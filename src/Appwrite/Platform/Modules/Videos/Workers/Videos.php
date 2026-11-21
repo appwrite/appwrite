@@ -2,6 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Videos\Workers;
 
+use Ahc\Jwt\JWT;
+use Appwrite\Auth\EncryptionKey;
+use Appwrite\Auth\Key;
 use Appwrite\Event\Message\Video as VideoMessage;
 use Appwrite\Event\Message\VideoAction;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
@@ -14,6 +17,8 @@ use Appwrite\Usage\Video as VideoUsage;
 use Appwrite\Video\Dash as DashManifest;
 use Appwrite\Video\Uploader;
 use Captioning\Format\SubripFile;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
@@ -29,6 +34,8 @@ use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
+use Utopia\Psr7\Method;
+use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\Psr7\Stream;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
@@ -118,6 +125,12 @@ class Videos extends Action
      * and caption passes that run before it.
      */
     private const PRESIGN_SLACK = 3600;
+
+    /** Longest an ephemeral API key is accepted for, which bounds a source read with one. */
+    private const KEY_SECONDS = 86400;
+
+    /** Seconds the API is given to answer for a source before it is copied instead. */
+    private const SOURCE_TIMEOUT = 10;
 
     /** Histogram bucket boundaries in seconds. */
     private const JOB_BUCKETS = [1, 5, 10, 30, 60, 120, 300, 600, 1200, 1800, 3600];
@@ -302,7 +315,7 @@ class Videos extends Action
                 \uniqid('', true)
             );
             $stage = 'download';
-            [$video, $inPath] = $this->prepareSource(
+            [$video, $inPath, $headers] = $this->prepareSource(
                 $dbForProject,
                 $deviceForFiles,
                 $deviceForVideos,
@@ -325,7 +338,7 @@ class Videos extends Action
                 $permissions
             );
 
-            $encoder = $this->encoder($this->timeout($video, 1));
+            $encoder = $this->encoder($this->timeout($video, 1), $headers);
 
             // Prefer dimensions over bitrate: many containers (VBR MKV, some DivX)
             // report width/height but leave bitrate as 0, and empty(0) is true in PHP.
@@ -817,7 +830,7 @@ class Videos extends Action
                 Base::JOB_RENDITION,
                 $rendition->getId()
             );
-            [$video, $inPath] = $this->prepareSource(
+            [$video, $inPath, $headers] = $this->prepareSource(
                 $dbForProject,
                 $deviceForFiles,
                 $deviceForVideos,
@@ -834,7 +847,7 @@ class Videos extends Action
 
             // Silent reporters: failures reach the span through the exception,
             // so the library must not print its own copy to stdout.
-            $probe = new FFprobe(protocols: Base::SOURCE_PROTOCOLS, formats: Base::SOURCE_FORMATS);
+            $probe = new FFprobe(protocols: Base::SOURCE_PROTOCOLS, formats: Base::SOURCE_FORMATS, options: Base::SOURCE_OPTIONS, headers: $headers);
             $probe->setReporter(new Silent());
             $timeout = $this->timeout(
                 $video,
@@ -844,7 +857,7 @@ class Videos extends Action
             Span::add('encode.timeout', $timeout);
             $threads = $this->threads();
             $packager = new Packager(
-                new FFmpeg(timeout: $timeout, threads: $threads, protocols: Base::SOURCE_PROTOCOLS, formats: Base::SOURCE_FORMATS),
+                new FFmpeg(timeout: $timeout, threads: $threads, protocols: Base::SOURCE_PROTOCOLS, formats: Base::SOURCE_FORMATS, options: Base::SOURCE_OPTIONS, headers: $headers),
                 probe: $probe,
                 reporter: new Silent()
             );
@@ -1846,13 +1859,13 @@ class Videos extends Action
     }
 
     /**
-     * Download the storage file into the job directory, probe metadata once,
-     * and extract embedded captions. A failed extract clears captionsExtracted
-     * so a later job can retry.
+     * Find where the source is read from, copying it into the job directory
+     * only when it must be, probe metadata once, and extract embedded captions.
+     * A failed extract clears captionsExtracted so a later job can retry.
      *
      * @param array{basePath: string, inDir: string, outDir: string} $workspace
      * @param array<string> $permissions
-     * @return array{0: Document, 1: string}
+     * @return array{0: Document, 1: string, 2: array<string, string>} the video, the path or URL of its source, and the headers a URL is requested with
      */
     private function prepareSource(
         Database $dbForProject,
@@ -1886,13 +1899,19 @@ class Videos extends Action
             'Reading video ' . $video->getId() . ' of project ' . $project->getId()
             . ' for ' . $action . ' (' . (int) $file->getAttribute('sizeOriginal', 0) . ' bytes)'
         );
-        $inPath = $this->source($deviceForFiles, $file, $workspace['inDir']);
+        [$inPath, $headers, $read, $why] = $this->source($deviceForFiles, $file, $project, $workspace['inDir']);
+        Span::add('source.read', $read);
+        Span::add('source.reason', $why);
+        $this->log(
+            'Read video ' . $video->getId() . ' of project ' . $project->getId()
+            . ' via ' . $read . ': ' . $why
+        );
         $this->phase($telemetry, $action, 'download', $phaseStart);
 
         if ((int) $video->getAttribute('duration', 0) <= 0) {
             $stage = 'probe';
             $phaseStart = \microtime(true);
-            $video = $this->probe($dbForProject, $video, $inPath);
+            $video = $this->probe($dbForProject, $video, $inPath, $this->encoder(headers: $headers));
             $this->phase($telemetry, $action, 'probe', $phaseStart);
             $this->notify(
                 $queueForRealtime,
@@ -1935,7 +1954,7 @@ class Videos extends Action
                         $video,
                         $inPath,
                         $workspace['outDir'],
-                        $this->encoder(),
+                        $this->encoder(headers: $headers),
                         $queueForRealtime,
                         $project,
                         $permissions,
@@ -1964,7 +1983,7 @@ class Videos extends Action
             }
         }
 
-        return [$video, $inPath];
+        return [$video, $inPath, $headers];
     }
 
     private function cleanup(string $basePath): void
@@ -2014,24 +2033,86 @@ class Videos extends Action
     /**
      * Where ffmpeg reads a video source from, copying it only when it must.
      *
-     * Encrypted or compressed uploads are decoded into the workspace: a
-     * segmented file in segments, straight to disk; an older one whole.
-     * Otherwise a local device's file is read where it is,
-     * and an S3 device's through a presigned URL that ffmpeg range-reads, so the
-     * workspace never holds a copy. The URL is a credential: it is kept off
+     * A file encrypted in segments is read through the Storage download
+     * endpoint, which decrypts just the segments each range covers. One
+     * encrypted or compressed any other way is decoded whole into the
+     * workspace. Otherwise a local device's file is read where it is, and an
+     * S3 device's through a presigned URL. ffmpeg range-reads either URL, so
+     * the workspace never holds a copy. Both carry a credential: the presigned
+     * URL in its query, the endpoint in the returned headers. They are kept off
      * spans, logs and stored errors, and only `source.path` is recorded. An
-     * encode the URL cannot outlive is copied instead.
+     * encode the credential cannot outlive is copied instead.
+     *
+     * @return array{string, array<string, string>, string, string} the path or URL, the headers a URL is requested with, how it is read (appwrite, s3, local or copy), and why
      */
-    private function source(Device $deviceForFiles, Document $file, string $inDir): string
+    private function source(Device $deviceForFiles, Document $file, Document $project, string $inDir): array
     {
         $fullPath = (string) $file->getAttribute('path', '');
         $encoded = !empty($file->getAttribute('openSSLCipher'))
             || $file->getAttribute('algorithm', Compression::NONE) !== Compression::NONE;
         $device = $deviceForFiles instanceof TelemetryDevice ? $deviceForFiles->getDevice() : $deviceForFiles;
 
-        if ($encoded || (!$device instanceof Local && !$device instanceof S3)) {
-            Span::add('source.read', 'copy');
-            return $this->download($deviceForFiles, $file, $inDir);
+        // The credential has to outlive the longest encode the timeout allows,
+        // plus the probe and caption passes before it. A timeout of 0 leaves
+        // that encode unbounded, so it is copied: a credential that expires
+        // mid-read fails a later range request. Clamping the lifetime instead
+        // would hide the same gap.
+        $cap = $this->cap();
+        $expires = $cap + self::PRESIGN_SLACK;
+
+        // Why the source is copied, when it is.
+        $compression = (string) $file->getAttribute('algorithm', Compression::NONE);
+        $why = match (true) {
+            !$encoded => '',
+            empty($file->getAttribute('openSSLCipher')) => 'compressed with ' . $compression,
+            $compression !== Compression::NONE => 'encrypted, and compressed with ' . $compression,
+            default => 'encrypted whole, not in segments',
+        };
+
+        if ((new Encryption($file))->isSegmented()) {
+            // The host the API answers on from inside the network; none means
+            // the worker has no way to reach it.
+            $host = System::getEnv('_APP_MIGRATION_HOST', '');
+            $why = match (true) {
+                $host === '' => 'encrypted in segments, and no API host is set',
+                $cap <= 0 => 'encrypted in segments, and no encode timeout bounds an API key',
+                $expires > self::KEY_SECONDS => 'encrypted in segments, and the encode timeout outlasts an API key',
+                default => '',
+            };
+
+            if ($why === '') {
+                $url = 'http://' . $host . '/v1/storage/buckets/' . $file->getAttribute('bucketId')
+                    . '/files/' . $file->getId() . '/download';
+                // A key is only taken with the project it was issued for named beside it.
+                $headers = [
+                    'X-Appwrite-Project' => $project->getId(),
+                    'X-Appwrite-Key' => $this->key($project, $expires),
+                ];
+
+                $refusal = $this->refusal($url, $headers);
+                if ($refusal === '') {
+                    return [$url, $headers, 'appwrite', 'encrypted in segments, decrypted by the API range by range'];
+                }
+
+                // The API can refuse a project the worker may still read for:
+                // one that is paused, over a limit, or behind its own rules.
+                // Said now, as the copy that follows can take a while.
+                Span::add('source.fallback', true);
+                $this->log(
+                    'Storage API did not serve file ' . $file->getId() . ' of project ' . $project->getId()
+                    . ' (' . $refusal . '), copying it instead',
+                    'warning'
+                );
+                $why = 'encrypted in segments, and the API did not serve it: ' . $refusal;
+            }
+        }
+
+        if ($encoded) {
+            return [$this->download($deviceForFiles, $file, $inDir), [], 'copy', $why];
+        }
+
+        if (!$device instanceof Local && !$device instanceof S3) {
+            return [$this->download($deviceForFiles, $file, $inDir), [], 'copy', 'its device is neither local nor S3'];
         }
 
         if (!$deviceForFiles->exists($fullPath)) {
@@ -2040,26 +2121,70 @@ class Videos extends Action
         }
 
         if ($device instanceof Local) {
-            Span::add('source.read', 'local');
-            return $fullPath;
+            return [$fullPath, [], 'local', 'stored as is on a local device'];
         }
 
-        // The URL has to outlive the longest encode the timeout allows, plus
-        // the probe and caption passes before it. A timeout of 0 leaves that
-        // encode unbounded, and SigV4 will not sign past 7 days, so either
-        // case is copied: a URL that expires mid-read fails a later range
-        // request. Clamping the lifetime instead would hide the same gap.
-        $cap = $this->cap();
-        $expires = $cap + self::PRESIGN_SLACK;
-        if ($cap > 0 && $expires <= S3::MAX_PRESIGN_SECONDS) {
-            Span::add('source.read', 'url');
-
-            return $device->getPresignedUrl($fullPath, $expires);
+        if ($cap <= 0) {
+            return [$this->download($deviceForFiles, $file, $inDir), [], 'copy', 'no encode timeout bounds a presigned URL'];
         }
 
-        Span::add('source.read', 'copy');
+        // SigV4 will not sign past 7 days.
+        if ($expires > S3::MAX_PRESIGN_SECONDS) {
+            return [$this->download($deviceForFiles, $file, $inDir), [], 'copy', 'the encode timeout outlasts a presigned URL'];
+        }
 
-        return $this->download($deviceForFiles, $file, $inDir);
+        return [$device->getPresignedUrl($fullPath, $expires), [], 's3', 'stored as is on S3'];
+    }
+
+    /**
+     * An API key for this job alone: it reads files, for as long as the job may
+     * run, and its requests are not counted as the project's traffic.
+     */
+    private function key(Document $project, int $seconds): string
+    {
+        $jwt = new JWT(EncryptionKey::current(), 'HS256', $seconds, 0);
+
+        return API_KEY_EPHEMERAL . '_' . $jwt->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
+            'projectId' => $project->getId(),
+            'projectSequence' => $project->getSequence(),
+            'disabledMetrics' => [
+                METRIC_NETWORK_REQUESTS,
+                METRIC_NETWORK_INBOUND,
+                METRIC_NETWORK_OUTBOUND,
+            ],
+            'scopes' => ['files.read'],
+        ]);
+    }
+
+    /**
+     * Why the API does not answer a range of the source, asked for its first
+     * byte: its status and error type, or the failure to reach it. Empty when
+     * it does.
+     *
+     * @param array<string, string> $headers
+     */
+    private function refusal(string $url, array $headers): string
+    {
+        try {
+            $response = (new Client(new CurlAdapter()))
+                ->withConnectTimeout(self::SOURCE_TIMEOUT)
+                ->withTimeout(self::SOURCE_TIMEOUT)
+                ->withHeaders([...$headers, 'Range' => 'bytes=0-0'])
+                ->sendRequest((new RequestFactory())->createRequest(Method::GET, $url));
+        } catch (\Throwable $error) {
+            // The class alone: a transport message can quote the request.
+            return 'request failed with ' . $error::class;
+        }
+
+        if ($response->getStatusCode() === 206) {
+            return '';
+        }
+
+        $body = \json_decode((string) $response->getBody(), true);
+        $type = \is_array($body) && \is_string($body['type'] ?? null) ? ' ' . $body['type'] : '';
+
+        return 'status ' . $response->getStatusCode() . $type;
     }
 
     /**
@@ -2405,18 +2530,19 @@ class Videos extends Action
 
     /**
      * @param int $timeout Seconds an ffmpeg run may take; 0 disables the limit.
+     * @param array<string, string> $headers Headers a source read from the API is requested with.
      */
-    private function encoder(int $timeout = 0): Encoder
+    private function encoder(int $timeout = 0, array $headers = []): Encoder
     {
         // Silent reporters: failures reach the span through the exception, so
         // the library must not print its own copy to stdout.
         // Sources are user uploads: only plain media containers, opened from
         // the workspace or a presigned URL, so nothing in them is followed.
-        $probe = new FFprobe(protocols: Base::SOURCE_PROTOCOLS, formats: Base::SOURCE_FORMATS);
+        $probe = new FFprobe(protocols: Base::SOURCE_PROTOCOLS, formats: Base::SOURCE_FORMATS, options: Base::SOURCE_OPTIONS, headers: $headers);
         $probe->setReporter(new Silent());
 
         return new Encoder(
-            new FFmpeg(timeout: $timeout, threads: $this->threads(), protocols: Base::SOURCE_PROTOCOLS, formats: Base::SOURCE_FORMATS),
+            new FFmpeg(timeout: $timeout, threads: $this->threads(), protocols: Base::SOURCE_PROTOCOLS, formats: Base::SOURCE_FORMATS, options: Base::SOURCE_OPTIONS, headers: $headers),
             $probe,
             new Silent()
         );

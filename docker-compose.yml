@@ -1364,6 +1364,7 @@ services:
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_VIDEOS_ENCODE_TIMEOUT
       - _APP_VIDEOS_THREADS
+      - _APP_MIGRATION_HOST
   appwrite-worker-certificates:
     profiles:
       - separate
