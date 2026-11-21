@@ -4099,7 +4099,7 @@ final class AccountCustomClientTest extends Scope
 
             $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $browserCookie], followRedirects: false);
             $this->assertEquals(301, $response['headers']['status-code']);
-            $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/' . $provider . '/redirect?code=', $response['headers']['location']);
+            $this->assertStringStartsWith('http://appwrite/v1/account/sessions/oauth2/' . $provider . '/redirect?code=', $response['headers']['location']);
 
             $redirects[] = $response['headers']['location'];
         }
