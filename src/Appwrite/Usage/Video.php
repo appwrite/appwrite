@@ -25,8 +25,11 @@ final class Video
      * size, so a retry or a deletion replaces the total instead of stacking
      * bytes.
      *
-     * `renditions.mbSeconds` multiplies the encode duration by the worker's
-     * specification memory and CPUs, the same product as `executions.mbSeconds`.
+     * Encode compute is published as `executions.mbSeconds` with `service`
+     * set to `videos`, the same counter functions and sites use, so the
+     * project total includes it and a service filter can show only videos.
+     * The value multiplies the encode duration by the worker's specification
+     * memory and CPUs.
      *
      * @param int $storageBytes total bytes written to the videos device for this rendition
      * @param int $computeMs    wall-clock encode duration in milliseconds
@@ -46,6 +49,7 @@ final class Video
         $mbSeconds = (int) (($specification['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * ($computeMs / 1000) * ($specification['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT));
 
         $usage
+            ->setService('videos')
             ->setResource('video')
             ->setResourceInternalId((string) $video->getSequence());
 
@@ -62,7 +66,7 @@ final class Video
             ->addMetric(METRIC_RENDITIONS, 1)
             ->addMetric(METRIC_VIDEOS_STORAGE, \max(0, $storageBytes))
             ->addMetric(METRIC_RENDITIONS_COMPUTE, $computeMs)
-            ->addMetric(METRIC_RENDITIONS_MB_SECONDS, $mbSeconds);
+            ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, $mbSeconds);
 
         if (!$usage->isEmpty()) {
             $publisherForUsage->enqueue(new UsageMessage(

@@ -2159,7 +2159,7 @@ return [
             ],
             [
                 'name' => '_APP_VIDEOS_SPECIFICATION',
-                'description' => 'The compute specification billed for each rendition encode as renditions.mbSeconds. Set it to the slug that matches the videos worker CPU and memory limits, for example s-4vcpu-4gb. An unknown slug falls back to the default. The default value is s-4vcpu-4gb.',
+                'description' => 'The compute specification billed for each rendition encode as executions.mbSeconds with service videos. Set it to the slug that matches the videos worker CPU and memory limits, for example s-4vcpu-4gb. An unknown slug falls back to the default. The default value is s-4vcpu-4gb.',
                 'introduction' => '2.7.0',
                 'default' => 's-4vcpu-4gb',
                 'required' => false,

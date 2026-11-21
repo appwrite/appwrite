@@ -2560,9 +2560,9 @@ class Videos extends Action
     }
 
     /**
-     * Encode size billed as renditions.mbSeconds, from _APP_VIDEOS_SPECIFICATION.
-     * It should match the worker's CPU and memory limits; an unknown slug bills
-     * the default.
+     * Encode size billed as executions.mbSeconds with service videos, from
+     * _APP_VIDEOS_SPECIFICATION. It should match the worker's CPU and memory
+     * limits; an unknown slug bills the default.
      *
      * @return array{slug: string, memory: int, cpus: int|float}
      */

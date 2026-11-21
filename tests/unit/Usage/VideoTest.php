@@ -16,10 +16,11 @@ final class VideoTest extends TestCase
 {
     /**
      * Publishes one settled rendition and returns the metric key => value map
-     * from the single message that reached the queue.
+     * from the single message that reached the queue, plus the raw metrics so
+     * callers can assert tags such as service.
      *
      * @param array{memory?: int, cpus?: int|float} $specification
-     * @return array<string, int>
+     * @return array{values: array<string, int>, metrics: list<array<string, mixed>>}
      */
     private function publish(string $status, int $storageBytes = 0, int $computeMs = 0, array $specification = []): array
     {
@@ -38,17 +39,20 @@ final class VideoTest extends TestCase
 
         $this->assertCount(1, $publisher->published);
 
-        $metrics = [];
+        $values = [];
         foreach ($publisher->published[0]['metrics'] as $metric) {
-            $metrics[$metric['key']] = ($metrics[$metric['key']] ?? 0) + $metric['value'];
+            $values[$metric['key']] = ($values[$metric['key']] ?? 0) + $metric['value'];
         }
 
-        return $metrics;
+        return [
+            'values' => $values,
+            'metrics' => $publisher->published[0]['metrics'],
+        ];
     }
 
     public function testReadyCountsSuccess(): void
     {
-        $metrics = $this->publish('ready', 2048, 1500);
+        $metrics = $this->publish('ready', 2048, 1500)['values'];
 
         $this->assertSame(1, $metrics[METRIC_RENDITIONS_SUCCESS] ?? null);
         $this->assertArrayNotHasKey(METRIC_RENDITIONS_FAILED, $metrics);
@@ -64,7 +68,7 @@ final class VideoTest extends TestCase
     #[DataProvider('nonReadyStatuses')]
     public function testNonReadyCountsFailed(string $status): void
     {
-        $metrics = $this->publish($status);
+        $metrics = $this->publish($status)['values'];
 
         $this->assertSame(1, $metrics[METRIC_RENDITIONS_FAILED] ?? null);
         $this->assertArrayNotHasKey(METRIC_RENDITIONS_SUCCESS, $metrics);
@@ -83,7 +87,7 @@ final class VideoTest extends TestCase
 
     public function testVideosGaugeNotPublishedPerEncode(): void
     {
-        $metrics = $this->publish('ready');
+        $metrics = $this->publish('ready')['values'];
 
         $this->assertArrayNotHasKey(
             METRIC_VIDEOS,
@@ -94,42 +98,67 @@ final class VideoTest extends TestCase
 
     public function testNegativeSizesClampToZero(): void
     {
-        $metrics = $this->publish('ready', -5, -9);
+        $metrics = $this->publish('ready', -5, -9)['values'];
 
         $this->assertSame(0, $metrics[METRIC_VIDEOS_STORAGE] ?? null);
         $this->assertSame(0, $metrics[METRIC_RENDITIONS_COMPUTE] ?? null);
-        $this->assertSame(0, $metrics[METRIC_RENDITIONS_MB_SECONDS] ?? null);
+        $this->assertSame(0, $metrics[METRIC_EXECUTIONS_MB_SECONDS] ?? null);
     }
 
     public function testMbSecondsMultipliesMemoryDurationAndCpus(): void
     {
-        $metrics = $this->publish('ready', 0, 1500, ['memory' => 4096, 'cpus' => 4]);
+        $published = $this->publish('ready', 0, 1500, ['memory' => 4096, 'cpus' => 4]);
 
-        $this->assertSame(24576, $metrics[METRIC_RENDITIONS_MB_SECONDS] ?? null);
-        $this->assertSame(1500, $metrics[METRIC_RENDITIONS_COMPUTE] ?? null);
+        $this->assertSame(24576, $published['values'][METRIC_EXECUTIONS_MB_SECONDS] ?? null);
+        $this->assertSame(1500, $published['values'][METRIC_RENDITIONS_COMPUTE] ?? null);
+        $this->assertEncodeServiceIsVideos($published['metrics']);
     }
 
     public function testMbSecondsKeepsFractionalCpus(): void
     {
-        $metrics = $this->publish('ready', 0, 2000, ['memory' => 512, 'cpus' => 0.5]);
+        $published = $this->publish('ready', 0, 2000, ['memory' => 512, 'cpus' => 0.5]);
 
-        $this->assertSame(512, $metrics[METRIC_RENDITIONS_MB_SECONDS] ?? null);
+        $this->assertSame(512, $published['values'][METRIC_EXECUTIONS_MB_SECONDS] ?? null);
+        $this->assertEncodeServiceIsVideos($published['metrics']);
     }
 
     public function testFailedEncodeStillBillsMbSeconds(): void
     {
-        $metrics = $this->publish('error', 0, 1000, ['memory' => 4096, 'cpus' => 4]);
+        $published = $this->publish('error', 0, 1000, ['memory' => 4096, 'cpus' => 4]);
 
-        $this->assertSame(16384, $metrics[METRIC_RENDITIONS_MB_SECONDS] ?? null);
+        $this->assertSame(16384, $published['values'][METRIC_EXECUTIONS_MB_SECONDS] ?? null);
+        $this->assertEncodeServiceIsVideos($published['metrics']);
     }
 
     public function testMbSecondsDefaultsWithoutSpecification(): void
     {
-        $metrics = $this->publish('ready', 0, 1000);
+        $published = $this->publish('ready', 0, 1000);
 
         $this->assertSame(
             (int) (APP_COMPUTE_MEMORY_DEFAULT * APP_COMPUTE_CPUS_DEFAULT),
-            $metrics[METRIC_RENDITIONS_MB_SECONDS] ?? null
+            $published['values'][METRIC_EXECUTIONS_MB_SECONDS] ?? null
         );
+        $this->assertEncodeServiceIsVideos($published['metrics']);
+    }
+
+    /**
+     * Encode compute shares executions.mbSeconds with functions and sites;
+     * service=videos is what keeps the three products apart.
+     *
+     * @param list<array<string, mixed>> $metrics
+     */
+    private function assertEncodeServiceIsVideos(array $metrics): void
+    {
+        foreach ($metrics as $metric) {
+            if (($metric['key'] ?? '') !== METRIC_EXECUTIONS_MB_SECONDS) {
+                continue;
+            }
+
+            $this->assertSame('videos', $metric['service'] ?? null);
+
+            return;
+        }
+
+        $this->fail('executions.mbSeconds was not published');
     }
 }

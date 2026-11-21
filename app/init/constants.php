@@ -498,7 +498,6 @@ const METRIC_RENDITIONS = 'renditions';
 const METRIC_RENDITIONS_SUCCESS = 'renditions.success';
 const METRIC_RENDITIONS_FAILED = 'renditions.failed';
 const METRIC_RENDITIONS_COMPUTE = 'renditions.compute';
-const METRIC_RENDITIONS_MB_SECONDS = 'renditions.mbSeconds';
 const METRIC_EXECUTIONS  = 'executions';
 const METRIC_EXECUTIONS_COMPUTE  = 'executions.compute';
 const METRIC_EXECUTIONS_MB_SECONDS = 'executions.mbSeconds';
