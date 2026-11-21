@@ -1899,9 +1899,13 @@ class Videos extends Action
             'Reading video ' . $video->getId() . ' of project ' . $project->getId()
             . ' for ' . $action . ' (' . (int) $file->getAttribute('sizeOriginal', 0) . ' bytes)'
         );
-        [$inPath, $headers, $read] = $this->source($deviceForFiles, $file, $project, $workspace['inDir']);
+        [$inPath, $headers, $read, $why] = $this->source($deviceForFiles, $file, $project, $workspace['inDir']);
         Span::add('source.read', $read);
-        $this->log('Read video ' . $video->getId() . ' of project ' . $project->getId() . ' via ' . $read);
+        Span::add('source.reason', $why);
+        $this->log(
+            'Read video ' . $video->getId() . ' of project ' . $project->getId()
+            . ' via ' . $read . ': ' . $why
+        );
         $this->phase($telemetry, $action, 'download', $phaseStart);
 
         if ((int) $video->getAttribute('duration', 0) <= 0) {
@@ -2039,7 +2043,7 @@ class Videos extends Action
      * spans, logs and stored errors, and only `source.path` is recorded. An
      * encode the credential cannot outlive is copied instead.
      *
-     * @return array{string, array<string, string>, string} the path or URL, the headers a URL is requested with, and how it is read: appwrite, s3, local or copy
+     * @return array{string, array<string, string>, string, string} the path or URL, the headers a URL is requested with, how it is read (appwrite, s3, local or copy), and why
      */
     private function source(Device $deviceForFiles, Document $file, Document $project, string $inDir): array
     {
@@ -2056,11 +2060,27 @@ class Videos extends Action
         $cap = $this->cap();
         $expires = $cap + self::PRESIGN_SLACK;
 
+        // Why the source is copied, when it is.
+        $compression = (string) $file->getAttribute('algorithm', Compression::NONE);
+        $why = match (true) {
+            !$encoded => '',
+            empty($file->getAttribute('openSSLCipher')) => 'compressed with ' . $compression,
+            $compression !== Compression::NONE => 'encrypted, and compressed with ' . $compression,
+            default => 'encrypted whole, not in segments',
+        };
+
         if ((new Encryption($file))->isSegmented()) {
             // The host the API answers on from inside the network; none means
             // the worker has no way to reach it.
             $host = System::getEnv('_APP_MIGRATION_HOST', '');
-            if ($host !== '' && $cap > 0 && $expires <= self::KEY_SECONDS) {
+            $why = match (true) {
+                $host === '' => 'encrypted in segments, and no API host is set',
+                $cap <= 0 => 'encrypted in segments, and no encode timeout bounds an API key',
+                $expires > self::KEY_SECONDS => 'encrypted in segments, and the encode timeout outlasts an API key',
+                default => '',
+            };
+
+            if ($why === '') {
                 $url = 'http://' . $host . '/v1/storage/buckets/' . $file->getAttribute('bucketId')
                     . '/files/' . $file->getId() . '/download';
                 // A key is only taken with the project it was issued for named beside it.
@@ -2069,18 +2089,30 @@ class Videos extends Action
                     'X-Appwrite-Key' => $this->key($project, $expires),
                 ];
 
-                if ($this->served($url, $headers)) {
-                    return [$url, $headers, 'appwrite'];
+                $refusal = $this->refusal($url, $headers);
+                if ($refusal === '') {
+                    return [$url, $headers, 'appwrite', 'encrypted in segments, decrypted by the API range by range'];
                 }
 
                 // The API can refuse a project the worker may still read for:
                 // one that is paused, over a limit, or behind its own rules.
+                // Said now, as the copy that follows can take a while.
                 Span::add('source.fallback', true);
+                $this->log(
+                    'Storage API did not serve file ' . $file->getId() . ' of project ' . $project->getId()
+                    . ' (' . $refusal . '), copying it instead',
+                    'warning'
+                );
+                $why = 'encrypted in segments, and the API did not serve it: ' . $refusal;
             }
         }
 
-        if ($encoded || (!$device instanceof Local && !$device instanceof S3)) {
-            return [$this->download($deviceForFiles, $file, $inDir), [], 'copy'];
+        if ($encoded) {
+            return [$this->download($deviceForFiles, $file, $inDir), [], 'copy', $why];
+        }
+
+        if (!$device instanceof Local && !$device instanceof S3) {
+            return [$this->download($deviceForFiles, $file, $inDir), [], 'copy', 'its device is neither local nor S3'];
         }
 
         if (!$deviceForFiles->exists($fullPath)) {
@@ -2089,15 +2121,19 @@ class Videos extends Action
         }
 
         if ($device instanceof Local) {
-            return [$fullPath, [], 'local'];
+            return [$fullPath, [], 'local', 'stored as is on a local device'];
+        }
+
+        if ($cap <= 0) {
+            return [$this->download($deviceForFiles, $file, $inDir), [], 'copy', 'no encode timeout bounds a presigned URL'];
         }
 
         // SigV4 will not sign past 7 days.
-        if ($cap > 0 && $expires <= S3::MAX_PRESIGN_SECONDS) {
-            return [$device->getPresignedUrl($fullPath, $expires), [], 's3'];
+        if ($expires > S3::MAX_PRESIGN_SECONDS) {
+            return [$this->download($deviceForFiles, $file, $inDir), [], 'copy', 'the encode timeout outlasts a presigned URL'];
         }
 
-        return [$this->download($deviceForFiles, $file, $inDir), [], 'copy'];
+        return [$device->getPresignedUrl($fullPath, $expires), [], 's3', 'stored as is on S3'];
     }
 
     /**
@@ -2122,11 +2158,13 @@ class Videos extends Action
     }
 
     /**
-     * Whether the API answers a range of the source, asked for its first byte.
+     * Why the API does not answer a range of the source, asked for its first
+     * byte: its status and error type, or the failure to reach it. Empty when
+     * it does.
      *
      * @param array<string, string> $headers
      */
-    private function served(string $url, array $headers): bool
+    private function refusal(string $url, array $headers): string
     {
         try {
             $response = (new Client(new CurlAdapter()))
@@ -2134,11 +2172,19 @@ class Videos extends Action
                 ->withTimeout(self::SOURCE_TIMEOUT)
                 ->withHeaders([...$headers, 'Range' => 'bytes=0-0'])
                 ->sendRequest((new RequestFactory())->createRequest(Method::GET, $url));
-        } catch (\Throwable) {
-            return false;
+        } catch (\Throwable $error) {
+            // The class alone: a transport message can quote the request.
+            return 'request failed with ' . $error::class;
         }
 
-        return $response->getStatusCode() === 206;
+        if ($response->getStatusCode() === 206) {
+            return '';
+        }
+
+        $body = \json_decode((string) $response->getBody(), true);
+        $type = \is_array($body) && \is_string($body['type'] ?? null) ? ' ' . $body['type'] : '';
+
+        return 'status ' . $response->getStatusCode() . $type;
     }
 
     /**
