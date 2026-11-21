@@ -3,11 +3,10 @@ prints the median of each operation side by side.
 
     python3 crates/extension/bench/run.py <script.php> <repository root> <utopia.so> <rounds> [extension ...]
 
-Each further argument names a shared extension both sides load (`scrypt`, which the PHP
-`Scrypt` hashes call), as `-n` loads none.
+Each further argument names a shared extension both sides load, as `-n` loads none.
 
 The script prints one JSON object of operation -> nanoseconds; _APP_EXTENSION_LIBRARIES,
-set to the script's name (`auth.php` -> `auth`), switches which implementation it gets.
+set to the script's name (`<name>.php` -> `<name>`), switches which implementation it gets.
 """
 import json, os, statistics, subprocess, sys
 script, root, lib, rounds = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4])

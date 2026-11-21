@@ -31,13 +31,13 @@ done
 
 # A PHP subclass of every class, cached by opcache: what the extension's defaults and constants
 # must survive (opcache frees what it copies into shared memory as PHP's allocator's).
-for with in "" "$all"; do
+for with in "" ${libraries:+"$all"}; do
     echo "== opcache (${with:-no switches})" >&2
     _APP_EXTENSION_LIBRARIES=$with php -d opcache.enable_cli=1 "$tests/opcache.php"
 done
 
 # Classes with no PHP implementation left: their packages' own tests, on the extension.
-for package in user-agent domains emails validators; do
+for package in user-agent domains emails validators auth; do
     echo "== $package (no PHP)" >&2
     vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php "packages/$package/tests"
 done
