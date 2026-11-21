@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Utopia\Auth\Tests;
 
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Auth\Hash;
 
+#[RequiresPhpExtension('utopia')]
 final class HashTest extends TestCase
 {
     private Hash $hash;

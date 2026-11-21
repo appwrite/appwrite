@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Utopia\Auth\Tests\Algorithms;
 
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Auth\Hashes\MD5;
 
+#[RequiresPhpExtension('utopia')]
 final class MD5Test extends TestCase
 {
     private MD5 $md5;

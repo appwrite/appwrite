@@ -28,6 +28,7 @@
       "rustfmt.toml",
       "packages/image/",
       "packages/validators/",
+      "packages/auth/",
       "Dockerfile",
       ".dockerignore"
     ],

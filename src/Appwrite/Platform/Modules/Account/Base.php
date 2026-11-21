@@ -310,8 +310,9 @@ abstract class Base extends Action
      * verified-email match adopts the account, otherwise a new user is
      * created. Mutates `$user` in place. Shared by every external identity sign-in; mirrors the browser OAuth2 flow.
      *
-     * @return array{?Document, ?Document} the user and email target created by
-     *     this request, if any, so they can be rolled back later
+     * @return array{?Document, ?Document, ?Document} the user and email target created by
+     *     this request, if any, so they can be rolled back later, and the identity an existing
+     *     user was resolved through, which must still exist when the sign-in is persisted
      */
     protected function resolveUser(User $user, string $provider, string $sub, string $providerEmail, bool $isVerified, string $name, Database $dbForProject, Document $project, array $plan, ProofsPassword $proofForPassword, Authorization $authorization, Mqtt $mqtt, Realtime $queueForRealtime, Bus $bus): array
     {
@@ -320,8 +321,10 @@ abstract class Base extends Action
             Query::equal('providerUid', [$sub]),
         ]);
 
+        $ground = null;
         if (!$identity->isEmpty()) {
             $user->setAttributes($dbForProject->getDocument('users', $identity->getAttribute('userId'))->getArrayCopy());
+            $ground = $identity;
         }
 
         $email = $providerEmail;
@@ -394,11 +397,12 @@ abstract class Base extends Action
                     throw new Exception(Exception::GENERAL_BAD_REQUEST);
                 }
                 $user->setAttributes($dbForProject->getDocument('users', $identityWithMatchingEmail->getAttribute('userId'))->getArrayCopy());
+                $ground = $identityWithMatchingEmail;
             }
         }
 
         if (!$user->isEmpty()) {
-            return [null, null];
+            return [null, null, $ground];
         }
 
         // Last option -> create the user
@@ -463,7 +467,7 @@ abstract class Base extends Action
                 ]));
             }
 
-            return [$userDoc, $newTarget];
+            return [$userDoc, $newTarget, null];
         } catch (Duplicate) {
             throw new Exception(Exception::USER_ALREADY_EXISTS);
         }
@@ -479,58 +483,88 @@ abstract class Base extends Action
      */
     protected function upsertIdentity(User $user, string $provider, string $sub, string $providerEmail, array $attributes, array $changes, Database $dbForProject, Authorization $authorization, ?Document $newUser, ?Document $newTarget): void
     {
+        $conflict = null;
+
+        try {
+            $this->writeIdentity($user, $provider, $sub, $providerEmail, $attributes, $changes, $dbForProject, $conflict);
+        } catch (Duplicate) {
+            // The (provider, providerUid) unique index guards the same identity being connected to two users
+            $conflict = Exception::USER_ALREADY_EXISTS;
+        }
+
+        if ($conflict !== null) {
+            $this->dropNewUser($dbForProject, $authorization, $newUser, $newTarget);
+            throw new Exception($conflict);
+        }
+    }
+
+    /**
+     * The write behind upsertIdentity(), for a caller that persists the sign-in in a transaction of its own and
+     * cleans up after a conflict once that has rolled back. Returns the identity it linked, or null when it
+     * refreshed the one that exists or the link did not hold, in which case `$conflict` names the error to fail
+     * with. A link made inside a transaction is confirmed with User::confirmIdentity() after the commit.
+     *
+     * @param array<string, mixed> $attributes Provider-specific attributes stored with a new identity
+     * @param array<string, mixed> $changes Attributes refreshed on an existing identity
+     * @throws Duplicate when (provider, sub) is already linked to another user
+     */
+    protected function writeIdentity(Document $user, string $provider, string $sub, string $providerEmail, array $attributes, array $changes, Database $dbForProject, ?string &$conflict): ?Document
+    {
+        $conflict = null;
+
         $identity = $dbForProject->findOne('identities', [
             Query::equal('userInternalId', [$user->getSequence()]),
             Query::equal('provider', [$provider]),
             Query::equal('providerUid', [$sub]),
         ]);
 
-        if ($identity->isEmpty()) {
-            $conflict = null;
-
-            try {
-                $linked = User::linkIdentity($dbForProject, new Document(\array_merge([
-                    '$id' => Id::unique(),
-                    '$permissions' => [
-                        Permission::read(Role::any()),
-                        Permission::update(Role::user($user->getId())),
-                        Permission::delete(Role::user($user->getId())),
-                    ],
-                    'userInternalId' => $user->getSequence(),
-                    'userId' => $user->getId(),
-                    'provider' => $provider,
-                    'providerUid' => $sub,
-                    'providerEmail' => $providerEmail,
-                ], $attributes)));
-
-                if (!$linked) {
-                    /** Return a generic bad request to prevent exposing existing accounts */
-                    $conflict = Exception::GENERAL_BAD_REQUEST;
-                }
-            } catch (Duplicate) {
-                // The (provider, providerUid) unique index guards the same identity being connected to two users
-                $conflict = Exception::USER_ALREADY_EXISTS;
+        if (!$identity->isEmpty()) {
+            if ($changes !== []) {
+                $dbForProject->updateDocument('identities', $identity->getId(), new Document($changes));
             }
 
-            if ($conflict !== null) {
-                // A request whose link did not hold must not leave behind the user it just created
-                if ($newUser !== null) {
-                    $authorization->skip(function () use ($dbForProject, $newUser, $newTarget) {
-                        if ($newTarget !== null) {
-                            $dbForProject->deleteDocument('targets', $newTarget->getId());
-                        }
-                        $dbForProject->deleteDocument('users', $newUser->getId());
-                    });
-                }
-                throw new Exception($conflict);
-            }
+            return null;
+        }
 
+        $identity = new Document(\array_merge([
+            '$id' => Id::unique(),
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
+            ],
+            'userInternalId' => $user->getSequence(),
+            'userId' => $user->getId(),
+            'provider' => $provider,
+            'providerUid' => $sub,
+            'providerEmail' => $providerEmail,
+        ], $attributes));
+
+        if (!User::linkIdentity($dbForProject, $identity)) {
+            /** Return a generic bad request to prevent exposing existing accounts */
+            $conflict = Exception::GENERAL_BAD_REQUEST;
+
+            return null;
+        }
+
+        return $identity;
+    }
+
+    /**
+     * Delete the user and email target a sign-in created, when what it went on to link did not hold.
+     */
+    protected function dropNewUser(Database $dbForProject, Authorization $authorization, ?Document $newUser, ?Document $newTarget): void
+    {
+        if ($newUser === null) {
             return;
         }
 
-        if ($changes !== []) {
-            $dbForProject->updateDocument('identities', $identity->getId(), new Document($changes));
-        }
+        $authorization->skip(function () use ($dbForProject, $newUser, $newTarget) {
+            if ($newTarget !== null) {
+                $dbForProject->deleteDocument('targets', $newTarget->getId());
+            }
+            $dbForProject->deleteDocument('users', $newUser->getId());
+        });
     }
 
     /**
