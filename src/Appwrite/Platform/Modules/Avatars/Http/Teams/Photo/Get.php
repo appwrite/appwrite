@@ -1,12 +1,12 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Teams\Http\Teams\Photo;
+namespace Appwrite\Platform\Modules\Avatars\Http\Teams\Photo;
 
 use Appwrite\AvatarPhotos\Providers\Custom;
 use Appwrite\AvatarPhotos\Providers\Fallback;
 use Appwrite\AvatarPhotos\Providers\Initials;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Action;
+use Appwrite\Platform\Modules\Avatars\Http\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -20,6 +20,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Image\Canvas;
 use Utopia\Image\Format;
 use Utopia\Image\Transform;
+use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
 use Utopia\Validator\Range;
@@ -37,17 +38,18 @@ class Get extends Action
     public function __construct()
     {
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/teams/:teamId/photo')
+            ->setHttpMethod(UtopiaAction::HTTP_REQUEST_METHOD_GET)
+            ->setHttpPath('/v1/avatars/teams/:teamId/photo')
+            ->httpAlias('/v1/teams/:teamId/photo')
             ->desc('Get photo')
-            ->groups(['api', 'teams'])
+            ->groups(['api', 'avatars'])
             ->label('scope', 'teams.read')
             ->label('sdk', new Method(
-                namespace: 'teams',
-                group: 'teams',
-                name: 'getPhoto',
+                namespace: 'avatars',
+                group: null,
+                name: 'getTeamPhoto',
                 description: <<<'EOT'
-                Returns the photo of a team: the uploaded photo (see teams.updatePhoto), else the initials of the team name, else a built-in static placeholder.
+                Returns the photo of a team: the uploaded photo (see avatars.updateTeamPhoto), else the initials of the team name, else a built-in static placeholder.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 type: MethodType::LOCATION,

@@ -7,6 +7,8 @@ $templateRuntimes = Config::getParam('template-runtimes');
 // The templates' SDKs need Node 18.17+ (node-appwrite 29) and Python 3.9+ (appwrite 23)
 $templateRuntimes['NODE'] = \array_diff($templateRuntimes['NODE'], ['node-14.5', 'node-16.0']);
 $templateRuntimes['PYTHON'] = \array_diff($templateRuntimes['PYTHON'], ['python-3.8']);
+// node-appwrite 32, used by the alert templates, needs Node 20+
+$nodeRuntimes20 = \array_filter($templateRuntimes['NODE'], fn (string $runtime) => \version_compare(\explode('-', $runtime)[1], '20', '>='));
 $allowList = \array_map('trim', \explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
 
 function getRuntimes($runtimes, $commands, $entrypoint, $providerRootDirectory, $allowList)
@@ -33,6 +35,7 @@ class FunctionUseCases
     public const UTILITIES = 'utilities';
     public const DEV_TOOLS = 'dev-tools';
     public const AUTH = 'auth';
+    public const MONITORING = 'monitoring';
 
     public static function getAll(): array
     {
@@ -44,6 +47,7 @@ class FunctionUseCases
             self::UTILITIES,
             self::DEV_TOOLS,
             self::AUTH,
+            self::MONITORING,
         ];
     }
 }
@@ -2445,6 +2449,77 @@ return [
             ]
         ],
         'scopes' => ['databases.write', 'tables.read', 'tables.write', 'rows.write']
+    ],
+    [
+        'icon' => 'icon-chat',
+        'id' => 'alerts-to-chat',
+        'name' => 'Alerts to chat',
+        'score' => 6,
+        'tagline' => 'Post every firing and resolved alert to Slack, Discord, Microsoft Teams or Google Chat.',
+        'permissions' => [],
+        'events' => ['monitors.*.alerts.*.firing', 'monitors.*.alerts.*.resolved'],
+        'cron' => '',
+        'timeout' => 15,
+        'useCases' => [FunctionUseCases::MONITORING],
+        'runtimes' => [
+            ...getRuntimes($templateRuntimes['NODE'], 'npm install', 'src/main.js', 'node/alerts-to-chat', $allowList)
+        ],
+        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/alerts-to-chat">file</a>.',
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '1.6.0',
+        'variables' => [
+            [
+                'name' => 'CHAT_WEBHOOK_URL',
+                'description' => 'Incoming webhook URL of the channel to post to. The template tells Slack, Discord, Microsoft Teams and Google Chat apart by its host. <a class="u-bold" target="_blank" href="https://api.slack.com/messaging/webhooks">Learn more</a>.',
+                'value' => '',
+                'placeholder' => 'https://hooks.slack.com/services/T000/B000/XXXX',
+                'required' => true,
+                'secret' => true,
+                'type' => 'password'
+            ],
+            [
+                'name' => 'CHAT_TARGET',
+                'description' => 'The chat app to format for, when the webhook URL\'s host doesn\'t tell: slack, discord, teams or google-chat.',
+                'value' => '',
+                'placeholder' => 'slack',
+                'required' => false,
+                'type' => 'text'
+            ]
+        ],
+        'scopes' => []
+    ],
+    [
+        'icon' => 'icon-lightning-bolt',
+        'id' => 'pause-on-usage-spike',
+        'name' => 'Pause on usage spike',
+        'score' => 6,
+        'tagline' => 'Disable a function or site when a usage monitor scoped to it fires, before a runaway loop runs up the bill.',
+        'permissions' => [],
+        'events' => ['monitors.*.alerts.*.firing'],
+        'cron' => '',
+        'timeout' => 15,
+        'useCases' => [FunctionUseCases::MONITORING],
+        'runtimes' => [
+            ...getRuntimes($nodeRuntimes20, 'npm install', 'src/main.js', 'node/pause-on-usage-spike', $allowList)
+        ],
+        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/pause-on-usage-spike">file</a>.',
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '1.6.0',
+        'variables' => [
+            [
+                'name' => 'MIN_SEVERITY',
+                'description' => 'Lowest monitor severity that pauses its resource: info, warning, error or critical.',
+                'value' => 'warning',
+                'placeholder' => 'warning',
+                'required' => false,
+                'type' => 'text'
+            ]
+        ],
+        'scopes' => ['functions.read', 'functions.write', 'sites.read', 'sites.write']
     ],
     [
         'icon' => 'icon-apple',

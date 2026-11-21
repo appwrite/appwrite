@@ -27,6 +27,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Atlassian\Update as Up
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Auth0\Update as UpdateOAuth2Auth0;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Authentik\Update as UpdateOAuth2Authentik;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Autodesk\Update as UpdateOAuth2Autodesk;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Bird\Update as UpdateOAuth2Bird;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Bitbucket\Update as UpdateOAuth2Bitbucket;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Bitly\Update as UpdateOAuth2Bitly;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Box\Update as UpdateOAuth2Box;
@@ -318,6 +319,7 @@ class Http extends Service
         $this->addAction('updateProjectOAuth2Roblox', UpdateOAuth2Roblox::class);
         $this->addAction('updateProjectOAuth2WorkOS', UpdateOAuth2WorkOS::class);
         $this->addAction('updateProjectOAuth2Resend', UpdateOAuth2Resend::class);
+        $this->addAction('updateProjectOAuth2Bird', UpdateOAuth2Bird::class);
         $this->addAction('updateProjectOAuth2TikTok', UpdateOAuth2TikTok::class);
         $this->addAction('updateProjectOAuth2Kakao', UpdateOAuth2Kakao::class);
         $this->addAction('updateProjectOAuth2Naver', UpdateOAuth2Naver::class);

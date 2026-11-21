@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { isAgentDocsHref } from '@/lib/docs/agent-docs-feature'
+import { isVideosDocsHref } from '@/lib/docs/videos-docs-feature'
 import { docsGridFourCol } from '@/lib/docs/docs-container'
 import { DOCS_HOME_PRODUCTS } from '@/lib/docs/home-content'
 import { cn } from '@/lib/utils'
@@ -64,9 +65,11 @@ export function DocsProductsBento() {
   const products = useMemo(
     () =>
       DOCS_HOME_PRODUCTS.filter(
-        (product) => features.agent || !isAgentDocsHref(product.href),
+        (product) =>
+          (features.agent || !isAgentDocsHref(product.href)) &&
+          (features.videos || !isVideosDocsHref(product.href)),
       ),
-    [features.agent],
+    [features.agent, features.videos],
   )
 
   return (

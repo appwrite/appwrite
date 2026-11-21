@@ -1192,20 +1192,20 @@ export const heProductPagesDictionary: Record<string, string> = {
   'Upload a WebVTT or SubRip file to Storage and attach it to a video with a name and an ISO 639-2 language code. Uploads are converted to WebVTT and segmented for streaming. Subtitle tracks embedded in the source are extracted automatically during the first encoding job, and you can retag their language at any time.':
     'העלו קובץ WebVTT או SubRip לאחסון וצרפו אותו לסרטון עם שם וקוד שפה לפי ISO 639-2. קבצים שהועלו מומרים ל-WebVTT ומחולקים לסגמנטים לסטרימינג. רצועות כתוביות שמוטמעות בקובץ המקור מחולצות אוטומטית במהלך משימת הקידוד הראשונה, ותוכלו לתייג מחדש את השפה שלהן בכל עת.',
   'What happens when I delete a video?': 'מה קורה כשמוחקים סרטון?',
-  'Deleting a video removes its renditions, subtitles, previews, and transcoded segments. Deleting a profile keeps the renditions that were already encoded with it.':
-    'מחיקת סרטון מסירה את גרסאות הקידוד, הכתוביות, התצוגות המקדימות והסגמנטים המקודדים שלו. מחיקת פרופיל משאירה את גרסאות הקידוד שכבר קודדו איתו.',
+  'Deleting a video removes its renditions, captions, timeline thumbnails, and transcoded segments. Deleting a profile keeps the renditions that were already encoded with it.':
+    'מחיקת סרטון מסירה את גרסאות הקידוד, הכתוביות, תמונות ציר הזמן והסגמנטים המקודדים שלו. מחיקת פרופיל משאירה את גרסאות הקידוד שכבר קודדו איתו.',
   'How do you reach a first frame under 100 ms?': 'איך מגיעים לפריים ראשון מתחת ל-100 ms?',
   'The pipeline is designed for that startup budget. Players load a small master manifest, pick a rendition from the ladder that the connection can fetch immediately, and request a short first segment instead of the source file. Use the inspector to watch time to first frame on a real session.':
     'הצינור תוכנן לתקציב הפתיחה הזה. נגנים טוענים מניפסט ראשי קטן, בוחרים גרסת קידוד מהסולם שהחיבור יכול להביא מיד, ומבקשים סגמנט ראשון קצר במקום את קובץ המקור. השתמשו בבודק כדי לעקוב אחרי הזמן עד לפריים הראשון בסשן אמיתי.',
   'Who can manage videos in my organization?': 'מי יכול לנהל סרטונים בארגון שלי?',
-  'Videos follows your organization roles. The videos.read and videos.write scopes control who can view and manage videos, profiles, renditions, and subtitles.':
-    'שירות הסרטונים פועל לפי התפקידים בארגון שלכם. ההרשאות videos.read ו-videos.write קובעות מי יכול לצפות ולנהל סרטונים, פרופילים, גרסאות קידוד וכתוביות.',
+  'Videos follows your organization roles. The videos.read and videos.write scopes control who can view and manage videos, renditions, and captions. The project.videos.profiles.read and project.videos.profiles.write scopes cover encoding profiles.':
+    'שירות הסרטונים פועל לפי התפקידים בארגון שלכם. ההרשאות videos.read ו-videos.write קובעות מי יכול לצפות ולנהל סרטונים, גרסאות קידוד וכתוביות. ההרשאות project.videos.profiles.read ו-project.videos.profiles.write חלות על פרופילי קידוד.',
   'Start from any file in Storage': 'התחילו מכל קובץ באחסון',
   'Create a video from a file that is already in a Storage bucket. The first encoding job probes codecs, resolution, frame rate, duration, and bitrate, so you never parse media metadata yourself.':
     'צרו סרטון מקובץ שכבר נמצא בבאקט באחסון. משימת הקידוד הראשונה מזהה קודקים, רזולוציה, קצב פריימים, משך וקצב סיביות, כך שלא תצטרכו לנתח מטא-דאטה של מדיה בעצמכם.',
   'Encode an adaptive bitrate ladder': 'קדדו סולם קצבי סיביות אדפטיבי',
-  'Every new project starts with a default ladder of encoding profiles. Renditions encode in the background and report status and progress until they are ready to stream. Add your own profiles when you need a different resolution or bitrate.':
-    'כל פרויקט חדש מתחיל עם סולם ברירת מחדל של פרופילי קידוד. גרסאות קידוד מקודדות ברקע ומדווחות על סטטוס והתקדמות עד שהן מוכנות לסטרימינג. הוסיפו פרופילים משלכם כשאתם צריכים רזולוציה או קצב סיביות אחרים.',
+  'Start from resolution presets or define your own encoding profiles. Renditions encode in the background and report status and progress until they are ready to stream.':
+    'התחילו מתבניות מוכנות של רזולוציה או הגדירו פרופילי קידוד משלכם. גרסאות קידוד מקודדות ברקע ומדווחות על סטטוס והתקדמות עד שהן מוכנות לסטרימינג.',
   'HLS, DASH, and CMAF from one source': 'HLS, DASH ו-CMAF ממקור אחד',
   'Package each rendition for the players you support. Every output has a master manifest that players follow to the right rendition for each viewer and connection.':
     'ארזו כל גרסת קידוד עבור הנגנים שאתם תומכים בהם. לכל פלט יש מניפסט ראשי שנגנים עוקבים אחריו אל גרסת הקידוד המתאימה לכל צופה ולכל חיבור.',
@@ -1213,8 +1213,8 @@ export const heProductPagesDictionary: Record<string, string> = {
   'Upload WebVTT or SubRip files from Storage, or use the tracks already embedded in the source. Tag each track with a language, choose a default, and players pick it up from the manifest.':
     'העלו קבצי WebVTT או SubRip מהאחסון, או השתמשו ברצועות שכבר מוטמעות בקובץ המקור. תייגו כל רצועה בשפה, בחרו ברירת מחדל, והנגנים יקבלו אותה מהמניפסט.',
   'Scrubbing thumbnails on the timeline': 'תמונות תצוגה מקדימה בציר הזמן',
-  'Generate sprite sheets with a WebVTT index so viewers see a preview frame while they scrub. The same sprites give every video a poster image.':
-    'צרו גיליונות ספרייט עם אינדקס WebVTT כדי שצופים יראו פריים לדוגמה בזמן שהם גוללים בציר הזמן. אותם ספרייטים מספקים לכל סרטון גם תמונת פוסטר.',
+  'Generate sprite sheets with a WebVTT index so viewers see a preview frame while they scrub.':
+    'צרו גיליונות ספרייט עם אינדקס WebVTT כדי שצופים יראו פריים לדוגמה בזמן שהם גוללים בציר הזמן.',
   'Play anywhere': 'ניגון בכל מקום',
   'Hand the master manifest URL to hls.js, dash.js, Shaka Player, AVPlayer, or ExoPlayer. Or copy an embed snippet from the Console and drop it into any page.':
     'העבירו את כתובת המניפסט הראשי ל-hls.js, dash.js, Shaka Player, AVPlayer או ExoPlayer. או העתיקו קוד הטמעה מהקונסולה והוסיפו אותו לכל עמוד.',
@@ -1238,7 +1238,6 @@ export const heProductPagesDictionary: Record<string, string> = {
   '3 outputs': '3 פלטים',
   'HLS, DASH, and CMAF': 'HLS, DASH ו-CMAF',
   Adaptive: 'אדפטיבי',
-  'Default bitrate ladder': 'סולם קצבי סיביות ברירת מחדל',
   'Uploaded or extracted': 'מועלות או מחולצות',
   Timeline: 'ציר זמן',
   'Scrubbing thumbnails': 'תמונות תצוגה מקדימה בגלילה',

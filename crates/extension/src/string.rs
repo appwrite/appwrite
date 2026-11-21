@@ -68,3 +68,24 @@ impl StubLiteral for PhpString<'_> {
         String::from_utf8_lossy(&self.0).as_ref().stub_literal()
     }
 }
+
+/// A property value of any type, shared by refcount.
+pub struct Value(pub Zval);
+
+impl IntoZval for Value {
+    const TYPE: DataType = DataType::Mixed;
+    const NULLABLE: bool = true;
+
+    fn set_zval(self, zv: &mut Zval, _: bool) -> ext_php_rs::error::Result<()> {
+        *zv = self.0;
+        Ok(())
+    }
+}
+
+impl FromZval<'_> for Value {
+    const TYPE: DataType = DataType::Mixed;
+
+    fn from_zval(zval: &Zval) -> Option<Self> {
+        Some(Self(zval.shallow_clone()))
+    }
+}

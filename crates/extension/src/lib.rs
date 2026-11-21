@@ -42,17 +42,17 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .class::<canvas::Canvas>()
         .class::<canvas::Font>()
         .class::<dsn::Dsn>()
-        .class::<locale::Locale>()
-        .class::<user_agent::UserAgent>()
         .class::<domains::Domain>()
         .class::<emails::Email>();
     module.request_shutdown_function(request_shutdown)
 }
 
-/// Registers the classes built by hand rather than with `#[php_class]`: the validators, and
-/// those that are switched on. Runs in MINIT, before the `#[php_class]` classes are registered.
+/// Registers the classes built by hand rather than with `#[php_class]`: `Locale`, `UserAgent`, the
+/// validators, and those switched on. Runs in MINIT, before the `#[php_class]` classes are registered.
 fn startup(_kind: i32, _module: i32) -> i32 {
     ext_php_rs::internal::startup_guard(|| {
+        locale::register()?;
+        user_agent::register()?;
         // The leaves extend the base, so it is registered first.
         validators::register()?;
         validators::scalar::register()?;

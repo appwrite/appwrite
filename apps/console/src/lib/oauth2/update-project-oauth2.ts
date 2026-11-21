@@ -30,6 +30,7 @@ const OAUTH2_UPDATE_BY_PROVIDER: Partial<
   [ProjectOAuthProviderId.Auth0]: (p, b) => p.updateOAuth2Auth0(b),
   [ProjectOAuthProviderId.Authentik]: (p, b) => p.updateOAuth2Authentik(b),
   [ProjectOAuthProviderId.Autodesk]: (p, b) => p.updateOAuth2Autodesk(b),
+  [ProjectOAuthProviderId.Bird]: (p, b) => p.updateOAuth2Bird(b),
   [ProjectOAuthProviderId.Bitbucket]: (p, b) => p.updateOAuth2Bitbucket(b),
   [ProjectOAuthProviderId.Bitly]: (p, b) => p.updateOAuth2Bitly(b),
   [ProjectOAuthProviderId.Box]: (p, b) => p.updateOAuth2Box(b),

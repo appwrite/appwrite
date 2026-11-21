@@ -75,6 +75,7 @@ class OAuth2ProviderList extends Model
                     Response::MODEL_OAUTH2_ROBLOX,
                     Response::MODEL_OAUTH2_WORKOS,
                     Response::MODEL_OAUTH2_RESEND,
+                    Response::MODEL_OAUTH2_BIRD,
                     Response::MODEL_OAUTH2_CLOUDFLARE,
                     Response::MODEL_OAUTH2_TIKTOK,
                     Response::MODEL_OAUTH2_KAKAO,

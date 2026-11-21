@@ -249,6 +249,20 @@
             "secret"
         ],
         "avatars.deletePhoto": [],
+        "avatars.getTeamPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "avatars.updateTeamPhoto": [
+            "teamId",
+            "file"
+        ],
+        "avatars.deleteTeamPhoto": [
+            "teamId"
+        ],
         "avatars.getBrowser": [
             "code",
             "width",
@@ -805,20 +819,6 @@
             "teamId",
             "name"
         ],
-        "teams.getPhoto": [
-            "teamId",
-            "width",
-            "height",
-            "quality",
-            "output"
-        ],
-        "teams.updatePhoto": [
-            "teamId",
-            "file"
-        ],
-        "teams.deletePhoto": [
-            "teamId"
-        ],
         "teams.updatePrefs": [
             "teamId",
             "prefs"
@@ -1302,6 +1302,20 @@
             "acknowledged"
         ],
         "avatars.deletePhoto": [],
+        "avatars.getTeamPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "avatars.updateTeamPhoto": [
+            "teamId",
+            "file"
+        ],
+        "avatars.deleteTeamPhoto": [
+            "teamId"
+        ],
         "avatars.getBrowser": [
             "code",
             "width",
@@ -2410,6 +2424,23 @@
             "qos",
             "expiry"
         ],
+        "messaging.createBirdEmailProvider": [
+            "providerId",
+            "name",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail",
+            "enabled"
+        ],
+        "messaging.createBirdSMSProvider": [
+            "providerId",
+            "name",
+            "from",
+            "apiKey",
+            "enabled"
+        ],
         "messaging.createEmail": [
             "messageId",
             "subject",
@@ -2479,7 +2510,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.createResendProvider": [
             "providerId",
@@ -2687,6 +2719,23 @@
             "qos",
             "expiry"
         ],
+        "messaging.updateBirdEmailProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail"
+        ],
+        "messaging.updateBirdSMSProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "from"
+        ],
         "messaging.updateEmail": [
             "messageId",
             "topics",
@@ -2756,7 +2805,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.updateResendProvider": [
             "providerId",
@@ -3399,6 +3449,11 @@
             "enabled"
         ],
         "project.updateOAuth2Autodesk": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Bird": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -4836,20 +4891,6 @@
             "teamId",
             "name"
         ],
-        "teams.getPhoto": [
-            "teamId",
-            "width",
-            "height",
-            "quality",
-            "output"
-        ],
-        "teams.updatePhoto": [
-            "teamId",
-            "file"
-        ],
-        "teams.deletePhoto": [
-            "teamId"
-        ],
         "teams.updatePrefs": [
             "teamId",
             "prefs"
@@ -5833,6 +5874,20 @@
             "acknowledged"
         ],
         "avatars.deletePhoto": [],
+        "avatars.getTeamPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "avatars.updateTeamPhoto": [
+            "teamId",
+            "file"
+        ],
+        "avatars.deleteTeamPhoto": [
+            "teamId"
+        ],
         "avatars.getBrowser": [
             "code",
             "width",
@@ -6917,6 +6972,23 @@
             "qos",
             "expiry"
         ],
+        "messaging.createBirdEmailProvider": [
+            "providerId",
+            "name",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail",
+            "enabled"
+        ],
+        "messaging.createBirdSMSProvider": [
+            "providerId",
+            "name",
+            "from",
+            "apiKey",
+            "enabled"
+        ],
         "messaging.createEmail": [
             "messageId",
             "subject",
@@ -6986,7 +7058,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.createResendProvider": [
             "providerId",
@@ -7194,6 +7267,23 @@
             "qos",
             "expiry"
         ],
+        "messaging.updateBirdEmailProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail"
+        ],
+        "messaging.updateBirdSMSProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "from"
+        ],
         "messaging.updateEmail": [
             "messageId",
             "topics",
@@ -7263,7 +7353,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.updateResendProvider": [
             "providerId",
@@ -7864,6 +7955,11 @@
             "enabled"
         ],
         "project.updateOAuth2Autodesk": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Bird": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -9260,20 +9356,6 @@
         "teams.updateName": [
             "teamId",
             "name"
-        ],
-        "teams.getPhoto": [
-            "teamId",
-            "width",
-            "height",
-            "quality",
-            "output"
-        ],
-        "teams.updatePhoto": [
-            "teamId",
-            "file"
-        ],
-        "teams.deletePhoto": [
-            "teamId"
         ],
         "teams.updatePrefs": [
             "teamId",

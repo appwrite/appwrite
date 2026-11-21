@@ -1,9 +1,9 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Teams\Http\Teams\Photo;
+namespace Appwrite\Platform\Modules\Avatars\Http\Teams\Photo;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Action;
+use Appwrite\Platform\Modules\Avatars\Http\Action;
 use Psr\Http\Message\StreamInterface;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
