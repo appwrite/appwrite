@@ -446,6 +446,7 @@ class Certificates extends Action
                 : "\033[90m[{$date}] \033[31mSSL certificate issuance failed: \033[0m\n";
             // A CDN provider's own failure is about Appwrite's account, not the domain, so the owner
             // gets a generic line; the worker still reports the raw error
+            // TODO: ask the provider whether its errors are the owner's, instead of checking its class
             $logs .= $e instanceof CertificateException
                 || $e instanceof AppwriteException
                 || $certificates instanceof LetsEncrypt
