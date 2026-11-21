@@ -158,6 +158,10 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_REDIS_QUEUE_HOST
+      - _APP_REDIS_QUEUE_PORT
+      - _APP_REDIS_QUEUE_USER
+      - _APP_REDIS_QUEUE_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -371,6 +375,10 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_REDIS_QUEUE_HOST
+      - _APP_REDIS_QUEUE_PORT
+      - _APP_REDIS_QUEUE_USER
+      - _APP_REDIS_QUEUE_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -453,6 +461,10 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_REDIS_QUEUE_HOST
+      - _APP_REDIS_QUEUE_PORT
+      - _APP_REDIS_QUEUE_USER
+      - _APP_REDIS_QUEUE_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -553,6 +565,10 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_REDIS_QUEUE_HOST
+      - _APP_REDIS_QUEUE_PORT
+      - _APP_REDIS_QUEUE_USER
+      - _APP_REDIS_QUEUE_PASS
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_FORMAT
       - _APP_QUEUE_NAME
@@ -712,6 +728,10 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_REDIS_QUEUE_HOST
+      - _APP_REDIS_QUEUE_PORT
+      - _APP_REDIS_QUEUE_USER
+      - _APP_REDIS_QUEUE_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -868,6 +888,10 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_REDIS_QUEUE_HOST
+      - _APP_REDIS_QUEUE_PORT
+      - _APP_REDIS_QUEUE_USER
+      - _APP_REDIS_QUEUE_PASS
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_FORMAT
       - _APP_WEBHOOK_MAX_FAILED_ATTEMPTS
@@ -922,6 +946,10 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_REDIS_QUEUE_HOST
+      - _APP_REDIS_QUEUE_PORT
+      - _APP_REDIS_QUEUE_USER
+      - _APP_REDIS_QUEUE_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -1005,6 +1033,10 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_REDIS_QUEUE_HOST
+      - _APP_REDIS_QUEUE_PORT
+      - _APP_REDIS_QUEUE_USER
+      - _APP_REDIS_QUEUE_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -1069,6 +1101,10 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_REDIS_QUEUE_HOST
+      - _APP_REDIS_QUEUE_PORT
+      - _APP_REDIS_QUEUE_USER
+      - _APP_REDIS_QUEUE_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -1205,6 +1241,10 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_REDIS_QUEUE_HOST
+      - _APP_REDIS_QUEUE_PORT
+      - _APP_REDIS_QUEUE_USER
+      - _APP_REDIS_QUEUE_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -1260,6 +1300,10 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_REDIS_QUEUE_HOST
+      - _APP_REDIS_QUEUE_PORT
+      - _APP_REDIS_QUEUE_USER
+      - _APP_REDIS_QUEUE_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -1407,6 +1451,10 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_REDIS_QUEUE_HOST
+      - _APP_REDIS_QUEUE_PORT
+      - _APP_REDIS_QUEUE_USER
+      - _APP_REDIS_QUEUE_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -1452,6 +1500,10 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_REDIS_QUEUE_HOST
+      - _APP_REDIS_QUEUE_PORT
+      - _APP_REDIS_QUEUE_USER
+      - _APP_REDIS_QUEUE_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -1494,6 +1546,10 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_REDIS_QUEUE_HOST
+      - _APP_REDIS_QUEUE_PORT
+      - _APP_REDIS_QUEUE_USER
+      - _APP_REDIS_QUEUE_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -1548,6 +1604,10 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_REDIS_QUEUE_HOST
+      - _APP_REDIS_QUEUE_PORT
+      - _APP_REDIS_QUEUE_USER
+      - _APP_REDIS_QUEUE_PASS
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -1604,6 +1664,10 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_REDIS_QUEUE_HOST
+      - _APP_REDIS_QUEUE_PORT
+      - _APP_REDIS_QUEUE_USER
+      - _APP_REDIS_QUEUE_PASS
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -1655,6 +1719,10 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_REDIS_QUEUE_HOST
+      - _APP_REDIS_QUEUE_PORT
+      - _APP_REDIS_QUEUE_USER
+      - _APP_REDIS_QUEUE_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -1732,6 +1800,10 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_REDIS_QUEUE_HOST
+      - _APP_REDIS_QUEUE_PORT
+      - _APP_REDIS_QUEUE_USER
+      - _APP_REDIS_QUEUE_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -1796,6 +1868,10 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_REDIS_QUEUE_HOST
+      - _APP_REDIS_QUEUE_PORT
+      - _APP_REDIS_QUEUE_USER
+      - _APP_REDIS_QUEUE_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -1849,6 +1925,10 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_REDIS_QUEUE_HOST
+      - _APP_REDIS_QUEUE_PORT
+      - _APP_REDIS_QUEUE_USER
+      - _APP_REDIS_QUEUE_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -1896,6 +1976,10 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_REDIS_QUEUE_HOST
+      - _APP_REDIS_QUEUE_PORT
+      - _APP_REDIS_QUEUE_USER
+      - _APP_REDIS_QUEUE_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -1941,6 +2025,10 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_REDIS_QUEUE_HOST
+      - _APP_REDIS_QUEUE_PORT
+      - _APP_REDIS_QUEUE_USER
+      - _APP_REDIS_QUEUE_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -1978,6 +2066,10 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_REDIS_QUEUE_HOST
+      - _APP_REDIS_QUEUE_PORT
+      - _APP_REDIS_QUEUE_USER
+      - _APP_REDIS_QUEUE_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
