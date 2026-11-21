@@ -282,6 +282,7 @@ class StatsUsage extends Action
             'databases', 'collections', 'documents', 'documentsdb', 'vectorsdb' => 'databases',
             'functions', 'deployments', 'builds', 'executions' => 'functions',
             'sites' => 'sites',
+            'renditions' => 'videos',
             'users', 'sessions', 'auth', 'mau', 'dau', 'wau', 'teams' => 'users',
             'messages', 'targets', 'topics', 'providers' => 'messaging',
             'webhooks' => 'webhooks',

@@ -658,6 +658,7 @@ services:
       - _APP_MAINTENANCE_RETENTION_RENDITION
       - _APP_VIDEOS_ENCODE_TIMEOUT
       - _APP_VIDEOS_THREADS
+      - _APP_VIDEOS_SPECIFICATION
       - _APP_LIMIT_DATABASE_BATCH
       - _APP_DOCUMENTSDB
       - _APP_VECTORSDB
@@ -1364,6 +1365,7 @@ services:
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_VIDEOS_ENCODE_TIMEOUT
       - _APP_VIDEOS_THREADS
+      - _APP_VIDEOS_SPECIFICATION
   appwrite-worker-certificates:
     profiles:
       - separate
