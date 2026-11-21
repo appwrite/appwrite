@@ -3,6 +3,21 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "appwrite-is-moving-to-rust",
+    "href": "/blog/post/appwrite-is-moving-to-rust",
+    "title": "Appwrite is moving to Rust, starting with image processing",
+    "description": "Appwrite is moving its engine from PHP to Rust. On Appwrite Cloud, Rust image processing halved slow preview times and cut preview errors to zero.",
+    "date": "2026-11-20",
+    "lastUpdated": "2026-11-20",
+    "timeToRead": 6,
+    "author": "eldad-fux",
+    "category": "announcements, performance",
+    "featured": false,
+    "unlisted": true,
+    "cover": "/images/blog/appwrite-is-moving-to-rust/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-ldap-login",
     "href": "/blog/post/announcing-ldap-login",
     "title": "Announcing LDAP login: Sign in with your directory",
