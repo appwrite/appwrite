@@ -344,7 +344,7 @@ return function (Container $context): void {
     /**
      * Cookie domain for the current request.
      */
-    $context->set('cookieDomain', function (Request $request, Document $project) {
+    $context->set('cookieDomain', function (Request $request, Document $project, array $platform, Database $dbForPlatform, Authorization $authorization) {
         $localHosts = ['localhost', 'localhost:' . $request->getPort()];
 
         $migrationHost = System::getEnv('_APP_MIGRATION_HOST');
@@ -355,25 +355,47 @@ return function (Container $context): void {
             $localHosts[] = $migrationHost . ':' . $request->getPort();
         }
 
+        $platformHostnames = \array_values(\array_unique(\array_filter([
+            ...($platform['hostnames'] ?? []),
+            $platform['apiHostname'] ?? null,
+            $platform['consoleHostname'] ?? null,
+            \parse_url((string) ($platform['consoleUrl'] ?? ''), PHP_URL_HOST) ?: null,
+        ])));
+
         $hostname = $request->getHostname();
-        $isLocalHost = \in_array($hostname, $localHosts, true);
-        $isIpAddress = \filter_var($hostname, FILTER_VALIDATE_IP) !== false;
+        $consoleRootSession = System::getEnv('_APP_CONSOLE_ROOT_SESSION', 'disabled') === 'enabled';
 
-        if ($isLocalHost || $isIpAddress) {
-            return;
+        $parentDomain = Platform::findParentWebDomain(
+            hostname: $hostname,
+            project: $project,
+            localHosts: $localHosts,
+            platformHostnames: $platformHostnames,
+        );
+
+        $hostRule = null;
+        if ($parentDomain !== null) {
+            $normalizedHost = \strtolower(\trim($hostname));
+            $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+            $hostRule = $authorization->skip(function () use ($dbForPlatform, $normalizedHost, $isMd5) {
+                if ($isMd5) {
+                    return $dbForPlatform->getDocument('rules', md5($normalizedHost));
+                }
+
+                return $dbForPlatform->findOne('rules', [
+                    Query::equal('domain', [$normalizedHost]),
+                ]);
+            });
         }
 
-        $isConsoleProject = $project->getAttribute('$id', '') === 'console';
-        $isConsoleRootSession = System::getEnv('_APP_CONSOLE_ROOT_SESSION', 'disabled') === 'enabled';
-
-        if ($isConsoleProject && $isConsoleRootSession) {
-            $domain = new Domain($hostname);
-
-            return '.' . $domain->getRegisterable();
-        }
-
-        return '.' . $hostname;
-    }, ['request', 'project']);
+        return Platform::getCookieDomain(
+            hostname: $hostname,
+            project: $project,
+            localHosts: $localHosts,
+            platformHostnames: $platformHostnames,
+            consoleRootSession: $consoleRootSession,
+            hostRule: $hostRule,
+        );
+    }, ['request', 'project', 'platform', 'dbForPlatform', 'authorization']);
 
     /**
      * Rule associated with a request origin.
