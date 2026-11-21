@@ -1,0 +1,37 @@
+name: Console / Prune images
+
+# Every Console build pushes an image to ghcr.io/appwrite/new (about 45 a day), and nothing removed old ones, so
+# the package reached thousands of versions and filled the organization's shared storage, which private repos'
+# Actions artifacts draw on too. This keeps the newest 50 tagged images and everything from the last 30 days,
+# and deletes the rest. Deleting a multi-arch image deletes its untagged platform manifests with it; a kept
+# image keeps its own. Docker Hub's copies are untouched.
+
+on:
+    schedule:
+        - cron: '0 3 * * 1' # Mondays, 03:00 UTC
+    workflow_dispatch:
+        inputs:
+            dry-run:
+                description: List what would be deleted without deleting it
+                type: boolean
+                default: true
+
+concurrency:
+    group: ${{ github.workflow }}
+    cancel-in-progress: false
+
+permissions:
+    packages: write
+
+jobs:
+    prune:
+        runs-on: ubuntu-24.04
+        steps:
+            - uses: dataaxiom/ghcr-cleanup-action@d52806a0dc70b430571a37da1fde39733ffd640f # v1.2.2
+              with:
+                  package: new
+                  keep-n-tagged: 50
+                  older-than: 30 days
+                  delete-untagged: true
+                  delete-orphaned-images: true
+                  dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run }}
