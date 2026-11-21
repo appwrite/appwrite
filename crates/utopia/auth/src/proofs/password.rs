@@ -244,7 +244,7 @@ pub fn set_options(hash: &mut dyn Hash, options: &Array) -> Result<(), Error> {
             KeyRef::Str(k) => hash.options_mut().set(&String::from_utf8_lossy(k), value.clone()),
             KeyRef::Int(_) => {
                 return Err(Error::Type(
-                    "Utopia\\Auth\\Hash::setOption(): Argument #1 ($key) must be of type string, int given, called in /usr/src/code/packages/auth/src/Hash.php on line 35".into(),
+                    "Utopia\\Auth\\Hash::setOption(): Argument #1 ($key) must be of type string, int given".into(),
                 ));
             }
         }

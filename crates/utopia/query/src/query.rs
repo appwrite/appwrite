@@ -10,7 +10,7 @@ use php_std::json::{self, Flags};
 use crate::enums::{CursorDirection, NullsPosition};
 use crate::error::{Error, Result};
 use crate::method::Method;
-use crate::value::{self, Array, IntoValue, IntoValues, Object, Param, Value};
+use crate::value::{self, Array, IntoValue, IntoValues, Object, Value};
 
 /// One query: a [`Method`], the attribute it applies to, its values, and the
 /// alias a join or an aggregate is exposed under.
@@ -448,9 +448,20 @@ impl Query {
         if method.is_nested() {
             let mut parsed = Array::with_capacity(values.len());
             for (key, value) in values.iter() {
-                let child =
-                    Param::method("Utopia\\Query\\Query::parseQuery", 1, "query", "Query.php", 285).array(value)?;
-                parsed.set(key.to_owned(), Value::from(Query::parse_query(child, allow_raw)?));
+                // A hand-built client may send a child as a query string instead of an
+                // object; utopia-php/database's Query already accepts that, so parse it
+                // the same way. Anything else is a client error, not a TypeError.
+                let child = match value {
+                    Value::Str(text) => Query::parse(&lossy(text.as_bytes()), allow_raw)?,
+                    Value::Array(child) => Query::parse_query(child, allow_raw)?,
+                    other => {
+                        return Err(Error::query(format!(
+                            "Invalid nested query. Must be an array or string, got {}",
+                            gettype(other)
+                        )));
+                    }
+                };
+                parsed.set(key.to_owned(), Value::from(child));
             }
             values = parsed;
         }

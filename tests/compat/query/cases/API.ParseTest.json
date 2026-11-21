@@ -6947,6 +6947,173 @@
         },
         "{\"method\":\"raw\",\"attribute\":\"x > ? AND y < ?\",\"values\":[1,2]}"
       ]
+    },
+    {
+      "name": "testParseNestedLogicalQueryWithStringChildren",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"and\",\"values\":[\"{\\\"method\\\":\\\"equal\\\",\\\"attribute\\\":\\\"name\\\",\\\"values\\\":[\\\"John\\\"]}\",{\"method\":\"greaterThan\",\"attribute\":\"age\",\"values\":[18]},\"{\\\"method\\\":\\\"or\\\",\\\"values\\\":[\\\"{\\\\\\\"method\\\\\\\":\\\\\\\"equal\\\\\\\",\\\\\\\"attribute\\\\\\\":\\\\\\\"city\\\\\\\",\\\\\\\"values\\\\\\\":[\\\\\\\"Paris\\\\\\\"]}\\\"]}\"]}"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::And"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 2,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "name",
+                  "values": [
+                    "John"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              },
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::GreaterThan"
+                  },
+                  "attribute": "age",
+                  "values": [
+                    18
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              },
+              {
+                "$value": "Query",
+                "id": 4,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Or"
+                  },
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$value": "Query",
+                      "id": 5,
+                      "props": {
+                        "method": {
+                          "$enum": "Method::Equal"
+                        },
+                        "attribute": "city",
+                        "values": [
+                          "Paris"
+                        ],
+                        "alias": "",
+                        "onArray": false,
+                        "attributeType": ""
+                      }
+                    }
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "testParseNestedStringChildThatIsNotJson",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"or\",\"values\":[\"not json\"]}"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception",
+            "message": "Invalid query: Syntax error"
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testParseNestedChildOfWrongType",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"or\",\"values\":[42]}"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception",
+            "message": "Invalid nested query. Must be an array or string, got integer"
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testParseNestedStringChildStillRefusesRaw",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"or\",\"values\":[\"{\\\"method\\\":\\\"raw\\\",\\\"attribute\\\":\\\"1 = 1\\\",\\\"values\\\":[]}\"]}"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Raw queries cannot be parsed from untrusted input; construct via Query::raw() in code"
+          },
+          "id": 1
+        }
+      ]
     }
   ]
 }
