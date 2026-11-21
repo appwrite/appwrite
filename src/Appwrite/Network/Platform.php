@@ -208,4 +208,61 @@ class Platform
         }
         return array_unique($schemes);
     }
+
+    /**
+     * Resolves the list of local and internal hosts allowed over plain HTTP when force-HTTPS is enabled.
+     *
+     * @param string $port
+     * @param string $jobsEndpoint
+     * @param string $migrationHost
+     * @return array<string>
+     */
+    public static function getLocalHosts(string $port, string $jobsEndpoint = '', string $migrationHost = ''): array
+    {
+        $localHosts = ['localhost', 'localhost:' . $port];
+
+        $endpoint = $jobsEndpoint !== '' ? $jobsEndpoint : 'http://appwrite';
+        $jobsHost = \parse_url($endpoint, PHP_URL_HOST);
+        $jobsPort = \parse_url($endpoint, PHP_URL_PORT);
+        if (!empty($jobsHost)) {
+            $localHosts[] = $jobsHost;
+            $localHosts[] = $jobsHost . ':' . $port;
+            if (!empty($jobsPort)) {
+                $localHosts[] = $jobsHost . ':' . $jobsPort;
+            }
+        }
+
+        if (!empty($migrationHost)) {
+            $localHosts[] = $migrationHost;
+            $localHosts[] = $migrationHost . ':' . $port;
+        }
+
+        return $localHosts;
+    }
+
+    /**
+     * Checks if an incoming request is exempt from the force-HTTPS requirement.
+     *
+     * @param string $protocol
+     * @param string $host
+     * @param string $uri
+     * @param array<string> $localHosts
+     * @return bool
+     */
+    public static function isForceHttpsExempt(string $protocol, string $host, string $uri, array $localHosts): bool
+    {
+        if ($protocol === 'https') {
+            return true;
+        }
+
+        if (\in_array($host, $localHosts, true)) {
+            return true;
+        }
+
+        if (\str_starts_with($uri, '/v1/jobs/event')) {
+            return true;
+        }
+
+        return false;
+    }
 }
