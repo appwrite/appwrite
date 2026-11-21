@@ -92,6 +92,19 @@ final class CertificatesDomainValidationTest extends TestCase
         $this->assertNull($this->thrown, 'A DNS failure must end the job, not hand it back to the queue');
     }
 
+    public function testAProviderFailureShowsAGenericLineInTheDomainLogs(): void
+    {
+        $certificates = $this->createMock(Provider::class);
+        $certificates->method('isRenewRequired')->willReturn(true);
+        $certificates->method('issueCertificate')->willThrowException(new \RuntimeException('You have reached the max number of certificates'));
+
+        $writes = $this->generate($certificates, skipDomainValidation: true);
+
+        $this->assertStringContainsString("We couldn't issue the certificate due to an issue on our side.", $writes['certificates']['logs']);
+        $this->assertStringNotContainsString('max number of certificates', $writes['certificates']['logs']);
+        $this->assertSame('You have reached the max number of certificates', $this->thrown?->getMessage());
+    }
+
     /**
      * Runs one generation job for a rule in `verifying`.
      *
