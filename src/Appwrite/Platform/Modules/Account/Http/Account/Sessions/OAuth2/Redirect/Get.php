@@ -310,6 +310,11 @@ class Get extends Base
             $failureRedirect(Exception::USER_MISSING_ID);
         }
 
+        // The identity names something people share, so it can attach to the signed-in caller but never sign anyone in
+        if ($user->isEmpty() && $oauth2->isLinkOnly()) {
+            $failureRedirect(Exception::USER_UNAUTHORIZED);
+        }
+
         $name = '';
         $nameOAuth = $oauth2->getUserName($accessToken);
         $userParam = $request->getParam('user');

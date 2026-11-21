@@ -98,6 +98,12 @@ final class BirdTest extends TestCase
         $this->assertSame(['Authorization: Bearer bt_eu1_access-token'], $bird->headers[self::WORKSPACE_URL]);
     }
 
+    public function testWorkspaceIdentityIsLinkOnly(): void
+    {
+        // Every member of the workspace gets the same ID, so it must never sign anyone in
+        $this->assertTrue((new FakeBird([]))->isLinkOnly());
+    }
+
     public function testIdentityFallsBackToTheWorkspaceEndpoint(): void
     {
         $bird = new FakeBird([self::WORKSPACE_URL => ['id' => 'ws_01m782jkzsegy9m4bsh89p4y6w', 'name' => 'Production']]);

@@ -5884,6 +5884,88 @@ final class AccountCustomClientTest extends Scope
         }
     }
 
+    /**
+     * A link-only provider names something people share (Bird names a workspace), so its identity must never sign
+     * anyone in: a signed-out caller is refused even once a signed-in user has linked the same identity.
+     */
+    public function testCreateOAuth2SessionLinkOnlyProviderNeverSignsIn(): void
+    {
+        $provider = 'mock-link-only';
+        $projectId = $this->getProject()['$id'];
+        $sessionCookieKey = 'a_session_' . $projectId;
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+        $urls = [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => $provider,
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Signed out, neither the session nor the token flow creates an account
+        foreach (['/account/sessions/oauth2/', '/account/tokens/oauth2/'] as $route) {
+            $response = $this->client->call(Client::METHOD_GET, $route . $provider, $headers, $urls);
+            $this->assertEquals(400, $response['headers']['status-code'], $route);
+            $this->assertEquals('failure', $response['body']['result'], $route);
+            $this->assertArrayNotHasKey($sessionCookieKey, $response['cookies'], $route);
+        }
+
+        // Signed in, the identity links to the caller's account
+        $email = uniqid() . 'oauthlinkonly@localhost.test';
+        $password = 'password';
+        $response = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $userId = $response['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $session = $response['cookies'][$sessionCookieKey];
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, array_merge($headers, [
+            'cookie' => $sessionCookieKey . '=' . $session,
+        ]), $urls);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('success', $response['body']['result']);
+        $session = $response['cookies'][$sessionCookieKey];
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/identities', array_merge($headers, [
+            'cookie' => $sessionCookieKey . '=' . $session,
+        ]));
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $linked = \array_values(\array_filter($response['body']['identities'], fn (array $identity) => $identity['provider'] === $provider));
+        $this->assertCount(1, $linked);
+        $this->assertEquals($userId, $linked[0]['userId']);
+
+        // Signed out again, the linked identity still does not sign anyone in as that user
+        foreach (['/account/sessions/oauth2/', '/account/tokens/oauth2/'] as $route) {
+            $response = $this->client->call(Client::METHOD_GET, $route . $provider, $headers, $urls);
+            $this->assertEquals(400, $response['headers']['status-code'], $route);
+            $this->assertEquals('failure', $response['body']['result'], $route);
+            $this->assertArrayNotHasKey($sessionCookieKey, $response['cookies'], $route);
+        }
+    }
+
     public function testGetSessionByID(): void
     {
         $session = $this->createAnonymousSession();
