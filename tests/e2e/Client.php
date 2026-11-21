@@ -121,10 +121,11 @@ class Client
      * Send several requests at the same time and return each response in request order.
      *
      * @param array<int, array{0: string, 1: string, 2: array<string, string>, 3: mixed}> $requests `[method, path, headers, params]` per request
+     * @param bool $followRedirects
      * @return array<int, array{headers: array, cookies: array, body: mixed}>
      * @throws Exception
      */
-    public function callConcurrently(array $requests, bool $decode = true): array
+    public function callConcurrently(array $requests, bool $decode = true, bool $followRedirects = true): array
     {
         $multi = curl_multi_init();
         $handles = [];
@@ -132,7 +133,7 @@ class Client
 
         foreach ($requests as $index => [$method, $path, $headers, $params]) {
             $responseHeaders[$index] = [];
-            $handles[$index] = $this->handle($method, $path, $headers, $params, true, 120, $responseHeaders[$index]);
+            $handles[$index] = $this->handle($method, $path, $headers, $params, $followRedirects, 120, $responseHeaders[$index]);
             curl_multi_add_handle($multi, $handles[$index]);
         }
 
