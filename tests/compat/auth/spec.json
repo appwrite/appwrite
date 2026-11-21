@@ -18,86 +18,35 @@
   "ops": {
     "hash.new": {
       "doc": "new <Hash>() for algo argon2|bcrypt|md5|phpass|plaintext|scrypt|scryptMod|sha",
-      "covers": [
-        "Utopia\\Auth\\Hashes\\Argon2::__construct",
-        "Utopia\\Auth\\Hashes\\Bcrypt::__construct",
-        "Utopia\\Auth\\Hashes\\MD5::__construct",
-        "Utopia\\Auth\\Hashes\\PHPass::__construct",
-        "Utopia\\Auth\\Hashes\\Plaintext::__construct",
-        "Utopia\\Auth\\Hashes\\Scrypt::__construct",
-        "Utopia\\Auth\\Hashes\\ScryptModified::__construct",
-        "Utopia\\Auth\\Hashes\\Sha::__construct"
-      ]
+      "covers": []
     },
     "hash.name": {
       "doc": "$hash->getName()",
-      "covers": [
-        "Utopia\\Auth\\Hashes\\Argon2::getName",
-        "Utopia\\Auth\\Hashes\\Bcrypt::getName",
-        "Utopia\\Auth\\Hashes\\MD5::getName",
-        "Utopia\\Auth\\Hashes\\PHPass::getName",
-        "Utopia\\Auth\\Hashes\\Plaintext::getName",
-        "Utopia\\Auth\\Hashes\\Scrypt::getName",
-        "Utopia\\Auth\\Hashes\\ScryptModified::getName",
-        "Utopia\\Auth\\Hashes\\Sha::getName"
-      ]
+      "covers": []
     },
     "hash.options": {
       "doc": "$hash->getOptions()",
-      "covers": [
-        "Utopia\\Auth\\Hash::getOptions"
-      ]
+      "covers": []
     },
     "hash.get_option": {
       "doc": "$hash->getOption(key, default?)",
-      "covers": [
-        "Utopia\\Auth\\Hash::getOption"
-      ]
+      "covers": []
     },
     "hash.set_option": {
       "doc": "$hash->setOption(key, value)",
-      "covers": [
-        "Utopia\\Auth\\Hash::setOption"
-      ]
+      "covers": []
     },
     "hash.set_options": {
       "doc": "$hash->setOptions(options)",
-      "covers": [
-        "Utopia\\Auth\\Hash::setOptions"
-      ]
+      "covers": []
     },
     "hash.setter": {
       "doc": "$hash->{method}(value) for the algorithm setters",
-      "covers": [
-        "Utopia\\Auth\\Hashes\\Argon2::setMemoryCost",
-        "Utopia\\Auth\\Hashes\\Argon2::setTimeCost",
-        "Utopia\\Auth\\Hashes\\Argon2::setThreads",
-        "Utopia\\Auth\\Hashes\\Bcrypt::setCost",
-        "Utopia\\Auth\\Hashes\\PHPass::setIterationCount",
-        "Utopia\\Auth\\Hashes\\PHPass::setPortableHashes",
-        "Utopia\\Auth\\Hashes\\Scrypt::setCpuCost",
-        "Utopia\\Auth\\Hashes\\Scrypt::setMemoryCost",
-        "Utopia\\Auth\\Hashes\\Scrypt::setParallelCost",
-        "Utopia\\Auth\\Hashes\\Scrypt::setLength",
-        "Utopia\\Auth\\Hashes\\Scrypt::setSalt",
-        "Utopia\\Auth\\Hashes\\ScryptModified::setSalt",
-        "Utopia\\Auth\\Hashes\\ScryptModified::setSaltSeparator",
-        "Utopia\\Auth\\Hashes\\ScryptModified::setSignerKey",
-        "Utopia\\Auth\\Hashes\\Sha::setVersion"
-      ]
+      "covers": []
     },
     "hash.hash": {
       "doc": "$hash->hash(value); salted algorithms are masked per step and cross-verified",
-      "covers": [
-        "Utopia\\Auth\\Hashes\\Argon2::hash",
-        "Utopia\\Auth\\Hashes\\Bcrypt::hash",
-        "Utopia\\Auth\\Hashes\\MD5::hash",
-        "Utopia\\Auth\\Hashes\\PHPass::hash",
-        "Utopia\\Auth\\Hashes\\Plaintext::hash",
-        "Utopia\\Auth\\Hashes\\Scrypt::hash",
-        "Utopia\\Auth\\Hashes\\ScryptModified::hash",
-        "Utopia\\Auth\\Hashes\\Sha::hash"
-      ]
+      "covers": []
     },
     "hash.once": {
       "doc": "new <Hash>(), setOptions(options), then verify(value, hash_value) or hash(value): one call, for fuzzing",
@@ -720,16 +669,7 @@
     },
     "hash.verify": {
       "doc": "$hash->verify(value, hash_value)",
-      "covers": [
-        "Utopia\\Auth\\Hashes\\Argon2::verify",
-        "Utopia\\Auth\\Hashes\\Bcrypt::verify",
-        "Utopia\\Auth\\Hashes\\MD5::verify",
-        "Utopia\\Auth\\Hashes\\PHPass::verify",
-        "Utopia\\Auth\\Hashes\\Plaintext::verify",
-        "Utopia\\Auth\\Hashes\\Scrypt::verify",
-        "Utopia\\Auth\\Hashes\\ScryptModified::verify",
-        "Utopia\\Auth\\Hashes\\Sha::verify"
-      ]
+      "covers": []
     },
     "proof.new": {
       "doc": "new Code(length?) | Token(length?) | Phrase() | Password(hashes: {name: hash handle})",

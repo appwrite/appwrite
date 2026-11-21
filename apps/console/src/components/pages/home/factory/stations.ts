@@ -338,7 +338,7 @@ const databases: Builder = (shop) => {
 const storage: Builder = (shop) => {
   const { kit, track } = shop
   const axis = createAxis(shop)
-  const feedZ = -0.36
+  const feedZ = -0.44
   const tile = { width: 0.2, depth: 0.16, height: 0.012 }
   const stackBase = BED_TOP + 0.05
   const stackTop = stackBase + 4 * 0.0135
@@ -385,8 +385,8 @@ const storage: Builder = (shop) => {
 
   const hit = STATION_HIT.storage
   const feed = feedZ - TRACK_Z
-  // High enough to carry the tile over an open laptop's lid.
-  const cruise = REST - 0.01
+  // As high as it goes, to carry the tile over an open laptop's lid.
+  const cruise = REST
 
   return {
     group: axis.group,

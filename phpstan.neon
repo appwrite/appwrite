@@ -20,6 +20,7 @@ parameters:
     - packages/domains/stubs/Domain.php
     - packages/emails/stubs/Email.php
     - packages/validators/stubs/Validators.php
+    - packages/auth/stubs/Hash.php
     # Classes the compat database recorder generates with eval()
     - tests/compat/database/recorder/Classes.stub
     # The migration suite's test doubles, which the compat migration adapter extends

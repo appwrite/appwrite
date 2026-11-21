@@ -154,8 +154,12 @@ const WALL_CENTER = WALL.y + WALL.height / 2
 const COUNTER_CENTER = COUNTER.y + COUNTER.height / 2
 const BLADE = { pitch: 0.09, height: 0.072, leds: 4 }
 
-/** The gate's tunnel: what the carriers ride into. */
-const TUNNEL = { back: TRACK_Z - 0.46, front: TRACK_Z + 0.46, top: 0.27 }
+/**
+ * The gate's tunnel: what the carriers ride into. Tall and deep enough for
+ * the tallest product, a laptop's open lid, which leans back past the carrier.
+ */
+const TUNNEL = { back: TRACK_Z - 0.58, front: TRACK_Z + 0.48, top: 0.36 }
+const TUNNEL_Z = (TUNNEL.front + TUNNEL.back) / 2
 const GATE_BACK = TUNNEL.back - 0.16
 const GATE_FRONT = BED_FRONT - 0.02
 const GATE_CENTER = GATE.start + GATE.length / 2
@@ -1048,7 +1052,7 @@ export class FactoryWorld {
       ),
       GATE_CENTER,
       (gateTop + tunnelTop) / 2,
-      TRACK_Z,
+      TUNNEL_Z,
     )
     // Dark tunnel lining and a trim frame around its mouth.
     add(
@@ -1056,21 +1060,21 @@ export class FactoryWorld {
       plain(GATE.length - 0.08, 0.01, TUNNEL.front - TUNNEL.back),
       GATE_CENTER + 0.03,
       tunnelTop - 0.006,
-      TRACK_Z,
+      TUNNEL_Z,
     )
     add(
       'matte',
       plain(0.02, TUNNEL.top, TUNNEL.front - TUNNEL.back),
       GATE_END - 0.06,
       BED_TOP + TUNNEL.top / 2,
-      TRACK_Z,
+      TUNNEL_Z,
     )
     add(
       'aluminum',
       box(0.03, 0.03, TUNNEL.front - TUNNEL.back + 0.06, 0.008, 1),
       GATE.start - 0.005,
       tunnelTop,
-      TRACK_Z,
+      TUNNEL_Z,
     )
     for (const z of [TUNNEL.back - 0.015, TUNNEL.front + 0.015]) {
       add(
@@ -1126,7 +1130,7 @@ export class FactoryWorld {
     this.curtainSheet.position.set(
       GATE.start + 0.03,
       BED_TOP + TUNNEL.top / 2,
-      TRACK_Z,
+      TUNNEL_Z,
     )
     this.curtainSheet.renderOrder = 8
     this.group.add(this.curtainSheet)
@@ -1253,7 +1257,7 @@ export class FactoryWorld {
     this.counterScreen.position.copy(spot)
     at(GATE_CENTER, CHEVRON_Y, GATE_FRONT + 0.0075, ARRIVALS.gate)
     this.chevronStrip.position.copy(spot)
-    at(GATE.start + 0.03, BED_TOP + TUNNEL.top / 2, TRACK_Z, ARRIVALS.gate)
+    at(GATE.start + 0.03, BED_TOP + TUNNEL.top / 2, TUNNEL_Z, ARRIVALS.gate)
     this.curtainSheet.position.copy(spot)
 
     for (let index = 0; index < STATION_COUNT; index++) {

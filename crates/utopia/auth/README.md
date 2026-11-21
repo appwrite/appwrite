@@ -149,7 +149,7 @@ cargo fmt --all --check
 
 ### Compare with PHP
 
-The utopia PHP extension serves the password hashes as `Utopia\Auth\Hash` and `Utopia\Auth\Hashes\*` behind `_APP_EXTENSION_LIBRARIES=auth`, over `php-std` and this crate's `scrypt` (PECL scrypt 2.0.1), `firebase` (Firebase's modified scrypt) and `phpass` modules, which return what PHP returns, byte for byte, including where PHP fails. `crates/extension/tests/auth.php` prints a corpus that must be identical on both implementations; `crates/extension/tests/run.sh` diffs it and runs `packages/auth/tests` on the extension in the development image. The modules' tests hold RFC 7914's scrypt vectors, outputs of PECL scrypt 2.0.1 and Firebase's published vector.
+The utopia PHP extension serves the password hashes as `Utopia\Auth\Hash` and `Utopia\Auth\Hashes\*`, which no longer have a PHP implementation, over `php-std` and this crate's `scrypt` (PECL scrypt 2.0.1), `firebase` (Firebase's modified scrypt) and `phpass` modules, which return what PHP returns, byte for byte, including where PHP fails. `crates/extension/tests/auth.php` prints a corpus that must be identical on both implementations; `crates/extension/tests/run.sh` diffs it and runs `packages/auth/tests` on the extension in the development image. The modules' tests hold RFC 7914's scrypt vectors, outputs of PECL scrypt 2.0.1 and Firebase's published vector.
 
 The rest of the library keeps its PHP classes. Replay the results PHP recorded for every case against Rust, without PHP:
 

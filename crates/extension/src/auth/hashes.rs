@@ -1,4 +1,4 @@
-//! The hashes of `packages/auth/src/Hashes`: `Argon2`, `Bcrypt`, `MD5`, `PHPass`,
+//! The hashes of `utopia-php/auth` (`Utopia\Auth\Hashes`): `Argon2`, `Bcrypt`, `MD5`, `PHPass`,
 //! `Plaintext`, `Scrypt`, `ScryptModified` and `Sha`, each a native subclass of the native
 //! `Utopia\Auth\Hash`.
 //!

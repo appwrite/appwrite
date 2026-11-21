@@ -283,7 +283,7 @@ class Create extends Action
             $port = $request->getPort();
             $callbackBase = $platform['consoleUrl'] ?? '';
             // Only the derived console URL follows the request port; an explicit one carries its own
-            if (empty(System::getEnv('_APP_CONSOLE_URL')) && $port !== ($protocol === 'https' ? '443' : '80')) {
+            if (empty(System::getEnv('_APP_CONSOLE_URL')) && $port !== '' && $port !== ($protocol === 'https' ? '443' : '80')) {
                 $callbackBase .= ':' . $port;
             }
             $url = "{$callbackBase}/auth/magic-url";
