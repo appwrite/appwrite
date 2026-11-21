@@ -18,6 +18,7 @@ use Appwrite\Platform\Modules\VCS\Http\GitHub\Events\Create as CreateGitHubEvent
 use Appwrite\Platform\Modules\VCS\Http\Gitlab\Authorize\Get as GetGitlabAuthorize;
 use Appwrite\Platform\Modules\VCS\Http\Gitlab\Callback\Get as GetGitlabCallback;
 use Appwrite\Platform\Modules\VCS\Http\Gitlab\Events\Create as CreateGitlabEvent;
+use Appwrite\Platform\Modules\VCS\Http\Installations\Create as CreateInstallation;
 use Appwrite\Platform\Modules\VCS\Http\Installations\Delete as DeleteInstallation;
 use Appwrite\Platform\Modules\VCS\Http\Installations\Get as GetInstallation;
 use Appwrite\Platform\Modules\VCS\Http\Installations\Namespaces\XList as ListNamespaces;
@@ -65,6 +66,7 @@ class Http extends Service
         $this->addAction('getVCSEntireCallback', GetEntireCallback::class);
 
         // Installations
+        $this->addAction('createInstallation', CreateInstallation::class);
         $this->addAction('getInstallation', GetInstallation::class);
         $this->addAction('listInstallations', ListInstallations::class);
         $this->addAction('deleteInstallation', DeleteInstallation::class);
