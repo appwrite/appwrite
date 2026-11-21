@@ -577,6 +577,385 @@ class CSVTest extends TestCase
         }
     }
 
+    public function testCSVSupportsDocumentResources(): void
+    {
+        $supported = DestinationCSV::getSupportedResources();
+
+        $this->assertContains(UtopiaResource::TYPE_ROW, $supported);
+        $this->assertContains(UtopiaResource::TYPE_DOCUMENT, $supported);
+    }
+
+    public function testCSVExportDocumentSchemalessAlignment(): void
+    {
+        $tempDir = sys_get_temp_dir() . '/csv_test_docs_' . uniqid();
+        mkdir($tempDir, 0755, true);
+        $exportDevice = new Local($tempDir);
+
+        $csvDestination = new TestCSV($exportDevice, 'docs_db:docs_col', '', 'docs_export');
+
+        $database = new \Utopia\Migration\Resources\Database\DocumentsDB('docs_db');
+        $collection = new \Utopia\Migration\Resources\Database\Collection($database, 'docs_collection', 'docs_col');
+
+        $doc1 = new \Utopia\Migration\Resources\Database\Document('doc1', $collection, [
+            'name' => 'Alice',
+            'age' => 30,
+        ]);
+        $doc2 = new \Utopia\Migration\Resources\Database\Document('doc2', $collection, [
+            'age' => 25,
+            'email' => 'bob@example.com',
+            'name' => 'Bob',
+        ]);
+        $doc3 = new \Utopia\Migration\Resources\Database\Document('doc3', $collection, [
+            'email' => 'carol@example.com',
+            'name' => 'Carol',
+        ]);
+
+        // Batch 1 discovers schemaless keys across documents before flushing the header
+        $csvDestination->testableImport([$doc1, $doc2], function (array $resources): void {
+            /** @var list<UtopiaResource> $resources */
+            foreach ($resources as $resource) {
+                $this->assertSame('success', $resource->getStatus());
+            }
+        });
+
+        // Batch 2 must not re-emit headers and must keep reordered/missing columns aligned
+        $csvDestination->testableImport([$doc3], function (array $resources): void {
+            /** @var list<UtopiaResource> $resources */
+            foreach ($resources as $resource) {
+                $this->assertSame('success', $resource->getStatus());
+            }
+        });
+
+        $csvFile = $csvDestination->getLocalRoot() . '/docs_export.csv';
+        $this->assertFileExists($csvFile);
+
+        $handle = fopen($csvFile, 'r');
+        $this->assertNotFalse($handle);
+
+        $lines = [];
+        while (($line = fgetcsv($handle, 0, ',', '"', '"')) !== false) {
+            $lines[] = $line;
+        }
+        fclose($handle);
+
+        $this->assertCount(4, $lines, 'Header should only be written once across batches');
+        $this->assertSame(['$id', '$permissions', '$createdAt', '$updatedAt', 'name', 'age', 'email'], $lines[0]);
+
+        $row1 = \array_combine($lines[0], $lines[1]);
+        $row2 = \array_combine($lines[0], $lines[2]);
+        $row3 = \array_combine($lines[0], $lines[3]);
+
+        $this->assertSame('doc1', $row1['$id']);
+        $this->assertSame('Alice', $row1['name']);
+        $this->assertSame('30', $row1['age']);
+        $this->assertSame('', $row1['email']);
+
+        $this->assertSame('doc2', $row2['$id']);
+        $this->assertSame('Bob', $row2['name']);
+        $this->assertSame('25', $row2['age']);
+        $this->assertSame('bob@example.com', $row2['email']);
+
+        $this->assertSame('doc3', $row3['$id']);
+        $this->assertSame('Carol', $row3['name']);
+        $this->assertSame('', $row3['age']);
+        $this->assertSame('carol@example.com', $row3['email']);
+
+        $this->recursiveDelete($csvDestination->getLocalRoot());
+        $this->recursiveDelete($tempDir);
+    }
+
+    public function testCSVExportDocumentWithAllowedColumnsAcrossBatches(): void
+    {
+        $tempDir = sys_get_temp_dir() . '/csv_test_docs_allowed_' . uniqid();
+        mkdir($tempDir, 0755, true);
+        $exportDevice = new Local($tempDir);
+
+        $csvDestination = new TestCSV($exportDevice, 'docs_db:docs_col', '', 'docs_allowed', ['name', 'email']);
+
+        $database = new \Utopia\Migration\Resources\Database\DocumentsDB('docs_db');
+        $collection = new \Utopia\Migration\Resources\Database\Collection($database, 'docs_collection', 'docs_col');
+
+        $doc1 = new \Utopia\Migration\Resources\Database\Document('doc1', $collection, [
+            'name' => 'Alice',
+            'secret' => 'omit',
+        ]);
+        $doc2 = new \Utopia\Migration\Resources\Database\Document('doc2', $collection, [
+            'email' => 'bob@example.com',
+            'name' => 'Bob',
+            'extra' => 'ignore-me',
+        ]);
+
+        $csvDestination->testableImport([$doc1], static function (): void {
+        });
+        $csvDestination->testableImport([$doc2], static function (): void {
+        });
+
+        $csvFile = $csvDestination->getLocalRoot() . '/docs_allowed.csv';
+        $handle = fopen($csvFile, 'r');
+        $this->assertNotFalse($handle);
+
+        $lines = [];
+        while (($line = fgetcsv($handle, 0, ',', '"', '"')) !== false) {
+            $lines[] = $line;
+        }
+        fclose($handle);
+
+        $this->assertCount(3, $lines);
+        $this->assertSame(['$id', '$permissions', '$createdAt', '$updatedAt', 'name', 'email'], $lines[0]);
+
+        $row1 = \array_combine($lines[0], $lines[1]);
+        $row2 = \array_combine($lines[0], $lines[2]);
+
+        $this->assertSame('Alice', $row1['name']);
+        $this->assertSame('', $row1['email']);
+        $this->assertSame('Bob', $row2['name']);
+        $this->assertSame('bob@example.com', $row2['email']);
+
+        $this->recursiveDelete($csvDestination->getLocalRoot());
+        $this->recursiveDelete($tempDir);
+    }
+
+    public function testCSVExportDocumentWithoutHeadersKeepsColumnAlignment(): void
+    {
+        $tempDir = sys_get_temp_dir() . '/csv_test_docs_no_hdr_' . uniqid();
+        mkdir($tempDir, 0755, true);
+        $exportDevice = new Local($tempDir);
+
+        $csvDestination = new TestCSV(
+            deviceForFiles: $exportDevice,
+            resourceId: 'docs_db:docs_col',
+            directory: '',
+            filename: 'docs_no_header',
+            includeHeaders: false,
+        );
+
+        $database = new \Utopia\Migration\Resources\Database\DocumentsDB('docs_db');
+        $collection = new \Utopia\Migration\Resources\Database\Collection($database, 'docs_collection', 'docs_col');
+
+        $doc1 = new \Utopia\Migration\Resources\Database\Document('doc1', $collection, [
+            'name' => 'Alice',
+            'age' => 30,
+        ]);
+        $doc2 = new \Utopia\Migration\Resources\Database\Document('doc2', $collection, [
+            'age' => 25,
+            'name' => 'Bob',
+        ]);
+
+        $csvDestination->testableImport([$doc1], static function (): void {
+        });
+        $csvDestination->testableImport([$doc2], static function (): void {
+        });
+
+        $csvFile = $csvDestination->getLocalRoot() . '/docs_no_header.csv';
+        $handle = fopen($csvFile, 'r');
+        $this->assertNotFalse($handle);
+
+        $lines = [];
+        while (($line = fgetcsv($handle, 0, ',', '"', '"')) !== false) {
+            $lines[] = $line;
+        }
+        fclose($handle);
+
+        $this->assertCount(2, $lines);
+        $this->assertSame('doc1', $lines[0][0]);
+        $this->assertSame('Alice', $lines[0][4]);
+        $this->assertSame('30', $lines[0][5]);
+
+        $this->assertSame('doc2', $lines[1][0]);
+        $this->assertSame('Bob', $lines[1][4]);
+        $this->assertSame('25', $lines[1][5]);
+
+        $this->recursiveDelete($csvDestination->getLocalRoot());
+        $this->recursiveDelete($tempDir);
+    }
+
+    public function testCSVExportDocumentExpandsLateSchemalessColumnsAcrossBatches(): void
+    {
+        $tempDir = sys_get_temp_dir() . '/csv_test_docs_late_' . uniqid();
+        mkdir($tempDir, 0755, true);
+        $exportDevice = new Local($tempDir);
+
+        $csvDestination = new TestCSV($exportDevice, 'docs_db:docs_col', '', 'docs_late_expand');
+
+        $database = new \Utopia\Migration\Resources\Database\DocumentsDB('docs_db');
+        $collection = new \Utopia\Migration\Resources\Database\Collection($database, 'docs_collection', 'docs_col');
+
+        $doc1 = new \Utopia\Migration\Resources\Database\Document('doc1', $collection, [
+            'name' => "Alice, \"Ops\"\nTeam",
+            'age' => 30,
+        ]);
+        $doc1b = new \Utopia\Migration\Resources\Database\Document('doc1b', $collection, [
+            'name' => 'Back\\Slash\\',
+            'age' => 40,
+        ]);
+        $doc2 = new \Utopia\Migration\Resources\Database\Document('doc2', $collection, [
+            'name' => 'Bob',
+            'age' => 25,
+            'city' => 'NYC',
+        ]);
+        $doc3 = new \Utopia\Migration\Resources\Database\Document('doc3', $collection, [
+            'age' => 35,
+            'name' => 'Carol',
+            'country' => 'US',
+        ]);
+
+        // Batch 1 flushes initial headers (`name`, `age`) to disk
+        $csvDestination->testableImport([$doc1, $doc1b], static function (): void {
+        });
+
+        // Batch 2 adds `city` and then `country` mid-batch while earlier rows are buffered/flushed
+        $csvDestination->testableImport([$doc2, $doc3], static function (): void {
+        });
+
+        $csvFile = $csvDestination->getLocalRoot() . '/docs_late_expand.csv';
+        $this->assertFileExists($csvFile);
+        $this->assertFileDoesNotExist($csvFile . '.tmp');
+
+        $handle = fopen($csvFile, 'r');
+        $this->assertNotFalse($handle);
+
+        $lines = [];
+        while (($line = fgetcsv($handle, 0, ',', '"', '')) !== false) {
+            $lines[] = $line;
+        }
+        fclose($handle);
+
+        $this->assertCount(5, $lines);
+        $this->assertSame(['$id', '$permissions', '$createdAt', '$updatedAt', 'name', 'age', 'city', 'country'], $lines[0]);
+
+        $row1 = \array_combine($lines[0], $lines[1]);
+        $row1b = \array_combine($lines[0], $lines[2]);
+        $row2 = \array_combine($lines[0], $lines[3]);
+        $row3 = \array_combine($lines[0], $lines[4]);
+
+        $this->assertSame("Alice, \"Ops\"\nTeam", $row1['name']);
+        $this->assertSame('30', $row1['age']);
+        $this->assertSame('', $row1['city']);
+        $this->assertSame('', $row1['country']);
+
+        $this->assertSame('Back\\Slash\\', $row1b['name']);
+        $this->assertSame('40', $row1b['age']);
+        $this->assertSame('', $row1b['city']);
+        $this->assertSame('', $row1b['country']);
+
+        $this->assertSame('Bob', $row2['name']);
+        $this->assertSame('NYC', $row2['city']);
+        $this->assertSame('', $row2['country']);
+
+        $this->assertSame('Carol', $row3['name']);
+        $this->assertSame('35', $row3['age']);
+        $this->assertSame('', $row3['city']);
+        $this->assertSame('US', $row3['country']);
+
+        $this->recursiveDelete($csvDestination->getLocalRoot());
+        $this->recursiveDelete($tempDir);
+    }
+
+    public function testCSVExportDocumentExpandsLateSchemalessColumnsAfterBufferFlush(): void
+    {
+        $tempDir = sys_get_temp_dir() . '/csv_test_docs_1mb_' . uniqid();
+        mkdir($tempDir, 0755, true);
+        $exportDevice = new Local($tempDir);
+
+        $csvDestination = new TestCSV($exportDevice, 'docs_db:docs_col', '', 'docs_large_batch');
+
+        $database = new \Utopia\Migration\Resources\Database\DocumentsDB('docs_db');
+        $collection = new \Utopia\Migration\Resources\Database\Collection($database, 'docs_collection', 'docs_col');
+
+        $docs = [];
+        $payload = str_repeat('x', 130 * 1024);
+        for ($i = 1; $i <= 9; $i++) {
+            $docs[] = new \Utopia\Migration\Resources\Database\Document('doc' . $i, $collection, [
+                'bio' => $payload,
+            ]);
+        }
+        $docs[] = new \Utopia\Migration\Resources\Database\Document('doc10', $collection, [
+            'bio' => 'short',
+            'lateTag' => 'after-flush',
+        ]);
+
+        // Single import() exceeds 1 MiB pending buffer on row 9 before row 10 introduces `lateTag`
+        $csvDestination->testableImport($docs, static function (): void {
+        });
+
+        $csvFile = $csvDestination->getLocalRoot() . '/docs_large_batch.csv';
+        $this->assertFileExists($csvFile);
+
+        $handle = fopen($csvFile, 'r');
+        $this->assertNotFalse($handle);
+
+        $lines = [];
+        while (($line = fgetcsv($handle, 0, ',', '"', '')) !== false) {
+            $lines[] = $line;
+        }
+        fclose($handle);
+
+        $this->assertCount(11, $lines);
+        $this->assertSame(['$id', '$permissions', '$createdAt', '$updatedAt', 'bio', 'lateTag'], $lines[0]);
+
+        $firstRow = \array_combine($lines[0], $lines[1]);
+        $lastRow = \array_combine($lines[0], $lines[10]);
+
+        $this->assertSame($payload, $firstRow['bio']);
+        $this->assertSame('', $firstRow['lateTag']);
+        $this->assertSame('doc10', $lastRow['$id']);
+        $this->assertSame('short', $lastRow['bio']);
+        $this->assertSame('after-flush', $lastRow['lateTag']);
+
+        $this->recursiveDelete($csvDestination->getLocalRoot());
+        $this->recursiveDelete($tempDir);
+    }
+
+    public function testCSVExportDocumentWithoutHeadersExpandsLateColumnsAndAlignsRows(): void
+    {
+        $tempDir = sys_get_temp_dir() . '/csv_test_docs_no_hdr_late_' . uniqid();
+        mkdir($tempDir, 0755, true);
+        $exportDevice = new Local($tempDir);
+
+        $csvDestination = new TestCSV(
+            deviceForFiles: $exportDevice,
+            resourceId: 'docs_db:docs_col',
+            directory: '',
+            filename: 'docs_no_hdr_late',
+            includeHeaders: false,
+        );
+
+        $database = new \Utopia\Migration\Resources\Database\DocumentsDB('docs_db');
+        $collection = new \Utopia\Migration\Resources\Database\Collection($database, 'docs_collection', 'docs_col');
+
+        $doc1 = new \Utopia\Migration\Resources\Database\Document('doc1', $collection, [
+            'name' => 'Alice',
+            'age' => 30,
+        ]);
+        $doc2 = new \Utopia\Migration\Resources\Database\Document('doc2', $collection, [
+            'age' => 25,
+            'name' => 'Bob',
+            'city' => 'NYC',
+        ]);
+
+        $csvDestination->testableImport([$doc1], static function (): void {
+        });
+        $csvDestination->testableImport([$doc2], static function (): void {
+        });
+
+        $csvFile = $csvDestination->getLocalRoot() . '/docs_no_hdr_late.csv';
+        $handle = fopen($csvFile, 'r');
+        $this->assertNotFalse($handle);
+
+        $lines = [];
+        while (($line = fgetcsv($handle, 0, ',', '"', '')) !== false) {
+            $lines[] = $line;
+        }
+        fclose($handle);
+
+        $this->assertCount(2, $lines);
+        $this->assertSame(['doc1', '', '', '', 'Alice', '30', ''], $lines[0]);
+        $this->assertSame(['doc2', '', '', '', 'Bob', '25', 'NYC'], $lines[1]);
+
+        $this->recursiveDelete($csvDestination->getLocalRoot());
+        $this->recursiveDelete($tempDir);
+    }
+
     private function recursiveDelete(string $dir): void
     {
         if (is_dir($dir)) {
