@@ -79,7 +79,8 @@
         "app/config/oAuthProviders.php",
         "packages/messaging/",
         "app/config/locale/",
-        "packages/smtp/"
+        "packages/smtp/",
+        "packages/emails/data/"
       ]
     },
     {
@@ -333,7 +334,8 @@
         "src/Appwrite/Platform/Modules/Organization/",
         "src/Appwrite/Platform/Workers/Mails.php",
         "app/config/locale/",
-        "packages/smtp/"
+        "packages/smtp/",
+        "packages/emails/data/"
       ]
     },
     {
@@ -366,7 +368,8 @@
         "src/Appwrite/Auth/MFA/",
         "src/Appwrite/Auth/Passkey/",
         "src/Appwrite/Platform/Workers/Mails.php",
-        "packages/smtp/"
+        "packages/smtp/",
+        "packages/emails/data/"
       ]
     },
     {
