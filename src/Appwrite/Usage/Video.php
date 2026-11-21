@@ -28,12 +28,12 @@ final class Video
      * Encode compute is published as `executions.mbSeconds` with `service`
      * set to `videos`, the same counter functions and sites use, so the
      * project total includes it and a service filter can show only videos.
-     * The value multiplies the encode duration by the worker's specification
+     * The value multiplies the encode duration by the worker's container
      * memory and CPUs.
      *
      * @param int $storageBytes total bytes written to the videos device for this rendition
      * @param int $computeMs    wall-clock encode duration in milliseconds
-     * @param array{memory?: int, cpus?: int|float} $specification encode size from app/config/specifications.php
+     * @param array{memory?: int, cpus?: int|float} $specification encode size from the worker container
      */
     public static function publish(
         Context $usage,

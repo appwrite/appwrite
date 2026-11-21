@@ -10,7 +10,6 @@ use Appwrite\Event\Message\VideoAction;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception as AppwriteException;
-use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Platform\Modules\Videos\Base;
 use Appwrite\Storage\Encryption;
 use Appwrite\Usage\Context;
@@ -2560,18 +2559,18 @@ class Videos extends Action
     }
 
     /**
-     * Encode size billed as executions.mbSeconds with service videos, from
-     * _APP_VIDEOS_SPECIFICATION. It should match the worker's CPU and memory
-     * limits; an unknown slug bills the default.
+     * Encode size billed as executions.mbSeconds with service videos: the
+     * container's effective memory (MiB) and CPU from the cgroup, or the host
+     * when no limit is set.
      *
-     * @return array{slug: string, memory: int, cpus: int|float}
+     * @return array{memory: int, cpus: float}
      */
     private function specification(): array
     {
-        $specifications = Config::getParam('specifications', []);
-        $slug = System::getEnv('_APP_VIDEOS_SPECIFICATION', Specification::S_4VCPU_4GB);
-
-        return $specifications[$slug] ?? $specifications[Specification::S_4VCPU_4GB];
+        return [
+            'memory' => System::getMemory(),
+            'cpus' => System::getCPU(),
+        ];
     }
 
     /**
