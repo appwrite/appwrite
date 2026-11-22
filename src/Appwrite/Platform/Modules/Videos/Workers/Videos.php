@@ -2717,7 +2717,7 @@ class Videos extends Action
      * Cuts the query string off every URL, so a presigned source never keeps its
      * signature: a URL runs to the next space or line break, and whatever follows its
      * `?` goes, a closing quote included. Also blanks the value of every credential
-     * header and any JWT, because ffmpeg only takes request headers on its command line,
+     * header and any JWT, wherever it sits, because ffmpeg only takes request headers on its command line,
      * so the ephemeral `X-Appwrite-Key` a segment-encrypted source is read with is in it.
      */
     private function withoutSignatures(string $text): string
@@ -2733,15 +2733,23 @@ class Videos extends Action
             }
         }
 
+        // A JWT can sit inside a larger word, such as `token=eyJ…` or a JSON value, so scan the whole text
+        $jwt = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.';
+        $offset = 0;
+        while (($at = \strpos($text, 'eyJ', $offset)) !== false) {
+            $token = \substr($text, $at, \strspn($text, $jwt, $at));
+            if (\substr_count($token, '.') === 2 && !\str_contains($token, '..') && !\str_ends_with($token, '.')) {
+                $text = \substr($text, 0, $at) . '[redacted]' . \substr($text, $at + \strlen($token));
+                $offset = $at + \strlen('[redacted]');
+                continue;
+            }
+            $offset = $at + 3;
+        }
+
         $lines = [];
         foreach (\explode("\n", $text) as $line) {
             $words = [];
             foreach (\explode(' ', $line) as $word) {
-                $bare = \trim($word, '"\'');
-                if (\str_starts_with($bare, 'eyJ') && \substr_count($bare, '.') === 2) {
-                    $words[] = '[redacted]';
-                    continue;
-                }
                 $query = \strpos($word, '?');
                 if ($query !== false && \str_contains(\substr($word, 0, $query), '://')) {
                     $word = \substr($word, 0, $query);
