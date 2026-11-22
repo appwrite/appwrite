@@ -31,7 +31,7 @@ You usually know which product you are running in. Use the matching section in s
 - You are a `codex` CLI session, the Codex IDE extension, or Codex in the ChatGPT desktop app: **Codex**.
 - You are Cursor's agent or the `cursor-agent` CLI: **Cursor**. You are GitHub Copilot or another agent inside VS Code: **VS Code**.
 - You are Cascade or Devin Local in Devin Desktop (formerly Windsurf): **Devin Desktop and Windsurf**.
-- Antigravity, Zed, OpenCode, and Grok Build have their own sections. Anything else: **Other agents**.
+- Antigravity, Zed, OpenCode, Grok Build, and Pi have their own sections. Anything else: **Other agents**.
 
 If you still cannot tell, ask the user one question: which app are they using?
 
@@ -232,11 +232,35 @@ npx --yes skills add appwrite/skills -g -a grok -s '*' -y
 
 For the user's list: start a new Grok session, run `/mcps`, select **appwrite**, and press `i` to sign in.
 
+### Pi
+
+Pi connects to MCP servers through the `pi-mcp-adapter` extension. Install it and the skills:
+
+```sh
+pi install npm:pi-mcp-adapter
+npx --yes skills add appwrite/skills -g -a pi -s '*' -y
+```
+
+Then merge this into `~/.pi/agent/mcp-adapter.json`:
+
+```json
+{
+  "mcpServers": {
+    "appwrite": {
+      "url": "https://mcp.appwrite.io",
+      "auth": "oauth"
+    }
+  }
+}
+```
+
+For the user's list: restart Pi, run `/mcp-auth appwrite`, and approve the sign-in in the browser.
+
 ### Other agents
 
 Add a remote HTTP server named `appwrite` with URL `https://mcp.appwrite.io` to your app's user-level MCP configuration, and install the skills with `npx --yes skills add appwrite/skills -g -s '*' -y` (add `-a <agent>` when the skills CLI knows your app). Clients that only support stdio can run the server through `npx mcp-remote https://mcp.appwrite.io`.
 
-Per-agent guides for people: https://appwrite.io/docs/tooling/ai/agents/<agent>.md, where `<agent>` is one of `claude-code`, `codex`, `chatgpt`, `cursor`, `vscode`, `windsurf`, `antigravity`, `zed`, `opencode`, `grok-build`
+Per-agent guides for people: https://appwrite.io/docs/tooling/ai/agents/<agent>.md, where `<agent>` is one of `claude-code`, `codex`, `chatgpt`, `cursor`, `vscode`, `windsurf`, `antigravity`, `zed`, `opencode`, `grok-build`, `pi`
 
 ## 4. Install the latest Appwrite CLI
 
@@ -348,7 +372,7 @@ Fill in the endpoint and project ID from the user prompt, and add the command to
 
 - MCP docs: https://appwrite.io/docs/tooling/ai/mcp-servers
 - Remote MCP: https://mcp.appwrite.io
-- Per-agent guides: https://appwrite.io/docs/tooling/ai/agents/<agent>.md, where `<agent>` is one of `claude-code`, `codex`, `chatgpt`, `cursor`, `vscode`, `windsurf`, `antigravity`, `zed`, `opencode`, `grok-build`
+- Per-agent guides: https://appwrite.io/docs/tooling/ai/agents/<agent>.md, where `<agent>` is one of `claude-code`, `codex`, `chatgpt`, `cursor`, `vscode`, `windsurf`, `antigravity`, `zed`, `opencode`, `grok-build`, `pi`
 - Claude plugin: https://claude.com/plugins/appwrite (source: https://github.com/appwrite/claude-plugin)
 - CLI install: https://appwrite.io/docs/tooling/command-line/installation
 - SDKs: https://appwrite.io/docs/sdks
