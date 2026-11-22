@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Usage;
 
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Usage\Context;
 use Appwrite\Usage\Video;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -139,6 +140,30 @@ final class VideoTest extends TestCase
             $published['values'][METRIC_EXECUTIONS_MB_SECONDS] ?? null
         );
         $this->assertEncodeServiceIsVideos($published['metrics']);
+    }
+
+    public function testEncodeSpecificationKeepsValuesBelowCap(): void
+    {
+        $this->assertSame(
+            ['memory' => 2048, 'cpus' => 2.0],
+            Video::encodeSpecification(Specification::S_4VCPU_4GB, 2048, 2.0)
+        );
+    }
+
+    public function testEncodeSpecificationClampsValuesAboveCap(): void
+    {
+        $this->assertSame(
+            ['memory' => 4096, 'cpus' => 4.0],
+            Video::encodeSpecification(Specification::S_4VCPU_4GB, 65536, 16.0)
+        );
+    }
+
+    public function testEncodeSpecificationUnknownSlugFallsBackToDefault(): void
+    {
+        $this->assertSame(
+            ['memory' => 4096, 'cpus' => 4.0],
+            Video::encodeSpecification('not-a-real-slug', 65536, 16.0)
+        );
     }
 
     /**

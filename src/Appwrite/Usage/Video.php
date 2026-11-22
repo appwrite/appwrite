@@ -4,6 +4,8 @@ namespace Appwrite\Usage;
 
 use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Platform\Modules\Compute\Specification;
+use Utopia\Config\Config;
 use Utopia\Database\Document;
 
 /**
@@ -12,6 +14,25 @@ use Utopia\Database\Document;
  */
 final class Video
 {
+    /**
+     * Encode size billed for a rendition: the smaller of the container's
+     * memory/CPUs and the catalog row for `$slug` (from
+     * `_APP_VIDEOS_SPECIFICATION`). An unknown slug falls back to
+     * `s-4vcpu-4gb`, so unbounded workers do not bill the host.
+     *
+     * @return array{memory: int, cpus: float}
+     */
+    public static function encodeSpecification(string $slug, int $memory, float $cpus): array
+    {
+        $specifications = Config::getParam('specifications', []);
+        $max = $specifications[$slug] ?? $specifications[Specification::S_4VCPU_4GB];
+
+        return [
+            'memory' => \min($memory, (int) $max['memory']),
+            'cpus' => \min($cpus, (float) $max['cpus']),
+        ];
+    }
+
     /**
      * Record metrics for a settled rendition encode onto the usage context and
      * publish them.
@@ -29,11 +50,11 @@ final class Video
      * set to `videos`, the same counter functions and sites use, so the
      * project total includes it and a service filter can show only videos.
      * The value multiplies the encode duration by the worker's container
-     * memory and CPUs.
+     * memory and CPUs, capped by `_APP_VIDEOS_SPECIFICATION`.
      *
      * @param int $storageBytes total bytes written to the videos device for this rendition
      * @param int $computeMs    wall-clock encode duration in milliseconds
-     * @param array{memory?: int, cpus?: int|float} $specification encode size from the worker container
+     * @param array{memory?: int, cpus?: int|float} $specification encode size from the worker
      */
     public static function publish(
         Context $usage,
