@@ -7,7 +7,7 @@ cover: /images/blog/appwrite-is-moving-from-php-to-rust/cover.avif
 timeToRead: 7
 author: eldad-fux
 category: announcements, open-source, performance
-featured: false
+featured: true
 faqs:
   - question: "Do I need to change anything in my app?"
     answer: "No. Rust serves the same API, with the same SDKs and the same data. The requests you send and the responses you get stay exactly the same."

@@ -12,7 +12,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "timeToRead": 7,
     "author": "eldad-fux",
     "category": "announcements, open-source, performance",
-    "featured": false,
+    "featured": true,
     "cover": "/images/blog/appwrite-is-moving-from-php-to-rust/cover.avif",
     "hasCover": true
   },
