@@ -4237,4 +4237,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'The note is removed from the chart for everyone.':
     'ההערה תוסר מהגרף עבור כולם.',
   'Former member': 'חבר לשעבר',
+  'analytics properties': 'נכסי אנליטיקה',
+  'analytics property': 'נכס אנליטיקה',
+  'per project.': 'לכל פרויקט.',
+  'to create another.': 'כדי ליצור נכס נוסף.',
+  'to enable analytics on this site.': 'כדי להפעיל אנליטיקה באתר הזה.',
 }

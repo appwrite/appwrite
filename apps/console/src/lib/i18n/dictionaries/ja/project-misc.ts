@@ -4319,4 +4319,9 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Launched the new pricing page': '新しい料金ページを公開',
   'The note is removed from the chart for everyone.': 'このメモは全員のグラフから削除されます。',
   'Former member': '元メンバー',
+  'analytics properties': 'アナリティクスプロパティ',
+  'analytics property': 'アナリティクスプロパティ',
+  'per project.': '(プロジェクトごと)。',
+  'to create another.': 'して、さらに作成してください。',
+  'to enable analytics on this site.': 'して、このサイトでアナリティクスを有効にしてください。',
 }

@@ -118,7 +118,11 @@ function corsHeaders(route: Route): Record<string, string> {
  * Every `/v1` call, on any region host, is answered here; the app itself is
  * served live. Records the site create, analytics update and domain requests.
  */
-async function mockAppwriteApi(page: Page, analyticsStatus = 200) {
+async function mockAppwriteApi(
+  page: Page,
+  analyticsStatus = 200,
+  planPropertyLimit = 0,
+) {
   const calls = {
     creates: [] as Request[],
     analytics: [] as Request[],
@@ -158,6 +162,15 @@ async function mockAppwriteApi(page: Page, analyticsStatus = 200) {
             version: '1.0',
           })
     }
+    // The project already holds one property.
+    if (apiPath === '/analytics/properties')
+      return json(200, { total: 1, properties: [] })
+    if (apiPath === `/organizations/${ORGANIZATION.$id}/plan`)
+      return json(200, {
+        $id: ORGANIZATION.billingPlan,
+        name: 'Free',
+        analyticsProperties: planPropertyLimit,
+      })
     if (apiPath === `/sites/templates/${TEMPLATE_KEY}`)
       return json(200, template())
     if (apiPath === '/sites/templates')
@@ -289,6 +302,24 @@ test.describe('site create analytics toggle (mocked API)', () => {
 
     await analyticsSwitch(page).click()
     await expect(analyticsSwitch(page)).not.toBeChecked()
+
+    await page.getByRole('button', { name: 'Deploy', exact: true }).click()
+    await expect.poll(() => calls.domains.length).toBe(1)
+    expect(calls.creates).toHaveLength(1)
+    expect(calls.analytics).toHaveLength(0)
+  })
+
+  test('is off and locked at the plan property limit', async ({ page }) => {
+    const calls = await mockAppwriteApi(page, 200, 1)
+    await openTemplate(page)
+
+    await expect(analyticsSwitch(page)).not.toBeChecked()
+    await expect(analyticsSwitch(page)).toBeDisabled()
+    await expect(
+      page.getByText(
+        'Your current plan includes up to 1 analytics property per project.',
+      ),
+    ).toBeVisible()
 
     await page.getByRole('button', { name: 'Deploy', exact: true }).click()
     await expect.poll(() => calls.domains.length).toBe(1)
