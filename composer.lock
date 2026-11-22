@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ae29586e0d859b9c98f344ed868efcec",
+    "content-hash": "f87c13f800110b3e997489385daf2d4a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -70,16 +70,16 @@
         },
         {
             "name": "appwrite/appwrite",
-            "version": "32.4.0",
+            "version": "32.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "2c6226025a58c3d29c50a0def50a872abd693298"
+                "reference": "2ed11392c3759c5f7df415ede8296b5b75ff7f9c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/2c6226025a58c3d29c50a0def50a872abd693298",
-                "reference": "2c6226025a58c3d29c50a0def50a872abd693298",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/2ed11392c3759c5f7df415ede8296b5b75ff7f9c",
+                "reference": "2ed11392c3759c5f7df415ede8296b5b75ff7f9c",
                 "shasum": ""
             },
             "require": {
@@ -112,11 +112,11 @@
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/32.4.0",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/32.3.0",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2026-11-16T13:51:09+00:00",
-            "published-time": "2026-11-16T13:52:46+00:00"
+            "time": "2026-11-11T13:02:34+00:00",
+            "published-time": "2026-11-11T13:03:14+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -286,6 +286,62 @@
             ],
             "time": "2026-09-12T10:28:18+00:00",
             "published-time": "2026-09-12T12:23:30+00:00"
+        },
+        {
+            "name": "captioning/captioning",
+            "version": "3.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/captioning/captioning.git",
+                "reference": "ec3c9bf7d06b68d6556d3c991f4b8693302f7964"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/captioning/captioning/zipball/ec3c9bf7d06b68d6556d3c991f4b8693302f7964",
+                "reference": "ec3c9bf7d06b68d6556d3c991f4b8693302f7964",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^6.0|^9.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Captioning": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Julien Villetorte",
+                    "email": "j.villetorte@gmail.com",
+                    "homepage": "http://www.delphiki.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A collection of tools to manipulate subtitles",
+            "keywords": [
+                "ass",
+                "srt",
+                "ssa",
+                "subrip",
+                "substation",
+                "subtitle",
+                "vtt",
+                "webvtt"
+            ],
+            "support": {
+                "issues": "https://github.com/captioning/captioning/issues",
+                "source": "https://github.com/captioning/captioning/tree/3.0.0"
+            },
+            "time": "2022-09-14T17:15:53+00:00",
+            "published-time": "2022-09-14T17:21:00+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -4658,16 +4714,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-fix-metadata-drop-unknown-attributes",
+            "version": "10.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "b18c4f697fe23cd2048b9f617d920550a94c3757"
+                "reference": "0f136bb85cf69e8310db135b3fc2da1360dbf726"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/b18c4f697fe23cd2048b9f617d920550a94c3757",
-                "reference": "b18c4f697fe23cd2048b9f617d920550a94c3757",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/0f136bb85cf69e8310db135b3fc2da1360dbf726",
+                "reference": "0f136bb85cf69e8310db135b3fc2da1360dbf726",
                 "shasum": ""
             },
             "require": {
@@ -4725,10 +4781,10 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/fix-metadata-drop-unknown-attributes"
+                "source": "https://github.com/utopia-php/database/tree/10.1.2"
             },
-            "time": "2026-11-17T10:21:00+00:00",
-            "published-time": "2026-11-17T10:21:14+00:00"
+            "time": "2026-11-11T13:40:42+00:00",
+            "published-time": "2026-11-11T13:42:35+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -4790,6 +4846,71 @@
             },
             "time": "2026-09-09T05:42:37+00:00",
             "published-time": "2026-09-09T05:43:09+00:00"
+        },
+        {
+            "name": "utopia-php/video",
+            "version": "0.0.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/video.git",
+                "reference": "7cb15b5ead80c498713d36369c2859043cc5ecbf"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/video/zipball/7cb15b5ead80c498713d36369c2859043cc5ecbf",
+                "reference": "7cb15b5ead80c498713d36369c2859043cc5ecbf",
+                "shasum": ""
+            },
+            "require": {
+                "ext-dom": "*",
+                "ext-json": "*",
+                "php": ">=8.2",
+                "utopia-php/console": "0.1.* || ^0.2"
+            },
+            "require-dev": {
+                "laravel/pint": "1.*",
+                "phpstan/phpstan": "^2.0",
+                "phpunit/phpunit": "11.*",
+                "swoole/ide-helper": "6.2.4"
+            },
+            "suggest": {
+                "ext-swoole": "Needed to run the library inside Swoole coroutines."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Video\\": "src/Video"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Shimon Newman",
+                    "email": "shimon@appwrite.io"
+                }
+            ],
+            "description": "A simple library to probe, encode and package video for adaptive streaming",
+            "keywords": [
+                "cmaf",
+                "dash",
+                "ffmpeg",
+                "framework",
+                "hls",
+                "php",
+                "streaming",
+                "upf",
+                "utopia",
+                "video"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/video/issues",
+                "source": "https://github.com/utopia-php/video/tree/0.0.4"
+            },
+            "time": "2026-11-03T16:45:03+00:00",
+            "published-time": "2026-11-03T16:46:13+00:00"
         },
         {
             "name": "web-auth/cose-lib",
@@ -5098,16 +5219,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "5.20.4",
+            "version": "5.20.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "818e5c894a633e12bdcc1f212d096c6810941ceb"
+                "reference": "9334947ed6eaad4f43ecf166ee46bb775c14028b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/818e5c894a633e12bdcc1f212d096c6810941ceb",
-                "reference": "818e5c894a633e12bdcc1f212d096c6810941ceb",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/9334947ed6eaad4f43ecf166ee46bb775c14028b",
+                "reference": "9334947ed6eaad4f43ecf166ee46bb775c14028b",
                 "shasum": ""
             },
             "require": {
@@ -5145,10 +5266,10 @@
             "description": "SDK generator for Appwrite APIs across multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/5.20.4"
+                "source": "https://github.com/appwrite/sdk-generator/tree/5.20.0"
             },
-            "time": "2026-11-17T04:25:03+00:00",
-            "published-time": "2026-11-17T04:25:33+00:00"
+            "time": "2026-11-13T12:05:35+00:00",
+            "published-time": "2026-11-13T13:01:49+00:00"
         },
         {
             "name": "brianium/paratest",
@@ -5870,11 +5991,11 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "2.3.6",
+            "version": "2.3.5",
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/00cedebb76cc82c1592414fa4f616cefdccda16f",
-                "reference": "00cedebb76cc82c1592414fa4f616cefdccda16f",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/645a1bd6bead15fc1b8474137467961d0fa30a79",
+                "reference": "645a1bd6bead15fc1b8474137467961d0fa30a79",
                 "shasum": ""
             },
             "require": {
@@ -5930,8 +6051,8 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-11-15T19:58:26+00:00",
-            "published-time": "2026-11-15T19:58:39+00:00"
+            "time": "2026-11-03T12:14:22+00:00",
+            "published-time": "2026-11-03T12:14:36+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -7657,16 +7778,16 @@
         },
         {
             "name": "symfony/polyfill-php85",
-            "version": "v1.44.0",
+            "version": "v1.43.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-php85.git",
-                "reference": "94c794cb5ba51784bc259f11e9f128593297d8dc"
+                "reference": "86a42cbcc07adc331481a5ab310a4024bfc227f6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-php85/zipball/94c794cb5ba51784bc259f11e9f128593297d8dc",
-                "reference": "94c794cb5ba51784bc259f11e9f128593297d8dc",
+                "url": "https://api.github.com/repos/symfony/polyfill-php85/zipball/86a42cbcc07adc331481a5ab310a4024bfc227f6",
+                "reference": "86a42cbcc07adc331481a5ab310a4024bfc227f6",
                 "shasum": ""
             },
             "require": {
@@ -7713,7 +7834,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-php85/tree/v1.44.0"
+                "source": "https://github.com/symfony/polyfill-php85/tree/v1.43.0"
             },
             "funding": [
                 {
@@ -7733,8 +7854,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-10-30T15:20:09+00:00",
-            "published-time": "2026-11-15T14:20:22+00:00"
+            "time": "2026-09-25T15:46:47+00:00",
+            "published-time": "2026-09-30T10:23:32+00:00"
         },
         {
             "name": "symfony/process",
@@ -7987,9 +8108,7 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
