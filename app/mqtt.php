@@ -128,28 +128,6 @@ $container->set('getPlan', fn () => fn (string $projectId): array => [], []);
 
 $container->set('getPlanForUser', fn () => fn (Document $project, string $userId): int => (int) System::getEnv('_APP_MQTT_REPLAY_DEPTH', '5'), []);
 
-$container->set('getRedis', fn () => function (): \Redis {
-    $ctx = Coroutine::getContext();
-
-    if (isset($ctx['redis'])) {
-        return $ctx['redis'];
-    }
-
-    $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
-    $port = System::getEnv('_APP_REDIS_PORT', 6379);
-    $pass = System::getEnv('_APP_REDIS_PASS', '');
-    $timeout = (float) System::getEnv('_APP_REDIS_TIMEOUT', 3);
-
-    $redis = new \Redis();
-    @$redis->pconnect($host, (int)$port, $timeout);
-    $redis->setOption(\Redis::OPT_READ_TIMEOUT, $timeout);
-    if ($pass) {
-        $redis->auth($pass);
-    }
-
-    return $ctx['redis'] = $redis;
-}, []);
-
 if (!$container->has('publisherForUsage')) {
     $container->set('publisherForUsage', function (Group $pools): UsagePublisher {
         $statsUsageConnection = System::getEnv('_APP_CONNECTIONS_QUEUE_STATS_USAGE', '');
@@ -241,6 +219,9 @@ $server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $
                     }
                     if (($counts['delivered'] ?? 0) > 0) {
                         $context->addMetric(METRIC_MQTT_MESSAGES_DELIVERED, (int) $counts['delivered']);
+                    }
+                    if (($counts['acked'] ?? 0) > 0) {
+                        $context->addMetric(METRIC_MQTT_MESSAGES_ACKED, (int) $counts['acked']);
                     }
 
                     $publisherForUsage->enqueue(new UsageMessage(

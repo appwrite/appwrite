@@ -21,6 +21,7 @@ import { useT } from '@/lib/i18n/translate'
 import { copyToClipboard } from '@/lib/utils/context-menu'
 import { VcsIcon } from '@/lib/vcs/providers'
 import { ReviewToggle } from './ReviewToggle'
+import { StrengthSelect } from './StrengthSelect'
 
 const HEAD_CLASS =
   'px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
@@ -62,6 +63,9 @@ export function RepositoriesTable({
             <TableHead className={HEAD_CLASS}>{t('Repository')}</TableHead>
             <TableHead className={`${HEAD_CLASS} text-end`}>
               {t('Reviewed since')}
+            </TableHead>
+            <TableHead className={`${HEAD_CLASS} text-end w-[140px]`}>
+              {t('Strength')}
             </TableHead>
             <TableHead className={`${HEAD_CLASS} text-end w-[72px]`}>
               {t('Review')}
@@ -130,6 +134,18 @@ function RepositoryRow({
           <DateTooltip
             date={row.repository.$createdAt}
             className="text-[12px] text-muted-foreground font-mono"
+          />
+        ) : (
+          <span className="text-[12px] text-muted-foreground">-</span>
+        )}
+      </TableCell>
+      <TableCell className="px-4 py-3 text-end">
+        {row.repository ? (
+          <StrengthSelect
+            projectId={projectId}
+            repository={row.repository}
+            name={row.name}
+            disabled={!canWrite}
           />
         ) : (
           <span className="text-[12px] text-muted-foreground">-</span>

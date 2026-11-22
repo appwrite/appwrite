@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Utopia\Validator\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Validator\Label;
 use Utopia\Validator\Validator;
 
+#[RequiresPhpExtension('utopia')]
 final class LabelTest extends TestCase
 {
     public function testShape(): void

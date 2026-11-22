@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Teams\Http\Memberships\Status;
 
 use Appwrite\Abuse\Limit;
 use Appwrite\Auth\MFA\Type;
+use Appwrite\Bus\Events\EmailVerified;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Realtime;
@@ -19,6 +20,7 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
@@ -85,10 +87,11 @@ class Update extends Action
             ->inject('cookieDomain')
             ->inject('mqtt')
             ->inject('queueForRealtime')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $targetUser, Database $dbForProject, Authorization $authorization, $project, Geo $geo, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain, Mqtt $mqtt, Realtime $queueForRealtime)
+    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $targetUser, Database $dbForProject, Authorization $authorization, $project, Geo $geo, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain, Mqtt $mqtt, Realtime $queueForRealtime, Bus $bus)
     {
         $protocol = $request->getProtocol();
 
@@ -164,8 +167,10 @@ class Update extends Action
         }
 
         $claimed = null;
-        $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $project, $membership, $team, $targetUser, $hasSession, $secret, $proofForToken, $mqtt, &$session, &$claimed) {
+        $emailVerified = false;
+        $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $project, $membership, $team, $targetUser, $hasSession, $secret, $proofForToken, $mqtt, &$session, &$claimed, &$emailVerified) {
             $claimed = null; // A retried attempt starts over
+            $emailVerified = false;
             // Lock the user first, as an address change does, so a voided invite cannot slip through
             /** @var User $user */
             $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $targetUser->getId(), forUpdate: true));
@@ -197,23 +202,24 @@ class Update extends Action
                 throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
             }
 
+            // With both an email and a phone on file the invite cannot tell which one it proved, so the holder signs in to accept
+            if (!$hasSession && $verification === null) {
+                throw new Exception(Exception::USER_UNAUTHORIZED, 'Sign in to accept this invitation.');
+            }
+
             $confirmed = $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['joined' => $membership->getAttribute('joined'), 'confirm' => true]));
 
             $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
-            if (!$hasSession && $verification !== null && !$user->getAttribute($verification, false)) {
+            if (!$hasSession && !$user->getAttribute($verification, false)) {
                 $proven = $verification === 'phoneVerification' ? MESSAGE_TYPE_SMS : MESSAGE_TYPE_EMAIL;
                 $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, $proven, $mqtt));
                 $claimed = $user;
             }
 
             if ($verification !== null) {
+                $emailVerified = $verification === 'emailVerification' && !$user->getAttribute('emailVerification', false);
                 $targetUser->setAttribute($verification, true);
                 $authorization->skip(fn () => $dbForProject->updateDocument('users', $targetUser->getId(), new Document([$verification => true])));
-            }
-
-            // The session counts only the channel the invite proved; when that is unknown the user signs in instead
-            if ($verification === null) {
-                $session = null;
             }
 
             if ($session !== null) {
@@ -269,6 +275,10 @@ class Update extends Action
         }
 
         $dbForProject->purgeCachedDocument('users', $targetUser->getId());
+
+        if ($emailVerified) {
+            $bus->dispatch(new EmailVerified(user: $targetUser->getArrayCopy(), project: $project->getArrayCopy()));
+        }
 
         if ($claimed !== null) {
             try {

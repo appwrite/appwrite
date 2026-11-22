@@ -159,6 +159,18 @@ class Response extends SwooleResponse
     public const MODEL_RESOURCE_TOKEN = 'resourceToken';
     public const MODEL_RESOURCE_TOKEN_LIST = 'resourceTokenList';
 
+    // Videos
+    public const MODEL_VIDEO = 'video';
+    public const MODEL_VIDEO_LIST = 'videoList';
+    public const MODEL_VIDEO_CODEC = 'videoCodec';
+    public const MODEL_VIDEO_CODEC_LIST = 'videoCodecList';
+    public const MODEL_VIDEO_PROFILE = 'videoProfile';
+    public const MODEL_VIDEO_PROFILE_LIST = 'videoProfileList';
+    public const MODEL_VIDEO_RENDITION = 'videoRendition';
+    public const MODEL_VIDEO_RENDITION_LIST = 'videoRenditionList';
+    public const MODEL_VIDEO_CAPTION = 'videoCaption';
+    public const MODEL_VIDEO_CAPTION_LIST = 'videoCaptionList';
+
     // Locale
     public const MODEL_LOCALE = 'locale';
     public const MODEL_LOCALE_CODE = 'localeCode';
@@ -240,6 +252,7 @@ class Response extends SwooleResponse
     // Proxy
     public const MODEL_PROXY_RULE = 'proxyRule';
     public const MODEL_PROXY_RULE_LIST = 'proxyRuleList';
+    public const MODEL_PROXY_RULE_RECORD = 'proxyRuleRecord';
 
     // Schedules
     public const MODEL_SCHEDULE = 'schedule';
@@ -318,6 +331,19 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_GOOGLE = 'oAuth2Google';
     public const MODEL_OAUTH2_CLOUDFLARE = 'oAuth2Cloudflare';
     public const MODEL_OAUTH2_HUGGINGFACE = 'oAuth2HuggingFace';
+    public const MODEL_OAUTH2_INSTAGRAM = 'oAuth2Instagram';
+    public const MODEL_OAUTH2_PATREON = 'oAuth2Patreon';
+    public const MODEL_OAUTH2_STRAVA = 'oAuth2Strava';
+    public const MODEL_OAUTH2_VK = 'oAuth2VK';
+    public const MODEL_OAUTH2_NETLIFY = 'oAuth2Netlify';
+    public const MODEL_OAUTH2_RAILWAY = 'oAuth2Railway';
+    public const MODEL_OAUTH2_REDDIT = 'oAuth2Reddit';
+    public const MODEL_OAUTH2_VERCEL = 'oAuth2Vercel';
+    public const MODEL_OAUTH2_ATLASSIAN = 'oAuth2Atlassian';
+    public const MODEL_OAUTH2_LINE = 'oAuth2Line';
+    public const MODEL_OAUTH2_LINEAR = 'oAuth2Linear';
+    public const MODEL_OAUTH2_ROBLOX = 'oAuth2Roblox';
+    public const MODEL_OAUTH2_WORKOS = 'oAuth2WorkOS';
     public const MODEL_OAUTH2_ZOOM = 'oAuth2Zoom';
     public const MODEL_OAUTH2_ZOHO = 'oAuth2Zoho';
     public const MODEL_OAUTH2_YANDEX = 'oAuth2Yandex';
@@ -351,6 +377,7 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_KICK = 'oAuth2Kick';
     public const MODEL_OAUTH2_MICROSOFT = 'oAuth2Microsoft';
     public const MODEL_OAUTH2_RESEND = 'oAuth2Resend';
+    public const MODEL_OAUTH2_BIRD = 'oAuth2Bird';
     public const MODEL_OAUTH2_TIKTOK = 'oAuth2TikTok';
     public const MODEL_OAUTH2_KAKAO = 'oAuth2Kakao';
     public const MODEL_OAUTH2_NAVER = 'oAuth2Naver';
@@ -381,6 +408,12 @@ class Response extends SwooleResponse
     public const MODEL_REVIEW_EVENT_LIST = 'reviewEventList';
     public const MODEL_REVIEW_REPOSITORY = 'reviewRepository';
     public const MODEL_REVIEW_REPOSITORY_LIST = 'reviewRepositoryList';
+    public const MODEL_REVIEW_AUTHOR = 'reviewAuthor';
+    public const MODEL_REVIEW_AUTHOR_LIST = 'reviewAuthorList';
+    public const MODEL_REVIEW_CATEGORY = 'reviewCategory';
+    public const MODEL_REVIEW_CATEGORY_LIST = 'reviewCategoryList';
+    public const MODEL_REVIEW_LEARNING = 'reviewLearning';
+    public const MODEL_REVIEW_LEARNING_LIST = 'reviewLearningList';
 
     // Console
     public const MODEL_CONSOLE_VARIABLES = 'consoleVariables';

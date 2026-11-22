@@ -73,6 +73,11 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Connect existing repository': '既存のリポジトリを接続',
   'Connect to GitHub': 'GitHub に接続',
   'Connect to GitLab': 'GitLab に接続',
+  'Connect Entire': 'Entire の接続',
+  'Add Entire account': 'Entire アカウントを追加',
+  'Add Origin account': 'Origin アカウントを追加',
+  'Add Bitbucket account': 'Bitbucket アカウントを追加',
+  'Add Gitea account': 'Gitea アカウントを追加',
   'Console user': 'コンソールユーザー',
   'Contact Support': 'サポートに連絡',
   'Contact sales': '営業に連絡',
@@ -380,6 +385,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   Searching: '検索中',
   'Select database': 'データベースを選択',
   'Select a bucket to browse files': 'ファイルを閲覧するバケットを選択',
+  'This file type is not supported.': 'このファイル形式はサポートされていません。',
   'Select a timezone': 'タイムゾーンを選択',
   'Select a service to build': 'ビルドするサービスを選択',
   'Select all': 'すべて選択',
@@ -1384,14 +1390,12 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Appwrite Analytics': 'Appwrite Analytics',
   'Visitor, page, and campaign tracking.':
     '訪問者、ページ、キャンペーンを計測します。',
+  'Appwrite Videos': 'Appwrite Videos',
+  'Transcode, stream, and caption videos.':
+    '動画のトランスコード、配信、字幕付けを行います。',
   'Project environments': 'プロジェクト環境',
   'Switch or clone staging and production.':
     'ステージングと本番を切り替え、複製します。',
-  'Origin Git provider': 'Origin Git プロバイダー',
-  'Deploy from Cursor Origin repositories.':
-    'Cursor Origin のリポジトリからデプロイします。',
-  'LDAP directory sign-in for a project.':
-    'プロジェクトへの LDAP ディレクトリ サインイン。',
   'Repository not available': 'リポジトリを利用できません',
   'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
     'この Git インストールからリポジトリにアクセスできなくなりました。削除された、インストールから外された、または別のインストールに移された可能性があります。デプロイを続けるには、リポジトリを接続し直してください。',

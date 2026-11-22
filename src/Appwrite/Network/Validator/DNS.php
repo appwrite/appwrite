@@ -33,6 +33,15 @@ class DNS extends BaseDNS
      */
     public function isValid(mixed $value): bool
     {
+        // Every record below is checked by agreement between the resolvers, so with
+        // none of them nothing is checked. Reporting success on that would accept
+        // every domain this validator is ever asked about.
+        if ($this->dnsServers === []) {
+            $this->reason = 'DNS verification failed as no DNS resolver is configured.';
+
+            return false;
+        }
+
         $wg = new WaitGroup();
         $failedValidator = null;
         // Outside a coroutine (CLI, tests) go() would leave a reactor running, so query in turn
@@ -43,7 +52,7 @@ class DNS extends BaseDNS
                 $validator = new BaseDNS($this->target, $this->type, $dnsServer);
 
                 if (!$validator->isValid($value)) {
-                    $failedValidator = $validator;
+                    self::retainFailure($validator, $failedValidator);
                 }
             };
 
@@ -75,5 +84,26 @@ class DNS extends BaseDNS
         }
 
         return true;
+    }
+
+    /**
+     * Keep the failure that best describes why the multi-resolver check lost.
+     *
+     * Prefer a resolver that could not answer over one that answered with no or
+     * wrong records. resolveOwnership() reads an empty reason as "no proof", so a
+     * NODATA response must not overwrite a lookup error from another resolver and
+     * let a rule verify during a partial outage. Among answered failures, prefer
+     * the one that saw records, so a mismatch is not lost to a NODATA peer.
+     */
+    public static function retainFailure(BaseDNS $validator, ?BaseDNS &$failedValidator): void
+    {
+        if (
+            $failedValidator === null
+            || ($validator->reason !== '' && $failedValidator->reason === '')
+            // Past the clauses above, both reasons are empty: prefer the failure that saw records.
+            || ($failedValidator->reason === '' && $validator->count > $failedValidator->count)
+        ) {
+            $failedValidator = $validator;
+        }
     }
 }

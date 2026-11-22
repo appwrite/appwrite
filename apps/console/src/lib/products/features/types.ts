@@ -6,8 +6,9 @@ export type ProductFeatureContent = {
   id: string
   title: string
   description: string
-  docsHref: string
-  docsLabel: string
+  /** Omitted until the product has published docs. */
+  docsHref?: string
+  docsLabel?: string
   /** Additional docs links rendered next to the primary one. */
   extraDocsLinks?: { href: string; label: string }[]
   layout?: ProductFeatureLayout

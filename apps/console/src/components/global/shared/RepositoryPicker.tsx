@@ -35,7 +35,6 @@ import {
   VcsIcon,
   buildVcsOrgOptions,
   getVisibleVcsOAuthProviders,
-  vcsProviderButtonIconClassName,
   type VcsProviderId,
 } from '@/lib/vcs/providers'
 import { VCSDetectionType } from '@appwrite.io/console'
@@ -46,11 +45,14 @@ import {
 } from '@/lib/react-query/hooks'
 import { getVcsInstallationErrorKind } from '@/lib/utils/error-formatting'
 import { VcsInstallationErrorState } from '@/components/global/shared/VcsInstallationError'
+import {
+  VcsAccountLinks,
+  VcsProviderButtons,
+} from '@/components/global/shared/VcsProviderButtons'
 import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
 import { RefreshButton } from '@/components/global/shared/RefreshButton'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 const REPO_PAGE_SIZE = 5
 
@@ -117,9 +119,8 @@ export function RepositoryPicker({
   className,
 }: RepositoryPickerProps) {
   const t = useT()
-  const { features } = useConsoleProfile()
   const { vcsProviders } = useConsoleVariables()
-  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features, vcsProviders)
+  const vcsOAuthProviders = getVisibleVcsOAuthProviders(vcsProviders)
   const vcsAuthUrl = (
     provider?: VcsProviderId,
     mode: 'create' | 'update' = 'create',
@@ -273,19 +274,12 @@ export function RepositoryPicker({
         <p className="text-[12px] text-muted-foreground mb-4 max-w-sm">
           {t('Import repositories for automatic deployments')}
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          {vcsOAuthProviders.map((provider) => (
-            <Button key={provider.id} size="sm" variant="secondary" asChild>
-              <a href={vcsAuthUrl(provider.id)}>
-                <VcsIcon
-                  type={provider.id}
-                  className={vcsProviderButtonIconClassName}
-                />
-                {t(`Connect ${provider.label}`)}
-              </a>
-            </Button>
-          ))}
-        </div>
+        <VcsProviderButtons
+          providers={vcsOAuthProviders}
+          link={(provider, content) => (
+            <a href={vcsAuthUrl(provider.id)}>{content}</a>
+          )}
+        />
       </div>
     )
   }
@@ -294,7 +288,7 @@ export function RepositoryPicker({
     <div className={cn('flex flex-col', className)}>
       <div className="space-y-4">
         {installations.length > 0 && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Select
               value={selectedOptionKey}
               onValueChange={(key) => selectOption(key)}
@@ -306,7 +300,7 @@ export function RepositoryPicker({
                 id="repo-picker-installation"
                 className={cn(
                   'shrink-0 h-9 text-[13px]',
-                  selectedInstallationId ? 'w-[200px]' : 'w-full',
+                  selectedInstallationId ? 'w-full sm:w-[200px]' : 'w-full',
                 )}
               >
                 <SelectValue placeholder={t('Select organization')}>
@@ -353,18 +347,10 @@ export function RepositoryPicker({
                     {t('No matches')}
                   </p>
                 )}
-                <div className="border-t border-border mt-1 pt-1">
-                  {vcsOAuthProviders.map((p) => (
-                    <a
-                      key={p.id}
-                      href={vcsAuthUrl(p.id)}
-                      className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
-                    >
-                      <p.Icon className="h-3 w-3" />
-                      {t(`Add ${p.label} account`)}
-                    </a>
-                  ))}
-                </div>
+                <VcsAccountLinks
+                  providers={vcsOAuthProviders}
+                  href={(p) => vcsAuthUrl(p.id)}
+                />
               </SelectContent>
             </Select>
             {selectedInstallationId && (

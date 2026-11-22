@@ -1,5 +1,24 @@
 # Change Log
 
+## 0.13.0
+
+* Added: `Account.CreateDevice`, `GetDevice`, `DeleteDevice` and `UpdateDeviceSession`, and the `Device` model
+* Added: `Account.CreateLDAPSession`
+* Added: `Session.UserName`
+* Added: `ImageFormat.Auto` on `Storage.GetFilePreview` and the avatar endpoints, serving avif or webp when the `Accept` header supports it
+* Added: `OAuthProvider.Naver`, `OAuthProvider.Vipps` and `OAuthProvider.VippsSandbox`
+* Added: optional `interactive` param on `Analytics.CreateEvent` to mark an event as telemetry that does not end a bounce
+* Added: `Client.SetEnvironment` to act in a project environment; realtime connections carry it
+* Updated: requests send `X-Appwrite-Response-Format: 2.7.2`; the SDK targets Appwrite 2.7.x
+
+## 0.12.0
+
+* Updated: requests send `X-Appwrite-Response-Format: 2.6.2`
+* Fixed: path parameters are percent-encoded as one segment; `.` and `..` throw `AppwriteException`
+* Fixed: chunked upload resume lookups percent-encode the file ID
+* Fixed: cookie debug logs show only the cookie name, not its value
+* Updated: README explains Secure session cookies over HTTPS
+
 ## 0.11.1
 
 * Fixed: Secure cookies are sent only over HTTPS, including when self-signed certificates are enabled

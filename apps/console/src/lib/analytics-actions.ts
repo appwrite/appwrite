@@ -75,6 +75,8 @@ export const ANALYTICS_ACTIONS = {
   'marketing-view-pricing': 'Marketing View Pricing Clicked',
   'home-start-project': 'Home Start Project Clicked',
   'home-view-docs': 'Home View Docs Clicked',
+  'home-console-open': 'Home Console Open Clicked',
+  'home-factory-station': 'Home Factory Station Clicked',
   'home-start-building': 'Home Start Building Clicked',
   'home-view-pricing': 'Home View Pricing Clicked',
   'home-join-init': 'Home Join Init Clicked',
@@ -227,6 +229,7 @@ export const ANALYTICS_ACTIONS = {
   'marketing-product-storage': 'Marketing Product Storage Clicked',
   'marketing-product-functions': 'Marketing Product Functions Clicked',
   'marketing-product-messaging': 'Marketing Product Messaging Clicked',
+  'marketing-product-videos': 'Marketing Product Videos Clicked',
   'marketing-product-realtime': 'Marketing Product Realtime Clicked',
   'marketing-product-sites': 'Marketing Product Sites Clicked',
   'marketing-product-domains': 'Marketing Product Domains Clicked',
@@ -252,11 +255,14 @@ export const ANALYTICS_ACTIONS = {
 
   // Project settings
   'smtp-quick-setup-resend': 'SMTP One-Click Setup Resend Clicked',
+  'smtp-quick-setup-bird': 'SMTP One-Click Setup Bird Clicked',
   'smtp-quick-setup-mailgun': 'SMTP One-Click Setup Mailgun Clicked',
-  'smtp-quick-setup-sendgrid': 'SMTP One-Click Setup SendGrid Clicked',
 
   // Messaging
   'messaging-quick-setup-resend': 'Messaging One-Click Setup Resend Clicked',
+  'messaging-quick-setup-bird': 'Messaging One-Click Setup Bird Clicked',
+  'messaging-quick-setup-bird-sms':
+    'Messaging One-Click Setup Bird SMS Clicked',
 
   // Resource creation
   'create-project': 'Create Project Clicked',
@@ -364,6 +370,7 @@ const MARKETING_PRODUCT_ACTIONS: Record<string, AnalyticsActionId> = {
   storage: 'marketing-product-storage',
   functions: 'marketing-product-functions',
   messaging: 'marketing-product-messaging',
+  videos: 'marketing-product-videos',
   realtime: 'marketing-product-realtime',
   sites: 'marketing-product-sites',
   domains: 'marketing-product-domains',

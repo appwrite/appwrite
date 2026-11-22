@@ -179,7 +179,7 @@ final class EvaluationCustomServerTest extends Scope
 
         // The phone gets a push that opens the alert and can mute the monitor.
         $push = $this->waitForPush($device['token'], 'alert:' . $firing['alertId'], 'firing');
-        $this->assertSame('Firing: ' . $name, $push['title']);
+        $this->assertSame('[Critical] ' . $name . ' on ' . $this->getProject()['name'], $push['title']);
         $this->assertStringContainsString('Outbound bandwidth reached', (string) $push['body']);
         $this->assertSame('high', $push['priority']);
         // The monitor is critical, so its firing rings with the critical sound.
@@ -267,7 +267,7 @@ final class EvaluationCustomServerTest extends Scope
 
         // The resolved push replaces the firing one, by its tag.
         $push = $this->waitForPush($device['token'], 'alert:' . $firing['alertId'], 'resolved');
-        $this->assertSame('Resolved: ' . $name, $push['title']);
+        $this->assertSame('[Resolved] ' . $name . ' on ' . $this->getProject()['name'], $push['title']);
         $this->assertArrayNotHasKey('critical', $push);
 
         $this->assertEventually(function () use ($name) {
@@ -292,7 +292,12 @@ final class EvaluationCustomServerTest extends Scope
         $quiet = $this->createMember($teamId, ['resolved' => false, 'mutedOrganizationIds' => $teamId, 'mutedProjectIds' => [42]]);
         $organizationMuted = $this->createMember($teamId, ['mutedOrganizationIds' => [$teamId]]);
         $projectMuted = $this->createMember($teamId, ['mutedProjectIds' => [$projectId]]);
-        $members = [$owner['$id'], $quiet['$id'], $organizationMuted['$id'], $projectMuted['$id']];
+        // Snoozes end at a time: one for this organization, one for every organization, one that has ended.
+        $inAnHour = (new \DateTimeImmutable('+1 hour'))->format(\DATE_ATOM);
+        $organizationSnoozed = $this->createMember($teamId, ['snoozes' => [$teamId => $inAnHour]]);
+        $allSnoozed = $this->createMember($teamId, ['snoozes' => ['*' => $inAnHour, 'other' => 'soon']]);
+        $snoozeEnded = $this->createMember($teamId, ['snoozes' => [$teamId => (new \DateTimeImmutable('-1 minute'))->format(\DATE_ATOM), 'other' => $inAnHour]]);
+        $members = [$owner['$id'], $quiet['$id'], $organizationMuted['$id'], $projectMuted['$id'], $organizationSnoozed['$id'], $allSnoozed['$id'], $snoozeEnded['$id']];
 
         $created = $this->client->call(Client::METHOD_POST, '/monitors/usage', $this->headers(), [
             'monitorId' => 'unique()',
@@ -316,13 +321,13 @@ final class EvaluationCustomServerTest extends Scope
 
         // Every device gets one push through its own service: an iPhone with APNs' critical sound,
         // an Android phone on the channel that rings through Do Not Disturb.
-        foreach ([$first, $second, $removed, $quiet['device']] as $device) {
+        foreach ([$first, $second, $removed, $quiet['device'], $snoozeEnded['device']] as $device) {
             $pushes = $this->pushes($device['token'], $tag);
             $this->assertCount(1, $pushes, $device['token']);
             $this->assertSame('high', $pushes[0]['priority']);
             if (\ctype_xdigit($device['token'])) {
                 $this->assertSame(PushService::APNS->value, $pushes[0]['service']);
-                $this->assertSame('Firing: ' . $name, $pushes[0]['title']);
+                $this->assertSame('[Critical] ' . $name . ' on ' . $this->getProject()['name'], $pushes[0]['title']);
                 $this->assertSame($tag, $pushes[0]['tag']);
                 $this->assertTrue($pushes[0]['critical']);
                 $this->assertSame('siren.caf', $pushes[0]['sound']);
@@ -338,7 +343,7 @@ final class EvaluationCustomServerTest extends Scope
                 $this->assertArrayNotHasKey('critical', $pushes[0]);
                 $this->assertArrayNotHasKey('sound', $pushes[0]);
                 $this->assertArrayNotHasKey('mutableContent', $pushes[0]);
-                $this->assertSame('Firing: ' . $name, $pushes[0]['data']['title']);
+                $this->assertSame('[Critical] ' . $name . ' on ' . $this->getProject()['name'], $pushes[0]['data']['title']);
                 $this->assertNotSame('', $pushes[0]['data']['message']);
                 $this->assertSame($tag, $pushes[0]['data']['tag']);
                 $this->assertSame('critical', $pushes[0]['data']['channelId']);
@@ -348,6 +353,9 @@ final class EvaluationCustomServerTest extends Scope
         // Owners who muted the organization or the project get none.
         $this->assertSame([], $this->pushes($organizationMuted['device']['token'], $tag));
         $this->assertSame([], $this->pushes($projectMuted['device']['token'], $tag));
+        // Owners who snoozed the organization, or every organization, get none while it lasts.
+        $this->assertSame([], $this->pushes($organizationSnoozed['device']['token'], $tag));
+        $this->assertSame([], $this->pushes($allSnoozed['device']['token'], $tag));
 
         // The expired token marks its target expired.
         $this->inCoroutine(function () use ($expired): void {
@@ -359,13 +367,16 @@ final class EvaluationCustomServerTest extends Scope
         foreach ([$first, $second] as $device) {
             $resolved = \array_values(\array_filter($this->pushes($device['token'], $tag), fn (array $push) => $push['data']['status'] === 'resolved'));
             $this->assertCount(1, $resolved);
-            $this->assertSame('Resolved: ' . $name, $resolved[0]['title'] ?? $resolved[0]['data']['title']);
+            $this->assertSame('[Resolved] ' . $name . ' on ' . $this->getProject()['name'], $resolved[0]['title'] ?? $resolved[0]['data']['title']);
             $this->assertArrayNotHasKey('critical', $resolved[0]);
             $this->assertArrayNotHasKey('sound', $resolved[0]);
         }
         // A resolved push on Android goes on the normal channel.
         $this->assertSame('alerts', \array_values(\array_filter($this->pushes($second['token'], $tag), fn (array $push) => $push['data']['status'] === 'resolved'))[0]['data']['channelId']);
         $this->assertCount(1, $this->pushes($quiet['device']['token'], $tag));
+        $this->assertSame([], $this->pushes($organizationSnoozed['device']['token'], $tag));
+        $this->assertSame([], $this->pushes($allSnoozed['device']['token'], $tag));
+        $this->assertCount(2, $this->pushes($snoozeEnded['device']['token'], $tag));
 
         // Signing out of a phone, or removing its target, stops its pushes.
         $this->assertSame(204, $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', $first['headers'])['headers']['status-code']);

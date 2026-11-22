@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use Appwrite\Reviews\Strength;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
@@ -58,6 +59,12 @@ class Review extends Model
                 'default' => '',
                 'example' => '42',
             ])
+            ->addRule('providerPullRequestAuthor', [
+                'type' => self::TYPE_STRING,
+                'description' => 'VCS login of who opened the pull request. Empty for reviews queued before it was recorded.',
+                'default' => '',
+                'example' => 'octocat',
+            ])
             ->addRule('providerCommitHash', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Head commit of the pull request: the one the review was queued for, then the one it reviews.',
@@ -81,6 +88,14 @@ class Review extends Model
                 'description' => 'Review status. Possible values: queued, processing, completed, skipped, failed, superseded.',
                 'default' => '',
                 'example' => 'completed',
+            ])
+            ->addRule('strength', [
+                'type' => self::TYPE_ENUM,
+                'description' => 'Strength the review runs and is billed at: the repository\'s when it was queued. Possible values: basic, normal, expert.',
+                'default' => Strength::Normal->value,
+                'example' => Strength::Normal->value,
+                'enum' => Strength::values(),
+                'enumSDKName' => 'ReviewStrength',
             ])
             ->addRule('verdict', [
                 'type' => self::TYPE_STRING,

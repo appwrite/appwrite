@@ -7,13 +7,16 @@ import {
 import { NameCard } from './NameCard'
 import { SiteDetailsCard } from './SiteDetailsCard'
 import { SiteStatusCard } from './SiteStatusCard'
+import { AnalyticsCard } from './AnalyticsCard'
 import { DangerZoneCard } from './DangerZoneCard'
 import { useT } from '@/lib/i18n/translate'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 export function View() {
   const t = useT()
   const { projectId, siteId } = useParams({ strict: false })
   const navigate = useNavigate()
+  const { features } = useConsoleProfile()
   const { data: site, isLoading: siteLoading } = useProjectSite(
     projectId,
     siteId,
@@ -66,6 +69,26 @@ export function View() {
         <SiteStatusCard projectId={projectId} siteId={siteId} site={site} />
       ),
     },
+    ...(features.analytics
+      ? [
+          {
+            id: 'analytics',
+            search: {
+              title: 'Analytics',
+              description:
+                'Add the analytics tracker to production pages without code.',
+              keywords: ['analytics', 'tracker', 'pageviews', 'visitors'],
+            },
+            node: (
+              <AnalyticsCard
+                projectId={projectId}
+                siteId={siteId}
+                site={site}
+              />
+            ),
+          },
+        ]
+      : []),
     {
       id: 'delete',
       search: {

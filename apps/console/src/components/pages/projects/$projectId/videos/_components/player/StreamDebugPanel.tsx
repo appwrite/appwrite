@@ -403,7 +403,7 @@ export function StreamDebugPanel({
   if (!detached) {
     return (
       <InspectorPortalContext.Provider value={portalContainer}>
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card/50">
+        <div className="rounded-xl border border-border bg-card/50">
           <div className="flex shrink-0 items-center gap-3 border-b border-border px-3 py-2">
             <StatusPill status={status} frozen={Boolean(frozen)} />
             <div className="min-w-0 flex-1 overflow-x-auto [scrollbar-width:none]">
@@ -425,9 +425,7 @@ export function StreamDebugPanel({
             />
             {actions}
           </div>
-          <div className="max-h-[min(75dvh,820px)] min-h-0 overflow-y-auto p-4">
-            {content}
-          </div>
+          <div className="p-4">{content}</div>
         </div>
       </InspectorPortalContext.Provider>
     )

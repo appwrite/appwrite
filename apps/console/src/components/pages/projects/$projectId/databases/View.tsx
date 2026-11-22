@@ -562,6 +562,7 @@ export function View() {
                 planId: organizationPlan?.$id,
               })}
               resourceName="databases"
+              resourceNameSingular="database"
               orgId={project?.teamId}
               fullWidth={false}
             />

@@ -24,7 +24,7 @@ function formatOpsCount(
   t: (text: string) => string,
 ): string {
   if (value === 'unlimited') return t('Unlimited')
-  return formatCompactCount(value)
+  return formatCompactCount(value, { decimals: 2 })
 }
 
 function formatIncludedOpsLabel(

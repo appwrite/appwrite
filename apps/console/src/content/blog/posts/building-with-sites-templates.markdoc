@@ -91,7 +91,7 @@ Here, you will select your **Production branch**. This is the branch that Appwri
 
 You can optionally set a **Root directory** if your production build is inside a specific folder within your repository.
 
-There is also a **Silent mode** option. If enabled, Appwrite will not automatically create comments when pushing changes to the connected repository.
+Appwrite comments on pull requests and adds checks to commits by default. You can turn either off later in the site's [Git automation](/docs/products/sites/deploy-from-git#git-automation) settings.
 
 Next, you will configure your **Environment variables**. Two variables will already be present:
 

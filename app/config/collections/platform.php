@@ -209,7 +209,7 @@ $platformCollections = [
             Attribute::string(key: 'rules', size: 1024, default: [], array: true),
             Attribute::string(key: 'metric', size: 64, required: true, default: ''),
             Attribute::string(key: 'comparator', size: 32, required: true, default: ''),
-            Attribute::double(key: 'threshold', required: true, default: 0),
+            Attribute::double(key: 'threshold', required: true, default: 0.0),
             Attribute::integer(key: 'window', required: true, default: 3600, signed: false),
             Attribute::integer(key: 'cooldown', required: true, default: 3600, signed: false),
             Attribute::string(key: 'notify', size: 32, default: ['owner'], array: true),
@@ -253,9 +253,9 @@ $platformCollections = [
             Attribute::string(key: 'resourceId', required: true, default: ''),
             Attribute::string(key: 'metric', size: 64, required: true, default: ''),
             Attribute::string(key: 'comparator', size: 32, required: true, default: ''),
-            Attribute::double(key: 'threshold', required: true, default: 0),
-            Attribute::double(key: 'value', required: true, default: 0),
-            Attribute::double(key: 'peak', required: true, default: 0),
+            Attribute::double(key: 'threshold', required: true, default: 0.0),
+            Attribute::double(key: 'value', required: true, default: 0.0),
+            Attribute::double(key: 'peak', required: true, default: 0.0),
             Attribute::integer(key: 'notifications', required: true, default: 0, signed: false),
             Attribute::datetime(key: 'resolvedAt'),
             Attribute::datetime(key: 'acknowledgedAt'),
@@ -372,6 +372,8 @@ $platformCollections = [
             Attribute::string(key: 'owner', size: 16, default: ''),
             Attribute::string(key: 'region', size: 16, required: true),
             Attribute::string(key: 'logs', size: 1000000, default: ''),
+            // Latest DNS record checks from verification, one ruleRecords row per record type
+            Attribute::string(key: 'records', size: 16384, filters: ['subQueryRuleRecords']),
         ],
         'indexes' => [
             Index::fulltext(key: '_key_search', attributes: ['search']),
@@ -392,6 +394,33 @@ $platformCollections = [
         ],
     ],
 
+    'ruleRecords' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('ruleRecords'),
+        'name' => 'Rule Records',
+        'attributes' => [
+            Attribute::string(key: 'projectInternalId', required: true),
+            Attribute::string(key: 'ruleInternalId', required: true),
+            Attribute::string(key: 'ruleId'),
+            // 'CAA', 'CNAME', 'A' or 'AAAA'
+            Attribute::string(key: 'type', size: 16, required: true),
+            // Hostname the record was looked up for, or the parent a blocking CAA record was found on
+            Attribute::string(key: 'name', required: true),
+            // Value the user must set
+            Attribute::string(key: 'expected', required: true),
+            // Values DNS returned, at most 10
+            Attribute::string(key: 'current', array: true, default: []),
+            // 'verified', 'missing', 'mismatch', 'misplaced' or 'failed'
+            Attribute::string(key: 'status', size: 16, required: true),
+            Attribute::string(key: 'message', size: 1000, default: ''),
+            Attribute::boolean(key: 'required', default: false),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_rule', attributes: ['ruleInternalId'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),
+            Index::key(key: '_key_project', attributes: ['projectInternalId'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),
+        ],
+    ],
+
     'installations' => [
         '$collection' => Id::custom(Database::METADATA),
         '$id' => Id::custom('installations'),
@@ -406,6 +435,8 @@ $platformCollections = [
             Attribute::text(key: 'personalAccessToken', size: 65535, filters: ['encrypt']),
             Attribute::datetime(key: 'personalAccessTokenExpiry'),
             Attribute::text(key: 'personalRefreshToken', size: 65535, filters: ['encrypt']),
+            // Code review only: whether repositories added to the installation later are reviewed.
+            Attribute::boolean(key: 'reviewNewRepositories', default: false),
         ],
         'indexes' => [
             Index::key(key: '_key_projectInternalId', attributes: ['projectInternalId'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),
@@ -428,6 +459,8 @@ $platformCollections = [
             Attribute::string(key: 'resourceInternalId'),
             Attribute::string(key: 'resourceType', required: true),
             Attribute::string(key: 'providerPullRequestIds', size: 128, array: true),
+            // Code review only: how hard its pull requests are reviewed (Appwrite\Reviews\Strength).
+            Attribute::string(key: 'strength', size: 16, default: 'normal'),
         ],
         'indexes' => [
             Index::key(key: '_key_installationId', attributes: ['installationId'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),

@@ -37,6 +37,9 @@ const EMPTY_CONFIG: RuntimeConfig = {
   stripePublishableKey: '',
   sentryDsn: '',
   plausibleScriptSrc: '',
+  appwriteAnalyticsEndpoint: '',
+  appwriteAnalyticsProjectId: '',
+  appwriteAnalyticsPropertyId: '',
   userVerification: '',
   cookieBanner: '',
   browserApi: '',
@@ -45,7 +48,6 @@ const EMPTY_CONFIG: RuntimeConfig = {
   screenshotMode: '',
   databasePitrRestore: '',
   projectEnvironments: '',
-  vcsOrigin: '',
   usageStats: '',
   preLaunch: '',
 }

@@ -17,6 +17,10 @@ Install using composer:
 composer require utopia-php/emails
 ```
 
+`Email` comes from the `utopia` PHP extension (`ext-utopia`, built from `crates/extension` in
+appwrite/appwrite); this package holds the validators, the canonical providers and the free and
+disposable lists (`data/`) the extension embeds. 0.8.x is the last release with the class in PHP.
+
 ```php
 <?php
 

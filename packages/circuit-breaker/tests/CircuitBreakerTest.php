@@ -219,6 +219,7 @@ final class CircuitBreakerTest extends TestCase
             'breaker.state' => 1,
             'breaker.failures' => 1,
             'breaker.successes' => 0,
+            'breaker.slow' => 0,
         ], $this->observe($telemetry));
         $this->assertCount(1, $telemetry->gauges['breaker.event.timestamp']->values);
     }
@@ -246,6 +247,7 @@ final class CircuitBreakerTest extends TestCase
             'edge.breaker.state' => 1,
             'edge.breaker.failures' => 1,
             'edge.breaker.successes' => 0,
+            'edge.breaker.slow' => 0,
         ], $this->observe($telemetry));
         $this->assertCount(1, $telemetry->gauges['edge.breaker.event.timestamp']->values);
         $this->assertArrayNotHasKey('breaker.calls', $telemetry->counters);
@@ -455,6 +457,7 @@ final class CircuitBreakerTest extends TestCase
             'breaker.state' => 0,
             'breaker.failures' => 0,
             'breaker.successes' => 0,
+            'breaker.slow' => 0,
         ], $this->observe($telemetry));
         $this->assertArrayNotHasKey('breaker.calls', $telemetry->counters);
 

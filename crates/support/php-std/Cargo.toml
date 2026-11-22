@@ -10,8 +10,9 @@ publish.workspace = true
 
 [dependencies]
 bytes.workspace = true
-# crypt(), password_*() and hash(): Argon2, Blowfish (EksBlowfish), MD5, SHA-1, SHA-2 and SHA-3 (RustCrypto).
-argon2.workspace = true
+# crypt(), password_*() and hash(): Blowfish (EksBlowfish), MD5, SHA-1, SHA-2 and SHA-3 (RustCrypto),
+# and BLAKE2b for Argon2 (src/argon2.rs).
+blake2.workspace = true
 blowfish.workspace = true
 foldhash.workspace = true
 getrandom.workspace = true
@@ -35,6 +36,12 @@ xxhash-rust.workspace = true
 # yaml_parse(): libyaml 0.2.5 translated to Rust, the parser ext-yaml links, so
 # documents are accepted, refused and split into events exactly as in PHP.
 unsafe-libyaml.workspace = true
+# Wipes Argon2's memory after a hash, as libargon2 does.
+zeroize.workspace = true
+
+[dev-dependencies]
+# The reference src/argon2.rs is tested against.
+argon2.workspace = true
 
 [build-dependencies]
 # PCRE2 10.44 with its JIT, from the sources PHP 8.5 bundles (pcre2/): the

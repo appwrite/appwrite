@@ -140,6 +140,7 @@ export function DomainSearchResults({
     retry,
     isRetrying,
     hasContent,
+    isInvalid,
     baseName,
     addRequestedTld,
   } = useDomainSearch(initialSearch, onSearchValueChange)
@@ -271,6 +272,10 @@ export function DomainSearchResults({
                 />
               ))}
             </div>
+          ) : isInvalid ? (
+            <p className={DOMAIN_SEARCH_HELPER_CLASS}>
+              {t('Enter a domain like example.com')}
+            </p>
           ) : baseName.length > 0 && baseName.length < 2 ? (
             <p className={DOMAIN_SEARCH_HELPER_CLASS}>
               {t('Type at least 2 characters to see suggestions')}

@@ -1,5 +1,17 @@
 # Change Log
 
+## 31.3.0
+
+* Added: `account.createLDAPSession` for LDAP sign-in
+* Added: `project.updateLDAP` and `project.createLDAPTest` to configure and test a project's LDAP directory, the `ProjectLDAPEncryption` enum and `ldap*` fields on `Project`
+* Added: `project.updateOAuth2Naver`, the `OAuth2Naver` model and `OAuthProvider.Naver`
+* Added: `project.deletePasswords` to force every user to reset their password
+* Added: `sites.updateAnalytics` and `analyticsEnabled` and `analyticsPropertyId` on `Site`
+* Added: `reason` on `DomainPrice`, set when a domain was not priced for the requested registration type
+* Added: `ImageFormat.Auto` on `Storage.getFilePreview` and the avatar endpoints, serving avif or webp when the `Accept` header supports it
+* Updated: optional params on `functions.update` accept `null`
+* Updated: requests send `X-Appwrite-Response-Format: 2.7.2`
+
 ## 31.2.0
 
 * Updated: `project.listEnvironments`, `project.createEnvironment`, `project.getEnvironment`, `project.updateEnvironment` return `Environment` models instead of `Project`

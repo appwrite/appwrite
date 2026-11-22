@@ -738,7 +738,7 @@ export function buildPlayerSetupPrompt({
     `Stream URL (${formatLabel} master manifest): ${url}`,
     '',
     'The master manifest lists every rendition and subtitle track, so the player handles adaptive bitrate and captions on its own.',
-    'Requests use the read permissions of the source file in Appwrite Storage. Public videos need read access for Any.',
+    "Requests use the video's own read permissions, not the source file's. Visitors need read access for Any; signed-in users need a session for the project and a read role on the video.",
     '',
     '## Install',
     ...(installNote ? ['', installNote] : []),

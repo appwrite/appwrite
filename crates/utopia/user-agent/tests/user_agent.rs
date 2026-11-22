@@ -1,5 +1,4 @@
-//! `packages/user-agent/tests/UserAgentTest.php`, natively. The parity
-//! corpus against PHP is `crates/extension/tests/user-agent.php`.
+//! `packages/user-agent/tests/UserAgentTest.php`, natively.
 
 use utopia_user_agent::{Text, UserAgent, detection};
 

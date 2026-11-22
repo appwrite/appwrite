@@ -317,6 +317,10 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/auth/passkeys',
           },
           {
+            label: 'LDAP login',
+            href: '/docs/products/auth/ldap',
+          },
+          {
             label: 'Sign in with Appwrite',
             href: '/docs/products/auth/sign-in-with-appwrite',
           },
@@ -343,6 +347,10 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Multi-factor authentication',
             href: '/docs/products/auth/mfa',
+          },
+          {
+            label: 'Account switching',
+            href: '/docs/products/auth/account-switching',
           },
           {
             label: 'Auth status check',
@@ -716,6 +724,74 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Block traffic with Firewall',
             href: '/docs/products/analytics/firewall',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    prefix: 'products/videos',
+    parent: {
+      href: '/docs',
+      label: 'Videos',
+    },
+    navigation: [
+      {
+        label: 'Getting started',
+        items: [
+          {
+            label: 'Overview',
+            href: '/docs/products/videos',
+          },
+          {
+            label: 'Quick start',
+            href: '/docs/products/videos/quick-start',
+          },
+        ],
+      },
+      {
+        label: 'Concepts',
+        items: [
+          {
+            label: 'Videos',
+            href: '/docs/products/videos/videos',
+          },
+          {
+            label: 'Encoding profiles',
+            href: '/docs/products/videos/profiles',
+          },
+          {
+            label: 'Renditions',
+            href: '/docs/products/videos/renditions',
+          },
+          {
+            label: 'Outputs',
+            href: '/docs/products/videos/outputs',
+          },
+          {
+            label: 'Captions',
+            href: '/docs/products/videos/captions',
+          },
+          {
+            label: 'Timeline',
+            href: '/docs/products/videos/timeline',
+          },
+          {
+            label: 'Permissions',
+            href: '/docs/products/videos/permissions',
+          },
+        ],
+      },
+      {
+        label: 'Guides',
+        items: [
+          {
+            label: 'Play a video in your app',
+            href: '/docs/products/videos/play',
+          },
+          {
+            label: 'Inspect playback',
+            href: '/docs/products/videos/inspector',
           },
         ],
       },

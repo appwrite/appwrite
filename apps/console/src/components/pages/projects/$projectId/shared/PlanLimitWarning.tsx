@@ -14,8 +14,10 @@ interface PlanLimitWarningProps {
   limit: number | bigint | null | undefined
   /** The plan name */
   planName?: string
-  /** The resource name (e.g., "databases", "buckets", "functions") */
+  /** Plural resource name (e.g., "databases", "buckets", "functions") */
   resourceName: string
+  /** Singular resource name (e.g., "database", "bucket", "function") */
+  resourceNameSingular: string
   /** The organization ID for the upgrade link */
   orgId: string | null | undefined
   /** When true, the alert content spans the full viewport width. */
@@ -29,6 +31,7 @@ export function PlanLimitWarning({
   limit,
   planName = 'plan',
   resourceName,
+  resourceNameSingular,
   orgId,
   fullWidth = true,
   salesSource,
@@ -55,6 +58,8 @@ export function PlanLimitWarning({
   }
 
   const remaining = Math.max(0, limitNumber - currentCount)
+  const resourceLabel =
+    limitNumber !== 1 ? t(resourceName) : t(resourceNameSingular)
 
   const capacityLink = salesSource ? (
     <ContactSalesLink
@@ -90,25 +95,22 @@ export function PlanLimitWarning({
             <div className="flex-1 min-w-0">
               <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
                 {isAtLimit
-                  ? `${t("You've reached the limit of")} ${limitNumber} ${t(resourceName)}`
-                  : `${t('Approaching the limit for')} ${t(resourceName)}`}
+                  ? `${t("You've reached the limit of")} ${limitNumber} ${resourceLabel}`
+                  : `${t('Approaching the limit for')} ${resourceLabel}`}
               </AlertTitle>
               <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
                 <span className="inline">
                   {isAtLimit ? (
                     <>
                       {t('Your plan')} ({planName}) {t('includes up to')}{' '}
-                      {limitNumber} {t(resourceName)}.{' '}
-                      {capacityLink}{' '}
+                      {limitNumber} {resourceLabel}. {capacityLink}{' '}
                       {t('to unlock more capacity.')}
                     </>
                   ) : (
                     <>
                       {t('Your plan')} ({planName}) {t('includes up to')}{' '}
-                      {limitNumber} {t(resourceName)}. {t('Remaining:')}{' '}
-                      {remaining}
-                      .{' '}
-                      {capacityLink}{' '}
+                      {limitNumber} {resourceLabel}. {t('Remaining:')}{' '}
+                      {remaining}. {capacityLink}{' '}
                       {t('to unlock more capacity.')}
                     </>
                   )}

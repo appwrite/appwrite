@@ -7,4 +7,4 @@ parameters:
         - src
         - tests
     scanFiles:
-        - stubs/scrypt.stub
+        - stubs/Hash.php

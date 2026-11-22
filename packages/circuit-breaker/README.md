@@ -72,6 +72,33 @@ Half open asks one question — is the dependency back — and one probe answers
 
 Probes are counted per process. That bounds the herd one process can send, which is the part a process can observe; a cross-process count would need a lease with its own timeout to survive a crashed holder.
 
+### Slow calls
+
+A dependency that answers slowly is not broken, and a timeout is not a failure. Pass the exceptions that mean "too slow" as `slow`, and they never count toward the failure ratio. Instead they get a ratio of their own, over calls that were slow or failed:
+
+```php
+use Utopia\Cache\Adapter\Redis\TimeoutException;
+use Utopia\CircuitBreaker\CircuitBreaker;
+
+$breaker = new CircuitBreaker(
+    failureRatio: 0.5,
+    minimumThroughput: 3,
+    slow: [TimeoutException::class],
+    slowRatio: 0.9,
+    slowMinimumThroughput: 20
+);
+```
+
+- While closed, the circuit opens once at least `slowMinimumThroughput` calls are in the window and `slowRatio` of them were calls that were slow or failed. `slowMinimumThroughput` defaults to `minimumThroughput`; set it higher so a few slow tail calls cannot open the circuit while a few failures still do.
+- The failure rule is unchanged: it opens on `failureRatio` of the window's calls failing, over `minimumThroughput`. A slow call is a call in its denominator, never a failure.
+- A window with no success at all opens the circuit once it holds `minimumThroughput` calls, even below `slowMinimumThroughput`, so a sparse caller whose every call is slow or failed is not left closed. One success keeps a window below `slowMinimumThroughput` closed.
+- A dependency that never succeeds therefore opens the circuit however its calls split between slow and failed, while one that still answers most calls in time stays closed.
+- While half open, a slow probe is neutral. It returns the `open` fallback and frees its probe slot, but neither re-opens the circuit nor counts toward `successThreshold`. A failed probe still re-opens it, and `successThreshold` successful probes still close it.
+- Once one half-open period has seen `slowMinimumThroughput` slow probes in a process, the circuit re-opens and backs off for `timeout`, so a dependency that stays slow is reported as open instead of being probed back to back.
+- A slow call returns the `open` fallback, as a failure does.
+- Matching uses `instanceof`, so subclasses of a listed exception are slow too.
+- Telemetry records the call with outcome `slow`, the fallback with reason `slow`, and the window's slow count as the `breaker.slow` gauge. Nothing is added to `breaker.callback_failures`.
+
 ## Examples
 
 ### Using all three states
@@ -164,7 +191,7 @@ $breaker = new CircuitBreaker(
 
 ### Telemetry
 
-Telemetry is opt-in. The `telemetry` constructor argument defaults to `null`, which emits no metrics and does not require `utopia-php/telemetry` at runtime. Install `utopia-php/telemetry` and pass any adapter to emit counters and gauges for calls, fallbacks, callback failures, transitions, state, failure counts, success counts, active calls, and transition/probe events.
+Telemetry is opt-in. The `telemetry` constructor argument defaults to `null`, which emits no metrics and does not require `utopia-php/telemetry` at runtime. Install `utopia-php/telemetry` and pass any adapter to emit counters and gauges for calls, fallbacks, callback failures, transitions, state, failure counts, slow counts, success counts, active calls, and transition/probe events.
 
 ```bash
 composer require utopia-php/telemetry
@@ -221,6 +248,9 @@ $breaker->setTelemetry($telemetry);
 - `failureRatio` (float, default `0.5`) — share of calls in the window that must fail to open the circuit, greater than 0 and at most 1
 - `minimumThroughput` (int, default `20`) — calls required in the window before the ratio is trusted
 - `halfOpenPermittedCalls` (int, default `1`) — probes allowed to run concurrently while half open
+- `slow` (`list<class-string<Throwable>>`, default `[]`) — exceptions that mean the call was too slow rather than failed, matched with `instanceof`
+- `slowRatio` (float, default `1.0`) — share of calls in the window that must have been slow or failed to open the circuit, greater than 0 and at most 1; ignored when `slow` is empty
+- `slowMinimumThroughput` (?int, default `null`) — calls required in the window before the slow ratio is trusted, at least 1; `null` uses `minimumThroughput`. A window with no success opens at `minimumThroughput` regardless
 
 ### `call()` parameters
 
@@ -242,6 +272,7 @@ $breaker->isClosed();
 $breaker->isHalfOpen();
 
 $breaker->getFailureCount();
+$breaker->getSlowCount();
 $breaker->getSuccessCount();
 ```
 

@@ -72,6 +72,7 @@ export { sitesFilterColumns } from './filter-configs/sites'
 export { domainsFilterColumns } from './filter-configs/domains'
 export { dnsRecordsFilterColumns } from './filter-configs/dns-records'
 export { deploymentsFilterColumns } from './filter-configs/deployments'
+export { reviewsFilterColumns } from './filter-configs/reviews'
 export {
   executionsFilterColumns,
   siteLogsFilterColumns,
@@ -87,11 +88,7 @@ export {
   toggleActivitySdkSourceInMap,
 } from './filter-configs/activities'
 export type { ActivitySdkSource } from './filter-configs/activities'
-export {
-  getActivityFilterQueryParts,
-  maxIso,
-  minIso,
-} from './activity-filters'
+export { getActivityFilterQueryParts, maxIso, minIso } from './activity-filters'
 export { proxyRulesFilterColumns } from './filter-configs/proxy-rules'
 export { tableColumnsFilterColumns } from './filter-configs/table-columns'
 export { tableIndexesFilterColumns } from './filter-configs/table-indexes'

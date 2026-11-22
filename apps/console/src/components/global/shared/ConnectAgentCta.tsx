@@ -39,9 +39,6 @@ export function ConnectAgentCta({
   const { project } = useProject(projectId)
   const { access } = useOrganizationScopes(project?.teamId)
   const { showProjectAgents } = useDebugOverrides()
-  const { data: consents, isFetched } = useAccountConsents({
-    enabled: isAuthenticated,
-  })
   const projectConnect = useProjectConnectDialog()
   const [copied, setCopied] = useState(false)
 
@@ -49,6 +46,7 @@ export function ConnectAgentCta({
     isAuthenticated &&
     showProjectAgents &&
     canShowAgentMcpConnectCta(access, features)
+  const { data: consents, isFetched } = useAccountConsents({ enabled: canShow })
   const connected = isFetched
     ? hasAccountMcpAgentConnected(consents)
     : initialConnected !== false

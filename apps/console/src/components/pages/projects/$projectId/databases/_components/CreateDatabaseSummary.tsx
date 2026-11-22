@@ -97,7 +97,7 @@ function formatIncludedOpsValue(
   t: (text: string) => string,
 ): string {
   if (value === 'unlimited') return t('Unlimited')
-  return `${formatCompactCount(value)} ${t('included')}`
+  return `${formatCompactCount(value, { decimals: 2 })} ${t('included')}`
 }
 
 function ServerlessPlanOps({
