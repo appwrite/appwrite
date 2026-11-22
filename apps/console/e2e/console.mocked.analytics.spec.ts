@@ -133,7 +133,7 @@ type MockOptions = {
   propertyLimitReached?: boolean
   /** The plan's `analyticsProperties`; the mocked project holds one property. */
   planPropertyLimit?: number
-  /** Holds the property list (the plan-limit count) until it resolves. */
+  /** Holds the plan-limit count (the limit-1 property list) until it resolves. */
   countGate?: Promise<void>
 }
 
@@ -327,7 +327,12 @@ async function mockAppwriteApi(
       return json(200, property(identifyUsers, options.type))
     }
     if (apiPath === '/analytics/properties') {
-      await options.countGate
+      const isCount = listParam(url, 'queries').some((query) => {
+        const { method, values } = JSON.parse(query)
+        return method === 'limit' && values[0] === 1
+      })
+      // The route loader awaits the full list, so only the count waits.
+      if (isCount) await options.countGate
       return json(200, {
         total: 1,
         properties: [property(identifyUsers, options.type)],
