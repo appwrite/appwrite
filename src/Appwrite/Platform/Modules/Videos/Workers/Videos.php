@@ -2712,13 +2712,19 @@ class Videos extends Action
     }
 
     /**
-     * Cuts the query string off every URL in a command line or ffmpeg's output,
-     * so a presigned source never reaches a span with its signature. A URL runs
-     * to the next space or line break; whatever follows its `?` goes, a closing
-     * quote included.
+     * Strips credentials from a command line or ffmpeg's output before it reaches a span.
+     *
+     * Cuts the query string off every URL, so a presigned source never keeps its
+     * signature: a URL runs to the next space or line break, and whatever follows its
+     * `?` goes, a closing quote included. Also blanks the value of every credential
+     * header and any JWT, because ffmpeg only takes request headers on its command line,
+     * so the ephemeral `X-Appwrite-Key` a segment-encrypted source is read with is in it.
      */
     private function withoutSignatures(string $text): string
     {
+        $text = (string) \preg_replace('/\b(X-Appwrite-Key|Authorization|Cookie)\s*:[^\r\n]*/i', '$1: [redacted]', $text);
+        $text = (string) \preg_replace('/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/', '[redacted]', $text);
+
         $lines = [];
         foreach (\explode("\n", $text) as $line) {
             $words = [];
