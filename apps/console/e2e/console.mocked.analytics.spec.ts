@@ -133,6 +133,8 @@ type MockOptions = {
   propertyLimitReached?: boolean
   /** The plan's `analyticsProperties`; the mocked project holds one property. */
   planPropertyLimit?: number
+  /** Holds the property list (the plan-limit count) until it resolves. */
+  countGate?: Promise<void>
 }
 
 const MOBILE_EVENT_COUNTS: Record<string, number> = {
@@ -324,11 +326,13 @@ async function mockAppwriteApi(
       }
       return json(200, property(identifyUsers, options.type))
     }
-    if (apiPath === '/analytics/properties')
+    if (apiPath === '/analytics/properties') {
+      await options.countGate
       return json(200, {
         total: 1,
         properties: [property(identifyUsers, options.type)],
       })
+    }
 
     if (apiPath === `/sites/${SITE_ID}/analytics`) {
       mock.siteAnalytics.push(request)
@@ -353,12 +357,13 @@ async function mockAppwriteApi(
     if (apiPath === '/vcs/installations')
       return json(200, { total: 0, installations: [] })
 
-    if (apiPath === `/organizations/${ORGANIZATION.$id}/plan`)
+    if (apiPath === `/organizations/${ORGANIZATION.$id}/plan`) {
       return json(200, {
         $id: ORGANIZATION.billingPlan,
         name: 'Free',
         analyticsProperties: options.planPropertyLimit ?? 0,
       })
+    }
 
     if (apiPath === '/account') return json(200, ACCOUNT)
     if (apiPath === '/account/prefs') {
@@ -840,6 +845,27 @@ test.describe('analytics property (mocked API)', () => {
     await expect(
       page.getByRole('button', { name: 'Create property' }),
     ).toBeDisabled()
+  })
+
+  test('holds the create form until the plan limit is known', async ({
+    page,
+  }) => {
+    let releaseCount = () => {}
+    const countGate = new Promise<void>((resolve) => {
+      releaseCount = resolve
+    })
+    await mockAppwriteApi(page, { planPropertyLimit: 5, countGate })
+    await page.goto(`/projects/${PROJECT_ID}/analytics/add`, {
+      waitUntil: 'domcontentloaded',
+    })
+
+    const create = page.getByRole('button', { name: 'Create property' })
+    await expect(create).toBeDisabled({ timeout: 30_000 })
+    releaseCount()
+    await expect(create).toBeEnabled()
+    await expect(page.getByTestId('analytics-property-plan-limit')).toHaveCount(
+      0,
+    )
   })
 
   test('turns user identification on', async ({ page }) => {

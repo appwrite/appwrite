@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -17,12 +17,25 @@ export function AnalyticsToggle({
 }: AnalyticsToggleProps) {
   const t = useT()
   const { projectId } = useParams({ strict: false })
-  const { isAtLimit, limit, orgId } = useAnalyticsPropertiesPlanLimit(projectId)
+  const { isAtLimit, isChecking, limit, orgId } =
+    useAnalyticsPropertiesPlanLimit(projectId)
+  const [held, setHeld] = useState(false)
 
-  // A new site always needs a new property, so the toggle starts on but cannot stay on at the cap.
+  // A new site always needs a new property: the default on is held off until the cap is known, and dropped at it.
   useEffect(() => {
-    if (isAtLimit && checked) onCheckedChange(false)
-  }, [isAtLimit, checked, onCheckedChange])
+    if (isChecking) {
+      if (checked) {
+        setHeld(true)
+        onCheckedChange(false)
+      }
+    } else if (isAtLimit) {
+      setHeld(false)
+      if (checked) onCheckedChange(false)
+    } else if (held) {
+      setHeld(false)
+      onCheckedChange(true)
+    }
+  }, [isChecking, isAtLimit, checked, held, onCheckedChange])
 
   return (
     <div className="flex items-center justify-between gap-4">
@@ -49,9 +62,9 @@ export function AnalyticsToggle({
       </div>
       <Switch
         id="site-analytics"
-        checked={checked && !isAtLimit}
+        checked={(checked || held) && !isAtLimit}
         onCheckedChange={onCheckedChange}
-        disabled={isAtLimit}
+        disabled={isAtLimit || isChecking}
         className="shrink-0"
       />
     </div>
