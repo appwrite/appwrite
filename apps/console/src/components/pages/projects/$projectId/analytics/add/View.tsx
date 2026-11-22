@@ -90,7 +90,8 @@ export function View({ projectId, search }: ViewProps) {
   const mayCreate = canCreateAnalyticsProperty(access, features)
   const planLimit = useAnalyticsPropertiesPlanLimit(projectId)
   // The setup step follows a create, which itself fills the last slot.
-  const blockedByPlan = step === 'configure' && planLimit.isAtLimit
+  const blockedByPlan =
+    step === 'configure' && (planLimit.isAtLimit || planLimit.isChecking)
 
   const [name, setName] = useState(search.name ?? '')
   const [domain, setDomain] = useState(search.domain ?? '')
@@ -285,7 +286,7 @@ export function View({ projectId, search }: ViewProps) {
           onSubmit={handleSubmit}
           className="w-full space-y-8"
         >
-          {blockedByPlan && (
+          {blockedByPlan && planLimit.isAtLimit && (
             <p
               className="text-[13px] text-amber-600 dark:text-amber-400"
               data-testid="analytics-property-plan-limit"

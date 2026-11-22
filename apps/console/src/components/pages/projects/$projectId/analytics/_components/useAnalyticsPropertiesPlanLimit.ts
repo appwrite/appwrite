@@ -9,8 +9,10 @@ import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 /** The plan's per-project property cap (0 = unlimited), counted without the list's search. */
 export function useAnalyticsPropertiesPlanLimit(projectId: string | undefined) {
   const { project } = useProject(projectId)
-  const { plan } = useOrganizationPlan(project?.teamId)
-  const { data } = useQuery(analyticsPropertiesQueryOptions(projectId, 0, 1))
+  const { plan, isLoading: planLoading } = useOrganizationPlan(project?.teamId)
+  const { data, isLoading: countLoading } = useQuery(
+    analyticsPropertiesQueryOptions(projectId, 0, 1),
+  )
 
   const currentCount = data?.total ?? 0
   const limit = plan?.analyticsProperties ?? 0
@@ -25,6 +27,8 @@ export function useAnalyticsPropertiesPlanLimit(projectId: string | undefined) {
     limit,
     isAtLimit,
     isLoaded: plan !== undefined && data !== undefined,
+    // A failed query settles too: the server's 402 still guards the create.
+    isChecking: !project || planLoading || countLoading,
     orgId: project?.teamId,
     planName,
   }
