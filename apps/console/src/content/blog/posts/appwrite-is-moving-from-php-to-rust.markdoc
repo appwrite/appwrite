@@ -18,7 +18,7 @@ faqs:
   - question: "Will Appwrite still support PHP?"
     answer: "Yes. The PHP SDK and the PHP Functions runtime stay fully supported. The move is about the language Appwrite's own server is written in, not the languages you build with."
   - question: "When will the migration be complete?"
-    answer: "Rust components already serve every Appwrite customer. We expect the main migration to complete in the next few weeks, while services with lighter load move in later phases. Our goal is to replace every line of code."
+    answer: "We are at the beginning, and most of Appwrite still runs on PHP. We hope to move the services that carry most of our load in the coming weeks, and services with lighter load will follow in later phases. Our goal is to replace every line of code."
 ---
 
 2.6 times the requests per second. 8 times less CPU per request. 33 times less memory. Those are the first numbers from parts of Appwrite running on Rust, measured against the same code on PHP.
@@ -94,9 +94,11 @@ Each service rolls out the way any well-run release does. It starts with a small
 
 # Where we are today
 
-The move is already in production. Over the last few weeks, every Appwrite customer has been served by Rust components inside our services.
+We are at the beginning. Most of Appwrite still runs on PHP today. What runs on Rust so far is a set of core libraries inside our PHP services, and the first few services starting to move over one at a time.
 
-We expect the main migration to complete in the next few weeks. A long tail of services with lighter load will stay on PHP a little longer and move in later phases. Our goal is the same for all of them: to replace every line of code.
+Small as that is, it already reaches everyone. Over the last few weeks, every Appwrite customer has been served by some Rust code inside our services, without noticing. That is the point of moving in small steps: each one ships quietly and safely.
+
+Our next milestone is moving the services that carry most of our load, which we hope to reach in the coming weeks. After that comes a long tail of services with lighter load, which will move in later phases. The goal for all of them stays the same: to replace every line of code, however long that takes.
 
 # Thank you, PHP
 
