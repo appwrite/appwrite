@@ -88,7 +88,7 @@ This lets every Rust component prove itself on its own, first in unit tests, the
 
 ## Rust beside PHP
 
-Second, whole services move to the Rust server, one at a time. Our proxy routes a migrated service's paths to Rust, while both runtimes share the same PostgreSQL, Redis, queues and caches. Users, Teams and Storage are the first services to make that move.
+Second, whole services move to the Rust server, one at a time. Our proxy routes a migrated service's paths to Rust, while both runtimes share the same databases, whether PostgreSQL, MySQL or MongoDB, along with the same Redis, queues and caches. Users, Teams and Storage are the first services to make that move.
 
 Each service rolls out the way any well-run release does. It starts with a small share of customer workloads, is measured against the PHP baseline, and expands step by step until it serves everyone. Because both runtimes share the same state, a service can move between them at any point with no data to migrate.
 
