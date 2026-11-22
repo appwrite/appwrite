@@ -1,0 +1,109 @@
+---
+layout: post
+title: "Appwrite is moving from PHP to Rust"
+description: After many years on PHP, Appwrite is moving its server to Rust. Why we made the choice, how we are migrating, and the first benchmark results.
+date: 2026-11-22
+cover: /images/blog/appwrite-is-moving-from-php-to-rust/cover.avif
+timeToRead: 7
+author: eldad-fux
+category: announcements, open-source, performance
+featured: false
+faqs:
+  - question: "Do I need to change anything in my app?"
+    answer: "No. Rust serves the same API, with the same SDKs and the same data. The requests you send and the responses you get stay exactly the same."
+  - question: "Why is Appwrite moving from PHP to Rust?"
+    answer: "AI made a rewrite of this size possible, and Rust lets Appwrite do two things: run much faster for everyone, and cost much less to run, both for self-hosters and for Appwrite Cloud."
+  - question: "How much faster is Appwrite on Rust?"
+    answer: "In our k6 benchmarks, the Rust Users API serves 2.6 times the requests per second of the PHP one, with 5.7 times less CPU per request and 33 times less memory. The Rust Storage API uses 8 times less CPU per request."
+  - question: "Will Appwrite still support PHP?"
+    answer: "Yes. The PHP SDK and the PHP Functions runtime stay fully supported. The move is about the language Appwrite's own server is written in, not the languages you build with."
+  - question: "When will the migration be complete?"
+    answer: "Rust components already serve every Appwrite customer. We expect the main migration to complete in the next few weeks, while services with lighter load move in later phases. Our goal is to replace every line of code."
+---
+
+2.6 times the requests per second. 8 times less CPU per request. 33 times less memory. Those are the first numbers from parts of Appwrite running on Rust, measured against the same code on PHP.
+
+After many years on PHP, we have decided to move Appwrite's server to Rust. We want to tell you why we made this choice, what we learned while exploring it, and what our first results look like. The work has already started, and Rust is serving real traffic today, but we still have a long way to go.
+
+We want to be clear about one thing first: this is not a story about PHP letting us down. PHP, together with Swoole, carried Appwrite from a side project to a platform that serves hundreds of thousands of developers. It gave us a fast language to build in, a mature ecosystem and a community we are proud to be part of. We are making this move because a new opportunity opened up, not because we were in pain.
+
+# Why now
+
+Rewriting a codebase the size of Appwrite used to be out of reach. It means hundreds of thousands of lines, 29 API services, more than 700 endpoints and dozens of libraries, all while the product keeps shipping. For years, no team our size could justify that cost. AI changed the math. With coding agents working alongside our engineers, a migration that would once have taken years is now measured in weeks.
+
+When something that was impossible becomes possible, you take a fresh look. We did, and saw two things worth doing:
+
+1. **Make Appwrite much faster for everyone.** Every request, on Appwrite Cloud and on every self-hosted server, gets more done with less waiting.
+2. **Make Appwrite much cheaper to run.** A server that needs a fraction of the CPU and memory costs a fraction to host. Self-hosters feel this first, on their own hardware. On Appwrite Cloud, it lowers our infrastructure cost, and that opens the door for us to bring prices down for our customers.
+
+# The numbers
+
+On the same machine and the same workload, the Rust Users API serves 2.6 times the requests of the PHP one, with 5.7 times less CPU and 33 times less memory.
+
+That result matters more because of where we started. Appwrite on PHP was never slow. Over the years, many independent benchmarks compared Appwrite with other backend platforms, and Appwrite was fast enough in all of them and usually came out on top. Rust is not fixing a weakness. It is raising a bar that was already high.
+
+We run the same k6 load test against both runtimes, on one Apple M4 Max, with PHP and Rust sharing one database, one Redis and one cache:
+
+| Measure | PHP | Rust | Difference |
+| --- | --- | --- | --- |
+| Users API throughput, 50 virtual users | 1,045 req/s | 2,758 req/s | 2.6× more |
+| Users API CPU per request, 200 req/s | 4.34 ms | 0.76 ms | 5.7× less |
+| Users API average memory, 200 req/s | 1,957 MiB | 58 MiB | 33× less |
+| Users API median latency, 200 req/s | 6.3 ms | 1.5 ms | 4.2× lower |
+| Storage API throughput, 200 virtual users | 298 req/s | 624 req/s | 2.1× more |
+| Storage API CPU per request, 200 req/s | 53.2 ms | 6.7 ms | 8.0× less |
+| Storage API peak memory, 200 req/s | 4,132 MiB | 1,403 MiB | 2.9× less |
+
+The gap widens under pressure. Asked for 500 requests per second, the Rust Storage API delivered 506 with no server errors and a 5.8 ms median. PHP delivered 318.
+
+The libraries underneath show the same pattern. Across 230 benchmarks of 49 Utopia libraries, each run beside its PHP original, Rust is 3.5 times faster, uses 3.5 times less CPU per call and 3.8 times less memory (geometric means).
+
+# How we approach a migration this size
+
+We move in small, verified steps, and every step ships on its own.
+
+**Gradual releases.** Rust takes over one piece at a time, behind the same API, the same SDKs and the same data. Nothing changes for the developers who use Appwrite: the requests they send and the responses they get stay exactly the same.
+
+**The tests we already trust.** Appwrite's end-to-end suite of 5,329 tests across 31 suites defines what the API does, and more than 1,400 unit tests cover the libraries underneath. A Rust service is ready when it passes the same PHP-written suite, run through the same proxy, against the same database.
+
+**Tools built for the job.** We built internal tools to guide the migration. A conversion standard says what a finished Rust library looks like. A compatibility tester records 43,075 cases from PHP across 50 libraries and replays them against Rust, fuzzed inputs included, until there are zero differences. A parity tool runs every API scenario on both runtimes and compares responses, database changes and cache effects side by side.
+
+**The same building blocks.** Appwrite has always been built from small, single-purpose Utopia libraries that grow into services and then into products. Rust keeps that architecture. Each Utopia library becomes a Rust crate with the same API, each service becomes a Rust module, and the products stay as they are.
+
+**One monorepo.** We moved 48 Utopia PHP libraries into the Appwrite repository, beside their 50 Rust counterparts. One change can now update a library, the services that use it and both runtimes together, while each library is still published to its own repository.
+
+**More output.** Together, these changes have increased our team's output by more than 400% over the last six months.
+
+**CI that keeps up.** At this pace, CI could easily become the bottleneck. We prevent that in three ways. Each change runs only the test lanes it can affect, using a map from code paths to suites. Engineers and agents verify changes locally before pushing, so CI confirms work instead of discovering problems. And libraries, services and runtimes each have their own lanes that run in parallel.
+
+# Two strategies, running together
+
+The migration follows two strategies at once: Rust inside PHP, and Rust beside PHP.
+
+## Rust inside PHP
+
+First, Appwrite's PHP server moves onto swoole-rs, a Rust foundation under the same Swoole programming model our code already uses. On top of it, our new Rust libraries load into PHP as extensions. The PHP code calls them exactly as it called the PHP libraries before.
+
+This lets every Rust component prove itself on its own, first in unit tests, then in end-to-end tests, benchmarks and manual testing, and finally in production, long before a whole service moves. Each library is checked against its PHP original and runs side by side with the code around it. By the time a service is ported, every part it is built from has already been running in production.
+
+## Rust beside PHP
+
+Second, whole services move to the Rust server, one at a time. Our proxy routes a migrated service's paths to Rust, while both runtimes share the same PostgreSQL, Redis, queues and caches. Users, Teams and Storage are the first services to make that move.
+
+Each service rolls out the way any well-run release does. It starts with a small share of customer workloads, is measured against the PHP baseline, and expands step by step until it serves everyone. Because both runtimes share the same state, a service can move between them at any point with no data to migrate.
+
+# Where we are today
+
+The move is already in production. Over the last few weeks, every Appwrite customer has been served by Rust components inside our services.
+
+We expect the main migration to complete in the next few weeks. A long tail of services with lighter load will stay on PHP a little longer and move in later phases. Our goal is the same for all of them: to replace every line of code.
+
+# Thank you, PHP
+
+We love PHP. It is the language Appwrite grew up in, and much of what we learned about building a platform, we learned in it. Our Utopia libraries started as PHP libraries, and the PHP community gave us contributors, feedback and friends along the way. Thank you.
+
+What changed is how software gets written. In an agentic world, much of the code is written and maintained with AI agents, so the comfort and experience of the people maintaining it matter less than they used to. What matters more is how fast it runs and how much it costs to run. We believe that is where software is heading, and that more teams will make choices like this one.
+
+If you are considering a similar path, we would love to hear from you. Talk to us on [Discord](https://appwrite.io/discord) or [GitHub](https://github.com/appwrite/appwrite), ask about our tools and our experience, and tell us about yours.
+
+And if you build on Appwrite, nothing about your stack needs to change. Appwrite supports the languages you are likely to need, with [SDKs](/docs/sdks) for web, mobile and server, and [Functions](/docs/products/functions) runtimes for Node.js, Python, Go, Rust, PHP, Ruby, Dart, Java, Kotlin, Swift, .NET, C++, Bun and Deno. PHP included.
