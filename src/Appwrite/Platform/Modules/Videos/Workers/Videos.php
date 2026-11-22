@@ -10,6 +10,7 @@ use Appwrite\Event\Message\VideoAction;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Platform\Modules\Videos\Base;
 use Appwrite\Storage\Encryption;
 use Appwrite\Usage\Context;
@@ -1288,7 +1289,8 @@ class Videos extends Action
                         $project,
                         $publisherForUsage,
                         $storageBytes,
-                        $computeMs
+                        $computeMs,
+                        $this->specification()
                     );
                 } catch (\Throwable $th) {
                     $this->log('Failed to publish video usage for ' . $tag . ': ' . $th->getMessage(), 'error');
@@ -2555,6 +2557,48 @@ class Videos extends Action
     private function threads(): int
     {
         return (int) System::getEnv('_APP_VIDEOS_THREADS', '4');
+    }
+
+    /**
+     * Encode size billed as executions.mbSeconds with service videos: the
+     * container's effective memory (MiB) and CPU, capped by the catalog row
+     * for `_APP_VIDEOS_SPECIFICATION` so unbounded workers do not bill the host.
+     *
+     * @return array{memory: int, cpus: float}
+     */
+    private function specification(): array
+    {
+        $measuredMemory = System::getMemory();
+        $measuredCpus = System::getCPU();
+        // Strictly less than the host total means a cgroup limit is in effect.
+        // Equal means unlimited (or a limit equal to the host), so not "from the container".
+        $memoryFromContainer = $measuredMemory < System::getMemoryTotal();
+        $cpusFromContainer = $measuredCpus < (float) System::getCPUCores();
+
+        $billed = VideoUsage::encodeSpecification(
+            System::getEnv('_APP_VIDEOS_SPECIFICATION', Specification::S_4VCPU_4GB),
+            $measuredMemory,
+            $measuredCpus,
+        );
+
+        $this->log(\sprintf(
+            'Encode bill size: memory=%dMiB (measured=%dMiB, fromContainer=%s) cpus=%g (measured=%g, fromContainer=%s)',
+            $billed['memory'],
+            $measuredMemory,
+            $memoryFromContainer ? 'yes' : 'no',
+            $billed['cpus'],
+            $measuredCpus,
+            $cpusFromContainer ? 'yes' : 'no',
+        ));
+
+        Span::add('encode.bill.memory', $billed['memory']);
+        Span::add('encode.bill.cpus', $billed['cpus']);
+        Span::add('encode.bill.measured_memory', $measuredMemory);
+        Span::add('encode.bill.measured_cpus', $measuredCpus);
+        Span::add('encode.bill.memory_from_container', $memoryFromContainer);
+        Span::add('encode.bill.cpus_from_container', $cpusFromContainer);
+
+        return $billed;
     }
 
     /**
