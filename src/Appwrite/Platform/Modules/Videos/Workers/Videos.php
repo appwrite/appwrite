@@ -2722,13 +2722,26 @@ class Videos extends Action
      */
     private function withoutSignatures(string $text): string
     {
-        $text = (string) \preg_replace('/\b(X-Appwrite-Key|Authorization|Cookie)\s*:[^\r\n]*/i', '$1: [redacted]', $text);
-        $text = (string) \preg_replace('/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/', '[redacted]', $text);
+        // A header value runs to the end of its line, which is how ffmpeg's -headers option takes them
+        foreach (['X-Appwrite-Key:', 'Authorization:', 'Cookie:'] as $header) {
+            $offset = 0;
+            while (($at = \stripos($text, $header, $offset)) !== false) {
+                $start = $at + \strlen($header);
+                $end = $start + \strcspn($text, "\r\n", $start);
+                $text = \substr($text, 0, $start) . ' [redacted]' . \substr($text, $end);
+                $offset = $start + \strlen(' [redacted]');
+            }
+        }
 
         $lines = [];
         foreach (\explode("\n", $text) as $line) {
             $words = [];
             foreach (\explode(' ', $line) as $word) {
+                $bare = \trim($word, '"\'');
+                if (\str_starts_with($bare, 'eyJ') && \substr_count($bare, '.') === 2) {
+                    $words[] = '[redacted]';
+                    continue;
+                }
                 $query = \strpos($word, '?');
                 if ($query !== false && \str_contains(\substr($word, 0, $query), '://')) {
                     $word = \substr($word, 0, $query);
