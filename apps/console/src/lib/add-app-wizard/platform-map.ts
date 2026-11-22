@@ -63,10 +63,24 @@ export function isValidKey(value: string): boolean {
   return /^[a-zA-Z][a-zA-Z0-9._-]*$/.test(v) && /\.[a-zA-Z]/.test(v)
 }
 
+/**
+ * Desktop targets identify an app by its executable name, not a reverse-DNS id:
+ * on Windows `package_info_plus` returns the executable's `InternalName` and on
+ * Linux the package name, so a bare token like `TNEDO` is the real identifier.
+ */
+export function variantKeyIsAppName(variant: string): boolean {
+  return (
+    variant === 'flutter-linux' ||
+    variant === 'linux' ||
+    variant === 'flutter-windows' ||
+    variant === 'windows'
+  )
+}
+
 export function isValidKeyForVariant(variant: string, value: string): boolean {
   const v = value.trim()
   if (v.length < 2) return false
-  if (variant === 'flutter-linux') {
+  if (variantKeyIsAppName(variant)) {
     return /^[a-zA-Z0-9._-]+$/.test(v)
   }
   return isValidKey(value)
