@@ -39,7 +39,10 @@ export function BreakdownRow({
   active = false,
   actionTitle,
   href,
+  conversionRate,
 }: {
+  /** Conversion rate of the selected goal for this row, 0-100; omitted when none is selected. */
+  conversionRate?: number | null
   /**
    * External URL for the value (a page or hostname). Adds a small "open in a
    * new window" icon after the label, shown on hover / focus.
@@ -136,6 +139,14 @@ export function BreakdownRow({
         {badge}
         <span className="flex-1" />
         <div className="flex shrink-0 items-center gap-3">
+          {conversionRate !== undefined ? (
+            <span
+              className="min-w-[44px] text-end text-[11px] font-semibold tabular-nums text-emerald-600 dark:text-emerald-400"
+              title="Conversion rate"
+            >
+              {conversionRate === null ? '–' : `${conversionRate.toFixed(1)}%`}
+            </span>
+          ) : null}
           <span className="text-[11px] font-medium tabular-nums text-muted-foreground">
             {Math.round(share)}%
           </span>
@@ -167,7 +178,10 @@ export function ChannelIcon({ value }: { value: string | null | undefined }) {
   const Icon =
     CHANNEL_ICONS.find(([pattern]) => pattern.test(value ?? ''))?.[1] ?? Globe
   return (
-    <span className="flex h-4 w-4 shrink-0 items-center justify-center" aria-hidden>
+    <span
+      className="flex h-4 w-4 shrink-0 items-center justify-center"
+      aria-hidden
+    >
       <Icon className="h-3.5 w-3.5 text-muted-foreground" />
     </span>
   )
@@ -239,7 +253,9 @@ const SOURCE_DOMAINS: Record<string, string> = {
 
 const DIRECT_SOURCES = new Set(['direct', 'direct / none', '(direct)', 'none'])
 
-export function sourceFaviconHostname(value: string | null | undefined): string | null {
+export function sourceFaviconHostname(
+  value: string | null | undefined,
+): string | null {
   const normalized = value?.trim().toLowerCase()
   if (!normalized) return null
   if (normalized.includes('.')) {
@@ -262,7 +278,10 @@ export function SourceFavicon({ value }: { value: string | null | undefined }) {
   if (isDirect || !hostname || failed) {
     const Icon = isDirect ? Link2 : Globe
     return (
-      <span className="flex h-4 w-4 shrink-0 items-center justify-center" aria-hidden>
+      <span
+        className="flex h-4 w-4 shrink-0 items-center justify-center"
+        aria-hidden
+      >
         <Icon className="h-3.5 w-3.5 text-muted-foreground" />
       </span>
     )
@@ -313,7 +332,9 @@ const BROWSER_CODES: Record<string, Browser> = {
   'avant browser': Browser.AvantBrowser,
 }
 
-export function browserAvatarCode(name: string | null | undefined): Browser | null {
+export function browserAvatarCode(
+  name: string | null | undefined,
+): Browser | null {
   if (!name) return null
   return BROWSER_CODES[name.trim().toLowerCase()] ?? null
 }
@@ -326,7 +347,10 @@ export function BrowserIcon({ name }: { name: string | null | undefined }) {
   if (!code || failed) {
     return (
       <span
-        className={cn(breakdownLeadingIconFrameClass, 'border-transparent bg-transparent')}
+        className={cn(
+          breakdownLeadingIconFrameClass,
+          'border-transparent bg-transparent',
+        )}
         aria-hidden
       >
         <Globe className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -344,7 +368,10 @@ export function BrowserIcon({ name }: { name: string | null | undefined }) {
 
   return (
     <span
-      className={cn(breakdownLeadingIconFrameClass, 'border-transparent bg-transparent')}
+      className={cn(
+        breakdownLeadingIconFrameClass,
+        'border-transparent bg-transparent',
+      )}
       aria-hidden
     >
       <img

@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { z } from 'zod'
 import { AnalyticsDimension } from '@appwrite.io/console'
 import { View } from '@/components/pages/projects/$projectId/analytics/$propertyId/View'
 import {
@@ -24,6 +25,8 @@ import type { UserPrefs } from '@/lib/user-prefs-keys'
 export const Route = createFileRoute(
   '/_public/projects/$projectId/analytics/$propertyId/',
 )({
+  // `goal` selects a goal whose conversion rate every breakdown shows.
+  validateSearch: z.object({ goal: z.string().optional().catch(undefined) }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return undefined
 
@@ -136,7 +139,7 @@ export const Route = createFileRoute(
 
 function PropertyAnalyticsPage() {
   const { projectId, propertyId } = Route.useParams()
-  const { query } = Route.useSearch()
+  const { query, goal } = Route.useSearch()
   const loaderData = Route.useLoaderData()
   const navigate = useNavigate()
 
@@ -150,7 +153,16 @@ function PropertyAnalyticsPage() {
     navigate({
       to: '/projects/$projectId/analytics/$propertyId',
       params: { projectId, propertyId },
-      search: next ? { query: next } : {},
+      search: { ...(next ? { query: next } : {}), ...(goal ? { goal } : {}) },
+      replace: true,
+    })
+  }
+
+  const handleGoalChange = (next: string | null) => {
+    navigate({
+      to: '/projects/$projectId/analytics/$propertyId',
+      params: { projectId, propertyId },
+      search: { ...(query ? { query } : {}), ...(next ? { goal: next } : {}) },
       replace: true,
     })
   }
@@ -164,6 +176,8 @@ function PropertyAnalyticsPage() {
       initialData={loaderData}
       filterQuery={query}
       onFilterQueryChange={handleFilterQueryChange}
+      goalId={goal ?? null}
+      onGoalChange={handleGoalChange}
     />
   )
 }

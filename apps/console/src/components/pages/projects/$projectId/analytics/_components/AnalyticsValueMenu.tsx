@@ -1,7 +1,17 @@
 import type { ReactNode } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { AnalyticsDimension } from '@appwrite.io/console'
-import { Ban, Copy, ExternalLink, Filter, FilterX, Shield, ShieldCheck, X } from 'lucide-react'
+import {
+  Ban,
+  Copy,
+  ExternalLink,
+  Filter,
+  FilterX,
+  Shield,
+  ShieldCheck,
+  Target,
+  X,
+} from 'lucide-react'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -25,6 +35,7 @@ import { firewallListSearch } from '@/lib/firewall/conditions'
 import { useT } from '@/lib/i18n/translate'
 import {
   useAnalyticsFilters,
+  useAnalyticsGoal,
   useAnalyticsValueMenuContext,
 } from './analytics-filters-context'
 
@@ -57,6 +68,7 @@ export function AnalyticsValueMenu({
   const { addEqualFilter, isFilterActive, onApplyFilter, filterMap } =
     useAnalyticsFilters()
   const { projectId, firewallSiteId } = useAnalyticsValueMenuContext()
+  const { addGoalForEvent } = useAnalyticsGoal()
 
   const attribute =
     attributeOverride !== undefined
@@ -123,6 +135,15 @@ export function AnalyticsValueMenu({
             <ContextMenuSeparator />
           </>
         ) : null}
+        {addGoalForEvent && dimension === AnalyticsDimension.EventName ? (
+          <>
+            <ContextMenuItem onSelect={() => addGoalForEvent(value)}>
+              <ContextMenuIcon icon={Target} />
+              {t('Add goal')}
+            </ContextMenuItem>
+            <ContextMenuSeparator />
+          </>
+        ) : null}
         <ContextMenuItem onSelect={() => copyToClipboard('Value', value)}>
           <ContextMenuIcon icon={Copy} />
           {t('Copy value')}
@@ -137,13 +158,19 @@ export function AnalyticsValueMenu({
           <>
             <ContextMenuSeparator />
             {firewallQuery ? (
-              <ContextMenuItem onSelect={() => openFirewallCreate(firewallQuery)}>
+              <ContextMenuItem
+                onSelect={() => openFirewallCreate(firewallQuery)}
+              >
                 <ContextMenuIcon icon={isCountry ? Ban : Shield} />
-                {isCountry ? t('Block this country') : t('Create firewall rule')}
+                {isCountry
+                  ? t('Block this country')
+                  : t('Create firewall rule')}
               </ContextMenuItem>
             ) : null}
             {allowOnlyQuery ? (
-              <ContextMenuItem onSelect={() => openFirewallCreate(allowOnlyQuery)}>
+              <ContextMenuItem
+                onSelect={() => openFirewallCreate(allowOnlyQuery)}
+              >
                 <ContextMenuIcon icon={ShieldCheck} />
                 {t('Allow only this country')}
               </ContextMenuItem>

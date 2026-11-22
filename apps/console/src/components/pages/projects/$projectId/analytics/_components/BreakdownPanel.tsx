@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { Maximize2 } from 'lucide-react'
-import type { AnalyticsDimension, Models } from '@appwrite.io/console'
+import { AnalyticsDimension, type Models } from '@appwrite.io/console'
 import { Button } from '@/components/ui/button'
 import { useT } from '@/lib/i18n/translate'
 import { BreakdownTabBar } from './BreakdownTabBar'
@@ -8,13 +8,18 @@ import { CountryMap } from './CountryMap'
 import { AnalyticsValueMenu } from './AnalyticsValueMenu'
 import { useAnalyticsCardTab } from '@/hooks/use-analytics-card-tab'
 import {
+  ANALYTICS_BREAKDOWN_LIMIT,
   useAnalyticsBreakdown,
+  useAnalyticsConversions,
   type AnalyticsRange,
 } from '@/lib/react-query/hooks'
 import { BreakdownRow, RowRank } from './BreakdownRow'
 import { BREAKDOWN_DIALOG_MAX_ROWS, BreakdownDialog } from './BreakdownDialog'
 import { MetricInfo, type AnalyticsMetricInfoKey } from './MetricInfo'
-import { useAnalyticsFilters } from './analytics-filters-context'
+import {
+  useAnalyticsFilters,
+  useAnalyticsGoal,
+} from './analytics-filters-context'
 import { isKnownBreakdownValue } from '@/lib/analytics/breakdown-values'
 import {
   ANALYTICS_FILTER_UNSUPPORTED_MESSAGE,
@@ -222,6 +227,12 @@ type BreakdownPanelProps = {
   mobile?: boolean
 }
 
+/** Read from the sessions table, which has no event name to match a goal on. */
+const SESSION_DIMENSIONS: ReadonlySet<AnalyticsDimension> = new Set([
+  AnalyticsDimension.EntryPage,
+  AnalyticsDimension.ExitPage,
+])
+
 /**
  * Ranked breakdown card with dimension tabs.
  *
@@ -262,6 +273,33 @@ export function BreakdownPanel({
 
   const { filters, addEqualFilter, isFilterActive } = useAnalyticsFilters()
   const filterAttribute = analyticsFilterAttributeForTab(active)
+  const { goalId } = useAnalyticsGoal()
+  // The sessions-table breakdowns cannot tell which visits converted yet.
+  const showConversions =
+    goalId !== null &&
+    active.display !== 'map' &&
+    !SESSION_DIMENSIONS.has(active.dimension)
+  const { metrics: conversions } = useAnalyticsConversions(
+    projectId,
+    propertyId,
+    range,
+    {
+      goalId: goalId ?? undefined,
+      dimension: active.dimension,
+      limit:
+        valueKey === 'visitors'
+          ? ANALYTICS_BREAKDOWN_LIMIT
+          : BREAKDOWN_DIALOG_MAX_ROWS,
+      propKey: active.propKey,
+    },
+    filters,
+    showConversions,
+  )
+  const conversionRates = useMemo(
+    () =>
+      new Map(conversions.map((row) => [row.value, row.conversionRate ?? 0])),
+    [conversions],
+  )
 
   const { breakdown, isLoading, error, unsupported } = useAnalyticsBreakdown(
     projectId,
@@ -278,7 +316,9 @@ export function BreakdownPanel({
   // Unknown rows (no referrer, unparseable agent, unknown location) are
   // dropped, and shares are computed among the known values.
   const { rows, columnTotal, max } = useMemo(() => {
-    const known = breakdown.filter((entry) => isKnownBreakdownValue(entry.value))
+    const known = breakdown.filter((entry) =>
+      isKnownBreakdownValue(entry.value),
+    )
     const ranked =
       valueKey === 'visitors'
         ? known
@@ -378,29 +418,38 @@ export function BreakdownPanel({
                 label={formatLabel?.(entry.value!, active.id) ?? entry.value!}
                 href={rowHref?.(entry.value!, active.id)}
               >
-              {/* Wrapper element: the menu trigger needs a DOM node to attach to. */}
-              <div>
-              <BreakdownRow
-                // Rows are known values only (see isKnownBreakdownValue).
-                label={formatLabel?.(entry.value!, active.id) ?? entry.value!}
-                value={entry[valueKey]}
-                share={
-                  columnTotal > 0 ? (entry[valueKey] / columnTotal) * 100 : 0
-                }
-                barPercent={max > 0 ? (entry[valueKey] / max) * 100 : 0}
-                leading={
-                  ranked ? (
-                    <RowRank index={index} />
-                  ) : (
-                    renderLeading?.(entry, index, active.id)
-                  )
-                }
-                color={rowColor?.(entry, index)}
-                mono={mono}
-                href={rowHref?.(entry.value!, active.id)}
-                {...filterRowProps(entry.value)}
-              />
-              </div>
+                {/* Wrapper element: the menu trigger needs a DOM node to attach to. */}
+                <div>
+                  <BreakdownRow
+                    // Rows are known values only (see isKnownBreakdownValue).
+                    label={
+                      formatLabel?.(entry.value!, active.id) ?? entry.value!
+                    }
+                    value={entry[valueKey]}
+                    share={
+                      columnTotal > 0
+                        ? (entry[valueKey] / columnTotal) * 100
+                        : 0
+                    }
+                    barPercent={max > 0 ? (entry[valueKey] / max) * 100 : 0}
+                    leading={
+                      ranked ? (
+                        <RowRank index={index} />
+                      ) : (
+                        renderLeading?.(entry, index, active.id)
+                      )
+                    }
+                    color={rowColor?.(entry, index)}
+                    mono={mono}
+                    href={rowHref?.(entry.value!, active.id)}
+                    conversionRate={
+                      showConversions
+                        ? (conversionRates.get(entry.value) ?? null)
+                        : undefined
+                    }
+                    {...filterRowProps(entry.value)}
+                  />
+                </div>
               </AnalyticsValueMenu>
             ))}
           </div>
