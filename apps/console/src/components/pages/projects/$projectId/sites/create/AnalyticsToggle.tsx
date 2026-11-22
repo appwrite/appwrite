@@ -21,7 +21,7 @@ export function AnalyticsToggle({
     useAnalyticsPropertiesPlanLimit(projectId)
   const [held, setHeld] = useState(false)
 
-  // A new site always needs a new property: the default on is held off until the cap is known, and dropped at it.
+  // A new site needs a new property: the default on stays off (as Deploy would send it) until the cap is known.
   useEffect(() => {
     if (isChecking) {
       if (checked) {
@@ -62,7 +62,7 @@ export function AnalyticsToggle({
       </div>
       <Switch
         id="site-analytics"
-        checked={(checked || held) && !isAtLimit}
+        checked={checked && !isAtLimit}
         onCheckedChange={onCheckedChange}
         disabled={isAtLimit || isChecking}
         className="shrink-0"

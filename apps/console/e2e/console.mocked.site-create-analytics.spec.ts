@@ -342,6 +342,7 @@ test.describe('site create analytics toggle (mocked API)', () => {
     await openTemplate(page)
 
     await expect(analyticsSwitch(page)).toBeDisabled()
+    await expect(analyticsSwitch(page)).not.toBeChecked()
     releaseCount()
     await expect(analyticsSwitch(page)).toBeEnabled()
     await expect(analyticsSwitch(page)).toBeChecked()
