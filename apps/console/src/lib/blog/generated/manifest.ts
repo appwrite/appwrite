@@ -10,7 +10,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "date": "2026-11-23",
     "lastUpdated": "2026-11-23",
     "timeToRead": 3,
-    "author": "aishwari",
+    "author": "eldad-fux",
     "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-learn-auth-and-learn-postgres/cover.avif",
