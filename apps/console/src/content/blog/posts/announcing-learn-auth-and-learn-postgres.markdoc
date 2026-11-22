@@ -1,0 +1,89 @@
+---
+layout: post
+title: "Introducing Learn Auth and Learn Postgres: Auth and SQL, two minutes at a time"
+description: Appwrite launches Learn Auth and Learn Postgres, two YouTube channels that explain authentication and PostgreSQL in short, visual two-minute episodes.
+date: 2026-11-23
+cover: /images/blog/announcing-learn-auth-and-learn-postgres/cover.avif
+timeToRead: 3
+author: aishwari
+category: announcements
+featured: false
+faqs:
+    - question: "What are Learn Auth and Learn Postgres?"
+      answer: "Learn Auth and Learn Postgres are two YouTube channels made by Appwrite. Each episode explains a single authentication or PostgreSQL topic in about two minutes, built around one visual metaphor that stays on screen, and ends with a quick quiz."
+    - question: "Who are the channels for?"
+      answer: "Both channels are made for developers working with these topics for the first time, students, and frontend and mobile developers. Learn Auth needs no prior auth knowledge, and Learn Postgres only assumes you know SELECT."
+    - question: "What does Season 1 cover?"
+      answer: "Learn Auth Season 1 covers how login works: authentication vs authorization, password hashing, sessions and cookies, JWT, OAuth 2, 2FA codes, passkeys, magic links and email codes, and password reset. Learn Postgres Season 1 covers SQL fundamentals: joins, indexes, EXPLAIN ANALYZE, NULL, transactions and ACID, primary and foreign keys, data types, constraints, and upsert."
+    - question: "Are the episodes available as Shorts?"
+      answer: "Yes. Each full episode also comes with an under-a-minute Short on the same topic, so you can catch the core idea quickly and watch the full episode when you want more depth."
+---
+
+Authentication and databases sit underneath almost every app you'll build, yet they are often the parts developers understand least. You copy a login flow from a tutorial, or a query works and you're not quite sure why. Things hold up until a session expires unexpectedly or a query slows down, and then you have to work out what's going on.
+
+Today, we're launching two new YouTube channels to help with that: **Learn Auth** and **Learn Postgres**.
+
+Both channels follow the same format. Each episode takes one topic and explains it in about two minutes, built around a single picture that stays on screen the whole time. Every episode ends with a quick quiz, and each one comes with an under-a-minute Short when you only want the core idea.
+
+# Meet Learn Auth
+
+[Learn Auth](https://www.youtube.com/@LearnAuth) explains how sign-in really works. Your app has a bouncer and a guest list, your session is a wristband, and your JWT is a signed hall pass. Each metaphor gives you something concrete to remember after the video ends.
+
+The channel is made for developers adding sign-in to their first app, students, and frontend and mobile developers who want auth to make sense. No prior auth knowledge is needed.
+
+**Season 1 covers how login works:**
+
+- Authentication vs authorization
+- Password hashing
+- Sessions and cookies
+- JWT
+- OAuth 2
+- 2FA codes
+- Passkeys
+- Magic links and email codes
+- Password reset
+
+The first episodes are already live, starting with the difference between who you are and what you're allowed to do:
+
+{% youtube id="wN5Wr2iZZUw" title="Authentication vs authorization: the bouncer and the guest list" /%}
+
+[**Subscribe to Learn Auth on YouTube**](https://www.youtube.com/@LearnAuth)
+
+# Meet Learn Postgres
+
+[Learn Postgres](https://www.youtube.com/@LearnPostgres) teaches the SQL every developer needs, using the same one-picture approach. Your tables have a group chat, your query takes the stairs, and your table has a bouncer.
+
+It's made for developers meeting their first relational database, students, and frontend and mobile developers who want their queries to make sense. All you need to know is SELECT.
+
+**Season 1 covers SQL fundamentals:**
+
+- Joins
+- Indexes
+- EXPLAIN ANALYZE
+- NULL
+- Transactions and ACID
+- Primary and foreign keys
+- Data types
+- Constraints
+- Upsert
+
+Episodes on joins, indexes, EXPLAIN ANALYZE, NULL, transactions, and primary and foreign keys are already published. The channel also covers Postgres news, starting with a breakdown of November's minor releases and the 52 CVEs they fix. Start with the episode on joins:
+
+{% youtube id="V7BYYkmj2lc" title="SQL joins explained: your tables have a group chat" /%}
+
+[**Subscribe to Learn Postgres on YouTube**](https://www.youtube.com/@LearnPostgres)
+
+# Stay connected
+
+Both channels also post on X and Instagram, so you can follow along for new episodes and quick lessons wherever you spend your time:
+
+- **Learn Auth:** [YouTube](https://www.youtube.com/@LearnAuth) · [X](https://x.com/learnauth) · [Instagram](https://www.instagram.com/learnauth/)
+- **Learn Postgres:** [YouTube](https://www.youtube.com/@LearnPostgres) · [X](https://x.com/learnpostgres) · [Instagram](https://www.instagram.com/learnpostgres/)
+
+# Start watching
+
+New episodes are rolling out through Season 1, so now is a good time to subscribe and learn alongside them. Two minutes is enough to finally understand the thing you've been copying from tutorials.
+
+When you're ready to put it into practice, [Appwrite Auth](/products/auth) handles sign-up, sign-in, sessions, OAuth, 2FA, passkeys, and permissions for you, and you can run the queries yourself on [Appwrite's managed Postgres](https://appwrite.io/products/postgres), with an SQL editor right in the Console.
+
+See you in the comments.

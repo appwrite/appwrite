@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-learn-auth-and-learn-postgres",
+    "href": "/blog/post/announcing-learn-auth-and-learn-postgres",
+    "title": "Introducing Learn Auth and Learn Postgres: Auth and SQL, two minutes at a time",
+    "description": "Appwrite launches Learn Auth and Learn Postgres, two YouTube channels that explain authentication and PostgreSQL in short, visual two-minute episodes.",
+    "date": "2026-11-23",
+    "lastUpdated": "2026-11-23",
+    "timeToRead": 3,
+    "author": "aishwari",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-learn-auth-and-learn-postgres/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-ldap-login",
     "href": "/blog/post/announcing-ldap-login",
     "title": "Announcing LDAP login: Sign in with your directory",
