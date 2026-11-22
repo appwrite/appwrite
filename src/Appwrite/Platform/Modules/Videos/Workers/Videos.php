@@ -2734,12 +2734,27 @@ class Videos extends Action
         }
 
         // A JWT can sit inside a larger word, such as `token=eyJ…` or a JSON value, so scan the whole text
-        $jwt = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.';
+        // Read three base64url segments joined by dots, so punctuation after the token is never part of it
+        $base64url = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
         $offset = 0;
         while (($at = \strpos($text, 'eyJ', $offset)) !== false) {
-            $token = \substr($text, $at, \strspn($text, $jwt, $at));
-            if (\substr_count($token, '.') === 2 && !\str_contains($token, '..') && !\str_ends_with($token, '.')) {
-                $text = \substr($text, 0, $at) . '[redacted]' . \substr($text, $at + \strlen($token));
+            $end = $at;
+            $segments = 0;
+            while ($segments < 3) {
+                $length = \strspn($text, $base64url, $end);
+                if ($length === 0) {
+                    break;
+                }
+                $end += $length;
+                $segments++;
+                if ($segments < 3 && ($text[$end] ?? '') === '.') {
+                    $end++;
+                } elseif ($segments < 3) {
+                    break;
+                }
+            }
+            if ($segments === 3) {
+                $text = \substr($text, 0, $at) . '[redacted]' . \substr($text, $end);
                 $offset = $at + \strlen('[redacted]');
                 continue;
             }
