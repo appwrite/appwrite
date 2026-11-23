@@ -18,6 +18,22 @@ use crate::value::{Array, Value};
 pub enum Step {
     /// `compileFilter(Query $query): string`.
     CompileFilter,
+    /// `compileOrder(Query $query): string`.
+    CompileOrder,
+    /// `compileLimit(Query $query): string`.
+    CompileLimit,
+    /// `compileOffset(Query $query): string`.
+    CompileOffset,
+    /// `compileSelect(Query $query): string`.
+    CompileSelect,
+    /// `compileCursor(Query $query): string`.
+    CompileCursor,
+    /// `compileAggregate(Query $query): string`.
+    CompileAggregate,
+    /// `compileGroupBy(Query $query): string`.
+    CompileGroupBy,
+    /// `compileJoin(Query $query): string`.
+    CompileJoin,
     /// `compileIn(string $attribute, array $values, ?string $column = null): string`.
     CompileIn,
     /// `compileLike(string $attribute, array $values, string $prefix, string $suffix, bool $not, ?string $column = null): string`.
@@ -28,12 +44,33 @@ pub enum Step {
 
 impl Step {
     /// Every step, in the order of the enum.
-    pub const ALL: [Step; 4] = [Step::CompileFilter, Step::CompileIn, Step::CompileLike, Step::AddBinding];
+    pub const ALL: [Step; 12] = [
+        Step::CompileFilter,
+        Step::CompileOrder,
+        Step::CompileLimit,
+        Step::CompileOffset,
+        Step::CompileSelect,
+        Step::CompileCursor,
+        Step::CompileAggregate,
+        Step::CompileGroupBy,
+        Step::CompileJoin,
+        Step::CompileIn,
+        Step::CompileLike,
+        Step::AddBinding,
+    ];
 
     /// The PHP method.
     pub const fn method(self) -> &'static str {
         match self {
             Step::CompileFilter => "compileFilter",
+            Step::CompileOrder => "compileOrder",
+            Step::CompileLimit => "compileLimit",
+            Step::CompileOffset => "compileOffset",
+            Step::CompileSelect => "compileSelect",
+            Step::CompileCursor => "compileCursor",
+            Step::CompileAggregate => "compileAggregate",
+            Step::CompileGroupBy => "compileGroupBy",
+            Step::CompileJoin => "compileJoin",
             Step::CompileIn => "compileIn",
             Step::CompileLike => "compileLike",
             Step::AddBinding => "addBinding",
@@ -107,6 +144,14 @@ impl<D: Dialect> Builder<D> {
     pub fn base(&mut self, step: Step, arguments: &[Arg<'_>]) -> Result<Ret> {
         match (step, arguments) {
             (Step::CompileFilter, [Arg::Query(query)]) => D::compile_filter(self, query).map(Ret::Str),
+            (Step::CompileOrder, [Arg::Query(query)]) => self.compile_order_query(query).map(Ret::Str),
+            (Step::CompileLimit, [Arg::Query(query)]) => Ok(Ret::Str(self.compile_limit_query(query))),
+            (Step::CompileOffset, [Arg::Query(query)]) => Ok(Ret::Str(self.compile_offset_query(query))),
+            (Step::CompileSelect, [Arg::Query(query)]) => self.compile_select_query(query).map(Ret::Str),
+            (Step::CompileCursor, [Arg::Query(query)]) => self.compile_cursor_query(query).map(Ret::Str),
+            (Step::CompileAggregate, [Arg::Query(query)]) => self.compile_aggregate_query(query).map(Ret::Str),
+            (Step::CompileGroupBy, [Arg::Query(query)]) => self.compile_group_by_query(query).map(Ret::Str),
+            (Step::CompileJoin, [Arg::Query(query)]) => self.compile_join_query(query).map(Ret::Str),
             (Step::CompileIn, [Arg::Str(attribute), Arg::Values(values), Arg::MaybeStr(column)]) => {
                 self.base_compile_in(attribute, values, *column).map(Ret::Str)
             }

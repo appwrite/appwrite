@@ -166,6 +166,7 @@ pub struct Core {
     pub(crate) scope: Option<crate::builder::flavor::ScopeState>,
     pub(crate) deferred: Option<Error>,
     pub(crate) overrides: Option<Arc<dyn crate::builder::Overrides>>,
+    pub(crate) class: Option<String>,
 }
 
 /// A query builder for one dialect: from a table, with queries (filters,
@@ -344,7 +345,7 @@ pub trait Dialect: Clone + Default + Send + Sync + Sized + 'static {
 
     /// A `groupByTimeBucket` expression; unsupported by default.
     fn compile_group_by_time_bucket(_b: &mut Builder<Self>, _attribute: &str, _interval: &str) -> Result<String> {
-        Err(Error::Unsupported(format!("groupByTimeBucket is not supported by {}", Self::CLASS)))
+        Err(Error::Unsupported(format!("groupByTimeBucket is not supported by {}", _b.class())))
     }
 
     /// Where a join filter's condition goes (cross and natural joins have no `ON`).
@@ -428,6 +429,20 @@ impl<D: Dialect> Builder<D> {
     /// The dialect's state.
     pub fn dialect(&self) -> &D {
         &self.dialect
+    }
+
+    /// The PHP class messages name: the dialect's, or the subclass of it given to
+    /// [`Builder::set_class`].
+    ///
+    /// PHP: `static::class`.
+    pub fn class(&self) -> &str {
+        self.core.class.as_deref().unwrap_or(D::CLASS)
+    }
+
+    /// Names the PHP class of the builder, when it is a subclass of the dialect's.
+    pub fn set_class(&mut self, class: impl Into<String>) -> &mut Self {
+        self.core.class = Some(class.into());
+        self
     }
 
     pub(crate) fn quote(&self, identifier: &str) -> Result<String> {
@@ -635,10 +650,10 @@ impl<D: Dialect> Builder<D> {
     fn build_select_clause(&mut self, grouped: &ParsedQuery) -> Result<String> {
         let mut parts = Vec::new();
         for aggregate in &grouped.aggregations {
-            parts.push(self.compile_aggregate_query(aggregate)?);
+            parts.push(self.step_string(Step::CompileAggregate, &[Arg::Query(aggregate)])?);
         }
         if let Some(selection) = grouped.selections.first() {
-            parts.push(self.compile_select_query(selection)?);
+            parts.push(self.step_string(Step::CompileSelect, &[Arg::Query(selection)])?);
         }
         for sub in self.core.sub_selects.clone() {
             let mut subquery = sub.subquery.clone();
@@ -721,7 +736,7 @@ impl<D: Dialect> Builder<D> {
                 let builder = pending_index.and_then(|i| self.core.joins.get(&i)).cloned();
                 let mut sql = match builder {
                     Some(builder) => D::compile_join_with_builder(self, join, &builder)?,
-                    None => self.compile_join_query(join)?,
+                    None => self.step_string(Step::CompileJoin, &[Arg::Query(join)])?,
                 };
                 let join_type = match join.method() {
                     Method::Join => JoinType::Inner,
@@ -792,7 +807,7 @@ impl<D: Dialect> Builder<D> {
         if grouped.cursor.is_some() && grouped.cursor_direction.is_some() {
             let cursor = Query::cursor_queries(&self.core.pending).first().map(|q| (*q).clone());
             if let Some(cursor) = cursor {
-                let sql = self.compile_cursor_query(&cursor)?;
+                let sql = self.step_string(Step::CompileCursor, &[Arg::Query(&cursor)])?;
                 if !sql.is_empty() {
                     clauses.push(sql);
                 }
@@ -927,7 +942,7 @@ impl<D: Dialect> Builder<D> {
                 .cloned()
                 .collect();
         for order in &orders {
-            clauses.push(self.compile_order_query(order)?);
+            clauses.push(self.step_string(Step::CompileOrder, &[Arg::Query(order)])?);
         }
         if clauses.is_empty() {
             return Ok(String::new());
@@ -1112,7 +1127,7 @@ impl<D: Dialect> Builder<D> {
                 .cloned()
                 .collect();
         for order in &orders {
-            clauses.push(self.compile_order_query(order)?);
+            clauses.push(self.step_string(Step::CompileOrder, &[Arg::Query(order)])?);
         }
         for raw in self.core.raw_orders.clone() {
             clauses.push(raw.expression);

@@ -17,6 +17,8 @@
 //! strings pass as they are and one that is not UTF-8 fails the statement as `json_encode()`
 //! does.
 
+#![allow(non_snake_case)]
+
 use std::borrow::Cow;
 use std::cell::{Cell, RefCell};
 use std::marker::PhantomData;
@@ -37,11 +39,11 @@ use utopia_query::builder::{
     Arg, Builder, ClickHouseDialect, Dialect, MariaDbDialect, MongoDbDialect, MySqlDialect, Overrides,
     PostgreSqlDialect, Ret, SqliteDialect, Statement, Step,
 };
-use utopia_query::{Array, Error, Object, Query, Value};
+use utopia_query::{Array, Error, NullsPosition, Object, Query, Value};
 
-use super::ast::{failed, narrow, null, wide};
+use super::ast::{failed, narrow, null, slots, wide};
 use super::tokenizer::class;
-use super::value::{Arr, Int, empty, parts};
+use super::value::{Arr, Bool, Int, empty, parts};
 use crate::emails::{Text as Bytes, construct, string, thrown};
 use crate::string::PhpString;
 
@@ -92,11 +94,6 @@ fn declared(class: &ClassEntry) -> Declared {
 
 /// Makes `object` the builder whose method is running, until it is dropped.
 struct Entered((*mut ZendObject, Declared));
-
-fn enter(object: &mut ZendObject) -> Entered {
-    let functions = declared(object.get_class_entry());
-    Entered(CURRENT.replace((std::ptr::from_mut(object), functions)))
-}
 
 impl Drop for Entered {
     fn drop(&mut self) {
@@ -184,6 +181,8 @@ pub struct State<D: Dialect + Text> {
     /// Whether a JSON dialect was given a string that is not UTF-8: its statements then fail
     /// as `json_encode()` does.
     malformed: Cell<bool>,
+    /// Whether the crate was told the object's class.
+    named: Cell<bool>,
 }
 
 impl<D: Dialect + Text> State<D> {
@@ -199,6 +198,7 @@ impl<D: Dialect + Text> State<D> {
             own: NonNull::from(Box::leak(Box::new(builder))),
             lent: Cell::new(std::ptr::null_mut()),
             malformed: Cell::new(malformed),
+            named: Cell::new(false),
         }
     }
 
@@ -245,6 +245,8 @@ impl<D: Dialect + Text> State<D> {
             Value::Array(self.array(found)?)
         } else if parts(zval).is_some() {
             Value::from(self.query(zval)?)
+        } else if let Some(Nulls(nulls)) = Nulls::from_zval(zval) {
+            Value::Ext(Object::Nulls(nulls))
         } else {
             let message = "A builder value must be a scalar, an array or a query".to_owned();
             return Err(PhpException::new(message, 0, ce::type_error()));
@@ -265,8 +267,72 @@ impl<D: Dialect + Text> State<D> {
         Ok(out)
     }
 
+    /// A row: its keys are column names, which are text as the statement's is.
+    fn row(&self, given: &Arr<'_>) -> PhpResult<Array> {
+        let mut out = Array::default();
+        for (key, item) in given.table().into_iter().flatten() {
+            let key = match key {
+                ArrayKey::Long(index) => Key::Int(index),
+                ArrayKey::String(name) => Key::Str(Str::from(self.text(name.as_bytes()).as_bytes())),
+                ArrayKey::Str(name) => Key::Str(Str::from(self.text(name.as_bytes()).as_bytes())),
+                ArrayKey::ZendString(name) => Key::Str(Str::from(self.text(name.as_bytes()).as_bytes())),
+            };
+            out.set(key, self.value(item)?);
+        }
+        Ok(out)
+    }
+
+    /// Makes `object` the builder whose method is running, and names its class to the crate
+    /// when it is a subclass, as PHP's messages name `static::class`.
+    fn running(&self, object: *mut ZendObject) -> Entered {
+        // SAFETY: `object` is the live PHP object of the method that is running.
+        let class = unsafe { &*object }.get_class_entry();
+        if !self.named.replace(true)
+            && let Some(name) = class.name()
+        {
+            self.with(|builder| {
+                if name != builder.class() {
+                    builder.set_class(name);
+                }
+            });
+        }
+        Entered(CURRENT.replace((object, declared(class))))
+    }
+
     fn values(&self, given: &Arr<'_>) -> PhpResult<Array> {
         Ok(given.table().map(|table| self.array(table)).transpose()?.unwrap_or_default())
+    }
+
+    /// The strings of an array argument.
+    fn strings(&self, given: &Arr<'_>) -> Vec<String> {
+        let items = given.table().into_iter().flat_map(ZendHashTable::values);
+        items.filter_map(|item| item.zend_str().map(|name| self.text(name.as_bytes()))).collect()
+    }
+
+    /// The queries of an array argument.
+    fn queries(&self, given: &Arr<'_>) -> PhpResult<Vec<Query>> {
+        given.table().into_iter().flat_map(ZendHashTable::values).map(|query| self.query(query)).collect()
+    }
+
+    /// A fluent call that can refuse: the crate's error is the exception.
+    fn change(&self, work: impl FnOnce(&mut Builder<D>) -> Result<(), Error>) -> PhpResult<()> {
+        self.with(work).map_err(|error| raised(&error))
+    }
+
+    /// One of the `compile*()` methods that take a query, run as the builder itself does.
+    fn compile(&self, step: Step, query: &Zval) -> PhpResult<Bytes> {
+        let query = self.query(query)?;
+        self.step(step, &[Arg::Query(&query)])
+    }
+
+    /// The bindings so far, as PHP holds them.
+    fn bindings(&self) -> PhpResult<Zval> {
+        let bindings = self.with(|builder| builder.bindings());
+        if bindings.is_empty() {
+            return Ok(empty());
+        }
+        let bindings = bindings.iter().map(|binding| zval(D::JSON, binding)).collect::<PhpResult<Vec<_>>>()?;
+        bindings.into_zval(false).map_err(PhpException::from)
     }
 
     /// A PHP `Query` as the crate's.
@@ -282,12 +348,8 @@ impl<D: Dialect + Text> State<D> {
 
     /// The statement the builder compiled, as the package's `Statement`.
     fn statement(&self, compiled: Result<Statement, Error>) -> PhpResult<Zval> {
-        if self.malformed.get() {
-            let class = ClassEntry::try_find("JsonException").unwrap_or_else(ce::exception);
-            let message = "Malformed UTF-8 characters, possibly incorrectly encoded".to_owned();
-            return Err(PhpException::new(message, 5, class));
-        }
         let found = compiled.map_err(|error| raised(&error))?;
+        let query = self.written(&found.query)?;
         let mut bindings = Vec::with_capacity(found.bindings.len());
         for binding in &found.bindings {
             bindings.push(zval(D::JSON, binding)?);
@@ -296,15 +358,36 @@ impl<D: Dialect + Text> State<D> {
         read_only.set_bool(found.read_only);
         let bindings =
             if bindings.is_empty() { empty() } else { bindings.into_zval(false).map_err(PhpException::from)? };
-        construct(class(STATEMENT)?, &mut [string(&bytes(D::JSON, &found.query)), bindings, read_only])?
+        construct(class(STATEMENT)?, &mut [string(&query), bindings, read_only])?
             .into_zval(false)
             .map_err(PhpException::from)
+    }
+
+    /// What the builder wrote, as the bytes PHP gets. A JSON dialect that was given a string
+    /// which is not UTF-8 fails where it encodes JSON, as `json_encode()` does; what it
+    /// writes without encoding (a single step, `INSERT ... DEFAULT VALUES`) keeps the bytes.
+    fn written<'t>(&self, text: &'t str) -> PhpResult<Cow<'t, [u8]>> {
+        if !self.malformed.get() {
+            return Ok(bytes(D::JSON, text));
+        }
+        if text.contains('{') {
+            let class = ClassEntry::try_find("JsonException").unwrap_or_else(ce::exception);
+            let message = "Malformed UTF-8 characters, possibly incorrectly encoded".to_owned();
+            return Err(PhpException::new(message, 5, class));
+        }
+        Ok(narrow(text))
+    }
+
+    /// The statement with its bindings written into it.
+    fn raw(&self) -> PhpResult<Bytes> {
+        let sql = self.with(|builder| if D::JSON { builder.to_raw_sql() } else { builder.to_raw_sql_widened() });
+        Ok(Bytes(self.written(&sql.map_err(|error| raised(&error))?)?.into_owned()))
     }
 
     /// A step that returns a string, run as the builder itself does.
     fn step(&self, step: Step, arguments: &[Arg<'_>]) -> PhpResult<Bytes> {
         match self.with(|builder| builder.base(step, arguments)).map_err(|error| raised(&error))? {
-            Ret::Str(text) => Ok(Bytes(bytes(D::JSON && !self.malformed.get(), &text).into_owned())),
+            Ret::Str(text) => Ok(Bytes(self.written(&text)?.into_owned())),
             Ret::None => Ok(Bytes(Vec::new())),
         }
     }
@@ -406,6 +489,31 @@ impl<'a> FromZval<'a> for QueryArgument<'a> {
     }
 }
 
+/// A `NullsPosition` argument.
+pub struct Nulls(NullsPosition);
+
+impl<'a> FromZval<'a> for Nulls {
+    const TYPE: DataType = DataType::object(NullsPosition::PHP_CLASS);
+
+    fn from_zval(zval: &'a Zval) -> Option<Self> {
+        let object = zval
+            .object()
+            .filter(|object| class(NullsPosition::PHP_CLASS).is_ok_and(|class| object.instance_of(class)))?;
+        slots(object).get(1)?.str().and_then(NullsPosition::try_from_value).map(Nulls)
+    }
+}
+
+/// `select()`'s `array|string $columns`: a list of columns, or one raw expression.
+pub struct Columns<'a>(&'a Zval);
+
+impl<'a> FromZval<'a> for Columns<'a> {
+    const TYPE: DataType = DataType::Mixed;
+
+    fn from_zval(zval: &'a Zval) -> Option<Self> {
+        (zval.is_array() || zval.is_string()).then_some(Columns(zval))
+    }
+}
+
 /// A builder class: its state, and the methods every dialect has. Every class declares its
 /// own, since a parent's native method would read its own Rust type.
 macro_rules! builder_class {
@@ -428,7 +536,7 @@ macro_rules! builder_class {
                 Self(State::new::<$class>())
             }
 
-            #[php(defaults(alias = "\"\""))]
+            #[php(defaults(table = "\"\"", alias = "\"\""))]
             pub fn from<'a>(
                 self_: &'a mut ZendClassObject<$class>,
                 table: PhpString<'_>,
@@ -441,18 +549,43 @@ macro_rules! builder_class {
                 self_
             }
 
+            #[php(name = "fromNone")]
+            pub fn from_none(self_: &mut ZendClassObject<$class>) -> &mut ZendClassObject<$class> {
+                self_.0.with(|builder| {
+                    builder.from_none();
+                });
+                self_
+            }
+
+            #[php(defaults(bindings = "Arr::Empty"))]
             pub fn select<'a>(
                 self_: &'a mut ZendClassObject<$class>,
-                columns: Arr<'_>,
-            ) -> &'a mut ZendClassObject<$class> {
-                let columns: Vec<String> = columns
-                    .table()
-                    .into_iter()
-                    .flat_map(ZendHashTable::values)
-                    .filter_map(|column| column.zend_str().map(|name| self_.0.text(name.as_bytes())))
-                    .collect();
+                columns: Columns<'_>,
+                bindings: Arr<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let state = &self_.0;
+                match columns.0.zend_str() {
+                    // One string is a raw expression, with its bindings.
+                    Some(expression) => {
+                        let expression = state.text(expression.as_bytes());
+                        let bindings: Vec<Value> = state.values(&bindings)?.values().cloned().collect();
+                        state.with(|builder| {
+                            builder.select_raw(expression, bindings);
+                        });
+                    }
+                    None => {
+                        let columns = state.strings(&Arr::Given(columns.0));
+                        state.with(|builder| {
+                            builder.select(columns);
+                        });
+                    }
+                }
+                Ok(self_)
+            }
+
+            pub fn distinct(self_: &mut ZendClassObject<$class>) -> &mut ZendClassObject<$class> {
                 self_.0.with(|builder| {
-                    builder.select(columns);
+                    builder.distinct();
                 });
                 self_
             }
@@ -461,38 +594,65 @@ macro_rules! builder_class {
                 self_: &'a mut ZendClassObject<$class>,
                 queries: Arr<'_>,
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
-                let queries = queries
-                    .table()
-                    .into_iter()
-                    .flat_map(ZendHashTable::values)
-                    .map(|query| self_.0.query(query))
-                    .collect::<PhpResult<Vec<_>>>()?;
+                let queries = self_.0.queries(&queries)?;
                 self_.0.with(|builder| {
                     builder.filter(queries);
                 });
                 Ok(self_)
             }
 
-            #[php(name = "sortDesc")]
-            pub fn sort_desc<'a>(
+            pub fn queries<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                queries: Arr<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let queries = self_.0.queries(&queries)?;
+                self_.0.with(|builder| {
+                    builder.queries(queries);
+                });
+                Ok(self_)
+            }
+
+            pub fn having<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                queries: Arr<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let queries = self_.0.queries(&queries)?;
+                self_.0.with(|builder| {
+                    builder.having(queries);
+                });
+                Ok(self_)
+            }
+
+            #[php(name = "sortAsc", optional = nulls)]
+            pub fn sort_asc<'a>(
                 self_: &'a mut ZendClassObject<$class>,
                 attribute: PhpString<'_>,
+                nulls: Option<Nulls>,
             ) -> &'a mut ZendClassObject<$class> {
                 let attribute = self_.0.text(attribute.bytes());
                 self_.0.with(|builder| {
-                    builder.sort_desc(attribute, None);
+                    builder.sort_asc(attribute, nulls.map(|nulls| nulls.0));
                 });
                 self_
             }
 
-            #[php(name = "sortAsc")]
-            pub fn sort_asc<'a>(
+            #[php(name = "sortDesc", optional = nulls)]
+            pub fn sort_desc<'a>(
                 self_: &'a mut ZendClassObject<$class>,
                 attribute: PhpString<'_>,
+                nulls: Option<Nulls>,
             ) -> &'a mut ZendClassObject<$class> {
                 let attribute = self_.0.text(attribute.bytes());
                 self_.0.with(|builder| {
-                    builder.sort_asc(attribute, None);
+                    builder.sort_desc(attribute, nulls.map(|nulls| nulls.0));
+                });
+                self_
+            }
+
+            #[php(name = "sortRandom")]
+            pub fn sort_random(self_: &mut ZendClassObject<$class>) -> &mut ZendClassObject<$class> {
+                self_.0.with(|builder| {
+                    builder.sort_random();
                 });
                 self_
             }
@@ -511,17 +671,378 @@ macro_rules! builder_class {
                 self_
             }
 
+            #[php(defaults(withTies = "Bool(false)"))]
+            pub fn fetch(self_: &mut ZendClassObject<$class>, count: Int, withTies: Bool) -> &mut ZendClassObject<$class> {
+                self_.0.with(|builder| {
+                    builder.fetch(count.0, withTies.0);
+                });
+                self_
+            }
+
+            #[php(defaults(perPage = "Int(25)"))]
+            pub fn page(
+                self_: &mut ZendClassObject<$class>,
+                page: Int,
+                perPage: Int,
+            ) -> PhpResult<&mut ZendClassObject<$class>> {
+                self_.0.change(|builder| builder.page(page.0, perPage.0).map(drop))?;
+                Ok(self_)
+            }
+
+            #[php(name = "cursorAfter")]
+            pub fn cursor_after<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                value: &Zval,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let value = self_.0.value(value)?;
+                self_.0.with(|builder| {
+                    builder.cursor_after(value);
+                });
+                Ok(self_)
+            }
+
+            #[php(name = "cursorBefore")]
+            pub fn cursor_before<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                value: &Zval,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let value = self_.0.value(value)?;
+                self_.0.with(|builder| {
+                    builder.cursor_before(value);
+                });
+                Ok(self_)
+            }
+
+            #[php(defaults(attribute = "\"*\"", alias = "\"\""))]
+            pub fn count<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                attribute: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let (attribute, alias) = (self_.0.text(attribute.bytes()), self_.0.text(alias.bytes()));
+                self_.0.with(|builder| {
+                    builder.count(attribute, alias);
+                });
+                self_
+            }
+
+            #[php(name = "countDistinct", defaults(alias = "\"\""))]
+            pub fn count_distinct<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                attribute: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let (attribute, alias) = (self_.0.text(attribute.bytes()), self_.0.text(alias.bytes()));
+                self_.0.with(|builder| {
+                    builder.count_distinct(attribute, alias);
+                });
+                self_
+            }
+
+            #[php(defaults(alias = "\"\""))]
+            pub fn sum<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                attribute: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let (attribute, alias) = (self_.0.text(attribute.bytes()), self_.0.text(alias.bytes()));
+                self_.0.with(|builder| {
+                    builder.sum(attribute, alias);
+                });
+                self_
+            }
+
+            #[php(defaults(alias = "\"\""))]
+            pub fn avg<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                attribute: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let (attribute, alias) = (self_.0.text(attribute.bytes()), self_.0.text(alias.bytes()));
+                self_.0.with(|builder| {
+                    builder.avg(attribute, alias);
+                });
+                self_
+            }
+
+            #[php(defaults(alias = "\"\""))]
+            pub fn min<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                attribute: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let (attribute, alias) = (self_.0.text(attribute.bytes()), self_.0.text(alias.bytes()));
+                self_.0.with(|builder| {
+                    builder.min(attribute, alias);
+                });
+                self_
+            }
+
+            #[php(defaults(alias = "\"\""))]
+            pub fn max<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                attribute: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let (attribute, alias) = (self_.0.text(attribute.bytes()), self_.0.text(alias.bytes()));
+                self_.0.with(|builder| {
+                    builder.max(attribute, alias);
+                });
+                self_
+            }
+
+            #[php(name = "groupBy")]
+            pub fn group_by<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                columns: Arr<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let columns = self_.0.strings(&columns);
+                self_.0.with(|builder| {
+                    builder.group_by(columns);
+                });
+                self_
+            }
+
+            #[php(name = "groupByTimeBucket")]
+            pub fn group_by_time_bucket<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                attribute: PhpString<'_>,
+                interval: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let (attribute, interval) = (self_.0.text(attribute.bytes()), self_.0.text(interval.bytes()));
+                self_.0.change(|builder| builder.group_by_time_bucket(attribute, &interval).map(drop))?;
+                Ok(self_)
+            }
+
+            #[php(defaults(operator = "\"=\"", alias = "\"\""))]
+            pub fn join<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                table: PhpString<'_>,
+                left: PhpString<'_>,
+                right: PhpString<'_>,
+                operator: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let state = &self_.0;
+                let (table, alias) = (state.text(table.bytes()), state.text(alias.bytes()));
+                let (left, right) = (state.text(left.bytes()), state.text(right.bytes()));
+                let operator = state.text(operator.bytes());
+                state.with(|builder| {
+                    builder.join(table, &left, &right, &operator, alias);
+                });
+                self_
+            }
+
+            #[php(name = "leftJoin", defaults(operator = "\"=\"", alias = "\"\""))]
+            pub fn left_join<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                table: PhpString<'_>,
+                left: PhpString<'_>,
+                right: PhpString<'_>,
+                operator: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let state = &self_.0;
+                let (table, alias) = (state.text(table.bytes()), state.text(alias.bytes()));
+                let (left, right) = (state.text(left.bytes()), state.text(right.bytes()));
+                let operator = state.text(operator.bytes());
+                state.with(|builder| {
+                    builder.left_join(table, &left, &right, &operator, alias);
+                });
+                self_
+            }
+
+            #[php(name = "rightJoin", defaults(operator = "\"=\"", alias = "\"\""))]
+            pub fn right_join<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                table: PhpString<'_>,
+                left: PhpString<'_>,
+                right: PhpString<'_>,
+                operator: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let state = &self_.0;
+                let (table, alias) = (state.text(table.bytes()), state.text(alias.bytes()));
+                let (left, right) = (state.text(left.bytes()), state.text(right.bytes()));
+                let operator = state.text(operator.bytes());
+                state.with(|builder| {
+                    builder.right_join(table, &left, &right, &operator, alias);
+                });
+                self_
+            }
+
+            pub fn into<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                table: PhpString<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let table = self_.0.text(table.bytes());
+                self_.0.with(|builder| {
+                    builder.into(table);
+                });
+                self_
+            }
+
+            #[php(name = "insertAs")]
+            pub fn insert_as<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                alias: PhpString<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let alias = self_.0.text(alias.bytes());
+                self_.0.with(|builder| {
+                    builder.insert_as(alias);
+                });
+                self_
+            }
+
+            pub fn set<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                row: Arr<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let row = self_.0.row(&row)?;
+                self_.0.change(|builder| builder.set(row).map(drop))?;
+                Ok(self_)
+            }
+
+            #[php(name = "onConflict")]
+            pub fn on_conflict<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                keys: Arr<'_>,
+                updateColumns: Arr<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let (keys, columns) = (self_.0.strings(&keys), self_.0.strings(&updateColumns));
+                self_.0.with(|builder| {
+                    builder.on_conflict(keys, columns);
+                });
+                self_
+            }
+
+            pub fn reset(self_: &mut ZendClassObject<$class>) -> &mut ZendClassObject<$class> {
+                self_.0.with(|builder| {
+                    builder.reset();
+                });
+                self_
+            }
+
+            #[php(name = "getBindings")]
+            pub fn get_bindings(&self) -> PhpResult<Zval> {
+                self.0.bindings()
+            }
+
+            #[php(name = "toRawSql")]
+            pub fn to_raw_sql(self_: &mut ZendClassObject<$class>) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                self_.0.raw()
+            }
+
+            #[php(defaults(analyze = "Bool(false)"))]
+            pub fn explain(self_: &mut ZendClassObject<$class>, analyze: Bool) -> PhpResult<Zval> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let built = self_.0.with(|builder| builder.explain(analyze.0));
+                self_.0.statement(built)
+            }
+
+            pub fn insert(self_: &mut ZendClassObject<$class>) -> PhpResult<Zval> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let built = self_.0.with(Builder::insert);
+                self_.0.statement(built)
+            }
+
+            #[php(name = "insertDefaultValues")]
+            pub fn insert_default_values(self_: &mut ZendClassObject<$class>) -> PhpResult<Zval> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let built = self_.0.with(Builder::insert_default_values);
+                self_.0.statement(built)
+            }
+
+            pub fn update(self_: &mut ZendClassObject<$class>) -> PhpResult<Zval> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let built = self_.0.with(Builder::update);
+                self_.0.statement(built)
+            }
+
+            pub fn delete(self_: &mut ZendClassObject<$class>) -> PhpResult<Zval> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let built = self_.0.with(Builder::delete);
+                self_.0.statement(built)
+            }
+
             pub fn build(self_: &mut ZendClassObject<$class>) -> PhpResult<Zval> {
-                let _running = enter(&mut self_.std);
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 let built = self_.0.with(Builder::build);
                 self_.0.statement(built)
             }
 
             #[php(name = "compileFilter")]
             pub fn compile_filter(self_: &mut ZendClassObject<$class>, query: QueryArgument<'_>) -> PhpResult<Bytes> {
-                let _running = enter(&mut self_.std);
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 let query = self_.0.query(query.0)?;
                 self_.0.step(Step::CompileFilter, &[Arg::Query(&query)])
+            }
+
+            #[php(name = "compileOrder")]
+            pub fn compile_order(self_: &mut ZendClassObject<$class>, query: QueryArgument<'_>) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                self_.0.compile(Step::CompileOrder, query.0)
+            }
+
+            #[php(name = "compileLimit")]
+            pub fn compile_limit(self_: &mut ZendClassObject<$class>, query: QueryArgument<'_>) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                self_.0.compile(Step::CompileLimit, query.0)
+            }
+
+            #[php(name = "compileOffset")]
+            pub fn compile_offset(self_: &mut ZendClassObject<$class>, query: QueryArgument<'_>) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                self_.0.compile(Step::CompileOffset, query.0)
+            }
+
+            #[php(name = "compileSelect")]
+            pub fn compile_select(self_: &mut ZendClassObject<$class>, query: QueryArgument<'_>) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                self_.0.compile(Step::CompileSelect, query.0)
+            }
+
+            #[php(name = "compileCursor")]
+            pub fn compile_cursor(self_: &mut ZendClassObject<$class>, query: QueryArgument<'_>) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                self_.0.compile(Step::CompileCursor, query.0)
+            }
+
+            #[php(name = "compileAggregate")]
+            pub fn compile_aggregate(self_: &mut ZendClassObject<$class>, query: QueryArgument<'_>) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                self_.0.compile(Step::CompileAggregate, query.0)
+            }
+
+            #[php(name = "compileGroupBy")]
+            pub fn compile_group_by(self_: &mut ZendClassObject<$class>, query: QueryArgument<'_>) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                self_.0.compile(Step::CompileGroupBy, query.0)
+            }
+
+            #[php(name = "compileJoin")]
+            pub fn compile_join(self_: &mut ZendClassObject<$class>, query: QueryArgument<'_>) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                self_.0.compile(Step::CompileJoin, query.0)
             }
 
             #[php(name = "compileIn", vis = "protected", optional = column)]
@@ -531,7 +1052,8 @@ macro_rules! builder_class {
                 values: Arr<'_>,
                 column: Option<PhpString<'_>>,
             ) -> PhpResult<Bytes> {
-                let _running = enter(&mut self_.std);
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 let (values, column) = (self_.0.values(&values)?, self_.0.maybe(column.as_ref()));
                 let attribute = self_.0.text(attribute.bytes());
                 self_.0.step(Step::CompileIn, &[Arg::Str(&attribute), Arg::Values(&values), Arg::MaybeStr(column.as_deref())])
@@ -547,7 +1069,8 @@ macro_rules! builder_class {
                 not: bool,
                 column: Option<PhpString<'_>>,
             ) -> PhpResult<Bytes> {
-                let _running = enter(&mut self_.std);
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 let (values, column) = (self_.0.values(&values)?, self_.0.maybe(column.as_ref()));
                 let attribute = self_.0.text(attribute.bytes());
                 let (prefix, suffix) = (self_.0.text(prefix.bytes()), self_.0.text(suffix.bytes()));
@@ -570,7 +1093,8 @@ macro_rules! builder_class {
                 value: &Zval,
                 column: Option<PhpString<'_>>,
             ) -> PhpResult<()> {
-                let _running = enter(&mut self_.std);
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 let (value, column) = (self_.0.value(value)?, self_.0.maybe(column.as_ref()));
                 self_.0.step(Step::AddBinding, &[Arg::Value(&value), Arg::MaybeStr(column.as_deref())]).map(drop)
             }
@@ -578,9 +1102,17 @@ macro_rules! builder_class {
     };
 }
 
+/// `Utopia\Query\Compiler`: what `Query::compile()` takes. It declares no methods here; the
+/// builders that implement it have every one.
+#[php_interface]
+#[php(name = "Utopia\\Query\\Compiler")]
+#[allow(dead_code)]
+pub trait Compiler {}
+
 /// `Utopia\Query\Builder`: the parent of every builder. Its methods are the dialects'.
 #[php_class]
 #[php(name = "Utopia\\Query\\Builder")]
+#[php(implements(PhpInterfaceCompiler))]
 #[php(flags = ClassFlags::Abstract)]
 pub struct Base;
 

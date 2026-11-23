@@ -316,30 +316,36 @@ impl<D: Dialect> Builder<D> {
     ///
     /// PHP: `toRawSql()`.
     pub fn to_raw_sql(&mut self) -> Result<String> {
+        self.raw_sql(false)
+    }
+
+    /// As [`Builder::to_raw_sql`], for a builder whose text holds a character for each
+    /// byte, as the PHP extension passes a string that is not UTF-8: the bytes of a
+    /// string binding are written the same way.
+    pub fn to_raw_sql_widened(&mut self) -> Result<String> {
+        self.raw_sql(true)
+    }
+
+    fn raw_sql(&mut self, widened: bool) -> Result<String> {
         let result = self.build()?;
-        let mut sql = result.query.into_bytes();
+        let mut sql = result.query;
         let mut offset = 0;
         for binding in &result.bindings {
-            let literal: Vec<u8> = match binding {
-                Value::Str(s) => D::quote_string(s.as_bytes()),
-                Value::Int(_) | Value::Float(_) => crate::value::to_php_string(binding).into_bytes(),
-                Value::Bool(b) => {
-                    if *b {
-                        b"1".to_vec()
-                    } else {
-                        b"0".to_vec()
-                    }
+            let literal = match binding {
+                Value::Str(s) if widened => {
+                    D::LITERAL.quote(&s.as_bytes().iter().map(|&b| char::from(b)).collect::<String>())?
                 }
-                _ => b"NULL".to_vec(),
+                Value::Str(s) => D::LITERAL.quote(&String::from_utf8_lossy(s.as_bytes()))?,
+                Value::Int(_) | Value::Float(_) => crate::value::to_php_string(binding),
+                Value::Bool(b) => if *b { "1" } else { "0" }.to_owned(),
+                _ => "NULL".to_owned(),
             };
-            if let Some(pos) =
-                sql.get(offset..).and_then(|rest| rest.iter().position(|&b| b == b'?')).map(|p| p + offset)
-            {
-                sql.splice(pos..pos + 1, literal.iter().copied());
+            if let Some(pos) = sql.get(offset..).and_then(|rest| rest.find('?')).map(|p| p + offset) {
+                sql.replace_range(pos..=pos, &literal);
                 offset = pos + literal.len();
             }
         }
-        Ok(String::from_utf8_lossy(&sql).into_owned())
+        Ok(sql)
     }
 
     /// The bindings of the last statement built.
@@ -819,35 +825,35 @@ impl<D: Dialect> Compiler for Builder<D> {
     }
 
     fn compile_order(&mut self, query: &Query) -> Result<String> {
-        self.compile_order_query(query)
+        self.step_string(Step::CompileOrder, &[Arg::Query(query)])
     }
 
     fn compile_limit(&mut self, query: &Query) -> Result<String> {
-        Ok(self.compile_limit_query(query))
+        self.step_string(Step::CompileLimit, &[Arg::Query(query)])
     }
 
     fn compile_offset(&mut self, query: &Query) -> Result<String> {
-        Ok(self.compile_offset_query(query))
+        self.step_string(Step::CompileOffset, &[Arg::Query(query)])
     }
 
     fn compile_select(&mut self, query: &Query) -> Result<String> {
-        self.compile_select_query(query)
+        self.step_string(Step::CompileSelect, &[Arg::Query(query)])
     }
 
     fn compile_cursor(&mut self, query: &Query) -> Result<String> {
-        self.compile_cursor_query(query)
+        self.step_string(Step::CompileCursor, &[Arg::Query(query)])
     }
 
     fn compile_aggregate(&mut self, query: &Query) -> Result<String> {
-        self.compile_aggregate_query(query)
+        self.step_string(Step::CompileAggregate, &[Arg::Query(query)])
     }
 
     fn compile_group_by(&mut self, query: &Query) -> Result<String> {
-        self.compile_group_by_query(query)
+        self.step_string(Step::CompileGroupBy, &[Arg::Query(query)])
     }
 
     fn compile_join(&mut self, query: &Query) -> Result<String> {
-        self.compile_join_query(query)
+        self.step_string(Step::CompileJoin, &[Arg::Query(query)])
     }
 }
 

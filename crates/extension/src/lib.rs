@@ -104,6 +104,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     // The builders are a batch of their own while they are being moved.
     let module = if enabled("query") && enabled("query-builders") {
         module
+            .interface::<query::builder::PhpInterfaceCompiler>()
             .class::<query::builder::Base>()
             .class::<query::builder::Sql>()
             .class::<query::builder::MySqlBuilder>()
