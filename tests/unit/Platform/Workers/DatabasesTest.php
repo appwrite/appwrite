@@ -92,14 +92,12 @@ final class DatabasesTest extends TestCase
     }
 
     /**
-     * @return array<string, array{0: PDOException, 1: string}>
+     * @return \Iterator<string, array{\PDOException, string}>
      */
-    public static function engineLimitProvider(): array
+    public static function engineLimitProvider(): \Iterator
     {
-        return [
-            'too many columns' => [self::engineError('HY000', 1117, 'SQLSTATE[HY000]: General error: 1117 Too many columns'), 'Column limit reached'],
-            'too many indexes' => [self::engineError('42000', 1069, 'SQLSTATE[42000]: Syntax error or access violation: 1069 Too many keys specified; max 64 keys allowed'), 'Index limit reached'],
-        ];
+        yield 'too many columns' => [self::engineError('HY000', 1117, 'SQLSTATE[HY000]: General error: 1117 Too many columns'), 'Column limit reached'];
+        yield 'too many indexes' => [self::engineError('42000', 1069, 'SQLSTATE[42000]: Syntax error or access violation: 1069 Too many keys specified; max 64 keys allowed'), 'Index limit reached'];
     }
 
     #[DataProvider('engineLimitProvider')]
@@ -153,17 +151,15 @@ final class DatabasesTest extends TestCase
     }
 
     /**
-     * @return array<string, array{0: string}>
+     * @return \Iterator<string, array{string}>
      */
-    public static function collectionJobProvider(): array
+    public static function collectionJobProvider(): \Iterator
     {
-        return [
-            'create attribute' => [DATABASE_TYPE_CREATE_ATTRIBUTE],
-            'delete attribute' => [DATABASE_TYPE_DELETE_ATTRIBUTE],
-            'create index' => [DATABASE_TYPE_CREATE_INDEX],
-            'delete index' => [DATABASE_TYPE_DELETE_INDEX],
-            'delete collection' => [DATABASE_TYPE_DELETE_COLLECTION],
-        ];
+        yield 'create attribute' => [DATABASE_TYPE_CREATE_ATTRIBUTE];
+        yield 'delete attribute' => [DATABASE_TYPE_DELETE_ATTRIBUTE];
+        yield 'create index' => [DATABASE_TYPE_CREATE_INDEX];
+        yield 'delete index' => [DATABASE_TYPE_DELETE_INDEX];
+        yield 'delete collection' => [DATABASE_TYPE_DELETE_COLLECTION];
     }
 
     /**
