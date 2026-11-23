@@ -121,7 +121,7 @@ To build this app, we used SvelteKit, a framework to build web applications usin
 We first set up a skeleton SvelteKit project (without TypeScript):
 
 ```bash
-npm create svelte@latest ai-crystal-ball
+npx sv create ai-crystal-ball
 cd ai-crystal-ball
 npm i
 ```

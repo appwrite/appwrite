@@ -95,7 +95,7 @@ Looking at the two primary features, there were three primary challenges we need
 We first set up a skeleton SvelteKit project.
 
 ```bash
-npm create svelte@latest init-giveaway-roulette
+npx sv create init-giveaway-roulette
 ```
 
 We then entered the application directory, installed the Appwrite Web SDK and Pink Design using `npm install appwrite "@appwrite.io/pink"`, and set up our constants.

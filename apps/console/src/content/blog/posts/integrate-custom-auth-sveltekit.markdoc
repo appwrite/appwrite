@@ -70,7 +70,7 @@ To build this app, we will use SvelteKit, a framework that lets you build web ap
 We will first set up a skeleton SvelteKit project (without TypeScript):
 
 ```bash
-npm create svelte@latest my-project
+npx sv create my-project
 cd my-project
 npm i
 ```
