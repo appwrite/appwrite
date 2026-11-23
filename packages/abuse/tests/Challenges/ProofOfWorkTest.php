@@ -21,9 +21,9 @@ final class ProofOfWorkTest extends TestCase
         return new Token(self::SECRET, 'label', $purpose, 120);
     }
 
-    private function pow(?Nonce $nonces = null, bool $acceptWhenNoncesUnavailable = false, ?Token $token = null): ProofOfWork
+    private function pow(?Nonce $nonces = null, bool $acceptWhenNoncesUnavailable = false, string $secret = self::SECRET): ProofOfWork
     {
-        return new ProofOfWork($token ?? $this->token(), $nonces ?? new Memory(), $acceptWhenNoncesUnavailable);
+        return new ProofOfWork($secret, $nonces ?? new Memory(), 120, $acceptWhenNoncesUnavailable, 'label');
     }
 
     // --- leadingZeroBits / meetsDifficulty ------------------------------------
@@ -63,7 +63,7 @@ final class ProofOfWorkTest extends TestCase
 
     public function testIssueSignsNonceDifficultyBindingAndClaims(): void
     {
-        $puzzle = $this->pow()->issue(12, self::BINDING, ['project' => 'p1', 'ttl' => 3600]);
+        $puzzle = $this->pow()->withBinding(self::BINDING)->issue(12, ['project' => 'p1', 'ttl' => 3600]);
 
         $this->assertSame(12, $puzzle->difficulty);
         $this->assertSame(32, \strlen($puzzle->nonce));
@@ -121,7 +121,7 @@ final class ProofOfWorkTest extends TestCase
     public function testIssueRefusesABindingThatSharesANameWithAClaim(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->pow()->issue(8, ['ip' => 'a'], ['ip' => 'b']);
+        $this->pow()->withBinding(['ip' => 'a'])->issue(8, ['ip' => 'b']);
     }
 
     // --- verify ---------------------------------------------------------------
@@ -129,9 +129,9 @@ final class ProofOfWorkTest extends TestCase
     public function testVerifyAcceptsAValidSolutionAndReturnsTheClaims(): void
     {
         $pow = $this->pow();
-        $puzzle = $pow->issue(8, self::BINDING, ['project' => 'p1']);
+        $puzzle = $pow->withBinding(self::BINDING)->issue(8, ['project' => 'p1']);
 
-        $result = $pow->verify($puzzle->token, $this->solve($puzzle->nonce, 8), self::BINDING);
+        $result = $pow->withBinding(self::BINDING)->verify($puzzle->token, $this->solve($puzzle->nonce, 8));
 
         $this->assertSame(Status::Valid, $result->status);
         $this->assertTrue($result->isValid());
@@ -143,47 +143,74 @@ final class ProofOfWorkTest extends TestCase
     public function testVerifyRejectsReplayOfTheSameSubmission(): void
     {
         $pow = $this->pow();
-        $puzzle = $pow->issue(8, self::BINDING);
+        $puzzle = $pow->withBinding(self::BINDING)->issue(8);
         $solution = $this->solve($puzzle->nonce, 8);
 
-        $this->assertSame(Status::Valid, $pow->verify($puzzle->token, $solution, self::BINDING)->status);
-        $this->assertSame(Status::Replay, $pow->verify($puzzle->token, $solution, self::BINDING)->status);
+        $this->assertSame(Status::Valid, $pow->withBinding(self::BINDING)->verify($puzzle->token, $solution)->status);
+        $this->assertSame(Status::Replay, $pow->withBinding(self::BINDING)->verify($puzzle->token, $solution)->status);
     }
 
     public function testNonceIsUsedEvenWhenTheSolutionIsWrong(): void
     {
         // One puzzle buys one attempt, so a wrong guess cannot be followed by a right one.
         $pow = $this->pow();
-        $puzzle = $pow->issue(12, self::BINDING);
+        $puzzle = $pow->withBinding(self::BINDING)->issue(12);
 
-        $this->assertSame(Status::InvalidSolution, $pow->verify($puzzle->token, $this->wrong($puzzle->nonce, 12), self::BINDING)->status);
-        $this->assertSame(Status::Replay, $pow->verify($puzzle->token, $this->solve($puzzle->nonce, 12), self::BINDING)->status);
+        $this->assertSame(Status::InvalidSolution, $pow->withBinding(self::BINDING)->verify($puzzle->token, $this->wrong($puzzle->nonce, 12))->status);
+        $this->assertSame(Status::Replay, $pow->withBinding(self::BINDING)->verify($puzzle->token, $this->solve($puzzle->nonce, 12))->status);
     }
 
     public function testBindingMismatchDoesNotUseTheNonce(): void
     {
         $pow = $this->pow();
-        $puzzle = $pow->issue(8, self::BINDING);
+        $puzzle = $pow->withBinding(self::BINDING)->issue(8);
         $solution = $this->solve($puzzle->nonce, 8);
 
-        $mismatch = $pow->verify($puzzle->token, $solution, ['ip' => '198.51.100.0/24', 'ua' => 'ua-hash']);
+        $mismatch = $pow->withBinding(['ip' => '198.51.100.0/24', 'ua' => 'ua-hash'])->verify($puzzle->token, $solution);
         $this->assertSame(Status::BindingMismatch, $mismatch->status);
         $this->assertSame([], $mismatch->claims);
 
         // The owner can still redeem it.
-        $this->assertSame(Status::Valid, $pow->verify($puzzle->token, $solution, self::BINDING)->status);
+        $this->assertSame(Status::Valid, $pow->withBinding(self::BINDING)->verify($puzzle->token, $solution)->status);
     }
 
     public function testVerifyingWithPartOfTheBindingIsRejected(): void
     {
         $pow = $this->pow();
-        $puzzle = $pow->issue(8, self::BINDING);
+        $puzzle = $pow->withBinding(self::BINDING)->issue(8);
         $solution = $this->solve($puzzle->nonce, 8);
 
-        $this->assertSame(Status::BindingMismatch, $pow->verify($puzzle->token, $solution, ['ip' => self::BINDING['ip']])->status);
+        $this->assertSame(Status::BindingMismatch, $pow->withBinding(['ip' => self::BINDING['ip']])->verify($puzzle->token, $solution)->status);
         $this->assertSame(Status::BindingMismatch, $pow->verify($puzzle->token, $solution)->status);
         // Neither attempt used the nonce.
-        $this->assertSame(Status::Valid, $pow->verify($puzzle->token, $solution, self::BINDING)->status);
+        $this->assertSame(Status::Valid, $pow->withBinding(self::BINDING)->verify($puzzle->token, $solution)->status);
+    }
+
+    public function testWithBindingReturnsACopyAndMerges(): void
+    {
+        $pow = $this->pow();
+        $bound = $pow->withBinding(['ip' => self::BINDING['ip']])->withBinding(['ua' => self::BINDING['ua']]);
+        $puzzle = $bound->issue(8);
+        $solution = $this->solve($puzzle->nonce, 8);
+
+        // The original stays unbound, so it cannot redeem a bound puzzle.
+        $this->assertSame(Status::BindingMismatch, $pow->verify($puzzle->token, $solution)->status);
+        $this->assertSame(Status::Valid, $pow->withBinding(self::BINDING)->verify($puzzle->token, $solution)->status);
+    }
+
+    public function testDefaultsWork(): void
+    {
+        $pow = new ProofOfWork(self::SECRET, new Memory());
+        $before = \time();
+        $puzzle = $pow->issue(8);
+
+        $this->assertSame(Status::Valid, $pow->verify($puzzle->token, $this->solve($puzzle->nonce, 8))->status);
+
+        // Default label and purpose are "challenge"; default lifetime is DEFAULT_TTL.
+        $claims = new Token(self::SECRET, 'challenge', 'challenge', 1)->verify($puzzle->token);
+        $this->assertIsArray($claims);
+        $this->assertGreaterThanOrEqual($before + ProofOfWork::DEFAULT_TTL, $claims['exp']);
+        $this->assertLessThanOrEqual(\time() + ProofOfWork::DEFAULT_TTL, $claims['exp']);
     }
 
     public function testBindingIsMissingFromTheToken(): void
@@ -191,7 +218,7 @@ final class ProofOfWorkTest extends TestCase
         $pow = $this->pow();
         $puzzle = $pow->issue(8);
 
-        $this->assertSame(Status::BindingMismatch, $pow->verify($puzzle->token, $this->solve($puzzle->nonce, 8), self::BINDING)->status);
+        $this->assertSame(Status::BindingMismatch, $pow->withBinding(self::BINDING)->verify($puzzle->token, $this->solve($puzzle->nonce, 8))->status);
     }
 
     public function testNonceKeyPlaceholdersAreFilledFromTheTokenClaims(): void
@@ -217,7 +244,7 @@ final class ProofOfWorkTest extends TestCase
         $tampered[\strlen($tampered) - 1] = $tampered[\strlen($tampered) - 1] === 'a' ? 'b' : 'a';
         $this->assertSame(Status::InvalidToken, $pow->verify($tampered, $this->solve($puzzle->nonce, 8))->status);
 
-        $foreign = new ProofOfWork(new Token('other-secret', 'label', 'challenge', 120), new Memory())->issue(8);
+        $foreign = $this->pow(secret: 'other-secret')->issue(8);
         $this->assertSame(Status::InvalidToken, $pow->verify($foreign->token, $this->solve($foreign->nonce, 8))->status);
     }
 

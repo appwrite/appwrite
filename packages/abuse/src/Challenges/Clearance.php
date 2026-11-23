@@ -13,25 +13,58 @@ namespace Utopia\Abuse\Challenges;
  */
 final readonly class Clearance
 {
+    /** Lifetime in seconds (30 minutes). Short on purpose: it tolerates IP drift. */
+    public const int DEFAULT_TTL = 1800;
+
     public const string DIFFICULTY_CLAIM = 'difficulty';
 
     public const string ISSUED_AT_CLAIM = 'issuedAt';
 
-    public function __construct(private Token $token)
-    {
+    private Token $token;
+
+    /** @var array<string, string> */
+    private array $binding;
+
+    /**
+     * @param  string  $secret  Signing secret
+     * @param  int  $ttl  Default lifetime in seconds
+     * @param  string  $label  Derives the signing key from the secret; keep it stable or issued clearances stop verifying
+     * @param  string  $purpose  Stored in each clearance so no other kind of token passes as one
+     *
+     * @throws \InvalidArgumentException
+     */
+    public function __construct(
+        string $secret,
+        int $ttl = self::DEFAULT_TTL,
+        string $label = 'clearance',
+        string $purpose = 'clearance',
+    ) {
+        $this->token = new Token($secret, $label, $purpose, $ttl);
+        $this->binding = [];
     }
 
     /**
-     * @param  array<string, string>  $binding  Verify must pass the same fields and values
+     * A copy bound to these fields, e.g. the client's IP prefix, User-Agent
+     * hash or the resource it was earned on. Clearances it issues verify only
+     * with the same binding.
+     *
+     * @param  array<string, string>  $binding
+     */
+    public function withBinding(array $binding): static
+    {
+        return clone($this, ['binding' => [...$this->binding, ...$binding]]);
+    }
+
+    /**
      * @param  int  $difficulty  The difficulty of the challenge that was passed
-     * @param  int  $ttl  Lifetime in seconds; 0 or less uses the token's default
+     * @param  int  $ttl  Lifetime in seconds; 0 or less uses the default
      * @param  array<string, string|int>  $claims  Carried along, not checked
      *
-     * @throws \InvalidArgumentException when a binding or claim uses a reserved name
+     * @throws \InvalidArgumentException when a binding field or claim uses a reserved name
      */
-    public function issue(array $binding, int $difficulty = 0, int $ttl = 0, array $claims = []): string
+    public function issue(int $difficulty = 0, int $ttl = 0, array $claims = []): string
     {
-        foreach ([...\array_keys($binding), ...\array_keys($claims)] as $name) {
+        foreach ([...\array_keys($this->binding), ...\array_keys($claims)] as $name) {
             if ($name === self::DIFFICULTY_CLAIM || $name === self::ISSUED_AT_CLAIM) {
                 throw new \InvalidArgumentException("claim '{$name}' is reserved");
             }
@@ -42,26 +75,19 @@ final readonly class Clearance
             self::DIFFICULTY_CLAIM => $difficulty,
             // Not `iat`: the JWT library would expire the token at iat + its fixed max age
             self::ISSUED_AT_CLAIM => \time(),
-        ], $ttl, $binding);
+        ], $ttl, $this->binding);
     }
 
     /**
-     * True when the clearance is valid and unexpired, it is bound to exactly
-     * this binding (every field, same values), it
-     * was earned at no less than $difficulty, and it is younger than $maxAge
+     * True when the clearance is valid and unexpired, bound to exactly this
+     * binding, earned at no less than $difficulty, and younger than $maxAge
      * seconds (no age limit when $maxAge is 0 or less). A mismatch returns false
      * so the caller challenges again rather than blocking.
-     *
-     * @param  array<string, string>  $binding
      */
-    public function verify(string $token, array $binding, int $difficulty = 0, int $maxAge = 0): bool
+    public function verify(string $token, int $difficulty = 0, int $maxAge = 0): bool
     {
         $claims = $this->token->verify($token);
-        if ($claims === null) {
-            return false;
-        }
-
-        if (!Token::isBoundTo($claims, $binding)) {
+        if ($claims === null || !Token::isBoundTo($claims, $this->binding)) {
             return false;
         }
 
