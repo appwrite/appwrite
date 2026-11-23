@@ -68,7 +68,7 @@ class Get extends Action
         ?Key $apiKey,
         Request $request,
     ) {
-        $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey);
+        $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey, 'organization.projects.keys.read');
 
         $key = $authorization->skip(fn () => $dbForPlatform->getDocument('keys', $keyId));
 

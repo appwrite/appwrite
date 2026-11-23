@@ -112,7 +112,7 @@ class Create extends Action
             throw new Exception(Exception::KEY_CREATION_DENIED);
         }
 
-        $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey);
+        $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey, 'organization.projects.keys.write');
 
         // The request may run through the console project; events and audits belong to the resolved project
         $queueForEvents->setProject($project);
