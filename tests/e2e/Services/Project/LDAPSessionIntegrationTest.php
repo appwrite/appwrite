@@ -425,14 +425,12 @@ final class LDAPSessionIntegrationTest extends Scope
     }
 
     /**
-     * @return array<array{bool}>
+     * @return \Iterator<int|string, array{bool}>
      */
-    public static function emailVerificationProvider(): array
+    public static function emailVerificationProvider(): \Iterator
     {
-        return [
-            'verified' => [true],
-            'unverified' => [false],
-        ];
+        yield 'verified' => [true];
+        yield 'unverified' => [false];
     }
 
     #[DataProvider('emailVerificationProvider')]
