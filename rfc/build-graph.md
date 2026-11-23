@@ -23,7 +23,7 @@ It does not adopt Bazel. [Alternatives](#alternatives-considered) says why, and 
 - Replacing Composer, Cargo or the Dockerfile. `appwrite-labs/cloud` consumes this repository through Composer and builds from the Dockerfile; the Packagist mirrors are split from `packages/`.
 - Subdividing a suite. A suite runs or it does not.
 - Caching test results across runs. That needs hermetic tests, and E2E runs against Docker Compose with real databases.
-- Removing the dependency injection container. [Shrinking the core](#phase-5-shrink-the-core) changes how modules name what they inject, nothing more.
+- Replacing the dependency injection container with a framework. [Injection names a class](#injection-names-a-class) changes what a resource is keyed by and where it is defined; `Utopia\DI\Container` stays about a hundred lines.
 
 ## Current state
 
@@ -79,6 +79,22 @@ So inference alone is not the answer. It is cheap and it is a good check, but th
 
 It also has a blind spot: a class the `utopia` extension registers has no PHP source. `validators` and `user-agent` came out as used by nothing.
 
+### How injection is used
+
+`Utopia\DI\Container` maps a string to a factory. The factories are defined centrally and modules name them by string.
+
+| | |
+|---|---|
+| Resources defined under `app/` | 158, of which 128 in `app/init/resources.php` and `app/init/resources/request.php` |
+| `->inject('name')` calls under `src/Appwrite/Platform` | 4,569, in 838 files across 33 units (30 modules, `Workers`, `Tasks`, `Installer`) |
+| Resources injected by at least half of the units | 9: `response`, `authorization`, `project`, `request`, `queueForEvents`, `dbForPlatform`, `dbForProject`, `user`, `publisherForDeletes` |
+| Resources injected by exactly one unit | 40 |
+| Resources injected by two or three units | 33 |
+| Resources with no injection, dependency or lookup in this repository | 11 |
+| Injections whose action parameter already has a class type | 92% |
+
+So the core is large by placement, not by need. Nine resources are used everywhere. Most of the rest belong to one module and are defined in a file every module's graph passes through.
+
 ## Target shape
 
 ### Every file has an owner
@@ -97,6 +113,36 @@ A new `bin/monorepo graph --check` builds the static graph above and fails when:
 Existing violations go in a baseline file, as `phpstan-baseline.neon` does for PHPStan. An entry that no longer holds fails the check, so the baseline only shrinks.
 
 The check does not select tests. Selection reads the declarations. The check keeps the declarations honest.
+
+### Injection names a class
+
+A resource becomes a class, and its key is that class's name:
+
+```php
+namespace Appwrite\Platform\Modules\Avatars\Resources;
+
+final class ClientForAvatars
+{
+    public const array DEPENDS = [];
+
+    public function __invoke(): Client
+    {
+        return new Client(/* ... */);
+    }
+}
+```
+
+```php
+->inject(ClientForAvatars::class)
+```
+
+Three things follow.
+
+- **The edge is in the source.** The action file imports the resource class, and the resource class imports what it constructs. Any static tool follows that: the checker in this RFC, PHPStan, an editor's "find usages". Nothing has to understand the container.
+- **A resource lives with its owner.** `ClientForAvatars` sits in the Avatars module. Its files leave `shared`, and a change to them selects the Avatars suite. The nine resources everything uses stay in a small shared kernel.
+- **The library does not change.** `Foo::class` is a string, so `Container::set()` and `Action::inject()` take it as they are. The change is a convention plus one helper that registers a resource class and reads `DEPENDS`. During the move the old name stays registered as an alias of the class, so the 4,569 call sites change by codemod, module by module, and Cloud's own injections keep working until it follows.
+
+A module using another module's resource imports it by name. That import is a declared dependency between two modules, and the check can hold it to an allowed list. Modules that should not know each other talk through events, as they already do through `queueForEvents`.
 
 ### Crates declare what they implement
 
@@ -184,9 +230,15 @@ Port the selection from `changes.mjs`. Run both in CI for a week and diff their 
 
 ### Phase 5. Shrink the core
 
-The core is 31% of files because of string-keyed injection. Each resource a single module uses moves out of `app/init` into that module's own registration, and its files leave `shared`. `graph --check` prints the size of `shared` on every run.
+Move resources to class keys, in this order:
 
-This phase has no end date. It is the work the earlier phases make visible.
+1. The helper that registers a resource class, and the alias from each old name. No call site changes.
+2. The 40 resources one unit injects move into that unit as classes. A Rector rule rewrites that unit's `->inject('name')` calls. One pull request per module.
+3. The 33 that two or three units inject get an owner each; the others import it.
+4. The 11 with no use in this repository are checked against Cloud, then deleted or moved there.
+5. The nine everything injects move last, into the kernel, and the aliases go.
+
+`graph --check` prints the size of `shared` on every run. Done when `app/init` defines only the kernel.
 
 ### Phase 6. Decide on a build tool
 
@@ -197,6 +249,7 @@ With the graph declared and checked, compare `bin/monorepo affected` against Baz
 - **A wrong declaration skips a suite that should have run.** The check catches a missing edge it can see. It cannot see string-keyed injection, which is why everything `app/init` constructs stays in `shared` until phase 5 moves it. The push to `main` runs every suite.
 - **The baseline becomes permanent.** An entry that no longer holds fails the check, so it cannot grow stale, but nothing forces it to shrink.
 - **The smoke set misses a base image regression on the pull request.** The merge queue runs every suite before it lands.
+- **Cloud extends this repository and injects by the same names.** The aliases keep it working, and it has to finish its own move before they are removed. Its resources that override one defined here need a way to replace a class key, which the helper has to provide.
 - **The numbers are a small sample.** 40 runs, with one `packages/abuse` run worth 21% of the E2E minutes. Phase 0 replaces them with CI's own.
 
 ## Open questions
@@ -204,5 +257,7 @@ With the graph declared and checked, compare `bin/monorepo affected` against Baz
 - Does the declaration stay in one file, or move next to each module as a manifest? One file is simpler to check. A manifest is reviewed by the people who own the module.
 - Write the checker in `bin/monorepo`, or configure [Deptrac](https://github.com/qossmic/deptrac)? Deptrac enforces declared layers and fails on anything undeclared, which is the model here. It has not been tried against this repository.
 - PHPStan keeps a file dependency map in its result cache, and CI already runs PHPStan. Is that a sturdier source for the graph than a tokenizer?
+- Does a resource declare its dependencies in a constant, as sketched, or does the helper read them from attributes on `__invoke`'s parameters? Types alone are not enough: `dbForProject` and `dbForPlatform` are both a `Database`.
+- Request, worker-message and process scope are separate files today. Is scope an interface a resource class implements, or the namespace it lives in?
 - Which suites make up the smoke set?
 - Does the repository use the merge queue on every pull request, or only some? Phase 3 depends on it.
