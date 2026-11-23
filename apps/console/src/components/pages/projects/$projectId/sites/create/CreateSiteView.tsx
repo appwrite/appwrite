@@ -48,7 +48,6 @@ import { useWizard } from './WizardContext'
 import type { Models } from '@appwrite.io/console'
 import { useT } from '@/lib/i18n/translate'
 import { RefreshButton } from '@/components/global/shared/RefreshButton'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { AuthFlowHeaderIcon } from '@/components/global/auth/AuthFlowHeaderIcon'
 import {
   GitIcon,
@@ -61,7 +60,6 @@ import {
 } from '@/lib/vcs/providers'
 
 const REPO_PAGE_SIZE = 7
-const DEFAULT_TEMPLATE_PAGE_SIZE = 9
 
 // Helper to safely extract framework string
 function getFrameworkString(framework: unknown): string {
@@ -107,9 +105,8 @@ function RepositorySkeleton({
 
 export function CreateSiteView() {
   const t = useT()
-  const { features } = useConsoleProfile()
   const { vcsProviders } = useConsoleVariables()
-  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features, vcsProviders)
+  const vcsOAuthProviders = getVisibleVcsOAuthProviders(vcsProviders)
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const { installations, updateFormData, setCurrentPath } = useWizard()
@@ -600,7 +597,6 @@ export function CreateSiteView() {
           {projectId ? (
             <SiteTemplateGallery
               projectId={projectId}
-              defaultPageSize={DEFAULT_TEMPLATE_PAGE_SIZE}
               pageSizeOptions={[12, 18, 36, 72]}
               onSelectTemplate={handleSelectTemplate}
             />

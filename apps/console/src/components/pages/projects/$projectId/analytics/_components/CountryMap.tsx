@@ -176,6 +176,7 @@ export function CountryMap({
   formatLabel,
   onSelect,
   isActive,
+  mobile = false,
 }: {
   /** Known `country` rows (ISO-2 values). */
   rows: Models.AnalyticsMetric[]
@@ -185,6 +186,8 @@ export function CountryMap({
   /** Toggle a country filter; omitted when filtering isn't available. */
   onSelect?: (code: string) => void
   isActive?: (code: string) => boolean
+  /** Mobile properties count users, not visitors. */
+  mobile?: boolean
 }) {
   const t = useT()
   const world = useCountryShapes()
@@ -226,7 +229,7 @@ export function CountryMap({
           preserveAspectRatio="xMidYMid meet"
           className="h-full w-full"
           role="img"
-          aria-label={t('Visitors by country')}
+          aria-label={t(mobile ? 'Users by country' : 'Visitors by country')}
         >
           {world.shapes.map((shape, index) => {
             const value = byCode.get(shape.code) ?? 0
@@ -300,7 +303,7 @@ export function CountryMap({
           <CountryFlag code={hover.code} />
           <span className="font-medium">{formatLabel(hover.code)}</span>
           <span className="tabular-nums text-muted-foreground">
-            {formatNumber(hovered)} {t('visitors')}
+            {formatNumber(hovered)} {t(mobile ? 'users' : 'visitors')}
             {total > 0 ? ` · ${Math.round((hovered / total) * 100)}%` : ''}
           </span>
         </div>

@@ -15,6 +15,8 @@ use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\System\System;
+use WebSocket\Client as WebSocketClient;
+use WebSocket\ConnectionException;
 
 final class AbuseTest extends Scope
 {
@@ -1183,6 +1185,43 @@ final class AbuseTest extends Scope
             $this->assertStringContainsString('Max query complexity', (string) $response['body']['errors'][0]['message']);
             $this->assertArrayNotHasKey('data', $response['body']);
         }
+    }
+
+    #[Group('abuseEnabled')]
+    public function testRealtimeMessageLimitClosesConnection(): void
+    {
+        $client = new WebSocketClient('ws://appwrite.test/v1/realtime?' . \http_build_query([
+            'project' => $this->getProject()['$id'],
+            'channels' => ['documents'],
+        ]), [
+            'headers' => ['origin' => 'http://localhost'],
+            'timeout' => 2,
+        ]);
+        $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+
+        /**
+         * Test for SUCCESS
+         */
+        $this->startCountingInOneWindow(60);
+        for ($i = 0; $i < APP_LIMIT_REALTIME_MESSAGES; $i++) {
+            $client->send(\json_encode(['type' => 'ping']));
+            $this->assertSame('pong', \json_decode($client->receive(), true)['type'] ?? null, 'Message ' . ($i + 1) . ' is within the limit');
+        }
+
+        /**
+         * Test for FAILURE
+         */
+        $client->send(\json_encode(['type' => 'ping']));
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('error', $response['type'] ?? null);
+        $this->assertSame(1013, $response['data']['code'] ?? null);
+        $this->assertSame('Too many messages.', $response['data']['message'] ?? null);
+
+        try {
+            $client->receive();
+        } catch (ConnectionException) {
+        }
+        $this->assertFalse($client->isConnected(), 'A connection past the message limit is closed');
     }
 
     /**

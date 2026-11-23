@@ -91,6 +91,60 @@ class ParseTest extends TestCase
         $this->assertSame('John', $query->getValues()[0]->getValue());
     }
 
+    public function testParseNestedLogicalQueryWithStringChildren(): void
+    {
+        $json = (string) json_encode([
+            'method' => 'and',
+            'values' => [
+                (string) json_encode(['method' => 'equal', 'attribute' => 'name', 'values' => ['John']]),
+                ['method' => 'greaterThan', 'attribute' => 'age', 'values' => [18]],
+                (string) json_encode(['method' => 'or', 'values' => [
+                    (string) json_encode(['method' => 'equal', 'attribute' => 'city', 'values' => ['Paris']]),
+                ]]),
+            ],
+        ]);
+
+        $query = Query::parse($json);
+        $children = $query->getValues();
+
+        $this->assertSame(Method::And, $query->getMethod());
+        $this->assertCount(3, $children);
+        $this->assertInstanceOf(Query::class, $children[0]);
+        $this->assertSame('John', $children[0]->getValue());
+        $this->assertInstanceOf(Query::class, $children[1]);
+        $this->assertSame(Method::GreaterThan, $children[1]->getMethod());
+        $this->assertInstanceOf(Query::class, $children[2]);
+        $this->assertSame(Method::Or, $children[2]->getMethod());
+        $grandchild = $children[2]->getValues()[0];
+        $this->assertInstanceOf(Query::class, $grandchild);
+        $this->assertSame('Paris', $grandchild->getValue());
+    }
+
+    public function testParseNestedStringChildThatIsNotJson(): void
+    {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessageMatches('/^Invalid query: /');
+
+        Query::parse((string) json_encode(['method' => 'or', 'values' => ['not json']]));
+    }
+
+    public function testParseNestedChildOfWrongType(): void
+    {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Invalid nested query. Must be an array or string, got integer');
+
+        Query::parse((string) json_encode(['method' => 'or', 'values' => [42]]));
+    }
+
+    public function testParseNestedStringChildStillRefusesRaw(): void
+    {
+        $this->expectException(ValidationException::class);
+
+        Query::parse((string) json_encode(['method' => 'or', 'values' => [
+            (string) json_encode(['method' => 'raw', 'attribute' => '1 = 1', 'values' => []]),
+        ]]));
+    }
+
     public function testParseQueries(): void
     {
         $queries = Query::parseQueries([

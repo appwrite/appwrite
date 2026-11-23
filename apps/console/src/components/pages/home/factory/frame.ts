@@ -8,8 +8,10 @@ export type FrameState = {
   time: number
   /** Real seconds since the previous frame. */
   dt: number
-  /** Real seconds since the scene booted. Drives the power-up. */
+  /** Power-up seconds (running faster than real ones) since the assembled line started powering up. */
   introTime: number
+  /** Real seconds since the scene first showed, as the factory assembles (see `assembly.ts`). */
+  assembly: number
   line: LineState
   palette: FactoryPalette
   glows: GlowLayer
@@ -21,15 +23,11 @@ export type FrameState = {
   /** Real shadow maps are on, so fake contact blobs can step back. */
   realShadows: boolean
   /**
-   * Per station, how its unfolded display fits around the page copy laid
-   * over the scene: how much of the mast to raise, and whether the open
-   * display still covers the copy (which then steps back while it is open).
+   * How high every hologram's screen floats (0 → 1): one height for all,
+   * so no hologram meets the page copy laid over the scene.
    */
-  fits: DisplayFit[]
+  lift: number
 }
-
-/** See `FrameState.fits`. */
-export type DisplayFit = { lift: number; covers: boolean }
 
 const POWER_ORDER = Array.from({ length: STATION_COUNT }, (_, index) => index)
   .sort((a, b) => STATION_DELAY[a]! - STATION_DELAY[b]!)

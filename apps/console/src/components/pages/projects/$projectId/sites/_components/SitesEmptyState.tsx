@@ -157,11 +157,10 @@ function BrowserVisual() {
  */
 function GitProviders({ projectId }: { projectId: string }) {
   const t = useT()
-  const { features } = useConsoleProfile()
   const { vcsProviders } = useConsoleVariables()
   const { project } = useProject(projectId)
-  const { data: installations } = useVcsInstallations(projectId)
-  const providers = getVisibleVcsOAuthProviders(features, vcsProviders)
+  const { data: installations, isPending } = useVcsInstallations(projectId)
+  const providers = getVisibleVcsOAuthProviders(vcsProviders)
 
   if (providers.length === 0) return null
 
@@ -183,7 +182,11 @@ function GitProviders({ projectId }: { projectId: string }) {
         variant="outline"
         className="mt-3 @4xl:justify-start"
         link={(provider, content) =>
-          connected.has(provider.id) ? (
+          isPending ? (
+            <button type="button" disabled>
+              {content}
+            </button>
+          ) : connected.has(provider.id) ? (
             <Link to="/projects/$projectId/sites/create" params={{ projectId }}>
               {content}
             </Link>

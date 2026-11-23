@@ -88,6 +88,8 @@ export async function resolveProviderAccessToken(
  */
 export function startProviderAuthorization(
   provider: AvailableSmtpQuickSetupProvider,
+  /** What the authorization is for, when a page offers several (see `QUICK_SETUP_TARGET_PARAM`). */
+  target?: string,
 ): void {
   if (typeof window === 'undefined') {
     throw new Error('Provider authorization requires a browser')
@@ -95,6 +97,7 @@ export function startProviderAuthorization(
   const { success, failure } = buildQuickSetupOAuthUrls(
     `${window.location.origin}${window.location.pathname}`,
     provider.id,
+    target,
   )
   const result = sdk.forConsole.account.createOAuth2Token({
     provider: provider.oauth.provider,

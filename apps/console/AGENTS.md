@@ -1173,7 +1173,6 @@ These flags do not grant backend permissions. Curl cannot call this browser API.
 - `VITE_CONSOLE_USER_VERIFICATION` – `true`/`false` to force post-signup email verification
 - `VITE_CONSOLE_COOKIE_BANNER` – `true`/`false` to enable/disable the cookie consent banner logic (GDPR prompt)
 - `VITE_CONSOLE_BLOG_DRAFTS` – `true`/`false` to show draft blog posts (off in both profiles by default)
-- `VITE_CONSOLE_VCS_ORIGIN` – `true`/`false` to show Origin (Cursor) on Git connect. Off in both profiles by default; accounts with the `quality` label can also turn it on from the header Previews menu.
 - `VITE_CONSOLE_PROJECT_ENVIRONMENTS` – `true`/`false` to show the project environments switcher and leave environments out of organization project lists. Off by default; ignored on self-hosted, which has no environments API.
 
 **Pre-launch mode** (not a profile feature; unset = off):
@@ -1402,7 +1401,7 @@ Console uses **team** (organization) and **user** (account) preferences to store
 ### Key format
 
 - **Pattern**: `console.<feature>.<optionalSubKey>`
-- **Examples**: `console.pinnedProjectIds`, `console.sidebarCollapsed`, `console.databases.adminNavCollapsed`, `organization` (preferred org on account prefs).
+- **Examples**: `console.pinnedProjectIds`, `console.sidebarCollapsed`, `console.databases.adminNavCollapsed`, `organization` (preferred org on account prefs), `console.videos.createSource` (`upload`, `storage`, or `demo`; account-wide create-video source tab, not per project).
 - **Scope**: Team prefs are per organization (`sdk.forConsole.teams.get/updatePrefs` with `teamId`). User/account prefs are per user (`sdk.forConsole.account.updatePrefs`).
 
 ### Value format

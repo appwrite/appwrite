@@ -20,6 +20,7 @@ mimalloc.workspace = true
 # would bring its thread pool (rayon) into a process that forks.
 php-std.workspace = true
 stacker.workspace = true
+utopia-auth.workspace = true
 utopia-domains.workspace = true
 utopia-dsn.workspace = true
 utopia-emails.workspace = true

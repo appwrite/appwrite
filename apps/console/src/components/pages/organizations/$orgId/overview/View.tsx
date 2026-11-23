@@ -165,7 +165,8 @@ import { ConsoleNoOrganizationsScreen } from '@/components/global/auth/ConsoleNo
 import { toast } from 'sonner'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
-import { InitialsAvatar, PhotoAvatar } from '@/components/global/shared/Avatar'
+import { PhotoAvatar, TeamAvatar } from '@/components/global/shared/Avatar'
+import { OrganizationPhoto } from './_components/OrganizationPhoto'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { isPaymentAuthentication } from '@/lib/billing/addons'
@@ -2260,7 +2261,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         {...analyticsAttrs('organization-switcher')}
                         className="group flex h-8 max-h-8 min-h-8 min-w-0 max-w-full cursor-pointer items-center gap-2 rounded-lg px-2 -ms-2 transition-colors hover:bg-accent"
                       >
-                        <InitialsAvatar name={selectedOrg.name} size="sm" />
+                        <TeamAvatar teamId={selectedOrg.$id} name={selectedOrg.name} size="sm" />
                         <h1 className="m-0 min-w-0 max-w-[10rem] truncate text-[13px] font-semibold leading-tight text-foreground sm:max-w-[14rem] md:max-w-[20rem] lg:max-w-[28rem]">
                           {selectedOrg.name}
                         </h1>
@@ -2305,7 +2306,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               selectedOrg.$id === org.$id && 'bg-accent',
                             )}
                           >
-                            <InitialsAvatar name={org.name} size="md" />
+                            <TeamAvatar teamId={org.$id} name={org.name} size="md" />
                             <div className="flex-1 min-w-0">
                               <p className="truncate text-[13px] font-medium text-foreground">
                                 {org.name}
@@ -2364,7 +2365,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   </Popover>
                 ) : (
                   <div className="flex h-8 max-h-8 min-h-8 min-w-0 max-w-full items-center gap-2 px-2 -ms-2">
-                    <InitialsAvatar name={selectedOrg.name} size="sm" />
+                    <TeamAvatar teamId={selectedOrg.$id} name={selectedOrg.name} size="sm" />
                     <h1 className="m-0 min-w-0 max-w-[10rem] truncate text-[13px] font-semibold leading-tight text-foreground sm:max-w-[14rem] md:max-w-[20rem] lg:max-w-[28rem]">
                       {selectedOrg.name}
                     </h1>
@@ -4086,6 +4087,22 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                   )} satisfies SettingsCardItem,
                               ]
                             : []),
+                          ...(selectedOrg
+                            ? [
+                                {
+                                  id: 'org-photo',
+                                  search: {
+                                    title: 'Organization photo',
+                                    keywords: ['avatar', 'logo', 'image']},
+                                  node: (
+                                    <OrganizationPhoto
+                                      teamId={selectedOrg.$id}
+                                      name={selectedOrg.name}
+                                      canUpdate={canInviteMembers}
+                                    />
+                                  )} satisfies SettingsCardItem,
+                              ]
+                            : []),
                           {
                             id: 'org-name',
                             search: {
@@ -4168,7 +4185,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
                                         {selectedOrg && (
                                           <div className="flex items-center gap-3 mt-4">
-                                            <InitialsAvatar
+                                            <TeamAvatar
+                                              teamId={selectedOrg.$id}
                                               name={selectedOrg.name}
                                               size="md"
                                             />
@@ -4283,7 +4301,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                               <div className="rounded-lg border border-border bg-muted/50 p-3 mb-4 mt-2">
                                                 {selectedOrg && (
                                                   <div className="flex items-center gap-3">
-                                                    <InitialsAvatar
+                                                    <TeamAvatar
+                                                      teamId={selectedOrg.$id}
                                                       name={selectedOrg.name}
                                                       size="sm"
                                                     />

@@ -541,11 +541,20 @@ services:
       - sh
       - -c
       - |
-        until ldapsearch -x -H ldap://openldap -b dc=appwrite,dc=test \
-          -D cn=admin,dc=appwrite,dc=test -w $${LDAP_ADMIN_PASSWORD} >/dev/null 2>&1; do sleep 2; done
-        ldapadd -c -x -H ldap://openldap -D cn=admin,dc=appwrite,dc=test \
-          -w $${LDAP_ADMIN_PASSWORD} -f /seed.ldif || true
-        echo "LDAP fixtures loaded."
+        # The image answers from a first-boot slapd and then restarts it, so an add can
+        # land while it is down. Retry until the seed's last entry reads back.
+        for attempt in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30; do
+          ldapadd -c -x -H ldap://openldap -D cn=admin,dc=appwrite,dc=test \
+            -w $${LDAP_ADMIN_PASSWORD} -f /seed.ldif >/dev/null 2>&1
+          if ldapsearch -x -H ldap://openldap -s base -b cn=appwrite-posix,ou=groups,dc=appwrite,dc=test \
+            -D cn=admin,dc=appwrite,dc=test -w $${LDAP_ADMIN_PASSWORD} >/dev/null 2>&1; then
+            echo "LDAP fixtures loaded."
+            exit 0
+          fi
+          sleep 2
+        done
+        echo "LDAP fixtures did not load." >&2
+        exit 1
     environment:
       - LDAP_ADMIN_PASSWORD=${LDAP_ADMIN_PASSWORD:-adminpassword}
 

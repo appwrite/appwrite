@@ -16,7 +16,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:2.3.2@sha256:24a6c6f4c1ddb10a72dd61e16303d94c6f55a412b601f1fff0fe236749817a2d AS ffmpeg
+FROM appwrite/base:2.4.3@sha256:12070bf2a5ea6aae44e6844553c59e1a16a97261fdf0139903d974fe6f2cc2a2 AS ffmpeg
 
 # Same pin as utopia-php/video (docs/design.md, Dockerfile ARG FFMPEG_VERSION).
 # Alpine's apk ffmpeg is an older line and is not what the library CI tests against.
@@ -52,7 +52,7 @@ RUN apk add --no-cache \
 
 # The utopia extension, built against the base image's own PHP headers and
 # libheif so the ABI matches. Alpine's Rust is older than the workspace needs.
-FROM appwrite/base:2.3.2@sha256:24a6c6f4c1ddb10a72dd61e16303d94c6f55a412b601f1fff0fe236749817a2d AS extension-build
+FROM appwrite/base:2.4.3@sha256:12070bf2a5ea6aae44e6844553c59e1a16a97261fdf0139903d974fe6f2cc2a2 AS extension-build
 
 RUN apk add --no-cache rustup clang-dev libheif-dev build-base && \
     rustup-init -y --profile minimal --default-toolchain 1.97.1
@@ -67,7 +67,7 @@ RUN . "$HOME/.cargo/env" && \
     cargo build --release --locked -p utopia-extension && \
     strip target/release/libutopia.so
 
-FROM appwrite/base:2.3.2@sha256:24a6c6f4c1ddb10a72dd61e16303d94c6f55a412b601f1fff0fe236749817a2d AS base
+FROM appwrite/base:2.4.3@sha256:12070bf2a5ea6aae44e6844553c59e1a16a97261fdf0139903d974fe6f2cc2a2 AS base
 
 LABEL maintainer="team@appwrite.io"
 
@@ -212,7 +212,7 @@ EXPOSE 80
 
 CMD [ "php", "app/http.php" ]
 
-FROM appwrite/base:2.3.2-xdebug@sha256:9daf4de81e23d88149922a2789382de6da4340f2faebf11ad14c062fcea466f6 AS xdebug
+FROM appwrite/base:2.4.3-xdebug@sha256:bdac6f5ee69653a60116fa6b3a5362be9122fef23bdffac08b75b76b4334d2a2 AS xdebug
 
 FROM base AS development
 

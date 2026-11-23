@@ -179,7 +179,7 @@ final class EvaluationCustomServerTest extends Scope
 
         // The phone gets a push that opens the alert and can mute the monitor.
         $push = $this->waitForPush($device['token'], 'alert:' . $firing['alertId'], 'firing');
-        $this->assertSame('Firing: ' . $name, $push['title']);
+        $this->assertSame('[Critical] ' . $name . ' on ' . $this->getProject()['name'], $push['title']);
         $this->assertStringContainsString('Outbound bandwidth reached', (string) $push['body']);
         $this->assertSame('high', $push['priority']);
         // The monitor is critical, so its firing rings with the critical sound.
@@ -267,7 +267,7 @@ final class EvaluationCustomServerTest extends Scope
 
         // The resolved push replaces the firing one, by its tag.
         $push = $this->waitForPush($device['token'], 'alert:' . $firing['alertId'], 'resolved');
-        $this->assertSame('Resolved: ' . $name, $push['title']);
+        $this->assertSame('[Resolved] ' . $name . ' on ' . $this->getProject()['name'], $push['title']);
         $this->assertArrayNotHasKey('critical', $push);
 
         $this->assertEventually(function () use ($name) {
@@ -327,7 +327,7 @@ final class EvaluationCustomServerTest extends Scope
             $this->assertSame('high', $pushes[0]['priority']);
             if (\ctype_xdigit($device['token'])) {
                 $this->assertSame(PushService::APNS->value, $pushes[0]['service']);
-                $this->assertSame('Firing: ' . $name, $pushes[0]['title']);
+                $this->assertSame('[Critical] ' . $name . ' on ' . $this->getProject()['name'], $pushes[0]['title']);
                 $this->assertSame($tag, $pushes[0]['tag']);
                 $this->assertTrue($pushes[0]['critical']);
                 $this->assertSame('siren.caf', $pushes[0]['sound']);
@@ -343,7 +343,7 @@ final class EvaluationCustomServerTest extends Scope
                 $this->assertArrayNotHasKey('critical', $pushes[0]);
                 $this->assertArrayNotHasKey('sound', $pushes[0]);
                 $this->assertArrayNotHasKey('mutableContent', $pushes[0]);
-                $this->assertSame('Firing: ' . $name, $pushes[0]['data']['title']);
+                $this->assertSame('[Critical] ' . $name . ' on ' . $this->getProject()['name'], $pushes[0]['data']['title']);
                 $this->assertNotSame('', $pushes[0]['data']['message']);
                 $this->assertSame($tag, $pushes[0]['data']['tag']);
                 $this->assertSame('critical', $pushes[0]['data']['channelId']);
@@ -367,7 +367,7 @@ final class EvaluationCustomServerTest extends Scope
         foreach ([$first, $second] as $device) {
             $resolved = \array_values(\array_filter($this->pushes($device['token'], $tag), fn (array $push) => $push['data']['status'] === 'resolved'));
             $this->assertCount(1, $resolved);
-            $this->assertSame('Resolved: ' . $name, $resolved[0]['title'] ?? $resolved[0]['data']['title']);
+            $this->assertSame('[Resolved] ' . $name . ' on ' . $this->getProject()['name'], $resolved[0]['title'] ?? $resolved[0]['data']['title']);
             $this->assertArrayNotHasKey('critical', $resolved[0]);
             $this->assertArrayNotHasKey('sound', $resolved[0]);
         }

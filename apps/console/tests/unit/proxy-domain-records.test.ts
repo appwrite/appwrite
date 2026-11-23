@@ -29,14 +29,14 @@ describe('getVerificationMethods', () => {
     nameservers: ['ns1.appwrite.zone', 'ns2.appwrite.zone'],
   }
 
-  test('leads an apex on Cloud with the nameservers, then A and AAAA, not a CNAME on @', () => {
+  test('offers an apex on Cloud an ALIAS, then the nameservers, never A or AAAA', () => {
     expect(
       getVerificationMethods({
         domain: 'example.com',
         cloud: true,
         ...targets,
       }),
-    ).toEqual(['nameservers', 'a', 'aaaa', 'cname'])
+    ).toEqual(['alias', 'nameservers'])
   })
 
   test('leads a subdomain on Cloud with the CNAME and keeps A, AAAA and nameservers hidden', () => {
@@ -49,14 +49,14 @@ describe('getVerificationMethods', () => {
     ).toEqual(['cname'])
   })
 
-  test('leads an apex on self-hosted with A and AAAA', () => {
+  test('offers an apex on self-hosted an ALIAS, not A and AAAA', () => {
     expect(
       getVerificationMethods({
         domain: 'example.com',
         cloud: false,
         ...targets,
       }),
-    ).toEqual(['a', 'aaaa', 'cname'])
+    ).toEqual(['alias'])
   })
 
   test('leaves out what the server does not report', () => {
@@ -67,7 +67,16 @@ describe('getVerificationMethods', () => {
         cname: 'cloud.appwrite.io',
         nameservers: [],
       }),
-    ).toEqual(['cname'])
+    ).toEqual(['alias'])
+    expect(
+      getVerificationMethods({
+        domain: 'app.example.com',
+        cloud: false,
+        a: '1.2.3.4',
+        aaaa: '::1',
+        nameservers: [],
+      }),
+    ).toEqual(['a', 'aaaa'])
   })
 })
 

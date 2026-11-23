@@ -135,7 +135,7 @@ class Swoole extends Adapter
     }
 
     /**
-     * @param array<int, array{queue: Queue, coroutines: int, prefetch?: int, consumer?: Consumer}> $queues
+     * @param array<int, array{queue: Queue, coroutines: int, prefetch?: int, maxInFlight?: int, consumer?: Consumer}> $queues
      */
     #[\Override]
     public function consume(
@@ -169,6 +169,7 @@ class Swoole extends Adapter
                             $errorCallback,
                             $spec['consumer'] ?? $this->consumer,
                             $spec['prefetch'] ?? $spec['coroutines'],
+                            $spec['maxInFlight'] ?? null,
                         );
                     } finally {
                         $waitGroup->done();
@@ -210,13 +211,15 @@ class Swoole extends Adapter
         callable $errorCallback,
         Consumer $consumer,
         ?int $prefetch = null,
+        ?int $maxInFlight = null,
     ): void {
         if ($consumer !== $this->consumer) {
             $this->consumers[] = $consumer;
         }
         $prefetch ??= $coroutines;
-        if ($coroutines < 1 || $prefetch < $coroutines) {
-            throw new \InvalidArgumentException('Prefetch must be at least the positive number of coroutines');
+        $maxInFlight ??= $coroutines + $prefetch;
+        if ($coroutines < 1 || $prefetch < 1 || $maxInFlight < 1) {
+            throw new \InvalidArgumentException('Coroutines, prefetch and maxInFlight must be positive');
         }
         $running = new Channel($coroutines);
         $buffer = new Channel($prefetch);
@@ -320,18 +323,30 @@ class Swoole extends Adapter
                 }
             }
         });
-        // NATS ADR-37: refill the receive buffer below its half-full watermark.
+        // NATS ADR-37: refill the receive buffer at its half-full watermark.
         // Outstanding deliveries have a separate cap, including pending confirmations.
-        $threshold = max(1, (int) ceil($prefetch / 2));
+        $threshold = intdiv($prefetch, 2);
         try {
             while (!$this->isStopped()) {
-                while (($buffer->length() >= $threshold || \count($deliveries) >= $prefetch) && !$this->isStopped()) {
+                while (($buffer->length() > $threshold || \count($deliveries) >= $maxInFlight) && !$this->isStopped()) {
                     $available->pop(0.1);
                 }
+                // Let ready confirmations release their credits before sizing the fetch.
+                // A channel wake-up otherwise interrupts the first result in a batch.
+                $receiver = Coroutine::getCid();
+                Event::defer(static function () use ($receiver): void {
+                    Coroutine::resume($receiver);
+                });
+                Coroutine::yield();
                 if ($this->isStopped()) {
                     break;
                 }
-                $messages = $this->nextBatchFrom($errorCallback, $queue, $consumer, $prefetch - \count($deliveries));
+                /** @var int $buffered */
+                $buffered = $buffer->length();
+                $messages = $this->nextBatchFrom($errorCallback, $queue, $consumer, min($prefetch - $buffered, $maxInFlight - \count($deliveries)), static function (Message $message) use ($deliveries, $buffer): void {
+                    $deliveries[spl_object_id($message)] = $message;
+                    $buffer->push($message);
+                });
                 foreach ($messages as $message) {
                     $deliveries[spl_object_id($message)] = $message;
                 }

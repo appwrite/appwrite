@@ -108,7 +108,8 @@ $container->set('executor', fn () => new Executor(), []);
 // container's _APP_ALLOWED_INTERNAL_ADDRESSES lists (empty by default; the dev stack lists its
 // own network). A malformed range throws rather than being skipped. Shared per process: without
 // connection reuse every request opens its own handle, and each with*() returns a copy.
-// cURL counts decoded bytes against the size cap and aborts the transfer once it is passed.
+// The size cap applies to the decoded body too: the adapter aborts the transfer once the decoded
+// bytes pass it, so a small compressed response cannot expand past it in memory.
 $container->set('clientForOAuth2', fn () => new Client(new CurlAdapter(options: [
     \CURLOPT_MAXFILESIZE_LARGE => APP_STORAGE_READ_BUFFER,
 ]), new PublicInternet(

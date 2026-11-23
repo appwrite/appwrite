@@ -619,6 +619,15 @@ class V25 extends Migration
                                 }
                             }
                         }
+                        // Segments created before each row stored its bytes. An existing
+                        // attribute is skipped; a second migrate hits that path.
+                        if ($existed && $id === 'videosRenditionsSegments') {
+                            try {
+                                $this->createAttributeFromCollection($this->dbForProject, $id, 'size');
+                            } catch (Duplicate) {
+                            }
+                            $this->dbForProject->purgeCachedCollection($id);
+                        }
                     } finally {
                         $this->dbForProject->setTenant($tenant);
                     }
@@ -637,6 +646,24 @@ class V25 extends Migration
                         }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'rules':
+                    // The latest DNS record checks from verification, shown on proxy rules and read from
+                    // ruleRecords. An existing attribute is skipped; any other failure propagates, since
+                    // without it no rule shows its checks.
+                    if ($collectionType === 'console' && $this->dbForProject->findCollection($id) !== null) {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'records');
+                        } catch (Duplicate) {
+                        }
+                        $this->dbForProject->purgeCachedCollection($id);
+                    }
+                    break;
+
+                case 'ruleRecords':
+                    // New with the DNS record checks. A platform collection, so only the console project visits it.
+                    $this->createCollection($id);
                     break;
 
                 case 'pushLedger':

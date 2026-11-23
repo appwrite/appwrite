@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Utopia\Validator\Tests;
 
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use Utopia\Validator\Contains;
 
+#[RequiresPhpExtension('utopia')]
 final class ContainsTest extends TestCase
 {
     public function testCanValidateWithSinglePattern(): void

@@ -10,6 +10,17 @@ checksum = "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa"
 
 [[package]]
 name = "aes"
+version = "0.8.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b169f7a6d4742236a0a00c541b845991d0ac43e546831af1249753ab4c3aa3a0"
+dependencies = [
+ "cfg-if",
+ "cipher 0.4.4",
+ "cpufeatures 0.2.17",
+]
+
+[[package]]
+name = "aes"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc0fc36d7440d015b45468ba08a21e80e056ebbd014c611c6298bb7503e04bd1"
@@ -1689,6 +1700,7 @@ name = "php-std"
 version = "0.1.0"
 dependencies = [
  "argon2",
+ "blake2",
  "blowfish",
  "bytes",
  "cc",
@@ -1711,6 +1723,7 @@ dependencies = [
  "unsafe-libyaml",
  "whirlpool",
  "xxhash-rust",
+ "zeroize",
 ]
 
 [[package]]
@@ -2585,6 +2598,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3a3b425286980a367278453f3b6d28cdcb134b574e5a35824a6ff5eebad50bb6"
 
 [[package]]
+name = "utopia-auth"
+version = "0.1.0"
+dependencies = [
+ "aes 0.8.4",
+ "getrandom 0.3.4",
+ "md-5",
+ "php-std",
+ "sha2 0.10.9",
+ "zeroize",
+]
+
+[[package]]
 name = "utopia-domains"
 version = "0.1.0"
 dependencies = [
@@ -2618,6 +2643,7 @@ dependencies = [
  "mimalloc",
  "php-std",
  "stacker",
+ "utopia-auth",
  "utopia-domains",
  "utopia-dsn",
  "utopia-emails",
@@ -2998,7 +3024,7 @@ version = "9.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3476fd497ac8af5b1ec7b51acab7bef380f7e8dd8e0487595bafd839417a302"
 dependencies = [
- "aes",
+ "aes 0.9.4",
  "bzip2",
  "constant_time_eq",
  "crc32fast",

@@ -536,12 +536,17 @@ Http::init()
                 throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
             }
 
-            if (
-                array_key_exists($namespace, $project->getAttribute('services', []))
-                && ! $project->getAttribute('services', [])[$namespace]
-                && ! ($rolesSource->isPrivileged($authorization->getRoles()) || $rolesSource->isKey($authorization->getRoles()))
-            ) {
-                throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
+            // A route served under one SDK namespace can also belong to another service, such as team
+            // photos under avatars; its `services` label names the other switches it must respect.
+            $switches = $project->getAttribute('services', []);
+            foreach (\array_unique([$namespace, ...$route->getLabel('services', [])]) as $service) {
+                if (
+                    array_key_exists($service, $switches)
+                    && ! $switches[$service]
+                    && ! ($rolesSource->isPrivileged($authorization->getRoles()) || $rolesSource->isKey($authorization->getRoles()))
+                ) {
+                    throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
+                }
             }
         }
 
@@ -772,6 +777,16 @@ Http::init()
                 }
             }
 
+            $miss = static function () use ($response, $storageCacheOperationsCounter): void {
+                $storageCacheOperationsCounter->add(1, ['result' => 'miss']);
+                Span::add('storage.cache.hit', false);
+                $response
+                    ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+                    ->addHeader('Pragma', 'no-cache')
+                    ->addHeader('Expires', '0')
+                    ->addHeader('X-Appwrite-Cache', 'miss');
+            };
+
             if (! empty($data) && ! $cacheLog->isEmpty()) {
                 $cacheControl = \sprintf('private, max-age=%d', $timestamp);
                 $parts = explode('/', $cacheLog->getAttribute('resourceType', ''));
@@ -814,6 +829,19 @@ Http::init()
                     if ($file->isEmpty()) {
                         throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
                     }
+
+                    // Cached before this file existed: a deleted file with the same ID, whose
+                    // entries the deletes worker has not purged yet.
+                    if ($cacheLog->getCreatedAt() < $file->getCreatedAt()) {
+                        $authorization->skip(fn () => $dbForProject->deleteDocument('cache', $cacheLog->getId()));
+                        $cache->purge($key);
+                        $fallback?->purge($key);
+                        Span::add('storage.cache.superseded', true);
+                        $miss();
+
+                        return;
+                    }
+
                     Span::add('storage.bucket.id', $bucketId);
                     Span::add('storage.file.id', $fileId);
                     // Do not update transformedAt if it's a console user
@@ -891,13 +919,7 @@ Http::init()
                     $response->send($data);
                 }
             } else {
-                $storageCacheOperationsCounter->add(1, ['result' => 'miss']);
-                Span::add('storage.cache.hit', false);
-                $response
-                    ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
-                    ->addHeader('Pragma', 'no-cache')
-                    ->addHeader('Expires', '0')
-                    ->addHeader('X-Appwrite-Cache', 'miss');
+                $miss();
             }
         }
     });
