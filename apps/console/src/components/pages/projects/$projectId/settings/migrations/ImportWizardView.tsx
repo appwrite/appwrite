@@ -286,7 +286,8 @@ export function ImportWizardView() {
     })
   }
 
-  const handleFetchReport = async () => {
+  // Credentials from a connected Supabase account arrive before the form state updates
+  const handleFetchReport = async (connected?: Models.SupabaseCredentials) => {
     if (!provider || !pid) return
     setReportError(null)
     setLoadingReport(true)
@@ -307,27 +308,24 @@ export function ImportWizardView() {
         )
         setReportData(report)
       } else if (provider === 'Supabase') {
+        const supabase = connected ?? {
+          endpoint: supabaseEndpoint.trim(),
+          apiKey: supabaseApiKey.trim(),
+          databaseHost: databaseHost.trim(),
+          username: supabaseUsername.trim() || 'postgres',
+          password: supabasePassword,
+          port: parseInt(supabasePort, 10) || 5432,
+        }
         if (
-          !supabaseEndpoint.trim() ||
-          !supabaseApiKey.trim() ||
-          !databaseHost.trim() ||
-          !supabasePassword.trim()
+          !supabase.endpoint ||
+          !supabase.apiKey ||
+          !supabase.databaseHost ||
+          !supabase.password
         ) {
           toast.error(t('Please fill required Supabase fields'))
           return
         }
-        const report = await fetchSupabaseReport(
-          pid,
-          {
-            endpoint: supabaseEndpoint.trim(),
-            apiKey: supabaseApiKey.trim(),
-            databaseHost: databaseHost.trim(),
-            username: supabaseUsername.trim() || 'postgres',
-            password: supabasePassword,
-            port: parseInt(supabasePort, 10) || 5432,
-          },
-          region,
-        )
+        const report = await fetchSupabaseReport(pid, supabase, region)
         setReportData(report)
       } else if (provider === 'Firebase') {
         if (!serviceAccount.trim()) {
@@ -643,6 +641,7 @@ export function ImportWizardView() {
               setSupabaseUsername(credentials.username)
               setSupabasePassword(credentials.password)
               setSupabasePort(String(credentials.port))
+              void handleFetchReport(credentials)
             }}
           />
           <div className="border-t border-border" />
@@ -1234,7 +1233,7 @@ export function ImportWizardView() {
         <Button
           type="button"
           disabled={loadingReport}
-          onClick={handleFetchReport}
+          onClick={() => handleFetchReport()}
         >
           {t('Continue')}
         </Button>
