@@ -117,9 +117,8 @@ final class UploaderTest extends TestCase
 
             $segments = $this->segments(4);
             $uploader->take($segments[0]);
-            Coroutine::sleep(0.01);
             $uploader->take($segments[1]);
-            Coroutine::sleep(0.01);
+            $this->waitUntil($uploader->failed(...), 'the second upload never failed');
 
             $thrown = null;
             try {
@@ -181,8 +180,7 @@ final class UploaderTest extends TestCase
             foreach ($segments as $written) {
                 $uploader->take($written);
             }
-            // Let the first write start.
-            Coroutine::sleep(0.01);
+            $this->waitUntil(fn (): bool => $uploader->pending() < 5, 'the first write never started');
 
             $start = \microtime(true);
             $uploader->abandon();
@@ -236,6 +234,18 @@ final class UploaderTest extends TestCase
         \sort($names, SORT_NATURAL);
 
         return $names;
+    }
+
+    private function waitUntil(callable $condition, string $message): void
+    {
+        $deadline = \microtime(true) + 5;
+
+        while (!$condition()) {
+            if (\microtime(true) > $deadline) {
+                $this->fail($message);
+            }
+            Coroutine::sleep(0.001);
+        }
     }
 
     private function remove(string $directory): void
