@@ -3,7 +3,7 @@
  * does not have to copy keys and a database password out of Supabase.
  */
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AppwriteException, type Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -64,10 +64,10 @@ export function SupabaseConnect({
     window.location.assign(url.toString())
   }
 
-  const fill = async () => {
+  const pick = async (ref: string) => {
+    setProjectRef(ref)
     try {
-      onCredentials(await createCredentials.mutateAsync(projectRef))
-      toast.success(t('Credentials filled from your Supabase project'))
+      onCredentials(await createCredentials.mutateAsync(ref))
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -79,6 +79,17 @@ export function SupabaseConnect({
 
   const connected = projects.data !== undefined
 
+  // A single project needs no choice, so it is used as soon as the account connects
+  const picked = useRef(false)
+  const only =
+    projects.data?.projects.length === 1 ? projects.data.projects[0] : null
+  useEffect(() => {
+    if (!only || picked.current) return
+    picked.current = true
+    void pick(only.projectRef)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [only])
+
   return (
     <div className="px-6 py-4 space-y-3">
       {!connected && (
@@ -88,11 +99,7 @@ export function SupabaseConnect({
               'Connect your Supabase account to fill the credentials automatically.',
             )}
           </p>
-          <Button
-            size="sm"
-            onClick={connect}
-            disabled={projects.isLoading}
-          >
+          <Button size="sm" onClick={connect} disabled={projects.isLoading}>
             {t('Connect Supabase')}
           </Button>
         </div>
@@ -100,25 +107,30 @@ export function SupabaseConnect({
       {connected && (
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-3">
-            <Select value={projectRef} onValueChange={setProjectRef}>
+            <Select
+              value={projectRef}
+              onValueChange={(ref) => void pick(ref)}
+              disabled={createCredentials.isPending}
+            >
               <SelectTrigger className="h-9 min-w-56 text-[13px]">
                 <SelectValue placeholder={t('Select a Supabase project')} />
               </SelectTrigger>
               <SelectContent>
                 {projects.data.projects.map((project) => (
-                  <SelectItem key={project.projectRef} value={project.projectRef}>
+                  <SelectItem
+                    key={project.projectRef}
+                    value={project.projectRef}
+                  >
                     {project.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Button
-              size="sm"
-              onClick={fill}
-              disabled={!projectRef || createCredentials.isPending}
-            >
-              {t('Use project')}
-            </Button>
+            {createCredentials.isPending && (
+              <span className="text-[12px] text-muted-foreground">
+                {t('Preparing access to the project…')}
+              </span>
+            )}
             <Button
               size="sm"
               variant="ghost"
