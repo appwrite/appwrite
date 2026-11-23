@@ -2,21 +2,25 @@
 
 namespace Utopia\Abuse\Challenges\ProofOfWork;
 
+use Throwable;
+
 /**
- * Result of {@see \Utopia\Abuse\Challenges\ProofOfWork::verify()}: the verdict plus the projectId and resourceId
- * carried by (and authenticated by the signature of) the token. Both are trusted
- * from the token — there is nothing external to cross-check at verify time — and
- * determine which project/resource the clearance and usage are attributed to.
+ * Result of {@see \Utopia\Abuse\Challenges\ProofOfWork::verify()}. Claims are
+ * the signed token's, set once the token is known to belong to this client.
  */
 final readonly class Result
 {
+    /**
+     * @param  array<mixed>  $claims
+     * @param  int  $elapsedMs  Time between issue and verify
+     * @param  Throwable|null  $nonceError  Why the nonce store failed, when it did
+     */
     public function __construct(
         public Status $status,
-        public string $projectId,
-        public string $resourceId = '',
-        public int $clearanceTtl = 0,
-        public int $elapsedMs = 0,
+        public array $claims = [],
         public int $difficulty = 0,
+        public int $elapsedMs = 0,
+        public ?Throwable $nonceError = null,
     ) {
     }
 

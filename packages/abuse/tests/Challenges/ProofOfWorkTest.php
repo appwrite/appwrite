@@ -2,24 +2,31 @@
 
 namespace Utopia\Abuse\Tests\Challenges;
 
-use Ahc\Jwt\JWT;
-use Ahc\Jwt\JWTException;
-use Iterator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Utopia\Abuse\Challenges\Clearance;
+use Utopia\Abuse\Challenges\Nonce;
 use Utopia\Abuse\Challenges\ProofOfWork;
-use Utopia\Abuse\Challenges\ProofOfWork\Nonce\Outcome;
 use Utopia\Abuse\Challenges\ProofOfWork\Status;
-use Utopia\Abuse\Tests\Challenges\ProofOfWork\Nonce\InMemoryConsumer;
+use Utopia\Abuse\Challenges\Token;
+use Utopia\Abuse\Tests\Challenges\Nonce\Memory;
 
 final class ProofOfWorkTest extends TestCase
 {
-    private const string SECRET = 'test-secret-key';
-    private const string IP_PREFIX = '203.0.113.0/24';
-    private const string UA_HASH = 'ua-hash-abc';
+    private const string SECRET = 'pow-secret';
 
-    // --- leadingZeroBits -----------------------------------------------------
+    private const array BINDING = ['ip' => '203.0.113.0/24', 'ua' => 'ua-hash'];
+
+    private function token(string $purpose = 'challenge'): Token
+    {
+        return new Token(self::SECRET, 'label', $purpose, 120);
+    }
+
+    private function pow(?Nonce $nonces = null, bool $acceptWhenNoncesUnavailable = false, ?Token $token = null): ProofOfWork
+    {
+        return new ProofOfWork($token ?? $this->token(), $nonces ?? new Memory(), $acceptWhenNoncesUnavailable);
+    }
+
+    // --- leadingZeroBits / meetsDifficulty ------------------------------------
 
     public function testLeadingZeroBitsCountsWholeZeroBytes(): void
     {
@@ -31,23 +38,16 @@ final class ProofOfWorkTest extends TestCase
     }
 
     /**
-     * The server counts leading zero bits over raw digest bytes; the browser
-     * counts over the hex string. Prove the two agree on every digest so a
-     * client-found solution always satisfies the server's check.
+     * The server counts over raw digest bytes; a browser counts over the hex
+     * string. They must agree so a client-found solution always passes.
      */
     public function testByteAndHexCountingAgree(): void
     {
         for ($i = 0; $i < 500; $i++) {
             $digest = \hash('sha256', 'sample:' . $i, true);
-            $this->assertSame(
-                ProofOfWork::leadingZeroBits($digest),
-                $this->leadingZeroBitsOverHex(\bin2hex($digest)),
-                'Mismatch at sample ' . $i,
-            );
+            $this->assertSame(ProofOfWork::leadingZeroBits($digest), $this->leadingZeroBitsOverHex(\bin2hex($digest)), 'Mismatch at sample ' . $i);
         }
     }
-
-    // --- meetsDifficulty -----------------------------------------------------
 
     public function testMeetsDifficultyAcceptsAValidSolutionAndRejectsOthers(): void
     {
@@ -55,55 +55,40 @@ final class ProofOfWorkTest extends TestCase
         $solution = $this->solve($nonce, 8);
 
         $this->assertTrue(ProofOfWork::meetsDifficulty($nonce, $solution, 8));
-        // A solution valid at difficulty 8 need not hold at a much harder target.
         $this->assertFalse(ProofOfWork::meetsDifficulty($nonce, $solution, 32));
-        // Difficulty 0 is trivially satisfied by anything.
         $this->assertTrue(ProofOfWork::meetsDifficulty($nonce, '0', 0));
     }
 
-    // --- issue ---------------------------------------------------------------
+    // --- issue ----------------------------------------------------------------
 
-    public function testIssueProducesABoundToken(): void
+    public function testIssueSignsNonceDifficultyBindingAndClaims(): void
     {
-        $pow = new ProofOfWork(self::SECRET, new InMemoryConsumer());
-        $issued = $pow->issue('proj1', self::IP_PREFIX, self::UA_HASH, 12);
+        $puzzle = $this->pow()->issue(12, self::BINDING, ['project' => 'p1', 'ttl' => 3600]);
 
-        $this->assertSame(12, $issued['difficulty']);
-        $this->assertSame(32, \strlen($issued['nonce'])); // 16 bytes hex
-        $this->assertCount(3, \explode('.', $issued['token']));
+        $this->assertSame(12, $puzzle->difficulty);
+        $this->assertSame(32, \strlen($puzzle->nonce));
 
-        $claims = new JWT($this->key(), 'HS256', ProofOfWork::DEFAULT_TTL, 0)->decode($issued['token']);
-        $this->assertSame('proj1', $claims['projectId']);
-        $this->assertSame(self::IP_PREFIX, $claims['ipPrefix']);
-        $this->assertSame(self::UA_HASH, $claims['uaHash']);
-        $this->assertSame($issued['nonce'], $claims['nonce']);
+        $claims = $this->token()->verify($puzzle->token);
+        $this->assertIsArray($claims);
+        $this->assertSame($puzzle->nonce, $claims['nonce']);
+        $this->assertSame(12, $claims['difficulty']);
+        $this->assertSame('203.0.113.0/24', $claims['ip']);
+        $this->assertSame('p1', $claims['project']);
+        $this->assertSame(3600, $claims['ttl']);
     }
 
-    // --- bitsForLevel --------------------------------------------------------
-
-    public function testBitsForLevelMapsTheOneToFiveScale(): void
-    {
-        $this->assertSame(14, ProofOfWork::bitsForLevel(1));
-        $this->assertSame(16, ProofOfWork::bitsForLevel(2));
-        $this->assertSame(18, ProofOfWork::bitsForLevel(3));
-        $this->assertSame(20, ProofOfWork::bitsForLevel(4));
-        $this->assertSame(21, ProofOfWork::bitsForLevel(5));
-    }
-
-    #[DataProvider('unsolvableOrTrivialDifficulties')]
+    #[DataProvider('outOfRangeDifficulties')]
     public function testIssueRejectsDifficultyOutsideTheDigestRange(int $difficulty): void
     {
         // Below 0 every solution passes; above 256 (the SHA-256 width) none can.
-        $pow = new ProofOfWork(self::SECRET, new InMemoryConsumer());
-
         $this->expectException(\InvalidArgumentException::class);
-        $pow->issue('proj1', self::IP_PREFIX, self::UA_HASH, $difficulty);
+        $this->pow()->issue($difficulty);
     }
 
     /**
-     * @return Iterator<string, array{int}>
+     * @return iterable<string, array{int}>
      */
-    public static function unsolvableOrTrivialDifficulties(): Iterator
+    public static function outOfRangeDifficulties(): iterable
     {
         yield 'negative' => [-1];
         yield 'wider than the digest' => [257];
@@ -111,275 +96,164 @@ final class ProofOfWorkTest extends TestCase
 
     public function testIssueAcceptsTheDigestRangeBounds(): void
     {
-        $pow = new ProofOfWork(self::SECRET, new InMemoryConsumer());
-
-        $this->assertSame(0, $pow->issue('proj1', self::IP_PREFIX, self::UA_HASH, 0)['difficulty']);
-        $this->assertSame(256, $pow->issue('proj1', self::IP_PREFIX, self::UA_HASH, 256)['difficulty']);
+        $this->assertSame(0, $this->pow()->issue(0)->difficulty);
+        $this->assertSame(256, $this->pow()->issue(256)->difficulty);
     }
 
-    public function testBitsForLevelFallsBackToDefaultForUnknownLevels(): void
+    #[DataProvider('reservedNames')]
+    public function testIssueRefusesReservedClaimNames(string $name): void
     {
-        // 0 (unset) and out-of-range levels fall back to the default difficulty.
-        $this->assertSame(ProofOfWork::DEFAULT_DIFFICULTY, ProofOfWork::bitsForLevel(0));
-        $this->assertSame(ProofOfWork::DEFAULT_DIFFICULTY, ProofOfWork::bitsForLevel(6));
-        $this->assertSame(ProofOfWork::DEFAULT_DIFFICULTY, ProofOfWork::bitsForLevel(-1));
-    }
-
-    // --- clearance TTL claim -------------------------------------------------
-
-    public function testClearanceTtlRoundTripsFromIssueToVerify(): void
-    {
-        $pow = new ProofOfWork(self::SECRET, new InMemoryConsumer());
-        $issued = $pow->issue('proj1', self::IP_PREFIX, self::UA_HASH, 8, 3600);
-        $solution = $this->solve($issued['nonce'], 8);
-
-        $result = $pow->verify($issued['token'], $solution, self::IP_PREFIX, self::UA_HASH);
-
-        $this->assertSame(Status::Valid, $result->status);
-        $this->assertSame(3600, $result->clearanceTtl);
-    }
-
-    public function testClearanceTtlDefaultsToZeroWhenNotIssued(): void
-    {
-        $pow = new ProofOfWork(self::SECRET, new InMemoryConsumer());
-        $issued = $pow->issue('proj1', self::IP_PREFIX, self::UA_HASH, 8);
-        $solution = $this->solve($issued['nonce'], 8);
-
-        $result = $pow->verify($issued['token'], $solution, self::IP_PREFIX, self::UA_HASH);
-
-        $this->assertSame(0, $result->clearanceTtl);
-    }
-
-    // --- verify: happy path --------------------------------------------------
-
-    public function testVerifyAcceptsAValidSolution(): void
-    {
-        $pow = new ProofOfWork(self::SECRET, new InMemoryConsumer());
-        $issued = $pow->issue('proj1', self::IP_PREFIX, self::UA_HASH, 8);
-        $solution = $this->solve($issued['nonce'], 8);
-
-        $result = $pow->verify($issued['token'], $solution, self::IP_PREFIX, self::UA_HASH);
-
-        $this->assertSame(Status::Valid, $result->status);
-        $this->assertTrue($result->isValid());
-        $this->assertSame('proj1', $result->projectId);
-    }
-
-    // --- verify: replay (nonce burned) --------------------------------------
-
-    public function testVerifyRejectsReplayOfSameSubmission(): void
-    {
-        $pow = new ProofOfWork(self::SECRET, new InMemoryConsumer());
-        $issued = $pow->issue('proj1', self::IP_PREFIX, self::UA_HASH, 8);
-        $solution = $this->solve($issued['nonce'], 8);
-
-        $first = $pow->verify($issued['token'], $solution, self::IP_PREFIX, self::UA_HASH);
-        $second = $pow->verify($issued['token'], $solution, self::IP_PREFIX, self::UA_HASH);
-
-        $this->assertSame(Status::Valid, $first->status);
-        $this->assertSame(Status::Replay, $second->status);
-    }
-
-    public function testNonceIsBurnedEvenWhenTheSolutionIsWrong(): void
-    {
-        // A bad-solution attempt still consumes the nonce, so a follow-up with the
-        // correct solution on the same token is rejected as replay. This is what
-        // makes one issued challenge worth exactly one attempt (blocks probing).
-        $pow = new ProofOfWork(self::SECRET, new InMemoryConsumer());
-        $issued = $pow->issue('proj1', self::IP_PREFIX, self::UA_HASH, 12);
-
-        $bad = $pow->verify($issued['token'], $this->wrong($issued['nonce'], 12), self::IP_PREFIX, self::UA_HASH);
-        $this->assertSame(Status::InvalidSolution, $bad->status);
-
-        $good = $pow->verify($issued['token'], $this->solve($issued['nonce'], 12), self::IP_PREFIX, self::UA_HASH);
-        $this->assertSame(Status::Replay, $good->status);
-    }
-
-    // --- verify: binding -----------------------------------------------------
-
-    public function testVerifyRejectsIpBindingMismatchWithoutBurningNonce(): void
-    {
-        $consumer = new InMemoryConsumer();
-        $pow = new ProofOfWork(self::SECRET, $consumer);
-        $issued = $pow->issue('proj1', self::IP_PREFIX, self::UA_HASH, 8);
-        $solution = $this->solve($issued['nonce'], 8);
-
-        $mismatch = $pow->verify($issued['token'], $solution, '198.51.100.0/24', self::UA_HASH);
-        $this->assertSame(Status::BindingMismatch, $mismatch->status);
-
-        // Binding is checked before the burn, so the legitimate client can still
-        // redeem the same token from the correct IP prefix.
-        $ok = $pow->verify($issued['token'], $solution, self::IP_PREFIX, self::UA_HASH);
-        $this->assertSame(Status::Valid, $ok->status);
-    }
-
-    public function testVerifyRejectsUaBindingMismatch(): void
-    {
-        $pow = new ProofOfWork(self::SECRET, new InMemoryConsumer());
-        $issued = $pow->issue('proj1', self::IP_PREFIX, self::UA_HASH, 8);
-        $solution = $this->solve($issued['nonce'], 8);
-
-        $result = $pow->verify($issued['token'], $solution, self::IP_PREFIX, 'different-ua-hash');
-        $this->assertSame(Status::BindingMismatch, $result->status);
-    }
-
-    // --- verify: bad tokens --------------------------------------------------
-
-    public function testVerifyRejectsGarbageToken(): void
-    {
-        $pow = new ProofOfWork(self::SECRET, new InMemoryConsumer());
-        $result = $pow->verify('not.a.jwt', '0', self::IP_PREFIX, self::UA_HASH);
-        $this->assertSame(Status::InvalidToken, $result->status);
-    }
-
-    public function testVerifyRejectsTamperedToken(): void
-    {
-        $pow = new ProofOfWork(self::SECRET, new InMemoryConsumer());
-        $issued = $pow->issue('proj1', self::IP_PREFIX, self::UA_HASH, 8);
-
-        // Flip the last character of the signature.
-        $token = $issued['token'];
-        $token[\strlen($token) - 1] = $token[\strlen($token) - 1] === 'a' ? 'b' : 'a';
-
-        $result = $pow->verify($token, $this->solve($issued['nonce'], 8), self::IP_PREFIX, self::UA_HASH);
-        $this->assertSame(Status::InvalidToken, $result->status);
-    }
-
-    public function testVerifyRejectsTokenSignedWithAnotherSecret(): void
-    {
-        $foreign = new ProofOfWork('a-different-secret', new InMemoryConsumer());
-        $issued = $foreign->issue('proj1', self::IP_PREFIX, self::UA_HASH, 8);
-
-        $pow = new ProofOfWork(self::SECRET, new InMemoryConsumer());
-        $result = $pow->verify($issued['token'], $this->solve($issued['nonce'], 8), self::IP_PREFIX, self::UA_HASH);
-        $this->assertSame(Status::InvalidToken, $result->status);
-    }
-
-    public function testVerifyRejectsClearanceCookie(): void
-    {
-        // A clearance cookie shares the secret and binding claims but is not a challenge.
-        $cookie = new Clearance(self::SECRET)->issue('proj1', '', self::IP_PREFIX, self::UA_HASH, ProofOfWork::DEFAULT_DIFFICULTY);
-
-        $pow = new ProofOfWork(self::SECRET, new InMemoryConsumer());
-        $result = $pow->verify($cookie, '0', self::IP_PREFIX, self::UA_HASH);
-        $this->assertSame(Status::InvalidToken, $result->status);
+        $this->expectException(\InvalidArgumentException::class);
+        $this->pow()->issue(8, claims: [$name => 'x']);
     }
 
     /**
-     * @return Iterator<string, array{?string}>
+     * @return iterable<string, array{string}>
      */
-    public static function otherPurposes(): Iterator
+    public static function reservedNames(): iterable
     {
-        yield 'clearance purpose' => [Clearance::PURPOSE];
-        yield 'no purpose' => [null];
+        yield 'nonce' => ['nonce'];
+        yield 'difficulty' => ['difficulty'];
+        yield 'issue time' => ['iatMs'];
+        yield 'purpose' => [Token::PURPOSE_CLAIM];
     }
 
-    #[DataProvider('otherPurposes')]
-    public function testVerifyRejectsTokenWithoutTheChallengePurpose(?string $purpose): void
+    public function testIssueRefusesABindingThatSharesANameWithAClaim(): void
     {
-        // Every challenge claim is valid except the purpose; the nonce must stay unburned.
-        $nonce = \bin2hex(\random_bytes(16));
-        $claims = [
-            'nonce' => $nonce,
-            'difficulty' => 8,
-            'projectId' => 'proj1',
-            'resourceId' => '',
-            'ipPrefix' => self::IP_PREFIX,
-            'uaHash' => self::UA_HASH,
-            'iatMs' => (int) (\microtime(true) * 1000),
-        ];
-        if ($purpose !== null) {
-            $claims[ProofOfWork::PURPOSE_CLAIM] = $purpose;
-        }
-        $token = new JWT($this->key(), 'HS256', ProofOfWork::DEFAULT_TTL, 0)->encode($claims);
-
-        $consumer = new InMemoryConsumer();
-        $pow = new ProofOfWork(self::SECRET, $consumer);
-        $result = $pow->verify($token, $this->solve($nonce, 8), self::IP_PREFIX, self::UA_HASH);
-        $this->assertSame(Status::InvalidToken, $result->status);
-        $this->assertSame(Outcome::Fresh, $consumer->consume('proj1', $nonce, ProofOfWork::DEFAULT_TTL));
+        $this->expectException(\InvalidArgumentException::class);
+        $this->pow()->issue(8, ['ip' => 'a'], ['ip' => 'b']);
     }
 
-    public function testVerifyRejectsTokenSignedWithTheConfiguredSecret(): void
+    // --- verify ---------------------------------------------------------------
+
+    public function testVerifyAcceptsAValidSolutionAndReturnsTheClaims(): void
     {
-        // Only the challenge-derived key is accepted, never the configured secret itself.
-        $nonce = \bin2hex(\random_bytes(16));
-        $token = new JWT(self::SECRET, 'HS256', ProofOfWork::DEFAULT_TTL, 0)->encode([
-            ProofOfWork::PURPOSE_CLAIM => ProofOfWork::PURPOSE,
-            'nonce' => $nonce,
-            'difficulty' => 8,
-            'projectId' => 'proj1',
-            'resourceId' => '',
-            'ipPrefix' => self::IP_PREFIX,
-            'uaHash' => self::UA_HASH,
-            'iatMs' => (int) (\microtime(true) * 1000),
-        ]);
+        $pow = $this->pow();
+        $puzzle = $pow->issue(8, self::BINDING, ['project' => 'p1']);
 
-        $consumer = new InMemoryConsumer();
-        $pow = new ProofOfWork(self::SECRET, $consumer);
-        $result = $pow->verify($token, $this->solve($nonce, 8), self::IP_PREFIX, self::UA_HASH);
-        $this->assertSame(Status::InvalidToken, $result->status);
-        $this->assertSame(Outcome::Fresh, $consumer->consume('proj1', $nonce, ProofOfWork::DEFAULT_TTL));
-    }
+        $result = $pow->verify($puzzle->token, $this->solve($puzzle->nonce, 8), self::BINDING);
 
-    public function testIssuedTokenIsNotSignedWithTheConfiguredSecret(): void
-    {
-        $issued = new ProofOfWork(self::SECRET, new InMemoryConsumer())->issue('proj1', self::IP_PREFIX, self::UA_HASH, 8);
-
-        $this->expectException(JWTException::class);
-        new JWT(self::SECRET, 'HS256', ProofOfWork::DEFAULT_TTL, 0)->decode($issued['token']);
-    }
-
-    public function testVerifyRejectsExpiredToken(): void
-    {
-        // Mint a token whose iat/exp are in the past by spoofing the JWT clock.
-        $jwt = new JWT($this->key(), 'HS256', ProofOfWork::DEFAULT_TTL, 0);
-        $jwt->setTestTimestamp(\time() - 10_000);
-        $token = $jwt->encode([
-            ProofOfWork::PURPOSE_CLAIM => ProofOfWork::PURPOSE,
-            'nonce' => \bin2hex(\random_bytes(16)),
-            'difficulty' => 8,
-            'projectId' => 'proj1',
-            'ipPrefix' => self::IP_PREFIX,
-            'uaHash' => self::UA_HASH,
-        ]);
-
-        $pow = new ProofOfWork(self::SECRET, new InMemoryConsumer());
-        $result = $pow->verify($token, '0', self::IP_PREFIX, self::UA_HASH);
-        $this->assertSame(Status::InvalidToken, $result->status);
-    }
-
-    public function testVerifyFailsOpenOnNonceWhenStoreIsUnavailable(): void
-    {
-        $pow = new ProofOfWork(self::SECRET, new InMemoryConsumer(unavailable: true));
-        $issued = $pow->issue('proj1', self::IP_PREFIX, self::UA_HASH, 8);
-        $solution = $this->solve($issued['nonce'], 8);
-
-        // A store outage must NOT be treated as a replay: that would loop a
-        // legitimate solver forever (403 → re-challenge → solve → still down …).
-        // The replay guard is skipped, but the solution is still validated, so a
-        // correct solve passes and the client is let through.
-        $result = $pow->verify($issued['token'], $solution, self::IP_PREFIX, self::UA_HASH);
         $this->assertSame(Status::Valid, $result->status);
+        $this->assertTrue($result->isValid());
+        $this->assertSame(8, $result->difficulty);
+        $this->assertSame('p1', $result->claims['project']);
+        $this->assertNull($result->nonceError);
     }
 
-    public function testVerifyStillRejectsBadSolutionWhenStoreIsUnavailable(): void
+    public function testVerifyRejectsReplayOfTheSameSubmission(): void
     {
-        // Failing open on the nonce only skips the replay guard — an incorrect
-        // solution is still rejected, so the outage does not open the gate.
-        $pow = new ProofOfWork(self::SECRET, new InMemoryConsumer(unavailable: true));
-        $issued = $pow->issue('proj1', self::IP_PREFIX, self::UA_HASH, 12);
+        $pow = $this->pow();
+        $puzzle = $pow->issue(8, self::BINDING);
+        $solution = $this->solve($puzzle->nonce, 8);
 
-        $result = $pow->verify($issued['token'], $this->wrong($issued['nonce'], 12), self::IP_PREFIX, self::UA_HASH);
-        $this->assertSame(Status::InvalidSolution, $result->status);
+        $this->assertSame(Status::Valid, $pow->verify($puzzle->token, $solution, self::BINDING)->status);
+        $this->assertSame(Status::Replay, $pow->verify($puzzle->token, $solution, self::BINDING)->status);
     }
 
-    // --- helpers -------------------------------------------------------------
-
-    private function key(): string
+    public function testNonceIsUsedEvenWhenTheSolutionIsWrong(): void
     {
-        return \hash_hmac('sha256', ProofOfWork::KEY_LABEL, self::SECRET);
+        // One puzzle buys one attempt, so a wrong guess cannot be followed by a right one.
+        $pow = $this->pow();
+        $puzzle = $pow->issue(12, self::BINDING);
+
+        $this->assertSame(Status::InvalidSolution, $pow->verify($puzzle->token, $this->wrong($puzzle->nonce, 12), self::BINDING)->status);
+        $this->assertSame(Status::Replay, $pow->verify($puzzle->token, $this->solve($puzzle->nonce, 12), self::BINDING)->status);
     }
+
+    public function testBindingMismatchDoesNotUseTheNonce(): void
+    {
+        $pow = $this->pow();
+        $puzzle = $pow->issue(8, self::BINDING);
+        $solution = $this->solve($puzzle->nonce, 8);
+
+        $mismatch = $pow->verify($puzzle->token, $solution, ['ip' => '198.51.100.0/24', 'ua' => 'ua-hash']);
+        $this->assertSame(Status::BindingMismatch, $mismatch->status);
+        $this->assertSame([], $mismatch->claims);
+
+        // The owner can still redeem it.
+        $this->assertSame(Status::Valid, $pow->verify($puzzle->token, $solution, self::BINDING)->status);
+    }
+
+    public function testBindingIsMissingFromTheToken(): void
+    {
+        $pow = $this->pow();
+        $puzzle = $pow->issue(8);
+
+        $this->assertSame(Status::BindingMismatch, $pow->verify($puzzle->token, $this->solve($puzzle->nonce, 8), self::BINDING)->status);
+    }
+
+    public function testNonceKeyPlaceholdersAreFilledFromTheTokenClaims(): void
+    {
+        $nonces = new Memory('pow:{project}');
+        $pow = $this->pow($nonces);
+        $puzzle = $pow->issue(8, claims: ['project' => 'p1']);
+
+        $pow->verify($puzzle->token, $this->solve($puzzle->nonce, 8));
+
+        $this->assertTrue($nonces->claimed->offsetExists('pow:p1:' . $puzzle->nonce));
+        // The nonce stays used for the token's lifetime.
+        $this->assertSame(120, $nonces->claimed['pow:p1:' . $puzzle->nonce]);
+    }
+
+    public function testVerifyRejectsGarbageTamperedAndForeignTokens(): void
+    {
+        $pow = $this->pow();
+        $this->assertSame(Status::InvalidToken, $pow->verify('not.a.jwt', '0')->status);
+
+        $puzzle = $pow->issue(8);
+        $tampered = $puzzle->token;
+        $tampered[\strlen($tampered) - 1] = $tampered[\strlen($tampered) - 1] === 'a' ? 'b' : 'a';
+        $this->assertSame(Status::InvalidToken, $pow->verify($tampered, $this->solve($puzzle->nonce, 8))->status);
+
+        $foreign = new ProofOfWork(new Token('other-secret', 'label', 'challenge', 120), new Memory())->issue(8);
+        $this->assertSame(Status::InvalidToken, $pow->verify($foreign->token, $this->solve($foreign->nonce, 8))->status);
+    }
+
+    public function testATokenIssuedForAnotherPurposeIsNotAPuzzle(): void
+    {
+        $other = $this->token('clearance')->issue(['nonce' => \bin2hex(\random_bytes(16)), 'difficulty' => 0]);
+
+        $this->assertSame(Status::InvalidToken, $this->pow()->verify($other, '0')->status);
+    }
+
+    public function testATokenWithoutANonceOrWithABadDifficultyIsInvalid(): void
+    {
+        $this->assertSame(Status::InvalidToken, $this->pow()->verify($this->token()->issue(['difficulty' => 0]), '0')->status);
+        $this->assertSame(Status::InvalidToken, $this->pow()->verify($this->token()->issue(['nonce' => 'n', 'difficulty' => -1]), '0')->status);
+        $this->assertSame(Status::InvalidToken, $this->pow()->verify($this->token()->issue(['nonce' => 'n', 'difficulty' => '8']), '0')->status);
+    }
+
+    // --- nonce store outage ---------------------------------------------------
+
+    public function testStoreOutageRejectsByDefault(): void
+    {
+        $error = new \RuntimeException('down');
+        $pow = $this->pow(new Memory(error: $error));
+        $puzzle = $pow->issue(8);
+
+        $result = $pow->verify($puzzle->token, $this->solve($puzzle->nonce, 8));
+
+        $this->assertSame(Status::NonceUnavailable, $result->status);
+        $this->assertSame($error, $result->nonceError);
+    }
+
+    public function testStoreOutageChecksTheSolutionWhenTheCallerAcceptsIt(): void
+    {
+        // Treating an outage as a replay would loop a genuine solver forever;
+        // a caller may choose to skip the replay guard and still check the solution.
+        $error = new \RuntimeException('down');
+        $pow = $this->pow(new Memory(error: $error), acceptWhenNoncesUnavailable: true);
+
+        $puzzle = $pow->issue(8);
+        $valid = $pow->verify($puzzle->token, $this->solve($puzzle->nonce, 8));
+        $this->assertSame(Status::Valid, $valid->status);
+        $this->assertSame($error, $valid->nonceError);
+
+        $puzzle = $pow->issue(12);
+        $this->assertSame(Status::InvalidSolution, $pow->verify($puzzle->token, $this->wrong($puzzle->nonce, 12))->status);
+    }
+
+    // --- helpers --------------------------------------------------------------
 
     private function solve(string $nonce, int $difficulty): string
     {
@@ -392,20 +266,8 @@ final class ProofOfWorkTest extends TestCase
     }
 
     /**
-     * A solution this nonce provably does not accept, chosen without asking
-     * the predicate under test.
-     *
-     * A fixed string like 'definitely-wrong' is not one: the nonce is random,
-     * so at difficulty 12 it satisfies the target once every 4096 issues and
-     * the assertion reads Valid instead.
-     *
-     * The candidate is judged against the rule the challenge is specified by —
-     * the leading zero bits of SHA-256(nonce ":" solution), counted with this
-     * file's own hex counter, the independent implementation
-     * {@see testByteAndHexCountingAgree()} already holds the server's to. So a
-     * `meetsDifficulty()` that accepted everything would be caught by the
-     * assertion rather than consulted for the fixture, and the search is
-     * bounded so it can never hang either way.
+     * A solution this nonce provably does not accept, judged by this file's own
+     * hex counter so a meetsDifficulty() that accepted everything would be caught.
      */
     private function wrong(string $nonce, int $difficulty): string
     {
@@ -416,7 +278,7 @@ final class ProofOfWorkTest extends TestCase
             }
         }
 
-        $this->fail("No candidate misses a {$difficulty}-bit target for nonce {$nonce}, which SHA-256 makes a 1-in-2^64 event");
+        $this->fail("No candidate misses a {$difficulty}-bit target for nonce {$nonce}");
     }
 
     private function leadingZeroBitsOverHex(string $hex): int
@@ -430,7 +292,6 @@ final class ProofOfWorkTest extends TestCase
 
                 continue;
             }
-            // Leading zeros within this 4-bit nibble.
             for ($mask = 0x8; $mask > 0; $mask >>= 1) {
                 if (($value & $mask) !== 0) {
                     return $bits;

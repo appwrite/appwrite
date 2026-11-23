@@ -3,311 +3,158 @@
 namespace Utopia\Abuse\Tests\Challenges;
 
 use Ahc\Jwt\JWT;
-use Ahc\Jwt\JWTException;
-use Iterator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Abuse\Challenges\Clearance;
-use Utopia\Abuse\Challenges\ProofOfWork;
-use Utopia\Abuse\Tests\Challenges\ProofOfWork\Nonce\InMemoryConsumer;
+use Utopia\Abuse\Challenges\Token;
 
 final class ClearanceTest extends TestCase
 {
     private const string SECRET = 'clearance-secret';
-    private const string PROJECT = 'proj1';
-    private const string RESOURCE = 'site1';
-    private const string IP_PREFIX = '203.0.113.0/24';
-    private const string UA_HASH = 'ua-hash-abc';
-    private const int DIFFICULTY = 14;
-    private const int TTL = 900;
+
+    private const array BINDING = ['project' => 'p1', 'resource' => 'r1', 'ip' => '203.0.113.0/24', 'ua' => 'ua-hash'];
+
+    private function token(string $purpose = 'clearance'): Token
+    {
+        return new Token(self::SECRET, 'label', $purpose, 1800);
+    }
+
+    private function clearance(): Clearance
+    {
+        return new Clearance($this->token());
+    }
 
     public function testIssueThenVerifyRoundTrips(): void
     {
-        $clearance = new Clearance(self::SECRET);
-        $cookie = $clearance->issue(self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY);
+        $clearance = $this->clearance();
 
-        $this->assertTrue($clearance->verify($cookie, self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY, self::TTL));
+        $this->assertTrue($clearance->verify($clearance->issue(self::BINDING, 18), self::BINDING, 18));
     }
 
-    public function testCookieMintedForAnotherProjectIsRejected(): void
+    #[DataProvider('bindingChanges')]
+    public function testAnyBindingMismatchIsRejected(string $name, string $value): void
     {
-        $clearance = new Clearance(self::SECRET);
-        $cookie = $clearance->issue(self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY);
+        $clearance = $this->clearance();
+        $issued = $clearance->issue(self::BINDING);
 
-        $this->assertFalse($clearance->verify($cookie, 'other-project', self::RESOURCE, self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY, self::TTL));
-    }
-
-    public function testCookieMintedForAnotherResourceIsRejected(): void
-    {
-        $clearance = new Clearance(self::SECRET);
-        $cookie = $clearance->issue(self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY);
-
-        $this->assertFalse($clearance->verify($cookie, self::PROJECT, 'site2', self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY, self::TTL));
-    }
-
-    public function testCookieMintedWithoutAResourceOnlyMatchesNoResource(): void
-    {
-        $clearance = new Clearance(self::SECRET);
-        $cookie = $clearance->issue(self::PROJECT, '', self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY);
-
-        $this->assertTrue($clearance->verify($cookie, self::PROJECT, '', self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY, self::TTL));
-        $this->assertFalse($clearance->verify($cookie, self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY, self::TTL));
-    }
-
-    public function testCookieWithoutAResourceClaimIsRejected(): void
-    {
-        $cookie = new JWT($this->key(), 'HS256', Clearance::DEFAULT_TTL, 0)->encode([
-            Clearance::PURPOSE_CLAIM => Clearance::PURPOSE,
-            'projectId' => self::PROJECT,
-            'ipPrefix' => self::IP_PREFIX,
-            'uaHash' => self::UA_HASH,
-            'difficulty' => self::DIFFICULTY,
-            'issuedAt' => \time(),
-            'exp' => \time() + Clearance::DEFAULT_TTL,
-        ]);
-
-        $this->assertFalse(new Clearance(self::SECRET)->verify($cookie, self::PROJECT, '', self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY, self::TTL));
-    }
-
-    public function testCookieSolvedAtALowerDifficultyIsRejected(): void
-    {
-        $clearance = new Clearance(self::SECRET);
-        $cookie = $clearance->issue(self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, 14, 86400);
-
-        $this->assertFalse($clearance->verify($cookie, self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, 18, self::TTL));
-    }
-
-    public function testCookieSolvedAtTheSameOrAHigherDifficultyPasses(): void
-    {
-        $clearance = new Clearance(self::SECRET);
-        $cookie = $clearance->issue(self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, 18);
-
-        $this->assertTrue($clearance->verify($cookie, self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, 18, self::TTL));
-        $this->assertTrue($clearance->verify($cookie, self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, 14, self::TTL));
-    }
-
-    public function testCookieOlderThanTheRequiredTtlIsRejected(): void
-    {
-        // Issued 10 minutes ago with a cookie lifetime still in the future.
-        $cookie = new JWT($this->key(), 'HS256', Clearance::DEFAULT_TTL, 0)->encode([
-            Clearance::PURPOSE_CLAIM => Clearance::PURPOSE,
-            'projectId' => self::PROJECT,
-            'resourceId' => self::RESOURCE,
-            'ipPrefix' => self::IP_PREFIX,
-            'uaHash' => self::UA_HASH,
-            'difficulty' => self::DIFFICULTY,
-            'issuedAt' => \time() - 600,
-            'exp' => \time() + 3000,
-        ]);
-
-        $clearance = new Clearance(self::SECRET);
-        $this->assertFalse($clearance->verify($cookie, self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY, 300));
-        $this->assertTrue($clearance->verify($cookie, self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY, 900));
-    }
-
-    public function testZeroTtlFallsBackToTheDefaultTtl(): void
-    {
-        // Issued longer ago than the 1800s default, with a cookie lifetime still in the future.
-        $cookie = new JWT($this->key(), 'HS256', Clearance::DEFAULT_TTL, 0)->encode([
-            Clearance::PURPOSE_CLAIM => Clearance::PURPOSE,
-            'projectId' => self::PROJECT,
-            'resourceId' => self::RESOURCE,
-            'ipPrefix' => self::IP_PREFIX,
-            'uaHash' => self::UA_HASH,
-            'difficulty' => self::DIFFICULTY,
-            'issuedAt' => \time() - 2000,
-            'exp' => \time() + 3000,
-        ]);
-
-        $this->assertFalse(new Clearance(self::SECRET)->verify($cookie, self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY, 0));
-    }
-
-    public function testCookieWithoutDifficultyOrIssuedAtIsRejected(): void
-    {
-        $cookie = new JWT($this->key(), 'HS256', Clearance::DEFAULT_TTL, 0)->encode([
-            Clearance::PURPOSE_CLAIM => Clearance::PURPOSE,
-            'projectId' => self::PROJECT,
-            'resourceId' => self::RESOURCE,
-            'ipPrefix' => self::IP_PREFIX,
-            'uaHash' => self::UA_HASH,
-            'exp' => \time() + Clearance::DEFAULT_TTL,
-        ]);
-
-        $this->assertFalse(new Clearance(self::SECRET)->verify($cookie, self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, 0, self::TTL));
-    }
-
-    public function testCookiePresentedFromAnotherIpPrefixIsRejected(): void
-    {
-        // The subtractive IP binding: a copied cookie fails outside the prefix it
-        // was minted for (caller then re-challenges, never hard-blocks).
-        $clearance = new Clearance(self::SECRET);
-        $cookie = $clearance->issue(self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY);
-
-        $this->assertFalse($clearance->verify($cookie, self::PROJECT, self::RESOURCE, '198.51.100.0/24', self::UA_HASH, self::DIFFICULTY, self::TTL));
-    }
-
-    public function testCookiePresentedWithAnotherUaIsRejected(): void
-    {
-        $clearance = new Clearance(self::SECRET);
-        $cookie = $clearance->issue(self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY);
-
-        $this->assertFalse($clearance->verify($cookie, self::PROJECT, self::RESOURCE, self::IP_PREFIX, 'other-ua', self::DIFFICULTY, self::TTL));
-    }
-
-    public function testTamperedCookieIsRejected(): void
-    {
-        $clearance = new Clearance(self::SECRET);
-        $cookie = $clearance->issue(self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY);
-        $cookie[\strlen($cookie) - 1] = $cookie[\strlen($cookie) - 1] === 'a' ? 'b' : 'a';
-
-        $this->assertFalse($clearance->verify($cookie, self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY, self::TTL));
-    }
-
-    public function testCookieSignedWithAnotherSecretIsRejected(): void
-    {
-        $foreign = new Clearance('another-secret');
-        $cookie = $foreign->issue(self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY);
-
-        $clearance = new Clearance(self::SECRET);
-        $this->assertFalse($clearance->verify($cookie, self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY, self::TTL));
-    }
-
-    public function testChallengeTokenIsRejectedAsClearance(): void
-    {
-        // An unsolved challenge token shares the secret and binding claims but is not a clearance.
-        $issued = new ProofOfWork(self::SECRET, new InMemoryConsumer())->issue(self::PROJECT, self::IP_PREFIX, self::UA_HASH);
-
-        $clearance = new Clearance(self::SECRET);
-        $this->assertFalse($clearance->verify($issued['token'], self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY, self::TTL));
+        $this->assertFalse($clearance->verify($issued, [...self::BINDING, $name => $value]));
     }
 
     /**
-     * @return Iterator<string, array{?string}>
+     * @return iterable<string, array{string, string}>
      */
-    public static function otherPurposes(): Iterator
+    public static function bindingChanges(): iterable
     {
-        yield 'challenge purpose' => [ProofOfWork::PURPOSE];
-        yield 'no purpose' => [null];
+        yield 'another project' => ['project', 'p2'];
+        yield 'another resource' => ['resource', 'r2'];
+        yield 'another network' => ['ip', '198.51.100.0/24'];
+        yield 'another user agent' => ['ua', 'other'];
+        yield 'a field it was not bound to' => ['session', 's1'];
     }
 
-    #[DataProvider('otherPurposes')]
-    public function testCookieWithoutTheClearancePurposeIsRejected(?string $purpose): void
+    public function testAnEmptyBindingValueOnlyMatchesAnEmptyValue(): void
     {
-        // Signed with the clearance key and correctly bound; only the purpose is wrong.
-        $claims = [
-            'projectId' => self::PROJECT,
-            'resourceId' => self::RESOURCE,
-            'ipPrefix' => self::IP_PREFIX,
-            'uaHash' => self::UA_HASH,
-            'difficulty' => self::DIFFICULTY,
-            'issuedAt' => \time(),
-            'exp' => \time() + Clearance::DEFAULT_TTL,
-        ];
-        if ($purpose !== null) {
-            $claims[Clearance::PURPOSE_CLAIM] = $purpose;
-        }
-        $cookie = new JWT($this->key(), 'HS256', Clearance::DEFAULT_TTL, 0)->encode($claims);
+        $clearance = $this->clearance();
+        $issued = $clearance->issue([...self::BINDING, 'resource' => '']);
 
-        $clearance = new Clearance(self::SECRET);
-        $this->assertFalse($clearance->verify($cookie, self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY, self::TTL));
+        $this->assertTrue($clearance->verify($issued, [...self::BINDING, 'resource' => '']));
+        $this->assertFalse($clearance->verify($issued, self::BINDING));
     }
 
-    public function testCookieSignedWithTheChallengeKeyIsRejected(): void
+    public function testAClearanceEarnedAtALowerDifficultyIsRejected(): void
     {
-        // Clearance claims signed with the challenge key; keeps the two keys apart.
-        $cookie = new JWT(\hash_hmac('sha256', ProofOfWork::KEY_LABEL, self::SECRET), 'HS256', Clearance::DEFAULT_TTL, 0)->encode([
-            Clearance::PURPOSE_CLAIM => Clearance::PURPOSE,
-            'projectId' => self::PROJECT,
-            'resourceId' => self::RESOURCE,
-            'ipPrefix' => self::IP_PREFIX,
-            'uaHash' => self::UA_HASH,
-            'difficulty' => self::DIFFICULTY,
-            'issuedAt' => \time(),
-            'exp' => \time() + Clearance::DEFAULT_TTL,
+        $clearance = $this->clearance();
+        $issued = $clearance->issue(self::BINDING, 16);
+
+        $this->assertTrue($clearance->verify($issued, self::BINDING, 14));
+        $this->assertTrue($clearance->verify($issued, self::BINDING, 16));
+        $this->assertFalse($clearance->verify($issued, self::BINDING, 18));
+    }
+
+    public function testMaxAgeLimitsHowOldAClearanceMayBe(): void
+    {
+        $old = new JWT(\hash_hmac('sha256', 'label', self::SECRET), 'HS256', 1800, 0)->encode([
+            Token::PURPOSE_CLAIM => 'clearance',
+            ...self::BINDING,
+            Clearance::DIFFICULTY_CLAIM => 18,
+            Clearance::ISSUED_AT_CLAIM => \time() - 1000,
+            'exp' => \time() + 3600,
         ]);
 
-        $clearance = new Clearance(self::SECRET);
-        $this->assertFalse($clearance->verify($cookie, self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY, self::TTL));
+        $clearance = $this->clearance();
+        $this->assertTrue($clearance->verify($old, self::BINDING, 18, 1800));
+        $this->assertFalse($clearance->verify($old, self::BINDING, 18, 900));
+        // No age limit when maxAge is 0.
+        $this->assertTrue($clearance->verify($old, self::BINDING, 18));
     }
 
-    public function testCookieSignedWithTheConfiguredSecretIsRejected(): void
+    public function testAClearanceMissingItsDifficultyOrIssueTimeIsRejected(): void
     {
-        // Only the clearance-derived key is accepted, never the configured secret itself.
-        $cookie = new JWT(self::SECRET, 'HS256', Clearance::DEFAULT_TTL, 0)->encode([
-            Clearance::PURPOSE_CLAIM => Clearance::PURPOSE,
-            'projectId' => self::PROJECT,
-            'resourceId' => self::RESOURCE,
-            'ipPrefix' => self::IP_PREFIX,
-            'uaHash' => self::UA_HASH,
-            'difficulty' => self::DIFFICULTY,
-            'issuedAt' => \time(),
-            'exp' => \time() + Clearance::DEFAULT_TTL,
-        ]);
+        $clearance = $this->clearance();
 
-        $clearance = new Clearance(self::SECRET);
-        $this->assertFalse($clearance->verify($cookie, self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY, self::TTL));
+        $this->assertFalse($clearance->verify($this->token()->issue([...self::BINDING, Clearance::DIFFICULTY_CLAIM => 18]), self::BINDING));
+        $this->assertFalse($clearance->verify($this->token()->issue([...self::BINDING, Clearance::ISSUED_AT_CLAIM => \time()]), self::BINDING));
     }
 
-    public function testIssuedCookieIsNotSignedWithTheConfiguredSecret(): void
+    public function testATokenIssuedForAnotherPurposeIsNotAClearance(): void
     {
-        $cookie = new Clearance(self::SECRET)->issue(self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY);
+        $challenge = $this->token('challenge')->issue([...self::BINDING, Clearance::DIFFICULTY_CLAIM => 99, Clearance::ISSUED_AT_CLAIM => \time()]);
 
-        $this->expectException(JWTException::class);
-        new JWT(self::SECRET, 'HS256', Clearance::DEFAULT_TTL, 0)->decode($cookie);
+        $this->assertFalse($this->clearance()->verify($challenge, self::BINDING));
     }
 
-    public function testEmptyCookieIsRejected(): void
+    public function testTamperedForeignAndEmptyTokensAreRejected(): void
     {
-        $clearance = new Clearance(self::SECRET);
-        $this->assertFalse($clearance->verify('', self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY, self::TTL));
+        $clearance = $this->clearance();
+        $issued = $clearance->issue(self::BINDING);
+        $issued[\strlen($issued) - 1] = $issued[\strlen($issued) - 1] === 'a' ? 'b' : 'a';
+
+        $this->assertFalse($clearance->verify($issued, self::BINDING));
+        $this->assertFalse($clearance->verify('', self::BINDING));
+
+        $foreign = new Clearance(new Token('other-secret', 'label', 'clearance', 1800))->issue(self::BINDING);
+        $this->assertFalse($clearance->verify($foreign, self::BINDING));
     }
 
-    public function testExpiredCookieIsRejected(): void
+    public function testTtlSetsTheExpiry(): void
     {
-        $jwt = new JWT($this->key(), 'HS256', Clearance::DEFAULT_TTL, 0);
-        $jwt->setTestTimestamp(\time() - 100_000);
-        $cookie = $jwt->encode([
-            Clearance::PURPOSE_CLAIM => Clearance::PURPOSE,
-            'projectId' => self::PROJECT,
-            'resourceId' => self::RESOURCE,
-            'ipPrefix' => self::IP_PREFIX,
-            'uaHash' => self::UA_HASH,
-            'difficulty' => self::DIFFICULTY,
-            'issuedAt' => \time(),
-        ]);
-
-        $clearance = new Clearance(self::SECRET);
-        $this->assertFalse($clearance->verify($cookie, self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY, self::TTL));
-    }
-
-    public function testIssueWithTtlOverrideDrivesExpiry(): void
-    {
-        // The default lifetime is 1800s, but a per-rule 3600s override must win.
-        $clearance = new Clearance(self::SECRET);
         $before = \time();
-        $cookie = $clearance->issue(self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY, 3600);
+        $issued = $this->clearance()->issue(self::BINDING, ttl: 3600);
+        $claims = $this->token()->verify($issued);
 
-        $claims = new JWT($this->key(), 'HS256', Clearance::DEFAULT_TTL, 0)->decode($cookie);
+        $this->assertIsArray($claims);
         $this->assertGreaterThanOrEqual($before + 3600, $claims['exp']);
-        $this->assertLessThanOrEqual(\time() + 3600, $claims['exp']);
-
-        // A longer-lived cookie is still a valid, correctly-bound clearance.
-        $this->assertTrue($clearance->verify($cookie, self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY, self::TTL));
+        $this->assertTrue($this->clearance()->verify($issued, self::BINDING));
     }
 
-    public function testIssueWithoutTtlOverrideUsesDefaultLifetime(): void
+    public function testClaimsAreCarriedButNotChecked(): void
     {
-        $clearance = new Clearance(self::SECRET);
-        $before = \time();
-        $cookie = $clearance->issue(self::PROJECT, self::RESOURCE, self::IP_PREFIX, self::UA_HASH, self::DIFFICULTY);
+        $issued = $this->clearance()->issue(self::BINDING, claims: ['note' => 'x']);
 
-        $claims = new JWT($this->key(), 'HS256', Clearance::DEFAULT_TTL, 0)->decode($cookie);
-        $this->assertGreaterThanOrEqual($before + Clearance::DEFAULT_TTL, $claims['exp']);
-        $this->assertLessThanOrEqual(\time() + Clearance::DEFAULT_TTL, $claims['exp']);
+        $this->assertSame('x', $this->token()->verify($issued)['note'] ?? null);
+        $this->assertTrue($this->clearance()->verify($issued, self::BINDING));
     }
 
-    private function key(): string
+    #[DataProvider('reservedNames')]
+    public function testReservedNamesAreRefused(string $name): void
     {
-        return \hash_hmac('sha256', Clearance::KEY_LABEL, self::SECRET);
+        $this->expectException(\InvalidArgumentException::class);
+        $this->clearance()->issue([$name => 'x']);
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function reservedNames(): iterable
+    {
+        yield 'difficulty' => [Clearance::DIFFICULTY_CLAIM];
+        yield 'issue time' => [Clearance::ISSUED_AT_CLAIM];
+        yield 'purpose' => [Token::PURPOSE_CLAIM];
+    }
+
+    public function testABindingThatSharesANameWithAClaimIsRefused(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->clearance()->issue(['ip' => 'a'], claims: ['ip' => 'b']);
     }
 }

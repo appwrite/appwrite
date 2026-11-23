@@ -4,23 +4,25 @@ namespace Utopia\Abuse\Challenges\ProofOfWork;
 
 /**
  * Outcome of verifying a proof-of-work submission. Distinct cases so the caller
- * can log which control rejected the attempt (all non-Valid cases map to a
- * re-challenge, never a hard block).
+ * can log which check rejected the attempt.
  */
 enum Status: string
 {
-    /** Signature + expiry + binding + nonce + solution all passed. */
+    /** Signature, expiry, binding, nonce and solution all passed. */
     case Valid = 'valid';
 
-    /** Bad signature or expired token. */
+    /** Bad signature, expired, issued for another purpose, or malformed. */
     case InvalidToken = 'invalid_token';
 
-    /** Token bound to a different (project, IP prefix, UA). */
+    /** The token is bound to a different client. */
     case BindingMismatch = 'binding_mismatch';
 
-    /** Nonce already consumed — the token/solution is being replayed. */
+    /** The nonce was already used: the submission is a replay. */
     case Replay = 'replay';
 
-    /** Nonce was fresh, but the solution does not meet the difficulty. */
+    /** The nonce store could not be reached and the challenge requires it. */
+    case NonceUnavailable = 'nonce_unavailable';
+
+    /** The nonce was fresh, but the solution does not meet the difficulty. */
     case InvalidSolution = 'invalid_solution';
 }

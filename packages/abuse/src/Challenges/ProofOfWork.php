@@ -2,174 +2,140 @@
 
 namespace Utopia\Abuse\Challenges;
 
-use Ahc\Jwt\JWT;
-use InvalidArgumentException;
 use Throwable;
-use Utopia\Abuse\Challenges\ProofOfWork\Nonce\Consumer;
-use Utopia\Abuse\Challenges\ProofOfWork\Nonce\Outcome;
+use Utopia\Abuse\Challenges\ProofOfWork\Puzzle;
 use Utopia\Abuse\Challenges\ProofOfWork\Result;
 use Utopia\Abuse\Challenges\ProofOfWork\Status;
 
 /**
- * Leading-zero-bits proof-of-work challenge tokens.
+ * Leading-zero-bits proof-of-work. A client must find a solution whose
+ * SHA-256(nonce ":" solution) starts with at least `difficulty` zero bits.
  *
- * Issue mints a signed, self-authenticating JWT (nonce, difficulty, and the
- * identity binding projectId/IP prefix/UA hash) — no server-side write. Verify
- * validates signature + expiry + binding, consumes the nonce once before the
- * solution check (so one challenge buys one attempt), and fails open on the
- * nonce if the store is unreachable.
+ * Issue signs the nonce, difficulty, binding and claims into a token, with no
+ * server-side write. Verify checks the token and binding, uses the nonce once
+ * before checking the solution (so one puzzle buys one attempt), then checks the
+ * solution.
  */
 final readonly class ProofOfWork
 {
-    /**
-     * Default leading-zero-*bits* difficulty. 20 bits ≈ 1M hashes ≈ ~5-10s in a
-     * browser Web Worker; each +1 bit doubles the work. Per-client cost comes
-     * from the binding, not the PoW.
-     */
-    public const int DEFAULT_DIFFICULTY = 20;
-
     /** SHA-256 digest width: the most leading zero bits a solution can have. */
     public const int MAX_DIFFICULTY = 256;
 
-    /** Token lifetime in seconds; also the nonce single-use window (TTL == exp). */
-    public const int DEFAULT_TTL = 120;
-
-    /** HMAC label deriving this token's signing key from the configured secret. */
-    public const string KEY_LABEL = 'edge-waf-challenge';
-
-    public const string PURPOSE_CLAIM = 'purpose';
-
-    /** Purpose claim value; keeps a clearance cookie from verifying as a challenge. */
-    public const string PURPOSE = 'challenge';
+    private const array RESERVED_CLAIMS = ['nonce', 'difficulty', 'iatMs'];
 
     /**
-     * Operator-facing difficulty level (1 easiest … 5 hardest) → leading-zero bits.
+     * @param  Token  $token  Signs puzzles; its ttl is also how long a nonce stays used
+     * @param  Nonce  $nonces  Key placeholders are filled from the token's claims, e.g. "pow:{project}"
+     * @param  bool  $acceptWhenNoncesUnavailable  When the nonce store fails, check the solution anyway instead of rejecting
      */
-    public const array LEVEL_BITS = [1 => 14, 2 => 16, 3 => 18, 4 => 20, 5 => 21];
-
-    private JWT $jwt;
-
     public function __construct(
-        string $secret,
-        private Consumer $nonces,
-        private int $ttl = self::DEFAULT_TTL,
+        private Token $token,
+        private Nonce $nonces,
+        private bool $acceptWhenNoncesUnavailable = false,
     ) {
-        if ($secret === '') {
-            throw new InvalidArgumentException('ProofOfWork requires a non-empty signing secret.');
-        }
-        // maxAge == ttl: Ahc\Jwt stamps `exp` and rejects expired tokens on decode.
-        $this->jwt = new JWT(\hash_hmac('sha256', self::KEY_LABEL, $secret), 'HS256', $this->ttl, 0);
     }
 
     /**
-     * Mint a challenge token plus the fields the interstitial needs to solve it.
+     * Sign a puzzle. The binding must match on verify; claims are carried
+     * through and returned by verify.
      *
-     * @throws InvalidArgumentException when $difficulty is outside 0..MAX_DIFFICULTY
+     * @param  array<string, string>  $binding
+     * @param  array<string, string|int>  $claims
      *
-     * @return array{token: string, nonce: string, difficulty: int}
+     * @throws \InvalidArgumentException
      */
-    public function issue(string $projectId, string $ipPrefix, string $uaHash, int $difficulty = self::DEFAULT_DIFFICULTY, int $clearanceTtl = 0, string $resourceId = ''): array
+    public function issue(int $difficulty, array $binding = [], array $claims = []): Puzzle
     {
         // Below 0 every solution passes; above the digest width none can.
         if ($difficulty < 0 || $difficulty > self::MAX_DIFFICULTY) {
-            throw new InvalidArgumentException('Difficulty must be between 0 and ' . self::MAX_DIFFICULTY . ' bits, got ' . $difficulty . '.');
+            throw new \InvalidArgumentException('difficulty must be between 0 and ' . self::MAX_DIFFICULTY . ', got ' . $difficulty);
+        }
+
+        foreach ([...\array_keys($binding), ...\array_keys($claims)] as $name) {
+            if (\in_array($name, self::RESERVED_CLAIMS, true)) {
+                throw new \InvalidArgumentException("claim '{$name}' is reserved");
+            }
+        }
+        if (\array_intersect_key($binding, $claims) !== []) {
+            throw new \InvalidArgumentException('binding and claims must not share names');
         }
 
         $nonce = \bin2hex(\random_bytes(16));
-        $claims = [
-            self::PURPOSE_CLAIM => self::PURPOSE,
+        $token = $this->token->issue([
             'nonce' => $nonce,
             'difficulty' => $difficulty,
-            'projectId' => $projectId,
-            'resourceId' => $resourceId,
-            'ipPrefix' => $ipPrefix,
-            'uaHash' => $uaHash,
-            // custom iatMs as jwt iat issue time in seconds.
+            ...$claims,
+            ...$binding,
             'iatMs' => (int) (\microtime(true) * 1000),
-            // 'ja4' => null, // reserved binding slot for a future TLS fingerprint
-        ];
-        if ($clearanceTtl > 0) {
-            $claims['clr'] = $clearanceTtl;
+        ]);
+
+        return new Puzzle($token, $nonce, $difficulty);
+    }
+
+    /**
+     * Verify a solution. The binding is checked before the nonce is used, so a
+     * token presented by another client never spends the owner's attempt.
+     *
+     * @param  array<string, string>  $binding
+     */
+    public function verify(string $token, string $solution, array $binding = []): Result
+    {
+        $claims = $this->token->verify($token);
+        if ($claims === null) {
+            return new Result(Status::InvalidToken);
         }
 
-        $token = $this->jwt->encode($claims);
+        foreach ($binding as $name => $value) {
+            if (($claims[$name] ?? null) !== $value) {
+                return new Result(Status::BindingMismatch);
+            }
+        }
 
-        return ['token' => $token, 'nonce' => $nonce, 'difficulty' => $difficulty];
-    }
+        $nonce = $claims['nonce'] ?? null;
+        $difficulty = $claims['difficulty'] ?? null;
+        if (!\is_string($nonce) || $nonce === '' || !\is_int($difficulty) || $difficulty < 0 || $difficulty > self::MAX_DIFFICULTY) {
+            return new Result(Status::InvalidToken, $claims);
+        }
 
-    /**
-     * Translate an operator-facing difficulty level (1–5) to leading-zero bits.
-     * An unknown/out-of-range level falls back to the default difficulty.
-     */
-    public static function bitsForLevel(int $level): int
-    {
-        return self::LEVEL_BITS[$level] ?? self::DEFAULT_DIFFICULTY;
-    }
+        $issuedMs = $claims['iatMs'] ?? 0;
+        $elapsedMs = \max(0, (int) (\microtime(true) * 1000) - (\is_int($issuedMs) ? $issuedMs : 0));
 
-    /**
-     * Verify a submitted solution against a token. Binding is checked against the
-     * connection-derived identity (IP prefix + UA hash); the projectId comes from
-     * the signed token. The nonce is burned before the solution check, so a bad
-     * attempt still spends the challenge.
-     */
-    public function verify(string $token, string $solution, string $ipPrefix, string $uaHash): Result
-    {
+        $nonceError = null;
         try {
-            $claims = $this->jwt->decode($token);
-        } catch (Throwable) {
-            return new Result(Status::InvalidToken, '');
+            $fresh = $this->nonces->withParams(self::placeholders($claims))->consume($nonce, $this->token->ttl);
+        } catch (Throwable $error) {
+            if (!$this->acceptWhenNoncesUnavailable) {
+                return new Result(Status::NonceUnavailable, $claims, $difficulty, $elapsedMs, $error);
+            }
+            // The replay guard did not run; the solution is still checked below.
+            $fresh = true;
+            $nonceError = $error;
         }
 
-        if (($claims[self::PURPOSE_CLAIM] ?? null) !== self::PURPOSE) {
-            return new Result(Status::InvalidToken, '');
-        }
-
-        // Binding checked before burning, so an attacker can only burn a nonce
-        // inside their own self-issued token.
-        if (self::stringClaim($claims, 'ipPrefix') !== $ipPrefix
-            || self::stringClaim($claims, 'uaHash') !== $uaHash) {
-            return new Result(Status::BindingMismatch, '');
-        }
-
-        $projectId = self::stringClaim($claims, 'projectId');
-        $resourceId = self::stringClaim($claims, 'resourceId');
-        $nonce = self::stringClaim($claims, 'nonce');
-        if ($nonce === '') {
-            return new Result(Status::InvalidToken, $projectId, $resourceId);
-        }
-        $difficulty = self::intClaim($claims, 'difficulty', self::DEFAULT_DIFFICULTY);
-        $clearanceTtl = self::intClaim($claims, 'clr');
-
-        $issuedMs = self::intClaim($claims, 'iatMs');
-        $elapsedMs = \max(0, (int) (\microtime(true) * 1000) - $issuedMs);
-
-        // Burn the nonce before the solution check. A replay is rejected; a store
-        // outage fails open (validates the solution anyway). See Outcome.
-        if ($this->nonces->consume($projectId, $nonce, $this->ttl) === Outcome::Consumed) {
-            return new Result(Status::Replay, $projectId, $resourceId);
+        if (!$fresh) {
+            return new Result(Status::Replay, $claims, $difficulty, $elapsedMs);
         }
 
         if (!self::meetsDifficulty($nonce, $solution, $difficulty)) {
-            return new Result(Status::InvalidSolution, $projectId, $resourceId);
+            return new Result(Status::InvalidSolution, $claims, $difficulty, $elapsedMs, $nonceError);
         }
 
-        return new Result(Status::Valid, $projectId, $resourceId, $clearanceTtl, $elapsedMs, $difficulty);
+        return new Result(Status::Valid, $claims, $difficulty, $elapsedMs, $nonceError);
     }
 
     /**
      * True when SHA-256(nonce ":" solution) has at least `difficulty` leading
-     * zero bits. One hash, O(1) — identical rule on both client and server.
+     * zero bits. One hash — the same rule on client and server.
      */
     public static function meetsDifficulty(string $nonce, string $solution, int $difficulty): bool
     {
-        $digest = \hash('sha256', $nonce . ':' . $solution, true); // raw bytes
-
-        return self::leadingZeroBits($digest) >= $difficulty;
+        return self::leadingZeroBits(\hash('sha256', $nonce . ':' . $solution, true)) >= $difficulty;
     }
 
     /**
-     * Count leading zero bits across a binary digest, MSB-first — matching the
-     * bit order the browser counts, so difficulty means the same on both sides.
+     * Count leading zero bits across a binary digest, most significant bit
+     * first — the order a browser counts in, so difficulty means the same on
+     * both sides.
      */
     public static function leadingZeroBits(string $digest): int
     {
@@ -196,22 +162,20 @@ final readonly class ProofOfWork
     }
 
     /**
-     * @param array<mixed> $claims
+     * Nonce key placeholders from the token's claims: "{name}" => value.
+     *
+     * @param  array<mixed>  $claims
+     * @return array<string, string>
      */
-    private static function stringClaim(array $claims, string $name): string
+    private static function placeholders(array $claims): array
     {
-        $value = $claims[$name] ?? '';
+        $placeholders = [];
+        foreach ($claims as $name => $value) {
+            if (\is_string($value) || \is_int($value)) {
+                $placeholders['{' . $name . '}'] = (string) $value;
+            }
+        }
 
-        return \is_string($value) ? $value : '';
-    }
-
-    /**
-     * @param array<mixed> $claims
-     */
-    private static function intClaim(array $claims, string $name, int $default = 0): int
-    {
-        $value = $claims[$name] ?? $default;
-
-        return \is_int($value) ? $value : $default;
+        return $placeholders;
     }
 }
