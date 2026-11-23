@@ -7,6 +7,9 @@ import { RuntimeLogsView } from '@/components/global/shared/RuntimeLogsView'
 import { Route } from '@/routes/_public/projects.$projectId.functions.$functionId.runtime-logs'
 import { DeploymentSelect } from '../shared/DeploymentSelect'
 
+/** Newest deployments offered in the picker. */
+const DEPLOYMENTS_LIMIT = 100
+
 export function View() {
   const { projectId, functionId } = Route.useParams()
   const search = Route.useSearch()
@@ -16,6 +19,8 @@ export function View() {
   const { deployments, isLoading } = useFunctionDeployments(
     projectId,
     functionId,
+    0,
+    DEPLOYMENTS_LIMIT,
   )
 
   const deploymentId =

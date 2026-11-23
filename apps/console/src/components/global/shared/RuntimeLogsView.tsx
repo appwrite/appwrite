@@ -27,6 +27,7 @@ import {
 import {
   canListRuntimeLogs,
   fetchRuntimeLogsSince,
+  RUNTIME_LOGS_PAGE_LIMIT,
   runtimeLogsInfiniteQueryOptions,
   type RuntimeLogRange,
   type RuntimeLogResourceType,
@@ -43,6 +44,9 @@ const TAIL_INTERVAL_MS = 5000
 
 /** Live tail keeps at most this many new lines above the fetched pages. */
 const TAIL_MAX_LINES = 1000
+
+/** Full pages one live tail poll may read before waiting for the next poll. */
+const TAIL_MAX_PAGES_PER_TICK = 5
 
 export interface RuntimeLogsViewProps {
   projectId: string | null | undefined
@@ -145,20 +149,37 @@ export function RuntimeLogsView({
       if (inFlight || document.visibilityState === 'hidden') return
       inFlight = true
       try {
-        const newest = newestRef.current
-        const rows = await fetchRuntimeLogsSince(
-          projectId,
-          resourceType,
-          resourceId,
-          filter,
-          newest?.timestamp ?? startedAt,
-        )
-        if (cancelled) return
-        const fresh = rows.filter((row) => !newest?.ids.has(row.$id))
-        if (fresh.length > 0) {
-          setTail((current) =>
-            [...fresh.reverse(), ...current].slice(0, TAIL_MAX_LINES),
+        let cursor = newestRef.current ?? {
+          timestamp: startedAt,
+          ids: new Set<string>(),
+        }
+        // Keep reading full pages so a busy deployment doesn't fall behind.
+        for (let page = 0; page < TAIL_MAX_PAGES_PER_TICK; page++) {
+          const rows = await fetchRuntimeLogsSince(
+            projectId,
+            resourceType,
+            resourceId,
+            filter,
+            cursor.timestamp,
           )
+          if (cancelled) return
+          const seen = cursor.ids
+          const fresh = rows.filter((row) => !seen.has(row.$id))
+          if (fresh.length === 0) break
+          setTail((current) =>
+            [...[...fresh].reverse(), ...current].slice(0, TAIL_MAX_LINES),
+          )
+          const last = fresh[fresh.length - 1]
+          const ids = new Set(
+            fresh
+              .filter((row) => row.timestamp === last.timestamp)
+              .map((row) => row.$id),
+          )
+          if (last.timestamp === cursor.timestamp) {
+            for (const id of seen) ids.add(id)
+          }
+          cursor = { timestamp: last.timestamp, ids }
+          if (rows.length < RUNTIME_LOGS_PAGE_LIMIT) break
         }
         setTailError(null)
       } catch (e) {
@@ -227,6 +248,18 @@ export function RuntimeLogsView({
             "Lines your database writes show up here. Runtime logs may not be collected in this project's region yet.",
           )
 
+  const loadOlder = hasNextPage ? (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => fetchNextPage()}
+      disabled={isFetchingNextPage}
+    >
+      {isFetchingNextPage && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+      {t('Load older')}
+    </Button>
+  ) : null
+
   let body: ReactNode
   if (!ready) {
     body = (
@@ -269,6 +302,7 @@ export function RuntimeLogsView({
         description={t(
           'Only the lines loaded so far are searched. Load older lines or widen the time range to search further back.',
         )}
+        action={loadOlder}
       />
     ) : (
       <EmptyState
@@ -316,20 +350,8 @@ export function RuntimeLogsView({
             </span>
           </div>
         ))}
-        {hasNextPage && (
-          <div className="flex justify-center py-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => fetchNextPage()}
-              disabled={isFetchingNextPage}
-            >
-              {isFetchingNextPage && (
-                <Loader2 className="me-2 h-4 w-4 animate-spin" />
-              )}
-              {t('Load older')}
-            </Button>
-          </div>
+        {loadOlder && (
+          <div className="flex justify-center py-3">{loadOlder}</div>
         )}
       </div>
     )
