@@ -116,7 +116,17 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     } else {
         module
     };
+    let module = if enabled("query") && enabled("query-builders") {
+        module.request_startup_function(request_startup)
+    } else {
+        module
+    };
     module.request_shutdown_function(request_shutdown)
+}
+
+extern "C" fn request_startup(_kind: i32, _module: i32) -> i32 {
+    query::builder::request_startup();
+    0
 }
 
 /// Registers the classes built by hand rather than with `#[php_class]`: `Locale`, `UserAgent`, the
