@@ -39,8 +39,9 @@ use php_std::types::KeyRef;
 use php_std::{ArrayKey as Key, Str};
 use utopia_query::builder::{
     AnyBuilder, Arg, AsofOperator, Binding, Builder, CaseExpression, ClickHouseDialect, Condition, Dialect,
-    ExplainOptions, IndexHint, JoinBuilder, JoinOn, JoinType, Kind, MariaDbDialect, MongoDbDialect, MySqlDialect,
-    Operator, Overrides, PostgreSqlDialect, Ret, SqliteDialect, Statement, Step, VectorMetric, WindowFrame,
+    ExplainOptions, Format, FormattedInsertStatement, IndexHint, JoinBuilder, JoinOn, JoinType, Kind, MariaDbDialect,
+    MongoDbDialect, MySqlDialect, Operator, Overrides, PostgreSqlDialect, Ret, SqliteDialect, Statement, Step,
+    VectorMetric, WindowFrame,
 };
 use utopia_query::hook::{self, Hook};
 use utopia_query::{Array, Error, Method, NullsPosition, Object, Query, Value};
@@ -75,6 +76,7 @@ impl<'a> FromZval<'a> for Slot {
     }
 }
 
+const FORMATTED: &str = "Utopia\\Query\\Builder\\ClickHouse\\FormattedInsertStatement";
 const CASE: &str = "Utopia\\Query\\Builder\\Case\\Expression";
 const BINDING: &str = "Utopia\\Query\\Builder\\Binding";
 const CONDITION: &str = "Utopia\\Query\\Builder\\Condition";
@@ -136,16 +138,26 @@ impl Drop for Entered {
 }
 
 /// Whether a dialect's statements are JSON, which is UTF-8, or SQL, which is bytes.
-pub trait Text {
+pub trait Text: Dialect {
     /// MongoDB's are JSON.
     const JSON: bool = false;
+
+    /// What `insert()` returns when the builder was given a format to insert in, which only
+    /// ClickHouse can be.
+    fn formatted(_builder: &mut Builder<Self>) -> Result<Option<FormattedInsertStatement>, Error> {
+        Ok(None)
+    }
 }
 
 impl Text for MySqlDialect {}
 impl Text for MariaDbDialect {}
 impl Text for PostgreSqlDialect {}
 impl Text for SqliteDialect {}
-impl Text for ClickHouseDialect {}
+impl Text for ClickHouseDialect {
+    fn formatted(builder: &mut Builder<Self>) -> Result<Option<FormattedInsertStatement>, Error> {
+        builder.formatted_insert()
+    }
+}
 impl Text for MongoDbDialect {
     const JSON: bool = true;
 }
@@ -480,6 +492,31 @@ impl<D: Dialect + Text> State<D> {
         Ok(out)
     }
 
+    /// A cursor: a value, or the row it is read from. A row that is an object is read here, where
+    /// PHP reads it when it builds: `_cursor` of an `ArrayAccess`, the public properties of any other.
+    fn cursor(&self, given: &Zval) -> PhpResult<Value> {
+        let Some(object) = given.object() else { return self.value(given) };
+        if parts(given).is_some() {
+            return self.value(given);
+        }
+        let row = if class("ArrayAccess").is_ok_and(|class| object.instance_of(class)) {
+            let mut row = ZendHashTable::new();
+            if object.try_call_method("offsetExists", vec![&"_cursor"]).map_err(PhpException::from)?.bool()
+                == Some(true)
+            {
+                let value = object.try_call_method("offsetGet", vec![&"_cursor"]).map_err(PhpException::from)?;
+                row.insert("_cursor", value).map_err(PhpException::from)?;
+            }
+            let mut zval = Zval::new();
+            zval.set_hashtable(row);
+            zval
+        } else {
+            let read = ZendCallable::try_from_name("get_object_vars").map_err(PhpException::from)?;
+            read.try_call(vec![given]).map_err(PhpException::from)?
+        };
+        self.value(&row)
+    }
+
     /// The pairs of an array of strings by name.
     fn pairs(&self, given: &Arr<'_>) -> Vec<(String, String)> {
         let items = given.table().into_iter().flatten();
@@ -624,9 +661,32 @@ impl<D: Dialect + Text> State<D> {
         let bindings =
             if bindings.is_empty() { empty() } else { bindings.into_zval(false).map_err(PhpException::from)? };
         let executor = self.executor.borrow().as_ref().map_or_else(null, Zval::shallow_clone);
-        construct(class(STATEMENT)?, &mut [string(&query), bindings, read_only, executor])?
-            .into_zval(false)
-            .map_err(PhpException::from)
+        let mut arguments = vec![string(&query), bindings, read_only, executor];
+        if let Some(named) = &found.named_bindings {
+            arguments.push(zval(D::JSON, &Value::Array(named.clone()))?);
+        }
+        construct(class(STATEMENT)?, &mut arguments)?.into_zval(false).map_err(PhpException::from)
+    }
+
+    /// ClickHouse's `FormattedInsertStatement`: the envelope, its columns and format, and the rows
+    /// when `bulkInsert()` serialized them.
+    fn formatted(&self, found: &FormattedInsertStatement) -> PhpResult<Zval> {
+        let columns: Vec<Zval> = found.columns.iter().map(|column| string(&bytes(D::JSON, column))).collect();
+        let columns =
+            if columns.is_empty() { empty() } else { columns.into_zval(false).map_err(PhpException::from)? };
+        let mut read_only = Zval::new();
+        read_only.set_bool(found.read_only);
+        let mut arguments = [
+            string(&self.written(&found.query)?),
+            empty(),
+            columns,
+            string(&bytes(D::JSON, &found.format)),
+            // The rows are text as PHP gave it, not a character a byte.
+            found.body.as_deref().map_or_else(null, |body| string(body.as_bytes())),
+            read_only,
+            self.executor.borrow().as_ref().map_or_else(null, Zval::shallow_clone),
+        ];
+        construct(class(FORMATTED)?, &mut arguments)?.into_zval(false).map_err(PhpException::from)
     }
 
     /// What the builder wrote, as the bytes PHP gets. A JSON dialect that was given a string
@@ -1084,6 +1144,11 @@ case_argument!(
     /// A `VectorMetric` argument.
     Metric,
     VectorMetric
+);
+case_argument!(
+    /// A ClickHouse `Format` argument.
+    Formats,
+    Format
 );
 case_argument!(
     /// An `AsofOperator` argument.
@@ -3845,6 +3910,33 @@ macro_rules! builder_class {
             }
         }, $($rest,)*);
     };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, bulk_insert, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(name = "bulkInsert", defaults(columns = "Arr::Empty"))]
+            pub fn bulk_insert(
+                self_: &mut ZendClassObject<$class>,
+                format: Formats,
+                rows: &Zval,
+                columns: Arr<'_>,
+            ) -> PhpResult<Zval> {
+                // `iterable`: an array, or what a `Traversable` yields.
+                let listed;
+                let rows = if rows.is_array() {
+                    rows
+                } else {
+                    let list = ZendCallable::try_from_name("iterator_to_array").map_err(PhpException::from)?;
+                    listed = list.try_call(vec![rows, &false]).map_err(PhpException::from)?;
+                    &listed
+                };
+                let rows = rows.array().into_iter().flat_map(ZendHashTable::values);
+                let rows = rows.map(|row| self_.0.value(row)).collect::<PhpResult<Vec<Value>>>()?;
+                let columns = self_.0.strings(&columns);
+                let built = self_.0.with(|builder| builder.bulk_insert(format.0, rows, columns));
+                self_.0.formatted(&built.map_err(|error| raised(&error))?)
+            }
+        }, $($rest,)*);
+    };
     // FEATURES
     (@add [$(#[$meta:meta])*] $class:ident, $dialect:ty, {$($methods:tt)*},) => {
         $(#[$meta])*
@@ -4067,7 +4159,7 @@ macro_rules! builder_class {
                 self_: &'a mut ZendClassObject<$class>,
                 value: &Zval,
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
-                let value = self_.0.value(value)?;
+                let value = self_.0.cursor(value)?;
                 self_.0.with(|builder| {
                     builder.cursor_after(value);
                 });
@@ -4079,7 +4171,7 @@ macro_rules! builder_class {
                 self_: &'a mut ZendClassObject<$class>,
                 value: &Zval,
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
-                let value = self_.0.value(value)?;
+                let value = self_.0.cursor(value)?;
                 self_.0.with(|builder| {
                     builder.cursor_before(value);
                 });
@@ -4313,6 +4405,9 @@ macro_rules! builder_class {
             pub fn insert(self_: &mut ZendClassObject<$class>) -> PhpResult<Zval> {
                 let object = std::ptr::from_mut(&mut self_.std);
                 let _running = self_.0.running(object);
+                if let Some(formatted) = self_.0.with(<$dialect as Text>::formatted).map_err(|error| raised(&error))? {
+                    return self_.0.formatted(&formatted);
+                }
                 let built = self_.0.with(Builder::insert);
                 self_.0.statement(built)
             }
@@ -5012,7 +5107,7 @@ builder_class!(
     #[php(extends(Base))]
     ClickHouseBuilder,
     ClickHouseDialect,
-    [literal, raw_sql, explain_plain, cross_joins, full_outer_joins, statistical_clickhouse, bitwise, raw_sql_more, rollup, cube, totals, hints, conditional_aggregates, json_aggregates, tablesample, clickhouse_more, clickhouse_constants, asof_joins, quantiles, group_concat, case_expressions]
+    [literal, raw_sql, explain_plain, cross_joins, full_outer_joins, statistical_clickhouse, bitwise, raw_sql_more, rollup, cube, totals, hints, conditional_aggregates, json_aggregates, tablesample, clickhouse_more, clickhouse_constants, asof_joins, quantiles, group_concat, case_expressions, bulk_insert]
 );
 builder_class!(
     /// `Utopia\Query\Builder\MongoDB`.
