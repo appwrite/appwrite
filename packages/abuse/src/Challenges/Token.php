@@ -84,8 +84,8 @@ final readonly class Token
     }
 
     /**
-     * The claims of a token with a valid signature, unexpired, issued for this
-     * purpose; null otherwise.
+     * The claims of a token with a valid signature and an expiry not yet
+     * passed, issued for this purpose; null otherwise.
      *
      * @return array<mixed>|null
      */
@@ -101,7 +101,8 @@ final readonly class Token
             return null;
         }
 
-        if (($claims[self::PURPOSE_CLAIM] ?? null) !== $this->purpose) {
+        // The library checks `exp` only when present; a token without one would never expire.
+        if (($claims[self::PURPOSE_CLAIM] ?? null) !== $this->purpose || !\is_int($claims[self::EXPIRY_CLAIM] ?? null)) {
             return null;
         }
 

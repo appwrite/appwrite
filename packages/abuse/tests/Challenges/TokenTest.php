@@ -80,6 +80,17 @@ final class TokenTest extends TestCase
         $this->assertNull($this->token()->verify($expired));
     }
 
+    public function testTokenWithoutAnExpiryIsRejected(): void
+    {
+        // The JWT library only checks `exp` when present; a token must not live forever.
+        $jwt = new JWT(\hash_hmac('sha256', 'label', self::SECRET), 'HS256', 60, 0);
+        // With `iat` set the library does not add `exp` itself.
+        $noExpiry = $jwt->encode([Token::PURPOSE_CLAIM => 'purpose', Token::BINDING_CLAIM => [], 'iat' => \time()]);
+        $this->assertArrayNotHasKey('exp', $jwt->decode($noExpiry));
+
+        $this->assertNull($this->token()->verify($noExpiry));
+    }
+
     public function testDefaultTtlSetsTheExpiry(): void
     {
         $before = \time();

@@ -146,9 +146,10 @@ $challenge = new ProofOfWork(
 $puzzle = $challenge->issue(18, $binding, ['project' => 'p1']);
 // Send $puzzle->token, $puzzle->nonce and $puzzle->difficulty to the client.
 
+$clearance = new Clearance(new Token('secret', 'my-app-clearance', 'clearance', ttl: 1800));
+
 $result = $challenge->verify($token, $solution, $binding);
 if ($result->isValid()) {
-    $clearance = new Clearance(new Token('secret', 'my-app-clearance', 'clearance', ttl: 1800));
     $cookie = $clearance->issue($binding, $result->difficulty);
 }
 
