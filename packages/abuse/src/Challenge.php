@@ -91,14 +91,14 @@ abstract readonly class Challenge
      *
      * @return array<mixed>|Result
      */
-    protected function open(string $token): array|Result
+    protected function claimsFrom(string $token): array|Result
     {
         $claims = $this->token->verify($token);
         if ($claims === null) {
             return new Result(Status::InvalidToken);
         }
 
-        if (!Token::isBoundTo($claims, $this->params)) {
+        if (!Token::paramsMatch($claims, $this->params)) {
             return new Result(Status::BindingMismatch);
         }
 

@@ -26,15 +26,15 @@ final class ProofOfWorkTest extends TestCase
         return new ProofOfWork($secret, $nonces ?? new Memory(), 8, 120, $acceptWhenNoncesUnavailable, 'label');
     }
 
-    // --- leadingZeroBits / meetsDifficulty ------------------------------------
+    // --- difficultyOf / isSolution ------------------------------------
 
-    public function testLeadingZeroBitsCountsWholeZeroBytes(): void
+    public function testDifficultyOfCountsWholeZeroBytes(): void
     {
-        $this->assertSame(256, ProofOfWork::leadingZeroBits(\str_repeat("\x00", 32)));
-        $this->assertSame(0, ProofOfWork::leadingZeroBits("\xff" . \str_repeat("\x00", 31)));
-        $this->assertSame(8, ProofOfWork::leadingZeroBits("\x00\xff" . \str_repeat("\x00", 30)));
-        $this->assertSame(20, ProofOfWork::leadingZeroBits("\x00\x00\x0f" . \str_repeat("\x00", 29)));
-        $this->assertSame(4, ProofOfWork::leadingZeroBits("\x08" . \str_repeat("\x00", 31)));
+        $this->assertSame(256, ProofOfWork::difficultyOf(\str_repeat("\x00", 32)));
+        $this->assertSame(0, ProofOfWork::difficultyOf("\xff" . \str_repeat("\x00", 31)));
+        $this->assertSame(8, ProofOfWork::difficultyOf("\x00\xff" . \str_repeat("\x00", 30)));
+        $this->assertSame(20, ProofOfWork::difficultyOf("\x00\x00\x0f" . \str_repeat("\x00", 29)));
+        $this->assertSame(4, ProofOfWork::difficultyOf("\x08" . \str_repeat("\x00", 31)));
     }
 
     /**
@@ -45,18 +45,18 @@ final class ProofOfWorkTest extends TestCase
     {
         for ($i = 0; $i < 500; $i++) {
             $digest = \hash('sha256', 'sample:' . $i, true);
-            $this->assertSame(ProofOfWork::leadingZeroBits($digest), $this->leadingZeroBitsOverHex(\bin2hex($digest)), 'Mismatch at sample ' . $i);
+            $this->assertSame(ProofOfWork::difficultyOf($digest), $this->difficultyOfHex(\bin2hex($digest)), 'Mismatch at sample ' . $i);
         }
     }
 
-    public function testMeetsDifficultyAcceptsAValidSolutionAndRejectsOthers(): void
+    public function testIsSolutionAcceptsAValidAnswerAndRejectsOthers(): void
     {
         $nonce = 'abcdef0123456789';
         $solution = $this->solve($nonce, 8);
 
-        $this->assertTrue(ProofOfWork::meetsDifficulty($nonce, $solution, 8));
-        $this->assertFalse(ProofOfWork::meetsDifficulty($nonce, $solution, 32));
-        $this->assertTrue(ProofOfWork::meetsDifficulty($nonce, '0', 0));
+        $this->assertTrue(ProofOfWork::isSolution($nonce, $solution, 8));
+        $this->assertFalse(ProofOfWork::isSolution($nonce, $solution, 32));
+        $this->assertTrue(ProofOfWork::isSolution($nonce, '0', 0));
     }
 
     // --- issue ----------------------------------------------------------------
@@ -236,7 +236,7 @@ final class ProofOfWorkTest extends TestCase
         $this->assertSame(Status::BindingMismatch, $pow->withParams(self::BINDING)->verify($puzzle->token, $this->solve($puzzle->nonce, 8))->status);
     }
 
-    public function testNonceKeyPlaceholdersAreFilledFromTheTokenClaims(): void
+    public function testNonceParamsAreFilledFromTheTokenClaims(): void
     {
         $nonces = new Memory('pow:{project}');
         $pow = $this->pow($nonces);
@@ -312,7 +312,7 @@ final class ProofOfWorkTest extends TestCase
     private function solve(string $nonce, int $difficulty): string
     {
         $counter = 0;
-        while (!ProofOfWork::meetsDifficulty($nonce, (string) $counter, $difficulty)) {
+        while (!ProofOfWork::isSolution($nonce, (string) $counter, $difficulty)) {
             $counter++;
         }
 
@@ -321,13 +321,13 @@ final class ProofOfWorkTest extends TestCase
 
     /**
      * A solution this nonce provably does not accept, judged by this file's own
-     * hex counter so a meetsDifficulty() that accepted everything would be caught.
+     * hex counter so a isSolution() that accepted everything would be caught.
      */
     private function wrong(string $nonce, int $difficulty): string
     {
         for ($counter = 0; $counter < 64; $counter++) {
             $candidate = 'wrong-' . $counter;
-            if ($this->leadingZeroBitsOverHex(\hash('sha256', $nonce . ':' . $candidate)) < $difficulty) {
+            if ($this->difficultyOfHex(\hash('sha256', $nonce . ':' . $candidate)) < $difficulty) {
                 return $candidate;
             }
         }
@@ -335,7 +335,7 @@ final class ProofOfWorkTest extends TestCase
         $this->fail("No candidate misses a {$difficulty}-bit target for nonce {$nonce}");
     }
 
-    private function leadingZeroBitsOverHex(string $hex): int
+    private function difficultyOfHex(string $hex): int
     {
         $bits = 0;
         $length = \strlen($hex);

@@ -92,7 +92,7 @@ final readonly class Clearance
     public function verify(string $token, int $difficulty = 0, int $maxAge = 0): bool
     {
         $claims = $this->token->verify($token);
-        if ($claims === null || !Token::isBoundTo($claims, $this->params)) {
+        if ($claims === null || !Token::paramsMatch($claims, $this->params)) {
             return false;
         }
 

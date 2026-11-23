@@ -27,7 +27,7 @@ final readonly class Riddle extends Challenge
     #[\Override]
     public function verify(string $token, string $answer): Result
     {
-        $claims = $this->open($token);
+        $claims = $this->claimsFrom($token);
         if ($claims instanceof Result) {
             return $claims;
         }

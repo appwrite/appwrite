@@ -153,7 +153,7 @@ if (!$clearance->withParams($client)->verify($cookie, difficulty: 18, maxAge: 18
 
 Puzzles last 120 seconds and clearances 30 minutes unless you pass a `ttl`. Tokens verify only with exactly the same params. A nonce store outage rejects the solution (`Status::Unavailable`) unless you pass `acceptWhenNoncesUnavailable: true`. To bind to a network rather than an exact IP, use `Identity`: `new Identity()->ipPrefix($ip)` gives the /24 (IPv4) or /48 (IPv6) the address belongs to, and `userAgentHash()` hashes the User-Agent.
 
-**Adding a kind.** Extend `Challenge`, sign the claims your kind needs with `sign()`, and read them back with `open()`, which already rejects invalid tokens and mismatched params:
+**Adding a kind.** Extend `Challenge`, sign the claims your kind needs with `sign()`, and read them back with `claimsFrom()`, which already rejects invalid tokens and mismatched params:
 
 ```php
 final readonly class Riddle extends Challenge
@@ -170,7 +170,7 @@ final readonly class Riddle extends Challenge
 
     public function verify(string $token, string $answer): Result
     {
-        $claims = $this->open($token);
+        $claims = $this->claimsFrom($token);
         if ($claims instanceof Result) {
             return $claims; // InvalidToken or BindingMismatch
         }

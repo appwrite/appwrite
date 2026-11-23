@@ -52,7 +52,7 @@ final readonly class Token
     /**
      * Sign the claims with this token's purpose and an expiry, bound to the
      * given fields. The binding's values are stored as claims and its names
-     * recorded, so {@see isBoundTo()} can require the whole binding.
+     * recorded, so {@see paramsMatch()} can require the whole binding.
      *
      * @param  array<string, string|int>  $claims
      * @param  int  $ttl  Lifetime in seconds; 0 or less uses the default
@@ -117,7 +117,7 @@ final readonly class Token
      * @param  array<mixed>  $claims  From {@see verify()}
      * @param  array<string, string>  $binding
      */
-    public static function isBoundTo(array $claims, array $binding): bool
+    public static function paramsMatch(array $claims, array $binding): bool
     {
         $names = $claims[self::BINDING_CLAIM] ?? null;
         if (!\is_array($names)) {

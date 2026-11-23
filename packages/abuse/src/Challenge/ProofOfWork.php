@@ -42,7 +42,7 @@ final readonly class ProofOfWork extends Challenge
         string $label = 'challenge',
         string $purpose = 'challenge',
     ) {
-        self::assertDifficulty($difficulty);
+        self::checkDifficulty($difficulty);
         parent::__construct($secret, $label, $purpose, $ttl);
     }
 
@@ -56,7 +56,7 @@ final readonly class ProofOfWork extends Challenge
     public function issue(array $claims = [], ?int $difficulty = null): Puzzle
     {
         $difficulty ??= $this->difficulty;
-        self::assertDifficulty($difficulty);
+        self::checkDifficulty($difficulty);
 
         $nonce = \bin2hex(\random_bytes(16));
         $token = $this->sign([
@@ -75,7 +75,7 @@ final readonly class ProofOfWork extends Challenge
     #[\Override]
     public function verify(string $token, string $answer): Result
     {
-        $claims = $this->open($token);
+        $claims = $this->claimsFrom($token);
         if ($claims instanceof Result) {
             return $claims;
         }
@@ -91,7 +91,7 @@ final readonly class ProofOfWork extends Challenge
 
         $error = null;
         try {
-            $fresh = $this->nonces->withParams(self::placeholders($claims))->consume($nonce, $this->token->ttl);
+            $fresh = $this->nonces->withParams(self::nonceParams($claims))->consume($nonce, $this->token->ttl);
         } catch (Throwable $e) {
             if (!$this->acceptWhenNoncesUnavailable) {
                 return new Result(Status::Unavailable, $claims, $difficulty, $elapsedMs, $e);
@@ -105,7 +105,7 @@ final readonly class ProofOfWork extends Challenge
             return new Result(Status::Replay, $claims, $difficulty, $elapsedMs);
         }
 
-        if (!self::meetsDifficulty($nonce, $answer, $difficulty)) {
+        if (!self::isSolution($nonce, $answer, $difficulty)) {
             return new Result(Status::Rejected, $claims, $difficulty, $elapsedMs, $error);
         }
 
@@ -113,11 +113,12 @@ final readonly class ProofOfWork extends Challenge
     }
 
     /**
-     * Below 0 every solution passes; above the digest width none can.
+     * Refuse a difficulty outside 0–256: below 0 every answer passes; above the
+     * digest width none can.
      *
      * @throws \InvalidArgumentException
      */
-    private static function assertDifficulty(int $difficulty): void
+    private static function checkDifficulty(int $difficulty): void
     {
         if ($difficulty < 0 || $difficulty > self::MAX_DIFFICULTY) {
             throw new \InvalidArgumentException('difficulty must be between 0 and ' . self::MAX_DIFFICULTY . ', got ' . $difficulty);
@@ -125,26 +126,26 @@ final readonly class ProofOfWork extends Challenge
     }
 
     /**
-     * True when SHA-256(nonce ":" solution) has at least `difficulty` leading
-     * zero bits. One hash — the same rule on client and server.
+     * Whether the answer solves the puzzle: SHA-256(nonce ":" answer) reaches
+     * the difficulty. One hash — the same rule on client and server.
      */
-    public static function meetsDifficulty(string $nonce, string $solution, int $difficulty): bool
+    public static function isSolution(string $nonce, string $answer, int $difficulty): bool
     {
-        return self::leadingZeroBits(\hash('sha256', $nonce . ':' . $solution, true)) >= $difficulty;
+        return self::difficultyOf(\hash('sha256', $nonce . ':' . $answer, true)) >= $difficulty;
     }
 
     /**
-     * Count leading zero bits across a binary digest, most significant bit
-     * first — the order a browser counts in, so difficulty means the same on
-     * both sides.
+     * The difficulty a hash reaches: its leading zero bits, counted from the
+     * most significant bit — the order a browser counts in, so difficulty
+     * means the same on both sides.
      */
-    public static function leadingZeroBits(string $digest): int
+    public static function difficultyOf(string $hash): int
     {
         $bits = 0;
-        $length = \strlen($digest);
+        $length = \strlen($hash);
 
         for ($i = 0; $i < $length; $i++) {
-            $byte = \ord($digest[$i]);
+            $byte = \ord($hash[$i]);
             if ($byte === 0) {
                 $bits += 8;
 
@@ -163,20 +164,20 @@ final readonly class ProofOfWork extends Challenge
     }
 
     /**
-     * Nonce key placeholders from the token's claims: "{name}" => value.
+     * The params that fill the nonce key's placeholders, taken from the token's claims: "{name}" => value.
      *
      * @param  array<mixed>  $claims
      * @return array<string, string>
      */
-    private static function placeholders(array $claims): array
+    private static function nonceParams(array $claims): array
     {
-        $placeholders = [];
+        $params = [];
         foreach ($claims as $name => $value) {
             if (\is_string($value) || \is_int($value)) {
-                $placeholders['{' . $name . '}'] = (string) $value;
+                $params['{' . $name . '}'] = (string) $value;
             }
         }
 
-        return $placeholders;
+        return $params;
     }
 }

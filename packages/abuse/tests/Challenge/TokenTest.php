@@ -122,22 +122,22 @@ final class TokenTest extends TestCase
         $this->assertSame(['ip', 'ua'], $claims[Token::BINDING_CLAIM]);
     }
 
-    public function testIsBoundToRequiresTheSameNamesAndValues(): void
+    public function testParamsMatchRequiresTheSameNamesAndValues(): void
     {
         $token = $this->token();
         $claims = $token->verify($token->issue([], binding: ['ip' => 'i', 'ua' => 'u']));
         $this->assertIsArray($claims);
 
-        $this->assertTrue(Token::isBoundTo($claims, ['ua' => 'u', 'ip' => 'i']));
-        $this->assertFalse(Token::isBoundTo($claims, ['ip' => 'i']));
-        $this->assertFalse(Token::isBoundTo($claims, []));
-        $this->assertFalse(Token::isBoundTo($claims, ['ip' => 'i', 'ua' => 'other']));
-        $this->assertFalse(Token::isBoundTo($claims, ['ip' => 'i', 'ua' => 'u', 'extra' => 'x']));
+        $this->assertTrue(Token::paramsMatch($claims, ['ua' => 'u', 'ip' => 'i']));
+        $this->assertFalse(Token::paramsMatch($claims, ['ip' => 'i']));
+        $this->assertFalse(Token::paramsMatch($claims, []));
+        $this->assertFalse(Token::paramsMatch($claims, ['ip' => 'i', 'ua' => 'other']));
+        $this->assertFalse(Token::paramsMatch($claims, ['ip' => 'i', 'ua' => 'u', 'extra' => 'x']));
         // A claim that is not part of the binding cannot stand in for it.
         $claims = $token->verify($token->issue(['ip' => 'i']));
         $this->assertIsArray($claims);
-        $this->assertFalse(Token::isBoundTo($claims, ['ip' => 'i']));
-        $this->assertTrue(Token::isBoundTo($claims, []));
+        $this->assertFalse(Token::paramsMatch($claims, ['ip' => 'i']));
+        $this->assertTrue(Token::paramsMatch($claims, []));
     }
 
     public function testBindingAndClaimsMustNotShareNames(): void
