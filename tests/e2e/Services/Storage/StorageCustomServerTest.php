@@ -448,6 +448,7 @@ final class StorageCustomServerTest extends Scope
         // A preview's cache row and file are written in the shutdown hook, after its response, so
         // the bucket DELETE could list rows before the last ones exist and orphan their files. Nothing
         // reports a finished hook; the filesystem holding the same keys across two reads does.
+        /** @var list<string>|null $previous the closure updates it by reference */
         $previous = null;
         $this->assertEventually(function () use (&$previous, $filesystem): void {
             $keys = $this->getCacheKeys($filesystem);
