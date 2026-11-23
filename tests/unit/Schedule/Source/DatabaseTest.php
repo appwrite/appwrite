@@ -8,6 +8,7 @@ use Appwrite\Schedule\Source\Alerts;
 use Appwrite\Schedule\Source\Functions;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
+use Utopia\Schedule\Clock\Test as TestClock;
 use Utopia\Schedule\Scheduler;
 
 final class DatabaseTest extends TestCase
@@ -105,6 +106,18 @@ final class DatabaseTest extends TestCase
     public function testAlertScheduleNeedsNoProject(): void
     {
         $database = $this->alertSchedules();
+        // An escalating alert's next step, due once.
+        $database->documents['schedules']['escalation'] = new Document([
+            '$id' => 'escalation',
+            '$sequence' => '12',
+            'projectId' => 'project',
+            'projectInternalId' => '5',
+            'resourceId' => 'outage',
+            'resourceType' => SCHEDULE_RESOURCE_TYPE_ESCALATION,
+            'schedule' => '2026-10-29 00:10:00.000',
+            'active' => true,
+            'resourceUpdatedAt' => '2026-10-29 00:00:00.000',
+        ]);
         $source = new Alerts($database, fn (array $schedules): array => \array_fill_keys(\array_map(fn (Document $schedule) => $schedule->getId(), $schedules), 60));
 
         $entries = [];
@@ -121,6 +134,28 @@ final class DatabaseTest extends TestCase
         $this->assertSame('egress', $entries['egress']->payload['monitorId']);
         $this->assertSame('project', $entries['egress']->payload['project']->getId());
         $this->assertSame('5', $entries['egress']->payload['project']->getSequence());
+
+        // The alert's step fires once, at its time, for the worker to notify by the alert.
+        $this->assertSame('outage', $entries['outage']->payload['alertId']);
+        $this->assertSame('', $entries['outage']->payload['monitorId']);
+        $this->assertSame('project', $entries['outage']->payload['project']->getId());
+        $this->assertFalse($entries['outage']->trigger->recurring());
+        $this->assertEquals(
+            [new \DateTimeImmutable('2026-10-29 00:10:00.000')],
+            $entries['outage']->trigger->occurrencesBetween(new \DateTimeImmutable('2026-10-29 00:00:00'), new \DateTimeImmutable('2026-10-29 01:00:00')),
+        );
+        // An active escalation remains owed after downtime beyond the scheduler's recovery window.
+        $clock = new TestClock(new \DateTimeImmutable('2026-10-29 01:00:00'));
+        $scheduler = new Scheduler($source, clock: $clock);
+        $scheduler->reconcile(true);
+        $scheduler->tick();
+        $scheduler->commit();
+        $clock->advance(1);
+        $this->assertContains('outage', \array_column(\array_column($scheduler->tick(), 'payload'), 'alertId'));
+        $scheduler->commit();
+        $scheduler->reconcile(true);
+        $clock->advance(1);
+        $this->assertNotContains('outage', \array_column(\array_column($scheduler->tick(), 'payload'), 'alertId'));
     }
 
     public function testAlertIntervalChangeReschedulesTheMonitor(): void

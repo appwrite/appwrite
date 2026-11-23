@@ -459,10 +459,10 @@ jobs:
             export PATH="$HOME/.cargo/bin:$PATH"
             echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
           fi
-          rustup toolchain install 1.97.1 --profile minimal
+          rustup toolchain install
 
       - name: Build the extension
-        run: cargo +1.97.1 build --release --locked -p utopia-extension
+        run: cargo build --release --locked -p utopia-extension
 
       - name: Upload the extension
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

@@ -16,7 +16,8 @@ use Utopia\Schedule\Trigger;
  */
 final readonly class At implements Trigger
 {
-    public function __construct(private \DateTimeImmutable $time)
+    /** With catch-up enabled, a missed occurrence is due at the start of the next window. */
+    public function __construct(private \DateTimeImmutable $time, private bool $catchUp = false)
     {
     }
 
@@ -34,7 +35,9 @@ final readonly class At implements Trigger
     #[\Override]
     public function occurrencesBetween(\DateTimeImmutable $start, \DateTimeImmutable $end): array
     {
-        return $this->time >= $start && $this->time < $end ? [$this->time] : [];
+        $due = $this->catchUp && $this->time < $start ? $start : $this->time;
+
+        return $due >= $start && $due < $end ? [$due] : [];
     }
 
     #[\Override]

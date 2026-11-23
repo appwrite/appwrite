@@ -50,24 +50,19 @@ RUN apk add --no-cache \
     && make install \
     && rm -rf /tmp/ffmpeg
 
-# The utopia extension, built against the base image's own PHP headers,
-# libheif and OpenSSL (utopia-auth's RSA keys) so the ABI matches. Alpine's Rust is older than the workspace needs.
+# The utopia extension, built against the base image's own PHP headers and
+# libheif and OpenSSL (utopia-auth's RSA keys) so the ABI matches. The recipe is crates/extension/build.sh.
 FROM appwrite/base:2.5.0@sha256:2284f9b74bce761750d4fb850c098fc8088e0282d266d90658ae17202c9119e8 AS extension-build
-
-RUN apk add --no-cache rustup clang-dev libheif-dev openssl-dev build-base && \
-    rustup-init -y --profile minimal --default-toolchain 1.97.1
 
 WORKDIR /usr/local/src
 
-COPY Cargo.toml Cargo.lock rustfmt.toml ./
+COPY Cargo.toml Cargo.lock rustfmt.toml rust-toolchain.toml ./
 COPY .cargo ./.cargo
 COPY crates ./crates
 # A workspace member: Cargo reads every member's manifest.
 COPY example ./example
 
-RUN . "$HOME/.cargo/env" && \
-    cargo build --release --locked -p utopia-extension && \
-    strip target/release/libutopia.so
+RUN crates/extension/build.sh
 
 FROM appwrite/base:2.5.0@sha256:2284f9b74bce761750d4fb850c098fc8088e0282d266d90658ae17202c9119e8 AS base
 
