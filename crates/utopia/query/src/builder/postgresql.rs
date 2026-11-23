@@ -848,8 +848,8 @@ impl Dialect for PostgreSqlDialect {
 
     fn reset(b: &mut Builder<Self>) {
         b.core.json_sets.clear();
-        b.core.returning.clear();
-        b.core.group_by_modifier = None;
+        b.reset_returning();
+        b.reset_group_by_modifier();
         b.dialect = PostgreSqlDialect::default();
     }
 

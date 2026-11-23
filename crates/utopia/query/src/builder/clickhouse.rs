@@ -378,6 +378,18 @@ fn infer_type(value: Option<&Value>) -> &'static str {
 
 /// Rewrites the `?` placeholders (not `??`, `?|`, `?&`) to `{paramN:Type}`
 /// and attaches the named bindings, when named bindings are on.
+/// `$this->applyNamedTypedBindings()`: a subclass's own when it has one.
+fn named(b: &mut ClickHouse, statement: Statement) -> Result<Statement> {
+    use crate::builder::{Arg, Ret, Step};
+    if !b.overrides(Step::ApplyNamedTypedBindings) {
+        return Ok(apply_named_typed_bindings(b, statement));
+    }
+    match b.step(Step::ApplyNamedTypedBindings, &[Arg::Statement(&statement)])? {
+        Ret::Statement(statement) => Ok(statement),
+        _ => Ok(statement),
+    }
+}
+
 impl ClickHouse {
     /// `statement` with its `?` placeholders named and typed, when named bindings are on.
     ///
@@ -440,6 +452,11 @@ impl Dialect for ClickHouseDialect {
         step: crate::builder::Step,
         arguments: &[crate::builder::Arg<'_>],
     ) -> Option<Result<crate::builder::Ret>> {
+        if let (crate::builder::Step::ApplyNamedTypedBindings, [crate::builder::Arg::Statement(statement)]) =
+            (step, arguments)
+        {
+            return Some(Ok(crate::builder::Ret::Statement(apply_named_typed_bindings(_b, (*statement).clone()))));
+        }
         crate::builder::feature::aggregates_base_step::<Self>(step, arguments)
     }
     const LITERAL: crate::StringLiteral = crate::StringLiteral::BackslashUtf8;
@@ -625,7 +642,7 @@ impl Dialect for ClickHouseDialect {
 
     fn build(b: &mut Builder<Self>) -> Result<Statement> {
         let result = b.base_build()?;
-        Ok(apply_named_typed_bindings(b, result))
+        named(b, result)
     }
 
     fn insert(b: &mut Builder<Self>) -> Result<Statement> {
@@ -633,7 +650,7 @@ impl Dialect for ClickHouseDialect {
             Some(formatted) => Ok(formatted.statement),
             None => {
                 let result = b.base_insert()?;
-                Ok(apply_named_typed_bindings(b, result))
+                named(b, result)
             }
         }
     }
@@ -653,7 +670,7 @@ impl Dialect for ClickHouseDialect {
         let sql =
             format!("ALTER TABLE {} UPDATE {} {}", b.quote(&b.core.table)?, assignments.join(", "), parts.join(" "));
         let statement = b.statement(sql);
-        Ok(apply_named_typed_bindings(b, statement))
+        named(b, statement)
     }
 
     fn delete(b: &mut Builder<Self>) -> Result<Statement> {
@@ -669,19 +686,19 @@ impl Dialect for ClickHouseDialect {
             DeleteMode::Lightweight => format!("DELETE FROM {table} {}", parts.join(" ")),
             DeleteMode::Mutation => format!("ALTER TABLE {table} DELETE {}", parts.join(" ")),
         };
-        let settings = Self::build_settings_clause(b)?;
+        let settings = b.step_string(crate::builder::Step::BuildSettingsClause, &[])?;
         if !settings.is_empty() {
             sql.push(' ');
             sql.push_str(&settings);
         }
         let statement = b.statement(sql);
-        Ok(apply_named_typed_bindings(b, statement))
+        named(b, statement)
     }
 
     fn reset(b: &mut Builder<Self>) {
         b.dialect = ClickHouseDialect::default();
         b.core.hints.clear();
-        b.core.group_by_modifier = None;
+        b.reset_group_by_modifier();
     }
 
     fn ast_dialect() -> crate::builder::AstDialect {

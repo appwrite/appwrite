@@ -994,12 +994,15 @@ $declaration = function (ReflectionMethod $method): string {
     $passed = [];
     foreach ($method->getParameters() as $parameter) {
         $default = $parameter->isDefaultValueAvailable() ? ' = ' . var_export($parameter->getDefaultValue(), true) : '';
-        $parameters[] = ($parameter->getType() ?? '') . ' ' . ($parameter->isVariadic() ? '...' : '') . '$' . $parameter->getName() . $default;
+        $parameters[] = ($parameter->getType() ?? '') . ' ' . ($parameter->isPassedByReference() ? '&' : '') . ($parameter->isVariadic() ? '...' : '') . '$' . $parameter->getName() . $default;
         $passed[] = ($parameter->isVariadic() ? '...' : '') . '$' . $parameter->getName();
     }
     $name = $method->getName();
 
-    return "protected function {$name}(" . implode(', ', $parameters) . '): ' . $method->getReturnType() . " { \$this->ran[] = '{$name}'; \$out = parent::{$name}(" . implode(', ', $passed) . "); return is_string(\$out) ? '/*{$name}*/' . \$out : \$out; }";
+    $returns = (string) $method->getReturnType();
+    $back = $returns === 'void' ? '' : " return is_string(\$out) ? '/*{$name}*/' . \$out : \$out;";
+
+    return "protected function {$name}(" . implode(', ', $parameters) . '): ' . $returns . " { \$this->ran[] = '{$name}'; \$out = parent::{$name}(" . implode(', ', $passed) . ");{$back} }";
 };
 $builds = [
     'filters' => fn ($b) => $b->from('t')->select(['a'])->filter([Query::startsWith('n', 'a%'), new Query(Utopia\Query\Method::Contains, 'n', ['x']), Query::greaterThan('a', 1), Query::between('b', 1, 2)])->build(),
@@ -1012,6 +1015,16 @@ $builds = [
     'json' => fn ($b) => $b->from('t')->filterJsonContains('tags', 'x')->filterJsonPath('data', 'a.b', '=', 1)->build(),
     'upsert' => fn ($b) => $b->into('t')->set(['id' => 1, 'a' => 2])->onConflict(['id'], ['a'])->upsert(),
     'aggregates' => fn ($b) => $b->from('t')->groupConcat('a', ',', 'g', ['b'])->jsonArrayAgg('a', 'j')->jsonObjectAgg('k', 'v', 'o')->build(),
+    'update' => fn ($b) => $b->from('t')->set(['a' => 1, 'b' => 'x'])->filter([Query::equal('id', [1])])->sortAsc('id')->limit(1)->update(),
+    'insert' => fn ($b) => $b->into('t')->set(['a' => 1])->set(['a' => 2])->insert(),
+    'delete' => fn ($b) => $b->from('t')->filter([Query::equal('id', [1])])->delete(),
+    'case' => fn ($b) => $b->from('t')->selectCase((new Builder\Case\Expression())->when('a', Builder\Case\Operator::GreaterThan, 5, 'big')->whenIn('a', [1, 2], 'few')->whenRaw('a < ?', 'neg', [0])->else('small')->alias('size'))->build(),
+    'returning' => fn ($b) => $b->into('t')->set(['a' => 1])->returning(['id'])->insert(),
+    'vector' => fn ($b) => $b->from('t')->orderByVectorDistance('embedding', [0.1, 0.2])->limit(3)->build(),
+    'joined' => fn ($b) => $b->from('t')->join('u', 't.id', 'u.tid')->crossJoin('v')->rightJoin('w', 't.id', 'w.tid')->filter([Query::equal('a', [1])])->build(),
+    'raw' => fn ($b) => $b->from('t')->whereRaw('a = ? OR b = ?', [1, 2])->filter([Query::raw('c > ?', [3])])->count('*', 'n')->groupBy(['c'])->havingRaw('COUNT(*) > ?', [1])->build(),
+    'hooked joins' => fn ($b) => $b->from('t')->addHook(new RecordingHook())->join('on', 't.id', 'on.tid')->leftJoin('u', 't.id', 'u.tid')->crossJoin('x')->build(),
+    'rolled up and reset' => fn ($b) => [$b->from('t')->count('*', 'n')->groupBy(['c'])->withRollup()->build(), $b->reset()->from('u')->build()],
     'object' => function ($b) {
         $typed = Query::equal('data.k', ['v']);
         $typed->setAttributeType('object');
@@ -1022,7 +1035,8 @@ $builds = [
 foreach ($dialects as $dialect) {
     $base = new ReflectionClass('Utopia\\Query\\Builder\\' . $dialect);
     $overrides = [];
-    foreach (array_keys($helpers) as $helper) {
+    $dispatched = ['validateTable', 'validateRows', 'validateAndGetColumns', 'addBindings', 'compileCase', 'compileInsertBody', 'compileAssignments', 'compileWhereClauses', 'compileOrderAndLimit', 'buildAfterJoinsClause', 'compileVectorOrderExpression', 'resolveJoinFilterPlacement', 'appendReturning', 'resetReturning', 'resetGroupByModifier', 'applyNamedTypedBindings'];
+    foreach ([...array_keys($helpers), ...$dispatched] as $helper) {
         if ($base->hasMethod($helper)) {
             $overrides[] = $declaration($base->getMethod($helper));
         }
@@ -1049,8 +1063,7 @@ foreach ($dialects as $dialect) {
     }
 }
 
-// The rest of the protected helpers, called on their own. A build does not call a subclass's override of
-// these, so none is overridden here.
+// The rest of the protected helpers, called on their own.
 $case = (new Builder\Case\Expression())->when('a', Builder\Case\Operator::GreaterThan, 5, 'big')->whenNull('a', 'none')->else('small')->alias('size');
 $called = [
     'validateTable' => [[]], 'validateRows' => [['insert'], ['upsert']], 'validateAndGetColumns' => [[]],

@@ -356,7 +356,7 @@ pub(crate) fn explain<D: Dialect>(b: &mut Builder<D>, analyze: bool, options: &E
 pub(crate) fn reset<D: MySqlFamily>(b: &mut Builder<D>) {
     b.core.hints.clear();
     b.core.json_sets.clear();
-    b.core.group_by_modifier = None;
+    b.reset_group_by_modifier();
     *D::mysql_mut(b) = MySqlState::default();
 }
 

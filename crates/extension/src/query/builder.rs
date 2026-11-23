@@ -157,11 +157,6 @@ pub trait Text: Dialect {
 
     /// The class `createAstSerializer()` makes.
     const SERIALIZER: &'static str = "Utopia\\Query\\AST\\Serializer";
-
-    /// ClickHouse's `applyNamedTypedBindings()`; the statement as it is elsewhere.
-    fn named(_builder: &Builder<Self>, statement: Statement) -> Statement {
-        statement
-    }
 }
 
 impl Text for MySqlDialect {
@@ -183,10 +178,6 @@ impl Text for SqliteDialect {
 impl Text for ClickHouseDialect {
     const TOKENIZER: &'static str = "Utopia\\Query\\Tokenizer\\ClickHouse";
     const SERIALIZER: &'static str = "Utopia\\Query\\AST\\Serializer\\ClickHouse";
-
-    fn named(builder: &Builder<Self>, statement: Statement) -> Statement {
-        builder.apply_named_typed_bindings(statement)
-    }
 
     fn formatted(builder: &mut Builder<Self>) -> Result<Option<FormattedInsertStatement>, Error> {
         builder.formatted_insert()
@@ -759,7 +750,13 @@ impl<D: Dialect + Text> State<D> {
     }
 
     /// Calls `function`, a PHP method of `object`'s class, as `$this->function(...)` does.
-    fn overridden(&self, object: *mut ZendObject, function: *mut zend_function, arguments: &[Arg<'_>]) -> Option<Ret> {
+    fn overridden(
+        &self,
+        object: *mut ZendObject,
+        function: *mut zend_function,
+        step: Step,
+        arguments: &[Arg<'_>],
+    ) -> Option<Ret> {
         let mut zvals = Vec::with_capacity(arguments.len());
         for argument in arguments {
             zvals.push(match argument {
@@ -780,6 +777,17 @@ impl<D: Dialect + Text> State<D> {
                     out.set_long(number);
                     out
                 }),
+                Arg::Case(case) => self.case_object(case).ok()?,
+                Arg::Statement(statement) => self.statement_object(statement).ok()?,
+                Arg::Placement(placement) => placed(*placement).ok()?,
+                // Taken by reference: what the override leaves in it is read back below.
+                Arg::Strings(strings) => referenced(self.listed(strings).ok()?),
+                Arg::Parsed(None) => null(),
+                // PHP's own grouping of the builder's queries.
+                Arg::Parsed(Some(_)) => {
+                    let group = ZendCallable::try_from_name("Utopia\\Query\\Query::groupByType").ok()?;
+                    group.try_call(vec![&self.pending().ok()?]).ok()?
+                }
             });
         }
         let mut returned = Zval::new();
@@ -799,6 +807,32 @@ impl<D: Dialect + Text> State<D> {
         }
         if !ExecutorGlobals::get().exception.is_null() {
             return None;
+        }
+        let strings = |list: &Zval| -> Vec<String> {
+            let items = list.dereference().array().into_iter().flat_map(ZendHashTable::values);
+            items.filter_map(Zval::zend_str).map(|item| self.text(item.as_bytes())).collect()
+        };
+        match step {
+            Step::CompileWhereClauses | Step::CompileOrderAndLimit => {
+                return Some(Ret::Strings(strings(zvals.first()?)));
+            }
+            Step::CompileAssignments => return Some(Ret::Strings(strings(&returned))),
+            Step::ValidateAndGetColumns => {
+                let columns = returned.array().into_iter().flat_map(ZendHashTable::values);
+                let columns = columns.filter_map(Zval::zend_str).map(|column| Key::Str(Str::from(column.as_bytes())));
+                return Some(Ret::Columns(columns.collect()));
+            }
+            Step::CompileInsertBody => {
+                let body = returned.array()?;
+                let sql = body.get_index(0).and_then(Zval::zend_str).map(|sql| self.text(sql.as_bytes()))?;
+                let bindings = body.get_index(1).and_then(Zval::array).into_iter().flat_map(ZendHashTable::values);
+                return Some(Ret::InsertBody(sql, bindings.map(bound).collect()));
+            }
+            Step::CompileVectorOrderExpression => return Some(Ret::Condition(condition(D::JSON, &returned))),
+            Step::ResolveJoinFilterPlacement => {
+                return PlacementArgument::from_zval(&returned).map(|placement| Ret::Placement(placement.0));
+            }
+            _ => {}
         }
         if let Some(text) = returned.zend_str() {
             return Some(Ret::Str(self.text(text.as_bytes())));
@@ -831,6 +865,53 @@ impl<D: Dialect + Text> State<D> {
         }
         parts.set_hashtable(held);
         Ok(())
+    }
+
+    /// The crate's `CASE` as the package's `Case\Expression`, built through its own methods.
+    fn case_object(&self, case: &CaseExpression) -> PhpResult<Zval> {
+        let made = construct(class(CASE)?, &mut [])?;
+        let text = |text: &str| string(&bytes(D::JSON, text));
+        let call = |method: &str, arguments: Vec<&dyn IntoZvalDyn>| {
+            made.try_call_method(method, arguments).map(drop).map_err(PhpException::from)
+        };
+        for when in case.whens() {
+            let column = text(when.column.as_deref().unwrap_or_default());
+            let then = zval(D::JSON, &when.then)?;
+            match when.kind {
+                Kind::Comparison => {
+                    let operator = enum_case(Operator::PHP_CLASS, when.operator.unwrap_or(Operator::Equal).name())?;
+                    call("when", vec![&column, &operator, &zval(D::JSON, &when.value)?, &then])?;
+                }
+                Kind::Null => call("whenNull", vec![&column, &then])?,
+                Kind::NotNull => call("whenNotNull", vec![&column, &then])?,
+                Kind::In => {
+                    let values = when.values.iter().map(|value| zval(D::JSON, value)).collect::<PhpResult<Vec<_>>>()?;
+                    call("whenIn", vec![&column, &values.into_zval(false).map_err(PhpException::from)?, &then])?;
+                }
+                Kind::Raw => {
+                    let bindings =
+                        when.raw_bindings.iter().map(|value| zval(D::JSON, value)).collect::<PhpResult<Vec<_>>>()?;
+                    let bindings = if bindings.is_empty() {
+                        empty()
+                    } else {
+                        bindings.into_zval(false).map_err(PhpException::from)?
+                    };
+                    call("whenRaw", vec![&text(when.raw_condition.as_deref().unwrap_or_default()), &then, &bindings])?;
+                }
+            }
+        }
+        if case.has_else() {
+            call("else", vec![&zval(D::JSON, case.else_value())?])?;
+        }
+        if !case.get_alias().is_empty() {
+            call("alias", vec![&text(case.get_alias())])?;
+        }
+        made.into_zval(false).map_err(PhpException::from)
+    }
+
+    /// A step run as the builder itself runs it, which is what `parent::step()` is.
+    fn base(&self, step: Step, arguments: &[Arg<'_>]) -> PhpResult<Ret> {
+        self.with(|builder| builder.base(step, arguments)).map_err(|error| raised(&error))
     }
 
     /// A list of strings as PHP's.
@@ -944,7 +1025,7 @@ impl<C: Native> Overrides for Subclass<C> {
         let state = ZendClassObject::<C>::from_zend_obj(unsafe { &*object })?.state();
         // The override reaches the builder through the pointer the crate lent for this call.
         let before = state.lent.replace(builder.cast());
-        let returned = state.overridden(object, function, arguments);
+        let returned = state.overridden(object, function, step, arguments);
         state.lent.set(before);
         // An exception stays pending for the native method that started the build to rethrow.
         Some(returned.ok_or_else(|| Error::Validation(format!("{}() failed", step.method()))))
@@ -1281,6 +1362,32 @@ impl<'a> FromZval<'a> for Grouped {
         let object = zval.object()?;
         class(PARSED).is_ok_and(|class| object.instance_of(class)).then_some(Grouped)
     }
+}
+
+/// A `Hook\Join\Placement` case.
+fn placed(placement: hook::Placement) -> PhpResult<Zval> {
+    enum_case(PLACEMENT, if placement == hook::Placement::On { "On" } else { "Where" })
+}
+
+/// `value` as a PHP reference to it, for an argument a method takes by reference.
+fn referenced(value: Zval) -> Zval {
+    // `GC_REFERENCE`: a reference, which the cycle collector does not walk.
+    const REFERENCE: u32 = 10 | (1 << 4);
+    // `IS_REFERENCE_EX`: a reference, counted.
+    const REFERENCE_ZVAL: u32 = 10 | (1 << 8);
+    let mut out = Zval::new();
+    // SAFETY: the reference is PHP's own layout, allocated by its allocator and freed with the zval.
+    unsafe {
+        let reference = ext_php_rs::ffi::_emalloc(std::mem::size_of::<ext_php_rs::ffi::zend_reference>())
+            .cast::<ext_php_rs::ffi::zend_reference>();
+        (*reference).gc.refcount = 1;
+        (*reference).gc.u.type_info = REFERENCE;
+        std::ptr::write(&raw mut (*reference).val, value);
+        (*reference).sources.ptr = std::ptr::null_mut();
+        out.value.ref_ = reference;
+        out.u1.type_info = REFERENCE_ZVAL;
+    }
+    out
 }
 
 /// A number of a list of floats.
@@ -4593,21 +4700,33 @@ macro_rules! builder_class {
     (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, helpers, $($rest:ident,)*) => {
         builder_class!(@add $metas $class, $dialect, {
             $($methods)*
-            /// The helpers below run the builder's own. A build does not call a subclass's.
             #[php(name = "validateTable", vis = "protected")]
-            pub fn validate_table(&self) -> PhpResult<()> {
-                self.0.with(|builder| builder.validate_table()).map_err(|error| raised(&error))
+            pub fn validate_table(
+                self_: &mut ZendClassObject<$class>,
+            ) -> PhpResult<()> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                self_.0.base(Step::ValidateTable, &[]).map(drop)
             }
 
             #[php(name = "validateRows", vis = "protected")]
-            pub fn validate_rows(&self, operation: PhpString<'_>) -> PhpResult<()> {
-                let operation = self.0.text(operation.bytes());
-                self.0.with(|builder| builder.validate_rows(&operation)).map_err(|error| raised(&error))
+            pub fn validate_rows(
+                self_: &mut ZendClassObject<$class>,
+                operation: PhpString<'_>,
+            ) -> PhpResult<()> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let operation = self_.0.text(operation.bytes());
+                self_.0.base(Step::ValidateRows, &[Arg::Str(&operation)]).map(drop)
             }
 
             #[php(name = "validateAndGetColumns", vis = "protected")]
-            pub fn validate_and_get_columns(&self) -> PhpResult<Zval> {
-                let columns = self.0.with(|builder| builder.validate_and_get_columns()).map_err(|error| raised(&error))?;
+            pub fn validate_and_get_columns(
+                self_: &mut ZendClassObject<$class>,
+            ) -> PhpResult<Zval> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let Ret::Columns(columns) = self_.0.base(Step::ValidateAndGetColumns, &[])? else { return Ok(empty()) };
                 let columns: Vec<Zval> = columns
                     .iter()
                     .map(|column| match column {
@@ -4623,62 +4742,101 @@ macro_rules! builder_class {
             }
 
             #[php(name = "addBindings", vis = "protected")]
-            pub fn add_bindings(&self, bindings: Arr<'_>) -> PhpResult<()> {
-                let bindings: Vec<Value> = self.0.values(&bindings)?.values().cloned().collect();
-                self.0.with(|builder| builder.add_bindings(bindings));
-                Ok(())
+            pub fn add_bindings(
+                self_: &mut ZendClassObject<$class>,
+                bindings: Arr<'_>,
+            ) -> PhpResult<()> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let bindings = self_.0.values(&bindings)?;
+                self_.0.base(Step::AddBindings, &[Arg::Values(&bindings)]).map(drop)
             }
 
             #[php(name = "compileCase", vis = "protected")]
-            pub fn compile_case(&self, case: CaseArgument<'_>) -> PhpResult<Bytes> {
-                let case = self.0.case(&case)?;
-                let sql = self.0.with(|builder| builder.compile_case(&case)).map_err(|error| raised(&error))?;
-                Ok(Bytes(self.0.written(&sql)?.into_owned()))
+            pub fn compile_case(
+                self_: &mut ZendClassObject<$class>,
+                case: CaseArgument<'_>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let case = self_.0.case(&case)?;
+                self_.0.step(Step::CompileCase, &[Arg::Case(&case)])
             }
 
             #[php(name = "compileInsertBody", vis = "protected")]
-            pub fn compile_insert_body(&self) -> PhpResult<Zval> {
-                let (sql, bindings) = self.0.with(Builder::compile_insert_body).map_err(|error| raised(&error))?;
-                let bindings = bindings.iter().map(|binding| zval(<$dialect as Text>::JSON, binding)).collect::<PhpResult<Vec<_>>>()?;
+            pub fn compile_insert_body(
+                self_: &mut ZendClassObject<$class>,
+            ) -> PhpResult<Zval> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let Ret::InsertBody(sql, bindings) = self_.0.base(Step::CompileInsertBody, &[])? else { return Ok(empty()) };
+                let json = <$dialect as Text>::JSON;
+                let bindings = bindings.iter().map(|binding| zval(json, binding)).collect::<PhpResult<Vec<_>>>()?;
                 let bindings = if bindings.is_empty() { empty() } else { bindings.into_zval(false).map_err(PhpException::from)? };
-                vec![string(&self.0.written(&sql)?), bindings].into_zval(false).map_err(PhpException::from)
+                vec![string(&self_.0.written(&sql)?), bindings].into_zval(false).map_err(PhpException::from)
             }
 
             #[php(name = "compileAssignments", vis = "protected")]
-            pub fn compile_assignments(&self) -> PhpResult<Zval> {
-                let assignments = self.0.with(Builder::compile_assignments).map_err(|error| raised(&error))?;
-                self.0.listed(&assignments)
+            pub fn compile_assignments(
+                self_: &mut ZendClassObject<$class>,
+            ) -> PhpResult<Zval> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let Ret::Strings(assignments) = self_.0.base(Step::CompileAssignments, &[])? else { return Ok(empty()) };
+                self_.0.listed(&assignments)
             }
 
-            /// `$parts` is taken by reference, and the clauses are appended to it.
             #[php(name = "compileWhereClauses", vis = "protected", optional = grouped)]
-            pub fn compile_where_clauses(&self, parts: &mut Zval, grouped: Option<Grouped>) -> PhpResult<()> {
+            pub fn compile_where_clauses(
+                self_: &mut ZendClassObject<$class>,
+                parts: &mut Zval,
+                grouped: Option<Grouped>,
+            ) -> PhpResult<()> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                // `$parts` is taken by reference, and the clauses are appended to it. The builder
+                // groups its own queries, whatever it is handed.
                 let _ = grouped;
-                let mut clauses = Vec::new();
-                self.0.with(|builder| builder.compile_where_clauses(&mut clauses, None)).map_err(|error| raised(&error))?;
-                self.0.append(parts, &clauses)
+                let Ret::Strings(clauses) = self_.0.base(Step::CompileWhereClauses, &[Arg::Strings(&[]), Arg::Parsed(None)])? else {
+                    return Ok(());
+                };
+                self_.0.append(parts, &clauses)
             }
 
             #[php(name = "compileOrderAndLimit", vis = "protected", optional = grouped)]
-            pub fn compile_order_and_limit(&self, parts: &mut Zval, grouped: Option<Grouped>) -> PhpResult<()> {
+            pub fn compile_order_and_limit(
+                self_: &mut ZendClassObject<$class>,
+                parts: &mut Zval,
+                grouped: Option<Grouped>,
+            ) -> PhpResult<()> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 let _ = grouped;
-                let mut clauses = Vec::new();
-                self.0.with(|builder| builder.compile_order_and_limit(&mut clauses, None)).map_err(|error| raised(&error))?;
-                self.0.append(parts, &clauses)
+                let Ret::Strings(clauses) = self_.0.base(Step::CompileOrderAndLimit, &[Arg::Strings(&[]), Arg::Parsed(None)])? else {
+                    return Ok(());
+                };
+                self_.0.append(parts, &clauses)
             }
 
             #[php(name = "buildAfterJoinsClause", vis = "protected")]
-            pub fn build_after_joins_clause(&self, grouped: Grouped) -> PhpResult<Bytes> {
+            pub fn build_after_joins_clause(
+                self_: &mut ZendClassObject<$class>,
+                grouped: Grouped,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 let _ = grouped;
                 let grouped = utopia_query::ParsedQuery::default();
-                let sql = self.0.with(|builder| <$dialect as Dialect>::build_after_joins_clause(builder, &grouped));
-                Ok(Bytes(self.0.written(&sql.map_err(|error| raised(&error))?)?.into_owned()))
+                self_.0.step(Step::BuildAfterJoinsClause, &[Arg::Parsed(Some(&grouped))])
             }
 
             #[php(name = "compileVectorOrderExpression", vis = "protected")]
-            pub fn compile_vector_order_expression(&self) -> PhpResult<Zval> {
-                let found = self.0.with(<$dialect as Dialect>::compile_vector_order_expression);
-                let Some(found) = found.map_err(|error| raised(&error))? else { return Ok(null()) };
+            pub fn compile_vector_order_expression(
+                self_: &mut ZendClassObject<$class>,
+            ) -> PhpResult<Zval> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let Ret::Condition(Some(found)) = self_.0.base(Step::CompileVectorOrderExpression, &[])? else { return Ok(null()) };
                 let json = <$dialect as Text>::JSON;
                 let bindings = found.bindings.iter().map(|binding| zval(json, binding)).collect::<PhpResult<Vec<_>>>()?;
                 let bindings = if bindings.is_empty() { empty() } else { bindings.into_zval(false).map_err(PhpException::from)? };
@@ -4687,11 +4845,18 @@ macro_rules! builder_class {
             }
 
             #[php(name = "resolveJoinFilterPlacement", vis = "protected")]
-            pub fn resolve_join_filter_placement(&self, requested: PlacementArgument, isCrossJoin: Bool) -> PhpResult<Zval> {
-                let resolved = self.0.with(|builder| {
-                    <$dialect as Dialect>::resolve_join_filter_placement(builder, requested.0, isCrossJoin.0)
-                });
-                enum_case(PLACEMENT, if resolved == hook::Placement::On { "On" } else { "Where" })
+            pub fn resolve_join_filter_placement(
+                self_: &mut ZendClassObject<$class>,
+                requested: PlacementArgument,
+                isCrossJoin: Bool,
+            ) -> PhpResult<Zval> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let arguments = [Arg::Placement(requested.0), Arg::Bool(isCrossJoin.0)];
+                match self_.0.base(Step::ResolveJoinFilterPlacement, &arguments)? {
+                    Ret::Placement(placement) => placed(placement),
+                    _ => placed(requested.0),
+                }
             }
 
             #[php(name = "createTokenizer", vis = "protected")]
@@ -4712,15 +4877,26 @@ macro_rules! builder_class {
         builder_class!(@add $metas $class, $dialect, {
             $($methods)*
             #[php(name = "appendReturning", vis = "protected")]
-            pub fn append_returning(&self, result: StatementArgument<'_>) -> PhpResult<Zval> {
-                let statement = self.0.read(result.0).unwrap_or_else(|| Statement::new(String::new(), Vec::new()));
-                let appended = self.0.with(|builder| builder.append_returning(statement));
-                self.0.statement_object(&appended.map_err(|error| raised(&error))?)
+            pub fn append_returning(
+                self_: &mut ZendClassObject<$class>,
+                result: StatementArgument<'_>,
+            ) -> PhpResult<Zval> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let statement = self_.0.read(result.0).unwrap_or_else(|| Statement::new(String::new(), Vec::new()));
+                match self_.0.base(Step::AppendReturning, &[Arg::Statement(&statement)])? {
+                    Ret::Statement(statement) => self_.0.statement_object(&statement),
+                    _ => Ok(null()),
+                }
             }
 
             #[php(name = "resetReturning", vis = "protected")]
-            pub fn reset_returning(&self) {
-                self.0.with(Builder::reset_returning);
+            pub fn reset_returning(
+                self_: &mut ZendClassObject<$class>,
+            ) -> PhpResult<()> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                self_.0.base(Step::ResetReturning, &[]).map(drop)
             }
         }, $($rest,)*);
     };
@@ -4728,8 +4904,12 @@ macro_rules! builder_class {
         builder_class!(@add $metas $class, $dialect, {
             $($methods)*
             #[php(name = "resetGroupByModifier", vis = "protected")]
-            pub fn reset_group_by_modifier(&self) {
-                self.0.with(Builder::reset_group_by_modifier);
+            pub fn reset_group_by_modifier(
+                self_: &mut ZendClassObject<$class>,
+            ) -> PhpResult<()> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                self_.0.base(Step::ResetGroupByModifier, &[]).map(drop)
             }
         }, $($rest,)*);
     };
@@ -4753,10 +4933,17 @@ macro_rules! builder_class {
         builder_class!(@add $metas $class, $dialect, {
             $($methods)*
             #[php(name = "applyNamedTypedBindings", vis = "protected")]
-            pub fn apply_named_typed_bindings(&self, stmt: StatementArgument<'_>) -> PhpResult<Zval> {
-                let statement = self.0.read(stmt.0).unwrap_or_else(|| Statement::new(String::new(), Vec::new()));
-                let named = self.0.with(|builder| <$dialect as Text>::named(builder, statement));
-                self.0.statement_object(&named)
+            pub fn apply_named_typed_bindings(
+                self_: &mut ZendClassObject<$class>,
+                stmt: StatementArgument<'_>,
+            ) -> PhpResult<Zval> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let statement = self_.0.read(stmt.0).unwrap_or_else(|| Statement::new(String::new(), Vec::new()));
+                match self_.0.base(Step::ApplyNamedTypedBindings, &[Arg::Statement(&statement)])? {
+                    Ret::Statement(statement) => self_.0.statement_object(&statement),
+                    _ => Ok(null()),
+                }
             }
         }, $($rest,)*);
     };
@@ -5211,6 +5398,9 @@ macro_rules! builder_class {
             }
 
             pub fn reset(self_: &mut ZendClassObject<$class>) -> &mut ZendClassObject<$class> {
+                // A dialect's reset runs steps a subclass may override.
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.with(|builder| {
                     builder.reset();
                 });

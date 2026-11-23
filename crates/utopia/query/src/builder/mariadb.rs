@@ -140,7 +140,7 @@ impl Dialect for MariaDbDialect {
 
     fn reset(b: &mut Builder<Self>) {
         mysql::reset(b);
-        b.core.returning.clear();
+        b.reset_returning();
     }
 
     fn ast_dialect() -> crate::builder::AstDialect {

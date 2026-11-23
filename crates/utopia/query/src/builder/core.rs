@@ -479,7 +479,7 @@ impl<D: Dialect> Builder<D> {
     /// Binds each of `values`.
     ///
     /// PHP: `addBindings()`.
-    pub fn add_bindings(&mut self, values: impl IntoIterator<Item = Value>) {
+    pub(crate) fn base_add_bindings(&mut self, values: impl IntoIterator<Item = Value>) {
         for value in values {
             self.core.bindings.push(Binding::new(value, None));
         }
@@ -525,24 +525,10 @@ impl<D: Dialect> Builder<D> {
         self.quote(&resolved)
     }
 
-    /// Forgets `WITH ROLLUP` / `WITH CUBE`.
-    ///
-    /// PHP: `resetGroupByModifier()`.
-    pub fn reset_group_by_modifier(&mut self) {
-        self.core.group_by_modifier = None;
-    }
-
-    /// Forgets the `RETURNING` columns.
-    ///
-    /// PHP: `resetReturning()`.
-    pub fn reset_returning(&mut self) {
-        self.core.returning.clear();
-    }
-
     /// Refuses a builder with no table.
     ///
     /// PHP: `validateTable()`.
-    pub fn validate_table(&self) -> Result<()> {
+    pub(crate) fn base_validate_table(&self) -> Result<()> {
         if self.core.tableless {
             return Ok(());
         }
@@ -555,7 +541,7 @@ impl<D: Dialect> Builder<D> {
     /// Refuses `operation` on a builder with no rows, or with an empty one.
     ///
     /// PHP: `validateRows()`.
-    pub fn validate_rows(&self, operation: &str) -> Result<()> {
+    pub(crate) fn base_validate_rows(&self, operation: &str) -> Result<()> {
         if self.core.rows.is_empty() {
             return Err(Error::Validation(format!("No rows to {operation}. Call set() before {operation}().")));
         }
@@ -568,7 +554,7 @@ impl<D: Dialect> Builder<D> {
     }
 
     /// The columns of the rows: the first row's keys; every row must have the same set.
-    pub fn validate_and_get_columns(&self) -> Result<Vec<ArrayKey>> {
+    pub(crate) fn base_validate_and_get_columns(&self) -> Result<Vec<ArrayKey>> {
         // PHP reads `$this->rows[0]` whatever is there, which every caller has checked. Now that
         // a subclass can call this on its own, no rows is an error, not a panic.
         let Some(first) = self.core.rows.first() else {
@@ -621,7 +607,7 @@ impl<D: Dialect> Builder<D> {
         push(&mut parts, from);
         let joins = self.build_joins_clause(&grouped, &mut join_filter_where)?;
         push(&mut parts, joins);
-        let after_joins = D::build_after_joins_clause(self, &grouped)?;
+        let after_joins = self.step_string(Step::BuildAfterJoinsClause, &[Arg::Parsed(Some(&grouped))])?;
         push(&mut parts, after_joins);
         let where_ = self.build_where_clause(&grouped, join_filter_where)?;
         push(&mut parts, where_);
@@ -804,7 +790,13 @@ impl<D: Dialect> Builder<D> {
                     let Some(result) = hook.filter_join(&table, join_type)? else {
                         continue;
                     };
-                    let placement = D::resolve_join_filter_placement(self, result.placement, is_cross);
+                    let placement = match self.step(
+                        Step::ResolveJoinFilterPlacement,
+                        &[Arg::Placement(result.placement), Arg::Bool(is_cross)],
+                    )? {
+                        crate::builder::Ret::Placement(placement) => placement,
+                        _ => result.placement,
+                    };
                     if placement == Placement::On {
                         sql.push_str(" AND ");
                         sql.push_str(&result.condition.expression);
@@ -865,7 +857,7 @@ impl<D: Dialect> Builder<D> {
             }
         }
         for raw in self.core.raw_wheres.clone() {
-            clauses.push(enclose(&raw.expression));
+            clauses.push(self.step_string(Step::Enclose, &[Arg::Str(&raw.expression)])?);
             self.add_bindings(raw.bindings);
         }
         for predicate in self.core.column_predicates.clone() {
@@ -921,7 +913,7 @@ impl<D: Dialect> Builder<D> {
             }
         }
         for raw in self.core.raw_havings.clone() {
-            clauses.push(enclose(&raw.expression));
+            clauses.push(self.step_string(Step::Enclose, &[Arg::Str(&raw.expression)])?);
             self.add_bindings(raw.bindings);
         }
         if clauses.is_empty() {
@@ -983,7 +975,11 @@ impl<D: Dialect> Builder<D> {
 
     fn build_order_by_clause(&mut self) -> Result<String> {
         let mut clauses = Vec::new();
-        if let Some(vector) = D::compile_vector_order_expression(self)? {
+        let vector = match self.step(Step::CompileVectorOrderExpression, &[])? {
+            crate::builder::Ret::Condition(vector) => vector,
+            _ => None,
+        };
+        if let Some(vector) = vector {
             clauses.push(vector.expression);
             self.add_bindings(vector.bindings);
         }
@@ -1053,7 +1049,7 @@ impl<D: Dialect> Builder<D> {
     // ----- writes ---------------------------------------------------------
 
     /// `INSERT INTO table (columns) VALUES (...), ...` and its bindings.
-    pub fn compile_insert_body(&mut self) -> Result<(String, Vec<Value>)> {
+    pub(crate) fn base_compile_insert_body(&mut self) -> Result<(String, Vec<Value>)> {
         self.validate_table()?;
         self.validate_rows("insert")?;
         let columns = self.validate_and_get_columns()?;
@@ -1087,7 +1083,7 @@ impl<D: Dialect> Builder<D> {
     /// The `column = ?` assignments of an `UPDATE`, binding their values.
     ///
     /// PHP: `compileAssignments()`.
-    pub fn compile_assignments(&mut self) -> Result<Vec<String>> {
+    pub(crate) fn base_compile_assignments(&mut self) -> Result<Vec<String>> {
         let mut assignments = Vec::new();
         if let Some(row) = self.core.rows.first().cloned() {
             for (column, value) in row.iter() {
@@ -1109,7 +1105,11 @@ impl<D: Dialect> Builder<D> {
     }
 
     /// The `WHERE` of updates and deletes.
-    pub fn compile_where_clauses(&mut self, parts: &mut Vec<String>, grouped: Option<&ParsedQuery>) -> Result<()> {
+    pub(crate) fn base_compile_where_clauses(
+        &mut self,
+        parts: &mut Vec<String>,
+        grouped: Option<&ParsedQuery>,
+    ) -> Result<()> {
         let owned;
         let grouped = match grouped {
             Some(g) => g,
@@ -1143,7 +1143,7 @@ impl<D: Dialect> Builder<D> {
             self.add_bindings(result.bindings);
         }
         for raw in self.core.raw_wheres.clone() {
-            clauses.push(enclose(&raw.expression));
+            clauses.push(self.step_string(Step::Enclose, &[Arg::Str(&raw.expression)])?);
             self.add_bindings(raw.bindings);
         }
         for predicate in self.core.column_predicates.clone() {
@@ -1161,7 +1161,11 @@ impl<D: Dialect> Builder<D> {
     }
 
     /// The `ORDER BY` and `LIMIT` of updates and deletes.
-    pub fn compile_order_and_limit(&mut self, parts: &mut Vec<String>, grouped: Option<&ParsedQuery>) -> Result<()> {
+    pub(crate) fn base_compile_order_and_limit(
+        &mut self,
+        parts: &mut Vec<String>,
+        grouped: Option<&ParsedQuery>,
+    ) -> Result<()> {
         let owned;
         let grouped = match grouped {
             Some(g) => g,
@@ -1397,7 +1401,7 @@ impl<D: Dialect> Builder<D> {
     }
 
     /// Appends ` RETURNING columns` (PostgreSQL, MariaDB).
-    pub fn append_returning(&mut self, result: Statement) -> Result<Statement> {
+    pub(crate) fn base_append_returning(&mut self, result: Statement) -> Result<Statement> {
         if self.core.returning.is_empty() {
             return Ok(result);
         }
@@ -1419,7 +1423,7 @@ impl<D: Dialect> Builder<D> {
     /// The SQL of a `CASE` expression, binding its values.
     ///
     /// PHP: `compileCase()`.
-    pub fn compile_case(&mut self, case: &CaseExpression) -> Result<String> {
+    pub(crate) fn base_compile_case(&mut self, case: &CaseExpression) -> Result<String> {
         if case.whens().is_empty() {
             return Err(Error::Validation("CASE expression requires at least one WHEN clause.".into()));
         }
@@ -1583,7 +1587,7 @@ impl<D: Dialect> Builder<D> {
             Or => self.compile_logical(query, "OR"),
             Exists => self.compile_exists(query, false),
             NotExists => self.compile_exists(query, true),
-            Raw => Ok(self.compile_raw(query)),
+            Raw => self.compile_raw(query),
             On => self.compile_on(query),
             other => Err(Error::Unsupported(format!("Unsupported filter type: {}", other.as_str()))),
         }
@@ -2024,14 +2028,14 @@ impl<D: Dialect> Builder<D> {
         Ok(format!("({})", parts.join(" AND ")))
     }
 
-    fn compile_raw(&mut self, query: &Query) -> String {
+    fn compile_raw(&mut self, query: &Query) -> Result<String> {
         if query.attribute().is_empty() {
-            return "1 = 1".into();
+            return Ok("1 = 1".into());
         }
         for binding in query.values().values() {
             self.add_binding(binding.clone(), None);
         }
-        enclose(query.attribute())
+        self.step_string(Step::Enclose, &[Arg::Str(query.attribute())])
     }
 }
 

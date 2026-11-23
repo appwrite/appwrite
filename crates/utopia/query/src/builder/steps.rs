@@ -8,11 +8,14 @@
 
 use std::sync::Arc;
 
+use crate::builder::case::CaseExpression;
 use crate::builder::core::{Builder, Dialect};
 use crate::builder::join::JoinBuilder;
-use crate::builder::types::Statement;
+use crate::builder::types::{Condition, Statement};
 use crate::error::{Error, Result};
+use crate::hook::Placement;
 use crate::method::Method;
+use crate::query::ParsedQuery;
 use crate::query::Query;
 use crate::value::{Array, Value};
 
@@ -129,11 +132,43 @@ pub enum Step {
     CompileJsonbContainment,
     /// `buildJsonbPath()`.
     BuildJsonbPath,
+    /// `validateTable()`.
+    ValidateTable,
+    /// `validateRows()`.
+    ValidateRows,
+    /// `validateAndGetColumns()`.
+    ValidateAndGetColumns,
+    /// `addBindings()`.
+    AddBindings,
+    /// `compileCase()`.
+    CompileCase,
+    /// `compileInsertBody()`.
+    CompileInsertBody,
+    /// `compileAssignments()`.
+    CompileAssignments,
+    /// `compileWhereClauses()`.
+    CompileWhereClauses,
+    /// `compileOrderAndLimit()`.
+    CompileOrderAndLimit,
+    /// `buildAfterJoinsClause()`.
+    BuildAfterJoinsClause,
+    /// `compileVectorOrderExpression()`.
+    CompileVectorOrderExpression,
+    /// `resolveJoinFilterPlacement()`.
+    ResolveJoinFilterPlacement,
+    /// `appendReturning()`.
+    AppendReturning,
+    /// `resetReturning()`.
+    ResetReturning,
+    /// `resetGroupByModifier()`.
+    ResetGroupByModifier,
+    /// `applyNamedTypedBindings()`.
+    ApplyNamedTypedBindings,
 }
 
 impl Step {
     /// Every step, in the order of the enum.
-    pub const ALL: [Step; 55] = [
+    pub const ALL: [Step; 71] = [
         Step::CompileFilter,
         Step::CompileOrder,
         Step::CompileLimit,
@@ -189,6 +224,22 @@ impl Step {
         Step::CompileObjectFilter,
         Step::CompileJsonbContainment,
         Step::BuildJsonbPath,
+        Step::ValidateTable,
+        Step::ValidateRows,
+        Step::ValidateAndGetColumns,
+        Step::AddBindings,
+        Step::CompileCase,
+        Step::CompileInsertBody,
+        Step::CompileAssignments,
+        Step::CompileWhereClauses,
+        Step::CompileOrderAndLimit,
+        Step::BuildAfterJoinsClause,
+        Step::CompileVectorOrderExpression,
+        Step::ResolveJoinFilterPlacement,
+        Step::AppendReturning,
+        Step::ResetReturning,
+        Step::ResetGroupByModifier,
+        Step::ApplyNamedTypedBindings,
     ];
 
     /// The PHP method.
@@ -249,6 +300,22 @@ impl Step {
             Step::CompileObjectFilter => "compileObjectFilter",
             Step::CompileJsonbContainment => "compileJsonbContainment",
             Step::BuildJsonbPath => "buildJsonbPath",
+            Step::ValidateTable => "validateTable",
+            Step::ValidateRows => "validateRows",
+            Step::ValidateAndGetColumns => "validateAndGetColumns",
+            Step::AddBindings => "addBindings",
+            Step::CompileCase => "compileCase",
+            Step::CompileInsertBody => "compileInsertBody",
+            Step::CompileAssignments => "compileAssignments",
+            Step::CompileWhereClauses => "compileWhereClauses",
+            Step::CompileOrderAndLimit => "compileOrderAndLimit",
+            Step::BuildAfterJoinsClause => "buildAfterJoinsClause",
+            Step::CompileVectorOrderExpression => "compileVectorOrderExpression",
+            Step::ResolveJoinFilterPlacement => "resolveJoinFilterPlacement",
+            Step::AppendReturning => "appendReturning",
+            Step::ResetReturning => "resetReturning",
+            Step::ResetGroupByModifier => "resetGroupByModifier",
+            Step::ApplyNamedTypedBindings => "applyNamedTypedBindings",
         }
     }
 }
@@ -274,6 +341,16 @@ pub enum Arg<'a> {
     Join(&'a JoinBuilder),
     /// An `int`, or a `?int` that is null.
     Int(Option<i64>),
+    /// A `Case\Expression`.
+    Case(&'a CaseExpression),
+    /// A `Statement`.
+    Statement(&'a Statement),
+    /// A `Hook\Join\Placement`.
+    Placement(Placement),
+    /// A list of strings, which a method that takes it by reference changes.
+    Strings(&'a [String]),
+    /// A `?ParsedQuery`: the builder's queries, grouped.
+    Parsed(Option<&'a ParsedQuery>),
 }
 
 /// What a [`Step`] returns.
@@ -287,6 +364,16 @@ pub enum Ret {
     Statement(Statement),
     /// A `bool`.
     Bool(bool),
+    /// A list of strings.
+    Strings(Vec<String>),
+    /// `compileInsertBody()`'s SQL and bindings.
+    InsertBody(String, Vec<Value>),
+    /// A `?Condition`.
+    Condition(Option<Condition>),
+    /// A `Hook\Join\Placement`.
+    Placement(Placement),
+    /// Column names.
+    Columns(Vec<php_std::ArrayKey>),
 }
 
 impl Ret {
@@ -415,6 +502,44 @@ impl<D: Dialect> Builder<D> {
                 [Arg::Str(attribute), Arg::Str(operator), Arg::Values(values), Arg::MaybeStr(column)],
             ) => Ok(Ret::Str(self.base_compile_comparison(attribute, operator, values, *column))),
             (Step::Enclose, [Arg::Str(condition)]) => Ok(Ret::Str(crate::builder::core::enclose(condition))),
+            (Step::ValidateTable, []) => self.base_validate_table().map(|()| Ret::None),
+            (Step::ValidateRows, [Arg::Str(operation)]) => self.base_validate_rows(operation).map(|()| Ret::None),
+            (Step::ValidateAndGetColumns, []) => self.base_validate_and_get_columns().map(Ret::Columns),
+            (Step::AddBindings, [Arg::Values(values)]) => {
+                self.base_add_bindings(values.values().cloned());
+                Ok(Ret::None)
+            }
+            (Step::CompileCase, [Arg::Case(case)]) => self.base_compile_case(case).map(Ret::Str),
+            (Step::CompileInsertBody, []) => {
+                self.base_compile_insert_body().map(|(sql, bindings)| Ret::InsertBody(sql, bindings))
+            }
+            (Step::CompileAssignments, []) => self.base_compile_assignments().map(Ret::Strings),
+            (Step::CompileWhereClauses, [Arg::Strings(parts), Arg::Parsed(grouped)]) => {
+                let mut parts = parts.to_vec();
+                self.base_compile_where_clauses(&mut parts, *grouped).map(|()| Ret::Strings(parts))
+            }
+            (Step::CompileOrderAndLimit, [Arg::Strings(parts), Arg::Parsed(grouped)]) => {
+                let mut parts = parts.to_vec();
+                self.base_compile_order_and_limit(&mut parts, *grouped).map(|()| Ret::Strings(parts))
+            }
+            (Step::BuildAfterJoinsClause, [Arg::Parsed(Some(grouped))]) => {
+                D::build_after_joins_clause(self, grouped).map(Ret::Str)
+            }
+            (Step::CompileVectorOrderExpression, []) => D::compile_vector_order_expression(self).map(Ret::Condition),
+            (Step::ResolveJoinFilterPlacement, [Arg::Placement(requested), Arg::Bool(cross)]) => {
+                Ok(Ret::Placement(D::resolve_join_filter_placement(self, *requested, *cross)))
+            }
+            (Step::AppendReturning, [Arg::Statement(statement)]) => {
+                self.base_append_returning((*statement).clone()).map(Ret::Statement)
+            }
+            (Step::ResetReturning, []) => {
+                self.core.returning.clear();
+                Ok(Ret::None)
+            }
+            (Step::ResetGroupByModifier, []) => {
+                self.core.group_by_modifier = None;
+                Ok(Ret::None)
+            }
             (Step::EscapeLikeValue, [Arg::Value(value)]) => {
                 let escaped = crate::builder::core::escape_like_value(value, D::LIKE_ESCAPE);
                 Ok(Ret::Str(escaped.iter().map(|&byte| char::from(byte)).collect()))
@@ -438,6 +563,118 @@ impl<D: Dialect> Builder<D> {
         match self.step(Step::Build, &[])? {
             Ret::Statement(statement) => Ok(statement),
             _ => Err(Error::Validation("build() did not return a statement".into())),
+        }
+    }
+
+    /// `validateTable()`: a subclass's own when it has one.
+    pub fn validate_table(&mut self) -> Result<()> {
+        if !self.overrides(Step::ValidateTable) {
+            return self.base_validate_table();
+        }
+        self.step(Step::ValidateTable, &[]).map(drop)
+    }
+
+    /// `validateRows()`.
+    pub fn validate_rows(&mut self, operation: &str) -> Result<()> {
+        if !self.overrides(Step::ValidateRows) {
+            return self.base_validate_rows(operation);
+        }
+        self.step(Step::ValidateRows, &[Arg::Str(operation)]).map(drop)
+    }
+
+    /// `validateAndGetColumns()`.
+    pub fn validate_and_get_columns(&mut self) -> Result<Vec<php_std::ArrayKey>> {
+        if !self.overrides(Step::ValidateAndGetColumns) {
+            return self.base_validate_and_get_columns();
+        }
+        match self.step(Step::ValidateAndGetColumns, &[])? {
+            Ret::Columns(columns) => Ok(columns),
+            _ => Err(wrong(Step::ValidateAndGetColumns)),
+        }
+    }
+
+    /// `addBindings()`.
+    pub fn add_bindings(&mut self, values: impl IntoIterator<Item = Value>) {
+        if !self.overrides(Step::AddBindings) {
+            return self.base_add_bindings(values);
+        }
+        let values = crate::value::list(values.into_iter().collect::<Vec<_>>());
+        // An override that throws leaves its exception for the method that is running.
+        let _ = self.step(Step::AddBindings, &[Arg::Values(&values)]);
+    }
+
+    /// `compileCase()`.
+    pub fn compile_case(&mut self, case: &CaseExpression) -> Result<String> {
+        if !self.overrides(Step::CompileCase) {
+            return self.base_compile_case(case);
+        }
+        self.step_string(Step::CompileCase, &[Arg::Case(case)])
+    }
+
+    /// `compileInsertBody()`.
+    pub fn compile_insert_body(&mut self) -> Result<(String, Vec<Value>)> {
+        if !self.overrides(Step::CompileInsertBody) {
+            return self.base_compile_insert_body();
+        }
+        match self.step(Step::CompileInsertBody, &[])? {
+            Ret::InsertBody(sql, bindings) => Ok((sql, bindings)),
+            _ => Err(wrong(Step::CompileInsertBody)),
+        }
+    }
+
+    /// `compileAssignments()`.
+    pub fn compile_assignments(&mut self) -> Result<Vec<String>> {
+        if !self.overrides(Step::CompileAssignments) {
+            return self.base_compile_assignments();
+        }
+        self.step_strings(Step::CompileAssignments, &[])
+    }
+
+    /// `compileWhereClauses()`.
+    pub fn compile_where_clauses(&mut self, parts: &mut Vec<String>, grouped: Option<&ParsedQuery>) -> Result<()> {
+        if !self.overrides(Step::CompileWhereClauses) {
+            return self.base_compile_where_clauses(parts, grouped);
+        }
+        *parts = self.step_strings(Step::CompileWhereClauses, &[Arg::Strings(parts), Arg::Parsed(grouped)])?;
+        Ok(())
+    }
+
+    /// `compileOrderAndLimit()`.
+    pub fn compile_order_and_limit(&mut self, parts: &mut Vec<String>, grouped: Option<&ParsedQuery>) -> Result<()> {
+        if !self.overrides(Step::CompileOrderAndLimit) {
+            return self.base_compile_order_and_limit(parts, grouped);
+        }
+        *parts = self.step_strings(Step::CompileOrderAndLimit, &[Arg::Strings(parts), Arg::Parsed(grouped)])?;
+        Ok(())
+    }
+
+    /// `appendReturning()`.
+    pub fn append_returning(&mut self, result: Statement) -> Result<Statement> {
+        if !self.overrides(Step::AppendReturning) {
+            return self.base_append_returning(result);
+        }
+        match self.step(Step::AppendReturning, &[Arg::Statement(&result)])? {
+            Ret::Statement(statement) => Ok(statement),
+            _ => Err(wrong(Step::AppendReturning)),
+        }
+    }
+
+    /// `resetReturning()`.
+    pub fn reset_returning(&mut self) {
+        // As for `addBindings()`: `reset()` has no error to return.
+        let _ = self.step(Step::ResetReturning, &[]);
+    }
+
+    /// `resetGroupByModifier()`.
+    pub fn reset_group_by_modifier(&mut self) {
+        let _ = self.step(Step::ResetGroupByModifier, &[]);
+    }
+
+    /// `step`, which returns a list of strings.
+    fn step_strings(&mut self, step: Step, arguments: &[Arg<'_>]) -> Result<Vec<String>> {
+        match self.step(step, arguments)? {
+            Ret::Strings(strings) => Ok(strings),
+            _ => Err(wrong(step)),
         }
     }
 
