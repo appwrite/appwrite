@@ -432,13 +432,18 @@ final class StorageCustomServerTest extends Scope
 
         [$headers, $filesystem] = $this->getCacheFixture();
         $path = $this->createPreviewFile($headers);
-        foreach (\range(20, 31) as $width) {
-            $preview = $this->client->call(Client::METHOD_GET, $path, $headers, ['width' => $width, 'output' => 'png']);
-            $this->assertSame(200, $preview['headers']['status-code']);
-        }
 
         // The first row's filesystem entry goes before its device purge fails, so it takes a second to tell.
-        $this->assertEventually(fn () => $this->assertGreaterThanOrEqual(2, \count($this->getCacheKeys($filesystem))));
+        // A key's store is picked by its hash, half each way, so a fixed run of sizes can leave fewer than two
+        // on the filesystem (13 runs in 4096 for twelve sizes): add sizes until two have landed there.
+        $width = 20;
+        $this->assertEventually(function () use (&$width, $path, $headers, $filesystem): void {
+            if (\count($this->getCacheKeys($filesystem)) < 2 && $width < 60) {
+                $preview = $this->client->call(Client::METHOD_GET, $path, $headers, ['width' => $width++, 'output' => 'png']);
+                $this->assertSame(200, $preview['headers']['status-code']);
+            }
+            $this->assertGreaterThanOrEqual(2, \count($this->getCacheKeys($filesystem)));
+        }, 240_000, 100);
 
         $delete = $this->client->call(Client::METHOD_DELETE, \dirname($path), $headers);
         $this->assertSame(204, $delete['headers']['status-code']);
