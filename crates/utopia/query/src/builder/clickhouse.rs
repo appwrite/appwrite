@@ -552,7 +552,7 @@ impl Dialect for ClickHouseDialect {
             b.add_bindings(result.bindings);
             return Ok(format!("FROM ({}) AS {}", result.query, b.quote(&sub.alias)?));
         }
-        let mut sql = format!("FROM {}", b.quote(&b.core.table)?);
+        let mut sql = format!("FROM {}", b.quote(&b.core.table.clone())?);
         if b.dialect.final_ {
             sql.push_str(" FINAL");
         }
@@ -565,7 +565,7 @@ impl Dialect for ClickHouseDialect {
         }
         if !b.core.alias.is_empty() {
             sql.push_str(" AS ");
-            sql.push_str(&b.quote(&b.core.alias)?);
+            sql.push_str(&b.quote(&b.core.alias.clone())?);
         }
         Ok(sql)
     }
@@ -667,8 +667,12 @@ impl Dialect for ClickHouseDialect {
         if parts.is_empty() {
             return Err(Error::Validation("ClickHouse UPDATE requires a WHERE clause.".into()));
         }
-        let sql =
-            format!("ALTER TABLE {} UPDATE {} {}", b.quote(&b.core.table)?, assignments.join(", "), parts.join(" "));
+        let sql = format!(
+            "ALTER TABLE {} UPDATE {} {}",
+            b.quote(&b.core.table.clone())?,
+            assignments.join(", "),
+            parts.join(" ")
+        );
         let statement = b.statement(sql);
         named(b, statement)
     }
@@ -681,7 +685,7 @@ impl Dialect for ClickHouseDialect {
         if parts.is_empty() {
             return Err(Error::Validation("ClickHouse DELETE requires a WHERE clause.".into()));
         }
-        let table = b.quote(&b.core.table)?;
+        let table = b.quote(&b.core.table.clone())?;
         let mut sql = match b.dialect.delete_mode {
             DeleteMode::Lightweight => format!("DELETE FROM {table} {}", parts.join(" ")),
             DeleteMode::Mutation => format!("ALTER TABLE {table} DELETE {}", parts.join(" ")),
@@ -935,7 +939,7 @@ impl Builder<ClickHouseDialect> {
         if columns.iter().any(String::is_empty) {
             return Err(Error::Validation("Column names for FORMAT INSERT must be non-empty strings.".into()));
         }
-        let mut sql = format!("INSERT INTO {}", self.quote(&self.core.table)?);
+        let mut sql = format!("INSERT INTO {}", self.quote(&self.core.table.clone())?);
         if !columns.is_empty() {
             let wrapped = columns.iter().map(|c| self.resolve_and_wrap(c)).collect::<Result<Vec<_>>>()?;
             sql.push_str(" (");

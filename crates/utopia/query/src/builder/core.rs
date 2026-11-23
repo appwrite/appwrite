@@ -462,8 +462,12 @@ impl<D: Dialect> Builder<D> {
         self
     }
 
-    pub(crate) fn quote(&self, identifier: &str) -> Result<String> {
-        D::quote(self, identifier)
+    /// PHP: `$this->quote()`, which a subclass may override.
+    pub(crate) fn quote(&mut self, identifier: &str) -> Result<String> {
+        if !self.overrides(Step::Quote) {
+            return D::quote(self, identifier);
+        }
+        self.step_string(Step::Quote, &[Arg::Str(identifier)])
     }
 
     pub(crate) fn add_binding(&mut self, value: Value, column: Option<&str>) {
@@ -489,11 +493,46 @@ impl<D: Dialect> Builder<D> {
         }
     }
 
-    pub(crate) fn binding_values(&self) -> Vec<Value> {
+    /// PHP: `$this->getBindingValues()`, which a subclass may override.
+    pub(crate) fn binding_values(&mut self) -> Vec<Value> {
+        if !self.overrides(Step::GetBindingValues) {
+            return self.base_binding_values();
+        }
+        // An override that fails has nowhere to say so here: the build it is part of does.
+        match self.step(Step::GetBindingValues, &[]) {
+            Ok(crate::builder::steps::Ret::Values(values)) => values,
+            Ok(_) => self.base_binding_values(),
+            Err(error) => {
+                self.core.deferred.get_or_insert(error);
+                self.base_binding_values()
+            }
+        }
+    }
+
+    /// The values bound so far.
+    ///
+    /// PHP: `parent::getBindingValues()`.
+    pub fn base_binding_values(&self) -> Vec<Value> {
         self.core.bindings.iter().map(|b| b.value.clone()).collect()
     }
 
-    pub(crate) fn statement(&self, sql: impl Into<String>) -> Statement {
+    /// PHP: `$this->getLikeKeyword()`, which a subclass may override.
+    pub(crate) fn like_keyword(&mut self) -> Result<String> {
+        if !self.overrides(Step::GetLikeKeyword) {
+            return Ok(D::like_keyword(self).to_owned());
+        }
+        self.step_string(Step::GetLikeKeyword, &[])
+    }
+
+    /// PHP: `$this->geometryToWkt()`, which a subclass may override.
+    pub(crate) fn geometry_to_wkt(&mut self, geometry: &Array) -> Result<String> {
+        if !self.overrides(Step::GeometryToWkt) {
+            return crate::builder::sql::geometry_to_wkt(geometry);
+        }
+        self.step_string(Step::GeometryToWkt, &[Arg::Values(geometry)])
+    }
+
+    pub(crate) fn statement(&mut self, sql: impl Into<String>) -> Statement {
         Statement::with_parts(sql, self.binding_values(), false, self.core.executor.clone(), None)
     }
 
@@ -754,10 +793,10 @@ impl<D: Dialect> Builder<D> {
             self.add_bindings(result.bindings);
             return Ok(format!("FROM ({}) AS {}", result.query, self.quote(&sub.alias)?));
         }
-        let mut sql = format!("FROM {}", self.quote(&self.core.table)?);
+        let mut sql = format!("FROM {}", self.quote(&self.core.table.clone())?);
         if !self.core.alias.is_empty() {
             sql.push_str(" AS ");
-            sql.push_str(&self.quote(&self.core.alias)?);
+            sql.push_str(&self.quote(&self.core.alias.clone())?);
         }
         if let Some((percent, method)) = &self.core.sample {
             sql.push_str(&format!(" TABLESAMPLE {method}({})", php_std::number::to_string(*percent)));
@@ -1031,9 +1070,9 @@ impl<D: Dialect> Builder<D> {
             return Ok(String::new());
         };
         let mut sql = mode.to_sql().to_owned();
-        if let Some(table) = &self.core.lock_of_table {
+        if let Some(table) = self.core.lock_of_table.clone() {
             sql.push_str(" OF ");
-            sql.push_str(&self.quote(table)?);
+            sql.push_str(&self.quote(&table)?);
         }
         Ok(sql)
     }
@@ -1076,10 +1115,10 @@ impl<D: Dialect> Builder<D> {
             }
             rows.push(format!("({})", placeholders.join(", ")));
         }
-        let mut table = self.quote(&self.core.table)?;
+        let mut table = self.quote(&self.core.table.clone())?;
         if !self.core.insert_alias.is_empty() {
             table.push_str(" AS ");
-            table.push_str(&self.quote(&self.core.insert_alias)?);
+            table.push_str(&self.quote(&self.core.insert_alias.clone())?);
         }
         Ok((format!("INSERT INTO {table} ({}) VALUES {}", wrapped.join(", "), rows.join(", ")), bindings))
     }
@@ -1211,7 +1250,7 @@ impl<D: Dialect> Builder<D> {
     pub(crate) fn base_insert_default_values(&mut self) -> Result<Statement> {
         self.core.bindings.clear();
         self.validate_table()?;
-        let sql = format!("INSERT INTO {} DEFAULT VALUES", self.quote(&self.core.table)?);
+        let sql = format!("INSERT INTO {} DEFAULT VALUES", self.quote(&self.core.table.clone())?);
         Ok(self.statement(sql))
     }
 
@@ -1232,7 +1271,8 @@ impl<D: Dialect> Builder<D> {
         let wrapped = columns.iter().map(|c| self.resolve_and_wrap(c)).collect::<Result<Vec<_>>>()?;
         let mut source = source;
         let result = source.build()?;
-        let sql = format!("INSERT INTO {} ({}) {}", self.quote(&self.core.table)?, wrapped.join(", "), result.query);
+        let sql =
+            format!("INSERT INTO {} ({}) {}", self.quote(&self.core.table.clone())?, wrapped.join(", "), result.query);
         self.add_bindings(result.bindings);
         Ok(self.statement(sql))
     }
@@ -1245,7 +1285,8 @@ impl<D: Dialect> Builder<D> {
             return Err(Error::Validation("No assignments for UPDATE. Call set() or setRaw() before update().".into()));
         }
         let grouped = Query::group_by_type(&self.core.pending);
-        let mut parts = vec![format!("UPDATE {} SET {}", self.quote(&self.core.table)?, assignments.join(", "))];
+        let mut parts =
+            vec![format!("UPDATE {} SET {}", self.quote(&self.core.table.clone())?, assignments.join(", "))];
         self.compile_where_clauses(&mut parts, Some(&grouped))?;
         self.compile_order_and_limit(&mut parts, Some(&grouped))?;
         Ok(self.statement(parts.join(" ")))
@@ -1255,7 +1296,7 @@ impl<D: Dialect> Builder<D> {
         self.core.bindings.clear();
         self.validate_table()?;
         let grouped = Query::group_by_type(&self.core.pending);
-        let mut parts = vec![format!("DELETE FROM {}", self.quote(&self.core.table)?)];
+        let mut parts = vec![format!("DELETE FROM {}", self.quote(&self.core.table.clone())?)];
         self.compile_where_clauses(&mut parts, Some(&grouped))?;
         self.compile_order_and_limit(&mut parts, Some(&grouped))?;
         Ok(self.statement(parts.join(" ")))
@@ -1353,10 +1394,10 @@ impl<D: Dialect> Builder<D> {
             }
             rows.push(format!("({})", placeholders.join(", ")));
         }
-        let mut table = self.quote(&self.core.table)?;
+        let mut table = self.quote(&self.core.table.clone())?;
         if !self.core.insert_alias.is_empty() {
             table.push_str(" AS ");
-            table.push_str(&self.quote(&self.core.insert_alias)?);
+            table.push_str(&self.quote(&self.core.insert_alias.clone())?);
         }
         let mut sql = format!("INSERT INTO {table} ({}) VALUES {}", wrapped.join(", "), rows.join(", "));
         sql.push(' ');
@@ -1397,7 +1438,7 @@ impl<D: Dialect> Builder<D> {
         let mut source = source;
         let result = source.build()?;
         let mut sql =
-            format!("INSERT INTO {} ({}) {}", self.quote(&self.core.table)?, wrapped.join(", "), result.query);
+            format!("INSERT INTO {} ({}) {}", self.quote(&self.core.table.clone())?, wrapped.join(", "), result.query);
         self.add_bindings(result.bindings);
         sql.push(' ');
         sql.push_str(&conflict(self)?);
@@ -1830,8 +1871,10 @@ impl<D: Dialect> Builder<D> {
 
     /// The builder's own `compileLikePredicate()`.
     pub(crate) fn base_like_predicate(&mut self, attribute: &str, not: bool) -> Result<String> {
+        // PHP asks for the keyword before the escape clause.
+        let like = self.like_keyword()?;
         let escape = self.step_string(Step::LikeEscape, &[])?;
-        Ok(format!("{attribute} {}{} ?{escape}", if not { "NOT " } else { "" }, D::like_keyword(self)))
+        Ok(format!("{attribute} {}{like} ?{escape}", if not { "NOT " } else { "" }))
     }
 
     /// The builder's own `likeEscape()`: the `ESCAPE` clause, where the dialect declares one.

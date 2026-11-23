@@ -161,7 +161,7 @@ impl SqlDialect for MariaDbDialect {
         if matches!(method, DistanceLessThan | DistanceGreaterThan | DistanceEqual | DistanceNotEqual) {
             let filter = sql::distance_filter(query.values(), "Builder/MariaDB.php", 83)?;
             if filter.meters && !query.attribute_type().is_empty() {
-                let wkt = crate::value::to_php_string(&wkt_of(&filter.geometry)?);
+                let wkt = crate::value::to_php_string(&wkt_of(b, &filter.geometry)?);
                 let wkt_type = match wkt.find('(') {
                     Some(position) => {
                         wkt[..position].trim_matches([' ', '\t', '\n', '\r', '\0', '\x0B']).to_ascii_lowercase()
@@ -187,7 +187,8 @@ impl SqlDialect for MariaDbDialect {
     ) -> Result<String> {
         let filter = sql::distance_filter(values, "Builder/MariaDB.php", 111)?;
         let operator = distance_operator(method);
-        b.add_binding(wkt_of(&filter.geometry)?, None);
+        let wkt = wkt_of(b, &filter.geometry)?;
+        b.add_binding(wkt, None);
         b.add_binding(Value::Float(filter.distance), None);
         if filter.meters {
             return Ok(format!("ST_DISTANCE_SPHERE({attribute}, ST_GeomFromText(?, 4326)) {operator} ?"));
@@ -343,7 +344,7 @@ impl InsertOrIgnore for MariaDbDialect {
 }
 
 impl Sequences for MariaDbDialect {
-    fn sequence_expression(b: &Builder<Self>, next: bool, sequence: &str) -> Result<String> {
+    fn sequence_expression(b: &mut Builder<Self>, next: bool, sequence: &str) -> Result<String> {
         Ok(format!("{}({})", if next { "NEXTVAL" } else { "LASTVAL" }, b.quote(sequence)?))
     }
 }

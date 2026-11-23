@@ -1032,10 +1032,76 @@ $builds = [
         return $b->from('t')->filter([$typed])->build();
     },
 ];
+// quote(), getLikeKeyword(), getBindingValues() and geometryToWkt() changed by a subclass: every
+// statement kind asks them, as does a method called first on a new object or on a clone.
+class QuotesItsOwn extends Builder\MySQL
+{
+    protected function quote(string $identifier): string
+    {
+        if ($identifier === 'boom') {
+            throw new RuntimeException('no ' . $identifier);
+        }
+
+        return '<' . parent::quote($identifier) . '>';
+    }
+}
+class QuotesClickHouse extends Builder\ClickHouse
+{
+    protected function quote(string $identifier): string
+    {
+        return '<' . $identifier . '>';
+    }
+}
+class LikesItsOwn extends Builder\PostgreSQL
+{
+    protected function getLikeKeyword(): string
+    {
+        return parent::getLikeKeyword() . ' /* own */';
+    }
+}
+class BindsItsOwn extends Builder\MySQL
+{
+    protected function getBindingValues(): array
+    {
+        return [...parent::getBindingValues(), 'own'];
+    }
+}
+class BindsMongoDB extends Builder\MongoDB
+{
+    protected function getBindingValues(): array
+    {
+        return array_reverse(parent::getBindingValues());
+    }
+}
+class ShapesItsOwn extends Builder\PostgreSQL
+{
+    protected function geometryToWkt(array $geometry): string
+    {
+        return 'SRID=4326;' . parent::geometryToWkt($geometry);
+    }
+}
+$mixed = [Query::equal('x', [1]), Query::startsWith('y', 'a'), Query::orderAsc('z')];
+foreach ([QuotesItsOwn::class, QuotesClickHouse::class, LikesItsOwn::class, BindsItsOwn::class, BindsMongoDB::class, ShapesItsOwn::class] as $own) {
+    emit($own . ' select', outcome(fn () => (new $own())->from('t', 'al')->select(['a', 'u.b'])->filter($mixed)->groupBy(['a'])->build()));
+    emit($own . ' insert', outcome(fn () => (new $own())->into('t')->set(['a' => 1, 'b' => 2])->insert()));
+    emit($own . ' update', outcome(fn () => (new $own())->from('t')->set(['a' => 1])->filter($mixed)->update()));
+    emit($own . ' delete', outcome(fn () => (new $own())->from('t')->filter($mixed)->delete()));
+    emit($own . ' getBindings() first', outcome(fn () => (new $own())->getBindings()));
+    emit($own . ' getBindings() after a build', outcome(function () use ($own, $mixed) {
+        $builder = (new $own())->from('t')->filter($mixed);
+
+        return [$builder->build(), $builder->getBindings(), (clone $builder)->getBindings()];
+    }));
+}
+emit('quote() that throws', outcome(fn () => (new QuotesItsOwn())->from('boom')->build()));
+emit('quote() in joins and locks', outcome(fn () => (new QuotesItsOwn())->from('t')->join('o', 't.id', 'o.tid')->sortDesc('o.c')->forUpdateOf('t')->build()));
+emit('quote() in savepoints', outcome(fn () => [(new QuotesItsOwn())->savepoint('s'), (new QuotesItsOwn())->releaseSavepoint('s'), (clone new QuotesItsOwn())->rollbackToSavepoint('s')]));
+emit('geometryToWkt() in predicates', outcome(fn () => (new ShapesItsOwn())->from('t')->filterIntersects('g', [1, 2])->filterDistance('g', [1, 2], '<', 5.0)->build()));
+
 foreach ($dialects as $dialect) {
     $base = new ReflectionClass('Utopia\\Query\\Builder\\' . $dialect);
     $overrides = [];
-    $dispatched = ['validateTable', 'validateRows', 'validateAndGetColumns', 'addBindings', 'compileCase', 'compileInsertBody', 'compileAssignments', 'compileWhereClauses', 'compileOrderAndLimit', 'buildAfterJoinsClause', 'compileVectorOrderExpression', 'resolveJoinFilterPlacement', 'appendReturning', 'resetReturning', 'resetGroupByModifier', 'applyNamedTypedBindings'];
+    $dispatched = ['quote', 'getLikeKeyword', 'getBindingValues', 'geometryToWkt', 'validateTable', 'validateRows', 'validateAndGetColumns', 'addBindings', 'compileCase', 'compileInsertBody', 'compileAssignments', 'compileWhereClauses', 'compileOrderAndLimit', 'buildAfterJoinsClause', 'compileVectorOrderExpression', 'resolveJoinFilterPlacement', 'appendReturning', 'resetReturning', 'resetGroupByModifier', 'applyNamedTypedBindings'];
     foreach ([...array_keys($helpers), ...$dispatched] as $helper) {
         if ($base->hasMethod($helper)) {
             $overrides[] = $declaration($base->getMethod($helper));

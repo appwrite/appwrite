@@ -525,7 +525,8 @@ compares each public one, and the interfaces each builder implements.
 What a subclass can rely on:
 
 - A protected method it overrides is the one the build calls, in the order PHP calls them: `build()`,
-  the `compile*()` methods, the clause hooks, the validators and every other helper, 73 in all.
+  the `compile*()` methods, the clause hooks, the validators and every other helper, 77 in all,
+  `quote()` and `getBindingValues()` among them.
   `parent::compileFilter()` runs the native one. An override is handed the package's own objects: a
   `Query`, a `Case\Expression`, a `Statement`, a `ParsedQuery`, and `$parts` by reference. Nothing
   is converted for a method no subclass overrides.
@@ -550,10 +551,8 @@ Known differences:
 - `compileWhereClauses()`, `compileOrderAndLimit()` and `buildAfterJoinsClause()`, called on their
   own, group the builder's own queries, whatever `ParsedQuery` they are handed. An override is
   handed the one PHP's `Query::groupByType()` makes of them.
-- `getSpatialTypeFromWkt()` can be overridden to no effect, as in PHP, where nothing calls it.
-- An override of `quote()`, `quoteLiteral()`, `getLikeKeyword()`, `getBindingValues()` or
-  `geometryToWkt()` is not called by a build. PHP calls each. No subclass in Appwrite, Cloud or
-  utopia-php/database overrides one.
+- `getSpatialTypeFromWkt()` and `quoteLiteral()` can be overridden to no effect, as in PHP, where no
+  builder calls them.
 - `validateAndGetColumns()` with no rows is a `ValidationException`. PHP warns and then fails on
   the missing row.
 - The other protected properties of PHP's builders (`table`, `unions`, `lockMode` and about fifty
@@ -565,7 +564,7 @@ Known differences:
 - `resolvedAttributeCache` has no order.
 - The classes declare a constructor and no `__clone()`. PHP's declare the reverse.
 
-Four things check them. `tests/query-builders.php` is a corpus like the others: 15,787 cases, the
+Four things check them. `tests/query-builders.php` is a corpus like the others: 15,827 cases, the
 same on PHP and on the extension. The package's own 5,828 tests pass on the native builders, but for
 two that read the PHP class's source and private state and are skipped there. utopia-php/database
 10.2.3 subclasses four of the builders, overrides 23 of their methods and serializes queries for its

@@ -632,8 +632,9 @@ impl<D: Dialect + Text> State<D> {
     }
 
     /// The bindings so far, as PHP holds them.
-    fn bindings(&self) -> PhpResult<Zval> {
-        let bindings = self.with(|builder| builder.bindings());
+    fn bindings(&self, overridable: bool) -> PhpResult<Zval> {
+        let bindings =
+            self.with(|builder| if overridable { builder.bindings() } else { builder.base_binding_values() });
         if bindings.is_empty() {
             return Ok(empty());
         }
@@ -805,6 +806,10 @@ impl<D: Dialect + Text> State<D> {
                 let sql = body.get_index(0).and_then(Zval::zend_str).map(|sql| self.text(sql.as_bytes()))?;
                 let bindings = body.get_index(1).and_then(Zval::array).into_iter().flat_map(ZendHashTable::values);
                 return Some(Ret::InsertBody(sql, bindings.map(bound).collect()));
+            }
+            Step::GetBindingValues => {
+                let values = returned.array().into_iter().flat_map(ZendHashTable::values);
+                return Some(Ret::Values(values.map(bound).collect()));
             }
             Step::CompileVectorOrderExpression => return Some(Ret::Condition(condition(D::JSON, &returned))),
             Step::ResolveJoinFilterPlacement => {
@@ -1000,6 +1005,8 @@ extern "C" fn create<C: Native>(class: *mut ClassEntry) -> *mut ZendObject {
     let mut held = unsafe { ZendClassObject::<C>::new_uninit(class.as_ref()) };
     held.initialize(C::fresh());
     let object = std::ptr::from_mut(held.get_mut_zend_obj());
+    // The builder knows its owner from the start, whichever method PHP calls first.
+    held.state().running(object);
     // PHP owns the object from here.
     std::mem::forget(held);
     object
@@ -3065,6 +3072,8 @@ macro_rules! builder_class {
                 self_: &mut ZendClassObject<$class>,
                 name: PhpString<'_>,
             ) -> PhpResult<Zval> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                self_.0.running(object);
                 let name = self_.0.text(name.bytes());
                 let built = self_.0.with(|builder| builder.savepoint(&name));
                 self_.0.statement(built)
@@ -3075,6 +3084,8 @@ macro_rules! builder_class {
                 self_: &mut ZendClassObject<$class>,
                 name: PhpString<'_>,
             ) -> PhpResult<Zval> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                self_.0.running(object);
                 let name = self_.0.text(name.bytes());
                 let built = self_.0.with(|builder| builder.release_savepoint(&name));
                 self_.0.statement(built)
@@ -3085,6 +3096,8 @@ macro_rules! builder_class {
                 self_: &mut ZendClassObject<$class>,
                 name: PhpString<'_>,
             ) -> PhpResult<Zval> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                self_.0.running(object);
                 let name = self_.0.text(name.bytes());
                 let built = self_.0.with(|builder| builder.rollback_to_savepoint(&name));
                 self_.0.statement(built)
@@ -3321,6 +3334,8 @@ macro_rules! builder_class {
             pub fn execute_merge(
                 self_: &mut ZendClassObject<$class>,
             ) -> PhpResult<Zval> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                self_.0.running(object);
                 let built = self_.0.with(|builder| builder.execute_merge());
                 self_.0.statement(built)
             }
@@ -5477,8 +5492,10 @@ macro_rules! builder_class {
             }
 
             #[php(name = "getBindings")]
-            pub fn get_bindings(&self) -> PhpResult<Zval> {
-                self.0.bindings()
+            pub fn get_bindings(self_: &mut ZendClassObject<$class>) -> PhpResult<Zval> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                self_.0.running(object);
+                self_.0.bindings(true)
             }
 
             #[php(name = "toRawSql")]
@@ -6077,7 +6094,7 @@ macro_rules! builder_class {
 
             #[php(name = "getBindingValues", vis = "protected")]
             pub fn get_binding_values(&self) -> PhpResult<Zval> {
-                self.0.bindings()
+                self.0.bindings(false)
             }
 
 

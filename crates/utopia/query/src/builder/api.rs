@@ -393,7 +393,7 @@ impl<D: Dialect> Builder<D> {
     /// The bindings of the last statement built.
     ///
     /// PHP: `getBindings()`.
-    pub fn bindings(&self) -> Vec<Value> {
+    pub fn bindings(&mut self) -> Vec<Value> {
         self.binding_values()
     }
 

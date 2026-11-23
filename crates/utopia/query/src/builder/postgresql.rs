@@ -367,8 +367,11 @@ impl Builder<PostgreSqlDialect> {
             from_clause.push_str(" AS ");
             from_clause.push_str(&self.quote(&from.alias)?);
         }
-        let mut parts =
-            vec![format!("UPDATE {} SET {} FROM {from_clause}", self.quote(&self.core.table)?, assignments.join(", "))];
+        let mut parts = vec![format!(
+            "UPDATE {} SET {} FROM {from_clause}",
+            self.quote(&self.core.table.clone())?,
+            assignments.join(", ")
+        )];
         self.compile_where_clauses(&mut parts, None)?;
         if !from.condition.is_empty() {
             Self::merge_into_where(&mut parts, enclose(&from.condition));
@@ -384,7 +387,7 @@ impl Builder<PostgreSqlDialect> {
             return Err(Error::Validation("No DELETE USING target specified.".into()));
         };
         let mut parts =
-            vec![format!("DELETE FROM {} USING {}", self.quote(&self.core.table)?, self.quote(&using.table)?)];
+            vec![format!("DELETE FROM {} USING {}", self.quote(&self.core.table.clone())?, self.quote(&using.table)?)];
         self.compile_where_clauses(&mut parts, None)?;
         if !using.condition.is_empty() {
             Self::merge_into_where(&mut parts, enclose(&using.condition));
@@ -883,7 +886,8 @@ impl SqlDialect for PostgreSqlDialect {
     ) -> Result<String> {
         let filter = sql::distance_filter(values, "Builder/PostgreSQL.php", 815)?;
         let operator = distance_operator(method);
-        b.add_binding(wkt_of(&filter.geometry)?, None);
+        let wkt = wkt_of(b, &filter.geometry)?;
+        b.add_binding(wkt, None);
         b.add_binding(Value::Float(filter.distance), None);
         if filter.meters {
             return Ok(format!(
@@ -900,7 +904,7 @@ impl SqlDialect for PostgreSqlDialect {
         values: &Array,
         not: bool,
     ) -> Result<String> {
-        let wkt = sql::predicate_wkt(values, Self::CLASS, "Builder/PostgreSQL.php", 844)?;
+        let wkt = sql::predicate_wkt(b, values, Self::CLASS, "Builder/PostgreSQL.php", 844)?;
         b.add_binding(value::string(wkt), None);
         let expression = format!("{function}({attribute}, ST_GeomFromText(?, 4326))");
         Ok(if not { format!("NOT {expression}") } else { expression })
@@ -1036,7 +1040,7 @@ impl TableSampling for PostgreSqlDialect {
 }
 
 impl Sequences for PostgreSqlDialect {
-    fn sequence_expression(_b: &Builder<Self>, next: bool, sequence: &str) -> Result<String> {
+    fn sequence_expression(_b: &mut Builder<Self>, next: bool, sequence: &str) -> Result<String> {
         Ok(format!("{}('{sequence}')", if next { "nextval" } else { "currval" }))
     }
 }

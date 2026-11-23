@@ -195,7 +195,7 @@ pub trait TableSampling: Dialect {
 /// `nextVal()` and `currVal()` of sequences.
 pub trait Sequences: Dialect {
     /// The select expression of `function` (`next` or `current`) on `sequence` (validated).
-    fn sequence_expression(b: &Builder<Self>, next: bool, sequence: &str) -> Result<String>;
+    fn sequence_expression(b: &mut Builder<Self>, next: bool, sequence: &str) -> Result<String>;
 }
 
 /// `RETURNING` after inserts, updates and deletes.
@@ -331,7 +331,7 @@ impl<D: Transactions> Builder<D> {
     /// `SAVEPOINT name`.
     ///
     /// PHP: `savepoint()`.
-    pub fn savepoint(&self, name: &str) -> Result<Statement> {
+    pub fn savepoint(&mut self, name: &str) -> Result<Statement> {
         Ok(Statement::with_parts(
             format!("SAVEPOINT {}", self.quote(name)?),
             Vec::new(),
@@ -344,7 +344,7 @@ impl<D: Transactions> Builder<D> {
     /// `RELEASE SAVEPOINT name`.
     ///
     /// PHP: `releaseSavepoint()`.
-    pub fn release_savepoint(&self, name: &str) -> Result<Statement> {
+    pub fn release_savepoint(&mut self, name: &str) -> Result<Statement> {
         Ok(Statement::with_parts(
             format!("RELEASE SAVEPOINT {}", self.quote(name)?),
             Vec::new(),
@@ -357,7 +357,7 @@ impl<D: Transactions> Builder<D> {
     /// `ROLLBACK TO SAVEPOINT name`.
     ///
     /// PHP: `rollbackToSavepoint()`.
-    pub fn rollback_to_savepoint(&self, name: &str) -> Result<Statement> {
+    pub fn rollback_to_savepoint(&mut self, name: &str) -> Result<Statement> {
         Ok(Statement::with_parts(
             format!("ROLLBACK TO SAVEPOINT {}", self.quote(name)?),
             Vec::new(),

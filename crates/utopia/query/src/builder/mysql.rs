@@ -276,7 +276,7 @@ fn update_join<D: MySqlFamily>(b: &mut Builder<D>) -> Result<Statement> {
     }
     let mut sql = format!(
         "UPDATE {} JOIN {join} ON {} = {}",
-        b.quote(&b.core.table)?,
+        b.quote(&b.core.table.clone())?,
         b.resolve_and_wrap(&left)?,
         b.resolve_and_wrap(&right)?
     );
@@ -301,7 +301,7 @@ pub(crate) fn delete<D: MySqlFamily>(b: &mut Builder<D>) -> Result<Statement> {
     let sql = format!(
         "DELETE {} FROM {} AS {} JOIN {} ON {} = {}",
         b.quote(&alias)?,
-        b.quote(&b.core.table)?,
+        b.quote(&b.core.table.clone())?,
         b.quote(&alias)?,
         b.quote(&table)?,
         b.resolve_and_wrap(&left)?,
@@ -328,7 +328,7 @@ pub(crate) fn insert_or_ignore<D: Dialect>(b: &mut Builder<D>) -> Result<Stateme
 pub(crate) fn insert_default_values<D: Dialect>(b: &mut Builder<D>) -> Result<Statement> {
     b.core.bindings.clear();
     b.validate_table()?;
-    let sql = format!("INSERT INTO {} () VALUES ()", b.quote(&b.core.table)?);
+    let sql = format!("INSERT INTO {} () VALUES ()", b.quote(&b.core.table.clone())?);
     Ok(b.statement(sql))
 }
 
@@ -368,7 +368,7 @@ pub(crate) fn spatial_distance<D: MySqlFamily>(
     values: &Array,
 ) -> Result<String> {
     let filter = sql::distance_filter(values, "Builder/MySQL.php", 484)?;
-    let wkt = wkt_of(&filter.geometry)?;
+    let wkt = wkt_of(b, &filter.geometry)?;
     let operator = distance_operator(method);
     b.add_binding(wkt, None);
     b.add_binding(Value::Float(filter.distance), None);
@@ -390,7 +390,7 @@ pub(crate) fn spatial_predicate<D: MySqlFamily>(
     values: &Array,
     not: bool,
 ) -> Result<String> {
-    let wkt = sql::predicate_wkt(values, MYSQL_CLASS, "Builder/MySQL.php", 513)?;
+    let wkt = sql::predicate_wkt(b, values, MYSQL_CLASS, "Builder/MySQL.php", 513)?;
     b.add_binding(value::string(wkt), None);
     let geometry = b.step_string(Step::GeomFromText, &[Arg::Int(Some(4326))])?;
     let expression = format!("{function}({attribute}, {geometry})");

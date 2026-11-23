@@ -349,10 +349,16 @@ fn number(value: Option<&Value>) -> f64 {
 
 /// `$this->geometryToWkt($values[0])` in `class`, called from `file` at
 /// `line`: the WKT of a spatial predicate's geometry.
-pub(crate) fn predicate_wkt(values: &Array, class: &str, file: &'static str, line: u32) -> Result<String> {
+pub(crate) fn predicate_wkt<D: Dialect>(
+    b: &mut Builder<D>,
+    values: &Array,
+    class: &str,
+    file: &'static str,
+    line: u32,
+) -> Result<String> {
     let geometry = values.get(&ArrayKey::Int(0)).unwrap_or(&Value::Null);
     let function = format!("{class}::geometryToWkt");
-    geometry_to_wkt(Param::method(&function, 1, "geometry", file, line).array(geometry)?)
+    b.geometry_to_wkt(Param::method(&function, 1, "geometry", file, line).array(geometry)?)
 }
 
 /// `SpatialDistanceFilter::fromTuple($values[0])`, called from `file` at `line`.
@@ -363,9 +369,9 @@ pub(crate) fn distance_filter(values: &Array, file: &'static str, line: u32) -> 
 }
 
 /// The WKT of a distance filter's geometry (a WKT string stays as is).
-pub(crate) fn wkt_of(geometry: &Value) -> Result<Value> {
+pub(crate) fn wkt_of<D: Dialect>(b: &mut Builder<D>, geometry: &Value) -> Result<Value> {
     Ok(match geometry {
-        Value::Array(a) => crate::value::string(geometry_to_wkt(a)?),
+        Value::Array(a) => crate::value::string(b.geometry_to_wkt(a)?),
         other => other.clone(),
     })
 }

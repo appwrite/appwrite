@@ -100,6 +100,14 @@ pub enum Step {
     CompileComparison,
     /// `enclose()`.
     Enclose,
+    /// `quote(string $identifier): string`.
+    Quote,
+    /// `getLikeKeyword(): string`.
+    GetLikeKeyword,
+    /// `getBindingValues(): array`.
+    GetBindingValues,
+    /// `geometryToWkt(array $geometry): string` (SQL dialects).
+    GeometryToWkt,
     /// `escapeLikeValue()`.
     EscapeLikeValue,
     /// `compileSpatialDistance()`.
@@ -172,7 +180,7 @@ pub enum Step {
 
 impl Step {
     /// Every step, in the order of the enum.
-    pub const ALL: [Step; 73] = [
+    pub const ALL: [Step; 77] = [
         Step::CompileFilter,
         Step::CompileOrder,
         Step::CompileLimit,
@@ -212,6 +220,10 @@ impl Step {
         Step::LikeEscape,
         Step::CompileComparison,
         Step::Enclose,
+        Step::Quote,
+        Step::GetLikeKeyword,
+        Step::GetBindingValues,
+        Step::GeometryToWkt,
         Step::EscapeLikeValue,
         Step::CompileSpatialDistance,
         Step::CompileSpatialPredicate,
@@ -290,6 +302,10 @@ impl Step {
             Step::LikeEscape => "likeEscape",
             Step::CompileComparison => "compileComparison",
             Step::Enclose => "enclose",
+            Step::Quote => "quote",
+            Step::GetLikeKeyword => "getLikeKeyword",
+            Step::GetBindingValues => "getBindingValues",
+            Step::GeometryToWkt => "geometryToWkt",
             Step::EscapeLikeValue => "escapeLikeValue",
             Step::CompileSpatialDistance => "compileSpatialDistance",
             Step::CompileSpatialPredicate => "compileSpatialPredicate",
@@ -380,6 +396,8 @@ pub enum Ret {
     Condition(Option<Condition>),
     /// A `Hook\Join\Placement`.
     Placement(Placement),
+    /// A list of values.
+    Values(Vec<Value>),
     /// Column names.
     Columns(Vec<php_std::ArrayKey>),
     /// A parsed statement.
@@ -566,6 +584,12 @@ impl<D: Dialect> Builder<D> {
                 .with_literal(D::LITERAL)
                 .parse_sql(sql)
                 .map(|read| Ret::Select(Box::new(read))),
+            (Step::Quote, [Arg::Str(identifier)]) => D::quote(self, identifier).map(Ret::Str),
+            (Step::GetLikeKeyword, []) => Ok(Ret::Str(D::like_keyword(self).to_owned())),
+            (Step::GetBindingValues, []) => Ok(Ret::Values(self.base_binding_values())),
+            (Step::GeometryToWkt, [Arg::Values(geometry)]) => {
+                crate::builder::sql::geometry_to_wkt(geometry).map(Ret::Str)
+            }
             (Step::EscapeLikeValue, [Arg::Value(value)]) => {
                 let escaped = crate::builder::core::escape_like_value(value, D::LIKE_ESCAPE);
                 Ok(Ret::Str(escaped.iter().map(|&byte| char::from(byte)).collect()))

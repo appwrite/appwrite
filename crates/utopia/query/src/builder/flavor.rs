@@ -442,7 +442,13 @@ impl<D: Dialect> Builder<D> {
         if !self.core.flavor.contains_all_patterns {
             return None;
         }
-        let like = D::like_keyword(self);
+        let like = match self.like_keyword() {
+            Ok(like) => like,
+            Err(error) => {
+                self.core.deferred.get_or_insert(error);
+                return None;
+            }
+        };
         let mut parts = Vec::with_capacity(values.len());
         for value in values.values() {
             self.add_binding(value.clone(), column);
@@ -582,7 +588,7 @@ impl Builder<crate::builder::PostgreSqlDialect> {
             _ => Array::new(),
         };
         let filter = crate::builder::SpatialDistanceFilter::from_tuple(&tuple)?;
-        let wkt = crate::builder::sql::wkt_of(&filter.geometry)?;
+        let wkt = crate::builder::sql::wkt_of(self, &filter.geometry)?;
         let geometry = format!("ST_GeomFromText(?, {srid})");
         if !filter.meters {
             self.add_binding(wkt.clone(), None);
