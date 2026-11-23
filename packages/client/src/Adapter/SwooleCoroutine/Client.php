@@ -416,6 +416,10 @@ class Client implements Adapter
 
                     if ($data === '') {
                         $client->requestBody = null;
+                        if (!\in_array($request->getMethod(), [Method::GET, Method::HEAD, Method::OPTIONS], true)
+                            && $client->setData('') === false) {
+                            throw new InvalidArgumentException('Unable to configure Swoole request body.');
+                        }
                     } elseif ($client->setData($data) === false) {
                         throw new InvalidArgumentException('Unable to configure Swoole request body.');
                     }
