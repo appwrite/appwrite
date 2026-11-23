@@ -36,6 +36,55 @@ for with in "" ${libraries:+"$all"}; do
     _APP_EXTENSION_LIBRARIES=$with php -d opcache.enable_cli=1 "$tests/opcache.php"
 done
 
+# utopia.libraries (README, "Using it outside Appwrite"). Unset or empty, the extension registers
+# exactly the classes pinned in libraries.expected (_APP_EXTENSION_LIBRARIES switches the rest on);
+# set, only the libraries it names, whatever _APP_EXTENSION_LIBRARIES says.
+echo "== utopia.libraries" >&2
+gate="$tests/libraries.php"
+every=dsn,domains,emails,image,locale,user-agent,validators,auth,detector,compression
+_APP_EXTENSION_LIBRARIES= php "$gate" > "$output/libraries.unset"
+diff "$tests/libraries.expected" "$output/libraries.unset" ||
+    { echo "the default classes changed: update tests/libraries.expected" >&2; exit 1; }
+_APP_EXTENSION_LIBRARIES= php -d utopia.libraries= "$gate" | diff "$tests/libraries.expected" -
+_APP_EXTENSION_LIBRARIES= php -d 'utopia.libraries= , ' "$gate" | diff "$tests/libraries.expected" -
+_APP_EXTENSION_LIBRARIES= php "$gate" ini= > /dev/null
+_APP_EXTENSION_LIBRARIES=$all php "$gate" > "$output/libraries.switched"
+_APP_EXTENSION_LIBRARIES= php -d utopia.libraries=$every "$gate" | diff "$output/libraries.switched" -
+# Edge and DNS, with _APP_EXTENSION_LIBRARIES naming what they leave out.
+_APP_EXTENSION_LIBRARIES=$all php -d utopia.libraries=validators,dsn,user-agent "$gate" \
+    ini=validators,dsn,user-agent \
+    +'Utopia\Validator\Validator' +'Utopia\Validator\Text' +'Utopia\Validator\Domain' +'Utopia\Validator\AnyOf' \
+    +'Utopia\DSN\DSN' +'Utopia\UserAgent\UserAgent' -'Utopia\Domains\Domain' -'Utopia\Emails\Email' \
+    -'Utopia\Auth\Hash' -'Utopia\Auth\Hashes\Argon2' -'Utopia\Image\Canvas' -'Utopia\Image\Font' \
+    -'Utopia\Locale\Locale' -'Utopia\Detector\Detector' -'Utopia\Compression\Compression' > /dev/null
+_APP_EXTENSION_LIBRARIES=$all php -d utopia.libraries=validators,dsn,domains "$gate" \
+    +'Utopia\Validator\Text' +'Utopia\DSN\DSN' +'Utopia\Domains\Domain' -'Utopia\Emails\Email' \
+    -'Utopia\UserAgent\UserAgent' -'Utopia\Auth\Hashes\Argon2' -'Utopia\Image\Canvas' -'Utopia\Locale\Locale' \
+    -'Utopia\Detector\Detector' -'Utopia\Compression\Compression' > /dev/null
+# The same from a scanned .ini file, as a service's utopia.ini sets it.
+mkdir "$output/conf.d"
+printf 'utopia.libraries = "validators, dsn, domains"\n' > "$output/conf.d/zz-libraries.ini"
+PHP_INI_SCAN_DIR="${PHP_INI_SCAN_DIR:-$(php -r 'echo PHP_CONFIG_FILE_SCAN_DIR;')}:$output/conf.d" php "$gate" \
+    +'Utopia\Domains\Domain' -'Utopia\UserAgent\UserAgent' > /dev/null
+php -d utopia.libraries=validators,dsn,user-agent --ri utopia | grep -q '^utopia.libraries => validators,dsn,user-agent' ||
+    { echo "php --ri utopia does not show utopia.libraries" >&2; exit 1; }
+# A switchable library named registers without _APP_EXTENSION_LIBRARIES; an old validators group
+# name means all of them; emails needs domains (Email builds a Domain), so it brings it.
+_APP_EXTENSION_LIBRARIES= php -d utopia.libraries=detector "$gate" \
+    +'Utopia\Detector\Detector' -'Utopia\Compression\Compression' -'Utopia\Validator\Validator' > /dev/null
+_APP_EXTENSION_LIBRARIES= php -d utopia.libraries=compression "$gate" \
+    +'Utopia\Compression\Compression' -'Utopia\Detector\Detector' > /dev/null
+_APP_EXTENSION_LIBRARIES= php -d utopia.libraries=validators-scalar "$gate" \
+    +'Utopia\Validator\Integer' +'Utopia\Validator\Text' +'Utopia\Validator\URL' +'Utopia\Validator\AnyOf' > /dev/null
+_APP_EXTENSION_LIBRARIES= php -d utopia.libraries=emails "$gate" \
+    +'Utopia\Emails\Email' +'Utopia\Domains\Domain' -'Utopia\Validator\Validator' > /dev/null
+php -d utopia.libraries=emails -r 'new Utopia\Emails\Email("a@example.com");'
+# An unknown name: a startup warning naming it, and the rest of the list still applies.
+warnings=$(php -d utopia.libraries=validators,bogus,dsn "$gate" +'Utopia\Validator\Text' +'Utopia\DSN\DSN' -'Utopia\Locale\Locale' 2>&1)
+echo "$warnings" | grep -q 'utopia.libraries: unknown library "bogus" ignored' ||
+    { echo "no warning for an unknown library: $warnings" >&2; exit 1; }
+echo "$warnings" | grep -q '^ok$'
+
 # Classes with no PHP implementation left: their packages' own tests, on the extension.
 for package in user-agent domains emails validators auth; do
     echo "== $package (no PHP)" >&2

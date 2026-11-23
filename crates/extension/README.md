@@ -49,12 +49,62 @@ RUN apk add --no-cache libheif libstdc++ \
 `.github/workflows/extension.yml` publishes it, smoke-testing each architecture on stock
 `php:8.5-cli-alpine` with exactly these packages first.
 
+### Choosing the libraries: `utopia.libraries`
+
+A class the extension registers takes its name over for the whole process, so a Composer copy of
+the same class in `vendor/` is never loaded. A service that still ships older PHP copies of some of
+these packages registers only the libraries it uses, with `utopia.libraries` in its `utopia.ini`:
+
+```ini
+; Edge
+extension=/usr/local/lib/php/utopia.so
+utopia.libraries = "validators,dsn,user-agent"
+```
+
+```ini
+; DNS
+extension=/usr/local/lib/php/utopia.so
+utopia.libraries = "validators,dsn,domains"
+```
+
+| Name          | Classes                                                                          |
+|---------------|----------------------------------------------------------------------------------|
+| `auth`        | `Utopia\Auth\Hash`, `Utopia\Auth\Hashes\*`                                       |
+| `compression` | `Utopia\Compression\*`                                                           |
+| `detector`    | `Utopia\Detector\*`                                                              |
+| `domains`     | `Utopia\Domains\Domain`                                                          |
+| `dsn`         | `Utopia\DSN\DSN`                                                                 |
+| `emails`      | `Utopia\Emails\Email`, and `domains` with it                                     |
+| `image`       | `Utopia\Image\Canvas`, `Utopia\Image\Font`                                       |
+| `locale`      | `Utopia\Locale\Locale`                                                           |
+| `user-agent`  | `Utopia\UserAgent\UserAgent`                                                     |
+| `validators`  | `Utopia\Validator\Validator` and every validator of `packages/validators`        |
+
+- **Unset or empty** (the default, and what Appwrite and Cloud use): every library above but
+  `detector` and `compression` registers, and `_APP_EXTENSION_LIBRARIES` switches those two on (see
+  [Switching a class on](#switching-a-class-on)).
+- **Set:** only the libraries it names register, `detector` and `compression` included, and
+  `_APP_EXTENSION_LIBRARIES` is ignored. Names are the package names, the same ones
+  `_APP_EXTENSION_LIBRARIES` takes, comma separated; spaces around them are ignored. The old
+  `validators-scalar`, `validators-text`, `validators-network` and `validators-compose` each mean
+  `validators`: the validators register together, as every one extends `Utopia\Validator\Validator`.
+- **Dependencies:** `emails` brings `domains`, because `Utopia\Emails\Email` builds a
+  `Utopia\Domains\Domain`. No other library uses another's classes.
+- **Unknown names** are skipped with a startup warning that names them
+  (`PHP Startup: utopia.libraries: unknown library "…" ignored; …`); the rest of the
+  list still applies.
+- **When it is read:** once, when PHP loads the extension, from the configuration PHP has parsed by
+  then: `php.ini`, the scanned `conf.d` (`PHP_INI_SCAN_DIR`) files and `-d utopia.libraries=…` on
+  the command line all work. It is a `PHP_INI_SYSTEM` setting, shown by `ini_get()` and
+  `php --ri utopia`; `ini_set()` cannot change it, and changing the file takes a restart. Nothing is
+  checked after startup.
+
 ## Switching a class on
 
 `Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN`, `Utopia\Locale\Locale`,
 `Utopia\UserAgent\UserAgent`, `Utopia\Domains\Domain`, `Utopia\Emails\Email`, the validators
-of `packages/validators` and the password hashes of `packages/auth` are always registered: they
-have no PHP implementation. Their signatures are in `stubs/`, `packages/image/stubs/`,
+of `packages/validators` and the password hashes of `packages/auth` are registered unless
+`utopia.libraries` leaves them out: they have no PHP implementation. Their signatures are in `stubs/`, `packages/image/stubs/`,
 `packages/user-agent/stubs/`, `packages/domains/stubs/`, `packages/emails/stubs/`,
 `packages/validators/stubs/` and `packages/auth/stubs/` for PHPStan, which runs without the
 extension. A library that still has a PHP implementation is registered only when
@@ -66,13 +116,19 @@ _APP_EXTENSION_LIBRARIES=<package>,<package>   # those packages' classes from th
 ```
 
 The extension reads it once, when PHP loads the module, so changing it takes a restart and no
-deploy. Each library is canaried on Cloud this way before it becomes the default.
+deploy. Each library is canaried on Cloud this way before it becomes the default. A process that
+sets `utopia.libraries` does not read it: its list alone decides.
 
 CI runs `crates/extension/tests/run.sh` in the development image. It finds the switchable libraries
 from the `enabled()` calls in `src/lib.rs` and requires a parity corpus at `tests/<name>.php` for
 each. For every one it runs `packages/<name>/tests` on the extension and diffs the corpus on both
 implementations, first one library at a time, then with all of them on. A new library needs only
-its `enabled()` call, its corpus and its package tests; there is no CI step to add.
+its `enabled()` call, its corpus, its package tests and its name in `NAMES` (`src/libraries.rs`)
+and in `run.sh`'s `every`; there is no CI step to add.
+
+`tests/libraries.php` then checks `utopia.libraries`: with it unset, the extension must register
+exactly the classes listed in `tests/libraries.expected` (a class added to a default library adds
+a line there); with it set, only those of the libraries named.
 
 `tests/opcache.php` then declares a PHP subclass of every class the extension registers and runs
 with opcache on, with no switch and with all of them: opcache copies a cached subclass, with the
