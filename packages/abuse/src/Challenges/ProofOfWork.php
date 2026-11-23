@@ -29,7 +29,7 @@ final readonly class ProofOfWork
     private Token $token;
 
     /** @var array<string, string> */
-    private array $binding;
+    private array $params;
 
     /**
      * @param  string  $secret  Signing secret
@@ -50,22 +50,28 @@ final readonly class ProofOfWork
         string $purpose = 'challenge',
     ) {
         $this->token = new Token($secret, $label, $purpose, $ttl);
-        $this->binding = [];
+        $this->params = [];
     }
 
     /**
-     * A copy bound to these fields, e.g. the client's IP prefix and User-Agent
-     * hash. Puzzles it issues verify only with the same binding.
+     * A copy with these params added, like the rate-limit adapters' withParams().
+     * Params are the fields tokens are bound to, e.g. the client's IP prefix and User-Agent hash: puzzles
+     * issued from it verify only with exactly the same params.
      *
-     * @param  array<string, string>  $binding
+     * @param  array<string, string>  $params
      */
-    public function withBinding(array $binding): static
+    public function withParams(array $params): static
     {
-        return clone($this, ['binding' => [...$this->binding, ...$binding]]);
+        return clone($this, ['params' => [...$this->params, ...$params]]);
+    }
+
+    public function withParam(string $name, string $value): static
+    {
+        return $this->withParams([$name => $value]);
     }
 
     /**
-     * Sign a puzzle bound to this binding. Claims are carried through and
+     * Sign a puzzle bound to these params. Claims are carried through and
      * returned by verify.
      *
      * @param  array<string, string|int>  $claims
@@ -79,7 +85,7 @@ final readonly class ProofOfWork
             throw new \InvalidArgumentException('difficulty must be between 0 and ' . self::MAX_DIFFICULTY . ', got ' . $difficulty);
         }
 
-        foreach ([...\array_keys($this->binding), ...\array_keys($claims)] as $name) {
+        foreach ([...\array_keys($this->params), ...\array_keys($claims)] as $name) {
             if (\in_array($name, self::RESERVED_CLAIMS, true)) {
                 throw new \InvalidArgumentException("claim '{$name}' is reserved");
             }
@@ -91,13 +97,13 @@ final readonly class ProofOfWork
             'difficulty' => $difficulty,
             ...$claims,
             'iatMs' => (int) (\microtime(true) * 1000),
-        ], binding: $this->binding);
+        ], binding: $this->params);
 
         return new Puzzle($token, $nonce, $difficulty);
     }
 
     /**
-     * Verify a solution. The binding must equal the one the puzzle was issued
+     * Verify a solution. The params must equal the ones the puzzle was issued
      * with; it is checked before the nonce is used, so a puzzle presented by
      * another client never spends the owner's attempt.
      */
@@ -108,7 +114,7 @@ final readonly class ProofOfWork
             return new Result(Status::InvalidToken);
         }
 
-        if (!Token::isBoundTo($claims, $this->binding)) {
+        if (!Token::isBoundTo($claims, $this->params)) {
             return new Result(Status::BindingMismatch);
         }
 

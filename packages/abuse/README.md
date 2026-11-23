@@ -120,7 +120,7 @@ if (!$recaptcha->verify($_POST['g-recaptcha-response'], $_SERVER['REMOTE_ADDR'])
 
 ### Proof-of-work challenge
 
-`ProofOfWork` makes a client spend CPU before it gets through. You issue a signed puzzle; the client finds a solution whose SHA-256 has enough leading zero bits; you verify it. Each puzzle can be redeemed once, tracked by a `Nonce` store. A passed challenge earns a `Clearance`, so later requests skip it. Both are bound to the client with `withBinding()`, which returns a copy, like `withParams()` on the rate-limit adapters.
+`ProofOfWork` makes a client spend CPU before it gets through. You issue a signed puzzle; the client finds a solution whose SHA-256 has enough leading zero bits; you verify it. Each puzzle can be redeemed once, tracked by a `Nonce` store. A passed challenge earns a `Clearance`, so later requests skip it. Both are bound to the client with `withParams()`, which returns a copy, the same as on the rate-limit adapters; tokens verify only with exactly the same params.
 
 ```php
 <?php
@@ -135,16 +135,16 @@ $clearance = new Clearance('secret');
 $client = ['ip' => $ip, 'ua' => $userAgent];
 
 // Issue a puzzle, then send $puzzle->token, $puzzle->nonce and $puzzle->difficulty to the client
-$puzzle = $challenge->withBinding($client)->issue(difficulty: 18);
+$puzzle = $challenge->withParams($client)->issue(difficulty: 18);
 
 // Verify the client's solution and hand out a clearance
-$result = $challenge->withBinding($client)->verify($token, $solution);
+$result = $challenge->withParams($client)->verify($token, $solution);
 if ($result->isValid()) {
-    $cookie = $clearance->withBinding($client)->issue($result->difficulty);
+    $cookie = $clearance->withParams($client)->issue($result->difficulty);
 }
 
 // Later requests skip the challenge while the clearance holds
-if (!$clearance->withBinding($client)->verify($cookie, difficulty: 18, maxAge: 1800)) {
+if (!$clearance->withParams($client)->verify($cookie, difficulty: 18, maxAge: 1800)) {
     // challenge again
 }
 ```

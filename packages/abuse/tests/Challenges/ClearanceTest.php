@@ -31,7 +31,7 @@ final class ClearanceTest extends TestCase
     {
         $clearance = $this->clearance();
 
-        $bound = $clearance->withBinding(self::BINDING);
+        $bound = $clearance->withParams(self::BINDING);
 
         $this->assertTrue($bound->verify($bound->issue(18), 18));
     }
@@ -40,9 +40,9 @@ final class ClearanceTest extends TestCase
     public function testAnyBindingMismatchIsRejected(string $name, string $value): void
     {
         $clearance = $this->clearance();
-        $issued = $clearance->withBinding(self::BINDING)->issue();
+        $issued = $clearance->withParams(self::BINDING)->issue();
 
-        $this->assertFalse($clearance->withBinding([...self::BINDING, $name => $value])->verify($issued));
+        $this->assertFalse($clearance->withParams([...self::BINDING, $name => $value])->verify($issued));
     }
 
     /**
@@ -61,40 +61,40 @@ final class ClearanceTest extends TestCase
     {
         // Leaving a field out must not drop it from the check.
         $clearance = $this->clearance();
-        $issued = $clearance->withBinding(self::BINDING)->issue();
+        $issued = $clearance->withParams(self::BINDING)->issue();
 
         $partial = self::BINDING;
         unset($partial['ua']);
-        $this->assertFalse($clearance->withBinding($partial)->verify($issued));
-        $this->assertFalse($clearance->withBinding([])->verify($issued));
+        $this->assertFalse($clearance->withParams($partial)->verify($issued));
+        $this->assertFalse($clearance->withParams([])->verify($issued));
     }
 
     public function testAnUnboundClearanceOnlyVerifiesWithoutABinding(): void
     {
         $clearance = $this->clearance();
-        $issued = $clearance->withBinding([])->issue();
+        $issued = $clearance->withParams([])->issue();
 
-        $this->assertTrue($clearance->withBinding([])->verify($issued));
-        $this->assertFalse($clearance->withBinding(['ip' => '203.0.113.0/24'])->verify($issued));
+        $this->assertTrue($clearance->withParams([])->verify($issued));
+        $this->assertFalse($clearance->withParams(['ip' => '203.0.113.0/24'])->verify($issued));
     }
 
     public function testAnEmptyBindingValueOnlyMatchesAnEmptyValue(): void
     {
         $clearance = $this->clearance();
-        $issued = $clearance->withBinding([...self::BINDING, 'resource' => ''])->issue();
+        $issued = $clearance->withParams([...self::BINDING, 'resource' => ''])->issue();
 
-        $this->assertTrue($clearance->withBinding([...self::BINDING, 'resource' => ''])->verify($issued));
-        $this->assertFalse($clearance->withBinding(self::BINDING)->verify($issued));
+        $this->assertTrue($clearance->withParams([...self::BINDING, 'resource' => ''])->verify($issued));
+        $this->assertFalse($clearance->withParams(self::BINDING)->verify($issued));
     }
 
     public function testAClearanceEarnedAtALowerDifficultyIsRejected(): void
     {
         $clearance = $this->clearance();
-        $issued = $clearance->withBinding(self::BINDING)->issue(16);
+        $issued = $clearance->withParams(self::BINDING)->issue(16);
 
-        $this->assertTrue($clearance->withBinding(self::BINDING)->verify($issued, 14));
-        $this->assertTrue($clearance->withBinding(self::BINDING)->verify($issued, 16));
-        $this->assertFalse($clearance->withBinding(self::BINDING)->verify($issued, 18));
+        $this->assertTrue($clearance->withParams(self::BINDING)->verify($issued, 14));
+        $this->assertTrue($clearance->withParams(self::BINDING)->verify($issued, 16));
+        $this->assertFalse($clearance->withParams(self::BINDING)->verify($issued, 18));
     }
 
     public function testMaxAgeLimitsHowOldAClearanceMayBe(): void
@@ -109,10 +109,10 @@ final class ClearanceTest extends TestCase
         ]);
 
         $clearance = $this->clearance();
-        $this->assertTrue($clearance->withBinding(self::BINDING)->verify($old, 18, 1800));
-        $this->assertFalse($clearance->withBinding(self::BINDING)->verify($old, 18, 900));
+        $this->assertTrue($clearance->withParams(self::BINDING)->verify($old, 18, 1800));
+        $this->assertFalse($clearance->withParams(self::BINDING)->verify($old, 18, 900));
         // No age limit when maxAge is 0.
-        $this->assertTrue($clearance->withBinding(self::BINDING)->verify($old, 18));
+        $this->assertTrue($clearance->withParams(self::BINDING)->verify($old, 18));
     }
 
     public function testATokenThatDoesNotRecordItsBindingIsRejected(): void
@@ -126,44 +126,52 @@ final class ClearanceTest extends TestCase
             'exp' => \time() + 1800,
         ]);
 
-        $this->assertFalse($this->clearance()->withBinding(self::BINDING)->verify($legacy));
+        $this->assertFalse($this->clearance()->withParams(self::BINDING)->verify($legacy));
     }
 
     public function testAClearanceMissingItsDifficultyOrIssueTimeIsRejected(): void
     {
         $clearance = $this->clearance();
 
-        $this->assertFalse($clearance->withBinding(self::BINDING)->verify($this->token()->issue([Clearance::DIFFICULTY_CLAIM => 18], binding: self::BINDING)));
-        $this->assertFalse($clearance->withBinding(self::BINDING)->verify($this->token()->issue([Clearance::ISSUED_AT_CLAIM => \time()], binding: self::BINDING)));
+        $this->assertFalse($clearance->withParams(self::BINDING)->verify($this->token()->issue([Clearance::DIFFICULTY_CLAIM => 18], binding: self::BINDING)));
+        $this->assertFalse($clearance->withParams(self::BINDING)->verify($this->token()->issue([Clearance::ISSUED_AT_CLAIM => \time()], binding: self::BINDING)));
     }
 
     public function testATokenIssuedForAnotherPurposeIsNotAClearance(): void
     {
         $challenge = $this->token('challenge')->issue([Clearance::DIFFICULTY_CLAIM => 99, Clearance::ISSUED_AT_CLAIM => \time()], binding: self::BINDING);
 
-        $this->assertFalse($this->clearance()->withBinding(self::BINDING)->verify($challenge));
+        $this->assertFalse($this->clearance()->withParams(self::BINDING)->verify($challenge));
     }
 
     public function testTamperedForeignAndEmptyTokensAreRejected(): void
     {
         $clearance = $this->clearance();
-        $issued = $clearance->withBinding(self::BINDING)->issue();
+        $issued = $clearance->withParams(self::BINDING)->issue();
         $issued[\strlen($issued) - 1] = $issued[\strlen($issued) - 1] === 'a' ? 'b' : 'a';
 
-        $this->assertFalse($clearance->withBinding(self::BINDING)->verify($issued));
-        $this->assertFalse($clearance->withBinding(self::BINDING)->verify(''));
+        $this->assertFalse($clearance->withParams(self::BINDING)->verify($issued));
+        $this->assertFalse($clearance->withParams(self::BINDING)->verify(''));
 
-        $foreign = $this->clearance('other-secret')->withBinding(self::BINDING)->issue();
-        $this->assertFalse($clearance->withBinding(self::BINDING)->verify($foreign));
+        $foreign = $this->clearance('other-secret')->withParams(self::BINDING)->issue();
+        $this->assertFalse($clearance->withParams(self::BINDING)->verify($foreign));
     }
 
-    public function testWithBindingReturnsACopyAndMerges(): void
+    public function testWithParamsReturnsACopyAndMerges(): void
     {
         $clearance = $this->clearance();
-        $issued = $clearance->withBinding(['project' => 'p1', 'resource' => 'r1'])->withBinding(['ip' => '203.0.113.0/24', 'ua' => 'ua-hash'])->issue();
+        $issued = $clearance->withParams(['project' => 'p1', 'resource' => 'r1'])->withParams(['ip' => '203.0.113.0/24', 'ua' => 'ua-hash'])->issue();
 
-        $this->assertTrue($clearance->withBinding(self::BINDING)->verify($issued));
+        $this->assertTrue($clearance->withParams(self::BINDING)->verify($issued));
         $this->assertFalse($clearance->verify($issued));
+    }
+
+    public function testWithParamAddsOneParam(): void
+    {
+        $clearance = $this->clearance();
+        $issued = $clearance->withParams(['project' => 'p1', 'resource' => 'r1', 'ip' => '203.0.113.0/24'])->withParam('ua', 'ua-hash')->issue();
+
+        $this->assertTrue($clearance->withParams(self::BINDING)->verify($issued));
     }
 
     public function testDefaultLabelsKeepPuzzlesAndClearancesApart(): void
@@ -181,27 +189,27 @@ final class ClearanceTest extends TestCase
     public function testTtlSetsTheExpiry(): void
     {
         $before = \time();
-        $issued = $this->clearance()->withBinding(self::BINDING)->issue(ttl: 3600);
+        $issued = $this->clearance()->withParams(self::BINDING)->issue(ttl: 3600);
         $claims = $this->token()->verify($issued);
 
         $this->assertIsArray($claims);
         $this->assertGreaterThanOrEqual($before + 3600, $claims['exp']);
-        $this->assertTrue($this->clearance()->withBinding(self::BINDING)->verify($issued));
+        $this->assertTrue($this->clearance()->withParams(self::BINDING)->verify($issued));
     }
 
     public function testClaimsAreCarriedButNotChecked(): void
     {
-        $issued = $this->clearance()->withBinding(self::BINDING)->issue(claims: ['note' => 'x']);
+        $issued = $this->clearance()->withParams(self::BINDING)->issue(claims: ['note' => 'x']);
 
         $this->assertSame('x', $this->token()->verify($issued)['note'] ?? null);
-        $this->assertTrue($this->clearance()->withBinding(self::BINDING)->verify($issued));
+        $this->assertTrue($this->clearance()->withParams(self::BINDING)->verify($issued));
     }
 
     #[DataProvider('reservedNames')]
     public function testReservedNamesAreRefused(string $name): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->clearance()->withBinding([$name => 'x'])->issue();
+        $this->clearance()->withParams([$name => 'x'])->issue();
     }
 
     /**
@@ -217,6 +225,6 @@ final class ClearanceTest extends TestCase
     public function testABindingThatSharesANameWithAClaimIsRefused(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->clearance()->withBinding(['ip' => 'a'])->issue(claims: ['ip' => 'b']);
+        $this->clearance()->withParams(['ip' => 'a'])->issue(claims: ['ip' => 'b']);
     }
 }

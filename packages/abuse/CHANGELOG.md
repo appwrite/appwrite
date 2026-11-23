@@ -5,9 +5,9 @@
 ### Added
 
 - `Utopia\Abuse\Challenges`: a proof-of-work challenge and the clearance a client earns by passing it, so any service can issue and verify the same tokens.
-  - `ProofOfWork`: `new ProofOfWork($secret, $nonces)`, then `withBinding([...])->issue($difficulty)` returns a `Puzzle` (token, nonce, difficulty) and `->verify($token, $solution)` returns a `ProofOfWork\Result`. Each puzzle can be redeemed once. A nonce store outage rejects the solution unless `acceptWhenNoncesUnavailable` is set.
-  - `Clearance`: `new Clearance($secret)`, then `withBinding([...])->issue($difficulty)` and `->verify($token, $difficulty, $maxAge)`.
-  - `withBinding()` returns a copy bound to the given fields; tokens verify only with exactly the same binding.
+  - `ProofOfWork`: `new ProofOfWork($secret, $nonces)`, then `withParams([...])->issue($difficulty)` returns a `Puzzle` (token, nonce, difficulty) and `->verify($token, $solution)` returns a `ProofOfWork\Result`. Each puzzle can be redeemed once. A nonce store outage rejects the solution unless `acceptWhenNoncesUnavailable` is set.
+  - `Clearance`: `new Clearance($secret)`, then `withParams([...])->issue($difficulty)` and `->verify($token, $difficulty, $maxAge)`.
+  - `withParams()` / `withParam()` return a copy with the params added, like the rate-limit adapters; params are the fields tokens are bound to, and tokens verify only with exactly the same params.
   - `Nonce`: the single-use nonce store, with a key pattern filled by `withParams()` like the rate-limit adapters. Backends: `Nonce\Redis`, `Nonce\RedisCluster`, `Nonce\RedisPool` and `Nonce\None`.
   - `Token`: the signed, purpose-bound token both are built on, for callers that need it directly.
   - `Identity`: a coarse IP prefix (configurable, /24 and /48 by default) and a User-Agent hash to bind to.

@@ -23,7 +23,7 @@ final readonly class Clearance
     private Token $token;
 
     /** @var array<string, string> */
-    private array $binding;
+    private array $params;
 
     /**
      * @param  string  $secret  Signing secret
@@ -40,19 +40,24 @@ final readonly class Clearance
         string $purpose = 'clearance',
     ) {
         $this->token = new Token($secret, $label, $purpose, $ttl);
-        $this->binding = [];
+        $this->params = [];
     }
 
     /**
-     * A copy bound to these fields, e.g. the client's IP prefix, User-Agent
-     * hash or the resource it was earned on. Clearances it issues verify only
-     * with the same binding.
+     * A copy with these params added, like the rate-limit adapters' withParams().
+     * Params are the fields tokens are bound to, e.g. the client's IP prefix, User-Agent hash or the resource it was earned on: clearances
+     * issued from it verify only with exactly the same params.
      *
-     * @param  array<string, string>  $binding
+     * @param  array<string, string>  $params
      */
-    public function withBinding(array $binding): static
+    public function withParams(array $params): static
     {
-        return clone($this, ['binding' => [...$this->binding, ...$binding]]);
+        return clone($this, ['params' => [...$this->params, ...$params]]);
+    }
+
+    public function withParam(string $name, string $value): static
+    {
+        return $this->withParams([$name => $value]);
     }
 
     /**
@@ -60,11 +65,11 @@ final readonly class Clearance
      * @param  int  $ttl  Lifetime in seconds; 0 or less uses the default
      * @param  array<string, string|int>  $claims  Carried along, not checked
      *
-     * @throws \InvalidArgumentException when a binding field or claim uses a reserved name
+     * @throws \InvalidArgumentException when a param or claim uses a reserved name
      */
     public function issue(int $difficulty = 0, int $ttl = 0, array $claims = []): string
     {
-        foreach ([...\array_keys($this->binding), ...\array_keys($claims)] as $name) {
+        foreach ([...\array_keys($this->params), ...\array_keys($claims)] as $name) {
             if ($name === self::DIFFICULTY_CLAIM || $name === self::ISSUED_AT_CLAIM) {
                 throw new \InvalidArgumentException("claim '{$name}' is reserved");
             }
@@ -75,19 +80,19 @@ final readonly class Clearance
             self::DIFFICULTY_CLAIM => $difficulty,
             // Not `iat`: the JWT library would expire the token at iat + its fixed max age
             self::ISSUED_AT_CLAIM => \time(),
-        ], $ttl, $this->binding);
+        ], $ttl, $this->params);
     }
 
     /**
      * True when the clearance is valid and unexpired, bound to exactly this
-     * binding, earned at no less than $difficulty, and younger than $maxAge
+     * params, earned at no less than $difficulty, and younger than $maxAge
      * seconds (no age limit when $maxAge is 0 or less). A mismatch returns false
      * so the caller challenges again rather than blocking.
      */
     public function verify(string $token, int $difficulty = 0, int $maxAge = 0): bool
     {
         $claims = $this->token->verify($token);
-        if ($claims === null || !Token::isBoundTo($claims, $this->binding)) {
+        if ($claims === null || !Token::isBoundTo($claims, $this->params)) {
             return false;
         }
 
