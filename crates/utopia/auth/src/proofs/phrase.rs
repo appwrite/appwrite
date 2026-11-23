@@ -252,7 +252,8 @@ const NOUNS: [&str; 104] = [
 /// use utopia_auth::proofs::{Phrase, Proof};
 ///
 /// let phrase = Phrase::new().generate()?;
-/// let words: Vec<&[u8]> = phrase.split(|b| *b == b' ').collect();
+/// // The adjective, then the noun (which can be two words, as `ice cream`).
+/// let words: Vec<&[u8]> = phrase.splitn(2, |b| *b == b' ').collect();
 /// assert_eq!(words.len(), 2);
 /// assert!(words[0][0].is_ascii_uppercase());
 /// # Ok::<(), utopia_auth::Error>(())
@@ -262,7 +263,7 @@ const NOUNS: [&str; 104] = [
 /// use Utopia\Auth\Proofs\Phrase;
 ///
 /// $phrase = (new Phrase())->generate();
-/// echo count(explode(' ', $phrase)), "\n"; // 2
+/// echo count(explode(' ', $phrase, 2)), "\n"; // 2
 /// ```
 #[derive(Debug, Clone)]
 pub struct Phrase {
