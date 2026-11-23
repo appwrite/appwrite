@@ -1,6 +1,7 @@
 //! Snappy, a port of Google's C++ snappy 1.2.1.
 
-use crate::{Algorithm, Compression, Error};
+use crate::sink::spare;
+use crate::{Algorithm, Compression, Error, Sink};
 
 /// Snappy raw format: the uncompressed length as a varint, then literals
 /// and copies.
@@ -47,6 +48,44 @@ impl Snappy {
     pub const fn is_supported() -> bool {
         true
     }
+
+    /// [`Algorithm::compress`], appended to `out`: into room for snappy's
+    /// `MaxCompressedLength()`, as `snappy_compress()` allocates it.
+    pub fn compress_into<S: Sink + ?Sized>(&self, data: &[u8], out: &mut S) -> Result<(), Error> {
+        let max = 32 + data.len() + data.len() / 6;
+        let start = out.len();
+        if !out.grow(start + max) {
+            return Err(Error::Codec("snappy_compress : memory error".into()));
+        }
+        let (at, _) = spare(out);
+        let mut writer = Writer { at, len: 0, capacity: max };
+        compress(data, &mut writer);
+        // SAFETY: the writer wrote `len` bytes, within the room made.
+        unsafe { out.set_len(start + writer.len) };
+        Ok(())
+    }
+
+    /// [`Algorithm::decompress`], appended to `out`: the length the input starts with is
+    /// allocated, as `snappy_uncompress()` allocates it, and the input must decode to exactly
+    /// that.
+    pub fn decompress_into<S: Sink + ?Sized>(&self, data: &[u8], out: &mut S) -> Result<(), Error> {
+        let Some((length, header)) = varint(data) else {
+            return Err(Error::Codec("snappy_uncompress : output length error".into()));
+        };
+        let length = length as usize;
+        let start = out.len();
+        if !out.grow(start + length) {
+            return Err(Error::Codec("snappy_uncompress : memory error".into()));
+        }
+        let (at, _) = spare(out);
+        // SAFETY: `at` has room for `length` bytes.
+        if !unsafe { decompress(&data[header..], at, length) } {
+            return Err(Error::Codec("snappy_uncompress : data error".into()));
+        }
+        // SAFETY: decompress wrote exactly `length` bytes.
+        unsafe { out.set_len(start + length) };
+        Ok(())
+    }
 }
 
 impl Algorithm for Snappy {
@@ -55,15 +94,15 @@ impl Algorithm for Snappy {
     }
 
     fn compress(&self, data: &[u8]) -> Result<Vec<u8>, Error> {
-        Ok(compress(data))
+        let mut out = Vec::new();
+        self.compress_into(data, &mut out)?;
+        Ok(out)
     }
 
     fn decompress(&self, data: &[u8]) -> Result<Vec<u8>, Error> {
-        let Some((length, header)) = varint(data) else {
-            return Err(Error::Codec("snappy_uncompress : output length error".into()));
-        };
-        decompress(&data[header..], length as usize)
-            .ok_or_else(|| Error::Codec("snappy_uncompress : data error".into()))
+        let mut out = Vec::new();
+        self.decompress_into(data, &mut out)?;
+        Ok(out)
     }
 
     fn supported(&self) -> bool {
@@ -83,8 +122,40 @@ const LITERAL: u8 = 0;
 const COPY_1_BYTE_OFFSET: u32 = 1;
 const COPY_2_BYTE_OFFSET: u32 = 2;
 
+/// Where the compressor writes: room for snappy's `MaxCompressedLength()`, which its output
+/// never exceeds (a write past it panics rather than corrupting memory).
+struct Writer {
+    at: *mut u8,
+    len: usize,
+    capacity: usize,
+}
+
+impl Writer {
+    #[inline(always)]
+    fn push(&mut self, byte: u8) {
+        assert!(self.len < self.capacity, "snappy output past MaxCompressedLength");
+        // SAFETY: within the room checked above.
+        unsafe { self.at.add(self.len).write(byte) };
+        self.len += 1;
+    }
+
+    #[inline(always)]
+    fn extend(&mut self, bytes: &[u8]) {
+        assert!(bytes.len() <= self.capacity - self.len, "snappy output past MaxCompressedLength");
+        // SAFETY: within the room checked above; the input never overlaps the output.
+        unsafe { std::ptr::copy_nonoverlapping(bytes.as_ptr(), self.at.add(self.len), bytes.len()) };
+        self.len += bytes.len();
+    }
+}
+
+#[inline(always)]
 fn load32(s: &[u8], i: usize) -> u32 {
-    u32::from_le_bytes([s[i], s[i + 1], s[i + 2], s[i + 3]])
+    u32::from_le_bytes(s[i..i + 4].try_into().unwrap_or_default())
+}
+
+#[inline(always)]
+fn load64(s: &[u8], i: usize) -> u64 {
+    u64::from_le_bytes(s[i..i + 8].try_into().unwrap_or_default())
 }
 
 /// `CalculateTableSize()`: the next power of two, within 2^8..2^15.
@@ -94,6 +165,7 @@ fn table_size(input: usize) -> usize {
 
 /// `TableEntry()` with the portable multiplicative hash: the index of the
 /// 16-bit slot for the 4 bytes `bytes`.
+#[inline(always)]
 fn slot(bytes: u32, mask: u32) -> usize {
     const MAGIC: u32 = 0x1e35_a7bd;
     // The C++ table is addressed in bytes: `mask` is 2 * (size - 1).
@@ -101,50 +173,57 @@ fn slot(bytes: u32, mask: u32) -> usize {
 }
 
 /// `RawCompress()`: the varint length, then each fragment.
-fn compress(input: &[u8]) -> Vec<u8> {
-    let mut out = Vec::with_capacity(32 + input.len() + input.len() / 6);
+fn compress(input: &[u8], out: &mut Writer) {
     let mut n = input.len() as u32;
     while n >= 0x80 {
         out.push(n as u8 | 0x80);
         n >>= 7;
     }
     out.push(n as u8);
-    let mut table = vec![0u16; table_size(input.len().min(BLOCK_SIZE))];
+    // The hash table, kept for the thread: only the part a fragment uses is cleared, so a small
+    // input does not pay for the 64 KiB a full one needs.
+    thread_local! {
+        static TABLE: std::cell::Cell<Option<Box<[u16; 1 << MAX_TABLE_BITS]>>> = const { std::cell::Cell::new(None) };
+    }
+    let mut table = TABLE.with(std::cell::Cell::take).unwrap_or_else(|| Box::new([0; 1 << MAX_TABLE_BITS]));
     for fragment in input.chunks(BLOCK_SIZE) {
         let size = table_size(fragment.len());
         table[..size].fill(0);
-        compress_fragment(fragment, &mut out, &mut table[..size]);
+        compress_fragment(fragment, out, &mut table[..size]);
     }
-    out
+    TABLE.with(|slot| slot.set(Some(table)));
 }
 
 /// `EmitLiteral()`.
-fn emit_literal(out: &mut Vec<u8>, literal: &[u8]) {
+#[inline(always)]
+fn emit_literal(out: &mut Writer, literal: &[u8]) {
     let n = literal.len() - 1;
     if n < 60 {
         out.push(LITERAL | ((n as u8) << 2));
     } else {
         let count = (n.ilog2() as usize >> 3) + 1;
         out.push(LITERAL | (((59 + count) as u8) << 2));
-        out.extend_from_slice(&(n as u32).to_le_bytes()[..count]);
+        out.extend(&(n as u32).to_le_bytes()[..count]);
     }
-    out.extend_from_slice(literal);
+    out.extend(literal);
 }
 
 /// `EmitCopyAtMost64()`.
-fn emit_copy_at_most_64(out: &mut Vec<u8>, offset: usize, len: usize) {
+#[inline(always)]
+fn emit_copy_at_most_64(out: &mut Writer, offset: usize, len: usize) {
     let (offset, len) = (offset as u32, len as u32);
     if len < 12 && offset < 2048 {
         out.push((COPY_1_BYTE_OFFSET + ((len - 4) << 2) + ((offset >> 8) << 5)) as u8);
         out.push(offset as u8);
     } else {
         out.push((COPY_2_BYTE_OFFSET + ((len - 1) << 2)) as u8);
-        out.extend_from_slice(&(offset as u16).to_le_bytes());
+        out.extend(&(offset as u16).to_le_bytes());
     }
 }
 
 /// `EmitCopy()`: 64-byte copies, keeping at least 4 bytes for the last one.
-fn emit_copy(out: &mut Vec<u8>, offset: usize, mut len: usize) {
+#[inline(always)]
+fn emit_copy(out: &mut Writer, offset: usize, mut len: usize) {
     if len < 12 {
         return emit_copy_at_most_64(out, offset, len);
     }
@@ -160,15 +239,27 @@ fn emit_copy(out: &mut Vec<u8>, offset: usize, mut len: usize) {
 }
 
 /// `FindMatchLength()`: how many bytes from `a` and `b` agree, `b` bounded
-/// by `end`.
+/// by `end` (`a < b`), eight at a time.
+#[inline(always)]
 fn match_length(s: &[u8], a: usize, b: usize, end: usize) -> usize {
-    s[b..end].iter().zip(&s[a..]).take_while(|(x, y)| x == y).count()
+    let mut matched = 0;
+    while b + matched + 8 <= end {
+        let diff = load64(s, a + matched) ^ load64(s, b + matched);
+        if diff != 0 {
+            return matched + (diff.trailing_zeros() / 8) as usize;
+        }
+        matched += 8;
+    }
+    while b + matched < end && s[a + matched] == s[b + matched] {
+        matched += 1;
+    }
+    matched
 }
 
 /// `CompressFragment()`: greedy matching through a hash table of the last
 /// position of each 4-byte string, skipping faster through data without
 /// matches.
-fn compress_fragment(input: &[u8], out: &mut Vec<u8>, table: &mut [u16]) {
+fn compress_fragment(input: &[u8], out: &mut Writer, table: &mut [u16]) {
     let mask = 2 * (table.len() as u32 - 1);
     let end = input.len();
     let mut ip = 0;
@@ -258,10 +349,14 @@ fn varint(data: &[u8]) -> Option<(u32, usize)> {
     None
 }
 
-/// `RawUncompress()`: decodes every tag; `None` unless the input ends on a
-/// tag boundary with exactly `length` bytes written.
-fn decompress(mut input: &[u8], length: usize) -> Option<Vec<u8>> {
-    let mut out: Vec<u8> = Vec::with_capacity(length.min(input.len().saturating_mul(255)));
+/// `RawUncompress()`: decodes every tag into `out`; `false` unless the input ends on a tag
+/// boundary with exactly `length` bytes written.
+///
+/// # Safety
+///
+/// `out` has room for `length` bytes.
+unsafe fn decompress(mut input: &[u8], out: *mut u8, length: usize) -> bool {
+    let mut op = 0;
     while let Some((&tag, rest)) = input.split_first() {
         input = rest;
         match tag & 3 {
@@ -269,48 +364,64 @@ fn decompress(mut input: &[u8], length: usize) -> Option<Vec<u8>> {
                 let mut len = (tag >> 2) as usize + 1;
                 if len > 60 {
                     let count = len - 60;
-                    let (bytes, rest) = input.split_at_checked(count)?;
+                    let Some((bytes, rest)) = input.split_at_checked(count) else { return false };
                     input = rest;
                     len = bytes.iter().rev().fold(0usize, |n, &b| (n << 8) | b as usize) + 1;
                 }
-                if len > length - out.len() {
-                    return None;
+                if len > length - op {
+                    return false;
                 }
-                let (literal, rest) = input.split_at_checked(len)?;
+                let Some((literal, rest)) = input.split_at_checked(len) else { return false };
                 input = rest;
-                out.extend_from_slice(literal);
+                // SAFETY: `len` more bytes fit in `length`; the input never overlaps the output.
+                unsafe { std::ptr::copy_nonoverlapping(literal.as_ptr(), out.add(op), len) };
+                op += len;
             }
             kind => {
                 let (len, offset, extra) = match kind {
                     1 => {
-                        let &b = input.first()?;
+                        let Some(&b) = input.first() else { return false };
                         (((tag >> 2) & 7) as usize + 4, ((tag as usize >> 5) << 8) | b as usize, 1)
                     }
                     2 => {
-                        let b = input.first_chunk::<2>()?;
+                        let Some(b) = input.first_chunk::<2>() else { return false };
                         ((tag >> 2) as usize + 1, u16::from_le_bytes(*b) as usize, 2)
                     }
                     _ => {
-                        let b = input.first_chunk::<4>()?;
+                        let Some(b) = input.first_chunk::<4>() else { return false };
                         ((tag >> 2) as usize + 1, u32::from_le_bytes(*b) as usize, 4)
                     }
                 };
                 input = &input[extra..];
-                if offset == 0 || offset > out.len() || len > length - out.len() {
-                    return None;
+                if offset == 0 || offset > op || len > length - op {
+                    return false;
                 }
-                let start = out.len() - offset;
-                if offset >= len {
-                    out.extend_from_within(start..start + len);
-                } else {
-                    for i in 0..len {
-                        out.push(out[start + i]);
+                // SAFETY: the copy reads `offset` back from `op`, within what was written, and
+                // writes `len` bytes that fit in `length`. A copy longer than its offset repeats
+                // the bytes it writes, so it goes one offset's worth (or byte) at a time.
+                unsafe {
+                    let from = out.add(op - offset);
+                    let to = out.add(op);
+                    if offset >= len {
+                        std::ptr::copy_nonoverlapping(from, to, len);
+                    } else if offset >= 8 {
+                        let mut done = 0;
+                        while done < len {
+                            let step = offset.min(len - done);
+                            std::ptr::copy_nonoverlapping(from.add(done), to.add(done), step);
+                            done += step;
+                        }
+                    } else {
+                        for i in 0..len {
+                            *to.add(i) = *from.add(i);
+                        }
                     }
                 }
+                op += len;
             }
         }
     }
-    (out.len() == length).then_some(out)
+    op == length
 }
 
 #[cfg(test)]
@@ -320,9 +431,9 @@ mod tests {
     #[test]
     fn known_outputs() {
         // snappy_compress() of PHP's ext-snappy.
-        assert_eq!(compress(b""), b"\x00");
-        assert_eq!(compress(b"a"), b"\x01\x00a");
-        assert_eq!(compress(b"This is a demo string"), b"\x15\x50This is a demo string");
+        assert_eq!(Snappy.compress(b"").unwrap(), b"\x00");
+        assert_eq!(Snappy.compress(b"a").unwrap(), b"\x01\x00a");
+        assert_eq!(Snappy.compress(b"This is a demo string").unwrap(), b"\x15\x50This is a demo string");
     }
 
     #[test]
@@ -331,8 +442,8 @@ mod tests {
         for i in 0..200_000u32 {
             data.push((i.wrapping_mul(2_654_435_761) >> 29) as u8 + if i % 7 == 0 { b'a' } else { 0 });
         }
-        for input in [&b"abcabcabcabcabcabcabcabc"[..], &data, &vec![0; 100_000]] {
-            let compressed = compress(input);
+        for input in [&b"abcabcabcabcabcabcabcabc"[..], &data, &vec![0; 100_000], &b"0123456789".repeat(9000)] {
+            let compressed = Snappy.compress(input).unwrap();
             assert_eq!(Snappy.decompress(&compressed).unwrap(), input);
         }
     }

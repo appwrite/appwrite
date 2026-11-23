@@ -120,11 +120,11 @@ base64 = "0.22"
 blake2 = "0.10"
 # EksBlowfish (php-std crypt()); RustCrypto, pure Rust.
 blowfish = { version = "0.9", features = ["bcrypt"] }
-# Brotli (utopia-compression; utopia-http through it); Dropbox's pure-Rust port of
-# Google's C library. Its encoder is not byte for byte C brotli 1.2.0 (PHP's
-# ext-brotli) at qualities 2-11, nor is any maintained binding's bundled C
-# (brotlic-sys: a 2023 snapshot); 9 brings the decoder's metablock length checks.
+# Brotli for utopia-http and utopia-client; Dropbox's pure-Rust port of Google's C
+# library. utopia-compression uses brotlic-sys below, the C library itself.
 brotli = { version = "9", default-features = false, features = ["std"] }
+# C brotli 1.2.1, built from source and linked statically: the library PHP's ext-brotli links.
+brotlic-sys = "0.2.5"
 bytes = "1"
 # Compiles the PCRE2 10.44 sources php-std vendors (crates/support/php-std/pcre2).
 cc = "1"
@@ -185,18 +185,12 @@ indexmap = "2"
 # EXIF orientation of JPEG, PNG and WebP images (utopia-image, as Imagick's
 # exif:Orientation property); pure Rust.
 kamadak-exif = "0.6"
+# The system zlib (no `static`): the library PHP itself links, so Deflate and GZIP write its bytes.
+libz-sys = { version = "1", default-features = false, features = ["libc"] }
 # libheif (a system library): AVIF and HEIC decoding, HEIC encoding. utopia-image's `libheif` feature.
 libheif-rs = { version = "3", default-features = false, features = ["v1_17"] }
-# zlib 1.3.2, the version PHP's ext-zlib links, built from the bundled sources
-# (utopia-compression's Deflate and GZIP). C: gzdeflate()/gzencode() output is
-# zlib's deflate at memLevel 9, which no Rust encoder reproduces byte for byte
-# (miniz_oxide and zlib-rs choose other matches) and flate2 cannot configure
-# (it hardcodes memLevel 8).
-libz-sys = { version = "1", default-features = false, features = ["static", "libc"] }
-# LZ4 1.10.0, the version PHP's ext-lz4 links (utopia-compression's LZ4). C:
-# lz4_compress() levels 1-12 are LZ4_compress_HC, which no Rust crate
-# implements, and lz4_flex's fast mode picks other matches than LZ4's.
-lz4 = "1"
+# LZ4 1.10.0, built from source and linked statically, as PHP's ext-lz4 links it.
+lz4-sys = "1.11.1"
 # XZ (LZMA2 in an .xz container with CRC64) for utopia-compression's optional
 # XZ algorithm; pure Rust, maintained.
 lzma-rust2 = { version = "0.22", default-features = false, features = ["std", "encoder", "xz"] }
@@ -306,6 +300,9 @@ webpki-roots = "1"
 whirlpool = "0.10"
 # XXH3 and XXH128 for php-std hash(); pure Rust.
 xxhash-rust = { version = "0.8", features = ["xxh3"] }
+# libzstd 1.5.7, built from source and linked statically, as PHP's ext-zstd links it. No
+# `zstdmt`: multithreaded compression would start threads in a process that forks.
+zstd-safe = { version = "8", default-features = false, features = ["std"] }
 # libwebp, built from source and linked statically: lossy WebP. utopia-image's `libwebp` feature.
 webp = { version = "0.3", default-features = false }
 # Wiping derived keys and scrypt's working memory (utopia-auth); RustCrypto, pure Rust.

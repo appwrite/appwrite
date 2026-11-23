@@ -10,11 +10,13 @@
 //!
 //! A library that still has one registers its classes only when `_APP_EXTENSION_LIBRARIES` names
 //! its package (`if enabled("<package>")` in [`startup`] or [`get_module`]), so it can be canaried
-//! and switched back to PHP with a restart, not a deploy: `detector` (`Utopia\Detector\*`).
+//! and switched back to PHP with a restart, not a deploy: `detector` (`Utopia\Detector\*`) and
+//! `compression` (`Utopia\Compression\*`).
 
 mod auth;
 mod canvas;
 mod classes;
+mod compression;
 mod detector;
 mod domains;
 mod dsn;
@@ -76,6 +78,9 @@ fn startup(_kind: i32, _module: i32) -> i32 {
         auth::register()?;
         if enabled("detector") {
             detector::register()?;
+        }
+        if enabled("compression") {
+            compression::register()?;
         }
         Ok(())
     })

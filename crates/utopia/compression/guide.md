@@ -84,6 +84,19 @@ try {
 }
 ```
 
+## Write into your own buffer
+
+Each algorithm's `compress_into` and `decompress_into` append to a `Sink`: a `Vec<u8>`, or a buffer type of your own that implements it, so the output is written once, where it ends up. The PHP extension writes straight into the PHP string it returns this way.
+
+```
+use utopia_compression::{Algorithm, Zstd};
+
+let mut out = b"header:".to_vec();
+Zstd::new().compress_into(b"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", &mut out)?;
+assert_eq!(Zstd::new().decompress(&out[7..])?, b"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+# Ok::<(), utopia_compression::Error>(())
+```
+
 ## Handle data that is not compressed
 
 Decompressing data that is not a valid stream fails with `Error::Codec`, whose message is the warning PHP's extension emits. PHP returns an empty string in that case.

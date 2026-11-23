@@ -486,7 +486,7 @@ dependencies = [
  "regex",
  "rustc-hash",
  "shlex",
- "syn 2.0.119",
+ "syn 3.0.6",
 ]
 
 [[package]]
@@ -573,6 +573,15 @@ checksum = "941cd9bd4ddab83cb46fa5a2d428f1c857b24ac78cb876cf7beb710840934bd7"
 dependencies = [
  "alloc-no-stdlib",
  "alloc-stdlib",
+]
+
+[[package]]
+name = "brotlic-sys"
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "44564126338ef14526ee5eddb56795cde7fc432ced4f3cfc39f1ec4fe74929c8"
+dependencies = [
+ "cc",
 ]
 
 [[package]]
@@ -2426,15 +2435,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ef9ac18847474e638e3702b76c65d4eb93428471a74778ef0f1be711717f89b5"
 dependencies = [
  "hashbrown 0.17.1",
-]
-
-[[package]]
-name = "lz4"
-version = "1.28.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a20b523e860d03443e98350ceaac5e71c6ba89aea7d960769ec3ce37f4de5af4"
-dependencies = [
- "lz4-sys",
 ]
 
 [[package]]
@@ -5087,13 +5087,13 @@ dependencies = [
 name = "utopia-compression"
 version = "0.1.0"
 dependencies = [
- "brotli",
+ "brotlic-sys",
  "libz-sys",
- "lz4",
+ "lz4-sys",
  "lzma-rust2 0.22.0",
  "php-std",
  "thiserror 2.0.21",
- "zstd",
+ "zstd-safe",
 ]
 
 [[package]]
@@ -5231,6 +5231,7 @@ dependencies = [
  "ext-php-rs",
  "php-std",
  "utopia-auth",
+ "utopia-compression",
  "utopia-detector",
  "utopia-domains",
  "utopia-dsn",

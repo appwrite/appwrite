@@ -13,21 +13,25 @@ publish.workspace = true
 # algorithm reports itself unsupported and fails like PHP without the
 # extension. `xz` is off by default: PHP's dev image has no ext-xz.
 default = ["brotli", "lz4", "zlib", "zstd"]
-brotli = ["dep:brotli"]
-lz4 = ["dep:lz4"]
+brotli = ["dep:brotlic-sys"]
+lz4 = ["dep:lz4-sys"]
 xz = ["dep:lzma-rust2"]
 zlib = ["dep:libz-sys"]
-zstd = ["dep:zstd"]
+zstd = ["dep:zstd-safe"]
 
 [dependencies]
-brotli = { workspace = true, optional = true }
+# The C libraries PHP's extensions link, at the same versions: brotli 1.2.1 and LZ4 1.10.0 built
+# from source, zlib the system's, libzstd 1.5.7 built from source or, with
+# ZSTD_SYS_USE_PKG_CONFIG=1 (as the PHP extension is built), the system's.
+brotlic-sys = { workspace = true, optional = true }
 libz-sys = { workspace = true, optional = true }
-lz4 = { workspace = true, optional = true }
+lz4-sys = { workspace = true, optional = true }
 lzma-rust2 = { workspace = true, optional = true }
 php-std.workspace = true
 thiserror.workspace = true
-# Legacy frames (zstd v0.5 to v0.7) are recognised, as by the libzstd PHP links.
-zstd = { workspace = true, optional = true, features = ["legacy"] }
+# Legacy frames (zstd v0.5 to v0.7) are recognised, as by the libzstd PHP links; `experimental`
+# for contexts on a caller's allocator (`ZSTD_createCCtx_advanced()`).
+zstd-safe = { workspace = true, optional = true, features = ["legacy", "experimental"] }
 
 [package.metadata.utopia]
 category = "utilities"

@@ -3,9 +3,11 @@
 //! choice of one from a name or an HTTP `Accept-Encoding` header
 //! ([`Compression::from_accept_encoding`]).
 //!
-//! Every algorithm writes the bytes PHP's extension writes at the same level
-//! (except Brotli at qualities 2 to 11, see [`Brotli`]), so data compressed
-//! by either runtime is read by the other, and responses are identical.
+//! Every algorithm writes the bytes PHP's extension writes at the same level, on
+//! the same C library (zlib, C brotli, libzstd, LZ4) or a port of it (snappy),
+//! so data compressed by either runtime is read by the other, and responses
+//! are identical. Each one can also write into a caller's buffer ([`Sink`]), so
+//! the output is never copied.
 //!
 //! ```
 //! use utopia_compression::{Algorithm, Compression};
@@ -68,6 +70,7 @@ mod brotli;
 mod error;
 mod lz4;
 mod negotiate;
+mod sink;
 mod snappy;
 mod xz;
 mod zlib;
@@ -78,6 +81,7 @@ use std::borrow::Cow;
 pub use brotli::{Brotli, Mode};
 pub use error::Error;
 pub use lz4::Lz4;
+pub use sink::{Allocator, Sink};
 pub use snappy::Snappy;
 pub use xz::Xz;
 pub use zlib::{Deflate, Gzip};
@@ -228,7 +232,12 @@ impl Compression {
     ///
     /// PHP: `Compression::fromName($name)`.
     pub fn from_name(name: &str) -> Option<Self> {
-        Some(match php_std::string::strtolower(name.as_bytes()).as_ref() {
+        Self::from_name_bytes(name.as_bytes())
+    }
+
+    /// [`Compression::from_name`] for a name in bytes, as PHP's strings are.
+    pub fn from_name_bytes(name: &[u8]) -> Option<Self> {
+        Some(match php_std::string::strtolower(name).as_ref() {
             b"brotli" | b"br" => Compression::Brotli(Brotli::new()),
             b"deflate" => Compression::Deflate(Deflate::new()),
             b"gzip" => Compression::Gzip(Gzip::new()),
@@ -274,9 +283,9 @@ impl Compression {
     /// a list of names.
     pub fn from_accept_encoding<S: AsRef<str>>(accept: &str, supported: &[S]) -> Option<Self> {
         if supported.is_empty() {
-            negotiate::choose(accept, Self::is_default_supported)
+            Self::from_accept_encoding_with(accept, Self::is_default_supported)
         } else {
-            negotiate::choose(accept, |name| supported.iter().any(|s| s.as_ref() == name))
+            Self::from_accept_encoding_with(accept, |name| supported.iter().any(|s| s.as_ref() == name))
         }
     }
 
@@ -286,6 +295,13 @@ impl Compression {
     /// PHP: `Compression::fromAcceptEncoding($acceptEncoding, $supported)`
     /// with a `name => bool` map (`fn(name) => $supported[$name] ?? false`).
     pub fn from_accept_encoding_with(accept: &str, supported: impl Fn(&str) -> bool) -> Option<Self> {
+        negotiate::choose(accept.as_bytes(), |name| std::str::from_utf8(name).is_ok_and(&supported))
+    }
+
+    /// [`Compression::from_accept_encoding_with`] for a header and names in bytes, as PHP's
+    /// strings are: a name that is not UTF-8 can still be supported, and chosen (it names no
+    /// algorithm, so the answer is then `None`).
+    pub fn from_accept_encoding_bytes(accept: &[u8], supported: impl Fn(&[u8]) -> bool) -> Option<Self> {
         negotiate::choose(accept, supported)
     }
 

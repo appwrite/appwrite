@@ -41,6 +41,11 @@ RUN apk add --no-cache libheif libstdc++ \
   package's `"ext-utopia"` constraint has to stay `*` until those builds report a version that
   orders against releases.
 
+- **Tracking main:** a consumer that vendors this repository at a commit and must not compile it
+  takes `appwrite/utopia-extension:$(crates/extension/tag.sh)`. The script prints `build-<hash>`, a
+  hash of what the build reads (the Cargo workspace and the base image), and every publish from
+  `main` also carries that tag.
+
 `.github/workflows/extension.yml` publishes it, smoke-testing each architecture on stock
 `php:8.5-cli-alpine` with exactly these packages first.
 
@@ -53,7 +58,7 @@ have no PHP implementation. Their signatures are in `stubs/`, `packages/image/st
 `packages/user-agent/stubs/`, `packages/domains/stubs/`, `packages/emails/stubs/`,
 `packages/validators/stubs/` and `packages/auth/stubs/` for PHPStan, which runs without the
 extension. A library that still has a PHP implementation is registered only when
-`_APP_EXTENSION_LIBRARIES` names its package; today that is `detector`. Otherwise Composer loads
+`_APP_EXTENSION_LIBRARIES` names its package; today those are `detector` and `compression`. Otherwise Composer loads
 the package's PHP class as before:
 
 ```sh
@@ -128,6 +133,68 @@ Known differences from the PHP classes:
 - An overriding `dependencies()` or a PHP option's `getPackages()` is compared by its string
   values: PHP's `in_array(..., true)` also matched an integer package against an integer name.
 - An exception names the caller's file and line, since the classes have no PHP source.
+
+## Utopia\Compression
+
+Over `crates/utopia/compression`, registered when `_APP_EXTENSION_LIBRARIES` names `compression`:
+the abstract `Compression` and the seven algorithms of `packages/compression` (`Brotli`, `Deflate`,
+`GZIP`, `LZ4`, `Snappy`, `XZ`, `Zstd`), so none of the package's PHP classes loads. Off by default.
+
+Built by hand like the detector, in `src/compression.rs`: the same names, inheritance, constants,
+signatures and typed properties (`Brotli`'s `$level` and `$mode`, `Deflate`'s private `$level`,
+the promoted `$level` of `LZ4` and `Zstd`), so `instanceof` (which the HTTP response checks),
+`clone`, `==`, `serialize()`, `var_dump()` and PHP subclasses behave as in PHP. A subclass's
+`getName()` and `Brotli::getLevel()` are called as PHP calls them. `isSupported()` is abstract and
+static on the base, which the engine only allows an internal class through a flag set after
+registration.
+
+The codecs are the C libraries PHP's extensions link, at the same versions: the system's zlib and
+libzstd (the `libz.so.1` PHP loads and the `libzstd.so.1` ext-zstd loads, both already in
+`php:8.5-cli-alpine`), and C brotli 1.2.1 (`brotlic-sys`) and LZ4 1.10.0 (`lz4-sys`) built from
+source and linked statically; Snappy is the crate's port of snappy 1.2.1. Each is called with
+the parameters, buffer sizes and calls of `gzencode()`, `gzdecode()`, `gzdeflate()`, `gzinflate()`,
+`zstd_compress()`, `zstd_uncompress()`, `brotli_compress()`, `brotli_uncompress()`,
+`lz4_compress()`, `lz4_uncompress()`, `snappy_compress()` and `snappy_uncompress()`, so the bytes
+written are PHP's, byte for byte, and what PHP's function rejects (with which warning, returning
+`""`) is rejected the same way. `XZ` calls `xzencode()` and `xzdecode()` as the PHP class does: it
+works exactly when ext-xz is loaded, which `appwrite/base` does not.
+
+Where it is faster: the input is read in place from the PHP string, and the output is written
+straight into the PHP string returned (PHP's functions copy theirs once or twice, and grow it
+step by step), so decompressing 64 MB holds the input and the output and nothing else. A gzip
+trailer's length sizes the output at once. zlib's streams are kept per process and reset (zlib
+defines a reset stream as a new one); zstd's contexts and brotli's coders are created and freed
+per call, as PHP does, but zstd's and the brotli encoder's small blocks come from PHP's allocator
+rather than `malloc()`. A kept zstd context changed which error a corrupt frame reports, so none is kept.
+
+`packages/compression/tests` run on the extension, and `tests/compression.php` (5,702 lines) is
+identical on both: what every algorithm writes at every level (Brotli 0 to 11, LZ4 0 to 12, Zstd -5
+to 22) for 15 inputs up to 3 MB, read back by the class and by PHP's own function; what PHP's
+functions wrote (gzencode and gzdeflate at every level, zstd_compress at every level,
+brotli_compress at every level and mode, lz4_compress, snappy_compress, and their incremental forms)
+read by the classes; concatenated gzip members, gzip headers PHP never writes, trailing bytes,
+skippable and legacy zstd frames (`tests/fixtures/compression`, written by zstd 0.4.7 to 0.7.5);
+every algorithm's output truncated and corrupted at a dozen places; 65 MB both ways; levels,
+constructors and argument coercion; `fromName()` and 1,342 `fromAcceptEncoding()` cases (61 headers
+against 22 `$supported` lists); reflection of every class; PHP subclasses; and, in processes of
+their own, frames claiming more than `memory_limit`. The differences below are asserted at its end.
+Nothing in Appwrite or Cloud subclasses a compression class.
+
+Known differences from the PHP classes:
+
+- A warning (`gzdecode(): data error`) or exception names the caller's file and line, since the
+  classes have no PHP source.
+- A closure cannot be bound to the scope of an internal class: `Closure::bind()` into one warns
+  and returns `null`, where PHP's classes allowed it.
+- When `memory_limit` runs out, both end the request with the same fatal error at the same point;
+  the stack trace has no frame inside the package, and outside the frame and length claims the
+  corpus checks, the size it says was asked for can differ by the few bytes the buffers differ by.
+- The working memory of zstd's contexts and brotli's encoder comes from PHP's allocator in blocks
+  under 2 MiB (each freed by the end of the call), so it counts against `memory_limit` while a call
+  runs, where `malloc()` did not; near the limit, blocks come from `malloc()` again.
+
+Once every region runs it, PECL `brotli`, `zstd`, `lz4` and `snappy` can leave `appwrite/base`: the
+classes need none of them, and only the corpus's PHP side does.
 
 ## Utopia\DSN\DSN
 
