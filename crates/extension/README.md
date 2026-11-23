@@ -101,6 +101,12 @@ the static fallback are the crate's, shared with the service slices. `Invalid st
 `Invalid input type 'x'` are thrown as PHP's `\Exception` and `\InvalidArgumentException`, with the
 argument's bytes.
 
+What the leaves return (names, file and package lists, and each command for `yarn`, `npm`,
+`pnpm` and any other packager) is built from the crate once, in MINIT, as interned strings and
+persistent immutable arrays, and returned without an allocation, as PHP returns the literals
+OPcache holds. `detect()` reads the inputs where they lie and asks a native option nothing
+through PHP.
+
 `packages/detector/tests` run on the extension, and `tests/detector.php` (5,536 lines) is identical
 on both: reflection of every class, every leaf's answers and commands with every packager,
 adapters over 38 configurations, every pair of frameworks in both orders (675 cases), 3,000 seeded

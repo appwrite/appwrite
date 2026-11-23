@@ -18,8 +18,8 @@ mod detections;
 mod detectors;
 
 use std::panic::AssertUnwindSafe;
-use std::sync::Mutex;
 use std::sync::atomic::{AtomicPtr, AtomicUsize, Ordering};
+use std::sync::{Mutex, OnceLock};
 
 use ext_php_rs::args::{Arg, ArgInfoTables};
 use ext_php_rs::builders::{ClassBuilder, FunctionBuilder};
@@ -70,9 +70,71 @@ fn class(index: usize) -> &'static ClassEntry {
     crate::classes::leaf::stored(&CLASSES[index])
 }
 
+/// The registered classes' addresses with their indexes, sorted by address (filled once all are
+/// registered).
+static BY_ADDRESS: OnceLock<Vec<(usize, usize)>> = OnceLock::new();
+
 /// The index of the registered class `ce`, if it is one of these.
+#[inline]
 fn index_of(ce: *const ClassEntry) -> Option<usize> {
-    CLASSES.iter().position(|slot| std::ptr::eq(slot.load(Ordering::Acquire), ce))
+    let table = BY_ADDRESS.get()?;
+    let address = ce as usize;
+    table.binary_search_by_key(&address, |(a, _)| *a).ok().map(|at| table[at].1)
+}
+
+/// A value built once in MINIT and never changed or freed: an interned string or a persistent
+/// immutable array. Returning one copies the zval, as PHP returns a literal OPcache holds, with
+/// no reference count to touch.
+pub struct Frozen(Zval);
+
+// SAFETY: interned strings and immutable arrays made in MINIT, read only afterwards; nothing
+// counts references to them, so every process and thread may copy them.
+unsafe impl Send for Frozen {}
+// SAFETY: as above.
+unsafe impl Sync for Frozen {}
+
+impl Frozen {
+    /// An interned string (MINIT).
+    fn string(text: &str) -> Self {
+        Frozen(engine::interned(text.as_bytes()))
+    }
+
+    /// A list of interned strings: a persistent immutable array, or the engine's empty one
+    /// (MINIT).
+    fn list(items: &[&str]) -> Self {
+        Frozen(if items.is_empty() { engine::empty_array() } else { engine::string_list(items) })
+    }
+
+    /// Returns the value.
+    #[inline(always)]
+    fn set(&self, retval: &mut Zval) {
+        // Neither an interned string nor an immutable array is reference counted: a copy.
+        *retval = self.0.shallow_clone();
+    }
+
+    /// The value, as an argument or a property value.
+    #[inline(always)]
+    fn zval(&self) -> Zval {
+        self.0.shallow_clone()
+    }
+}
+
+/// The strings the handlers return or store that do not depend on a class.
+struct Strings {
+    empty: Frozen,
+    pnpm: Frozen,
+    ssr: Frozen,
+    static_: Frozen,
+    /// The keys of an input (`['type' => ..., 'content' => ...]`).
+    type_key: Frozen,
+    content_key: Frozen,
+}
+
+static STRINGS: OnceLock<Strings> = OnceLock::new();
+
+#[inline(always)]
+fn strings_() -> &'static Strings {
+    STRINGS.get().expect("interned in MINIT")
 }
 
 // The properties, each declared once (a redeclaration shares its parent's slot).
@@ -243,6 +305,15 @@ fn parent_name(index: usize) -> &'static str {
 /// Registers every class of `utopia-php/detector`. Called from the module's startup (MINIT)
 /// when `_APP_EXTENSION_LIBRARIES` names `detector`.
 pub fn register() -> ext_php_rs::error::Result<()> {
+    STRINGS.get_or_init(|| Strings {
+        empty: Frozen::string(""),
+        pnpm: Frozen::string("pnpm"),
+        ssr: Frozen::string("ssr"),
+        static_: Frozen::string("static"),
+        type_key: Frozen::string("type"),
+        content_key: Frozen::string("content"),
+    });
+    detections::freeze();
     for callee in
         [&GET_NAME, &GET_FILES, &GET_PACKAGES, &GET_LANGUAGES, &GET_FILE_EXTENSIONS, &SET_PACKAGER, &GET_VALUE]
     {
@@ -256,21 +327,75 @@ pub fn register() -> ext_php_rs::error::Result<()> {
     for (index, definition) in classes.into_iter().enumerate() {
         build(index, definition)?;
     }
+    let mut by_address: Vec<(usize, usize)> =
+        CLASSES.iter().enumerate().map(|(index, slot)| (slot.load(Ordering::Acquire) as usize, index)).collect();
+    by_address.sort_unstable();
+    let _ = BY_ADDRESS.set(by_address);
     Ok(())
 }
 
 // What the handlers share ---------------------------------------------------------------
 
-/// Runs a handler's body, a panic thrown as PHP's `Error` (`Rust panic: ...`) and a bailout
-/// passed on to the engine.
+/// Runs a handler's body with a panic thrown as PHP's `Error` (`Rust panic: ...`), under
+/// `catch_unwind` only, which costs nothing unless it panics. A bailout (a fatal error in a
+/// `__toString()` the body calls) unwinds through it to the engine, as through the validators'
+/// handlers; [`guard_engine`] is for the bodies that call PHP methods.
+#[inline(always)]
 fn guard(body: impl FnOnce()) {
+    if let Err(payload) = std::panic::catch_unwind(AssertUnwindSafe(body)) {
+        panicked(payload.as_ref());
+    }
+}
+
+#[cold]
+#[inline(never)]
+fn panicked(payload: &(dyn std::any::Any + Send)) {
+    let message = payload
+        .downcast_ref::<&str>()
+        .map(|s| (*s).to_owned())
+        .or_else(|| payload.downcast_ref::<String>().cloned())
+        .unwrap_or_else(|| "non-string panic payload".to_owned());
+    if !engine::has_exception() {
+        engine::error(&format!("Rust panic: {message}"));
+    }
+}
+
+/// Runs a body that calls PHP methods (`detect()`): a panic thrown as PHP's `Error`, and a
+/// bailout inside a method it calls passed on to the engine once this frame is cleaned up.
+fn guard_engine(body: impl FnOnce()) {
     ext_php_rs::zend::run_handler(AssertUnwindSafe(body));
 }
 
-/// The class that declares the executing method (a subclass inherits the method as it is).
-fn scope(ex: &ExecuteData) -> *const ClassEntry {
-    // SAFETY: the executing function and its scope live as long as the call.
-    unsafe { ex.func.as_ref().map_or(std::ptr::null(), |func| func.common.scope.cast_const()) }
+/// Whether the method was called with at least `required` of its `total` arguments; `false`
+/// with the `ArgumentCountError` thrown.
+#[inline(always)]
+fn arity(ex: &ExecuteData, required: usize, total: usize) -> bool {
+    let passed = engine::args_count(ex);
+    if passed < required {
+        engine::too_few(ex, &function_name(ex), passed, required, total);
+        return false;
+    }
+    true
+}
+
+/// A `string` parameter's argument as PHP passes it on: the string itself (another reference)
+/// when it is one, coerced otherwise; `None` with the `TypeError` thrown.
+#[inline(always)]
+fn str_value(ex: &ExecuteData, num: u32, arg: &mut Zval) -> Option<Zval> {
+    if arg.is_string() {
+        return Some(arg.shallow_clone());
+    }
+    engine::str_zval_arg(ex, num, arg)
+}
+
+/// `$value` (a `string` parameter's argument, coerced as PHP coerces it) as bytes: borrowed
+/// when it is a string, which it nearly always is.
+fn with_str<R>(ex: &ExecuteData, num: u32, arg: &mut Zval, run: impl FnOnce(&[u8]) -> R) -> Option<R> {
+    if let Some(s) = arg.dereference().zend_str() {
+        return Some(run(s.as_bytes()));
+    }
+    let bytes = engine::str_arg(ex, num, arg)?;
+    Some(run(&bytes))
 }
 
 /// `Class::method`, the executing method's name as PHP's errors give it.
@@ -290,27 +415,38 @@ fn function_name(ex: &ExecuteData) -> String {
     }
 }
 
-/// The method's arguments, at most `total`; `None` with the `ArgumentCountError` of a call with
-/// fewer than `required` thrown.
-fn args(ex: &mut ExecuteData, required: usize, total: usize) -> Option<Vec<&'static mut Zval>> {
-    let passed = engine::args_count(ex);
-    if passed < required {
-        engine::too_few(ex, &function_name(ex), passed, required, total);
-        return None;
-    }
-    Some((0..passed.min(total)).filter_map(|i| engine::arg(ex, i)).collect())
-}
-
 /// Whether `ce` is a class of this extension (not a PHP subclass): its properties have no hooks
 /// and its methods are these.
+#[inline(always)]
 fn native(ce: &ClassEntry) -> bool {
     /// `ZEND_INTERNAL_CLASS`.
     const INTERNAL_CLASS: i8 = 1;
     ce.type_ == INTERNAL_CLASS
 }
 
+/// `look` run on `$this->property` (declared by the class at `declared_in`) where it lies: in
+/// its slot on a native object, a copy otherwise; `None` with the exception pending (an
+/// uninitialized property).
+#[inline(always)]
+fn peek<R>(this: &mut ZendObject, declared_in: usize, property: &Property, look: impl FnOnce(&Zval) -> R) -> Option<R> {
+    // SAFETY: an object's class lives as long as the object.
+    let ce = unsafe { &*this.ce };
+    if native(ce)
+        && let Some(slot) = engine::property_slot(ce, this, property)
+    {
+        let value = slot.dereference();
+        // `IS_UNDEF`: uninitialized, which the engine reports.
+        if unsafe { value.u1.type_info } != 0 {
+            return Some(look(value));
+        }
+    }
+    let value = read(this, declared_in, property)?;
+    Some(look(&value))
+}
+
 /// `$this->property`, `property` declared by the class at `declared_in`; `None` with the
 /// exception pending (an uninitialized property).
+#[inline(always)]
 fn read(this: &mut ZendObject, declared_in: usize, property: &Property) -> Option<Zval> {
     // SAFETY: an object's class lives as long as the object.
     let ce = unsafe { &*this.ce };
@@ -319,6 +455,7 @@ fn read(this: &mut ZendObject, declared_in: usize, property: &Property) -> Optio
 }
 
 /// `$this->property = $value`, `property` declared by the class at `declared_in`.
+#[inline(always)]
 fn write(this: &mut ZendObject, declared_in: usize, property: &Property, value: Zval) {
     // SAFETY: an object's class lives as long as the object.
     let ce = unsafe { &*this.ce };
@@ -326,17 +463,49 @@ fn write(this: &mut ZendObject, declared_in: usize, property: &Property, value: 
     engine::set(scope, this, property, value);
 }
 
+/// Adds a reference to `value` (so `$table[] = $value` or `$table[$key] = $value` may copy it
+/// where it lies), unless `take`: the caller hands its own over.
+#[inline(always)]
+fn add_ref(value: &Zval, take: bool) {
+    /// `IS_TYPE_REFCOUNTED`, in a zval's type info.
+    const REFCOUNTED: u32 = 1 << 8;
+    // SAFETY: a refcounted zval points at its counted value.
+    unsafe {
+        if !take && value.u1.type_info & REFCOUNTED != 0 {
+            (*value.value.counted).gc.refcount += 1;
+        }
+    }
+}
+
 /// `$this->property[] = $value`, `property` (named `name`) declared by the class at
-/// `declared_in`.
-fn append(this: &mut ZendObject, declared_in: usize, property: &Property, name: &str, value: Zval) -> Option<()> {
+/// `declared_in`; `take` hands the caller's reference to `value` over. The value is copied
+/// from where it lies, field by field, by the engine.
+fn append(
+    this: &mut ZendObject,
+    declared_in: usize,
+    property: &Property,
+    name: &str,
+    value: &Zval,
+    take: bool,
+) -> Option<()> {
     // SAFETY: an object's class lives as long as the object.
     let ce = unsafe { &*this.ce };
     if native(ce)
         && let Some(table) = engine::array_slot(ce, this, property)
     {
-        return table.push(value).ok();
+        add_ref(value, take);
+        // SAFETY: a separated table with room for one more; it copies the zval
+        // (`ZVAL_COPY_VALUE`) and owns the reference added above.
+        unsafe { ext_php_rs::ffi::zend_hash_next_index_insert(table, std::ptr::from_ref(value).cast_mut()) };
+        return Some(());
     }
     // A subclass's object: the array, copied with the value appended, written back.
+    let value = if take {
+        // SAFETY: the caller's reference, handed over.
+        unsafe { std::ptr::read(value) }
+    } else {
+        value.shallow_clone()
+    };
     let current = engine::read(class(declared_in), this, name)?;
     let mut copy = current.array().map_or_else(ZendHashTable::new, ToOwned::to_owned);
     copy.push(value).ok()?;
