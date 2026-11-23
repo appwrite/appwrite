@@ -43,6 +43,7 @@ use Appwrite\Screenshots\Client as ScreenshotsClient;
 use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Utopia\Database\Documents\Project;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\InstallationRepositories;
 use Appwrite\Vcs\InstallationTokens;
 use Appwrite\Vcs\RepositoryWebhooks;
 use Executor\Executor;
@@ -605,6 +606,7 @@ $container->set('promiseAdapter', fn ($register) => $register->get('promiseAdapt
 // The VCS endpoints are the operator's own (_APP_VCS_*), which may be on a private network
 $container->set('vcsFactory', fn (Cache $cache) => new VcsFactory($cache, new Client(new CurlAdapter())), ['cache']);
 $container->set('installationTokens', fn () => new InstallationTokens(), []);
+$container->set('installationRepositories', fn () => new InstallationRepositories(), []);
 $container->set('repositoryWebhooks', fn (VcsFactory $vcsFactory) => new RepositoryWebhooks($vcsFactory), ['vcsFactory']);
 
 $container->set('vcsProviders', fn (VcsFactory $vcsFactory) => fn () => $vcsFactory->getProviders(), ['vcsFactory']);
