@@ -17,7 +17,7 @@ class OAuth2Supabase extends OAuth2Base
 
     public function getClientIdExample(): string
     {
-        return '00000000000000000000000000000000';
+        return '00000000-0000-0000-0000-000000000000';
     }
 
     public function getClientSecretExample(): string
