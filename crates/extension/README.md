@@ -267,6 +267,9 @@ and `Utopia\Usage\UsageQuery` extend `Query`:
   `array|object` override is compatible with; they accept an object all the same.
 - The seven protected properties are declared and getter-backed, so a subclass reads
   `$this->method` and `var_dump()`, `==` and `(array)` see what they see in PHP.
+- `serialize()` writes what PHP's class writes, a property at a time, and `unserialize()` reads it,
+  so either reads what the other wrote. utopia-php/database hashes it for its cache keys. A subclass
+  keeps the properties it declares.
 
 The corpus adds: every method constructed on the class and on two subclasses, with and without
 values, nested queries and an alias; every factory with arguments it takes and sixty seeded
@@ -442,6 +445,54 @@ The executor closure is held in Rust, where PHP's cycle collector does not look.
 reaches its own schema (`$schema->setExecutor(fn () => $schema)`) is freed at the end of the
 request, not before. The database library's executor is bound to the database, which does not keep
 the schema.
+### The builders
+
+`Builder\MySQL`, `MariaDB`, `PostgreSQL`, `SQLite`, `ClickHouse` and `MongoDB`, with the abstract
+`Builder` and `Builder\SQL` above them and the `Compiler` interface. They are still being moved, so
+they are a batch of their own: `_APP_EXTENSION_LIBRARIES=query,query-builders`. Of the public and
+protected methods PHP has, MySQL has 173 of 222, MariaDB 176 of 227, PostgreSQL 194 of 249, SQLite
+152 of 196, ClickHouse 154 of 196 and MongoDB 118 of 151. A method that is not moved is an undefined
+method, not a slower one. Still to move: `toAst()` and `fromAst()`, `selectCase()` and `setCase()`,
+the lateral and ASOF joins, `bulkInsert()`, `orderByVectorDistance()`, MERGE's `using()`, MongoDB's
+`hint()`, `increment()` and `facet()`, and about forty protected helpers.
+
+What a subclass can rely on:
+
+- A protected `compile*()` method it overrides is the one the build calls, 26 of them so far,
+  `build()` included. `parent::compileFilter()` runs the native one.
+- `bindings`, `pendingQueries` and `resolvedAttributeCache` are protected properties it reads,
+  assigns and changes in place (`$this->pendingQueries[] = $query`), as the package's own traits do.
+  PHP is handed a copy the builder holds, and the next native call reads it back.
+- Its constructor need not call the parent's, which PHP's builders have none of.
+- Fluent methods return `static`.
+- A builder implements the `Feature\*` interfaces whose methods are all moved, 43 of 51 so far. An
+  interface takes its signatures from the native methods, so the two cannot disagree.
+
+Three things happen after every extension has registered its classes, in PHP's post-startup hook,
+because `#[php_class]` cannot say them: fluent return types become `static`, the builders implement
+their interfaces, and PHP creates a builder, or a `Query`, with its state already in it.
+
+Known differences:
+
+- The other protected properties of PHP's builders (`table`, `unions`, `lockMode` and about fifty
+  more) do not exist, so a subclass that composes one of the package's `Builder\Trait\*` traits
+  works only when the trait touches nothing but `pendingQueries` and `bindings`.
+- An override is handed a `Query` or a `JoinBuilder` built from the builder's own, not the object
+  the caller passed in.
+- `resolvedAttributeCache` has no order.
+
+Three things check them. `tests/query-builders.php` is a corpus like the others: 15,080 cases, the
+same on PHP and on the extension. The package's own tests pass on both for everything but the
+builders, and with the builders on 261 of 5,828 fail, all but a few for a method not moved yet.
+utopia-php/database 10.2.3 subclasses four of the builders, overrides 23 of their methods and
+serializes queries for its cache keys. Its 13,217 unit tests give the same result on the native
+builders as on PHP.
+
+A typical read (five queries, three columns) builds in 3.7 µs against PHP's 11 µs, and in 3.9 µs
+against 10.6 µs through utopia-php/database's MySQL builder. Its PostgreSQL builder overrides
+`compileFilter()` in PHP, and takes 6.1 µs against 11.1 µs. Measured on an M-series Mac without the
+JIT.
+
 ## Utopia\Validator\Validator
 
 Over `crates/utopia/validators`, always registered with every validator below. Once the extension
