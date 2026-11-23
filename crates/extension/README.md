@@ -41,6 +41,11 @@ RUN apk add --no-cache libheif libstdc++ \
   package's `"ext-utopia"` constraint has to stay `*` until those builds report a version that
   orders against releases.
 
+- **Tracking main:** a consumer that vendors this repository at a commit and must not compile it
+  takes `appwrite/utopia-extension:$(crates/extension/tag.sh)`. The script prints `build-<hash>`, a
+  hash of what the build reads (the Cargo workspace and the base image), and every publish from
+  `main` also carries that tag.
+
 `.github/workflows/extension.yml` publishes it, smoke-testing each architecture on stock
 `php:8.5-cli-alpine` with exactly these packages first.
 

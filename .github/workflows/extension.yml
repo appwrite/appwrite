@@ -6,7 +6,9 @@ name: Extension image
 #
 #   COPY --from=appwrite/utopia-extension:<version> /utopia.so /usr/local/lib/php/utopia.so
 #
-# A release publishes <version> and latest; main publishes main. A manual run
+# A release publishes <version> and latest; main publishes main and, for a
+# consumer that vendors this repository at a commit, the build-<hash> that
+# crates/extension/tag.sh prints for the tree. A manual run
 # on any other branch only builds and smoke-tests, so an unreviewed ref can
 # never replace a published tag. Each
 # architecture builds on its own native runner (no QEMU) and is smoke-tested on
@@ -49,6 +51,8 @@ jobs:
     name: Build (${{ matrix.arch }})
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
+    outputs:
+      build: ${{ steps.version.outputs.build }}
     strategy:
       matrix:
         include:
@@ -87,6 +91,7 @@ jobs:
           else
             echo "stamp=" >> "$GITHUB_OUTPUT"
             echo "tag=main" >> "$GITHUB_OUTPUT"
+            echo "build=$(crates/extension/tag.sh)" >> "$GITHUB_OUTPUT"
           fi
 
       - uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
@@ -160,9 +165,10 @@ jobs:
       - name: Publish
         env:
           RELEASE: ${{ github.event.release.tag_name }}
+          BUILD: ${{ needs.build.outputs.build }}
         run: |
           tag=main
-          extra=""
+          extra="--tag $IMAGE:$BUILD"
           if [ "$GITHUB_EVENT_NAME" = "release" ]; then
             tag="${RELEASE#v}"
             extra="--tag $IMAGE:latest"
