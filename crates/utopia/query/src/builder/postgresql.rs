@@ -650,6 +650,14 @@ impl Dialect for PostgreSqlDialect {
     const WRAP: char = '"';
     const LITERAL: crate::StringLiteral = crate::StringLiteral::Extended;
 
+    fn base_step(
+        b: &mut Builder<Self>,
+        step: crate::builder::Step,
+        arguments: &[crate::builder::Arg<'_>],
+    ) -> Option<Result<crate::builder::Ret>> {
+        sql::sql_base_step(b, step, arguments)
+    }
+
     fn quote_string(value: &[u8]) -> Vec<u8> {
         quote_bytes(value, false)
     }

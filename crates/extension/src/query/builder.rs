@@ -36,21 +36,24 @@ use ext_php_rs::zend::{ClassEntry, ExecutorGlobals, ce};
 use php_std::types::KeyRef;
 use php_std::{ArrayKey as Key, Str};
 use utopia_query::builder::{
-    AnyBuilder, Arg, Builder, ClickHouseDialect, Condition, Dialect, JoinOn, JoinType, MariaDbDialect, MongoDbDialect,
-    MySqlDialect, Overrides, PostgreSqlDialect, Ret, SqliteDialect, Statement, Step, WindowFrame,
+    AnyBuilder, Arg, Builder, ClickHouseDialect, Condition, Dialect, JoinBuilder, JoinOn, JoinType, MariaDbDialect,
+    MongoDbDialect, MySqlDialect, Overrides, PostgreSqlDialect, Ret, SqliteDialect, Statement, Step, WindowFrame,
 };
 use utopia_query::hook::{self, Hook};
-use utopia_query::{Array, Error, NullsPosition, Object, Query, Value};
+use utopia_query::{Array, Error, Method, NullsPosition, Object, Query, Value};
 
 use super::ast::{failed, narrow, null, slots, wide};
+use super::schema::slot_of;
 use super::tokenizer::class;
-use super::value::{Arr, Bool, Int, clone_object, empty, enum_case, parts};
+use super::value::{Arr, Bool, Int, case_method, clone_object, empty, enum_case, method_case, parts};
 use crate::emails::{Text as Bytes, construct, string, thrown};
 use crate::string::PhpString;
 
 const BUILDER: &str = "Utopia\\Query\\Builder";
 const HOOK: &str = "Utopia\\Query\\Hook";
+const CONDITION: &str = "Utopia\\Query\\Builder\\Condition";
 const JOIN_BUILDER: &str = "Utopia\\Query\\Builder\\JoinBuilder";
+const JOIN_ON: &str = "Utopia\\Query\\Builder\\JoinOn";
 const WINDOW_FRAME: &str = "Utopia\\Query\\Builder\\WindowFrame";
 const QUERY: &str = "Utopia\\Query\\Query";
 const STATEMENT: &str = "Utopia\\Query\\Builder\\Statement";
@@ -308,7 +311,15 @@ impl<D: Dialect + Text> State<D> {
                 }
             });
         }
-        Entered(CURRENT.replace((object, declared(class))))
+        let functions = declared(class);
+        let steps = functions
+            .iter()
+            .enumerate()
+            .fold(0, |steps, (index, function)| steps | u64::from(!function.is_null()) << index);
+        self.with(|builder| {
+            builder.set_overridden(steps);
+        });
+        Entered(CURRENT.replace((object, functions)))
     }
 
     fn values(&self, given: &Arr<'_>) -> PhpResult<Array> {
@@ -430,6 +441,8 @@ impl<D: Dialect + Text> State<D> {
                 Arg::Values(values) => list(D::JSON, values).ok()?,
                 Arg::Value(found) => zval(D::JSON, found).ok()?,
                 Arg::Query(found) => query_object(D::JSON, found).ok()?,
+                Arg::Method(method) => method_case(*method).ok()?,
+                Arg::Join(join) => join_object(D::JSON, join).ok()?,
             });
         }
         let mut returned = Zval::new();
@@ -627,6 +640,81 @@ fn condition(json: bool, zval: &Zval) -> Option<Condition> {
     };
     let bindings = property(fields, "bindings").and_then(Zval::array).into_iter().flat_map(ZendHashTable::values);
     Some(Condition::new(expression, bindings.map(bound).collect()))
+}
+
+/// The conditions of a PHP `JoinBuilder`, as written on it.
+fn join_of(json: bool, zval: &Zval) -> JoinBuilder {
+    let text = |bytes: &[u8]| if json { String::from_utf8_lossy(bytes).into_owned() } else { wide(bytes).into_owned() };
+    let fields = properties(zval);
+    let list = |name: &str| {
+        fields
+            .and_then(|fields| property(fields, name))
+            .and_then(Zval::array)
+            .into_iter()
+            .flat_map(ZendHashTable::values)
+    };
+    let ons = list("ons").filter_map(|on| {
+        let fields = properties(on)?;
+        let part = |name: &str| property(fields, name)?.zend_str().map(|found| text(found.as_bytes()));
+        Some(JoinOn::new(part("left")?, part("operator")?, part("right")?))
+    });
+    let mut join = JoinBuilder::new();
+    join.push(ons, list("wheres").filter_map(|found| condition(json, found)));
+    join
+}
+
+/// The crate's join conditions as a PHP `JoinBuilder`, for an override that is handed one.
+fn join_object(json: bool, join: &JoinBuilder) -> PhpResult<Zval> {
+    let text = |text: &str| string(&bytes(json, text));
+    let mut ons = Vec::with_capacity(join.ons().len());
+    for on in join.ons() {
+        let mut arguments = [text(&on.left), text(&on.operator), text(&on.right)];
+        ons.push(construct(class(JOIN_ON)?, &mut arguments)?.into_zval(false).map_err(PhpException::from)?);
+    }
+    let mut wheres = Vec::with_capacity(join.wheres().len());
+    for found in join.wheres() {
+        let bindings = found.bindings.iter().map(|binding| zval(json, binding)).collect::<PhpResult<Vec<_>>>()?;
+        let bindings =
+            if bindings.is_empty() { empty() } else { bindings.into_zval(false).map_err(PhpException::from)? };
+        let mut arguments = [text(&found.expression), bindings];
+        wheres.push(construct(class(CONDITION)?, &mut arguments)?.into_zval(false).map_err(PhpException::from)?);
+    }
+    let builder = class(JOIN_BUILDER)?;
+    let mut object = construct(builder, &mut [])?;
+    for (name, items) in [("ons", ons), ("wheres", wheres)] {
+        if items.is_empty() {
+            continue;
+        }
+        let Some(slot) = slot_of(builder, name) else { continue };
+        let items = items.into_zval(false).map_err(PhpException::from)?;
+        // SAFETY: `slot_of` only answers a slot the class declares, and a new `JoinBuilder`
+        // holds the shared empty array there, which is not counted.
+        unsafe { object.properties_table.as_mut_ptr().add(slot).write(items) };
+    }
+    object.into_zval(false).map_err(PhpException::from)
+}
+
+/// A `JoinBuilder` argument.
+pub struct Joined<'a>(&'a Zval);
+
+impl<'a> FromZval<'a> for Joined<'a> {
+    const TYPE: DataType = DataType::object(JOIN_BUILDER);
+
+    fn from_zval(zval: &'a Zval) -> Option<Self> {
+        let builder = ClassEntry::try_find(JOIN_BUILDER)?;
+        zval.object().filter(|object| object.instance_of(builder)).map(|_| Joined(zval))
+    }
+}
+
+/// A `Method` argument.
+pub struct MethodArgument(Method);
+
+impl<'a> FromZval<'a> for MethodArgument {
+    const TYPE: DataType = DataType::object(Method::PHP_CLASS);
+
+    fn from_zval(zval: &'a Zval) -> Option<Self> {
+        zval.object().and_then(case_method).map(MethodArgument)
+    }
 }
 
 /// A `JoinType` argument.
@@ -843,7 +931,7 @@ impl<'a> FromZval<'a> for Columns<'a> {
 /// A builder class: its state, and the methods every dialect has. Every class declares its
 /// own, since a parent's native method would read its own Rust type.
 macro_rules! builder_class {
-    ($(#[$meta:meta])* $class:ident, $dialect:ty) => {
+    ($(#[$meta:meta])* $class:ident, $dialect:ty $(, sql = $sql:literal)? $(, spatial = $spatial:literal)? $(, literal = $literal:literal)?) => {
         $(#[$meta])*
         #[derive(Clone)]
         pub struct $class(State<$dialect>);
@@ -1524,24 +1612,14 @@ macro_rules! builder_class {
                 let join = construct(class(JOIN_BUILDER)?, &mut [])?.into_zval(false).map_err(PhpException::from)?;
                 ZendCallable::new(callback.0).map_err(PhpException::from)?.try_call(vec![&join]).map(drop).or_else(|_| thrown())?;
                 thrown()?;
-                let json = <$dialect as Text>::JSON;
-                let fields = properties(&join);
-                let list = |name: &str| fields.and_then(|fields| property(fields, name)).and_then(Zval::array).into_iter().flat_map(ZendHashTable::values);
-                let ons: Vec<JoinOn> = list("ons")
-                    .filter_map(|on| {
-                        let fields = properties(on)?;
-                        let text = |name: &str| property(fields, name)?.zend_str().map(|found| self_.0.text(found.as_bytes()));
-                        Some(JoinOn::new(text("left")?, text("operator")?, text("right")?))
-                    })
-                    .collect();
-                let wheres: Vec<Condition> = list("wheres").filter_map(|found| condition(json, found)).collect();
+                let written = join_of(<$dialect as Text>::JSON, &join);
                 let (table, alias) = (self_.0.text(table.bytes()), self_.0.text(alias.bytes()));
                 self_.0.change(|builder| {
                     builder
                         .join_where(
                             table,
                             |join| {
-                                join.push(ons, wheres);
+                                *join = written;
                                 Ok(())
                             },
                             r#type.0,
@@ -1750,6 +1828,208 @@ macro_rules! builder_class {
                 self_.0.step(Step::CompileIn, &[Arg::Str(&attribute), Arg::Values(&values), Arg::MaybeStr(column.as_deref())])
             }
 
+            #[php(name = "compileNotIn", vis = "protected", optional = column)]
+            pub fn compile_not_in(
+                self_: &mut ZendClassObject<$class>,
+                attribute: PhpString<'_>,
+                values: Arr<'_>,
+                column: Option<PhpString<'_>>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let (values, column) = (self_.0.values(&values)?, self_.0.maybe(column.as_ref()));
+                let attribute = self_.0.text(attribute.bytes());
+                self_.0.step(Step::CompileNotIn, &[Arg::Str(&attribute), Arg::Values(&values), Arg::MaybeStr(column.as_deref())])
+            }
+
+            #[php(name = "compileRegex", vis = "protected", optional = column)]
+            pub fn compile_regex(
+                self_: &mut ZendClassObject<$class>,
+                attribute: PhpString<'_>,
+                values: Arr<'_>,
+                column: Option<PhpString<'_>>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let (values, column) = (self_.0.values(&values)?, self_.0.maybe(column.as_ref()));
+                let attribute = self_.0.text(attribute.bytes());
+                self_.0.step(Step::CompileRegex, &[Arg::Str(&attribute), Arg::Values(&values), Arg::MaybeStr(column.as_deref())])
+            }
+
+            #[php(name = "compileContains", vis = "protected", optional = column)]
+            pub fn compile_contains(
+                self_: &mut ZendClassObject<$class>,
+                attribute: PhpString<'_>,
+                values: Arr<'_>,
+                column: Option<PhpString<'_>>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let (values, column) = (self_.0.values(&values)?, self_.0.maybe(column.as_ref()));
+                let attribute = self_.0.text(attribute.bytes());
+                self_.0.step(Step::CompileContains, &[Arg::Str(&attribute), Arg::Values(&values), Arg::MaybeStr(column.as_deref())])
+            }
+
+            #[php(name = "compileContainsAll", vis = "protected", optional = column)]
+            pub fn compile_contains_all(
+                self_: &mut ZendClassObject<$class>,
+                attribute: PhpString<'_>,
+                values: Arr<'_>,
+                column: Option<PhpString<'_>>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let (values, column) = (self_.0.values(&values)?, self_.0.maybe(column.as_ref()));
+                let attribute = self_.0.text(attribute.bytes());
+                self_.0.step(Step::CompileContainsAll, &[Arg::Str(&attribute), Arg::Values(&values), Arg::MaybeStr(column.as_deref())])
+            }
+
+            #[php(name = "compileNotContains", vis = "protected", optional = column)]
+            pub fn compile_not_contains(
+                self_: &mut ZendClassObject<$class>,
+                attribute: PhpString<'_>,
+                values: Arr<'_>,
+                column: Option<PhpString<'_>>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let (values, column) = (self_.0.values(&values)?, self_.0.maybe(column.as_ref()));
+                let attribute = self_.0.text(attribute.bytes());
+                self_.0.step(Step::CompileNotContains, &[Arg::Str(&attribute), Arg::Values(&values), Arg::MaybeStr(column.as_deref())])
+            }
+
+            #[php(name = "compileJoinWithBuilder", vis = "protected")]
+            pub fn compile_join_with_builder(
+                self_: &mut ZendClassObject<$class>,
+                query: QueryArgument<'_>,
+                joinBuilder: Joined<'_>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let (query, join) = (self_.0.query(query.0)?, join_of(<$dialect as Text>::JSON, joinBuilder.0));
+                self_.0.step(Step::CompileJoinWithBuilder, &[Arg::Query(&query), Arg::Join(&join)])
+            }
+
+            #[php(name = "resolveAttribute", vis = "protected")]
+            pub fn resolve_attribute(self_: &mut ZendClassObject<$class>, attribute: PhpString<'_>) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let attribute = self_.0.text(attribute.bytes());
+                self_.0.step(Step::ResolveAttribute, &[Arg::Str(&attribute)])
+            }
+
+            #[php(name = "resolveAndWrap", vis = "protected")]
+            pub fn resolve_and_wrap(self_: &mut ZendClassObject<$class>, attribute: PhpString<'_>) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let attribute = self_.0.text(attribute.bytes());
+                self_.0.step(Step::ResolveAndWrap, &[Arg::Str(&attribute)])
+            }
+
+            #[php(vis = "protected")]
+            pub fn quote(&self, identifier: PhpString<'_>) -> PhpResult<Bytes> {
+                let identifier = self.0.text(identifier.bytes());
+                let quoted = self.0.with(|builder| <$dialect as Dialect>::quote(builder, &identifier));
+                Ok(Bytes(self.0.written(&quoted.map_err(|error| raised(&error))?)?.into_owned()))
+            }
+
+            $(
+                #[php(name = "quoteLiteral", vis = "protected")]
+                pub fn quote_literal(&self, identifier: PhpString<'_>) -> PhpResult<Bytes> {
+                    let _: bool = $literal;
+                    let identifier = self.0.text(identifier.bytes());
+                    let quoted = utopia_query::quote_literal(&identifier, <$dialect as Dialect>::WRAP);
+                    Ok(Bytes(self.0.written(&quoted.map_err(|error| raised(&error))?)?.into_owned()))
+                }
+            )?
+
+            #[php(name = "getLikeKeyword", vis = "protected")]
+            pub fn get_like_keyword(&self) -> &'static str {
+                self.0.with(|builder| <$dialect as Dialect>::like_keyword(builder))
+            }
+
+            #[php(name = "getBindingValues", vis = "protected")]
+            pub fn get_binding_values(&self) -> PhpResult<Zval> {
+                self.0.bindings()
+            }
+
+            $(
+                #[php(name = "compileSearchExpression", vis = "protected")]
+                pub fn compile_search_expression(
+                    self_: &mut ZendClassObject<$class>,
+                    attribute: PhpString<'_>,
+                    values: Arr<'_>,
+                    not: bool,
+                ) -> PhpResult<Bytes> {
+                    let _: bool = $sql;
+                    let object = std::ptr::from_mut(&mut self_.std);
+                    let _running = self_.0.running(object);
+                    let (attribute, values) = (self_.0.text(attribute.bytes()), self_.0.values(&values)?);
+                    self_.0.step(Step::CompileSearchExpression, &[Arg::Str(&attribute), Arg::Values(&values), Arg::Bool(not)])
+                }
+
+                #[php(name = "compileJsonContainsExpression", vis = "protected")]
+                pub fn compile_json_contains_expression(
+                    self_: &mut ZendClassObject<$class>,
+                    attribute: PhpString<'_>,
+                    values: Arr<'_>,
+                    not: bool,
+                ) -> PhpResult<Bytes> {
+                    let object = std::ptr::from_mut(&mut self_.std);
+                    let _running = self_.0.running(object);
+                    let (attribute, values) = (self_.0.text(attribute.bytes()), self_.0.values(&values)?);
+                    self_.0.step(Step::CompileJsonContainsExpression, &[Arg::Str(&attribute), Arg::Values(&values), Arg::Bool(not)])
+                }
+
+                #[php(name = "compileJsonOverlapsExpression", vis = "protected")]
+                pub fn compile_json_overlaps_expression(
+                    self_: &mut ZendClassObject<$class>,
+                    attribute: PhpString<'_>,
+                    values: Arr<'_>,
+                ) -> PhpResult<Bytes> {
+                    let object = std::ptr::from_mut(&mut self_.std);
+                    let _running = self_.0.running(object);
+                    let (attribute, values) = (self_.0.text(attribute.bytes()), self_.0.values(&values)?);
+                    self_.0.step(Step::CompileJsonOverlapsExpression, &[Arg::Str(&attribute), Arg::Values(&values)])
+                }
+
+                #[php(name = "compileSpatialFilter", vis = "protected")]
+                pub fn compile_spatial_filter(
+                    self_: &mut ZendClassObject<$class>,
+                    method: MethodArgument,
+                    attribute: PhpString<'_>,
+                    query: QueryArgument<'_>,
+                ) -> PhpResult<Bytes> {
+                    let object = std::ptr::from_mut(&mut self_.std);
+                    let _running = self_.0.running(object);
+                    let (attribute, query) = (self_.0.text(attribute.bytes()), self_.0.query(query.0)?);
+                    self_.0.step(Step::CompileSpatialFilter, &[Arg::Method(method.0), Arg::Str(&attribute), Arg::Query(&query)])
+                }
+
+                #[php(name = "compileArrayFilter", vis = "protected")]
+                pub fn compile_array_filter(
+                    self_: &mut ZendClassObject<$class>,
+                    method: MethodArgument,
+                    attribute: PhpString<'_>,
+                    query: QueryArgument<'_>,
+                ) -> PhpResult<Bytes> {
+                    let object = std::ptr::from_mut(&mut self_.std);
+                    let _running = self_.0.running(object);
+                    let (attribute, query) = (self_.0.text(attribute.bytes()), self_.0.query(query.0)?);
+                    self_.0.step(Step::CompileArrayFilter, &[Arg::Method(method.0), Arg::Str(&attribute), Arg::Query(&query)])
+                }
+            )?
+
+            $(
+                #[php(name = "geometryToWkt", vis = "protected")]
+                pub fn geometry_to_wkt(&self, geometry: Arr<'_>) -> PhpResult<Bytes> {
+                    let _: bool = $spatial;
+                    let geometry = self.0.values(&geometry)?;
+                    let wkt = utopia_query::builder::geometry_to_wkt(&geometry).map_err(|error| raised(&error))?;
+                    Ok(Bytes(wkt.into_bytes()))
+                }
+            )?
+
             #[php(name = "compileLike", vis = "protected", optional = column)]
             pub fn compile_like(
                 self_: &mut ZendClassObject<$class>,
@@ -1826,7 +2106,10 @@ builder_class!(
     #[php(name = "Utopia\\Query\\Builder\\MySQL")]
     #[php(extends(Sql))]
     MySqlBuilder,
-    MySqlDialect
+    MySqlDialect,
+    sql = true,
+    spatial = true,
+    literal = true
 );
 builder_class!(
     /// `Utopia\Query\Builder\MariaDB`.
@@ -1834,7 +2117,10 @@ builder_class!(
     #[php(name = "Utopia\\Query\\Builder\\MariaDB")]
     #[php(extends(MySqlBuilder))]
     MariaDbBuilder,
-    MariaDbDialect
+    MariaDbDialect,
+    sql = true,
+    spatial = true,
+    literal = true
 );
 builder_class!(
     /// `Utopia\Query\Builder\PostgreSQL`.
@@ -1842,7 +2128,10 @@ builder_class!(
     #[php(name = "Utopia\\Query\\Builder\\PostgreSQL")]
     #[php(extends(Sql))]
     PostgreSqlBuilder,
-    PostgreSqlDialect
+    PostgreSqlDialect,
+    sql = true,
+    spatial = true,
+    literal = true
 );
 builder_class!(
     /// `Utopia\Query\Builder\SQLite`.
@@ -1850,7 +2139,9 @@ builder_class!(
     #[php(name = "Utopia\\Query\\Builder\\SQLite")]
     #[php(extends(Sql))]
     SqliteBuilder,
-    SqliteDialect
+    SqliteDialect,
+    sql = true,
+    literal = true
 );
 builder_class!(
     /// `Utopia\Query\Builder\ClickHouse`.
@@ -1858,7 +2149,8 @@ builder_class!(
     #[php(name = "Utopia\\Query\\Builder\\ClickHouse")]
     #[php(extends(Base))]
     ClickHouseBuilder,
-    ClickHouseDialect
+    ClickHouseDialect,
+    literal = true
 );
 builder_class!(
     /// `Utopia\Query\Builder\MongoDB`.

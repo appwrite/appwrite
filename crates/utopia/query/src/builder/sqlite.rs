@@ -73,6 +73,14 @@ impl Dialect for SqliteDialect {
     const DECLARES_LIKE_ESCAPE: bool = true;
     const LITERAL: crate::StringLiteral = crate::StringLiteral::Standard;
 
+    fn base_step(
+        b: &mut Builder<Self>,
+        step: crate::builder::Step,
+        arguments: &[crate::builder::Arg<'_>],
+    ) -> Option<Result<crate::builder::Ret>> {
+        sql::sql_base_step(b, step, arguments)
+    }
+
     fn quote_string(value: &[u8]) -> Vec<u8> {
         quote_bytes(value, false)
     }
@@ -234,7 +242,10 @@ impl SqlDialect for SqliteDialect {
     fn compile_array_filter(b: &mut Builder<Self>, method: Method, attribute: &str, query: &Query) -> Result<String> {
         if b.core.flavor.sqlite.is_some() && method == Method::NotContains {
             let wrapped = value::list([Value::Array(query.values().clone())]);
-            let overlaps = Self::compile_json_overlaps_expression(b, attribute, &wrapped)?;
+            let overlaps = b.step_string(
+                crate::builder::Step::CompileJsonOverlapsExpression,
+                &[crate::builder::Arg::Str(attribute), crate::builder::Arg::Values(&wrapped)],
+            )?;
             return Ok(format!("({attribute} IS NOT NULL AND NOT {overlaps})"));
         }
         sql::sql_compile_array_filter(b, method, attribute, query)

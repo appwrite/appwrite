@@ -425,6 +425,14 @@ impl Dialect for MySqlDialect {
     const LIKE_ESCAPE: u8 = b'!';
     const DECLARES_LIKE_ESCAPE: bool = true;
 
+    fn base_step(
+        b: &mut Builder<Self>,
+        step: crate::builder::Step,
+        arguments: &[crate::builder::Arg<'_>],
+    ) -> Option<Result<crate::builder::Ret>> {
+        sql::sql_base_step(b, step, arguments)
+    }
+
     fn compile_random(_b: &Builder<Self>) -> String {
         "RAND()".into()
     }

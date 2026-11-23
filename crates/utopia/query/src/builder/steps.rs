@@ -9,7 +9,9 @@
 use std::sync::Arc;
 
 use crate::builder::core::{Builder, Dialect};
+use crate::builder::join::JoinBuilder;
 use crate::error::{Error, Result};
+use crate::method::Method;
 use crate::query::Query;
 use crate::value::{Array, Value};
 
@@ -36,6 +38,32 @@ pub enum Step {
     CompileJoin,
     /// `compileIn(string $attribute, array $values, ?string $column = null): string`.
     CompileIn,
+    /// `compileNotIn(string $attribute, array $values, ?string $column = null): string`.
+    CompileNotIn,
+    /// `compileRegex(string $attribute, array $values, ?string $column = null): string`.
+    CompileRegex,
+    /// `compileContains(string $attribute, array $values, ?string $column = null): string`.
+    CompileContains,
+    /// `compileContainsAll(string $attribute, array $values, ?string $column = null): string`.
+    CompileContainsAll,
+    /// `compileNotContains(string $attribute, array $values, ?string $column = null): string`.
+    CompileNotContains,
+    /// `compileSearchExpression(string $attribute, array $values, bool $not): string` (SQL dialects).
+    CompileSearchExpression,
+    /// `compileSpatialFilter(Method $method, string $attribute, Query $query): string` (SQL dialects).
+    CompileSpatialFilter,
+    /// `compileArrayFilter(Method $method, string $attribute, Query $query): string` (SQL dialects).
+    CompileArrayFilter,
+    /// `compileJsonContainsExpression(string $attribute, array $values, bool $not): string` (SQL dialects).
+    CompileJsonContainsExpression,
+    /// `compileJsonOverlapsExpression(string $attribute, array $values): string` (SQL dialects).
+    CompileJsonOverlapsExpression,
+    /// `compileJoinWithBuilder(Query $query, JoinBuilder $joinBuilder): string`.
+    CompileJoinWithBuilder,
+    /// `resolveAttribute(string $attribute): string`.
+    ResolveAttribute,
+    /// `resolveAndWrap(string $attribute): string`.
+    ResolveAndWrap,
     /// `compileLike(string $attribute, array $values, string $prefix, string $suffix, bool $not, ?string $column = null): string`.
     CompileLike,
     /// `addBinding(mixed $value, ?string $column = null): void`.
@@ -44,7 +72,7 @@ pub enum Step {
 
 impl Step {
     /// Every step, in the order of the enum.
-    pub const ALL: [Step; 12] = [
+    pub const ALL: [Step; 25] = [
         Step::CompileFilter,
         Step::CompileOrder,
         Step::CompileLimit,
@@ -55,6 +83,19 @@ impl Step {
         Step::CompileGroupBy,
         Step::CompileJoin,
         Step::CompileIn,
+        Step::CompileNotIn,
+        Step::CompileRegex,
+        Step::CompileContains,
+        Step::CompileContainsAll,
+        Step::CompileNotContains,
+        Step::CompileSearchExpression,
+        Step::CompileSpatialFilter,
+        Step::CompileArrayFilter,
+        Step::CompileJsonContainsExpression,
+        Step::CompileJsonOverlapsExpression,
+        Step::CompileJoinWithBuilder,
+        Step::ResolveAttribute,
+        Step::ResolveAndWrap,
         Step::CompileLike,
         Step::AddBinding,
     ];
@@ -72,6 +113,19 @@ impl Step {
             Step::CompileGroupBy => "compileGroupBy",
             Step::CompileJoin => "compileJoin",
             Step::CompileIn => "compileIn",
+            Step::CompileNotIn => "compileNotIn",
+            Step::CompileRegex => "compileRegex",
+            Step::CompileContains => "compileContains",
+            Step::CompileContainsAll => "compileContainsAll",
+            Step::CompileNotContains => "compileNotContains",
+            Step::CompileSearchExpression => "compileSearchExpression",
+            Step::CompileSpatialFilter => "compileSpatialFilter",
+            Step::CompileArrayFilter => "compileArrayFilter",
+            Step::CompileJsonContainsExpression => "compileJsonContainsExpression",
+            Step::CompileJsonOverlapsExpression => "compileJsonOverlapsExpression",
+            Step::CompileJoinWithBuilder => "compileJoinWithBuilder",
+            Step::ResolveAttribute => "resolveAttribute",
+            Step::ResolveAndWrap => "resolveAndWrap",
             Step::CompileLike => "compileLike",
             Step::AddBinding => "addBinding",
         }
@@ -93,6 +147,10 @@ pub enum Arg<'a> {
     Value(&'a Value),
     /// A `Query`.
     Query(&'a Query),
+    /// A `Method`.
+    Method(Method),
+    /// A `JoinBuilder`.
+    Join(&'a JoinBuilder),
 }
 
 /// What a [`Step`] returns.
@@ -132,8 +190,18 @@ impl<D: Dialect> Builder<D> {
         self
     }
 
+    /// Says which steps the overrides take, a bit for each by its place in [`Step::ALL`]:
+    /// the others are not asked about.
+    pub fn set_overridden(&mut self, steps: u64) -> &mut Self {
+        self.core.steps = steps;
+        self
+    }
+
     /// The override of `step`, when there is one.
     fn overridden(&mut self, step: Step, arguments: &[Arg<'_>]) -> Option<Result<Ret>> {
+        if self.core.steps & (1 << step as u64) == 0 {
+            return None;
+        }
         let overrides = self.core.overrides.clone()?;
         overrides.call(std::ptr::from_mut(self).cast(), step, arguments)
     }
@@ -166,11 +234,32 @@ impl<D: Dialect> Builder<D> {
                     Arg::MaybeStr(column),
                 ],
             ) => D::compile_like(self, attribute, values, prefix, suffix, *not, *column).map(Ret::Str),
+            (Step::CompileNotIn, [Arg::Str(attribute), Arg::Values(values), Arg::MaybeStr(column)]) => {
+                self.base_compile_not_in(attribute, values, *column).map(Ret::Str)
+            }
+            (Step::CompileRegex, [Arg::Str(attribute), Arg::Values(values), Arg::MaybeStr(column)]) => {
+                D::compile_regex(self, attribute, values, *column).map(Ret::Str)
+            }
+            (Step::CompileContains, [Arg::Str(attribute), Arg::Values(values), Arg::MaybeStr(column)]) => {
+                D::compile_contains(self, attribute, values, *column).map(Ret::Str)
+            }
+            (Step::CompileContainsAll, [Arg::Str(attribute), Arg::Values(values), Arg::MaybeStr(column)]) => {
+                D::compile_contains_all(self, attribute, values, *column).map(Ret::Str)
+            }
+            (Step::CompileNotContains, [Arg::Str(attribute), Arg::Values(values), Arg::MaybeStr(column)]) => {
+                D::compile_not_contains(self, attribute, values, *column).map(Ret::Str)
+            }
+            (Step::CompileJoinWithBuilder, [Arg::Query(query), Arg::Join(join)]) => {
+                D::compile_join_with_builder(self, query, join).map(Ret::Str)
+            }
+            (Step::ResolveAttribute, [Arg::Str(attribute)]) => self.base_resolve_attribute(attribute).map(Ret::Str),
+            (Step::ResolveAndWrap, [Arg::Str(attribute)]) => self.base_resolve_and_wrap(attribute).map(Ret::Str),
             (Step::AddBinding, [Arg::Value(value), Arg::MaybeStr(column)]) => {
                 self.base_add_binding((*value).clone(), *column);
                 Ok(Ret::None)
             }
-            _ => Err(wrong(step)),
+            // A step only some dialects have.
+            _ => D::base_step(self, step, arguments).unwrap_or_else(|| Err(wrong(step))),
         }
     }
 

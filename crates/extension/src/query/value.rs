@@ -76,7 +76,7 @@ fn method_class() -> PhpResult<&'static ClassEntry> {
 }
 
 /// The `Method` case object of `method`.
-fn method_case(method: Method) -> PhpResult<Zval> {
+pub(super) fn method_case(method: Method) -> PhpResult<Zval> {
     let mut case = METHOD_CASES.with(|cases| cases[method as usize].get());
     if case.is_null() {
         let class = method_class()?;
@@ -458,7 +458,7 @@ fn methods(types: &Arr<'_>) -> Vec<Method> {
 }
 
 /// The `Method` an enum case object is, if it is one.
-fn case_method(object: &ZendObject) -> Option<Method> {
+pub(super) fn case_method(object: &ZendObject) -> Option<Method> {
     if !std::ptr::eq(object.get_class_entry(), method_class().ok()?) {
         return None;
     }

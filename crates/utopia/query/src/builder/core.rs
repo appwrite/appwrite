@@ -167,6 +167,7 @@ pub struct Core {
     pub(crate) deferred: Option<Error>,
     pub(crate) overrides: Option<Arc<dyn crate::builder::Overrides>>,
     pub(crate) class: Option<String>,
+    pub(crate) steps: u64,
 }
 
 /// A query builder for one dialect: from a table, with queries (filters,
@@ -236,6 +237,12 @@ pub trait Dialect: Clone + Default + Send + Sync + Sized + 'static {
     /// PHP: `quoteString()`.
     fn quote_string(value: &[u8]) -> Vec<u8> {
         quote_bytes(value, true)
+    }
+
+    /// A step only some dialects have, run as the dialect itself does: `None` where the
+    /// dialect has no such step.
+    fn base_step(_b: &mut Builder<Self>, _step: Step, _arguments: &[Arg<'_>]) -> Option<Result<crate::builder::Ret>> {
+        None
     }
 
     /// The random-order expression (`RAND()`).
@@ -478,6 +485,10 @@ impl<D: Dialect> Builder<D> {
     }
 
     pub(crate) fn resolve_attribute(&mut self, attribute: &str) -> Result<String> {
+        self.step_string(Step::ResolveAttribute, &[Arg::Str(attribute)])
+    }
+
+    pub(crate) fn base_resolve_attribute(&mut self, attribute: &str) -> Result<String> {
         if let Some(resolved) = self.core.resolved.get(attribute) {
             return Ok(resolved.clone());
         }
@@ -490,6 +501,10 @@ impl<D: Dialect> Builder<D> {
     }
 
     pub(crate) fn resolve_and_wrap(&mut self, attribute: &str) -> Result<String> {
+        self.step_string(Step::ResolveAndWrap, &[Arg::Str(attribute)])
+    }
+
+    pub(crate) fn base_resolve_and_wrap(&mut self, attribute: &str) -> Result<String> {
         let mut resolved = self.resolve_attribute(attribute)?;
         if self.core.qualify
             && resolved != "*"
@@ -735,7 +750,9 @@ impl<D: Dialect> Builder<D> {
                 let pending_index = join_indices.get(join_index).copied();
                 let builder = pending_index.and_then(|i| self.core.joins.get(&i)).cloned();
                 let mut sql = match builder {
-                    Some(builder) => D::compile_join_with_builder(self, join, &builder)?,
+                    Some(builder) => {
+                        self.step_string(Step::CompileJoinWithBuilder, &[Arg::Query(join), Arg::Join(&builder)])?
+                    }
                     None => self.step_string(Step::CompileJoin, &[Arg::Query(join)])?,
                 };
                 let join_type = match join.method() {
@@ -1494,18 +1511,31 @@ impl<D: Dialect> Builder<D> {
                     Arg::MaybeStr(column),
                 ],
             ),
-            Contains => D::compile_contains(self, &attribute, values, column),
+            Contains => self.step_string(
+                Step::CompileContains,
+                &[Arg::Str(&attribute), Arg::Values(values), Arg::MaybeStr(column)],
+            ),
             ContainsAny => {
                 if query.on_array() {
                     self.compile_in(&attribute, values, column)
                 } else {
-                    D::compile_contains(self, &attribute, values, column)
+                    self.step_string(
+                        Step::CompileContains,
+                        &[Arg::Str(&attribute), Arg::Values(values), Arg::MaybeStr(column)],
+                    )
                 }
             }
-            ContainsAll => D::compile_contains_all(self, &attribute, values, column),
-            NotContains => D::compile_not_contains(self, &attribute, values, column),
+            ContainsAll => self.step_string(
+                Step::CompileContainsAll,
+                &[Arg::Str(&attribute), Arg::Values(values), Arg::MaybeStr(column)],
+            ),
+            NotContains => self.step_string(
+                Step::CompileNotContains,
+                &[Arg::Str(&attribute), Arg::Values(values), Arg::MaybeStr(column)],
+            ),
             Search | NotSearch => Err(Error::Unsupported("Full-text search is not supported by this dialect.".into())),
-            Regex => D::compile_regex(self, &attribute, values, column),
+            Regex => self
+                .step_string(Step::CompileRegex, &[Arg::Str(&attribute), Arg::Values(values), Arg::MaybeStr(column)]),
             IsNull => Ok(format!("{attribute} IS NULL")),
             IsNotNull => Ok(format!("{attribute} IS NOT NULL")),
             And | Having => self.compile_logical(query, "AND"),
@@ -1832,6 +1862,15 @@ impl<D: Dialect> Builder<D> {
 
     /// `attribute != ?` / `NOT IN (...)`, with `IS NOT NULL` for null values; `1 = 1` for none.
     pub(crate) fn compile_not_in(&mut self, attribute: &str, values: &Array, column: Option<&str>) -> Result<String> {
+        self.step_string(Step::CompileNotIn, &[Arg::Str(attribute), Arg::Values(values), Arg::MaybeStr(column)])
+    }
+
+    pub(crate) fn base_compile_not_in(
+        &mut self,
+        attribute: &str,
+        values: &Array,
+        column: Option<&str>,
+    ) -> Result<String> {
         let collated = self.collate(attribute, column)?;
         let attribute = collated.as_str();
         if values.is_empty() {

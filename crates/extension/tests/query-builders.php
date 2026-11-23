@@ -38,8 +38,9 @@ function outcome(callable $run): array
 {
     try {
         return ['value' => exported($run())];
-    } catch (Utopia\Query\Exception $e) {
-        return ['throws' => $e::class, 'message' => exported($e->getMessage())];
+    } catch (TypeError $e) {
+        // The wording of an argument's type error names the PHP function, which the extension's does not.
+        return ['throws' => TypeError::class];
     } catch (Throwable $e) {
         return ['throws' => $e::class, 'message' => exported($e->getMessage())];
     }
@@ -509,4 +510,156 @@ foreach ($dialects as $dialect) {
         }
     }
     emit($dialect . ' joins, hooks and windows', $out);
+}
+
+// --- More of the steps a subclass overrides -----------------------------------------------------
+
+use Utopia\Query\Builder\JoinBuilder;
+use Utopia\Query\Method;
+
+// Each override tags what it returns and calls the parent, so the statement shows which ran and in what order.
+trait TagsSteps
+{
+    /** @var list<string> */
+    public array $ran = [];
+
+    protected function compileNotIn(string $attribute, array $values, ?string $column = null): string
+    {
+        $this->ran[] = 'notIn';
+
+        return '/*notIn*/' . parent::compileNotIn($attribute, $values, $column);
+    }
+
+    protected function compileRegex(string $attribute, array $values, ?string $column = null): string
+    {
+        $this->ran[] = 'regex';
+
+        return '/*regex*/' . parent::compileRegex($attribute, $values, $column);
+    }
+
+    protected function compileContains(string $attribute, array $values, ?string $column = null): string
+    {
+        $this->ran[] = 'contains';
+
+        return '/*contains*/' . parent::compileContains($attribute, $values, $column);
+    }
+
+    protected function compileContainsAll(string $attribute, array $values, ?string $column = null): string
+    {
+        $this->ran[] = 'containsAll';
+
+        return '/*containsAll*/' . parent::compileContainsAll($attribute, $values, $column);
+    }
+
+    protected function compileNotContains(string $attribute, array $values, ?string $column = null): string
+    {
+        $this->ran[] = 'notContains';
+
+        return '/*notContains*/' . parent::compileNotContains($attribute, $values, $column);
+    }
+
+    protected function compileJoinWithBuilder(Query $query, JoinBuilder $joinBuilder): string
+    {
+        $this->ran[] = 'join ' . count($joinBuilder->ons) . ' ' . count($joinBuilder->wheres);
+
+        return '/*join*/' . parent::compileJoinWithBuilder($query, $joinBuilder);
+    }
+
+    protected function resolveAttribute(string $attribute): string
+    {
+        return parent::resolveAttribute($attribute === 'alias' ? 'actual' : $attribute);
+    }
+
+    /** The protected helpers a subclass calls. */
+    public function helpers(): array
+    {
+        $this->addBinding('kept');
+
+        return [
+            $this->quote('a.b'), $this->quote('*'), $this->quoteLiteral('a.b'), $this->resolveAttribute('alias'), $this->resolveAndWrap('alias'),
+            $this->resolveAndWrap('t.c'), $this->getLikeKeyword(), $this->getBindingValues(),
+        ];
+    }
+}
+trait TagsSqlSteps
+{
+    protected function compileSearchExpression(string $attribute, array $values, bool $not): string
+    {
+        $this->ran[] = 'search';
+
+        return '/*search*/' . parent::compileSearchExpression($attribute, $values, $not);
+    }
+
+    protected function compileSpatialFilter(Method $method, string $attribute, Query $query): string
+    {
+        $this->ran[] = 'spatial ' . $method->value;
+
+        return '/*spatial*/' . parent::compileSpatialFilter($method, $attribute, $query);
+    }
+
+    protected function compileArrayFilter(Method $method, string $attribute, Query $query): string
+    {
+        $this->ran[] = 'array ' . $method->value;
+
+        return '/*array*/' . parent::compileArrayFilter($method, $attribute, $query);
+    }
+
+    protected function compileJsonContainsExpression(string $attribute, array $values, bool $not): string
+    {
+        $this->ran[] = 'jsonContains';
+
+        return '/*jsonContains*/' . parent::compileJsonContainsExpression($attribute, $values, $not);
+    }
+
+    protected function compileJsonOverlapsExpression(string $attribute, array $values): string
+    {
+        $this->ran[] = 'jsonOverlaps';
+
+        return '/*jsonOverlaps*/' . parent::compileJsonOverlapsExpression($attribute, $values);
+    }
+}
+foreach ($dialects as $dialect) {
+    $sql = in_array($dialect, ['MySQL', 'MariaDB', 'PostgreSQL', 'SQLite'], true) ? ' use TagsSqlSteps;' : '';
+    eval("class Tags{$dialect} extends Utopia\\Query\\Builder\\{$dialect} { use TagsSteps;{$sql} }");
+}
+
+$array = function (Query $query): Query {
+    $query->setOnArray(true);
+
+    return $query;
+};
+$stepped = [
+    'not equal' => [Query::notEqual('a', 'x'), Query::notEqual('b', [1, 2]), Query::notEqual('c', null)],
+    'regex' => [Query::regex('a', '^x.*$')],
+    'contains' => [new Query(Method::Contains, 'a', ['x']), new Query(Method::Contains, 'b', ['x', 'y']), Query::containsAny('c', ['p', 'q'])],
+    'contains all' => [Query::containsAll('a', ['x', 'y'])],
+    'not contains' => [Query::notContains('a', ['x']), Query::notContains('b', ['x', 'y'])],
+    'search' => [Query::search('body', 'hello world'), Query::notSearch('body', 'spam')],
+    'on arrays' => [$array(new Query(Method::Contains, 'tags', ['a', 'b'])), $array(Query::containsAll('tags', ['a'])), $array(Query::notContains('tags', ['z'])), $array(Query::containsAny('tags', ['q']))],
+    'spatial' => [Query::distanceLessThan('loc', [1.5, 2.5], 100), Query::intersects('area', [[0, 0], [1, 1]]), Query::notIntersects('area', [1, 2])],
+    'alias' => [Query::equal('alias', [1]), Query::startsWith('alias', 'x')],
+    'nested' => [Query::or([Query::notEqual('a', 1), Query::and([new Query(Method::Contains, 'b', ['x']), Query::regex('c', 'y')])])],
+];
+foreach ($dialects as $dialect) {
+    $out = [];
+    foreach ($stepped as $queries) {
+        foreach (['Utopia\\Query\\Builder\\' . $dialect, 'Tags' . $dialect] as $class) {
+            $out[] = outcome(function () use ($class, $queries) {
+                $builder = (new $class())->from('t')->filter($queries);
+
+                return [$builder->build(), $builder->ran ?? null];
+            });
+            foreach ($queries as $query) {
+                $out[] = outcome(fn () => (new $class())->from('t')->compileFilter($query));
+            }
+        }
+    }
+    $out[] = outcome(function () use ($dialect) {
+        $builder = (new ('Tags' . $dialect)())->from('t')->joinWhere('u', fn ($j) => $j->on('t.id', 'u.tid')->where('u.a', '=', 1)->onRaw('u.b > ?', [2]))->joinWhere('v', fn ($j) => $j, JoinType::Left, 'w');
+
+        return [$builder->build(), $builder->ran];
+    });
+    $out[] = outcome(fn () => (new ('Tags' . $dialect)())->from('t', 'x')->helpers());
+    $out[] = outcome(fn () => (new ('Tags' . $dialect)())->from('t')->join('u', 't.id', 'u.tid')->helpers());
+    emit($dialect . ' more steps', $out);
 }

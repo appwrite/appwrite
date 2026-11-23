@@ -4,6 +4,7 @@
 //!
 //! PHP: `Utopia\Query\Builder\SQL` and the `Spatial` trait.
 
+use crate::builder::steps::{Arg, Ret, Step};
 use php_std::ArrayKey;
 
 use crate::builder::core::{Builder, Dialect};
@@ -75,18 +76,55 @@ pub trait SqlDialect: Dialect {
     }
 }
 
+/// The steps the SQL dialects have, run as `D` itself does.
+pub(crate) fn sql_base_step<D: SqlDialect>(
+    b: &mut Builder<D>,
+    step: Step,
+    arguments: &[Arg<'_>],
+) -> Option<Result<Ret>> {
+    Some(match (step, arguments) {
+        (Step::CompileSearchExpression, [Arg::Str(attribute), Arg::Values(values), Arg::Bool(not)]) => {
+            D::compile_search_expression(b, attribute, values, *not).map(Ret::Str)
+        }
+        (Step::CompileSpatialFilter, [Arg::Method(method), Arg::Str(attribute), Arg::Query(query)]) => {
+            D::compile_spatial_filter(b, *method, attribute, query).map(Ret::Str)
+        }
+        (Step::CompileArrayFilter, [Arg::Method(method), Arg::Str(attribute), Arg::Query(query)]) => {
+            D::compile_array_filter(b, *method, attribute, query).map(Ret::Str)
+        }
+        (Step::CompileJsonContainsExpression, [Arg::Str(attribute), Arg::Values(values), Arg::Bool(not)]) => {
+            D::compile_json_contains_expression(b, attribute, values, *not).map(Ret::Str)
+        }
+        (Step::CompileJsonOverlapsExpression, [Arg::Str(attribute), Arg::Values(values)]) => {
+            D::compile_json_overlaps_expression(b, attribute, values).map(Ret::Str)
+        }
+        _ => return None,
+    })
+}
+
 /// PHP's `SQL::compileFilter()`: search, spatial, JSON and array filters,
 /// then the base filters.
 pub(crate) fn sql_compile_filter<D: SqlDialect>(b: &mut Builder<D>, query: &Query) -> Result<String> {
     let method = query.method();
     let attribute = b.resolve_and_wrap(query.attribute())?;
     match method {
-        Method::Search => return D::compile_search_expression(b, &attribute, query.values(), false),
-        Method::NotSearch => return D::compile_search_expression(b, &attribute, query.values(), true),
+        Method::Search => {
+            return b.step_string(
+                Step::CompileSearchExpression,
+                &[Arg::Str(&attribute), Arg::Values(query.values()), Arg::Bool(false)],
+            );
+        }
+        Method::NotSearch => {
+            return b.step_string(
+                Step::CompileSearchExpression,
+                &[Arg::Str(&attribute), Arg::Values(query.values()), Arg::Bool(true)],
+            );
+        }
         _ => {}
     }
     if method.is_spatial() {
-        return D::compile_spatial_filter(b, method, &attribute, query);
+        return b
+            .step_string(Step::CompileSpatialFilter, &[Arg::Method(method), Arg::Str(&attribute), Arg::Query(query)]);
     }
     if matches!(query.attribute_type(), "point" | "linestring" | "polygon") {
         let spatial = match method {
@@ -97,7 +135,10 @@ pub(crate) fn sql_compile_filter<D: SqlDialect>(b: &mut Builder<D>, query: &Quer
             _ => None,
         };
         if let Some(spatial) = spatial {
-            return D::compile_spatial_filter(b, spatial, &attribute, query);
+            return b.step_string(
+                Step::CompileSpatialFilter,
+                &[Arg::Method(spatial), Arg::Str(&attribute), Arg::Query(query)],
+            );
         }
     }
     if method.is_json() {
@@ -106,7 +147,8 @@ pub(crate) fn sql_compile_filter<D: SqlDialect>(b: &mut Builder<D>, query: &Quer
     if query.on_array()
         && matches!(method, Method::Contains | Method::ContainsAny | Method::NotContains | Method::ContainsAll)
     {
-        return D::compile_array_filter(b, method, &attribute, query);
+        return b
+            .step_string(Step::CompileArrayFilter, &[Arg::Method(method), Arg::Str(&attribute), Arg::Query(query)]);
     }
     b.base_compile_filter(query)
 }
@@ -120,9 +162,17 @@ pub(crate) fn sql_compile_array_filter<D: SqlDialect>(
 ) -> Result<String> {
     let wrapped = crate::value::list([Value::Array(query.values().clone())]);
     match method {
-        Method::Contains | Method::ContainsAny => D::compile_json_overlaps_expression(b, attribute, &wrapped),
-        Method::NotContains => Ok(format!("NOT {}", D::compile_json_overlaps_expression(b, attribute, &wrapped)?)),
-        Method::ContainsAll => D::compile_json_contains_expression(b, attribute, &wrapped, false),
+        Method::Contains | Method::ContainsAny => {
+            b.step_string(Step::CompileJsonOverlapsExpression, &[Arg::Str(attribute), Arg::Values(&wrapped)])
+        }
+        Method::NotContains => Ok(format!(
+            "NOT {}",
+            b.step_string(Step::CompileJsonOverlapsExpression, &[Arg::Str(attribute), Arg::Values(&wrapped)])?
+        )),
+        Method::ContainsAll => b.step_string(
+            Step::CompileJsonContainsExpression,
+            &[Arg::Str(attribute), Arg::Values(&wrapped), Arg::Bool(false)],
+        ),
         _ => b.base_compile_filter(query),
     }
 }
@@ -165,9 +215,17 @@ pub(crate) fn sql_compile_json_filter<D: SqlDialect>(
 ) -> Result<String> {
     let values = query.values();
     match method {
-        Method::JsonContains => D::compile_json_contains_expression(b, attribute, values, false),
-        Method::JsonNotContains => D::compile_json_contains_expression(b, attribute, values, true),
-        Method::JsonOverlaps => D::compile_json_overlaps_expression(b, attribute, values),
+        Method::JsonContains => b.step_string(
+            Step::CompileJsonContainsExpression,
+            &[Arg::Str(attribute), Arg::Values(values), Arg::Bool(false)],
+        ),
+        Method::JsonNotContains => b.step_string(
+            Step::CompileJsonContainsExpression,
+            &[Arg::Str(attribute), Arg::Values(values), Arg::Bool(true)],
+        ),
+        Method::JsonOverlaps => {
+            b.step_string(Step::CompileJsonOverlapsExpression, &[Arg::Str(attribute), Arg::Values(values)])
+        }
         Method::JsonPath => D::compile_json_path_expression(b, attribute, values),
         _ => b.base_compile_filter(query),
     }

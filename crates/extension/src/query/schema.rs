@@ -359,7 +359,7 @@ fn known(name: &'static str) -> PhpResult<&'static ClassEntry> {
 }
 
 /// The slot `class` keeps its property `name` in.
-fn slot_of(class: &ClassEntry, name: &str) -> Option<usize> {
+pub(super) fn slot_of(class: &ClassEntry, name: &str) -> Option<usize> {
     let info = class.properties_info.get(name).filter(|found| found.is_ptr())?;
     // SAFETY: a class's `properties_info` holds a pointer to a `zend_property_info` for each
     // property it declares.
