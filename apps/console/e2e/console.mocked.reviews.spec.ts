@@ -324,4 +324,28 @@ test.describe('reviews', () => {
     await page.getByRole('button', { name: 'Choose repositories' }).click()
     await expect(page).toHaveURL(/\/reviews\/repositories/)
   })
+
+  test('integration tab shows how to install the review skills', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page)
+    await page.goto(`/projects/${PROJECT.$id}/reviews`, {
+      waitUntil: 'domcontentloaded',
+    })
+
+    await page.getByRole('tab', { name: 'Integration' }).click({
+      timeout: 30_000,
+    })
+    await expect(page).toHaveURL(/\/reviews\/integration/)
+    await expect(
+      page.getByRole('heading', { name: 'Use Review from your coding agent' }),
+    ).toBeVisible()
+    for (const tool of ['Claude Code', 'Codex', 'Cursor', 'Others']) {
+      await expect(page.getByRole('heading', { name: tool })).toBeVisible()
+    }
+    await expect(page.getByText('appwrite-review-loop').first()).toBeVisible()
+    await expect(
+      page.getByRole('link', { name: 'Open Cursor Marketplace' }),
+    ).toHaveAttribute('href', 'https://cursor.com/marketplace/appwrite')
+  })
 })

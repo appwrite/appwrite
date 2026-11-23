@@ -283,4 +283,32 @@ export const heReviewsDictionary: Record<string, string> = {
     'קטגוריות שנדחות לעיתים קרובות הן מועמדות ללמידה שתורה לסוקר לסמן אותן פחות.',
   'Useful findings is the share of settled findings that were fixed rather than dismissed; findings still open count for neither.':
     'ממצאים מועילים הם החלק מהממצאים שהוכרעו שתוקנו ולא נדחו; ממצאים שעדיין פתוחים אינם נספרים לאף צד.',
+
+  // Integration
+  'Use Review from your coding agent': 'שימוש ב-Review מסוכן הקוד שלכם',
+  'Install the Appwrite plugin in your coding agent. Its review skills read the review on a pull request, fix the findings until it grades Tier S, and teach the reviewer rules for later reviews.':
+    'התקינו את התוסף של Appwrite בסוכן הקוד שלכם. ה-Skills של הסקירה קוראים את הסקירה של בקשת משיכה, מתקנים את הממצאים עד שהיא מקבלת דירוג Tier S, ומלמדים את הסוקר כללים לסקירות הבאות.',
+  'In Codex, run /plugins, open the OpenAI Curated marketplace, and install Appwrite. Or install it from the terminal:':
+    'ב-Codex, הריצו ‎/plugins, פתחו את המרקטפלייס OpenAI Curated והתקינו את Appwrite. או התקינו אותו מהטרמינל:',
+  'Install the Appwrite plugin from the Cursor Marketplace.':
+    'התקינו את התוסף של Appwrite מה-Cursor Marketplace.',
+  'Open Cursor Marketplace': 'פתיחת Cursor Marketplace',
+  'Any agent that loads skills can use them. Install one skill without a plugin:':
+    'כל סוכן שטוען Skills יכול להשתמש בהם. התקינו Skill אחד בלי תוסף:',
+  'Replace appwrite-review-loop with any skill below. The skills use git and the GitHub CLI; another GitHub client is fine when that is what the environment has.':
+    'החליפו את appwrite-review-loop בכל Skill מהרשימה למטה. ה-Skills משתמשים ב-git וב-GitHub CLI; לקוח GitHub אחר מתאים גם הוא אם זה מה שקיים בסביבה.',
+  'Pass a pull request number to work on that one. Otherwise a skill uses the pull request of the current branch. Each review the loop requests uses this project’s review credits, and it stops after 5 rounds.':
+    'העבירו מספר של בקשת משיכה כדי לעבוד עליה. אחרת ה-Skill משתמש בבקשת המשיכה של הענף הנוכחי. כל סקירה שהלולאה מבקשת משתמשת בקרדיטים לסקירה של הפרויקט הזה, והיא נעצרת אחרי 5 סבבים.',
+  'The repository needs review turned on in':
+    'במאגר צריכה להיות סקירה מופעלת ב-',
+  'Reads the current tier, the open findings, and the comments the review filtered out. It does not start a review.':
+    'קורא את הדירוג הנוכחי, את הממצאים הפתוחים ואת ההערות שהסקירה סיננה. הוא לא מתחיל סקירה.',
+  'Fixes the pull request until the review grades it Tier S and no findings are left open.':
+    'מתקן את בקשת המשיכה עד שהסקירה מדרגת אותה Tier S ולא נשארים ממצאים פתוחים.',
+  'Replies on a finding with a lasting rule, so later reviews of the repository follow it.':
+    'משיב על ממצא עם כלל קבוע, כך שסקירות הבאות של המאגר פועלות לפיו.',
+  'Writes the repository’s review config and opens a pull request onto the base branch.':
+    'כותב את הגדרות הסקירה של המאגר ופותח בקשת משיכה לענף הבסיס.',
+  'Keeps the agent from resolving review threads. The review clears a thread once a later review sees the fix.':
+    'מונע מהסוכן לסגור שרשורי סקירה. הסקירה סוגרת שרשור ברגע שסקירה מאוחרת יותר רואה את התיקון.',
 }

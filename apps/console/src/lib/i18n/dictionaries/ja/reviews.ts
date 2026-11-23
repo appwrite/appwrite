@@ -287,4 +287,33 @@ export const jaReviewsDictionary: Record<string, string> = {
     'よく却下されるカテゴリは、レビュアーに指摘を控えさせる学習の候補です。',
   'Useful findings is the share of settled findings that were fixed rather than dismissed; findings still open count for neither.':
     '有用な指摘は、決着した指摘のうち却下されずに修正されたものの割合です。未解決の指摘はどちらにも数えません。',
+
+  // Integration
+  'Use Review from your coding agent':
+    'コーディングエージェントからコードレビューを使う',
+  'Install the Appwrite plugin in your coding agent. Its review skills read the review on a pull request, fix the findings until it grades Tier S, and teach the reviewer rules for later reviews.':
+    'コーディングエージェントに Appwrite プラグインをインストールします。レビュー用のスキルは、プルリクエストのレビューを読み、Tier S になるまで指摘事項を修正し、今後のレビューで守るルールをレビュアーに教えます。',
+  'In Codex, run /plugins, open the OpenAI Curated marketplace, and install Appwrite. Or install it from the terminal:':
+    'Codex で /plugins を実行し、OpenAI Curated マーケットプレイスを開いて Appwrite をインストールします。ターミナルからもインストールできます:',
+  'Install the Appwrite plugin from the Cursor Marketplace.':
+    'Cursor Marketplace から Appwrite プラグインをインストールします。',
+  'Open Cursor Marketplace': 'Cursor Marketplace を開く',
+  'Any agent that loads skills can use them. Install one skill without a plugin:':
+    'スキルを読み込めるエージェントならどれでも使えます。プラグインなしでスキルを 1 つインストールするには:',
+  'Replace appwrite-review-loop with any skill below. The skills use git and the GitHub CLI; another GitHub client is fine when that is what the environment has.':
+    'appwrite-review-loop は下のどのスキルにも置き換えられます。スキルは git と GitHub CLI を使いますが、環境にある別の GitHub クライアントでも構いません。',
+  'Pass a pull request number to work on that one. Otherwise a skill uses the pull request of the current branch. Each review the loop requests uses this project’s review credits, and it stops after 5 rounds.':
+    'プルリクエスト番号を渡すとそのプルリクエストを対象にします。指定しない場合は現在のブランチのプルリクエストを使います。ループが依頼するレビューごとにこのプロジェクトのレビュークレジットを使い、5 回で止まります。',
+  'The repository needs review turned on in':
+    'リポジトリでレビューをオンにしておく必要があります:',
+  'Reads the current tier, the open findings, and the comments the review filtered out. It does not start a review.':
+    '現在の Tier、未解決の指摘事項、レビューで除外されたコメントを読みます。レビューは開始しません。',
+  'Fixes the pull request until the review grades it Tier S and no findings are left open.':
+    'レビューが Tier S と評価し、未解決の指摘事項がなくなるまでプルリクエストを修正します。',
+  'Replies on a finding with a lasting rule, so later reviews of the repository follow it.':
+    '指摘事項に恒久的なルールで返信し、リポジトリの今後のレビューがそれに従うようにします。',
+  'Writes the repository’s review config and opens a pull request onto the base branch.':
+    'リポジトリのレビュー設定を書き、ベースブランチへのプルリクエストを作成します。',
+  'Keeps the agent from resolving review threads. The review clears a thread once a later review sees the fix.':
+    'エージェントがレビュースレッドを解決しないようにします。後のレビューが修正を確認すると、レビューがスレッドを閉じます。',
 }
