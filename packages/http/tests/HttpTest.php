@@ -15,6 +15,7 @@ use Utopia\Http\Exception;
 use Utopia\Http\Http;
 use Utopia\Http\Route;
 use Utopia\Validator\AnyOf;
+use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Nullable;
@@ -23,6 +24,8 @@ use Utopia\Validator\WhiteList;
 
 final class HttpTest extends TestCase
 {
+    private static bool $called = false;
+
     protected ?Http $http;
 
     protected ?Container $resources;
@@ -955,6 +958,39 @@ final class HttpTest extends TestCase
         ob_end_clean();
 
         $this->assertSame('generated: generated-value', $result);
+    }
+
+    public static function markCalled(): string
+    {
+        self::$called = true;
+
+        return 'called';
+    }
+
+    public function testCallableArrayRequestParametersNotExecuted(): void
+    {
+        self::$called = false;
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/test-callable-array-param';
+
+        Http::get('/test-callable-array-param')
+            ->param('items', [], new ArrayList(new Text(200)), 'items param', true)
+            ->action(function (array $items) {
+                echo \json_encode($items);
+            });
+
+        $request = new FPMRequest();
+        $request::_setParams(['items' => [self::class, 'markCalled']]);
+
+        ob_start();
+        $this->http->execute($request, new Response());
+        $result = ob_get_contents();
+        ob_end_clean();
+
+        $request::_setParams(null);
+
+        $this->assertFalse(self::$called);
+        $this->assertSame(\json_encode([self::class, 'markCalled']), $result);
     }
 
     public function testExplicitNullOptionalParamFallsBackToDefault(): void

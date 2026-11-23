@@ -8,7 +8,7 @@ Coolify is an open-source, self-hosted platform that simplifies application depl
 
 # Prerequisites {% #prerequisites %}
 
-Before starting, ensure your server meets the [minimum requirements](/docs/advanced/self-hosting#system-requirements) for hosting Appwrite with Coolify.
+Before starting, ensure your server meets the [minimum requirements](/docs/advanced/self-hosting/installation#system-requirements) for hosting Appwrite with Coolify.
 
 # Installation {% #installation %}
 

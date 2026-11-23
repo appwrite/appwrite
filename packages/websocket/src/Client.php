@@ -7,10 +7,13 @@ use Swoole\WebSocket\Frame;
 
 class Client
 {
+    private const DEFAULT_PORTS = ['ws' => 80, 'wss' => 443];
+
     private SwooleClient $client;
     private bool $connected = false;
     private string $host;
     private int $port;
+    private bool $secure;
     private string $path;
     /** @var array<string, string> */
     private array $headers;
@@ -38,8 +41,14 @@ class Client
             throw new \InvalidArgumentException('WebSocket URL must contain a host');
         }
 
+        $scheme = strtolower($parsedUrl['scheme'] ?? '');
+        if (!isset(self::DEFAULT_PORTS[$scheme])) {
+            throw new \InvalidArgumentException('WebSocket URL scheme must be ws or wss');
+        }
+
         $this->host = $parsedUrl['host'];
-        $this->port = $parsedUrl['port'] ?? (isset($parsedUrl['scheme']) && $parsedUrl['scheme'] === 'wss' ? 443 : 80);
+        $this->secure = $scheme === 'wss';
+        $this->port = $parsedUrl['port'] ?? self::DEFAULT_PORTS[$scheme];
         $this->path = $parsedUrl['path'] ?? '/';
         if (isset($parsedUrl['query'])) {
             $this->path .= '?' . $parsedUrl['query'];
@@ -51,7 +60,7 @@ class Client
 
     public function connect(): void
     {
-        $this->client = new SwooleClient($this->host, $this->port, $this->port === 443);
+        $this->client = new SwooleClient($this->host, $this->port, $this->secure);
         $this->client->set([
             'timeout' => $this->timeout,
             'websocket_compression' => true,

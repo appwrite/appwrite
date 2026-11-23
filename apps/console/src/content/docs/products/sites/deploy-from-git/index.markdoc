@@ -12,7 +12,7 @@ With Appwrite Sites, you can seamlessly deploy updates from Git repositories, en
 
 The recommended way to manage your Appwrite Sites deployments is to use a version control system like Git. This offers simple versioning and collaboration that will easily fit into the rest of your development workflow.
 
-You can only use Git deployment for Appwrite Sites connected to Git. [Create a new site with GitHub](/docs/products/sites/quick-start) or connect your existing site to a GitHub repository in your site’s **Settings** > **Git repository** > **Connect Git**.
+You can only use Git deployment for Appwrite Sites connected to Git. [Create a new site with GitHub](/docs/products/sites/quick-start) or connect your existing site to a Git repository in your site’s **Settings** > **Version control (Git)**.
 
 {% only_dark %}
 ![Git repository](/images/docs/sites/dark/git-repo.avif)
@@ -26,6 +26,8 @@ You can only use Git deployment for Appwrite Sites connected to Git. [Create a n
 3. Push the commit.
 4. A new deployment will be automatically created, built, and activated.
 
+Pushes deploy automatically while **Deploy on push** is on in the site's [Git automation](#git-automation) settings.
+
 ## Commits to the production branch
 
 When you push a commit to the production branch, usually `main`, a new deployment is created, built, and activated. This means the new deployments **immediately replace the current active deployment** and can be used on your site’s primary domain.
@@ -36,7 +38,111 @@ When you push a commit to a branch other than the production branch, a new deplo
 
 # Git configuration
 
-If you need to update your Git configuration, navigate to **Sites** > your site > **Settings** > **Git repository**.
+If you need to update your Git configuration, navigate to **Sites** > your site > **Settings** > **Version control (Git)**.
+
+## Git automation {% #git-automation %}
+
+Git automation controls what Appwrite does when you push to the connected repository. Once your site is connected to a repository, open its **Settings** > **Version control (Git)** and find the **Git automation** card.
+
+{% only_dark %}
+![Git automation card in the Appwrite Console](/images/docs/sites/dark/git-automation.avif)
+{% /only_dark %}
+{% only_light %}
+![Git automation card in the Appwrite Console](/images/docs/sites/git-automation.avif)
+{% /only_light %}
+
+The card holds the **Production branch** and three switches, all on by default:
+
+{% table %}
+* Switch
+* API parameter
+* When it's on
+---
+* **Deploy on push**
+* `providerDeployments`
+* Every push that matches your [build triggers](#build-triggers) creates a deployment. Pushes to the production branch activate it, and other branches get a [preview link](/docs/products/sites/previews).
+---
+* **Post build summaries**
+* `providerComments`
+* Appwrite posts one comment on each pull request with the build status and preview link, and updates it as builds finish.
+---
+* **Report commit status**
+* `providerStatuses`
+* Appwrite reports each build on its commit as building, passed, or failed. On GitHub, it adds a check run. On Entire, it adds a check run and a deployment entry. On GitLab and Gitea, it sets a commit status, and on Bitbucket, a build status.
+{% /table %}
+
+Changes apply from the next push, without a redeploy.
+
+### Deploy on push {% #deploy-on-push %}
+
+When **Deploy on push** is off, pushes no longer create deployments, including preview deployments, and your site keeps serving its active deployment. The repository stays connected, so you can deploy a branch whenever you choose: open the site's **Deployments** tab, click **Create deployment**, and select **Git**. You pick the branch and whether to activate the deployment when it finishes building.
+
+While it's off, the Console disables **Production branch** and **Post build summaries**, because a deployment you create yourself has no pull request and decides for itself whether to go live. **Report commit status** still works for the commits you deploy.
+
+### Post build summaries {% #post-build-summaries %}
+
+Turn off **Post build summaries** to keep Appwrite's comment out of pull requests. Preview deployments are still created, and if **Report commit status** stays on, each commit still shows whether the build passed.
+
+Appwrite posts the summary when a pull request is opened or reopened, so turning the switch on doesn't add one to a pull request that's already open. Entire doesn't get build summaries.
+
+### Report commit status {% #report-commit-status %}
+
+Turn off **Report commit status** to stop Appwrite from adding checks, statuses, and deployment entries to your commits.
+
+{% info title="Required status checks" %}
+If a branch protection rule requires Appwrite's check, pull requests to that branch wait for a status that never arrives while this switch is off. Remove the check from the rule before you turn the switch off.
+{% /info %}
+
+### Silent mode {% #silent-mode %}
+
+You can turn on **Silent mode** when you create a site from a repository. Silent mode turns off build summaries and commit statuses, whatever the switches say, and the **Git automation** card shows both as off while it's on. Saving the card turns silent mode off and saves both switches as the card shows them, so turn on the ones you want before you click **Update**. Silent mode doesn't affect **Deploy on push**.
+
+### Configure Git automation with a Server SDK {% #git-automation-server-sdk %}
+
+Pass `providerDeployments`, `providerComments`, and `providerStatuses` when you create or update a site. Settings you leave out of an update keep their current values.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>') // Your project ID
+    .setKey('<API_KEY>'); // Your secret API key
+
+const sites = new sdk.Sites(client);
+
+// Stop deploying on push, and deploy branches by hand instead
+await sites.update({
+    siteId: '<SITE_ID>',
+    name: '<NAME>', // name and framework are required by update
+    framework: sdk.Framework.Nextjs,
+    providerDeployments: false
+});
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.sites import Sites
+from appwrite.enums.framework import Framework
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<PROJECT_ID>') # Your project ID
+client.set_key('<API_KEY>') # Your secret API key
+
+sites = Sites(client)
+
+# Stop deploying on push, and deploy branches by hand instead
+sites.update(
+    site_id='<SITE_ID>',
+    name='<NAME>',  # name and framework are required by update
+    framework=Framework.NEXTJS,
+    provider_deployments=False
+)
+```
+{% /multicode %}
+
+To deploy a branch or commit while **Deploy on push** is off, call `sites.createVcsDeployment()` with `type` set to `branch` or `commit`, the branch name or commit hash as `reference`, and `activate` set to `true` to make it live once it builds.
 
 ## Build triggers {% #build-triggers %}
 
@@ -62,6 +168,14 @@ Use these formats to write glob patterns.
 
 {% partial file="git-glob-patterns.md" /%}
 
+## Skip a deployment {% #skip-deployment %}
+
+To push a commit without creating a deployment, add `[skip appwrite]` or `[skip ci]` to the commit message. `[skip appwrite]` skips only the Appwrite deployment. `[skip ci]` is also recognized by GitHub Actions and most other CI tools, so it skips those workflows too.
+
+```txt
+docs: update readme [skip appwrite]
+```
+
 ## Install command
 
 The install command of your site allow you to install your site’s dependencies. You can specify custom install scripts such as ones that let you configure your `npm` command with options or use an alternative package manager such as `pnpm` or `yarn`.
@@ -74,8 +188,54 @@ The build command of your site allow you to create a build of the site ready for
 
 The output directory will contain the files generated by your site's build command. The contents of this directory will be available to view on your site's public URL.
 
+# Monorepos {% #monorepos %}
+
+Appwrite Sites can deploy server-rendered apps from npm, pnpm, and Bun workspaces. Appwrite installs and builds the workspace from the root of the repository, then deploys your app's build output together with its dependencies and the workspace packages it imports. Code from the other apps in the repository isn't included in the deployment.
+
+Monorepo deployments work with every JavaScript framework that Appwrite Sites renders on the server: Next.js, Nuxt, Astro, SvelteKit, Remix, TanStack Start, Angular, and Analog.
+
+Here's an example pnpm workspace, with a Next.js app in `apps/web` that imports a shared package from `packages/ui`:
+
+```txt
+acme/
+├── apps/
+│   ├── web/          # the Next.js app to deploy
+│   └── docs/
+├── packages/
+│   └── ui/
+├── package.json
+├── pnpm-lock.yaml
+└── pnpm-workspace.yaml
+```
+
+These are the settings to use, either when creating the site or later in its settings:
+
+- **Root directory:** `./`, the root of the repository. The lockfile and the workspace config need to be inside the root directory.
+- **Framework:** your app's framework, selected by hand. Automatic detection reads the `package.json` and config files in the root directory, and in a monorepo those belong to the workspace rather than your app.
+- **Install command:** a command that installs the whole workspace, such as `pnpm install`.
+- **Build command:** a command that builds only your app, such as `pnpm --filter web build`, where `web` is the `name` field in your app's `package.json`.
+- **Output directory:** the path to your app's build output from the root of the repository, such as `./apps/web/.next`.
+
+The install and build commands for each package manager look like this:
+
+| Package manager | Install command | Build command |
+| --- | --- | --- |
+| npm | `npm install` | `npm run build --workspace web` |
+| pnpm | `pnpm install` | `pnpm --filter web build` |
+| Bun | `bun install` | `bun run --filter web build` |
+
+Workspace packages that have their own build step need to be built in the same command.
+
+To deploy several apps from one repository, create one site per app, each with its own build command and output directory. [Path filters](#build-triggers) on each site keep it from deploying when only another app changes, for example `apps/web/**`, `packages/**`, and your lockfile. Listing the individual packages the app imports, instead of `packages/**`, narrows this further.
+
+These setups aren't supported:
+
+- Yarn Plug'n'Play.
+- pnpm with `shared-workspace-lockfile=false`.
+- Workspace packages that ship raw TypeScript and are loaded by Node.js at runtime. Node.js doesn't strip types from files in `node_modules`, so these packages need to be compiled in your build command or bundled by your framework, for example with `transpilePackages` in Next.js.
+
 # Debugging
 
 - If you updated your site's configuration but the deployment is not working as expected, you may need to first redeploy your site before the changes take effect.
 - If you're missing some code files at build time, verify your **build command** and ensure that the build output is included in the Git configuration's **output directory**. Only files in the output directory folder will be available after deployment.
-- If you're self-hosting Appwrite, you will need to configure some [environment variables](https://appwrite.io/docs/advanced/self-hosting/functions) to enable Git deployments.
+- If you're self-hosting Appwrite, you will need to configure some [environment variables](/docs/advanced/self-hosting/configuration/version-control) to enable Git deployments.

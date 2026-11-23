@@ -143,7 +143,7 @@ export const forAgentsFaqItems: ForAgentsFaqItem[] = [
   {
     question: 'Is there more than one Appwrite MCP server?',
     answer:
-      'No. Cloud uses one hosted server at https://mcp.appwrite.io. It covers API actions and docs search. Self-hosted Appwrite uses a local stdio server with an API key. Do not add separate appwrite-api and appwrite-docs servers.',
+      'No. Cloud uses one hosted server at https://mcp.appwrite.io. It covers API actions and docs search. Self-hosted Appwrite uses a local stdio server with an API key. Do not add separate appwrite-api and appwrite-docs servers. Only an agent that cannot sign in should use https://mcp.appwrite.io/docs/mcp, which serves the same docs search without the API.',
   },
   {
     question: 'Where should agents start reading?',

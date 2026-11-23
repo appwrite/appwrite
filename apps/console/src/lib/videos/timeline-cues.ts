@@ -1,5 +1,22 @@
 import type { VideoTimelineCue } from '@/lib/react-query/hooks/videos'
 
+/** Evenly sample cues for a short hover preview loop. */
+export function sampleTimelineCuesForPreview(
+  cues: VideoTimelineCue[],
+  maxFrames = 48,
+): VideoTimelineCue[] {
+  if (cues.length <= maxFrames) return cues
+  const result: VideoTimelineCue[] = []
+  for (let i = 0; i < maxFrames; i++) {
+    const index = Math.min(
+      cues.length - 1,
+      Math.floor((i * cues.length) / maxFrames),
+    )
+    result.push(cues[index])
+  }
+  return result
+}
+
 /** Returns the sprite cue that covers `time` (seconds), if any. */
 export function findTimelineCueAtTime(
   cues: VideoTimelineCue[],

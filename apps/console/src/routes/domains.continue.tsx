@@ -8,7 +8,7 @@ import {
   buildBuyDomainWizardSearch,
   type BuyDomainContinueSearch,
 } from '@/lib/domains/buy-wizard'
-import { ensurePersonalOrgAndFirstProject } from '@/lib/ensure-personal-org'
+import { ensurePersonalOrg } from '@/lib/ensure-personal-org'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const domainsContinueSearchSchema = z.object({
@@ -70,7 +70,7 @@ function DomainsContinueRedirect({
 
       if (!orgId) {
         try {
-          orgId = await ensurePersonalOrgAndFirstProject()
+          orgId = await ensurePersonalOrg()
         } catch {
           navigate({ to: '/account', replace: true })
           return

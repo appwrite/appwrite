@@ -153,6 +153,11 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '攻撃モードがオンです。すべての訪問者がチャレンジされます。',
   'Apply as firewall rule': 'ファイアウォールルールとして適用',
   'No firewall rules': 'ファイアウォールルールがありません',
+  'Configure rules': 'ルールを設定',
+  'Rules that apply to this site appear here.':
+    'このサイトに適用されるルールがここに表示されます。',
+  'Rules that apply to this function appear here.':
+    'この Function に適用されるルールがここに表示されます。',
   'No API firewall rules': 'API のファイアウォールルールがありません',
   'No function firewall rules':
     'Functions のファイアウォールルールがありません',
@@ -511,6 +516,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   '1 day': '1 日',
   'Open activity details': 'アクティビティの詳細を開く',
   'View event': 'イベントを表示',
+  Reason: '理由',
   'Logged in': 'ログイン',
   'Logged out': 'ログアウト',
   'Project key': 'プロジェクトキー',
@@ -644,7 +650,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Property: 'プロパティ',
   properties: 'プロパティ',
   'Property ID': 'プロパティ ID',
-  'Snippet ID': 'スニペット ID',
   'No properties yet': 'プロパティがまだありません',
   'Create your first property to start tracking analytics for a website or app':
     '最初のプロパティを作成して、ウェブサイトやアプリのアナリティクス計測を開始しましょう',
@@ -697,10 +702,50 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このプロパティがイベントを受け付けるかどうかを設定します。',
   'Tracking enabled': '計測を有効にしました',
   'Tracking disabled': '計測を無効にしました',
+  'Browser versions': 'ブラウザのバージョン',
+  'OS versions': 'OS のバージョン',
+  Versions: 'バージョン',
+  'Browser version': 'ブラウザのバージョン',
+  'OS version': 'OS のバージョン',
+  'Identified users, ranked by visitors': '識別されたユーザー (訪問者数順)',
+  'No identified users in this range': 'この期間に識別されたユーザーはいません',
+  'Event properties': 'イベントの属性',
+  'Models and tools': 'モデルとツール',
+  'Calls by model and by tool': 'モデル別・ツール別の呼び出し数',
+  'No calls in this range': 'この期間の呼び出しはありません',
+  'Installs and push': 'インストールとプッシュ',
+  'Installs, updates and push notifications from the tracking SDK':
+    '計測 SDK によるインストール、アップデート、プッシュ通知',
+  'No installs tracked yet': 'まだインストールは計測されていません',
+  'Add the latest tracking SDK to your app to count installs, updates and push notifications.':
+    '最新の計測 SDK をアプリに追加すると、インストール、アップデート、プッシュ通知を計測できます。',
+  'Add the tracking SDK': '計測 SDK を追加',
+  Installs: 'インストール',
+  Updates: 'アップデート',
+  'Push received': 'プッシュ受信',
+  'Push opened': 'プッシュ開封',
+  'Push opened by message': 'メッセージ別のプッシュ開封',
+  'No opened pushes with a message ID in this range':
+    'この期間にメッセージ ID 付きで開封されたプッシュはありません',
+  'Values of the props sent with your events':
+    'イベントと一緒に送信された props の値',
+  'No event props in this range': 'この期間にイベントの props はありません',
+  'Not available with this filter': 'このフィルターでは利用できません',
+  'User identification': 'ユーザーの識別',
+  'Identify signed-in users': 'サインイン中のユーザーを識別する',
+  'User identification enabled': 'ユーザーの識別を有効にしました',
+  'User identification disabled': 'ユーザーの識別を無効にしました',
+  'Distinct identified users. Only events that carry a user ID are counted; anonymous visitors are left out.':
+    '識別されたユーザーの数 (重複なし)。ユーザー ID を含むイベントのみを数え、匿名の訪問者は含みません。',
+  "Record the signed-in user's ID on events sent from a client session, so you can count and break down traffic by user. Anonymous visitors aren't affected. IDs are your project's user IDs, never emails or names. Turn this on only if your privacy policy covers linking analytics to user accounts.":
+    'クライアントセッションから送信されたイベントに、サインイン中のユーザーの ID を記録します。これにより、ユーザー単位でトラフィックを集計・内訳表示できます。匿名の訪問者には影響しません。ID はプロジェクトのユーザー ID で、メールアドレスや名前は記録されません。プライバシーポリシーでアナリティクスとユーザーアカウントの紐付けを扱っている場合にのみ有効にしてください。',
   'Tracking is enabled': '計測は有効です',
-  'Primary domain being tracked. Optional for native apps.':
-    '計測対象の主要ドメインです。ネイティブアプリの場合は任意です。',
+  'Primary domain being tracked. May be empty for mobile and agent properties.':
+    '計測対象の主要ドメインです。モバイルとエージェントのプロパティでは空欄でもかまいません。',
   'Domain updated': 'ドメインを更新しました',
+  'Type updated': 'タイプを更新しました',
+  'Only changes which panels the dashboard shows.':
+    'ダッシュボードに表示するパネルだけが変わります。',
   'Origins allowed to send tracking events. Use * to allow all origins.':
     '計測イベントの送信を許可するオリジンです。* を指定するとすべてのオリジンを許可します。',
   'https://example.com': 'https://example.com',
@@ -746,7 +791,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Identifiers and timestamps for this property.':
     'このプロパティの識別子とタイムスタンプ。',
   'Property ID:': 'プロパティ ID:',
-  'Snippet ID:': 'スニペット ID:',
   'Events are reaching Appwrite.': 'イベントが Appwrite に届いています。',
   'Install the code and load a page. Checks every few seconds.':
     'コードを導入してページを読み込んでください。数秒ごとに確認します。',
@@ -780,8 +824,25 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Exit pages': '出口ページ',
   'Where visitors came from': '訪問者の流入元',
   'Most visited paths': '最も閲覧されたパス',
+  Screens: '画面',
+  'Most viewed screens': '最も閲覧された画面',
   'Where visitors are browsing from': '訪問者の閲覧地域',
+  'Where your users are': 'ユーザーの所在地',
+  'Users online now': '現在オンラインのユーザー',
+  'user online': '人のユーザーがオンライン',
+  'users online': '人のユーザーがオンライン',
+  'Unique users active in the last': '直近でアクティブだったユニークユーザー:',
+  'Could not load live users': 'ライブユーザーを読み込めませんでした',
+  'Active screens': 'アクティブな画面',
+  'No one is using the app right now.': '現在アプリを使用しているユーザーはいません。',
+  'Users by country': '国別ユーザー',
+  'Visitors and app users, pages and screens, sources, locations, and bots, plus any custom events you track.': '訪問者とアプリユーザー、ページと画面、参照元、地域、ボット、そしてトラッキングしているカスタムイベント。',
   'What visitors are browsing with': '訪問者の利用環境',
+  'What your users are on': 'ユーザーの利用環境',
+  'Active users': 'アクティブユーザー',
+  'Screen views': '画面表示数',
+  'Signed-in users': 'サインイン済みユーザー',
+  'Screens/session': 'セッションあたりの画面数',
   'Human visitors versus bots': '人間の訪問者とボットの比較',
   'AI agents and crawlers': 'AI エージェントとクローラー',
   Agents: 'エージェント',
@@ -808,6 +869,14 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '1 つのコードベースから iOS、Android、web、デスクトップへ。',
   'Any language, straight against the HTTP API.':
     '任意の言語から HTTP API を直接呼び出します。',
+  'Websites and browser apps.': 'Web サイトとブラウザアプリ。',
+  'iOS and Android apps.': 'iOS と Android のアプリ。',
+  'AI agents and backend services, over the API.':
+    'AI エージェントやバックエンドサービスから API 経由で。',
+  'Decides which panels the dashboard shows. You can change it later in settings.':
+    'ダッシュボードに表示するパネルが決まります。後から設定で変更できます。',
+  'The site you are tracking. Page paths in reports link to it.':
+    '計測するサイトです。レポートのページパスはこのサイトにリンクします。',
   'Install the SDK': 'SDK をインストール',
   'Initialize tracking': '計測を初期化',
   'Turn on automatic tracking': '自動計測を有効化',
@@ -912,6 +981,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'The domain your app makes requests from. Use':
     'アプリがリクエストを送信するドメイン。使用:',
   'Troubleshoot CORS errors': 'CORS エラーのトラブルシューティング',
+  "Any website can send requests to this project. Before going live, replace * with your app's domain, like app.example.com.":
+    'どのウェブサイトからでもこのプロジェクトにリクエストを送信できます。本番公開の前に、* をアプリのドメイン（例: app.example.com）に置き換えてください。',
   'Bundle ID': 'バンドル ID',
   'Application ID': 'アプリケーション ID',
   'Package identifier': 'パッケージ識別子',
@@ -1374,7 +1445,11 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'hours or less for this interval.': '時間以下 (この間隔の場合)。',
   'Ranges shorter than 15 minutes use the 1m interval.':
     '15分未満の範囲では1分間隔を使用します。',
+  'Use a date range longer than this interval.':
+    'この間隔より長い日付範囲を使用してください。',
   'days or less for this interval.': '日以下 (この間隔の場合)。',
+  'This interval is larger than the selected date range.':
+    'この間隔は選択した期間より大きいです。',
   Compute: 'コンピュート',
   'Compute over time': '経時的なコンピュート',
   'Copy API endpoint': 'API エンドポイントをコピー',
@@ -1869,8 +1944,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'すべてのプロジェクトプロトコルが有効になります。',
   'All protocols for': 'すべてのプロトコル:',
   'All services for': 'すべてのサービス:',
-  'Are you sure you want to delete this domain? This action cannot be undone.':
-    'このドメインを削除してもよろしいですか? この操作は元に戻せません。',
   'Are you sure you want to disable all protocols? This will disable client access over those protocols until they are re-enabled.':
     'すべてのプロトコルを無効にしてもよろしいですか? 再有効化されるまで、これらのプロトコル経由のクライアントアクセスが無効になります。',
   'Are you sure you want to disconnect this git installation?':
@@ -1957,7 +2030,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Failed to rotate secret': 'シークレットのローテーションに失敗しました',
   'Failed to send test email': 'テストメールの送信に失敗しました',
   'Failed to start migration': '移行の開始に失敗しました',
-  'Failed to transfer project': 'プロジェクトの転送に失敗しました',
   'Failed to update SMTP settings': 'SMTP 設定の更新に失敗しました',
   'Failed to update project name': 'プロジェクト名の更新に失敗しました',
   'Failed to update protocol': 'プロトコルの更新に失敗しました',
@@ -2003,8 +2075,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'It will stop receiving events immediately. This action cannot be undone.':
     'イベントの受信はすぐに停止します。この操作は元に戻せません。',
   'Last deployed:': '最終デプロイ:',
-  'Leave blank to keep current password unchanged.':
-    '空欄のままにすると、現在のパスワードは変更されません。',
+  'Leave blank to keep the current password. Re-enter it when changing the host, port, or secure protocol.':
+    '空欄のままにすると、現在のパスワードが保持されます。ホスト、ポート、またはセキュアプロトコルを変更する場合は、パスワードを再入力してください。',
   'Leave blank to keep existing': '空欄のままにすると既存の値を保持',
   'Leave empty to auto-generate': '空欄の場合は自動生成',
   'Leave empty to clear the whole project':
@@ -2093,14 +2165,12 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   SMTP: 'SMTP',
   'SMTP server has been disabled.': 'SMTP サーバーを無効にしました。',
   'SMTP server has been enabled.': 'SMTP サーバーを有効にしました。',
-  'SSL certificate is being issued. This usually takes a couple of minutes - no action needed on your end.':
-    'SSL 証明書を発行中です。通常数分かかります。操作は不要です。',
+  "SSL certificate is being issued. This usually takes a few minutes. If the logs ask for a DNS record, add it where your domain's DNS is managed.":
+    'SSL 証明書を発行中です。通常数分かかります。ログで DNS レコードの追加を求められた場合は、ドメインの DNS を管理しているサービスで追加してください。',
   'Search domains...': 'ドメインを検索...',
   'Search migrations...': 'マイグレーションを検索...',
   'Search webhooks...': 'Webhook を検索...',
   'Secure protocol': 'セキュアプロトコル',
-  'Select a different organization to transfer to.':
-    '転送先の別の組織を選択してください。',
   'Select at least one event': '少なくとも 1 つのイベントを選択',
   'Select at least one resource': '少なくとも 1 つのリソースを選択',
   'Select destination': '転送先を選択',
@@ -2136,7 +2206,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Shared with all Functions and Sites in this project.':
     'このプロジェクト内のすべての Functions とサイトで共有されます。',
   'Showing first': '最初の',
-  Since: '開始',
   'Some PostgreSQL features are not migrated. OAuth users and functions are not migrated automatically.':
     '一部の PostgreSQL 機能は移行されません。OAuth ユーザーと Functions は自動的に移行されません。',
   'Some entities failed to migrate. Check status counts above.':
@@ -2159,12 +2228,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このシークレットは、Webhook 作成またはシークレットローテーション後に 1 回のみ表示されます。',
   'This secret is only shown once after webhook creation or secret rotation. Copy it now.':
     'このシークレットは、Webhook 作成またはシークレットローテーション後に 1 回のみ表示されます。今すぐコピーしてください。',
-  'To transfer this project, you must be a member of both the current and target organization. Select a destination below.':
-    'このプロジェクトを転送するには、現在の組織と転送先組織の両方のメンバーである必要があります。以下で転送先を選択してください。',
   'Transfer between organizations': '組織間の転送',
   'Transfer project': 'プロジェクトの転送',
-  'Transfer this project to the selected organization':
-    'このプロジェクトを選択した組織に転送',
   'URL is required': 'URL は必須です',
   'Update webhook': 'Webhook の更新',
   'Use a service account JSON key. In Firebase Console: Project Settings → Service Accounts → Create service account, then add keys and create a new JSON key. Required roles: Firebase Viewer (Database and Storage), Identity Toolkit Viewer (users).':
@@ -2193,11 +2258,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'インポート中に既存の ID を持つ行に遭遇した場合。',
   'When enabled, all emails will be sent through your configured SMTP server.':
     '有効にすると、すべてのメールは設定した SMTP サーバー経由で送信されます。',
-  'You do not have any organizations you can transfer this project to.':
-    'このプロジェクトを転送できる組織がありません。',
-  'You do not have any organizations you can transfer this project to. Create or join another organization to transfer.':
-    'このプロジェクトを転送できる組織がありません。転送するには、別の組織を作成または参加してください。',
-  'an A or AAAA record': 'A または AAAA レコード',
   'and all its databases, functions, and files? This action cannot be undone.':
     'とそのすべてのデータベース、Functions、ファイル? この操作は元に戻せません。',
   characters: '文字',
@@ -2215,14 +2275,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'have been enabled.': 'を有効にしました。',
   here: 'こちら',
   installations: 'インストール',
-  // pragma: allowlist secret
-  "instead. If you're using Cloudflare or another CDN, make sure the proxy is disabled (set to DNS only) for this record, since Appwrite serves your domain through its own CDN.":
-    'を使用してください。Cloudflare やその他の CDN を使用している場合は、Appwrite が独自の CDN 経由でドメインを配信するため、このレコードのプロキシを無効 (DNS only) にしてください。', // pragma: allowlist secret
-  "is an apex domain, CNAME record is only supported by certain providers. If yours doesn't, please verify using":
-    'はエイペックスドメインです。CNAME レコードは一部のプロバイダーでのみサポートされています。サポートされていない場合は、次で検証してください',
   item: '項目',
   'key for the API key.': 'API キーのキー。',
-  nameservers: 'ネームサーバー',
   'protocol has been disabled': 'プロトコルを無効にしました',
   'protocol has been enabled': 'プロトコルを有効にしました',
   recipient: '受信者',
@@ -2498,6 +2552,27 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'Mailgun 経由でトランザクションメールを送信します。',
   'Send transactional email through Resend.':
     'Resend 経由でトランザクションメールを送信します。',
+  'Send SMS through Bird.': 'Bird 経由で SMS を送信します。',
+  'A Bird API key with the sms:write scope.':
+    'sms:write スコープを持つ Bird の API キー。',
+  'A sender your Bird workspace owns: a number with its country code, or an alphanumeric sender ID.':
+    'Bird ワークスペースが所有する送信元: 国番号付きの電話番号、または英数字の送信者 ID。',
+  'One-click Bird SMS': 'ワンクリック Bird SMS',
+  'Let Appwrite create the API key and fill in one of your senders.':
+    'Appwrite が API キーを作成し、送信元を入力します。',
+  'Loading senders…': '送信元を読み込み中…',
+  'Add a sender, then check again.':
+    '送信元を追加して、もう一度確認してください。',
+  'Manage senders': '送信元を管理',
+  'Failed to load senders from the SMS provider':
+    'SMS プロバイダーから送信元を読み込めませんでした',
+  'Failed to create the API key with the SMS provider':
+    'SMS プロバイダーでの API キーの作成に失敗しました',
+  'Send email through Bird.': 'Bird 経由でメールを送信します。',
+  'A Bird API key with the emails:write scope.':
+    'emails:write スコープを持つ Bird の API キー。',
+  'Bird API keys start with bk_ and their region, for example bk_eu1_.':
+    'Bird の API キーは bk_ とリージョンで始まります（例: bk_eu1_）。',
   'Send transactional email through SendGrid.':
     'SendGrid 経由でトランザクションメールを送信します。',
   Sender: '送信元',
@@ -2757,8 +2832,10 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'ストア向けのアーティファクトを作成するためにビルドをトリガーします。',
   'Submit a ready build to a store to track its review status here.':
     '準備できたビルドをストアに提出すると、ここでレビュー状況を追跡できます。',
-  'Upgrade or contact sales for longer retention.':
-    'より長い保持期間が必要な場合は、アップグレードするか営業にお問い合わせください。',
+  'Upgrade for longer retention.':
+    'より長い保持期間が必要な場合は、アップグレードしてください。',
+  'Longer retention is available on Enterprise.':
+    'Enterprise プランでは、より長い保持期間をご利用いただけます。',
   'Activity will appear here as you use your project':
     'プロジェクトを使用すると、ここにアクティビティが表示されます',
   'Human vs AI traffic (last 30 days)': '人間と AI のトラフィック (過去 30 日)',
@@ -2853,6 +2930,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Never: 'なし',
   Scopes: 'スコープ',
   Explorer: 'Explorer',
+  'Playground mode': 'プレイグラウンドのモード',
   APIs: 'API',
   Other: 'その他',
   Breakdown: '内訳',
@@ -3065,6 +3143,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Clear: 'クリア',
   Apply: '適用',
   Compare: '比較',
+  vs: 'vs',
   Realtime: 'Realtime',
   Connected: '接続済み',
   Connecting: '接続中',
@@ -3150,6 +3229,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   domains: 'ドメイン',
   functions: '関数',
   sites: 'サイト',
+  'firewall rule': 'ファイアウォールルール',
   'firewall rules': 'ファイアウォールルール',
   'Firewall rules': 'ファイアウォールルール',
   Downgraded: 'ダウングレード済み',
@@ -3162,16 +3242,16 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   avatars: 'アバター',
   Organizations: '組織',
   Install: 'インストール',
-  // SMTP quick setup (universal card: Resend today, Mailgun and SendGrid next)
+  // SMTP quick setup (universal card: Resend and Bird today, Mailgun next)
   'Connect an email provider and Appwrite fills in your SMTP settings automatically.':
     'メールプロバイダーを接続すると、Appwrite が SMTP 設定を自動で入力します。',
   'Set up': 'セットアップ',
   'Creates a sending-only API key for a verified domain.':
     '検証済みドメイン用の送信専用 API キーを作成します。',
+  'Creates an API key that can only send email.':
+    'メール送信のみ行える API キーを作成します。',
   'Creates a domain sending key for a verified domain.':
     '検証済みドメイン用のドメイン送信キーを作成します。',
-  'Creates a restricted API key with mail send access.':
-    'メール送信権限を持つ制限付き API キーを作成します。',
   'Failed to connect the email provider':
     'メールプロバイダーへの接続に失敗しました',
   'The provider was authorized for a different Appwrite account. Try again while signed in to this account.':
@@ -3186,6 +3266,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Check again': '再確認',
   'The credential is restricted to this domain and can only send email.':
     'この認証情報はこのドメインに制限され、メール送信のみ行えます。',
+  'The credential can only send email. It is not tied to a domain, so pick the one your sender address uses.':
+    'この認証情報はメール送信のみ行えます。特定のドメインには紐づかないため、送信者アドレスのドメインを選択してください。',
   'Must use the selected domain.': '選択したドメインを使用する必要があります。',
   'Enter a sender name.': '送信者名を入力してください。',
   'Enter a sender email on the selected domain.':
@@ -3199,6 +3281,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'Appwrite が検証済みドメイン用の API キーを作成し、これらの項目を入力します。',
   'Generate API key': 'API キーを生成',
   'One-click Resend sender': 'ワンクリック Resend 送信者',
+  'One-click Bird sender': 'ワンクリック Bird 送信者',
   'Creating the sending credential…': '送信用の認証情報を作成中…',
   'Failed to create the API key with the email provider':
     'メールプロバイダーでの API キーの作成に失敗しました',
@@ -3215,19 +3298,19 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Sending domain': '送信ドメイン',
   Sender: '送信者',
   'Disconnect Resend': 'Resend を切断',
+  'Disconnect Bird': 'Bird を切断',
   'Disconnect Mailgun': 'Mailgun を切断',
-  'Disconnect SendGrid': 'SendGrid を切断',
   'Provider actions': 'プロバイダーの操作',
   'Set up SMTP with Resend': 'Resend で SMTP をセットアップ',
+  'Set up SMTP with Bird': 'Bird で SMTP をセットアップ',
   'Set up SMTP with Mailgun': 'Mailgun で SMTP をセットアップ',
-  'Set up SMTP with SendGrid': 'SendGrid で SMTP をセットアップ',
   'Creating credential and saving SMTP settings…':
     '認証情報を作成して SMTP 設定を保存中…',
   'Custom SMTP is enabled and your project now sends emails through this provider.':
     'カスタム SMTP が有効になり、プロジェクトはこのプロバイダー経由でメールを送信するようになりました。',
   'Connect with Resend': 'Resend に接続',
+  'Connect with Bird': 'Bird に接続',
   'Connect with Mailgun': 'Mailgun に接続',
-  'Connect with SendGrid': 'SendGrid に接続',
   'Appwrite will no longer be able to create sending credentials for this provider. Credentials already saved in your SMTP settings keep working.':
     'Appwrite はこのプロバイダーの送信用認証情報を作成できなくなります。SMTP 設定に保存済みの認証情報は引き続き動作します。',
   'Provider disconnected': 'プロバイダーを切断しました',
@@ -3372,10 +3455,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Create environment': '環境を作成',
   'Rename environment': '環境の名前を変更',
   'Delete environment': '環境を削除',
-  'Environment ID': '環境 ID',
   'Enter environment name': '環境名を入力',
-  'An environment gets its own resources and users, in the same region as this project. Its usage is billed under this project.':
-    '環境はこのプロジェクトと同じリージョンに、独自のリソースとユーザーを持ちます。使用量はこのプロジェクトに請求されます。',
   'Only the name changes. The environment ID stays the same.':
     '変更されるのは名前だけです。環境 ID はそのままです。',
   'Are you sure you want to delete this environment? Its resources and users are removed with it. This action cannot be undone.':
@@ -3388,6 +3468,93 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Failed to delete environment': '環境の削除に失敗しました',
   'Too many environments created for this project in the last hour. Try again later.':
     'このプロジェクトで過去 1 時間に作成された環境が多すぎます。しばらくしてからもう一度お試しください。',
+  // Migration resource types copied into an environment
+  'Function variable': 'Function の変数',
+  'Function variables': 'Function の変数',
+  'Messaging providers': 'メッセージングプロバイダー',
+  'OAuth2 provider': 'OAuth2 プロバイダー',
+  'Project variable': 'プロジェクト変数',
+  'SMTP settings': 'SMTP 設定',
+  'Security policies': 'セキュリティポリシー',
+  'Site deployment': 'サイトのデプロイ',
+  'Site deployments': 'サイトのデプロイ',
+  'Site variable': 'サイト変数',
+  'Site variables': 'サイト変数',
+  // Environment switcher order, banner and creation wizard
+  'The copy from the project is under way. Its progress shows in the corner of the environment.':
+    'プロジェクトからのコピーを実行中です。進行状況は環境の隅に表示されます。',
+  'Failed to update environment order': '環境の順序を更新できませんでした',
+  'Project environment': 'プロジェクト環境',
+  'Switch to production': '本番に切り替え',
+  'Environment ID': '環境 ID',
+  // Environments by plan: Pro and above, and the cap per project
+  'Project environments are available on Pro':
+    'プロジェクト環境は Pro プランで利用できます',
+  'does not include project environments. Upgrade to give each project environments such as staging and preview, with resources and users of their own.':
+    'にはプロジェクト環境が含まれていません。アップグレードすると、各プロジェクトに staging や preview などの環境を作成でき、それぞれが独自のリソースとユーザーを持ちます。',
+  environments: '個の環境',
+  'environments per project.': '個の環境をプロジェクトごとに作成できます。',
+  'Delete an environment to create another.':
+    '別の環境を作成するには、環境を 1 つ削除してください。',
+  // Environments for a plan without them: examples in the switcher and the upgrade they open
+  'Add an environment': '環境を追加',
+  'Test before you release': 'リリース前にテスト',
+  'Share work in progress': '作業中の内容を共有',
+  'Break things freely': '気兼ねなく試せる',
+  'Try changes before your users do': 'ユーザーより先に変更を試す',
+  'An environment is a separate copy of your project, with its own resources and users.':
+    '環境はプロジェクトの独立したコピーで、独自のリソースとユーザーを持ちます。',
+  '{plan} includes up to {limit} environments per project.':
+    '{plan} プランでは、プロジェクトごとに最大 {limit} 個の環境を作成できます。',
+  'Start from a copy of production': '本番のコピーから始める',
+  'Copy databases, functions and settings. Bringing data is optional.':
+    'データベース、Functions、設定をコピーできます。データのコピーは任意です。',
+  'Keep production untouched': '本番には影響しません',
+  'Each environment has its own data, files and users.':
+    '環境ごとにデータ、ファイル、ユーザーが分かれています。',
+  'Switch with one line': '1 行で切り替え',
+  'Same project ID and endpoint. Set the environment ID in your SDK.':
+    'プロジェクト ID とエンドポイントはそのままです。SDK に環境 ID を設定するだけです。',
+  'Upgrade to {plan}': '{plan} にアップグレード',
+  // Settings of an environment: its name, its ID, and deleting it
+  'Environment name has been updated': '環境名を更新しました',
+  'Failed to update environment name': '環境名の更新に失敗しました',
+  "Access this environment with the project's API Endpoint and Project ID, and the Environment ID that tells it apart from production.":
+    'この環境には、プロジェクトの API エンドポイントとプロジェクト ID に加え、本番と区別するための環境 ID を使用してアクセスします。', // pragma: allowlist secret
+  'Permanently delete this environment with its resources and users. The project it belongs to and its other environments are not affected. This action cannot be undone.':
+    'この環境をリソースとユーザーごと完全に削除します。この環境が属するプロジェクトと他の環境には影響しません。この操作は元に戻せません。',
+  Environment: '環境',
+  'Project:': 'プロジェクト:',
+  'Failed to load migrations': 'マイグレーションの読み込みに失敗しました',
+  'Failed to refresh migrations': 'マイグレーションの更新に失敗しました',
+  'The list below may be out of date.':
+    '以下の一覧は最新でない可能性があります。',
+  'An environment with this ID already exists in this project.':
+    'この ID の環境はこのプロジェクトに既に存在します。',
+  'Use lowercase letters, numbers and hyphens, starting with a letter or a number.':
+    '英小文字、数字、ハイフンを使い、先頭は英字か数字にしてください。',
+  'What your apps pass as the environment next to the project ID, so pick one you can type: staging, preview, qa.':
+    'アプリがプロジェクト ID と一緒に環境として渡す値です。staging、preview、qa のように入力しやすいものを選んでください。',
+  'Connect to this environment': 'この環境に接続',
+  'Same endpoint and project ID as production. The environment ID is what tells them apart.':
+    'エンドポイントとプロジェクト ID は本番と同じです。環境 ID で区別します。',
+  'Changes here do not affect production.':
+    'ここでの変更は本番に影響しません。',
+  'Name the environment and choose where it starts.':
+    '環境に名前を付け、開始方法を選択します。',
+  'An environment is a separate project. Copying keeps the IDs of what it brings over.':
+    '環境は別のプロジェクトです。コピーしたものの ID はそのまま残ります。',
+  'Structure and settings are cloned, data only where you ask for it.':
+    '構成と設定がクローンされます。データは指定した分だけです。',
+  'Structure is selected by default. Include data only where you need it.':
+    '構成は最初から選択されています。データは必要な分だけ含めてください。',
+  'Pick what to copy from the project.':
+    'プロジェクトからコピーする内容を選択します。',
+  'Point your app at the new environment.': 'アプリを新しい環境に接続します。',
+  'Open environment': '環境を開く',
+  'An environment is a project of its own. Point an app at it with this project ID; the API endpoint is the one your project already uses.':
+    '環境はそれ自体が1つのプロジェクトです。このプロジェクト ID を使ってアプリを接続してください。API エンドポイントはプロジェクトで使用しているものと同じです。',
+  'API endpoint': 'API エンドポイント',
   'Send your first message': '最初のメッセージを送信',
   'Reach your users by email, SMS, and push notifications from one place.':
     'メール、SMS、プッシュ通知でユーザーに届けられます。すべて 1 か所で管理できます。',
@@ -3531,4 +3698,630 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Ship your apps to every store': 'アプリをすべてのストアに配信',
   'Build Android, iOS, and Windows releases from one place and submit them to Google Play, the App Store, and the Microsoft Store.':
     'Android、iOS、Windows のリリースを 1 か所でビルドし、Google Play、App Store、Microsoft Store に提出できます。',
+  'Create a link that lets another organization claim this project. Each link can be claimed once.':
+    '別の組織がこのプロジェクトを受け取れるリンクを作成します。各リンクは 1 回だけ使用できます。',
+  'Failed to load transfer links': '転送リンクの読み込みに失敗しました',
+  'No active transfer links': '有効な転送リンクはありません',
+  Recipient: '受取先',
+  'Any organization': '任意の組織',
+  'Transfer link actions': '転送リンクの操作',
+  'transfer links': '件の転送リンク',
+  'Create transfer link': '転送リンクを作成',
+  'Share this link with the recipient organization. You can copy it again from the list.':
+    '受取先の組織にこのリンクを共有してください。一覧からもう一度コピーできます。',
+  'Choose how long the link is valid and which organization can claim the project.':
+    'リンクの有効期間と、プロジェクトを受け取れる組織を選択します。',
+  'Transfer link': '転送リンク',
+  'Expires in': '有効期間',
+  'Recipient organization ID (optional)': '受取先の組織 ID (任意)',
+  'Recommended. Only this organization can claim the project, so the link is useless to anyone else who gets it. Leave empty to let any organization with the link claim it.':
+    '推奨。この組織だけがプロジェクトを受け取れるため、リンクが他の人に渡っても使われることはありません。空欄にすると、リンクを持つどの組織でもプロジェクトを受け取れます。',
+  'Failed to create transfer link': '転送リンクの作成に失敗しました',
+  'Delete transfer link': '転送リンクを削除',
+  'The link will stop working and the project can no longer be claimed with it.':
+    'リンクは無効になり、このリンクでプロジェクトを受け取ることはできなくなります。',
+  'Transfer link has been deleted': '転送リンクを削除しました',
+  'Failed to delete transfer link': '転送リンクの削除に失敗しました',
+  'Claim project': 'プロジェクトを受け取る',
+  'Choose the organization that should receive this project.':
+    'このプロジェクトを受け取る組織を選択してください。',
+  'Target organization': '受取先の組織',
+  'has been claimed': 'を受け取りました',
+  'Failed to claim project': 'プロジェクトの受け取りに失敗しました',
+  'This transfer link is incomplete. Ask the sender to share it again.':
+    'この転送リンクは不完全です。送信者にもう一度共有するよう依頼してください。',
+  'You need an organization to claim this project. Create one, then open the link again.':
+    'このプロジェクトを受け取るには組織が必要です。組織を作成してから、もう一度リンクを開いてください。',
+  'Link expires': 'リンクの有効期限',
+  'This transfer link is no longer valid.':
+    'この転送リンクは無効になりました。',
+  'The project already belongs to this organization. Select a different one.':
+    'プロジェクトはすでにこの組織に属しています。別の組織を選択してください。',
+  'will move from': 'は次の組織から移動します:',
+  'to the organization you choose.': '移動先は選択した組織です。',
+  'Only this organization can claim this link.':
+    'このリンクを受け取れるのはこの組織だけです。',
+  'This transfer is reserved for an organization you are not part of:':
+    'この転送は、あなたが所属していない組織専用です:',
+  "Resolve this organization's billing issues before transferring.":
+    '転送する前に、この組織の請求に関する問題を解決してください。',
+  'This organization has a failed or unauthorized payment. Resolve its billing issues before transferring this project.':
+    'この組織には失敗した支払い、または承認されていない支払いがあります。このプロジェクトを転送する前に、請求に関する問題を解決してください。',
+  'Go to billing': '請求へ移動',
+  'Checking...': '確認中...',
+  'Billing issue': '請求の問題',
+  'Project limit reached': 'プロジェクト数の上限に達しています',
+  "You don't have permission to add projects to this organization.":
+    'この組織にプロジェクトを追加する権限がありません。',
+  'This organization has billing issues. Resolve them before it can receive projects.':
+    'この組織には請求に関する問題があります。プロジェクトを受け取るには、先に問題を解決してください。',
+  "This organization has reached its plan's project limit. Upgrade its plan to claim this project.":
+    'この組織はプランのプロジェクト数の上限に達しています。このプロジェクトを受け取るには、プランをアップグレードしてください。',
+  "Change which organization owns this project. Its resources and data move with it, and the new organization's plan and members apply from then on.":
+    'このプロジェクトを所有する組織を変更します。リソースとデータはプロジェクトと一緒に移動し、以降は新しい組織のプランとメンバーが適用されます。',
+  'Move to another organization': '別の組織に移動',
+  'Move this project to another organization you are a member of. The move happens right away.':
+    'このプロジェクトを、あなたが所属する別の組織に移動します。移動はすぐに反映されます。',
+  'Destination organization': '移動先の組織',
+  'Move project': 'プロジェクトを移動',
+  'Failed to move project': 'プロジェクトの移動に失敗しました',
+  'You are not a member of any other organization.':
+    'ほかに所属している組織がありません。',
+  'Select an organization to move this project to.':
+    'プロジェクトの移動先の組織を選択してください。',
+  'Hand off with a transfer link': '転送リンクで引き渡す',
+  "Share a single-use link with someone in another organization. The project moves when they claim it, and you don't need to be a member of their organization.":
+    '別の組織のユーザーに 1 回限りのリンクを共有します。相手が受け取るとプロジェクトが移動します。相手の組織に所属している必要はありません。',
+  'Pending transfer links': '保留中の転送リンク',
+  'Links that have not been claimed yet. Expired links can no longer be claimed. Delete a link to stop it from working sooner.':
+    'まだ受け取られていないリンクです。期限切れのリンクでは受け取れません。期限より前に無効にするには、リンクを削除してください。',
+  'The project already belongs to this organization.':
+    'プロジェクトはすでにこの組織に属しています。',
+  'Only organization owners can transfer this project. Ask an organization owner to transfer it or to update your role.':
+    'このプロジェクトを転送できるのは組織のオーナーだけです。組織のオーナーに転送を依頼するか、ロールの変更を依頼してください。',
+  'No permission': '権限なし',
+  "You don't have permission to transfer projects in this organization.":
+    'この組織でプロジェクトを転送する権限がありません。',
+  'Transfer links': '転送リンク',
+  'Active transfer links for this project stop working after the move.':
+    '移動後、このプロジェクトの有効な転送リンクは使用できなくなります。',
+  'Choose how long to keep inactive deployments. Active deployments and deployments linked to a custom domain are always retained.':
+    '非アクティブなデプロイの保持期間を選択します。アクティブなデプロイとカスタムドメインに紐づくデプロイは常に保持されます。',
+  'From November 5, 2026, Appwrite Cloud will delete inactive deployments after 30 days by default. To keep more history, choose a longer retention period and click Update before then.':
+    '2026年11月5日から、Appwrite Cloud では非アクティブなデプロイがデフォルトで30日後に削除されます。履歴をより長く残すには、それまでに保持期間を延長して「更新」をクリックしてください。',
+  'Retention limits are unavailable. Try reloading this page.':
+    '保持期間の上限を取得できません。ページを再読み込みしてください。',
+  'Your plan keeps up to 100 inactive deployments for up to 90 days.':
+    'ご利用のプランでは、非アクティブなデプロイを最大100件、最長90日間保持できます。',
+  'Your plan allows retention for up to 3 years.':
+    'ご利用のプランでは最長3年間保持できます。',
+  'Your organization has a custom retention policy.':
+    '組織にはカスタムの保持ポリシーが適用されています。',
+  'Your saved retention exceeds your plan limit. Save a supported period to update it.':
+    '保存済みの保持期間がプランの上限を超えています。対応する期間を選択して保存してください。',
+  '3 Years': '3 年',
+
+  // Environment copy at creation, its progress card, and backups in environments
+  'Start from': '開始方法',
+  'Empty environment': '空の環境',
+  'Nothing is copied from the project. You handle the scaffolding.':
+    'プロジェクトからは何もコピーしません。スキャフォールディングはご自身で行います。',
+  'Clone of the project': 'プロジェクトのクローン',
+  'Structure and settings are copied, data only where you ask for it. The copy runs after the environment is created and keeps the IDs of what it copies.':
+    '構造と設定をコピーし、データは指定した場合のみコピーします。コピーは環境の作成後に実行され、コピーしたものの ID はそのまま保持されます。',
+  'What to copy': 'コピーする内容',
+  'Pick what to copy, or start from an empty environment.':
+    'コピーする内容を選択するか、空の環境から開始してください。',
+  'Databases, tables, columns and indexes':
+    'データベース、テーブル、カラム、インデックス',
+  'Rows and documents': '行とドキュメント',
+  'Buckets and their settings': 'バケットとその設定',
+  'Teams, auth settings, security policies and OAuth2 providers':
+    'チーム、認証設定、セキュリティポリシー、OAuth2 プロバイダー',
+  'Users and memberships': 'ユーザーとメンバーシップ',
+  'The newest 90 users, with their passwords. An environment holds 100 users at most, so 10 places stay free for test accounts.':
+    '最新のユーザー 90 件を、パスワードごとコピーします。環境のユーザー数は最大 100 件のため、テストアカウント用に 10 件分の空きが残ります。',
+  'Functions, their variables and their active deployment':
+    '関数、その変数、アクティブなデプロイメント',
+  'Every deployment': 'すべてのデプロイメント',
+  'Sites, their variables and their active deployment':
+    'サイト、その変数、アクティブなデプロイメント',
+  'Providers and topics': 'プロバイダーとトピック',
+  'Platforms, SMTP, enabled services, project variables and email templates':
+    'プラットフォーム、SMTP、有効なサービス、プロジェクト変数、メールテンプレート',
+  'Copying from the project': 'プロジェクトからコピー中',
+  'Copied from the project': 'プロジェクトからコピーしました',
+  'Could not copy from the project': 'プロジェクトからコピーできませんでした',
+  Dismiss: '閉じる',
+  'Backups are not available in environments. Back up the project the environment belongs to.':
+    'バックアップは環境では利用できません。環境が属するプロジェクトをバックアップしてください。',
+  'Backed up with the project': 'プロジェクトと一緒にバックアップされます',
+  'Backup policies and archives are managed on the project this environment belongs to.':
+    'バックアップポリシーとアーカイブは、この環境が属するプロジェクトで管理します。',
+  'Open the project': 'プロジェクトを開く',
+  // Alert rules
+  '5 minutes': '5 分',
+  '6 hours': '6 時間',
+  Cooldown: 'クールダウン',
+  'Database storage': 'データベースストレージ',
+  'Egress spike': '送信トラフィックの急増',
+  'Enter a threshold of 0 or more.': '0 以上のしきい値を入力してください。',
+  Firing: '発生中',
+  'Greater than': 'より大きい',
+  'Greater than or equal': '以上',
+  'Inbound bandwidth': '受信帯域幅',
+  'Know when something needs attention': '対応が必要なときに把握する',
+  'Last value': '最新の値',
+  'Less than': 'より小さい',
+  'Less than or equal': '以下',
+  Metric: 'メトリクス',
+  OK: '正常',
+  'Outbound bandwidth': '送信帯域幅',
+  'Read IOPS': '読み取り IOPS',
+  'Select resource': 'リソースを選択',
+  'Select the resource to watch.': '監視するリソースを選択してください。',
+  'No data': 'データなし',
+  'No usage recorded to compare yet':
+    '比較できる使用量はまだ記録されていません',
+  'This project has no buckets yet.':
+    'このプロジェクトにはまだバケットがありません。',
+  'This project has no databases of this type yet.':
+    'このプロジェクトにはまだこの種類のデータベースがありません。',
+  'Execution GB-hours': '実行の GB 時間',
+  'Files, databases and deployments grow past 50 GB.':
+    'ファイル、データベース、デプロイの合計が 50 GB を超えたとき。',
+  'Messages failed': '失敗メッセージ',
+  'More than 10 webhook deliveries fail in an hour.':
+    '1 時間に Webhook の配信が 10 件を超えて失敗したとき。',
+  'SMS messages sent': '送信 SMS メッセージ',
+  'This project has no functions yet.':
+    'このプロジェクトにはまだ関数がありません。',
+  'This project has no sites yet.':
+    'このプロジェクトにはまだサイトがありません。',
+  'Webhook events failed': '失敗した Webhook イベント',
+  'Webhook events sent': '送信した Webhook イベント',
+  'Webhook failures': 'Webhook の失敗',
+  Window: '期間',
+  'Write IOPS': '書き込み IOPS',
+  'Get notified when a usage metric crosses a threshold, and again when it recovers.':
+    '使用量のメトリクスがしきい値を超えたとき、そして回復したときに通知を受け取ります。',
+  'Could not load resources.': 'リソースを読み込めませんでした。',
+  Comparator: '比較条件',
+  Console: 'コンソール',
+  'Could not load usage history.': '使用状況の履歴を読み込めませんでした。',
+  'Counted over the window and compared at every check.':
+    '期間内の合計をチェックごとに比較します。',
+  'Get notified when usage crosses a threshold, and again when it recovers.':
+    '使用量がしきい値を超えたときと、回復したときに通知を受け取ります。',
+  'Last checked': '最終チェック',
+  'Last fired': '最終発生',
+  Monitoring: 'モニタリング',
+  'More than a million database reads in an hour.':
+    '1 時間のデータベース読み取りが 100 万回を超えたとき。',
+  'No history is available for this metric yet.':
+    'このメトリクスの履歴はまだありません。',
+  'Not checked yet': '未チェック',
+  Notify: '通知',
+  'Outbound bandwidth above 10 GB in an hour.':
+    '1 時間の送信帯域幅が 10 GB を超えたとき。',
+  'Paused rules are not checked and never notify.':
+    '一時停止中のルールはチェックされず、通知も送信されません。',
+  'Project owners': 'プロジェクトのオーナー',
+  'Read surge': '読み取りの急増',
+  'Select a resource to see its history.':
+    '履歴を表示するリソースを選択してください。',
+  'The latest reading is compared at every check.':
+    'チェックごとに最新の値を比較します。',
+  'The whole project': 'プロジェクト全体',
+  Threshold: 'しきい値',
+  When: '条件',
+  'Would have fired once in the {range}.': '{range}に 1 回発生していました。',
+  'Would have fired {count} times in the {range}.':
+    '{range}に {count} 回発生していました。',
+  'Would not have fired in the {range}.': '{range}には発生していませんでした。',
+  is: 'が',
+  'last 12 hours': '過去 12 時間',
+  'last 24 hours': '過去 24 時間',
+  'last 30 days': '過去 30 日間',
+  'last 7 days': '過去 7 日間',
+  on: '対象',
+  'the whole project': 'プロジェクト全体',
+  within: '期間',
+  'Waiting for the first check': '最初のチェックを待っています',
+  peak: 'ピーク',
+  '{count} sent': '{count} 件送信',
+  ongoing: '継続中',
+  'Would not have fired in the {range}': '{range}には発火しなかったはずです',
+  'Would have fired {count}× in the {range}':
+    '{range}に {count} 回発火したはずです',
+  'History range': '履歴の範囲',
+  'Name, cooldown': '名前、クールダウン',
+  'Firing since': '発火開始',
+  Checked: 'チェック',
+  '{ratio} the {threshold} threshold': 'しきい値 {threshold} の {ratio}',
+  'Threshold {threshold}': 'しきい値 {threshold}',
+  Notifies: '通知先',
+  'at most once per {cooldown}': '{cooldown}に最大 1 回',
+  'Peak hour': 'ピーク時間',
+  'Suggested from your last 7 days of usage': '過去 7 日間の使用量からの提案',
+  'Sent when additional usage reaches each threshold. They follow the budget cap and alerts above.':
+    '追加使用量が各しきい値に達すると送信されます。上の予算上限とアラートに従います。',
+  'Cap reached': '上限に到達',
+  '{percent}% of {budget}': '{budget} の {percent}%',
+  'Managed by budget': '予算で管理',
+  'Last sent': '最終送信',
+  Alert: 'アラート',
+  'Alert not found': 'アラートが見つかりません',
+  'Budget monitors': '予算モニター',
+  'Checks run every few minutes, so this monitor is not being evaluated.':
+    'チェックは数分ごとに実行されるため、このモニターは評価されていません。',
+  'Create monitor': 'モニターを作成',
+  'Delete monitor': 'モニターを削除',
+  'Every time a monitor fired: when, how far over its threshold, and when it recovered.':
+    'モニターが発生したすべての記録: 発生時刻、しきい値をどれだけ超えたか、回復した時刻。',
+  'Failed to create monitor': 'モニターを作成できませんでした',
+  'Failed to delete monitor': 'モニターを削除できませんでした',
+  'Failed to update monitor': 'モニターを更新できませんでした',
+  'Filter alerts': 'アラートを絞り込む',
+  'Filter monitors': 'モニターを絞り込む',
+  'Fired for': '発生期間',
+  'Firing for': '発生中の期間',
+  'Latest reading': '最新の値',
+  'Monitor has been created': 'モニターを作成しました',
+  'Monitor has been deleted': 'モニターを削除しました',
+  'Monitor has been paused': 'モニターを一時停止しました',
+  'Monitor has been resumed': 'モニターを再開しました',
+  'Monitor has been updated': 'モニターを更新しました',
+  'Monitor not found': 'モニターが見つかりません',
+  Monitors: 'モニター',
+  'Monitors watch your project usage and your endpoints, and notify you when a metric crosses your threshold or a check fails.':
+    'モニターはプロジェクトの使用量とエンドポイントを監視し、メトリクスがしきい値を超えたときやチェックが失敗したときに通知します。',
+  'No alerts yet': 'まだアラートはありません',
+  Ongoing: '継続中',
+  Peak: 'ピーク',
+  Resolved: '解決済み',
+  "Resolves when the monitor's rules stop holding.":
+    'モニターのルールが成立しなくなると解決します。',
+  'Search monitors...': 'モニターを検索...',
+  'Started firing': '発生開始',
+  'Still firing': '発生中',
+  'View monitor': 'モニターを表示',
+  'View monitors': 'モニターを表示',
+  'Waiting for recovery': '回復待ち',
+  Watches: '監視対象',
+  Acknowledge: '確認済みにする',
+  'Acknowledged by {name}': '{name} が確認済み',
+  'Acknowledged by a member': 'メンバーが確認済み',
+  'Acknowledged with an API key': 'API キーで確認済み',
+  'Failed to acknowledge the alert': 'アラートを確認済みにできませんでした',
+  'Failed to undo the acknowledgement': '確認済みを取り消せませんでした',
+  'Let your team know someone is on it. It keeps firing until its monitor recovers.':
+    '誰かが対応中であることをチームに知らせます。モニターが回復するまでアラートは発生し続けます。',
+  'Nobody has acknowledged this alert':
+    'このアラートはまだ誰も確認していません',
+  "You don't have permission to manage monitors.":
+    'モニターを管理する権限がありません。',
+  'between two alerts from this monitor.':
+    '(このモニターからの 2 つのアラートの間隔)。',
+  'the threshold': 'しきい値',
+  '{count} notifications sent, one per cooldown':
+    '{count} 件の通知を送信 (クールダウンごとに 1 件)',
+  'Its alerts stay in the history.': 'アラートは履歴に残ります。',
+  'Send alerts to a webhook': 'アラートを Webhook に送信',
+  'Deploy an alert function': 'アラート用の関数をデプロイ',
+  Owners: 'オーナー',
+  Editors: '編集者',
+  Analysts: 'アナリスト',
+  'Members with these roles get an email and a console notification when the monitor fires and again when it resolves.':
+    'これらのロールのメンバーには、モニターが発火したときと解決したときにメールとコンソール通知が届きます。',
+  'Nobody is emailed or notified. The alerts still fire their events for project webhooks and functions.':
+    '誰にもメールや通知は届きません。アラートはプロジェクトの Webhook や Functions 向けのイベントを引き続き発生させます。',
+  'Project webhooks and functions can also listen to its alert events.':
+    'プロジェクトの Webhook や Functions もアラートイベントを受け取れます。',
+  'Nobody, only its events': 'なし（イベントのみ）',
+  Critical: '重要',
+  "Rings on your phone even when it's on silent or in Do Not Disturb.":
+    'スマートフォンがサイレントやおやすみモードでも鳴ります。',
+  Severity: '重大度',
+  Warning: '警告',
+  'Worth knowing about. Nothing needs doing yet.':
+    '知っておくべき情報です。まだ対応は不要です。',
+  'Look into it soon, before it becomes a problem.':
+    '問題になる前に、早めに確認してください。',
+  'Something is broken and needs fixing.': '何かが壊れていて、修正が必要です。',
+  'Critical. Rings on phones even on silent.':
+    '重要。サイレントでもスマートフォンが鳴ります。',
+  'Rings on phones even on silent': 'サイレントでもスマートフォンが鳴ります',
+  'Notifies nobody': '通知先なし',
+  'Notifies nobody. Its alerts only fire their events.':
+    '通知先はありません。アラートはイベントのみを発生させます。',
+  'Each monitor emails and notifies the organization roles it names. Every alert is also a project event your own systems can receive.':
+    '各モニターは指定した組織ロールにメールと通知を送ります。各アラートはプロジェクトのイベントでもあり、独自のシステムで受け取れます。',
+  'Unsubscribe from alert emails': 'アラートメールの配信停止',
+  'This monitor was deleted.': 'このモニターは削除されました。',
+  'Stop emails for this monitor': 'このモニターのメールを停止',
+  'Emails for this monitor are stopped.':
+    'このモニターのメールは停止されています。',
+  'Stop all usage alert emails': '使用量アラートのメールをすべて停止',
+  'Stop all alert emails of this kind': 'この種類のアラートメールをすべて停止',
+  'All usage alert emails are stopped.':
+    '使用量アラートのメールはすべて停止されています。',
+  'All alert emails of this kind are stopped.':
+    'この種類のアラートメールはすべて停止されています。',
+  'This link is invalid or has expired': 'このリンクは無効か、期限切れです',
+  'Open the Unsubscribe link in a more recent alert email.':
+    'より新しいアラートメールの配信停止リンクを開いてください。',
+  "You'll still see these alerts in console notifications.":
+    'これらのアラートは引き続きコンソール通知に表示されます。',
+  'Saving...': '保存中...',
+  // Firewall rule schedules
+  'Times are in your local time zone:':
+    '時刻はローカルのタイムゾーンで表示されます:',
+  'Times follow the time zone this schedule was created in:':
+    '時刻はこのスケジュールを作成したタイムゾーンに従います:',
+  'Your local time zone:': 'ローカルのタイムゾーン:',
+  'This rule has a schedule this version of the Console cannot show. It is kept unless you remove it or set a new one.':
+    'このルールには、このバージョンのコンソールでは表示できないスケジュールがあります。削除するか新しいスケジュールを設定しない限り、そのまま保持されます。',
+  'Remove schedule': 'スケジュールを削除',
+  'The schedule will be removed when you save.':
+    '保存するとスケジュールが削除されます。',
+  'Apply this rule only on certain days or at certain times. When off, the rule is always active.':
+    '特定の曜日や時間帯にのみこのルールを適用します。オフの場合、ルールは常に有効です。',
+  Repeat: '繰り返し',
+  'Selected days every week': '毎週の選択した曜日',
+  'Selected days every other week': '隔週の選択した曜日',
+  'Weekends (Sat and Sun)': '週末（土・日）',
+  'Every few days': '数日ごと',
+  'Days of the week': '曜日',
+  'Select at least one day.': '曜日を 1 つ以上選択してください。',
+  'Repeat every (days)': '繰り返し間隔（日）',
+  'Starting on': '開始日',
+  'The week of this date is the first active week.':
+    'この日付を含む週が最初の有効な週になります。',
+  'The first active day. The rule is never active before it.':
+    '最初の有効日です。この日より前はルールが有効になりません。',
+  'All day': '終日',
+  'Start and end times must differ. Turn on All day for the whole day.':
+    '開始時刻と終了時刻は異なる値にしてください。1 日中有効にするには「終日」をオンにします。',
+  'This window crosses midnight: it starts on each selected day and ends the next morning.':
+    'この時間帯は午前 0 時をまたぎます。選択した各曜日に始まり、翌朝に終わります。',
+
+  // Project dashboard: resources, apps and API keys
+  'Your resources': 'プロジェクトのリソース',
+  'View all databases': 'すべてのデータベースを表示',
+  'View all sites': 'すべてのサイトを表示',
+  'Files up to': 'ファイル上限',
+  'View all functions': 'すべての関数を表示',
+  'View all buckets': 'すべてのバケットを表示',
+  'View all users': 'すべてのユーザーを表示',
+  'View all topics': 'すべてのトピックを表示',
+  'View all API keys': 'すべての API キーを表示',
+  'Failed to load sites': 'サイトの読み込みに失敗しました',
+  'Failed to load functions': '関数の読み込みに失敗しました',
+  'Failed to load buckets': 'バケットの読み込みに失敗しました',
+  'Failed to load users': 'ユーザーの読み込みに失敗しました',
+  'Failed to load topics': 'トピックの読み込みに失敗しました',
+  'Store, query, and sync your app data with a managed database.':
+    'マネージドデータベースで、アプリのデータを保存、クエリ、同期できます。',
+  'Run backend code on HTTP requests, events, or a schedule.':
+    'HTTP リクエスト、イベント、スケジュールに応じてバックエンドのコードを実行します。',
+  'Keep data apart by environment, customer, or workload.':
+    '環境、顧客、ワークロードごとにデータを分けて管理できます。',
+  'Deploy another app, a landing page, or your docs.':
+    '別のアプリ、ランディングページ、ドキュメントをデプロイできます。',
+  'Add a webhook, a scheduled job, or an event handler.':
+    'Webhook、スケジュールジョブ、イベントハンドラーを追加できます。',
+  'Group files with their own permissions and limits.':
+    '権限と制限を個別に設定して、ファイルをまとめられます。',
+  'Add a user by hand, or let people sign up from your app.':
+    'ユーザーを手動で追加するか、アプリからサインアップしてもらえます。',
+  'Group subscribers to message them all at once.':
+    'サブスクライバーをまとめて、一度にメッセージを送信できます。',
+  'Add each web, mobile, or desktop app that calls this project.':
+    'このプロジェクトを呼び出すウェブ、モバイル、デスクトップアプリをそれぞれ追加します。',
+  'Give your servers and scripts scoped access to this project.':
+    'サーバーやスクリプトに、スコープを限定したこのプロジェクトへのアクセスを付与します。',
+  'Use a key per server or environment, with only the scopes it needs.':
+    'サーバーや環境ごとにキーを分け、必要なスコープだけを付与しましょう。',
+  'Upload and serve files with permissions, encryption, and image previews.':
+    '権限、暗号化、画像プレビューを備えたファイルのアップロードと配信ができます。',
+  'Sign users in with email, OAuth providers, phone, or passkeys.':
+    'メール、OAuth プロバイダー、電話番号、パスキーでユーザーをサインインさせます。',
+  'Send email, SMS, and push notifications to your users.':
+    'ユーザーにメール、SMS、プッシュ通知を送信します。',
+  'Auto-deploy on every push': 'push のたびに自動デプロイ',
+  // Identity servers (LDAP)
+  'Identity servers': 'ID サーバー',
+  'Enable LDAP sign-in': 'LDAP サインインを有効化',
+  'When enabled, users can sign in with their directory username and password.':
+    '有効にすると、ユーザーはディレクトリのユーザー名とパスワードでサインインできます。',
+  'Tried in order until one answers, up to 10. Pasting an LDAP URL also fills in encryption, port and base DN.':
+    '応答があるまで順に試します。最大 10 件。LDAP URL を貼り付けると、暗号化、ポート、ベース DN も入力されます。',
+  'Leave empty for 636 with LDAPS, or 389 otherwise.':
+    '空にすると、LDAPS は 636、それ以外は 389 を使用します。',
+  'Use None only on a trusted private network.':
+    '「なし」は信頼できるプライベートネットワークでのみ使用してください。',
+  "Check the directory's certificate before sending any password.":
+    'パスワードを送信する前に、ディレクトリの証明書を検証します。',
+  'The CA or self-signed certificate to trust. Leave empty to use the system trust store.':
+    '信頼する CA 証明書または自己署名証明書。空にするとシステムの信頼ストアを使用します。',
+  'How long to wait for each answer, from 1 to 30.': '各応答を待つ時間。1 から 30 まで。',
+  'Service account for the search, or empty for anonymous.':
+    '検索に使うサービスアカウント。空にすると匿名で検索します。',
+  'Never shown again. Re-enter it when the connection changes.':
+    '再表示されません。接続を変更する際は再入力してください。',
+  'Enter the bind password again to save.': '保存するにはバインドパスワードを再入力してください。',
+  'Only its members can sign in. Leave empty to allow everyone.':
+    'このグループのメンバーだけがサインインできます。空にするとすべてのユーザーを許可します。',
+  'An ID that never changes, such as entryUUID.': '変更されない ID。entryUUID など。',
+  'Attribute holding the display name, usually cn.': '表示名を保持する属性。通常は cn。',
+  'Attribute holding an E.164 phone number. Optional.':
+    'E.164 形式の電話番号を保持する属性。任意。',
+  'Using Active Directory?': 'Active Directory を使用していますか?',
+  'Search identity servers...': 'ID サーバーを検索...',
+  'Identity servers section': 'ID サーバーセクション',
+  'Identity servers navigation': 'ID サーバーナビゲーション',
+  LDAP: 'LDAP',
+  'Let users sign in with the credentials of your LDAP directory, such as Active Directory or OpenLDAP.':
+    'Active Directory や OpenLDAP などの LDAP ディレクトリの認証情報でユーザーがサインインできるようにします。',
+  Directory: 'ディレクトリ',
+  Hosts: 'ホスト',
+  'Use {dn} as the base DN?': '{dn} をベース DN として使用しますか?',
+  Use: '使用',
+  'Verify certificate': '証明書を検証',
+  'Timeout (seconds)': 'タイムアウト (秒)',
+  'Certificate (PEM)': '証明書 (PEM)',
+  'Base DN': 'ベース DN',
+  'Subtree the user search starts from, for example ou=people,dc=example,dc=com.':
+    'ユーザー検索の起点となるサブツリー。例: ou=people,dc=example,dc=com',
+  'Bind DN': 'バインド DN',
+  'Bind password': 'バインドパスワード',
+  'User filter': 'ユーザーフィルター',
+  'Finds the person signing in. {username} is replaced with what they type.':
+    'サインインするユーザーを検索します。{username} は入力された内容に置き換えられます。',
+  'The user filter must contain {username}.':
+    'ユーザーフィルターには {username} を含める必要があります。',
+  'Sign-in rules': 'サインインのルール',
+  'Attribute mapping': '属性のマッピング',
+  'ID attribute': 'ID 属性',
+  'Email attribute': 'メール属性',
+  'Attribute holding the email address, usually mail.':
+    'メールアドレスを保持する属性。通常は mail。',
+  'Name attribute': '名前属性',
+  'Phone attribute': '電話番号属性',
+  'Required group DN': '必須グループ DN',
+  'Port must be between 1 and 65535.':
+    'ポートは 1 から 65535 の範囲で指定してください。',
+  'LDAP settings have been updated.': 'LDAP 設定を更新しました。',
+  'LDAP sign-in has been enabled.': 'LDAP サインインを有効にしました。',
+  'LDAP sign-in has been disabled.': 'LDAP サインインを無効にしました。',
+  'Failed to update LDAP settings': 'LDAP 設定の更新に失敗しました',
+  'Test connection': '接続をテスト',
+  'Update the configuration with at least one host and a base DN before testing the connection.':
+    '接続をテストする前に、少なくとも 1 つのホストとベース DN を設定して更新してください。',
+  'Test LDAP connection': 'LDAP 接続のテスト',
+  'Checks the configuration saved on this project: it connects to the directory, binds as the service account and reads the base DN.':
+    'このプロジェクトに保存された設定を確認します。ディレクトリに接続し、サービスアカウントでバインドして、ベース DN を読み取ります。',
+  'Unsaved changes in the form are not included: update first to test them.':
+    'フォームの未保存の変更は含まれません。テストするには先に更新してください。',
+  'Username (optional)': 'ユーザー名 (任意)',
+  'Also looks this user up and checks the required group.':
+    'このユーザーを検索し、必須グループも確認します。',
+  'Password (optional)': 'パスワード (任意)',
+  'Also verifies the password of that user.':
+    'そのユーザーのパスワードも検証します。',
+  'Run test': 'テストを実行',
+  'Testing the connection…': '接続をテストしています…',
+  'Connection, service account and base DN look good.':
+    '接続、サービスアカウント、ベース DN に問題はありません。',
+  'User found, group check passed, password accepted.':
+    'ユーザーが見つかり、グループの確認に合格し、パスワードが受け入れられました。',
+  'User found, group check passed.':
+    'ユーザーが見つかり、グループの確認に合格しました。',
+  'Failed to test the LDAP connection': 'LDAP 接続のテストに失敗しました',
+  'Add at least one host and a base DN to enable LDAP sign-in.':
+    'LDAP サインインを有効にするには、少なくとも 1 つのホストとベース DN を追加してください。',
+  'Add at least one host and a base DN under Settings > Identity servers to enable LDAP sign-in.':
+    'LDAP サインインを有効にするには、[設定] > [ID サーバー] で少なくとも 1 つのホストとベース DN を追加してください。',
+  // Probe monitors
+  'Enter a URL starting with http:// or https://.':
+    'http:// または https:// で始まる URL を入力してください。',
+  'Write each header on its own line as Name: value.':
+    'ヘッダーは 1 行に 1 つずつ Name: value の形式で記述してください。',
+  'Enter status codes between 100 and 599.':
+    '100 から 599 までのステータスコードを入力してください。',
+  'Enter the domain to query.': 'クエリするドメインを入力してください。',
+  'Enter the host to connect to.': '接続先のホストを入力してください。',
+  'Enter a port between 1 and 65535.':
+    '1 から 65535 までのポートを入力してください。',
+  'The timeout must not be longer than the interval.':
+    'タイムアウトはチェック間隔より長くできません。',
+  'Monitor type': 'モニターの種類',
+  'Expected status codes': '想定するステータスコード',
+  'Separate codes with commas.': 'コードはカンマで区切ります。',
+  'Any 2xx status': '任意の 2xx ステータス',
+  'Certificate expiry warning': '証明書の有効期限の警告',
+  'Days before an HTTPS certificate expires to fire. 0 never warns early.':
+    'HTTPS 証明書の有効期限の何日前に発生させるか。0 の場合は事前に警告しません。',
+  'One per line, as Name: value.':
+    '1 行に 1 つ、Name: value の形式で記述します。',
+  'Record type': 'レコードタイプ',
+  'Expected answer': '想定する応答',
+  'Leave empty to accept any answer.': '空欄の場合はどの応答も受け入れます。',
+  Resolver: 'リゾルバー',
+  "Leave empty to use the server's resolver.":
+    '空欄の場合はサーバーのリゾルバーを使用します。',
+  Checks: 'チェック',
+  'The monitor fires when a check fails, and resolves when one passes again.':
+    'チェックが失敗するとモニターが発生し、再び成功すると解決します。',
+  'Check every': 'チェック間隔',
+  'Check interval': 'チェック間隔',
+  'and fail after': 'タイムアウト',
+  'Check timeout': 'チェックのタイムアウト',
+  'Last check': '最新のチェック',
+  'Code {code}': 'コード {code}',
+  'Every {interval}, failing after {timeout}':
+    '{interval}ごと、{timeout}でタイムアウト',
+  Expects: '想定',
+  Certificate: '証明書',
+  'No certificate seen yet': 'まだ証明書は確認されていません',
+  'fires {days} days before it expires': '有効期限の {days} 日前に発生',
+  'Any answer': '任意の応答',
+  "The server's resolver": 'サーバーのリゾルバー',
+  'Checks run on the monitor interval, so this monitor is not being checked.':
+    'チェックはモニターの間隔で実行されるため、このモニターはチェックされていません。',
+  '{type} check': '{type} チェック',
+  'Check that your endpoints respond': 'エンドポイントが応答しているか確認する',
+  '{type} monitor': '{type} モニター',
+  'Latest latency': '最新のレイテンシ',
+  'Peak latency': '最大レイテンシ',
+  Result: '結果',
+  'Resolves when a check passes again.': 'チェックが再び成功すると解決します。',
+  'A monitor raises an alert when its rules hold or its check fails, and resolves it when they recover.':
+    'モニターはルールが成立するかチェックが失敗するとアラートを発生させ、回復すると解決します。',
+  'peak latency': '最大レイテンシ',
+  'Get notified when a URL stops answering with the status you expect, or its certificate is about to expire.':
+    'URL が想定したステータスで応答しなくなったとき、または証明書の有効期限が近づいたときに通知を受け取ります。',
+  'Get notified when a domain stops resolving, or stops answering with the value you expect.':
+    'ドメインが名前解決できなくなったとき、または想定した値で応答しなくなったときに通知を受け取ります。',
+  'Get notified when a host stops accepting connections on a port.':
+    'ホストがポートへの接続を受け付けなくなったときに通知を受け取ります。',
+  'Get notified when a mail server stops accepting sessions or its TLS handshake fails.':
+    'メールサーバーがセッションを受け付けなくなったとき、または TLS ハンドシェイクが失敗したときに通知を受け取ります。',
+  Responding: '応答あり',
+  'Name did not resolve': '名前解決に失敗',
+  'Connection refused': '接続が拒否されました',
+  'Connection timed out': '接続がタイムアウトしました',
+  'TLS handshake failed': 'TLS ハンドシェイクに失敗',
+  'TLS certificate expiring': 'TLS 証明書の有効期限切れ間近',
+  'Unexpected status code': '想定外のステータスコード',
+  'Unexpected answer': '想定外の応答',
+  'Server refused the session': 'サーバーがセッションを拒否しました',
+  'Target is in a denied network': '対象が拒否されたネットワーク内にあります',
+  'Timed out': 'タイムアウトしました',
+  '30 seconds': '30 秒',
+  '1 minute': '1 分',
+  '5 seconds': '5 秒',
+  '10 seconds': '10 秒',
+  'From the port': 'ポートから判断',
+  'Upgrade with STARTTLS': 'STARTTLS でアップグレード',
+  'Implicit TLS': '暗黙的 TLS',
+  'Add note': 'メモを追加',
+  'Edit note': 'メモを編集',
+  'Delete note': 'メモを削除',
+  'Show notes': 'メモを表示',
+  'Note added': 'メモを追加しました',
+  'Note updated': 'メモを更新しました',
+  'Note deleted': 'メモを削除しました',
+  'Note text': 'メモの内容',
+  'Notes mark releases, campaigns or incidents on the chart for everyone in the project.':
+    'メモはリリース、キャンペーン、障害などをグラフ上に記録し、プロジェクトの全員に表示されます。',
+  'Launched the new pricing page': '新しい料金ページを公開',
+  'The note is removed from the chart for everyone.': 'このメモは全員のグラフから削除されます。',
+  'Former member': '元メンバー',
+  'analytics properties': 'アナリティクスプロパティ',
+  'analytics property': 'アナリティクスプロパティ',
+  'per project.': '(プロジェクトごと)。',
+  'to create another.': 'して、さらに作成してください。',
+  'to enable analytics on this site.': 'して、このサイトでアナリティクスを有効にしてください。',
 }

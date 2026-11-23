@@ -134,6 +134,11 @@ function dispatchIdentityOnly(
       return messaging.updateMsg91Provider(identity)
     case 'telesign':
       return messaging.updateTelesignProvider(identity)
+    case 'bird':
+      // Bird's email and SMS providers share the name and differ by type.
+      return provider.type === 'email'
+        ? messaging.updateBirdEmailProvider(identity)
+        : messaging.updateBirdSMSProvider(identity)
     case 'textmagic':
       return messaging.updateTextmagicProvider(identity)
     case 'fcm':
@@ -263,6 +268,26 @@ function dispatchWithMerged(
         name,
         enabled,
         customerId: optStr(merged.customerId),
+        apiKey: optStr(merged.apiKey),
+        from: optStr(merged.from),
+      })
+    case 'bird':
+      if (provider.type === 'email') {
+        return messaging.updateBirdEmailProvider({
+          providerId,
+          name,
+          enabled,
+          apiKey: optStr(merged.apiKey),
+          fromName: optStr(merged.fromName),
+          fromEmail: optStr(merged.fromEmail),
+          replyToName: optStr(merged.replyToName),
+          replyToEmail: optStr(merged.replyToEmail),
+        })
+      }
+      return messaging.updateBirdSMSProvider({
+        providerId,
+        name,
+        enabled,
         apiKey: optStr(merged.apiKey),
         from: optStr(merged.from),
       })

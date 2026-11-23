@@ -2,6 +2,10 @@
 
 namespace Utopia\Messaging\Adapter\Email;
 
+use Dom\Element;
+use Dom\HTMLDocument;
+use Dom\Node;
+use Dom\Text;
 use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Messaging\Messages\Email\Attachment as EmailAttachment;
 use Utopia\SMTP\Address;
@@ -104,8 +108,9 @@ final class Mime
     }
 
     /**
-     * The reading a client without markup gets. Stripping tags leaves the
-     * contents of a style block behind, so those go first.
+     * The reading a client without markup gets: the visible text with its
+     * entities decoded, a line per block, and each link's address beside it
+     * so a button still leads somewhere.
      */
     private static function text(EmailMessage $email): string
     {
@@ -113,8 +118,72 @@ final class Mime
             return $email->getContent();
         }
 
-        return trim(strip_tags(
-            preg_replace('/<style\b[^>]*>(.*?)<\/style>/is', '', $email->getContent()) ?? '',
-        ));
+        $document = HTMLDocument::createFromString($email->getContent(), LIBXML_NOERROR);
+
+        $text = '';
+        foreach (explode("\n", self::render($document->body)) as $line) {
+            $line = trim($line, ' ');
+
+            // Blocks end a line; a blank one between them keeps paragraphs apart.
+            if ($line !== '' || ! str_ends_with($text, "\n\n")) {
+                $text .= $line . "\n";
+            }
+        }
+
+        // Preformatted lines are joined with a carriage return so the trim above leaves them alone.
+        return str_replace("\r", "\n", trim($text));
+    }
+
+    private static function render(Node $node, bool $preformatted = false): string
+    {
+        if ($node instanceof Text) {
+            if ($preformatted) {
+                return str_replace("\n", "\r", $node->data);
+            }
+
+            // Preview padding is a run of invisible characters and no-break spaces
+            // with nothing else in it. Elsewhere those characters shape the text.
+            if (str_replace(["\u{00A0}", "\u{200B}", "\u{200C}", "\u{200D}", "\u{200E}", "\u{200F}", "\u{FEFF}", ' ', "\t", "\n", "\r", "\f"], '', $node->data) === '') {
+                return ' ';
+            }
+
+            // Source whitespace means nothing in HTML; collapse it the way a browser would.
+            $data = str_replace(["\t", "\n", "\r", "\f"], ' ', $node->data);
+            $words = implode(' ', array_filter(explode(' ', $data), static fn (string $word): bool => $word !== ''));
+
+            return (str_starts_with($data, ' ') ? ' ' : '') . $words . (str_ends_with($data, ' ') ? ' ' : '');
+        }
+
+        $name = $node instanceof Element ? $node->localName : '';
+
+        if (\in_array($name, ['style', 'script', 'title', 'template'], true)) {
+            return '';
+        }
+
+        if ($name === 'br') {
+            return "\n";
+        }
+
+        $preformatted = $preformatted || \in_array($name, ['pre', 'textarea'], true);
+
+        $text = '';
+        foreach ($node->childNodes as $child) {
+            $text .= self::render($child, $preformatted);
+        }
+
+        if ($name === 'a') {
+            $href = trim($node->getAttribute('href') ?? '');
+            $label = trim($text);
+
+            if ($href !== '' && ! str_starts_with($href, '#') && ! str_starts_with(strtolower($href), 'javascript:') && $href !== $label) {
+                $text = $label === '' ? $href : $label . ': ' . $href;
+            }
+        }
+
+        if (\in_array($name, ['p', 'div', 'tr', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'ul', 'ol', 'blockquote', 'section', 'header', 'footer', 'hr', 'pre'], true)) {
+            return "\n\n" . $text . "\n\n";
+        }
+
+        return $text;
     }
 }

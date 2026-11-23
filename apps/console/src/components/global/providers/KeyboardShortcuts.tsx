@@ -98,8 +98,8 @@ export function KeyboardShortcutsProvider({
         }
         return
       }
-      if (section === 'explorer') {
-        navigate({ to: '/projects/$projectId/explorer', params: { projectId } })
+      if (section === 'playground') {
+        navigate({ to: '/projects/$projectId/playground', params: { projectId } })
         return
       }
       if (section === 'auth') {
@@ -212,13 +212,13 @@ export function KeyboardShortcutsProvider({
         })
       } else if (type === 'user') {
         navigate({
-          to: '/projects/$projectId/auth',
+          to: '/projects/$projectId/auth/users',
           params: { projectId },
           search: { create: 'user' },
         })
       } else if (type === 'team') {
         navigate({
-          to: '/projects/$projectId/auth',
+          to: '/projects/$projectId/auth/teams',
           params: { projectId },
           search: { create: 'team' },
         })
@@ -234,7 +234,7 @@ export function KeyboardShortcutsProvider({
         })
       } else if (type === 'video') {
         navigate({
-          to: '/projects/$projectId/videos/',
+          to: '/projects/$projectId/videos',
           params: { projectId },
           search: { create: 'video' },
         })
@@ -300,7 +300,9 @@ export function KeyboardShortcutsProvider({
     if (canShowConnectSection(access, features)) {
       shortcuts['g i'] = () => navigateToSection('apps')
       shortcuts['g k'] = () => navigateToSection('api-keys')
-      shortcuts['g x'] = () => navigateToSection('explorer')
+    }
+    if (canSeeProjectNavItem(access, features, 'playground')) {
+      shortcuts['g x'] = () => navigateToSection('playground')
     }
     if (canSeeProjectNavItem(access, features, 'databases')) {
       shortcuts['g d'] = () => navigateToSection('databases')

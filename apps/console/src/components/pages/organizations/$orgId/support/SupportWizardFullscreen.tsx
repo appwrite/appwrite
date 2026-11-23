@@ -247,7 +247,9 @@ export function SupportWizardFullscreen() {
             {t('Get dedicated support and SLAs for your organization.')}
           </p>
           <Button variant="outline" size="sm" className="mt-4 w-full" asChild>
-            <ContactSalesLink>{t('Contact sales')}</ContactSalesLink>
+            <ContactSalesLink source="support-ticket" orgId={orgId}>
+              {t('Contact sales')}
+            </ContactSalesLink>
           </Button>
         </div>
       </div>
@@ -400,7 +402,11 @@ export function SupportWizardFullscreen() {
               <div className="border-t border-border px-6 py-4 bg-muted/30">
                 <p className="text-[13px] text-muted-foreground">
                   {t('Need 24/7 or enterprise support?')}{' '}
-                  <ContactSalesLink className="font-medium text-foreground underline hover:no-underline">
+                  <ContactSalesLink
+                    source="support-ticket"
+                    orgId={orgId}
+                    className="font-medium text-foreground underline hover:no-underline"
+                  >
                     {t('Contact sales')}
                   </ContactSalesLink>
                 </p>

@@ -195,6 +195,7 @@ final class AppwriteIndexLengthsTest extends TestCase
                     $this->attributeArray('databaseInternalId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY),
                     $this->attributeArray('databaseId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY),
                     $this->attributeArray('name', ColumnType::String, size: 256),
+                    $this->attributeArray('description', ColumnType::String, size: 1024),
                     $this->attributeArray('enabled', ColumnType::Boolean, default: true),
                     $this->attributeArray('documentSecurity', ColumnType::Boolean, default: false),
                     $this->attributeArray('search', ColumnType::String, size: 16384),
@@ -252,6 +253,7 @@ final class AppwriteIndexLengthsTest extends TestCase
             id: 'databases',
             attributes: [
                 $this->attribute('name', ColumnType::String, required: true, size: 256),
+                $this->attribute('description', ColumnType::String, size: 1024),
                 $this->attribute('enabled', ColumnType::Boolean, default: true),
                 $this->attribute('search', ColumnType::String, size: 16384),
                 $this->attribute('originalId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY),
@@ -264,6 +266,7 @@ final class AppwriteIndexLengthsTest extends TestCase
             id: 'attributes',
             attributes: [
                 $this->attribute('key', ColumnType::String, size: 256),
+                $this->attribute('description', ColumnType::String, size: 1024),
                 $this->attribute('databaseInternalId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY),
                 $this->attribute('databaseId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY),
                 $this->attribute('collectionInternalId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY),
@@ -287,6 +290,7 @@ final class AppwriteIndexLengthsTest extends TestCase
             id: 'indexes',
             attributes: [
                 $this->attribute('key', ColumnType::String, size: 256),
+                $this->attribute('description', ColumnType::String, size: 1024),
                 $this->attribute('status', ColumnType::String, size: 64),
                 $this->attribute('databaseInternalId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY),
                 $this->attribute('databaseId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY),

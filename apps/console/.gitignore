@@ -19,11 +19,14 @@ public/llms-full.txt
 public/docs/llms.txt
 public/docs.md
 public/blog.md
+public/blog/llms.txt
 public/setup.md
 public/alternative-to.md
 public/alternative-to/
 public/changelog.md
 public/integrations.md
+public/pricing.md
+public/auth.md
 public/robots.txt
 public/.well-known/
 public/sitemap.xml
@@ -93,6 +96,12 @@ scripts/oauth2-shots.mjs
 
 # Bundled site template screenshots (served at /images/sites/templates)
 !public/images/sites/templates/*.png
+
+# Email images (served at /email; APP_EMAIL_FOOTER_IMAGE_URL points here)
+!public/email/*.png
+
+# Static Open Graph cards (served at /images/og)
+!public/images/og/*.png
 
 # TypeScript incremental build cache
 tsconfig.tsbuildinfo

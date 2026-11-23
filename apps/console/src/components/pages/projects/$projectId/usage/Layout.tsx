@@ -12,6 +12,7 @@ import {
   refetchProjectRealtimeUsageQueries,
   refetchProjectRequestsUsageQueries,
   refetchProjectStorageUsageQueries,
+  useCountryLookups,
 } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
@@ -33,6 +34,7 @@ import {
   Menu,
   Globe,
   Shield,
+  Plus,
   type LucideIcon,
 } from '@/lib/icons'
 import { Button } from '@/components/ui/button'
@@ -88,10 +90,12 @@ import {
 } from './usage-nav'
 import { UsageFiltersProvider } from './usage-filters-context'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
+import { ActiveFilterChips } from '@/components/global/shared/ActiveFilterChips'
 import {
   buildFilterQueryString,
   mapToQueryParam,
   queryParamToMap,
+  withFilter,
   type CompactFilterKey,
 } from '@/lib/table-filters'
 import {
@@ -191,6 +195,22 @@ interface CategoryNavigationProps {
   navGroups: UsageNavGroup[]
   activeCategoryId: string
   className?: string
+}
+
+/** Metric each usage category opens a new monitor on. */
+const ALERT_METRIC_BY_CATEGORY: Record<string, string> = {
+  requests: 'network.requests',
+  bandwidth: 'network.outbound',
+  compute: 'executions',
+  functions: 'executions',
+  sites: 'executions',
+  realtime: 'realtime.connections',
+  auth: 'users.mau',
+  databases: 'databases.operations.reads',
+  storage: 'storage',
+  messaging: 'messages.sent',
+  webhooks: 'webhooks.events.failed',
+  avatars: 'avatars.screenshotsGenerated',
 }
 
 function UsageNavGroupHeading({ label }: { label: string }) {
@@ -398,8 +418,11 @@ function UsageLayoutContent({
     getUsageCategoryIdFromPathname(location.pathname),
     plan,
   )
-  const [filtersOpen, setFiltersOpen] = useState(false)
   const { features, isCloud, isSelfHosted } = useConsoleProfile()
+  const alertMetric = features.alerts
+    ? ALERT_METRIC_BY_CATEGORY[categoryId]
+    : undefined
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const filterAvailability = useMemo(
     () => ({ allowCity: !isSelfHosted }),
     [isSelfHosted],
@@ -425,6 +448,7 @@ function UsageLayoutContent({
     () => getUsageFilterColumnsForCategory(categoryId, filterAvailability),
     [categoryId, filterAvailability],
   )
+  const { lookups: countryLookups } = useCountryLookups()
   const usageEventFilterQueries = useMemo(
     () =>
       getUsageFilterQueriesForSurface(
@@ -449,8 +473,7 @@ function UsageLayoutContent({
   const { project } = useProject(projectId)
   const { plan: organizationPlan, isFetched: isOrganizationPlanFetched } =
     useOrganizationPlan(project?.teamId)
-  const usageLogRetentionReady =
-    !project?.teamId || isOrganizationPlanFetched
+  const usageLogRetentionReady = !project?.teamId || isOrganizationPlanFetched
   const showUsageFilters =
     categorySupportsUsageFilters(categoryId) &&
     canShowUsageCategoryFilters(categoryId, organizationPlan)
@@ -502,9 +525,7 @@ function UsageLayoutContent({
         )
       )
         return
-      const newMap = new Map(usageFilterMap)
-      if (replaceKey) newMap.delete(replaceKey)
-      newMap.set(key, queryStr)
+      const newMap = withFilter(usageFilterMap, key, queryStr, replaceKey)
       navigateUsageFilters(
         mapToQueryParam(
           sanitizeUsageFilterMap(newMap, categoryId, filterAvailability),
@@ -738,7 +759,7 @@ function UsageLayoutContent({
       <div className="sticky top-0 z-20 shrink-0 bg-background">
         <div className="border-b border-border">
           <div className="w-full px-4 py-4 sm:px-6">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-2 sm:min-h-9 sm:flex-row sm:items-center sm:justify-between">
               <h1 className="min-w-0 flex-1 text-[17px] font-semibold leading-tight text-foreground">
                 {t('Usage')}
               </h1>
@@ -827,6 +848,16 @@ function UsageLayoutContent({
             </div>
           </div>
         </div>
+        {showUsageFilters ? (
+          <ActiveFilterChips
+            filterMap={usageFilterMap}
+            columns={usageFilterColumns}
+            countryLookups={countryLookups}
+            onApplyFilter={applyUsageFilter}
+            onRemoveFilter={removeUsageFilter}
+            onClearAllFilters={clearAllUsageFilters}
+          />
+        ) : null}
         {showUsageHistoryLimitAlert &&
         hasFiniteUsageLogRetention(organizationPlan) ? (
           <UsageLogRetentionAlert
@@ -865,13 +896,32 @@ function UsageLayoutContent({
 
             {activeCategoryData ? (
               <>
-                <div className="mb-6">
-                  <h2 className="text-[16px] font-semibold text-foreground">
-                    {t(activeCategoryData.label)}
-                  </h2>
-                  <p className="mt-1 text-[13px] text-muted-foreground">
-                    {t(activeCategoryData.description)}
-                  </p>
+                <div className="mb-6 flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="text-[16px] font-semibold text-foreground">
+                      {t(activeCategoryData.label)}
+                    </h2>
+                    <p className="mt-1 text-[13px] text-muted-foreground">
+                      {t(activeCategoryData.description)}
+                    </p>
+                  </div>
+                  {alertMetric ? (
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      className="h-8 shrink-0 text-[13px]"
+                    >
+                      <Link
+                        to="/projects/$projectId/monitors"
+                        params={{ projectId }}
+                        search={{ metric: alertMetric }}
+                      >
+                        <Plus className="me-1.5 h-3.5 w-3.5" />
+                        {t('Create monitor')}
+                      </Link>
+                    </Button>
+                  ) : null}
                 </div>
 
                 <UsageFiltersProvider
@@ -886,8 +936,12 @@ function UsageLayoutContent({
                     chartInterval,
                     onDateRangeChange: setUsageDateRange,
                     filterMap: usageFilterMap,
-                    eventFilterQueries: showUsageFilters ? usageEventFilterQueries : undefined,
-                    gaugeFilterQueries: showUsageFilters ? usageGaugeFilterQueries : undefined,
+                    eventFilterQueries: showUsageFilters
+                      ? usageEventFilterQueries
+                      : undefined,
+                    gaugeFilterQueries: showUsageFilters
+                      ? usageGaugeFilterQueries
+                      : undefined,
                     filterColumns: usageFilterColumns,
                     filterScope: usageFilterScope,
                     onApplyFilter: applyUsageFilter,

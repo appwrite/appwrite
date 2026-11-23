@@ -75,17 +75,34 @@ export function getVideoRenditionPlaylistUrl(
   return null
 }
 
-export function getVideoSubtitleManifestUrl(
+export function getVideoCaptionManifestUrl(
   projectId: string,
   videoId: string,
-  subtitleId: string,
+  captionId: string,
   output: string,
 ): string {
   return withoutEmptyParams(
-    sdk.forProject(projectId).videos.getSubtitleManifest({
+    sdk.forProject(projectId).videos.getCaptionManifest({
       videoId,
-      subtitleId,
       output: output as VideoOutput,
+      captionId,
+    }),
+  )
+}
+
+export function getVideoCaptionSegmentUrl(
+  projectId: string,
+  videoId: string,
+  captionId: string,
+  output: VideoOutput,
+  segmentId: string,
+): string {
+  return withoutEmptyParams(
+    sdk.forProject(projectId).videos.getCaptionSegment({
+      videoId,
+      output,
+      captionId,
+      segmentId,
     }),
   )
 }

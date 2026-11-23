@@ -39,11 +39,15 @@ export const Route = createFileRoute('/docs/$')({
         }
 
         const slug = splat.slice(0, -3)
-        // Match the HTML route: partners docs stay available on the server
-        // until the client can apply a local override. A hard 404 here made
-        // `/docs/partners/...md` fail while the page itself rendered.
+        // Match the HTML route: partners, analytics, and videos docs stay available on
+        // the server until the client can apply a local override. A hard 404
+        // here made `/docs/partners/...md` fail while the page itself rendered.
         if (
-          isFeatureGatedDocsSlugHidden(slug, { deferPartnersOnServer: true })
+          isFeatureGatedDocsSlugHidden(slug, {
+            deferPartnersOnServer: true,
+            deferAnalyticsOnServer: true,
+            deferVideosOnServer: true,
+          })
         ) {
           return new Response('Not found', { status: 404 })
         }
@@ -68,7 +72,13 @@ export const Route = createFileRoute('/docs/$')({
     const splat = params._splat ?? ''
     if (splat === DOCS_LLMS_TXT_SPLAT || splat.endsWith('.md')) return
 
-    if (isFeatureGatedDocsSlugHidden(splat, { deferPartnersOnServer: true })) {
+    if (
+      isFeatureGatedDocsSlugHidden(splat, {
+        deferPartnersOnServer: true,
+        deferAnalyticsOnServer: true,
+        deferVideosOnServer: true,
+      })
+    ) {
       throw redirect({ to: '/docs', replace: true })
     }
   },
@@ -86,6 +96,8 @@ export const Route = createFileRoute('/docs/$')({
       if (
         isFeatureGatedDocsSlugHidden(targetSlug, {
           deferPartnersOnServer: true,
+          deferAnalyticsOnServer: true,
+          deferVideosOnServer: true,
         })
       ) {
         throw redirect({ to: '/docs', replace: true })

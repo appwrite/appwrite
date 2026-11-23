@@ -349,6 +349,93 @@ class Create extends Action
         }
     }
 
+    /**
+     * Repositories with this provider repository id that are connected through an installation of this provider.
+     *
+     * @param array<Query> $queries
+     * @return array<Document>
+     */
+    private function findRepositories(string $providerRepositoryId, array $queries, Database $dbForPlatform, Authorization $authorization): array
+    {
+        $found = [];
+        $cursor = null;
+
+        do {
+            $page = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
+                Query::equal('providerRepositoryId', [$providerRepositoryId]),
+                ...$queries,
+                Query::limit(100),
+                ...($cursor === null ? [] : [Query::cursorAfter($cursor)]),
+            ]));
+
+            $installationIds = \array_values(\array_unique(\array_filter(\array_map(fn (Document $repository) => $repository->getAttribute('installationId', ''), $page))));
+            $installations = empty($installationIds) ? [] : $authorization->skip(fn () => $dbForPlatform->find('installations', [
+                Query::equal('$id', $installationIds),
+                Query::equal('provider', ['entire']),
+                Query::limit(\count($installationIds)),
+            ]));
+            $installationIds = \array_map(fn (Document $installation) => $installation->getId(), $installations);
+
+            foreach ($page as $repository) {
+                if (\in_array($repository->getAttribute('installationId', ''), $installationIds, true)) {
+                    $found[] = $repository;
+                }
+            }
+
+            $cursor = \count($page) === 100 ? $page[\array_key_last($page)] : null;
+        } while ($cursor !== null && \count($found) < 100);
+
+        return \array_slice($found, 0, 100);
+    }
+
+    /**
+     * Moves a repository's connection to the installation that delivered its
+     * push. An Entire repository keeps its id when it moves to another
+     * project, as when a GitHub mirror is detached, and only the installation
+     * on its project now covers it; one still connected through the old
+     * installation would build with a token that no longer reaches it. The
+     * move stays within the Appwrite project that connected the repository,
+     * so it happens only once that project has the new installation too.
+     *
+     * The site or function moves before the repository record, so a delivery
+     * retried after a partial move still finds the record to move.
+     */
+    private function moveRepository(Document $repository, Document $project, string $providerInstallationId, Database $dbForPlatform, Authorization $authorization, callable $getProjectDB): Document
+    {
+        $current = $authorization->skip(fn () => $dbForPlatform->getDocument('installations', $repository->getAttribute('installationId', '')));
+        if ($providerInstallationId === '' || $current->getAttribute('providerInstallationId', '') === $providerInstallationId) {
+            return $repository;
+        }
+
+        $installation = $authorization->skip(fn () => $dbForPlatform->findOne('installations', [
+            Query::equal('provider', ['entire']),
+            Query::equal('providerInstallationId', [$providerInstallationId]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
+        ]));
+        if ($installation->isEmpty()) {
+            return $repository;
+        }
+
+        $moved = new Document([
+            'installationId' => $installation->getId(),
+            'installationInternalId' => $installation->getSequence(),
+        ]);
+
+        // The site or function follows while it is still connected through this record
+        $collection = $repository->getAttribute('resourceType') === 'function' ? 'functions' : 'sites';
+        $dbForProject = $getProjectDB($project);
+        $resource = $authorization->skip(fn () => $dbForProject->getDocument($collection, $repository->getAttribute('resourceId', '')));
+        if ($resource->getAttribute('repositoryId') === $repository->getId() && $resource->getAttribute('installationId') !== $installation->getId()) {
+            $authorization->skip(fn () => $dbForProject->updateDocument($collection, $resource->getId(), $moved));
+        }
+
+        $repository = $authorization->skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), $moved));
+
+        Span::add('vcs.entire.repository.moved', $repository->getId());
+
+        return $repository;
+    }
+
     private function isProjectInCurrentRegion(Document $project): bool
     {
         try {
@@ -402,10 +489,7 @@ class Create extends Action
         }
 
         // Find associated repositories
-        $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
-            Query::equal('providerRepositoryId', [$providerRepositoryId]),
-            Query::limit(100),
-        ]));
+        $repositories = $this->findRepositories($providerRepositoryId, [], $dbForPlatform, $authorization);
 
         // A delivery for a repository nothing deploys from needs no token
         if (empty($repositories)) {
@@ -439,30 +523,33 @@ class Create extends Action
             return;
         }
 
+        // A new branch has no previous tip, so what it changes is what it
+        // holds beyond where it left the default branch
+        $providerBaseCommitHash = $providerPreviousCommitHash;
+        if ($providerBranchCreated || \trim($providerBaseCommitHash, '0') === '') {
+            $providerBaseCommitHash = '';
+            $providerDefaultBranch = $parsedPayload['defaultBranch'] ?? '';
+            if ($providerDefaultBranch !== '' && $providerDefaultBranch !== $providerBranch) {
+                try {
+                    $providerBaseCommitHash = $vcs->getMergeBase($providerRepositoryOwner, $providerRepositoryName, $providerDefaultBranch, $providerCommitHash);
+                } catch (\Throwable $e) {
+                    Console::warning("Failed to find where '{$providerBranch}' left '{$providerDefaultBranch}': " . $e->getMessage());
+                }
+            }
+        }
+
         $providerAffectedFiles = [];
-        // A new branch has no previous tip to compare against
-        if (!$providerBranchCreated && !empty($providerPreviousCommitHash) && \trim($providerPreviousCommitHash, '0') !== '') {
+        if ($providerBaseCommitHash !== '') {
             try {
-                $files = $vcs->compareFiles($providerRepositoryOwner, $providerRepositoryName, $providerPreviousCommitHash, $providerCommitHash);
+                $files = $vcs->compareFiles($providerRepositoryOwner, $providerRepositoryName, $providerBaseCommitHash, $providerCommitHash);
                 $providerAffectedFiles = [
                     ...\array_column($files, 'filename'),
                     // Only renamed files carry a previous filename; skip missing values from other file changes.
                     ...\array_filter(\array_column($files, 'previous_filename')),
                 ];
             } catch (\Throwable $e) {
-                Console::warning("Failed to compare '{$providerPreviousCommitHash}' with '{$providerCommitHash}': " . $e->getMessage());
+                Console::warning("Failed to compare '{$providerBaseCommitHash}' with '{$providerCommitHash}': " . $e->getMessage());
             }
-        }
-
-        // Entire delivers no trail events, so a push onto a branch that has
-        // an open trail reports on it from here. Trails never come from a
-        // fork, so none is ever external.
-        $providerPullRequestId = '';
-        try {
-            $trail = $vcs->getPullRequestFromBranch($providerRepositoryOwner, $providerRepositoryName, $providerBranch);
-            $providerPullRequestId = !empty($trail['number']) ? \strval($trail['number']) : '';
-        } catch (\Throwable $e) {
-            Console::warning("Failed to look up the trail of branch '{$providerBranch}': " . $e->getMessage());
         }
 
         // Entire retries a delivery it got an error for. Each repository claims
@@ -492,6 +579,7 @@ class Create extends Action
 
             $attemptedAt = DateTime::now();
             try {
+                $repository = $this->moveRepository($repository, $project, $providerInstallationId, $dbForPlatform, $authorization, $getProjectDB);
                 $this->createGitDeployments($vcs, $providerInstallationId, [$repository], $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, '', $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory);
             } catch (\Throwable $error) {
                 if ($deliveryId !== '' && !$this->hasDeployed($repository, $providerCommitHash, $providerBranch, $attemptedAt, $dbForPlatform, $authorization, $getProjectDB)) {
@@ -499,18 +587,6 @@ class Create extends Action
                 }
                 $errors[] = $error->getMessage();
                 continue;
-            }
-
-            // With a pull request id the trait only comments and links the
-            // deployment the push created, the way a pull request event would.
-            // The deployment exists, so a failure here must not hand the
-            // delivery back for a retry that would deploy it again.
-            if ($providerPullRequestId !== '') {
-                try {
-                    $this->createGitDeployments($vcs, $providerInstallationId, [$repository], $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, '', $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, false, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory);
-                } catch (\Throwable $error) {
-                    Console::warning("Failed to report on trail #{$providerPullRequestId}: " . $error->getMessage());
-                }
             }
         }
 

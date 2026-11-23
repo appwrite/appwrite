@@ -150,8 +150,8 @@ import {
   sanitizeAccountPrefsForWrite,
   mergeDismissedBannerPrefs,
   clearDismissedBannerPrefs,
+  mergeExperimentsSeenAtPrefs,
   mergeAgentsDismissedProjectIdsPrefs,
-  mergePremiumGeoOverviewDismissedProjectIdsPrefs,
   USER_PREFS_KEY_FEATURE_NOTIFICATIONS,
   type UserPrefs,
 } from '@/lib/user-prefs-keys'
@@ -992,6 +992,42 @@ export function useUpdateSessionInvalidation(
 }
 
 /**
+ * Hook to sign out every user in the project
+ *
+ * @param projectId - The project ID
+ */
+export function useDeleteProjectSessions(projectId: string | null | undefined) {
+  return useMutation({
+    mutationFn: async () => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+
+      return await sdk.forProject(projectId).project.deleteSessions()
+    },
+  })
+}
+
+/**
+ * Hook to force every user in the project to reset their password
+ *
+ * @param projectId - The project ID
+ */
+export function useDeleteProjectPasswords(
+  projectId: string | null | undefined,
+) {
+  return useMutation({
+    mutationFn: async () => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+
+      return await sdk.forProject(projectId).project.deletePasswords()
+    },
+  })
+}
+
+/**
  * Hook to update project mock phone numbers
  *
  * @param projectId - The project ID
@@ -1217,6 +1253,52 @@ export function useUpdateDenyCorporateEmailPolicy(
       return await projectEmailPolicyService(
         projectId,
       ).updateDenyCorporateEmailPolicy({ enabled })
+    },
+    onSuccess: () => {
+      invalidateProjectAuthQueries(queryClient, projectId)
+    },
+  })
+}
+
+/**
+ * Hook to update the deny realtime guests policy.
+ */
+export function useUpdateDenyRealtimeGuestsPolicy(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (enabled: boolean) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      return await sdk
+        .forProject(projectId)
+        .project.updateDenyRealtimeGuestsPolicy({ enabled })
+    },
+    onSuccess: () => {
+      invalidateProjectAuthQueries(queryClient, projectId)
+    },
+  })
+}
+
+/**
+ * Hook to update the account switching (account devices) policy.
+ */
+export function useUpdateAccountDevicesPolicy(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (enabled: boolean) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      return await sdk
+        .forProject(projectId)
+        .project.updateAccountDevicesPolicy({ enabled })
     },
     onSuccess: () => {
       invalidateProjectAuthQueries(queryClient, projectId)
@@ -1802,6 +1884,32 @@ export function useClearConsoleBannerDismissal() {
 }
 
 /**
+ * Record in `console.previews.seenAt` that the user opened the previews popover.
+ */
+export function useMarkExperimentsSeen() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (seenAt: Date) => {
+      const account = getConsoleAccountFromCache(queryClient)
+
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+
+      const updatedPrefs = mergeExperimentsSeenAtPrefs(account.prefs, seenAt)
+
+      return await updateAccountPrefs(updatedPrefs, 'mark-experiments-seen')
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+}
+
+/**
  * Persist dismissal of the project Agents landing in
  * `console.agents.dismissedProjectIds`.
  */
@@ -1824,39 +1932,6 @@ export function useDismissProjectAgentsLanding() {
       return await updateAccountPrefs(
         updatedPrefs,
         'dismiss-project-agents-landing',
-      )
-    },
-    onSuccess: (updatedAccount) => {
-      syncConsoleAccountAfterMutation(queryClient, {
-        apiResult: updatedAccount,
-      })
-    },
-  })
-}
-
-/**
- * Persist dismissal of the Premium Geo DB overview promo for a project in
- * `console.premiumGeoOverview.dismissedProjectIds`.
- */
-export function useDismissPremiumGeoOverviewPromo() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async (projectId: string) => {
-      const account = getConsoleAccountFromCache(queryClient)
-
-      if (!account) {
-        throw new Error('Account data not available')
-      }
-
-      const updatedPrefs = mergePremiumGeoOverviewDismissedProjectIdsPrefs(
-        account.prefs,
-        projectId,
-      )
-
-      return await updateAccountPrefs(
-        updatedPrefs,
-        'dismiss-premium-geo-overview-promo',
       )
     },
     onSuccess: (updatedAccount) => {

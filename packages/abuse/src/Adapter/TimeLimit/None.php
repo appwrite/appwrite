@@ -23,6 +23,11 @@ final readonly class None extends TimeLimit
     {
     }
 
+    #[\Override]
+    protected function unhit(string $key, int $window): void
+    {
+    }
+
     /**
      * @return array{}
      */

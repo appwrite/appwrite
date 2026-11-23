@@ -209,7 +209,7 @@ class Delete extends Base
         $queueForEvents
             ->setParam('functionId', $function->getId())
             ->setParam('executionId', $execution->getId())
-            ->setPayload($response->output($execution, Response::MODEL_EXECUTION));
+            ->setPayload($response->output($execution, Response::MODEL_EXECUTION), sensitive: ['logs', 'errors']);
 
         $response->noContent();
     }

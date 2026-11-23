@@ -1,5 +1,10 @@
 import type { DocsNavGroup, DocsNavTree } from '../types'
 import { isAgentDocsEnabled, isAgentDocsHref } from '../agent-docs-feature'
+import {
+  isAnalyticsDocsEnabled,
+  isAnalyticsDocsHref,
+} from '../analytics-docs-feature'
+import { isVideosDocsEnabled, isVideosDocsHref } from '../videos-docs-feature'
 import { DOCS_GLOBAL_NAV } from './global'
 import { DOCS_PARTNERS_GLOBAL_NAV } from './partners'
 
@@ -51,6 +56,12 @@ export function getDocsGlobalNav(audience: DocsAudience): DocsNavTree {
   if (audience === 'partners') return navigation
   if (!isAgentDocsEnabled()) {
     navigation = withoutHref(navigation, isAgentDocsHref)
+  }
+  if (!isAnalyticsDocsEnabled()) {
+    navigation = withoutHref(navigation, isAnalyticsDocsHref)
+  }
+  if (!isVideosDocsEnabled()) {
+    navigation = withoutHref(navigation, isVideosDocsHref)
   }
   return navigation
 }

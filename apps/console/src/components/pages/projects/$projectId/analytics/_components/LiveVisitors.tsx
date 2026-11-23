@@ -39,12 +39,16 @@ type LiveVisitorsProps = {
   /** Disabled properties don't ingest, so there is nothing to poll. */
   enabled?: boolean
   /**
-   * `pill` (default) is the standalone header control. `inline` drops the
-   * chrome (dot + count as plain text) for dense surfaces like the
-   * properties list, where a pill on every card or row reads as noise.
+   * `pill` (default) is the standalone header control. `inline` is denser
+   * for surfaces like the properties list.
    */
   variant?: 'pill' | 'inline'
+  /** Mobile properties count users on screens, not visitors on pages. */
+  mobile?: boolean
 }
+
+const LIVE_TEXT_CLASS =
+  'text-emerald-700 dark:text-emerald-400'
 
 /**
  * "N online" pill: unique visitors with activity in the last few minutes,
@@ -56,6 +60,7 @@ export function LiveVisitors({
   propertyId,
   enabled = true,
   variant = 'pill',
+  mobile = false,
 }: LiveVisitorsProps) {
   const t = useT()
   const isDocumentVisible = useDocumentVisible()
@@ -89,20 +94,17 @@ export function LiveVisitors({
           <button
             type="button"
             className={cn(
-              'group/live inline-flex h-6 shrink-0 items-center gap-1.5 rounded-md px-1.5 -mx-1.5 text-[12px] text-muted-foreground transition-colors',
+              'group/live inline-flex h-6 shrink-0 items-center gap-1.5 rounded-md px-1.5 -mx-1.5 text-[12px] transition-colors',
               'hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               open && 'bg-muted/60',
+              isLive ? LIVE_TEXT_CLASS : 'text-muted-foreground',
             )}
-            aria-label={t('Visitors online now')}
+            aria-label={t(mobile ? 'Users online now' : 'Visitors online now')}
           >
-            <LiveDot active={isLive && polling} />
             {hasValue ? (
               <AnimatedCounter
                 value={count}
-                className={cn(
-                  'font-medium tabular-nums',
-                  isLive ? 'text-foreground' : 'text-muted-foreground',
-                )}
+                className="font-medium tabular-nums"
               />
             ) : (
               <span>-</span>
@@ -113,15 +115,14 @@ export function LiveVisitors({
           <button
             type="button"
             className={cn(
-              'inline-flex h-7 shrink-0 items-center gap-2 rounded-full border px-2.5 text-[12px] transition-colors',
+              'inline-flex h-7 shrink-0 items-center gap-1.5 text-[12px] font-medium transition-colors',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               isLive
-                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/15 dark:text-emerald-300'
-                : 'border-border text-muted-foreground hover:bg-muted/50',
+                ? `${LIVE_TEXT_CLASS} hover:text-emerald-800 dark:hover:text-emerald-300`
+                : 'text-muted-foreground hover:text-foreground',
             )}
-            aria-label={t('Visitors online now')}
+            aria-label={t(mobile ? 'Users online now' : 'Visitors online now')}
           >
-            <LiveDot active={isLive && polling} />
             {hasValue ? (
               <AnimatedCounter
                 value={count}
@@ -140,11 +141,17 @@ export function LiveVisitors({
             <LiveDot active={isLive && polling} />
             <p className="text-[13px] font-semibold text-foreground">
               {hasValue ? formatNumber(count) : '-'}{' '}
-              {count === 1 ? t('visitor online') : t('visitors online')}
+              {count === 1
+                ? t(mobile ? 'user online' : 'visitor online')
+                : t(mobile ? 'users online' : 'visitors online')}
             </p>
           </div>
           <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
-            {t('Unique visitors active in the last')}{' '}
+            {t(
+              mobile
+                ? 'Unique users active in the last'
+                : 'Unique visitors active in the last',
+            )}{' '}
             {ANALYTICS_LIVE_WINDOW_MINUTES} {t('minutes')}.{' '}
             {polling
               ? `${t('Updates every')} ${ANALYTICS_LIVE_POLL_INTERVAL_MS / 1000}s.`
@@ -154,13 +161,17 @@ export function LiveVisitors({
             <p className="mt-1 text-[11px] text-amber-600 dark:text-amber-400">
               {error instanceof Error
                 ? error.message
-                : t('Could not load live visitors')}
+                : t(
+                    mobile
+                      ? 'Could not load live users'
+                      : 'Could not load live visitors',
+                  )}
             </p>
           ) : null}
         </div>
         <div className="px-3 py-2.5">
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {t('Active pages')}
+            {t(mobile ? 'Active screens' : 'Active pages')}
           </p>
           {pagesLoading && pages.length === 0 ? (
             <div className="space-y-1.5" aria-hidden>
@@ -173,7 +184,11 @@ export function LiveVisitors({
             </div>
           ) : pages.length === 0 ? (
             <p className="py-2 text-[12px] text-muted-foreground">
-              {t('No one is browsing right now.')}
+              {t(
+                mobile
+                  ? 'No one is using the app right now.'
+                  : 'No one is browsing right now.',
+              )}
             </p>
           ) : (
             <div className="space-y-0.5">

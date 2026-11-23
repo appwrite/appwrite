@@ -23,11 +23,12 @@ import { useAnalyticsFilters } from './analytics-filters-context'
 import { isKnownBreakdownValue } from '@/lib/analytics/breakdown-values'
 import {
   ANALYTICS_FILTER_UNSUPPORTED_MESSAGE,
-  analyticsFilterAttributeForDimension,
+  analyticsFilterAttributeForTab,
   isAnalyticsFilterShapeSupported,
 } from '@/lib/analytics/analytics-filters'
 import { BreakdownMessage, BreakdownSkeleton } from './BreakdownPanel'
 import type { BreakdownTab } from './BreakdownPanel'
+import { breakdownTabLabel } from './BreakdownTabBar'
 
 /** Rows added per "Load more". */
 export const BREAKDOWN_DIALOG_PAGE_SIZE = 50
@@ -102,13 +103,15 @@ export function BreakdownDialog({
 }: BreakdownDialogProps) {
   const t = useT()
   const [activeTab, setActiveTab] = useState(initialTabId ?? tabs[0]?.id ?? '')
-  const [limit, setLimit] = useState(BREAKDOWN_DIALOG_PAGE_SIZE)
+  const initialLimit =
+    valueKey === 'visitors' ? BREAKDOWN_DIALOG_PAGE_SIZE : BREAKDOWN_DIALOG_MAX_ROWS
+  const [limit, setLimit] = useState(initialLimit)
   const [filter, setFilter] = useState('')
 
   const active = tabs.find((tab) => tab.id === activeTab) ?? tabs[0]
 
   const { filters, addEqualFilter, isFilterActive } = useAnalyticsFilters()
-  const filterAttribute = analyticsFilterAttributeForDimension(active.dimension)
+  const filterAttribute = analyticsFilterAttributeForTab(active)
   const unsupported = !isAnalyticsFilterShapeSupported(filters, {
     kind: 'breakdown',
     dimension: active.dimension,
@@ -122,14 +125,21 @@ export function BreakdownDialog({
     limit,
     true,
     filters,
+    active.propKey,
   )
   const { data, isLoading, isFetching, error } = useQuery({
     ...baseOptions,
     // Keep the rows on screen while the next page loads, but never carry rows
-    // across a tab switch (a different dimension). Key index 4 is the
-    // dimension in analyticsBreakdownQueryOptions.
-    placeholderData: (previous, previousQuery) =>
-      previousQuery?.queryKey[4] === active.dimension ? previous : undefined,
+    // across a tab switch. Key index 4 is the dimension in
+    // analyticsBreakdownQueryOptions; prop tabs share `props` and differ by
+    // the value after the `propKey` marker.
+    placeholderData: (previous, previousQuery) => {
+      const key = previousQuery?.queryKey
+      if (key?.[4] !== active.dimension) return undefined
+      const marker = key.indexOf('propKey')
+      const previousPropKey = marker === -1 ? undefined : key[marker + 1]
+      return previousPropKey === active.propKey ? previous : undefined
+    },
   })
 
   // Raw rows from the API, before `rowFilter`: paging decides on these, since
@@ -200,7 +210,7 @@ export function BreakdownDialog({
               value={active.id}
               onValueChange={(value) => {
                 setActiveTab(value)
-                setLimit(BREAKDOWN_DIALOG_PAGE_SIZE)
+                setLimit(initialLimit)
                 setFilter('')
               }}
             />
@@ -220,7 +230,7 @@ export function BreakdownDialog({
 
         {/* Column header */}
         <div className="flex items-center justify-between px-7 pt-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          <span>{t(active.label)}</span>
+          <span>{breakdownTabLabel(t, active)}</span>
           <span className="flex items-center gap-3">
             <span>{t('Share')}</span>
             <span className="min-w-[50px] text-end">
@@ -316,6 +326,7 @@ export function BreakdownDialog({
                   <AnalyticsValueMenu
                     key={`${entry.value}-${index}`}
                     dimension={active.dimension}
+                    attribute={filterAttribute}
                     value={entry.value}
                     label={labelFor(entry)}
                     href={rowHref?.(entry.value, active.id)}

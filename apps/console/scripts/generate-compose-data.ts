@@ -30,10 +30,10 @@ const COMBINED_TOPOLOGY_SERVICES = [
 const SEPARATE_TOPOLOGY_PROFILE = 'separate'
 // Profiles the installer leaves on a service. Generator.php only acts on the
 // topology profile, so a service under any of these keeps its `profiles:` list
-// in the generated compose and stays opt-in through COMPOSE_PROFILES. The
-// embeddings container is the one case today: resource-heavy, so it is not
-// started until an operator adds "embedding" to COMPOSE_PROFILES.
-const KEPT_PROFILES = ['embedding']
+// in the generated compose and stays opt-in through COMPOSE_PROFILES: the
+// resource-heavy embeddings container ("embedding") and the pull request
+// review service ("reviews"), which also needs _APP_REVIEWS_SECRET.
+const KEPT_PROFILES = ['embedding', 'reviews']
 // Every Compose profile the appwrite compose file is allowed to use. Any other
 // profile aborts generation, because the docs generator would not know which
 // topology or database option it belongs to.
@@ -71,6 +71,12 @@ const OMITTED_ENV_KEYS = [
   '_APP_CONNECTIONS_DATABASE_VECTORSDB',
 ]
 
+// Keys whose upstream .env value is a development secret. The docs keep the key,
+// so a self-hoster can still set it, but ship it empty like the installer:
+//   - _APP_REVIEWS_SECRET turns reviews on whenever it is non-empty, and the
+//     development value is public.
+const BLANKED_ENV_KEYS = ['_APP_REVIEWS_SECRET']
+
 /**
  * Removes the OMITTED_ENV_KEYS entries, pass-through or with a value, from a
  * service's `environment:` list. Compose passes an unset key through as unset,
@@ -89,7 +95,7 @@ function stripOmittedServiceEnv(block: string): string {
 
 /**
  * Drops the keys in OMITTED_ENV_KEYS, and the comment lines directly above them,
- * from the .env template.
+ * from the .env template, and empties the BLANKED_ENV_KEYS values.
  */
 function filterEnv(env: string): string {
   const omitted = new Set(OMITTED_ENV_KEYS)
@@ -105,7 +111,10 @@ function filterEnv(env: string): string {
       pendingComments = []
       continue
     }
-    kept.push(...pendingComments, line)
+    kept.push(
+      ...pendingComments,
+      BLANKED_ENV_KEYS.includes(key) ? `${key}=` : line,
+    )
     pendingComments = []
   }
   kept.push(...pendingComments)

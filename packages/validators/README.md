@@ -12,6 +12,11 @@ This package exposes a consistent API for common HTTP-oriented validation concer
 composer require utopia-php/validators
 ```
 
+The validators come from the `utopia` PHP extension (`ext-utopia`, built from `crates/extension` in
+appwrite/appwrite); this package holds their signatures for static analysis (`stubs/Validators.php`),
+the aliases of the old names (`src/compat.php`), the PHPStan extension and the tests. 2.0.x is the
+last release with the validators in PHP.
+
 ## Usage
 
 ```php
@@ -44,7 +49,7 @@ For advanced flows combine validators with `Multiple`, `AnyOf`, `AllOf`, `NoneOf
 - `AllOf`, `AnyOf`, `NoneOf`, `Multiple` – composition helpers
 - `ArrayList`, `Assoc`, `Nullable`, `WhiteList`, `Wildcard`
 - `Boolean`, `Integer`, `FloatValidator`, `Numeric`, `Range`
-- `Domain`, `Host`, `Hostname`, `IP`, `Port`, `URL`
+- `Domain`, `Host`, `Hostname`, `IP`, `Label`, `Port`, `URL`
 - `HexColor`, `Identifier`, `JSON`, `Phone`, `Text`
 - `JSON\ObjectValidator`, `JSON\ArrayValidator` – JSON shape checks that accept encoded strings
 - `JSON\FCM` – FCM service account JSON with required credential fields
@@ -77,7 +82,8 @@ account fields when present.
 
 ## Development
 
-Run the static analysis and test suites from the project root:
+The tests need the extension loaded; without it they are skipped. Run the static analysis and test
+suites from the project root:
 
 ```bash
 composer check

@@ -25,6 +25,8 @@ const HISTORY_MAX_PAGES = 20
 type GeneratedStarsFile = {
   stars: number
   fetchedAt: string
+  forks?: number
+  commits?: number
   history: GitHubStarHistoryPoint[]
 }
 
@@ -52,6 +54,10 @@ async function readExisting(): Promise<GeneratedStarsFile | null> {
         typeof parsed.fetchedAt === 'string'
           ? parsed.fetchedAt
           : new Date().toISOString(),
+      ...(typeof parsed.forks === 'number' ? { forks: parsed.forks } : {}),
+      ...(typeof parsed.commits === 'number'
+        ? { commits: parsed.commits }
+        : {}),
       history: Array.isArray(parsed.history) ? parsed.history : [],
     }
   } catch {
@@ -78,6 +84,35 @@ function parseStarWeeks(payload: unknown): GitHubStarWeek[] {
     weeks.push({ week, total })
   }
   return weeks
+}
+
+/**
+ * Total item count via the `Link: rel="last"` pagination header on a
+ * `per_page=1` request (how GitHub exposes totals for commits/contributors).
+ */
+async function fetchCountFromLastPage(url: string): Promise<number | null> {
+  const res = await fetch(url, { headers: githubHeaders() })
+  if (!res.ok) return null
+  const link = res.headers.get('link')
+  if (!link) {
+    const payload = (await res.json()) as unknown
+    return Array.isArray(payload) ? payload.length : null
+  }
+  for (const part of link.split(',')) {
+    const [target, ...params] = part.split(';')
+    if (!params.some((param) => param.trim() === 'rel="last"')) continue
+    const start = target.indexOf('<')
+    const end = target.indexOf('>')
+    if (start === -1 || end <= start) return null
+    try {
+      const lastUrl = new URL(target.slice(start + 1, end).trim())
+      const page = Number(lastUrl.searchParams.get('page'))
+      return Number.isInteger(page) && page > 0 ? page : null
+    } catch {
+      return null
+    }
+  }
+  return null
 }
 
 async function fetchGitHubHistory(): Promise<GitHubStarWeek[]> {
@@ -147,9 +182,26 @@ async function run() {
   try {
     const repo = (await fetchJson(GITHUB_REPO, githubHeaders())) as {
       stargazers_count?: unknown
+      forks_count?: unknown
     }
     const stars =
       typeof repo.stargazers_count === 'number' ? repo.stargazers_count : 0
+    const forks =
+      typeof repo.forks_count === 'number' ? repo.forks_count : existing?.forks
+
+    // Contributors stay a curated marketing figure: the REST contributors
+    // endpoint undercounts badly (caps out far below the repo page's number).
+    let commits = existing?.commits
+    try {
+      commits =
+        (await fetchCountFromLastPage(`${GITHUB_REPO}/commits?per_page=1`)) ??
+        commits
+    } catch (err) {
+      console.warn(
+        'GitHub commit count unavailable, keeping existing.',
+        err instanceof Error ? err.message : err,
+      )
+    }
 
     let history: GitHubStarHistoryPoint[] = []
     try {
@@ -176,6 +228,8 @@ async function run() {
     await writeStarsFile({
       stars,
       fetchedAt: fetchedAt.toISOString(),
+      ...(typeof forks === 'number' ? { forks } : {}),
+      ...(typeof commits === 'number' ? { commits } : {}),
       history,
     })
   } catch (err) {

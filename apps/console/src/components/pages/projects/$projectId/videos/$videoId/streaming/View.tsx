@@ -1,6 +1,6 @@
+import { VideoOutput, type Models } from '@appwrite.io/console'
 import { useMemo, useState } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
-import type { Models, VideoOutput } from '@appwrite.io/console'
 import { CodeXml, Info } from 'lucide-react'
 import { VideoPage, VideoSectionCard } from '../../_components/VideoPage'
 import { VideoTermHint } from '../../_components/VideoTermHint'
@@ -22,14 +22,15 @@ import { sdk } from '@/lib/appwrite/sdk'
 import {
   useProjectVideo,
   useVideoRenditions,
-  useVideoSubtitles,
+  useVideoCaptions,
 } from '@/lib/react-query/hooks'
 import type { VideoGlossaryTerm } from '@/lib/videos/glossary'
 import {
   getVideoMasterManifestUrl,
   getVideoRenditionPlaylistUrl,
-  getVideoSubtitleManifestUrl,
+  getVideoCaptionManifestUrl,
   VIDEO_MASTER_MANIFESTS,
+  getVideoCaptionSegmentUrl,
 } from '@/lib/videos/urls'
 import { useT } from '@/lib/i18n/translate'
 
@@ -50,12 +51,12 @@ export function View() {
   }
   const { data: video } = useProjectVideo(projectId, videoId)
   const { data: renditionsData } = useVideoRenditions(projectId, videoId)
-  const { data: subtitlesData } = useVideoSubtitles(projectId, videoId)
+  const { data: subtitlesData } = useVideoCaptions(projectId, videoId)
   const renditions = useMemo(
     () => renditionsData?.renditions ?? [],
     [renditionsData],
   )
-  const subtitles = subtitlesData?.subtitles ?? []
+  const subtitles = subtitlesData?.captions ?? []
 
   const readyByOutput = useMemo(() => {
     const counts: Record<string, number> = { hls: 0, dash: 0, cmaf: 0 }
@@ -131,14 +132,15 @@ export function View() {
         <Info className="mt-0.5 h-4 w-4 shrink-0" />
         <p>
           {t(
-            'Manifest, segment, and subtitle requests use the read permissions of the source file in Storage. Grant read access to Any for public playback, or to signed-in users for private videos.',
+            'Manifest, segment, and subtitle requests use the read permissions of the video. Turn on public playback in Settings to let anyone watch, or grant read access to signed-in users for private videos.',
           )}{' '}
           <Link
-            to="/projects/$projectId/storage/$bucketId"
-            params={{ projectId, bucketId: video.bucketId }}
+            to="/projects/$projectId/videos/$videoId/settings"
+            params={{ projectId, videoId: video.$id }}
+            hash="access"
             className="text-foreground underline-offset-4 hover:underline"
           >
-            {t('Open bucket')}
+            {t('Open access settings')}
           </Link>
         </p>
       </div>
@@ -166,7 +168,7 @@ function SubtitleUrlsCard({
 }: {
   projectId: string
   videoId: string
-  subtitles: Models.VideoSubtitle[]
+  subtitles: Models.VideoCaption[]
 }) {
   const t = useT()
   const [output, setOutput] = useState<SubtitleOutput>('hls')
@@ -205,7 +207,7 @@ function SubtitleUrlsCard({
     >
       {subtitles.length === 0 ? (
         <p className="py-3 text-[13px] text-muted-foreground">
-          {t('No subtitle tracks. Add them from the Subtitles page.')}
+          {t('No caption tracks. Add them from the Captions page.')}
         </p>
       ) : (
         <div className="divide-y divide-border">
@@ -214,7 +216,7 @@ function SubtitleUrlsCard({
               key={subtitle.$id}
               label={subtitle.name}
               meta={subtitle.code}
-              url={getVideoSubtitleManifestUrl(
+              url={getVideoCaptionManifestUrl(
                 projectId,
                 videoId,
                 subtitle.$id,
@@ -243,7 +245,7 @@ function AdvancedUrlsCard({
   projectId: string
   videoId: string
   renditions: Models.VideoRendition[]
-  subtitles: Models.VideoSubtitle[]
+  subtitles: Models.VideoCaption[]
 }) {
   const t = useT()
   const [renditionId, setRenditionId] = useState('')
@@ -280,13 +282,12 @@ function AdvancedUrlsCard({
       : ''
   const subtitleSegmentUrl =
     subtitle && subtitleSegmentId.trim()
-      ? String(
-          videos.getSubtitleSegment({
-            videoId,
-            output: 'hls' as VideoOutput,
-            subtitleId: subtitle.$id,
-            segmentId: subtitleSegmentId.trim(),
-          }),
+      ? getVideoCaptionSegmentUrl(
+          projectId,
+          videoId,
+          subtitle.$id,
+          VideoOutput.Hls,
+          subtitleSegmentId.trim(),
         )
       : ''
 

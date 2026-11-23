@@ -251,6 +251,33 @@ Every command that reads the project config uses the chosen file. This includes 
 If `APPWRITE_PROJECT_ID` or `APPWRITE_ENDPOINT` is set, the CLI uses it instead of the `projectId` or `endpoint` in the chosen config file. Unset these variables when you switch environments with a config file.
 {% /info %}
 
+## Project environments {% #project-environments %}
+
+On Appwrite Cloud, a project can have [environments](/docs/sdks#environments) of its own, such as `staging`. An environment has no project ID of its own: the CLI acts in one with the project's ID in `projectId` and the environment's ID in `environmentId`.
+
+When you link an existing project that has environments, `appwrite init project` asks which one to use, with the project itself as the default. Pass `--environment-id` to choose without the prompt:
+
+```sh
+appwrite init project --project-id "<PROJECT_ID>" --environment-id staging
+```
+
+The CLI saves the choice in `appwrite.config.json`:
+
+```json
+{
+    "projectId": "<PROJECT_ID>",
+    "environmentId": "staging"
+}
+```
+
+To switch environments later, run `appwrite client --environment-id <ENVIRONMENT_ID>`, or pass an empty value to act in the project itself. The `APPWRITE_ENVIRONMENT_ID` environment variable takes precedence over the config file. The config file's `environmentId` only applies to the project in the same file, so setting `APPWRITE_PROJECT_ID` to another project leaves it out.
+
+Combine environments with config files to keep one config for each environment in the same repository, each with the same `projectId` and a different `environmentId`.
+
+{% info title="Project settings stay with the project" %}
+`appwrite push settings` and `appwrite pull settings` change and read the project itself, so they stop with an error while an environment is set. `appwrite push all` and `appwrite pull all` skip settings in an environment and push or pull everything else.
+{% /info %}
+
 ## Next steps {% #next-steps %}
 
 You can use the CLI to create and deploy tables, functions, teams, topics, and buckets. Deployment commands allow you to configure your Appwrite project programmatically and replicate functions and table schemas across Appwrite projects.

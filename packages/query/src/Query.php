@@ -281,6 +281,19 @@ class Query
 
         if ($methodEnum->isNested()) {
             foreach ($values as $index => $value) {
+                // A hand-built client may send a child as a query string instead of an
+                // object; utopia-php/database's Query already accepts that, so parse it
+                // the same way. Anything else is a client error, not a TypeError.
+                if (\is_string($value)) {
+                    $values[$index] = static::parse($value, $allowRaw);
+
+                    continue;
+                }
+
+                if (! \is_array($value)) {
+                    throw new QueryException('Invalid nested query. Must be an array or string, got '.\gettype($value));
+                }
+
                 /** @var array<string, mixed> $value */
                 $values[$index] = static::parseQuery($value, $allowRaw);
             }

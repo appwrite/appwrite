@@ -7,7 +7,7 @@ import {
   AlertCircle,
   FileDown,
 } from 'lucide-react'
-import { MessageDirectionIcon } from '@/components/pages/projects/$projectId/realtime/_components/MessageDirectionIcon'
+import { MessageDirectionIcon } from '@/components/pages/projects/$projectId/playground/_components/MessageDirectionIcon'
 import { cn } from '@/lib/utils'
 import {
   Table,

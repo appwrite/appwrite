@@ -2,6 +2,11 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Embeddings\Text;
 
+use Appwrite\Abuse\Limit;
+use Appwrite\Auth\Key;
+use Appwrite\Event\Message\Usage as UsageMessage;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Action as CreateDocumentAction;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -11,7 +16,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Agents\Adapters\Appwrite as AppwriteAdapter;
-use Utopia\Agents\Agent;
+use Utopia\Agents\Exception\Api;
 use Utopia\Database\Document;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Platform\Enum;
@@ -49,9 +54,7 @@ class Create extends CreateDocumentAction
             ->label('audits.event', 'embedding.create')
             ->label('audits.resource', 'embeddings/text')
             ->label('usage.resource', 'database/embeddings/text')
-            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT * 2, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', [
                 new Method(
                     namespace: 'embeddings',
@@ -73,44 +76,52 @@ class Create extends CreateDocumentAction
                     ]
                 )
             ])
-            ->param('texts', [], fn (array $plan) => new ArrayList(new Text(0), $plan['databasesMaxEmbeddingTexts'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of text to generate embeddings.', false, ['plan'], example: '["Appwrite helps developers build applications.","Find documents with semantic search."]')
+            ->param('texts', [], fn (array $plan) => new ArrayList(new Text(0, requireNonBlank: true), $plan['databasesMaxEmbeddingTexts'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of text to generate embeddings.', false, ['plan'], example: '["Appwrite helps developers build applications.","Find documents with semantic search."]')
             ->param('model', AppwriteAdapter::MODEL_NOMIC_EMBED_TEXT, new WhiteList([AppwriteAdapter::MODEL_NOMIC_EMBED_TEXT, AppwriteAdapter::MODEL_ALL_MINILM]), 'The embedding model to use for generating vector embeddings.', true, enum: new Enum(name: 'EmbeddingModel'))
             ->inject('response')
             ->inject('project')
-            ->inject('embeddingAgent')
+            ->inject('embedder')
             ->inject('usage')
+            ->inject('publisherForUsage')
+            ->inject('apiKey')
             ->callback($this->action(...));
     }
 
-    public function action(array $texts, string $model, UtopiaResponse $response, Document $project, Agent $embeddingAgent, Context $usage): void
+    public function action(array $texts, string $model, UtopiaResponse $response, Document $project, AppwriteAdapter $embedder, Context $usage, UsagePublisher $publisherForUsage, ?Key $apiKey): void
     {
-        $adapter = $embeddingAgent->getAdapter();
-        $adapter->setModel($model);
-        $dimension = $adapter->getEmbeddingDimension();
+        $embedder = $embedder->withModel($model);
+        $dimension = $embedder->getDimension();
 
         $results = [];
         $totalDuration = 0;
         $totalTokens = 0;
         $totalErrors = 0;
+        $failure = null;
+        $tooLong = null;
 
-        foreach (array_chunk($texts, APP_EMBEDDING_BATCH_LIMIT) as $batch) {
+        foreach (array_chunk($texts, APP_EMBEDDING_BATCH_LIMIT) as $position => $batch) {
             try {
-                $embedResult = $embeddingAgent->bulkEmbed($batch);
-                $totalDuration += $embedResult['totalDuration'] ?? 0;
-                $totalTokens += $embedResult['tokensProcessed'] ?? 0;
+                $embeddings = $embedder->embed($batch);
+                $totalDuration += $embeddings->duration ?? 0;
+                $totalTokens += $embeddings->tokens ?? 0;
 
-                foreach ($embedResult['embeddings'] as $embedding) {
-                    $results[] = $this->embeddingResult($model, $dimension, $embedding);
-                }
-
-                // Partial success: backend returned fewer embeddings than inputs.
-                // Fill the gap with error results so the response stays 1:1 with texts.
-                $missing = \count($batch) - \count($embedResult['embeddings']);
-                for ($i = 0; $i < $missing; $i++) {
-                    $totalErrors++;
-                    $results[] = $this->embeddingResult($model, $dimension, [], 'Error while generating embedding');
+                foreach ($embeddings->vectors as $vector) {
+                    $results[] = $this->embeddingResult($model, $dimension, $vector);
                 }
             } catch (\Exception $e) {
+                if ($e instanceof Api && $e->type === 'text_too_long') {
+                    $error = \json_decode($e->body, true)['error'];
+                    $index = $position * APP_EMBEDDING_BATCH_LIMIT + $error['index'];
+                    $tooLong = new Exception(
+                        Exception::GENERAL_EMBEDDING_TEXT_TOO_LONG,
+                        "Text at index {$index} has {$error['tokens']} tokens, but {$model} accepts up to {$error['limit']}. Split it into smaller chunks and try again.",
+                        previous: $e,
+                    );
+                    $totalErrors = \count($texts);
+                    break;
+                }
+
+                $failure = $e;
                 $totalErrors += \count($batch);
                 Span::add('embedding.model', $model);
                 Span::add('warning.message', $e->getMessage());
@@ -124,6 +135,38 @@ class Create extends CreateDocumentAction
         }
 
         Span::add('embedding.errors', $totalErrors);
+        if ($totalErrors > 0 && $totalErrors === \count($texts)) {
+            $exception = $tooLong ?? new Exception(Exception::GENERAL_EMBEDDING_UNAVAILABLE, previous: $failure);
+
+            // Usage shutdown hooks are skipped once the action throws, so publish the errors here.
+            if ($project->getId() !== 'console') {
+                $usage
+                    ->setStatus($exception->getCode())
+                    ->addMetric(METRIC_EMBEDDINGS_TEXT_TOTAL_ERROR, $totalErrors)
+                    ->addMetric(\str_replace('{embeddingModel}', $model, METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_ERROR), $totalErrors);
+
+                $disabledMetrics = $apiKey?->getDisabledMetrics() ?? [];
+                $metrics = \array_values(\array_filter($usage->getMetrics(), function (array $metric) use ($disabledMetrics) {
+                    foreach ($disabledMetrics as $pattern) {
+                        if (\str_ends_with($metric['key'], $pattern)) {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                }));
+
+                $publisherForUsage->enqueue(new UsageMessage(
+                    project: $project,
+                    metrics: $metrics,
+                    reduce: $usage->getReduce(),
+                ));
+            }
+
+            throw $exception;
+        }
+
+        $embedded = \count($texts) - $totalErrors;
 
         $embeddings = new Document([
             'embeddings' => $results,
@@ -135,8 +178,8 @@ class Create extends CreateDocumentAction
             ->dynamic($embeddings, $this->getBulkResponseModel());
 
         $usage
-            ->addMetric(METRIC_EMBEDDINGS_TEXT, \count($texts))
-            ->addMetric(\str_replace('{embeddingModel}', $model, METRIC_EMBEDDINGS_MODEL_TEXT), \count($texts))
+            ->addMetric(METRIC_EMBEDDINGS_TEXT, $embedded)
+            ->addMetric(\str_replace('{embeddingModel}', $model, METRIC_EMBEDDINGS_MODEL_TEXT), $embedded)
             ->addMetric(METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS, $totalTokens)
             ->addMetric(\str_replace('{embeddingModel}', $model, METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_TOKENS), $totalTokens)
             ->addMetric(METRIC_EMBEDDINGS_TEXT_TOTAL_DURATION, $totalDuration)

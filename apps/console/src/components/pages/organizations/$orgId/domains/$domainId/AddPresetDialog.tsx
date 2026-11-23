@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -7,19 +6,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { usePresetRecords, useCreateDnsRecord } from '@/lib/react-query/hooks'
+import {
+  useCreatePresetRecords,
+  usePresetRecords,
+} from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 
-interface AddPresetDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  domainId: string | null | undefined
-  onAdd: () => void
-}
-
-const PRESETS = [
+export const DNS_PRESET_OPTIONS = [
   { id: 'google-workspace', label: 'Google Workspace' },
   { id: 'outlook', label: 'Outlook' },
   { id: 'mailgun', label: 'Mailgun' },
@@ -28,126 +23,138 @@ const PRESETS = [
   { id: 'icloud', label: 'iCloud' },
 ] as const
 
-type PresetType = (typeof PRESETS)[number]['id']
+export type DnsPresetId = (typeof DNS_PRESET_OPTIONS)[number]['id']
+
+interface AddPresetDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  domainId: string | null | undefined
+  preset: DnsPresetId | null
+}
 
 export function AddPresetDialog({
   open,
   onOpenChange,
   domainId,
-  onAdd,
+  preset,
 }: AddPresetDialogProps) {
   const t = useT()
-  const [selectedPreset, setSelectedPreset] = useState<PresetType | null>(null)
+  const {
+    data: presetRecords,
+    isLoading,
+    isError,
+    error,
+  } = usePresetRecords(open ? domainId : null, open ? preset : null)
+  const createPresetMutation = useCreatePresetRecords(domainId)
 
-  const { data: presetRecords, isLoading: isLoadingPresets } = usePresetRecords(
-    domainId,
-    selectedPreset,
-  )
+  const records = presetRecords?.dnsRecords ?? []
+  const presetLabel = DNS_PRESET_OPTIONS.find(
+    (item) => item.id === preset,
+  )?.label
+  const isPending = createPresetMutation.isPending
 
-  const createRecordMutation = useCreateDnsRecord(domainId)
+  const handleConfirm = async () => {
+    if (!preset || records.length === 0) return
 
-  const handleAddPreset = async () => {
-    if (!selectedPreset || !presetRecords?.dnsRecords) {
-      return
-    }
-
+    // The preset endpoint adds only the records the domain does not have yet,
+    // so applying a preset again, or over matching records, is not an error.
+    // It returns all of the preset's records, so the toast states no count.
     try {
-      // Create all records from the preset
-      await Promise.all(
-        presetRecords.dnsRecords.map((record) =>
-          createRecordMutation.mutateAsync({
-            type: record.type,
-            data: {
-              name: record.name || '@',
-              value: record.value,
-              ttl: record.ttl,
-              priority: record.priority,
-              weight: record.weight,
-              port: record.port,
-              comment: record.comment,
-            },
-          }),
-        ),
-      )
-
+      await createPresetMutation.mutateAsync(preset)
       toast.success(
-        `${t('Successfully added')} ${presetRecords.dnsRecords.length} ${t('DNS records from')} ${PRESETS.find((p) => p.id === selectedPreset)?.label}`,
+        `${t('Successfully added')} ${t('DNS records from')} ${presetLabel}`,
       )
-      onAdd()
       onOpenChange(false)
-      setSelectedPreset(null)
-    } catch (error) {
-      toast.error(getErrorMessage(error))
+    } catch (confirmError) {
+      toast.error(getErrorMessage(confirmError))
     }
   }
-
-  const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen) {
-      setSelectedPreset(null)
-    }
-    onOpenChange(newOpen)
-  }
-
-  const selectedPresetLabel = selectedPreset
-    ? PRESETS.find((p) => p.id === selectedPreset)?.label
-    : null
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md p-0">
-        <DialogHeader className="px-6 pt-6 text-start">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>{t('Add preset records')}</DialogTitle>
+          {presetLabel ? (
+            <p className="text-[13px] font-medium text-foreground mt-2">
+              {presetLabel}
+            </p>
+          ) : null}
           <DialogDescription className="text-[13px] mt-2">
             {t(
-              'Select an email provider preset to automatically add the required DNS records.',
+              'These DNS records will be added. Records this domain already has are left unchanged. Nothing is created until you confirm.',
             )}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
 
-        <div className="px-6 pb-4 pt-0">
-          <div className="space-y-3">
-            {PRESETS.map((preset) => (
-              <Button
-                key={preset.id}
-                variant={selectedPreset === preset.id ? 'default' : 'outline'}
-                className="w-full justify-start h-auto py-3 px-4"
-                onClick={() => setSelectedPreset(preset.id)}
-              >
-                <span className="text-[13px] font-medium">{preset.label}</span>
-              </Button>
-            ))}
-          </div>
-
-          {selectedPreset && presetRecords && (
-            <div className="mt-4 rounded-lg border border-border bg-muted/30 p-3">
-              <p className="text-[12px] text-muted-foreground mb-1">
-                {t('This will add')} {presetRecords.dnsRecords?.length || 0}{' '}
-                {(presetRecords.dnsRecords?.length || 0) !== 1
-                  ? t('DNS records')
-                  : t('DNS record')}{' '}
-                {t('for')} {selectedPresetLabel}
-              </p>
-            </div>
+        <div className="px-6 py-4">
+          {isLoading ? (
+            <p className="text-[13px] text-muted-foreground">
+              {t('Loading...')}
+            </p>
+          ) : isError ? (
+            <p className="text-[13px] text-destructive">
+              {getErrorMessage(error, t('Failed to load preset records'))}
+            </p>
+          ) : records.length === 0 ? (
+            <p className="text-[13px] text-muted-foreground">
+              {t('No DNS records')}
+            </p>
+          ) : (
+            <ul className="max-h-[min(40dvh,360px)] space-y-2 overflow-y-auto">
+              {records.map((record, index) => {
+                const showPriority =
+                  (record.type === 'MX' || record.type === 'SRV') &&
+                  typeof record.priority === 'number'
+                return (
+                  <li
+                    key={
+                      record.$id ||
+                      `${record.type}-${record.name}-${record.value}-${index}`
+                    }
+                    className="rounded-md border border-border px-3 py-2"
+                  >
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="text-[11px] font-semibold text-muted-foreground">
+                        {record.type}
+                      </span>
+                      <code className="text-[12px] font-mono text-foreground">
+                        {record.name || '@'}
+                      </code>
+                      {showPriority ? (
+                        <span className="text-[12px] text-muted-foreground">
+                          {t('Priority')} {record.priority}
+                        </span>
+                      ) : null}
+                    </div>
+                    <code className="mt-1 block break-all text-[12px] font-mono text-foreground">
+                      {record.value}
+                    </code>
+                  </li>
+                )
+              })}
+            </ul>
           )}
         </div>
 
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button
             variant="outline"
-            onClick={() => handleOpenChange(false)}
-            disabled={createRecordMutation.isPending}
+            onClick={() => onOpenChange(false)}
+            disabled={isPending}
           >
             {t('Cancel')}
           </Button>
           <Button
-            onClick={handleAddPreset}
+            onClick={handleConfirm}
             disabled={
-              !selectedPreset ||
-              createRecordMutation.isPending ||
-              isLoadingPresets
+              !preset ||
+              isPending ||
+              isLoading ||
+              isError ||
+              records.length === 0
             }
-            className="gap-2"
           >
             {t('Add preset')}
           </Button>

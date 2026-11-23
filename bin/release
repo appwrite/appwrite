@@ -557,8 +557,9 @@ final class Release
 
     /**
      * Variable definitions out of sync with docker-compose.yml since the previous
-     * release: new compose variables without a definition, and new definitions
-     * whose introduction is not this version.
+     * release: new compose variables without a definition, new definitions whose
+     * introduction is not this version, and existing definitions whose
+     * introduction changed.
      *
      * @return string[]
      */
@@ -579,6 +580,12 @@ final class Release
         foreach (array_diff_key($definitions, $before) as $name => $introduction) {
             if ($introduction !== $version) {
                 $problems[] = "{$name} is new since {$previous}; set its introduction to {$version}, not '{$introduction}'";
+            }
+        }
+
+        foreach (array_intersect_key($definitions, $before) as $name => $introduction) {
+            if ($introduction !== $before[$name]) {
+                $problems[] = "{$name} was introduced in '{$before[$name]}', but its introduction is now '{$introduction}'";
             }
         }
 

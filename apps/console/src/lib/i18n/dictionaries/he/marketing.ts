@@ -721,6 +721,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'More about the Appwrite Network': 'גלו עוד על Appwrite Network', // pragma: allowlist secret
   'More customers': 'עוד לקוחות',
   'More providers': 'עוד ספקים',
+  'Move your data to Appwrite': 'העבירו את הנתונים שלכם ל-Appwrite',
   'My functions': 'הפונקציות שלי',
   'N/A': 'לא זמין',
   'mySHOEFITTER sized 12,000+ feet accurately for major EU retailers':
@@ -933,6 +934,7 @@ export const heMarketingDictionary: Record<string, string> = {
     'שחזור גרסה מחליף את הפריסה המוגשת. שום קוד לא נמחק, משתנה או נבנה מחדש, כך שההתאוששות כמעט מיידית וללא השבתה.',
   'Round-the-clock Slack and email from our engineering team.': 'זמינות מסביב לשעון ב-Slack ובאימייל מצוות ההנדסה שלנו.',
   'rows': 'שורות',
+  'Run Appwrite on your own infrastructure': 'הריצו את Appwrite על התשתית שלכם',
   'Run Enterprise on fully managed Appwrite Cloud or as a premium self-hosted edition in your environment.': // pragma: allowlist secret
     'הריצו את Enterprise על Appwrite Cloud בניהול מלא או כמהדורת פרימיום באירוח עצמי בסביבה שלכם.', // pragma: allowlist secret
   'Run on localhost': 'הרצה על localhost',
@@ -1719,4 +1721,50 @@ export const heMarketingDictionary: Record<string, string> = {
   'Manage records in the Console, next to your projects.': 'ניהול רשומות ב-Console, לצד הפרויקטים שלכם.',
   'Connect Sites, Functions, or API domains with certificates issued for you.':
     'חיבור אתרים, פונקציות או דומיינים של API עם תעודות שמונפקות עבורכם.',
+  // Homepage factory hero and Console section.
+  'Your software factory': 'מפעל התוכנה שלכם',
+  'starts here': 'מתחיל כאן',
+  'An animated software factory where every Appwrite service builds apps on one production line':
+    'מפעל תוכנה מונפש שבו כל שירות של Appwrite בונה אפליקציות על פס ייצור אחד',
+  'The Appwrite Console': 'Appwrite Console',
+  'One control room for the whole factory': 'חדר בקרה אחד לכל המפעל',
+  'Every project, database, function, and deployment in one place. Watch usage, manage keys and teams, and ship without switching tools.':
+    'כל פרויקט, מסד נתונים, פונקציה ופריסה במקום אחד. עקבו אחר השימוש, נהלו מפתחות וצוותים ושחררו בלי לעבור בין כלים.',
+  'Open the Console': 'פתיחת ה-Console',
+  'Every service in one place': 'כל השירותים במקום אחד',
+  'Auth, Databases, Storage, Functions, Messaging, and Sites, side by side in every project.':
+    'אימות, מסדי נתונים, אחסון, פונקציות, הודעות ואתרים, זה לצד זה בכל פרויקט.',
+  'Usage at a glance': 'השימוש במבט אחד',
+  'Requests, bandwidth, storage, and executions for every project and organization.':
+    'בקשות, רוחב פס, אחסון והרצות לכל פרויקט וארגון.',
+  'Keys and roles': 'מפתחות ותפקידים',
+  'Create scoped API keys and give every teammate the right access.':
+    'צרו מפתחות API עם הרשאות מוגדרות ותנו לכל חבר צוות את הגישה המתאימה.',
+  'Managed PostgreSQL, TablesDB, DocumentsDB, VectorsDB, MySQL.':
+    'PostgreSQL מנוהל, TablesDB, DocumentsDB, VectorsDB ו-MySQL.',
+  'APIs, cron jobs, and event handlers at scale.':
+    'ממשקי API, משימות Cron ומטפלי אירועים בקנה מידה גדול.',
+  'Live events, channels, and presence.': 'אירועים חיים, ערוצים ונוכחות.',
+  'Email, SMS, and push with topics and targets.': 'אימייל, SMS והתראות Push עם נושאים ויעדים.',
+  'Project rules to deny, rate limit, and redirect traffic.':
+    'כללי פרויקט לחסימה, להגבלת קצב ולהפניה של תעבורה.',
+  'Projects shipped': 'פרויקטים שהושקו',
+  Prompt: 'פרומפט',
+  // Home factory: the display each machine unfolds.
+  'Sign users in with email, OAuth, or passkeys, plus MFA, teams, and roles':
+    'התחברות עם אימייל, OAuth או מפתחות גישה, לצד MFA, צוותים ותפקידים',
+  'Five databases in one project: Postgres, MySQL, TablesDB, DocumentsDB, and VectorsDB':
+    'חמישה מסדי נתונים בפרויקט אחד: Postgres, MySQL, TablesDB, DocumentsDB ו-VectorsDB',
+  'Upload files, resize images on the fly, and deliver them over a global CDN':
+    'העלו קבצים, התאימו את גודל התמונות בזמן אמת והגישו אותם דרך CDN גלובלי',
+  'Run Node, Python, Go, and more on requests, schedules, or events':
+    'הריצו Node, Python, Go ועוד בתגובה לבקשות, לתזמונים או לאירועים',
+  'Push every database, file, and auth change to your clients as it happens':
+    'דחפו כל שינוי במסד הנתונים, בקבצים ובאימות לאפליקציות שלכם ברגע שהוא קורה',
+  'Send email, SMS, and push to users or topics, now or on a schedule':
+    'שלחו אימייל, SMS והתראות Push למשתמשים או לנושאים, עכשיו או בתזמון',
+  'Block, rate limit, or redirect traffic before it reaches your app':
+    'חסמו, הגבילו קצב או הפנו תעבורה לפני שהיא מגיעה לאפליקציה שלכם',
+  'Deploy any framework from Git, with a live preview for every branch':
+    'פרסו כל framework מ-Git, עם תצוגה מקדימה חיה לכל Branch',
 }

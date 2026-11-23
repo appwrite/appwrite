@@ -1,0 +1,67 @@
+---
+layout: integration
+title: MCP with Bolt
+description: Connect Bolt to your Appwrite project and docs through the hosted Appwrite MCP server
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/mcp-bolt/cover.avif
+category: mcp
+product:
+    vendor: Bolt
+    description: "Bolt, from StackBlitz, lets you create apps and websites by chatting with AI in your browser."
+platform:
+    - 'Cloud'
+---
+
+[Bolt](https://bolt.new) is an AI app builder from StackBlitz. You describe the app or website you want in a chat, and Bolt writes the code and runs it in your browser while you keep iterating.
+
+# How does the integration work?
+
+The [Appwrite MCP server](/docs/tooling/ai/mcp-servers) connects Bolt to your Appwrite project through the [Model Context Protocol](https://modelcontextprotocol.io). It is a hosted server at `https://mcp.appwrite.io/` that uses the HTTP transport and signs you in with OAuth, so there is nothing to install and no API key to create.
+
+Once connected, Bolt can look up your projects, read and change resources such as users, databases, and tables, and search the Appwrite documentation while it builds your app. Changes go through a separate write tool that requires confirmation, and each change carries a short reason that appears in your project's **Activity** tab.
+
+{% info title="Appwrite Cloud projects" %}
+The hosted MCP server signs in with your Appwrite Cloud account, so Bolt can reach your Cloud projects without any local setup.
+{% /info %}
+
+# How to implement
+
+To connect Bolt to Appwrite, there are several steps you must complete:
+
+## Step 1: Set up your Appwrite project
+
+First, [create an account on Appwrite Cloud](/sign-up) if you haven't already, and create a project. You don't need an API key: Bolt asks you to sign in to Appwrite the first time it connects to the server.
+
+## Step 2: Add the Appwrite MCP server to Bolt
+
+In Bolt, go to **Settings** > **Connectors (MCP)** and click **Custom MCP server**. Enter the following details:
+
+| Field | Value |
+| --- | --- |
+| **Name** | `Appwrite` |
+| **URL** | `https://mcp.appwrite.io/` |
+| **Transport Type** | HTTP |
+| **Authentication** | MCP OAuth |
+
+Click **Add MCP server**. When Bolt first connects, complete the sign-in flow in your browser to sign in to your Appwrite account and authorize access. The server is then available in your Bolt projects.
+
+## Step 3: Test the integration
+
+Ask Bolt to work with your project, for example:
+
+- `Create a new user in my Appwrite project`
+- `List all databases in my project`
+- `Show me the tables in my database`
+- `How do I set up real-time subscriptions in Appwrite?`
+
+# Read more about Bolt and the Appwrite MCP server
+
+If you would like to learn more about Bolt and the Appwrite MCP server, we have some resources that you should visit:
+
+- [Connect the Appwrite MCP server to Bolt](/docs/tooling/ai/vibe-coding/bolt)
+- [Appwrite MCP server documentation](/docs/tooling/ai/mcp-servers)
+- [The Appwrite MCP server is now remote: one URL, no API keys](/blog/post/announcing-remote-appwrite-mcp-server)
+- [Bolt](https://bolt.new)

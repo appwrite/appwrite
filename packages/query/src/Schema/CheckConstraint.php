@@ -10,7 +10,7 @@ final readonly class CheckConstraint
         public string $name,
         public string $expression,
     ) {
-        if (! \preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $name)) {
+        if (! \preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/D', $name)) {
             throw new ValidationException('Invalid check constraint name: ' . $name);
         }
     }

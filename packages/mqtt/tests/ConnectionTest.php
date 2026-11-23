@@ -5,9 +5,6 @@ declare(strict_types=1);
 namespace Utopia\Mqtt\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Utopia\Mqtt\Adapter;
-use Utopia\Mqtt\Adapter\Swoole\Timer;
-use Utopia\Mqtt\Adapter\Swoole\Timers\NoTimer;
 use Utopia\Mqtt\Connection;
 use Utopia\Mqtt\Handler;
 use Utopia\Mqtt\Packet;
@@ -17,6 +14,7 @@ use Utopia\Mqtt\Packet\Connect;
 use Utopia\Mqtt\Packet\Disconnect;
 use Utopia\Mqtt\Packet\Puback;
 use Utopia\Mqtt\Packet\Publish;
+use Utopia\Mqtt\Packet\Specs\V3;
 use Utopia\Mqtt\Packet\Specs\V5;
 use Utopia\Mqtt\Packet\Suback;
 use Utopia\Mqtt\Packet\Subscribe;
@@ -336,8 +334,105 @@ final class ConnectionTest extends TestCase
         $this->assertInstanceOf(Connection::class, $handler->connection);
         $this->assertTrue($handler->connection->closed);
         $this->assertFalse($handler->connection->active, 'a connection closed during onConnect was marked active');
-        $this->assertArrayNotHasKey('mqtt.connections.active', $telemetry->upDownCounters, 'a connection closed during onConnect moved the active gauge');
+        $this->assertRecorded([0], $telemetry->upDownCounters['mqtt.connections.active'], 'a connection closed during onConnect moved the active gauge');
         $this->assertArrayNotHasKey('mqtt.connections.opened', $telemetry->counters, 'a connection closed during onConnect was counted as opened');
+    }
+
+    public function testActiveConnectionsAreReportedFromTheStart(): void
+    {
+        $telemetry = new TestTelemetry();
+        (new Server(new RecordingAdapter(), new AcceptingHandler()))->setTelemetry($telemetry)->start();
+
+        // Test for SUCCESS: a broker that has accepted nothing still reports 0.
+        $this->assertRecorded([0], $telemetry->upDownCounters['mqtt.connections.active']);
+    }
+
+    public function testConnectThatThrowsIsCountedAndClosed(): void
+    {
+        $adapter = new RecordingAdapter();
+        $handler = new class () implements Handler {
+            public function onConnect(Connect $connect, Connection $connection): Connack
+            {
+                throw new \RuntimeException('Connection refused');
+            }
+
+            public function onAuthenticate(Auth $auth, Connection $connection): Connack|Auth|Disconnect
+            {
+                throw new \LogicException('not exercised');
+            }
+
+            public function onSubscribe(Subscribe $subscribe, Connection $connection): Suback
+            {
+                throw new \LogicException('not exercised');
+            }
+
+            public function onUnsubscribe(Unsubscribe $unsubscribe, Connection $connection): Unsuback
+            {
+                throw new \LogicException('not exercised');
+            }
+
+            public function onPublish(Publish $publish, Connection $connection, iterable $subscribers): void
+            {
+            }
+
+            public function onPuback(Puback $puback, Connection $connection): void
+            {
+            }
+
+            public function onDisconnect(?Disconnect $disconnect, Connection $connection): void
+            {
+            }
+        };
+        $telemetry = new TestTelemetry();
+        $errors = [];
+        (new Server($adapter, $handler))
+            ->setTelemetry($telemetry)
+            ->error(function (\Throwable $error, string $action) use (&$errors): void {
+                $errors[] = $action . ': ' . $error->getMessage();
+            })
+            ->start();
+
+        // Test for FAILURE: onConnect throws, as it did when the rate-limit store was unreachable.
+        $adapter->deliver(9, V5::connect('client-9'));
+
+        $this->assertSame([], $adapter->sent, 'a CONNECT that threw was sent a CONNACK');
+        $this->assertSame([9], $adapter->closed);
+        $this->assertSame(['receive: Connection refused'], $errors);
+        $this->assertRecorded([1], $telemetry->counters['mqtt.connections.opened'], 'a CONNECT that threw was not counted');
+        $this->assertRecorded([0], $telemetry->upDownCounters['mqtt.connections.active'], 'a CONNECT that threw moved the active gauge');
+    }
+
+    public function testSecondConnectIsAProtocolErrorThatClosesTheConnection(): void
+    {
+        $adapter = new RecordingAdapter();
+        $handler = new AcceptingHandler();
+        $telemetry = new TestTelemetry();
+        (new Server($adapter, $handler))->setTelemetry($telemetry)->start();
+
+        $adapter->deliver(9, V5::connect('client-9'), V5::connect('client-other'));
+
+        $this->assertSame(1, $handler->connects, 'the second CONNECT reached the handler');
+        $this->assertCount(2, $adapter->sent, 'expected a CONNACK then a DISCONNECT');
+        $this->assertSame(Packet::CONNACK, Packet::parse($adapter->sent[0][1])->type);
+
+        $disconnect = Packet::parse($adapter->sent[1][1]);
+        $this->assertSame(Packet::DISCONNECT, $disconnect->type);
+        $this->assertSame(Disconnect::PROTOCOL_ERROR, ord($disconnect->body[0]));
+        $this->assertSame([9], $adapter->closed);
+        $this->assertSame('client-9', $handler->clientId, "the client id is not the first CONNECT's");
+    }
+
+    public function testSecondConnectOnA311ClientClosesWithoutADisconnectPacket(): void
+    {
+        $adapter = new RecordingAdapter();
+        $handler = new AcceptingHandler();
+        (new Server($adapter, $handler))->start();
+
+        $adapter->deliver(9, V3::connect('client-9'), V3::connect('client-9'));
+
+        $this->assertSame(1, $handler->connects);
+        $this->assertCount(1, $adapter->sent, 'only the CONNACK is sent to a 3.1.1 client');
+        $this->assertSame([9], $adapter->closed);
     }
 
     /**
@@ -352,104 +447,15 @@ final class ConnectionTest extends TestCase
 
         return $delivery;
     }
-}
 
-/**
- * A minimal Adapter that records send() and close() calls and can feed packets to a Server, so a
- * Connection's outbound behaviour can be asserted without a real transport.
- */
-final class RecordingAdapter extends Adapter
-{
-    /** @var array<int, array{0: int, 1: string}> */
-    public array $sent = [];
-
-    /** @var array<int, int> */
-    public array $closed = [];
-
-    /** When true, send() throws — to prove disconnect() still closes the socket. */
-    public bool $failSend = false;
-
-    /** @var callable|null */
-    private $onOpen = null;
-
-    /** @var callable|null */
-    private $onReceive = null;
-
-    /** @var callable|null */
-    private $onClose = null;
-
-    /** Open a connection on $fd and feed it the given packets, as the transport would. */
-    public function deliver(int $fd, string ...$packets): void
+    /**
+     * The test telemetry adapter keeps every amount an instrument recorded in its `values`.
+     *
+     * @param list<float|int> $expected
+     */
+    private function assertRecorded(array $expected, object $instrument, string $message = ''): void
     {
-        if ($this->onOpen === null || $this->onReceive === null) {
-            throw new \LogicException('No server is attached to this adapter');
-        }
-
-        ($this->onOpen)($fd);
-        foreach ($packets as $packet) {
-            ($this->onReceive)($fd, $packet);
-        }
-    }
-
-    public function send(int $connection, string $message): void
-    {
-        if ($this->failSend) {
-            throw new \RuntimeException('transport gone');
-        }
-
-        $this->sent[] = [$connection, $message];
-    }
-
-    public function close(int $connection): void
-    {
-        $this->closed[] = $connection;
-
-        if ($this->onClose !== null) {
-            ($this->onClose)($connection);
-        }
-    }
-
-    public function onStart(callable $callback): self
-    {
-        return $this;
-    }
-
-    public function onWorkerStart(callable $callback): self
-    {
-        return $this;
-    }
-
-    public function onOpen(callable $callback): self
-    {
-        $this->onOpen = $callback;
-
-        return $this;
-    }
-
-    public function onReceive(callable $callback): self
-    {
-        $this->onReceive = $callback;
-
-        return $this;
-    }
-
-    public function onClose(callable $callback): self
-    {
-        $this->onClose = $callback;
-
-        return $this;
-    }
-
-    public function timer(): Timer
-    {
-        return new NoTimer();
-    }
-
-    public function start(): void
-    {
-    }
-
-    public function shutdown(): void
-    {
+        $this->assertTrue(\property_exists($instrument, 'values'), $instrument::class . ' does not record values');
+        $this->assertSame($expected, $instrument->values, $message);
     }
 }

@@ -23,7 +23,7 @@ const SPINE_INSET_CLASS = 'top-[32px] bottom-[32px]'
 
 /**
  * Three event sources joining one property. Client code carries only the
- * public snippet ID; the backend adds a user ID with an API key.
+ * public property ID; the backend adds a user ID with an API key.
  */
 export function AnalyticsServerSideVisual() {
   const t = useT()

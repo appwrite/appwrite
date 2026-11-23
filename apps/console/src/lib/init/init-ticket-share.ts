@@ -10,10 +10,19 @@ import {
   getInitTicketStorageConfig,
   getInitTicketStorageFileViewUrl,
 } from '@/lib/init/init-ticket-storage-config'
-import { getRequestSiteOrigin, resolveSiteAssetUrl } from '@/lib/marketing/site-origin'
+import {
+  getRequestSiteOrigin,
+  resolveSiteAssetUrl,
+} from '@/lib/marketing/site-origin'
 import { getPageMetaTags } from '@/lib/seo/page-meta'
 import { asRouteHead } from '@/lib/seo/route-head'
 import { pageTitle } from '@/lib/utils/page-title'
+
+const INIT_TICKET_ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,35}$/
+
+export function isInitTicketId(ticketId: string): boolean {
+  return INIT_TICKET_ID_PATTERN.test(ticketId)
+}
 
 export function buildInitTicketShareOgImagePath(ticketId: string): string {
   return `/init/${ticketId}/og.png`
@@ -23,7 +32,10 @@ export function getInitTicketShareOgImageUrl(
   ticketId: string,
   siteOrigin?: string,
 ): string {
-  return resolveSiteAssetUrl(buildInitTicketShareOgImagePath(ticketId), siteOrigin)
+  return resolveSiteAssetUrl(
+    buildInitTicketShareOgImagePath(ticketId),
+    siteOrigin,
+  )
 }
 
 export function buildInitTicketSharePath(ticketId: string): string {
@@ -37,12 +49,16 @@ export function buildInitTicketShareUrl(
   return resolveSiteAssetUrl(buildInitTicketSharePath(ticketId), siteOrigin)
 }
 
-export async function initTicketStorageFileExists(fileId: string): Promise<boolean> {
+export async function initTicketStorageFileExists(
+  fileId: string,
+): Promise<boolean> {
+  if (!isInitTicketId(fileId)) return false
+
   const { endpoint, projectId, bucketId } = getInitTicketStorageConfig()
   const params = new URLSearchParams({ project: projectId })
   try {
     const response = await fetch(
-      `${endpoint}/storage/buckets/${bucketId}/files/${fileId}?${params.toString()}`,
+      `${endpoint}/storage/buckets/${encodeURIComponent(bucketId)}/files/${encodeURIComponent(fileId)}?${params.toString()}`,
       { method: 'GET' },
     )
     return response.ok
@@ -60,28 +76,30 @@ export function getInitTicketShareRouteMetaTags(params: {
   const ogImage = getInitTicketShareOgImageUrl(params.ticketId, siteOrigin)
   const title = pageTitle(INIT_TICKET_SHARE_SEO_TITLE)
 
-  return [...getPageMetaTags({
-    title,
-    description: INIT_TICKET_SHARE_SEO_DESCRIPTION,
-    canonical: canonicalUrl,
-    ogImage,
-    ogType: 'website',
-    siteOrigin,
-  }).map((tag) => {
-    if ('property' in tag && tag.property === 'og:image:width') {
-      return {
-        property: 'og:image:width',
-        content: String(INIT_TICKET_OG_EXPORT_WIDTH),
+  return [
+    ...getPageMetaTags({
+      title,
+      description: INIT_TICKET_SHARE_SEO_DESCRIPTION,
+      canonical: canonicalUrl,
+      ogImage,
+      ogType: 'website',
+      siteOrigin,
+    }).map((tag) => {
+      if ('property' in tag && tag.property === 'og:image:width') {
+        return {
+          property: 'og:image:width',
+          content: String(INIT_TICKET_OG_EXPORT_WIDTH),
+        }
       }
-    }
-    if ('property' in tag && tag.property === 'og:image:height') {
-      return {
-        property: 'og:image:height',
-        content: String(INIT_TICKET_OG_EXPORT_HEIGHT),
+      if ('property' in tag && tag.property === 'og:image:height') {
+        return {
+          property: 'og:image:height',
+          content: String(INIT_TICKET_OG_EXPORT_HEIGHT),
+        }
       }
-    }
-    return tag
-  })] as unknown as Array<Record<string, string>>
+      return tag
+    }),
+  ] as unknown as Array<Record<string, string>>
 }
 
 export function getInitTicketShareRouteHead(params: {

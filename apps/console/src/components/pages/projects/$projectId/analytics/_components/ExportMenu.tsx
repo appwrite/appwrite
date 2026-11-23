@@ -21,7 +21,7 @@ import type {
 import { resolveCountryDisplayName } from '@/lib/locale/country-lookups'
 import { buildFilterTagFromCompactKey } from '@/lib/table-filters'
 import {
-  ANALYTICS_FILTER_COLUMNS,
+  analyticsFilterColumns,
   trafficKindOfFilterKey,
 } from '@/lib/analytics/analytics-filters'
 import { collectAnalyticsExport } from '@/lib/analytics/export/collect'
@@ -72,6 +72,7 @@ export function ExportMenu({
       ? resolveCountryDisplayName(value, countryLookups)
       : value
 
+  const filterColumns = analyticsFilterColumns(filters)
   const filterLabels = Array.from(filterMap.keys()).map((key) => {
     // Same wording as the filter chips for the humans/bots filter.
     const trafficKind = trafficKindOfFilterKey(key)
@@ -80,7 +81,7 @@ export function ExportMenu({
       key.c === 'country' && typeof key.v === 'string' && countryLookups
         ? { ...key, v: resolveCountryDisplayName(key.v, countryLookups) }
         : key
-    return buildFilterTagFromCompactKey(displayKey, ANALYTICS_FILTER_COLUMNS).tag.replace(
+    return buildFilterTagFromCompactKey(displayKey, filterColumns).tag.replace(
       /\*\*/g,
       '',
     )

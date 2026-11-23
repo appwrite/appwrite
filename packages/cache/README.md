@@ -33,7 +33,7 @@ $key    = 'data-from-example.com';
 
 $data   = $cache->load($key, 60 * 60 * 24 * 30 * 3 /* 3 months */);
 
-if(!$data) {
+if ($data === false) {
     $data = file_get_contents('https://example.com');
 
     $cache->save($key, $data);
@@ -42,11 +42,14 @@ if(!$data) {
 echo $data;
 ```
 
+A miss loads as `false`. `save()` refuses `''` and `'0'` and returns `false`. It stores an empty array `[]` and returns `[]`, so compare the result with `=== false`. `Filesystem` and `Storage` store strings and refuse `[]` too.
+
 ## Adapters
 
 | Adapter | Notes |
 | --- | --- |
 | `Filesystem` | Files on disk, with optional streaming reads. |
+| `Storage` | One object per entry on a `utopia-php/storage` device, such as S3. Age comes from the object's last modified time, and a load is one conditional GET on S3. A failed load or save reads as a miss. `flush` lists every object under the root and `getSize` returns 0. |
 | `Memory` | In-process array, useful in tests. |
 | `None` | Stores nothing, for turning caching off. |
 | `Redis` | phpredis, with reconnect and leases. |
@@ -56,7 +59,7 @@ echo $data;
 | `Hazelcast` | Hazelcast over its Memcached protocol. |
 | `Sharding` | Spreads keys across several adapters. |
 | `Pool` | Checks an adapter out of a `utopia-php/pools` pool per call. |
-| `CircuitBreaker` | Wraps an adapter so a failing cache stops being called. Reads and saves fall back to a miss; a purge it cannot confirm throws `Exception\Unavailable`. |
+| `CircuitBreaker` | Wraps an adapter so a failing cache stops being called. Reads and saves fall back to a miss; a purge it cannot confirm throws `Exception\Unavailable`. In front of `Redis\Multiplexing`, give the breaker `slow: [Redis\TimeoutException::class]` with a `slowRatio` such as `0.9` and a `slowMinimumThroughput` such as `20`, so timeouts are judged apart from failures and a slow server opens it only when most of a busy window times out or fails. The default `slowRatio` of `1.0` opens it only when no call in the window succeeds. |
 
 ## Codecs
 

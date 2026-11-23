@@ -120,32 +120,3 @@ parameters:
 			count: 1
 			path: src/Canonicals/Providers/Yandex.php
 
-		-
-			message: '#^Binary operation "\." between mixed and ''@'' results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: src/Email.php
-
-		-
-			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: src/Email.php
-
-		-
-			message: '#^Property Utopia\\Emails\\Email\:\:\$disposableDomains type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Email.php
-
-		-
-			message: '#^Property Utopia\\Emails\\Email\:\:\$freeDomains type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Email.php
-
-		-
-			message: '#^Property Utopia\\Emails\\Email\:\:\$parts type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Email.php

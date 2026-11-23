@@ -1,0 +1,495 @@
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { AlertCircle, Check, ExternalLink, Loader2 } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { useAuth } from '@/components/global/auth/RequireAuth'
+import { accountIdentitiesQueryOptions } from '@/lib/react-query/hooks'
+import { useT } from '@/lib/i18n/translate'
+import { analyticsAttrs, type AnalyticsActionId } from '@/lib/analytics-actions'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
+import {
+  buildCredentialName,
+  createMintedCredentialTracker,
+  defaultSenderEmail,
+  emailBelongsToDomain,
+  pickDefaultQuickSetupDomain,
+  sortQuickSetupDomains,
+  type QuickSetupDomain,
+} from '@/lib/smtp/quick-setup'
+import type {
+  AvailableSmtpQuickSetupProvider,
+  SmtpQuickSetupCredential,
+} from '@/lib/smtp/providers'
+import {
+  QuickSetupReauthorizeRequiredError,
+  startProviderAuthorization,
+} from '@/lib/smtp/quick-setup-oauth'
+import { useProviderTokens } from '@/lib/smtp/use-provider-tokens'
+
+type Phase =
+  | 'idle'
+  | 'loading'
+  | 'ready'
+  | 'no-domains'
+  | 'minting'
+  | 'done'
+  | 'reauthorize'
+  | 'error'
+
+/** What the minted key sends; SMS needs a provider with an `sms` API (Bird). */
+export type OneClickChannel = 'email' | 'sms'
+
+/** Copy per channel, as whole sentences so each one translates on its own. */
+const CHANNEL_COPY = {
+  email: {
+    intro:
+      'Let Appwrite create the API key for a verified domain and fill these fields.',
+    loading: 'Loading domains…',
+    empty: 'Add and verify a sending domain, then check again.',
+    manage: 'Manage domains',
+    pick: 'Domain',
+    loadFailed: 'Failed to load domains from the email provider',
+    mintFailed: 'Failed to create the API key with the email provider',
+  },
+  sms: {
+    intro: 'Let Appwrite create the API key and fill in one of your senders.',
+    loading: 'Loading senders…',
+    empty: 'Add a sender, then check again.',
+    manage: 'Manage senders',
+    pick: 'Sender',
+    loadFailed: 'Failed to load senders from the SMS provider',
+    mintFailed: 'Failed to create the API key with the SMS provider',
+  },
+} as const
+
+interface OneClickSetupProps {
+  /** Provider that mints the API key the wizard sends with. */
+  provider: AvailableSmtpQuickSetupProvider
+  channel?: OneClickChannel
+  /**
+   * Names this setup in the authorization round trip, so the wizard reopens
+   * the right card when one provider serves two (Bird email and Bird SMS).
+   */
+  target?: string
+  analyticsAction: AnalyticsActionId
+  /** Provider name filled in when the user left it empty. */
+  defaultName: string
+  projectName: string
+  /** Current wizard values, so filling does not clobber what the user typed. */
+  values: Record<string, unknown>
+  onFill: (fields: {
+    apiKey: string
+    /** Provider name; set only when the user left it empty. */
+    name?: string
+    fromName?: string
+    fromEmail?: string
+    /** SMS sender. */
+    from?: string
+  }) => void
+  /** Run the flow on mount, used when returning from authorization. */
+  autoStart?: boolean
+}
+
+export interface OneClickSetupHandle {
+  /**
+   * The wizard is creating the provider with `apiKey`, and `request` is that
+   * call. From here on a key minted here is decided by the request alone:
+   * kept once the provider exists, revoked when creation fails, and never
+   * touched by the unmount cleanup in between, even if the wizard is closed
+   * while the request is still in flight. A minted key the user replaced by
+   * hand is still unused and is revoked as usual.
+   */
+  settleCredential(apiKey: unknown, request: Promise<unknown>): void
+}
+
+/**
+ * One-click setup for a messaging provider (Resend and Bird email, Bird SMS):
+ * authorize the provider once, then let Appwrite mint a sending-only API key
+ * and fill the wizard's API key and sender fields. Email picks a verified
+ * domain; SMS picks one of the workspace's senders.
+ *
+ * Same credentials and reconnect rules as the project SMTP one-click setup;
+ * only the fields differ. The wizard decides how the key is used: Resend and
+ * Bird email send through their email APIs, Bird SMS through the Bird SMS
+ * provider.
+ *
+ * The key exists at the provider from the moment it is minted, but nothing
+ * depends on it until the messaging provider is created. Until the wizard
+ * hands that request over through
+ * {@link OneClickSetupHandle.settleCredential}, this panel owns the key and
+ * revokes it when the user leaves without creating the provider.
+ */
+export const OneClickSetup = forwardRef<
+  OneClickSetupHandle,
+  OneClickSetupProps
+>(function OneClickSetup(
+  {
+    provider,
+    channel = 'email',
+    target,
+    analyticsAction,
+    defaultName,
+    projectName,
+    values,
+    onFill,
+    autoStart = false,
+  },
+  ref,
+) {
+  const t = useT()
+  const copy = CHANNEL_COPY[channel]
+  const sms = channel === 'sms' ? provider.sms : undefined
+  const { account } = useAuth()
+  const accountId =
+    (account as { $id?: string } | null | undefined)?.$id ?? null
+
+  const { data: identitiesData, isPending: identitiesPending } = useQuery(
+    accountIdentitiesQueryOptions(),
+  )
+  const connected = (identitiesData?.identities ?? []).some(
+    (identity) => identity.provider === provider.id,
+  )
+
+  const { callWith } = useProviderTokens()
+  const [minted] = useState(() =>
+    createMintedCredentialTracker<SmtpQuickSetupCredential>((credentialId) =>
+      callWith(provider, (accessToken) =>
+        provider.api.deleteCredential(accessToken, credentialId),
+      ),
+    ),
+  )
+  const [phase, setPhase] = useState<Phase>('idle')
+  const [domains, setDomains] = useState<QuickSetupDomain[]>([])
+  const [domainId, setDomainId] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
+  const startedRef = useRef(false)
+
+  const selectedDomain = domains.find((domain) => domain.id === domainId)
+
+  const failWith = useCallback((error: unknown, fallback: string) => {
+    if (error instanceof QuickSetupReauthorizeRequiredError) {
+      setPhase('reauthorize')
+      return
+    }
+    setErrorMessage(getErrorMessage(error, fallback))
+    setPhase('error')
+  }, [])
+
+  const loadDomains = useCallback(async () => {
+    setPhase('loading')
+    setErrorMessage('')
+    try {
+      const list = sortQuickSetupDomains(
+        await callWith(
+          provider,
+          sms ? sms.listSenders : provider.api.listDomains,
+        ),
+      )
+      setDomains(list)
+      const initial = sms
+        ? (list.find(
+            (sender) => sender.verified && sender.name === values.from,
+          ) ?? list.find((sender) => sender.verified))
+        : pickDefaultQuickSetupDomain(
+            list,
+            typeof values.fromEmail === 'string' ? values.fromEmail : undefined,
+          )
+      if (!initial) {
+        setPhase('no-domains')
+        return
+      }
+      setDomainId(initial.id)
+      setPhase('ready')
+    } catch (error) {
+      failWith(error, copy.loadFailed)
+    }
+    // `values` is read for a default only; re-running on each keystroke would
+    // reload the domain list while the user types.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [callWith, copy, failWith, provider, sms])
+
+  useEffect(() => {
+    if (!autoStart || startedRef.current || !connected) return
+    startedRef.current = true
+    void loadDomains()
+  }, [autoStart, connected, loadDomains])
+
+  // Leaving the wizard without creating the provider (back, close, browser
+  // navigation) abandons the minted key. Revoke it rather than leave a live,
+  // unused sending key in the provider account.
+  useEffect(() => () => minted.release(), [minted])
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      settleCredential: (apiKey, request) => minted.settle(apiKey, request),
+    }),
+    [minted],
+  )
+
+  const authorize = () => {
+    if (!accountId) return
+    try {
+      startProviderAuthorization(provider, target)
+    } catch (error) {
+      failWith(error, 'Failed to connect the email provider')
+    }
+  }
+
+  const generate = async () => {
+    if (!selectedDomain) return
+    setPhase('minting')
+    setErrorMessage('')
+    try {
+      const credential = await callWith(provider, (accessToken) =>
+        sms
+          ? sms.createCredential(accessToken, {
+              name: buildCredentialName(
+                projectName,
+                provider.credentialNameMaxLength,
+                'Appwrite SMS',
+              ),
+            })
+          : provider.api.createCredential(accessToken, {
+              name: buildCredentialName(
+                projectName,
+                provider.credentialNameMaxLength,
+              ),
+              domainId: selectedDomain.id,
+            }),
+      )
+      // Generating again replaces the key in the form, so the previous one
+      // (if any) is revoked here as well. A key that arrives after the wizard
+      // left this step is revoked instead and never reaches the form.
+      if (!minted.track(credential)) return
+
+      if (sms) {
+        const currentProviderName =
+          typeof values.name === 'string' ? values.name.trim() : ''
+        onFill({
+          apiKey: credential.secret,
+          name: currentProviderName ? undefined : t(defaultName),
+          from: selectedDomain.name,
+        })
+        setPhase('done')
+        return
+      }
+
+      const currentEmail =
+        typeof values.fromEmail === 'string' ? values.fromEmail.trim() : ''
+      const currentName =
+        typeof values.fromName === 'string' ? values.fromName.trim() : ''
+      const currentProviderName =
+        typeof values.name === 'string' ? values.name.trim() : ''
+      onFill({
+        apiKey: credential.secret,
+        // The name is required to create the provider; give the one-click
+        // path a default so the user is not blocked on it.
+        name: currentProviderName ? undefined : t(defaultName),
+        // Keep what the user typed when it already fits the chosen domain.
+        fromEmail: emailBelongsToDomain(currentEmail, selectedDomain.name)
+          ? undefined
+          : defaultSenderEmail(selectedDomain.name),
+        fromName: currentName ? undefined : projectName,
+      })
+      setPhase('done')
+    } catch (error) {
+      failWith(error, copy.mintFailed)
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="flex items-center gap-3 px-4 py-3">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+          <img
+            src={provider.iconPath}
+            alt=""
+            aria-hidden="true"
+            className={`h-4 w-4 ${PUBLIC_ICON_MUTED_CLASSES}`}
+          />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-[13px] font-medium text-foreground">
+            {t('One-click setup')}
+          </p>
+          <p className="text-[12px] text-muted-foreground">{t(copy.intro)}</p>
+        </div>
+        {phase === 'idle' ? (
+          // Same label whether or not the provider is already connected; only
+          // the action differs, and that is not known until the identities load.
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 shrink-0 text-[12px]"
+            disabled={!accountId || identitiesPending}
+            onClick={connected ? () => void loadDomains() : authorize}
+            {...analyticsAttrs(analyticsAction)}
+          >
+            {t(provider.connectLabel)}
+          </Button>
+        ) : null}
+      </div>
+
+      {phase !== 'idle' ? (
+        <>
+          <div className="border-t border-border" />
+          <div className="px-4 py-3">
+            {phase === 'loading' || phase === 'minting' ? (
+              <p className="flex items-center gap-2 text-[12px] text-muted-foreground">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                {phase === 'loading'
+                  ? t(copy.loading)
+                  : t('Creating the sending credential…')}
+              </p>
+            ) : null}
+
+            {phase === 'ready' ? (
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <div className="min-w-0 flex-1 space-y-2">
+                  <Label
+                    htmlFor="one-click-domain"
+                    className="text-[12px] font-medium"
+                  >
+                    {t(copy.pick)}
+                  </Label>
+                  <Select value={domainId} onValueChange={setDomainId}>
+                    <SelectTrigger
+                      id="one-click-domain"
+                      className="h-9 text-[13px]"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {domains.map((domain) => (
+                        <SelectItem
+                          key={domain.id}
+                          value={domain.id}
+                          disabled={!domain.verified}
+                        >
+                          {domain.name}
+                          {!domain.verified ? (
+                            <span className="text-muted-foreground">
+                              {' '}
+                              ({t('unverified')})
+                            </span>
+                          ) : null}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="h-9 shrink-0 text-[13px]"
+                  disabled={!selectedDomain}
+                  onClick={() => void generate()}
+                >
+                  {t('Generate API key')}
+                </Button>
+              </div>
+            ) : null}
+
+            {phase === 'no-domains' ? (
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-[12px] text-muted-foreground">
+                  {t(copy.empty)}
+                </p>
+                <div className="flex shrink-0 gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-[12px]"
+                    asChild
+                  >
+                    <a
+                      href={sms ? sms.sendersUrl : provider.domainsUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {t(copy.manage)}
+                      <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+                    </a>
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="h-8 text-[12px]"
+                    onClick={() => void loadDomains()}
+                  >
+                    {t('Check again')}
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+
+            {phase === 'done' ? (
+              <p className="flex items-center gap-2 text-[12px] text-foreground">
+                <Check className="h-3.5 w-3.5 text-green-600" />
+                {t(
+                  'API key created and filled in below. Review and create the provider.',
+                )}
+              </p>
+            ) : null}
+
+            {phase === 'reauthorize' ? (
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-[12px] text-muted-foreground">
+                  {t('Reconnect your provider account to continue.')}
+                </p>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="h-8 shrink-0 text-[12px]"
+                  disabled={!accountId}
+                  onClick={authorize}
+                >
+                  {t('Reconnect')}
+                </Button>
+              </div>
+            ) : null}
+
+            {phase === 'error' ? (
+              <div className="space-y-3">
+                <Alert variant="destructive" className="border-destructive/30">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="text-[13px]">
+                    {errorMessage}
+                  </AlertDescription>
+                </Alert>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="h-8 text-[12px]"
+                  onClick={() => void loadDomains()}
+                >
+                  {t('Try again')}
+                </Button>
+              </div>
+            ) : null}
+          </div>
+        </>
+      ) : null}
+    </div>
+  )
+})

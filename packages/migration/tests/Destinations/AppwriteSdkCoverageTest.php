@@ -43,6 +43,9 @@ class AppwriteSdkCoverageTest extends TestCase
             'url' => 'Members are added by userId; phone, url and name only address an invite.',
             'name' => 'Members are added by userId; phone, url and name only address an invite.',
         ],
+        'Project::createEnvironment' => [
+            'resources' => 'Copies the destination project into the new environment; the source environment holds its own resources in a separate project.',
+        ],
         'Storage::createFile' => [
             'permissions' => 'Only a permission probe calls createFile; uploads are chunked requests in importFile.',
             'folder' => 'Only a permission probe calls createFile; uploads are chunked requests in importFile.',
@@ -64,6 +67,7 @@ class AppwriteSdkCoverageTest extends TestCase
     private const array PROJECT_METHODS = [
         'updateAuthMethod' => 'migrated: AuthMethods',
         'updateLabels' => 'migrated: Labels',
+        'updatePrefs' => 'migrated: Preferences',
         'updateProtocol' => 'migrated: Protocols',
         'updateService' => 'migrated: Services',
         'updateSMTP' => 'migrated: SMTP',
@@ -85,19 +89,23 @@ class AppwriteSdkCoverageTest extends TestCase
         'updateEnvironment' => 'migrated: Environment, created with its name',
         'createEphemeralKey' => 'skipped: ephemeral keys expire within minutes and are never listed.',
         'createSMTPTest' => 'skipped: sends a test email; there is nothing to migrate.',
+        'createLDAPTest' => 'skipped: tests the LDAP connection; there is nothing to migrate.',
         'createMockPhone' => 'not migrated yet: mock phone numbers for testing phone sign-in.',
         'updateMockPhone' => 'not migrated yet: mock phone numbers for testing phone sign-in.',
         'updateOAuth2Server' => 'not migrated yet: the project acting as an OAuth2 server, and its clients.',
+        'updateLDAP' => 'not migrated yet: LDAP sign-in settings, which hold the bind password.',
     ];
 
     /**
      * Policy update methods whose policy Policies carries.
      */
     private const array POLICIES = [
+        'updateAccountDevicesPolicy',
         'updateDenyAliasedEmailPolicy',
         'updateDenyCorporateEmailPolicy',
         'updateDenyDisposableEmailPolicy',
         'updateDenyFreeEmailPolicy',
+        'updateDenyRealtimeGuestsPolicy',
         'updateMembershipPrivacyPolicy',
         'updateMFAFactorsPolicy',
         'updatePasskeyPolicy',

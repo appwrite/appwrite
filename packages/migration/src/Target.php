@@ -31,6 +31,12 @@ abstract class Target
     public const int REQUEST_TIMEOUT = 30;
 
     /**
+     * Bytes a response body may decode to before the request is abandoned. Far above
+     * any API page or file chunk, so a compressed body cannot expand to fill memory.
+     */
+    public const int MAX_RESPONSE_SIZE = 32 * 1024 * 1024;
+
+    /**
      * Global Headers
      *
      * @var array<string, string>
@@ -240,6 +246,7 @@ abstract class Target
             \CURLOPT_TIMEOUT_MS => 0,
             \CURLOPT_LOW_SPEED_LIMIT => 1,
             \CURLOPT_LOW_SPEED_TIME => static::STALL_TIMEOUT,
+            \CURLOPT_MAXFILESIZE_LARGE => static::MAX_RESPONSE_SIZE,
             \CURLOPT_PROTOCOLS_STR => self::PROTOCOLS,
             \CURLOPT_REDIR_PROTOCOLS_STR => self::PROTOCOLS,
         ]), $this->destinations))

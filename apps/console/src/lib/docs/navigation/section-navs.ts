@@ -1,4 +1,6 @@
 import { isAgentDocsEnabled, isAgentDocsHref } from '../agent-docs-feature'
+import { isAnalyticsDocsEnabled } from '../analytics-docs-feature'
+import { isVideosDocsEnabled } from '../videos-docs-feature'
 import type { DocsNavGroup, DocsNavTree } from '../types'
 import { DOCS_LOCAL_SECTION_NAVS } from './local-sections'
 import { DOCS_SECTION_NAVS, type DocsSectionNavConfig } from './sections'
@@ -44,6 +46,14 @@ export function getAllDocsSectionNavs(): DocsSectionNavConfig[] {
             }
           : config,
       )
+  }
+
+  if (!isAnalyticsDocsEnabled()) {
+    configs = configs.filter((config) => config.prefix !== 'products/analytics')
+  }
+
+  if (!isVideosDocsEnabled()) {
+    configs = configs.filter((config) => config.prefix !== 'products/videos')
   }
 
   return configs

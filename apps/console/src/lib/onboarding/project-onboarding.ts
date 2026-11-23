@@ -25,6 +25,7 @@ export const ONBOARDING_PLATFORM_SDK_KEYS = [
 export const ONBOARDING_DATABASE_SDK_KEYS = [
   'tablesDB.create',
   'documentsDB.create',
+  'vectorsDB.create',
   'databases.create',
 ] as const
 
@@ -34,6 +35,8 @@ export const ONBOARDING_DATABASE_SCHEMA_SDK_KEYS = [
   'tablesDB.createRow',
   'documentsDB.createCollection',
   'documentsDB.createDocument',
+  'vectorsDB.createCollection',
+  'vectorsDB.createDocument',
   'databases.createCollection',
   'databases.createDocument',
 ] as const
@@ -54,11 +57,13 @@ export const ONBOARDING_MESSAGING_PROVIDER_SDK_KEYS = [
   'messaging.createResendProvider',
   'messaging.createSmtpProvider',
   'messaging.createSMTPProvider',
+  'messaging.createBirdEmailProvider',
   'messaging.createMsg91Provider',
   'messaging.createTelesignProvider',
   'messaging.createTextmagicProvider',
   'messaging.createTwilioProvider',
   'messaging.createVonageProvider',
+  'messaging.createBirdSMSProvider',
   'messaging.createFcmProvider',
   'messaging.createFCMProvider',
   'messaging.createApnsProvider',
@@ -207,7 +212,7 @@ const GROUP_AUTH: OnboardingProductGroupDef = {
       hint: 'Register, import, or invite someone so Auth is in use.',
       cta: 'Add user',
       ctaDone: 'Manage users',
-      to: '/projects/$projectId/auth',
+      to: '/projects/$projectId/auth/users',
       debug:
         'Done when any of `users.create`, `account.create`, or `account.createAnonymousSession` is completed or skipped.',
       sdkKeys: ['users.create', 'account.create', 'account.createAnonymousSession'],
@@ -218,7 +223,7 @@ const GROUP_AUTH: OnboardingProductGroupDef = {
       hint: 'Group users and assign roles for access control.',
       cta: 'Create team',
       ctaDone: 'Manage teams',
-      to: '/projects/$projectId/auth',
+      to: '/projects/$projectId/auth/teams',
       debug: 'Done when `teams.create` is completed or skipped.',
       sdkKeys: ['teams.create'],
     },

@@ -40,6 +40,7 @@
     },
     "require": {
         "php": ">=8.5",
+        "ext-utopia": "*",
         "ext-curl": "*",
         "ext-mbstring": "*",
         "ext-simplexml": "*",

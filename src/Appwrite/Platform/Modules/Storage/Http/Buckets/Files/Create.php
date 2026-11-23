@@ -2,19 +2,21 @@
 
 namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\ClamAV\Network;
 use Appwrite\ClamAV\ScanResult;
 use Appwrite\Event\Event;
 use Appwrite\Exiftool\Client as ExiftoolClient;
 use Appwrite\Extend\Exception;
-use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Storage\Encryption;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Filename;
 use Appwrite\Utopia\Database\Validator\Folder;
 use Appwrite\Utopia\Request\Validator\File;
 use Appwrite\Utopia\Response;
@@ -41,6 +43,7 @@ use Utopia\Lock\Exception\Contention as LockContention;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Psr7\Stream;
+use Utopia\Storage\Cipher;
 use Utopia\Storage\Device;
 use Utopia\Storage\DeviceType;
 use Utopia\Storage\Validator\FileExt;
@@ -94,9 +97,7 @@ class Create extends Action
             ->label('event', 'buckets.[bucketId].files.[fileId].create')
             ->label('audits.resource', 'file/{response.$id}')
             ->label('usage.resource', 'bucket/{request.bucketId}/file/{response.$id}')
-            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId},chunkId:{chunkId}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId', 'chunkId'], APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
                 namespace: 'storage',
                 group: 'files',
@@ -131,6 +132,9 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
+    /**
+     * @return Document|null The file, when this request completed its upload
+     */
     public function action(
         string $bucketId,
         string $fileId,
@@ -148,7 +152,7 @@ class Create extends Action
         Authorization $authorization,
         callable $locks,
         ExiftoolClient $exiftool
-    ) {
+    ): ?Document {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = $user->isKey($authorization->getRoles());
@@ -246,6 +250,16 @@ class Create extends Action
 
             $chunks = (int) ceil($fileSize / APP_LIMIT_UPLOAD_CHUNK_SIZE);
             $chunk = (int) ($start / APP_LIMIT_UPLOAD_CHUNK_SIZE) + 1;
+
+            // A range starting at the declared size has no bytes left to address.
+            if ($start >= $fileSize) {
+                throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
+            }
+        }
+
+        $filename = new Filename(0, 0);
+        if (!$filename->isValid($fileName)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $filename->getDescription());
         }
 
         /**
@@ -276,8 +290,14 @@ class Create extends Action
 
         $lockKey = 'storage:file:' . $project->getId() . ':' . $bucket->getId() . ':' . $fileId;
 
-        $metadata = ['content_type' => $deviceForLocal->getFileMimeType($fileTmpName)];
+        $contentType = $deviceForLocal->getFileMimeType($fileTmpName);
+        $metadata = ['content_type' => $contentType];
+        // A resumed upload keeps the key stored with its first chunk.
+        if ($bucket->getAttribute('encryption', true)) {
+            $metadata['encryption'] = Encryption::create();
+        }
         $completed = false;
+        $finished = null;
         // True when prepareUpload created the pending document in this request.
         // Finalize still sees that document, but it is not a resume.
         $createdInRequest = false;
@@ -294,6 +314,13 @@ class Create extends Action
 
                 $merged['parts'] = $parts;
                 $merged['chunks'] = \count($parts);
+            }
+
+            if (isset($stored['digests']) || isset($current['digests'])) {
+                $digests = ($current['digests'] ?? []) + ($stored['digests'] ?? []);
+                \ksort($digests);
+
+                $merged['digests'] = $digests;
             }
 
             return $merged;
@@ -364,7 +391,7 @@ class Create extends Action
             }
         };
 
-        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $exiftool, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response, $user): void {
+        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $exiftool, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response, $user, &$finished): void {
             $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
             $uploaded = 0;
 
@@ -404,9 +431,14 @@ class Create extends Action
 
             if ($chunksUploaded === $chunks && $uploaded < $chunks) {
                 $deviceForFiles->finalize($path, $chunks, $metadata);
+                // Reuse one metadata snapshot instead of separate backend HEADs.
+                $info = $deviceForFiles->getFileInfo($path);
+
+                // Files uploaded before segmented encryption have no key and were stored as sent.
+                $cipher = isset($metadata['encryption']) ? Encryption::cipher($metadata['encryption']) : null;
 
                 // A chunk can carry more or fewer bytes than its range announces.
-                if (!empty($contentRange) && $deviceForFiles->getFileSize($path) !== $fileSize) {
+                if (!empty($contentRange) && $info->size !== ($cipher === null ? $fileSize : Cipher::size($fileSize))) {
                     $removed = $deviceForFiles->delete($path);
 
                     if ($removed && !$file->isEmpty() && !$authorization->skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId))) {
@@ -422,10 +454,25 @@ class Create extends Action
                         (int) System::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
                     );
 
+                    // ClamAV reads a path, so an encrypted file is scanned from a decrypted temporary copy.
+                    $temporary = $cipher === null ? null : \tempnam(\sys_get_temp_dir(), 'scan');
+
                     try {
-                        $scan = $antivirus->scanInStream($path);
+                        // A missing or short copy would scan clean, so it fails the scan instead.
+                        if ($cipher !== null) {
+                            $plaintext = $cipher->decrypt((string) $deviceForFiles->read($path), 0, true);
+                            if (!\is_string($temporary) || \file_put_contents($temporary, $plaintext) !== \strlen($plaintext)) {
+                                throw new \RuntimeException('Unable to write the decrypted copy for scanning');
+                            }
+                        }
+
+                        $scan = $antivirus->scanInStream(\is_string($temporary) ? $temporary : $path);
                     } catch (\RuntimeException $e) {
                         $scan = ScanResult::failed($e->getMessage());
+                    } finally {
+                        if (\is_string($temporary)) {
+                            \unlink($temporary);
+                        }
                     }
 
                     if (!$scan->isClean()) {
@@ -450,70 +497,88 @@ class Create extends Action
                     }
                 }
 
-                $mimeType = $deviceForFiles->getFileMimeType($path); // Get mime-type before compression and encryption
+                // Use chunk 1's type: encrypted bytes say nothing, and S3 keeps the type of whichever chunk arrived first.
+                $mimeType = $cipher === null ? (($metadata['content_type'] ?? '') ?: ($info->mimeType ?? $deviceForFiles->getFileMimeType($path))) : ($metadata['content_type'] ?? '');
                 $formats = Config::getParam('storage-formats');
+
+                $allowed = $bucket->getAttribute('allowedFileExtensions', []);
+                $signed = isset($formats['signatures'][\strtolower(\pathinfo($fileName, PATHINFO_EXTENSION))]);
+                $types = \array_merge(...\array_map(fn (string $extension): array => $formats['signatures'][\strtolower($extension)] ?? [], $allowed));
+                if (!empty($allowed) && $signed && !\in_array($mimeType, $types, true)) {
+                    $removed = $deviceForFiles->delete($path);
+
+                    if ($removed && !$file->isEmpty() && !$authorization->skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId))) {
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove file from DB');
+                    }
+
+                    throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, 'File content type not allowed');
+                }
 
                 if (\in_array($mimeType, $formats['ambiguous'], true)) {
                     $mimeType = $formats['extensions'][\strtolower(\pathinfo($fileName, PATHINFO_EXTENSION))] ?? $mimeType;
                 }
 
-                // Strip before hashing so the signature and sizes describe the file we store.
-                if ($bucket->getAttribute('stripMetadata', false) && $fileSize <= APP_STORAGE_READ_BUFFER && \in_array($mimeType, self::METADATA_MIME_TYPES, true)) {
-                    $fileSize = $this->stripMetadata($exiftool, $deviceForFiles, $path, $mimeType) ?? $fileSize;
-                }
+                // The signature describes the plaintext, in the format the device reports for it.
+                $fileHash = match (true) {
+                    $cipher === null => $info->etag ?? $deviceForFiles->getFileHash($path),
+                    $chunks > 1 && $deviceForFiles->getType() === DeviceType::Local => $this->hash($deviceForFiles, $path, $fileSize, $metadata),
+                    default => $this->signature($metadata['digests'] ?? []),
+                };
 
-                $fileHash = $deviceForFiles->getFileHash($path); // Get file hash before compression and encryption
-                $data = '';
-                $iv = '';
-                $tag = null;
-                // Compression
                 $algorithm = $bucket->getAttribute('compression', Compression::NONE);
-                if ($fileSize <= APP_STORAGE_READ_BUFFER && $algorithm != Compression::NONE) {
-                    $data = (string) $deviceForFiles->read($path);
-                    switch ($algorithm) {
-                        case Compression::ZSTD:
-                            $compressor = new Zstd();
-                            break;
-                        case Compression::GZIP:
-                        default:
-                            $compressor = new GZIP();
-                            break;
-                    }
-                    $data = $compressor->compress($data);
-                } else {
-                    // reset the algorithm to none as we do not compress the file
-                    // if file size exceedes the APP_STORAGE_READ_BUFFER
-                    // regardless the bucket compression algoorithm
+                if ($fileSize > APP_STORAGE_READ_BUFFER) {
                     $algorithm = Compression::NONE;
                 }
+                $strip = $bucket->getAttribute('stripMetadata', false) && $fileSize <= APP_STORAGE_READ_BUFFER && \in_array($mimeType, self::METADATA_MIME_TYPES, true);
+                // An upload started before segmented encryption is encrypted now, as it was before.
+                $encrypt = $cipher === null && $bucket->getAttribute('encryption', true) && $fileSize <= APP_STORAGE_READ_BUFFER;
 
-                if ($bucket->getAttribute('encryption', true) && $fileSize <= APP_STORAGE_READ_BUFFER) {
-                    if (empty($data)) {
-                        $data = (string) $deviceForFiles->read($path);
+                // Changes to the content are made in memory and written once, still encrypted.
+                $data = null;
+                if ($strip || $algorithm !== Compression::NONE || $encrypt) {
+                    $data = (string) $deviceForFiles->read($path);
+                    if ($cipher !== null) {
+                        $data = $cipher->decrypt($data, 0, true);
                     }
-                    $key = System::getEnv('_APP_OPENSSL_KEY_V1');
-                    $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-                    $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
-                }
 
-                if (!empty($data)) {
+                    // Strip before hashing so the signature and sizes describe the file we store.
+                    $stripped = $strip ? $this->stripMetadata($exiftool, $data, $path) : null;
+                    if ($stripped !== null) {
+                        $data = $stripped;
+                        $fileSize = \strlen($data);
+                        $fileHash = \md5($data);
+                    }
+
+                    $data = match ($algorithm) {
+                        Compression::NONE => $data,
+                        Compression::ZSTD => (new Zstd())->compress($data),
+                        default => (new GZIP())->compress($data),
+                    };
+
+                    if ($encrypt) {
+                        $metadata['encryption'] = Encryption::create();
+                        $cipher = Encryption::cipher($metadata['encryption']);
+                    }
+
+                    if ($cipher !== null) {
+                        $data = $cipher->encrypt($data, 0, true);
+                    }
+
                     if (!$deviceForFiles->write($path, new Stream($data), $mimeType)) {
                         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to save file');
                     }
                 }
 
-                $sizeActual = $deviceForFiles->getFileSize($path);
+                $sizeActual = $data !== null ? \strlen($data) : $info->size;
 
                 $openSSLVersion = null;
                 $openSSLCipher = null;
                 $openSSLTag = null;
                 $openSSLIV = null;
 
-                if ($bucket->getAttribute('encryption', true) && $fileSize <= APP_STORAGE_READ_BUFFER) {
-                    $openSSLVersion = '1';
-                    $openSSLCipher = OpenSSL::CIPHER_AES_128_GCM;
-                    $openSSLTag = \bin2hex($tag);
-                    $openSSLIV = \bin2hex($iv);
+                if ($cipher !== null) {
+                    $openSSLVersion = $metadata['encryption']['version'];
+                    $openSSLCipher = Cipher::NAME;
                 }
 
                 if ($file->isEmpty()) {
@@ -571,8 +636,7 @@ class Create extends Action
                     ])));
                 }
 
-                // Trigger after create success hook
-                $this->afterCreateSuccess($file);
+                $finished = $file;
             } else {
                 /**
                  * Skip authorization in updateDocument.
@@ -609,7 +673,7 @@ class Create extends Action
         try {
             // upload() can finalize and remove chunk files itself. Keep preparation,
             // transfer and document completion under the same per-file lock.
-            $locks($lockKey, self::LOCK_TTL, function (Distributed $lock) use ($prepareUpload, $finalizeUpload, &$completed, $queueForEvents, $deviceForFiles, $deviceForLocal, $fileTmpName, $path, $chunk, &$chunks, &$metadata): void {
+            $locks($lockKey, self::LOCK_TTL, function (Distributed $lock) use ($prepareUpload, $finalizeUpload, &$completed, $queueForEvents, $deviceForFiles, $deviceForLocal, $fileTmpName, $contentType, $path, $chunk, &$chunks, &$metadata): void {
                 $prepareUpload();
 
                 if ($completed) {
@@ -618,14 +682,25 @@ class Create extends Action
                     return;
                 }
 
+                // Out-of-order uploads take the type from the first chunk, whenever it arrives.
+                if ($chunk === 1) {
+                    $metadata['content_type'] = $contentType;
+                }
+
                 // Restart the lease so the transfer gets the full window,
                 // regardless of how long preparation took.
                 if (!$lock->refresh()) {
                     throw new LockContention('Upload lease lost before transfer: ' . $lock->token());
                 }
 
+                $data = $deviceForLocal->read($fileTmpName);
+                // Encrypt before the chunk reaches storage. Files resumed from before segmented encryption have no key.
+                if (isset($metadata['encryption'])) {
+                    $data = $this->encrypt(Encryption::cipher($metadata['encryption']), (string) $data, $chunk, $chunks, $metadata);
+                }
+
                 $chunksUploaded = $deviceForFiles->upload(
-                    $deviceForLocal->read($fileTmpName),
+                    $data,
                     $path,
                     $metadata['content_type'] ?? '',
                     $chunk,
@@ -645,39 +720,74 @@ class Create extends Action
             $response->addHeader('Retry-After', '5');
             throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'File upload is busy. Try again.');
         }
+
+        return $finished;
     }
 
     /**
-     * Hook to run after file is created successfully
-     *
-     * @param Document $file
-     * @return void
+     * Returns the stripped file, or null when the file is kept as uploaded.
      */
-    protected function afterCreateSuccess(Document $file)
-    {
-    }
-
-    /**
-     * Returns the stripped size, or null when the file is kept as uploaded.
-     */
-    private function stripMetadata(ExiftoolClient $exiftool, Device $deviceForFiles, string $path, string $mimeType): ?int
+    private function stripMetadata(ExiftoolClient $exiftool, string $data, string $path): ?string
     {
         try {
-            $stripped = $exiftool->strip($deviceForFiles->read($path));
-
-            if (!$deviceForFiles->write($path, new Stream($stripped), $mimeType)) {
-                Console::warning("Image metadata was not removed from {$path}: the stripped file could not be saved.");
-                return null;
-            }
-
-            // Later size checks stat this path again.
-            \clearstatcache(true, $path);
-
-            return \strlen($stripped);
+            return $exiftool->strip($data);
         } catch (\Throwable $th) {
             Console::warning("Image metadata was not removed from {$path}: {$th->getMessage()}");
             return null;
         }
+    }
+
+    /**
+     * Encrypt one chunk at its place in the file, and keep the digest of its plaintext for the signature.
+     * Every chunk but the last must be full, so chunks line up with segments. A wrong-sized last chunk
+     * fails the size check when the file is finalized.
+     *
+     * @param array<string, mixed> $metadata
+     */
+    private function encrypt(Cipher $cipher, string $data, int $chunk, int $chunks, array &$metadata): Stream
+    {
+        if ($chunk < $chunks && \strlen($data) !== APP_LIMIT_UPLOAD_CHUNK_SIZE) {
+            throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
+        }
+
+        $metadata['digests'][$chunk] = \md5($data);
+
+        return new Stream($cipher->encrypt($data, ($chunk - 1) * \intdiv(APP_LIMIT_UPLOAD_CHUNK_SIZE, Cipher::SEGMENT), $chunk === $chunks));
+    }
+
+    /**
+     * MD5 of the whole plaintext, as the local device reports for files it stores as sent. Streams one segment at a time.
+     *
+     * @param array<string, mixed> $metadata
+     */
+    private function hash(Device $deviceForFiles, string $path, int $fileSize, array $metadata): string
+    {
+        $context = \hash_init('md5');
+        $file = new Document([
+            'path' => $path,
+            'sizeOriginal' => $fileSize,
+            'openSSLCipher' => Cipher::NAME,
+            'metadata' => $metadata,
+        ]);
+        (new Encryption($file))->stream($deviceForFiles, static fn (string $chunk) => \hash_update($context, $chunk));
+
+        return \hash_final($context);
+    }
+
+    /**
+     * MD5 of a single chunk, or the S3 multipart ETag form (MD5 of the part digests, dash, part count).
+     *
+     * @param array<int, string> $digests
+     */
+    private function signature(array $digests): string
+    {
+        \ksort($digests);
+
+        if (\count($digests) === 1) {
+            return \reset($digests);
+        }
+
+        return \md5(\implode('', \array_map(\hex2bin(...), $digests))) . '-' . \count($digests);
     }
 
     /**

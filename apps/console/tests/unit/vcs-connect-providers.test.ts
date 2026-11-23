@@ -1,32 +1,38 @@
 import { describe, expect, test } from 'bun:test'
-import { CONSOLE_PROFILES } from '@/lib/console-profiles'
-import { getVisibleVcsOAuthProviders } from '@/lib/vcs/providers'
+import {
+  getVcsProviderColumns,
+  getVisibleVcsOAuthProviders,
+} from '@/lib/vcs/providers'
 
-const ids = (features: { extraVcsOAuth: boolean; vcsEntire: boolean }) =>
-  getVisibleVcsOAuthProviders(features).map((provider) => provider.id)
+const ids = (configuredProviders: string[] | undefined) =>
+  getVisibleVcsOAuthProviders(configuredProviders).map(
+    (provider) => provider.id,
+  )
 
 describe('Git connect providers', () => {
-  test('both profiles hide Origin and Entire by default', () => {
-    for (const profile of Object.values(CONSOLE_PROFILES)) {
-      expect(ids(profile.features)).toEqual(['github', 'gitlab', 'bitbucket'])
-    }
-  })
-
-  test('vcsEntire shows only Entire, second after GitHub', () => {
-    expect(ids({ extraVcsOAuth: false, vcsEntire: true })).toEqual([
+  test('every provider shows, GitHub first, then Entire and Origin', () => {
+    expect(ids(undefined)).toEqual([
       'github',
       'entire',
-      'gitlab',
-      'bitbucket',
-    ])
-  })
-
-  test('extraVcsOAuth shows only Origin', () => {
-    expect(ids({ extraVcsOAuth: true, vcsEntire: false })).toEqual([
-      'github',
       'origin',
       'gitlab',
       'bitbucket',
+      'gitea',
     ])
+  })
+
+  test('only the providers the server has configured show', () => {
+    expect(ids(['origin', 'github'])).toEqual(['github', 'origin'])
+    expect(ids(['github', 'gitlab'])).toEqual(['github', 'gitlab'])
+    expect(ids([])).toEqual([])
+  })
+})
+
+describe('Git connect provider columns', () => {
+  test('rows stay balanced as providers are added', () => {
+    const columns = Array.from({ length: 11 }, (_, i) =>
+      getVcsProviderColumns(i + 1),
+    )
+    expect(columns).toEqual([1, 2, 3, 2, 3, 3, 3, 3, 3, 3, 3])
   })
 })

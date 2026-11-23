@@ -55,12 +55,23 @@ class Init extends Action
             'Content-Range',
             'ETag',
             'Last-Modified',
-            'x-amz-server-side-encryption',
         ])));
         foreach ($corsHeaders as $name => $value) {
             $response
                 ->removeHeader($name)
                 ->addHeader($name, $value);
+        }
+
+        // S3 is not in the api/web/graphql groups, so the shared security-headers
+        // hook does not run. Apply the same baseline here; object GET adds CSP
+        // and Content-Disposition in Get.php. CORS stays the S3 expose list above.
+        $response
+            ->addHeader('Server', 'Appwrite')
+            ->addHeader('X-Content-Type-Options', 'nosniff');
+
+        if ($request->getProtocol() === 'https') {
+            $maxAge = 60 * 60 * 24 * 126; // 126 days
+            $response->addHeader('Strict-Transport-Security', "max-age={$maxAge}");
         }
 
         // The S3 actions set the event name and params themselves; project and

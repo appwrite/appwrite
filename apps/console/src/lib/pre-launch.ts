@@ -49,6 +49,7 @@ export function isPreLaunchAllowedPath(
   if (normalized === '/og/init.png') return true
   // Debug previews (pink menu) stay reachable while the rest of the site is locked.
   if (normalized === '/debug' || normalized.startsWith('/debug/')) return true
+  if (normalized === '/player' || normalized.startsWith('/player/')) return true
   if (LEGAL_ALLOWED_PATHS.has(normalized)) return true
   return AUTH_ALLOWED_PATHS.has(normalized)
 }
@@ -82,7 +83,11 @@ export function isPreLaunchHeavyContentPath(
     '/og/image.png',
     '/og/image',
   ]
-  if (heavyPrefixes.some((prefix) => normalized === prefix || normalized.startsWith(`${prefix}/`))) {
+  if (
+    heavyPrefixes.some(
+      (prefix) => normalized === prefix || normalized.startsWith(`${prefix}/`),
+    )
+  ) {
     return true
   }
 
@@ -97,6 +102,7 @@ export function isPreLaunchHeavyContentPath(
     '/for-agents.md',
     '/blog/rss.xml',
     '/changelog/rss.xml',
+    '/changelog.json',
     '/robots.txt',
   ])
   if (heavyExact.has(normalized)) return true
@@ -124,9 +130,7 @@ export function clearLegacyPreLaunchDebugOverride(): void {
 }
 
 /** Whether pre-launch lock is active (env only: `VITE_CONSOLE_PRE_LAUNCH`). */
-export function isPreLaunchModeEnabled(
-  _cookieHeader?: string | null,
-): boolean {
+export function isPreLaunchModeEnabled(_cookieHeader?: string | null): boolean {
   return getPreLaunchDefault()
 }
 

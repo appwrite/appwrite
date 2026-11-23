@@ -221,6 +221,32 @@ final class ResolverTest extends TestCase
         }
     }
 
+    public function testLookupAnswersIdenticalRecordsOnce(): void
+    {
+        $soa = new Record(
+            'example.com',
+            Record::TYPE_SOA,
+            ttl: 3600,
+            rdata: 'ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300',
+        );
+        $caa = new Record('example.com', Record::TYPE_CAA, ttl: 3600, rdata: '0 issue "letsencrypt.org"');
+        $wildcard = new Record('*.example.com', Record::TYPE_CNAME, ttl: 3600, rdata: 'target.example.com');
+        $zone = new Zone('example.com', [$caa, $wildcard, clone $caa, clone $wildcard], $soa);
+
+        $response = Resolver::lookup(Message::query(new Question('example.com', Record::TYPE_CAA)), $zone);
+
+        $this->assertSame(Message::RCODE_NOERROR, $response->header->responseCode);
+        $this->assertCount(1, $response->answers);
+        $this->assertSame($caa->rdata, $response->answers[0]->rdata);
+
+        $response = Resolver::lookup(Message::query(new Question('beta.example.com', Record::TYPE_A)), $zone);
+
+        $this->assertSame(Message::RCODE_NOERROR, $response->header->responseCode);
+        $this->assertCount(1, $response->answers);
+        $this->assertSame('beta.example.com', $response->answers[0]->name);
+        $this->assertSame($wildcard->rdata, $response->answers[0]->rdata);
+    }
+
     /**
      * Test that wildcard MX records preserve priority after synthesis.
      * Note: RRSet order is randomized for load balancing (RFC 2181 Section 5),

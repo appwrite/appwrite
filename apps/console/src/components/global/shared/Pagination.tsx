@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useT } from '@/lib/i18n/translate'
+import { formatPaginationTotal, isListTotalCapped } from '@/lib/list-total'
 import { cn, scrollConsoleMainToTop } from '@/lib/utils'
 import {
   ChevronDown,
@@ -155,12 +156,6 @@ export interface PaginationProps {
    * plus client dedupe) so the default `(page−1)×pageSize+1 … page×pageSize` would be wrong.
    */
   displayItemRange?: { start: number; end: number }
-  /**
-   * Override for the total in the summary text (`start–end of <totalDisplay>`).
-   * Use when the API caps the reported total (e.g. "5000+"); navigation math
-   * still uses `totalItems`.
-   */
-  totalDisplay?: string
 }
 
 export function Pagination({
@@ -178,7 +173,6 @@ export function Pagination({
   showPageSizeSelector = true,
   scrollToTopOnPageChange = true,
   displayItemRange,
-  totalDisplay,
 }: PaginationProps) {
   const t = useT()
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
@@ -186,11 +180,15 @@ export function Pagination({
   const derivedEnd = Math.min(currentPage * pageSize, totalItems)
   const rangeEnd = displayItemRange?.end ?? derivedEnd
 
-  // List APIs clamp `total` at APP_LIMIT_COUNT (5,000). A caller reporting rows the count cannot
-  // account for, or another page past the counted last one, proves the count is only a floor.
+  // The reported count stops bounding the list once it sits at the server's count clamp, once the
+  // caller shows rows it cannot account for, or once the caller reports another page past the
+  // counted last one. While it is only a floor, the page count and the jump to the last page would
+  // both be guesses, so they are hidden rather than shown as the end of the list.
   const totalIsLowerBound =
     totalKnown &&
-    (rangeEnd > totalItems || (hasNextPage && currentPage >= totalPages))
+    (isListTotalCapped(totalItems) ||
+      rangeEnd > totalItems ||
+      (hasNextPage && currentPage >= totalPages))
   const countExact = totalKnown && !totalIsLowerBound
 
   const startItem = displayItemRange?.start ?? derivedStart
@@ -200,13 +198,13 @@ export function Pagination({
       : displayItemRange.end
     : derivedEnd
 
-  // While the count is a floor the real total is unknown, but once the caller stops reporting a
-  // next page the final row index is the exact total.
-  const totalLabel = totalIsLowerBound
-    ? hasNextPage
-      ? `${Math.max(totalItems, rangeEnd).toLocaleString()}+`
-      : rangeEnd.toLocaleString()
-    : (totalDisplay ?? totalItems.toLocaleString())
+  const totalLabel = formatPaginationTotal({
+    total: totalItems,
+    rangeEnd,
+    currentPage,
+    totalPages,
+    hasNextPage,
+  })
 
   const canGoPrevious = currentPage > 1
   const canGoNext = totalKnown

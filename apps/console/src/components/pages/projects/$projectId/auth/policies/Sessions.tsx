@@ -5,10 +5,12 @@ import {
   SessionAlertsCard,
   InvalidateSessionsCard,
 } from '../Security'
+import { PolicySwitchCard } from './EmailPoliciesCard'
 import {
   SettingsCardsList,
   type SettingsCardItem,
 } from '@/components/global/shared/settings-search/SettingsCardsList'
+import { useUpdateAccountDevicesPolicy } from '@/lib/react-query/hooks/auth'
 import { useT } from '@/lib/i18n/translate'
 
 type SessionsProps = {
@@ -18,6 +20,7 @@ type SessionsProps = {
 export function SessionsPolicies({ projectId }: SessionsProps) {
   const t = useT()
   const security = useAuthSecuritySnapshot(projectId)
+  const accountDevicesMutation = useUpdateAccountDevicesPolicy(projectId)
 
   const cards: SettingsCardItem[] = [
     {
@@ -69,6 +72,27 @@ export function SessionsPolicies({ projectId }: SessionsProps) {
         <InvalidateSessionsCard
           projectId={projectId}
           currentEnabled={security.authInvalidateSessions ?? false}
+        />
+      ),
+    },
+    {
+      id: 'account-switching',
+      search: {
+        title: 'Account switching',
+        keywords: ['device', 'devices', 'multiple accounts', 'switch'],
+      },
+      node: (
+        <PolicySwitchCard
+          currentEnabled={security.authAccountDevices ?? true}
+          title={t('Account switching')}
+          description={t(
+            'Let a browser or app stay signed in to several accounts at once and switch between them. Sessions are grouped in a device, with one active account at a time. When disabled, new devices cannot be created and each browser is limited to a single active session.',
+          )}
+          switchId="account-devices-enabled"
+          switchLabel={t('Allow account switching')}
+          mutation={accountDevicesMutation}
+          successMessage={t('Updated account switching policy')}
+          errorMessage={t('Failed to update account switching policy')}
         />
       ),
     },

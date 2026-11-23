@@ -1,0 +1,873 @@
+---
+layout: post
+title: "Announcing email triggers for Appwrite Functions"
+description: Appwrite Functions can now execute when an email arrives. Each function has a built-in email address, and you can connect a custom domain with MX and TXT records.
+date: 2026-10-30
+cover: /images/blog/announcing-function-email-triggers/cover.avif
+timeToRead: 6
+author: torsten-dittmann
+category: announcements
+featured: false
+callToAction: true
+faqs:
+  - question: "What is an email trigger in Appwrite Functions?"
+    answer: "An email trigger executes an Appwrite Function when an email arrives at an address that is connected to the function. Appwrite receives the email, parses it, and executes the function with the email as JSON and each attachment as a file in the request body."
+  - question: "Do I need to configure DNS to receive email in a function?"
+    answer: "No. Each function has a built-in email domain, `<FUNCTION_ID>-<PROJECT_ID>.appwrite.email`, that receives email without DNS records after you turn on the email trigger. You need DNS records only to connect a custom domain: an MX record and a TXT record."
+  - question: "Can Appwrite Functions send email?"
+    answer: "Email triggers only receive email. A function can send email with [Appwrite Messaging](/docs/products/messaging), for example to reply to the sender."
+  - question: "What happens when the same email arrives two times?"
+    answer: "A function can receive the same email more than one time, for example when the sending mail server retries after a function did not finish in time. Each copy gets a new `id`, so compare the `messageId` of the email to find duplicates."
+  - question: "How does a function get the attachments of an email?"
+    answer: "The request body is `multipart/form-data`. The `email` part lists the attachments, and each attachment follows as its own part, named after the attachment's `id`, with the original file bytes. Appwrite does not store attachments, so upload them to Storage if you need them later."
+  - question: "Does Appwrite filter spam?"
+    answer: "Appwrite scores each email with a spam filter and adds the score and a verdict to the email. It does not reject email because of the score, so your function decides what to do with spam."
+---
+
+Many apps receive work by email. Customers send support requests, vendors send invoices, and monitoring services send alerts. To process that email in code, you usually need an inbound email provider, a webhook endpoint, and a MIME parser.
+
+Appwrite Functions on Appwrite Cloud now have **email triggers**. A function can execute when an email arrives at its address. Appwrite receives the email, parses it, and executes your function with the email as JSON and each attachment as a file.
+
+# How email triggers work
+
+The email trigger is off by default, so you turn it on for each function that should receive email. After that, each email that arrives at an address of the function creates one execution. The execution is a `POST` request, and the `x-appwrite-trigger` header is `email`.
+
+Appwrite handles each email in this order:
+
+1. Checks that each recipient address belongs to an enabled function that has the email trigger on and an active deployment. An address on a custom domain also needs a verified domain.
+2. Receives the email over SMTP and scores it with a spam filter.
+3. Parses the headers, the plain text body, the HTML body, and the attachments.
+4. Executes each function with the email in the request body, while the sending mail server waits.
+5. Confirms receipt to the sending mail server after the functions finish.
+
+Appwrite does not store the email or its attachments. Your function gets them in one request, so it needs no MIME parser and no mail server of its own.
+
+When your function returns an error, Appwrite still confirms the email, and the sender does not get a bounce message, so check the execution logs of the function for errors. When the function cannot run or does not finish in time, Appwrite does not confirm the email, and the sending mail server sends it again later.
+
+# Receive email at the built-in address
+
+![Email card with Email trigger turned on and the built-in address under Default address](/images/blog/announcing-function-email-triggers/built-in-address.avif)
+
+Each function has a built-in email domain, `<FUNCTION_ID>-<PROJECT_ID>.appwrite.email`, and it does not need DNS records.
+
+Any name before the `@` works. For example, `support@<FUNCTION_ID>-<PROJECT_ID>.appwrite.email` and `billing@<FUNCTION_ID>-<PROJECT_ID>.appwrite.email` both execute the same function. The function reads the address that received the email from `envelope.to`.
+
+To turn on the trigger, open your function in the Appwrite Console, go to **Settings** > **Executions**, turn on **Email trigger** in the **Email** card, and click **Update**. The card shows an address of the function under **Default address**.
+
+# Connect a custom domain
+
+![Verify email domain screen with the MX and TXT records for mail.example.com](/images/blog/announcing-function-email-triggers/custom-domain.avif)
+
+You can connect a domain that you own, such as `mail.example.com`. Every email sent to that domain goes to your function, so use a domain that you don't use for any other email.
+
+Turn on the email trigger first. Then open the **Domains** tab of your function, click **Add domain**, select the **Email** type, enter the domain, and click **Add**. The Console shows two DNS records to add at your DNS provider:
+
+- An `MX` record that sends the email of the domain to the Appwrite mail server.
+- A `TXT` record named `_appwrite.mail` with your project ID as the value. This record proves that you own the domain.
+
+After you add the records, click **Verify**.
+
+{% info title="Domains with a CNAME record" %}
+DNS does not allow an `MX` record on a name that has a `CNAME` record. If `support.example.com` already points to a site with a `CNAME` record, receive email on another subdomain, such as `mail.example.com`.
+{% /info %}
+
+# Handle an email in your function
+
+The request body is `multipart/form-data`. Its first part is named `email` and contains the email as JSON: the sender, the recipients, the subject, the plain text and HTML bodies, a selection of headers, a list of attachments, and the spam score. This shortened example shows the main fields. The [documentation](/docs/products/functions/email#request-body) has the full format.
+
+```json
+{
+  "id": "5f0c2a9e3b7d4e1f8a6c0b2d4e6f8a1c",
+  "envelope": {
+    "from": "walter@example.net",
+    "to": ["support@6a51290fe3d0727e293a-6a5128c4001f2d3e8a7b.appwrite.email"]
+  },
+  "from": "Walter O'Brien <walter@example.net>",
+  "subject": "Order 1042 did not arrive",
+  "text": "Hi, my order 1042 did not arrive yet.",
+  "html": "<p>Hi, my order 1042 did not arrive yet.</p>",
+  "attachments": [
+    {
+      "id": "attachment-0",
+      "name": "receipt.pdf",
+      "contentType": "application/pdf",
+      "size": 48213
+    }
+  ],
+  "spam": {
+    "score": 0.0213,
+    "verdict": "ham",
+    "model": "1fb022917838"
+  }
+}
+```
+
+Each attachment follows the `email` part as its own part. The part is named after the attachment's `id` and contains the original file bytes.
+
+This example saves each email to a table and logs the size of each attachment. Give the function the `rows.write` scope so that it can create rows. The Node.js, Deno, and Go examples read the body with a built-in multipart parser, and the other examples split the body at the boundary from the `content-type` header.
+
+{% multicode %}
+```server-nodejs
+import { Client, ID, TablesDB } from 'node-appwrite';
+
+export default async ({ req, res, log }) => {
+  if (req.headers['x-appwrite-trigger'] !== 'email') {
+    return res.text('Not an email', 400);
+  }
+
+  const form = await new Response(req.bodyBinary, {
+    headers: { 'content-type': req.headers['content-type'] }
+  }).formData();
+  const email = JSON.parse(form.get('email'));
+
+  const client = new Client()
+    .setEndpoint(process.env.APPWRITE_FUNCTION_API_ENDPOINT)
+    .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
+    .setKey(req.headers['x-appwrite-key']);
+
+  const tablesDB = new TablesDB(client);
+
+  await tablesDB.createRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: ID.unique(),
+    data: {
+      from: email.from,
+      subject: email.subject,
+      text: email.text
+    }
+  });
+
+  for (const attachment of email.attachments) {
+    const file = form.get(attachment.id);
+    log(`Attachment ${attachment.name}: ${file.size} bytes`);
+  }
+
+  return res.empty();
+};
+```
+```php
+<?php
+
+require(__DIR__ . '/../vendor/autoload.php');
+
+use Appwrite\Client;
+use Appwrite\ID;
+use Appwrite\Services\TablesDB;
+
+// Splits the multipart body into its parts, keyed by part name.
+function parseBody($req): array
+{
+    $delimiter = "\r\n--" . explode('boundary=', $req->headers['content-type'])[1];
+    $parts = [];
+    foreach (explode($delimiter, $req->bodyBinary) as $part) {
+        if (!str_contains($part, "\r\n\r\n")) {
+            continue;
+        }
+        [$head, $content] = explode("\r\n\r\n", $part, 2);
+        $name = explode('"', explode(' name="', $head)[1])[0];
+        $parts[$name] = $content;
+    }
+    return $parts;
+}
+
+return function ($context) {
+    if (($context->req->headers['x-appwrite-trigger'] ?? '') !== 'email') {
+        return $context->res->text('Not an email', 400);
+    }
+
+    $parts = parseBody($context->req);
+    $email = json_decode($parts['email'], true);
+
+    $client = (new Client())
+        ->setEndpoint(getenv('APPWRITE_FUNCTION_API_ENDPOINT'))
+        ->setProject(getenv('APPWRITE_FUNCTION_PROJECT_ID'))
+        ->setKey($context->req->headers['x-appwrite-key']);
+
+    $tablesDB = new TablesDB($client);
+
+    $tablesDB->createRow(
+        databaseId: '<DATABASE_ID>',
+        tableId: '<TABLE_ID>',
+        rowId: ID::unique(),
+        data: [
+            'from' => $email['from'],
+            'subject' => $email['subject'],
+            'text' => $email['text'],
+        ]
+    );
+
+    foreach ($email['attachments'] as $attachment) {
+        $size = strlen($parts[$attachment['id']]);
+        $context->log("Attachment {$attachment['name']}: {$size} bytes");
+    }
+
+    return $context->res->empty();
+};
+```
+```python
+import json
+import os
+
+from appwrite.client import Client
+from appwrite.id import ID
+from appwrite.services.tables_db import TablesDB
+
+
+# Splits the multipart body into its parts, keyed by part name.
+def parse_body(req):
+    boundary = req.headers["content-type"].split("boundary=")[1]
+    parts = {}
+    for part in req.body_binary.split(b"\r\n--" + boundary.encode()):
+        head, separator, content = part.partition(b"\r\n\r\n")
+        if separator:
+            name = head.split(b' name="')[1].split(b'"')[0].decode()
+            parts[name] = content
+    return parts
+
+
+def main(context):
+    if context.req.headers.get("x-appwrite-trigger") != "email":
+        return context.res.text("Not an email", 400)
+
+    parts = parse_body(context.req)
+    email = json.loads(parts["email"])
+
+    client = (
+        Client()
+        .set_endpoint(os.environ["APPWRITE_FUNCTION_API_ENDPOINT"])
+        .set_project(os.environ["APPWRITE_FUNCTION_PROJECT_ID"])
+        .set_key(context.req.headers["x-appwrite-key"])
+    )
+
+    tables_db = TablesDB(client)
+
+    tables_db.create_row(
+        database_id="<DATABASE_ID>",
+        table_id="<TABLE_ID>",
+        row_id=ID.unique(),
+        data={
+            "from": email["from"],
+            "subject": email["subject"],
+            "text": email["text"],
+        },
+    )
+
+    for attachment in email["attachments"]:
+        size = len(parts[attachment["id"]])
+        context.log(f"Attachment {attachment['name']}: {size} bytes")
+
+    return context.res.empty()
+```
+```ruby
+require 'json'
+require 'appwrite'
+
+include Appwrite
+
+# Splits the multipart body into its parts, keyed by part name.
+def parse_body(req)
+  delimiter = "\r\n--#{req.headers['content-type'].split('boundary=').last}"
+  req.body_binary.b.split(delimiter).each_with_object({}) do |part, parts|
+    head, content = part.split("\r\n\r\n", 2)
+    parts[head[/ name="([^"]*)"/, 1]] = content unless content.nil?
+  end
+end
+
+def main(context)
+  if context.req.headers['x-appwrite-trigger'] != 'email'
+    return context.res.text('Not an email', 400)
+  end
+
+  parts = parse_body(context.req)
+  email = JSON.parse(parts['email'])
+
+  client = Client.new
+    .set_endpoint(ENV['APPWRITE_FUNCTION_API_ENDPOINT'])
+    .set_project(ENV['APPWRITE_FUNCTION_PROJECT_ID'])
+    .set_key(context.req.headers['x-appwrite-key'])
+
+  tables_db = TablesDB.new(client)
+
+  tables_db.create_row(
+    database_id: '<DATABASE_ID>',
+    table_id: '<TABLE_ID>',
+    row_id: ID.unique(),
+    data: {
+      from: email['from'],
+      subject: email['subject'],
+      text: email['text']
+    }
+  )
+
+  email['attachments'].each do |attachment|
+    size = parts[attachment['id']].bytesize
+    context.log("Attachment #{attachment['name']}: #{size} bytes")
+  end
+
+  context.res.empty
+end
+```
+```deno
+import { Client, ID, TablesDB } from "npm:node-appwrite";
+
+export default async ({ req, res, log }: any) => {
+  if (req.headers["x-appwrite-trigger"] !== "email") {
+    return res.text("Not an email", 400);
+  }
+
+  const form = await new Response(req.bodyBinary, {
+    headers: { "content-type": req.headers["content-type"] },
+  }).formData();
+  const email = JSON.parse(form.get("email") as string);
+
+  const client = new Client()
+    .setEndpoint(Deno.env.get("APPWRITE_FUNCTION_API_ENDPOINT") ?? "")
+    .setProject(Deno.env.get("APPWRITE_FUNCTION_PROJECT_ID") ?? "")
+    .setKey(req.headers["x-appwrite-key"] ?? "");
+
+  const tablesDB = new TablesDB(client);
+
+  await tablesDB.createRow({
+    databaseId: "<DATABASE_ID>",
+    tableId: "<TABLE_ID>",
+    rowId: ID.unique(),
+    data: {
+      from: email.from,
+      subject: email.subject,
+      text: email.text,
+    },
+  });
+
+  for (const attachment of email.attachments) {
+    const file = form.get(attachment.id) as File;
+    log(`Attachment ${attachment.name}: ${file.size} bytes`);
+  }
+
+  return res.empty();
+};
+```
+```go
+package handler
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"mime"
+	"mime/multipart"
+	"os"
+
+	"github.com/appwrite/sdk-for-go/v7/appwrite"
+	"github.com/appwrite/sdk-for-go/v7/id"
+	"github.com/open-runtimes/types-for-go/v4/openruntimes"
+)
+
+type Email struct {
+	From        string `json:"from"`
+	Subject     string `json:"subject"`
+	Text        string `json:"text"`
+	Attachments []struct {
+		Id   string `json:"id"`
+		Name string `json:"name"`
+	} `json:"attachments"`
+}
+
+// Reads the multipart body into its parts, keyed by part name.
+func parseBody(req openruntimes.ContextRequest) (map[string][]byte, error) {
+	_, params, err := mime.ParseMediaType(req.Headers["content-type"])
+	if err != nil {
+		return nil, err
+	}
+	reader := multipart.NewReader(bytes.NewReader(req.BodyBinary()), params["boundary"])
+	parts := map[string][]byte{}
+	for {
+		part, err := reader.NextPart()
+		if err == io.EOF {
+			return parts, nil
+		}
+		if err != nil {
+			return nil, err
+		}
+		content, err := io.ReadAll(part)
+		if err != nil {
+			return nil, err
+		}
+		parts[part.FormName()] = content
+	}
+}
+
+func Main(Context openruntimes.Context) openruntimes.Response {
+	if Context.Req.Headers["x-appwrite-trigger"] != "email" {
+		return Context.Res.Text("Not an email", Context.Res.WithStatusCode(400))
+	}
+
+	var email Email
+	parts, err := parseBody(Context.Req)
+	if err == nil {
+		err = json.Unmarshal(parts["email"], &email)
+	}
+	if err != nil {
+		return Context.Res.Text("Invalid email payload", Context.Res.WithStatusCode(400))
+	}
+
+	appwriteClient := appwrite.NewClient(
+		appwrite.WithEndpoint(os.Getenv("APPWRITE_FUNCTION_API_ENDPOINT")),
+		appwrite.WithProject(os.Getenv("APPWRITE_FUNCTION_PROJECT_ID")),
+		appwrite.WithKey(Context.Req.Headers["x-appwrite-key"]),
+	)
+
+	tablesDB := appwrite.NewTablesDB(appwriteClient)
+
+	_, err = tablesDB.CreateRow(
+		"<DATABASE_ID>",
+		"<TABLE_ID>",
+		id.Unique(),
+		map[string]interface{}{
+			"from":    email.From,
+			"subject": email.Subject,
+			"text":    email.Text,
+		},
+	)
+	if err != nil {
+		Context.Error(fmt.Sprintf("Failed to save email: %v", err))
+		return Context.Res.Text("Failed to save email", Context.Res.WithStatusCode(500))
+	}
+
+	for _, attachment := range email.Attachments {
+		Context.Log(fmt.Sprintf("Attachment %s: %d bytes", attachment.Name, len(parts[attachment.Id])))
+	}
+
+	return Context.Res.Empty()
+}
+```
+```dart
+import 'dart:convert';
+import 'dart:io';
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+// Splits the multipart body into its parts, keyed by part name.
+Map<String, List<int>> parseBody(dynamic req) {
+  final boundary = req.headers['content-type'].split('boundary=').last;
+  // Latin-1 maps each byte to one character, so the attachment bytes stay intact.
+  final body = latin1.decode(req.bodyBinary);
+  final parts = <String, List<int>>{};
+  for (final part in body.split('\r\n--$boundary')) {
+    final separator = part.indexOf('\r\n\r\n');
+    if (separator == -1) continue;
+    final name = part.substring(0, separator).split(' name="')[1].split('"')[0];
+    parts[name] = latin1.encode(part.substring(separator + 4));
+  }
+  return parts;
+}
+
+Future<dynamic> main(final context) async {
+  if (context.req.headers['x-appwrite-trigger'] != 'email') {
+    return context.res.text('Not an email', 400);
+  }
+
+  final parts = parseBody(context.req);
+  final email = jsonDecode(utf8.decode(parts['email']!));
+
+  final client = Client()
+      .setEndpoint(Platform.environment['APPWRITE_FUNCTION_API_ENDPOINT']!)
+      .setProject(Platform.environment['APPWRITE_FUNCTION_PROJECT_ID']!)
+      .setKey(context.req.headers['x-appwrite-key']);
+
+  final tablesDB = TablesDB(client);
+
+  await tablesDB.createRow(
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: ID.unique(),
+    data: {
+      'from': email['from'],
+      'subject': email['subject'],
+      'text': email['text'],
+    },
+  );
+
+  for (final attachment in email['attachments']) {
+    final size = parts[attachment['id']]!.length;
+    context.log('Attachment ${attachment['name']}: $size bytes');
+  }
+
+  return context.res.empty();
+}
+```
+```kotlin
+package io.openruntimes.kotlin.src
+
+import com.google.gson.Gson
+import io.appwrite.Client
+import io.appwrite.ID
+import io.appwrite.services.TablesDB
+import io.openruntimes.kotlin.RuntimeContext
+import io.openruntimes.kotlin.RuntimeOutput
+import io.openruntimes.kotlin.RuntimeRequest
+import kotlinx.coroutines.runBlocking
+
+class Main {
+    // Splits the multipart body into its parts, keyed by part name.
+    private fun parseBody(req: RuntimeRequest): Map<String, ByteArray> {
+        val delimiter = "\r\n--" + req.headers["content-type"]!!.substringAfter("boundary=")
+        // ISO-8859-1 maps each byte to one character, so the attachment bytes stay intact.
+        val body = String(req.bodyBinary, Charsets.ISO_8859_1)
+        return body.split(delimiter)
+            .filter { it.contains("\r\n\r\n") }
+            .associate { part ->
+                val name = part.substringAfter(" name=\"").substringBefore('"')
+                name to part.substringAfter("\r\n\r\n").toByteArray(Charsets.ISO_8859_1)
+            }
+    }
+
+    fun main(context: RuntimeContext): RuntimeOutput {
+        if (context.req.headers["x-appwrite-trigger"] != "email") {
+            return context.res.text("Not an email", 400)
+        }
+
+        val parts = parseBody(context.req)
+        val email = Gson().fromJson(String(parts["email"]!!), Map::class.java) as Map<String, Any>
+
+        val client = Client()
+            .setEndpoint(System.getenv("APPWRITE_FUNCTION_API_ENDPOINT"))
+            .setProject(System.getenv("APPWRITE_FUNCTION_PROJECT_ID"))
+            .setKey(context.req.headers["x-appwrite-key"] ?: "")
+
+        val tablesDB = TablesDB(client)
+
+        runBlocking {
+            tablesDB.createRow(
+                databaseId = "<DATABASE_ID>",
+                tableId = "<TABLE_ID>",
+                rowId = ID.unique(),
+                data = mapOf(
+                    "from" to email["from"],
+                    "subject" to email["subject"],
+                    "text" to email["text"]
+                )
+            )
+        }
+
+        for (attachment in email["attachments"] as List<Map<String, Any>>) {
+            val size = parts[attachment["id"] as String]!!.size
+            context.log("Attachment ${attachment["name"]}: $size bytes")
+        }
+
+        return context.res.empty()
+    }
+}
+```
+```java
+package io.openruntimes.java.src;
+
+import com.google.gson.Gson;
+import io.appwrite.Client;
+import io.appwrite.ID;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.TablesDB;
+import io.openruntimes.java.RuntimeContext;
+import io.openruntimes.java.RuntimeOutput;
+import io.openruntimes.java.RuntimeRequest;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.regex.Pattern;
+
+public class Main {
+    // Splits the multipart body into its parts, keyed by part name.
+    private Map<String, byte[]> parseBody(RuntimeRequest req) {
+        String boundary = req.getHeaders().get("content-type").split("boundary=")[1];
+        // ISO-8859-1 maps each byte to one character, so the attachment bytes stay intact.
+        String body = new String(req.getBodyBinary(), StandardCharsets.ISO_8859_1);
+        Map<String, byte[]> parts = new HashMap<>();
+        for (String part : body.split(Pattern.quote("\r\n--" + boundary))) {
+            int separator = part.indexOf("\r\n\r\n");
+            if (separator == -1) {
+                continue;
+            }
+            String name = part.substring(0, separator).split(" name=\"")[1].split("\"")[0];
+            parts.put(name, part.substring(separator + 4).getBytes(StandardCharsets.ISO_8859_1));
+        }
+        return parts;
+    }
+
+    public RuntimeOutput main(RuntimeContext context) throws Exception {
+        if (!"email".equals(context.getReq().getHeaders().get("x-appwrite-trigger"))) {
+            return context.getRes().text("Not an email", 400);
+        }
+
+        Map<String, byte[]> parts = parseBody(context.getReq());
+        Map<String, Object> email = new Gson().fromJson(
+            new String(parts.get("email"), StandardCharsets.UTF_8), Map.class);
+
+        Client client = new Client()
+            .setEndpoint(System.getenv("APPWRITE_FUNCTION_API_ENDPOINT"))
+            .setProject(System.getenv("APPWRITE_FUNCTION_PROJECT_ID"))
+            .setKey(context.getReq().getHeaders().get("x-appwrite-key"));
+
+        TablesDB tablesDB = new TablesDB(client);
+        CompletableFuture<Throwable> result = new CompletableFuture<>();
+
+        tablesDB.createRow(
+            "<DATABASE_ID>",
+            "<TABLE_ID>",
+            ID.unique(),
+            Map.of(
+                "from", email.get("from"),
+                "subject", email.get("subject"),
+                "text", email.get("text")
+            ),
+            new CoroutineCallback<>((row, error) -> result.complete(error))
+        );
+
+        Throwable error = result.get();
+        if (error != null) {
+            context.error("Failed to save email: " + error.getMessage());
+            throw new Exception(error);
+        }
+
+        for (Map<String, Object> attachment : (List<Map<String, Object>>) email.get("attachments")) {
+            int size = parts.get((String) attachment.get("id")).length;
+            context.log("Attachment " + attachment.get("name") + ": " + size + " bytes");
+        }
+
+        return context.getRes().empty();
+    }
+}
+```
+```swift
+import Appwrite
+import Foundation
+
+// Splits the multipart body into its parts, keyed by part name.
+func parseBody(_ req: RuntimeRequest) -> [String: Data] {
+    let boundary = (req.headers["content-type"] ?? "").components(separatedBy: "boundary=").last ?? ""
+    // ISO Latin 1 maps each byte to one character, so the attachment bytes stay intact.
+    let body = String(data: req.bodyBinary, encoding: .isoLatin1) ?? ""
+    var parts: [String: Data] = [:]
+    for part in body.components(separatedBy: "\r\n--" + boundary) {
+        guard let separator = part.range(of: "\r\n\r\n") else { continue }
+        let name = part[..<separator.lowerBound]
+            .components(separatedBy: " name=\"")[1]
+            .components(separatedBy: "\"")[0]
+        parts[name] = part[separator.upperBound...].data(using: .isoLatin1)
+    }
+    return parts
+}
+
+func main(context: RuntimeContext) async throws -> RuntimeOutput {
+    if context.req.headers["x-appwrite-trigger"] != "email" {
+        return context.res.text("Not an email", statusCode: 400)
+    }
+
+    let parts = parseBody(context.req)
+    let email = try JSONSerialization.jsonObject(with: parts["email"] ?? Data()) as? [String: Any] ?? [:]
+
+    let client = Client()
+        .setEndpoint(ProcessInfo.processInfo.environment["APPWRITE_FUNCTION_API_ENDPOINT"] ?? "")
+        .setProject(ProcessInfo.processInfo.environment["APPWRITE_FUNCTION_PROJECT_ID"] ?? "")
+        .setKey(context.req.headers["x-appwrite-key"] ?? "")
+
+    let tablesDB = TablesDB(client)
+
+    _ = try await tablesDB.createRow(
+        databaseId: "<DATABASE_ID>",
+        tableId: "<TABLE_ID>",
+        rowId: ID.unique(),
+        data: [
+            "from": email["from"] ?? "",
+            "subject": email["subject"] ?? "",
+            "text": email["text"] ?? ""
+        ]
+    )
+
+    for attachment in email["attachments"] as? [[String: Any]] ?? [] {
+        let size = parts[attachment["id"] as? String ?? ""]?.count ?? 0
+        context.log("Attachment \(attachment["name"] as? String ?? ""): \(size) bytes")
+    }
+
+    return context.res.empty()
+}
+```
+```csharp
+using System.Text;
+using System.Text.Json;
+using Appwrite;
+using Appwrite.Services;
+
+namespace DotNetRuntime;
+
+public class Handler
+{
+    // Splits the multipart body into its parts, keyed by part name.
+    private static Dictionary<string, byte[]> ParseBody(RuntimeRequest req)
+    {
+        var delimiter = "\r\n--" + req.Headers["content-type"].Split("boundary=")[1];
+        // Latin-1 maps each byte to one character, so the attachment bytes stay intact.
+        var body = Encoding.Latin1.GetString(req.BodyBinary);
+        var parts = new Dictionary<string, byte[]>();
+        foreach (var part in body.Split(delimiter))
+        {
+            var separator = part.IndexOf("\r\n\r\n", StringComparison.Ordinal);
+            if (separator == -1)
+            {
+                continue;
+            }
+            var name = part[..separator].Split(" name=\"")[1].Split('"')[0];
+            parts[name] = Encoding.Latin1.GetBytes(part[(separator + 4)..]);
+        }
+        return parts;
+    }
+
+    public async Task<RuntimeOutput> Main(RuntimeContext Context)
+    {
+        if (Context.Req.Headers.GetValueOrDefault("x-appwrite-trigger") != "email")
+        {
+            return Context.Res.Text("Not an email", 400);
+        }
+
+        var parts = ParseBody(Context.Req);
+        var email = JsonDocument.Parse(parts["email"]).RootElement;
+
+        var client = new Client()
+            .SetEndpoint(Environment.GetEnvironmentVariable("APPWRITE_FUNCTION_API_ENDPOINT"))
+            .SetProject(Environment.GetEnvironmentVariable("APPWRITE_FUNCTION_PROJECT_ID"))
+            .SetKey(Context.Req.Headers["x-appwrite-key"]);
+
+        var tablesDB = new TablesDB(client);
+
+        await tablesDB.CreateRow(
+            databaseId: "<DATABASE_ID>",
+            tableId: "<TABLE_ID>",
+            rowId: ID.Unique(),
+            data: new Dictionary<string, object>
+            {
+                ["from"] = email.GetProperty("from").GetString()!,
+                ["subject"] = email.GetProperty("subject").GetString()!,
+                ["text"] = email.GetProperty("text").GetString()!
+            });
+
+        foreach (var attachment in email.GetProperty("attachments").EnumerateArray())
+        {
+            var size = parts[attachment.GetProperty("id").GetString()!].Length;
+            Context.Log($"Attachment {attachment.GetProperty("name").GetString()}: {size} bytes");
+        }
+
+        return Context.Res.Empty();
+    }
+}
+```
+```rust
+use appwrite::id::ID;
+use appwrite::services::tables_db::TablesDB;
+use appwrite::Client;
+use openruntimes::{Context, Response};
+use serde_json::{json, Value};
+use std::collections::HashMap;
+use std::env;
+
+// Splits the multipart body into its parts, keyed by part name.
+fn parse_body(context: &Context) -> HashMap<String, Vec<u8>> {
+    let content_type = context.req.headers.get("content-type").cloned().unwrap_or_default();
+    let boundary = content_type.split("boundary=").last().unwrap_or_default();
+    let delimiter = format!("\r\n--{}", boundary);
+    // Each byte becomes one char, so the attachment bytes stay intact.
+    let body: String = context.req.body_binary().iter().map(|&byte| byte as char).collect();
+
+    body.split(&delimiter)
+        .filter_map(|part| part.split_once("\r\n\r\n"))
+        .map(|(head, content)| {
+            let name = head.split(" name=\"").nth(1).unwrap_or_default();
+            let name = name.split('"').next().unwrap_or_default().to_string();
+            (name, content.chars().map(|c| c as u8).collect())
+        })
+        .collect()
+}
+
+pub fn main(context: Context) -> Response {
+    if context.req.headers.get("x-appwrite-trigger").map(String::as_str) != Some("email") {
+        return context.res.text("Not an email", Some(400), None);
+    }
+
+    let parts = parse_body(&context);
+    let email: Value = serde_json::from_slice(&parts["email"]).unwrap_or(Value::Null);
+
+    let client = Client::new()
+        .set_endpoint(env::var("APPWRITE_FUNCTION_API_ENDPOINT").unwrap_or_default())
+        .set_project(env::var("APPWRITE_FUNCTION_PROJECT_ID").unwrap_or_default())
+        .set_key(
+            context
+                .req
+                .headers
+                .get("x-appwrite-key")
+                .cloned()
+                .unwrap_or_default(),
+        );
+
+    let tables_db = TablesDB::new(&client);
+
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+
+    let result = runtime.block_on(tables_db.create_row(
+        "<DATABASE_ID>",
+        "<TABLE_ID>",
+        ID::unique(),
+        json!({
+            "from": email["from"],
+            "subject": email["subject"],
+            "text": email["text"]
+        }),
+        None,
+        None,
+    ));
+
+    if let Err(e) = result {
+        context.error(format!("Failed to save email: {}", e));
+        return context.res.text("Failed to save email", Some(500), None);
+    }
+
+    for attachment in email["attachments"].as_array().into_iter().flatten() {
+        let id = attachment["id"].as_str().unwrap_or_default();
+        let size = parts.get(id).map_or(0, Vec::len);
+        let name = attachment["name"].as_str().unwrap_or_default();
+        context.log(format!("Attachment {}: {} bytes", name, size));
+    }
+
+    context.res.empty()
+}
+```
+{% /multicode %}
+
+# Duplicates, spam, and attachments
+
+Plan for three behaviors when you write a function with an email trigger:
+
+- **Duplicates are possible.** When Appwrite does not confirm an email, for example because a function did not finish in time, the sending mail server sends the email again, and every function in the delivery executes again. Each copy gets a new `id`, so compare `messageId` to skip duplicates.
+- **The spam score is a hint.** The `spam` field has a `score` from `0` to `1` and a `verdict` of `ham`, `unsure`, or `spam`. Appwrite does not reject email because of it. Automated email such as order confirmations and sign-in codes can score as `spam`, so test the scores with the email you expect before your function drops anything.
+- **Appwrite keeps no copy.** The attachments exist only in the request body. Upload them to [Storage](/docs/products/storage) if you need them later.
+
+# Use cases
+
+- **Support inbox.** Save each email to a table, and reply to the customer with [Messaging](/docs/products/messaging).
+- **Invoice processing.** Read PDF attachments from vendors and store the extracted totals.
+- **Alerts from other services.** Parse the alerts that monitoring services send by email and open an incident.
+- **Conversations by email.** Give each conversation its own address, such as `ticket-1042@<FUNCTION_ID>-<PROJECT_ID>.appwrite.email` or `ticket-1042@mail.example.com` on a custom domain, and read the address from `envelope.to` to find the conversation.
+
+# Get started
+
+Email triggers are available for Appwrite Functions on Appwrite Cloud. The [email triggers documentation](/docs/products/functions/email) has the full request format, the DNS setup for custom domains, and the limits.
+
+# Resources
+
+- [Email triggers documentation](/docs/products/functions/email)
+- [Appwrite Functions documentation](/docs/products/functions)
+- [Function execution](/docs/products/functions/execute)
+- [Appwrite Messaging documentation](/docs/products/messaging)
+- [Join the Appwrite Discord](https://appwrite.io/discord)

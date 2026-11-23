@@ -33,17 +33,21 @@ import {
   useRepositories,
   useProject,
   useNamespacesForInstallations,
+  useConsoleVariables,
 } from '@/lib/react-query/hooks'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { getVcsInstallationErrorKind } from '@/lib/utils/error-formatting'
 import { VcsInstallationErrorState } from '@/components/global/shared/VcsInstallationError'
+import {
+  VcsAccountLinks,
+  VcsProviderButtons,
+} from '@/components/global/shared/VcsProviderButtons'
 import { useVcsInstallationReconnect } from '@/lib/vcs/use-installation-reconnect'
 import { cn } from '@/lib/utils'
 import { useWizard } from './WizardContext'
 import type { Models } from '@appwrite.io/console'
 import { useT } from '@/lib/i18n/translate'
 import { RefreshButton } from '@/components/global/shared/RefreshButton'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { AuthFlowHeaderIcon } from '@/components/global/auth/AuthFlowHeaderIcon'
 import {
   GitIcon,
@@ -52,12 +56,10 @@ import {
   VcsIcon,
   getVisibleVcsOAuthProviders,
   buildVcsOrgOptions,
-  vcsProviderButtonIconClassName,
   type VcsProviderId,
 } from '@/lib/vcs/providers'
 
 const REPO_PAGE_SIZE = 7
-const DEFAULT_TEMPLATE_PAGE_SIZE = 9
 
 // Helper to safely extract framework string
 function getFrameworkString(framework: unknown): string {
@@ -103,8 +105,8 @@ function RepositorySkeleton({
 
 export function CreateSiteView() {
   const t = useT()
-  const { features } = useConsoleProfile()
-  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features)
+  const { vcsProviders } = useConsoleVariables()
+  const vcsOAuthProviders = getVisibleVcsOAuthProviders(vcsProviders)
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const { installations, updateFormData, setCurrentPath } = useWizard()
@@ -374,29 +376,17 @@ export function CreateSiteView() {
               <p className="text-[11px] text-muted-foreground mb-3">
                 {t('Import repositories for automatic deployments')}
               </p>
-              <div className="flex flex-wrap items-center justify-center gap-2">
-                {vcsOAuthProviders.map((provider) => (
-                  <Button
-                    key={provider.id}
-                    size="sm"
-                    variant="secondary"
-                    asChild
-                  >
-                    <a href={getVcsAuthUrl(provider.id)}>
-                      <VcsIcon
-                        type={provider.id}
-                        className={vcsProviderButtonIconClassName}
-                      />
-                      {t(`Connect ${provider.label}`)}
-                    </a>
-                  </Button>
-                ))}
-              </div>
+              <VcsProviderButtons
+                providers={vcsOAuthProviders}
+                link={(provider, content) => (
+                  <a href={getVcsAuthUrl(provider.id)}>{content}</a>
+                )}
+              />
             </div>
           ) : (
             <div className="flex flex-1 flex-col">
               {/* Controls */}
-              <div className="mb-4 flex items-center gap-2">
+              <div className="mb-4 flex flex-wrap items-center gap-2">
                 <Select
                   value={selectedOptionKey}
                   onValueChange={(key) => selectOption(key)}
@@ -404,7 +394,7 @@ export function CreateSiteView() {
                     if (!open) setOrgFilter('')
                   }}
                 >
-                  <SelectTrigger className="w-[200px] h-9 text-[13px]">
+                  <SelectTrigger className="h-9 w-full text-[13px] sm:w-[200px]">
                     <SelectValue placeholder={t('Select organization')}>
                       {selectedOption && (
                         <span className="flex items-center gap-2">
@@ -451,22 +441,14 @@ export function CreateSiteView() {
                         {t('No matches')}
                       </p>
                     )}
-                    <div className="border-t border-border mt-1 pt-1">
-                      {vcsOAuthProviders.map((p) => (
-                        <a
-                          key={p.id}
-                          href={getVcsAuthUrl(p.id)}
-                          className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
-                        >
-                          <p.Icon className="h-3 w-3" />
-                          {t(`Add ${p.label} account`)}
-                        </a>
-                      ))}
-                    </div>
+                    <VcsAccountLinks
+                      providers={vcsOAuthProviders}
+                      href={(p) => getVcsAuthUrl(p.id)}
+                    />
                   </SelectContent>
                 </Select>
 
-                <div className="relative flex-1">
+                <div className="relative min-w-0 flex-1">
                   <Search className="absolute start-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                   <Input
                     value={repoSearch}
@@ -615,7 +597,6 @@ export function CreateSiteView() {
           {projectId ? (
             <SiteTemplateGallery
               projectId={projectId}
-              defaultPageSize={DEFAULT_TEMPLATE_PAGE_SIZE}
               pageSizeOptions={[12, 18, 36, 72]}
               onSelectTemplate={handleSelectTemplate}
             />
