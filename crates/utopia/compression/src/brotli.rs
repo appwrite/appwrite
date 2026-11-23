@@ -207,6 +207,9 @@ mod imp {
     /// The output chunk of `brotli_uncompress()` (`PHP_BROTLI_BUFFER_SIZE`).
     const CHUNK: usize = 1 << 19;
 
+    /// The output size past which it grows by a quarter rather than a chunk.
+    const GEOMETRIC: usize = 8 << 20;
+
     /// The sink's allocator as brotli takes one; none for brotli's default (`malloc()`).
     fn allocator<S: Sink + ?Sized>(out: &S) -> (b::brotli_alloc_func, b::brotli_free_func, *mut std::ffi::c_void) {
         match out.allocator() {
@@ -301,8 +304,8 @@ mod imp {
     }
 
     /// `brotli_uncompress()`: a decoder that accepts large windows, run while it needs more
-    /// output; anything but success (truncated or corrupt input) is a failure. The output
-    /// grows by 512 KiB at a time, as PHP's does, but in place.
+    /// output; anything but success (truncated or corrupt input) is a failure. The output is
+    /// written in place, grown as [`GEOMETRIC`] says.
     pub(super) fn decompress<S: Sink + ?Sized>(data: &[u8], out: &mut S) -> Result<(), Error> {
         let failed = || Error::Codec("brotli_uncompress(): failed to uncompress".into());
         // SAFETY: creates a decoder with brotli's default allocator, or returns null.
@@ -321,7 +324,11 @@ mod imp {
         let mut first = CHUNK.min(data.len().saturating_mul(4).max(1024));
         loop {
             let (len, capacity) = (out.len(), out.capacity());
-            if len + first > capacity && !out.grow(len + first) {
+            // 512 KiB at a time, as PHP grows its output, up to 8 MiB; then by a quarter, so a
+            // large output is copied a bounded number of times when the block cannot be
+            // extended in place.
+            let wanted = if capacity < GEOMETRIC { len + first } else { (len + first).max(capacity + capacity / 4) };
+            if len + first > capacity && !out.grow(wanted) {
                 return Err(Error::Codec("brotli_uncompress(): insufficient memory".into()));
             }
             first = CHUNK;
