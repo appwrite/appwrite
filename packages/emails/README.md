@@ -1,7 +1,7 @@
 # Utopia Emails
 
 > [!IMPORTANT]
-> This repository is a read-only mirror of [`packages/emails`](https://github.com/appwrite/appwrite/tree/main/packages/emails) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+> This package is now implemented in Rust and served by the `utopia` PHP extension built from [appwrite/appwrite](https://github.com/appwrite/appwrite/tree/main/crates/extension), so it requires `ext-utopia` and is no longer published on its own. The [`utopia-php/emails`](https://github.com/utopia-php/emails) mirror is archived: its last PHP release, [`0.8.3`](https://packagist.org/packages/utopia-php/emails#0.8.3), keeps working from Packagist and needs no extension. Development happens in [`packages/emails`](https://github.com/appwrite/appwrite/tree/main/packages/emails).
 
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/emails.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244)](https://appwrite.io/discord)

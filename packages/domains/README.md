@@ -1,7 +1,7 @@
 # Utopia Domains
 
 > [!IMPORTANT]
-> This repository is a read-only mirror of [`packages/domains`](https://github.com/appwrite/appwrite/tree/main/packages/domains) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+> This package is now implemented in Rust and served by the `utopia` PHP extension built from [appwrite/appwrite](https://github.com/appwrite/appwrite/tree/main/crates/extension), so it requires `ext-utopia` and is no longer published on its own. The [`utopia-php/domains`](https://github.com/utopia-php/domains) mirror is archived: its last PHP release, [`4.4.1`](https://packagist.org/packages/utopia-php/domains#4.4.1), keeps working from Packagist and needs no extension. Development happens in [`packages/domains`](https://github.com/appwrite/appwrite/tree/main/packages/domains).
 
 ![Total downloads](https://img.shields.io/packagist/dt/utopia-php/domains.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244)](https://appwrite.io/discord)

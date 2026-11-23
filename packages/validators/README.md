@@ -1,7 +1,7 @@
 # Utopia Validators
 
 > [!IMPORTANT]
-> This repository is a read-only mirror of [`packages/validators`](https://github.com/appwrite/appwrite/tree/main/packages/validators) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+> This package is now implemented in Rust and served by the `utopia` PHP extension built from [appwrite/appwrite](https://github.com/appwrite/appwrite/tree/main/crates/extension), so it requires `ext-utopia` and is no longer published on its own. The [`utopia-php/validators`](https://github.com/utopia-php/validators) mirror is archived: its last PHP release, [`2.0.0`](https://packagist.org/packages/utopia-php/validators#2.0.0), keeps working from Packagist and needs no extension. Development happens in [`packages/validators`](https://github.com/appwrite/appwrite/tree/main/packages/validators).
 
 Reusable validation building blocks for [Utopia](https://github.com/utopia-php) projects.  
 This package exposes a consistent API for common HTTP-oriented validation concerns such as input sanitization, URL checks, IP validation, hostname filtering, lists enforcement, and more.
