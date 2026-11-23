@@ -58,6 +58,8 @@ The gap widens under pressure. Asked for 500 requests per second, the Rust Stora
 
 The libraries underneath show the same pattern. Across 230 benchmarks of 49 Utopia libraries, each run beside its PHP original, Rust is 3.5 times faster, uses 3.5 times less CPU per call and 3.8 times less memory (geometric means).
 
+![230 benchmarks across 49 Utopia libraries: Rust is 3.5 times faster, with 3.5 times less CPU per call and 3.8 times less memory](/images/blog/appwrite-is-moving-from-php-to-rust/libraries.avif)
+
 # How we approach a migration this size
 
 We move in small, verified steps, and every step ships on its own.
