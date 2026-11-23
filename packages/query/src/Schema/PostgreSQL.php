@@ -20,7 +20,6 @@ use Utopia\Query\Schema\Feature\TableComments;
 use Utopia\Query\Schema\Feature\Triggers;
 use Utopia\Query\Schema\Feature\Types;
 use Utopia\Query\Schema\Feature\Views;
-use Utopia\Query\StringLiteral;
 
 class PostgreSQL extends SQL implements
     ForeignKeys,
@@ -47,8 +46,6 @@ class PostgreSQL extends SQL implements
     use Trait\Views;
 
     protected string $wrapChar = '"';
-
-    protected StringLiteral $literal = StringLiteral::Extended;
 
     #[\Override]
     public function table(string $name): Table\PostgreSQL
@@ -161,7 +158,7 @@ class PostgreSQL extends SQL implements
 
         // PostgreSQL enum emulation via CHECK constraint
         if ($column->type === ColumnType::Enum && ! empty($column->enumValues)) {
-            $values = \array_map($this->literal->quote(...), $column->enumValues);
+            $values = \array_map(fn (string $v): string => "'" . \str_replace(['\\', "'"], ['\\\\', "''"], $v) . "'", $column->enumValues);
             $parts[] = 'CHECK (' . $this->quoteLiteral($column->name) . ' IN (' . \implode(', ', $values) . '))';
         }
 
@@ -452,7 +449,7 @@ class PostgreSQL extends SQL implements
             if (! \preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/D', $key)) {
                 throw new ValidationException('Invalid collation option key: ' . $key);
             }
-            $optParts[] = $key . ' = ' . $this->literal->quote($value);
+            $optParts[] = $key . " = '" . \str_replace(['\\', "'"], ['\\\\', "''"], $value) . "'";
         }
         $optParts[] = 'deterministic = ' . ($deterministic ? 'true' : 'false');
 
@@ -560,7 +557,7 @@ class PostgreSQL extends SQL implements
 
     public function createType(string $name, array $values): Statement
     {
-        $escaped = array_map($this->literal->quote(...), $values);
+        $escaped = array_map(fn (string $v): string => "'" . str_replace(['\\', "'"], ['\\\\', "''"], $v) . "'", $values);
 
         return new Statement(
             'CREATE TYPE ' . $this->quote($name) . ' AS ENUM (' . implode(', ', $escaped) . ')',
@@ -591,7 +588,7 @@ class PostgreSQL extends SQL implements
     public function nextVal(string $name): Statement
     {
         return new Statement(
-            'SELECT nextval(' . $this->literal->quote($name) . ')',
+            "SELECT nextval('" . str_replace(['\\', "'"], ['\\\\', "''"], $name) . "')",
             [],
             executor: $this->executor,
         );
@@ -600,7 +597,7 @@ class PostgreSQL extends SQL implements
     public function commentOnTable(string $table, string $comment): Statement
     {
         return new Statement(
-            'COMMENT ON TABLE ' . $this->quote($table) . ' IS ' . $this->literal->quote($comment),
+            'COMMENT ON TABLE ' . $this->quote($table) . " IS '" . str_replace(['\\', "'"], ['\\\\', "''"], $comment) . "'",
             [],
             executor: $this->executor,
         );
@@ -609,7 +606,7 @@ class PostgreSQL extends SQL implements
     public function commentOnColumn(string $table, string $column, string $comment): Statement
     {
         return new Statement(
-            'COMMENT ON COLUMN ' . $this->quote($table) . '.' . $this->quoteLiteral($column) . ' IS ' . $this->literal->quote($comment),
+            'COMMENT ON COLUMN ' . $this->quote($table) . '.' . $this->quoteLiteral($column) . " IS '" . str_replace(['\\', "'"], ['\\\\', "''"], $comment) . "'",
             [],
             executor: $this->executor,
         );

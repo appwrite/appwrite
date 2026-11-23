@@ -819,12 +819,12 @@ class SecurityRegressionTest extends TestCase
     public static function standardStringBuilderProvider(): array
     {
         return [
-            'postgresql' => [new PostgreSQLBuilder(), "SELECT * FROM \"t\" WHERE \"name\" IN (E'a\\\\b''c')"],
+            'postgresql' => [new PostgreSQLBuilder(), "SELECT * FROM \"t\" WHERE \"name\" IN ('a\\b''c')"],
             'sqlite' => [new SQLiteBuilder(), "SELECT * FROM `t` WHERE `name` IN ('a\\b''c')"],
         ];
     }
 
-    /** SQLite reads a backslash literally, so doubling it misrenders the value; PostgreSQL doubles it inside E'', which reads the same under any standard_conforming_strings. */
+    /** PostgreSQL and SQLite read a backslash literally, so doubling it misrenders the value. */
     #[DataProvider('standardStringBuilderProvider')]
     public function testToRawSqlKeepsBackslashLiteralInStandardStrings(PostgreSQLBuilder|SQLiteBuilder $builder, string $sql): void
     {

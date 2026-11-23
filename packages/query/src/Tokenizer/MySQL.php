@@ -22,7 +22,6 @@ class MySQL extends Tokenizer
         $result = '';
         $len = strlen($sql);
         $i = 0;
-        $escapes = $this->literal->escapesInPlainLiteral();
 
         while ($i < $len) {
             $char = $sql[$i];
@@ -32,7 +31,7 @@ class MySQL extends Tokenizer
                 $i++;
                 while ($i < $len) {
                     $c = $sql[$i];
-                    if ($escapes && $c === '\\') {
+                    if ($c === '\\') {
                         $result .= $c;
                         $i++;
                         if ($i < $len) {

@@ -14,7 +14,6 @@ use Utopia\Query\Schema\Feature\DropPartition;
 use Utopia\Query\Schema\Feature\MaterializedViews;
 use Utopia\Query\Schema\Feature\TableComments;
 use Utopia\Query\Schema\Feature\Views;
-use Utopia\Query\StringLiteral;
 
 class ClickHouse extends Schema implements TableComments, ColumnComments, DropPartition, Views, Databases, MaterializedViews
 {
@@ -22,8 +21,6 @@ class ClickHouse extends Schema implements TableComments, ColumnComments, DropPa
     use Trait\Databases;
     use Trait\MaterializedViews;
     use Trait\Views;
-
-    protected StringLiteral $literal = StringLiteral::BackslashUtf8;
 
     #[\Override]
     public function table(string $name): Table\ClickHouse
@@ -154,7 +151,7 @@ class ClickHouse extends Schema implements TableComments, ColumnComments, DropPa
         }
 
         if ($column->comment !== null) {
-            $parts[] = 'COMMENT ' . $this->literal->quote($column->comment);
+            $parts[] = "COMMENT '" . \str_replace(['\\', "'"], ['\\\\', "''"], $column->comment) . "'";
         }
 
         return \implode(' ', $parts);
@@ -325,7 +322,7 @@ class ClickHouse extends Schema implements TableComments, ColumnComments, DropPa
         if ($index->algorithmArgs !== []) {
             $args = \array_map(
                 fn (string|int|float $arg): string => match (true) {
-                    \is_string($arg) => $this->literal->quote($arg),
+                    \is_string($arg) => "'" . \str_replace(['\\', "'"], ['\\\\', "''"], $arg) . "'",
                     // sprintf('%F', ...) avoids scientific notation (e.g. 1.0E-5)
                     // which ClickHouse rejects in index type arguments. Trim
                     // trailing zeros so 0.01 stays "0.010000" → "0.01".
@@ -370,8 +367,8 @@ class ClickHouse extends Schema implements TableComments, ColumnComments, DropPa
             Engine::CollapsingMergeTree => $engine->value . '(' . $this->quoteLiteral($args[0]) . ')',
 
             Engine::ReplicatedMergeTree => $engine->value
-                . '(' . $this->literal->quote($args[0])
-                . ', ' . $this->literal->quote($args[1]) . ')',
+                . "('" . \str_replace(['\\', "'"], ['\\\\', "''"], $args[0]) . "'"
+                . ", '" . \str_replace(['\\', "'"], ['\\\\', "''"], $args[1]) . "')",
 
             Engine::Memory,
             Engine::Log,
@@ -427,7 +424,7 @@ class ClickHouse extends Schema implements TableComments, ColumnComments, DropPa
     {
         $parts = [];
         foreach (\array_values($values) as $i => $value) {
-            $parts[] = $this->literal->quote($value) . ' = ' . ($i + 1);
+            $parts[] = "'" . \str_replace(['\\', "'"], ['\\\\', "\\'"], $value) . "' = " . ($i + 1);
         }
 
         return 'Enum8(' . \implode(', ', $parts) . ')';
@@ -436,7 +433,7 @@ class ClickHouse extends Schema implements TableComments, ColumnComments, DropPa
     public function commentOnTable(string $table, string $comment): Statement
     {
         return new Statement(
-            'ALTER TABLE ' . $this->quote($table) . ' MODIFY COMMENT ' . $this->literal->quote($comment),
+            'ALTER TABLE ' . $this->quote($table) . " MODIFY COMMENT '" . str_replace(['\\', "'"], ['\\\\', "''"], $comment) . "'",
             [],
             executor: $this->executor,
         );
@@ -445,7 +442,7 @@ class ClickHouse extends Schema implements TableComments, ColumnComments, DropPa
     public function commentOnColumn(string $table, string $column, string $comment): Statement
     {
         return new Statement(
-            'ALTER TABLE ' . $this->quote($table) . ' COMMENT COLUMN ' . $this->quoteLiteral($column) . ' ' . $this->literal->quote($comment),
+            'ALTER TABLE ' . $this->quote($table) . ' COMMENT COLUMN ' . $this->quoteLiteral($column) . " '" . str_replace(['\\', "'"], ['\\\\', "''"], $comment) . "'",
             [],
             executor: $this->executor,
         );
@@ -454,7 +451,7 @@ class ClickHouse extends Schema implements TableComments, ColumnComments, DropPa
     public function dropPartition(string $table, string $name): Statement
     {
         return new Statement(
-            'ALTER TABLE ' . $this->quote($table) . ' DROP PARTITION ' . $this->literal->quote($name),
+            'ALTER TABLE ' . $this->quote($table) . " DROP PARTITION '" . str_replace(['\\', "'"], ['\\\\', "''"], $name) . "'",
             [],
             executor: $this->executor,
         );

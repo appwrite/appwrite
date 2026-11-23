@@ -24,7 +24,6 @@ use Utopia\Query\Exception;
 use Utopia\Query\Exception\ValidationException;
 use Utopia\Query\NullsPosition;
 use Utopia\Query\OrderDirection;
-use Utopia\Query\StringLiteral;
 use Utopia\Query\Tokenizer\Token;
 use Utopia\Query\Tokenizer\TokenType;
 
@@ -42,19 +41,12 @@ class Parser
 {
     private const int MAX_DEPTH = 256;
 
-    private const string ESCAPE = 'ESCAPE';
-
     /** @var Token[] */
     private array $tokens;
     private int $tokenCount;
     private int $pos;
     private int $depth = 0;
     private bool $inColumnList = false;
-
-    public function __construct(
-        private readonly StringLiteral $literal = StringLiteral::Backslash,
-    ) {
-    }
 
     /**
      * Parse tokens into a Select.
@@ -68,15 +60,7 @@ class Parser
         $this->depth = 0;
         $this->inColumnList = false;
 
-        $select = $this->parseSelect();
-        $this->matchAndConsume(TokenType::Semicolon);
-
-        $token = $this->current();
-        if ($token->type !== TokenType::Eof) {
-            throw new ValidationException("Unexpected token '{$token->value}' ({$token->type->name}) at position {$token->position}");
-        }
-
-        return $select;
+        return $this->parseSelect();
     }
 
     private function parseSelect(): Select
@@ -391,12 +375,14 @@ class Parser
             if ($this->peekKeyword(1, 'LIKE')) {
                 $this->advance(); // NOT
                 $this->advance(); // LIKE
-                return $this->parseLike($left, 'NOT LIKE');
+                $right = $this->parseAddition();
+                return new Binary($left, 'NOT LIKE', $right);
             }
             if ($this->peekKeyword(1, 'ILIKE')) {
                 $this->advance(); // NOT
                 $this->advance(); // ILIKE
-                return $this->parseLike($left, 'NOT ILIKE');
+                $right = $this->parseAddition();
+                return new Binary($left, 'NOT ILIKE', $right);
             }
         }
 
@@ -415,11 +401,13 @@ class Parser
         // LIKE / ILIKE
         if ($this->matchKeyword('LIKE')) {
             $this->advance();
-            return $this->parseLike($left, 'LIKE');
+            $right = $this->parseAddition();
+            return new Binary($left, 'LIKE', $right);
         }
         if ($this->matchKeyword('ILIKE')) {
             $this->advance();
-            return $this->parseLike($left, 'ILIKE');
+            $right = $this->parseAddition();
+            return new Binary($left, 'ILIKE', $right);
         }
 
         // Comparison operators: =, !=, <>, <, >, <=, >=
@@ -434,19 +422,6 @@ class Parser
         }
 
         return $left;
-    }
-
-    private function parseLike(Expression $left, string $operator): Binary
-    {
-        $right = $this->parseAddition();
-
-        if (!$this->matchWord(self::ESCAPE)) {
-            return new Binary($left, $operator, $right);
-        }
-
-        $this->advance();
-
-        return new Binary($left, $operator, $right, $this->parseAddition());
     }
 
     private function parseInList(Expression $left, bool $negated): In
@@ -559,7 +534,11 @@ class Parser
 
         if ($token->type === TokenType::String) {
             $this->advance();
-            return new Literal($this->literal->unquote($token->value));
+            $raw = $token->value;
+            $inner = substr($raw, 1, -1);
+            $inner = str_replace("''", "'", $inner);
+            $inner = str_replace("\\'", "'", $inner);
+            return new Literal($inner);
         }
 
         if ($token->type === TokenType::Boolean) {
@@ -1181,14 +1160,6 @@ class Parser
         throw new Exception(
             "Expected '{$value}' at position {$token->position}, got '{$token->value}'"
         );
-    }
-
-    private function matchWord(string $word): bool
-    {
-        $token = $this->current();
-
-        return ($token->type === TokenType::Identifier || $token->type === TokenType::Keyword)
-            && strtoupper($token->value) === $word;
     }
 
     private function matchAndConsume(TokenType $type): bool

@@ -158,13 +158,12 @@ class Walker
     {
         $left = $this->walkExpression($expression->left, $visitor);
         $right = $this->walkExpression($expression->right, $visitor);
-        $escape = $expression->escape === null ? null : $this->walkExpression($expression->escape, $visitor);
 
-        if ($left === $expression->left && $right === $expression->right && $escape === $expression->escape) {
+        if ($left === $expression->left && $right === $expression->right) {
             return $expression;
         }
 
-        return new Binary($left, $expression->operator, $right, $escape);
+        return new Binary($left, $expression->operator, $right);
     }
 
     private function walkUnary(Unary $expression, Visitor $visitor): Unary

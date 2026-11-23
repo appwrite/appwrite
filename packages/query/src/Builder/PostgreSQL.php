@@ -33,9 +33,6 @@ use Utopia\Query\Exception\ValidationException;
 use Utopia\Query\Method;
 use Utopia\Query\Query;
 use Utopia\Query\Schema\ColumnType;
-use Utopia\Query\StringLiteral;
-use Utopia\Query\Tokenizer\PostgreSQL as PostgreSQLTokenizer;
-use Utopia\Query\Tokenizer\Tokenizer;
 
 class PostgreSQL extends SQL implements
     VectorSearch,
@@ -87,18 +84,10 @@ class PostgreSQL extends SQL implements
 
     protected string $wrapChar = '"';
 
-    protected StringLiteral $literal = StringLiteral::Extended;
-
     #[\Override]
     protected function createAstSerializer(): Serializer
     {
-        return new PostgreSQLSerializer($this->literal);
-    }
-
-    #[\Override]
-    protected function createTokenizer(): Tokenizer
-    {
-        return new PostgreSQLTokenizer($this->literal);
+        return new PostgreSQLSerializer();
     }
 
     /** @var ?array{attribute: string, vector: array<float>, metric: VectorMetric} */
@@ -608,10 +597,10 @@ class PostgreSQL extends SQL implements
 
         $chain = $base;
         foreach ($parts as $key) {
-            $chain .= '->' . $this->literal->quote($key);
+            $chain .= '->' . $this->quoteJsonKey($key);
         }
 
-        return $chain . '->>' . $this->literal->quote($lastKey);
+        return $chain . '->>' . $this->quoteJsonKey($lastKey);
     }
 
     private function quoteArrayElement(string $element): string
@@ -625,6 +614,26 @@ class PostgreSQL extends SQL implements
         }
 
         return '"' . \str_replace(['\\', '"'], ['\\\\', '\\"'], $element) . '"';
+    }
+
+    /**
+     * A key without a backslash is emitted as a plain literal, which reads the same whatever
+     * standard_conforming_strings is set to; a key with one uses the E'' form, which always
+     * treats a backslash as an escape.
+     */
+    private function quoteJsonKey(string $key): string
+    {
+        if (\str_contains($key, "\0")) {
+            throw new ValidationException('JSON key contains a NUL byte');
+        }
+
+        $escaped = \str_replace("'", "''", $key);
+
+        if (!\str_contains($key, '\\')) {
+            return "'" . $escaped . "'";
+        }
+
+        return "E'" . \str_replace('\\', '\\\\', $escaped) . "'";
     }
 
     #[\Override]
@@ -921,5 +930,11 @@ class PostgreSQL extends SQL implements
         $this->addBinding(\json_encode($vector));
 
         return '(' . $attribute . ' ' . $operator . ' ?::vector)';
+    }
+
+    #[\Override]
+    protected function quoteString(string $value): string
+    {
+        return "'" . \str_replace("'", "''", $value) . "'";
     }
 }

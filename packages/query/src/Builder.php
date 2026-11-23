@@ -79,18 +79,6 @@ abstract class Builder implements
 
     protected const string CURSOR_COLUMN = '_cursor';
 
-    protected const string LIKE_ESCAPE = '\\';
-
-    protected const bool DECLARES_LIKE_ESCAPE = false;
-
-    protected const ?string IMPLICIT_LIKE_ESCAPE = '\\';
-
-    private const string LIKE_WILDCARD = '%';
-
-    private const string LIKE_SINGLE_WILDCARD = '_';
-
-    protected StringLiteral $literal = StringLiteral::Backslash;
-
     protected string $table = '';
 
     protected string $alias = '';
@@ -1676,9 +1664,12 @@ abstract class Builder implements
     {
         /** @var string $rawVal */
         $rawVal = $values[0];
-        $this->addBinding($prefix . $this->escapeLikeValue($rawVal) . $suffix, $column);
+        $val = $this->escapeLikeValue($rawVal);
+        $this->addBinding($prefix . $val . $suffix, $column);
+        $like = $this->getLikeKeyword();
+        $keyword = $not ? 'NOT ' . $like : $like;
 
-        return $this->compileLikePredicate($attribute, $not);
+        return $attribute . ' ' . $keyword . ' ?';
     }
 
     /**
@@ -1686,17 +1677,18 @@ abstract class Builder implements
      */
     protected function compileContains(string $attribute, array $values, ?string $column = null): string
     {
+        $like = $this->getLikeKeyword();
         /** @var array<string> $values */
         if (\count($values) === 1) {
             $this->addBinding('%' . $this->escapeLikeValue($values[0]) . '%', $column);
 
-            return $this->compileLikePredicate($attribute);
+            return $attribute . ' ' . $like . ' ?';
         }
 
         $parts = [];
         foreach ($values as $value) {
             $this->addBinding('%' . $this->escapeLikeValue($value) . '%', $column);
-            $parts[] = $this->compileLikePredicate($attribute);
+            $parts[] = $attribute . ' ' . $like . ' ?';
         }
 
         return '(' . \implode(' OR ', $parts) . ')';
@@ -1707,11 +1699,12 @@ abstract class Builder implements
      */
     protected function compileContainsAll(string $attribute, array $values, ?string $column = null): string
     {
+        $like = $this->getLikeKeyword();
         /** @var array<string> $values */
         $parts = [];
         foreach ($values as $value) {
             $this->addBinding('%' . $this->escapeLikeValue($value) . '%', $column);
-            $parts[] = $this->compileLikePredicate($attribute);
+            $parts[] = $attribute . ' ' . $like . ' ?';
         }
 
         return '(' . \implode(' AND ', $parts) . ')';
@@ -1722,35 +1715,26 @@ abstract class Builder implements
      */
     protected function compileNotContains(string $attribute, array $values, ?string $column = null): string
     {
+        $like = $this->getLikeKeyword();
         /** @var array<string> $values */
         if (\count($values) === 1) {
             $this->addBinding('%' . $this->escapeLikeValue($values[0]) . '%', $column);
 
-            return $this->compileLikePredicate($attribute, true);
+            return $attribute . ' NOT ' . $like . ' ?';
         }
 
         $parts = [];
         foreach ($values as $value) {
             $this->addBinding('%' . $this->escapeLikeValue($value) . '%', $column);
-            $parts[] = $this->compileLikePredicate($attribute, true);
+            $parts[] = $attribute . ' NOT ' . $like . ' ?';
         }
 
         return '(' . \implode(' AND ', $parts) . ')';
     }
 
-    protected function compileLikePredicate(string $attribute, bool $not = false): string
-    {
-        return $attribute . ' ' . ($not ? 'NOT ' : '') . $this->getLikeKeyword() . ' ?' . $this->likeEscape();
-    }
-
     protected function getLikeKeyword(): string
     {
         return 'LIKE';
-    }
-
-    protected function likeEscape(): string
-    {
-        return static::DECLARES_LIKE_ESCAPE ? ' ESCAPE ' . $this->literal->quote(static::LIKE_ESCAPE) : '';
     }
 
     /**
@@ -1766,9 +1750,7 @@ abstract class Builder implements
             $value = '';
         }
 
-        $escape = static::LIKE_ESCAPE;
-
-        return \str_replace([$escape, '%', '_'], [$escape . $escape, $escape . '%', $escape . '_'], $value);
+        return \str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $value);
     }
 
     /**
@@ -2142,10 +2124,10 @@ abstract class Builder implements
             Method::Contains => $this->buildContainsAstExpression($attr, $values, false),
             Method::ContainsAny => $this->buildContainsAstExpression($attr, $values, false),
             Method::NotContains => $this->buildContainsAstExpression($attr, $values, true),
-            Method::StartsWith => $this->buildLikeAstExpression($attr, $this->escapeLikeValue($this->toScalar($values[0] ?? '')) . self::LIKE_WILDCARD, false),
-            Method::NotStartsWith => $this->buildLikeAstExpression($attr, $this->escapeLikeValue($this->toScalar($values[0] ?? '')) . self::LIKE_WILDCARD, true),
-            Method::EndsWith => $this->buildLikeAstExpression($attr, self::LIKE_WILDCARD . $this->escapeLikeValue($this->toScalar($values[0] ?? '')), false),
-            Method::NotEndsWith => $this->buildLikeAstExpression($attr, self::LIKE_WILDCARD . $this->escapeLikeValue($this->toScalar($values[0] ?? '')), true),
+            Method::StartsWith => new Binary(new Column($attr), 'LIKE', new Literal($this->toScalar($values[0] ?? '') . '%')),
+            Method::NotStartsWith => new Binary(new Column($attr), 'NOT LIKE', new Literal($this->toScalar($values[0] ?? '') . '%')),
+            Method::EndsWith => new Binary(new Column($attr), 'LIKE', new Literal('%' . $this->toScalar($values[0] ?? ''))),
+            Method::NotEndsWith => new Binary(new Column($attr), 'NOT LIKE', new Literal('%' . $this->toScalar($values[0] ?? ''))),
             Method::And => $this->buildLogicalAstExpression($query, 'AND'),
             Method::Or => $this->buildLogicalAstExpression($query, 'OR'),
             Method::On => $this->buildOnAstExpression($query),
@@ -2275,27 +2257,19 @@ abstract class Builder implements
      */
     private function buildContainsAstExpression(string $attr, array $values, bool $negated): Expression
     {
-        $parts = [];
-        foreach ($values as $value) {
-            $parts[] = $this->buildLikeAstExpression($attr, self::LIKE_WILDCARD . $this->escapeLikeValue($this->toScalar($value)) . self::LIKE_WILDCARD, $negated);
+        if (\count($values) === 1) {
+            $op = $negated ? 'NOT LIKE' : 'LIKE';
+            return new Binary(new Column($attr), $op, new Literal('%' . $this->toScalar($values[0]) . '%'));
         }
 
-        if (\count($parts) === 1) {
-            return $parts[0];
+        $parts = [];
+        $op = $negated ? 'NOT LIKE' : 'LIKE';
+        foreach ($values as $value) {
+            $parts[] = new Binary(new Column($attr), $op, new Literal('%' . $this->toScalar($value) . '%'));
         }
 
         $combinator = $negated ? 'AND' : 'OR';
         return $this->combineAstExpressions($parts, $combinator);
-    }
-
-    private function buildLikeAstExpression(string $attr, string $pattern, bool $negated): Binary
-    {
-        return new Binary(
-            new Column($attr),
-            $negated ? 'NOT LIKE' : 'LIKE',
-            new Literal($pattern),
-            static::DECLARES_LIKE_ESCAPE ? new Literal(static::LIKE_ESCAPE) : null,
-        );
     }
 
     private function buildLogicalAstExpression(Query $query, string $operator): Expression
@@ -2417,19 +2391,15 @@ abstract class Builder implements
 
     private function parseSqlToAst(string $sql): Select
     {
-        $tokens = Tokenizer::filter($this->createTokenizer()->tokenize($sql));
-
-        return new Parser($this->literal)->parse($tokens);
-    }
-
-    protected function createTokenizer(): Tokenizer
-    {
-        return new Tokenizer($this->literal);
+        $tokenizer = new Tokenizer();
+        $tokens = Tokenizer::filter($tokenizer->tokenize($sql));
+        $parser = new Parser();
+        return $parser->parse($tokens);
     }
 
     protected function createAstSerializer(): Serializer
     {
-        return new Serializer($this->literal);
+        return new Serializer();
     }
 
     public static function fromAst(Select $ast): static
@@ -2711,13 +2681,13 @@ abstract class Builder implements
             return $left;
         }
 
-        return [$this->astExpressionToQuery($expression)];
-    }
+        $query = $this->astExpressionToSingleQuery($expression);
+        if ($query !== null) {
+            return [$query];
+        }
 
-    private function astExpressionToQuery(Expression $expression): Query
-    {
-        return $this->astExpressionToSingleQuery($expression)
-            ?? Query::raw($this->createAstSerializer()->serializeExpression($expression));
+        $serializer = $this->createAstSerializer();
+        return [Query::raw($serializer->serializeExpression($expression))];
     }
 
     private function astExpressionToSingleQuery(Expression $expression): ?Query
@@ -2733,10 +2703,19 @@ abstract class Builder implements
             }
 
             if ($op === 'OR') {
-                return Query::or([
-                    $this->astExpressionToQuery($expression->left),
-                    $this->astExpressionToQuery($expression->right),
-                ]);
+                $leftQ = $this->astExpressionToSingleQuery($expression->left);
+                $rightQ = $this->astExpressionToSingleQuery($expression->right);
+                $parts = [];
+                if ($leftQ !== null) {
+                    $parts[] = $leftQ;
+                }
+                if ($rightQ !== null) {
+                    $parts[] = $rightQ;
+                }
+                if (!empty($parts)) {
+                    return Query::or($parts);
+                }
+                return null;
             }
 
             if ($expression->left instanceof Column && $expression->right instanceof Literal) {
@@ -2751,8 +2730,8 @@ abstract class Builder implements
                     '>=' => Query::greaterThanEqual($attr, \is_string($val) || \is_int($val) || \is_float($val) ? $val : (string) $val),
                     '<' => Query::lessThan($attr, \is_string($val) || \is_int($val) || \is_float($val) ? $val : (string) $val),
                     '<=' => Query::lessThanEqual($attr, \is_string($val) || \is_int($val) || \is_float($val) ? $val : (string) $val),
-                    'LIKE' => $this->likeToQuery($attr, (string) $val, $expression->escape, false),
-                    'NOT LIKE' => $this->likeToQuery($attr, (string) $val, $expression->escape, true),
+                    'LIKE' => $this->likeToQuery($attr, (string) $val),
+                    'NOT LIKE' => $this->notLikeToQuery($attr, (string) $val),
                     default => null,
                 };
             }
@@ -2794,72 +2773,34 @@ abstract class Builder implements
         return null;
     }
 
-    private function likeToQuery(string $attr, string $pattern, ?Expression $escape, bool $negated): ?Query
+    private function likeToQuery(string $attr, string $val): Query
     {
-        if ($escape !== null && !($escape instanceof Literal && \is_string($escape->value) && \strlen($escape->value) === 1)) {
-            return null;
+        $str = $val;
+        if (\str_starts_with($str, '%') && \str_ends_with($str, '%') && \strlen($str) > 2) {
+            return new Query(Method::Contains, $attr, [\substr($str, 1, -1)]);
         }
-
-        $escapeCharacter = $escape instanceof Literal ? (string) $escape->value : static::IMPLICIT_LIKE_ESCAPE;
-
-        if ($escapeCharacter === self::LIKE_WILDCARD || $escapeCharacter === self::LIKE_SINGLE_WILDCARD) {
-            return null;
+        if (\str_ends_with($str, '%') && !\str_starts_with($str, '%')) {
+            return Query::startsWith($attr, \substr($str, 0, -1));
         }
-        $decoded = $this->decodeLikePattern($pattern, $escapeCharacter);
-
-        if ($decoded === null || $decoded[0] === false && $decoded[2] === false) {
-            $clause = $escape === null ? '' : ' ESCAPE ' . $this->createAstSerializer()->serializeExpression($escape);
-
-            return Query::raw($attr . ($negated ? ' NOT LIKE ?' : ' LIKE ?') . $clause, [$pattern]);
+        if (\str_starts_with($str, '%') && !\str_ends_with($str, '%')) {
+            return Query::endsWith($attr, \substr($str, 1));
         }
-
-        [$leading, $value, $trailing] = $decoded;
-
-        return match (true) {
-            $leading && $trailing => new Query($negated ? Method::NotContains : Method::Contains, $attr, [$value]),
-            $trailing => $negated ? Query::notStartsWith($attr, $value) : Query::startsWith($attr, $value),
-            default => $negated ? Query::notEndsWith($attr, $value) : Query::endsWith($attr, $value),
-        };
+        return Query::raw($attr . ' LIKE ?', [$val]);
     }
 
-    /**
-     * @return array{bool, string, bool}|null
-     */
-    private function decodeLikePattern(string $pattern, ?string $escape): ?array
+    private function notLikeToQuery(string $attr, string $val): Query
     {
-        $length = \strlen($pattern);
-        $leading = $length > 0 && $pattern[0] === self::LIKE_WILDCARD;
-        $value = '';
-        $trailing = false;
-
-        for ($i = $leading ? 1 : 0; $i < $length; $i++) {
-            $character = $pattern[$i];
-
-            if ($character === $escape) {
-                if (++$i === $length) {
-                    return null;
-                }
-                $value .= $pattern[$i];
-                continue;
-            }
-
-            if ($character === self::LIKE_WILDCARD && $i === $length - 1) {
-                $trailing = true;
-                continue;
-            }
-
-            if ($character === self::LIKE_WILDCARD || $character === self::LIKE_SINGLE_WILDCARD) {
-                return null;
-            }
-
-            $value .= $character;
+        $str = $val;
+        if (\str_starts_with($str, '%') && \str_ends_with($str, '%') && \strlen($str) > 2) {
+            return new Query(Method::NotContains, $attr, [\substr($str, 1, -1)]);
         }
-
-        if ($value === '') {
-            return null;
+        if (\str_ends_with($str, '%') && !\str_starts_with($str, '%')) {
+            return Query::notStartsWith($attr, \substr($str, 0, -1));
         }
-
-        return [$leading, $value, $trailing];
+        if (\str_starts_with($str, '%') && !\str_ends_with($str, '%')) {
+            return Query::notEndsWith($attr, \substr($str, 1));
+        }
+        return Query::raw($attr . ' NOT LIKE ?', [$val]);
     }
 
     private function applyAstGroupBy(Select $ast): void
