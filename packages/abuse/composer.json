@@ -45,6 +45,9 @@
     "require-dev": {
         "phpbench/phpbench": "1.*"
     },
+    "suggest": {
+        "ext-utopia": "Required by Challenge\\Password: utopia-php/auth's password hashes come from the utopia extension"
+    },
     "config": {
         "allow-plugins": {
             "php-http/discovery": true,
