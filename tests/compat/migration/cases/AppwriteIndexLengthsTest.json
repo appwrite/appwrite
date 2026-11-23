@@ -4221,7 +4221,10 @@
                 "resourceId": "idx_reference_channel",
                 "trace": "<masked>"
               },
-              "previous": null
+              "previous": {
+                "class": "Utopia\\Migration\\Exception",
+                "message": "Column not found in table: reference"
+              }
             }
           ]
         },
