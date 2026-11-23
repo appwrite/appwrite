@@ -976,6 +976,28 @@ pub fn string_map(items: &[(&str, &str)]) -> Zval {
     }
 }
 
+/// A persistent immutable array of lists of strings keyed by strings (`['a' => ['x', 'y'],
+/// 'b' => []]`), as a constant of an internal class holds one: each list a [`string_list`],
+/// an empty one the engine's immutable [`empty_array`].
+pub fn string_list_map(items: &[(&str, &[&str])]) -> Zval {
+    // SAFETY: as [`string_map`]; the lists are persistent and immutable themselves.
+    unsafe {
+        let ht = ext_php_rs::ffi::__zend_malloc(std::mem::size_of::<HashTable>()).cast::<HashTable>();
+        _zend_hash_init(ht, u32::try_from(items.len()).unwrap_or(8), std::ptr::null_mut(), true);
+        for (key, list) in items {
+            let mut value = if list.is_empty() { empty_array() } else { string_list(list) };
+            zend_hash_str_add(ht, key.as_ptr().cast(), key.len(), &raw mut value);
+            std::mem::forget(value);
+        }
+        (*ht).gc.refcount = 2;
+        (*ht).gc.u.type_info = IS_ARRAY | IMMUTABLE_ARRAY;
+        let mut zval = Zval::new();
+        zval.value.arr = ht;
+        zval.u1.type_info = IS_ARRAY;
+        zval
+    }
+}
+
 /// Declares the public constant `name` of `class` with `value` (a scalar, an interned
 /// string or a [`string_list`]) and type `mask` (0: untyped).
 pub fn declare_constant(class: &mut ClassEntry, name: &str, value: Zval, mask: u32) {
