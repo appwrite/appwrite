@@ -134,7 +134,15 @@ export function SupabaseConnect({
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => disconnect.mutate()}
+              onClick={() =>
+                disconnect.mutate(undefined, {
+                  onSuccess: () => {
+                    // A reconnect starts over, so a lone project is picked again
+                    picked.current = false
+                    setProjectRef('')
+                  },
+                })
+              }
               disabled={disconnect.isPending}
             >
               {t('Disconnect')}
