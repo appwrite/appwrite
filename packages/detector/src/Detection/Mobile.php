@@ -1,0 +1,51 @@
+<?php
+
+namespace Utopia\Detector\Detection;
+
+use Utopia\Detector\Detection;
+
+abstract class Mobile extends Detection
+{
+    public const PLATFORM_ANDROID = 'android';
+
+    public const PLATFORM_IOS = 'ios';
+
+    abstract public function getName(): string;
+
+    /**
+     * @return array<string> Platforms the project builds apps for.
+     */
+    abstract public function getPlatforms(): array;
+
+    /**
+     * @return array<string> File names that identify the project.
+     */
+    public function getFiles(): array
+    {
+        return [];
+    }
+
+    /**
+     * @return array<string> File or directory extensions that identify the project.
+     */
+    public function getFileExtensions(): array
+    {
+        return [];
+    }
+
+    /**
+     * @return array<string> Runtime dependencies that identify the project.
+     */
+    public function getPackages(): array
+    {
+        return [];
+    }
+
+    /**
+     * @return array<string> Gradle plugin ids that identify the project.
+     */
+    public function getPlugins(): array
+    {
+        return [];
+    }
+}

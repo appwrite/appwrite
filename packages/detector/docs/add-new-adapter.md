@@ -6,7 +6,7 @@ To get started with implementing a new detector and detection adapters, start by
 - A `Detector` is a class that analyzes input files to identify specific characteristics of a project.
 - A `Detection` class represents a specific type of detection (like Framework, Runtime, Packager, etc.) and contains the logic for identifying that type.
 - To add a new detector, you need to extend the `Detector` parent class and define the required methods.
-- To add a new detection class, you need to extend the appropriate `Detection` parent class (Framework, Runtime, Packager, or Rendering).
+- To add a new detection class, you need to extend the appropriate `Detection` parent class (Framework, Mobile, Runtime, Packager, or Rendering).
 
 ### File Structure 📂
 
@@ -19,11 +19,13 @@ Below are outlined the most useful files for adding a new detector and detection
 │   ├── Detection.php # Parent class for all detections
 │   ├── Detector/ # Where your new detector goes!
 │   │   ├── Framework.php # Framework detector
+│   │   ├── Mobile.php # Mobile detector
 │   │   ├── Packager.php # Packager detector
 │   │   ├── Runtime.php # Runtime detector
 │   │   └── Rendering.php # Rendering detector
 │   └── Detection/ # Where your new detection class goes!
 │       ├── Framework/ # Framework detections
+│       ├── Mobile/ # Mobile detections
 │       ├── Packager/ # Packager detections
 │       ├── Runtime/ # Runtime detections
 │       └── Rendering/ # Rendering detections
@@ -142,6 +144,7 @@ public function yourDetectorDataProvider(): array
    - For runtime detection: Extend `Detection\Runtime`
    - For packager detection: Extend `Detection\Packager`
    - For rendering detection: Extend `Detection\Rendering`
+   - For mobile app detection: Extend `Detection\Mobile`
 
 2. **Implement Required Methods**
    - Each detection type has specific required methods
@@ -149,6 +152,7 @@ public function yourDetectorDataProvider(): array
    - Runtime detections need: `getName()`, `getLanguages()`, `getFileExtensions()`, `getFiles()`, `getCommands()`, `getEntrypoint()`
    - Packager detections need: `getName()`, `getFiles()`
    - Rendering detections need: `getName()`
+   - Mobile detections need: `getName()`, `getPlatforms()`, plus at least one of `getFiles()`, `getFileExtensions()`, `getPackages()` or `getPlugins()`
 
 3. **File Detection**
    - Use specific file patterns that uniquely identify your detection

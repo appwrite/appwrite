@@ -23,7 +23,12 @@ Init in your application:
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
+use Utopia\Detector\Detection\Mobile\Android;
+use Utopia\Detector\Detection\Mobile\Flutter;
+use Utopia\Detector\Detection\Mobile\Ios;
+use Utopia\Detector\Detection\Mobile\ReactNative;
 use Utopia\Detector\Detector\Framework;
+use Utopia\Detector\Detector\Mobile;
 use Utopia\Detector\Detector\Packager;
 use Utopia\Detector\Detector\Rendering;
 use Utopia\Detector\Detector\Runtime;
@@ -94,7 +99,24 @@ $detector
 
 $detectedRendering = $detector->detect();
 $rendering = $detectedRendering->getName();
+
+// Initialise Mobile Detection
+$detector = new Mobile();
+$detector
+    ->addInput('pubspec.yaml', Mobile::INPUT_FILE)
+    ->addInput($pubspec, Mobile::INPUT_PACKAGES) // package.json or pubspec.yaml content
+    ->addInput($gradle, Mobile::INPUT_GRADLE) // build.gradle(.kts), settings.gradle(.kts) or libs.versions.toml content
+    ->addOption(new Flutter())
+    ->addOption(new ReactNative())
+    ->addOption(new Android())
+    ->addOption(new Ios());
+
+$detectedMobile = $detector->detect();
+$mobile = $detectedMobile->getName(); // flutter, react-native, android or ios
+$platforms = $detectedMobile->getPlatforms(); // ['android', 'ios']
 ```
+
+Mobile detection reads runtime `dependencies` only (Flutter, React Native), Gradle scripts that apply or declare `com.android.application` (Android), and `*.xcodeproj`, `*.xcworkspace` or `Podfile` entries (iOS). When several options match, the one covering the most platforms wins, so a Flutter or React Native project is not reported as its embedded native project.
 
 ### Supported Adapters
 
@@ -106,6 +128,7 @@ Detector Adapters:
 | Framework | ✅ |
 | Packager | ✅ |
 | Rendering | ✅ |
+| Mobile | ✅ |
 
 Runtime Adapters:
 
@@ -152,6 +175,15 @@ Rendering Adapters:
 |---------|---------|
 | SSR | ✅ |
 | Static | ✅ |
+
+Mobile Adapters:
+
+| Adapter | Status |
+|---------|---------|
+| Android | ✅ |
+| Flutter | ✅ |
+| Ios | ✅ |
+| ReactNative | ✅ |
 
 `✅  - supported, 🛠  - work in progress`
 
