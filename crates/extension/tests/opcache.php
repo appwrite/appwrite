@@ -15,7 +15,8 @@ if (!(opcache_get_status(false)['opcache_enabled'] ?? false)) {
 }
 
 // A subclass of every class the extension registers that PHP code may extend (the ones whose
-// library is switched off are PHP's, which costs nothing to check too). opcache links each one
+// library is switched off are PHP's, which costs nothing to check too; the validators and the
+// password hashes are always the extension's). opcache links each one
 // through its inheritance cache, which copies the class into shared memory.
 if (class_exists(\Utopia\Validator\Validator::class)) {
     abstract class ExtendsUtopiaValidatorValidator extends \Utopia\Validator\Validator

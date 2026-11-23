@@ -16,8 +16,17 @@ export const jaReviewsDictionary: Record<string, string> = {
 
   // Empty states
   'Review pull requests with AI': 'AI でプルリクエストをレビュー',
-  'Add a GitHub repository and every pull request gets a review with findings, a verdict, and a merge confidence grade. Mention the app in a comment to ask it anything.':
-    'GitHub リポジトリを追加すると、すべてのプルリクエストに指摘事項、判定、マージの信頼度を含むレビューが付きます。コメントでアプリにメンションすると、何でも質問できます。',
+  'Catch bugs and security issues before they merge. Choose the repositories to review, and every pull request in them gets a review on GitHub.':
+    'バグやセキュリティの問題をマージ前に見つけます。レビューするリポジトリを選ぶと、そのリポジトリのすべてのプルリクエストが GitHub 上でレビューされます。',
+  'Install the GitHub app on your account or organization, then turn on review for the repositories you pick.':
+    'アカウントまたは組織に GitHub アプリをインストールし、選んだリポジトリのレビューをオンにします。',
+  'Get a review on every pull request': 'すべてのプルリクエストをレビュー',
+  'Each new pull request and commit gets a summary, findings on the lines they concern, a verdict, and a merge confidence grade.':
+    '新しいプルリクエストとコミットごとに、概要、該当する行への指摘事項、判定、マージの信頼度が付きます。',
+  'Talk to the reviewer': 'レビュアーと話す',
+  'Mention the app in a comment to ask a question, request a new review, or have it remember a preference for later reviews.':
+    'コメントでアプリにメンションすると、質問したり、新しいレビューを依頼したり、今後のレビューで守ってほしい方針を覚えさせたりできます。',
+  'No reviews match your filters': 'フィルターに一致するレビューはありません',
   'No reviews yet': 'まだレビューはありません',
   'Reviews show up here when a pull request is opened or gets new commits in one of your repositories.':
     'リポジトリでプルリクエストが作成されるか、新しいコミットが追加されると、ここにレビューが表示されます。',
@@ -34,6 +43,9 @@ export const jaReviewsDictionary: Record<string, string> = {
     'レビューで指摘事項は見つかりませんでした。',
   'View comment': 'コメントを表示',
   'Open on GitHub': 'GitHub で開く',
+  'Compare on GitHub': 'GitHub で比較',
+  'Open commit on GitHub': 'GitHub でコミットを開く',
+  'Filter findings by severity': '重要度で指摘事項を絞り込む',
 
   // Statuses and verdicts
   Reviewing: 'レビュー中',

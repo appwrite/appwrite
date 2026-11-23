@@ -8,6 +8,7 @@ use std::sync::LazyLock;
 use aho_corasick::AhoCorasick;
 use php_std::string;
 
+use crate::scan;
 use crate::values::Bot;
 
 /// Known bots: a lowercase needle, the bot's name and its category. The
@@ -112,8 +113,15 @@ pub fn bot(user_agent: &[u8]) -> Option<Bot<'_>> {
         return None;
     }
     // The first needle in table order wins, wherever it occurs; without
-    // any, not even the generic rule can match.
-    let first = NEEDLES.find_overlapping_iter(user_agent).map(|m| m.pattern().as_usize()).min()?;
+    // any, not even the generic rule can match. The table's first needle
+    // (`googlebot`, the most common bot) wins whenever it occurs, so it is
+    // looked for alone first, as PHP's loop tests it first: one search for
+    // its first letter, where the scan for every needle costs more per byte.
+    let first = if scan::contains_ci(user_agent, BOTS[0].0) {
+        0
+    } else {
+        NEEDLES.find_overlapping_iter(user_agent).map(|m| m.pattern().as_usize()).min()?
+    };
     if let Some((_, name, category)) = BOTS.get(first) {
         return Some(Bot::with_category(name.as_bytes(), category.as_bytes()));
     }

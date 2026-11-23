@@ -645,6 +645,7 @@ const SCHEDULE_RESOURCE_TYPE_EXECUTION = 'execution';
 const SCHEDULE_RESOURCE_TYPE_FUNCTION = 'function';
 const SCHEDULE_RESOURCE_TYPE_MESSAGE = 'message';
 const SCHEDULE_RESOURCE_TYPE_MONITOR = 'monitor';
+const SCHEDULE_RESOURCE_TYPE_ESCALATION = 'escalation';
 
 // Monitor types, the kind of check a monitor runs; see `types` in app/config/alerts.php
 const MONITOR_TYPE_USAGE = 'usage';

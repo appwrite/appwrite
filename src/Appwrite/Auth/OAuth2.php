@@ -140,6 +140,22 @@ abstract class OAuth2
     }
 
     /**
+     * Whether the provider's identity may only be linked to an account that
+     * is already signed in, never used to sign in.
+     *
+     * Sign-in trusts getUserID() to name one person. A provider whose grant
+     * names something people share, such as a workspace, would let anyone
+     * who can authorize it sign in as whoever linked it first, so such a
+     * provider returns true here.
+     *
+     * @return bool
+     */
+    public function isLinkOnly(): bool
+    {
+        return false;
+    }
+
+    /**
      * @param $scope
      *
      * @return $this

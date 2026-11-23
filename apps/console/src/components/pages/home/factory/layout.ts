@@ -103,6 +103,50 @@ export function hologramBottom(lift: number) {
 }
 
 /**
+ * Extensions: units on the floor in front of the bed, one at a station's bay,
+ * for products built on that station's service. Each works on the app right
+ * after its station does: Videos films it once Storage has placed its files,
+ * Analytics scans it once Sites has put it live.
+ */
+export const EXTENSION_IDS = ['videos', 'analytics'] as const
+
+export type FactoryExtensionId = (typeof EXTENSION_IDS)[number]
+
+export const EXTENSION_COUNT = EXTENSION_IDS.length
+
+/** The station whose bay each extension stands at. */
+export const EXTENSION_STATION: Record<FactoryExtensionId, number> = {
+  videos: STATION_IDS.indexOf('storage'),
+  analytics: STATION_IDS.indexOf('sites'),
+}
+
+/**
+ * An extension's cabinet: as wide as its station's column and centered on
+ * the app stopped there, in the bed's paint and a little lower than the bed,
+ * with `gap` of floor between the two that its cable duct crosses.
+ */
+export const UNIT = {
+  width: TOWER.width,
+  depth: 0.4,
+  height: BED_TOP - 0.02,
+  gap: 0.3,
+} as const
+export const UNIT_BACK = BED_FRONT + UNIT.gap
+export const UNIT_Z = UNIT_BACK + UNIT.depth / 2
+export const UNIT_FRONT = UNIT_Z + UNIT.depth / 2
+/**
+ * Where an extension's head turns, on a post at the back of the cabinet's
+ * top; `scale` sizes the head and the fork it turns in.
+ */
+export const UNIT_HEAD = {
+  y: 0.62,
+  z: UNIT_BACK + 0.11,
+  scale: 2,
+} as const
+/** Top of an extension's post, where the head's fork sits. */
+export const UNIT_POST_TOP = UNIT_HEAD.y - 0.06 * UNIT_HEAD.scale
+
+/**
  * The arm rides the column's vertical rails and reaches over the track. It
  * ends just past the track's centerline, so the tool hangs from its tip.
  */
@@ -217,6 +261,11 @@ export function slotX(slot: number): number {
 
 export function stationX(index: number): number {
   return slotX(index)
+}
+
+/** Where an extension stands along the line: centered on its station's bay. */
+export function extensionX(id: FactoryExtensionId): number {
+  return stationX(EXTENSION_STATION[id])
 }
 
 const nearest = Math.abs(stationX(STATION_COUNT - 1) - CORE.x)

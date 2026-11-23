@@ -13,6 +13,7 @@ import {
   formatMetricValue,
   thresholdRatio,
 } from '@/lib/alerts/metrics'
+import { escalationState } from '@/lib/alerts/escalation'
 import { formatLatency, resultLabel } from '@/lib/alerts/probes'
 import {
   alertLength,
@@ -310,6 +311,11 @@ function AlertEntry({ alert, now, width, time, onOpen }: AlertEntryProps) {
             {firing && alert.acknowledgedAt && (
               <span className="shrink-0 truncate text-[11px] text-muted-foreground">
                 {acknowledgedBy(alert, t)}
+              </span>
+            )}
+            {escalationState(alert) === 'waiting' && (
+              <span className="shrink-0 truncate text-[11px] text-muted-foreground">
+                {t('Escalating')}
               </span>
             )}
           </span>

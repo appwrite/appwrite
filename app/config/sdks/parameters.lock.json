@@ -249,6 +249,20 @@
             "secret"
         ],
         "avatars.deletePhoto": [],
+        "avatars.getTeamPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "avatars.updateTeamPhoto": [
+            "teamId",
+            "file"
+        ],
+        "avatars.deleteTeamPhoto": [
+            "teamId"
+        ],
         "avatars.getBrowser": [
             "code",
             "width",
@@ -805,20 +819,6 @@
             "teamId",
             "name"
         ],
-        "teams.getPhoto": [
-            "teamId",
-            "width",
-            "height",
-            "quality",
-            "output"
-        ],
-        "teams.updatePhoto": [
-            "teamId",
-            "file"
-        ],
-        "teams.deletePhoto": [
-            "teamId"
-        ],
         "teams.updatePrefs": [
             "teamId",
             "prefs"
@@ -1302,6 +1302,20 @@
             "acknowledged"
         ],
         "avatars.deletePhoto": [],
+        "avatars.getTeamPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "avatars.updateTeamPhoto": [
+            "teamId",
+            "file"
+        ],
+        "avatars.deleteTeamPhoto": [
+            "teamId"
+        ],
         "avatars.getBrowser": [
             "code",
             "width",
@@ -2410,6 +2424,23 @@
             "qos",
             "expiry"
         ],
+        "messaging.createBirdEmailProvider": [
+            "providerId",
+            "name",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail",
+            "enabled"
+        ],
+        "messaging.createBirdSMSProvider": [
+            "providerId",
+            "name",
+            "from",
+            "apiKey",
+            "enabled"
+        ],
         "messaging.createEmail": [
             "messageId",
             "subject",
@@ -2479,7 +2510,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.createResendProvider": [
             "providerId",
@@ -2687,6 +2719,23 @@
             "qos",
             "expiry"
         ],
+        "messaging.updateBirdEmailProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail"
+        ],
+        "messaging.updateBirdSMSProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "from"
+        ],
         "messaging.updateEmail": [
             "messageId",
             "topics",
@@ -2756,7 +2805,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.updateResendProvider": [
             "providerId",
@@ -2997,7 +3047,8 @@
             "cooldown",
             "enabled",
             "notify",
-            "severity"
+            "severity",
+            "escalationId"
         ],
         "monitors.delete": [
             "monitorId"
@@ -3017,7 +3068,8 @@
             "cooldown",
             "enabled",
             "notify",
-            "severity"
+            "severity",
+            "escalationId"
         ],
         "notifications.list": [
             "queries",
@@ -3031,6 +3083,12 @@
             "projectId",
             "scopes",
             "duration"
+        ],
+        "organization.createEscalation": [
+            "escalationId",
+            "name",
+            "steps",
+            "repeat"
         ],
         "organization.createProject": [
             "projectId",
@@ -3050,6 +3108,9 @@
             "recipientId",
             "expire"
         ],
+        "organization.deleteEscalation": [
+            "escalationId"
+        ],
         "organization.deleteProject": [
             "projectId"
         ],
@@ -3059,6 +3120,9 @@
         ],
         "organization.deleteProjectTransfer": [
             "transferId"
+        ],
+        "organization.getEscalation": [
+            "escalationId"
         ],
         "organization.getProject": [
             "projectId"
@@ -3070,6 +3134,10 @@
         "organization.getProjectTransfer": [
             "transferId",
             "secret"
+        ],
+        "organization.listEscalations": [
+            "queries",
+            "total"
         ],
         "organization.listProjectKeys": [
             "projectId",
@@ -3085,6 +3153,12 @@
             "queries",
             "search",
             "total"
+        ],
+        "organization.updateEscalation": [
+            "escalationId",
+            "name",
+            "steps",
+            "repeat"
         ],
         "organization.updateProject": [
             "projectId",
@@ -3403,6 +3477,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Bird": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Bitbucket": [
             "key",
             "secret",
@@ -3633,6 +3712,11 @@
         "project.updateOAuth2Stripe": [
             "clientId",
             "apiSecretKey",
+            "enabled"
+        ],
+        "project.updateOAuth2Supabase": [
+            "clientId",
+            "clientSecret",
             "enabled"
         ],
         "project.updateOAuth2TikTok": [
@@ -4836,20 +4920,6 @@
             "teamId",
             "name"
         ],
-        "teams.getPhoto": [
-            "teamId",
-            "width",
-            "height",
-            "quality",
-            "output"
-        ],
-        "teams.updatePhoto": [
-            "teamId",
-            "file"
-        ],
-        "teams.deletePhoto": [
-            "teamId"
-        ],
         "teams.updatePrefs": [
             "teamId",
             "prefs"
@@ -5160,6 +5230,9 @@
             "success",
             "failure"
         ],
+        "vcs.createInstallation": [
+            "installationId"
+        ],
         "vcs.createOriginInstallation": [
             "success",
             "failure"
@@ -5195,7 +5268,8 @@
         "vcs.listInstallations": [
             "queries",
             "search",
-            "total"
+            "total",
+            "shared"
         ],
         "vcs.listNamespaces": [
             "installationId",
@@ -5833,6 +5907,20 @@
             "acknowledged"
         ],
         "avatars.deletePhoto": [],
+        "avatars.getTeamPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "avatars.updateTeamPhoto": [
+            "teamId",
+            "file"
+        ],
+        "avatars.deleteTeamPhoto": [
+            "teamId"
+        ],
         "avatars.getBrowser": [
             "code",
             "width",
@@ -6917,6 +7005,23 @@
             "qos",
             "expiry"
         ],
+        "messaging.createBirdEmailProvider": [
+            "providerId",
+            "name",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail",
+            "enabled"
+        ],
+        "messaging.createBirdSMSProvider": [
+            "providerId",
+            "name",
+            "from",
+            "apiKey",
+            "enabled"
+        ],
         "messaging.createEmail": [
             "messageId",
             "subject",
@@ -6986,7 +7091,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.createResendProvider": [
             "providerId",
@@ -7194,6 +7300,23 @@
             "qos",
             "expiry"
         ],
+        "messaging.updateBirdEmailProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail"
+        ],
+        "messaging.updateBirdSMSProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "from"
+        ],
         "messaging.updateEmail": [
             "messageId",
             "topics",
@@ -7263,7 +7386,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.updateResendProvider": [
             "providerId",
@@ -7504,7 +7628,8 @@
             "cooldown",
             "enabled",
             "notify",
-            "severity"
+            "severity",
+            "escalationId"
         ],
         "monitors.delete": [
             "monitorId"
@@ -7524,7 +7649,8 @@
             "cooldown",
             "enabled",
             "notify",
-            "severity"
+            "severity",
+            "escalationId"
         ],
         "organization.createEphemeralProjectKey": [
             "projectId",
@@ -7868,6 +7994,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Bird": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Bitbucket": [
             "key",
             "secret",
@@ -8098,6 +8229,11 @@
         "project.updateOAuth2Stripe": [
             "clientId",
             "apiSecretKey",
+            "enabled"
+        ],
+        "project.updateOAuth2Supabase": [
+            "clientId",
+            "clientSecret",
             "enabled"
         ],
         "project.updateOAuth2TikTok": [
@@ -9260,20 +9396,6 @@
         "teams.updateName": [
             "teamId",
             "name"
-        ],
-        "teams.getPhoto": [
-            "teamId",
-            "width",
-            "height",
-            "quality",
-            "output"
-        ],
-        "teams.updatePhoto": [
-            "teamId",
-            "file"
-        ],
-        "teams.deletePhoto": [
-            "teamId"
         ],
         "teams.updatePrefs": [
             "teamId",

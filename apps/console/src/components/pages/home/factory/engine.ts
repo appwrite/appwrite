@@ -62,6 +62,7 @@ import {
 } from './palette'
 import { ProductLine } from './products'
 import { DroneFleet } from './drones'
+import { ExtensionLine } from './extensions'
 import { StationLine } from './stations'
 import { createStudioEnvironment } from './studio'
 import {
@@ -222,6 +223,7 @@ export class FactoryEngine {
   private kit: FactoryKit | null = null
   private world: FactoryWorld | null = null
   private stations: StationLine | null = null
+  private extensions: ExtensionLine | null = null
   private products: ProductLine | null = null
   private drones: DroneFleet | null = null
   private glows: GlowLayer | null = null
@@ -384,6 +386,8 @@ export class FactoryEngine {
 
     this.stations = new StationLine(kit)
     this.scene.add(this.stations.group)
+    this.extensions = new ExtensionLine(kit)
+    this.scene.add(this.extensions.group)
     if (!(await this.step())) return
 
     this.products = new ProductLine(kit)
@@ -1134,6 +1138,7 @@ export class FactoryEngine {
     glows.begin()
     shadows.begin()
     stations.update(frame)
+    this.extensions?.update(frame)
     world.update(frame)
     products.update(frame)
     this.drones?.update(frame)
@@ -1330,6 +1335,7 @@ export class FactoryEngine {
     )
     this.world?.dispose()
     this.stations?.dispose()
+    this.extensions?.dispose()
     this.products?.dispose()
     this.drones?.dispose()
     this.glows?.points.geometry.dispose()

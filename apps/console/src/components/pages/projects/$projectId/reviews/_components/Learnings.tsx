@@ -36,6 +36,7 @@ import {
   openDialogAfterOverlayCloses,
 } from '@/lib/utils/overlay-lock'
 import { VcsIcon } from '@/lib/vcs/providers'
+import { ReviewAuthorLink } from './ReviewBadges'
 
 const HEAD_CLASS =
   'px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
@@ -172,20 +173,7 @@ export function Learnings({ projectId, canWrite }: LearningsProps) {
                     </div>
                   </TableCell>
                   <TableCell className="px-4 py-3">
-                    {learning.author ? (
-                      <a
-                        href={`https://github.com/${encodeURIComponent(learning.author)}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-[13px] text-foreground hover:underline"
-                      >
-                        @{learning.author}
-                      </a>
-                    ) : (
-                      <span className="text-[12px] text-muted-foreground">
-                        -
-                      </span>
-                    )}
+                    <ReviewAuthorLink author={learning.author} />
                   </TableCell>
                   <TableCell className="px-4 py-3 text-end">
                     <DateTooltip

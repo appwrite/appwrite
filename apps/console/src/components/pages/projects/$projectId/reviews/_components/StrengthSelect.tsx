@@ -26,19 +26,19 @@ const STRENGTHS: {
     value: 'basic',
     label: 'Basic',
     description: 'Cheaper models that read the code without running it',
-    credits: 2,
+    credits: 10,
   },
   {
     value: 'normal',
     label: 'Normal',
     description: 'The default models, running commands in a sandbox',
-    credits: 10,
+    credits: 50,
   },
   {
     value: 'expert',
     label: 'Expert',
     description: 'Stronger models that split the work across subagents',
-    credits: 150,
+    credits: 500,
   },
 ]
 

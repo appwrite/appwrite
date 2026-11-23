@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import { Pause, Pencil, Play, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
@@ -17,7 +18,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { useUpdateMonitor } from '@/lib/react-query/hooks'
+import {
+  useEscalations,
+  useProject,
+  useUpdateMonitor,
+} from '@/lib/react-query/hooks'
 import type {
   ParsedMonitor,
   ProbeMonitorChanges,
@@ -360,6 +365,10 @@ export function MonitorDrawer({
 }: AlertDrawerProps) {
   const t = useT()
   const updateMutation = useUpdateMonitor(projectId)
+  const { project } = useProject(projectId)
+  const { escalations } = useEscalations(
+    monitor?.escalationId ? project?.teamId : null,
+  )
   const [form, setForm] = useState<RuleForm>(emptyRuleForm)
   const [probe, setProbe] = useState<ProbeForm>(() => emptyProbeForm('http'))
   // The drawer opens on what the monitor does; the form is one click away.
@@ -546,6 +555,7 @@ export function MonitorDrawer({
             <div className="flex-1 overflow-y-auto px-6 py-6">
               {probeMonitor ? (
                 <ProbeFields
+                  projectId={projectId}
                   form={probe}
                   onChange={(next) =>
                     setProbe((current) => ({ ...current, ...next }))
@@ -652,11 +662,21 @@ export function MonitorDrawer({
                   {t('Notifies')}
                 </dt>
                 <dd className="m-0 min-w-0 border-t border-border py-2 text-foreground">
-                  {monitor.notify.length === 0
-                    ? t('Nobody, only its events')
-                    : monitor.notify
-                        .map((role) => t(roleLabel(role)))
-                        .join(', ')}
+                  {monitor.escalationId ? (
+                    <Link
+                      to="/organizations/$orgId/settings/escalations"
+                      params={{ orgId: project?.teamId ?? '' }}
+                      className="underline underline-offset-2"
+                    >
+                      {escalations.find(
+                        (escalation) => escalation.$id === monitor.escalationId,
+                      )?.name ?? t('Escalation')}
+                    </Link>
+                  ) : monitor.notify.length === 0 ? (
+                    t('Nobody, only its events')
+                  ) : (
+                    monitor.notify.map((role) => t(roleLabel(role))).join(', ')
+                  )}
                   {monitor.cooldown > 0 && cooldown && (
                     <span className="text-muted-foreground">
                       {' · '}

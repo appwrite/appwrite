@@ -27,6 +27,8 @@
       ".cargo/",
       "rustfmt.toml",
       "packages/image/",
+      "packages/validators/",
+      "packages/auth/",
       "Dockerfile",
       ".dockerignore"
     ],
@@ -376,6 +378,8 @@
       "paths": [
         "src/Appwrite/Platform/Modules/Videos/",
         "src/Appwrite/Video/",
+        "src/Appwrite/Storage/",
+        "src/Appwrite/Platform/Modules/Storage/Http/Buckets/Files/Download/",
         "src/Appwrite/Event/Publisher/Video.php",
         "src/Appwrite/Event/Message/Video",
         "src/Appwrite/Platform/Modules/Project/Http/Project/Videos/Profiles/",

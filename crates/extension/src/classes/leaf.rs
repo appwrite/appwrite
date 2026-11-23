@@ -7,11 +7,11 @@ use std::sync::atomic::{AtomicPtr, Ordering};
 use ext_php_rs::args::{Arg, ArgInfoTables};
 use ext_php_rs::builders::{ClassBuilder, FunctionBuilder};
 use ext_php_rs::flags::{DataType, MethodFlags};
-use ext_php_rs::types::{ZendObject, Zval};
+use ext_php_rs::types::{ZendObject, ZendStr, Zval};
 use ext_php_rs::zend::{ClassEntry, ExecuteData};
 
 use super::engine::{
-    self, MAY_BE_ANY, MAY_BE_ARRAY, MAY_BE_BOOL, MAY_BE_DOUBLE, MAY_BE_LONG, MAY_BE_STRING, string, too_few,
+    self, Literal, MAY_BE_ANY, MAY_BE_ARRAY, MAY_BE_BOOL, MAY_BE_DOUBLE, MAY_BE_LONG, MAY_BE_STRING, too_few,
 };
 
 /// A method's handler (ext-php-rs's `FunctionHandler`, which it does not export).
@@ -120,18 +120,21 @@ pub fn patch(class: &ClassEntry, methods: &[Method], tables: ArgInfoTables, unpr
 }
 
 /// The class entry stored in `slot` at registration.
+#[inline]
 pub fn stored(slot: &AtomicPtr<ClassEntry>) -> &'static ClassEntry {
     // SAFETY: set once, in MINIT, to a class entry the engine keeps for the process.
     unsafe { slot.load(Ordering::Acquire).as_ref().expect("class registered in MINIT") }
 }
 
 /// The method's `$this` (the hand-built classes' methods are never static).
+#[inline]
 pub fn this(ex: &mut ExecuteData) -> Option<&'static mut ZendObject> {
     // SAFETY: the object outlives the call.
     ex.get_self().map(|object| unsafe { &mut *std::ptr::from_mut(object) })
 }
 
 /// `isValid()`'s one argument, or the `ArgumentCountError` of a call without it.
+#[inline]
 pub fn value_arg(ex: &mut ExecuteData, function: &str) -> Option<&'static mut Zval> {
     let arg = engine::arg(ex, 0);
     if arg.is_none() {
@@ -140,12 +143,40 @@ pub fn value_arg(ex: &mut ExecuteData, function: &str) -> Option<&'static mut Zv
     arg
 }
 
+#[inline]
 pub fn set_bool(retval: &mut Zval, value: bool) {
     retval.set_bool(value);
 }
 
 pub fn set_str(retval: &mut Zval, value: &[u8]) {
-    *retval = string(value);
+    retval.set_zend_string(ZendStr::new(value, false));
+}
+
+/// Returns `literal`, as PHP returns a string literal (see [`Literal`]).
+#[inline]
+pub fn set_literal(retval: &mut Zval, literal: &Literal) {
+    literal.set(retval);
+}
+
+/// Returns the string `build` appends to its first buffer (see [`engine::built`]); nothing,
+/// with the exception pending, when it gives up.
+#[inline]
+pub fn set_built(retval: &mut Zval, build: impl FnOnce(&mut Vec<u8>, &mut Vec<u8>) -> Option<()>) {
+    engine::built(retval, build);
+}
+
+/// The `getType()` answers the classes share (`Validator::TYPE_*`).
+pub static TYPE_BOOLEAN: Literal = Literal::new("boolean");
+pub static TYPE_INTEGER: Literal = Literal::new("integer");
+pub static TYPE_FLOAT: Literal = Literal::new("double");
+pub static TYPE_STRING: Literal = Literal::new("string");
+pub static TYPE_ARRAY: Literal = Literal::new("array");
+pub static TYPE_OBJECT: Literal = Literal::new("object");
+pub static TYPE_MIXED: Literal = Literal::new("mixed");
+
+/// Interns the shared literals; called in MINIT with the base class.
+pub fn intern() {
+    engine::intern(&[&TYPE_BOOLEAN, &TYPE_INTEGER, &TYPE_FLOAT, &TYPE_STRING, &TYPE_ARRAY, &TYPE_OBJECT, &TYPE_MIXED]);
 }
 
 // The constant answers most classes give.
@@ -153,5 +184,5 @@ pub extern "C" fn is_array(_: &mut ExecuteData, retval: &mut Zval) {
     set_bool(retval, false);
 }
 pub extern "C" fn type_string(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, b"string");
+    set_literal(retval, &TYPE_STRING);
 }

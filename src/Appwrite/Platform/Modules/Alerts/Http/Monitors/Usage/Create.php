@@ -63,6 +63,7 @@ class Create extends Base
             ->param('enabled', true, new Boolean(), 'Set to false to create the monitor without evaluating it.', true)
             ->param('notify', ['owner'], fn () => new ArrayList(new WhiteList(Config::getParam('alerts', [])['roles'] ?? [], true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Organization roles whose confirmed members get an email and a console notification when the monitor fires and resolves. Each must be an organization role, such as `owner` or `developer`. Defaults to owners; pass an empty list to rely on the alert events alone.', true)
             ->param('severity', Severity::Warning->value, new WhiteList(Severity::values(), true), 'How urgent the monitor\'s alerts are: `info`, `warning`, `error` or `critical`. Critical alerts may be delivered with higher urgency by the notification channels that support it, such as a push that rings through silent mode.', true)
+            ->param('escalationId', '', fn (Database $dbForPlatform) => new Text($dbForPlatform->getMaxUidLength(), 0), 'ID of an escalation of the organization that notifies the team of this monitor\'s alerts step by step, until a member acknowledges the alert or it resolves. When set, `notify` is not used. Leave empty to notify the `notify` roles once.', true, ['dbForPlatform'])
             ->inject('response')
             ->inject('project')
             ->inject('dbForPlatform')
@@ -84,12 +85,13 @@ class Create extends Base
         bool $enabled,
         array $notify,
         string $severity,
+        string $escalationId,
         Response $response,
         Document $project,
         Database $dbForPlatform,
         Database $dbForProject,
         Authorization $authorization,
     ): void {
-        $this->createMonitor(MONITOR_TYPE_USAGE, $monitorId, $name, $rules, $window, $cooldown, $enabled, $notify, $response, $project, $dbForPlatform, $dbForProject, $authorization, Severity::from($severity));
+        $this->createMonitor(MONITOR_TYPE_USAGE, $monitorId, $name, $rules, $window, $cooldown, $enabled, $notify, $response, $project, $dbForPlatform, $dbForProject, $authorization, Severity::from($severity), $escalationId);
     }
 }

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Utopia\Auth\Tests\Algorithms;
 
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Auth\Hashes\Plaintext;
 
+#[RequiresPhpExtension('utopia')]
 final class PlaintextTest extends TestCase
 {
     private Plaintext $plaintext;

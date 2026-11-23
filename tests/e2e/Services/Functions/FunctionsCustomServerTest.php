@@ -4037,6 +4037,19 @@ final class FunctionsCustomServerTest extends Scope
 
     public function testFunctionLogging()
     {
+        $default = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => Id::unique(),
+            'runtime' => 'node-22',
+            'name' => 'Logging Default Test',
+            'entrypoint' => 'index.js',
+        ]);
+        $this->assertEquals(201, $default['headers']['status-code']);
+        $this->assertFalse($default['body']['logging'], 'Functions are created with logging off unless asked.');
+        $this->cleanupFunction($default['body']['$id']);
+
         $function = $this->createFunction([
             'functionId' => Id::unique(),
             'runtime' => 'node-22',

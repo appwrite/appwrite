@@ -42,7 +42,6 @@ import {
 import { useVcsInstallationReconnect } from '@/lib/vcs/use-installation-reconnect'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { AuthFlowHeaderIcon } from '@/components/global/auth/AuthFlowHeaderIcon'
 import {
   buildVcsOrgOptions,
@@ -124,13 +123,12 @@ export function ConnectRepositorySection({
   className,
 }: ConnectRepositorySectionProps) {
   const t = useT()
-  const { features } = useConsoleProfile()
   const {
     vcsProviders,
     vcsProvidersWithRepositoryCreation,
     vcsProvidersWithPublicRepositories,
   } = useConsoleVariables()
-  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features, vcsProviders)
+  const vcsOAuthProviders = getVisibleVcsOAuthProviders(vcsProviders)
   const vcsAuthUrl = (
     provider?: VcsProviderId,
     mode: 'create' | 'update' = 'create',

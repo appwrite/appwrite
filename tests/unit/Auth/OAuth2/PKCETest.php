@@ -6,6 +6,7 @@ namespace Tests\Unit\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
 use Appwrite\Auth\OAuth2\Appwrite as AppwriteProvider;
+use Appwrite\Auth\OAuth2\Bird;
 use Appwrite\Auth\OAuth2\Cloudflare;
 use Appwrite\Auth\OAuth2\Etsy;
 use Appwrite\Auth\OAuth2\Kick;
@@ -14,6 +15,7 @@ use Appwrite\Auth\OAuth2\Linear;
 use Appwrite\Auth\OAuth2\Railway;
 use Appwrite\Auth\OAuth2\Resend;
 use Appwrite\Auth\OAuth2\Roblox;
+use Appwrite\Auth\OAuth2\Supabase;
 use Appwrite\Auth\OAuth2\Vercel;
 use Appwrite\Auth\OAuth2\X;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -37,12 +39,14 @@ final class PKCETest extends TestCase
         yield 'kick' => [Kick::class];
         yield 'appwrite' => [AppwriteProvider::class];
         yield 'resend' => [Resend::class];
+        yield 'bird' => [Bird::class];
         yield 'cloudflare' => [Cloudflare::class];
         yield 'railway' => [Railway::class];
         yield 'vercel' => [Vercel::class];
         yield 'line' => [Line::class];
         yield 'linear' => [Linear::class];
         yield 'roblox' => [Roblox::class];
+        yield 'supabase' => [Supabase::class];
     }
 
     protected function setUp(): void
