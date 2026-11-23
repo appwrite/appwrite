@@ -574,6 +574,20 @@ cache keys. Its 13,217 unit tests give the same result on the native builders as
 callbacks sleep in the middle of a build, so builds interleave on one thread. Each builder carries
 the PHP object that owns it for that reason: kept per thread, 476 of the 720 lost their overrides.
 
+Run by hand on 2026-11-23, on the Alpine image built for arm64, and not part of CI:
+
+- Appwrite's `Databases` and `TablesDB` E2E suites on the compose stack with the switch on in every
+  service, on PostgreSQL and on MariaDB: 3,946 of 3,949 tests pass on each. The three that fail
+  need the embedding service, and fail the same way with the switch off.
+- Both corpora and the coroutine test under valgrind, with PHP on the system allocator: no invalid
+  read, write or free in the builders, and the same warnings as the PHP classes give. The `query`
+  corpus reports 19 invalid accesses, all on the stack `stacker` grows for a deep AST, which
+  valgrind does not know is a stack.
+- 400,000 rounds of 25 builds, clones, callbacks, failures and serialization in one process, alone
+  and across eight coroutines: resident memory is flat from the first sample to the last.
+
+CI's E2E lanes leave the switch off, so they run the PHP classes.
+
 Microseconds per call, release build, OPcache on, no JIT, an M-series Mac, median of seven runs.
 A read is five queries and three columns. `Database\*` is utopia-php/database 10.2.3's subclass.
 
