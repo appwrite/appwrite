@@ -697,7 +697,9 @@ export function useUpdateOrganizationApp(
   })
 }
 
-export function useCreateOrganizationAppSecret(appId: string | null | undefined) {
+export function useCreateOrganizationAppSecret(
+  appId: string | null | undefined,
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -787,6 +789,26 @@ export async function fetchOrganizationAppInstallations(
   return { installations: response.installations ?? [] }
 }
 
+/** One cursor page of the apps installed on an organization, newest first. */
+export async function fetchOrganizationInstalledApps(
+  organizationId: string,
+  cursor?: string,
+) {
+  if (!organizationId) throw new Error('Organization ID is required')
+  const queries = [
+    Query.orderDesc('$createdAt'),
+    Query.limit(ORGANIZATION_APP_INSTALLATIONS_PAGE_SIZE),
+  ]
+  if (cursor) queries.push(Query.cursorAfter(cursor))
+
+  const response = await sdk.forConsole.teams.listInstallations({
+    teamId: organizationId,
+    queries,
+    total: false,
+  })
+  return { installations: response.installations ?? [] }
+}
+
 /** One cursor page of an app's keys, newest first. */
 export async function fetchOrganizationAppKeys(appId: string, cursor?: string) {
   if (!appId) throw new Error('App ID is required')
@@ -836,6 +858,29 @@ export function organizationAppInstallationsInfiniteQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: appId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function organizationInstalledAppsInfiniteQueryOptions(
+  organizationId: string | null | undefined,
+) {
+  return infiniteQueryOptions({
+    queryKey: ['organization', organizationId, 'installations'],
+    queryFn: ({ pageParam }) =>
+      fetchOrganizationInstalledApps(organizationId!, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) =>
+      nextCursorAfter(
+        lastPage.installations,
+        ORGANIZATION_APP_INSTALLATIONS_PAGE_SIZE,
+      ),
+    enabled: !!organizationId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: organizationId ? 5 * 60 * 1000 : 0,
   })
 }
 
@@ -939,6 +984,81 @@ export function useDeleteOrganizationAppInstallation(
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: ['app', appId, 'installations'],
+      })
+    },
+  })
+}
+
+export function useOrganizationInstalledApps(
+  organizationId: string | null | undefined,
+) {
+  const {
+    data,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+  } = useInfiniteQuery(
+    organizationInstalledAppsInfiniteQueryOptions(organizationId),
+  )
+
+  return {
+    installations: data?.pages.flatMap((page) => page.installations) ?? [],
+    hasMore: hasNextPage,
+    loadMore: () => void fetchNextPage(),
+    isLoadingMore: isFetchingNextPage,
+    loadMoreFailed: isFetchNextPageError,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
+export function useUpdateOrganizationInstalledApp(
+  organizationId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: {
+      installationId: string
+      authorizationDetails: string
+    }) => {
+      if (!organizationId) throw new Error('Organization ID is required')
+      return await sdk.forConsole.teams.updateInstallation({
+        teamId: organizationId,
+        ...params,
+      })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['organization', organizationId, 'installations'],
+      })
+    },
+  })
+}
+
+export function useDeleteOrganizationInstalledApp(
+  organizationId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (installationId: string) => {
+      if (!organizationId) throw new Error('Organization ID is required')
+      await sdk.forConsole.teams.deleteInstallation({
+        teamId: organizationId,
+        installationId,
+      })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['organization', organizationId, 'installations'],
       })
     },
   })
