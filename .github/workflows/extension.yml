@@ -6,13 +6,11 @@ name: Extension image
 #
 #   COPY --from=appwrite/utopia-extension:<version> /utopia.so /usr/local/lib/php/utopia.so
 #
-# A release publishes <version> and latest; main publishes main. Every run that
-# is not a release also publishes build-<hash>, the tag crates/extension/tag.sh
-# prints for the tree: a hash of the build's inputs, for a consumer that tracks
-# main by commit (appwrite-labs/cloud) and finds its image by running the same
-# script. It is written once and never replaced, so a manual run on another
-# branch can add the image a branch's crates need but cannot change a
-# published tag. Each
+# A release publishes <version> and latest; main publishes main and, for a
+# consumer that vendors this repository at a commit, the build-<hash> that
+# crates/extension/tag.sh prints for the tree. A manual run
+# on any other branch only builds and smoke-tests, so an unreviewed ref can
+# never replace a published tag. Each
 # architecture builds on its own native runner (no QEMU) and is smoke-tested on
 # stock php:8.5-cli-alpine with only the documented runtime packages before it
 # is pushed. That image floats on purpose, while the build's base is pinned: it
@@ -53,9 +51,7 @@ jobs:
     name: Build (${{ matrix.arch }})
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
-    # Both architectures resolve the same values.
     outputs:
-      tag: ${{ steps.version.outputs.tag }}
       build: ${{ steps.version.outputs.build }}
     strategy:
       matrix:
@@ -70,10 +66,8 @@ jobs:
           persist-credentials: false
 
       # A release stamps its version into phpversion('utopia'), as release.yml
-      # does for the Appwrite image; other runs keep the crate version. `tag` is
-      # the moving tag the run publishes (none off main) and `build` the tree's
-      # build-<hash>, empty on a release, whose library is stamped, and when
-      # Docker Hub already has it. A published version is immutable, as
+      # does for the Appwrite image; main and manual runs keep the crate version
+      # and publish under the main tag. A published version is immutable, as
       # appwrite/appwrite's are: consumers pin the tag, so a rerun must not
       # replace what they pulled. The check is on the manifest tag, which is
       # written last, so a run that failed halfway can still be rerun.
@@ -94,31 +88,10 @@ jobs:
             fi
             echo "stamp=$version" >> "$GITHUB_OUTPUT"
             echo "tag=$version" >> "$GITHUB_OUTPUT"
-            echo "build=" >> "$GITHUB_OUTPUT"
           else
-            build=$(crates/extension/tag.sh)
-            status=$(curl --silent --output /dev/null --write-out '%{http_code}' \
-              --retry 3 --retry-all-errors --max-time 30 \
-              "https://hub.docker.com/v2/repositories/$IMAGE/tags/$build" || true)
-            # Only a confirmed miss publishes: any other answer could hide a tag that exists.
-            case "$status" in
-              404) ;;
-              200)
-                echo "$IMAGE:$build is already published."
-                build=""
-                ;;
-              *)
-                echo "::error::Docker Hub answered $status for $IMAGE:$build. Refusing to publish over a tag that may exist."
-                exit 1
-                ;;
-            esac
-            tag=""
-            if [ "$GITHUB_REF" = "refs/heads/main" ]; then
-              tag=main
-            fi
             echo "stamp=" >> "$GITHUB_OUTPUT"
-            echo "tag=$tag" >> "$GITHUB_OUTPUT"
-            echo "build=$build" >> "$GITHUB_OUTPUT"
+            echo "tag=main" >> "$GITHUB_OUTPUT"
+            echo "build=$(crates/extension/tag.sh)" >> "$GITHUB_OUTPUT"
           fi
 
       - uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
@@ -159,40 +132,28 @@ jobs:
             "
 
       - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
-        if: steps.version.outputs.tag != '' || steps.version.outputs.build != ''
+        if: github.event_name == 'release' || github.ref == 'refs/heads/main'
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Push
-        if: steps.version.outputs.tag != '' || steps.version.outputs.build != ''
+        if: github.event_name == 'release' || github.ref == 'refs/heads/main'
         env:
           STAMP: ${{ steps.version.outputs.stamp }}
           TAG: ${{ steps.version.outputs.tag }}
-          BUILD: ${{ steps.version.outputs.build }}
-          ARCH: ${{ matrix.arch }}
         run: |
-          tags=""
-          for tag in $TAG $BUILD; do
-            tags="$tags --tag $IMAGE:$tag-$ARCH"
-          done
-          # shellcheck disable=SC2086 # $tags is a list of arguments
           docker buildx build --target extension \
             --build-arg UTOPIA_EXTENSION_VERSION="$STAMP" \
-            --platform "linux/$ARCH" $tags --push .
+            --platform "linux/${{ matrix.arch }}" \
+            --tag "$IMAGE:$TAG-${{ matrix.arch }}" --push .
 
   manifest:
     name: Manifest
     needs: build
-    if: needs.build.outputs.tag != '' || needs.build.outputs.build != ''
+    if: github.event_name == 'release' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    # Runs on different refs can share a build tag and both find it missing. One
-    # at a time per tag, and the second finds the first's manifest below. A
-    # release publishes no build tag and waits on nothing.
-    concurrency:
-      group: extension-manifest-${{ needs.build.outputs.build || github.run_id }}
-      cancel-in-progress: false
     steps:
       - uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
@@ -203,28 +164,15 @@ jobs:
 
       - name: Publish
         env:
-          TAG: ${{ needs.build.outputs.tag }}
+          RELEASE: ${{ github.event.release.tag_name }}
           BUILD: ${{ needs.build.outputs.build }}
         run: |
-          extra=""
+          tag=main
+          extra="--tag $IMAGE:$BUILD"
           if [ "$GITHUB_EVENT_NAME" = "release" ]; then
+            tag="${RELEASE#v}"
             extra="--tag $IMAGE:latest"
           fi
-          for tag in $TAG $BUILD; do
-            # The manifest holds its images by digest, so the build tag stays on the first
-            # run's library even though a second run has moved the per-architecture tags.
-            # Only "not found" publishes: any other failure could hide a tag that exists.
-            if [ "$tag" = "$BUILD" ]; then
-              if found=$(docker buildx imagetools inspect "$IMAGE:$tag" 2>&1); then
-                echo "$IMAGE:$tag was published by another run."
-                continue
-              elif ! grep -q ': not found$' <<< "$found"; then
-                echo "::error::Could not tell whether $IMAGE:$tag exists: $found"
-                exit 1
-              fi
-            fi
-            # shellcheck disable=SC2086 # $extra is an optional argument
-            docker buildx imagetools create --tag "$IMAGE:$tag" $extra \
-              "$IMAGE:$tag-amd64" "$IMAGE:$tag-arm64"
-            docker buildx imagetools inspect "$IMAGE:$tag"
-          done
+          docker buildx imagetools create --tag "$IMAGE:$tag" $extra \
+            "$IMAGE:$tag-amd64" "$IMAGE:$tag-arm64"
+          docker buildx imagetools inspect "$IMAGE:$tag"

@@ -43,9 +43,8 @@ RUN apk add --no-cache libheif libstdc++ \
 
 - **Tracking main:** a consumer that vendors this repository at a commit and must not compile it
   takes `appwrite/utopia-extension:$(crates/extension/tag.sh)`. The script prints `build-<hash>`, a
-  hash of what the build reads (the Cargo workspace and the base image), and every run on `main`
-  publishes under it. A branch whose crates differ has no image until someone runs the workflow on
-  it by hand.
+  hash of what the build reads (the Cargo workspace and the base image), and every publish from
+  `main` also carries that tag.
 
 `.github/workflows/extension.yml` publishes it, smoke-testing each architecture on stock
 `php:8.5-cli-alpine` with exactly these packages first.
