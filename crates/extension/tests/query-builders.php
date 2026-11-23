@@ -793,7 +793,15 @@ trait OwnsState
 foreach ($dialects as $dialect) {
     eval("class Owns{$dialect} extends Utopia\\Query\\Builder\\{$dialect} { use OwnsBuild; use OwnsState; }");
     $class = 'Owns' . $dialect;
-    $start = fn () => (new $class())->from('t')->select(['a'])->filter([Query::equal('a', [1]), Query::lessThan('b', 2)])->sortAsc('a');
+    $start = function () use ($class) {
+        // What a query holds beyond its constructor's arguments survives being read and written back.
+        $tags = new Query(Utopia\Query\Method::Contains, 'tags', ['x', 'y']);
+        $tags->setOnArray(true);
+        $typed = Query::equal('data.k', ['v']);
+        $typed->setAttributeType('object');
+
+        return (new $class())->from('t')->select(['a'])->filter([Query::equal('a', [1]), Query::lessThan('b', 2), $tags, $typed])->sortAsc('a');
+    };
     emit($dialect . ' own build', [
         outcome(fn () => $start()->build()),
         outcome(fn () => method_exists($class, 'toRawSql') ? $start()->toRawSql() : 'none'),

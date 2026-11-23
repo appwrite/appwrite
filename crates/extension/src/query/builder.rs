@@ -194,7 +194,16 @@ fn query_object(json: bool, found: &Query) -> PhpResult<Zval> {
         list(json, found.values())?,
         string(&bytes(json, found.alias())),
     ];
-    construct(class(QUERY)?, &mut arguments)?.into_zval(false).map_err(PhpException::from)
+    let query = construct(class(QUERY)?, &mut arguments)?;
+    // What the constructor does not take.
+    if found.on_array() {
+        query.try_call_method("setOnArray", vec![&true]).map_err(PhpException::from)?;
+    }
+    if !found.attribute_type().is_empty() {
+        let attribute_type = string(&bytes(json, found.attribute_type()));
+        query.try_call_method("setAttributeType", vec![&attribute_type]).map_err(PhpException::from)?;
+    }
+    query.into_zval(false).map_err(PhpException::from)
 }
 
 /// The error of a build: the exception an override left pending, or the crate's own.
