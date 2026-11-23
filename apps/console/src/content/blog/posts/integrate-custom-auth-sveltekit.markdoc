@@ -70,9 +70,8 @@ To build this app, we will use SvelteKit, a framework that lets you build web ap
 We will first set up a skeleton SvelteKit project (without TypeScript):
 
 ```bash
-npx sv create my-project
+npx sv create my-project --template minimal --types jsdoc --no-add-ons --install npm
 cd my-project
-npm i
 ```
 
 Next, we shall create a `.env` file at the root of the directory and add the following:

@@ -10,7 +10,7 @@ step: 2
 Create a SvelteKit app using the minimal template.
 
 ```sh
-npx sv create ideas-tracker --template minimal --install npm
+npx sv create ideas-tracker --template minimal --types jsdoc --no-add-ons --install npm
 cd ideas-tracker
 ```
 
