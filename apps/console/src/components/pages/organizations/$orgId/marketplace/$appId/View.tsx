@@ -19,6 +19,7 @@ import {
 } from '@/lib/marketplace/types'
 import {
   useOrganizationApp,
+  useOrganizationAppInstallation,
   useOrganizations,
 } from '@/lib/react-query/hooks'
 import { MarketplaceAppBadges } from '../_components/MarketplaceAppBadges'
@@ -45,6 +46,7 @@ export function View({ initialData }: ViewProps = {}) {
 
   const { app: appFromHook, isLoading, isFetching } = useOrganizationApp(appId)
   const app = appFromHook ?? initialData?.app
+  const { installation } = useOrganizationAppInstallation(orgId, appId)
 
   const teamNamesById = useMemo(
     () =>
@@ -168,13 +170,29 @@ export function View({ initialData }: ViewProps = {}) {
                 </div>
               </div>
 
-              {mapped.installationScopes.length > 0 && (
-                <Button
-                  disabled={installMutation.isPending}
-                  onClick={() => installMutation.mutate()}
-                >
-                  {t('Install app')}
-                </Button>
+              {installation ? (
+                <div className="flex items-center gap-2">
+                  <Badge variant="success" className="text-[11px]">
+                    {t('Installed')}
+                  </Badge>
+                  <Button variant="outline" asChild>
+                    <Link
+                      to="/organizations/$orgId/settings/installations"
+                      params={{ orgId }}
+                    >
+                      {t('Manage')}
+                    </Link>
+                  </Button>
+                </div>
+              ) : (
+                mapped.installationScopes.length > 0 && (
+                  <Button
+                    disabled={installMutation.isPending}
+                    onClick={() => installMutation.mutate()}
+                  >
+                    {t('Install app')}
+                  </Button>
+                )
               )}
             </div>
           </div>
