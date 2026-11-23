@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Project;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -423,13 +424,25 @@ final class LDAPSessionIntegrationTest extends Scope
         $this->assertSame('general_invalid_email', $response['body']['type']);
     }
 
-    public function testExistingVerifiedAccountIsAdopted(): void
+    /**
+     * @return array<array{bool}>
+     */
+    public static function emailVerificationProvider(): array
+    {
+        return [
+            'verified' => [true],
+            'unverified' => [false],
+        ];
+    }
+
+    #[DataProvider('emailVerificationProvider')]
+    public function testExistingAccountIsNotAdoptedByEmail(bool $emailVerification): void
     {
         $this->configureDirectory();
 
-        // An account that already owns the verified address is the same person,
-        // so the directory sign-in links to it rather than creating a duplicate,
-        // as an OAuth2 sign-in with an attested email does.
+        // A directory entry that lists an existing account's address is not that account's owner:
+        // `mail` is an attribute, not proof of the mailbox, and directories do not keep it unique.
+        // The sign-in is refused and the account is left as it was.
         $user = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
             'userId' => Id::unique(),
             'email' => 'carol@appwrite.test',
@@ -439,27 +452,40 @@ final class LDAPSessionIntegrationTest extends Scope
 
         $this->assertSame(201, $user['headers']['status-code']);
 
-        $verified = $this->client->call(Client::METHOD_PATCH, '/users/' . $user['body']['$id'] . '/verification', $this->serverHeaders(), [
-            'emailVerification' => true,
-        ]);
+        try {
+            $verified = $this->client->call(Client::METHOD_PATCH, '/users/' . $user['body']['$id'] . '/verification', $this->serverHeaders(), [
+                'emailVerification' => $emailVerification,
+            ]);
 
-        $this->assertSame(200, $verified['headers']['status-code']);
+            $this->assertSame(200, $verified['headers']['status-code']);
 
-        $response = $this->signIn('carol', 'carolpass');
+            $response = $this->signIn('carol', 'carolpass');
 
-        $this->assertSame(201, $response['headers']['status-code']);
-        $this->assertSame($user['body']['$id'], $response['body']['userId']);
+            $this->assertSame(400, $response['headers']['status-code']);
+            $this->assertSame('general_bad_request', $response['body']['type']);
 
-        // Linked, and the name now follows the directory.
-        $identities = $this->identitiesOf($user['body']['$id']);
+            // No identity was linked and the directory's name was not copied over.
+            $identities = $this->identitiesOf($user['body']['$id']);
 
-        $this->assertSame(200, $identities['headers']['status-code']);
-        $this->assertSame(1, $identities['body']['total']);
-        $this->assertSame('ldap', $identities['body']['identities'][0]['provider']);
+            $this->assertSame(200, $identities['headers']['status-code']);
+            $this->assertSame(0, $identities['body']['total']);
 
-        $account = $this->client->call(Client::METHOD_GET, '/users/' . $user['body']['$id'], $this->serverHeaders());
+            $account = $this->client->call(Client::METHOD_GET, '/users/' . $user['body']['$id'], $this->serverHeaders());
 
-        $this->assertSame('Carol White', $account['body']['name']);
+            $this->assertSame('Carol', $account['body']['name']);
+            $this->assertSame($emailVerification, $account['body']['emailVerification']);
+
+            // The owner's password still works: an unverified account was not claimed and revoked.
+            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
+                'email' => 'carol@appwrite.test',
+                'password' => 'localpassword',
+            ]);
+
+            $this->assertSame(201, $session['headers']['status-code']);
+            $this->assertSame($user['body']['$id'], $session['body']['userId']);
+        } finally {
+            $this->client->call(Client::METHOD_DELETE, '/users/' . $user['body']['$id'], $this->serverHeaders());
+        }
     }
 
     public function testBlockedUserIsRejected(): void

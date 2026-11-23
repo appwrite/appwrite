@@ -310,11 +310,15 @@ abstract class Base extends Action
      * verified-email match adopts the account, otherwise a new user is
      * created. Mutates `$user` in place. Shared by every external identity sign-in; mirrors the browser OAuth2 flow.
      *
+     * `$adoptByEmail` false refuses a sign-in whose address already belongs to another account or
+     * identity instead of adopting it, for sources whose email is an attribute rather than a proof of
+     * mailbox control.
+     *
      * @return array{?Document, ?Document, ?Document} the user and email target created by
      *     this request, if any, so they can be rolled back later, and the identity an existing
      *     user was resolved through, which must still exist when the sign-in is persisted
      */
-    protected function resolveUser(User $user, string $provider, string $sub, string $providerEmail, bool $isVerified, string $name, Database $dbForProject, Document $project, array $plan, ProofsPassword $proofForPassword, Authorization $authorization, Mqtt $mqtt, Realtime $queueForRealtime, Bus $bus): array
+    protected function resolveUser(User $user, string $provider, string $sub, string $providerEmail, bool $isVerified, string $name, Database $dbForProject, Document $project, array $plan, ProofsPassword $proofForPassword, Authorization $authorization, Mqtt $mqtt, Realtime $queueForRealtime, Bus $bus, bool $adoptByEmail = true): array
     {
         $identity = $dbForProject->findOne('identities', [
             Query::equal('provider', [$provider]),
@@ -347,7 +351,7 @@ abstract class Base extends Action
                 Query::equal('email', $emails),
             ]);
             if (!$userWithEmail->isEmpty()) {
-                if (!$isVerified) {
+                if (!$isVerified || !$adoptByEmail) {
                     throw new Exception(Exception::GENERAL_BAD_REQUEST);
                 }
                 $user->setAttributes($userWithEmail->getArrayCopy());
@@ -393,7 +397,7 @@ abstract class Base extends Action
                 Query::equal('providerEmail', [$providerEmail]),
             ]);
             if (!$identityWithMatchingEmail->isEmpty()) {
-                if (!$isVerified) {
+                if (!$isVerified || !$adoptByEmail) {
                     throw new Exception(Exception::GENERAL_BAD_REQUEST);
                 }
                 $user->setAttributes($dbForProject->getDocument('users', $identityWithMatchingEmail->getAttribute('userId'))->getArrayCopy());

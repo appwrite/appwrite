@@ -170,9 +170,11 @@ class Create extends Base
         // the directory's user to the device; the entry is never linked to whoever is signed in.
         $user->exchangeArray([]);
 
-        // The directory is the project's own authority on who its users are, so the address
-        // it returns is trusted the way a provider's attested email is for OAuth2.
-        [$newUser, $newTarget] = $this->resolveUser($user, SESSION_PROVIDER_LDAP, $entry['id'], $entry['email'], true, $entry['name'], $dbForProject, $project, $plan, $proofForPassword, $authorization, $mqtt, $queueForRealtime, $bus);
+        // A new account takes the directory's address as verified, but the address never adopts an
+        // existing account: `mail` is an attribute, not proof of the mailbox, and directories do not
+        // keep it unique, so any entry listing someone's address would otherwise sign in as them.
+        // A returning directory user is found by their identity, not their address.
+        [$newUser, $newTarget] = $this->resolveUser($user, SESSION_PROVIDER_LDAP, $entry['id'], $entry['email'], true, $entry['name'], $dbForProject, $project, $plan, $proofForPassword, $authorization, $mqtt, $queueForRealtime, $bus, adoptByEmail: false);
 
         // Every change to the address below is saved and read back onto the user, and a claim already
         // dispatched EmailVerified, so the user in hand tells whether this sign-in verified the email
