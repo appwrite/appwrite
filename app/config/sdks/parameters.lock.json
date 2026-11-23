@@ -5201,6 +5201,9 @@
             "success",
             "failure"
         ],
+        "vcs.createInstallation": [
+            "installationId"
+        ],
         "vcs.createOriginInstallation": [
             "success",
             "failure"
@@ -5236,7 +5239,8 @@
         "vcs.listInstallations": [
             "queries",
             "search",
-            "total"
+            "total",
+            "shared"
         ],
         "vcs.listNamespaces": [
             "installationId",
