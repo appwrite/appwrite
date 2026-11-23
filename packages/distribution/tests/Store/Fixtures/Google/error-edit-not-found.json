@@ -1,0 +1,14 @@
+{
+    "error": {
+        "code": 404,
+        "message": "This Edit has been deleted.",
+        "status": "NOT_FOUND",
+        "errors": [
+            {
+                "reason": "editNotFound",
+                "domain": "androidpublisher",
+                "message": "This Edit has been deleted."
+            }
+        ]
+    }
+}

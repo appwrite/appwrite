@@ -1,0 +1,14 @@
+{
+    "error": {
+        "code": 400,
+        "message": "Changes cannot be sent for review automatically. Please set the query parameter changesNotSentForReview to true. Once committed, the changes in this edit can be sent for review from the Google Play Console UI.",
+        "status": "INVALID_ARGUMENT",
+        "errors": [
+            {
+                "reason": "badRequest",
+                "domain": "global",
+                "message": "Changes cannot be sent for review automatically. Please set the query parameter changesNotSentForReview to true. Once committed, the changes in this edit can be sent for review from the Google Play Console UI."
+            }
+        ]
+    }
+}

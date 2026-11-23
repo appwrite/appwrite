@@ -8,12 +8,19 @@ use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Builds\XList as 
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Apps\Create as CreateDistributionAppleSeedApp;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Builds\Create as CreateDistributionAppleSeedBuild;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Keys\Create as CreateDistributionAppleSeedKey;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Bundles\Create as CreateDistributionGoogleBundleUpload;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Bundles\Update as UpdateDistributionGoogleBundleUpload;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Create as CreateDistributionGoogleEdit;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Delete as DeleteDistributionGoogleEdit;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Get as GetDistributionGoogleEdit;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Tracks\Get as GetDistributionGoogleTrack;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Tracks\Update as UpdateDistributionGoogleTrack;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Tracks\XList as ListDistributionGoogleTracks;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Update as UpdateDistributionGoogleEdit;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Tracks\Releases\XList as ListDistributionGoogleReleases;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Seeds\Applications\Create as CreateDistributionGoogleSeedApplication;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Seeds\Bundles\Create as CreateDistributionGoogleSeedBundle;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Seeds\Reviews\Create as CreateDistributionGoogleSeedReview;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Seeds\ServiceAccounts\Create as CreateDistributionGoogleSeedServiceAccount;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Token\Create as CreateDistributionGoogleToken;
 use Appwrite\Platform\Modules\Mock\Http\Mock\GitHub\Callback\Get as GetGitHubCallback;
@@ -75,6 +82,13 @@ class Http extends Service
         $this->addAction('listDistributionAppleApps', ListDistributionAppleApps::class);
         $this->addAction('createDistributionAppleSeedBuild', CreateDistributionAppleSeedBuild::class);
         $this->addAction('listDistributionAppleBuilds', ListDistributionAppleBuilds::class);
+        $this->addAction('createDistributionGoogleBundleUpload', CreateDistributionGoogleBundleUpload::class);
+        $this->addAction('updateDistributionGoogleBundleUpload', UpdateDistributionGoogleBundleUpload::class);
+        $this->addAction('getDistributionGoogleTrack', GetDistributionGoogleTrack::class);
+        $this->addAction('updateDistributionGoogleTrack', UpdateDistributionGoogleTrack::class);
+        $this->addAction('listDistributionGoogleReleases', ListDistributionGoogleReleases::class);
+        $this->addAction('createDistributionGoogleSeedReview', CreateDistributionGoogleSeedReview::class);
+        $this->addAction('createDistributionGoogleSeedBundle', CreateDistributionGoogleSeedBundle::class);
         $this->addAction('shutdown', Shutdown::class);
     }
 }

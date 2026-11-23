@@ -19,7 +19,12 @@ use Utopia\Distribution\Exception\Unauthorized;
 use Utopia\Distribution\Exception\Unavailable;
 use Utopia\Distribution\Issue;
 use Utopia\Distribution\JWT;
+use Utopia\Distribution\Progress;
+use Utopia\Distribution\Release;
+use Utopia\Distribution\State;
 use Utopia\Distribution\Store;
+use Utopia\Distribution\Upload;
+use Utopia\Psr7\ContentType;
 use Utopia\Psr7\Header;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory;
@@ -40,6 +45,12 @@ class Google extends Store
 
     public const int TOKEN_MARGIN = 300;
 
+    public const string UPLOAD_SESSION_ENDED = 'uploadSessionEnded';
+
+    public const int CHUNK = 8388608;
+
+    public const int NOTES_LIMIT = 500;
+
     private const string APPLICATIONS = '/androidpublisher/v3/applications';
 
     private const string INVALID_GRANT = 'invalid_grant';
@@ -51,6 +62,60 @@ class Google extends Store
     private const string FAILED_PRECONDITION = 'FAILED_PRECONDITION';
 
     private const string CHANGES_ALREADY_IN_REVIEW = 'CHANGES_ALREADY_IN_REVIEW';
+
+    private const string RESUMABLE = '/resumable/upload';
+
+    private const string UPLOAD_TYPE = 'resumable';
+
+    private const string UPLOAD_CONTENT_TYPE = 'X-Upload-Content-Type';
+
+    private const string UPLOAD_CONTENT_LENGTH = 'X-Upload-Content-Length';
+
+    private const string CONTENT_RANGE = 'Content-Range';
+
+    private const string RANGE = 'Range';
+
+    private const string RANGE_UNIT = 'bytes=';
+
+    private const int INCOMPLETE = 308;
+
+    private const array SESSION_ENDED = [404, 410];
+
+    private const array EDIT_INVALID = ['editNotFound', 'editExpired', 'editAlreadyCommitted'];
+
+    private const string QA = 'qa';
+
+    private const string IN_REVIEW_BEHAVIOR = 'ERROR_IF_IN_REVIEW';
+
+    private const string NOT_SENT_FOR_REVIEW = 'Please set the query parameter changesNotSentForReview to true';
+
+    private const string DRAFT_ONLY = 'Only releases with status draft may be created on draft app';
+
+    private const string RELEASE_DRAFT = 'draft';
+
+    private const string RELEASE_IN_PROGRESS = 'inProgress';
+
+    private const string RELEASE_HALTED = 'halted';
+
+    private const string RELEASE_COMPLETED = 'completed';
+
+    private const string LIFECYCLE_UNSPECIFIED = 'RELEASE_LIFECYCLE_STATE_UNSPECIFIED';
+
+    private const string LIFECYCLE_DRAFT = 'RELEASE_LIFECYCLE_STATE_DRAFT';
+
+    private const string LIFECYCLE_NOT_SENT_FOR_REVIEW = 'RELEASE_LIFECYCLE_STATE_NOT_SENT_FOR_REVIEW';
+
+    private const string LIFECYCLE_IN_REVIEW = 'RELEASE_LIFECYCLE_STATE_IN_REVIEW';
+
+    private const string LIFECYCLE_APPROVED_NOT_PUBLISHED = 'RELEASE_LIFECYCLE_STATE_APPROVED_NOT_PUBLISHED';
+
+    private const string LIFECYCLE_NOT_APPROVED = 'RELEASE_LIFECYCLE_STATE_NOT_APPROVED';
+
+    private const string LIFECYCLE_PUBLISHED = 'RELEASE_LIFECYCLE_STATE_PUBLISHED';
+
+    private const string LIFECYCLE_NOT_FOUND = 'NOT_FOUND';
+
+    private const string DRAFT_APP = 'DRAFT_APP';
 
     private readonly Factory $factory;
 
@@ -86,7 +151,7 @@ class Google extends Store
     #[\Override]
     public function app(string $identifier): App
     {
-        $edit = $this->insert($identifier);
+        $edit = $this->insert($identifier)['id'];
         $this->discard($identifier, $edit);
 
         return new App($identifier, $identifier);
@@ -95,7 +160,7 @@ class Google extends Store
     #[\Override]
     public function latestVersionCode(string $identifier): int
     {
-        $edit = $this->insert($identifier);
+        $edit = $this->insert($identifier)['id'];
 
         try {
             $body = $this->call($this->factory->createRequest(Method::GET, $this->edits($identifier, $edit) . '/tracks'));
@@ -121,12 +186,187 @@ class Google extends Store
         return $latest;
     }
 
+    /**
+     * @param array<string, mixed>|null $checkpoint
+     *
+     * @return array<string, mixed>
+     */
+    #[\Override]
+    public function upload(Upload $upload, ?array $checkpoint, ?Progress $progress = null): array
+    {
+        if ($upload->platform !== Upload::PLATFORM_ANDROID) {
+            throw new Invalid("Google Play does not accept {$upload->platform} uploads");
+        }
+
+        $session = $this->restore($upload, $checkpoint);
+        $response = $session === null ? null : $this->probe($upload, $session['session']);
+
+        if ($session === null || ($response instanceof ResponseInterface && \in_array($response->getStatusCode(), self::SESSION_ENDED, true))) {
+            $session = $this->open($upload);
+            $response = null;
+            $progress?->save([...$session, 'offset' => 0]);
+        }
+
+        $bundle = $this->transfer($upload, $session, $response, $progress);
+
+        unset($session['session']);
+
+        return [...$session, ...$bundle];
+    }
+
+    /**
+     * @param array<string, mixed> $external
+     *
+     * @return array<string, mixed>
+     */
+    #[\Override]
+    public function processed(array $external): array
+    {
+        return $external;
+    }
+
+    /**
+     * @param array<string, mixed> $external
+     *
+     * @return array<string, mixed>
+     */
+    #[\Override]
+    public function release(Release $release, array $external): array
+    {
+        $packageName = $this->field($external, 'packageName');
+        $editId = $this->field($external, 'editId');
+        $versionCode = $this->code($external);
+        $notes = $this->notes($release);
+
+        $track = $this->track($packageName, $editId, $release->track);
+        $entry = ['versionCodes' => [$versionCode]];
+
+        $releases = $release->fraction === 1.0
+            ? [[...$entry, 'status' => self::RELEASE_COMPLETED, ...$notes]]
+            : [
+                ...array_values(array_filter($this->releases($packageName, $editId, $track), $this->completed(...))),
+                [...$entry, 'status' => self::RELEASE_IN_PROGRESS, 'userFraction' => $release->fraction, ...$notes],
+            ];
+
+        $draft = false;
+        try {
+            $this->update($packageName, $editId, $track, $releases);
+        } catch (Invalid $invalid) {
+            if (!$this->mentions($invalid, self::DRAFT_ONLY)) {
+                throw $invalid;
+            }
+
+            $this->update($packageName, $editId, $track, [[...$entry, 'status' => self::RELEASE_DRAFT, ...$notes]]);
+            $draft = true;
+        }
+
+        $unsent = $this->commit($packageName, $editId);
+
+        $external = [...$external, 'track' => $track, 'committed' => true];
+        unset($external['changesNotSentForReview'], $external['draft']);
+
+        if ($unsent) {
+            $external['changesNotSentForReview'] = true;
+        }
+
+        if ($draft) {
+            $external['draft'] = true;
+        }
+
+        return $external;
+    }
+
+    /**
+     * @param array<string, mixed> $external
+     */
+    #[\Override]
+    public function state(array $external, string $track): State
+    {
+        $packageName = $this->field($external, 'packageName');
+        $versionCode = $this->code($external);
+        $track = $this->alias($external, $track);
+
+        $lifecycle = $this->lifecycle($packageName, $track, $versionCode);
+
+        return match ($lifecycle) {
+            self::LIFECYCLE_DRAFT => new State(
+                State::STATUS_PENDING,
+                $lifecycle,
+                issues: ($external['draft'] ?? false) === true ? [new Issue(self::DRAFT_APP, 'The app is a draft; publish it from Play Console', manual: true)] : [],
+            ),
+            self::LIFECYCLE_NOT_SENT_FOR_REVIEW => new State(
+                State::STATUS_PENDING,
+                $lifecycle,
+                issues: [new Issue($lifecycle, 'The release must be sent for review from Play Console', manual: true)],
+            ),
+            self::LIFECYCLE_IN_REVIEW => new State(State::STATUS_REVIEWING, $lifecycle),
+            self::LIFECYCLE_APPROVED_NOT_PUBLISHED => new State(State::STATUS_APPROVED, $lifecycle),
+            self::LIFECYCLE_NOT_APPROVED => new State(State::STATUS_REJECTED, $lifecycle),
+            self::LIFECYCLE_PUBLISHED => $this->published($packageName, $track, $versionCode),
+            default => new State(State::STATUS_PENDING, $lifecycle),
+        };
+    }
+
+    /**
+     * @param array<string, mixed> $external
+     */
+    #[\Override]
+    public function rollout(array $external, string $track, float $fraction): void
+    {
+        if (is_nan($fraction) || $fraction <= 0.0 || $fraction > 1.0) {
+            throw new Invalid('Rollout fraction must be greater than 0 and at most 1');
+        }
+
+        $this->change(
+            $external,
+            $track,
+            fn (array $release): array => $fraction === 1.0
+                ? $this->complete($release)
+                : [...$release, 'status' => self::RELEASE_IN_PROGRESS, 'userFraction' => $fraction],
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $external
+     */
+    #[\Override]
+    public function halt(array $external, string $track): void
+    {
+        $this->change($external, $track, static fn (array $release): array => [...$release, 'status' => self::RELEASE_HALTED]);
+    }
+
+    /**
+     * @param array<string, mixed> $external
+     */
+    #[\Override]
+    public function resume(array $external, string $track): void
+    {
+        $this->change(
+            $external,
+            $track,
+            fn (array $release): array => $this->fraction($release) < 1.0
+                ? [...$release, 'status' => self::RELEASE_IN_PROGRESS]
+                : $this->complete($release),
+        );
+    }
+
+    /**
+     * @return int<1, max>
+     */
+    protected function chunk(): int
+    {
+        return self::CHUNK;
+    }
+
     protected function now(): int
     {
         return time();
     }
 
-    private function insert(string $identifier): string
+    /**
+     * @return array{id: string, expiryTimeSeconds?: int}
+     */
+    private function insert(string $identifier): array
     {
         $body = $this->call($this->factory->json(Method::POST, $this->edits($identifier), new \stdClass()));
 
@@ -135,7 +375,23 @@ class Google extends Store
             throw new Unavailable('Google Play returned an edit without an id');
         }
 
-        return $id;
+        $expiry = $this->expiry($body);
+
+        return $expiry === null ? ['id' => $id] : ['id' => $id, 'expiryTimeSeconds' => $expiry];
+    }
+
+    /**
+     * @param array<array-key, mixed> $edit
+     */
+    private function expiry(array $edit): ?int
+    {
+        $expiry = $edit['expiryTimeSeconds'] ?? null;
+
+        return match (true) {
+            \is_int($expiry) => $expiry,
+            \is_string($expiry) && ctype_digit($expiry) => (int) $expiry,
+            default => null,
+        };
     }
 
     private function delete(string $identifier, string $edit): void
@@ -152,15 +408,20 @@ class Google extends Store
         }
     }
 
-    private function edits(string $identifier, ?string $edit = null): string
+    private function edits(string $identifier, ?string $edit = null, string $prefix = ''): string
+    {
+        $path = $this->application($identifier, $prefix) . '/edits';
+
+        return $edit === null ? $path : $path . '/' . rawurlencode($edit);
+    }
+
+    private function application(string $identifier, string $prefix = ''): string
     {
         if ($identifier === '') {
             throw new Invalid('Google Play package name must not be empty');
         }
 
-        $path = $this->endpoint . self::APPLICATIONS . '/' . rawurlencode($identifier) . '/edits';
-
-        return $edit === null ? $path : $path . '/' . rawurlencode($edit);
+        return $this->endpoint . $prefix . self::APPLICATIONS . '/' . rawurlencode($identifier);
     }
 
     /**
@@ -168,21 +429,33 @@ class Google extends Store
      */
     private function call(RequestInterface $request): array
     {
+        return $this->decode((string) $this->respond($request)->getBody());
+    }
+
+    private function respond(RequestInterface $request, int ...$expected): ResponseInterface
+    {
         $response = $this->send($this->authorize($request));
 
         if ($response->getStatusCode() === 401) {
             $this->accessToken = null;
+
+            $body = $request->getBody();
+            if ($body->isSeekable()) {
+                $body->rewind();
+            }
+
             $response = $this->send($this->authorize($request));
         }
 
-        $contents = (string) $response->getBody();
-        $body = $this->decode($contents);
+        $status = $response->getStatusCode();
 
-        if (!$this->successful($response)) {
-            throw $this->failure($response->getStatusCode(), $body, $contents);
+        if (!$this->successful($response) && !\in_array($status, $expected, true)) {
+            $contents = (string) $response->getBody();
+
+            throw $this->failure($status, $this->decode($contents), $contents);
         }
 
-        return $body;
+        return $response;
     }
 
     private function authorize(RequestInterface $request): RequestInterface
@@ -269,7 +542,8 @@ class Google extends Store
 
         return match (true) {
             $status === 401, $status === 403 => new Unauthorized($message, $issues, body: $contents),
-            $status === 404 => new NotFound($message, $issues, body: $contents),
+            $status === 404,
+            $status === 400 && array_intersect(self::EDIT_INVALID, $reasons) !== [] => new NotFound($message, $issues, body: $contents),
             $status === 409,
             $status === 400 && (($error['status'] ?? null) === self::FAILED_PRECONDITION || \in_array(self::CHANGES_ALREADY_IN_REVIEW, $reasons, true)) => new Conflict($message, $issues, body: $contents),
             $status === 429 => new RateLimited($message, $issues, body: $contents),
@@ -352,5 +626,446 @@ class Google extends Store
         $decoded = json_decode($contents, true);
 
         return \is_array($decoded) ? $decoded : [];
+    }
+
+    /**
+     * @param array<string, mixed>|null $checkpoint
+     *
+     * @return array{packageName: string, editId: string, expiryTimeSeconds?: int, session: string}|null
+     */
+    private function restore(Upload $upload, ?array $checkpoint): ?array
+    {
+        $editId = $checkpoint['editId'] ?? null;
+        $session = $checkpoint['session'] ?? null;
+
+        if (
+            ($checkpoint['packageName'] ?? null) !== $upload->identifier
+            || !\is_string($editId) || $editId === ''
+            || !\is_string($session) || $session === ''
+        ) {
+            return null;
+        }
+
+        try {
+            $edit = $this->call($this->factory->createRequest(Method::GET, $this->edits($upload->identifier, $editId)));
+        } catch (NotFound) {
+            return null;
+        }
+
+        return $this->session($upload, ['id' => $editId, 'expiryTimeSeconds' => $this->expiry($edit) ?? $this->expiry($checkpoint)], $session);
+    }
+
+    /**
+     * @return array{packageName: string, editId: string, expiryTimeSeconds?: int, session: string}
+     */
+    private function open(Upload $upload): array
+    {
+        $edit = $this->insert($upload->identifier);
+        $editId = $edit['id'];
+
+        $response = $this->respond($this->factory->query(
+            Method::POST,
+            $this->edits($upload->identifier, $editId, self::RESUMABLE) . '/bundles',
+            ['uploadType' => self::UPLOAD_TYPE],
+            [
+                self::UPLOAD_CONTENT_TYPE => ContentType::OCTET_STREAM,
+                self::UPLOAD_CONTENT_LENGTH => (string) $upload->size,
+                Header::CONTENT_LENGTH => '0',
+            ],
+        ));
+
+        $session = $response->getHeaderLine(Header::LOCATION);
+        if ($session === '') {
+            throw new Unavailable('Google Play did not return an upload session');
+        }
+
+        return $this->session($upload, $edit, $session);
+    }
+
+    /**
+     * @param array{id: string, expiryTimeSeconds?: int|null} $edit
+     *
+     * @return array{packageName: string, editId: string, expiryTimeSeconds?: int, session: string}
+     */
+    private function session(Upload $upload, array $edit, #[\SensitiveParameter] string $session): array
+    {
+        $expiry = $edit['expiryTimeSeconds'] ?? null;
+
+        return $expiry === null
+            ? ['packageName' => $upload->identifier, 'editId' => $edit['id'], 'session' => $session]
+            : ['packageName' => $upload->identifier, 'editId' => $edit['id'], 'expiryTimeSeconds' => $expiry, 'session' => $session];
+    }
+
+    private function probe(Upload $upload, #[\SensitiveParameter] string $session): ResponseInterface
+    {
+        return $this->respond(
+            $this->factory->createRequest(Method::PUT, $session)
+                ->withHeader(Header::CONTENT_LENGTH, '0')
+                ->withHeader(self::CONTENT_RANGE, "bytes */{$upload->size}"),
+            self::INCOMPLETE,
+            ...self::SESSION_ENDED,
+        );
+    }
+
+    /**
+     * @param array{packageName: string, editId: string, expiryTimeSeconds?: int, session: string} $session
+     *
+     * @return array{versionCode: int, sha256: string}
+     */
+    private function transfer(Upload $upload, #[\SensitiveParameter] array $session, ?ResponseInterface $response, ?Progress $progress): array
+    {
+        if ($response instanceof ResponseInterface && $response->getStatusCode() !== self::INCOMPLETE) {
+            return $this->bundle($response);
+        }
+
+        $offset = $response instanceof ResponseInterface ? $this->received($response) : 0;
+
+        while (true) {
+            $remaining = $upload->size - $offset;
+            $response = $remaining > 0
+                ? $this->part($upload, $session['session'], $offset, min($this->chunk(), $remaining))
+                : $this->probe($upload, $session['session']);
+
+            if (\in_array($response->getStatusCode(), self::SESSION_ENDED, true)) {
+                $message = 'Google Play ended the upload session before returning the bundle; the next attempt starts a new upload';
+
+                throw new NotFound($message, [new Issue(self::UPLOAD_SESSION_ENDED, $message)]);
+            }
+
+            if ($response->getStatusCode() !== self::INCOMPLETE) {
+                return $this->bundle($response);
+            }
+
+            $received = $this->received($response);
+            if ($received <= $offset) {
+                throw new Unavailable("Google Play stopped accepting the upload at byte {$offset}");
+            }
+
+            $offset = $received;
+            $progress?->save([...$session, 'offset' => $offset]);
+        }
+    }
+
+    /**
+     * @param int<0, max> $offset
+     * @param int<1, max> $length
+     */
+    private function part(Upload $upload, #[\SensitiveParameter] string $session, int $offset, int $length): ResponseInterface
+    {
+        $last = $offset + $length - 1;
+
+        return $this->respond(
+            $this->factory->createRequest(Method::PUT, $session)
+                ->withHeader(Header::CONTENT_LENGTH, (string) $length)
+                ->withHeader(self::CONTENT_RANGE, "bytes {$offset}-{$last}/{$upload->size}")
+                ->withBody($upload->device->read($upload->path, $offset, $length)),
+            self::INCOMPLETE,
+        );
+    }
+
+    /**
+     * @return int<0, max>
+     */
+    private function received(ResponseInterface $response): int
+    {
+        $range = $response->getHeaderLine(self::RANGE);
+        if ($range === '') {
+            return 0;
+        }
+
+        $bounds = str_starts_with($range, self::RANGE_UNIT) ? explode('-', substr($range, \strlen(self::RANGE_UNIT)), 2) : [];
+        $last = $bounds[1] ?? '';
+        $received = (int) $last + 1;
+
+        if (($bounds[0] ?? null) !== '0' || !ctype_digit($last) || $received < 1) {
+            throw new Unavailable("Google Play returned an unreadable upload range \"{$range}\"");
+        }
+
+        return $received;
+    }
+
+    /**
+     * @return array{versionCode: int, sha256: string}
+     */
+    private function bundle(ResponseInterface $response): array
+    {
+        $body = $this->decode((string) $response->getBody());
+
+        $versionCode = $body['versionCode'] ?? null;
+        $versionCode = \is_string($versionCode) && ctype_digit($versionCode) ? (int) $versionCode : $versionCode;
+
+        $sha256 = $body['sha256'] ?? null;
+
+        if (!\is_int($versionCode) || !\is_string($sha256) || $sha256 === '') {
+            throw new Unavailable('Google Play returned a bundle without a version code and sha256');
+        }
+
+        return ['versionCode' => $versionCode, 'sha256' => $sha256];
+    }
+
+    private function track(string $packageName, string $editId, string $track): string
+    {
+        $body = $this->call($this->factory->createRequest(Method::GET, $this->edits($packageName, $editId) . '/tracks'));
+
+        $names = [];
+        foreach ($this->list($body, 'tracks') as $entry) {
+            $name = \is_array($entry) ? ($entry['track'] ?? null) : null;
+            if (\is_string($name)) {
+                $names[] = $name;
+            }
+        }
+
+        if ($track === Release::TRACK_INTERNAL && !\in_array($track, $names, true) && \in_array(self::QA, $names, true)) {
+            return self::QA;
+        }
+
+        return $track;
+    }
+
+    /**
+     * @return list<array<array-key, mixed>>
+     */
+    private function releases(string $packageName, string $editId, string $track): array
+    {
+        $body = $this->call($this->factory->createRequest(Method::GET, $this->tracks($packageName, $editId, $track)));
+
+        return array_values(array_filter($this->list($body, 'releases'), \is_array(...)));
+    }
+
+    /**
+     * @param list<array<array-key, mixed>> $releases
+     */
+    private function update(string $packageName, string $editId, string $track, array $releases): void
+    {
+        $this->call($this->factory->json(Method::PUT, $this->tracks($packageName, $editId, $track), [
+            'track' => $track,
+            'releases' => $releases,
+        ]));
+    }
+
+    private function commit(string $packageName, string $editId): bool
+    {
+        $uri = $this->edits($packageName, $editId) . ':commit';
+        $query = ['changesInReviewBehavior' => self::IN_REVIEW_BEHAVIOR];
+
+        try {
+            $this->call($this->factory->query(Method::POST, $uri, $query));
+
+            return false;
+        } catch (Invalid $invalid) {
+            if (!$this->mentions($invalid, self::NOT_SENT_FOR_REVIEW)) {
+                throw $invalid;
+            }
+        }
+
+        $this->call($this->factory->query(Method::POST, $uri, [...$query, 'changesNotSentForReview' => 'true']));
+
+        return true;
+    }
+
+    private function tracks(string $packageName, string $editId, string $track): string
+    {
+        return $this->edits($packageName, $editId) . '/tracks/' . rawurlencode($track);
+    }
+
+    private function lifecycle(string $packageName, string $track, string $versionCode): string
+    {
+        $body = $this->call($this->factory->createRequest(
+            Method::GET,
+            $this->application($packageName) . '/tracks/' . rawurlencode($track) . '/releases',
+        ));
+
+        foreach ($this->list($body, 'releases') as $summary) {
+            foreach ($this->list($summary, 'activeArtifacts') as $artifact) {
+                $code = \is_array($artifact) ? ($artifact['versionCode'] ?? null) : null;
+
+                if ((\is_int($code) || \is_string($code)) && (string) $code === $versionCode) {
+                    $lifecycle = \is_array($summary) ? ($summary['releaseLifecycleState'] ?? null) : null;
+
+                    return \is_string($lifecycle) && $lifecycle !== '' ? $lifecycle : self::LIFECYCLE_UNSPECIFIED;
+                }
+            }
+        }
+
+        return self::LIFECYCLE_NOT_FOUND;
+    }
+
+    private function published(string $packageName, string $track, string $versionCode): State
+    {
+        $editId = $this->insert($packageName)['id'];
+
+        try {
+            $releases = $this->releases($packageName, $editId, $track);
+        } finally {
+            $this->discard($packageName, $editId);
+        }
+
+        $index = $this->find($releases, $versionCode);
+        $release = $index === null ? [] : $releases[$index];
+
+        return match ($release['status'] ?? null) {
+            self::RELEASE_HALTED => new State(State::STATUS_HALTED, self::LIFECYCLE_PUBLISHED, $this->fraction($release)),
+            self::RELEASE_IN_PROGRESS => new State(State::STATUS_PUBLISHED, self::LIFECYCLE_PUBLISHED, $this->fraction($release)),
+            default => new State(State::STATUS_PUBLISHED, self::LIFECYCLE_PUBLISHED),
+        };
+    }
+
+    /**
+     * @param array<string, mixed> $external
+     * @param \Closure(array<array-key, mixed>): array<array-key, mixed> $transition
+     */
+    private function change(array $external, string $track, \Closure $transition): void
+    {
+        $packageName = $this->field($external, 'packageName');
+        $versionCode = $this->code($external);
+        $track = $this->alias($external, $track);
+
+        $editId = $this->insert($packageName)['id'];
+
+        try {
+            $releases = $this->releases($packageName, $editId, $track);
+
+            $index = $this->find($releases, $versionCode);
+            if ($index === null) {
+                throw new NotFound("Version code {$versionCode} has no release on the {$track} track");
+            }
+
+            $changed = $transition($releases[$index]);
+            $releases[$index] = $changed;
+
+            if ($this->completed($changed)) {
+                $releases = array_filter(
+                    $releases,
+                    fn (array $release, int $key): bool => $key === $index || !$this->completed($release),
+                    ARRAY_FILTER_USE_BOTH,
+                );
+            }
+
+            $this->update($packageName, $editId, $track, array_values($releases));
+            $this->commit($packageName, $editId);
+        } catch (\Throwable $throwable) {
+            $this->discard($packageName, $editId);
+
+            throw $throwable;
+        }
+    }
+
+    /**
+     * @param list<array<array-key, mixed>> $releases
+     */
+    private function find(array $releases, string $versionCode): ?int
+    {
+        foreach ($releases as $index => $release) {
+            foreach ($this->list($release, 'versionCodes') as $code) {
+                if ((\is_int($code) || \is_string($code)) && (string) $code === $versionCode) {
+                    return $index;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<array-key, mixed> $release
+     *
+     * @return array<array-key, mixed>
+     */
+    private function complete(array $release): array
+    {
+        unset($release['userFraction']);
+
+        return [...$release, 'status' => self::RELEASE_COMPLETED];
+    }
+
+    /**
+     * @param array<array-key, mixed> $release
+     */
+    private function completed(array $release): bool
+    {
+        return ($release['status'] ?? null) === self::RELEASE_COMPLETED;
+    }
+
+    /**
+     * @param array<array-key, mixed> $release
+     */
+    private function fraction(array $release): float
+    {
+        $fraction = $release['userFraction'] ?? null;
+
+        return (\is_float($fraction) || \is_int($fraction)) && $fraction > 0 && $fraction < 1 ? $fraction : 1.0;
+    }
+
+    /**
+     * @return array{}|array{releaseNotes: list<array{language: string, text: string}>}
+     */
+    private function notes(Release $release): array
+    {
+        $notes = [];
+        foreach ($release->notes as $language => $text) {
+            if ($this->characters($text) > self::NOTES_LIMIT) {
+                throw new Invalid("Google Play release notes for {$language} must be at most " . self::NOTES_LIMIT . ' characters');
+            }
+
+            $notes[] = ['language' => $language, 'text' => $text];
+        }
+
+        return $notes === [] ? [] : ['releaseNotes' => $notes];
+    }
+
+    private function characters(string $text): int
+    {
+        $characters = 0;
+        $bytes = \strlen($text);
+
+        for ($index = 0; $index < $bytes; $index++) {
+            if ((\ord($text[$index]) & 0xC0) !== 0x80) {
+                $characters++;
+            }
+        }
+
+        return $characters;
+    }
+
+    /**
+     * @param array<string, mixed> $external
+     */
+    private function alias(array $external, string $track): string
+    {
+        return $track === Release::TRACK_INTERNAL && ($external['track'] ?? null) === self::QA ? self::QA : $track;
+    }
+
+    /**
+     * @param array<string, mixed> $external
+     */
+    private function field(array $external, string $key): string
+    {
+        $value = $external[$key] ?? null;
+        if (!\is_string($value) || $value === '') {
+            throw new Invalid("Google Play external ids are missing {$key}");
+        }
+
+        return $value;
+    }
+
+    /**
+     * @param array<string, mixed> $external
+     */
+    private function code(array $external): string
+    {
+        $versionCode = $external['versionCode'] ?? null;
+        $versionCode = \is_int($versionCode) ? (string) $versionCode : $versionCode;
+
+        if (!\is_string($versionCode) || !ctype_digit($versionCode)) {
+            throw new Invalid('Google Play external ids are missing versionCode');
+        }
+
+        return $versionCode;
+    }
+
+    private function mentions(Exception $exception, string $text): bool
+    {
+        return str_contains($exception->getMessage(), $text)
+            || array_any($exception->getIssues(), static fn (Issue $issue): bool => str_contains($issue->message, $text));
     }
 }

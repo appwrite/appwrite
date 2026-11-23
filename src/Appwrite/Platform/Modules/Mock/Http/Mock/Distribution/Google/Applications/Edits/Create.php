@@ -60,10 +60,13 @@ class Create extends Base
             'expiryTimeSeconds' => (string) (\time() + self::TTL),
             'packageName' => $packageName,
             'email' => $email,
-            'tracks' => $application['tracks'],
         ];
 
-        $cache->save($this->key(self::RESOURCE_EDIT, $edit['id']), $edit, '', self::TTL);
+        foreach (self::CONTENT as $key) {
+            $edit[$key] = $application[$key] ?? [];
+        }
+
+        $this->saveEdit($cache, $edit);
         $cache->save($this->current($packageName, $email), $edit['id'], '', self::TTL);
 
         $response->json($this->appEdit($edit));
