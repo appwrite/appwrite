@@ -2,7 +2,6 @@
 
 namespace Utopia\Abuse;
 
-use Utopia\Abuse\Challenge\Prompt;
 use Utopia\Abuse\Challenge\Result;
 use Utopia\Abuse\Challenge\Status;
 use Utopia\Abuse\Challenge\Token;
@@ -22,9 +21,9 @@ abstract readonly class Challenge
 
     /**
      * @param  string  $secret  Signing secret
-     * @param  string  $label  Derives the signing key from the secret; keep it stable or issued prompts stop verifying
-     * @param  string  $purpose  Stored in each prompt so no other kind of token passes as one
-     * @param  int  $ttl  Prompt lifetime in seconds
+     * @param  string  $label  Derives the signing key from the secret; keep it stable or issued tokens stop verifying
+     * @param  string  $purpose  Stored in each token so no other kind of token passes as one
+     * @param  int  $ttl  Token lifetime in seconds
      *
      * @throws \InvalidArgumentException
      */
@@ -36,8 +35,8 @@ abstract readonly class Challenge
 
     /**
      * A copy with these params added, like {@see Adapter::withParams()}. Params
-     * are the fields prompts are bound to, e.g. the client's IP prefix and
-     * User-Agent hash: a prompt verifies only with exactly the same params.
+     * are the fields tokens are bound to, e.g. the client's IP prefix and
+     * User-Agent hash: a token verifies only with exactly the same params.
      *
      * @param  array<string, string>  $params
      */
@@ -52,17 +51,17 @@ abstract readonly class Challenge
     }
 
     /**
-     * Sign what the client needs to answer, bound to these params. Claims are
-     * carried through and returned by verify.
+     * Issue the signed token the client sends back with its answer, bound to
+     * these params. Claims are carried through and returned by verify.
      *
      * @param  array<string, string|int>  $claims
      *
      * @throws \InvalidArgumentException
      */
-    abstract public function issue(array $claims = []): Prompt;
+    abstract public function issue(array $claims = []): string;
 
     /**
-     * Check the client's answer to a prompt issued with the same params.
+     * Check the client's answer to a token issued with the same params.
      */
     abstract public function verify(string $token, string $answer): Result;
 

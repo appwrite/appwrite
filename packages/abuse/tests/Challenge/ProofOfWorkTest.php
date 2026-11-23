@@ -63,18 +63,24 @@ final class ProofOfWorkTest extends TestCase
 
     public function testIssueSignsNonceDifficultyBindingAndClaims(): void
     {
-        $puzzle = $this->pow()->withParams(self::BINDING)->issue(['project' => 'p1', 'ttl' => 3600], 12);
+        $token = $this->pow()->withParams(self::BINDING)->issue(['project' => 'p1', 'ttl' => 3600], 12);
 
-        $this->assertSame(12, $puzzle->difficulty);
-        $this->assertSame(32, \strlen($puzzle->nonce));
-
-        $claims = $this->token()->verify($puzzle->token);
+        $claims = $this->token()->verify($token);
         $this->assertIsArray($claims);
-        $this->assertSame($puzzle->nonce, $claims['nonce']);
+        $this->assertIsString($claims['nonce']);
+        $this->assertSame(32, \strlen($claims['nonce']));
         $this->assertSame(12, $claims['difficulty']);
         $this->assertSame('203.0.113.0/24', $claims['ip']);
         $this->assertSame('p1', $claims['project']);
         $this->assertSame(3600, $claims['ttl']);
+    }
+
+    public function testTheSeedIsTheTokensHash(): void
+    {
+        $token = $this->pow()->issue();
+
+        $this->assertSame(\hash('sha256', $token), ProofOfWork::seed($token));
+        $this->assertNotSame(ProofOfWork::seed($token), ProofOfWork::seed($this->pow()->issue()));
     }
 
     #[DataProvider('outOfRangeDifficulties')]
@@ -103,16 +109,16 @@ final class ProofOfWorkTest extends TestCase
 
     public function testIssueUsesTheConstructorDifficultyUnlessOverridden(): void
     {
-        $pow = new ProofOfWork(self::SECRET, new Memory(), 10);
+        $pow = new ProofOfWork(self::SECRET, new Memory(), 10, label: 'label');
 
-        $this->assertSame(10, $pow->issue()->difficulty);
-        $this->assertSame(12, $pow->issue(difficulty: 12)->difficulty);
+        $this->assertSame(10, $this->difficultyIn($pow->issue()));
+        $this->assertSame(12, $this->difficultyIn($pow->issue(difficulty: 12)));
     }
 
     public function testIssueAcceptsTheDigestRangeBounds(): void
     {
-        $this->assertSame(0, $this->pow()->issue(difficulty: 0)->difficulty);
-        $this->assertSame(256, $this->pow()->issue(difficulty: 256)->difficulty);
+        $this->assertSame(0, $this->difficultyIn($this->pow()->issue(difficulty: 0)));
+        $this->assertSame(256, $this->difficultyIn($this->pow()->issue(difficulty: 256)));
     }
 
     #[DataProvider('reservedNames')]
@@ -146,7 +152,7 @@ final class ProofOfWorkTest extends TestCase
         $pow = $this->pow();
         $puzzle = $pow->withParams(self::BINDING)->issue(['project' => 'p1'], 8);
 
-        $result = $pow->withParams(self::BINDING)->verify($puzzle->token, $this->solve($puzzle->nonce, 8));
+        $result = $pow->withParams(self::BINDING)->verify($puzzle, $this->solve(ProofOfWork::seed($puzzle), 8));
 
         $this->assertSame(Status::Valid, $result->status);
         $this->assertTrue($result->isValid());
@@ -159,10 +165,10 @@ final class ProofOfWorkTest extends TestCase
     {
         $pow = $this->pow();
         $puzzle = $pow->withParams(self::BINDING)->issue(difficulty: 8);
-        $solution = $this->solve($puzzle->nonce, 8);
+        $solution = $this->solve(ProofOfWork::seed($puzzle), 8);
 
-        $this->assertSame(Status::Valid, $pow->withParams(self::BINDING)->verify($puzzle->token, $solution)->status);
-        $this->assertSame(Status::Replay, $pow->withParams(self::BINDING)->verify($puzzle->token, $solution)->status);
+        $this->assertSame(Status::Valid, $pow->withParams(self::BINDING)->verify($puzzle, $solution)->status);
+        $this->assertSame(Status::Replay, $pow->withParams(self::BINDING)->verify($puzzle, $solution)->status);
     }
 
     public function testNonceIsUsedEvenWhenTheSolutionIsWrong(): void
@@ -171,34 +177,34 @@ final class ProofOfWorkTest extends TestCase
         $pow = $this->pow();
         $puzzle = $pow->withParams(self::BINDING)->issue(difficulty: 12);
 
-        $this->assertSame(Status::Rejected, $pow->withParams(self::BINDING)->verify($puzzle->token, $this->wrong($puzzle->nonce, 12))->status);
-        $this->assertSame(Status::Replay, $pow->withParams(self::BINDING)->verify($puzzle->token, $this->solve($puzzle->nonce, 12))->status);
+        $this->assertSame(Status::Rejected, $pow->withParams(self::BINDING)->verify($puzzle, $this->wrong(ProofOfWork::seed($puzzle), 12))->status);
+        $this->assertSame(Status::Replay, $pow->withParams(self::BINDING)->verify($puzzle, $this->solve(ProofOfWork::seed($puzzle), 12))->status);
     }
 
     public function testBindingMismatchDoesNotUseTheNonce(): void
     {
         $pow = $this->pow();
         $puzzle = $pow->withParams(self::BINDING)->issue(difficulty: 8);
-        $solution = $this->solve($puzzle->nonce, 8);
+        $solution = $this->solve(ProofOfWork::seed($puzzle), 8);
 
-        $mismatch = $pow->withParams(['ip' => '198.51.100.0/24', 'ua' => 'ua-hash'])->verify($puzzle->token, $solution);
+        $mismatch = $pow->withParams(['ip' => '198.51.100.0/24', 'ua' => 'ua-hash'])->verify($puzzle, $solution);
         $this->assertSame(Status::BindingMismatch, $mismatch->status);
         $this->assertSame([], $mismatch->claims);
 
         // The owner can still redeem it.
-        $this->assertSame(Status::Valid, $pow->withParams(self::BINDING)->verify($puzzle->token, $solution)->status);
+        $this->assertSame(Status::Valid, $pow->withParams(self::BINDING)->verify($puzzle, $solution)->status);
     }
 
     public function testVerifyingWithPartOfTheBindingIsRejected(): void
     {
         $pow = $this->pow();
         $puzzle = $pow->withParams(self::BINDING)->issue(difficulty: 8);
-        $solution = $this->solve($puzzle->nonce, 8);
+        $solution = $this->solve(ProofOfWork::seed($puzzle), 8);
 
-        $this->assertSame(Status::BindingMismatch, $pow->withParams(['ip' => self::BINDING['ip']])->verify($puzzle->token, $solution)->status);
-        $this->assertSame(Status::BindingMismatch, $pow->verify($puzzle->token, $solution)->status);
+        $this->assertSame(Status::BindingMismatch, $pow->withParams(['ip' => self::BINDING['ip']])->verify($puzzle, $solution)->status);
+        $this->assertSame(Status::BindingMismatch, $pow->verify($puzzle, $solution)->status);
         // Neither attempt used the nonce.
-        $this->assertSame(Status::Valid, $pow->withParams(self::BINDING)->verify($puzzle->token, $solution)->status);
+        $this->assertSame(Status::Valid, $pow->withParams(self::BINDING)->verify($puzzle, $solution)->status);
     }
 
     public function testWithParamsReturnsACopyAndMerges(): void
@@ -206,11 +212,11 @@ final class ProofOfWorkTest extends TestCase
         $pow = $this->pow();
         $bound = $pow->withParams(['ip' => self::BINDING['ip']])->withParams(['ua' => self::BINDING['ua']]);
         $puzzle = $bound->issue(difficulty: 8);
-        $solution = $this->solve($puzzle->nonce, 8);
+        $solution = $this->solve(ProofOfWork::seed($puzzle), 8);
 
         // The original stays unbound, so it cannot redeem a bound puzzle.
-        $this->assertSame(Status::BindingMismatch, $pow->verify($puzzle->token, $solution)->status);
-        $this->assertSame(Status::Valid, $pow->withParams(self::BINDING)->verify($puzzle->token, $solution)->status);
+        $this->assertSame(Status::BindingMismatch, $pow->verify($puzzle, $solution)->status);
+        $this->assertSame(Status::Valid, $pow->withParams(self::BINDING)->verify($puzzle, $solution)->status);
     }
 
     public function testDefaultsWork(): void
@@ -219,10 +225,10 @@ final class ProofOfWorkTest extends TestCase
         $before = \time();
         $puzzle = $pow->issue(difficulty: 8);
 
-        $this->assertSame(Status::Valid, $pow->verify($puzzle->token, $this->solve($puzzle->nonce, 8))->status);
+        $this->assertSame(Status::Valid, $pow->verify($puzzle, $this->solve(ProofOfWork::seed($puzzle), 8))->status);
 
         // Default label and purpose are "challenge"; default lifetime is DEFAULT_TTL.
-        $claims = new Token(self::SECRET, 'challenge', 'challenge', 1)->verify($puzzle->token);
+        $claims = new Token(self::SECRET, 'challenge', 'challenge', 1)->verify($puzzle);
         $this->assertIsArray($claims);
         $this->assertGreaterThanOrEqual($before + ProofOfWork::DEFAULT_TTL, $claims['exp']);
         $this->assertLessThanOrEqual(\time() + ProofOfWork::DEFAULT_TTL, $claims['exp']);
@@ -233,7 +239,7 @@ final class ProofOfWorkTest extends TestCase
         $pow = $this->pow();
         $puzzle = $pow->issue(difficulty: 8);
 
-        $this->assertSame(Status::BindingMismatch, $pow->withParams(self::BINDING)->verify($puzzle->token, $this->solve($puzzle->nonce, 8))->status);
+        $this->assertSame(Status::BindingMismatch, $pow->withParams(self::BINDING)->verify($puzzle, $this->solve(ProofOfWork::seed($puzzle), 8))->status);
     }
 
     public function testNonceParamsAreFilledFromTheTokenClaims(): void
@@ -242,11 +248,14 @@ final class ProofOfWorkTest extends TestCase
         $pow = $this->pow($nonces);
         $puzzle = $pow->issue(['project' => 'p1'], 8);
 
-        $pow->verify($puzzle->token, $this->solve($puzzle->nonce, 8));
+        $pow->verify($puzzle, $this->solve(ProofOfWork::seed($puzzle), 8));
 
-        $this->assertTrue($nonces->claimed->offsetExists('pow:p1:' . $puzzle->nonce));
+        // The store key uses the token's random nonce claim, not the seed.
+        $nonce = $this->token()->verify($puzzle)['nonce'] ?? null;
+        $this->assertIsString($nonce);
+        $this->assertTrue($nonces->claimed->offsetExists('pow:p1:' . $nonce));
         // The nonce stays used for the token's lifetime.
-        $this->assertSame(120, $nonces->claimed['pow:p1:' . $puzzle->nonce]);
+        $this->assertSame(120, $nonces->claimed['pow:p1:' . $nonce]);
     }
 
     public function testVerifyRejectsGarbageTamperedAndForeignTokens(): void
@@ -255,12 +264,12 @@ final class ProofOfWorkTest extends TestCase
         $this->assertSame(Status::InvalidToken, $pow->verify('not.a.jwt', '0')->status);
 
         $puzzle = $pow->issue(difficulty: 8);
-        $tampered = $puzzle->token;
+        $tampered = $puzzle;
         $tampered[\strlen($tampered) - 1] = $tampered[\strlen($tampered) - 1] === 'a' ? 'b' : 'a';
-        $this->assertSame(Status::InvalidToken, $pow->verify($tampered, $this->solve($puzzle->nonce, 8))->status);
+        $this->assertSame(Status::InvalidToken, $pow->verify($tampered, $this->solve(ProofOfWork::seed($puzzle), 8))->status);
 
         $foreign = $this->pow(secret: 'other-secret')->issue(difficulty: 8);
-        $this->assertSame(Status::InvalidToken, $pow->verify($foreign->token, $this->solve($foreign->nonce, 8))->status);
+        $this->assertSame(Status::InvalidToken, $pow->verify($foreign, $this->solve(ProofOfWork::seed($foreign), 8))->status);
     }
 
     public function testATokenIssuedForAnotherPurposeIsNotAPuzzle(): void
@@ -285,7 +294,7 @@ final class ProofOfWorkTest extends TestCase
         $pow = $this->pow(new Memory(error: $error));
         $puzzle = $pow->issue(difficulty: 8);
 
-        $result = $pow->verify($puzzle->token, $this->solve($puzzle->nonce, 8));
+        $result = $pow->verify($puzzle, $this->solve(ProofOfWork::seed($puzzle), 8));
 
         $this->assertSame(Status::Unavailable, $result->status);
         $this->assertSame($error, $result->error);
@@ -299,15 +308,23 @@ final class ProofOfWorkTest extends TestCase
         $pow = $this->pow(new Memory(error: $error), acceptWhenNoncesUnavailable: true);
 
         $puzzle = $pow->issue(difficulty: 8);
-        $valid = $pow->verify($puzzle->token, $this->solve($puzzle->nonce, 8));
+        $valid = $pow->verify($puzzle, $this->solve(ProofOfWork::seed($puzzle), 8));
         $this->assertSame(Status::Valid, $valid->status);
         $this->assertSame($error, $valid->error);
 
         $puzzle = $pow->issue(difficulty: 12);
-        $this->assertSame(Status::Rejected, $pow->verify($puzzle->token, $this->wrong($puzzle->nonce, 12))->status);
+        $this->assertSame(Status::Rejected, $pow->verify($puzzle, $this->wrong(ProofOfWork::seed($puzzle), 12))->status);
     }
 
     // --- helpers --------------------------------------------------------------
+
+    private function difficultyIn(string $token): int
+    {
+        $difficulty = $this->token()->verify($token)['difficulty'] ?? null;
+        $this->assertIsInt($difficulty);
+
+        return $difficulty;
+    }
 
     private function solve(string $nonce, int $difficulty): string
     {

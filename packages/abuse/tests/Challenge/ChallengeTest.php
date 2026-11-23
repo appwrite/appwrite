@@ -20,21 +20,21 @@ final class ChallengeTest extends TestCase
     public function testANewKindNeedsOnlyIssueAndVerify(): void
     {
         $riddle = $this->riddle()->withParams(self::CLIENT);
-        $prompt = $riddle->issue(['project' => 'p1']);
+        $token = $riddle->issue(['project' => 'p1']);
 
-        $valid = $riddle->verify($prompt->token, 'echo');
+        $valid = $riddle->verify($token, 'echo');
         $this->assertSame(Status::Valid, $valid->status);
         $this->assertSame('p1', $valid->claims['project']);
-        $this->assertSame(Status::Rejected, $riddle->verify($prompt->token, 'wrong')->status);
+        $this->assertSame(Status::Rejected, $riddle->verify($token, 'wrong')->status);
     }
 
     public function testParamsAreEnforcedByTheBase(): void
     {
-        $prompt = $this->riddle()->withParams(self::CLIENT)->issue();
+        $token = $this->riddle()->withParams(self::CLIENT)->issue();
 
-        $this->assertSame(Status::BindingMismatch, $this->riddle()->verify($prompt->token, 'echo')->status);
-        $this->assertSame(Status::BindingMismatch, $this->riddle()->withParam('ip', '203.0.113.0/24')->verify($prompt->token, 'echo')->status);
-        $this->assertSame(Status::Valid, $this->riddle()->withParam('ip', '203.0.113.0/24')->withParam('ua', 'ua-hash')->verify($prompt->token, 'echo')->status);
+        $this->assertSame(Status::BindingMismatch, $this->riddle()->verify($token, 'echo')->status);
+        $this->assertSame(Status::BindingMismatch, $this->riddle()->withParam('ip', '203.0.113.0/24')->verify($token, 'echo')->status);
+        $this->assertSame(Status::Valid, $this->riddle()->withParam('ip', '203.0.113.0/24')->withParam('ua', 'ua-hash')->verify($token, 'echo')->status);
     }
 
     public function testWithParamsReturnsACopy(): void
@@ -43,13 +43,13 @@ final class ChallengeTest extends TestCase
         $riddle->withParams(self::CLIENT);
 
         // The original stayed unbound, so its prompts carry no binding.
-        $this->assertSame(Status::Valid, $riddle->verify($riddle->issue()->token, 'echo')->status);
+        $this->assertSame(Status::Valid, $riddle->verify($riddle->issue(), 'echo')->status);
     }
 
     public function testInvalidTokensAreRejectedByTheBase(): void
     {
         $this->assertSame(Status::InvalidToken, $this->riddle()->verify('not.a.jwt', 'echo')->status);
-        $this->assertSame(Status::InvalidToken, $this->riddle()->verify($this->riddle('other')->issue()->token, 'echo')->status);
+        $this->assertSame(Status::InvalidToken, $this->riddle()->verify($this->riddle('other')->issue(), 'echo')->status);
     }
 
     public function testTheKindsOwnClaimsCannotBeOverridden(): void

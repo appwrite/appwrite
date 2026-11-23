@@ -4,32 +4,33 @@ namespace Utopia\Abuse\Challenge;
 
 use Throwable;
 use Utopia\Abuse\Challenge;
-use Utopia\Abuse\Challenge\ProofOfWork\Puzzle;
 
 /**
- * Leading-zero-bits proof-of-work. A client must find a solution whose
- * SHA-256(nonce ":" solution) starts with at least `difficulty` zero bits.
+ * Leading-zero-bits proof-of-work. A client must find an answer whose
+ * SHA-256(seed ":" answer) starts with at least `difficulty` zero bits, where
+ * the seed is {@see seed()} of the token it was issued.
  *
- * Issue signs the nonce and difficulty into a token, with no server-side write.
- * Verify checks the token and params, uses the nonce once before checking the
- * solution (so one puzzle buys one attempt), then checks the solution.
+ * Issue signs a random nonce and the difficulty into a token, with no
+ * server-side write. Verify checks the token and params, records the nonce as
+ * used before checking the answer (so one token buys one attempt), then checks
+ * the answer.
  */
 final readonly class ProofOfWork extends Challenge
 {
     /** SHA-256 digest width: the most leading zero bits a solution can have. */
     public const int MAX_DIFFICULTY = 256;
 
-    /** Puzzle lifetime in seconds; also how long a used nonce is remembered. */
+    /** Token lifetime in seconds; also how long a used nonce is remembered. */
     public const int DEFAULT_TTL = 120;
 
     /**
      * @param  string  $secret  Signing secret
-     * @param  Nonce  $nonces  Remembers used nonces; key placeholders such as "{project}" are filled from the puzzle's claims
-     * @param  int  $difficulty  Leading zero bits a solution needs, 0–256; issue() can override it per puzzle
-     * @param  int  $ttl  Puzzle lifetime in seconds
+     * @param  Nonce  $nonces  Remembers used nonces; key placeholders such as "{project}" are filled from the token's claims
+     * @param  int  $difficulty  Leading zero bits an answer needs, 0–256; issue() can override it per token
+     * @param  int  $ttl  Token lifetime in seconds
      * @param  bool  $acceptWhenNoncesUnavailable  When the nonce store fails, check the solution anyway instead of rejecting
-     * @param  string  $label  Derives the signing key from the secret; keep it stable or issued puzzles stop verifying
-     * @param  string  $purpose  Stored in each puzzle so no other kind of token passes as one
+     * @param  string  $label  Derives the signing key from the secret; keep it stable or issued tokens stop verifying
+     * @param  string  $purpose  Stored in each token so no other kind of token passes as one
      *
      * @throws \InvalidArgumentException
      */
@@ -48,29 +49,26 @@ final readonly class ProofOfWork extends Challenge
 
     /**
      * @param  array<string, string|int>  $claims
-     * @param  int|null  $difficulty  Overrides the constructor's difficulty for this puzzle
+     * @param  int|null  $difficulty  Overrides the constructor's difficulty for this token
      *
      * @throws \InvalidArgumentException
      */
     #[\Override]
-    public function issue(array $claims = [], ?int $difficulty = null): Puzzle
+    public function issue(array $claims = [], ?int $difficulty = null): string
     {
         $difficulty ??= $this->difficulty;
         self::checkDifficulty($difficulty);
 
-        $nonce = \bin2hex(\random_bytes(16));
-        $token = $this->sign([
-            'nonce' => $nonce,
+        return $this->sign([
+            'nonce' => \bin2hex(\random_bytes(16)),
             'difficulty' => $difficulty,
             'iatMs' => (int) (\microtime(true) * 1000),
         ], $claims);
-
-        return new Puzzle($token, $nonce, $difficulty);
     }
 
     /**
-     * Verify a solution. Params are checked before the nonce is used, so a
-     * puzzle presented by another client never spends the owner's attempt.
+     * Verify an answer. Params are checked before the nonce is used, so a token
+     * presented by another client never spends the owner's attempt.
      */
     #[\Override]
     public function verify(string $token, string $answer): Result
@@ -105,7 +103,7 @@ final readonly class ProofOfWork extends Challenge
             return new Result(Status::Replay, $claims, $difficulty, $elapsedMs);
         }
 
-        if (!self::isSolution($nonce, $answer, $difficulty)) {
+        if (!self::isSolution(self::seed($token), $answer, $difficulty)) {
             return new Result(Status::Rejected, $claims, $difficulty, $elapsedMs, $error);
         }
 
@@ -126,12 +124,21 @@ final readonly class ProofOfWork extends Challenge
     }
 
     /**
-     * Whether the answer solves the puzzle: SHA-256(nonce ":" answer) reaches
+     * What the client hashes its answers against: SHA-256 of the token, in hex.
+     * Callers send it to the client alongside the token and difficulty.
+     */
+    public static function seed(string $token): string
+    {
+        return \hash('sha256', $token);
+    }
+
+    /**
+     * Whether the answer solves the puzzle: SHA-256(seed ":" answer) reaches
      * the difficulty. One hash — the same rule on client and server.
      */
-    public static function isSolution(string $nonce, string $answer, int $difficulty): bool
+    public static function isSolution(string $seed, string $answer, int $difficulty): bool
     {
-        return self::difficultyOf(\hash('sha256', $nonce . ':' . $answer, true)) >= $difficulty;
+        return self::difficultyOf(\hash('sha256', $seed . ':' . $answer, true)) >= $difficulty;
     }
 
     /**
