@@ -425,7 +425,7 @@ impl<D: Dialect + Text> State<D> {
         let steps = functions
             .iter()
             .enumerate()
-            .fold(0, |steps, (index, function)| steps | u64::from(!function.is_null()) << index);
+            .fold(0, |steps, (index, function)| steps | u128::from(!function.is_null()) << index);
         self.with(|builder| {
             builder.set_overridden(steps);
         });
@@ -720,6 +720,12 @@ impl<D: Dialect + Text> State<D> {
         }
     }
 
+    /// A step that returns a bool, run as the builder itself runs it.
+    fn step_bool(&self, step: Step, arguments: &[Arg<'_>]) -> PhpResult<bool> {
+        let returned = self.with(|builder| builder.base(step, arguments)).map_err(|error| raised(&error))?;
+        Ok(matches!(returned, Ret::Bool(true)))
+    }
+
     /// Calls `function`, a PHP method of `object`'s class, as `$this->function(...)` does.
     fn overridden(&self, object: *mut ZendObject, function: *mut zend_function, arguments: &[Arg<'_>]) -> Option<Ret> {
         let mut zvals = Vec::with_capacity(arguments.len());
@@ -737,6 +743,11 @@ impl<D: Dialect + Text> State<D> {
                 Arg::Query(found) => query_object(D::JSON, found).ok()?,
                 Arg::Method(method) => method_case(*method).ok()?,
                 Arg::Join(join) => join_object(D::JSON, join).ok()?,
+                Arg::Int(number) => number.map_or_else(null, |number| {
+                    let mut out = Zval::new();
+                    out.set_long(number);
+                    out
+                }),
             });
         }
         let mut returned = Zval::new();
@@ -759,6 +770,9 @@ impl<D: Dialect + Text> State<D> {
         }
         if let Some(text) = returned.zend_str() {
             return Some(Ret::Str(self.text(text.as_bytes())));
+        }
+        if let Some(flag) = returned.bool() {
+            return Some(Ret::Bool(flag));
         }
         // `build()` returns a statement.
         let Some(fields) = properties(&returned) else { return Some(Ret::None) };
@@ -1970,6 +1984,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let attribute = self_.0.text(attribute.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.stddev(&attribute, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2010,6 +2026,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let attribute = self_.0.text(attribute.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.variance(&attribute, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2102,6 +2120,8 @@ macro_rules! builder_class {
                 let column = self_.0.text(column.bytes());
                 let r#type = self_.0.text(r#type.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.select_cast(&column, &r#type, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2116,6 +2136,8 @@ macro_rules! builder_class {
                 let left = self_.0.text(left.bytes());
                 let operator = self_.0.text(operator.bytes());
                 let right = self_.0.text(right.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.where_column(&left, &operator, &right).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2165,6 +2187,8 @@ macro_rules! builder_class {
                 hint: PhpString<'_>,
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let hint = self_.0.text(hint.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.hint(&hint).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2183,6 +2207,8 @@ macro_rules! builder_class {
                 let condition = self_.0.text(condition.bytes());
                 let alias = self_.0.text(alias.bytes());
                 let bindings = bindings.iter().map(|value| self_.0.value(value)).collect::<PhpResult<Vec<Value>>>()?;
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.count_when(&condition, &alias, bindings).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2199,6 +2225,8 @@ macro_rules! builder_class {
                 let condition = self_.0.text(condition.bytes());
                 let alias = self_.0.text(alias.bytes());
                 let bindings = bindings.iter().map(|value| self_.0.value(value)).collect::<PhpResult<Vec<Value>>>()?;
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.sum_when(&column, &condition, &alias, bindings).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2215,6 +2243,8 @@ macro_rules! builder_class {
                 let condition = self_.0.text(condition.bytes());
                 let alias = self_.0.text(alias.bytes());
                 let bindings = bindings.iter().map(|value| self_.0.value(value)).collect::<PhpResult<Vec<Value>>>()?;
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.avg_when(&column, &condition, &alias, bindings).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2231,6 +2261,8 @@ macro_rules! builder_class {
                 let condition = self_.0.text(condition.bytes());
                 let alias = self_.0.text(alias.bytes());
                 let bindings = bindings.iter().map(|value| self_.0.value(value)).collect::<PhpResult<Vec<Value>>>()?;
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.min_when(&column, &condition, &alias, bindings).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2247,6 +2279,8 @@ macro_rules! builder_class {
                 let condition = self_.0.text(condition.bytes());
                 let alias = self_.0.text(alias.bytes());
                 let bindings = bindings.iter().map(|value| self_.0.value(value)).collect::<PhpResult<Vec<Value>>>()?;
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.max_when(&column, &condition, &alias, bindings).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2263,6 +2297,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let column = self_.0.text(column.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.json_array_agg(&column, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2277,6 +2313,8 @@ macro_rules! builder_class {
                 let keyColumn = self_.0.text(keyColumn.bytes());
                 let valueColumn = self_.0.text(valueColumn.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.json_object_agg(&keyColumn, &valueColumn, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2353,6 +2391,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let column = self_.0.text(column.bytes());
                 let values = self_.0.values(&values)?;
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.set_json_append(&column, values).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2365,6 +2405,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let column = self_.0.text(column.bytes());
                 let values = self_.0.values(&values)?;
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.set_json_prepend(&column, values).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2379,6 +2421,8 @@ macro_rules! builder_class {
                 let column = self_.0.text(column.bytes());
                 let index = index.0;
                 let value = self_.0.value(value)?;
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.set_json_insert(&column, index, value).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2391,6 +2435,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let column = self_.0.text(column.bytes());
                 let value = self_.0.value(value)?;
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.set_json_remove(&column, value).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2403,6 +2449,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let column = self_.0.text(column.bytes());
                 let values = self_.0.values(&values)?;
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.set_json_intersect(&column, values).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2415,6 +2463,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let column = self_.0.text(column.bytes());
                 let values = self_.0.values(&values)?;
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.set_json_diff(&column, values).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2425,6 +2475,8 @@ macro_rules! builder_class {
                 column: PhpString<'_>,
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let column = self_.0.text(column.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.set_json_unique(&column).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2439,6 +2491,8 @@ macro_rules! builder_class {
                 let column = self_.0.text(column.bytes());
                 let path = self_.0.text(path.bytes());
                 let value = self_.0.value(value)?;
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.set_json_path(&column, &path, value).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2455,6 +2509,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let attribute = self_.0.text(attribute.bytes());
                 let value = self_.0.text(value.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.filter_search(&attribute, &value).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2489,6 +2545,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let percent = percent.0;
                 let method = self_.0.text(method.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.tablesample(percent, &method).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2505,6 +2563,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let sequence = self_.0.text(sequence.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.next_val(&sequence, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2517,6 +2577,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let sequence = self_.0.text(sequence.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.curr_val(&sequence, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2539,6 +2601,8 @@ macro_rules! builder_class {
                 let operator = self_.0.text(operator.bytes());
                 let distance = distance.0;
                 let meters = meters.0;
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.filter_distance(attribute, &point, &operator, distance, meters).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2831,6 +2895,8 @@ macro_rules! builder_class {
                 let filterCondition = self_.0.text(filterCondition.bytes());
                 let alias = self_.0.text(alias.bytes());
                 let bindings: Vec<Value> = self_.0.values(&bindings)?.values().cloned().collect();
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.select_aggregate_filter(&aggregateExpr, &filterCondition, &alias, bindings).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2843,6 +2909,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let column = self_.0.text(column.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.array_agg(&column, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2855,6 +2923,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let column = self_.0.text(column.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.bool_and(&column, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2867,6 +2937,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let column = self_.0.text(column.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.bool_or(&column, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2879,6 +2951,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let column = self_.0.text(column.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.every(&column, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2891,6 +2965,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let column = self_.0.text(column.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.mode(&column, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2905,6 +2981,8 @@ macro_rules! builder_class {
                 let fraction = fraction.0;
                 let orderColumn = self_.0.text(orderColumn.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.percentile_cont(fraction, &orderColumn, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2919,6 +2997,8 @@ macro_rules! builder_class {
                 let fraction = fraction.0;
                 let orderColumn = self_.0.text(orderColumn.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.percentile_disc(fraction, &orderColumn, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -2994,6 +3074,8 @@ macro_rules! builder_class {
                 ms: Int,
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let ms = ms.0;
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.max_execution_time(ms).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3014,6 +3096,8 @@ macro_rules! builder_class {
                 fraction: Float,
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let fraction = fraction.0;
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.sample(fraction).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3038,6 +3122,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let column = self_.0.text(column.bytes());
                 let r#type = self_.0.text(r#type.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.with_param_type(column, &r#type).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3048,6 +3134,8 @@ macro_rules! builder_class {
                 types: Arr<'_>,
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let types = self_.0.pairs(&types);
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.with_param_types(types).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3057,6 +3145,8 @@ macro_rules! builder_class {
                 settings: Arr<'_>,
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let settings = self_.0.pairs(&settings);
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.settings(settings).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3069,6 +3159,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let format = self_.0.text(format.bytes());
                 let columns = self_.0.strings(&columns);
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.insert_format(&format, columns).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3079,6 +3171,8 @@ macro_rules! builder_class {
                 mode: PhpString<'_>,
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let mode = self_.0.text(mode.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| (match utopia_query::builder::DeleteMode::parse(&mode) { Ok(mode) => { builder.delete_mode(mode); Ok(()) } Err(error) => Err(error) }).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3093,6 +3187,8 @@ macro_rules! builder_class {
                 let level = level.0;
                 let column = self_.0.text(column.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.quantile(level, &column, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3107,6 +3203,8 @@ macro_rules! builder_class {
                 let level = level.0;
                 let column = self_.0.text(column.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.quantile_exact(level, &column, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3119,6 +3217,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let column = self_.0.text(column.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.median(&column, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3131,6 +3231,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let column = self_.0.text(column.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.uniq(&column, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3143,6 +3245,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let column = self_.0.text(column.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.uniq_exact(&column, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3155,6 +3259,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let column = self_.0.text(column.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.uniq_combined(&column, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3169,6 +3275,8 @@ macro_rules! builder_class {
                 let valueColumn = self_.0.text(valueColumn.bytes());
                 let argColumn = self_.0.text(argColumn.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.arg_min(&valueColumn, &argColumn, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3183,6 +3291,8 @@ macro_rules! builder_class {
                 let valueColumn = self_.0.text(valueColumn.bytes());
                 let argColumn = self_.0.text(argColumn.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.arg_max(&valueColumn, &argColumn, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3197,6 +3307,8 @@ macro_rules! builder_class {
                 let k = k.0;
                 let column = self_.0.text(column.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.top_k(k, &column, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3213,6 +3325,8 @@ macro_rules! builder_class {
                 let column = self_.0.text(column.bytes());
                 let weightColumn = self_.0.text(weightColumn.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.top_k_weighted(k, &column, &weightColumn, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3225,6 +3339,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let column = self_.0.text(column.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.any_value(&column, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3237,6 +3353,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let column = self_.0.text(column.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.any_last_value(&column, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3249,6 +3367,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let column = self_.0.text(column.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.group_uniq_array(&column, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3261,6 +3381,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let column = self_.0.text(column.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.group_array_moving_avg(&column, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3273,6 +3395,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let column = self_.0.text(column.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.group_array_moving_sum(&column, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3344,6 +3468,8 @@ macro_rules! builder_class {
                 let from = from.filter(|from| !from.is_null()).map(|from| self_.0.value(from)).transpose()?;
                 let to = to.filter(|to| !to.is_null()).map(|to| self_.0.value(to)).transpose()?;
                 let step = step.filter(|step| !step.is_null()).map(|step| self_.0.value(step)).transpose()?;
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.order_with_fill(&column, &direction, from, to, step).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3359,6 +3485,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let field = self_.0.text(field.bytes());
                 let value = self_.0.value(value)?;
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.push(&field, value).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3370,6 +3498,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let field = self_.0.text(field.bytes());
                 let value = self_.0.value(value)?;
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.pull(&field, value).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3382,6 +3512,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let field = self_.0.text(field.bytes());
                 let value = self_.0.value(value)?;
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.add_to_set(&field, value).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3392,6 +3524,8 @@ macro_rules! builder_class {
                 fields: &[&Zval],
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let fields: Vec<String> = fields.iter().filter_map(|value| value.zend_str()).map(|value| self_.0.text(value.as_bytes())).collect();
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.unset_fields(fields).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3403,6 +3537,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let oldField = self_.0.text(oldField.bytes());
                 let newField = self_.0.text(newField.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.rename(&oldField, &newField).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3414,6 +3550,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let field = self_.0.text(field.bytes());
                 let factor = self_.0.value(factor)?;
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.multiply(&field, factor).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3424,6 +3562,8 @@ macro_rules! builder_class {
                 field: PhpString<'_>,
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let field = self_.0.text(field.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.pop_first(&field).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3434,6 +3574,8 @@ macro_rules! builder_class {
                 field: PhpString<'_>,
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let field = self_.0.text(field.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.pop_last(&field).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3446,6 +3588,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let field = self_.0.text(field.bytes());
                 let values = self_.0.values(&values)?;
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.pull_all(&field, values).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3458,6 +3602,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let field = self_.0.text(field.bytes());
                 let value = self_.0.value(value)?;
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.update_min(&field, value).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3470,6 +3616,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let field = self_.0.text(field.bytes());
                 let value = self_.0.value(value)?;
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.update_max(&field, value).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3482,6 +3630,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let field = self_.0.text(field.bytes());
                 let r#type = self_.0.text(r#type.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.current_date(&field, &r#type).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3500,6 +3650,8 @@ macro_rules! builder_class {
                 let position = position.map(|position| position.0);
                 let slice = slice.map(|slice| slice.0);
                 let sort = sort.map(|sort| self_.0.values(&sort)).transpose()?;
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.push_each(&field, values, position, slice, sort).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3793,6 +3945,8 @@ macro_rules! builder_class {
                 let operator = operator.0;
                 let rightInequality = self_.0.text(rightInequality.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.asof_join(&table, equiPairs, &leftInequality, operator, &rightInequality, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3813,6 +3967,8 @@ macro_rules! builder_class {
                 let operator = operator.0;
                 let rightInequality = self_.0.text(rightInequality.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.asof_left_join(&table, equiPairs, &leftInequality, operator, &rightInequality, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3831,6 +3987,8 @@ macro_rules! builder_class {
                 let levels: Vec<f64> = self_.0.values(&levels)?.values().map(number).collect();
                 let column = self_.0.text(column.bytes());
                 let alias = self_.0.text(alias.bytes());
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.quantiles(&levels, &column, &alias).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3851,6 +4009,8 @@ macro_rules! builder_class {
                 let separator = self_.0.text(separator.bytes());
                 let alias = self_.0.text(alias.bytes());
                 let orderBy = orderBy.map(|orderBy| self_.0.strings(&orderBy));
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.group_concat(&column, &separator, &alias, orderBy.as_deref()).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3867,6 +4027,8 @@ macro_rules! builder_class {
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let field = self_.0.text(field.bytes());
                 let amount = amount.filter(|amount| !amount.is_null()).map(|amount| self_.0.value(amount)).transpose()?;
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.increment(&field, amount.unwrap_or(Value::Int(1))).map(|_| ()))?;
                 Ok(self_)
             }
@@ -3959,6 +4121,373 @@ macro_rules! builder_class {
                     state.0.with(|builder| *builder = built);
                 }
                 Ok(object)
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, steps_all, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(name = "compileRandom", vis = "protected")]
+            pub fn compile_random(
+                self_: &mut ZendClassObject<$class>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                self_.0.step(Step::CompileRandom, &[])
+            }
+
+            #[php(name = "buildTableClause", vis = "protected")]
+            pub fn build_table_clause(
+                self_: &mut ZendClassObject<$class>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                self_.0.step(Step::BuildTableClause, &[])
+            }
+
+            #[php(name = "buildAfterGroupByClause", vis = "protected")]
+            pub fn build_after_group_by_clause(
+                self_: &mut ZendClassObject<$class>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                self_.0.step(Step::BuildAfterGroupByClause, &[])
+            }
+
+            #[php(name = "buildAfterOrderByClause", vis = "protected")]
+            pub fn build_after_order_by_clause(
+                self_: &mut ZendClassObject<$class>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                self_.0.step(Step::BuildAfterOrderByClause, &[])
+            }
+
+            #[php(name = "buildSettingsClause", vis = "protected")]
+            pub fn build_settings_clause(
+                self_: &mut ZendClassObject<$class>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                self_.0.step(Step::BuildSettingsClause, &[])
+            }
+
+            #[php(name = "wrapUnionMember", vis = "protected")]
+            pub fn wrap_union_member(
+                self_: &mut ZendClassObject<$class>,
+                sql: PhpString<'_>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let sql = self_.0.text(sql.bytes());
+                self_.0.step(Step::WrapUnionMember, &[Arg::Str(&sql)])
+            }
+
+            // `?int` parameters that are required: ext-php-rs makes an `Option` optional, so they are
+            // taken as they come and typed where the classes are finished.
+            #[php(name = "shouldEmitOffset", vis = "protected")]
+            pub fn should_emit_offset(
+                self_: &mut ZendClassObject<$class>,
+                offset: &Zval,
+                limit: &Zval,
+            ) -> PhpResult<bool> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                self_.0.step_bool(Step::ShouldEmitOffset, &[Arg::Int(offset.long()), Arg::Int(limit.long())])
+            }
+
+            #[php(name = "compileHavingCondition", vis = "protected")]
+            pub fn compile_having_condition(
+                self_: &mut ZendClassObject<$class>,
+                query: QueryArgument<'_>,
+                expression: PhpString<'_>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let query = self_.0.query(query.0)?;
+                let expression = self_.0.text(expression.bytes());
+                self_.0.step(Step::CompileHavingCondition, &[Arg::Query(&query), Arg::Str(&expression)])
+            }
+
+            #[php(name = "compileGroupByTimeBucket", vis = "protected")]
+            pub fn compile_group_by_time_bucket(
+                self_: &mut ZendClassObject<$class>,
+                attribute: PhpString<'_>,
+                interval: PhpString<'_>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let attribute = self_.0.text(attribute.bytes());
+                let interval = self_.0.text(interval.bytes());
+                self_.0.step(Step::CompileGroupByTimeBucket, &[Arg::Str(&attribute), Arg::Str(&interval)])
+            }
+
+            #[php(name = "compileLikePredicate", vis = "protected", defaults(not = "Bool(false)"))]
+            pub fn compile_like_predicate(
+                self_: &mut ZendClassObject<$class>,
+                attribute: PhpString<'_>,
+                not: Bool,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let attribute = self_.0.text(attribute.bytes());
+                let not = not.0;
+                self_.0.step(Step::CompileLikePredicate, &[Arg::Str(&attribute), Arg::Bool(not)])
+            }
+
+            #[php(name = "likeEscape", vis = "protected")]
+            pub fn like_escape(
+                self_: &mut ZendClassObject<$class>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                self_.0.step(Step::LikeEscape, &[])
+            }
+
+            #[php(name = "compileComparison", vis = "protected", optional = column)]
+            pub fn compile_comparison(
+                self_: &mut ZendClassObject<$class>,
+                attribute: PhpString<'_>,
+                operator: PhpString<'_>,
+                values: Arr<'_>,
+                column: Option<PhpString<'_>>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let attribute = self_.0.text(attribute.bytes());
+                let operator = self_.0.text(operator.bytes());
+                let values = self_.0.values(&values)?;
+                let column = column.map(|column| self_.0.text(column.bytes()));
+                self_.0.step(Step::CompileComparison, &[Arg::Str(&attribute), Arg::Str(&operator), Arg::Values(&values), Arg::MaybeStr(column.as_deref())])
+            }
+
+            #[php(vis = "protected")]
+            pub fn enclose(
+                self_: &mut ZendClassObject<$class>,
+                condition: PhpString<'_>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let condition = self_.0.text(condition.bytes());
+                self_.0.step(Step::Enclose, &[Arg::Str(&condition)])
+            }
+
+            #[php(name = "escapeLikeValue", vis = "protected")]
+            pub fn escape_like_value(
+                self_: &mut ZendClassObject<$class>,
+                value: &Zval,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let value = self_.0.value(value)?;
+                self_.0.step(Step::EscapeLikeValue, &[Arg::Value(&value)])
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, steps_sql, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(name = "compileSpatialDistance", vis = "protected")]
+            pub fn compile_spatial_distance(
+                self_: &mut ZendClassObject<$class>,
+                method: MethodArgument,
+                attribute: PhpString<'_>,
+                values: Arr<'_>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let method = method.0;
+                let attribute = self_.0.text(attribute.bytes());
+                let values = self_.0.values(&values)?;
+                self_.0.step(Step::CompileSpatialDistance, &[Arg::Method(method), Arg::Str(&attribute), Arg::Values(&values)])
+            }
+
+            #[php(name = "compileSpatialPredicate", vis = "protected")]
+            pub fn compile_spatial_predicate(
+                self_: &mut ZendClassObject<$class>,
+                function: PhpString<'_>,
+                attribute: PhpString<'_>,
+                values: Arr<'_>,
+                not: Bool,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let function = self_.0.text(function.bytes());
+                let attribute = self_.0.text(attribute.bytes());
+                let values = self_.0.values(&values)?;
+                let not = not.0;
+                self_.0.step(Step::CompileSpatialPredicate, &[Arg::Str(&function), Arg::Str(&attribute), Arg::Values(&values), Arg::Bool(not)])
+            }
+
+            #[php(name = "compileSpatialCoversPredicate", vis = "protected")]
+            pub fn compile_spatial_covers_predicate(
+                self_: &mut ZendClassObject<$class>,
+                attribute: PhpString<'_>,
+                values: Arr<'_>,
+                not: Bool,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let attribute = self_.0.text(attribute.bytes());
+                let values = self_.0.values(&values)?;
+                let not = not.0;
+                self_.0.step(Step::CompileSpatialCoversPredicate, &[Arg::Str(&attribute), Arg::Values(&values), Arg::Bool(not)])
+            }
+
+            #[php(name = "compileJsonPathExpression", vis = "protected")]
+            pub fn compile_json_path_expression(
+                self_: &mut ZendClassObject<$class>,
+                attribute: PhpString<'_>,
+                values: Arr<'_>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let attribute = self_.0.text(attribute.bytes());
+                let values = self_.0.values(&values)?;
+                self_.0.step(Step::CompileJsonPathExpression, &[Arg::Str(&attribute), Arg::Values(&values)])
+            }
+
+            #[php(name = "compileJsonFilter", vis = "protected")]
+            pub fn compile_json_filter(
+                self_: &mut ZendClassObject<$class>,
+                method: MethodArgument,
+                attribute: PhpString<'_>,
+                query: QueryArgument<'_>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let method = method.0;
+                let attribute = self_.0.text(attribute.bytes());
+                let query = self_.0.query(query.0)?;
+                self_.0.step(Step::CompileJsonFilter, &[Arg::Method(method), Arg::Str(&attribute), Arg::Query(&query)])
+            }
+
+            #[php(name = "compileConflictHeader", vis = "protected")]
+            pub fn compile_conflict_header(
+                self_: &mut ZendClassObject<$class>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                self_.0.step(Step::CompileConflictHeader, &[])
+            }
+
+            #[php(name = "compileConflictAssignment", vis = "protected")]
+            pub fn compile_conflict_assignment(
+                self_: &mut ZendClassObject<$class>,
+                wrapped: PhpString<'_>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let wrapped = self_.0.text(wrapped.bytes());
+                self_.0.step(Step::CompileConflictAssignment, &[Arg::Str(&wrapped)])
+            }
+
+            #[php(name = "compileConflictClause", vis = "protected")]
+            pub fn compile_conflict_clause(
+                self_: &mut ZendClassObject<$class>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                self_.0.step(Step::CompileConflictClause, &[])
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, steps_aggregates, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(name = "groupConcatExpr", vis = "protected")]
+            pub fn group_concat_expr(
+                self_: &mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+                orderBy: PhpString<'_>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let column = self_.0.text(column.bytes());
+                let orderBy = self_.0.text(orderBy.bytes());
+                self_.0.step(Step::GroupConcatExpr, &[Arg::Str(&column), Arg::Str(&orderBy)])
+            }
+
+            #[php(name = "jsonArrayAggExpr", vis = "protected")]
+            pub fn json_array_agg_expr(
+                self_: &mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let column = self_.0.text(column.bytes());
+                self_.0.step(Step::JsonArrayAggExpr, &[Arg::Str(&column)])
+            }
+
+            #[php(name = "jsonObjectAggExpr", vis = "protected")]
+            pub fn json_object_agg_expr(
+                self_: &mut ZendClassObject<$class>,
+                keyColumn: PhpString<'_>,
+                valueColumn: PhpString<'_>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let keyColumn = self_.0.text(keyColumn.bytes());
+                let valueColumn = self_.0.text(valueColumn.bytes());
+                self_.0.step(Step::JsonObjectAggExpr, &[Arg::Str(&keyColumn), Arg::Str(&valueColumn)])
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, steps_mysql, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(name = "geomFromText", vis = "protected")]
+            pub fn geom_from_text(
+                self_: &mut ZendClassObject<$class>,
+                srid: Int,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let srid = srid.0;
+                self_.0.step(Step::GeomFromText, &[Arg::Int(Some(srid))])
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, steps_postgres, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(name = "compileObjectFilter", vis = "protected")]
+            pub fn compile_object_filter(
+                self_: &mut ZendClassObject<$class>,
+                query: QueryArgument<'_>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let query = self_.0.query(query.0)?;
+                self_.0.step(Step::CompileObjectFilter, &[Arg::Query(&query)])
+            }
+
+            #[php(name = "compileJsonbContainment", vis = "protected")]
+            pub fn compile_jsonb_containment(
+                self_: &mut ZendClassObject<$class>,
+                attribute: PhpString<'_>,
+                values: Arr<'_>,
+                not: Bool,
+                wrapScalars: Bool,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let attribute = self_.0.text(attribute.bytes());
+                let values = self_.0.values(&values)?;
+                let not = not.0;
+                let wrapScalars = wrapScalars.0;
+                self_.0.step(Step::CompileJsonbContainment, &[Arg::Str(&attribute), Arg::Values(&values), Arg::Bool(not), Arg::Bool(wrapScalars)])
+            }
+
+            #[php(name = "buildJsonbPath", vis = "protected")]
+            pub fn build_jsonb_path(
+                self_: &mut ZendClassObject<$class>,
+                path: PhpString<'_>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let path = self_.0.text(path.bytes());
+                self_.0.step(Step::BuildJsonbPath, &[Arg::Str(&path)])
             }
         }, $($rest,)*);
     };
@@ -4175,6 +4704,8 @@ macro_rules! builder_class {
                 page: Int,
                 perPage: Int,
             ) -> PhpResult<&mut ZendClassObject<$class>> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.page(page.0, perPage.0).map(drop))?;
                 Ok(self_)
             }
@@ -4391,6 +4922,8 @@ macro_rules! builder_class {
                 row: Arr<'_>,
             ) -> PhpResult<&'a mut ZendClassObject<$class>> {
                 let row = self_.0.row(&row)?;
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.set(row).map(drop))?;
                 Ok(self_)
             }
@@ -4685,6 +5218,8 @@ macro_rules! builder_class {
                 thrown()?;
                 let written = join_of(<$dialect as Text>::JSON, &join);
                 let (table, alias) = (self_.0.text(table.bytes()), self_.0.text(alias.bytes()));
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| {
                     builder
                         .join_where(
@@ -4714,6 +5249,8 @@ macro_rules! builder_class {
                     attribute: is("Utopia\\Query\\Hook\\Attribute").then(|| held.clone() as Arc<dyn hook::Attribute>),
                     join_filter: is("Utopia\\Query\\Hook\\Join\\Filter").then(|| held.clone() as Arc<dyn hook::JoinFilter>),
                 };
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 self_.0.change(|builder| builder.add_hook(hook).map(drop))?;
                 Ok(self_)
             }
@@ -5096,7 +5633,7 @@ builder_class!(
     #[php(extends(Sql))]
     MySqlBuilder,
     MySqlDialect,
-    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, mysql_family, explain_format, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, hints, conditional_aggregates, json_aggregates, json, search, not_search, spatial_filters, transactions, max_execution_time, lateral_joins, group_concat, case_expressions, ast]
+    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, mysql_family, explain_format, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, hints, conditional_aggregates, json_aggregates, json, search, not_search, spatial_filters, transactions, max_execution_time, lateral_joins, group_concat, case_expressions, ast, steps_all, steps_sql, steps_aggregates, steps_mysql]
 );
 builder_class!(
     /// `Utopia\Query\Builder\MariaDB`.
@@ -5105,7 +5642,7 @@ builder_class!(
     #[php(extends(MySqlBuilder))]
     MariaDbBuilder,
     MariaDbDialect,
-    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, returning, mysql_family, explain_format, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, hints, conditional_aggregates, json_aggregates, json, search, not_search, sequences, spatial_filters, transactions, max_execution_time, lateral_joins, group_concat, case_expressions, ast]
+    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, returning, mysql_family, explain_format, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, hints, conditional_aggregates, json_aggregates, json, search, not_search, sequences, spatial_filters, transactions, max_execution_time, lateral_joins, group_concat, case_expressions, ast, steps_all, steps_sql, steps_aggregates, steps_mysql]
 );
 builder_class!(
     /// `Utopia\Query\Builder\PostgreSQL`.
@@ -5114,7 +5651,7 @@ builder_class!(
     #[php(extends(Sql))]
     PostgreSqlBuilder,
     PostgreSqlDialect,
-    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, returning, postgres_from, explain_postgres, cross_joins, full_outer_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, cube, conditional_aggregates, json_aggregates, json, search, not_search, tablesample, sequences, spatial_filters, transactions, postgres_more, lateral_joins, merge_using, vector_search, group_concat, case_expressions, ast]
+    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, returning, postgres_from, explain_postgres, cross_joins, full_outer_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, cube, conditional_aggregates, json_aggregates, json, search, not_search, tablesample, sequences, spatial_filters, transactions, postgres_more, lateral_joins, merge_using, vector_search, group_concat, case_expressions, ast, steps_all, steps_sql, steps_aggregates, steps_postgres]
 );
 builder_class!(
     /// `Utopia\Query\Builder\SQLite`.
@@ -5123,7 +5660,7 @@ builder_class!(
     #[php(extends(Sql))]
     SqliteBuilder,
     SqliteDialect,
-    [sql, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, explain_plain, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, conditional_aggregates, json_aggregates, json, transactions, group_concat, case_expressions, ast]
+    [sql, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, explain_plain, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, conditional_aggregates, json_aggregates, json, transactions, group_concat, case_expressions, ast, steps_all, steps_sql, steps_aggregates]
 );
 builder_class!(
     /// `Utopia\Query\Builder\ClickHouse`.
@@ -5132,7 +5669,7 @@ builder_class!(
     #[php(extends(Base))]
     ClickHouseBuilder,
     ClickHouseDialect,
-    [literal, raw_sql, explain_plain, cross_joins, full_outer_joins, statistical_clickhouse, bitwise, raw_sql_more, rollup, cube, totals, hints, conditional_aggregates, json_aggregates, tablesample, clickhouse_more, clickhouse_constants, asof_joins, quantiles, group_concat, case_expressions, bulk_insert, ast]
+    [literal, raw_sql, explain_plain, cross_joins, full_outer_joins, statistical_clickhouse, bitwise, raw_sql_more, rollup, cube, totals, hints, conditional_aggregates, json_aggregates, tablesample, clickhouse_more, clickhouse_constants, asof_joins, quantiles, group_concat, case_expressions, bulk_insert, ast, steps_all, steps_aggregates]
 );
 builder_class!(
     /// `Utopia\Query\Builder\MongoDB`.
@@ -5141,5 +5678,5 @@ builder_class!(
     #[php(extends(Base))]
     MongoDbBuilder,
     MongoDbDialect,
-    [upsert, insert_or_ignore, explain_plain, search, tablesample, mongo_updates, mongo_stages, mongo_facet, mongo_more, ast]
+    [upsert, insert_or_ignore, explain_plain, search, tablesample, mongo_updates, mongo_stages, mongo_facet, mongo_more, ast, steps_all]
 );

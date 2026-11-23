@@ -11,6 +11,7 @@ use crate::builder::feature::{
     Upsert, UpsertSelect,
 };
 use crate::builder::sql::{self, SqlDialect, distance_operator, wkt_of};
+use crate::builder::steps::{Arg, Step};
 use crate::builder::types::{Condition, Statement};
 use crate::error::{Error, Result};
 use crate::method::Method;
@@ -374,10 +375,11 @@ pub(crate) fn spatial_distance<D: MySqlFamily>(
     if filter.meters {
         return Ok(format!(
             "ST_Distance(ST_SRID({attribute}, 4326), {}, 'metre') {operator} ?",
-            D::geom_from_text(4326)
+            b.step_string(Step::GeomFromText, &[Arg::Int(Some(4326))])?
         ));
     }
-    Ok(format!("ST_Distance(ST_SRID({attribute}, 0), {}) {operator} ?", D::geom_from_text(0)))
+    let geometry = b.step_string(Step::GeomFromText, &[Arg::Int(Some(0))])?;
+    Ok(format!("ST_Distance(ST_SRID({attribute}, 0), {geometry}) {operator} ?"))
 }
 
 /// `function(attribute, ST_GeomFromText(?, 4326, ...))`, negated with `NOT`.
@@ -390,7 +392,8 @@ pub(crate) fn spatial_predicate<D: MySqlFamily>(
 ) -> Result<String> {
     let wkt = sql::predicate_wkt(values, MYSQL_CLASS, "Builder/MySQL.php", 513)?;
     b.add_binding(value::string(wkt), None);
-    let expression = format!("{function}({attribute}, {})", D::geom_from_text(4326));
+    let geometry = b.step_string(Step::GeomFromText, &[Arg::Int(Some(4326))])?;
+    let expression = format!("{function}({attribute}, {geometry})");
     Ok(if not { format!("NOT {expression}") } else { expression })
 }
 
@@ -431,6 +434,13 @@ impl Dialect for MySqlDialect {
         arguments: &[crate::builder::Arg<'_>],
     ) -> Option<Result<crate::builder::Ret>> {
         sql::sql_base_step(b, step, arguments)
+            .or_else(|| crate::builder::feature::aggregates_base_step::<Self>(step, arguments))
+            .or_else(|| match (step, arguments) {
+                (crate::builder::Step::GeomFromText, [crate::builder::Arg::Int(Some(srid))]) => {
+                    Some(Ok(crate::builder::Ret::Str(Self::geom_from_text(*srid))))
+                }
+                _ => None,
+            })
     }
 
     fn compile_random(_b: &Builder<Self>) -> String {
@@ -520,7 +530,16 @@ impl SqlDialect for MySqlDialect {
         values: &Array,
         not: bool,
     ) -> Result<String> {
-        spatial_predicate(b, "ST_Contains", attribute, values, not)
+        // Through the step, so a subclass's compileSpatialPredicate() writes this one too.
+        b.step_string(
+            crate::builder::Step::CompileSpatialPredicate,
+            &[
+                crate::builder::Arg::Str("ST_Contains"),
+                crate::builder::Arg::Str(attribute),
+                crate::builder::Arg::Values(values),
+                crate::builder::Arg::Bool(not),
+            ],
+        )
     }
 
     fn compile_json_contains_expression(
@@ -551,8 +570,15 @@ impl SqlDialect for MySqlDialect {
 
 /// The SQL of a conflict clause for a SQL dialect.
 pub(crate) fn conflict_clause<D: SqlDialect>(b: &mut Builder<D>) -> Result<String> {
-    let header = D::compile_conflict_header(b)?;
-    b.compile_conflict_clause(&header, D::compile_conflict_assignment)
+    b.step_string(Step::CompileConflictClause, &[])
+}
+
+/// The builder's own `compileConflictClause()`.
+pub(crate) fn base_conflict_clause<D: SqlDialect>(b: &mut Builder<D>) -> Result<String> {
+    b.compile_conflict_clause(
+        |b| b.step_string(Step::CompileConflictHeader, &[]),
+        |b, wrapped| b.step_string(Step::CompileConflictAssignment, &[Arg::Str(wrapped)]),
+    )
 }
 
 /// MySQL's JSON column updates, shared with MariaDB.

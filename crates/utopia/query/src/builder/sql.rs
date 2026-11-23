@@ -98,6 +98,25 @@ pub(crate) fn sql_base_step<D: SqlDialect>(
         (Step::CompileJsonOverlapsExpression, [Arg::Str(attribute), Arg::Values(values)]) => {
             D::compile_json_overlaps_expression(b, attribute, values).map(Ret::Str)
         }
+        (Step::CompileSpatialDistance, [Arg::Method(method), Arg::Str(attribute), Arg::Values(values)]) => {
+            D::compile_spatial_distance(b, *method, attribute, values).map(Ret::Str)
+        }
+        (
+            Step::CompileSpatialPredicate,
+            [Arg::Str(function), Arg::Str(attribute), Arg::Values(values), Arg::Bool(not)],
+        ) => D::compile_spatial_predicate(b, function, attribute, values, *not).map(Ret::Str),
+        (Step::CompileSpatialCoversPredicate, [Arg::Str(attribute), Arg::Values(values), Arg::Bool(not)]) => {
+            D::compile_spatial_covers_predicate(b, attribute, values, *not).map(Ret::Str)
+        }
+        (Step::CompileJsonPathExpression, [Arg::Str(attribute), Arg::Values(values)]) => {
+            D::compile_json_path_expression(b, attribute, values).map(Ret::Str)
+        }
+        (Step::CompileJsonFilter, [Arg::Method(method), Arg::Str(attribute), Arg::Query(query)]) => {
+            sql_compile_json_filter(b, *method, attribute, query).map(Ret::Str)
+        }
+        (Step::CompileConflictHeader, []) => D::compile_conflict_header(b).map(Ret::Str),
+        (Step::CompileConflictAssignment, [Arg::Str(wrapped)]) => Ok(Ret::Str(D::compile_conflict_assignment(wrapped))),
+        (Step::CompileConflictClause, []) => crate::builder::mysql::base_conflict_clause(b).map(Ret::Str),
         _ => return None,
     })
 }
@@ -142,7 +161,7 @@ pub(crate) fn sql_compile_filter<D: SqlDialect>(b: &mut Builder<D>, query: &Quer
         }
     }
     if method.is_json() {
-        return sql_compile_json_filter(b, method, &attribute, query);
+        return b.step_string(Step::CompileJsonFilter, &[Arg::Method(method), Arg::Str(&attribute), Arg::Query(query)]);
     }
     if query.on_array()
         && matches!(method, Method::Contains | Method::ContainsAny | Method::NotContains | Method::ContainsAll)
@@ -185,23 +204,36 @@ pub(crate) fn sql_compile_spatial_filter<D: SqlDialect>(
     query: &Query,
 ) -> Result<String> {
     let values = query.values();
+    let predicate = |b: &mut Builder<D>, function: &str, not: bool| {
+        b.step_string(
+            Step::CompileSpatialPredicate,
+            &[Arg::Str(function), Arg::Str(attribute), Arg::Values(values), Arg::Bool(not)],
+        )
+    };
     use Method::*;
     match method {
-        DistanceLessThan | DistanceGreaterThan | DistanceEqual | DistanceNotEqual => {
-            D::compile_spatial_distance(b, method, attribute, values)
-        }
-        Intersects => D::compile_spatial_predicate(b, "ST_Intersects", attribute, values, false),
-        NotIntersects => D::compile_spatial_predicate(b, "ST_Intersects", attribute, values, true),
-        Crosses => D::compile_spatial_predicate(b, "ST_Crosses", attribute, values, false),
-        NotCrosses => D::compile_spatial_predicate(b, "ST_Crosses", attribute, values, true),
-        Overlaps => D::compile_spatial_predicate(b, "ST_Overlaps", attribute, values, false),
-        NotOverlaps => D::compile_spatial_predicate(b, "ST_Overlaps", attribute, values, true),
-        Touches => D::compile_spatial_predicate(b, "ST_Touches", attribute, values, false),
-        NotTouches => D::compile_spatial_predicate(b, "ST_Touches", attribute, values, true),
-        Covers => D::compile_spatial_covers_predicate(b, attribute, values, false),
-        NotCovers => D::compile_spatial_covers_predicate(b, attribute, values, true),
-        SpatialEquals => D::compile_spatial_predicate(b, "ST_Equals", attribute, values, false),
-        NotSpatialEquals => D::compile_spatial_predicate(b, "ST_Equals", attribute, values, true),
+        DistanceLessThan | DistanceGreaterThan | DistanceEqual | DistanceNotEqual => b.step_string(
+            Step::CompileSpatialDistance,
+            &[Arg::Method(method), Arg::Str(attribute), Arg::Values(values)],
+        ),
+        Intersects => predicate(b, "ST_Intersects", false),
+        NotIntersects => predicate(b, "ST_Intersects", true),
+        Crosses => predicate(b, "ST_Crosses", false),
+        NotCrosses => predicate(b, "ST_Crosses", true),
+        Overlaps => predicate(b, "ST_Overlaps", false),
+        NotOverlaps => predicate(b, "ST_Overlaps", true),
+        Touches => predicate(b, "ST_Touches", false),
+        NotTouches => predicate(b, "ST_Touches", true),
+        Covers => b.step_string(
+            Step::CompileSpatialCoversPredicate,
+            &[Arg::Str(attribute), Arg::Values(values), Arg::Bool(false)],
+        ),
+        NotCovers => b.step_string(
+            Step::CompileSpatialCoversPredicate,
+            &[Arg::Str(attribute), Arg::Values(values), Arg::Bool(true)],
+        ),
+        SpatialEquals => predicate(b, "ST_Equals", false),
+        NotSpatialEquals => predicate(b, "ST_Equals", true),
         _ => b.base_compile_filter(query),
     }
 }
@@ -226,7 +258,7 @@ pub(crate) fn sql_compile_json_filter<D: SqlDialect>(
         Method::JsonOverlaps => {
             b.step_string(Step::CompileJsonOverlapsExpression, &[Arg::Str(attribute), Arg::Values(values)])
         }
-        Method::JsonPath => D::compile_json_path_expression(b, attribute, values),
+        Method::JsonPath => b.step_string(Step::CompileJsonPathExpression, &[Arg::Str(attribute), Arg::Values(values)]),
         _ => b.base_compile_filter(query),
     }
 }

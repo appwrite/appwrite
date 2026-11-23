@@ -167,7 +167,7 @@ pub struct Core {
     pub(crate) deferred: Option<Error>,
     pub(crate) overrides: Option<Arc<dyn crate::builder::Overrides>>,
     pub(crate) class: Option<String>,
-    pub(crate) steps: u64,
+    pub(crate) steps: u128,
 }
 
 /// A query builder for one dialect: from a table, with queries (filters,
@@ -589,7 +589,7 @@ impl<D: Dialect> Builder<D> {
                 parts.push(fragment);
             }
         };
-        let from = D::build_table_clause(self)?;
+        let from = self.step_string(Step::BuildTableClause, &[])?;
         push(&mut parts, from);
         let joins = self.build_joins_clause(&grouped, &mut join_filter_where)?;
         push(&mut parts, joins);
@@ -599,7 +599,7 @@ impl<D: Dialect> Builder<D> {
         push(&mut parts, where_);
         let group_by = self.build_group_by_clause(&grouped)?;
         push(&mut parts, group_by);
-        let after_group_by = D::build_after_group_by_clause(self)?;
+        let after_group_by = self.step_string(Step::BuildAfterGroupByClause, &[])?;
         push(&mut parts, after_group_by);
         let having = self.build_having_clause(&grouped)?;
         push(&mut parts, having);
@@ -607,19 +607,19 @@ impl<D: Dialect> Builder<D> {
         push(&mut parts, window);
         let order_by = self.build_order_by_clause()?;
         push(&mut parts, order_by);
-        let after_order_by = D::build_after_order_by_clause(self)?;
+        let after_order_by = self.step_string(Step::BuildAfterOrderByClause, &[])?;
         push(&mut parts, after_order_by);
         let limit = self.build_limit_clause(&grouped)?;
         push(&mut parts, limit);
         let locking = self.build_locking_clause()?;
         push(&mut parts, locking);
-        let settings = D::build_settings_clause(self)?;
+        let settings = self.step_string(Step::BuildSettingsClause, &[])?;
         push(&mut parts, settings);
 
         let mut sql = parts.join(" ");
-        let union_suffix = self.build_union_suffix();
+        let union_suffix = self.build_union_suffix()?;
         if !union_suffix.is_empty() {
-            sql = D::wrap_union_member(self, &sql) + &union_suffix;
+            sql = self.step_string(Step::WrapUnionMember, &[Arg::Str(&sql)])? + &union_suffix;
         }
         let sql = cte_prefix + &sql;
 
@@ -864,7 +864,9 @@ impl<D: Dialect> Builder<D> {
         let function = time_bucket_function::<D>();
         for bucket in &grouped.time_buckets {
             let interval = Param::method(function, 2, "interval", "Builder.php", 781).string(&bucket.interval)?;
-            parts.push(D::compile_group_by_time_bucket(self, &bucket.attribute, &interval)?);
+            parts.push(
+                self.step_string(Step::CompileGroupByTimeBucket, &[Arg::Str(&bucket.attribute), Arg::Str(&interval)])?,
+            );
         }
         for raw in self.core.raw_groups.clone() {
             parts.push(raw.expression);
@@ -883,7 +885,9 @@ impl<D: Dialect> Builder<D> {
             for value in having.values().values() {
                 let sub = query_value(value, "compileFilter")?;
                 match alias_to_expression.iter().find(|(alias, _)| alias == sub.attribute()) {
-                    Some((_, expression)) => clauses.push(self.compile_having_condition(sub, expression)?),
+                    Some((_, expression)) => clauses.push(
+                        self.step_string(Step::CompileHavingCondition, &[Arg::Query(sub), Arg::Str(expression)])?,
+                    ),
                     None => clauses.push(self.step_string(Step::CompileFilter, &[Arg::Query(sub)])?),
                 }
             }
@@ -979,7 +983,7 @@ impl<D: Dialect> Builder<D> {
             parts.push("LIMIT ?");
             self.add_binding(Value::Int(limit), None);
         }
-        if D::should_emit_offset(self, grouped.offset, grouped.limit)? {
+        if self.step_bool(Step::ShouldEmitOffset, &[Arg::Int(grouped.offset), Arg::Int(grouped.limit)])? {
             parts.push("OFFSET ?");
             self.add_binding(grouped.offset.map(Value::Int).unwrap_or(Value::Null), None);
         }
@@ -1006,16 +1010,16 @@ impl<D: Dialect> Builder<D> {
         Ok(sql)
     }
 
-    fn build_union_suffix(&mut self) -> String {
+    fn build_union_suffix(&mut self) -> Result<String> {
         let mut suffix = String::new();
         for union in self.core.unions.clone() {
             suffix.push(' ');
             suffix.push_str(union.union_type.as_str());
             suffix.push(' ');
-            suffix.push_str(&D::wrap_union_member(self, &union.query));
+            suffix.push_str(&self.step_string(Step::WrapUnionMember, &[Arg::Str(&union.query)])?);
             self.add_bindings(union.bindings);
         }
-        suffix
+        Ok(suffix)
     }
 
     // ----- writes ---------------------------------------------------------
@@ -1253,8 +1257,8 @@ impl<D: Dialect> Builder<D> {
     /// The SQL dialects' `ON CONFLICT` / `ON DUPLICATE KEY UPDATE` clause.
     pub(crate) fn compile_conflict_clause(
         &mut self,
-        header: &str,
-        assignment: impl Fn(&str) -> String,
+        header: impl FnOnce(&mut Self) -> Result<String>,
+        assignment: impl Fn(&mut Self, &str) -> Result<String>,
     ) -> Result<String> {
         let mut updates = Vec::new();
         for column in self.core.conflict_update_columns.clone() {
@@ -1266,9 +1270,14 @@ impl<D: Dialect> Builder<D> {
                         self.add_bindings(bindings);
                     }
                 }
-                None => updates.push(format!("{wrapped} = {}", assignment(&wrapped))),
+                None => {
+                    let assigned = assignment(self, &wrapped)?;
+                    updates.push(format!("{wrapped} = {assigned}"));
+                }
             }
         }
+        // The header last, as PHP writes it.
+        let header = header(self)?;
         Ok(format!("{header} {}", updates.join(", ")))
     }
 
@@ -1467,10 +1476,10 @@ impl<D: Dialect> Builder<D> {
         match method {
             Equal => self.compile_in(&attribute, values, column),
             NotEqual => self.compile_not_in(&attribute, values, column),
-            LessThan => Ok(self.compile_comparison(&attribute, "<", values, column)),
-            LessThanEqual => Ok(self.compile_comparison(&attribute, "<=", values, column)),
-            GreaterThan => Ok(self.compile_comparison(&attribute, ">", values, column)),
-            GreaterThanEqual => Ok(self.compile_comparison(&attribute, ">=", values, column)),
+            LessThan => self.compile_comparison(&attribute, "<", values, column),
+            LessThanEqual => self.compile_comparison(&attribute, "<=", values, column),
+            GreaterThan => self.compile_comparison(&attribute, ">", values, column),
+            GreaterThanEqual => self.compile_comparison(&attribute, ">=", values, column),
             Between => Ok(self.compile_between(&attribute, values, false, column)),
             NotBetween => Ok(self.compile_between(&attribute, values, true, column)),
             StartsWith => self.step_string(
@@ -1554,16 +1563,16 @@ impl<D: Dialect> Builder<D> {
         }
     }
 
-    fn compile_having_condition(&mut self, query: &Query, expression: &str) -> Result<String> {
+    pub(crate) fn base_compile_having_condition(&mut self, query: &Query, expression: &str) -> Result<String> {
         let values = query.values();
         use Method::*;
         match query.method() {
             Equal => self.compile_in(expression, values, None),
             NotEqual => self.compile_not_in(expression, values, None),
-            LessThan => Ok(self.compile_comparison(expression, "<", values, None)),
-            LessThanEqual => Ok(self.compile_comparison(expression, "<=", values, None)),
-            GreaterThan => Ok(self.compile_comparison(expression, ">", values, None)),
-            GreaterThanEqual => Ok(self.compile_comparison(expression, ">=", values, None)),
+            LessThan => self.compile_comparison(expression, "<", values, None),
+            LessThanEqual => self.compile_comparison(expression, "<=", values, None),
+            GreaterThan => self.compile_comparison(expression, ">", values, None),
+            GreaterThanEqual => self.compile_comparison(expression, ">=", values, None),
             Between => Ok(self.compile_between(expression, values, false, None)),
             NotBetween => Ok(self.compile_between(expression, values, true, None)),
             IsNull => Ok(format!("{expression} IS NULL")),
@@ -1577,7 +1586,7 @@ impl<D: Dialect> Builder<D> {
         let mut sql = match query.method() {
             Method::OrderAsc => format!("{} ASC", self.resolve_and_wrap(query.attribute())?),
             Method::OrderDesc => format!("{} DESC", self.resolve_and_wrap(query.attribute())?),
-            Method::OrderRandom => D::compile_random(self),
+            Method::OrderRandom => self.step_string(Step::CompileRandom, &[])?,
             other => return Err(Error::Unsupported(format!("Unsupported order type: {}", other.as_str()))),
         };
         if let Some(Value::Ext(Object::Nulls(nulls))) = query.value() {
@@ -1674,7 +1683,8 @@ impl<D: Dialect> Builder<D> {
                 Some(v) => v.clone(),
             };
             let interval = interval_param.string(&interval)?;
-            return D::compile_group_by_time_bucket(self, query.attribute(), &interval);
+            return self
+                .step_string(Step::CompileGroupByTimeBucket, &[Arg::Str(query.attribute()), Arg::Str(&interval)]);
         }
         let mut columns = Vec::with_capacity(query.values().len());
         for column in query.values().values() {
@@ -1770,13 +1780,32 @@ impl<D: Dialect> Builder<D> {
     /// `attribute [NOT ]LIKE ?`, naming the escape character where the dialect does.
     ///
     /// PHP: `compileLikePredicate()`, `likeEscape()`.
-    pub(crate) fn like_predicate(&self, attribute: &str, not: bool) -> Result<String> {
-        let mut sql = format!("{attribute} {}{} ?", if not { "NOT " } else { "" }, D::like_keyword(self));
-        if D::DECLARES_LIKE_ESCAPE {
-            sql.push_str(" ESCAPE ");
-            sql.push_str(&D::LITERAL.quote(&char::from(D::LIKE_ESCAPE).to_string())?);
+    /// `$prefix . $this->escapeLikeValue($value) . $suffix`: a subclass's own `escapeLikeValue()`
+    /// when it has one. Without one the value keeps its bytes.
+    pub(crate) fn like_value(&mut self, prefix: &str, value: &Value, suffix: &str) -> Result<Value> {
+        if !self.overrides(Step::EscapeLikeValue) {
+            return Ok(like_pattern(prefix, value, suffix, D::LIKE_ESCAPE));
         }
-        Ok(sql)
+        let escaped = self.step_string(Step::EscapeLikeValue, &[Arg::Value(value)])?;
+        Ok(value::string(format!("{prefix}{escaped}{suffix}")))
+    }
+
+    pub(crate) fn like_predicate(&mut self, attribute: &str, not: bool) -> Result<String> {
+        self.step_string(Step::CompileLikePredicate, &[Arg::Str(attribute), Arg::Bool(not)])
+    }
+
+    /// The builder's own `compileLikePredicate()`.
+    pub(crate) fn base_like_predicate(&mut self, attribute: &str, not: bool) -> Result<String> {
+        let escape = self.step_string(Step::LikeEscape, &[])?;
+        Ok(format!("{attribute} {}{} ?{escape}", if not { "NOT " } else { "" }, D::like_keyword(self)))
+    }
+
+    /// The builder's own `likeEscape()`: the `ESCAPE` clause, where the dialect declares one.
+    pub(crate) fn base_like_escape(&self) -> Result<String> {
+        if !D::DECLARES_LIKE_ESCAPE {
+            return Ok(String::new());
+        }
+        Ok(format!(" ESCAPE {}", D::LITERAL.quote(&char::from(D::LIKE_ESCAPE).to_string())?))
     }
 
     pub(crate) fn base_compile_like(
@@ -1788,7 +1817,8 @@ impl<D: Dialect> Builder<D> {
         not: bool,
         column: Option<&str>,
     ) -> Result<String> {
-        self.add_binding(like_pattern(prefix, &first(values), suffix, D::LIKE_ESCAPE), column);
+        let pattern = self.like_value(prefix, &first(values), suffix)?;
+        self.add_binding(pattern, column);
         self.like_predicate(attribute, not)
     }
 
@@ -1799,12 +1829,14 @@ impl<D: Dialect> Builder<D> {
         column: Option<&str>,
     ) -> Result<String> {
         if values.len() == 1 {
-            self.add_binding(like_pattern("%", &first(values), "%", D::LIKE_ESCAPE), column);
+            let pattern = self.like_value("%", &first(values), "%")?;
+            self.add_binding(pattern, column);
             return self.like_predicate(attribute, false);
         }
         let mut parts = Vec::with_capacity(values.len());
         for v in values.values() {
-            self.add_binding(like_pattern("%", v, "%", D::LIKE_ESCAPE), column);
+            let pattern = self.like_value("%", v, "%")?;
+            self.add_binding(pattern, column);
             parts.push(self.like_predicate(attribute, false)?);
         }
         Ok(format!("({})", parts.join(" OR ")))
@@ -1818,7 +1850,8 @@ impl<D: Dialect> Builder<D> {
     ) -> Result<String> {
         let mut parts = Vec::with_capacity(values.len());
         for v in values.values() {
-            self.add_binding(like_pattern("%", v, "%", D::LIKE_ESCAPE), column);
+            let pattern = self.like_value("%", v, "%")?;
+            self.add_binding(pattern, column);
             parts.push(self.like_predicate(attribute, false)?);
         }
         Ok(format!("({})", parts.join(" AND ")))
@@ -1831,12 +1864,14 @@ impl<D: Dialect> Builder<D> {
         column: Option<&str>,
     ) -> Result<String> {
         if values.len() == 1 {
-            self.add_binding(like_pattern("%", &first(values), "%", D::LIKE_ESCAPE), column);
+            let pattern = self.like_value("%", &first(values), "%")?;
+            self.add_binding(pattern, column);
             return self.like_predicate(attribute, true);
         }
         let mut parts = Vec::with_capacity(values.len());
         for v in values.values() {
-            self.add_binding(like_pattern("%", v, "%", D::LIKE_ESCAPE), column);
+            let pattern = self.like_value("%", v, "%")?;
+            self.add_binding(pattern, column);
             parts.push(self.like_predicate(attribute, true)?);
         }
         Ok(format!("({})", parts.join(" AND ")))
@@ -1901,6 +1936,20 @@ impl<D: Dialect> Builder<D> {
     }
 
     pub(crate) fn compile_comparison(
+        &mut self,
+        attribute: &str,
+        operator: &str,
+        values: &Array,
+        column: Option<&str>,
+    ) -> Result<String> {
+        self.step_string(
+            Step::CompileComparison,
+            &[Arg::Str(attribute), Arg::Str(operator), Arg::Values(values), Arg::MaybeStr(column)],
+        )
+    }
+
+    /// The builder's own `compileComparison()`.
+    pub(crate) fn base_compile_comparison(
         &mut self,
         attribute: &str,
         operator: &str,

@@ -80,6 +80,7 @@ impl Dialect for SqliteDialect {
         arguments: &[crate::builder::Arg<'_>],
     ) -> Option<Result<crate::builder::Ret>> {
         sql::sql_base_step(b, step, arguments)
+            .or_else(|| crate::builder::feature::aggregates_base_step::<Self>(step, arguments))
     }
 
     fn quote_string(value: &[u8]) -> Vec<u8> {

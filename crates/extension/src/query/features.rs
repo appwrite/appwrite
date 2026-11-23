@@ -389,6 +389,8 @@ const TYPES: &[(&str, usize, Declared)] = &[
     ("increment", 2, INT_OR_FLOAT),
     ("multiply", 2, INT_OR_FLOAT),
     ("unsetFields", 1, Declared::Types(engine::MAY_BE_STRING)),
+    ("shouldEmitOffset", 1, Declared::Types(engine::MAY_BE_LONG | engine::MAY_BE_NULL)),
+    ("shouldEmitOffset", 2, Declared::Types(engine::MAY_BE_LONG | engine::MAY_BE_NULL)),
 ];
 
 /// Declares [`TYPES`] on the methods of `class` that are among them.

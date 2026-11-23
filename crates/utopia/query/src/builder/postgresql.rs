@@ -232,6 +232,11 @@ fn quote_json_key(key: &str) -> Result<String> {
 impl Builder<PostgreSqlDialect> {
     /// `"col"->'a'->>'b'` for `col.a.b`.
     fn jsonb_path(&mut self, path: &str) -> Result<String> {
+        self.step_string(crate::builder::Step::BuildJsonbPath, &[crate::builder::Arg::Str(path)])
+    }
+
+    /// The builder's own `buildJsonbPath()`.
+    fn base_jsonb_path(&mut self, path: &str) -> Result<String> {
         let mut parts: Vec<&str> = path.split('.').collect();
         if parts.len() == 1 {
             return self.resolve_and_wrap(parts[0]);
@@ -248,7 +253,16 @@ impl Builder<PostgreSqlDialect> {
         Ok(chain)
     }
 
-    fn jsonb_containment(&mut self, attribute: &str, values: &Array, not: bool, wrap_scalars: bool) -> String {
+    fn jsonb_containment(&mut self, attribute: &str, values: &Array, not: bool, wrap_scalars: bool) -> Result<String> {
+        use crate::builder::{Arg, Step};
+        self.step_string(
+            Step::CompileJsonbContainment,
+            &[Arg::Str(attribute), Arg::Values(values), Arg::Bool(not), Arg::Bool(wrap_scalars)],
+        )
+    }
+
+    /// The builder's own `compileJsonbContainment()`.
+    fn base_jsonb_containment(&mut self, attribute: &str, values: &Array, not: bool, wrap_scalars: bool) -> String {
         let mut conditions = Vec::with_capacity(values.len());
         for value in values.values() {
             let mut value = value.clone();
@@ -271,6 +285,11 @@ impl Builder<PostgreSqlDialect> {
     }
 
     fn object_filter(&mut self, query: &Query) -> Result<String> {
+        self.step_string(crate::builder::Step::CompileObjectFilter, &[crate::builder::Arg::Query(query)])
+    }
+
+    /// The builder's own `compileObjectFilter()`.
+    fn base_object_filter(&mut self, query: &Query) -> Result<String> {
         let method = query.method();
         let raw = query.attribute();
         let values = query.values();
@@ -280,10 +299,10 @@ impl Builder<PostgreSqlDialect> {
             return match method {
                 Equal => self.compile_in(&attribute, values, None),
                 NotEqual => self.compile_not_in(&attribute, values, None),
-                LessThan => Ok(self.compile_comparison(&attribute, "<", values, None)),
-                LessThanEqual => Ok(self.compile_comparison(&attribute, "<=", values, None)),
-                GreaterThan => Ok(self.compile_comparison(&attribute, ">", values, None)),
-                GreaterThanEqual => Ok(self.compile_comparison(&attribute, ">=", values, None)),
+                LessThan => self.compile_comparison(&attribute, "<", values, None),
+                LessThanEqual => self.compile_comparison(&attribute, "<=", values, None),
+                GreaterThan => self.compile_comparison(&attribute, ">", values, None),
+                GreaterThanEqual => self.compile_comparison(&attribute, ">=", values, None),
                 StartsWith => PostgreSqlDialect::compile_like(self, &attribute, values, "", "%", false, None),
                 NotStartsWith => PostgreSqlDialect::compile_like(self, &attribute, values, "", "%", true, None),
                 EndsWith => PostgreSqlDialect::compile_like(self, &attribute, values, "%", "", false, None),
@@ -298,9 +317,9 @@ impl Builder<PostgreSqlDialect> {
         let attribute = self.resolve_and_wrap(raw)?;
         let text = format!("{attribute}::text");
         match method {
-            Equal | NotEqual => Ok(self.jsonb_containment(&attribute, values, method == NotEqual, false)),
+            Equal | NotEqual => self.jsonb_containment(&attribute, values, method == NotEqual, false),
             Contains | ContainsAny | ContainsAll | NotContains => {
-                Ok(self.jsonb_containment(&attribute, values, method == NotContains, true))
+                self.jsonb_containment(&attribute, values, method == NotContains, true)
             }
             StartsWith => PostgreSqlDialect::compile_like(self, &text, values, "", "%", false, None),
             NotStartsWith => PostgreSqlDialect::compile_like(self, &text, values, "", "%", true, None),
@@ -656,6 +675,19 @@ impl Dialect for PostgreSqlDialect {
         arguments: &[crate::builder::Arg<'_>],
     ) -> Option<Result<crate::builder::Ret>> {
         sql::sql_base_step(b, step, arguments)
+            .or_else(|| crate::builder::feature::aggregates_base_step::<Self>(step, arguments))
+            .or_else(|| {
+                use crate::builder::{Arg, Ret, Step};
+                Some(match (step, arguments) {
+                    (Step::CompileObjectFilter, [Arg::Query(query)]) => b.base_object_filter(query).map(Ret::Str),
+                    (
+                        Step::CompileJsonbContainment,
+                        [Arg::Str(attribute), Arg::Values(values), Arg::Bool(not), Arg::Bool(wrap)],
+                    ) => Ok(Ret::Str(b.base_jsonb_containment(attribute, values, *not, *wrap))),
+                    (Step::BuildJsonbPath, [Arg::Str(path)]) => b.base_jsonb_path(path).map(Ret::Str),
+                    _ => return None,
+                })
+            })
     }
 
     fn quote_string(value: &[u8]) -> Vec<u8> {
@@ -880,7 +912,16 @@ impl SqlDialect for PostgreSqlDialect {
         values: &Array,
         not: bool,
     ) -> Result<String> {
-        Self::compile_spatial_predicate(b, "ST_Covers", attribute, values, not)
+        // Through the step, so a subclass's compileSpatialPredicate() writes this one too.
+        b.step_string(
+            crate::builder::Step::CompileSpatialPredicate,
+            &[
+                crate::builder::Arg::Str("ST_Covers"),
+                crate::builder::Arg::Str(attribute),
+                crate::builder::Arg::Values(values),
+                crate::builder::Arg::Bool(not),
+            ],
+        )
     }
 
     fn compile_json_contains_expression(

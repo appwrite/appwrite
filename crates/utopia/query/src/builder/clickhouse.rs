@@ -26,7 +26,7 @@ use std::ops::Deref;
 use php_std::ArrayKey;
 use php_std::json::Flags;
 
-use crate::builder::core::{Builder, Dialect, first, key_string, like_pattern};
+use crate::builder::core::{Builder, Dialect, first, key_string};
 use crate::builder::feature::{
     BitwiseAggregates, ConditionalAggregates, CrossJoins, Cube, FullOuterJoins, Hints, RawSql, Rollup,
     StringAggregates, TableSampling, Totals, is_plain_identifier,
@@ -425,6 +425,14 @@ fn select_function(b: &mut ClickHouse, expression: String, alias: &str) -> Resul
 
 impl Dialect for ClickHouseDialect {
     const CLASS: &'static str = "Utopia\\Query\\Builder\\ClickHouse";
+
+    fn base_step(
+        _b: &mut Builder<Self>,
+        step: crate::builder::Step,
+        arguments: &[crate::builder::Arg<'_>],
+    ) -> Option<Result<crate::builder::Ret>> {
+        crate::builder::feature::aggregates_base_step::<Self>(step, arguments)
+    }
     const LITERAL: crate::StringLiteral = crate::StringLiteral::BackslashUtf8;
 
     fn compile_random(_b: &Builder<Self>) -> String {
@@ -456,7 +464,8 @@ impl Dialect for ClickHouseDialect {
             let not = if not { "NOT " } else { "" };
             return Ok(format!("{not}{function}({attribute}, ?)"));
         }
-        b.add_binding(like_pattern(prefix, &raw, suffix, Self::LIKE_ESCAPE), column);
+        let pattern = b.like_value(prefix, &raw, suffix)?;
+        b.add_binding(pattern, column);
         b.like_predicate(attribute, not)
     }
 

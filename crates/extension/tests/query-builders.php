@@ -965,3 +965,86 @@ foreach ($dialects as $dialect) {
     sort($interfaces);
     emit($dialect . ' signatures', [$signatures, $interfaces]);
 }
+
+// The protected helpers of a build: a subclass that overrides every one it has, declared with the signature
+// reflection gives, tags what each returns and records the order they ran in. Then each is called on its own.
+$helpers = [
+    'compileRandom' => [[]], 'buildTableClause' => [[]], 'buildAfterGroupByClause' => [[]], 'buildAfterOrderByClause' => [[]],
+    'buildSettingsClause' => [[]], 'wrapUnionMember' => [['SELECT 1'], ['']],
+    'shouldEmitOffset' => [[null, null], [5, null], [null, 5], [0, 10], [3, 10]],
+    'compileHavingCondition' => [[Query::greaterThan('total', 5), 'SUM(`x`)'], [Query::between('n', 1, 2), 'COUNT(*)']],
+    'compileGroupByTimeBucket' => [['created', '1h'], ['created', '1d'], ['created', 'bad']],
+    'compileLikePredicate' => [['`a`'], ['`a`', true]], 'likeEscape' => [[]],
+    'compileComparison' => [['`a`', '>', [5]], ['`a`', '=', ['x', 'y'], 'a']],
+    'enclose' => [['a = 1'], ['']], 'escapeLikeValue' => [['50%_!\\'], [5], [1.5], [true], [null], [['a' => '%']]],
+    'compileSpatialDistance' => [[Utopia\Query\Method::DistanceLessThan, '`loc`', [[[1.0, 2.0], 100.0, false]]], [Utopia\Query\Method::DistanceEqual, '`loc`', [[[1, 2], 5, true]]]],
+    'compileSpatialPredicate' => [['ST_Intersects', '`area`', [[1, 2]], false], ['ST_Touches', '`area`', [[[0, 0], [1, 1]]], true]],
+    'compileSpatialCoversPredicate' => [['`area`', [[1, 2]], false], ['`area`', [[1, 2]], true]],
+    'compileJsonPathExpression' => [['`data`', ['a.b', '=', 1]], ['`data`', ['$.a', '>', 'x']]],
+    'compileJsonFilter' => [[Utopia\Query\Method::JsonContains, '`tags`', Query::equal('tags', ['x'])], [Utopia\Query\Method::JsonOverlaps, '`tags`', Query::equal('tags', [['x', 'y']])]],
+    'compileConflictHeader' => [[]], 'compileConflictAssignment' => [['`a`'], ['']], 'compileConflictClause' => [[]],
+    'groupConcatExpr' => [['`a`', ''], ['`a`', 'ORDER BY `b` ASC']], 'jsonArrayAggExpr' => [['`a`']], 'jsonObjectAggExpr' => [['`k`', '`v`']],
+    'geomFromText' => [[4326], [0]],
+    'compileObjectFilter' => [[Query::equal('data.k', ['v'])], [new Query(Utopia\Query\Method::Contains, 'data.tags', ['x'])], [Query::greaterThan('data.n', 3)]],
+    'compileJsonbContainment' => [['"data"', ['x'], false, false], ['"data"', ['x', 2], true, true], ['"data"', [], false, true]],
+    'buildJsonbPath' => [['data'], ['data.a.b'], ["data.a'b"]],
+];
+$declaration = function (ReflectionMethod $method): string {
+    $parameters = [];
+    $passed = [];
+    foreach ($method->getParameters() as $parameter) {
+        $default = $parameter->isDefaultValueAvailable() ? ' = ' . var_export($parameter->getDefaultValue(), true) : '';
+        $parameters[] = ($parameter->getType() ?? '') . ' ' . ($parameter->isVariadic() ? '...' : '') . '$' . $parameter->getName() . $default;
+        $passed[] = ($parameter->isVariadic() ? '...' : '') . '$' . $parameter->getName();
+    }
+    $name = $method->getName();
+
+    return "protected function {$name}(" . implode(', ', $parameters) . '): ' . $method->getReturnType() . " { \$this->ran[] = '{$name}'; \$out = parent::{$name}(" . implode(', ', $passed) . "); return is_string(\$out) ? '/*{$name}*/' . \$out : \$out; }";
+};
+$builds = [
+    'filters' => fn ($b) => $b->from('t')->select(['a'])->filter([Query::startsWith('n', 'a%'), new Query(Utopia\Query\Method::Contains, 'n', ['x']), Query::greaterThan('a', 1), Query::between('b', 1, 2)])->build(),
+    'random page' => fn ($b) => $b->from('t')->sortRandom()->limit(5)->offset(10)->build(),
+    'offset alone' => fn ($b) => $b->from('t')->offset(10)->build(),
+    'grouped' => fn ($b) => $b->from('t')->sum('x', 'total')->groupBy(['c'])->having([Query::greaterThan('total', 5)])->build(),
+    'bucketed' => fn ($b) => $b->from('t')->count('*', 'n')->groupByTimeBucket('created', '1h')->build(),
+    'union' => fn ($b) => $b->from('t')->select(['a'])->union((new ($b::class)())->from('u')->select(['a']))->build(),
+    'spatial' => fn ($b) => $b->from('t')->filterIntersects('area', [1, 2])->filterCovers('area', [1, 2])->filterDistance('loc', [1, 2], '<', 5.0)->build(),
+    'json' => fn ($b) => $b->from('t')->filterJsonContains('tags', 'x')->filterJsonPath('data', 'a.b', '=', 1)->build(),
+    'upsert' => fn ($b) => $b->into('t')->set(['id' => 1, 'a' => 2])->onConflict(['id'], ['a'])->upsert(),
+    'aggregates' => fn ($b) => $b->from('t')->groupConcat('a', ',', 'g', ['b'])->jsonArrayAgg('a', 'j')->jsonObjectAgg('k', 'v', 'o')->build(),
+    'object' => function ($b) {
+        $typed = Query::equal('data.k', ['v']);
+        $typed->setAttributeType('object');
+
+        return $b->from('t')->filter([$typed])->build();
+    },
+];
+foreach ($dialects as $dialect) {
+    $base = new ReflectionClass('Utopia\\Query\\Builder\\' . $dialect);
+    $overrides = [];
+    foreach (array_keys($helpers) as $helper) {
+        if ($base->hasMethod($helper)) {
+            $overrides[] = $declaration($base->getMethod($helper));
+        }
+    }
+    eval("class Helps{$dialect} extends Utopia\\Query\\Builder\\{$dialect} { public array \$ran = []; public function call(string \$name, array \$arguments): mixed { return parent::{\$name}(...\$arguments); } " . implode(' ', $overrides) . ' }');
+    $class = 'Helps' . $dialect;
+    foreach ($builds as $name => $build) {
+        emit($dialect . ' helpers in ' . $name, outcome(function () use ($class, $build) {
+            $builder = new $class();
+            $built = outcome(fn () => $build($builder));
+
+            return [$built, $builder->ran, $builder->getBindings()];
+        }));
+    }
+    foreach ($helpers as $helper => $lists) {
+        if (! $base->hasMethod($helper)) {
+            continue;
+        }
+        emit($dialect . ' helper ' . $helper, array_map(fn (array $arguments) => outcome(function () use ($class, $helper, $arguments) {
+            $builder = (new $class())->from('t', 't')->into('t')->set(['id' => 1, 'a' => 2])->onConflict(['id'], ['a']);
+
+            return [$builder->call($helper, $arguments), $builder->getBindings()];
+        }), $lists));
+    }
+}

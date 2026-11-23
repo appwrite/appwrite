@@ -29,6 +29,7 @@
 //! | `Feature\MariaDB\Returning`, `Feature\PostgreSQL\Returning` | [`Returning`] |
 
 use crate::builder::core::{Builder, Dialect};
+use crate::builder::steps::{Arg, Ret, Step};
 use crate::builder::types::{ColumnPredicate, Condition, LockMode, Statement};
 use crate::builder::{AnyBuilder, CaseExpression, JoinType};
 use crate::error::{Error, Result};
@@ -110,6 +111,16 @@ pub trait ConditionalAggregates: Dialect {
         }
         Ok(expression)
     }
+}
+
+/// The builder's own `groupConcatExpr()`, `jsonArrayAggExpr()` and `jsonObjectAggExpr()`.
+pub(crate) fn aggregates_base_step<D: StringAggregates>(step: Step, arguments: &[Arg<'_>]) -> Option<Result<Ret>> {
+    Some(Ok(Ret::Str(match (step, arguments) {
+        (Step::GroupConcatExpr, [Arg::Str(column), Arg::Str(order_by)]) => D::group_concat_expr(column, order_by),
+        (Step::JsonArrayAggExpr, [Arg::Str(column)]) => D::json_array_agg_expr(column),
+        (Step::JsonObjectAggExpr, [Arg::Str(key), Arg::Str(value)]) => D::json_object_agg_expr(key, value),
+        _ => return None,
+    })))
 }
 
 /// `GROUP_CONCAT` / `STRING_AGG`, `JSON_ARRAYAGG`, `JSON_OBJECTAGG`.
@@ -747,7 +758,8 @@ impl<D: StringAggregates> Builder<D> {
             Some(columns) if !columns.is_empty() => format!("ORDER BY {}", self.compile_order_by_list(columns)?),
             _ => String::new(),
         };
-        let mut expression = D::group_concat_expr(&self.resolve_and_wrap(column)?, &order);
+        let wrapped = self.resolve_and_wrap(column)?;
+        let mut expression = self.step_string(Step::GroupConcatExpr, &[Arg::Str(&wrapped), Arg::Str(&order)])?;
         if !alias.is_empty() {
             expression.push_str(" AS ");
             expression.push_str(&self.quote(alias)?);
@@ -759,7 +771,8 @@ impl<D: StringAggregates> Builder<D> {
     ///
     /// PHP: `jsonArrayAgg()`.
     pub fn json_array_agg(&mut self, column: &str, alias: &str) -> Result<&mut Self> {
-        let mut expression = D::json_array_agg_expr(&self.resolve_and_wrap(column)?);
+        let wrapped = self.resolve_and_wrap(column)?;
+        let mut expression = self.step_string(Step::JsonArrayAggExpr, &[Arg::Str(&wrapped)])?;
         if !alias.is_empty() {
             expression.push_str(" AS ");
             expression.push_str(&self.quote(alias)?);
@@ -773,7 +786,7 @@ impl<D: StringAggregates> Builder<D> {
     pub fn json_object_agg(&mut self, key_column: &str, value_column: &str, alias: &str) -> Result<&mut Self> {
         let key = self.resolve_and_wrap(key_column)?;
         let value = self.resolve_and_wrap(value_column)?;
-        let mut expression = D::json_object_agg_expr(&key, &value);
+        let mut expression = self.step_string(Step::JsonObjectAggExpr, &[Arg::Str(&key), Arg::Str(&value)])?;
         if !alias.is_empty() {
             expression.push_str(" AS ");
             expression.push_str(&self.quote(alias)?);

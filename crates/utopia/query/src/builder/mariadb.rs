@@ -77,6 +77,13 @@ impl Dialect for MariaDbDialect {
         arguments: &[crate::builder::Arg<'_>],
     ) -> Option<Result<crate::builder::Ret>> {
         sql::sql_base_step(b, step, arguments)
+            .or_else(|| crate::builder::feature::aggregates_base_step::<Self>(step, arguments))
+            .or_else(|| match (step, arguments) {
+                (crate::builder::Step::GeomFromText, [crate::builder::Arg::Int(Some(srid))]) => {
+                    Some(Ok(crate::builder::Ret::Str(Self::geom_from_text(*srid))))
+                }
+                _ => None,
+            })
     }
 
     fn compile_random(_b: &Builder<Self>) -> String {
@@ -204,7 +211,16 @@ impl SqlDialect for MariaDbDialect {
         values: &Array,
         not: bool,
     ) -> Result<String> {
-        mysql::spatial_predicate(b, "ST_Contains", attribute, values, not)
+        // Through the step, so a subclass's compileSpatialPredicate() writes this one too.
+        b.step_string(
+            crate::builder::Step::CompileSpatialPredicate,
+            &[
+                crate::builder::Arg::Str("ST_Contains"),
+                crate::builder::Arg::Str(attribute),
+                crate::builder::Arg::Values(values),
+                crate::builder::Arg::Bool(not),
+            ],
+        )
     }
 
     fn compile_json_contains_expression(

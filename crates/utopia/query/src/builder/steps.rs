@@ -71,11 +71,69 @@ pub enum Step {
     AddBinding,
     /// `build(): Statement`.
     Build,
+    /// `compileRandom()`.
+    CompileRandom,
+    /// `buildTableClause()`.
+    BuildTableClause,
+    /// `buildAfterGroupByClause()`.
+    BuildAfterGroupByClause,
+    /// `buildAfterOrderByClause()`.
+    BuildAfterOrderByClause,
+    /// `buildSettingsClause()`.
+    BuildSettingsClause,
+    /// `wrapUnionMember()`.
+    WrapUnionMember,
+    /// `shouldEmitOffset()`.
+    ShouldEmitOffset,
+    /// `compileHavingCondition()`.
+    CompileHavingCondition,
+    /// `compileGroupByTimeBucket()`.
+    CompileGroupByTimeBucket,
+    /// `compileLikePredicate()`.
+    CompileLikePredicate,
+    /// `likeEscape()`.
+    LikeEscape,
+    /// `compileComparison()`.
+    CompileComparison,
+    /// `enclose()`.
+    Enclose,
+    /// `escapeLikeValue()`.
+    EscapeLikeValue,
+    /// `compileSpatialDistance()`.
+    CompileSpatialDistance,
+    /// `compileSpatialPredicate()`.
+    CompileSpatialPredicate,
+    /// `compileSpatialCoversPredicate()`.
+    CompileSpatialCoversPredicate,
+    /// `compileJsonPathExpression()`.
+    CompileJsonPathExpression,
+    /// `compileJsonFilter()`.
+    CompileJsonFilter,
+    /// `compileConflictHeader()`.
+    CompileConflictHeader,
+    /// `compileConflictAssignment()`.
+    CompileConflictAssignment,
+    /// `compileConflictClause()`.
+    CompileConflictClause,
+    /// `groupConcatExpr()`.
+    GroupConcatExpr,
+    /// `jsonArrayAggExpr()`.
+    JsonArrayAggExpr,
+    /// `jsonObjectAggExpr()`.
+    JsonObjectAggExpr,
+    /// `geomFromText()`.
+    GeomFromText,
+    /// `compileObjectFilter()`.
+    CompileObjectFilter,
+    /// `compileJsonbContainment()`.
+    CompileJsonbContainment,
+    /// `buildJsonbPath()`.
+    BuildJsonbPath,
 }
 
 impl Step {
     /// Every step, in the order of the enum.
-    pub const ALL: [Step; 26] = [
+    pub const ALL: [Step; 55] = [
         Step::CompileFilter,
         Step::CompileOrder,
         Step::CompileLimit,
@@ -102,6 +160,35 @@ impl Step {
         Step::CompileLike,
         Step::AddBinding,
         Step::Build,
+        Step::CompileRandom,
+        Step::BuildTableClause,
+        Step::BuildAfterGroupByClause,
+        Step::BuildAfterOrderByClause,
+        Step::BuildSettingsClause,
+        Step::WrapUnionMember,
+        Step::ShouldEmitOffset,
+        Step::CompileHavingCondition,
+        Step::CompileGroupByTimeBucket,
+        Step::CompileLikePredicate,
+        Step::LikeEscape,
+        Step::CompileComparison,
+        Step::Enclose,
+        Step::EscapeLikeValue,
+        Step::CompileSpatialDistance,
+        Step::CompileSpatialPredicate,
+        Step::CompileSpatialCoversPredicate,
+        Step::CompileJsonPathExpression,
+        Step::CompileJsonFilter,
+        Step::CompileConflictHeader,
+        Step::CompileConflictAssignment,
+        Step::CompileConflictClause,
+        Step::GroupConcatExpr,
+        Step::JsonArrayAggExpr,
+        Step::JsonObjectAggExpr,
+        Step::GeomFromText,
+        Step::CompileObjectFilter,
+        Step::CompileJsonbContainment,
+        Step::BuildJsonbPath,
     ];
 
     /// The PHP method.
@@ -133,6 +220,35 @@ impl Step {
             Step::CompileLike => "compileLike",
             Step::AddBinding => "addBinding",
             Step::Build => "build",
+            Step::CompileRandom => "compileRandom",
+            Step::BuildTableClause => "buildTableClause",
+            Step::BuildAfterGroupByClause => "buildAfterGroupByClause",
+            Step::BuildAfterOrderByClause => "buildAfterOrderByClause",
+            Step::BuildSettingsClause => "buildSettingsClause",
+            Step::WrapUnionMember => "wrapUnionMember",
+            Step::ShouldEmitOffset => "shouldEmitOffset",
+            Step::CompileHavingCondition => "compileHavingCondition",
+            Step::CompileGroupByTimeBucket => "compileGroupByTimeBucket",
+            Step::CompileLikePredicate => "compileLikePredicate",
+            Step::LikeEscape => "likeEscape",
+            Step::CompileComparison => "compileComparison",
+            Step::Enclose => "enclose",
+            Step::EscapeLikeValue => "escapeLikeValue",
+            Step::CompileSpatialDistance => "compileSpatialDistance",
+            Step::CompileSpatialPredicate => "compileSpatialPredicate",
+            Step::CompileSpatialCoversPredicate => "compileSpatialCoversPredicate",
+            Step::CompileJsonPathExpression => "compileJsonPathExpression",
+            Step::CompileJsonFilter => "compileJsonFilter",
+            Step::CompileConflictHeader => "compileConflictHeader",
+            Step::CompileConflictAssignment => "compileConflictAssignment",
+            Step::CompileConflictClause => "compileConflictClause",
+            Step::GroupConcatExpr => "groupConcatExpr",
+            Step::JsonArrayAggExpr => "jsonArrayAggExpr",
+            Step::JsonObjectAggExpr => "jsonObjectAggExpr",
+            Step::GeomFromText => "geomFromText",
+            Step::CompileObjectFilter => "compileObjectFilter",
+            Step::CompileJsonbContainment => "compileJsonbContainment",
+            Step::BuildJsonbPath => "buildJsonbPath",
         }
     }
 }
@@ -156,6 +272,8 @@ pub enum Arg<'a> {
     Method(Method),
     /// A `JoinBuilder`.
     Join(&'a JoinBuilder),
+    /// An `int`, or a `?int` that is null.
+    Int(Option<i64>),
 }
 
 /// What a [`Step`] returns.
@@ -167,6 +285,8 @@ pub enum Ret {
     Str(String),
     /// A `Statement`.
     Statement(Statement),
+    /// A `bool`.
+    Bool(bool),
 }
 
 impl Ret {
@@ -199,14 +319,19 @@ impl<D: Dialect> Builder<D> {
 
     /// Says which steps the overrides take, a bit for each by its place in [`Step::ALL`]:
     /// the others are not asked about.
-    pub fn set_overridden(&mut self, steps: u64) -> &mut Self {
+    pub fn set_overridden(&mut self, steps: u128) -> &mut Self {
         self.core.steps = steps;
         self
     }
 
+    /// Whether a subclass overrides `step`.
+    pub(crate) fn overrides(&self, step: Step) -> bool {
+        self.core.steps & (1 << step as u32) != 0
+    }
+
     /// The override of `step`, when there is one.
     fn overridden(&mut self, step: Step, arguments: &[Arg<'_>]) -> Option<Result<Ret>> {
-        if self.core.steps & (1 << step as u64) == 0 {
+        if self.core.steps & (1 << step as u32) == 0 {
             return None;
         }
         let overrides = self.core.overrides.clone()?;
@@ -266,6 +391,34 @@ impl<D: Dialect> Builder<D> {
                 Ok(Ret::None)
             }
             (Step::Build, []) => self.build().map(Ret::Statement),
+            (Step::CompileRandom, []) => Ok(Ret::Str(D::compile_random(self))),
+            (Step::BuildTableClause, []) => D::build_table_clause(self).map(Ret::Str),
+            (Step::BuildAfterGroupByClause, []) => D::build_after_group_by_clause(self).map(Ret::Str),
+            (Step::BuildAfterOrderByClause, []) => D::build_after_order_by_clause(self).map(Ret::Str),
+            (Step::BuildSettingsClause, []) => D::build_settings_clause(self).map(Ret::Str),
+            (Step::WrapUnionMember, [Arg::Str(sql)]) => Ok(Ret::Str(D::wrap_union_member(self, sql))),
+            (Step::ShouldEmitOffset, [Arg::Int(offset), Arg::Int(limit)]) => {
+                D::should_emit_offset(self, *offset, *limit).map(Ret::Bool)
+            }
+            (Step::CompileHavingCondition, [Arg::Query(query), Arg::Str(expression)]) => {
+                self.base_compile_having_condition(query, expression).map(Ret::Str)
+            }
+            (Step::CompileGroupByTimeBucket, [Arg::Str(attribute), Arg::Str(interval)]) => {
+                D::compile_group_by_time_bucket(self, attribute, interval).map(Ret::Str)
+            }
+            (Step::CompileLikePredicate, [Arg::Str(attribute), Arg::Bool(not)]) => {
+                self.base_like_predicate(attribute, *not).map(Ret::Str)
+            }
+            (Step::LikeEscape, []) => self.base_like_escape().map(Ret::Str),
+            (
+                Step::CompileComparison,
+                [Arg::Str(attribute), Arg::Str(operator), Arg::Values(values), Arg::MaybeStr(column)],
+            ) => Ok(Ret::Str(self.base_compile_comparison(attribute, operator, values, *column))),
+            (Step::Enclose, [Arg::Str(condition)]) => Ok(Ret::Str(crate::builder::core::enclose(condition))),
+            (Step::EscapeLikeValue, [Arg::Value(value)]) => {
+                let escaped = crate::builder::core::escape_like_value(value, D::LIKE_ESCAPE);
+                Ok(Ret::Str(escaped.iter().map(|&byte| char::from(byte)).collect()))
+            }
             // A step only some dialects have.
             _ => D::base_step(self, step, arguments).unwrap_or_else(|| Err(wrong(step))),
         }
@@ -285,6 +438,14 @@ impl<D: Dialect> Builder<D> {
         match self.step(Step::Build, &[])? {
             Ret::Statement(statement) => Ok(statement),
             _ => Err(Error::Validation("build() did not return a statement".into())),
+        }
+    }
+
+    /// `step`, which returns a bool.
+    pub(crate) fn step_bool(&mut self, step: Step, arguments: &[Arg<'_>]) -> Result<bool> {
+        match self.step(step, arguments)? {
+            Ret::Bool(flag) => Ok(flag),
+            _ => Err(Error::Validation(format!("{}() did not return a bool", step.method()))),
         }
     }
 
