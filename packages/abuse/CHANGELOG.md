@@ -10,7 +10,7 @@
 - `Challenge\Clearance`: issued after a challenge is passed. `withParams([...])->issue($difficulty)` and `->verify($token, $difficulty, $maxAge)`.
 - `Challenge\Nonce`: the single-use nonce store, with a key pattern filled by `withParams()`. Backends: `Nonce\Redis`, `Nonce\RedisCluster`, `Nonce\RedisPool` and `Nonce\None`.
 - `Challenge\Issuer`: issues the signed, purpose-bound tokens everything is built on, and checks them. `Challenge\Identity`: a coarse IP prefix (configurable, /24 and /48 by default) and a User-Agent hash to bind to.
-- Requires `adhocore/jwt` `^1.1`.
+- Requires `adhocore/jwt` `^1.1` and `ext-openssl`.
 - `Challenge\Password`: asks for a password the caller set, held encrypted in Appwrite's `encrypt`-filter envelope (`Password::encrypt()`), with keys tried in order during a rotation. It does not limit guesses; callers rate-limit verify. `version()` identifies the stored password so a clearance can end when it changes.
 
 ## 4.0.0 (unreleased)
