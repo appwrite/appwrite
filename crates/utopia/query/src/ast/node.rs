@@ -205,8 +205,6 @@ pub struct Binary {
     pub operator: String,
     /// The right operand.
     pub right: Box<Expression>,
-    /// What `ESCAPE` names after a `LIKE` pattern.
-    pub escape: Option<Box<Expression>>,
 }
 
 impl Binary {
@@ -214,16 +212,7 @@ impl Binary {
     ///
     /// PHP: `new Binary($left, $operator, $right)`.
     pub fn new(left: impl Into<Expression>, operator: impl Into<String>, right: impl Into<Expression>) -> Self {
-        Binary { left: boxed(left), operator: operator.into(), right: boxed(right), escape: None }
-    }
-
-    /// The comparison with `ESCAPE escape` after its pattern.
-    ///
-    /// PHP: the `$escape` argument.
-    #[must_use]
-    pub fn with_escape(mut self, escape: impl Into<Expression>) -> Self {
-        self.escape = Some(boxed(escape));
-        self
+        Binary { left: boxed(left), operator: operator.into(), right: boxed(right) }
     }
 }
 

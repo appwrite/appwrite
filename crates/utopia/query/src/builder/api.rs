@@ -340,10 +340,8 @@ impl<D: Dialect> Builder<D> {
         let mut offset = 0;
         for binding in &result.bindings {
             let literal = match binding {
-                Value::Str(s) if widened => {
-                    D::LITERAL.quote(&s.as_bytes().iter().map(|&b| char::from(b)).collect::<String>())?
-                }
-                Value::Str(s) => D::LITERAL.quote(&String::from_utf8_lossy(s.as_bytes()))?,
+                Value::Str(s) if widened => D::quote_string(s.as_bytes()).iter().map(|&b| char::from(b)).collect(),
+                Value::Str(s) => String::from_utf8_lossy(&D::quote_string(s.as_bytes())).into_owned(),
                 Value::Int(_) | Value::Float(_) => crate::value::to_php_string(binding),
                 Value::Bool(b) => if *b { "1" } else { "0" }.to_owned(),
                 _ => "NULL".to_owned(),

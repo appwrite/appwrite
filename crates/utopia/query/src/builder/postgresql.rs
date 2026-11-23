@@ -670,7 +670,6 @@ fn select_keyword_len(query: &str) -> Option<usize> {
 impl Dialect for PostgreSqlDialect {
     const CLASS: &'static str = "Utopia\\Query\\Builder\\PostgreSQL";
     const WRAP: char = '"';
-    const LITERAL: crate::StringLiteral = crate::StringLiteral::Extended;
 
     fn base_step(
         b: &mut Builder<Self>,

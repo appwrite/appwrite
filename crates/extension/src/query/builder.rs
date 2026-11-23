@@ -140,33 +140,19 @@ pub trait Text: Dialect {
         Ok(None)
     }
 
-    /// The class `createTokenizer()` makes: the dialect's own, or the standard one.
-    const TOKENIZER: &'static str = "Utopia\\Query\\Tokenizer\\Tokenizer";
-
     /// The class `createAstSerializer()` makes.
     const SERIALIZER: &'static str = "Utopia\\Query\\AST\\Serializer";
 }
 
-impl Text for MySqlDialect {
-    const TOKENIZER: &'static str = "Utopia\\Query\\Tokenizer\\MySQL";
-    const SERIALIZER: &'static str = "Utopia\\Query\\AST\\Serializer\\MySQL";
-}
-impl Text for MariaDbDialect {
-    const TOKENIZER: &'static str = "Utopia\\Query\\Tokenizer\\MariaDB";
-    const SERIALIZER: &'static str = "Utopia\\Query\\AST\\Serializer\\MariaDB";
-}
+impl Text for MySqlDialect {}
+impl Text for MariaDbDialect {}
 impl Text for PostgreSqlDialect {
-    const TOKENIZER: &'static str = "Utopia\\Query\\Tokenizer\\PostgreSQL";
     const SERIALIZER: &'static str = "Utopia\\Query\\AST\\Serializer\\PostgreSQL";
 }
 impl Text for SqliteDialect {
-    const TOKENIZER: &'static str = "Utopia\\Query\\Tokenizer\\SQLite";
     const SERIALIZER: &'static str = "Utopia\\Query\\AST\\Serializer\\SQLite";
 }
 impl Text for ClickHouseDialect {
-    const TOKENIZER: &'static str = "Utopia\\Query\\Tokenizer\\ClickHouse";
-    const SERIALIZER: &'static str = "Utopia\\Query\\AST\\Serializer\\ClickHouse";
-
     fn formatted(builder: &mut Builder<Self>) -> Result<Option<FormattedInsertStatement>, Error> {
         builder.formatted_insert()
     }
@@ -779,12 +765,6 @@ impl<D: Dialect + Text> State<D> {
                 }
             });
         }
-        // `createTokenizer()` takes nothing: the SQL is for the tokenizer it returns.
-        if step == Step::CreateTokenizer {
-            let [Arg::Str(sql)] = arguments else { return None };
-            let tokenizer = invoke(object, function, &mut [])?;
-            return self.tokenized(&tokenizer, sql).ok().map(|read| Ret::Select(Box::new(read)));
-        }
         let returned = invoke(object, function, &mut zvals)?;
         let strings = |list: &Zval| -> Vec<String> {
             let items = list.dereference().array().into_iter().flat_map(ZendHashTable::values);
@@ -847,22 +827,6 @@ impl<D: Dialect + Text> State<D> {
         }
         parts.set_hashtable(held);
         Ok(())
-    }
-
-    /// `$sql` read as PHP reads a CTE: the tokenizer's tokens, filtered, through the package's parser
-    /// with the dialect's string rules.
-    fn tokenized(&self, tokenizer: &Zval, sql: &str) -> PhpResult<utopia_query::ast::Select> {
-        let tokenizer = tokenizer.object().ok_or_else(pending)?;
-        let tokens =
-            tokenizer.try_call_method("tokenize", vec![&string(&bytes(D::JSON, sql))]).map_err(|_| pending())?;
-        let filter =
-            ZendCallable::try_from_name("Utopia\\Query\\Tokenizer\\Tokenizer::filter").map_err(PhpException::from)?;
-        let tokens = filter.try_call(vec![&tokens]).map_err(|_| pending())?;
-        let rules = utopia_query::StringLiteral::CASES.iter().find(|(rules, _)| *rules == D::LITERAL);
-        let rules = enum_case("Utopia\\Query\\StringLiteral", rules.map_or("Backslash", |found| found.1))?;
-        let parser = construct(class("Utopia\\Query\\AST\\Parser")?, &mut [rules])?;
-        let select = parser.try_call_method("parse", vec![&tokens]).map_err(|_| pending())?;
-        super::ast::read_select(&select)
     }
 
     /// The crate's `CASE` as the package's `Case\Expression`, built through its own methods.
@@ -4511,28 +4475,6 @@ macro_rules! builder_class {
                 self_.0.step(Step::CompileGroupByTimeBucket, &[Arg::Str(&attribute), Arg::Str(&interval)])
             }
 
-            #[php(name = "compileLikePredicate", vis = "protected", defaults(not = "Bool(false)"))]
-            pub fn compile_like_predicate(
-                self_: &mut ZendClassObject<$class>,
-                attribute: PhpString<'_>,
-                not: Bool,
-            ) -> PhpResult<Bytes> {
-                let object = std::ptr::from_mut(&mut self_.std);
-                self_.0.running(object);
-                let attribute = self_.0.text(attribute.bytes());
-                let not = not.0;
-                self_.0.step(Step::CompileLikePredicate, &[Arg::Str(&attribute), Arg::Bool(not)])
-            }
-
-            #[php(name = "likeEscape", vis = "protected")]
-            pub fn like_escape(
-                self_: &mut ZendClassObject<$class>,
-            ) -> PhpResult<Bytes> {
-                let object = std::ptr::from_mut(&mut self_.std);
-                self_.0.running(object);
-                self_.0.step(Step::LikeEscape, &[])
-            }
-
             #[php(name = "compileComparison", vis = "protected", optional = column)]
             pub fn compile_comparison(
                 self_: &mut ZendClassObject<$class>,
@@ -4940,11 +4882,6 @@ macro_rules! builder_class {
                     Ret::Placement(placement) => placed(placement),
                     _ => placed(requested.0),
                 }
-            }
-
-            #[php(name = "createTokenizer", vis = "protected")]
-            pub fn create_tokenizer(&self) -> PhpResult<Zval> {
-                construct(class(<$dialect as Text>::TOKENIZER)?, &mut [])?.into_zval(false).map_err(PhpException::from)
             }
 
             #[php(name = "createAstSerializer", vis = "protected")]

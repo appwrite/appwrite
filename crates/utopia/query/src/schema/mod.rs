@@ -209,14 +209,6 @@ pub trait Schema: Clone + Send + Sync + Sized + 'static {
         Ok(collation.to_owned())
     }
 
-    /// How the dialect writes a string literal: comments, defaults and enum
-    /// values are inlined, since DDL takes no bound parameters.
-    ///
-    /// PHP: `$literal`.
-    fn literal(&self) -> crate::StringLiteral {
-        crate::StringLiteral::Backslash
-    }
-
     /// The unsigned keyword, or empty where there is none.
     ///
     /// PHP: `compileUnsigned()`.

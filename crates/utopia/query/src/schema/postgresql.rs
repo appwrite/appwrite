@@ -104,7 +104,7 @@ impl PostgreSql {
             if !names::is_identifier(key) {
                 return Err(Error::Validation(format!("Invalid collation option key: {key}")));
             }
-            parts.push(format!("{key} = {}", self.literal().quote(value)?));
+            parts.push(format!("{key} = {}", names::literal(value)));
         }
         parts.push(format!("deterministic = {deterministic}"));
         base::plain(self, format!("CREATE COLLATION IF NOT EXISTS {} ({})", self.quote(name)?, parts.join(", ")))
@@ -162,10 +162,6 @@ impl Schema for PostgreSql {
     fn set_executor(&mut self, executor: Executor) -> &mut Self {
         self.executor = Some(executor);
         self
-    }
-
-    fn literal(&self) -> crate::StringLiteral {
-        crate::StringLiteral::Extended
     }
 
     fn quote(&self, identifier: &str) -> Result<String> {
@@ -252,9 +248,9 @@ impl Schema for PostgreSql {
         }
         base::add(&mut out, &[if c.nullable { "NULL" } else { "NOT NULL" }]);
         if !generated {
-            base::add_default(self, &mut out, column)?;
+            base::add_default(&mut out, column);
             if c.kind == ColumnType::Enum && !c.enum_values.is_empty() {
-                let values = c.enum_values.iter().map(|v| self.literal().quote(v)).collect::<Result<Vec<_>>>()?;
+                let values: Vec<String> = c.enum_values.iter().map(|v| names::literal(v)).collect();
                 base::add(&mut out, &["CHECK (", &self.quote_literal(&c.name)?, " IN (", &values.join(", "), "))"]);
             }
         }
@@ -451,7 +447,7 @@ impl feature::Triggers for PostgreSql {
 
 impl feature::Types for PostgreSql {
     fn create_type(&self, name: &str, values: &[&str]) -> Result<Statement> {
-        let values = values.iter().map(|v| self.literal().quote(v)).collect::<Result<Vec<_>>>()?;
+        let values: Vec<String> = values.iter().map(|v| names::literal(v)).collect();
         base::plain(self, format!("CREATE TYPE {} AS ENUM ({})", self.quote(name)?, values.join(", ")))
     }
 
@@ -470,13 +466,13 @@ impl feature::Sequences for PostgreSql {
     }
 
     fn next_val(&self, name: &str) -> Result<Statement> {
-        base::plain(self, format!("SELECT nextval({})", self.literal().quote(name)?))
+        base::plain(self, format!("SELECT nextval({})", names::literal(name)))
     }
 }
 
 impl feature::TableComments for PostgreSql {
     fn comment_on_table(&self, table: &str, comment: &str) -> Result<Statement> {
-        base::plain(self, format!("COMMENT ON TABLE {} IS {}", self.quote(table)?, self.literal().quote(comment)?))
+        base::plain(self, format!("COMMENT ON TABLE {} IS {}", self.quote(table)?, names::literal(comment)))
     }
 }
 
@@ -488,7 +484,7 @@ impl feature::ColumnComments for PostgreSql {
                 "COMMENT ON COLUMN {}.{} IS {}",
                 self.quote(table)?,
                 self.quote_literal(column)?,
-                self.literal().quote(comment)?
+                names::literal(comment)
             ),
         )
     }

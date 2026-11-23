@@ -83,10 +83,6 @@ impl Schema for Sqlite {
         self
     }
 
-    fn literal(&self) -> crate::StringLiteral {
-        crate::StringLiteral::Standard
-    }
-
     fn quote(&self, identifier: &str) -> Result<String> {
         crate::quote(identifier, '`')
     }
@@ -143,7 +139,7 @@ impl Schema for Sqlite {
         if !c.nullable {
             base::add(&mut out, &["NOT NULL"]);
         }
-        base::add_default(self, &mut out, column)?;
+        base::add_default(&mut out, column);
         if let Some(check) = &c.check {
             base::add(&mut out, &["CHECK (", check, ")"]);
         }

@@ -214,27 +214,6 @@ pub trait Dialect: Clone + Default + Send + Sync + Sized + 'static {
     /// The identifier quote character.
     const WRAP: char = '`';
 
-    /// The character that escapes `%`, `_` and itself in a `LIKE` pattern.
-    ///
-    /// PHP: `LIKE_ESCAPE`.
-    const LIKE_ESCAPE: u8 = b'\\';
-
-    /// Whether a `LIKE` names its escape character (`LIKE ? ESCAPE '!'`).
-    ///
-    /// PHP: `DECLARES_LIKE_ESCAPE`.
-    const DECLARES_LIKE_ESCAPE: bool = false;
-
-    /// The character `LIKE` escapes with when a pattern declares none; `None` when it escapes
-    /// nothing, as in SQLite.
-    ///
-    /// PHP: `IMPLICIT_LIKE_ESCAPE`.
-    const IMPLICIT_LIKE_ESCAPE: Option<u8> = Some(b'\\');
-
-    /// How the dialect writes and reads a string literal.
-    ///
-    /// PHP: `$literal`.
-    const LITERAL: crate::StringLiteral = crate::StringLiteral::Backslash;
-
     /// Quotes an identifier (`` `users`.`id` ``).
     fn quote(_b: &Builder<Self>, identifier: &str) -> Result<String> {
         crate::quote::quote(identifier, Self::WRAP)
@@ -1852,37 +1831,19 @@ impl<D: Dialect> Builder<D> {
         self.collate_comparisons(sql, &comparisons)
     }
 
-    /// `attribute [NOT ]LIKE ?`, naming the escape character where the dialect does.
-    ///
-    /// PHP: `compileLikePredicate()`, `likeEscape()`.
     /// `$prefix . $this->escapeLikeValue($value) . $suffix`: a subclass's own `escapeLikeValue()`
     /// when it has one. Without one the value keeps its bytes.
     pub(crate) fn like_value(&mut self, prefix: &str, value: &Value, suffix: &str) -> Result<Value> {
         if !self.overrides(Step::EscapeLikeValue) {
-            return Ok(like_pattern(prefix, value, suffix, D::LIKE_ESCAPE));
+            return Ok(like_pattern(prefix, value, suffix, b'\\'));
         }
         let escaped = self.step_string(Step::EscapeLikeValue, &[Arg::Value(value)])?;
         Ok(value::string(format!("{prefix}{escaped}{suffix}")))
     }
 
     pub(crate) fn like_predicate(&mut self, attribute: &str, not: bool) -> Result<String> {
-        self.step_string(Step::CompileLikePredicate, &[Arg::Str(attribute), Arg::Bool(not)])
-    }
-
-    /// The builder's own `compileLikePredicate()`.
-    pub(crate) fn base_like_predicate(&mut self, attribute: &str, not: bool) -> Result<String> {
-        // PHP asks for the keyword before the escape clause.
         let like = self.like_keyword()?;
-        let escape = self.step_string(Step::LikeEscape, &[])?;
-        Ok(format!("{attribute} {}{like} ?{escape}", if not { "NOT " } else { "" }))
-    }
-
-    /// The builder's own `likeEscape()`: the `ESCAPE` clause, where the dialect declares one.
-    pub(crate) fn base_like_escape(&self) -> Result<String> {
-        if !D::DECLARES_LIKE_ESCAPE {
-            return Ok(String::new());
-        }
-        Ok(format!(" ESCAPE {}", D::LITERAL.quote(&char::from(D::LIKE_ESCAPE).to_string())?))
+        Ok(format!("{attribute} {}{like} ?", if not { "NOT " } else { "" }))
     }
 
     pub(crate) fn base_compile_like(
@@ -1899,24 +1860,38 @@ impl<D: Dialect> Builder<D> {
         self.like_predicate(attribute, not)
     }
 
+    /// `(attribute LIKE ? joiner ...)` for each of `values`, or the predicate alone for one value
+    /// when `single` allows it. PHP asks for the keyword once, before it escapes a value.
+    fn compile_patterns(
+        &mut self,
+        attribute: &str,
+        values: &Array,
+        column: Option<&str>,
+        not: bool,
+        joiner: &str,
+        single: bool,
+    ) -> Result<String> {
+        let like = self.like_keyword()?;
+        let predicate = format!("{attribute} {}{like} ?", if not { "NOT " } else { "" });
+        if single && values.len() == 1 {
+            let pattern = self.like_value("%", &first(values), "%")?;
+            self.add_binding(pattern, column);
+            return Ok(predicate);
+        }
+        for v in values.values() {
+            let pattern = self.like_value("%", v, "%")?;
+            self.add_binding(pattern, column);
+        }
+        Ok(format!("({})", vec![predicate; values.len()].join(joiner)))
+    }
+
     pub(crate) fn base_compile_contains(
         &mut self,
         attribute: &str,
         values: &Array,
         column: Option<&str>,
     ) -> Result<String> {
-        if values.len() == 1 {
-            let pattern = self.like_value("%", &first(values), "%")?;
-            self.add_binding(pattern, column);
-            return self.like_predicate(attribute, false);
-        }
-        let mut parts = Vec::with_capacity(values.len());
-        for v in values.values() {
-            let pattern = self.like_value("%", v, "%")?;
-            self.add_binding(pattern, column);
-            parts.push(self.like_predicate(attribute, false)?);
-        }
-        Ok(format!("({})", parts.join(" OR ")))
+        self.compile_patterns(attribute, values, column, false, " OR ", true)
     }
 
     pub(crate) fn base_compile_contains_all(
@@ -1925,13 +1900,7 @@ impl<D: Dialect> Builder<D> {
         values: &Array,
         column: Option<&str>,
     ) -> Result<String> {
-        let mut parts = Vec::with_capacity(values.len());
-        for v in values.values() {
-            let pattern = self.like_value("%", v, "%")?;
-            self.add_binding(pattern, column);
-            parts.push(self.like_predicate(attribute, false)?);
-        }
-        Ok(format!("({})", parts.join(" AND ")))
+        self.compile_patterns(attribute, values, column, false, " AND ", false)
     }
 
     pub(crate) fn base_compile_not_contains(
@@ -1940,18 +1909,7 @@ impl<D: Dialect> Builder<D> {
         values: &Array,
         column: Option<&str>,
     ) -> Result<String> {
-        if values.len() == 1 {
-            let pattern = self.like_value("%", &first(values), "%")?;
-            self.add_binding(pattern, column);
-            return self.like_predicate(attribute, true);
-        }
-        let mut parts = Vec::with_capacity(values.len());
-        for v in values.values() {
-            let pattern = self.like_value("%", v, "%")?;
-            self.add_binding(pattern, column);
-            parts.push(self.like_predicate(attribute, true)?);
-        }
-        Ok(format!("({})", parts.join(" AND ")))
+        self.compile_patterns(attribute, values, column, true, " AND ", true)
     }
 
     /// `attribute IN (?, ...)`, with `IS NULL` for null values; `1 = 0` for none.

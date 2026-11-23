@@ -459,7 +459,6 @@ impl Dialect for ClickHouseDialect {
         }
         crate::builder::feature::aggregates_base_step::<Self>(step, arguments)
     }
-    const LITERAL: crate::StringLiteral = crate::StringLiteral::BackslashUtf8;
 
     fn compile_random(_b: &Builder<Self>) -> String {
         "rand()".into()
@@ -703,10 +702,6 @@ impl Dialect for ClickHouseDialect {
         b.dialect = ClickHouseDialect::default();
         b.core.hints.clear();
         b.reset_group_by_modifier();
-    }
-
-    fn ast_dialect() -> crate::builder::AstDialect {
-        crate::builder::AstDialect::ClickHouse
     }
 }
 

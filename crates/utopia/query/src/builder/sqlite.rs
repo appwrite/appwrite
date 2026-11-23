@@ -70,9 +70,6 @@ fn json_each_conditions(b: &mut Builder<SqliteDialect>, attribute: &str, values:
 
 impl Dialect for SqliteDialect {
     const CLASS: &'static str = "Utopia\\Query\\Builder\\SQLite";
-    const DECLARES_LIKE_ESCAPE: bool = true;
-    const IMPLICIT_LIKE_ESCAPE: Option<u8> = None;
-    const LITERAL: crate::StringLiteral = crate::StringLiteral::Standard;
 
     fn base_step(
         b: &mut Builder<Self>,

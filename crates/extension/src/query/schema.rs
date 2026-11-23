@@ -1399,25 +1399,19 @@ schema_methods!(
 
         #[php(name = "createCollation", defaults(deterministic = "Bool(true)"))]
         pub fn create_collation(&self, name: PhpString<'_>, options: Arr<'_>, deterministic: Bool) -> PhpResult<Zval> {
-            let name = inward(false, name.bytes())?;
-            let compile = |pairs: &[(String, String)]| {
-                let pairs: Vec<_> = pairs.iter().map(|(name, option)| (name.as_str(), option.as_str())).collect();
-                PostgreSql::new().create_collation(&name, &pairs, deterministic.0)
-            };
             let mut pairs = Vec::new();
             for (name, option) in options.table().into_iter().flat_map(ZendHashTable::iter) {
-                let name = key(false, &name)?;
-                match scalar(false, option, "options") {
-                    Ok(option) => pairs.push((name, option)),
-                    // PHP refuses a key before it reads the value under it, and an earlier
-                    // option before a later one.
-                    Err(wrong) => {
-                        pairs.push((name, String::new()));
-                        return Err(compile(&pairs).err().map_or(wrong, |error| thrown(false, &error)));
-                    }
-                }
+                // PHP writes these into a string: nothing for `null`, `Array` for an array.
+                let option = match option {
+                    option if option.is_null() => String::new(),
+                    option if option.is_array() => "Array".to_owned(),
+                    option => scalar(false, option, "options")?,
+                };
+                pairs.push((key(false, &name)?, option));
             }
-            statement::<PostgreSql>(&self.0, compile(&pairs), None)
+            let pairs: Vec<_> = pairs.iter().map(|(name, option)| (name.as_str(), option.as_str())).collect();
+            let name = inward(false, name.bytes())?;
+            statement::<PostgreSql>(&self.0, PostgreSql::new().create_collation(&name, &pairs, deterministic.0), None)
         }
 
         #[php(name = "alterColumnType", defaults(using = "\"\""))]

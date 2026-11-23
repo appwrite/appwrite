@@ -40,7 +40,6 @@
 //! echo $tokens[3]->value, "\n"; // users
 //! ```
 
-use crate::StringLiteral;
 use std::borrow::Cow;
 
 use crate::error::{Error, Result};
@@ -224,7 +223,6 @@ pub struct Tokenizer {
     quote: u8,
     hash_comments: bool,
     postgres_operators: bool,
-    literal: StringLiteral,
 }
 
 impl Default for Tokenizer {
@@ -347,14 +345,14 @@ impl Tokenizer {
     ///
     /// PHP: `new Tokenizer\Tokenizer()`.
     pub const fn new() -> Self {
-        Tokenizer { quote: b'`', hash_comments: false, postgres_operators: false, literal: StringLiteral::Backslash }
+        Tokenizer { quote: b'`', hash_comments: false, postgres_operators: false }
     }
 
     /// MySQL: also reads `#` line comments.
     ///
     /// PHP: `new Tokenizer\MySQL()`.
     pub const fn mysql() -> Self {
-        Tokenizer { quote: b'`', hash_comments: true, postgres_operators: false, literal: StringLiteral::Backslash }
+        Tokenizer { quote: b'`', hash_comments: true, postgres_operators: false }
     }
 
     /// MariaDB: as MySQL.
@@ -369,30 +367,21 @@ impl Tokenizer {
     ///
     /// PHP: `new Tokenizer\PostgreSQL()`.
     pub const fn postgresql() -> Self {
-        Tokenizer { quote: b'"', hash_comments: false, postgres_operators: true, literal: StringLiteral::Extended }
+        Tokenizer { quote: b'"', hash_comments: false, postgres_operators: true }
     }
 
-    /// SQLite: a backslash is a character like any other.
+    /// SQLite: identifiers quoted with double quotes.
     ///
     /// PHP: `new Tokenizer\SQLite()`.
     pub const fn sqlite() -> Self {
-        Self::new().with_literal(StringLiteral::Standard)
+        Tokenizer { quote: b'"', hash_comments: false, postgres_operators: false }
     }
 
     /// ClickHouse: as the standard tokenizer.
     ///
     /// PHP: `new Tokenizer\ClickHouse()`.
     pub const fn clickhouse() -> Self {
-        Self::new().with_literal(StringLiteral::BackslashUtf8)
-    }
-
-    /// The tokenizer reading string literals by `literal`'s rules.
-    ///
-    /// PHP: `new Tokenizer($literal)`.
-    #[must_use]
-    pub const fn with_literal(mut self, literal: StringLiteral) -> Self {
-        self.literal = literal;
-        self
+        Self::new()
     }
 
     /// The tokens of `sql`, whitespace and comments included, ending with an
@@ -420,7 +409,7 @@ impl Tokenizer {
     pub fn tokenize<'a, S: AsRef<[u8]> + ?Sized>(&self, sql: &'a S) -> Result<Vec<Token<'a>>> {
         let sql: &'a [u8] = sql.as_ref();
         if self.hash_comments
-            && let Some(rewritten) = replace_hash_comments(sql, self.literal.escapes_in_plain_literal())
+            && let Some(rewritten) = replace_hash_comments(sql)
         {
             let tokens = self.scan(&rewritten)?;
             return Ok(tokens.into_iter().map(Token::into_owned).collect());
@@ -444,7 +433,7 @@ impl Tokenizer {
         let mut scanner = Scanner { bytes: sql, pos: 0 };
         let mut tokens = Vec::with_capacity(sql.len() / 3 + 1);
         while scanner.pos < scanner.bytes.len() {
-            tokens.push(scanner.next(self)?);
+            tokens.push(scanner.next(self.quote)?);
         }
         tokens.push(Token { kind: TokenType::Eof, value: Cow::Borrowed(b""), position: scanner.pos });
         Ok(tokens)
@@ -474,11 +463,9 @@ impl<'a> Scanner<'a> {
         Token { kind, value: Cow::Borrowed(value.as_bytes()), position: start }
     }
 
-    fn next(&mut self, tokenizer: &Tokenizer) -> Result<Token<'a>> {
+    fn next(&mut self, quote: u8) -> Result<Token<'a>> {
         let start = self.pos;
         let c = self.bytes[start];
-        let quote = tokenizer.quote;
-        let prefix = tokenizer.literal.escape_prefix().as_bytes();
         Ok(match c {
             b' ' | b'\t' | b'\n' | b'\r' => {
                 while matches!(self.peek(0), Some(b' ' | b'\t' | b'\n' | b'\r')) {
@@ -494,12 +481,7 @@ impl<'a> Scanner<'a> {
                 self.token(TokenType::LineComment, start)
             }
             b'/' if self.peek(1) == Some(b'*') => self.block_comment(start),
-            b'\'' => self.string(start, tokenizer.literal.escapes_in_plain_literal())?,
-            // `E'...'`: a literal whose backslashes escape.
-            _ if !prefix.is_empty() && prefix[0].eq_ignore_ascii_case(&c) && self.peek(1) == Some(b'\'') => {
-                self.pos += prefix.len();
-                self.string(start, true)?
-            }
+            b'\'' => self.string(start)?,
             _ if c == quote => self.quoted_identifier(start, quote)?,
             b'"' => self.quoted_identifier(start, b'"')?,
             b'0'..=b'9' => self.number(start),
@@ -561,12 +543,12 @@ impl<'a> Scanner<'a> {
         self.token(TokenType::BlockComment, start)
     }
 
-    fn string(&mut self, start: usize, escapes: bool) -> Result<Token<'a>> {
+    fn string(&mut self, start: usize) -> Result<Token<'a>> {
         self.pos += 1;
         let len = self.bytes.len();
         while self.pos < len {
             match self.bytes[self.pos] {
-                b'\\' if escapes => {
+                b'\\' => {
                     if self.pos + 1 >= len {
                         break;
                     }
@@ -674,7 +656,7 @@ impl<'a> Scanner<'a> {
 
 /// MySQL's `#` comments rewritten to `-- ` outside strings and quoted
 /// identifiers (`None` when the SQL has none).
-fn replace_hash_comments(sql: &[u8], escapes: bool) -> Option<Vec<u8>> {
+fn replace_hash_comments(sql: &[u8]) -> Option<Vec<u8>> {
     let bytes = sql;
     let len = bytes.len();
     let mut hashes = Vec::new();
@@ -686,7 +668,7 @@ fn replace_hash_comments(sql: &[u8], escapes: bool) -> Option<Vec<u8>> {
                 i += 1;
                 while i < len {
                     let d = bytes[i];
-                    if d == b'\\' && (c == b'"' || (c == b'\'' && escapes)) {
+                    if d == b'\\' && c != b'`' {
                         i += 2;
                         continue;
                     }

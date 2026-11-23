@@ -81,11 +81,11 @@ impl ClickHouse {
                 .algorithm_args
                 .iter()
                 .map(|arg| match arg {
-                    Value::Str(s) => self.literal().quote(&String::from_utf8_lossy(s.as_bytes())),
-                    Value::Float(f) => Ok(names::fixed(*f)),
-                    other => Ok(crate::value::to_php_string(other)),
+                    Value::Str(s) => names::literal(&String::from_utf8_lossy(s.as_bytes())),
+                    Value::Float(f) => names::fixed(*f),
+                    other => crate::value::to_php_string(other),
                 })
-                .collect::<Result<_>>()?;
+                .collect();
             kind.push_str(&format!("({})", args.join(", ")));
         }
         Ok(format!(
@@ -112,8 +112,8 @@ impl ClickHouse {
                 format!("{name}({})", self.quote_literal(args.first().map(String::as_str).unwrap_or_default())?)
             }
             Engine::ReplicatedMergeTree => {
-                let at = |i: usize| self.literal().quote(args.get(i).map(String::as_str).unwrap_or_default());
-                format!("{name}({}, {})", at(0)?, at(1)?)
+                let at = |i: usize| args.get(i).map(|a| names::escape(a)).unwrap_or_default();
+                format!("{name}('{}', '{}')", at(0), at(1))
             }
             Engine::Memory | Engine::Log | Engine::TinyLog | Engine::StripeLog => name.to_owned(),
         })
@@ -164,14 +164,24 @@ impl ClickHouse {
         })
     }
 
-    /// `Enum8('a' = 1, 'b' = 2, ...)`.
-    fn enumeration(&self, values: &[String]) -> Result<String> {
-        let parts = values
+    /// `Enum8('a' = 1, 'b' = 2, ...)`, with `\` and `'` backslash-escaped.
+    fn enumeration(values: &[String]) -> String {
+        let parts: Vec<String> = values
             .iter()
             .enumerate()
-            .map(|(i, value)| Ok(format!("{} = {}", self.literal().quote(value)?, i + 1)))
-            .collect::<Result<Vec<_>>>()?;
-        Ok(format!("Enum8({})", parts.join(", ")))
+            .map(|(i, value)| {
+                let mut escaped = String::with_capacity(value.len());
+                for c in value.chars() {
+                    match c {
+                        '\\' => escaped.push_str("\\\\"),
+                        '\'' => escaped.push_str("\\'"),
+                        c => escaped.push(c),
+                    }
+                }
+                format!("'{escaped}' = {}", i + 1)
+            })
+            .collect();
+        format!("Enum8({})", parts.join(", "))
     }
 }
 
@@ -183,10 +193,6 @@ impl Schema for ClickHouse {
     fn set_executor(&mut self, executor: Executor) -> &mut Self {
         self.executor = Some(executor);
         self
-    }
-
-    fn literal(&self) -> crate::StringLiteral {
-        crate::StringLiteral::BackslashUtf8
     }
 
     fn quote(&self, identifier: &str) -> Result<String> {
@@ -265,7 +271,7 @@ impl Schema for ClickHouse {
             ColumnType::Datetime | ColumnType::Timestamp => date(),
             ColumnType::Json | ColumnType::Object => "String".into(),
             ColumnType::Binary => "String".into(),
-            ColumnType::Enum => self.enumeration(&c.enum_values)?,
+            ColumnType::Enum => Self::enumeration(&c.enum_values),
             ColumnType::Point => "Tuple(Float64, Float64)".into(),
             ColumnType::Linestring => "Array(Tuple(Float64, Float64))".into(),
             ColumnType::Polygon => "Array(Array(Tuple(Float64, Float64)))".into(),
@@ -299,7 +305,7 @@ impl Schema for ClickHouse {
     fn compile_column_definition(&self, column: &Column<Self>) -> Result<String> {
         let c = &column.def;
         let mut out = base::column_start(self, column)?;
-        base::add_default(self, &mut out, column)?;
+        base::add_default(&mut out, column);
         if !c.codecs.is_empty() {
             base::add(&mut out, &["CODEC(", &c.codecs.join(", "), ")"]);
         }
@@ -307,7 +313,7 @@ impl Schema for ClickHouse {
             base::add(&mut out, &["TTL ", ttl]);
         }
         if let Some(comment) = &c.comment {
-            base::add(&mut out, &["COMMENT ", &self.literal().quote(comment)?]);
+            base::add(&mut out, &["COMMENT ", &names::literal(comment)]);
         }
         Ok(out)
     }
@@ -443,10 +449,7 @@ impl table::CompositePrimary for ClickHouse {}
 
 impl feature::TableComments for ClickHouse {
     fn comment_on_table(&self, table: &str, comment: &str) -> Result<Statement> {
-        base::plain(
-            self,
-            format!("ALTER TABLE {} MODIFY COMMENT {}", self.quote(table)?, self.literal().quote(comment)?),
-        )
+        base::plain(self, format!("ALTER TABLE {} MODIFY COMMENT {}", self.quote(table)?, names::literal(comment)))
     }
 }
 
@@ -458,7 +461,7 @@ impl feature::ColumnComments for ClickHouse {
                 "ALTER TABLE {} COMMENT COLUMN {} {}",
                 self.quote(table)?,
                 self.quote_literal(column)?,
-                self.literal().quote(comment)?
+                names::literal(comment)
             ),
         )
     }
@@ -466,7 +469,7 @@ impl feature::ColumnComments for ClickHouse {
 
 impl feature::DropPartition for ClickHouse {
     fn drop_partition(&self, table: &str, name: &str) -> Result<Statement> {
-        base::plain(self, format!("ALTER TABLE {} DROP PARTITION {}", self.quote(table)?, self.literal().quote(name)?))
+        base::plain(self, format!("ALTER TABLE {} DROP PARTITION {}", self.quote(table)?, names::literal(name)))
     }
 }
 

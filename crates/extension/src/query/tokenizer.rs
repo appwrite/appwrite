@@ -7,10 +7,9 @@ use ext_php_rs::exception::PhpException;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, ZendObject, ZendStr, Zval};
 use ext_php_rs::zend::{ClassEntry, ce};
-use utopia_query::StringLiteral;
 use utopia_query::tokenizer::{TokenType, Tokenizer as Dialect};
 
-use super::{Rules, exception};
+use super::exception;
 use crate::emails::{construct, string};
 use crate::string::PhpString;
 
@@ -76,16 +75,15 @@ fn filter(tokens: &ZendHashTable) -> PhpResult<Vec<Zval>> {
 /// The methods every tokenizer class declares: a parent's method reads its own Rust type,
 /// so each class has its own.
 macro_rules! tokenizer_methods {
-    ($class:ident, $dialect:expr, $rules:literal, $quote:literal) => {
+    ($class:ident, $dialect:expr, $quote:literal) => {
         #[php_impl]
         impl $class {
-            #[php(defaults(literal = $rules))]
-            pub fn __construct(literal: Rules) -> Self {
-                Self(literal.0)
+            pub fn __construct() -> Self {
+                Self
             }
 
             pub fn tokenize(&self, sql: PhpString<'_>) -> PhpResult<Vec<Zval>> {
-                tokenize($dialect.with_literal(self.0), sql.bytes())
+                tokenize($dialect, sql.bytes())
             }
 
             pub fn filter(tokens: &ZendHashTable) -> PhpResult<Vec<Zval>> {
@@ -100,48 +98,52 @@ macro_rules! tokenizer_methods {
     };
 }
 
+/// `Utopia\Query\Tokenizer\Tokenizer`: the standard tokenizer.
+///
+/// No class here derives `Default`: with it, ext-php-rs 0.16.5 makes `new` of a PHP subclass
+/// an object of the Rust class.
 #[php_class]
 #[php(name = "Utopia\\Query\\Tokenizer\\Tokenizer")]
 #[derive(Clone)]
-pub struct Tokenizer(StringLiteral);
-tokenizer_methods!(Tokenizer, Dialect::new(), "Rules(StringLiteral::Backslash)", "`");
+pub struct Tokenizer;
+tokenizer_methods!(Tokenizer, Dialect::new(), "`");
 
 /// `Utopia\Query\Tokenizer\MySQL`: also reads `#` line comments.
 #[php_class]
 #[php(name = "Utopia\\Query\\Tokenizer\\MySQL")]
 #[php(extends(Tokenizer))]
 #[derive(Clone)]
-pub struct MySql(StringLiteral);
-tokenizer_methods!(MySql, Dialect::mysql(), "Rules(StringLiteral::Backslash)", "`");
+pub struct MySql;
+tokenizer_methods!(MySql, Dialect::mysql(), "`");
 
 /// `Utopia\Query\Tokenizer\MariaDB`: as MySQL.
 #[php_class]
 #[php(name = "Utopia\\Query\\Tokenizer\\MariaDB")]
 #[php(extends(MySql))]
 #[derive(Clone)]
-pub struct MariaDb(StringLiteral);
-tokenizer_methods!(MariaDb, Dialect::mariadb(), "Rules(StringLiteral::Backslash)", "`");
+pub struct MariaDb;
+tokenizer_methods!(MariaDb, Dialect::mariadb(), "`");
 
 /// `Utopia\Query\Tokenizer\PostgreSQL`: double-quoted identifiers and multi-character operators.
 #[php_class]
 #[php(name = "Utopia\\Query\\Tokenizer\\PostgreSQL")]
 #[php(extends(Tokenizer))]
 #[derive(Clone)]
-pub struct PostgreSql(StringLiteral);
-tokenizer_methods!(PostgreSql, Dialect::postgresql(), "Rules(StringLiteral::Extended)", "\"");
+pub struct PostgreSql;
+tokenizer_methods!(PostgreSql, Dialect::postgresql(), "\"");
 
 /// `Utopia\Query\Tokenizer\SQLite`: double-quoted identifiers.
 #[php_class]
 #[php(name = "Utopia\\Query\\Tokenizer\\SQLite")]
 #[php(extends(Tokenizer))]
 #[derive(Clone)]
-pub struct Sqlite(StringLiteral);
-tokenizer_methods!(Sqlite, Dialect::sqlite(), "Rules(StringLiteral::Standard)", "`");
+pub struct Sqlite;
+tokenizer_methods!(Sqlite, Dialect::sqlite(), "\"");
 
 /// `Utopia\Query\Tokenizer\ClickHouse`: as the standard tokenizer.
 #[php_class]
 #[php(name = "Utopia\\Query\\Tokenizer\\ClickHouse")]
 #[php(extends(Tokenizer))]
 #[derive(Clone)]
-pub struct ClickHouse(StringLiteral);
-tokenizer_methods!(ClickHouse, Dialect::clickhouse(), "Rules(StringLiteral::BackslashUtf8)", "`");
+pub struct ClickHouse;
+tokenizer_methods!(ClickHouse, Dialect::clickhouse(), "`");
