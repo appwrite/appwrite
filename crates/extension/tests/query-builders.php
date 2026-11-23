@@ -255,3 +255,61 @@ foreach ($dialects as $dialect) {
     }
     emit($dialect . ' compile methods', $out);
 }
+
+// --- Builders inside builders -----------------------------------------------------------------
+
+// A subquery is a builder of its own: the same class, another dialect's, or a subclass whose overrides have
+// to apply inside the statement that holds it.
+foreach ($dialects as $dialect) {
+    $class = 'Utopia\\Query\\Builder\\' . $dialect;
+    $inner = [
+        'same' => fn () => (new $class())->from('u')->select(['id'])->filter([Query::equal('x', [1, 2])]),
+        'wraps' => fn () => (new ('Wraps' . $dialect)())->from('u')->select(['id'])->filter([Query::equal('x', [1]), Query::startsWith('n', 'a')]),
+        'throws' => fn () => (new ('Throws' . $dialect)())->from('u')->filter([Query::equal('x', [1])]),
+        'mysql' => fn () => (new Builder\MySQL())->from('u')->select(['id'])->limit(3),
+        'postgres' => fn () => (new Builder\PostgreSQL())->from('u')->select(['id'])->filter([Query::equal('x', ['é'])]),
+        'empty' => fn () => new $class(),
+    ];
+    $nested = [
+        'fromSub' => fn ($b, $sub) => $b->fromSub($sub, 's')->select(['id'])->filter([Query::greaterThan('id', 5)]),
+        'selectSub' => fn ($b, $sub) => $b->from('t')->select(['a'])->selectSub($sub, 'total'),
+        'filterWhereIn' => fn ($b, $sub) => $b->from('t')->filter([Query::equal('a', [9])])->filterWhereIn('id', $sub),
+        'filterWhereNotIn' => fn ($b, $sub) => $b->from('t')->filterWhereNotIn('id', $sub)->limit(2),
+        'filterExists' => fn ($b, $sub) => $b->from('t')->filterExists($sub),
+        'filterNotExists' => fn ($b, $sub) => $b->from('t')->filterNotExists($sub)->filter([Query::isNull('z')]),
+        'union' => fn ($b, $sub) => $b->from('t')->select(['id'])->filter([Query::equal('a', [7])])->union($sub),
+        'unionAll' => fn ($b, $sub) => $b->from('t')->select(['id'])->unionAll($sub)->sortAsc('id')->limit(4),
+        'intersect' => fn ($b, $sub) => $b->from('t')->select(['id'])->intersect($sub),
+        'intersectAll' => fn ($b, $sub) => $b->from('t')->select(['id'])->intersectAll($sub),
+        'except' => fn ($b, $sub) => $b->from('t')->select(['id'])->except($sub),
+        'exceptAll' => fn ($b, $sub) => $b->from('t')->select(['id'])->exceptAll($sub),
+        'two unions' => fn ($b, $sub) => $b->from('t')->select(['id'])->union($sub)->unionAll($sub),
+        'with' => fn ($b, $sub) => $b->with('recent', $sub)->from('recent')->select(['id']),
+        'with columns' => fn ($b, $sub) => $b->with('recent', $sub, ['a', 'b'])->from('recent')->filter([Query::equal('a', [1])]),
+        'withRecursive' => fn ($b, $sub) => $b->withRecursive('tree', $sub, ['id'])->from('tree'),
+        'seed and step' => fn ($b, $sub) => $b->withRecursiveSeedStep('tree', $sub, (new ($b::class)())->from('tree')->select(['id']), ['id'])->from('tree'),
+        'fromSelect' => fn ($b, $sub) => $b->into('copy')->fromSelect(['id'], $sub),
+        'changed after' => function ($b, $sub) {
+            $b->from('t')->filterWhereIn('id', $sub);
+            $sub->filter([Query::equal('later', ['yes'])]);
+
+            return $b;
+        },
+    ];
+    foreach ($nested as $name => $shape) {
+        $out = [];
+        foreach ($inner as $make) {
+            foreach ([$class, 'Wraps' . $dialect] as $outer) {
+                foreach (['build', 'insertSelect', 'toRawSql', 'getBindings'] as $end) {
+                    $out[] = outcome(function () use ($outer, $shape, $make, $end) {
+                        $builder = new $outer();
+                        $shape($builder, $make());
+
+                        return $builder->{$end}();
+                    });
+                }
+            }
+        }
+        emit($dialect . ' nested ' . $name, $out);
+    }
+}

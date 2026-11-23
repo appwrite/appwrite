@@ -36,7 +36,7 @@ use ext_php_rs::zend::{ClassEntry, ExecutorGlobals, ce};
 use php_std::types::KeyRef;
 use php_std::{ArrayKey as Key, Str};
 use utopia_query::builder::{
-    Arg, Builder, ClickHouseDialect, Dialect, MariaDbDialect, MongoDbDialect, MySqlDialect, Overrides,
+    AnyBuilder, Arg, Builder, ClickHouseDialect, Dialect, MariaDbDialect, MongoDbDialect, MySqlDialect, Overrides,
     PostgreSqlDialect, Ret, SqliteDialect, Statement, Step,
 };
 use utopia_query::{Array, Error, NullsPosition, Object, Query, Value};
@@ -47,6 +47,7 @@ use super::value::{Arr, Bool, Int, empty, parts};
 use crate::emails::{Text as Bytes, construct, string, thrown};
 use crate::string::PhpString;
 
+const BUILDER: &str = "Utopia\\Query\\Builder";
 const QUERY: &str = "Utopia\\Query\\Query";
 const STATEMENT: &str = "Utopia\\Query\\Builder\\Statement";
 
@@ -486,6 +487,98 @@ impl<'a> FromZval<'a> for QueryArgument<'a> {
 
     fn from_zval(zval: &'a Zval) -> Option<Self> {
         parts(zval).map(|_| QueryArgument(zval))
+    }
+}
+
+/// A `Builder` argument.
+pub struct BuilderArgument<'a>(&'a Zval);
+
+impl<'a> FromZval<'a> for BuilderArgument<'a> {
+    const TYPE: DataType = DataType::object(BUILDER);
+
+    fn from_zval(zval: &'a Zval) -> Option<Self> {
+        let base = Base::get_metadata().ce();
+        zval.object().filter(|object| object.instance_of(base)).map(|_| BuilderArgument(zval))
+    }
+}
+
+/// A PHP builder among another's clauses. It is built by its own `build()`, which a subclass
+/// may override, when the builder that holds it is; the object stays the one PHP passed.
+struct Foreign {
+    object: Zval,
+    json: bool,
+}
+
+// SAFETY: a PHP request runs on one thread, and the builder that holds this never leaves it.
+unsafe impl Send for Foreign {}
+// SAFETY: as above.
+unsafe impl Sync for Foreign {}
+
+impl Foreign {
+    fn of<D: Dialect + Text>(builder: &BuilderArgument<'_>) -> Self {
+        Foreign { object: builder.0.shallow_clone(), json: D::JSON }
+    }
+
+    fn text(&self, bytes: &[u8]) -> String {
+        if self.json { String::from_utf8_lossy(bytes).into_owned() } else { wide(bytes).into_owned() }
+    }
+}
+
+/// A binding of a statement PHP built: a scalar or an array of them.
+fn bound(zval: &Zval) -> Value {
+    if let Some(found) = zval.bool() {
+        Value::Bool(found)
+    } else if let Some(found) = zval.long() {
+        Value::Int(found)
+    } else if let Some(found) = zval.double() {
+        Value::Float(found)
+    } else if let Some(found) = zval.zend_str() {
+        Value::Str(Str::from(found.as_bytes()))
+    } else if let Some(found) = zval.array() {
+        let mut out = Array::default();
+        for (key, item) in found {
+            let key = match key {
+                ArrayKey::Long(index) => Key::Int(index),
+                ArrayKey::String(name) => Key::Str(Str::from(name.as_bytes())),
+                ArrayKey::Str(name) => Key::Str(Str::from(name.as_bytes())),
+                ArrayKey::ZendString(name) => Key::Str(Str::from(name.as_bytes())),
+            };
+            out.set(key, bound(item));
+        }
+        Value::Array(out)
+    } else {
+        Value::Null
+    }
+}
+
+impl AnyBuilder for Foreign {
+    fn build(&mut self) -> Result<Statement, Error> {
+        // An exception stays pending for the native method that started the build to rethrow.
+        let failed = || Error::Validation("build() failed".to_owned());
+        let object = self.object.object().ok_or_else(failed)?;
+        let built = object.try_call_method("build", vec![]).map_err(|_| failed())?;
+        if !ExecutorGlobals::get().exception.is_null() {
+            return Err(failed());
+        }
+        let fields = built.object().and_then(|object| object.get_properties().ok()).ok_or_else(failed)?;
+        let property = |name: &str| fields.get(name).map(|found| found.indirect().unwrap_or(found));
+        let query = property("query").and_then(Zval::zend_str).map(|query| self.text(query.as_bytes()));
+        let bindings = property("bindings").and_then(Zval::array).into_iter().flat_map(ZendHashTable::values);
+        let mut statement = Statement::new(query.unwrap_or_default(), bindings.map(bound).collect());
+        statement.read_only = property("readOnly").and_then(Zval::bool).unwrap_or(false);
+        Ok(statement)
+    }
+
+    fn clone_box(&self) -> Box<dyn AnyBuilder> {
+        Box::new(Foreign { object: self.object.shallow_clone(), json: self.json })
+    }
+
+    fn php_class(&self) -> &'static str {
+        BUILDER
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
     }
 }
 
@@ -971,6 +1064,218 @@ macro_rules! builder_class {
                 let object = std::ptr::from_mut(&mut self_.std);
                 let _running = self_.0.running(object);
                 let built = self_.0.with(Builder::delete);
+                self_.0.statement(built)
+            }
+
+            #[php(name = "fromSub")]
+            pub fn from_sub<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                subquery: BuilderArgument<'_>,
+                alias: PhpString<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let (subquery, alias) = (Box::new(Foreign::of::<$dialect>(&subquery)), self_.0.text(alias.bytes()));
+                self_.0.with(|builder| {
+                    builder.from_sub_boxed(subquery, alias);
+                });
+                self_
+            }
+
+            #[php(name = "selectSub")]
+            pub fn select_sub<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                subquery: BuilderArgument<'_>,
+                alias: PhpString<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let (subquery, alias) = (Box::new(Foreign::of::<$dialect>(&subquery)), self_.0.text(alias.bytes()));
+                self_.0.with(|builder| {
+                    builder.select_sub(subquery, alias);
+                });
+                self_
+            }
+
+            #[php(name = "filterWhereIn")]
+            pub fn filter_where_in<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+                subquery: BuilderArgument<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let (column, subquery) = (self_.0.text(column.bytes()), Box::new(Foreign::of::<$dialect>(&subquery)));
+                self_.0.with(|builder| {
+                    builder.filter_where_in(column, subquery);
+                });
+                self_
+            }
+
+            #[php(name = "filterWhereNotIn")]
+            pub fn filter_where_not_in<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+                subquery: BuilderArgument<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let (column, subquery) = (self_.0.text(column.bytes()), Box::new(Foreign::of::<$dialect>(&subquery)));
+                self_.0.with(|builder| {
+                    builder.filter_where_not_in(column, subquery);
+                });
+                self_
+            }
+
+            #[php(name = "filterExists")]
+            pub fn filter_exists<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                subquery: BuilderArgument<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let subquery = Box::new(Foreign::of::<$dialect>(&subquery));
+                self_.0.with(|builder| {
+                    builder.filter_exists(subquery);
+                });
+                self_
+            }
+
+            #[php(name = "filterNotExists")]
+            pub fn filter_not_exists<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                subquery: BuilderArgument<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let subquery = Box::new(Foreign::of::<$dialect>(&subquery));
+                self_.0.with(|builder| {
+                    builder.filter_not_exists(subquery);
+                });
+                self_
+            }
+
+            pub fn union<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                other: BuilderArgument<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let mut other = Foreign::of::<$dialect>(&other);
+                self_.0.change(|builder| builder.union(&mut other).map(drop))?;
+                Ok(self_)
+            }
+
+            #[php(name = "unionAll")]
+            pub fn union_all<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                other: BuilderArgument<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let mut other = Foreign::of::<$dialect>(&other);
+                self_.0.change(|builder| builder.union_all(&mut other).map(drop))?;
+                Ok(self_)
+            }
+
+            pub fn intersect<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                other: BuilderArgument<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let mut other = Foreign::of::<$dialect>(&other);
+                self_.0.change(|builder| builder.intersect(&mut other).map(drop))?;
+                Ok(self_)
+            }
+
+            #[php(name = "intersectAll")]
+            pub fn intersect_all<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                other: BuilderArgument<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let mut other = Foreign::of::<$dialect>(&other);
+                self_.0.change(|builder| builder.intersect_all(&mut other).map(drop))?;
+                Ok(self_)
+            }
+
+            pub fn except<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                other: BuilderArgument<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let mut other = Foreign::of::<$dialect>(&other);
+                self_.0.change(|builder| builder.except(&mut other).map(drop))?;
+                Ok(self_)
+            }
+
+            #[php(name = "exceptAll")]
+            pub fn except_all<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                other: BuilderArgument<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let mut other = Foreign::of::<$dialect>(&other);
+                self_.0.change(|builder| builder.except_all(&mut other).map(drop))?;
+                Ok(self_)
+            }
+
+            #[php(defaults(columns = "Arr::Empty"))]
+            pub fn with<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                name: PhpString<'_>,
+                query: BuilderArgument<'_>,
+                columns: Arr<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let (name, columns) = (self_.0.text(name.bytes()), self_.0.strings(&columns));
+                let mut query = Foreign::of::<$dialect>(&query);
+                self_.0.change(|builder| builder.with(name, &mut query, columns).map(drop))?;
+                Ok(self_)
+            }
+
+            #[php(name = "withRecursive", defaults(columns = "Arr::Empty"))]
+            pub fn with_recursive<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                name: PhpString<'_>,
+                query: BuilderArgument<'_>,
+                columns: Arr<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let (name, columns) = (self_.0.text(name.bytes()), self_.0.strings(&columns));
+                let mut query = Foreign::of::<$dialect>(&query);
+                self_.0.change(|builder| builder.with_recursive(name, &mut query, columns).map(drop))?;
+                Ok(self_)
+            }
+
+            #[php(name = "withRecursiveSeedStep", defaults(columns = "Arr::Empty"))]
+            pub fn with_recursive_seed_step<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                name: PhpString<'_>,
+                seed: BuilderArgument<'_>,
+                step: BuilderArgument<'_>,
+                columns: Arr<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let (name, columns) = (self_.0.text(name.bytes()), self_.0.strings(&columns));
+                let (mut seed, mut step) = (Foreign::of::<$dialect>(&seed), Foreign::of::<$dialect>(&step));
+                self_.0.change(|builder| builder.with_recursive_seed_step(name, &mut seed, &mut step, columns).map(drop))?;
+                Ok(self_)
+            }
+
+            #[php(name = "fromSelect")]
+            pub fn from_select<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                columns: Arr<'_>,
+                source: BuilderArgument<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let (columns, source) = (self_.0.strings(&columns), Box::new(Foreign::of::<$dialect>(&source)));
+                self_.0.with(|builder| {
+                    builder.from_select(columns, source);
+                });
+                self_
+            }
+
+            #[php(name = "insertSelect")]
+            pub fn insert_select(self_: &mut ZendClassObject<$class>) -> PhpResult<Zval> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let built = self_.0.with(Builder::insert_select);
                 self_.0.statement(built)
             }
 
