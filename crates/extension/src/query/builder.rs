@@ -38,9 +38,9 @@ use ext_php_rs::zend::{ClassEntry, ExecutorGlobals, ce};
 use php_std::types::KeyRef;
 use php_std::{ArrayKey as Key, Str};
 use utopia_query::builder::{
-    AnyBuilder, Arg, AsofOperator, Binding, Builder, ClickHouseDialect, Condition, Dialect, ExplainOptions, IndexHint,
-    JoinBuilder, JoinOn, JoinType, MariaDbDialect, MongoDbDialect, MySqlDialect, Overrides, PostgreSqlDialect, Ret,
-    SqliteDialect, Statement, Step, VectorMetric, WindowFrame,
+    AnyBuilder, Arg, AsofOperator, Binding, Builder, CaseExpression, ClickHouseDialect, Condition, Dialect,
+    ExplainOptions, IndexHint, JoinBuilder, JoinOn, JoinType, Kind, MariaDbDialect, MongoDbDialect, MySqlDialect,
+    Operator, Overrides, PostgreSqlDialect, Ret, SqliteDialect, Statement, Step, VectorMetric, WindowFrame,
 };
 use utopia_query::hook::{self, Hook};
 use utopia_query::{Array, Error, Method, NullsPosition, Object, Query, Value};
@@ -75,6 +75,7 @@ impl<'a> FromZval<'a> for Slot {
     }
 }
 
+const CASE: &str = "Utopia\\Query\\Builder\\Case\\Expression";
 const BINDING: &str = "Utopia\\Query\\Builder\\Binding";
 const CONDITION: &str = "Utopia\\Query\\Builder\\Condition";
 const JOIN_BUILDER: &str = "Utopia\\Query\\Builder\\JoinBuilder";
@@ -425,6 +426,58 @@ impl<D: Dialect + Text> State<D> {
     fn strings(&self, given: &Arr<'_>) -> Vec<String> {
         let items = given.table().into_iter().flat_map(ZendHashTable::values);
         items.filter_map(|item| item.zend_str().map(|name| self.text(name.as_bytes()))).collect()
+    }
+
+    /// PHP's `Case\Expression` as the crate's, read through its getters and its clauses' properties.
+    fn case(&self, given: &CaseArgument<'_>) -> PhpResult<CaseExpression> {
+        let Some(object) = given.0.object() else { return Ok(CaseExpression::new()) };
+        let ask = |method: &str| object.try_call_method(method, vec![]).map_err(PhpException::from);
+        let case_of = |field: Option<&Zval>| {
+            let case = field.and_then(Zval::object)?;
+            slots(case).get(1)?.str().map(str::to_owned)
+        };
+        let mut out = CaseExpression::new();
+        let whens = ask("getWhens")?;
+        for when in whens.array().into_iter().flat_map(ZendHashTable::values) {
+            let Some(fields) = properties(when) else { continue };
+            let value = |name: &str| property(fields, name).map_or(Ok(Value::Null), |value| self.value(value));
+            let text = |name: &str| {
+                property(fields, name)
+                    .and_then(Zval::zend_str)
+                    .map(|text| self.text(text.as_bytes()))
+                    .unwrap_or_default()
+            };
+            let list = |name: &str| -> PhpResult<Vec<Value>> {
+                let items = property(fields, name).and_then(Zval::array).into_iter().flat_map(ZendHashTable::values);
+                items.map(|item| self.value(item)).collect()
+            };
+            match case_of(property(fields, "kind")).as_deref().and_then(Kind::try_from_value) {
+                Some(Kind::Comparison) => {
+                    let operator = case_of(property(fields, "operator")).as_deref().and_then(Operator::try_from_value);
+                    out.when(text("column"), operator.unwrap_or(Operator::Equal), value("value")?, value("then")?);
+                }
+                Some(Kind::Null) => {
+                    out.when_null(text("column"), value("then")?);
+                }
+                Some(Kind::NotNull) => {
+                    out.when_not_null(text("column"), value("then")?);
+                }
+                Some(Kind::In) => {
+                    out.when_in(text("column"), list("values")?, value("then")?).map_err(|error| raised(&error))?;
+                }
+                Some(Kind::Raw) => {
+                    out.when_raw(text("rawCondition"), value("then")?, list("rawBindings")?);
+                }
+                None => {}
+            }
+        }
+        if ask("hasElse")?.bool().unwrap_or(false) {
+            out.else_(self.value(&ask("getElse")?)?);
+        }
+        if let Some(alias) = ask("getAlias")?.zend_str() {
+            out.alias(self.text(alias.as_bytes()));
+        }
+        Ok(out)
     }
 
     /// The pairs of an array of strings by name.
@@ -1037,6 +1090,18 @@ case_argument!(
     Asof,
     AsofOperator
 );
+
+/// A `Case\Expression` argument.
+pub struct CaseArgument<'a>(&'a Zval);
+
+impl<'a> FromZval<'a> for CaseArgument<'a> {
+    const TYPE: DataType = DataType::object(CASE);
+
+    fn from_zval(zval: &'a Zval) -> Option<Self> {
+        let object = zval.object()?;
+        class(CASE).is_ok_and(|class| object.instance_of(class)).then_some(CaseArgument(zval))
+    }
+}
 
 /// A number of a list of floats.
 fn number(value: &Value) -> f64 {
@@ -3751,6 +3816,35 @@ macro_rules! builder_class {
             }
         }, $($rest,)*);
     };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, case_expressions, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(name = "selectCase")]
+            pub fn select_case<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                case: CaseArgument<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let case = self_.0.case(&case)?;
+                self_.0.with(|builder| {
+                    builder.select_case(case);
+                });
+                Ok(self_)
+            }
+
+            #[php(name = "setCase")]
+            pub fn set_case<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+                case: CaseArgument<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let (column, case) = (self_.0.text(column.bytes()), self_.0.case(&case)?);
+                self_.0.with(|builder| {
+                    builder.set_case(column, case);
+                });
+                Ok(self_)
+            }
+        }, $($rest,)*);
+    };
     // FEATURES
     (@add [$(#[$meta:meta])*] $class:ident, $dialect:ty, {$($methods:tt)*},) => {
         $(#[$meta])*
@@ -4882,7 +4976,7 @@ builder_class!(
     #[php(extends(Sql))]
     MySqlBuilder,
     MySqlDialect,
-    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, mysql_family, explain_format, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, hints, conditional_aggregates, json_aggregates, json, search, not_search, spatial_filters, transactions, max_execution_time, lateral_joins, group_concat]
+    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, mysql_family, explain_format, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, hints, conditional_aggregates, json_aggregates, json, search, not_search, spatial_filters, transactions, max_execution_time, lateral_joins, group_concat, case_expressions]
 );
 builder_class!(
     /// `Utopia\Query\Builder\MariaDB`.
@@ -4891,7 +4985,7 @@ builder_class!(
     #[php(extends(MySqlBuilder))]
     MariaDbBuilder,
     MariaDbDialect,
-    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, returning, mysql_family, explain_format, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, hints, conditional_aggregates, json_aggregates, json, search, not_search, sequences, spatial_filters, transactions, max_execution_time, lateral_joins, group_concat]
+    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, returning, mysql_family, explain_format, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, hints, conditional_aggregates, json_aggregates, json, search, not_search, sequences, spatial_filters, transactions, max_execution_time, lateral_joins, group_concat, case_expressions]
 );
 builder_class!(
     /// `Utopia\Query\Builder\PostgreSQL`.
@@ -4900,7 +4994,7 @@ builder_class!(
     #[php(extends(Sql))]
     PostgreSqlBuilder,
     PostgreSqlDialect,
-    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, returning, postgres_from, explain_postgres, cross_joins, full_outer_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, cube, conditional_aggregates, json_aggregates, json, search, not_search, tablesample, sequences, spatial_filters, transactions, postgres_more, lateral_joins, merge_using, vector_search, group_concat]
+    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, returning, postgres_from, explain_postgres, cross_joins, full_outer_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, cube, conditional_aggregates, json_aggregates, json, search, not_search, tablesample, sequences, spatial_filters, transactions, postgres_more, lateral_joins, merge_using, vector_search, group_concat, case_expressions]
 );
 builder_class!(
     /// `Utopia\Query\Builder\SQLite`.
@@ -4909,7 +5003,7 @@ builder_class!(
     #[php(extends(Sql))]
     SqliteBuilder,
     SqliteDialect,
-    [sql, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, explain_plain, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, conditional_aggregates, json_aggregates, json, transactions, group_concat]
+    [sql, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, explain_plain, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, conditional_aggregates, json_aggregates, json, transactions, group_concat, case_expressions]
 );
 builder_class!(
     /// `Utopia\Query\Builder\ClickHouse`.
@@ -4918,7 +5012,7 @@ builder_class!(
     #[php(extends(Base))]
     ClickHouseBuilder,
     ClickHouseDialect,
-    [literal, raw_sql, explain_plain, cross_joins, full_outer_joins, statistical_clickhouse, bitwise, raw_sql_more, rollup, cube, totals, hints, conditional_aggregates, json_aggregates, tablesample, clickhouse_more, clickhouse_constants, asof_joins, quantiles, group_concat]
+    [literal, raw_sql, explain_plain, cross_joins, full_outer_joins, statistical_clickhouse, bitwise, raw_sql_more, rollup, cube, totals, hints, conditional_aggregates, json_aggregates, tablesample, clickhouse_more, clickhouse_constants, asof_joins, quantiles, group_concat, case_expressions]
 );
 builder_class!(
     /// `Utopia\Query\Builder\MongoDB`.
