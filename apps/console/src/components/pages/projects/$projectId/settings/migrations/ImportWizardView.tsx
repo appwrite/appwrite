@@ -57,6 +57,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
+import { SupabaseConnect, SUPABASE_CONNECT_PARAM } from './SupabaseConnect'
 
 export type ImportProvider =
   | 'AppwriteSelfHosted'
@@ -160,6 +161,20 @@ export function ImportWizardView() {
   const [supabaseUsername, setSupabaseUsername] = useState('postgres')
   const [supabasePassword, setSupabasePassword] = useState('')
   const [supabasePort, setSupabasePort] = useState('5432')
+
+  // Back from connecting a Supabase account: reopen its credentials step
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    const outcome = url.searchParams.get(SUPABASE_CONNECT_PARAM)
+    if (!outcome) return
+    url.searchParams.delete(SUPABASE_CONNECT_PARAM)
+    window.history.replaceState(window.history.state, '', url.toString())
+    setProvider('Supabase')
+    setStep(2)
+    if (outcome === 'failed') {
+      toast.error(t('Supabase did not grant access'))
+    }
+  }, [t])
 
   const [serviceAccount, setServiceAccount] = useState('')
 
@@ -617,6 +632,19 @@ export function ImportWizardView() {
               <strong>service_role</strong> {t('key for the API key.')}
             </p>
           </div>
+          <div className="border-t border-border" />
+          <SupabaseConnect
+            projectId={pid}
+            region={region}
+            onCredentials={(credentials) => {
+              setSupabaseEndpoint(credentials.endpoint)
+              setSupabaseApiKey(credentials.apiKey)
+              setDatabaseHost(credentials.databaseHost)
+              setSupabaseUsername(credentials.username)
+              setSupabasePassword(credentials.password)
+              setSupabasePort(String(credentials.port))
+            }}
+          />
           <div className="border-t border-border" />
           <div className="px-6 py-4 space-y-4">
             <div className="space-y-2">
