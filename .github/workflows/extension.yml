@@ -213,9 +213,15 @@ jobs:
           for tag in $TAG $BUILD; do
             # The manifest holds its images by digest, so the build tag stays on the first
             # run's library even though a second run has moved the per-architecture tags.
-            if [ "$tag" = "$BUILD" ] && docker buildx imagetools inspect "$IMAGE:$tag" > /dev/null 2>&1; then
-              echo "$IMAGE:$tag was published by another run."
-              continue
+            # Only "not found" publishes: any other failure could hide a tag that exists.
+            if [ "$tag" = "$BUILD" ]; then
+              if found=$(docker buildx imagetools inspect "$IMAGE:$tag" 2>&1); then
+                echo "$IMAGE:$tag was published by another run."
+                continue
+              elif ! grep -q ': not found$' <<< "$found"; then
+                echo "::error::Could not tell whether $IMAGE:$tag exists: $found"
+                exit 1
+              fi
             fi
             # shellcheck disable=SC2086 # $extra is an optional argument
             docker buildx imagetools create --tag "$IMAGE:$tag" $extra \
