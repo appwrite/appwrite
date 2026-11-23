@@ -40,11 +40,16 @@ export function GoalsPanel({
   const t = useT()
   const { filters } = useAnalyticsFilters()
   const { goalId, selectGoal } = useAnalyticsGoal()
-  const { goals, isLoading: goalsLoading } = useAnalyticsGoals(
-    projectId,
-    propertyId,
-  )
-  const { metrics, isLoading } = useAnalyticsConversions(
+  const {
+    goals,
+    isLoading: goalsLoading,
+    error: goalsError,
+  } = useAnalyticsGoals(projectId, propertyId)
+  const {
+    metrics,
+    isLoading,
+    error: metricsError,
+  } = useAnalyticsConversions(
     projectId,
     propertyId,
     range,
@@ -58,6 +63,7 @@ export function GoalsPanel({
     [metrics],
   )
   const visible = metrics.slice(0, BREAKDOWN_COLLAPSED_ROWS)
+  const error = goalsError ?? metricsError
 
   return (
     <div className="flex flex-col rounded-lg border border-border bg-card">
@@ -76,7 +82,13 @@ export function GoalsPanel({
         }
       />
       <BreakdownBody canShowMore={false} onShowMore={() => {}}>
-        {goals.length === 0 ? (
+        {error ? (
+          <BreakdownMessage>
+            {error instanceof Error
+              ? error.message
+              : t('Could not load analytics data')}
+          </BreakdownMessage>
+        ) : goals.length === 0 ? (
           goalsLoading ? (
             <BreakdownSkeleton />
           ) : (

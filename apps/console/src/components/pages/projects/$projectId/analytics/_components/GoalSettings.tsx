@@ -23,7 +23,7 @@ export function GoalSettings({
   canWrite: boolean
 }) {
   const t = useT()
-  const { goals, isLoading } = useAnalyticsGoals(projectId, propertyId)
+  const { goals, isLoading, error } = useAnalyticsGoals(projectId, propertyId)
   const deleteMutation = useDeleteAnalyticsGoal(projectId, propertyId)
   const [editing, setEditing] = useState<AnalyticsGoal | null>(null)
   const [adding, setAdding] = useState(false)
@@ -56,7 +56,13 @@ export function GoalSettings({
       </div>
       <div className="border-t border-border" />
       <div className="px-6 py-4">
-        {goals.length === 0 ? (
+        {error ? (
+          <p className="text-[13px] text-destructive">
+            {error instanceof Error
+              ? error.message
+              : t('Could not load analytics data')}
+          </p>
+        ) : goals.length === 0 ? (
           <p className="flex items-center gap-2 text-[13px] text-muted-foreground">
             <Target className="h-4 w-4" aria-hidden />
             {isLoading ? t('Loading goals…') : t('No goals yet')}

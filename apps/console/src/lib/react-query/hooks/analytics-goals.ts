@@ -116,10 +116,10 @@ export function useAnalyticsGoals(
   projectId: string | null | undefined,
   propertyId: string | null | undefined,
 ) {
-  const { data, isLoading } = useQuery(
+  const { data, isLoading, error } = useQuery(
     analyticsGoalsQueryOptions(projectId, propertyId),
   )
-  return { goals: data ?? [], isLoading }
+  return { goals: data ?? [], isLoading, error }
 }
 
 /**
@@ -165,7 +165,7 @@ export function useAnalyticsConversions(
   filters: readonly AnalyticsFilter[] = NO_FILTERS,
   enabled = true,
 ) {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: [
       'analytics',
       'conversions',
@@ -191,7 +191,7 @@ export function useAnalyticsConversions(
     retry: false,
     refetchOnWindowFocus: false,
   })
-  return { metrics: data ?? [], isLoading }
+  return { metrics: data ?? [], isLoading, error }
 }
 
 export type SaveAnalyticsGoalInput = {
