@@ -7,7 +7,6 @@ use Appwrite\Platform\Modules\Videos\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
-use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
@@ -56,8 +55,6 @@ class Get extends Base
                     )
                 ],
                 contentType: ContentType::TEXT,
-                type: MethodType::LOCATION,
-                locationAuth: ['Project', 'ImpersonateUserId'],
             ))
             ->param('videoId', '', new UID(), 'Video unique ID.')
             ->inject('response')

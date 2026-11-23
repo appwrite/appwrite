@@ -16,8 +16,17 @@ export const heReviewsDictionary: Record<string, string> = {
 
   // Empty states
   'Review pull requests with AI': 'סקירת Pull requests עם AI',
-  'Add a GitHub repository and every pull request gets a review with findings, a verdict, and a merge confidence grade. Mention the app in a comment to ask it anything.':
-    'הוסיפו repo מ-GitHub וכל Pull request יקבל סקירה עם ממצאים, החלטה וציון ביטחון למיזוג. תייגו את האפליקציה בתגובה כדי לשאול אותה כל שאלה.',
+  'Catch bugs and security issues before they merge. Choose the repositories to review, and every pull request in them gets a review on GitHub.':
+    'אתרו באגים ובעיות אבטחה לפני המיזוג. בחרו את ה-repos לסקירה, וכל Pull request בהם יקבל סקירה ב-GitHub.',
+  'Install the GitHub app on your account or organization, then turn on review for the repositories you pick.':
+    'התקינו את אפליקציית GitHub בחשבון או בארגון שלכם, ואז הפעילו סקירה ל-repos שבחרתם.',
+  'Get a review on every pull request': 'סקירה לכל Pull request',
+  'Each new pull request and commit gets a summary, findings on the lines they concern, a verdict, and a merge confidence grade.':
+    'כל Pull request וכל קומיט חדש מקבלים סיכום, ממצאים על השורות הרלוונטיות, החלטה וציון ביטחון למיזוג.',
+  'Talk to the reviewer': 'שיחה עם הסוקר',
+  'Mention the app in a comment to ask a question, request a new review, or have it remember a preference for later reviews.':
+    'תייגו את האפליקציה בתגובה כדי לשאול שאלה, לבקש סקירה חדשה או לבקש ממנה לזכור העדפה לסקירות הבאות.',
+  'No reviews match your filters': 'אין סקירות התואמות למסננים שלכם',
   'No reviews yet': 'עדיין אין סקירות',
   'Reviews show up here when a pull request is opened or gets new commits in one of your repositories.':
     'סקירות יופיעו כאן כש-Pull request נפתח או מקבל קומיטים חדשים באחד מה-repos שלכם.',
@@ -33,6 +42,9 @@ export const heReviewsDictionary: Record<string, string> = {
   'The review found nothing to flag.': 'הסקירה לא מצאה דבר שדורש תשומת לב.',
   'View comment': 'הצגת התגובה',
   'Open on GitHub': 'פתיחה ב-GitHub',
+  'Compare on GitHub': 'השוואה ב-GitHub',
+  'Open commit on GitHub': 'פתיחת הקומיט ב-GitHub',
+  'Filter findings by severity': 'סינון ממצאים לפי חומרה',
 
   // Statuses and verdicts
   Reviewing: 'בסקירה',

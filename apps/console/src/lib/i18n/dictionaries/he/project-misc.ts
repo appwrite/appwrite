@@ -3041,6 +3041,26 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'שליחת אימייל טרנזקציוני דרך Mailgun.',
   'Send transactional email through Resend.':
     'שליחת אימייל טרנזקציוני דרך Resend.',
+  'Send SMS through Bird.': 'שליחת SMS דרך Bird.',
+  'A Bird API key with the sms:write scope.':
+    'מפתח API של Bird עם ההרשאה sms:write.',
+  'A sender your Bird workspace owns: a number with its country code, or an alphanumeric sender ID.':
+    'שולח שבבעלות סביבת העבודה שלכם ב-Bird: מספר עם קידומת המדינה, או מזהה שולח אלפאנומרי.',
+  'One-click Bird SMS': 'SMS של Bird בקליק אחד',
+  'Let Appwrite create the API key and fill in one of your senders.':
+    'תנו ל-Appwrite ליצור את מפתח ה-API ולמלא את אחד מהשולחים שלכם.',
+  'Loading senders…': 'טוען שולחים…',
+  'Add a sender, then check again.': 'הוסיפו שולח, ואז בדקו שוב.',
+  'Manage senders': 'ניהול שולחים',
+  'Failed to load senders from the SMS provider':
+    'טעינת השולחים מספק ה-SMS נכשלה',
+  'Failed to create the API key with the SMS provider':
+    'יצירת מפתח ה-API מול ספק ה-SMS נכשלה',
+  'Send email through Bird.': 'שליחת אימייל דרך Bird.',
+  'A Bird API key with the emails:write scope.':
+    'מפתח API של Bird עם ההרשאה emails:write.',
+  'Bird API keys start with bk_ and their region, for example bk_eu1_.':
+    'מפתחות API של Bird מתחילים ב-bk_ ובאזור שלהם, לדוגמה bk_eu1_.',
   'Send transactional email through SendGrid.':
     'שליחת אימייל טרנזקציוני דרך SendGrid.',
   Sender: 'שולח',
@@ -3142,16 +3162,16 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'אין לכם הרשאה ליצור מיגרציות.',
   "You don't have permission to create webhooks.":
     'אין לכם הרשאה ליצור webhooks.',
-  // SMTP quick setup (universal card: Resend today, Mailgun and SendGrid next)
+  // SMTP quick setup (universal card: Resend and Bird today, Mailgun next)
   'Connect an email provider and Appwrite fills in your SMTP settings automatically.':
     'חברו ספק אימייל ו-Appwrite תמלא עבורכם את הגדרות ה-SMTP באופן אוטומטי.',
   'Set up': 'הגדרה',
   'Creates a sending-only API key for a verified domain.':
     'יוצר מפתח API לשליחה בלבד עבור דומיין מאומת.',
+  'Creates an API key that can only send email.':
+    'יוצר מפתח API שיכול לשלוח אימייל בלבד.',
   'Creates a domain sending key for a verified domain.':
     'יוצר מפתח שליחה לדומיין עבור דומיין מאומת.',
-  'Creates a restricted API key with mail send access.':
-    'יוצר מפתח API מוגבל עם הרשאת שליחת אימייל.',
   'Failed to connect the email provider': 'החיבור לספק האימייל נכשל',
   'The provider was authorized for a different Appwrite account. Try again while signed in to this account.':
     'ההרשאה לספק ניתנה לחשבון Appwrite אחר. נסו שוב כשאתם מחוברים לחשבון הזה.',
@@ -3165,6 +3185,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Check again': 'בדיקה חוזרת',
   'The credential is restricted to this domain and can only send email.':
     'פרטי הגישה מוגבלים לדומיין הזה ומאפשרים שליחת אימייל בלבד.',
+  'The credential can only send email. It is not tied to a domain, so pick the one your sender address uses.':
+    'פרטי הגישה מאפשרים שליחת אימייל בלבד. הם אינם קשורים לדומיין מסוים, לכן בחרו את הדומיין של כתובת השולח.',
   'Must use the selected domain.': 'חייב להשתמש בדומיין שנבחר.',
   'Enter a sender name.': 'הזינו שם שולח.',
   'Enter a sender email on the selected domain.':
@@ -3178,6 +3200,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'תנו ל-Appwrite ליצור את מפתח ה-API עבור דומיין מאומת ולמלא את השדות האלה.',
   'Generate API key': 'יצירת מפתח API',
   'One-click Resend sender': 'שולח Resend בקליק אחד',
+  'One-click Bird sender': 'שולח Bird בקליק אחד',
   'Creating the sending credential…': 'יוצר את פרטי הגישה לשליחה…',
   'Failed to create the API key with the email provider':
     'יצירת מפתח ה-API מול ספק האימייל נכשלה',
@@ -3194,19 +3217,19 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Sending domain': 'דומיין שליחה',
   Sender: 'שולח',
   'Disconnect Resend': 'ניתוק Resend',
+  'Disconnect Bird': 'ניתוק Bird',
   'Disconnect Mailgun': 'ניתוק Mailgun',
-  'Disconnect SendGrid': 'ניתוק SendGrid',
   'Provider actions': 'פעולות ספק',
   'Set up SMTP with Resend': 'הגדרת SMTP עם Resend',
+  'Set up SMTP with Bird': 'הגדרת SMTP עם Bird',
   'Set up SMTP with Mailgun': 'הגדרת SMTP עם Mailgun',
-  'Set up SMTP with SendGrid': 'הגדרת SMTP עם SendGrid',
   'Creating credential and saving SMTP settings…':
     'יוצר פרטי גישה ושומר את הגדרות ה-SMTP…',
   'Custom SMTP is enabled and your project now sends emails through this provider.':
     'SMTP מותאם אישית הופעל והפרויקט שלכם שולח כעת אימיילים דרך הספק הזה.',
   'Connect with Resend': 'התחברות עם Resend',
+  'Connect with Bird': 'התחברות עם Bird',
   'Connect with Mailgun': 'התחברות עם Mailgun',
-  'Connect with SendGrid': 'התחברות עם SendGrid',
   'Appwrite will no longer be able to create sending credentials for this provider. Credentials already saved in your SMTP settings keep working.':
     'Appwrite לא תוכל עוד ליצור פרטי גישה לשליחה עבור הספק הזה. פרטי גישה ששמורים כבר בהגדרות ה-SMTP שלכם ימשיכו לפעול.',
   'Provider disconnected': 'הספק נותק',
@@ -4269,4 +4292,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'מתחילה שוב מהשלב הראשון, פרק הצינון של המוניטור אחרי השלב האחרון.',
   now: 'עכשיו',
   'after {delay}': 'אחרי {delay}',
+  'analytics properties': 'נכסי אנליטיקה',
+  'analytics property': 'נכס אנליטיקה',
+  'per project.': 'לכל פרויקט.',
+  'to create another.': 'כדי ליצור נכס נוסף.',
+  'to enable analytics on this site.': 'כדי להפעיל אנליטיקה באתר הזה.',
 }

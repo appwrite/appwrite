@@ -56,12 +56,14 @@ export function isReviewRunning(review: Pick<Review, 'status'>): boolean {
 // ============================================================================
 
 /**
- * Query function to fetch a page of reviews, newest first.
+ * Query function to fetch a page of reviews, newest first. `filterQueries` are
+ * the encoded queries of the list's filters.
  */
 export async function fetchReviews(
   projectId: string,
   page: number,
   limit: number,
+  filterQueries?: string[],
 ): Promise<ReviewList> {
   if (!projectId) {
     return { reviews: [], total: 0 }
@@ -69,6 +71,7 @@ export async function fetchReviews(
 
   return await sdk.forProject(projectId).reviews.list({
     queries: [
+      ...(filterQueries ?? []),
       Query.orderDesc('$createdAt'),
       Query.limit(limit),
       Query.offset(page * limit),
@@ -231,10 +234,11 @@ export function reviewsQueryOptions(
   projectId: string | null | undefined,
   page: number,
   limit: number,
+  filterQueries?: string[],
 ) {
   return queryOptions({
-    queryKey: ['reviews', 'project', projectId, page, limit],
-    queryFn: () => fetchReviews(projectId!, page, limit),
+    queryKey: ['reviews', 'project', projectId, page, limit, filterQueries],
+    queryFn: () => fetchReviews(projectId!, page, limit, filterQueries),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -384,9 +388,10 @@ export function useReviews(
   projectId: string | null | undefined,
   page: number,
   limit: number,
+  filterQueries?: string[],
 ) {
-  const { data, isLoading, isFetching, error } = useQuery(
-    reviewsQueryOptions(projectId, page, limit),
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    reviewsQueryOptions(projectId, page, limit, filterQueries),
   )
 
   return {
@@ -395,6 +400,7 @@ export function useReviews(
     isLoading,
     isFetching,
     error,
+    refetch,
   }
 }
 

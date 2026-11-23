@@ -21,20 +21,18 @@ and libclang at build time.
 ## Switching a class on
 
 `Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN`, `Utopia\Locale\Locale`,
-`Utopia\UserAgent\UserAgent`, `Utopia\Domains\Domain`, `Utopia\Emails\Email` and the validators
-of `packages/validators` are always registered: they have no PHP implementation. Their signatures
-are in `stubs/`, `packages/image/stubs/`, `packages/user-agent/stubs/`, `packages/domains/stubs/`,
-`packages/emails/stubs/` and `packages/validators/stubs/` for PHPStan, which runs without the
-extension. Every other class is registered only when
-`_APP_EXTENSION_LIBRARIES` names its package. Otherwise Composer loads the package's PHP class as
-before:
+`Utopia\UserAgent\UserAgent`, `Utopia\Domains\Domain`, `Utopia\Emails\Email`, the validators
+of `packages/validators` and the password hashes of `packages/auth` are always registered: they
+have no PHP implementation. Their signatures are in `stubs/`, `packages/image/stubs/`,
+`packages/user-agent/stubs/`, `packages/domains/stubs/`, `packages/emails/stubs/`,
+`packages/validators/stubs/` and `packages/auth/stubs/` for PHPStan, which runs without the
+extension. A library that still has a PHP implementation is registered only when
+`_APP_EXTENSION_LIBRARIES` names its package; none does today. Otherwise Composer loads the
+package's PHP class as before:
 
 ```sh
 _APP_EXTENSION_LIBRARIES=<package>,<package>   # those packages' classes from the extension
 ```
-
-`auth` registers the password hashes of `packages/auth` (`Utopia\Auth\Hash` and
-`Utopia\Auth\Hashes\*`).
 
 The extension reads it once, when PHP loads the module, so changing it takes a restart and no
 deploy. Each library is canaried on Cloud this way before it becomes the default.
@@ -312,13 +310,17 @@ Known differences from the PHP classes they replaced:
 
 ## Utopia\Auth\Hash and the password hashes
 
-`_APP_EXTENSION_LIBRARIES=auth` registers the abstract `Utopia\Auth\Hash` and its eight hashes,
-`Argon2`, `Bcrypt`, `MD5`, `PHPass`, `Plaintext`, `Scrypt`, `ScryptModified` and `Sha`, over
+The abstract `Utopia\Auth\Hash` and its eight hashes, `Argon2`, `Bcrypt`, `MD5`, `PHPass`,
+`Plaintext`, `Scrypt`, `ScryptModified` and `Sha`, always registered, over
 `php-std` (`password_hash()`, `password_verify()`, `crypt()`, `hash()`, `base64_*()`,
 `mb_convert_encoding()`) and `crates/utopia/auth` (PECL `scrypt()`, Firebase's modified scrypt, phpass).
-The proofs, tokens, issuers, verifiers and passkeys of the package stay PHP; `Proofs\Password`
-takes the native `Hash`, which is why the base is native too, and PHP subclasses (the package's
-tests, any app's) extend it and the hashes as they would the PHP classes.
+Once the extension had served them in every Cloud region (appwrite-labs/cloud#7503), the PHP
+classes (`src/Hash.php` and `src/Hashes/*`) were removed from `packages/auth`, which now requires
+`ext-utopia` like `packages/image` and keeps their signatures in `stubs/Hash.php`; 0.12.x on
+Packagist is the last release with the hashes in PHP. The proofs, tokens, issuers, verifiers and
+passkeys of the package stay PHP; `Proofs\Password` takes the native `Hash`, which is why the base
+is native too, and PHP subclasses (the package's tests, any app's) extend it and the hashes as they
+would the PHP classes. `packages/auth/tests` run on the extension.
 
 `src/auth/` builds them by hand like the validators, with the helpers they share in
 `src/classes/` (`engine.rs`, `leaf.rs`). `$options` (and `PHPass::$itoa64`) are real typed
@@ -343,18 +345,10 @@ on threads of their own (`std::thread::scope`), joined before the next slice, so
 with the default 3 threads takes PHP's wall-clock time rather than twice it. Its unit tests check
 it against the `argon2` crate and the reference implementation's example.
 
-`crates/extension/tests/auth.php` prints a corpus that must be identical on both implementations
-(1,374 lines): each class's reflection; the option API over keys PHP converts (`'1'`, `'01'`, `'-0'`,
-binary) and values of every type; arguments of the wrong kind; `MD5`, all nine `Sha` versions and
-`Plaintext` over passwords that are empty, UTF-8, not UTF-8, with NUL bytes and past 72 bytes;
-`Sha` with versions only `setOption()` stores; `Scrypt` over its parameters and every PECL failure
-(`Error`, warning, `false`); `ScryptModified` with Firebase's vector, other options and missing ones;
-`Argon2` and `Bcrypt` over every `password_hash()` option error, each hash checked by the class and
-by PHP's own `password_verify()` and `crypt()`; 90 hashes PHP made (`password_hash()`, every
-`crypt()` scheme, portable phpass) and 39 malformed ones through every `verify()`; `PHPass` made
-deterministic by a subclass's `getRandomBytes()`, over its options, alphabet and helpers; subclasses
-overriding `setOption()`, `getOption()`, `getOptions()`, `getName()`, `hash()` and `encode64()`;
-and dumps, clones, comparisons and serialization. Its known differences, which no caller depends on:
+They were canaried behind their own switch and compared with the PHP classes by a parity corpus
+(1,374 lines: reflection, the option API, every hash scheme PHP makes and verifies, malformed
+hashes, subclass overrides, dumps, clones and serialization), removed with them. Known differences
+from the PHP classes they replaced, which no caller depends on:
 
 - `setOptions()` with an integer key throws `Hash.php`'s `TypeError` without PHP's
   `, called in .../Hash.php on line N`.
