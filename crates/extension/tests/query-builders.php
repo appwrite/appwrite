@@ -938,3 +938,30 @@ foreach ($dialects as $dialect) {
         ]);
     }
 }
+
+// Every public method's signature, and every interface a builder implements. A subclass that overrides a
+// method with PHP's types must load, and `instanceof` a feature must answer as PHP does.
+foreach ($dialects as $dialect) {
+    $class = new ReflectionClass('Utopia\\Query\\Builder\\' . $dialect);
+    $signatures = [];
+    foreach ($class->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+        // PHP declares __clone() and no constructor; the extension clones in its handler and has a constructor.
+        if (in_array($method->getName(), ['__clone', '__construct'], true)) {
+            continue;
+        }
+        $parameters = array_map(function (ReflectionParameter $parameter): string {
+            $default = '';
+            if ($parameter->isDefaultValueAvailable()) {
+                $value = $parameter->getDefaultValue();
+                $default = ' = ' . ($value instanceof UnitEnum ? $value::class . '::' . $value->name : json_encode($value));
+            }
+
+            return ($parameter->getType() ?? '') . ' ' . ($parameter->isVariadic() ? '...' : '') . '$' . $parameter->getName() . $default;
+        }, $method->getParameters());
+        $signatures[$method->getName()] = ($method->isStatic() ? 'static ' : '') . '(' . implode(', ', $parameters) . '): ' . ($method->getReturnType() ?? '');
+    }
+    ksort($signatures);
+    $interfaces = $class->getInterfaceNames();
+    sort($interfaces);
+    emit($dialect . ' signatures', [$signatures, $interfaces]);
+}

@@ -335,6 +335,99 @@ fn fluent(class: &ClassEntry, methods: &[String]) {
     }
 }
 
+/// A type ext-php-rs cannot declare: a union, a class a method returns, or `static`.
+enum Declared {
+    /// Built-in types, as their `MAY_BE_*` bits.
+    Types(u32),
+    /// A class, and the built-in types it is in a union with.
+    Class(&'static str, u32),
+}
+
+const STATEMENT: Declared = Declared::Class("Utopia\\Query\\Builder\\Statement", 0);
+const INT_OR_FLOAT: Declared = Declared::Types(engine::MAY_BE_LONG | engine::MAY_BE_DOUBLE);
+const ARRAY_OR_STRING: Declared = Declared::Types(engine::MAY_BE_ARRAY | engine::MAY_BE_STRING);
+const OBJECT_OR_ARRAY: Declared = Declared::Types(MAY_BE_OBJECT | engine::MAY_BE_ARRAY);
+
+/// `iterable`, which is `Traversable|array` with this bit (`_ZEND_TYPE_ITERABLE_BIT`).
+const ITERABLE: u32 = 1 << 21;
+
+/// `MAY_BE_OBJECT`.
+const MAY_BE_OBJECT: u32 = 1 << 8;
+
+/// The types PHP declares where ext-php-rs declares `mixed`: a method, the parameter (0 is what it
+/// returns) and the type. A subclass that overrides one with PHP's type would not load otherwise.
+const TYPES: &[(&str, usize, Declared)] = &[
+    ("build", 0, STATEMENT),
+    ("insert", 0, STATEMENT),
+    ("insertDefaultValues", 0, STATEMENT),
+    ("insertOrIgnore", 0, STATEMENT),
+    ("insertSelect", 0, STATEMENT),
+    ("update", 0, STATEMENT),
+    ("delete", 0, STATEMENT),
+    ("upsert", 0, STATEMENT),
+    ("upsertSelect", 0, STATEMENT),
+    ("explain", 0, STATEMENT),
+    ("executeMerge", 0, STATEMENT),
+    ("begin", 0, STATEMENT),
+    ("commit", 0, STATEMENT),
+    ("rollback", 0, STATEMENT),
+    ("savepoint", 0, STATEMENT),
+    ("releaseSavepoint", 0, STATEMENT),
+    ("rollbackToSavepoint", 0, STATEMENT),
+    ("bulkInsert", 0, Declared::Class("Utopia\\Query\\Builder\\ClickHouse\\FormattedInsertStatement", 0)),
+    ("bulkInsert", 2, Declared::Class("Traversable", engine::MAY_BE_ARRAY | ITERABLE)),
+    ("toAst", 0, Declared::Class("Utopia\\Query\\AST\\Statement\\Select", 0)),
+    ("fromAst", 0, Declared::Types(engine::MAY_BE_STATIC)),
+    ("clone", 0, Declared::Types(engine::MAY_BE_STATIC)),
+    ("getBindings", 0, Declared::Types(engine::MAY_BE_ARRAY)),
+    ("getBindingValues", 0, Declared::Types(engine::MAY_BE_ARRAY)),
+    ("execute", 0, Declared::Types(engine::MAY_BE_ARRAY | engine::MAY_BE_LONG)),
+    ("select", 1, ARRAY_OR_STRING),
+    ("hint", 1, ARRAY_OR_STRING),
+    ("cursorAfter", 1, OBJECT_OR_ARRAY),
+    ("cursorBefore", 1, OBJECT_OR_ARRAY),
+    ("increment", 2, INT_OR_FLOAT),
+    ("multiply", 2, INT_OR_FLOAT),
+    ("unsetFields", 1, Declared::Types(engine::MAY_BE_STRING)),
+];
+
+/// Declares [`TYPES`] on the methods of `class` that are among them.
+fn typed(class: &ClassEntry) {
+    // The bits of a type that say what it is, below the flags of the parameter it is on.
+    const TYPE: u32 = (1 << 25) - 1;
+    for (method, parameter, declared) in TYPES {
+        let Some(info) = engine::arg_info(class, method) else { continue };
+        // A variadic parameter is one past the parameters the function counts.
+        let info = if *parameter == info.len() && *method == "unsetFields" {
+            // SAFETY: a variadic function's argument info has that entry.
+            unsafe { &mut *info.as_mut_ptr().add(*parameter) }
+        } else if let Some(info) = info.get_mut(*parameter) {
+            info
+        } else {
+            continue;
+        };
+        // MongoDB's `hint()` is the one that takes a key pattern; the others take a string.
+        if *method == "hint" && info.type_.type_mask & engine::MAY_BE_ANY != engine::MAY_BE_ANY {
+            continue;
+        }
+        let kept = info.type_.type_mask & !TYPE;
+        match declared {
+            Declared::Types(types) => {
+                info.type_.ptr = std::ptr::null_mut();
+                info.type_.type_mask = kept | types;
+            }
+            Declared::Class(name, types) => {
+                info.type_.ptr = ZendStr::new_interned(name, true).into_raw().cast();
+                info.type_.type_mask = kept | NAMED | types;
+            }
+        }
+    }
+    // `increment(string $field, int|float $amount = 1)`.
+    if let Some(amount) = engine::arg_info(class, "increment").and_then(|info| info.get_mut(2)) {
+        amount.default_value = c"1".as_ptr();
+    }
+}
+
 /// The interface `name`, if [`register`] registered it. Nothing can be looked up by autoloading yet.
 fn registered(name: &str) -> Option<&'static ClassEntry> {
     // SAFETY: the class table holds the classes registered so far, for as long as the process runs.
@@ -361,11 +454,13 @@ unsafe extern "C" fn finish() -> i32 {
     let native: Vec<Vec<String>> = DIALECTS.iter().map(|dialect| names(dialect.methods)).collect();
     for (dialect, methods) in DIALECTS.iter().zip(&native) {
         fluent((dialect.class)(), methods);
+        typed((dialect.class)());
         (dialect.prepare)();
     }
     for (name, dialects, _) in FEATURES {
         let Some(interface) = registered(name) else { continue };
         fluent(interface, &native[dialects.trailing_zeros() as usize]);
+        typed(interface);
         for (bit, dialect) in DIALECTS.iter().enumerate() {
             if dialects & (1 << bit) != 0 {
                 let (class, interface) =
