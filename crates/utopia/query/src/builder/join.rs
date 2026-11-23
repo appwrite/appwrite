@@ -84,6 +84,18 @@ impl JoinBuilder {
         self
     }
 
+    /// Adds a comparison and a condition as they are, for a join whose conditions were
+    /// checked where they were written (PHP's `JoinBuilder`).
+    pub fn push(
+        &mut self,
+        ons: impl IntoIterator<Item = JoinOn>,
+        wheres: impl IntoIterator<Item = Condition>,
+    ) -> &mut Self {
+        self.ons.extend(ons);
+        self.wheres.extend(wheres);
+        self
+    }
+
     /// The column comparisons.
     ///
     /// PHP: `$ons`.

@@ -379,7 +379,7 @@ fn element<'a>(table: &'a ZendHashTable, key: &str) -> Option<&'a Zval> {
 }
 
 /// `clone $object`.
-fn clone_object(zval: &Zval) -> Zval {
+pub(super) fn clone_object(zval: &Zval) -> Zval {
     let Some(object) = zval.object() else { return zval.shallow_clone() };
     // SAFETY: `clone_obj` is the handler `clone` calls, on a live object; it returns a new
     // object, which the box then owns and hands to the zval.
@@ -475,7 +475,7 @@ fn case_method(object: &ZendObject) -> Option<Method> {
 }
 
 /// The case `name` of the PHP enum `class`.
-fn enum_case(class: &str, name: &str) -> PhpResult<Zval> {
+pub(super) fn enum_case(class: &str, name: &str) -> PhpResult<Zval> {
     let class = self::class(class)?;
     let mut name = ZendStr::new(name, false);
     let mut zval = Zval::new();

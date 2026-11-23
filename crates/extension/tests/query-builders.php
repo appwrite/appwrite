@@ -313,3 +313,200 @@ foreach ($dialects as $dialect) {
         emit($dialect . ' nested ' . $name, $out);
     }
 }
+
+// --- Closures -----------------------------------------------------------------------------------
+
+foreach ($dialects as $dialect) {
+    $class = 'Utopia\\Query\\Builder\\' . $dialect;
+    $out = [];
+    foreach ([$class, 'Wraps' . $dialect, 'Counts' . $dialect] as $made) {
+        // when(): the callback is given the builder, only when the condition holds.
+        $out[] = outcome(fn () => (new $made())->from('t')->when(true, fn ($b) => $b->filter([Query::equal('a', [1])]))->when(false, fn ($b) => $b->limit(1))->build());
+        $out[] = outcome(fn () => (new $made())->from('t')->when(true, function ($b) use ($made) {
+            return [$b instanceof $made, $b->limit(3)];
+        })->build());
+        $out[] = outcome(fn () => (new $made())->from('t')->when(true, fn () => throw new LogicException('in when'))->build());
+        // beforeBuild(): each build runs the callbacks, which may change the builder.
+        $out[] = outcome(function () use ($made) {
+            $runs = 0;
+            $builder = (new $made())->from('t')->beforeBuild(function ($b) use (&$runs) {
+                $runs++;
+                $b->filter([Query::equal('run', [$runs])]);
+            })->beforeBuild(fn ($b) => $b->limit(7));
+
+            return [$builder->build(), $builder->build(), $runs, $builder->getBindings(), $builder->toRawSql(), $builder->explain(), $runs];
+        });
+        $out[] = outcome(fn () => (new $made())->from('t')->beforeBuild(fn () => throw new LogicException('before'))->build());
+        // afterBuild(): the statement the last callback returns is the one build() gives.
+        $out[] = outcome(function () use ($made) {
+            $kept = null;
+            $seen = [];
+            $builder = (new $made())->from('t')->filter([Query::equal('a', [1])])
+                ->afterBuild(function (Builder\Statement $s) use (&$seen) {
+                    $seen[] = [$s->query, $s->bindings, $s->readOnly];
+
+                    return new Builder\Statement($s->query . ' /* one */', [...$s->bindings, 'x'], false);
+                })
+                ->afterBuild(function (Builder\Statement $s) use (&$kept, &$seen) {
+                    $seen[] = [$s->query, $s->bindings, $s->readOnly];
+
+                    return $kept = new Builder\Statement($s->query . ' /* two */', $s->bindings, $s->readOnly, namedBindings: ['n' => 1]);
+                });
+            $built = $builder->build();
+
+            return [$built, $built === $kept, $built->namedBindings, $seen, $builder->explain(), $builder->toRawSql()];
+        });
+        $out[] = outcome(fn () => (new $made())->from('t')->afterBuild(fn ($s) => $s)->build());
+        $out[] = outcome(fn () => (new $made())->from('t')->afterBuild(fn () => throw new LogicException('after'))->build());
+        $out[] = outcome(fn () => (new $made())->into('t')->set(['a' => 1])->afterBuild(fn ($s) => new Builder\Statement('changed', []))->insert());
+        // setExecutor(): every statement carries it, and execute() builds and runs.
+        $out[] = outcome(function () use ($made) {
+            $ran = [];
+            $builder = (new $made())->from('t')->limit(2)->setExecutor(function (Builder\Statement $s) use (&$ran) {
+                $ran[] = $s->query;
+
+                return [['row' => count($ran)]];
+            });
+
+            return [$builder->execute(), $builder->build()->execute(), $builder->explain()->execute(), $builder->into('t')->set(['a' => 1])->insert()->execute(), $ran];
+        });
+        $out[] = outcome(fn () => (new $made())->from('t')->execute());
+        $out[] = outcome(fn () => (new $made())->from('t')->setExecutor(fn () => throw new LogicException('executor'))->execute());
+        // clone: a copy that shares nothing the original can change, its subqueries included.
+        $out[] = outcome(function () use ($made, $class) {
+            $sub = (new $class())->from('u')->select(['id']);
+            $original = (new $made())->from('t')->filter([Query::equal('a', [1])])->filterWhereIn('id', $sub)->setExecutor(fn () => 5)->beforeBuild(fn ($b) => $b->limit(9));
+            $copy = $original->clone();
+            $other = clone $original;
+            $original->filter([Query::equal('only', ['original'])]);
+            $sub->filter([Query::equal('sub', ['changed'])]);
+            $copy->filter([Query::equal('only', ['copy'])]);
+
+            return [$copy::class, $copy !== $original, $original->build(), $copy->build(), $other->build(), $copy->execute(), $copy->seen ?? $copy->bound ?? null];
+        });
+    }
+    emit($dialect . ' closures', $out);
+}
+
+// --- Joins written in a closure, hooks and windows ----------------------------------------------
+
+use Utopia\Query\Builder\Condition;
+use Utopia\Query\Builder\JoinType;
+use Utopia\Query\Builder\WindowFrame;
+use Utopia\Query\Hook;
+
+/** A hook of every kind that records what it was asked. */
+class RecordingHook implements Hook\Filter, Hook\Attribute, Hook\Join\Filter
+{
+    /** @var list<string> */
+    public array $asked = [];
+
+    public function filter(string $table): Condition
+    {
+        $this->asked[] = 'filter ' . $table;
+
+        return new Condition('tenant = ?', [42]);
+    }
+
+    public function resolve(string $attribute): string
+    {
+        $this->asked[] = 'resolve ' . $attribute;
+
+        return $attribute === 'renamed' ? 'actual' : $attribute;
+    }
+
+    public function filterJoin(string $table, JoinType $joinType): ?Hook\Join\Condition
+    {
+        $this->asked[] = 'join ' . $table . ' ' . $joinType->name;
+
+        return match ($table) {
+            'none' => null,
+            'on' => new Hook\Join\Condition(new Condition('on.tenant = ?', [1]), Hook\Join\Placement::On),
+            default => new Hook\Join\Condition(new Condition($table . '.tenant = ?', [2])),
+        };
+    }
+}
+class ThrowingHook implements Hook\Filter
+{
+    public function filter(string $table): Condition
+    {
+        throw new DomainException('hook refused ' . $table);
+    }
+}
+class FilterOnlyHook implements Hook\Filter
+{
+    public function filter(string $table): Condition
+    {
+        return new Condition("deleted IS NULL /* {$table} */", []);
+    }
+}
+class MarkerHook implements Hook
+{
+}
+
+foreach ($dialects as $dialect) {
+    $class = 'Utopia\\Query\\Builder\\' . $dialect;
+    $out = [];
+    foreach ([$class, 'Wraps' . $dialect] as $made) {
+        $joins = [
+            fn ($b) => $b->from('t')->joinWhere('u', fn ($j) => $j->on('t.id', 'u.tid')),
+            fn ($b) => $b->from('t')->joinWhere('u', fn ($j) => $j->on('t.id', 'u.tid', '!=')->on('t.a', 'u.a')->where('u.x', '>', 5)->onRaw('u.y = ?', [1])->whereRaw('u.z IN (?, ?)', [2, 3]), JoinType::Left, 'x'),
+            fn ($b) => $b->from('t')->joinWhere('u', fn ($j) => $j->on('t.id', 'u.tid'), JoinType::Right)->joinWhere('v', fn ($j) => $j->where('v.a', '=', 'b'), JoinType::FullOuter)->joinWhere('w', fn ($j) => $j, JoinType::Cross, 'c')->joinWhere('n', fn ($j) => $j, JoinType::Natural),
+            fn ($b) => $b->from('t')->joinWhere('u', fn ($j) => $j, JoinType::Inner),
+            fn ($b) => $b->from('t')->joinWhere('u', fn ($j) => $j->on('bad name', 'u.tid')),
+            fn ($b) => $b->from('t')->joinWhere('u', fn ($j) => $j->on('t.id', 'u.tid', 'LIKE')),
+            fn ($b) => $b->from('t')->joinWhere('u', fn ($j) => throw new LogicException('in join')),
+            fn ($b) => $b->from('t')->filter([Query::equal('a', [1])])->joinWhere('u', fn ($j) => $j->on('t.id', 'u.tid')->where('u.b', '<', 9))->filter([Query::equal('c', [2])])->limit(3),
+        ];
+        foreach ($joins as $shape) {
+            $out[] = outcome(function () use ($made, $shape) {
+                $builder = new $made();
+                $shape($builder);
+
+                return [$builder->build(), $builder->toRawSql()];
+            });
+        }
+        $hooked = [
+            fn ($b, $h) => $b->from('t')->addHook($h)->filter([Query::equal('renamed', [1]), Query::greaterThan('other', 2)])->sortAsc('renamed')->select(['renamed', 'plain']),
+            fn ($b, $h) => $b->from('t')->addHook($h)->join('u', 't.id', 'u.tid')->leftJoin('on', 't.id', 'on.tid')->rightJoin('none', 't.id', 'none.tid'),
+            fn ($b, $h) => $b->from('t')->addHook($h)->addHook($h)->filter([Query::equal('a', [1])]),
+            fn ($b, $h) => $b->from('t')->addHook($h)->set(['renamed' => 1])->filter([Query::equal('id', [2])]),
+            fn ($b, $h) => $b->into('t')->addHook($h)->set(['renamed' => 1, 'plain' => 2]),
+            fn ($b, $h) => $b->from('t')->addHook($h)->count('renamed', 'n')->groupBy(['renamed'])->having([Query::greaterThan('n', 1)]),
+        ];
+        foreach ($hooked as $shape) {
+            foreach (['build', 'update', 'delete', 'insert'] as $end) {
+                $out[] = outcome(function () use ($made, $shape, $end) {
+                    $hook = new RecordingHook();
+                    $builder = new $made();
+                    $shape($builder, $hook);
+
+                    return [$builder->{$end}(), $hook->asked];
+                });
+            }
+        }
+        $out[] = outcome(fn () => (new $made())->from('t')->addHook(new Hook\Filter\Tenant(['a', 'b']))->filter([Query::equal('x', [1])])->join('u', 't.id', 'u.tid')->build());
+        $out[] = outcome(fn () => (new $made())->from('t')->addHook(new Hook\Filter\Tenant([7], 'org'))->build());
+        $out[] = outcome(fn () => (new $made())->from('t')->addHook(new Hook\Attribute\Map(['$id' => '_uid', 'name' => 'full_name']))->select(['$id', 'name', 'age'])->filter([Query::equal('$id', ['x'])])->sortDesc('name')->build());
+        $out[] = outcome(fn () => (new $made())->from('t')->addHook(new FilterOnlyHook())->addHook(new MarkerHook())->join('u', 't.id', 'u.tid')->build());
+        $out[] = outcome(fn () => (new $made())->from('t')->addHook(new ThrowingHook())->build());
+        $windows = [
+            fn ($b) => $b->from('t')->selectWindow('ROW_NUMBER()', 'rn'),
+            fn ($b) => $b->from('t')->select(['a'])->selectWindow('RANK()', 'r', ['dept'], ['salary', '-age']),
+            fn ($b) => $b->from('t')->selectWindow('SUM(amount)', 's', ['a'], ['b'], null, new WindowFrame('ROWS', 'UNBOUNDED PRECEDING', 'CURRENT ROW')),
+            fn ($b) => $b->from('t')->selectWindow('AVG(x)', 'm', null, null, 'w')->window('w', ['a', 'b'], ['c'], new WindowFrame('RANGE', 'CURRENT ROW')),
+            fn ($b) => $b->from('t')->window('w1', ['a'])->window('w2', null, ['-b'])->selectWindow('COUNT(*)', 'n', windowName: 'w1'),
+            fn ($b) => $b->from('t')->selectWindow('DROP TABLE x', 'bad'),
+            fn ($b) => $b->from('t')->selectWindow('ROW_NUMBER()', 'r', [], []),
+        ];
+        foreach ($windows as $shape) {
+            $out[] = outcome(function () use ($made, $shape) {
+                $builder = new $made();
+                $shape($builder);
+
+                return $builder->build();
+            });
+        }
+    }
+    emit($dialect . ' joins, hooks and windows', $out);
+}

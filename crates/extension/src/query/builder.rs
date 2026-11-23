@@ -26,28 +26,32 @@ use std::ptr::NonNull;
 use std::sync::Arc;
 
 use ext_php_rs::class::RegisteredClass;
-use ext_php_rs::convert::{FromZval, IntoZval};
+use ext_php_rs::convert::{FromZval, IntoZval, IntoZvalDyn, StubLiteral};
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::ffi::{zend_function, zend_hash_str_find};
 use ext_php_rs::flags::{ClassFlags, DataType};
 use ext_php_rs::prelude::*;
-use ext_php_rs::types::{ArrayKey, ZendClassObject, ZendHashTable, ZendObject, Zval};
+use ext_php_rs::types::{ArrayKey, ZendCallable, ZendClassObject, ZendHashTable, ZendObject, Zval};
 use ext_php_rs::zend::{ClassEntry, ExecutorGlobals, ce};
 use php_std::types::KeyRef;
 use php_std::{ArrayKey as Key, Str};
 use utopia_query::builder::{
-    AnyBuilder, Arg, Builder, ClickHouseDialect, Dialect, MariaDbDialect, MongoDbDialect, MySqlDialect, Overrides,
-    PostgreSqlDialect, Ret, SqliteDialect, Statement, Step,
+    AnyBuilder, Arg, Builder, ClickHouseDialect, Condition, Dialect, JoinOn, JoinType, MariaDbDialect, MongoDbDialect,
+    MySqlDialect, Overrides, PostgreSqlDialect, Ret, SqliteDialect, Statement, Step, WindowFrame,
 };
+use utopia_query::hook::{self, Hook};
 use utopia_query::{Array, Error, NullsPosition, Object, Query, Value};
 
 use super::ast::{failed, narrow, null, slots, wide};
 use super::tokenizer::class;
-use super::value::{Arr, Bool, Int, empty, parts};
+use super::value::{Arr, Bool, Int, clone_object, empty, enum_case, parts};
 use crate::emails::{Text as Bytes, construct, string, thrown};
 use crate::string::PhpString;
 
 const BUILDER: &str = "Utopia\\Query\\Builder";
+const HOOK: &str = "Utopia\\Query\\Hook";
+const JOIN_BUILDER: &str = "Utopia\\Query\\Builder\\JoinBuilder";
+const WINDOW_FRAME: &str = "Utopia\\Query\\Builder\\WindowFrame";
 const QUERY: &str = "Utopia\\Query\\Query";
 const STATEMENT: &str = "Utopia\\Query\\Builder\\Statement";
 
@@ -184,6 +188,11 @@ pub struct State<D: Dialect + Text> {
     malformed: Cell<bool>,
     /// Whether the crate was told the object's class.
     named: Cell<bool>,
+    /// The closure given to `setExecutor()`, which every statement carries.
+    executor: RefCell<Option<Zval>>,
+    /// The statement the last `afterBuild()` callback returned, and its query: `build()`
+    /// hands back that very object.
+    returned: RefCell<Option<(Zval, String)>>,
 }
 
 impl<D: Dialect + Text> State<D> {
@@ -200,6 +209,8 @@ impl<D: Dialect + Text> State<D> {
             lent: Cell::new(std::ptr::null_mut()),
             malformed: Cell::new(malformed),
             named: Cell::new(false),
+            executor: RefCell::new(None),
+            returned: RefCell::new(None),
         }
     }
 
@@ -350,6 +361,16 @@ impl<D: Dialect + Text> State<D> {
     /// The statement the builder compiled, as the package's `Statement`.
     fn statement(&self, compiled: Result<Statement, Error>) -> PhpResult<Zval> {
         let found = compiled.map_err(|error| raised(&error))?;
+        if let Some((object, query)) = self.returned.take()
+            && query == found.query
+        {
+            return Ok(object);
+        }
+        self.statement_object(&found)
+    }
+
+    /// `found` as a new `Statement` of the package.
+    fn statement_object(&self, found: &Statement) -> PhpResult<Zval> {
         let query = self.written(&found.query)?;
         let mut bindings = Vec::with_capacity(found.bindings.len());
         for binding in &found.bindings {
@@ -359,7 +380,8 @@ impl<D: Dialect + Text> State<D> {
         read_only.set_bool(found.read_only);
         let bindings =
             if bindings.is_empty() { empty() } else { bindings.into_zval(false).map_err(PhpException::from)? };
-        construct(class(STATEMENT)?, &mut [string(&query), bindings, read_only])?
+        let executor = self.executor.borrow().as_ref().map_or_else(null, Zval::shallow_clone);
+        construct(class(STATEMENT)?, &mut [string(&query), bindings, read_only, executor])?
             .into_zval(false)
             .map_err(PhpException::from)
     }
@@ -438,7 +460,9 @@ impl<D: Dialect + Text> State<D> {
 impl<D: Dialect + Text> Clone for State<D> {
     /// `clone $builder`: a copy of the builder as it is now.
     fn clone(&self) -> Self {
-        Self::of(self.with(|builder| builder.clone()), self.malformed.get())
+        let copy = Self::of(self.with(|builder| builder.clone()), self.malformed.get());
+        *copy.executor.borrow_mut() = self.executor.borrow().as_ref().map(Zval::shallow_clone);
+        copy
     }
 }
 
@@ -570,7 +594,8 @@ impl AnyBuilder for Foreign {
     }
 
     fn clone_box(&self) -> Box<dyn AnyBuilder> {
-        Box::new(Foreign { object: self.object.shallow_clone(), json: self.json })
+        // `clone $builder` clones the builders it holds.
+        Box::new(Foreign { object: clone_object(&self.object), json: self.json })
     }
 
     fn php_class(&self) -> &'static str {
@@ -580,6 +605,214 @@ impl AnyBuilder for Foreign {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
+}
+
+/// The properties of a PHP object, by name.
+fn properties(zval: &Zval) -> Option<&ZendHashTable> {
+    zval.object()?.get_properties().ok()
+}
+
+fn property<'a>(fields: &'a ZendHashTable, name: &str) -> Option<&'a Zval> {
+    fields.get(name).map(|found| found.indirect().unwrap_or(found))
+}
+
+/// A `Builder\Condition` PHP made: its expression and bindings.
+fn condition(json: bool, zval: &Zval) -> Option<Condition> {
+    let fields = properties(zval)?;
+    let expression = property(fields, "expression")?.zend_str()?;
+    let expression = if json {
+        String::from_utf8_lossy(expression.as_bytes()).into_owned()
+    } else {
+        wide(expression.as_bytes()).into_owned()
+    };
+    let bindings = property(fields, "bindings").and_then(Zval::array).into_iter().flat_map(ZendHashTable::values);
+    Some(Condition::new(expression, bindings.map(bound).collect()))
+}
+
+/// A `JoinType` argument.
+pub struct Join(JoinType);
+
+impl<'a> FromZval<'a> for Join {
+    const TYPE: DataType = DataType::object(JoinType::PHP_CLASS);
+
+    fn from_zval(zval: &'a Zval) -> Option<Self> {
+        let object =
+            zval.object().filter(|object| class(JoinType::PHP_CLASS).is_ok_and(|class| object.instance_of(class)))?;
+        slots(object).get(1)?.str().and_then(JoinType::try_from_value).map(Join)
+    }
+}
+
+impl StubLiteral for Join {
+    fn stub_literal(&self) -> String {
+        format!("\\{}::{}", JoinType::PHP_CLASS, self.0.name())
+    }
+}
+
+/// A `Hook` argument.
+pub struct HookArgument<'a>(&'a Zval);
+
+impl<'a> FromZval<'a> for HookArgument<'a> {
+    const TYPE: DataType = DataType::object(HOOK);
+
+    fn from_zval(zval: &'a Zval) -> Option<Self> {
+        let hook = ClassEntry::try_find(HOOK)?;
+        zval.object().filter(|object| object.instance_of(hook)).map(|_| HookArgument(zval))
+    }
+}
+
+/// A PHP hook a builder runs while it compiles.
+struct Hooked {
+    object: Zval,
+    json: bool,
+}
+
+// SAFETY: a PHP request runs on one thread, and the builder that holds this never leaves it.
+unsafe impl Send for Hooked {}
+// SAFETY: as above.
+unsafe impl Sync for Hooked {}
+
+impl Hooked {
+    fn text(&self, bytes: &[u8]) -> String {
+        if self.json { String::from_utf8_lossy(bytes).into_owned() } else { wide(bytes).into_owned() }
+    }
+
+    /// Calls a method of the hook. An exception stays pending for the native method that
+    /// started the build to rethrow.
+    fn call(&self, method: &str, arguments: Vec<&dyn IntoZvalDyn>) -> Result<Zval, Error> {
+        let failed = || Error::Validation(format!("{method}() failed"));
+        let called = self.object.object().ok_or_else(failed)?.try_call_method(method, arguments);
+        if !ExecutorGlobals::get().exception.is_null() {
+            return Err(failed());
+        }
+        called.map_err(|_| failed())
+    }
+}
+
+impl hook::Filter for Hooked {
+    fn filter(&self, table: &str) -> Result<Condition, Error> {
+        let table = string(&bytes(self.json, table));
+        let returned = self.call("filter", vec![&table])?;
+        condition(self.json, &returned).ok_or_else(|| Error::Validation("filter() must return a Condition".to_owned()))
+    }
+}
+
+impl hook::Attribute for Hooked {
+    fn resolve(&self, attribute: &str) -> Result<String, Error> {
+        let attribute = string(&bytes(self.json, attribute));
+        let returned = self.call("resolve", vec![&attribute])?;
+        Ok(returned.zend_str().map(|resolved| self.text(resolved.as_bytes())).unwrap_or_default())
+    }
+}
+
+impl hook::JoinFilter for Hooked {
+    fn filter_join(&self, table: &str, join_type: JoinType) -> Result<Option<hook::JoinCondition>, Error> {
+        let failed = || Error::Validation("filterJoin() failed".to_owned());
+        let table = string(&bytes(self.json, table));
+        let kind = enum_case(JoinType::PHP_CLASS, join_type.name()).map_err(|_| failed())?;
+        let returned = self.call("filterJoin", vec![&table, &kind])?;
+        if returned.is_null() {
+            return Ok(None);
+        }
+        let fields = properties(&returned).ok_or_else(failed)?;
+        let found = property(fields, "condition").and_then(|found| condition(self.json, found)).ok_or_else(failed)?;
+        // `Placement` has no backing value: a case object keeps its name in its first slot.
+        let placement =
+            property(fields, "placement").and_then(Zval::object).and_then(|case| slots(case).first()?.str());
+        let placement = if placement == Some("On") { hook::Placement::On } else { hook::Placement::Where };
+        Ok(Some(hook::JoinCondition::new(found, placement)))
+    }
+}
+
+/// A `WindowFrame` argument.
+pub struct Frame(WindowFrame);
+
+impl<'a> FromZval<'a> for Frame {
+    const TYPE: DataType = DataType::object(WINDOW_FRAME);
+
+    fn from_zval(zval: &'a Zval) -> Option<Self> {
+        let frame = ClassEntry::try_find(WINDOW_FRAME)?;
+        let fields = zval.object().filter(|object| object.instance_of(frame))?.get_properties().ok()?;
+        let text = |name: &str| property(fields, name)?.zend_str().map(|found| wide(found.as_bytes()).into_owned());
+        Some(Frame(WindowFrame::new(text("type")?, text("start")?, text("end"))))
+    }
+}
+
+/// A `Closure` argument.
+pub struct Callback<'a>(&'a Zval);
+
+impl<'a> FromZval<'a> for Callback<'a> {
+    const TYPE: DataType = DataType::object("Closure");
+
+    fn from_zval(zval: &'a Zval) -> Option<Self> {
+        let closure = ClassEntry::try_find("Closure")?;
+        zval.object().filter(|object| object.instance_of(closure)).map(|_| Callback(zval))
+    }
+}
+
+/// A PHP closure a builder keeps.
+struct Held(Zval);
+
+// SAFETY: a PHP request runs on one thread, and the builder that holds this never leaves it.
+unsafe impl Send for Held {}
+// SAFETY: as above.
+unsafe impl Sync for Held {}
+
+impl Held {
+    /// Calls the closure. An exception stays pending for the native method that started
+    /// the build to rethrow.
+    fn call(&self, argument: &Zval, what: &str) -> Result<Zval, Error> {
+        let failed = || Error::Validation(format!("{what}() failed"));
+        let called = ZendCallable::new(&self.0).map_err(|_| failed())?.try_call(vec![argument]);
+        if !ExecutorGlobals::get().exception.is_null() {
+            return Err(failed());
+        }
+        called.map_err(|_| failed())
+    }
+}
+
+/// The builder object whose method is running, as `$this`.
+fn this() -> Option<Zval> {
+    let (object, _) = CURRENT.get();
+    // SAFETY: `running()` set the object for the length of the native method that is running.
+    let object = unsafe { object.as_mut() }?;
+    let mut this = Zval::new();
+    this.set_object(object);
+    Some(this)
+}
+
+/// A `beforeBuild()` callback: `$callback($this)`, with the builder lent to it.
+fn before<C: Native>(builder: &mut Builder<C::Dialect>, callback: &Held) -> Result<(), Error> {
+    let Some(this) = this() else { return Ok(()) };
+    let Some(state) = this.object().and_then(ZendClassObject::<C>::from_zend_obj).map(|object| object.state()) else {
+        return Ok(());
+    };
+    let before = state.lent.replace(std::ptr::from_mut(builder));
+    let called = callback.call(&this, "beforeBuild");
+    state.lent.set(before);
+    called.map(drop)
+}
+
+/// An `afterBuild()` callback: `$callback($statement)`, whose statement is the one built.
+fn after<C: Native>(statement: Statement, callback: &Held) -> Result<Statement, Error> {
+    let failed = || Error::Validation("afterBuild() failed".to_owned());
+    let Some(this) = this() else { return Ok(statement) };
+    let Some(state) = this.object().and_then(ZendClassObject::<C>::from_zend_obj).map(|object| object.state()) else {
+        return Ok(statement);
+    };
+    // A callback before this one may have returned a statement of its own.
+    let given = match state.returned.take() {
+        Some((object, query)) if query == statement.query => object,
+        _ => state.statement_object(&statement).map_err(|_| failed())?,
+    };
+    let returned = callback.call(&given, "afterBuild")?;
+    let fields = returned.object().and_then(|object| object.get_properties().ok()).ok_or_else(failed)?;
+    let property = |name: &str| fields.get(name).map(|found| found.indirect().unwrap_or(found));
+    let query = property("query").and_then(Zval::zend_str).map(|query| state.text(query.as_bytes()));
+    let bindings = property("bindings").and_then(Zval::array).into_iter().flat_map(ZendHashTable::values);
+    let mut built = Statement::new(query.unwrap_or_default(), bindings.map(bound).collect());
+    built.read_only = property("readOnly").and_then(Zval::bool).unwrap_or(false);
+    *state.returned.borrow_mut() = Some((returned, built.query.clone()));
+    Ok(built)
 }
 
 /// A `NullsPosition` argument.
@@ -1277,6 +1510,159 @@ macro_rules! builder_class {
                 let _running = self_.0.running(object);
                 let built = self_.0.with(Builder::insert_select);
                 self_.0.statement(built)
+            }
+
+            #[php(name = "joinWhere", defaults(r#type = "Join(JoinType::Inner)", alias = "\"\""))]
+            pub fn join_where<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                table: PhpString<'_>,
+                callback: Callback<'_>,
+                r#type: Join,
+                alias: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                // The conditions are written on the package's own `JoinBuilder`, which checks them.
+                let join = construct(class(JOIN_BUILDER)?, &mut [])?.into_zval(false).map_err(PhpException::from)?;
+                ZendCallable::new(callback.0).map_err(PhpException::from)?.try_call(vec![&join]).map(drop).or_else(|_| thrown())?;
+                thrown()?;
+                let json = <$dialect as Text>::JSON;
+                let fields = properties(&join);
+                let list = |name: &str| fields.and_then(|fields| property(fields, name)).and_then(Zval::array).into_iter().flat_map(ZendHashTable::values);
+                let ons: Vec<JoinOn> = list("ons")
+                    .filter_map(|on| {
+                        let fields = properties(on)?;
+                        let text = |name: &str| property(fields, name)?.zend_str().map(|found| self_.0.text(found.as_bytes()));
+                        Some(JoinOn::new(text("left")?, text("operator")?, text("right")?))
+                    })
+                    .collect();
+                let wheres: Vec<Condition> = list("wheres").filter_map(|found| condition(json, found)).collect();
+                let (table, alias) = (self_.0.text(table.bytes()), self_.0.text(alias.bytes()));
+                self_.0.change(|builder| {
+                    builder
+                        .join_where(
+                            table,
+                            |join| {
+                                join.push(ons, wheres);
+                                Ok(())
+                            },
+                            r#type.0,
+                            alias,
+                        )
+                        .map(drop)
+                })?;
+                Ok(self_)
+            }
+
+            #[php(name = "addHook")]
+            pub fn add_hook<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                hook: HookArgument<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let object = hook.0.object();
+                let is = |name: &str| ClassEntry::try_find(name).is_some_and(|class| object.is_some_and(|object| object.instance_of(class)));
+                let held = Arc::new(Hooked { object: hook.0.shallow_clone(), json: <$dialect as Text>::JSON });
+                let hook = Hook {
+                    filter: is("Utopia\\Query\\Hook\\Filter").then(|| held.clone() as Arc<dyn hook::Filter>),
+                    attribute: is("Utopia\\Query\\Hook\\Attribute").then(|| held.clone() as Arc<dyn hook::Attribute>),
+                    join_filter: is("Utopia\\Query\\Hook\\Join\\Filter").then(|| held.clone() as Arc<dyn hook::JoinFilter>),
+                };
+                self_.0.change(|builder| builder.add_hook(hook).map(drop))?;
+                Ok(self_)
+            }
+
+            #[php(name = "selectWindow", optional = partitionBy)]
+            pub fn select_window<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                function: PhpString<'_>,
+                alias: PhpString<'_>,
+                partitionBy: Option<Arr<'_>>,
+                orderBy: Option<Arr<'_>>,
+                windowName: Option<PhpString<'_>>,
+                frame: Option<Frame>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let state = &self_.0;
+                let (function, alias) = (state.text(function.bytes()), state.text(alias.bytes()));
+                let (partition, order) = (partitionBy.map(|by| state.strings(&by)), orderBy.map(|by| state.strings(&by)));
+                let name = state.maybe(windowName.as_ref());
+                state.change(|builder| builder.select_window(function, alias, partition, order, name, frame.map(|frame| frame.0)).map(drop))?;
+                Ok(self_)
+            }
+
+            #[php(optional = partitionBy)]
+            pub fn window<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                name: PhpString<'_>,
+                partitionBy: Option<Arr<'_>>,
+                orderBy: Option<Arr<'_>>,
+                frame: Option<Frame>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let state = &self_.0;
+                let name = state.text(name.bytes());
+                let (partition, order) = (partitionBy.map(|by| state.strings(&by)), orderBy.map(|by| state.strings(&by)));
+                state.with(|builder| {
+                    builder.window(name, partition, order, frame.map(|frame| frame.0));
+                });
+                self_
+            }
+
+            pub fn when<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                condition: bool,
+                callback: Callback<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                if condition {
+                    let mut this = Zval::new();
+                    this.set_object(&mut self_.std);
+                    ZendCallable::new(callback.0).map_err(PhpException::from)?.try_call(vec![&this]).map(drop).or_else(|_| thrown())?;
+                }
+                Ok(self_)
+            }
+
+            #[php(name = "beforeBuild")]
+            pub fn before_build<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                callback: Callback<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let callback = Held(callback.0.shallow_clone());
+                self_.0.with(|builder| {
+                    builder.before_build(move |builder| before::<$class>(builder, &callback));
+                });
+                self_
+            }
+
+            #[php(name = "afterBuild")]
+            pub fn after_build<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                callback: Callback<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let callback = Held(callback.0.shallow_clone());
+                self_.0.with(|builder| {
+                    builder.after_build(move |statement| after::<$class>(statement, &callback));
+                });
+                self_
+            }
+
+            #[php(name = "setExecutor")]
+            pub fn set_executor<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                executor: Callback<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                *self_.0.executor.borrow_mut() = Some(executor.0.shallow_clone());
+                self_
+            }
+
+            /// `$this->build()->execute()`: `build()` is the object's own, which a subclass may override.
+            pub fn execute(self_: &mut ZendClassObject<$class>) -> PhpResult<Zval> {
+                let built = self_.std.try_call_method("build", vec![]);
+                thrown()?;
+                let executed = built.map_err(PhpException::from)?.object().map(|built| built.try_call_method("execute", vec![]));
+                thrown()?;
+                executed.transpose().map_err(PhpException::from).map(|result| result.unwrap_or_else(Zval::new))
+            }
+
+            pub fn clone(self_: &mut ZendClassObject<$class>) -> Zval {
+                let mut this = Zval::new();
+                this.set_object(&mut self_.std);
+                clone_object(&this)
             }
 
             pub fn build(self_: &mut ZendClassObject<$class>) -> PhpResult<Zval> {
