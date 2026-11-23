@@ -72,6 +72,7 @@ const bench = define({
         { skipped: 'GET /v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/branches', reason: 'lists the repository\'s branches from GitHub' },
         { skipped: 'GET /v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/contents', reason: 'reads the repository\'s contents from GitHub' },
         { skipped: 'PATCH /v1/vcs/github/installations/:installationId/repositories/:repositoryId', reason: 'reads the pull request from GitHub and deploys it' },
+        { skipped: 'POST /v1/vcs/installations', reason: 'reuses a GitHub organization installation, which needs a GitHub App installed on a real organization' },
     ],
 });
 
