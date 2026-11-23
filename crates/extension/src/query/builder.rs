@@ -17,9 +17,9 @@
 //! strings pass as they are and one that is not UTF-8 fails the statement as `json_encode()`
 //! does.
 
-// The parameters are named as PHP names them, and a fluent method names its lifetime whether or not
+// The parameters are PHP's, in name and number, and a fluent method names its lifetime whether or not
 // an argument borrows.
-#![allow(non_snake_case, clippy::needless_lifetimes)]
+#![allow(non_snake_case, clippy::needless_lifetimes, clippy::too_many_arguments)]
 
 use std::borrow::Cow;
 use std::cell::{Cell, RefCell};
