@@ -1,5 +1,5 @@
 import { afterAll, afterEach, describe, expect, mock, test } from 'bun:test'
-import { GlobalRegistrator } from '@happy-dom/global-registrator'
+import { registerDom, unregisterDom } from './dom.ts'
 import { AppwriteException } from '@appwrite.io/console'
 import * as actualRouter from '@tanstack/react-router'
 import { createElement } from 'react'
@@ -9,7 +9,7 @@ import * as actualConsoleProfiles from '../../src/lib/console-profiles.ts'
 import * as actualHooks from '../../src/lib/react-query/hooks/index.ts'
 import * as actualProxyDomains from '../../src/lib/utils/proxy-domains.ts'
 
-GlobalRegistrator.register()
+registerDom()
 const { act, cleanup, fireEvent, render } = await import(
   '@testing-library/react'
 )
@@ -107,7 +107,7 @@ afterAll(async () => {
   mock.restore()
   // mock.restore leaves module mocks in place
   mock.module(proxyDomainsPath, () => realProxyDomains)
-  await GlobalRegistrator.unregister()
+  await unregisterDom()
 })
 
 afterEach(() => {

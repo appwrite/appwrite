@@ -88,7 +88,6 @@ import {
   resetDebugProfileFeatureOverrides,
   resetDebugProfileFeatureOverride,
   getCanonicalProfileFeatures,
-  getEnvProfileId,
   hasDebugProfileOverride,
   CONSOLE_PROFILES,
   CONSOLE_PROFILE_FEATURE_LABELS,
@@ -104,7 +103,6 @@ import {
 import { useDebugMcpEndpoint } from '@/hooks/use-debug-mcp-endpoint'
 import { usePromptDialog } from '@/hooks/use-prompt-dialog'
 import { McpIcon } from '@/components/global/shared/McpIcon'
-import { useNavigate } from '@tanstack/react-router'
 import { Branch as DismissableLayerBranch } from '@radix-ui/react-dismissable-layer'
 import { cn } from '@/lib/utils'
 import type {
@@ -1065,8 +1063,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
   const { profileId, features } = useConsoleProfile()
   const {
     preset: endpointPreset,
-    customUrl: endpointCustomUrl,
-    customEndpoints: endpointCustomEndpoints,
     effectiveUrl: endpointEffectiveUrl,
     envUrl: endpointEnvUrl,
   } = useDebugEndpoint()
@@ -1076,8 +1072,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     effectiveUrl: mcpEndpointEffectiveUrl,
   } = useDebugMcpEndpoint()
   const profileFromOverride = hasDebugProfileOverride()
-  const envProfileId = getEnvProfileId()
-  const navigate = useNavigate()
   const initLowPowerDecision = useInitLowPowerAnimationDecision()
   const [position, setPosition] = useState<DebugMenuPosition>(() =>
     readDebugMenuPosition(),
@@ -1771,6 +1765,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Products' },
               ),
               createProfileFeatureFlagItem(
+                'Distribution',
+                'Show the Distribution product (build, sign and submit iOS and Android apps to the stores) in projects where the server has distribution enabled.',
+                'distribution',
+                profileId,
+                features.distribution,
+                { category: 'Products' },
+              ),
+              createProfileFeatureFlagItem(
                 'Appwrite push',
                 'Show the Appwrite push provider in messaging (create wizard and QoS/expiry settings).',
                 'appwritePush',
@@ -2108,6 +2110,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.analytics,
     features.alerts,
     features.reviews,
+    features.distribution,
     features.appwritePush,
     features.nativeDbsMongo,
     features.databasePitrRestore,
@@ -2122,24 +2125,19 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.notifications,
     features.init,
     endpointPreset,
-    endpointCustomUrl,
-    endpointCustomEndpoints,
     endpointEffectiveUrl,
     endpointEnvUrl,
     mcpEndpointPreset,
     mcpEndpointCustomUrl,
     mcpEndpointEffectiveUrl,
     profileFromOverride,
-    envProfileId,
     initLowPowerDecision,
     overrides,
     isScreenshotModeActive,
     setScreenshotModeActive,
     actions,
-    navigate,
     setTheme,
     languageCopy,
-    applyOverrideAndGoHome,
     prompt,
   ])
 

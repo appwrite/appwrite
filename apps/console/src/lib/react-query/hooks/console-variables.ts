@@ -34,6 +34,20 @@ export function isReviewsEnabled(
   )
 }
 
+/**
+ * Distribution runs only where the server switches the service on. Servers
+ * that predate the variable have no distribution API, so a missing value reads
+ * as off.
+ */
+export function isDistributionEnabled(
+  vars: Models.ConsoleVariables | undefined,
+): boolean {
+  return (
+    (vars as unknown as Record<string, unknown> | undefined)
+      ?._APP_DISTRIBUTION_ENABLED === true
+  )
+}
+
 export function consoleVariablesQueryOptions(region?: string) {
   return queryOptions({
     queryKey: ['console-variables', region ?? 'default'],
@@ -82,5 +96,6 @@ export function useConsoleVariables(region?: string) {
     vcsProvidersWithPublicRepositories:
       vars?._APP_VCS_PROVIDERS_WITH_PUBLIC_REPOSITORIES,
     reviewsEnabled: isReviewsEnabled(vars),
+    distributionEnabled: isDistributionEnabled(vars),
   }
 }

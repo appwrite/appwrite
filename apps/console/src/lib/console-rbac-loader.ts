@@ -5,7 +5,10 @@
  */
 
 import type { QueryClient } from '@tanstack/react-query'
-import { getActiveProfileFeatures, isCloudProfile } from '@/lib/console-profiles'
+import {
+  getActiveProfileFeatures,
+  isCloudProfile,
+} from '@/lib/console-profiles'
 import {
   canShowDatabaseSecuritySettings,
   canShowTableSecuritySettings,
@@ -24,6 +27,10 @@ import {
   canShowAgentMcpConnectCta,
   canCreateDatabase,
   canSeeActivityNav,
+  canSeeProjectNavItem,
+  canCreateDistributionApp,
+  canWriteDistributionApp,
+  canShowDistributionCredentials,
 } from '@/lib/console-access-checks'
 import {
   deriveAccessFromRolesScopes,
@@ -273,4 +280,44 @@ export async function canAccessProjectActivity(
   if (!access) return true
   const features = getActiveProfileFeatures()
   return canSeeActivityNav(access, features)
+}
+
+export async function canAccessDistribution(
+  queryClient: QueryClient,
+  projectId: string,
+): Promise<boolean> {
+  const access = await getProjectAccess(queryClient, projectId)
+  if (!access) return true
+  const features = getActiveProfileFeatures()
+  return canSeeProjectNavItem(access, features, 'distribution')
+}
+
+export async function canAccessDistributionAppCreate(
+  queryClient: QueryClient,
+  projectId: string,
+): Promise<boolean> {
+  const access = await getProjectAccess(queryClient, projectId)
+  if (!access) return true
+  const features = getActiveProfileFeatures()
+  return canCreateDistributionApp(access, features)
+}
+
+export async function canAccessDistributionAppSettings(
+  queryClient: QueryClient,
+  projectId: string,
+): Promise<boolean> {
+  const access = await getProjectAccess(queryClient, projectId)
+  if (!access) return true
+  const features = getActiveProfileFeatures()
+  return canWriteDistributionApp(access, features)
+}
+
+export async function canAccessDistributionCredentials(
+  queryClient: QueryClient,
+  projectId: string,
+): Promise<boolean> {
+  const access = await getProjectAccess(queryClient, projectId)
+  if (!access) return true
+  const features = getActiveProfileFeatures()
+  return canShowDistributionCredentials(access, features)
 }

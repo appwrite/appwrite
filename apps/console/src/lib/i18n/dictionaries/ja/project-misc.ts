@@ -485,23 +485,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'No distribution apps yet': 'Distribution アプリがまだありません',
   'Search apps...': 'アプリを検索...',
   'Create app': 'アプリの作成',
-  'Loading apps...': 'アプリを読み込み中...',
-  'In review': 'レビュー中',
-  'Distribution app created': 'Distribution アプリを作成しました',
-  'Failed to create distribution app':
-    'Distribution アプリの作成に失敗しました',
-  'Create distribution app': 'Distribution アプリの作成',
-  'My app': 'マイアプリ',
-  'Identifier (optional)': '識別子 (任意)',
   'Creating...': '作成中...',
   'App not found': 'アプリが見つかりません',
-  'Back to Distribution': 'Distribution に戻る',
-  'Default track': 'デフォルトトラック',
-  'Auto submit': '自動送信',
-  'Loading builds...': 'ビルドを読み込み中...',
-  'No builds yet': 'ビルドがまだありません',
-  'Loading submissions...': '送信を読み込み中...',
-  'No submissions yet': '送信がまだありません',
   'IP address': 'IP アドレス',
   'Loading activities': 'アクティビティを読み込み中',
   'Activity log not found or unavailable.':
@@ -834,9 +819,11 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Unique users active in the last': '直近でアクティブだったユニークユーザー:',
   'Could not load live users': 'ライブユーザーを読み込めませんでした',
   'Active screens': 'アクティブな画面',
-  'No one is using the app right now.': '現在アプリを使用しているユーザーはいません。',
+  'No one is using the app right now.':
+    '現在アプリを使用しているユーザーはいません。',
   'Users by country': '国別ユーザー',
-  'Visitors and app users, pages and screens, sources, locations, and bots, plus any custom events you track.': '訪問者とアプリユーザー、ページと画面、参照元、地域、ボット、そしてトラッキングしているカスタムイベント。',
+  'Visitors and app users, pages and screens, sources, locations, and bots, plus any custom events you track.':
+    '訪問者とアプリユーザー、ページと画面、参照元、地域、ボット、そしてトラッキングしているカスタムイベント。',
   'What visitors are browsing with': '訪問者の利用環境',
   'What your users are on': 'ユーザーの利用環境',
   'Active users': 'アクティブユーザー',
@@ -2824,14 +2811,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'ルールがリクエストを処理し始めると、ここにファイアウォールログが表示されます',
   'Create an app to build and submit to Google Play, the App Store, and the Microsoft Store.':
     'Google Play、App Store、Microsoft Store 向けにビルドして提出するアプリを作成します。',
-  'Pick a framework and platforms to start shipping builds to the app stores.':
-    'アプリストアへビルドを配信し始めるために、Framework とプラットフォームを選択してください。',
-  'This distribution app does not exist or has been removed.':
-    'この Distribution アプリは存在しないか、削除されています。',
-  'Trigger a build to create an artifact for the stores.':
-    'ストア向けのアーティファクトを作成するためにビルドをトリガーします。',
-  'Submit a ready build to a store to track its review status here.':
-    '準備できたビルドをストアに提出すると、ここでレビュー状況を追跡できます。',
   'Upgrade for longer retention.':
     'より長い保持期間が必要な場合は、アップグレードしてください。',
   'Longer retention is available on Enterprise.':
@@ -3028,7 +3007,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Path: 'パス',
   Method: 'メソッド',
   Country: '国',
-  Distribution: 'Distribution',
   App: 'アプリ',
   Platforms: 'プラットフォーム',
   Identifier: '識別子',
@@ -3041,8 +3019,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Queued: 'キュー済み',
   Processing: '処理中',
   Approved: '承認済み',
-  Published: '公開済み',
-  Rejected: '拒否済み',
   Framework: 'Framework',
   Create: '作成',
   Configuration: '設定',
@@ -3051,11 +3027,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Version: 'バージョン',
   Duration: '所要時間',
   Created: '作成日',
-  Submissions: '提出',
   Provider: 'プロバイダー',
-  Track: 'トラック',
   Release: 'リリース',
-  Submitted: '提出済み',
   Activity: 'アクティビティ',
   Event: 'イベント',
   Actor: '実行者',
@@ -3686,18 +3659,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Bring your data to Appwrite': 'データを Appwrite に移行',
   'Move users, databases, files, and functions from another Appwrite project or a different platform. Your source stays untouched while the import runs.':
     '別の Appwrite プロジェクトや他のプラットフォームから、ユーザー、データベース、ファイル、Functions を移行できます。インポート中も移行元は変更されません。',
-  'Create the app': 'アプリを作成する',
-  'Pick the framework, from Flutter and React Native to native Android, iOS, or .NET MAUI, and the platforms you ship to.':
-    'Flutter や React Native からネイティブの Android、iOS、.NET MAUI までのフレームワークと、配布先のプラットフォームを選びます。',
-  'Build every platform': '全プラットフォームをビルドする',
-  'Each version gets its own build per platform, with status and duration tracked here.':
-    '各バージョンはプラットフォームごとにビルドされ、ステータスと所要時間をここで確認できます。',
-  'Submit to the stores': 'ストアに提出する',
-  'Send builds to Google Play, App Store Connect, and the Microsoft Store, or turn on auto submit.':
-    'ビルドを Google Play、App Store Connect、Microsoft Store に送信するか、自動送信をオンにします。',
-  'Ship your apps to every store': 'アプリをすべてのストアに配信',
-  'Build Android, iOS, and Windows releases from one place and submit them to Google Play, the App Store, and the Microsoft Store.':
-    'Android、iOS、Windows のリリースを 1 か所でビルドし、Google Play、App Store、Microsoft Store に提出できます。',
   'Create a link that lets another organization claim this project. Each link can be claimed once.':
     '別の組織がこのプロジェクトを受け取れるリンクを作成します。各リンクは 1 回だけ使用できます。',
   'Failed to load transfer links': '転送リンクの読み込みに失敗しました',
@@ -4145,16 +4106,20 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'パスワードを送信する前に、ディレクトリの証明書を検証します。',
   'The CA or self-signed certificate to trust. Leave empty to use the system trust store.':
     '信頼する CA 証明書または自己署名証明書。空にするとシステムの信頼ストアを使用します。',
-  'How long to wait for each answer, from 1 to 30.': '各応答を待つ時間。1 から 30 まで。',
+  'How long to wait for each answer, from 1 to 30.':
+    '各応答を待つ時間。1 から 30 まで。',
   'Service account for the search, or empty for anonymous.':
     '検索に使うサービスアカウント。空にすると匿名で検索します。',
   'Never shown again. Re-enter it when the connection changes.':
     '再表示されません。接続を変更する際は再入力してください。',
-  'Enter the bind password again to save.': '保存するにはバインドパスワードを再入力してください。',
+  'Enter the bind password again to save.':
+    '保存するにはバインドパスワードを再入力してください。',
   'Only its members can sign in. Leave empty to allow everyone.':
     'このグループのメンバーだけがサインインできます。空にするとすべてのユーザーを許可します。',
-  'An ID that never changes, such as entryUUID.': '変更されない ID。entryUUID など。',
-  'Attribute holding the display name, usually cn.': '表示名を保持する属性。通常は cn。',
+  'An ID that never changes, such as entryUUID.':
+    '変更されない ID。entryUUID など。',
+  'Attribute holding the display name, usually cn.':
+    '表示名を保持する属性。通常は cn。',
   'Attribute holding an E.164 phone number. Optional.':
     'E.164 形式の電話番号を保持する属性。任意。',
   'Using Active Directory?': 'Active Directory を使用していますか?',
@@ -4317,11 +4282,13 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Notes mark releases, campaigns or incidents on the chart for everyone in the project.':
     'メモはリリース、キャンペーン、障害などをグラフ上に記録し、プロジェクトの全員に表示されます。',
   'Launched the new pricing page': '新しい料金ページを公開',
-  'The note is removed from the chart for everyone.': 'このメモは全員のグラフから削除されます。',
+  'The note is removed from the chart for everyone.':
+    'このメモは全員のグラフから削除されます。',
   'Former member': '元メンバー',
   'analytics properties': 'アナリティクスプロパティ',
   'analytics property': 'アナリティクスプロパティ',
   'per project.': '(プロジェクトごと)。',
   'to create another.': 'して、さらに作成してください。',
-  'to enable analytics on this site.': 'して、このサイトでアナリティクスを有効にしてください。',
+  'to enable analytics on this site.':
+    'して、このサイトでアナリティクスを有効にしてください。',
 }

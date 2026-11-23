@@ -1,5 +1,5 @@
 import { afterAll, afterEach, describe, expect, mock, test } from 'bun:test'
-import { GlobalRegistrator } from '@happy-dom/global-registrator'
+import { registerDom, unregisterDom } from './dom.ts'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import * as actualRouter from '@tanstack/react-router'
 import { createElement, type ReactNode } from 'react'
@@ -8,7 +8,7 @@ import type { Models } from '@appwrite.io/console'
 import * as actualConsoleProfile from '../../src/hooks/use-console-profile.ts'
 import * as actualHooks from '../../src/lib/react-query/hooks/index.ts'
 
-GlobalRegistrator.register({ url: 'http://localhost/' })
+registerDom({ url: 'http://localhost/' })
 const { cleanup, render } = await import('@testing-library/react')
 
 const consoleRoot = join(import.meta.dir, '../..')
@@ -90,7 +90,7 @@ afterEach(() => cleanup())
 
 afterAll(async () => {
   mock.restore()
-  await GlobalRegistrator.unregister()
+  await unregisterDom()
 })
 
 describe('organization domain nameservers', () => {

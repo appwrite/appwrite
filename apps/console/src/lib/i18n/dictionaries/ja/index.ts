@@ -3,6 +3,7 @@ import { jaSitesDictionary } from './sites'
 import { jaFunctionsDictionary } from './functions'
 import { jaAuthStorageDictionary } from './auth-storage'
 import { jaProjectMiscDictionary } from './project-misc'
+import { jaDistributionDictionary } from './distribution'
 import { jaOrganizationsDictionary } from './organizations'
 import { jaAccountGlobalDictionary } from './account-global'
 import { jaSharedUiDictionary } from './shared-ui'
@@ -32,6 +33,7 @@ export const jaDictionary: Record<string, string> = {
   ...jaAccountGlobalDictionary,
   ...jaOrganizationsDictionary,
   ...jaProjectMiscDictionary,
+  ...jaDistributionDictionary,
   ...jaAuthStorageDictionary,
   ...jaFunctionsDictionary,
   ...jaSitesDictionary,

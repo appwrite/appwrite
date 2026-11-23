@@ -68,6 +68,13 @@ export type ConsoleProfileFeatures = {
    * self-hosted instances run the review service only when they opt in.
    */
   reviews: boolean
+  /**
+   * Internal only, switched on from the debug menu. Distribution product
+   * (build, sign and submit iOS and Android apps to the stores) via the
+   * `distribution` service. Even when on, it shows only where the server
+   * reports `_APP_DISTRIBUTION_ENABLED`.
+   */
+  distribution: boolean
   /** Project environments switcher in the project sidebar (`/project/environments`, Cloud only). */
   projectEnvironments: boolean
   /** An experiment, off by default; the quality team turns it on from the header Previews menu. Usage monitors and the alerts they raise: the Usage sidebar's Monitors and Alerts pages, their quick actions, budget monitors in billing, and the alert events in the webhook event picker. */
@@ -131,6 +138,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   nativeDbsMongo: 'Native DBs: MongoDB',
   videos: 'Videos',
   reviews: 'Review',
+  distribution: 'Distribution',
   projectEnvironments: 'Project environments',
   alerts: 'Alerts',
   multiRegion: 'Multi-region',
@@ -185,6 +193,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       nativeDbsMongo: false,
       videos: false,
       reviews: false,
+      distribution: false,
       projectEnvironments: false,
       alerts: false,
       multiRegion: true,
@@ -228,6 +237,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       nativeDbsMongo: false,
       videos: false,
       reviews: false,
+      distribution: false,
       projectEnvironments: false,
       alerts: false,
       multiRegion: false,

@@ -208,6 +208,7 @@ import { Route as PublicProjectsProjectIdApiKeysRouteImport } from './routes/_pu
 import { Route as PublicProjectsProjectIdAppsRouteImport } from './routes/_public/projects.$projectId.apps'
 import { Route as PublicProjectsProjectIdAuthRouteImport } from './routes/_public/projects.$projectId.auth'
 import { Route as PublicProjectsProjectIdDatabasesRouteImport } from './routes/_public/projects.$projectId.databases'
+import { Route as PublicProjectsProjectIdDistributionRouteImport } from './routes/_public/projects.$projectId.distribution'
 import { Route as PublicProjectsProjectIdExplorerRouteImport } from './routes/_public/projects.$projectId.explorer'
 import { Route as PublicProjectsProjectIdFirewallRouteImport } from './routes/_public/projects.$projectId.firewall'
 import { Route as PublicProjectsProjectIdFunctionsRouteImport } from './routes/_public/projects.$projectId.functions'
@@ -221,7 +222,6 @@ import { Route as PublicProjectsProjectIdRealtimeRouteImport } from './routes/_p
 import { Route as PublicProjectsProjectIdReviewsRouteImport } from './routes/_public/projects.$projectId.reviews'
 import { Route as PublicProjectsProjectIdSettingsRouteImport } from './routes/_public/projects.$projectId.settings'
 import { Route as PublicProjectsProjectIdStorageRouteImport } from './routes/_public/projects.$projectId.storage'
-import { Route as PublicProjectsProjectIdStoresRouteImport } from './routes/_public/projects.$projectId.stores'
 import { Route as PublicProjectsProjectIdUsageRouteImport } from './routes/_public/projects.$projectId.usage'
 import { Route as PublicProjectsProjectIdVideosRouteImport } from './routes/_public/projects.$projectId.videos'
 import { Route as PublicOrganizationsOrgIdAgentIndexRouteImport } from './routes/_public/organizations.$orgId.agent.index'
@@ -256,6 +256,11 @@ import { Route as PublicProjectsProjectIdAuthTemplatesRouteImport } from './rout
 import { Route as PublicProjectsProjectIdDatabasesIndexRouteImport } from './routes/_public/projects.$projectId.databases.index'
 import { Route as PublicProjectsProjectIdDatabasesDatabaseIdRouteImport } from './routes/_public/projects.$projectId.databases.$databaseId'
 import { Route as PublicProjectsProjectIdDatabasesCreateRouteImport } from './routes/_public/projects.$projectId.databases.create'
+import { Route as PublicProjectsProjectIdDistributionIndexRouteImport } from './routes/_public/projects.$projectId.distribution.index'
+import { Route as PublicProjectsProjectIdDistributionAppIdRouteImport } from './routes/_public/projects.$projectId.distribution.$appId'
+import { Route as PublicProjectsProjectIdDistributionConnectionsRouteImport } from './routes/_public/projects.$projectId.distribution.connections'
+import { Route as PublicProjectsProjectIdDistributionCreateRouteImport } from './routes/_public/projects.$projectId.distribution.create'
+import { Route as PublicProjectsProjectIdDistributionSigningRouteImport } from './routes/_public/projects.$projectId.distribution.signing'
 import { Route as PublicProjectsProjectIdEnvironmentsCreateRouteImport } from './routes/_public/projects.$projectId.environments.create'
 import { Route as PublicProjectsProjectIdFirewallIndexRouteImport } from './routes/_public/projects.$projectId.firewall.index'
 import { Route as PublicProjectsProjectIdFirewallCreateRouteImport } from './routes/_public/projects.$projectId.firewall.create'
@@ -290,7 +295,6 @@ import { Route as PublicProjectsProjectIdSitesSiteIdRouteImport } from './routes
 import { Route as PublicProjectsProjectIdSitesCreateRouteImport } from './routes/_public/projects.$projectId.sites.create'
 import { Route as PublicProjectsProjectIdStorageIndexRouteImport } from './routes/_public/projects.$projectId.storage.index'
 import { Route as PublicProjectsProjectIdStorageBucketIdRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId'
-import { Route as PublicProjectsProjectIdStoresIndexRouteImport } from './routes/_public/projects.$projectId.stores.index'
 import { Route as PublicProjectsProjectIdUsageIndexRouteImport } from './routes/_public/projects.$projectId.usage.index'
 import { Route as PublicProjectsProjectIdUsageCategoryIdRouteImport } from './routes/_public/projects.$projectId.usage.$categoryId'
 import { Route as PublicProjectsProjectIdUsageAlertsRouteImport } from './routes/_public/projects.$projectId.usage.alerts'
@@ -337,6 +341,10 @@ import { Route as PublicProjectsProjectIdAuthUsersUserIdRouteImport } from './ro
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId'
 import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId'
+import { Route as PublicProjectsProjectIdDistributionAppIdIndexRouteImport } from './routes/_public/projects.$projectId.distribution.$appId.index'
+import { Route as PublicProjectsProjectIdDistributionAppIdSettingsRouteImport } from './routes/_public/projects.$projectId.distribution.$appId.settings'
+import { Route as PublicProjectsProjectIdDistributionAppIdTargetsRouteImport } from './routes/_public/projects.$projectId.distribution.$appId.targets'
+import { Route as PublicProjectsProjectIdDistributionAppIdVariablesRouteImport } from './routes/_public/projects.$projectId.distribution.$appId.variables'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdIndexRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.index'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdDeploymentsRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.deployments'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdDomainsRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.domains'
@@ -378,7 +386,6 @@ import { Route as PublicProjectsProjectIdSitesCreateManualRouteImport } from './
 import { Route as PublicProjectsProjectIdStorageBucketIdIndexRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId.index'
 import { Route as PublicProjectsProjectIdStorageBucketIdSecurityRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId.security'
 import { Route as PublicProjectsProjectIdStorageBucketIdSettingsRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId.settings'
-import { Route as PublicProjectsProjectIdStoresAppIdIndexRouteImport } from './routes/_public/projects.$projectId.stores.$appId.index'
 import { Route as PublicProjectsProjectIdUsageCategoryIdMetricIdRouteImport } from './routes/_public/projects.$projectId.usage.$categoryId.$metricId'
 import { Route as PublicProjectsProjectIdVideosVideoIdIndexRouteImport } from './routes/_public/projects.$projectId.videos.$videoId.index'
 import { Route as PublicProjectsProjectIdVideosVideoIdInstallRouteImport } from './routes/_public/projects.$projectId.videos.$videoId.install'
@@ -1577,6 +1584,12 @@ const PublicProjectsProjectIdDatabasesRoute =
     path: '/databases',
     getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
+const PublicProjectsProjectIdDistributionRoute =
+  PublicProjectsProjectIdDistributionRouteImport.update({
+    id: '/distribution',
+    path: '/distribution',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
 const PublicProjectsProjectIdExplorerRoute =
   PublicProjectsProjectIdExplorerRouteImport.update({
     id: '/explorer',
@@ -1653,12 +1666,6 @@ const PublicProjectsProjectIdStorageRoute =
   PublicProjectsProjectIdStorageRouteImport.update({
     id: '/storage',
     path: '/storage',
-    getParentRoute: () => PublicProjectsProjectIdRoute,
-  } as any)
-const PublicProjectsProjectIdStoresRoute =
-  PublicProjectsProjectIdStoresRouteImport.update({
-    id: '/stores',
-    path: '/stores',
     getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
 const PublicProjectsProjectIdUsageRoute =
@@ -1865,6 +1872,36 @@ const PublicProjectsProjectIdDatabasesCreateRoute =
     path: '/create',
     getParentRoute: () => PublicProjectsProjectIdDatabasesRoute,
   } as any)
+const PublicProjectsProjectIdDistributionIndexRoute =
+  PublicProjectsProjectIdDistributionIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdDistributionRoute,
+  } as any)
+const PublicProjectsProjectIdDistributionAppIdRoute =
+  PublicProjectsProjectIdDistributionAppIdRouteImport.update({
+    id: '/$appId',
+    path: '/$appId',
+    getParentRoute: () => PublicProjectsProjectIdDistributionRoute,
+  } as any)
+const PublicProjectsProjectIdDistributionConnectionsRoute =
+  PublicProjectsProjectIdDistributionConnectionsRouteImport.update({
+    id: '/connections',
+    path: '/connections',
+    getParentRoute: () => PublicProjectsProjectIdDistributionRoute,
+  } as any)
+const PublicProjectsProjectIdDistributionCreateRoute =
+  PublicProjectsProjectIdDistributionCreateRouteImport.update({
+    id: '/create',
+    path: '/create',
+    getParentRoute: () => PublicProjectsProjectIdDistributionRoute,
+  } as any)
+const PublicProjectsProjectIdDistributionSigningRoute =
+  PublicProjectsProjectIdDistributionSigningRouteImport.update({
+    id: '/signing',
+    path: '/signing',
+    getParentRoute: () => PublicProjectsProjectIdDistributionRoute,
+  } as any)
 const PublicProjectsProjectIdEnvironmentsCreateRoute =
   PublicProjectsProjectIdEnvironmentsCreateRouteImport.update({
     id: '/environments/create',
@@ -2068,12 +2105,6 @@ const PublicProjectsProjectIdStorageBucketIdRoute =
     id: '/$bucketId',
     path: '/$bucketId',
     getParentRoute: () => PublicProjectsProjectIdStorageRoute,
-  } as any)
-const PublicProjectsProjectIdStoresIndexRoute =
-  PublicProjectsProjectIdStoresIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PublicProjectsProjectIdStoresRoute,
   } as any)
 const PublicProjectsProjectIdUsageIndexRoute =
   PublicProjectsProjectIdUsageIndexRouteImport.update({
@@ -2351,6 +2382,30 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute =
     path: '/postgres/$databaseId',
     getParentRoute: () => PublicProjectsProjectIdDatabasesRoute,
   } as any)
+const PublicProjectsProjectIdDistributionAppIdIndexRoute =
+  PublicProjectsProjectIdDistributionAppIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicProjectsProjectIdDistributionAppIdRoute,
+  } as any)
+const PublicProjectsProjectIdDistributionAppIdSettingsRoute =
+  PublicProjectsProjectIdDistributionAppIdSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => PublicProjectsProjectIdDistributionAppIdRoute,
+  } as any)
+const PublicProjectsProjectIdDistributionAppIdTargetsRoute =
+  PublicProjectsProjectIdDistributionAppIdTargetsRouteImport.update({
+    id: '/targets',
+    path: '/targets',
+    getParentRoute: () => PublicProjectsProjectIdDistributionAppIdRoute,
+  } as any)
+const PublicProjectsProjectIdDistributionAppIdVariablesRoute =
+  PublicProjectsProjectIdDistributionAppIdVariablesRouteImport.update({
+    id: '/variables',
+    path: '/variables',
+    getParentRoute: () => PublicProjectsProjectIdDistributionAppIdRoute,
+  } as any)
 const PublicProjectsProjectIdFunctionsFunctionIdIndexRoute =
   PublicProjectsProjectIdFunctionsFunctionIdIndexRouteImport.update({
     id: '/',
@@ -2596,12 +2651,6 @@ const PublicProjectsProjectIdStorageBucketIdSettingsRoute =
     id: '/settings',
     path: '/settings',
     getParentRoute: () => PublicProjectsProjectIdStorageBucketIdRoute,
-  } as any)
-const PublicProjectsProjectIdStoresAppIdIndexRoute =
-  PublicProjectsProjectIdStoresAppIdIndexRouteImport.update({
-    id: '/$appId/',
-    path: '/$appId/',
-    getParentRoute: () => PublicProjectsProjectIdStoresRoute,
   } as any)
 const PublicProjectsProjectIdUsageCategoryIdMetricIdRoute =
   PublicProjectsProjectIdUsageCategoryIdMetricIdRouteImport.update({
@@ -3873,6 +3922,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
   '/projects/$projectId/auth': typeof PublicProjectsProjectIdAuthRouteWithChildren
   '/projects/$projectId/databases': typeof PublicProjectsProjectIdDatabasesRouteWithChildren
+  '/projects/$projectId/distribution': typeof PublicProjectsProjectIdDistributionRouteWithChildren
   '/projects/$projectId/explorer': typeof PublicProjectsProjectIdExplorerRoute
   '/projects/$projectId/firewall': typeof PublicProjectsProjectIdFirewallRouteWithChildren
   '/projects/$projectId/functions': typeof PublicProjectsProjectIdFunctionsRouteWithChildren
@@ -3886,7 +3936,6 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/reviews': typeof PublicProjectsProjectIdReviewsRouteWithChildren
   '/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsRouteWithChildren
   '/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageRouteWithChildren
-  '/projects/$projectId/stores': typeof PublicProjectsProjectIdStoresRouteWithChildren
   '/projects/$projectId/usage': typeof PublicProjectsProjectIdUsageRouteWithChildren
   '/projects/$projectId/videos': typeof PublicProjectsProjectIdVideosRouteWithChildren
   '/agent/automations/': typeof PublicAgentAutomationsIndexRoute
@@ -3919,6 +3968,10 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/auth/templates': typeof PublicProjectsProjectIdAuthTemplatesRoute
   '/projects/$projectId/databases/$databaseId': typeof PublicProjectsProjectIdDatabasesDatabaseIdRoute
   '/projects/$projectId/databases/create': typeof PublicProjectsProjectIdDatabasesCreateRoute
+  '/projects/$projectId/distribution/$appId': typeof PublicProjectsProjectIdDistributionAppIdRouteWithChildren
+  '/projects/$projectId/distribution/connections': typeof PublicProjectsProjectIdDistributionConnectionsRoute
+  '/projects/$projectId/distribution/create': typeof PublicProjectsProjectIdDistributionCreateRoute
+  '/projects/$projectId/distribution/signing': typeof PublicProjectsProjectIdDistributionSigningRoute
   '/projects/$projectId/environments/create': typeof PublicProjectsProjectIdEnvironmentsCreateRoute
   '/projects/$projectId/firewall/create': typeof PublicProjectsProjectIdFirewallCreateRoute
   '/projects/$projectId/functions/$functionId': typeof PublicProjectsProjectIdFunctionsFunctionIdRouteWithChildren
@@ -3957,6 +4010,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/marketplace/': typeof PublicOrganizationsOrgIdMarketplaceIndexRoute
   '/projects/$projectId/auth/': typeof PublicProjectsProjectIdAuthIndexRoute
   '/projects/$projectId/databases/': typeof PublicProjectsProjectIdDatabasesIndexRoute
+  '/projects/$projectId/distribution/': typeof PublicProjectsProjectIdDistributionIndexRoute
   '/projects/$projectId/firewall/': typeof PublicProjectsProjectIdFirewallIndexRoute
   '/projects/$projectId/functions/': typeof PublicProjectsProjectIdFunctionsIndexRoute
   '/projects/$projectId/messaging/': typeof PublicProjectsProjectIdMessagingIndexRoute
@@ -3966,7 +4020,6 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/settings/': typeof PublicProjectsProjectIdSettingsIndexRoute
   '/projects/$projectId/sites/': typeof PublicProjectsProjectIdSitesIndexRoute
   '/projects/$projectId/storage/': typeof PublicProjectsProjectIdStorageIndexRoute
-  '/projects/$projectId/stores/': typeof PublicProjectsProjectIdStoresIndexRoute
   '/projects/$projectId/usage/': typeof PublicProjectsProjectIdUsageIndexRoute
   '/projects/$projectId/videos/': typeof PublicProjectsProjectIdVideosIndexRoute
   '/organizations/$orgId/agent/automations/$automationId': typeof PublicOrganizationsOrgIdAgentAutomationsAutomationIdRoute
@@ -3999,6 +4052,9 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/$dbKind/$databaseId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteWithChildren
   '/projects/$projectId/databases/mysql/$databaseId': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteWithChildren
   '/projects/$projectId/databases/postgres/$databaseId': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRouteWithChildren
+  '/projects/$projectId/distribution/$appId/settings': typeof PublicProjectsProjectIdDistributionAppIdSettingsRoute
+  '/projects/$projectId/distribution/$appId/targets': typeof PublicProjectsProjectIdDistributionAppIdTargetsRoute
+  '/projects/$projectId/distribution/$appId/variables': typeof PublicProjectsProjectIdDistributionAppIdVariablesRoute
   '/projects/$projectId/functions/$functionId/deployments': typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsRouteWithChildren
   '/projects/$projectId/functions/$functionId/domains': typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsRouteWithChildren
   '/projects/$projectId/functions/$functionId/executions': typeof PublicProjectsProjectIdFunctionsFunctionIdExecutionsRoute
@@ -4043,6 +4099,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/marketplace/$appId/': typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute
   '/projects/$projectId/analytics/$propertyId/': typeof PublicProjectsProjectIdAnalyticsPropertyIdIndexRoute
   '/projects/$projectId/auth/users/': typeof PublicProjectsProjectIdAuthUsersIndexRoute
+  '/projects/$projectId/distribution/$appId/': typeof PublicProjectsProjectIdDistributionAppIdIndexRoute
   '/projects/$projectId/functions/$functionId/': typeof PublicProjectsProjectIdFunctionsFunctionIdIndexRoute
   '/projects/$projectId/functions/create/': typeof PublicProjectsProjectIdFunctionsCreateIndexRoute
   '/projects/$projectId/messaging/$messageId/': typeof PublicProjectsProjectIdMessagingMessageIdIndexRoute
@@ -4053,7 +4110,6 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/sites/$siteId/': typeof PublicProjectsProjectIdSitesSiteIdIndexRoute
   '/projects/$projectId/sites/create/': typeof PublicProjectsProjectIdSitesCreateIndexRoute
   '/projects/$projectId/storage/$bucketId/': typeof PublicProjectsProjectIdStorageBucketIdIndexRoute
-  '/projects/$projectId/stores/$appId/': typeof PublicProjectsProjectIdStoresAppIdIndexRoute
   '/projects/$projectId/videos/$videoId/': typeof PublicProjectsProjectIdVideosVideoIdIndexRoute
   '/projects/$projectId/auth/teams/$teamId/activity': typeof PublicProjectsProjectIdAuthTeamsTeamIdActivityRoute
   '/projects/$projectId/auth/teams/$teamId/members': typeof PublicProjectsProjectIdAuthTeamsTeamIdMembersRoute
@@ -4398,6 +4454,9 @@ export interface FileRoutesByTo {
   '/projects/$projectId/auth/templates': typeof PublicProjectsProjectIdAuthTemplatesRoute
   '/projects/$projectId/databases/$databaseId': typeof PublicProjectsProjectIdDatabasesDatabaseIdRoute
   '/projects/$projectId/databases/create': typeof PublicProjectsProjectIdDatabasesCreateRoute
+  '/projects/$projectId/distribution/connections': typeof PublicProjectsProjectIdDistributionConnectionsRoute
+  '/projects/$projectId/distribution/create': typeof PublicProjectsProjectIdDistributionCreateRoute
+  '/projects/$projectId/distribution/signing': typeof PublicProjectsProjectIdDistributionSigningRoute
   '/projects/$projectId/environments/create': typeof PublicProjectsProjectIdEnvironmentsCreateRoute
   '/projects/$projectId/firewall/create': typeof PublicProjectsProjectIdFirewallCreateRoute
   '/projects/$projectId/functions/editor': typeof PublicProjectsProjectIdFunctionsEditorRoute
@@ -4427,6 +4486,7 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/marketplace': typeof PublicOrganizationsOrgIdMarketplaceIndexRoute
   '/projects/$projectId/auth': typeof PublicProjectsProjectIdAuthIndexRoute
   '/projects/$projectId/databases': typeof PublicProjectsProjectIdDatabasesIndexRoute
+  '/projects/$projectId/distribution': typeof PublicProjectsProjectIdDistributionIndexRoute
   '/projects/$projectId/firewall': typeof PublicProjectsProjectIdFirewallIndexRoute
   '/projects/$projectId/functions': typeof PublicProjectsProjectIdFunctionsIndexRoute
   '/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingIndexRoute
@@ -4436,7 +4496,6 @@ export interface FileRoutesByTo {
   '/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsIndexRoute
   '/projects/$projectId/sites': typeof PublicProjectsProjectIdSitesIndexRoute
   '/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageIndexRoute
-  '/projects/$projectId/stores': typeof PublicProjectsProjectIdStoresIndexRoute
   '/projects/$projectId/usage': typeof PublicProjectsProjectIdUsageIndexRoute
   '/projects/$projectId/videos': typeof PublicProjectsProjectIdVideosIndexRoute
   '/organizations/$orgId/agent/automations/$automationId': typeof PublicOrganizationsOrgIdAgentAutomationsAutomationIdRoute
@@ -4466,6 +4525,9 @@ export interface FileRoutesByTo {
   '/projects/$projectId/auth/policies/users': typeof PublicProjectsProjectIdAuthPoliciesUsersRoute
   '/projects/$projectId/auth/teams/$teamId': typeof PublicProjectsProjectIdAuthTeamsTeamIdRouteWithChildren
   '/projects/$projectId/auth/users/$userId': typeof PublicProjectsProjectIdAuthUsersUserIdRouteWithChildren
+  '/projects/$projectId/distribution/$appId/settings': typeof PublicProjectsProjectIdDistributionAppIdSettingsRoute
+  '/projects/$projectId/distribution/$appId/targets': typeof PublicProjectsProjectIdDistributionAppIdTargetsRoute
+  '/projects/$projectId/distribution/$appId/variables': typeof PublicProjectsProjectIdDistributionAppIdVariablesRoute
   '/projects/$projectId/functions/$functionId/executions': typeof PublicProjectsProjectIdFunctionsFunctionIdExecutionsRoute
   '/projects/$projectId/functions/$functionId/firewall': typeof PublicProjectsProjectIdFunctionsFunctionIdFirewallRoute
   '/projects/$projectId/functions/$functionId/security': typeof PublicProjectsProjectIdFunctionsFunctionIdSecurityRoute
@@ -4502,6 +4564,7 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/marketplace/$appId': typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute
   '/projects/$projectId/analytics/$propertyId': typeof PublicProjectsProjectIdAnalyticsPropertyIdIndexRoute
   '/projects/$projectId/auth/users': typeof PublicProjectsProjectIdAuthUsersIndexRoute
+  '/projects/$projectId/distribution/$appId': typeof PublicProjectsProjectIdDistributionAppIdIndexRoute
   '/projects/$projectId/functions/$functionId': typeof PublicProjectsProjectIdFunctionsFunctionIdIndexRoute
   '/projects/$projectId/functions/create': typeof PublicProjectsProjectIdFunctionsCreateIndexRoute
   '/projects/$projectId/messaging/$messageId': typeof PublicProjectsProjectIdMessagingMessageIdIndexRoute
@@ -4512,7 +4575,6 @@ export interface FileRoutesByTo {
   '/projects/$projectId/sites/$siteId': typeof PublicProjectsProjectIdSitesSiteIdIndexRoute
   '/projects/$projectId/sites/create': typeof PublicProjectsProjectIdSitesCreateIndexRoute
   '/projects/$projectId/storage/$bucketId': typeof PublicProjectsProjectIdStorageBucketIdIndexRoute
-  '/projects/$projectId/stores/$appId': typeof PublicProjectsProjectIdStoresAppIdIndexRoute
   '/projects/$projectId/videos/$videoId': typeof PublicProjectsProjectIdVideosVideoIdIndexRoute
   '/projects/$projectId/auth/teams/$teamId/activity': typeof PublicProjectsProjectIdAuthTeamsTeamIdActivityRoute
   '/projects/$projectId/auth/teams/$teamId/members': typeof PublicProjectsProjectIdAuthTeamsTeamIdMembersRoute
@@ -4840,6 +4902,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
   '/_public/projects/$projectId/auth': typeof PublicProjectsProjectIdAuthRouteWithChildren
   '/_public/projects/$projectId/databases': typeof PublicProjectsProjectIdDatabasesRouteWithChildren
+  '/_public/projects/$projectId/distribution': typeof PublicProjectsProjectIdDistributionRouteWithChildren
   '/_public/projects/$projectId/explorer': typeof PublicProjectsProjectIdExplorerRoute
   '/_public/projects/$projectId/firewall': typeof PublicProjectsProjectIdFirewallRouteWithChildren
   '/_public/projects/$projectId/functions': typeof PublicProjectsProjectIdFunctionsRouteWithChildren
@@ -4853,7 +4916,6 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/reviews': typeof PublicProjectsProjectIdReviewsRouteWithChildren
   '/_public/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsRouteWithChildren
   '/_public/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageRouteWithChildren
-  '/_public/projects/$projectId/stores': typeof PublicProjectsProjectIdStoresRouteWithChildren
   '/_public/projects/$projectId/usage': typeof PublicProjectsProjectIdUsageRouteWithChildren
   '/_public/projects/$projectId/videos': typeof PublicProjectsProjectIdVideosRouteWithChildren
   '/_public/agent/automations/': typeof PublicAgentAutomationsIndexRoute
@@ -4886,6 +4948,10 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/auth/templates': typeof PublicProjectsProjectIdAuthTemplatesRoute
   '/_public/projects/$projectId/databases/$databaseId': typeof PublicProjectsProjectIdDatabasesDatabaseIdRoute
   '/_public/projects/$projectId/databases/create': typeof PublicProjectsProjectIdDatabasesCreateRoute
+  '/_public/projects/$projectId/distribution/$appId': typeof PublicProjectsProjectIdDistributionAppIdRouteWithChildren
+  '/_public/projects/$projectId/distribution/connections': typeof PublicProjectsProjectIdDistributionConnectionsRoute
+  '/_public/projects/$projectId/distribution/create': typeof PublicProjectsProjectIdDistributionCreateRoute
+  '/_public/projects/$projectId/distribution/signing': typeof PublicProjectsProjectIdDistributionSigningRoute
   '/_public/projects/$projectId/environments/create': typeof PublicProjectsProjectIdEnvironmentsCreateRoute
   '/_public/projects/$projectId/firewall/create': typeof PublicProjectsProjectIdFirewallCreateRoute
   '/_public/projects/$projectId/functions/$functionId': typeof PublicProjectsProjectIdFunctionsFunctionIdRouteWithChildren
@@ -4924,6 +4990,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/marketplace/': typeof PublicOrganizationsOrgIdMarketplaceIndexRoute
   '/_public/projects/$projectId/auth/': typeof PublicProjectsProjectIdAuthIndexRoute
   '/_public/projects/$projectId/databases/': typeof PublicProjectsProjectIdDatabasesIndexRoute
+  '/_public/projects/$projectId/distribution/': typeof PublicProjectsProjectIdDistributionIndexRoute
   '/_public/projects/$projectId/firewall/': typeof PublicProjectsProjectIdFirewallIndexRoute
   '/_public/projects/$projectId/functions/': typeof PublicProjectsProjectIdFunctionsIndexRoute
   '/_public/projects/$projectId/messaging/': typeof PublicProjectsProjectIdMessagingIndexRoute
@@ -4933,7 +5000,6 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/settings/': typeof PublicProjectsProjectIdSettingsIndexRoute
   '/_public/projects/$projectId/sites/': typeof PublicProjectsProjectIdSitesIndexRoute
   '/_public/projects/$projectId/storage/': typeof PublicProjectsProjectIdStorageIndexRoute
-  '/_public/projects/$projectId/stores/': typeof PublicProjectsProjectIdStoresIndexRoute
   '/_public/projects/$projectId/usage/': typeof PublicProjectsProjectIdUsageIndexRoute
   '/_public/projects/$projectId/videos/': typeof PublicProjectsProjectIdVideosIndexRoute
   '/_public/organizations/$orgId/agent/automations/$automationId': typeof PublicOrganizationsOrgIdAgentAutomationsAutomationIdRoute
@@ -4966,6 +5032,9 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/databases/$dbKind/$databaseId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteWithChildren
   '/_public/projects/$projectId/databases/mysql/$databaseId': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteWithChildren
   '/_public/projects/$projectId/databases/postgres/$databaseId': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRouteWithChildren
+  '/_public/projects/$projectId/distribution/$appId/settings': typeof PublicProjectsProjectIdDistributionAppIdSettingsRoute
+  '/_public/projects/$projectId/distribution/$appId/targets': typeof PublicProjectsProjectIdDistributionAppIdTargetsRoute
+  '/_public/projects/$projectId/distribution/$appId/variables': typeof PublicProjectsProjectIdDistributionAppIdVariablesRoute
   '/_public/projects/$projectId/functions/$functionId/deployments': typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsRouteWithChildren
   '/_public/projects/$projectId/functions/$functionId/domains': typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsRouteWithChildren
   '/_public/projects/$projectId/functions/$functionId/executions': typeof PublicProjectsProjectIdFunctionsFunctionIdExecutionsRoute
@@ -5010,6 +5079,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/marketplace/$appId/': typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute
   '/_public/projects/$projectId/analytics/$propertyId/': typeof PublicProjectsProjectIdAnalyticsPropertyIdIndexRoute
   '/_public/projects/$projectId/auth/users/': typeof PublicProjectsProjectIdAuthUsersIndexRoute
+  '/_public/projects/$projectId/distribution/$appId/': typeof PublicProjectsProjectIdDistributionAppIdIndexRoute
   '/_public/projects/$projectId/functions/$functionId/': typeof PublicProjectsProjectIdFunctionsFunctionIdIndexRoute
   '/_public/projects/$projectId/functions/create/': typeof PublicProjectsProjectIdFunctionsCreateIndexRoute
   '/_public/projects/$projectId/messaging/$messageId/': typeof PublicProjectsProjectIdMessagingMessageIdIndexRoute
@@ -5020,7 +5090,6 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/sites/$siteId/': typeof PublicProjectsProjectIdSitesSiteIdIndexRoute
   '/_public/projects/$projectId/sites/create/': typeof PublicProjectsProjectIdSitesCreateIndexRoute
   '/_public/projects/$projectId/storage/$bucketId/': typeof PublicProjectsProjectIdStorageBucketIdIndexRoute
-  '/_public/projects/$projectId/stores/$appId/': typeof PublicProjectsProjectIdStoresAppIdIndexRoute
   '/_public/projects/$projectId/videos/$videoId/': typeof PublicProjectsProjectIdVideosVideoIdIndexRoute
   '/_public/projects/$projectId/auth/teams/$teamId/activity': typeof PublicProjectsProjectIdAuthTeamsTeamIdActivityRoute
   '/_public/projects/$projectId/auth/teams/$teamId/members': typeof PublicProjectsProjectIdAuthTeamsTeamIdMembersRoute
@@ -5351,6 +5420,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/apps'
     | '/projects/$projectId/auth'
     | '/projects/$projectId/databases'
+    | '/projects/$projectId/distribution'
     | '/projects/$projectId/explorer'
     | '/projects/$projectId/firewall'
     | '/projects/$projectId/functions'
@@ -5364,7 +5434,6 @@ export interface FileRouteTypes {
     | '/projects/$projectId/reviews'
     | '/projects/$projectId/settings'
     | '/projects/$projectId/storage'
-    | '/projects/$projectId/stores'
     | '/projects/$projectId/usage'
     | '/projects/$projectId/videos'
     | '/agent/automations/'
@@ -5397,6 +5466,10 @@ export interface FileRouteTypes {
     | '/projects/$projectId/auth/templates'
     | '/projects/$projectId/databases/$databaseId'
     | '/projects/$projectId/databases/create'
+    | '/projects/$projectId/distribution/$appId'
+    | '/projects/$projectId/distribution/connections'
+    | '/projects/$projectId/distribution/create'
+    | '/projects/$projectId/distribution/signing'
     | '/projects/$projectId/environments/create'
     | '/projects/$projectId/firewall/create'
     | '/projects/$projectId/functions/$functionId'
@@ -5435,6 +5508,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/marketplace/'
     | '/projects/$projectId/auth/'
     | '/projects/$projectId/databases/'
+    | '/projects/$projectId/distribution/'
     | '/projects/$projectId/firewall/'
     | '/projects/$projectId/functions/'
     | '/projects/$projectId/messaging/'
@@ -5444,7 +5518,6 @@ export interface FileRouteTypes {
     | '/projects/$projectId/settings/'
     | '/projects/$projectId/sites/'
     | '/projects/$projectId/storage/'
-    | '/projects/$projectId/stores/'
     | '/projects/$projectId/usage/'
     | '/projects/$projectId/videos/'
     | '/organizations/$orgId/agent/automations/$automationId'
@@ -5477,6 +5550,9 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId'
     | '/projects/$projectId/databases/mysql/$databaseId'
     | '/projects/$projectId/databases/postgres/$databaseId'
+    | '/projects/$projectId/distribution/$appId/settings'
+    | '/projects/$projectId/distribution/$appId/targets'
+    | '/projects/$projectId/distribution/$appId/variables'
     | '/projects/$projectId/functions/$functionId/deployments'
     | '/projects/$projectId/functions/$functionId/domains'
     | '/projects/$projectId/functions/$functionId/executions'
@@ -5521,6 +5597,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/marketplace/$appId/'
     | '/projects/$projectId/analytics/$propertyId/'
     | '/projects/$projectId/auth/users/'
+    | '/projects/$projectId/distribution/$appId/'
     | '/projects/$projectId/functions/$functionId/'
     | '/projects/$projectId/functions/create/'
     | '/projects/$projectId/messaging/$messageId/'
@@ -5531,7 +5608,6 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/$siteId/'
     | '/projects/$projectId/sites/create/'
     | '/projects/$projectId/storage/$bucketId/'
-    | '/projects/$projectId/stores/$appId/'
     | '/projects/$projectId/videos/$videoId/'
     | '/projects/$projectId/auth/teams/$teamId/activity'
     | '/projects/$projectId/auth/teams/$teamId/members'
@@ -5876,6 +5952,9 @@ export interface FileRouteTypes {
     | '/projects/$projectId/auth/templates'
     | '/projects/$projectId/databases/$databaseId'
     | '/projects/$projectId/databases/create'
+    | '/projects/$projectId/distribution/connections'
+    | '/projects/$projectId/distribution/create'
+    | '/projects/$projectId/distribution/signing'
     | '/projects/$projectId/environments/create'
     | '/projects/$projectId/firewall/create'
     | '/projects/$projectId/functions/editor'
@@ -5905,6 +5984,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/marketplace'
     | '/projects/$projectId/auth'
     | '/projects/$projectId/databases'
+    | '/projects/$projectId/distribution'
     | '/projects/$projectId/firewall'
     | '/projects/$projectId/functions'
     | '/projects/$projectId/messaging'
@@ -5914,7 +5994,6 @@ export interface FileRouteTypes {
     | '/projects/$projectId/settings'
     | '/projects/$projectId/sites'
     | '/projects/$projectId/storage'
-    | '/projects/$projectId/stores'
     | '/projects/$projectId/usage'
     | '/projects/$projectId/videos'
     | '/organizations/$orgId/agent/automations/$automationId'
@@ -5944,6 +6023,9 @@ export interface FileRouteTypes {
     | '/projects/$projectId/auth/policies/users'
     | '/projects/$projectId/auth/teams/$teamId'
     | '/projects/$projectId/auth/users/$userId'
+    | '/projects/$projectId/distribution/$appId/settings'
+    | '/projects/$projectId/distribution/$appId/targets'
+    | '/projects/$projectId/distribution/$appId/variables'
     | '/projects/$projectId/functions/$functionId/executions'
     | '/projects/$projectId/functions/$functionId/firewall'
     | '/projects/$projectId/functions/$functionId/security'
@@ -5980,6 +6062,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/marketplace/$appId'
     | '/projects/$projectId/analytics/$propertyId'
     | '/projects/$projectId/auth/users'
+    | '/projects/$projectId/distribution/$appId'
     | '/projects/$projectId/functions/$functionId'
     | '/projects/$projectId/functions/create'
     | '/projects/$projectId/messaging/$messageId'
@@ -5990,7 +6073,6 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/$siteId'
     | '/projects/$projectId/sites/create'
     | '/projects/$projectId/storage/$bucketId'
-    | '/projects/$projectId/stores/$appId'
     | '/projects/$projectId/videos/$videoId'
     | '/projects/$projectId/auth/teams/$teamId/activity'
     | '/projects/$projectId/auth/teams/$teamId/members'
@@ -6317,6 +6399,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/apps'
     | '/_public/projects/$projectId/auth'
     | '/_public/projects/$projectId/databases'
+    | '/_public/projects/$projectId/distribution'
     | '/_public/projects/$projectId/explorer'
     | '/_public/projects/$projectId/firewall'
     | '/_public/projects/$projectId/functions'
@@ -6330,7 +6413,6 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/reviews'
     | '/_public/projects/$projectId/settings'
     | '/_public/projects/$projectId/storage'
-    | '/_public/projects/$projectId/stores'
     | '/_public/projects/$projectId/usage'
     | '/_public/projects/$projectId/videos'
     | '/_public/agent/automations/'
@@ -6363,6 +6445,10 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/auth/templates'
     | '/_public/projects/$projectId/databases/$databaseId'
     | '/_public/projects/$projectId/databases/create'
+    | '/_public/projects/$projectId/distribution/$appId'
+    | '/_public/projects/$projectId/distribution/connections'
+    | '/_public/projects/$projectId/distribution/create'
+    | '/_public/projects/$projectId/distribution/signing'
     | '/_public/projects/$projectId/environments/create'
     | '/_public/projects/$projectId/firewall/create'
     | '/_public/projects/$projectId/functions/$functionId'
@@ -6401,6 +6487,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/marketplace/'
     | '/_public/projects/$projectId/auth/'
     | '/_public/projects/$projectId/databases/'
+    | '/_public/projects/$projectId/distribution/'
     | '/_public/projects/$projectId/firewall/'
     | '/_public/projects/$projectId/functions/'
     | '/_public/projects/$projectId/messaging/'
@@ -6410,7 +6497,6 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/settings/'
     | '/_public/projects/$projectId/sites/'
     | '/_public/projects/$projectId/storage/'
-    | '/_public/projects/$projectId/stores/'
     | '/_public/projects/$projectId/usage/'
     | '/_public/projects/$projectId/videos/'
     | '/_public/organizations/$orgId/agent/automations/$automationId'
@@ -6443,6 +6529,9 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId'
     | '/_public/projects/$projectId/databases/mysql/$databaseId'
     | '/_public/projects/$projectId/databases/postgres/$databaseId'
+    | '/_public/projects/$projectId/distribution/$appId/settings'
+    | '/_public/projects/$projectId/distribution/$appId/targets'
+    | '/_public/projects/$projectId/distribution/$appId/variables'
     | '/_public/projects/$projectId/functions/$functionId/deployments'
     | '/_public/projects/$projectId/functions/$functionId/domains'
     | '/_public/projects/$projectId/functions/$functionId/executions'
@@ -6487,6 +6576,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/marketplace/$appId/'
     | '/_public/projects/$projectId/analytics/$propertyId/'
     | '/_public/projects/$projectId/auth/users/'
+    | '/_public/projects/$projectId/distribution/$appId/'
     | '/_public/projects/$projectId/functions/$functionId/'
     | '/_public/projects/$projectId/functions/create/'
     | '/_public/projects/$projectId/messaging/$messageId/'
@@ -6497,7 +6587,6 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/sites/$siteId/'
     | '/_public/projects/$projectId/sites/create/'
     | '/_public/projects/$projectId/storage/$bucketId/'
-    | '/_public/projects/$projectId/stores/$appId/'
     | '/_public/projects/$projectId/videos/$videoId/'
     | '/_public/projects/$projectId/auth/teams/$teamId/activity'
     | '/_public/projects/$projectId/auth/teams/$teamId/members'
@@ -8091,6 +8180,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesRouteImport
       parentRoute: typeof PublicProjectsProjectIdRoute
     }
+    '/_public/projects/$projectId/distribution': {
+      id: '/_public/projects/$projectId/distribution'
+      path: '/distribution'
+      fullPath: '/projects/$projectId/distribution'
+      preLoaderRoute: typeof PublicProjectsProjectIdDistributionRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
     '/_public/projects/$projectId/explorer': {
       id: '/_public/projects/$projectId/explorer'
       path: '/explorer'
@@ -8180,13 +8276,6 @@ declare module '@tanstack/react-router' {
       path: '/storage'
       fullPath: '/projects/$projectId/storage'
       preLoaderRoute: typeof PublicProjectsProjectIdStorageRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRoute
-    }
-    '/_public/projects/$projectId/stores': {
-      id: '/_public/projects/$projectId/stores'
-      path: '/stores'
-      fullPath: '/projects/$projectId/stores'
-      preLoaderRoute: typeof PublicProjectsProjectIdStoresRouteImport
       parentRoute: typeof PublicProjectsProjectIdRoute
     }
     '/_public/projects/$projectId/usage': {
@@ -8427,6 +8516,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesCreateRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesRoute
     }
+    '/_public/projects/$projectId/distribution/': {
+      id: '/_public/projects/$projectId/distribution/'
+      path: '/'
+      fullPath: '/projects/$projectId/distribution/'
+      preLoaderRoute: typeof PublicProjectsProjectIdDistributionIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDistributionRoute
+    }
+    '/_public/projects/$projectId/distribution/$appId': {
+      id: '/_public/projects/$projectId/distribution/$appId'
+      path: '/$appId'
+      fullPath: '/projects/$projectId/distribution/$appId'
+      preLoaderRoute: typeof PublicProjectsProjectIdDistributionAppIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDistributionRoute
+    }
+    '/_public/projects/$projectId/distribution/connections': {
+      id: '/_public/projects/$projectId/distribution/connections'
+      path: '/connections'
+      fullPath: '/projects/$projectId/distribution/connections'
+      preLoaderRoute: typeof PublicProjectsProjectIdDistributionConnectionsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDistributionRoute
+    }
+    '/_public/projects/$projectId/distribution/create': {
+      id: '/_public/projects/$projectId/distribution/create'
+      path: '/create'
+      fullPath: '/projects/$projectId/distribution/create'
+      preLoaderRoute: typeof PublicProjectsProjectIdDistributionCreateRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDistributionRoute
+    }
+    '/_public/projects/$projectId/distribution/signing': {
+      id: '/_public/projects/$projectId/distribution/signing'
+      path: '/signing'
+      fullPath: '/projects/$projectId/distribution/signing'
+      preLoaderRoute: typeof PublicProjectsProjectIdDistributionSigningRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDistributionRoute
+    }
     '/_public/projects/$projectId/environments/create': {
       id: '/_public/projects/$projectId/environments/create'
       path: '/environments/create'
@@ -8664,13 +8788,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/$projectId/storage/$bucketId'
       preLoaderRoute: typeof PublicProjectsProjectIdStorageBucketIdRouteImport
       parentRoute: typeof PublicProjectsProjectIdStorageRoute
-    }
-    '/_public/projects/$projectId/stores/': {
-      id: '/_public/projects/$projectId/stores/'
-      path: '/'
-      fullPath: '/projects/$projectId/stores/'
-      preLoaderRoute: typeof PublicProjectsProjectIdStoresIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdStoresRoute
     }
     '/_public/projects/$projectId/usage/': {
       id: '/_public/projects/$projectId/usage/'
@@ -8994,6 +9111,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesRoute
     }
+    '/_public/projects/$projectId/distribution/$appId/': {
+      id: '/_public/projects/$projectId/distribution/$appId/'
+      path: '/'
+      fullPath: '/projects/$projectId/distribution/$appId/'
+      preLoaderRoute: typeof PublicProjectsProjectIdDistributionAppIdIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDistributionAppIdRoute
+    }
+    '/_public/projects/$projectId/distribution/$appId/settings': {
+      id: '/_public/projects/$projectId/distribution/$appId/settings'
+      path: '/settings'
+      fullPath: '/projects/$projectId/distribution/$appId/settings'
+      preLoaderRoute: typeof PublicProjectsProjectIdDistributionAppIdSettingsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDistributionAppIdRoute
+    }
+    '/_public/projects/$projectId/distribution/$appId/targets': {
+      id: '/_public/projects/$projectId/distribution/$appId/targets'
+      path: '/targets'
+      fullPath: '/projects/$projectId/distribution/$appId/targets'
+      preLoaderRoute: typeof PublicProjectsProjectIdDistributionAppIdTargetsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDistributionAppIdRoute
+    }
+    '/_public/projects/$projectId/distribution/$appId/variables': {
+      id: '/_public/projects/$projectId/distribution/$appId/variables'
+      path: '/variables'
+      fullPath: '/projects/$projectId/distribution/$appId/variables'
+      preLoaderRoute: typeof PublicProjectsProjectIdDistributionAppIdVariablesRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDistributionAppIdRoute
+    }
     '/_public/projects/$projectId/functions/$functionId/': {
       id: '/_public/projects/$projectId/functions/$functionId/'
       path: '/'
@@ -9280,13 +9425,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/$projectId/storage/$bucketId/settings'
       preLoaderRoute: typeof PublicProjectsProjectIdStorageBucketIdSettingsRouteImport
       parentRoute: typeof PublicProjectsProjectIdStorageBucketIdRoute
-    }
-    '/_public/projects/$projectId/stores/$appId/': {
-      id: '/_public/projects/$projectId/stores/$appId/'
-      path: '/$appId'
-      fullPath: '/projects/$projectId/stores/$appId/'
-      preLoaderRoute: typeof PublicProjectsProjectIdStoresAppIdIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdStoresRoute
     }
     '/_public/projects/$projectId/usage/$categoryId/$metricId': {
       id: '/_public/projects/$projectId/usage/$categoryId/$metricId'
@@ -11406,6 +11544,57 @@ const PublicProjectsProjectIdDatabasesRouteWithChildren =
     PublicProjectsProjectIdDatabasesRouteChildren,
   )
 
+interface PublicProjectsProjectIdDistributionAppIdRouteChildren {
+  PublicProjectsProjectIdDistributionAppIdSettingsRoute: typeof PublicProjectsProjectIdDistributionAppIdSettingsRoute
+  PublicProjectsProjectIdDistributionAppIdTargetsRoute: typeof PublicProjectsProjectIdDistributionAppIdTargetsRoute
+  PublicProjectsProjectIdDistributionAppIdVariablesRoute: typeof PublicProjectsProjectIdDistributionAppIdVariablesRoute
+  PublicProjectsProjectIdDistributionAppIdIndexRoute: typeof PublicProjectsProjectIdDistributionAppIdIndexRoute
+}
+
+const PublicProjectsProjectIdDistributionAppIdRouteChildren: PublicProjectsProjectIdDistributionAppIdRouteChildren =
+  {
+    PublicProjectsProjectIdDistributionAppIdSettingsRoute:
+      PublicProjectsProjectIdDistributionAppIdSettingsRoute,
+    PublicProjectsProjectIdDistributionAppIdTargetsRoute:
+      PublicProjectsProjectIdDistributionAppIdTargetsRoute,
+    PublicProjectsProjectIdDistributionAppIdVariablesRoute:
+      PublicProjectsProjectIdDistributionAppIdVariablesRoute,
+    PublicProjectsProjectIdDistributionAppIdIndexRoute:
+      PublicProjectsProjectIdDistributionAppIdIndexRoute,
+  }
+
+const PublicProjectsProjectIdDistributionAppIdRouteWithChildren =
+  PublicProjectsProjectIdDistributionAppIdRoute._addFileChildren(
+    PublicProjectsProjectIdDistributionAppIdRouteChildren,
+  )
+
+interface PublicProjectsProjectIdDistributionRouteChildren {
+  PublicProjectsProjectIdDistributionAppIdRoute: typeof PublicProjectsProjectIdDistributionAppIdRouteWithChildren
+  PublicProjectsProjectIdDistributionConnectionsRoute: typeof PublicProjectsProjectIdDistributionConnectionsRoute
+  PublicProjectsProjectIdDistributionCreateRoute: typeof PublicProjectsProjectIdDistributionCreateRoute
+  PublicProjectsProjectIdDistributionSigningRoute: typeof PublicProjectsProjectIdDistributionSigningRoute
+  PublicProjectsProjectIdDistributionIndexRoute: typeof PublicProjectsProjectIdDistributionIndexRoute
+}
+
+const PublicProjectsProjectIdDistributionRouteChildren: PublicProjectsProjectIdDistributionRouteChildren =
+  {
+    PublicProjectsProjectIdDistributionAppIdRoute:
+      PublicProjectsProjectIdDistributionAppIdRouteWithChildren,
+    PublicProjectsProjectIdDistributionConnectionsRoute:
+      PublicProjectsProjectIdDistributionConnectionsRoute,
+    PublicProjectsProjectIdDistributionCreateRoute:
+      PublicProjectsProjectIdDistributionCreateRoute,
+    PublicProjectsProjectIdDistributionSigningRoute:
+      PublicProjectsProjectIdDistributionSigningRoute,
+    PublicProjectsProjectIdDistributionIndexRoute:
+      PublicProjectsProjectIdDistributionIndexRoute,
+  }
+
+const PublicProjectsProjectIdDistributionRouteWithChildren =
+  PublicProjectsProjectIdDistributionRoute._addFileChildren(
+    PublicProjectsProjectIdDistributionRouteChildren,
+  )
+
 interface PublicProjectsProjectIdFirewallRouteChildren {
   PublicProjectsProjectIdFirewallCreateRoute: typeof PublicProjectsProjectIdFirewallCreateRoute
   PublicProjectsProjectIdFirewallIndexRoute: typeof PublicProjectsProjectIdFirewallIndexRoute
@@ -11889,24 +12078,6 @@ const PublicProjectsProjectIdStorageRouteWithChildren =
     PublicProjectsProjectIdStorageRouteChildren,
   )
 
-interface PublicProjectsProjectIdStoresRouteChildren {
-  PublicProjectsProjectIdStoresIndexRoute: typeof PublicProjectsProjectIdStoresIndexRoute
-  PublicProjectsProjectIdStoresAppIdIndexRoute: typeof PublicProjectsProjectIdStoresAppIdIndexRoute
-}
-
-const PublicProjectsProjectIdStoresRouteChildren: PublicProjectsProjectIdStoresRouteChildren =
-  {
-    PublicProjectsProjectIdStoresIndexRoute:
-      PublicProjectsProjectIdStoresIndexRoute,
-    PublicProjectsProjectIdStoresAppIdIndexRoute:
-      PublicProjectsProjectIdStoresAppIdIndexRoute,
-  }
-
-const PublicProjectsProjectIdStoresRouteWithChildren =
-  PublicProjectsProjectIdStoresRoute._addFileChildren(
-    PublicProjectsProjectIdStoresRouteChildren,
-  )
-
 interface PublicProjectsProjectIdUsageCategoryIdRouteChildren {
   PublicProjectsProjectIdUsageCategoryIdMetricIdRoute: typeof PublicProjectsProjectIdUsageCategoryIdMetricIdRoute
 }
@@ -12177,6 +12348,7 @@ interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdAppsRoute: typeof PublicProjectsProjectIdAppsRouteWithChildren
   PublicProjectsProjectIdAuthRoute: typeof PublicProjectsProjectIdAuthRouteWithChildren
   PublicProjectsProjectIdDatabasesRoute: typeof PublicProjectsProjectIdDatabasesRouteWithChildren
+  PublicProjectsProjectIdDistributionRoute: typeof PublicProjectsProjectIdDistributionRouteWithChildren
   PublicProjectsProjectIdExplorerRoute: typeof PublicProjectsProjectIdExplorerRoute
   PublicProjectsProjectIdFirewallRoute: typeof PublicProjectsProjectIdFirewallRouteWithChildren
   PublicProjectsProjectIdFunctionsRoute: typeof PublicProjectsProjectIdFunctionsRouteWithChildren
@@ -12190,7 +12362,6 @@ interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdReviewsRoute: typeof PublicProjectsProjectIdReviewsRouteWithChildren
   PublicProjectsProjectIdSettingsRoute: typeof PublicProjectsProjectIdSettingsRouteWithChildren
   PublicProjectsProjectIdStorageRoute: typeof PublicProjectsProjectIdStorageRouteWithChildren
-  PublicProjectsProjectIdStoresRoute: typeof PublicProjectsProjectIdStoresRouteWithChildren
   PublicProjectsProjectIdUsageRoute: typeof PublicProjectsProjectIdUsageRouteWithChildren
   PublicProjectsProjectIdVideosRoute: typeof PublicProjectsProjectIdVideosRouteWithChildren
   PublicProjectsProjectIdIndexRoute: typeof PublicProjectsProjectIdIndexRoute
@@ -12214,6 +12385,8 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
       PublicProjectsProjectIdAuthRouteWithChildren,
     PublicProjectsProjectIdDatabasesRoute:
       PublicProjectsProjectIdDatabasesRouteWithChildren,
+    PublicProjectsProjectIdDistributionRoute:
+      PublicProjectsProjectIdDistributionRouteWithChildren,
     PublicProjectsProjectIdExplorerRoute: PublicProjectsProjectIdExplorerRoute,
     PublicProjectsProjectIdFirewallRoute:
       PublicProjectsProjectIdFirewallRouteWithChildren,
@@ -12237,8 +12410,6 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
       PublicProjectsProjectIdSettingsRouteWithChildren,
     PublicProjectsProjectIdStorageRoute:
       PublicProjectsProjectIdStorageRouteWithChildren,
-    PublicProjectsProjectIdStoresRoute:
-      PublicProjectsProjectIdStoresRouteWithChildren,
     PublicProjectsProjectIdUsageRoute:
       PublicProjectsProjectIdUsageRouteWithChildren,
     PublicProjectsProjectIdVideosRoute:

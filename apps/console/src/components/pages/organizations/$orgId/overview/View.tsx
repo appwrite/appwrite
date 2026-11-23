@@ -5,7 +5,8 @@ import {
   useLocation,
   useSearch,
   useMatches,
-  useRouterState} from '@tanstack/react-router'
+  useRouterState,
+} from '@tanstack/react-router'
 import {
   Plus,
   Folder,
@@ -31,7 +32,8 @@ import {
   KeyRound,
   Handshake,
   Pin,
-  PinOff} from '@/lib/icons'
+  PinOff,
+} from '@/lib/icons'
 import { useSequentialShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import { useGlobalCommandShortcuts } from '@/lib/keyboard-shortcuts/use-global-command-shortcuts'
 import { type Organization, type TeamMember } from '@/lib/utils/mock-data'
@@ -73,12 +75,14 @@ import {
   updateAccountPrefs,
   mapProjectToListItem,
   useProjectListRequestsUsage,
-  formatProjectNameForDisplay} from '@/lib/react-query/hooks'
+  formatProjectNameForDisplay,
+} from '@/lib/react-query/hooks'
 import {
   parsePinnedProjectIds,
   buildPinnedProjectIdsPrefs,
   reorderPinnedProjectIds,
-  MAX_PINNED_PROJECTS} from '@/lib/team-prefs-keys'
+  MAX_PINNED_PROJECTS,
+} from '@/lib/team-prefs-keys'
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   prefetchOrganizationOverviewData,
@@ -106,13 +110,15 @@ import {
   getFirstAllowedOrgOverviewPath,
   canShowOrgBillingNav,
   canShowOrgComplianceNav,
-  canSwitchOrganizations} from '@/lib/console-access-checks'
+  canSwitchOrganizations,
+} from '@/lib/console-access-checks'
 import { OrgMemberContextMenu } from './_components/OrgMemberContextMenu'
 import { ProjectContextMenu } from './_components/ProjectContextMenu'
 import { ProjectsEmptyState } from './_components/ProjectsEmptyState'
 import {
   ProjectListCardFooter,
-  ProjectListCardMain} from './_components/ProjectListCardContent'
+  ProjectListCardMain,
+} from './_components/ProjectListCardContent'
 import { ProjectListCardRequestsChart } from './_components/ProjectListRequestsChart'
 import { ProjectsListTable } from './_components/ProjectsListTable'
 import {
@@ -124,13 +130,15 @@ import { InitOrgPromoBanner } from './_components/InitOrgPromoBanner'
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger} from '@/components/ui/popover'
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator} from '@/components/ui/dropdown-menu'
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import {
@@ -139,12 +147,14 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger} from '@/components/ui/dialog'
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger} from '@/components/ui/tooltip'
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { ClaimToUnlock } from '@/components/global/shared/ClaimToUnlock'
 import {
   useState,
@@ -152,12 +162,14 @@ import {
   useMemo,
   useRef,
   useCallback,
-  type DragEvent} from 'react'
+  type DragEvent,
+} from 'react'
 import {
   useQuery,
   useMutation,
   useQueryClient,
-  keepPreviousData} from '@tanstack/react-query'
+  keepPreviousData,
+} from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useAuth } from '@/components/global/auth/RequireAuth'
@@ -216,10 +228,12 @@ import { isUsageStatsCapabilityResolved } from '@/lib/console-profiles'
 import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
 import {
   SettingsCardsList,
-  type SettingsCardItem} from '@/components/global/shared/settings-search/SettingsCardsList'
+  type SettingsCardItem,
+} from '@/components/global/shared/settings-search/SettingsCardsList'
 import {
   ORG_SETTINGS_CARD_INDEX,
-  SOC2_SETTINGS_KEYWORDS} from '@/lib/settings-search/org-settings-cards'
+  SOC2_SETTINGS_KEYWORDS,
+} from '@/lib/settings-search/org-settings-cards'
 import { useDebugMode } from '@/components/global/providers/DebugMode'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
@@ -228,11 +242,13 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow} from '@/components/ui/table'
+  TableRow,
+} from '@/components/ui/table'
 import {
   RESOURCE_CARD_GRID_CLASSNAME,
   RESOURCE_CARD_INTERACTIVE_CLASSNAME,
-  RESOURCE_CARD_PADDED_CLASSNAME} from '@/components/pages/projects/$projectId/shared/ResourceCard'
+  RESOURCE_CARD_PADDED_CLASSNAME,
+} from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
@@ -255,7 +271,10 @@ type OrgRoutePath =
   | '/organizations/$orgId/settings/compliance'
   | '/organizations/$orgId/settings/oauth-apps'
   | '/organizations/$orgId/settings/partners'
-import { analyticsAttrs, getOrgTabAnalyticsAction } from '@/lib/analytics-actions'
+import {
+  analyticsAttrs,
+  getOrgTabAnalyticsAction,
+} from '@/lib/analytics-actions'
 
 /** Pro orgs with at least this many members see the Enterprise access line. */
 const ENTERPRISE_NOTE_MIN_MEMBERS = 5
@@ -285,27 +304,32 @@ const ROLE_OPTIONS = [
     value: 'owner',
     label: 'Owner',
     icon: Shield,
-    description: 'Full control over all aspects including team and billing.'},
+    description: 'Full control over all aspects including team and billing.',
+  },
   {
     value: 'developer',
     label: 'Developer',
     icon: Code,
-    description: 'All resources except team management and billing writes.'},
+    description: 'All resources except team management and billing writes.',
+  },
   {
     value: 'editor',
     label: 'Editor',
     icon: Edit,
-    description: 'Can modify most resources but not critical backend.'},
+    description: 'Can modify most resources but not critical backend.',
+  },
   {
     value: 'analyst',
     label: 'Analyst',
     icon: Eye,
-    description: 'Read-only access across all resources.'},
+    description: 'Read-only access across all resources.',
+  },
   {
     value: 'billing',
     label: 'Billing',
     icon: CreditCard,
-    description: 'Billing and payment management only.'},
+    description: 'Billing and payment management only.',
+  },
 ] as const
 
 function orgMembershipRoleDisplay(role: string): {
@@ -316,7 +340,8 @@ function orgMembershipRoleDisplay(role: string): {
   if (opt) return { Icon: opt.icon, label: opt.label }
   return {
     Icon: Users,
-    label: role.charAt(0).toUpperCase() + role.slice(1)}
+    label: role.charAt(0).toUpperCase() + role.slice(1),
+  }
 }
 
 /** Single source for role badges, so the table and its tooltips cannot drift. */
@@ -347,7 +372,8 @@ function EmptyMemberAvatarSlot({
   zIndex,
   onClick,
   disabled,
-  disabledTooltip}: {
+  disabledTooltip,
+}: {
   zIndex: number
   onClick: () => void
   disabled?: boolean
@@ -392,7 +418,6 @@ function EmptyMemberAvatarSlot({
     </TooltipProvider>
   )
 }
-
 
 interface OrgOverviewProps {
   tab?: 'projects' | 'marketplace' | 'domains' | 'settings'
@@ -515,9 +540,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     const segment = pathParts[orgIndex + 2]
     const resourceId = pathParts[orgIndex + 3]
 
-    return (
-      !!resourceId && (segment === 'apps' || segment === 'marketplace')
-    )
+    return !!resourceId && (segment === 'apps' || segment === 'marketplace')
   }, [matches, location.pathname])
 
   // Check if we should render children (domains / marketplace list) vs tab content
@@ -624,13 +647,15 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         label: t('General'),
         to: '/organizations/$orgId/settings',
         icon: Settings,
-        keywords: ['general', 'overview', 'name', 'delete']},
+        keywords: ['general', 'overview', 'name', 'delete'],
+      },
       {
         id: 'members',
         label: t('Members'),
         to: '/organizations/$orgId/settings/members',
         icon: Users,
-        keywords: ['members', 'team', 'invite', 'roles']},
+        keywords: ['members', 'team', 'invite', 'roles'],
+      },
       ...(features.billing
         ? [
             {
@@ -638,7 +663,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               label: t('Billing'),
               to: '/organizations/$orgId/settings/billing',
               icon: CreditCard,
-              keywords: ['billing', 'payment', 'invoice', 'subscription']},
+              keywords: ['billing', 'payment', 'invoice', 'subscription'],
+            },
           ]
         : []),
       ...(features.compliance
@@ -655,17 +681,19 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 'hipaa',
                 'gdpr',
                 ...SOC2_SETTINGS_KEYWORDS,
-              ]},
+              ],
+            },
           ]
         : []),
-      ...(canShowOrgOAuthAppsSettings(access, features)
+      ...(canShowOrgOAuthAppsSettings(access)
         ? [
             {
               id: 'oauth-apps',
               label: t('OAuth apps'),
               to: '/organizations/$orgId/settings/oauth-apps',
               icon: KeyRound,
-              keywords: ['oauth', 'sso', 'apps', 'login']},
+              keywords: ['oauth', 'sso', 'apps', 'login'],
+            },
           ]
         : []),
       ...(features.orgApiKeys
@@ -675,7 +703,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               label: t('Partners'),
               to: '/organizations/$orgId/settings/partners',
               icon: Handshake,
-              keywords: ['partners', 'api', 'keys', 'credentials', 'partners keys']},
+              keywords: [
+                'partners',
+                'api',
+                'keys',
+                'credentials',
+                'partners keys',
+              ],
+            },
           ]
         : []),
     ]
@@ -689,7 +724,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           if (item.id === 'compliance')
             return canAccessOrgSettingsCompliance(access)
           if (item.id === 'oauth-apps')
-            return canShowOrgOAuthAppsSettings(access, features)
+            return canShowOrgOAuthAppsSettings(access)
           if (item.id === 'partners')
             return canShowOrgApiKeysSettings(access, features)
           return true
@@ -698,7 +733,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
     return filtered.map((item) => ({
       ...item,
-      params: { orgId: orgId ?? '' }}))
+      params: { orgId: orgId ?? '' },
+    }))
   }, [features, access, orgId, t])
 
   const orgSettingsCardIndex = useMemo(() => {
@@ -732,7 +768,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       navigate({
         to: target as '/organizations/$orgId',
         params: { orgId },
-        replace: true})
+        replace: true,
+      })
     }
   }, [
     features.orgRoles,
@@ -782,19 +819,21 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       navigate({
         to: '/organizations/$orgId/settings',
         params: { orgId: orgId! },
-        replace: true})
+        replace: true,
+      })
       return
     }
     if (
       (settingsSubTab === 'compliance' && !features.compliance) ||
       (settingsSubTab === 'oauth-apps' &&
-        !canShowOrgOAuthAppsSettings(access, features)) ||
+        !canShowOrgOAuthAppsSettings(access)) ||
       (settingsSubTab === 'partners' && !features.orgApiKeys)
     ) {
       navigate({
         to: '/organizations/$orgId/settings',
         params: { orgId: orgId! },
-        replace: true})
+        replace: true,
+      })
       return
     }
     if (features.orgRoles && activeTab === 'settings') {
@@ -806,7 +845,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         (settingsSubTab === 'compliance' &&
           canAccessOrgSettingsCompliance(access)) ||
         (settingsSubTab === 'oauth-apps' &&
-          canShowOrgOAuthAppsSettings(access, features)) ||
+          canShowOrgOAuthAppsSettings(access)) ||
         (settingsSubTab === 'partners' &&
           canShowOrgApiKeysSettings(access, features))
       if (!allowed) {
@@ -818,7 +857,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         navigate({
           to: firstAllowed as '/organizations/$orgId/settings',
           params: { orgId: orgId! },
-          replace: true})
+          replace: true,
+        })
       }
     }
   }, [activeTab, settingsSubTab, features, access, orgId, navigate])
@@ -842,7 +882,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         navigate({
           to: route,
           params: { orgId },
-          replace: true})
+          replace: true,
+        })
       }
     },
     [navigate, orgId],
@@ -869,7 +910,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   useGlobalCommandShortcuts({
     commandCenterOpen,
     onOpenCommandCenter: openOrgCommandCenter,
-    onOpenShortcutsHelp: openOrgShortcutsHelp})
+    onOpenShortcutsHelp: openOrgShortcutsHelp,
+  })
 
   useSequentialShortcuts(
     {
@@ -894,14 +936,16 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             'c p': () => {
               handleOrgNavigate('projects')
               setCreateProjectDialogOpen(true)
-            }}
+            },
+          }
         : {}),
       ...(canCreateOrganization
         ? { 'c t': () => handleOpenCreateOrganization() }
         : {}),
       ...(canInviteOrgMember(access, features)
         ? { 'c m': () => setInviteDialogOpen(true) }
-        : {})},
+        : {}),
+    },
     { enabled: !commandCenterOpen },
   )
 
@@ -1122,7 +1166,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           // Return empty object if no other params, otherwise return the cleaned object
           return Object.keys(newSearch).length === 0 ? {} : newSearch
         },
-        replace: true})
+        replace: true,
+      })
     }
   }, [
     search,
@@ -1154,7 +1199,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           delete newSearch.create
           return Object.keys(newSearch).length === 0 ? {} : newSearch
         },
-        replace: true})
+        replace: true,
+      })
     }
   }, [
     search,
@@ -1191,7 +1237,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         navigate({
           to: '/organizations/$orgId',
           params: { orgId: fallbackOrgId },
-          replace: true})
+          replace: true,
+        })
       } else {
         // No memberships: empty state is rendered below (avoids /, /upgrade, /account loops).
         return
@@ -1240,8 +1287,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {
-        apiResult: updatedAccount})
-    }})
+        apiResult: updatedAccount,
+      })
+    },
+  })
 
   // Mutation to update organization name
   const updateOrgNameMutation = useMutation({
@@ -1255,7 +1304,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to update organization name'))
-    }})
+    },
+  })
 
   // Mutation to delete organization
   const deleteOrgMutation = useMutation({
@@ -1275,14 +1325,16 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         navigate({
           to: '/organizations/$orgId',
           params: { orgId: remainingOrgs[0].$id },
-          replace: true})
+          replace: true,
+        })
       } else {
         navigate({ to: '/', replace: true })
       }
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to delete organization'))
-    }})
+    },
+  })
 
   // Mutation to create organization
   const createOrgMutation = useCreateOrganization()
@@ -1290,7 +1342,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // Get team ID from URL param (orgId) - no need to wait for selectedOrg state
   // In Appwrite, organizations ARE teams, so we use the organization ID directly as the team ID
   const orgTeamId = orgId || null
-
 
   // Pinned projects: stored in team prefs, excluded from main list
   const { data: consoleTeam } = useConsoleTeam(orgTeamId)
@@ -1322,7 +1373,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   const { data: pinnedProjectsData } = useQuery({
     ...pinnedProjectsQueryOptions(orgTeamId, pinnedIds),
-    placeholderData: keepPreviousData})
+    placeholderData: keepPreviousData,
+  })
 
   const { data: activeProjectsTotalData } = useQuery(
     activeProjectsTotalQueryOptions(orgTeamId, restrictToProjectIds),
@@ -1339,7 +1391,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     data: requestedProjectsData,
     isLoading: activeProjectsLoading,
     isFetching: activeProjectsFetching,
-    error: activeProjectsError} = useQuery({
+    error: activeProjectsError,
+  } = useQuery({
     ...activeProjectsQueryOptions(
       orgTeamId,
       requestedPage - 1,
@@ -1348,7 +1401,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       listExcludePinnedIds,
       restrictToProjectIds,
     ),
-    placeholderData: keepPreviousData})
+    placeholderData: keepPreviousData,
+  })
 
   // Fetch data for the displayed page (what we show - stays until new page is ready); exclude pinned when not searching
   const { data: activeProjectsData, isLoading: displayedProjectsLoading } =
@@ -1361,7 +1415,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         listExcludePinnedIds,
         restrictToProjectIds,
       ),
-      placeholderData: keepPreviousData})
+      placeholderData: keepPreviousData,
+    })
 
   // Only show full loading when we have no data to display (initial load)
   const displayedProjects = activeProjectsData?.projects ?? []
@@ -1476,9 +1531,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           currentPinnedIds.length >= MAX_PINNED_PROJECTS &&
           !currentPinnedIds.includes(projectId)
         ) {
-          throw new Error(
-            `You can pin up to ${MAX_PINNED_PROJECTS} projects`,
-          )
+          throw new Error(`You can pin up to ${MAX_PINNED_PROJECTS} projects`)
         }
         const next = currentPinnedIds.includes(projectId)
           ? currentPinnedIds.filter((id) => id !== projectId)
@@ -1498,8 +1551,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           )
         },
         onError: (error) => {
-          const message =
-            error instanceof Error ? error.message : undefined
+          const message = error instanceof Error ? error.message : undefined
           toast.error(
             message?.startsWith('You can pin up to')
               ? message
@@ -1636,8 +1688,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           name: selectedOrg.name,
           color: 'from-blue-400 to-violet-500',
           members: selectedOrg.members,
-          orgId: selectedOrg.$id},
-        projects: activeProjects},
+          orgId: selectedOrg.$id,
+        },
+        projects: activeProjects,
+      },
     ]
   }, [selectedOrg, activeProjects])
 
@@ -1771,26 +1825,30 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // Memberships table + header avatars: mirror projects list (two queries, keepPreviousData, loader fills cache)
   const {
     data: requestedMembershipsRaw,
-    isFetching: membershipsRequestedFetching} = useQuery({
+    isFetching: membershipsRequestedFetching,
+  } = useQuery({
     ...organizationMembershipsQueryOptions(
       orgId,
       requestedMembershipsPage - 1,
       membershipsPageSize,
       membershipsSearchQuery,
     ),
-    placeholderData: keepPreviousData})
+    placeholderData: keepPreviousData,
+  })
 
   const {
     data: displayedMembershipsRaw,
     isLoading: displayedMembershipsLoading,
-    error: membershipsError} = useQuery({
+    error: membershipsError,
+  } = useQuery({
     ...organizationMembershipsQueryOptions(
       orgId,
       displayedMembershipsPage - 1,
       membershipsPageSize,
       membershipsSearchQuery,
     ),
-    placeholderData: keepPreviousData})
+    placeholderData: keepPreviousData,
+  })
 
   const memberships = useMemo(
     () =>
@@ -1868,25 +1926,29 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       tabs.push({
         id: 'projects',
         label: 'Projects',
-        to: '/organizations/$orgId'})
+        to: '/organizations/$orgId',
+      })
     }
     if (canShowOrgMarketplaceTab(access, features)) {
       tabs.push({
         id: 'marketplace',
         label: 'Marketplace',
-        to: '/organizations/$orgId/marketplace'})
+        to: '/organizations/$orgId/marketplace',
+      })
     }
     if (canShowOrgDomainsTab(access, features)) {
       tabs.push({
         id: 'domains',
         label: 'Domains',
-        to: '/organizations/$orgId/domains'})
+        to: '/organizations/$orgId/domains',
+      })
     }
     if (canShowOrgSettingsTab(access)) {
       tabs.push({
         id: 'settings',
         label: 'Settings',
-        to: '/organizations/$orgId/settings'})
+        to: '/organizations/$orgId/settings',
+      })
     }
     return tabs
   }, [selectedOrg, access, features])
@@ -1898,7 +1960,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         ? projects
         : projects.filter((p) =>
             p.name?.toLowerCase().includes(searchQuery.toLowerCase()),
-          )}))
+          ),
+    }))
     .filter(({ projects }) => projects.length > 0)
 
   // Keep current results until new data is ready: when search is fetching or pagination in flight
@@ -1942,8 +2005,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   ])
 
   const showProjectUsageCharts =
-    features.usageStats ||
-    (isSelfHosted && !isUsageStatsCapabilityResolved())
+    features.usageStats || (isSelfHosted && !isUsageStatsCapabilityResolved())
   // Budget-locked projects cannot load usage APIs (402). Skip those
   // fetches and show N/A on the cards instead.
   const skipProjectCardExtras = showProjectsLockedAlert
@@ -2012,10 +2074,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               queryClient.ensureQueryData(
                 organizationPlanQueryOptions(nextOrgId),
               ),
-              prefetchOrganizationInvoiceDataIfAllowed(
-                queryClient,
-                nextOrgId,
-              ),
+              prefetchOrganizationInvoiceDataIfAllowed(queryClient, nextOrgId),
             ]
           : []),
         ...(features.orgRoles
@@ -2145,7 +2204,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     navigate({
       to: route,
       params: { orgId: org.$id },
-      replace: true})
+      replace: true,
+    })
 
     // Update user prefs with the selected organization
     try {
@@ -2234,7 +2294,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           onCommandCenterOpen: openOrgCommandCenter,
           onCreateOrganization: canCreateOrganization
             ? handleOpenCreateOrganization
-            : undefined}}
+            : undefined,
+        }}
         headerBanner={
           <OrganizationBillingHeaderBanners organizationId={orgId} />
         }
@@ -2261,7 +2322,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         {...analyticsAttrs('organization-switcher')}
                         className="group flex h-8 max-h-8 min-h-8 min-w-0 max-w-full cursor-pointer items-center gap-2 rounded-lg px-2 -ms-2 transition-colors hover:bg-accent"
                       >
-                        <TeamAvatar teamId={selectedOrg.$id} name={selectedOrg.name} size="sm" />
+                        <TeamAvatar
+                          teamId={selectedOrg.$id}
+                          name={selectedOrg.name}
+                          size="sm"
+                        />
                         <h1 className="m-0 min-w-0 max-w-[10rem] truncate text-[13px] font-semibold leading-tight text-foreground sm:max-w-[14rem] md:max-w-[20rem] lg:max-w-[28rem]">
                           {selectedOrg.name}
                         </h1>
@@ -2306,7 +2371,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               selectedOrg.$id === org.$id && 'bg-accent',
                             )}
                           >
-                            <TeamAvatar teamId={org.$id} name={org.name} size="md" />
+                            <TeamAvatar
+                              teamId={org.$id}
+                              name={org.name}
+                              size="md"
+                            />
                             <div className="flex-1 min-w-0">
                               <p className="truncate text-[13px] font-medium text-foreground">
                                 {org.name}
@@ -2365,7 +2434,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   </Popover>
                 ) : (
                   <div className="flex h-8 max-h-8 min-h-8 min-w-0 max-w-full items-center gap-2 px-2 -ms-2">
-                    <TeamAvatar teamId={selectedOrg.$id} name={selectedOrg.name} size="sm" />
+                    <TeamAvatar
+                      teamId={selectedOrg.$id}
+                      name={selectedOrg.name}
+                      size="sm"
+                    />
                     <h1 className="m-0 min-w-0 max-w-[10rem] truncate text-[13px] font-semibold leading-tight text-foreground sm:max-w-[14rem] md:max-w-[20rem] lg:max-w-[28rem]">
                       {selectedOrg.name}
                     </h1>
@@ -2492,7 +2565,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                     style={{
                                       zIndex:
                                         emptySlotCount +
-                                        (displayMembers.length - index)}}
+                                        (displayMembers.length - index),
+                                    }}
                                     title={member.userName}
                                   >
                                     <PhotoAvatar
@@ -2572,27 +2646,27 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 orgTabs.map((tab) => {
                   const tabAnalytics = getOrgTabAnalyticsAction(tab.id)
                   return (
-                  <Link
-                    key={tab.id}
-                    to={tab.to}
-                    params={{ orgId: orgId ?? '' }}
-                    replace
-                    role="tab"
-                    aria-selected={activeTab === tab.id}
-                    {...(tabAnalytics ? analyticsAttrs(tabAnalytics) : {})}
-                    className={cn(
-                      'relative flex h-[2.75rem] shrink-0 items-center gap-1.5 px-3 text-[13px] font-medium leading-none transition-colors rounded-sm',
-                      'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
-                      activeTab === tab.id
-                        ? 'text-foreground'
-                        : 'text-muted-foreground hover:text-foreground/80',
-                    )}
-                  >
-                    {t(tab.label)}
-                    {activeTab === tab.id && (
-                      <div className="absolute bottom-0 start-0 end-0 h-0.5 bg-foreground" />
-                    )}
-                  </Link>
+                    <Link
+                      key={tab.id}
+                      to={tab.to}
+                      params={{ orgId: orgId ?? '' }}
+                      replace
+                      role="tab"
+                      aria-selected={activeTab === tab.id}
+                      {...(tabAnalytics ? analyticsAttrs(tabAnalytics) : {})}
+                      className={cn(
+                        'relative flex h-[2.75rem] shrink-0 items-center gap-1.5 px-3 text-[13px] font-medium leading-none transition-colors rounded-sm',
+                        'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                        activeTab === tab.id
+                          ? 'text-foreground'
+                          : 'text-muted-foreground hover:text-foreground/80',
+                      )}
+                    >
+                      {t(tab.label)}
+                      {activeTab === tab.id && (
+                        <div className="absolute bottom-0 start-0 end-0 h-0.5 bg-foreground" />
+                      )}
+                    </Link>
                   )
                 })
               ) : orgId ? (
@@ -2626,7 +2700,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             const planName =
               resolveOrganizationPlanDisplayLabel({
                 planName: organizationPlan?.name ?? null,
-                planId: organizationPlan?.$id}) || 'plan'
+                planId: organizationPlan?.$id,
+              }) || 'plan'
 
             // Only show if limit exists and is greater than 0
             if (limit !== null && limit > 0) {
@@ -2719,7 +2794,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             const planName =
               resolveOrganizationPlanDisplayLabel({
                 planName: organizationPlan?.name ?? null,
-                planId: organizationPlan?.$id}) || 'plan'
+                planId: organizationPlan?.$id,
+              }) || 'plan'
 
             // Only show if limit exists, is greater than 0, and user has reached it
             if (limit !== null && limit > 0) {
@@ -2814,128 +2890,133 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       <>
                         {/* Toolbar: Search + Filters + Create */}
                         {!showsFirstRunProjectsEmptyState && (
-                        <div className="mb-4 flex items-center gap-3">
-                          <div className="relative min-w-0 flex-1 @[640px]:max-w-xs">
-                            <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                            <Input
-                              placeholder={t('Search projects...')}
-                              value={searchQuery}
-                              onChange={(e) => setSearchQuery(e.target.value)}
-                              className="h-9 border-border bg-accent/50 ps-10 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                            />
-                          </div>
+                          <div className="mb-4 flex items-center gap-3">
+                            <div className="relative min-w-0 flex-1 @[640px]:max-w-xs">
+                              <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                              <Input
+                                placeholder={t('Search projects...')}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="h-9 border-border bg-accent/50 ps-10 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                              />
+                            </div>
 
-                          <ServiceListViewToggle
-                            viewMode={projectsViewMode}
-                            onViewModeChange={setProjectsViewMode}
-                          />
-
-                          <div className="ms-auto flex shrink-0 items-center gap-2">
-                          {isDebugModeOpen && (
-                            <LightningCollectorTrigger
-                              open={lightningCollectorOpen}
-                              onOpenChange={setLightningCollectorOpen}
+                            <ServiceListViewToggle
+                              viewMode={projectsViewMode}
+                              onViewModeChange={setProjectsViewMode}
                             />
-                          )}
-                          {(() => {
-                            if (
-                              !canCreateProject(access, features) ||
-                              zeroAccount
-                            ) {
-                              return (
-                                <TooltipProvider delayDuration={0}>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <span>
-                                        <Button
-                                          variant="brandCta"
-                                          className="h-9 gap-2 text-[13px] font-medium opacity-50 cursor-not-allowed"
-                                          disabled
-                                          {...analyticsAttrs('create-project')}
-                                        >
-                                          <Plus className="h-4 w-4" />
-                                          {t('Create project')}
-                                        </Button>
-                                      </span>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>
-                                        {zeroAccount
-                                          ? t(
-                                              'Claim this project to create more projects',
-                                            )
-                                          : t(
-                                              "You don't have permission to create projects.",
+
+                            <div className="ms-auto flex shrink-0 items-center gap-2">
+                              {isDebugModeOpen && (
+                                <LightningCollectorTrigger
+                                  open={lightningCollectorOpen}
+                                  onOpenChange={setLightningCollectorOpen}
+                                />
+                              )}
+                              {(() => {
+                                if (
+                                  !canCreateProject(access, features) ||
+                                  zeroAccount
+                                ) {
+                                  return (
+                                    <TooltipProvider delayDuration={0}>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <span>
+                                            <Button
+                                              variant="brandCta"
+                                              className="h-9 gap-2 text-[13px] font-medium opacity-50 cursor-not-allowed"
+                                              disabled
+                                              {...analyticsAttrs(
+                                                'create-project',
+                                              )}
+                                            >
+                                              <Plus className="h-4 w-4" />
+                                              {t('Create project')}
+                                            </Button>
+                                          </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>
+                                            {zeroAccount
+                                              ? t(
+                                                  'Claim this project to create more projects',
+                                                )
+                                              : t(
+                                                  "You don't have permission to create projects.",
+                                                )}
+                                          </p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  )
+                                }
+                                if (!organizationPlan) {
+                                  return (
+                                    <Button
+                                      variant="brandCta"
+                                      className="h-9 gap-2 text-[13px] font-medium"
+                                      onClick={() =>
+                                        setCreateProjectDialogOpen(true)
+                                      }
+                                      {...analyticsAttrs('create-project')}
+                                    >
+                                      <Plus className="h-4 w-4" />
+                                      {t('Create project')}
+                                    </Button>
+                                  )
+                                }
+
+                                const projectLimit =
+                                  organizationPlan?.addons?.projects?.limit
+                                const planIncluded =
+                                  organizationPlan?.addons?.projects
+                                    ?.planIncluded
+                                const limitNum = Number(
+                                  projectLimit ?? planIncluded,
+                                )
+                                const limit = isNaN(limitNum) ? null : limitNum
+                                const isAtLimit =
+                                  limit !== null &&
+                                  limit > 0 &&
+                                  totalProjectsCount >= limit
+
+                                return (
+                                  <TooltipProvider delayDuration={0}>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <div>
+                                          <Button
+                                            variant="brandCta"
+                                            className="h-9 gap-2 text-[13px] font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                            disabled={isAtLimit}
+                                            onClick={() =>
+                                              setCreateProjectDialogOpen(true)
+                                            }
+                                            {...analyticsAttrs(
+                                              'create-project',
                                             )}
-                                      </p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              )
-                            }
-                            if (!organizationPlan) {
-                              return (
-                                <Button
-                                  variant="brandCta"
-                                  className="h-9 gap-2 text-[13px] font-medium"
-                                  onClick={() =>
-                                    setCreateProjectDialogOpen(true)
-                                  }
-                                  {...analyticsAttrs('create-project')}
-                                >
-                                  <Plus className="h-4 w-4" />
-                                  {t('Create project')}
-                                </Button>
-                              )
-                            }
-
-                            const projectLimit =
-                              organizationPlan?.addons?.projects?.limit
-                            const planIncluded =
-                              organizationPlan?.addons?.projects?.planIncluded
-                            const limitNum = Number(
-                              projectLimit ?? planIncluded,
-                            )
-                            const limit = isNaN(limitNum) ? null : limitNum
-                            const isAtLimit =
-                              limit !== null &&
-                              limit > 0 &&
-                              totalProjectsCount >= limit
-
-                            return (
-                              <TooltipProvider delayDuration={0}>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <div>
-                                      <Button
-                                        variant="brandCta"
-                                        className="h-9 gap-2 text-[13px] font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                                        disabled={isAtLimit}
-                                        onClick={() =>
-                                          setCreateProjectDialogOpen(true)
-                                        }
-                                        {...analyticsAttrs('create-project')}
-                                      >
-                                        <Plus className="h-4 w-4" />
-                                        {t('Create project')}
-                                      </Button>
-                                    </div>
-                                  </TooltipTrigger>
-                                  {isAtLimit && (
-                                    <TooltipContent side="bottom">
-                                      <p>
-                                        {t(
-                                          "You've reached the limit for projects on your plan",
-                                        )}
-                                      </p>
-                                    </TooltipContent>
-                                  )}
-                                </Tooltip>
-                              </TooltipProvider>
-                            )
-                          })()}
+                                          >
+                                            <Plus className="h-4 w-4" />
+                                            {t('Create project')}
+                                          </Button>
+                                        </div>
+                                      </TooltipTrigger>
+                                      {isAtLimit && (
+                                        <TooltipContent side="bottom">
+                                          <p>
+                                            {t(
+                                              "You've reached the limit for projects on your plan",
+                                            )}
+                                          </p>
+                                        </TooltipContent>
+                                      )}
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )
+                              })()}
+                            </div>
                           </div>
-                        </div>
                         )}
 
                         {/* Loading placeholder - same layout as grid to prevent shift */}
@@ -2968,7 +3049,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                       orgBillingReadonlyForFailedInvoice={
                                         orgBillingReadonlyForFailedInvoice
                                       }
-                                      budgetLimitReached={showProjectsLockedAlert}
+                                      budgetLimitReached={
+                                        showProjectsLockedAlert
+                                      }
                                       showUsageCharts={showProjectUsageCharts}
                                       projectRequestsUsageById={
                                         projectRequestsUsageById
@@ -2981,133 +3064,139 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                       }
                                     />
                                   ) : (
-                                  <div className={RESOURCE_CARD_GRID_CLASSNAME}>
-                                    {pinnedProjects.map((project, index) => {
-                                      const isDragActive =
-                                        canReorderPinned &&
-                                        pinnedDraggingIndex !== null
-                                      const isDragSource =
-                                        isDragActive &&
-                                        pinnedDraggingIndex === index
-                                      const isDropTarget =
-                                        isDragActive &&
-                                        pinnedDragOverIndex === index &&
-                                        pinnedDraggingIndex !== index
-                                      const isDragDimmed =
-                                        isDragActive &&
-                                        pinnedDraggingIndex !== index &&
-                                        pinnedDragOverIndex !== index
+                                    <div
+                                      className={RESOURCE_CARD_GRID_CLASSNAME}
+                                    >
+                                      {pinnedProjects.map((project, index) => {
+                                        const isDragActive =
+                                          canReorderPinned &&
+                                          pinnedDraggingIndex !== null
+                                        const isDragSource =
+                                          isDragActive &&
+                                          pinnedDraggingIndex === index
+                                        const isDropTarget =
+                                          isDragActive &&
+                                          pinnedDragOverIndex === index &&
+                                          pinnedDraggingIndex !== index
+                                        const isDragDimmed =
+                                          isDragActive &&
+                                          pinnedDraggingIndex !== index &&
+                                          pinnedDragOverIndex !== index
 
-                                      return (
-                                        <ProjectContextMenu
-                                          key={project.$id}
-                                          project={project}
-                                          showSettingsTab={
-                                            showProjectSettingsTab
-                                          }
-                                          canDeleteProject={canManageProjects}
-                                          onProjectDeleted={
-                                            handleProjectDeleted
-                                          }
-                                          canPinProjects={canPinProjectsResult}
-                                          isPinned
-                                          onPinProject={handlePinProject}
-                                          isPinPending={
-                                            updateTeamPrefsMutation.isPending
-                                          }
-                                        >
-                                          <div
-                                            className={cn(
-                                              RESOURCE_CARD_PADDED_CLASSNAME,
-                                              RESOURCE_CARD_INTERACTIVE_CLASSNAME,
-                                              'pb-0',
-                                              'group relative transition-[opacity,transform,box-shadow,border-color] duration-200 ease-out',
-                                              !isDragActive && 'border-border',
-                                              isDragSource &&
-                                                'z-0 scale-[0.99] opacity-[0.48] ring-2 ring-dashed ring-muted-foreground/45',
-                                              isDropTarget &&
-                                                'z-20 border-border opacity-100 ring-1 ring-inset ring-primary/35',
-                                              isDragDimmed && 'opacity-[0.26]',
-                                            )}
-                                            data-project-card
-                                            onDragOver={
-                                              canReorderPinned
-                                                ? (e) =>
-                                                    handlePinnedDragOver(
-                                                      e,
-                                                      index,
-                                                    )
-                                                : undefined
+                                        return (
+                                          <ProjectContextMenu
+                                            key={project.$id}
+                                            project={project}
+                                            showSettingsTab={
+                                              showProjectSettingsTab
                                             }
-                                            onDragLeave={
-                                              canReorderPinned
-                                                ? handlePinnedCardDragLeave
-                                                : undefined
+                                            canDeleteProject={canManageProjects}
+                                            onProjectDeleted={
+                                              handleProjectDeleted
                                             }
-                                            onDrop={
-                                              canReorderPinned
-                                                ? (e) =>
-                                                    handlePinnedDrop(e, index)
-                                                : undefined
+                                            canPinProjects={
+                                              canPinProjectsResult
+                                            }
+                                            isPinned
+                                            onPinProject={handlePinProject}
+                                            isPinPending={
+                                              updateTeamPrefsMutation.isPending
                                             }
                                           >
-                                            <Link
-                                              to="/projects/$projectId"
-                                              params={{
-                                                projectId: project.$id,
-                                              }}
-                                              className="absolute inset-0 z-0"
-                                              aria-label={`${t('Open')} ${project.name}`}
-                                            />
                                             <div
                                               className={cn(
-                                                'relative z-[1] min-w-0 pointer-events-none',
-                                                (canReorderPinned ||
-                                                  canPinProjectsResult) &&
-                                                  'pe-10',
+                                                RESOURCE_CARD_PADDED_CLASSNAME,
+                                                RESOURCE_CARD_INTERACTIVE_CLASSNAME,
+                                                'pb-0',
+                                                'group relative transition-[opacity,transform,box-shadow,border-color] duration-200 ease-out',
+                                                !isDragActive &&
+                                                  'border-border',
+                                                isDragSource &&
+                                                  'z-0 scale-[0.99] opacity-[0.48] ring-2 ring-dashed ring-muted-foreground/45',
+                                                isDropTarget &&
+                                                  'z-20 border-border opacity-100 ring-1 ring-inset ring-primary/35',
+                                                isDragDimmed &&
+                                                  'opacity-[0.26]',
                                               )}
-                                            >
-                                              <ProjectListCardMain
-                                                project={project}
-                                                budgetLimitReached={
-                                                  showProjectsLockedAlert
-                                                }
-                                                failedInvoiceWarning={
-                                                  <FailedInvoiceWarningIcon
-                                                    show={
-                                                      showFailedInvoiceOrgAlert
-                                                    }
-                                                    orgBillingReadonly={
-                                                      orgBillingReadonlyForFailedInvoice
-                                                    }
-                                                    className="shrink-0"
-                                                  />
-                                                }
-                                              />
-                                            </div>
-                                            {showProjectUsageCharts ? (
-                                              <ProjectListCardRequestsChart
-                                                projectId={project.$id}
-                                                usageByProjectId={
-                                                  projectRequestsUsageById
-                                                }
-                                              />
-                                            ) : null}
-                                            <ProjectListCardFooter
-                                              project={project}
-                                              showSettingsTab={
-                                                showProjectSettingsTab
+                                              data-project-card
+                                              onDragOver={
+                                                canReorderPinned
+                                                  ? (e) =>
+                                                      handlePinnedDragOver(
+                                                        e,
+                                                        index,
+                                                      )
+                                                  : undefined
                                               }
-                                            />
-                                            {(canReorderPinned ||
-                                              canPinProjectsResult) && (
+                                              onDragLeave={
+                                                canReorderPinned
+                                                  ? handlePinnedCardDragLeave
+                                                  : undefined
+                                              }
+                                              onDrop={
+                                                canReorderPinned
+                                                  ? (e) =>
+                                                      handlePinnedDrop(e, index)
+                                                  : undefined
+                                              }
+                                            >
+                                              <Link
+                                                to="/projects/$projectId"
+                                                params={{
+                                                  projectId: project.$id,
+                                                }}
+                                                className="absolute inset-0 z-0"
+                                                aria-label={`${t('Open')} ${project.name}`}
+                                              />
                                               <div
                                                 className={cn(
-                                                  'absolute end-2 top-2 z-10 flex shrink-0 items-center gap-0.5 opacity-0 pointer-events-none transition-opacity group-hover:pointer-events-auto group-hover:opacity-100',
-                                                  isDragActive &&
-                                                    'pointer-events-auto opacity-100',
+                                                  'relative z-[1] min-w-0 pointer-events-none',
+                                                  (canReorderPinned ||
+                                                    canPinProjectsResult) &&
+                                                    'pe-10',
                                                 )}
                                               >
+                                                <ProjectListCardMain
+                                                  project={project}
+                                                  budgetLimitReached={
+                                                    showProjectsLockedAlert
+                                                  }
+                                                  failedInvoiceWarning={
+                                                    <FailedInvoiceWarningIcon
+                                                      show={
+                                                        showFailedInvoiceOrgAlert
+                                                      }
+                                                      orgBillingReadonly={
+                                                        orgBillingReadonlyForFailedInvoice
+                                                      }
+                                                      className="shrink-0"
+                                                    />
+                                                  }
+                                                />
+                                              </div>
+                                              {showProjectUsageCharts ? (
+                                                <ProjectListCardRequestsChart
+                                                  projectId={project.$id}
+                                                  usageByProjectId={
+                                                    projectRequestsUsageById
+                                                  }
+                                                />
+                                              ) : null}
+                                              <ProjectListCardFooter
+                                                project={project}
+                                                showSettingsTab={
+                                                  showProjectSettingsTab
+                                                }
+                                              />
+                                              {(canReorderPinned ||
+                                                canPinProjectsResult) && (
+                                                <div
+                                                  className={cn(
+                                                    'absolute end-2 top-2 z-10 flex shrink-0 items-center gap-0.5 opacity-0 pointer-events-none transition-opacity group-hover:pointer-events-auto group-hover:opacity-100',
+                                                    isDragActive &&
+                                                      'pointer-events-auto opacity-100',
+                                                  )}
+                                                >
                                                   {canPinProjectsResult ? (
                                                     <TooltipProvider
                                                       delayDuration={0}
@@ -3190,13 +3279,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                       </Tooltip>
                                                     </TooltipProvider>
                                                   ) : null}
-                                              </div>
-                                            )}
-                                          </div>
-                                        </ProjectContextMenu>
-                                      )
-                                    })}
-                                  </div>
+                                                </div>
+                                              )}
+                                            </div>
+                                          </ProjectContextMenu>
+                                        )
+                                      })}
+                                    </div>
                                   )}
                                 </div>
                               )}
@@ -3229,7 +3318,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         orgBillingReadonlyForFailedInvoice={
                                           orgBillingReadonlyForFailedInvoice
                                         }
-                                        budgetLimitReached={showProjectsLockedAlert}
+                                        budgetLimitReached={
+                                          showProjectsLockedAlert
+                                        }
                                         showUsageCharts={showProjectUsageCharts}
                                         projectRequestsUsageById={
                                           projectRequestsUsageById
@@ -3242,89 +3333,95 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         }
                                       />
                                     ) : (
-                                    <div
-                                      className={RESOURCE_CARD_GRID_CLASSNAME}
-                                    >
-                                      {projects.map((project) => {
-                                        const canPin =
-                                          pinnedIds.length < MAX_PINNED_PROJECTS
-                                        return (
-                                          <ProjectContextMenu
-                                            key={project.$id}
-                                            project={project}
-                                            showSettingsTab={
-                                              showProjectSettingsTab
-                                            }
-                                            canDeleteProject={canManageProjects}
-                                            onProjectDeleted={
-                                              handleProjectDeleted
-                                            }
-                                            canPinProjects={canPinProjectsResult}
-                                            isPinned={false}
-                                            canPinMore={canPin}
-                                            onPinProject={handlePinProject}
-                                            isPinPending={
-                                              updateTeamPrefsMutation.isPending
-                                            }
-                                          >
-                                            <div
-                                              className={cn(
-                                                RESOURCE_CARD_PADDED_CLASSNAME,
-                                                RESOURCE_CARD_INTERACTIVE_CLASSNAME,
-                                                'group relative pb-0',
-                                              )}
-                                              data-project-card
+                                      <div
+                                        className={RESOURCE_CARD_GRID_CLASSNAME}
+                                      >
+                                        {projects.map((project) => {
+                                          const canPin =
+                                            pinnedIds.length <
+                                            MAX_PINNED_PROJECTS
+                                          return (
+                                            <ProjectContextMenu
+                                              key={project.$id}
+                                              project={project}
+                                              showSettingsTab={
+                                                showProjectSettingsTab
+                                              }
+                                              canDeleteProject={
+                                                canManageProjects
+                                              }
+                                              onProjectDeleted={
+                                                handleProjectDeleted
+                                              }
+                                              canPinProjects={
+                                                canPinProjectsResult
+                                              }
+                                              isPinned={false}
+                                              canPinMore={canPin}
+                                              onPinProject={handlePinProject}
+                                              isPinPending={
+                                                updateTeamPrefsMutation.isPending
+                                              }
                                             >
-                                              <Link
-                                                to="/projects/$projectId"
-                                                params={{
-                                                  projectId: project.$id,
-                                                }}
-                                                className="absolute inset-0 z-0"
-                                                aria-label={`${t('Open')} ${project.name}`}
-                                              />
                                               <div
                                                 className={cn(
-                                                  'relative z-[1] min-w-0 pointer-events-none',
-                                                  canPin &&
-                                                    canPinProjectsResult &&
-                                                    'pe-10',
+                                                  RESOURCE_CARD_PADDED_CLASSNAME,
+                                                  RESOURCE_CARD_INTERACTIVE_CLASSNAME,
+                                                  'group relative pb-0',
                                                 )}
+                                                data-project-card
                                               >
-                                                <ProjectListCardMain
+                                                <Link
+                                                  to="/projects/$projectId"
+                                                  params={{
+                                                    projectId: project.$id,
+                                                  }}
+                                                  className="absolute inset-0 z-0"
+                                                  aria-label={`${t('Open')} ${project.name}`}
+                                                />
+                                                <div
+                                                  className={cn(
+                                                    'relative z-[1] min-w-0 pointer-events-none',
+                                                    canPin &&
+                                                      canPinProjectsResult &&
+                                                      'pe-10',
+                                                  )}
+                                                >
+                                                  <ProjectListCardMain
+                                                    project={project}
+                                                    budgetLimitReached={
+                                                      showProjectsLockedAlert
+                                                    }
+                                                    failedInvoiceWarning={
+                                                      <FailedInvoiceWarningIcon
+                                                        show={
+                                                          showFailedInvoiceOrgAlert
+                                                        }
+                                                        orgBillingReadonly={
+                                                          orgBillingReadonlyForFailedInvoice
+                                                        }
+                                                        className="shrink-0"
+                                                      />
+                                                    }
+                                                  />
+                                                </div>
+                                                {showProjectUsageCharts ? (
+                                                  <ProjectListCardRequestsChart
+                                                    projectId={project.$id}
+                                                    usageByProjectId={
+                                                      projectRequestsUsageById
+                                                    }
+                                                  />
+                                                ) : null}
+                                                <ProjectListCardFooter
                                                   project={project}
-                                                  budgetLimitReached={
-                                                    showProjectsLockedAlert
-                                                  }
-                                                  failedInvoiceWarning={
-                                                    <FailedInvoiceWarningIcon
-                                                      show={
-                                                        showFailedInvoiceOrgAlert
-                                                      }
-                                                      orgBillingReadonly={
-                                                        orgBillingReadonlyForFailedInvoice
-                                                      }
-                                                      className="shrink-0"
-                                                    />
+                                                  showSettingsTab={
+                                                    showProjectSettingsTab
                                                   }
                                                 />
-                                              </div>
-                                              {showProjectUsageCharts ? (
-                                                <ProjectListCardRequestsChart
-                                                  projectId={project.$id}
-                                                  usageByProjectId={
-                                                    projectRequestsUsageById
-                                                  }
-                                                />
-                                              ) : null}
-                                              <ProjectListCardFooter
-                                                project={project}
-                                                showSettingsTab={
-                                                  showProjectSettingsTab
-                                                }
-                                              />
-                                              {canPin && canPinProjectsResult && (
-                                                <div className="absolute end-2 top-2 z-10 flex shrink-0 opacity-0 pointer-events-none transition-opacity group-hover:pointer-events-auto group-hover:opacity-100">
+                                                {canPin &&
+                                                  canPinProjectsResult && (
+                                                    <div className="absolute end-2 top-2 z-10 flex shrink-0 opacity-0 pointer-events-none transition-opacity group-hover:pointer-events-auto group-hover:opacity-100">
                                                       <TooltipProvider
                                                         delayDuration={0}
                                                       >
@@ -3359,13 +3456,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                           </TooltipContent>
                                                         </Tooltip>
                                                       </TooltipProvider>
-                                                </div>
-                                              )}
-                                            </div>
-                                          </ProjectContextMenu>
-                                        )
-                                      })}
-                                    </div>
+                                                    </div>
+                                                  )}
+                                              </div>
+                                            </ProjectContextMenu>
+                                          )
+                                        })}
+                                      </div>
                                     )}
                                   </div>
                                 ),
@@ -3412,8 +3509,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         ? prev
                                         : {}),
                                       projectsPage: page,
-                                      projectsLimit: urlProjectsLimit}),
-                                    replace: true})
+                                      projectsLimit: urlProjectsLimit,
+                                    }),
+                                    replace: true,
+                                  })
                                 }}
                                 onPageSizeChange={(size: number) => {
                                   setRequestedPage(1)
@@ -3427,8 +3526,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         ? prev
                                         : {}),
                                       projectsPage: 1,
-                                      projectsLimit: size}),
-                                    replace: true})
+                                      projectsLimit: size,
+                                    }),
+                                    replace: true,
+                                  })
                                 }}
                                 itemLabel={t('projects')}
                               />
@@ -3484,7 +3585,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       if (item && orgId) {
                         navigate({
                           to: item.to as '/',
-                          params: { orgId }})
+                          params: { orgId },
+                        })
                       }
                     }}
                   >
@@ -3608,8 +3710,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         const projectLabel = (
                                           projectId: string,
                                         ) =>
-                                          memberProjectNameById.get(projectId) ??
-                                          projectId
+                                          memberProjectNameById.get(
+                                            projectId,
+                                          ) ?? projectId
                                         const canManageMembers =
                                           canInviteOrgMember(access, features)
                                         const isCurrentMember =
@@ -3667,321 +3770,339 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                             }
                                           >
                                             <TableRow className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                                            <TableCell className="px-4 py-3">
-                                              <div className="flex items-center gap-3 min-w-0">
-                                                <PhotoAvatar
-                                                  userId={member.userId}
-                                                  name={
-                                                    member.userName ||
-                                                    member.userEmail
-                                                  }
-                                                  size="sm"
-                                                  className="shrink-0"
-                                                />
-                                                <div className="flex-1 min-w-0">
-                                                  <div className="flex min-w-0 items-center gap-2">
-                                                    <p className="min-w-0 truncate text-[13px] font-medium text-foreground">
-                                                      {member.userName ||
-                                                        member.userEmail}
-                                                    </p>
-                                                    {member.status ===
-                                                      'pending' && (
-                                                      <Badge
-                                                        variant="secondary"
-                                                        className="text-[11px] font-medium border px-2 py-0.5 shrink-0"
-                                                      >
-                                                        {t('Pending')}
-                                                      </Badge>
+                                              <TableCell className="px-4 py-3">
+                                                <div className="flex items-center gap-3 min-w-0">
+                                                  <PhotoAvatar
+                                                    userId={member.userId}
+                                                    name={
+                                                      member.userName ||
+                                                      member.userEmail
+                                                    }
+                                                    size="sm"
+                                                    className="shrink-0"
+                                                  />
+                                                  <div className="flex-1 min-w-0">
+                                                    <div className="flex min-w-0 items-center gap-2">
+                                                      <p className="min-w-0 truncate text-[13px] font-medium text-foreground">
+                                                        {member.userName ||
+                                                          member.userEmail}
+                                                      </p>
+                                                      {member.status ===
+                                                        'pending' && (
+                                                        <Badge
+                                                          variant="secondary"
+                                                          className="text-[11px] font-medium border px-2 py-0.5 shrink-0"
+                                                        >
+                                                          {t('Pending')}
+                                                        </Badge>
+                                                      )}
+                                                    </div>
+                                                    <div className="mt-0.5">
+                                                      <p className="truncate text-[12px] text-muted-foreground">
+                                                        {member.userEmail}
+                                                      </p>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </TableCell>
+                                              <TableCell className="px-4 py-3">
+                                                <div className="flex flex-nowrap items-center justify-center gap-1 whitespace-nowrap">
+                                                  {isProjectScoped ? (
+                                                    // Roles are per project for
+                                                    // this member; the Projects
+                                                    // cell names them.
+                                                    <span className="text-[12px] text-muted-foreground">
+                                                      {t('Per project')}
+                                                    </span>
+                                                  ) : (
+                                                    <OrgRoleBadge
+                                                      role={member.role}
+                                                    />
+                                                  )}
+                                                </div>
+                                              </TableCell>
+                                              {supportsProjectRoles && (
+                                                <TableCell className="px-4 py-3 hidden md:table-cell">
+                                                  <div className="flex items-center justify-center">
+                                                    {!isProjectScoped ? (
+                                                      <span className="text-[12px] text-muted-foreground">
+                                                        {t('All projects')}
+                                                      </span>
+                                                    ) : (
+                                                      // Popover, not an expanded
+                                                      // row: the detail is a small
+                                                      // table of its own and must
+                                                      // not grow the member row or
+                                                      // borrow the Member column,
+                                                      // where a project name reads
+                                                      // as the member's name.
+                                                      <Popover>
+                                                        <PopoverTrigger asChild>
+                                                          <button
+                                                            type="button"
+                                                            className="inline-flex cursor-pointer items-center rounded-md px-1.5 py-0.5 text-[12px] text-foreground hover:bg-muted/60"
+                                                          >
+                                                            {`${memberProjectAccess.length} ${t('projects')}`}
+                                                          </button>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent
+                                                          align="center"
+                                                          className="w-64 p-0"
+                                                        >
+                                                          <p className="border-b border-border px-3 py-2 text-[11px] font-medium text-muted-foreground">
+                                                            {t(
+                                                              'Project access',
+                                                            )}
+                                                          </p>
+                                                          <div className="max-h-64 overflow-y-auto py-1">
+                                                            {memberProjectAccess.map(
+                                                              (row) => (
+                                                                <div
+                                                                  key={
+                                                                    row.projectId
+                                                                  }
+                                                                  className="flex items-center justify-between gap-3 px-3 py-1.5"
+                                                                >
+                                                                  <span
+                                                                    className="min-w-0 truncate text-[12px] text-foreground"
+                                                                    title={projectLabel(
+                                                                      row.projectId,
+                                                                    )}
+                                                                  >
+                                                                    {projectLabel(
+                                                                      row.projectId,
+                                                                    )}
+                                                                  </span>
+                                                                  <span className="shrink-0 text-[11px] text-muted-foreground">
+                                                                    {t(
+                                                                      orgMembershipRoleDisplay(
+                                                                        row.roleName,
+                                                                      ).label,
+                                                                    )}
+                                                                  </span>
+                                                                </div>
+                                                              ),
+                                                            )}
+                                                          </div>
+                                                        </PopoverContent>
+                                                      </Popover>
                                                     )}
                                                   </div>
-                                                  <div className="mt-0.5">
-                                                    <p className="truncate text-[12px] text-muted-foreground">
-                                                      {member.userEmail}
-                                                    </p>
+                                                </TableCell>
+                                              )}
+                                              {features.accountMfa && (
+                                                <TableCell className="px-4 py-3 hidden sm:table-cell">
+                                                  <div className="flex items-center justify-center">
+                                                    {member.status ===
+                                                    'pending' ? (
+                                                      <span className="text-muted-foreground/50 text-[12px]">
+                                                        -
+                                                      </span>
+                                                    ) : member.mfaEnabled ? (
+                                                      <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                          <div className="flex items-center justify-center">
+                                                            <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                                          </div>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                          <p className="text-xs">
+                                                            {t(
+                                                              'Multi-factor authentication enabled',
+                                                            )}
+                                                          </p>
+                                                        </TooltipContent>
+                                                      </Tooltip>
+                                                    ) : (
+                                                      <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                          <div className="flex items-center justify-center">
+                                                            <XCircle className="h-4 w-4 text-muted-foreground/40" />
+                                                          </div>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                          <p className="text-xs">
+                                                            {t(
+                                                              'Multi-factor authentication not enabled',
+                                                            )}
+                                                          </p>
+                                                        </TooltipContent>
+                                                      </Tooltip>
+                                                    )}
                                                   </div>
-                                                </div>
-                                              </div>
-                                            </TableCell>
-                                            <TableCell className="px-4 py-3">
-                                              <div className="flex flex-nowrap items-center justify-center gap-1 whitespace-nowrap">
-                                                {isProjectScoped ? (
-                                                  // Roles are per project for
-                                                  // this member; the Projects
-                                                  // cell names them.
-                                                  <span className="text-[12px] text-muted-foreground">
-                                                    {t('Per project')}
-                                                  </span>
-                                                ) : (
-                                                  <OrgRoleBadge
-                                                    role={member.role}
-                                                  />
-                                                )}
-                                              </div>
-                                            </TableCell>
-                                            {supportsProjectRoles && (
-                                              <TableCell className="px-4 py-3 hidden md:table-cell">
-                                                <div className="flex items-center justify-center">
-                                                  {!isProjectScoped ? (
-                                                    <span className="text-[12px] text-muted-foreground">
-                                                      {t('All projects')}
-                                                    </span>
-                                                  ) : (
-                                                    // Popover, not an expanded
-                                                    // row: the detail is a small
-                                                    // table of its own and must
-                                                    // not grow the member row or
-                                                    // borrow the Member column,
-                                                    // where a project name reads
-                                                    // as the member's name.
-                                                    <Popover>
-                                                      <PopoverTrigger asChild>
-                                                        <button
-                                                          type="button"
-                                                          className="inline-flex cursor-pointer items-center rounded-md px-1.5 py-0.5 text-[12px] text-foreground hover:bg-muted/60"
-                                                        >
-                                                          {`${memberProjectAccess.length} ${t('projects')}`}
-                                                        </button>
-                                                      </PopoverTrigger>
-                                                      <PopoverContent
-                                                        align="center"
-                                                        className="w-64 p-0"
-                                                      >
-                                                        <p className="border-b border-border px-3 py-2 text-[11px] font-medium text-muted-foreground">
-                                                          {t('Project access')}
-                                                        </p>
-                                                        <div className="max-h-64 overflow-y-auto py-1">
-                                                          {memberProjectAccess.map(
-                                                            (row) => (
-                                                              <div
-                                                                key={
-                                                                  row.projectId
-                                                                }
-                                                                className="flex items-center justify-between gap-3 px-3 py-1.5"
-                                                              >
-                                                                <span
-                                                                  className="min-w-0 truncate text-[12px] text-foreground"
-                                                                  title={projectLabel(
-                                                                    row.projectId,
-                                                                  )}
-                                                                >
-                                                                  {projectLabel(
-                                                                    row.projectId,
-                                                                  )}
-                                                                </span>
-                                                                <span className="shrink-0 text-[11px] text-muted-foreground">
-                                                                  {t(
-                                                                    orgMembershipRoleDisplay(
-                                                                      row.roleName,
-                                                                    ).label,
-                                                                  )}
-                                                                </span>
-                                                              </div>
-                                                            ),
-                                                          )}
-                                                        </div>
-                                                      </PopoverContent>
-                                                    </Popover>
-                                                  )}
-                                                </div>
-                                              </TableCell>
-                                            )}
-                                            {features.accountMfa && (
+                                                </TableCell>
+                                              )}
                                               <TableCell className="px-4 py-3 hidden sm:table-cell">
-                                                <div className="flex items-center justify-center">
+                                                <div className="text-end">
                                                   {member.status ===
                                                   'pending' ? (
-                                                    <span className="text-muted-foreground/50 text-[12px]">
-                                                      -
+                                                    <span className="text-[12px] text-muted-foreground/70 italic">
+                                                      {t('Invited')}
                                                     </span>
-                                                  ) : member.mfaEnabled ? (
-                                                    <Tooltip>
-                                                      <TooltipTrigger asChild>
-                                                        <div className="flex items-center justify-center">
-                                                          <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-                                                        </div>
-                                                      </TooltipTrigger>
-                                                      <TooltipContent>
-                                                        <p className="text-xs">
-                                                          {t(
-                                                            'Multi-factor authentication enabled',
-                                                          )}
-                                                        </p>
-                                                      </TooltipContent>
-                                                    </Tooltip>
                                                   ) : (
-                                                    <Tooltip>
-                                                      <TooltipTrigger asChild>
-                                                        <div className="flex items-center justify-center">
-                                                          <XCircle className="h-4 w-4 text-muted-foreground/40" />
-                                                        </div>
-                                                      </TooltipTrigger>
-                                                      <TooltipContent>
-                                                        <p className="text-xs">
-                                                          {t(
-                                                            'Multi-factor authentication not enabled',
-                                                          )}
-                                                        </p>
-                                                      </TooltipContent>
-                                                    </Tooltip>
+                                                    <DateTooltip
+                                                      date={
+                                                        new Date(
+                                                          member.joinedAt,
+                                                        )
+                                                      }
+                                                      className="text-[12px] text-muted-foreground font-mono"
+                                                    />
                                                   )}
                                                 </div>
                                               </TableCell>
-                                            )}
-                                            <TableCell className="px-4 py-3 hidden sm:table-cell">
-                                              <div className="text-end">
-                                                {member.status === 'pending' ? (
-                                                  <span className="text-[12px] text-muted-foreground/70 italic">
-                                                    {t('Invited')}
-                                                  </span>
-                                                ) : (
-                                                  <DateTooltip
-                                                    date={
-                                                      new Date(member.joinedAt)
-                                                    }
-                                                    className="text-[12px] text-muted-foreground font-mono"
-                                                  />
-                                                )}
-                                              </div>
-                                            </TableCell>
-                                            <TableCell className="px-4 py-3">
-                                              <div className="flex items-center justify-end">
-                                                {!canRemoveThisMember ? (
-                                                  <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                      <span className="inline-flex">
-                                                        <RowActionsMenuTrigger
-                                                          disabled
-                                                        />
-                                                      </span>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                      {t(
-                                                        "You don't have permission to manage members.",
-                                                      )}
-                                                    </TooltipContent>
-                                                  </Tooltip>
-                                                ) : member.status ===
-                                                  'pending' ? (
-                                                  <DropdownMenu>
-                                                    <DropdownMenuTrigger
-                                                      asChild
-                                                    >
-                                                      <RowActionsMenuTrigger />
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent
-                                                      align="end"
-                                                      className="w-48"
-                                                    >
-                                                      <DropdownMenuItem
-                                                        onClick={async () => {
-                                                          try {
-                                                            const roles =
-                                                              member.roles &&
-                                                              member.roles
-                                                                .length > 0
-                                                                ? member.roles
-                                                                : [member.role]
-                                                            await resendInviteMutation.mutateAsync(
-                                                              {
-                                                                membershipId:
-                                                                  member.membershipId ||
-                                                                  member.$id,
-                                                                email:
-                                                                  member.userEmail,
-                                                                roles},
-                                                            )
-                                                            toast.success(
-                                                              t(
-                                                                'Invitation resent successfully',
-                                                              ),
-                                                            )
-                                                          } catch (error: unknown) {
-                                                            toast.error(
-                                                              getErrorMessage(
-                                                                error,
+                                              <TableCell className="px-4 py-3">
+                                                <div className="flex items-center justify-end">
+                                                  {!canRemoveThisMember ? (
+                                                    <Tooltip>
+                                                      <TooltipTrigger asChild>
+                                                        <span className="inline-flex">
+                                                          <RowActionsMenuTrigger
+                                                            disabled
+                                                          />
+                                                        </span>
+                                                      </TooltipTrigger>
+                                                      <TooltipContent>
+                                                        {t(
+                                                          "You don't have permission to manage members.",
+                                                        )}
+                                                      </TooltipContent>
+                                                    </Tooltip>
+                                                  ) : member.status ===
+                                                    'pending' ? (
+                                                    <DropdownMenu>
+                                                      <DropdownMenuTrigger
+                                                        asChild
+                                                      >
+                                                        <RowActionsMenuTrigger />
+                                                      </DropdownMenuTrigger>
+                                                      <DropdownMenuContent
+                                                        align="end"
+                                                        className="w-48"
+                                                      >
+                                                        <DropdownMenuItem
+                                                          onClick={async () => {
+                                                            try {
+                                                              const roles =
+                                                                member.roles &&
+                                                                member.roles
+                                                                  .length > 0
+                                                                  ? member.roles
+                                                                  : [
+                                                                      member.role,
+                                                                    ]
+                                                              await resendInviteMutation.mutateAsync(
+                                                                {
+                                                                  membershipId:
+                                                                    member.membershipId ||
+                                                                    member.$id,
+                                                                  email:
+                                                                    member.userEmail,
+                                                                  roles,
+                                                                },
+                                                              )
+                                                              toast.success(
                                                                 t(
-                                                                  'Failed to resend invitation',
+                                                                  'Invitation resent successfully',
                                                                 ),
-                                                              ),
-                                                            )
+                                                              )
+                                                            } catch (error: unknown) {
+                                                              toast.error(
+                                                                getErrorMessage(
+                                                                  error,
+                                                                  t(
+                                                                    'Failed to resend invitation',
+                                                                  ),
+                                                                ),
+                                                              )
+                                                            }
+                                                          }}
+                                                          disabled={
+                                                            resendInviteMutation.isPending
                                                           }
-                                                        }}
-                                                        disabled={
-                                                          resendInviteMutation.isPending
-                                                        }
-                                                      >
-                                                        <MenuItemContent icon={Mail}>
-                                                          {resendInviteMutation.isPending
-                                                            ? t('Resending...')
-                                                            : t('Resend')}
-                                                        </MenuItemContent>
-                                                      </DropdownMenuItem>
-                                                      <DropdownMenuSeparator />
-                                                      <DropdownMenuItem
-                                                        onClick={
-                                                          openRemoveMember
-                                                        }
-                                                      >
-                                                        <MenuItemContent icon={Trash2}>
-                                                          {t('Remove')}
-                                                        </MenuItemContent>
-                                                      </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                  </DropdownMenu>
-                                                ) : (
-                                                  <DropdownMenu>
-                                                    <DropdownMenuTrigger
-                                                      asChild
-                                                    >
-                                                      <RowActionsMenuTrigger />
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent
-                                                      align="end"
-                                                      className="w-48"
-                                                    >
-                                                      {canManageMembers && (
-                                                        <>
-                                                          <DropdownMenuItem
-                                                            onClick={() => {
-                                                              setSelectedMember(
-                                                                member,
-                                                              )
-                                                              const role =
-                                                                member.role as
-                                                                  | 'owner'
-                                                                  | 'developer'
-                                                                  | 'editor'
-                                                                  | 'analyst'
-                                                                  | 'billing'
-                                                              setSelectedRole(
-                                                                role,
-                                                              )
-                                                              setUpdateRoleDialogOpen(
-                                                                true,
-                                                              )
-                                                            }}
+                                                        >
+                                                          <MenuItemContent
+                                                            icon={Mail}
                                                           >
-                                                            <MenuItemContent icon={UserCog}>
-                                                              {t('Update')}
-                                                            </MenuItemContent>
-                                                          </DropdownMenuItem>
-                                                          <DropdownMenuSeparator />
-                                                        </>
-                                                      )}
-                                                      <DropdownMenuItem
-                                                        onClick={
-                                                          openRemoveMember
-                                                        }
+                                                            {resendInviteMutation.isPending
+                                                              ? t(
+                                                                  'Resending...',
+                                                                )
+                                                              : t('Resend')}
+                                                          </MenuItemContent>
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuItem
+                                                          onClick={
+                                                            openRemoveMember
+                                                          }
+                                                        >
+                                                          <MenuItemContent
+                                                            icon={Trash2}
+                                                          >
+                                                            {t('Remove')}
+                                                          </MenuItemContent>
+                                                        </DropdownMenuItem>
+                                                      </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                  ) : (
+                                                    <DropdownMenu>
+                                                      <DropdownMenuTrigger
+                                                        asChild
                                                       >
-                                                        <MenuItemContent icon={Trash2}>
-                                                          {t('Remove')}
-                                                        </MenuItemContent>
-                                                      </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                  </DropdownMenu>
-                                                )}
-                                              </div>
-                                            </TableCell>
+                                                        <RowActionsMenuTrigger />
+                                                      </DropdownMenuTrigger>
+                                                      <DropdownMenuContent
+                                                        align="end"
+                                                        className="w-48"
+                                                      >
+                                                        {canManageMembers && (
+                                                          <>
+                                                            <DropdownMenuItem
+                                                              onClick={() => {
+                                                                setSelectedMember(
+                                                                  member,
+                                                                )
+                                                                const role =
+                                                                  member.role as
+                                                                    | 'owner'
+                                                                    | 'developer'
+                                                                    | 'editor'
+                                                                    | 'analyst'
+                                                                    | 'billing'
+                                                                setSelectedRole(
+                                                                  role,
+                                                                )
+                                                                setUpdateRoleDialogOpen(
+                                                                  true,
+                                                                )
+                                                              }}
+                                                            >
+                                                              <MenuItemContent
+                                                                icon={UserCog}
+                                                              >
+                                                                {t('Update')}
+                                                              </MenuItemContent>
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuSeparator />
+                                                          </>
+                                                        )}
+                                                        <DropdownMenuItem
+                                                          onClick={
+                                                            openRemoveMember
+                                                          }
+                                                        >
+                                                          <MenuItemContent
+                                                            icon={Trash2}
+                                                          >
+                                                            {t('Remove')}
+                                                          </MenuItemContent>
+                                                        </DropdownMenuItem>
+                                                      </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                  )}
+                                                </div>
+                                              </TableCell>
                                             </TableRow>
                                           </OrgMemberContextMenu>
                                         )
@@ -4062,7 +4183,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                       'webhook',
                                       'sdk',
                                       'copy',
-                                    ]},
+                                    ],
+                                  },
                                   node: (
                                     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                                       <div className="px-6 py-4">
@@ -4084,7 +4206,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         />
                                       </div>
                                     </div>
-                                  )} satisfies SettingsCardItem,
+                                  ),
+                                } satisfies SettingsCardItem,
                               ]
                             : []),
                           ...(selectedOrg
@@ -4093,21 +4216,24 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                   id: 'org-photo',
                                   search: {
                                     title: 'Organization photo',
-                                    keywords: ['avatar', 'logo', 'image']},
+                                    keywords: ['avatar', 'logo', 'image'],
+                                  },
                                   node: (
                                     <OrganizationPhoto
                                       teamId={selectedOrg.$id}
                                       name={selectedOrg.name}
                                       canUpdate={canInviteMembers}
                                     />
-                                  )} satisfies SettingsCardItem,
+                                  ),
+                                } satisfies SettingsCardItem,
                               ]
                             : []),
                           {
                             id: 'org-name',
                             search: {
                               title: 'Organization name',
-                              keywords: ['rename', 'display name']},
+                              keywords: ['rename', 'display name'],
+                            },
                             node: (
                               <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                                 <div className="px-6 py-4">
@@ -4147,7 +4273,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                       ) {
                                         updateOrgNameMutation.mutate({
                                           orgId: selectedOrg.$id,
-                                          name: orgName.trim()})
+                                          name: orgName.trim(),
+                                        })
                                       }
                                     }}
                                   >
@@ -4155,7 +4282,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                   </Button>
                                 </div>
                               </div>
-                            )},
+                            ),
+                          },
                           ...(supportsMultiTenancy
                             ? [
                                 {
@@ -4167,7 +4295,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                       'remove',
                                       'destroy',
                                       'danger',
-                                    ]},
+                                    ],
+                                  },
                                   node: (
                                     <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
                                       <div className="px-6 py-4">
@@ -4230,7 +4359,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                           key={member.$id}
                                                           className="relative h-6 w-6 shrink-0 overflow-hidden rounded-full ring-2 ring-background"
                                                           style={{
-                                                            zIndex: 4 - index}}
+                                                            zIndex: 4 - index,
+                                                          }}
                                                           title={
                                                             member.userName
                                                           }
@@ -4316,8 +4446,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                           ? t('members')
                                                           : t('member')}{' '}
                                                         {t('will lose access')}{' '}
-                                                        •{' '}
-                                                        {activeProjectsTotal}{' '}
+                                                        • {activeProjectsTotal}{' '}
                                                         {activeProjectsTotal !==
                                                         1
                                                           ? t('projects')
@@ -4427,7 +4556,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         </Dialog>
                                       </div>
                                     </div>
-                                  )} satisfies SettingsCardItem,
+                                  ),
+                                } satisfies SettingsCardItem,
                               ]
                             : []),
                         ]}
@@ -4521,7 +4651,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   value={editAccessType}
                   onValueChange={(value: 'all' | 'specific') => {
                     setEditAccessType(value)
-                    if (value === 'specific' && editProjectAccess.length === 0) {
+                    if (
+                      value === 'specific' &&
+                      editProjectAccess.length === 0
+                    ) {
                       setEditProjectAccess([
                         { projectId: '', roleName: DEFAULT_PROJECT_ROLE },
                       ])
@@ -4539,7 +4672,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                     </Label>
                   </div>
                   <div className="flex items-center gap-2">
-                    <RadioGroupItem id="edit-access-specific" value="specific" />
+                    <RadioGroupItem
+                      id="edit-access-specific"
+                      value="specific"
+                    />
                     <Label
                       htmlFor="edit-access-specific"
                       className="cursor-pointer text-[13px] font-normal"
@@ -4565,72 +4701,72 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 )}
               </div>
             ) : (
-            <div className="space-y-1.5">
-              <label className="text-[13px] font-medium text-foreground mb-1.5 block">
-                {t('Role')}
-              </label>
-              <RadioGroup
-                value={selectedRole}
-                onValueChange={(
-                  value:
-                    | 'owner'
-                    | 'developer'
-                    | 'editor'
-                    | 'analyst'
-                    | 'billing',
-                ) => setSelectedRole(value)}
-                className="rounded-lg border border-border bg-card/50 overflow-hidden divide-y divide-border gap-0"
-              >
-                {roleOptions.map((role) => {
-                  const Icon = role.icon
-                  const isSelected = selectedRole === role.value
-                  return (
-                    <div
-                      key={role.value}
-                      className="first:rounded-t-lg last:rounded-b-lg [&:not(:first-child)]:border-t-0"
-                    >
-                      <RadioGroupItem
-                        value={role.value}
-                        id={`role-${role.value}`}
-                        className="peer sr-only"
-                      />
-                      <Label
-                        htmlFor={`role-${role.value}`}
-                        className={cn(
-                          'flex cursor-pointer items-start gap-2.5 px-3 py-2.5 transition-colors',
-                          'hover:bg-accent',
-                          isSelected && 'bg-accent',
-                        )}
+              <div className="space-y-1.5">
+                <label className="text-[13px] font-medium text-foreground mb-1.5 block">
+                  {t('Role')}
+                </label>
+                <RadioGroup
+                  value={selectedRole}
+                  onValueChange={(
+                    value:
+                      | 'owner'
+                      | 'developer'
+                      | 'editor'
+                      | 'analyst'
+                      | 'billing',
+                  ) => setSelectedRole(value)}
+                  className="rounded-lg border border-border bg-card/50 overflow-hidden divide-y divide-border gap-0"
+                >
+                  {roleOptions.map((role) => {
+                    const Icon = role.icon
+                    const isSelected = selectedRole === role.value
+                    return (
+                      <div
+                        key={role.value}
+                        className="first:rounded-t-lg last:rounded-b-lg [&:not(:first-child)]:border-t-0"
                       >
-                        <div className="mt-0.5 shrink-0">
-                          <div
-                            className={cn(
-                              'h-3.5 w-3.5 rounded-full border-2 flex items-center justify-center transition-colors',
-                              isSelected
-                                ? 'border-foreground'
-                                : 'border-muted-foreground',
-                            )}
-                          >
-                            {isSelected && (
-                              <div className="h-1.5 w-1.5 rounded-full bg-foreground" />
-                            )}
+                        <RadioGroupItem
+                          value={role.value}
+                          id={`role-${role.value}`}
+                          className="peer sr-only"
+                        />
+                        <Label
+                          htmlFor={`role-${role.value}`}
+                          className={cn(
+                            'flex cursor-pointer items-start gap-2.5 px-3 py-2.5 transition-colors',
+                            'hover:bg-accent',
+                            isSelected && 'bg-accent',
+                          )}
+                        >
+                          <div className="mt-0.5 shrink-0">
+                            <div
+                              className={cn(
+                                'h-3.5 w-3.5 rounded-full border-2 flex items-center justify-center transition-colors',
+                                isSelected
+                                  ? 'border-foreground'
+                                  : 'border-muted-foreground',
+                              )}
+                            >
+                              {isSelected && (
+                                <div className="h-1.5 w-1.5 rounded-full bg-foreground" />
+                              )}
+                            </div>
                           </div>
-                        </div>
-                        <Icon className="h-3.5 w-3.5 shrink-0 mt-0.5 text-muted-foreground" />
-                        <div className="flex flex-col min-w-0 flex-1">
-                          <span className="text-[13px] font-medium text-foreground">
-                            {t(role.label)}
-                          </span>
-                          <span className="text-[11px] text-muted-foreground leading-tight mt-0.5">
-                            {t(role.description)}
-                          </span>
-                        </div>
-                      </Label>
-                    </div>
-                  )
-                })}
-              </RadioGroup>
-            </div>
+                          <Icon className="h-3.5 w-3.5 shrink-0 mt-0.5 text-muted-foreground" />
+                          <div className="flex flex-col min-w-0 flex-1">
+                            <span className="text-[13px] font-medium text-foreground">
+                              {t(role.label)}
+                            </span>
+                            <span className="text-[11px] text-muted-foreground leading-tight mt-0.5">
+                              {t(role.description)}
+                            </span>
+                          </div>
+                        </Label>
+                      </div>
+                    )
+                  })}
+                </RadioGroup>
+              </div>
             )}
           </div>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -4677,12 +4813,15 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   await updateRoleMutation.mutateAsync({
                     membershipId:
                       selectedMember.membershipId || selectedMember.$id,
-                    roles})
+                    roles,
+                  })
                   toast.success(t('Role updated successfully'))
                   setUpdateRoleDialogOpen(false)
                   setSelectedMember(null)
                 } catch (error: unknown) {
-                  toast.error(getErrorMessage(error, t('Failed to update role')))
+                  toast.error(
+                    getErrorMessage(error, t('Failed to update role')),
+                  )
                 }
               }}
             >
@@ -4737,9 +4876,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               variant="outline"
               size="sm"
               className="h-9 text-[13px]"
-              disabled={
-                removeMemberMutation.isPending || leavingOrganization
-              }
+              disabled={removeMemberMutation.isPending || leavingOrganization}
               onClick={() => {
                 setRemoveMemberDialogOpen(false)
                 setSelectedMember(null)
@@ -4900,7 +5037,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               navigate({
                 to: '/organizations/$orgId',
                 params: { orgId: newOrg.$id },
-                replace: true})
+                replace: true,
+              })
             } catch (error: unknown) {
               toast.error(
                 getErrorMessage(error, t('Failed to create organization')),

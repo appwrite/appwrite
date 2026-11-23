@@ -21,6 +21,7 @@ import {
   Bot,
   Video,
   GitPullRequest,
+  Package,
 } from 'lucide-react'
 
 export function isCloudEnvironment(): boolean {
@@ -38,6 +39,12 @@ export function isOAuth2AppsCatalogScope(
 ): boolean {
   if (scopeId.toLowerCase().startsWith('apps.')) return true
   return (apiCategory ?? '').trim().toLowerCase() === 'apps'
+}
+
+const DISTRIBUTION_SCOPE_PREFIX = 'distribution.'
+
+function isDistributionScope(scopeId: string): boolean {
+  return scopeId.toLowerCase().startsWith(DISTRIBUTION_SCOPE_PREFIX)
 }
 
 /** Scopes only available on Appwrite Cloud (e.g. backups). */
@@ -85,6 +92,7 @@ function inferAccordionCategoryFromScopeId(scopeId: string): string {
   if (/^videos\./.test(id)) return 'Videos'
   if (/^reviews\./.test(id)) return 'Reviews'
   if (/^(sites|log)\./.test(id)) return 'Sites'
+  if (isDistributionScope(id)) return 'Distribution'
   if (/^presences\./.test(id)) return 'Presences'
   if (/^apps\./.test(id)) return 'Apps'
   if (
@@ -123,6 +131,7 @@ const KNOWN_CATEGORY_ORDER = [
   'Messaging',
   'Videos',
   'Sites',
+  'Distribution',
   'Presences',
   'Domains',
   'Project',
@@ -140,9 +149,7 @@ export function sortScopeCategories(categories: Iterable<string>): string[] {
   const set = new Set(categories)
   const ranked = KNOWN_CATEGORY_ORDER.filter((c) => set.has(c))
   const rest = Array.from(set)
-    .filter(
-      (c) => !KNOWN_CATEGORY_ORDER_SET.has(c) && c !== 'Other',
-    )
+    .filter((c) => !KNOWN_CATEGORY_ORDER_SET.has(c) && c !== 'Other')
     .sort((a, b) => a.localeCompare(b))
   return set.has('Other') ? [...ranked, ...rest, 'Other'] : [...ranked, ...rest]
 }
@@ -208,6 +215,9 @@ export function getScopeCategoryIcon(
   if (c.includes('site') || c.includes('log')) {
     return Globe
   }
+  if (c.includes('distribution')) {
+    return Package
+  }
   if (c.includes('presence')) {
     return UsersRound
   }
@@ -243,14 +253,13 @@ export function getScopeCategoryIcon(
     }
     if (/^(functions|executions|execution)\./.test(id)) return Zap
     if (/^(files|buckets|tokens)\./.test(id)) return Folder
-    if (
-      /^(messages|topics|subscribers|targets|providers)\./.test(id)
-    ) {
+    if (/^(messages|topics|subscribers|targets|providers)\./.test(id)) {
       return MessageSquare
     }
     if (/^videos\./.test(id)) return Video
     if (/^reviews\./.test(id)) return GitPullRequest
     if (/^(sites|log)\./.test(id)) return Globe
+    if (isDistributionScope(id)) return Package
     if (/^presences\./.test(id)) return UsersRound
     if (/^apps\./.test(id)) return Plug2
     if (/^advisor\./.test(id)) return ScanSearch
@@ -264,14 +273,16 @@ export function getScopeCategoryIcon(
 
 export function buildAllAvailableScopeIds(
   list: Models.ConsoleKeyScopeList | undefined,
-  opts: { isCloud: boolean; oauth2Server: boolean },
+  opts: { isCloud: boolean; oauth2Server: boolean; distribution: boolean },
 ): string[] {
   if (!list?.scopes?.length) return []
   const out: string[] = []
   for (const s of list.scopes) {
     if (s.deprecated) continue
     if (CLOUD_ONLY_SCOPE_IDS.has(s.$id) && !opts.isCloud) continue
-    if (isOAuth2AppsCatalogScope(s.$id, s.category) && !opts.oauth2Server) continue
+    if (isOAuth2AppsCatalogScope(s.$id, s.category) && !opts.oauth2Server)
+      continue
+    if (isDistributionScope(s.$id) && !opts.distribution) continue
     out.push(s.$id)
   }
   return out
@@ -339,6 +350,7 @@ export function consoleKeyScopesToEditorRows(
   opts: {
     isCloud: boolean
     oauth2Server: boolean
+    distribution: boolean
     catalog?: 'project' | 'organization'
   },
 ): ScopeEditorRow[] {
@@ -346,8 +358,7 @@ export function consoleKeyScopesToEditorRows(
   const isOrgCatalog = opts.catalog === 'organization'
   return list.scopes
     .filter(
-      (s) =>
-        isOrgCatalog || !CLOUD_ONLY_SCOPE_IDS.has(s.$id) || opts.isCloud,
+      (s) => isOrgCatalog || !CLOUD_ONLY_SCOPE_IDS.has(s.$id) || opts.isCloud,
     )
     .filter(
       (s) =>
@@ -355,6 +366,7 @@ export function consoleKeyScopesToEditorRows(
         !isOAuth2AppsCatalogScope(s.$id, s.category) ||
         opts.oauth2Server,
     )
+    .filter((s) => opts.distribution || !isDistributionScope(s.$id))
     .map((s) => {
       const sourceCategory = s.category || 'Other'
       const categoryLooksDeprecated =

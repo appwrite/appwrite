@@ -1,9 +1,9 @@
 import { afterAll, afterEach, describe, expect, mock, test } from 'bun:test'
-import { GlobalRegistrator } from '@happy-dom/global-registrator'
+import { registerDom, unregisterDom } from './dom.ts'
 import { createElement, type ReactNode } from 'react'
 import { join } from 'node:path'
 
-GlobalRegistrator.register()
+registerDom()
 const { cleanup, fireEvent, render } = await import('@testing-library/react')
 
 const consoleRoot = join(import.meta.dir, '../..')
@@ -32,7 +32,7 @@ afterEach(() => cleanup())
 afterAll(async () => {
   mock.module(dialogPath, () => realDialog)
   mock.restore()
-  await GlobalRegistrator.unregister()
+  await unregisterDom()
 })
 
 describe('ImportZone.tsx', () => {

@@ -386,10 +386,6 @@ export function buildSavedFiltersPrefs(
   }
 }
 
-// ---------------------------------------------------------------------------
-// Storage: image transform wizard - saved presets (account + team prefs)
-// ---------------------------------------------------------------------------
-
 /** Full key: `console.imageTransformPresets` - JSON SavedImageTransformPreset[] */
 export const USER_PREFS_KEY_IMAGE_TRANSFORM_PRESETS =
   'console.imageTransformPresets'
@@ -459,10 +455,6 @@ export function buildSavedImageTransformPresetsPrefs(
     ),
   }
 }
-
-// ---------------------------------------------------------------------------
-// Databases: PostgreSQL saved SQL queries (account + team prefs, per database)
-// ---------------------------------------------------------------------------
 
 /**
  * Preference key prefix for saved PostgreSQL queries.
@@ -639,10 +631,6 @@ export function buildPostgresSavedQueriesScopePrefs(
   }
 }
 
-// ---------------------------------------------------------------------------
-// Databases: PostgreSQL sidebar selected schema (account prefs, per database)
-// ---------------------------------------------------------------------------
-
 /**
  * Preference key for the schema shown in the Data sidebar panel.
  * Full key: `console.postgresSelectedSchema.<databaseId>`
@@ -686,10 +674,6 @@ export function resolvePostgresSelectedSchema(args: {
   if (schemas.includes('public')) return 'public'
   return schemas[0] ?? null
 }
-
-// ---------------------------------------------------------------------------
-// Databases: PostgreSQL saved queries list sort (account prefs, per database)
-// ---------------------------------------------------------------------------
 
 /**
  * Preference key for saved-queries sidebar sort order.
@@ -776,10 +760,6 @@ export function sortSavedPostgresQueries(
       return queries
   }
 }
-
-// ---------------------------------------------------------------------------
-// Databases: PostgreSQL Data sidebar table list sort (account prefs, per database)
-// ---------------------------------------------------------------------------
 
 /**
  * Preference key for table list sort in the Data sidebar panel.
@@ -871,10 +851,6 @@ export function sortPostgresSidebarTableRows<T extends { table_name: string }>(
   }
 }
 
-// ---------------------------------------------------------------------------
-// Databases: PostgreSQL sidebar panel (Data / Queries / History)
-// ---------------------------------------------------------------------------
-
 /**
  * Preference key for the sidebar panel toggle (Data / Queries / History).
  * Full key: `console.postgresSidebarPanel.<databaseId>`
@@ -924,10 +900,6 @@ export function buildPostgresSidebarPanelPrefs(
     [getPostgresSidebarPanelKey(databaseId)]: panel,
   }
 }
-
-// ---------------------------------------------------------------------------
-// Databases: PostgreSQL SQL editor tabs (account prefs, per database)
-// ---------------------------------------------------------------------------
 
 /**
  * Preference key for SQL editor open tabs and active tab.
@@ -1065,10 +1037,6 @@ export function resolvePostgresSavedQueriesScope(args: {
   if (teamQueryCount > 0 && userQueryCount === 0) return 'team'
   return 'user'
 }
-
-// ---------------------------------------------------------------------------
-// Databases: MySQL saved SQL queries (account + team prefs, per database)
-// ---------------------------------------------------------------------------
 
 /**
  * Preference key prefix for saved MySQL queries.
@@ -1245,10 +1213,6 @@ export function buildMysqlSavedQueriesScopePrefs(
   }
 }
 
-// ---------------------------------------------------------------------------
-// Databases: MySQL sidebar selected schema (account prefs, per database)
-// ---------------------------------------------------------------------------
-
 /**
  * Preference key for the schema shown in the Data sidebar panel.
  * Full key: `console.mysqlSelectedSchema.<databaseId>`
@@ -1311,10 +1275,6 @@ export function resolveMysqlSelectedSchema(args: {
   if (normalizedSchemas.includes('public')) return 'public'
   return normalizedSchemas[0] ?? null
 }
-
-// ---------------------------------------------------------------------------
-// Databases: MySQL saved queries list sort (account prefs, per database)
-// ---------------------------------------------------------------------------
 
 /**
  * Preference key for saved-queries sidebar sort order.
@@ -1399,10 +1359,6 @@ export function sortSavedMysqlQueries(
       return queries
   }
 }
-
-// ---------------------------------------------------------------------------
-// Databases: MySQL Data sidebar table list sort (account prefs, per database)
-// ---------------------------------------------------------------------------
 
 /**
  * Preference key for table list sort in the Data sidebar panel.
@@ -1492,10 +1448,6 @@ export function sortMysqlSidebarTableRows<T extends { table_name: string }>(
   }
 }
 
-// ---------------------------------------------------------------------------
-// Databases: MySQL sidebar panel (Data / Queries / History)
-// ---------------------------------------------------------------------------
-
 /**
  * Preference key for the sidebar panel toggle (Data / Queries / History).
  * Full key: `console.mysqlSidebarPanel.<databaseId>`
@@ -1543,10 +1495,6 @@ export function buildMysqlSidebarPanelPrefs(
     [getMysqlSidebarPanelKey(databaseId)]: panel,
   }
 }
-
-// ---------------------------------------------------------------------------
-// Databases: MySQL SQL editor tabs (account prefs, per database)
-// ---------------------------------------------------------------------------
 
 /**
  * Preference key for SQL editor open tabs and active tab.
@@ -1685,10 +1633,6 @@ export function resolveMysqlSavedQueriesScope(args: {
   return 'user'
 }
 
-// ---------------------------------------------------------------------------
-// Databases: tables sidebar width (single shared setting across all databases)
-// ---------------------------------------------------------------------------
-
 /**
  * Full key: `console.databases.sidebarWidth` - sidebar width in px for
  * `TableViewResizableLayout` (shared across all databases / tables).
@@ -1712,10 +1656,6 @@ export function buildDatabasesSidebarWidthPrefs(widthPx: number): UserPrefs {
     widthPx,
   )
 }
-
-// ---------------------------------------------------------------------------
-// Storage: buckets sidebar width (separate from databases tables sidebar)
-// ---------------------------------------------------------------------------
 
 /**
  * Full key: `console.storage.sidebarWidth` - buckets list sidebar width in px.
@@ -1922,10 +1862,6 @@ function buildSidebarWidthPxPrefsForKey(
 /** Default when account pref is unset. */
 export { TABLE_VIEW_SIDEBAR_DEFAULT_WIDTH_PX as DATABASES_SIDEBAR_DEFAULT_WIDTH_PX }
 
-// ---------------------------------------------------------------------------
-// Postgres: SQL editor container height (vertical split in SQL workbench)
-// ---------------------------------------------------------------------------
-
 /**
  * Full key: `console.databases.postgresSqlEditorHeight` - SQL editor container
  * height in px (includes toolbar).
@@ -1959,10 +1895,6 @@ export function buildPostgresSqlEditorHeightPrefs(heightPx: number): UserPrefs {
 
 export { POSTGRES_SQL_EDITOR_DEFAULT_HEIGHT_PX }
 
-// ---------------------------------------------------------------------------
-// MySQL: SQL editor container height (vertical split in SQL workbench)
-// ---------------------------------------------------------------------------
-
 /**
  * Full key: `console.databases.mysqlSqlEditorHeight` - SQL editor container
  * height in px (includes toolbar).
@@ -1995,10 +1927,6 @@ export function buildMysqlSqlEditorHeightPrefs(heightPx: number): UserPrefs {
 }
 
 export { MYSQL_SQL_EDITOR_DEFAULT_HEIGHT_PX }
-
-// ---------------------------------------------------------------------------
-// Storage: files list column widths (account - same widths for every bucket)
-// ---------------------------------------------------------------------------
 
 /** Full key: `console.storageFiles.listColumnWidths` - JSON Record<columnKey, number> (px). */
 export const USER_PREFS_KEY_STORAGE_FILES_LIST_COLUMN_WIDTHS =
@@ -2124,10 +2052,6 @@ export function mergeStorageFilesListColumnWidthsIntoPrefs(
   return next
 }
 
-// ---------------------------------------------------------------------------
-// Storage: files list / inline preview split (account - same width every bucket)
-// ---------------------------------------------------------------------------
-
 /**
  * Full key: `console.storageFiles.tablePaneWidthPx` - table (left) pane width in px
  * for the files list + inline preview split. When unset, parsers return
@@ -2219,10 +2143,6 @@ export function clearLegacyStorageFilesTablePaneWidthLocalStorage(): void {
     /* private mode */
   }
 }
-
-// ---------------------------------------------------------------------------
-// Databases: tables DB row grid column widths (per database + table, account)
-// ---------------------------------------------------------------------------
 
 /**
  * Full key: `console.databaseTables.rowColumnWidths`
@@ -2480,10 +2400,6 @@ export function deleteDatabaseTableRowColumnWidthsFromPrefs(
   return next
 }
 
-// ---------------------------------------------------------------------------
-// Databases: Tables DB - which row attributes to fetch & column order (account)
-// ---------------------------------------------------------------------------
-
 /**
  * Per-table preference key: `console.tablesDb.rowsListColumns.<databaseId>.<tableId>`
  *
@@ -2712,10 +2628,6 @@ export function deleteTablesDbRowsListColumnsFromPrefs(
   return mergeTablesDbRowsListColumnsIntoPrefs(prefs, databaseId, tableId, null)
 }
 
-// ---------------------------------------------------------------------------
-// Navigation sidebar collapsed (account prefs)
-// ---------------------------------------------------------------------------
-
 /** Full key: `console.sidebarCollapsed` - sidebar collapsed when true / `"true"`. */
 export const USER_PREFS_KEY_SIDEBAR_COLLAPSED = 'console.sidebarCollapsed'
 
@@ -2747,10 +2659,6 @@ export function mergeSidebarCollapsedIntoPrefs(
   return next
 }
 
-// ---------------------------------------------------------------------------
-// Databases: admin nav collapsed (Credentials, Monitor, Connections, …)
-// ---------------------------------------------------------------------------
-
 /** Full key: `console.databases.adminNavCollapsed` - admin links hidden when true. */
 export const USER_PREFS_KEY_DATABASE_ADMIN_NAV_COLLAPSED =
   'console.databases.adminNavCollapsed'
@@ -2774,10 +2682,6 @@ export function mergeDatabaseAdminNavCollapsedIntoPrefs(
     [USER_PREFS_KEY_DATABASE_ADMIN_NAV_COLLAPSED]: collapsed,
   }
 }
-
-// ---------------------------------------------------------------------------
-// Connect project dialog tab (account prefs)
-// ---------------------------------------------------------------------------
 
 /** Full key: `console.connect.tab` - last selected Connect modal tab. */
 export const USER_PREFS_KEY_CONNECT_PROJECT_TAB = 'console.connect.tab'
@@ -2819,10 +2723,6 @@ export function mergeConnectProjectTabIntoPrefs(
     [USER_PREFS_KEY_CONNECT_PROJECT_TAB]: tab,
   }
 }
-
-// ---------------------------------------------------------------------------
-// AI assistant panel (account prefs)
-// ---------------------------------------------------------------------------
 
 /** Full key: `console.aiChat.panelOpen` - panel open when true / `"true"`. */
 export const USER_PREFS_KEY_AI_CHAT_PANEL_OPEN = 'console.aiChat.panelOpen'
@@ -3046,10 +2946,6 @@ export function mergeAIChatPanelWidthPxIntoPrefs(
   }
 }
 
-// ---------------------------------------------------------------------------
-// Console right pane width (account prefs) - shared by docs, assistant, etc.
-// ---------------------------------------------------------------------------
-
 /** Full key: `console.rightPane.widthPx` - shared right pane width in pixels. */
 export const USER_PREFS_KEY_RIGHT_PANE_WIDTH_PX = 'console.rightPane.widthPx'
 
@@ -3095,10 +2991,6 @@ export function mergeRightPaneWidthPxIntoPrefs(
     ),
   }
 }
-
-// ---------------------------------------------------------------------------
-// Auth password strength compliance panel (account prefs)
-// ---------------------------------------------------------------------------
 
 /** Full key: `console.auth.passwordStrengthComplianceOpen` - compliance section expanded when true. */
 export const USER_PREFS_KEY_AUTH_PASSWORD_STRENGTH_COMPLIANCE_OPEN =
@@ -3164,10 +3056,6 @@ export function clearLegacyAIChatLocalStorage(): void {
     /* private mode */
   }
 }
-
-// ---------------------------------------------------------------------------
-// CLI shell panel (account prefs)
-// ---------------------------------------------------------------------------
 
 /** Full key: `console.cliShell.open` - terminal expanded when true / `"true"`. */
 export const USER_PREFS_KEY_CLI_SHELL_OPEN = 'console.cliShell.open'
@@ -3486,10 +3374,6 @@ export function clearLegacyCliShellHeightLocalStorage(): void {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Diagram generator: saved generations (account prefs)
-// ---------------------------------------------------------------------------
-
 /** Full key: `console.diagramGenerator.generations` - JSON SavedDiagramGeneration[] */
 export {
   USER_PREFS_KEY_DIAGRAM_GENERATIONS,
@@ -3497,10 +3381,6 @@ export {
   MAX_SAVED_DIAGRAM_GENERATION_NAME_LENGTH,
   type SavedDiagramGeneration,
 } from '@/lib/diagram-generator/generation-prefs'
-
-// ---------------------------------------------------------------------------
-// API Explorer panel layouts (account prefs)
-// ---------------------------------------------------------------------------
 
 /** Full key: `console.coverGenerator.columnsLayout` - JSON `[templates%, canvas%, properties%]`. */
 export const USER_PREFS_KEY_COVER_GENERATOR_COLUMNS_LAYOUT =
@@ -3676,24 +3556,12 @@ export function mergeApiExplorerExpandedProductGroupIntoPrefs(
   }
 }
 
-// ---------------------------------------------------------------------------
-// API reference explorer UI (account prefs + localStorage for guests)
-// ---------------------------------------------------------------------------
-
 /** Full key: `console.apiReference.ui` - JSON UI state for docs API reference. */
 export { USER_PREFS_KEY_API_REFERENCE_UI } from '@/lib/docs/references/api-reference-ui-prefs'
-
-// ---------------------------------------------------------------------------
-// Browser alerts (account prefs) — master toggle for desktop notifications
-// ---------------------------------------------------------------------------
 
 /** Full key: `console.buildNotifications.optedOut` - user dismissed the enable prompt. */
 export const USER_PREFS_KEY_BUILD_NOTIFICATIONS_OPTED_OUT =
   'console.buildNotifications.optedOut'
-
-// ---------------------------------------------------------------------------
-// Community support prompt (account prefs)
-// ---------------------------------------------------------------------------
 
 /**
  * Full key: `console.communitySupport` - JSON state for the skippable
@@ -3813,10 +3681,6 @@ export function clearLegacyBuildNotificationsOptedOutLocalStorage(): void {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Usage chart date range + interval (account prefs, shared overview + usage)
-// ---------------------------------------------------------------------------
-
 /** Full key: `console.usageChart.dateRange` - JSON `{ preset }` or `{ from, to }` ISO strings. */
 export const USER_PREFS_KEY_USAGE_CHART_DATE_RANGE =
   'console.usageChart.dateRange'
@@ -3915,11 +3779,6 @@ export function mergeUsageChartFiltersIntoPrefs(
     [USER_PREFS_KEY_USAGE_CHART_INTERVAL]: chartInterval,
   }
 }
-
-// ---------------------------------------------------------------------------
-// Analytics chart date range + interval (account prefs; one setting for all
-// analytics properties, independent of the usage chart range)
-// ---------------------------------------------------------------------------
 
 /** Full key: `console.analytics.dateRange` - JSON `{ preset }` or `{ from, to }` ISO strings. */
 export const USER_PREFS_KEY_ANALYTICS_CHART_DATE_RANGE =
@@ -4031,10 +3890,6 @@ export function mergeFirewallTrafficLiveUpdatesIntoPrefs(
   }
 }
 
-// ---------------------------------------------------------------------------
-// Service list view mode (account prefs, one key per page across all projects)
-// ---------------------------------------------------------------------------
-
 export type ServiceListViewMode = 'list' | 'grid'
 
 export const SERVICE_LIST_VIEW_MODE_DEFAULT: ServiceListViewMode = 'grid'
@@ -4043,7 +3898,7 @@ export type ServiceListViewModeScope =
   | 'functions'
   | 'sites'
   | 'projects'
-  | 'stores'
+  | 'distribution'
   | 'videos'
 
 /** Full key: `console.functions.listViewMode` - `"list"` or `"grid"`. */
@@ -4061,9 +3916,9 @@ export const USER_PREFS_KEY_ORG_PROJECTS_LIST_VIEW_MODE =
 export const USER_PREFS_KEY_VIDEOS_LIST_VIEW_MODE =
   'console.videos.listViewMode'
 
-/** Full key: `console.stores.listViewMode` - `"list"` or `"grid"`. */
-export const USER_PREFS_KEY_STORES_LIST_VIEW_MODE =
-  'console.stores.listViewMode'
+/** Full key: `console.distribution.listViewMode` - `"list"` or `"grid"`. */
+export const USER_PREFS_KEY_DISTRIBUTION_LIST_VIEW_MODE =
+  'console.distribution.listViewMode'
 
 function getServiceListViewModeKey(scope: ServiceListViewModeScope): string {
   switch (scope) {
@@ -4073,8 +3928,8 @@ function getServiceListViewModeKey(scope: ServiceListViewModeScope): string {
       return USER_PREFS_KEY_SITES_LIST_VIEW_MODE
     case 'projects':
       return USER_PREFS_KEY_ORG_PROJECTS_LIST_VIEW_MODE
-    case 'stores':
-      return USER_PREFS_KEY_STORES_LIST_VIEW_MODE
+    case 'distribution':
+      return USER_PREFS_KEY_DISTRIBUTION_LIST_VIEW_MODE
     case 'videos':
       return USER_PREFS_KEY_VIDEOS_LIST_VIEW_MODE
   }
@@ -4099,10 +3954,6 @@ export function mergeServiceListViewModeIntoPrefs(
     [getServiceListViewModeKey(scope)]: mode,
   }
 }
-
-// ---------------------------------------------------------------------------
-// Playground mode (account prefs, shared across all projects)
-// ---------------------------------------------------------------------------
 
 export type PlaygroundMode = 'rest' | 'realtime'
 
@@ -4129,13 +3980,11 @@ export function mergePlaygroundModeIntoPrefs(
   }
 }
 
-// ---------------------------------------------------------------------------
 // Console operator impersonation - recent targets (quick access in picker)
 //
 // Account prefs store only ordered user ID references (small). Display fields
 // (name/email) live in localStorage so we never write avatars, data URLs, or
 // other large blobs into Appwrite account prefs.
-// ---------------------------------------------------------------------------
 
 /**
  * Full key: `console.impersonation.recentUsers`
