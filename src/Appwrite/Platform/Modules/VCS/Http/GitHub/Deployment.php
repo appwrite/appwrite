@@ -125,6 +125,7 @@ trait Deployment
                 if ($validator->isValid($providerCommitMessage)) {
                     Span::add("{$logBase}.build.skipped.reason", $validator->getDescription());
                     Span::add("{$logBase}.build.skipped", 'true');
+                    $this->reportSkip($vcs, $providerInstallationId, $repository, $project, $resource, $providerCommitHash, 'The commit message asks to skip deployments.');
                     continue;
                 }
 
@@ -133,6 +134,7 @@ trait Deployment
                 if (!$branchTrigger->isValid($providerBranch)) {
                     Span::add("{$logBase}.build.skipped.reason", 'branch');
                     Span::add("{$logBase}.build.skipped", 'true');
+                    $this->reportSkip($vcs, $providerInstallationId, $repository, $project, $resource, $providerCommitHash, "Branch '{$providerBranch}' does not match the deployment branches.");
                     continue;
                 }
 
@@ -150,6 +152,7 @@ trait Deployment
                     if (!$pathMatched) {
                         Span::add("{$logBase}.build.skipped.reason", 'path');
                         Span::add("{$logBase}.build.skipped", 'true');
+                        $this->reportSkip($vcs, $providerInstallationId, $repository, $project, $resource, $providerCommitHash, 'No changed file matches the deployment paths.');
                         continue;
                     }
                 }
@@ -721,4 +724,32 @@ trait Deployment
         return null;
     }
 
+    /**
+     * Reports a push the resource's triggers skipped as a neutral check, keyed
+     * like the build's, so the commit says why nothing was deployed.
+     */
+    private function reportSkip(Git $vcs, string $providerInstallationId, Document $repository, Document $project, Document $resource, string $providerCommitHash, string $reason): void
+    {
+        if ($providerCommitHash === '' || $resource->getAttribute('providerSilentMode', false) === true || $resource->getAttribute('providerStatuses', true) === false) {
+            return;
+        }
+
+        try {
+            $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
+            $vcs->updateCheck(
+                $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId),
+                $vcs->getRepositoryName($providerRepositoryId),
+                $providerCommitHash,
+                'neutral',
+                $resource->getAttribute('name'),
+                'Deployment skipped',
+                $reason,
+                suite: $project->getAttribute('name'),
+                key: "{$project->getId()}/{$resource->getCollection()}/{$resource->getId()}",
+                suiteKey: $project->getId(),
+            );
+        } catch (\Throwable $e) {
+            Console::warning("Failed to report skipped deployment for '{$resource->getId()}': " . $e->getMessage());
+        }
+    }
 }
