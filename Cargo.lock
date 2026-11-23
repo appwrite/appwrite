@@ -2650,6 +2650,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "utopia-balancer"
+version = "0.1.0"
+dependencies = [
+ "php-std",
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "utopia-compression"
 version = "0.1.0"
 dependencies = [
@@ -2706,6 +2714,7 @@ dependencies = [
  "php-std",
  "stacker",
  "utopia-auth",
+ "utopia-balancer",
  "utopia-compression",
  "utopia-detector",
  "utopia-domains",

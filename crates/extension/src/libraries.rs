@@ -42,6 +42,7 @@ const NAMES: [&str; 11] = [
     "detector",
     "compression",
     "query",
+    "balancer",
 ];
 
 /// Names the validators were switched on by, one group at a time, before they all became one
