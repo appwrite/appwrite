@@ -38,9 +38,9 @@ use ext_php_rs::zend::{ClassEntry, ExecutorGlobals, ce};
 use php_std::types::KeyRef;
 use php_std::{ArrayKey as Key, Str};
 use utopia_query::builder::{
-    AnyBuilder, Arg, Binding, Builder, ClickHouseDialect, Condition, Dialect, ExplainOptions, JoinBuilder, JoinOn,
-    JoinType, MariaDbDialect, MongoDbDialect, MySqlDialect, Overrides, PostgreSqlDialect, Ret, SqliteDialect,
-    Statement, Step, WindowFrame,
+    AnyBuilder, Arg, AsofOperator, Binding, Builder, ClickHouseDialect, Condition, Dialect, ExplainOptions, IndexHint,
+    JoinBuilder, JoinOn, JoinType, MariaDbDialect, MongoDbDialect, MySqlDialect, Overrides, PostgreSqlDialect, Ret,
+    SqliteDialect, Statement, Step, VectorMetric, WindowFrame,
 };
 use utopia_query::hook::{self, Hook};
 use utopia_query::{Array, Error, Method, NullsPosition, Object, Query, Value};
@@ -1000,6 +1000,60 @@ impl<'a> FromZval<'a> for Join {
 impl StubLiteral for Join {
     fn stub_literal(&self) -> String {
         format!("\\{}::{}", JoinType::PHP_CLASS, self.0.name())
+    }
+}
+
+/// An argument that is a case of one of the package's enums.
+macro_rules! case_argument {
+    ($(#[$meta:meta])* $name:ident, $of:ty) => {
+        $(#[$meta])*
+        pub struct $name($of);
+
+        impl<'a> FromZval<'a> for $name {
+            const TYPE: DataType = DataType::object(<$of>::PHP_CLASS);
+
+            fn from_zval(zval: &'a Zval) -> Option<Self> {
+                let object =
+                    zval.object().filter(|object| class(<$of>::PHP_CLASS).is_ok_and(|class| object.instance_of(class)))?;
+                slots(object).get(1)?.str().and_then(<$of>::try_from_value).map($name)
+            }
+        }
+
+        impl StubLiteral for $name {
+            fn stub_literal(&self) -> String {
+                format!("\\{}::{}", <$of>::PHP_CLASS, self.0.name())
+            }
+        }
+    };
+}
+
+case_argument!(
+    /// A `VectorMetric` argument.
+    Metric,
+    VectorMetric
+);
+case_argument!(
+    /// An `AsofOperator` argument.
+    Asof,
+    AsofOperator
+);
+
+/// A number of a list of floats.
+fn number(value: &Value) -> f64 {
+    match value {
+        Value::Float(number) => *number,
+        #[allow(clippy::cast_precision_loss)]
+        Value::Int(number) => *number as f64,
+        _ => 0.0,
+    }
+}
+
+/// MongoDB's `hint()`: a key pattern, or the name of an index.
+fn hinted(hint: Value) -> IndexHint {
+    match hint {
+        Value::Array(keys) => IndexHint::Keys(keys),
+        Value::Str(name) => IndexHint::Name(String::from_utf8_lossy(name.as_bytes()).into_owned()),
+        _ => IndexHint::Name(String::new()),
     }
 }
 
@@ -3489,6 +3543,214 @@ macro_rules! builder_class {
             }
         }, $($rest,)*);
     };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, clickhouse_constants, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            const DELETE_MODE_LIGHTWEIGHT: &'static str = "lightweight";
+            const DELETE_MODE_MUTATION: &'static str = "mutation";
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, mongo_facet, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            pub fn facet<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                facets: Arr<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let mut named = Vec::new();
+                for (name, builder) in facets.table().into_iter().flatten() {
+                    let builder = BuilderArgument::from_zval(builder)
+                        .ok_or_else(|| PhpException::new("A facet must be a builder".to_owned(), 0, ce::type_error()))?;
+                    named.push((self_.0.text(name.to_string().as_bytes()), Foreign::of::<$dialect>(&builder)));
+                }
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let facets = named.iter_mut().map(|(name, builder)| (name.as_str(), builder as &mut dyn AnyBuilder));
+                self_.0.change(|builder| builder.facet(facets).map(|_| ()))?;
+                Ok(self_)
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, lateral_joins, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(name = "joinLateral", defaults(r#type = "Join(JoinType::Inner)"))]
+            pub fn join_lateral<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                subquery: BuilderArgument<'_>,
+                alias: PhpString<'_>,
+                r#type: Join,
+            ) -> &'a mut ZendClassObject<$class> {
+                let subquery: Box<dyn AnyBuilder> = Box::new(Foreign::of::<$dialect>(&subquery));
+                let alias = self_.0.text(alias.bytes());
+                let r#type = r#type.0;
+                self_.0.with(|builder| {
+                    builder.join_lateral(subquery, alias, r#type);
+                });
+                self_
+            }
+
+            #[php(name = "leftJoinLateral")]
+            pub fn left_join_lateral<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                subquery: BuilderArgument<'_>,
+                alias: PhpString<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let subquery: Box<dyn AnyBuilder> = Box::new(Foreign::of::<$dialect>(&subquery));
+                let alias = self_.0.text(alias.bytes());
+                self_.0.with(|builder| {
+                    builder.left_join_lateral(subquery, alias);
+                });
+                self_
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, merge_using, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            pub fn using_<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                source: BuilderArgument<'_>,
+                alias: PhpString<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let source: Box<dyn AnyBuilder> = Box::new(Foreign::of::<$dialect>(&source));
+                let alias = self_.0.text(alias.bytes());
+                self_.0.with(|builder| {
+                    builder.using(source, alias);
+                });
+                self_
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, vector_search, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(name = "orderByVectorDistance", defaults(metric = "Metric(VectorMetric::Cosine)"))]
+            pub fn order_by_vector_distance<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                attribute: PhpString<'_>,
+                vector: Arr<'_>,
+                metric: Metric,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let attribute = self_.0.text(attribute.bytes());
+                let vector = self_.0.values(&vector)?;
+                let metric = metric.0;
+                self_.0.with(|builder| {
+                    builder.order_by_vector_distance(attribute, vector, metric);
+                });
+                Ok(self_)
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, asof_joins, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(name = "asofJoin", defaults(alias = "\"\""))]
+            pub fn asof_join<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                table: PhpString<'_>,
+                equiPairs: Arr<'_>,
+                leftInequality: PhpString<'_>,
+                operator: Asof,
+                rightInequality: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let table = self_.0.text(table.bytes());
+                let equiPairs = self_.0.pairs(&equiPairs);
+                let leftInequality = self_.0.text(leftInequality.bytes());
+                let operator = operator.0;
+                let rightInequality = self_.0.text(rightInequality.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.change(|builder| builder.asof_join(&table, equiPairs, &leftInequality, operator, &rightInequality, &alias).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "asofLeftJoin", defaults(alias = "\"\""))]
+            pub fn asof_left_join<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                table: PhpString<'_>,
+                equiPairs: Arr<'_>,
+                leftInequality: PhpString<'_>,
+                operator: Asof,
+                rightInequality: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let table = self_.0.text(table.bytes());
+                let equiPairs = self_.0.pairs(&equiPairs);
+                let leftInequality = self_.0.text(leftInequality.bytes());
+                let operator = operator.0;
+                let rightInequality = self_.0.text(rightInequality.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.change(|builder| builder.asof_left_join(&table, equiPairs, &leftInequality, operator, &rightInequality, &alias).map(|_| ()))?;
+                Ok(self_)
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, quantiles, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(defaults(alias = "\"\""))]
+            pub fn quantiles<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                levels: Arr<'_>,
+                column: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let levels: Vec<f64> = self_.0.values(&levels)?.values().map(number).collect();
+                let column = self_.0.text(column.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.change(|builder| builder.quantiles(&levels, &column, &alias).map(|_| ()))?;
+                Ok(self_)
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, group_concat, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(name = "groupConcat", defaults(separator = "\",\"", alias = "\"\""), optional = separator)]
+            pub fn group_concat<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+                separator: PhpString<'_>,
+                alias: PhpString<'_>,
+                orderBy: Option<Arr<'_>>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let column = self_.0.text(column.bytes());
+                let separator = self_.0.text(separator.bytes());
+                let alias = self_.0.text(alias.bytes());
+                let orderBy = orderBy.map(|orderBy| self_.0.strings(&orderBy));
+                self_.0.change(|builder| builder.group_concat(&column, &separator, &alias, orderBy.as_deref()).map(|_| ()))?;
+                Ok(self_)
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, mongo_more, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(optional = amount)]
+            pub fn increment<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                field: PhpString<'_>,
+                amount: Option<&Zval>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let field = self_.0.text(field.bytes());
+                let amount = amount.filter(|amount| !amount.is_null()).map(|amount| self_.0.value(amount)).transpose()?;
+                self_.0.change(|builder| builder.increment(&field, amount.unwrap_or(Value::Int(1))).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            pub fn hint<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                hint: &Zval,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let hint = self_.0.value(hint)?;
+                self_.0.with(|builder| {
+                    builder.hint(hinted(hint));
+                });
+                Ok(self_)
+            }
+        }, $($rest,)*);
+    };
     // FEATURES
     (@add [$(#[$meta:meta])*] $class:ident, $dialect:ty, {$($methods:tt)*},) => {
         $(#[$meta])*
@@ -4620,7 +4882,7 @@ builder_class!(
     #[php(extends(Sql))]
     MySqlBuilder,
     MySqlDialect,
-    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, mysql_family, explain_format, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, hints, conditional_aggregates, json_aggregates, json, search, not_search, spatial_filters, transactions, max_execution_time]
+    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, mysql_family, explain_format, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, hints, conditional_aggregates, json_aggregates, json, search, not_search, spatial_filters, transactions, max_execution_time, lateral_joins, group_concat]
 );
 builder_class!(
     /// `Utopia\Query\Builder\MariaDB`.
@@ -4629,7 +4891,7 @@ builder_class!(
     #[php(extends(MySqlBuilder))]
     MariaDbBuilder,
     MariaDbDialect,
-    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, returning, mysql_family, explain_format, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, hints, conditional_aggregates, json_aggregates, json, search, not_search, sequences, spatial_filters, transactions, max_execution_time]
+    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, returning, mysql_family, explain_format, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, hints, conditional_aggregates, json_aggregates, json, search, not_search, sequences, spatial_filters, transactions, max_execution_time, lateral_joins, group_concat]
 );
 builder_class!(
     /// `Utopia\Query\Builder\PostgreSQL`.
@@ -4638,7 +4900,7 @@ builder_class!(
     #[php(extends(Sql))]
     PostgreSqlBuilder,
     PostgreSqlDialect,
-    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, returning, postgres_from, explain_postgres, cross_joins, full_outer_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, cube, conditional_aggregates, json_aggregates, json, search, not_search, tablesample, sequences, spatial_filters, transactions, postgres_more]
+    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, returning, postgres_from, explain_postgres, cross_joins, full_outer_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, cube, conditional_aggregates, json_aggregates, json, search, not_search, tablesample, sequences, spatial_filters, transactions, postgres_more, lateral_joins, merge_using, vector_search, group_concat]
 );
 builder_class!(
     /// `Utopia\Query\Builder\SQLite`.
@@ -4647,7 +4909,7 @@ builder_class!(
     #[php(extends(Sql))]
     SqliteBuilder,
     SqliteDialect,
-    [sql, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, explain_plain, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, conditional_aggregates, json_aggregates, json, transactions]
+    [sql, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, explain_plain, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, conditional_aggregates, json_aggregates, json, transactions, group_concat]
 );
 builder_class!(
     /// `Utopia\Query\Builder\ClickHouse`.
@@ -4656,7 +4918,7 @@ builder_class!(
     #[php(extends(Base))]
     ClickHouseBuilder,
     ClickHouseDialect,
-    [literal, raw_sql, explain_plain, cross_joins, full_outer_joins, statistical_clickhouse, bitwise, raw_sql_more, rollup, cube, totals, hints, conditional_aggregates, json_aggregates, tablesample, clickhouse_more]
+    [literal, raw_sql, explain_plain, cross_joins, full_outer_joins, statistical_clickhouse, bitwise, raw_sql_more, rollup, cube, totals, hints, conditional_aggregates, json_aggregates, tablesample, clickhouse_more, clickhouse_constants, asof_joins, quantiles, group_concat]
 );
 builder_class!(
     /// `Utopia\Query\Builder\MongoDB`.
@@ -4665,5 +4927,5 @@ builder_class!(
     #[php(extends(Base))]
     MongoDbBuilder,
     MongoDbDialect,
-    [upsert, insert_or_ignore, explain_plain, search, tablesample, mongo_updates, mongo_stages]
+    [upsert, insert_or_ignore, explain_plain, search, tablesample, mongo_updates, mongo_stages, mongo_facet, mongo_more]
 );
