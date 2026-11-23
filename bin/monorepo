@@ -109,6 +109,26 @@ function packages(): array
 }
 
 /**
+ * A package that requires `ext-utopia` is served by the Rust extension built
+ * from this repository: it cannot be installed on its own, so its mirror is
+ * archived at the last PHP release and it is no longer split or released.
+ */
+function frozen(string $package): bool
+{
+    return isset(manifest($package)['require']['ext-utopia']);
+}
+
+/**
+ * Packages that are still published to their mirrors.
+ *
+ * @return string[]
+ */
+function distributed(): array
+{
+    return array_values(array_filter(packages(), fn (string $package) => !frozen($package)));
+}
+
+/**
  * Distribution remote for a package. CI overrides the base with an
  * authenticated HTTPS URL via SPLIT_REMOTE_BASE.
  */
@@ -698,10 +718,11 @@ switch ($command) {
         break;
 
     case 'split':
-        $targets = $arguments !== [] ? $arguments : packages();
+        $targets = $arguments !== [] ? $arguments : distributed();
         $failed = [];
         foreach ($targets as $package) {
             is_dir("packages/{$package}") || fail("unknown package: {$package}");
+            frozen($package) && fail("{$package} requires ext-utopia: its mirror " . ORG . "/{$package} is archived and no longer split");
 
             out("splitting {$package}...");
             $sha = split_package($package);
@@ -771,6 +792,7 @@ switch ($command) {
         $package = $arguments[0] ?? fail('usage: monorepo release <package> <version> [--dry-run]');
         $version = $arguments[1] ?? fail('usage: monorepo release <package> <version> [--dry-run]');
         is_dir("packages/{$package}") || fail("unknown package: {$package}");
+        frozen($package) && fail("{$package} requires ext-utopia: its mirror " . ORG . "/{$package} is archived and no longer released");
         preg_match('/^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$/', $version)
             || fail("version must be semver (e.g. 2.1.0 or 2.1.0-rc1), got \"{$version}\"");
 
@@ -1067,6 +1089,10 @@ switch ($command) {
         out('all tests passed');
         break;
 
+    case 'mirrors':
+        out(implode(',', distributed()));
+        break;
+
     default:
         out(<<<'HELP'
         usage: bin/monorepo <command>
@@ -1076,6 +1102,8 @@ switch ($command) {
                                               import (preserving history) + strip hoisted QA + mirror PR redirect + lockdown
           split [name...] [--tag=v] [--branch=main] [--remote=url] [--force] [--dry-run]
                                               push package histories to their mirrors
+                                              (packages that require ext-utopia are skipped)
+          mirrors                             comma-separated packages that are still published
           release <name> <version> [--dry-run]
                                               preview notes, tag <name>/<version> and push it (CI does the rest)
           validate                            check the package shape and the root autoload wiring

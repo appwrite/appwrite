@@ -30,14 +30,15 @@ jobs:
           # the persisted GITHUB_TOKEN header would override the app token on push
           persist-credentials: false
 
-      # A tag pushes one mirror; main pushes every package that carries a manifest.
+      # A tag pushes one mirror; main pushes every package that is still published.
       - name: Resolve mirrors
         id: mirrors
         run: |
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
             repositories="${GITHUB_REF_NAME%%/*}"
           else
-            repositories=$(for manifest in packages/*/composer.json; do basename "$(dirname "$manifest")"; done | paste -sd, -)
+            # Packages that require ext-utopia have archived mirrors.
+            repositories=$(bin/monorepo mirrors)
           fi
           echo "repositories=$repositories" >> "$GITHUB_OUTPUT"
 
