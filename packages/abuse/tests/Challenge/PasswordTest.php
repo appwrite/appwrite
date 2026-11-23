@@ -6,31 +6,22 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Abuse\Challenge\Clearance;
 use Utopia\Abuse\Challenge\Password;
 use Utopia\Abuse\Challenge\Status;
+use Utopia\Auth\Proofs\Password as PasswordProof;
 
 final class PasswordTest extends TestCase
 {
     private const string SECRET = 'password-secret';
 
-    private const string KEY = 'fixture-openssl-key-v1-0123456789abcdef';
-
-    private const string PREVIOUS_KEY = 'previous-openssl-key-v0-fedcba9876543210';
-
     private const string PASSWORD = 'correct horse battery staple';
 
-    /**
-     * Written by Appwrite's `encrypt` database filter code path
-     * (Appwrite\OpenSSL\OpenSSL, AES-128-GCM) with KEY at version "1".
-     */
-    private const string APPWRITE_ENCRYPTED = '{"data":"cOSUHpamMn0onToPe4GIK7/1brUDlMWqXRTsng==","method":"aes-128-gcm","iv":"1a47fe5094f2d00ee01c61c2","tag":"6e5b94f73632f22ecd127a7355ed150d","version":"1"}';
+    /** A hash Appwrite stores for the password "appwrite" (its own e2e fixture). */
+    private const string APPWRITE_HASH = '$argon2i$v=19$m=20,t=3,p=2$YXBwd3JpdGU$A/54i238ed09ZR4NwlACU5XnkjNBZU9QeOEuhjLiexI';
 
     private const array CLIENT = ['ip' => '203.0.113.0/24', 'ua' => 'ua-hash'];
 
-    /**
-     * @param  array<array-key, string>  $keys
-     */
-    private function password(string $encrypted = self::APPWRITE_ENCRYPTED, array $keys = ['1' => self::KEY]): Password
+    private function password(string $hash): Password
     {
-        return new Password(self::SECRET, $encrypted, $keys);
+        return new Password(self::SECRET, $hash);
     }
 
     private function answer(Password $password, string $guess): Status
@@ -40,76 +31,65 @@ final class PasswordTest extends TestCase
         return $bound->verify($bound->issue()->value, $guess)->status;
     }
 
-    public function testAPasswordEncryptedByAppwriteMatches(): void
+    public function testAPasswordHashedByAuthMatches(): void
     {
-        $this->assertSame(Status::Valid, $this->answer($this->password(), self::PASSWORD));
-        $this->assertSame(Status::Rejected, $this->answer($this->password(), 'wrong'));
-        $this->assertSame(Status::Rejected, $this->answer($this->password(), self::PASSWORD . ' '));
-        $this->assertSame(Status::Rejected, $this->answer($this->password(), ''));
+        $password = $this->password(new PasswordProof()->hash(self::PASSWORD));
+
+        $this->assertSame(Status::Valid, $this->answer($password, self::PASSWORD));
+        $this->assertSame(Status::Rejected, $this->answer($password, 'wrong'));
+        $this->assertSame(Status::Rejected, $this->answer($password, self::PASSWORD . ' '));
     }
 
-    public function testEncryptWritesTheAppwriteEnvelope(): void
+    public function testAHashAppwriteStoresMatches(): void
     {
-        $envelope = \json_decode(Password::encrypt(self::PASSWORD, self::KEY, '1'), true);
+        $password = $this->password(self::APPWRITE_HASH);
 
-        $this->assertIsArray($envelope);
-        $this->assertSame(['data', 'method', 'iv', 'tag', 'version'], \array_keys($envelope));
-        $this->assertSame('aes-128-gcm', $envelope['method']);
-        $this->assertIsString($envelope['data']);
-        $this->assertIsString($envelope['iv']);
-        $this->assertIsString($envelope['tag']);
-
-        // Plain openssl, as Appwrite's filter decrypts, returns the password.
-        $this->assertSame(self::PASSWORD, \openssl_decrypt($envelope['data'], 'aes-128-gcm', self::KEY, 0, (string) \hex2bin($envelope['iv']), (string) \hex2bin($envelope['tag'])));
+        $this->assertSame(Status::Valid, $this->answer($password, 'appwrite'));
+        $this->assertSame(Status::Rejected, $this->answer($password, 'Appwrite'));
     }
 
-    public function testUnlabelledKeysAreTriedInTurnDuringARotation(): void
+    public function testAnEmptyGuessNeverMatches(): void
     {
-        $old = Password::encrypt(self::PASSWORD, self::PREVIOUS_KEY, '1');
-        $new = Password::encrypt(self::PASSWORD, self::KEY, '2');
-
-        $this->assertSame(Status::Valid, $this->answer($this->password($old, [self::KEY, self::PREVIOUS_KEY]), self::PASSWORD));
-        $this->assertSame(Status::Valid, $this->answer($this->password($new, [self::KEY, self::PREVIOUS_KEY]), self::PASSWORD));
+        $this->assertSame(Status::Rejected, $this->answer($this->password(new PasswordProof()->hash(self::PASSWORD)), ''));
+        // Not even against a hash of an empty password.
+        $this->assertSame(Status::Rejected, $this->answer($this->password(new PasswordProof()->hash('')), ''));
     }
 
-    public function testAWrongKeyNeverMatches(): void
+    public function testAMalformedHashNeverMatches(): void
     {
-        $this->assertSame(Status::Rejected, $this->answer($this->password(keys: ['1' => self::PREVIOUS_KEY]), self::PASSWORD));
-        $this->assertSame(Status::Rejected, $this->answer($this->password(keys: ['']), self::PASSWORD));
+        $this->assertSame(Status::Rejected, $this->answer($this->password('not-a-hash'), self::PASSWORD));
     }
 
-    public function testATamperedOrMalformedPasswordNeverMatches(): void
+    public function testAnEmptyHashIsRefused(): void
     {
-        $envelope = \json_decode(self::APPWRITE_ENCRYPTED, true);
-        $envelope['tag'] = \str_repeat('0', 32);
-
-        foreach ([(string) \json_encode($envelope), 'not json', '{"data":"x","method":"aes-256-cbc","iv":"00","tag":"00","version":"1"}', '{"data":"x","method":"aes-128-gcm","iv":"zz","tag":"00","version":"1"}'] as $encrypted) {
-            $this->assertSame(Status::Rejected, $this->answer($this->password($encrypted), self::PASSWORD), $encrypted);
-        }
+        $this->expectException(\InvalidArgumentException::class);
+        $this->password('');
     }
 
     public function testATokenVerifiesOnlyForTheSameParams(): void
     {
-        $token = $this->password()->withParams(self::CLIENT)->issue();
+        $password = $this->password(new PasswordProof()->hash(self::PASSWORD));
+        $token = $password->withParams(self::CLIENT)->issue();
 
-        $this->assertSame(Status::BindingMismatch, $this->password()->verify($token->value, self::PASSWORD)->status);
-        $this->assertSame(Status::BindingMismatch, $this->password()->withParams([...self::CLIENT, 'ip' => '198.51.100.0/24'])->verify($token->value, self::PASSWORD)->status);
-        $this->assertSame(Status::Valid, $this->password()->withParams(self::CLIENT)->verify($token->value, self::PASSWORD)->status);
+        $this->assertSame(Status::BindingMismatch, $password->verify($token->value, self::PASSWORD)->status);
+        $this->assertSame(Status::BindingMismatch, $password->withParams([...self::CLIENT, 'ip' => '198.51.100.0/24'])->verify($token->value, self::PASSWORD)->status);
+        $this->assertSame(Status::Valid, $password->withParams(self::CLIENT)->verify($token->value, self::PASSWORD)->status);
     }
 
     public function testATokenFromAnotherChallengeIsRejected(): void
     {
-        $other = new Password('other-secret', self::APPWRITE_ENCRYPTED, ['1' => self::KEY])->issue();
+        $hash = new PasswordProof()->hash(self::PASSWORD);
+        $other = new Password('other-secret', $hash)->issue();
         $clearance = new Clearance(self::SECRET)->issue();
 
-        $this->assertSame(Status::InvalidToken, $this->password()->verify($other->value, self::PASSWORD)->status);
-        $this->assertSame(Status::InvalidToken, $this->password()->verify($clearance, self::PASSWORD)->status);
+        $this->assertSame(Status::InvalidToken, $this->password($hash)->verify($other->value, self::PASSWORD)->status);
+        $this->assertSame(Status::InvalidToken, $this->password($hash)->verify($clearance, self::PASSWORD)->status);
     }
 
-    public function testVersionChangesWhenThePasswordIsEncryptedAgain(): void
+    public function testVersionChangesWhenThePasswordIsHashedAgain(): void
     {
-        $first = $this->password(Password::encrypt(self::PASSWORD, self::KEY, '1'));
-        $second = $this->password(Password::encrypt(self::PASSWORD, self::KEY, '1'));
+        $first = $this->password(new PasswordProof()->hash(self::PASSWORD));
+        $second = $this->password(new PasswordProof()->hash(self::PASSWORD));
 
         $this->assertSame($first->version(), $first->version());
         $this->assertNotSame($first->version(), $second->version());
@@ -119,42 +99,12 @@ final class PasswordTest extends TestCase
     public function testAClearanceBoundToTheVersionEndsWhenThePasswordChanges(): void
     {
         $clearance = new Clearance(self::SECRET);
-        $before = $this->password(Password::encrypt(self::PASSWORD, self::KEY, '1'));
-        $after = $this->password(Password::encrypt('new password', self::KEY, '1'));
+        $before = $this->password(new PasswordProof()->hash(self::PASSWORD));
+        $after = $this->password(new PasswordProof()->hash('new password'));
 
         $pass = $clearance->withParams([...self::CLIENT, 'version' => $before->version()])->issue();
 
         $this->assertTrue($clearance->withParams([...self::CLIENT, 'version' => $before->version()])->verify($pass));
         $this->assertFalse($clearance->withParams([...self::CLIENT, 'version' => $after->version()])->verify($pass));
-    }
-
-    public function testEncryptRefusesAnEmptyPassword(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        Password::encrypt('', self::KEY, '1');
-    }
-
-    public function testAnEmptyStoredPasswordNeverMatches(): void
-    {
-        // Written elsewhere (e.g. Appwrite's `encrypt` filter), an empty password must not accept an empty guess.
-        $iv = \random_bytes(12);
-        $tag = '';
-        $data = (string) \openssl_encrypt('', 'aes-128-gcm', self::KEY, 0, $iv, $tag);
-        $empty = (string) \json_encode(['data' => $data, 'method' => 'aes-128-gcm', 'iv' => \bin2hex($iv), 'tag' => \bin2hex($tag), 'version' => '1']);
-
-        $this->assertSame(Status::Rejected, $this->answer($this->password($empty), ''));
-        $this->assertSame(Status::Rejected, $this->answer($this->password($empty), 'anything'));
-    }
-
-    public function testEncryptRefusesAnEmptyKey(): void
-    {
-        $this->expectException(\RuntimeException::class);
-        Password::encrypt(self::PASSWORD, '', '1');
-    }
-
-    public function testAnEmptyPasswordOrNoKeysIsRefused(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        new Password(self::SECRET, '', ['1' => self::KEY]);
     }
 }

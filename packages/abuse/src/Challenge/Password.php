@@ -3,20 +3,19 @@
 namespace Utopia\Abuse\Challenge;
 
 use Utopia\Abuse\Challenge;
+use Utopia\Auth\Proof;
+use Utopia\Auth\Proofs\Password as PasswordProof;
 
 /**
- * Asks the client for a password the caller set, e.g. on a firewall rule. The
- * password is held encrypted, in the same envelope Appwrite's `encrypt` database
- * filter writes (AES-128-GCM, base64 data, hex IV and tag, key version), so it
- * is never stored or passed around in plaintext.
+ * Asks the client for a password the caller set, e.g. on a firewall rule. Only
+ * a hash of it is kept, checked with utopia-php/auth's password proof, so any
+ * hash auth verifies works (Argon2 by default, as Appwrite stores user
+ * passwords). Create one with `new \Utopia\Auth\Proofs\Password()->hash(...)`.
  *
- * It does not limit guesses: rate-limit verify() per client, e.g. with a
- * TimeLimit adapter, before calling it.
+ * It does not limit guesses: rate-limit verify() per client before calling it.
  */
 final readonly class Password extends Challenge
 {
-    public const string CIPHER = 'aes-128-gcm';
-
     /** Token lifetime in seconds: how long the form stays valid. */
     public const int DEFAULT_TTL = 600;
 
@@ -25,8 +24,8 @@ final readonly class Password extends Challenge
 
     /**
      * @param  string  $secret  Signing secret
-     * @param  string  $password  The password, encrypted with {@see encrypt()} or Appwrite's `encrypt` filter
-     * @param  array<array-key, string>  $keys  Decryption keys, keyed by version where known; others are tried in order during a rotation
+     * @param  string  $hash  The password's hash, from utopia-php/auth
+     * @param  Proof  $proof  Checks a guess against the hash
      * @param  int  $ttl  Token lifetime in seconds
      * @param  string  $label  Derives the signing key from the secret; keep it stable or issued tokens stop verifying
      * @param  string  $purpose  Stored in each token so no other kind of token passes as one
@@ -35,14 +34,14 @@ final readonly class Password extends Challenge
      */
     public function __construct(
         string $secret,
-        private string $password,
-        private array $keys,
+        private string $hash,
+        private Proof $proof = new PasswordProof(),
         int $ttl = self::DEFAULT_TTL,
         string $label = 'password',
         string $purpose = 'password',
     ) {
-        if ($password === '' || $keys === []) {
-            throw new \InvalidArgumentException('password and keys must not be empty');
+        if ($hash === '') {
+            throw new \InvalidArgumentException('hash must not be empty');
         }
 
         parent::__construct($secret, $label, $purpose, $ttl);
@@ -55,7 +54,8 @@ final readonly class Password extends Challenge
     }
 
     /**
-     * Check a guess against the stored password.
+     * Check a guess against the stored hash. An empty guess never matches, so a
+     * hash of an empty password can't let anyone through.
      */
     #[\Override]
     public function verify(string $token, string $answer): Result
@@ -65,97 +65,18 @@ final readonly class Password extends Challenge
             return $claims;
         }
 
-        return new Result($this->matches($answer) ? Status::Valid : Status::Rejected, $claims);
+        $matches = $answer !== '' && $this->proof->verify($answer, $this->hash);
+
+        return new Result($matches ? Status::Valid : Status::Rejected, $claims);
     }
 
     /**
-     * A short identifier of the password as stored. Re-encrypting it, even to
-     * the same password, changes it, so binding a clearance to it ends every
-     * clearance earned with the old one.
+     * A short identifier of the stored hash. Hashing again, even the same
+     * password, changes it (new salt), so binding a clearance to it ends every
+     * clearance earned with the old password.
      */
     public function version(): string
     {
-        return \substr(\hash('sha256', $this->password), 0, self::VERSION_LENGTH);
-    }
-
-    /**
-     * Encrypt a password for storage, recording the key version so the reader
-     * can pick the right key after a rotation.
-     *
-     * @throws \InvalidArgumentException when the password is empty: it would let anyone through
-     * @throws \RuntimeException when the key is empty or encryption fails
-     */
-    public static function encrypt(string $password, string $key, string $version): string
-    {
-        if ($password === '') {
-            throw new \InvalidArgumentException('Refusing to encrypt an empty password.');
-        }
-        if ($key === '') {
-            throw new \RuntimeException('Refusing to encrypt a password with an empty key.');
-        }
-
-        $iv = \random_bytes(12);
-        $tag = '';
-        $data = \openssl_encrypt($password, self::CIPHER, $key, 0, $iv, $tag);
-        if ($data === false) {
-            throw new \RuntimeException('Password encryption failed.');
-        }
-
-        return (string) \json_encode([
-            'data' => $data,
-            'method' => self::CIPHER,
-            'iv' => \bin2hex($iv),
-            'tag' => \bin2hex($tag),
-            'version' => $version,
-        ], JSON_UNESCAPED_SLASHES);
-    }
-
-    /**
-     * Whether the guess equals the stored password. The key whose version
-     * matches the envelope is tried first, then the rest; a wrong key fails the
-     * GCM tag check and never yields a match.
-     */
-    private function matches(string $guess): bool
-    {
-        $envelope = \json_decode($this->password, true);
-        if (!\is_array($envelope)) {
-            return false;
-        }
-
-        $data = $envelope['data'] ?? null;
-        $iv = self::fromHex($envelope['iv'] ?? null);
-        $tag = self::fromHex($envelope['tag'] ?? null);
-        if (!\is_string($data) || ($envelope['method'] ?? null) !== self::CIPHER || $iv === null || $tag === null) {
-            return false;
-        }
-
-        $version = $envelope['version'] ?? null;
-        $keys = \array_values($this->keys);
-        if ((\is_string($version) || \is_int($version)) && isset($this->keys[$version])) {
-            \array_unshift($keys, $this->keys[$version]);
-        }
-
-        foreach ($keys as $key) {
-            $password = $key === '' ? false : \openssl_decrypt($data, self::CIPHER, $key, 0, $iv, $tag);
-            if ($password !== false) {
-                // An empty stored password would accept an empty guess; never treat it as set.
-                // Compare digests so the time taken does not depend on length.
-                return $password !== '' && \hash_equals(\hash('sha256', $password), \hash('sha256', $guess));
-            }
-        }
-
-        return false;
-    }
-
-    /** Decodes an even-length hex string; anything else is null. */
-    private static function fromHex(mixed $value): ?string
-    {
-        if (!\is_string($value) || $value === '' || \strlen($value) % 2 !== 0 || !\ctype_xdigit($value)) {
-            return null;
-        }
-
-        $binary = \hex2bin($value);
-
-        return $binary === false ? null : $binary;
+        return \substr(\hash('sha256', $this->hash), 0, self::VERSION_LENGTH);
     }
 }

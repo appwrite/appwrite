@@ -154,19 +154,20 @@ if (!$clearance->withParams($client)->verify($cookie, difficulty: 18, maxAge: 18
 
 Proof-of-work tokens last 120 seconds and clearances 30 minutes unless you pass a `ttl`. Tokens verify only with exactly the same params. A nonce store outage rejects the solution (`Status::Unavailable`) unless you pass `acceptWhenNoncesUnavailable: true`. To bind to a network rather than an exact IP, use `Identity`: `new Identity()->ipPrefix($ip)` gives the /24 (IPv4) or /48 (IPv6) the address belongs to, and `userAgentHash()` hashes the User-Agent.
 
-**Password.** `Password` asks for a password you set, e.g. on a firewall rule. Store it encrypted with `Password::encrypt()` (the same envelope as Appwrite's `encrypt` database filter) and pass the keys to decrypt it. It does not limit guesses: rate-limit verify per client yourself, e.g. with a `TimeLimit` adapter.
+**Password.** `Password` asks for a password you set, e.g. on a firewall rule. It keeps only a hash, checked with `utopia-php/auth`'s password proof, so it accepts the same hashes Appwrite stores for user passwords (Argon2 by default). It does not limit guesses: rate-limit verify per client yourself, e.g. with a `TimeLimit` adapter.
 
 ```php
 <?php
 
 use Utopia\Abuse\Challenge\Password;
+use Utopia\Auth\Proofs\Password as PasswordProof;
 
-$stored = Password::encrypt('open sesame', $key, version: '1');   // keep this, not the password
+$hash = new PasswordProof()->hash('open sesame');   // store this, not the password
 
-$password = new Password('secret', $stored, keys: ['1' => $key]);
+$password = new Password('secret', $hash);
 
-$token = $password->withParams($client)->issue();                        // render a form carrying $token->value
-$result = $password->withParams($client)->verify($value, $guess);        // Valid or Rejected
+$token  = $password->withParams($client)->issue();                // render a form carrying $token->value
+$result = $password->withParams($client)->verify($value, $guess);  // Valid or Rejected
 
 // Tie the clearance to this version of the password, so changing it ends every clearance
 $pass = $clearance->withParams([...$client, 'version' => $password->version()])->issue();
