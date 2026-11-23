@@ -104,4 +104,24 @@ abstract readonly class Challenge
 
         return $claims;
     }
+
+    /**
+     * Params that fill a store's key pattern, taken from a token's claims:
+     * "{name}" => value, so a key such as "pow:{project}" or "pw:{ip}" is scoped
+     * by what the token was issued for.
+     *
+     * @param  array<mixed>  $claims
+     * @return array<string, string>
+     */
+    protected static function keyParams(array $claims): array
+    {
+        $params = [];
+        foreach ($claims as $name => $value) {
+            if (\is_string($value) || \is_int($value)) {
+                $params['{' . $name . '}'] = (string) $value;
+            }
+        }
+
+        return $params;
+    }
 }

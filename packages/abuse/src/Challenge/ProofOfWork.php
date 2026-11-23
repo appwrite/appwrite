@@ -91,7 +91,7 @@ final readonly class ProofOfWork extends Challenge
 
         $error = null;
         try {
-            $fresh = $this->nonces->withParams(self::nonceParams($claims))->consume($nonce, $this->token->ttl);
+            $fresh = $this->nonces->withParams(self::keyParams($claims))->consume($nonce, $this->token->ttl);
         } catch (Throwable $e) {
             if (!$this->acceptWhenNoncesUnavailable) {
                 return new Result(Status::Unavailable, $claims, $difficulty, $elapsedMs, $e);
@@ -161,23 +161,5 @@ final readonly class ProofOfWork extends Challenge
         }
 
         return $bits;
-    }
-
-    /**
-     * The params that fill the nonce key's placeholders, taken from the token's claims: "{name}" => value.
-     *
-     * @param  array<mixed>  $claims
-     * @return array<string, string>
-     */
-    private static function nonceParams(array $claims): array
-    {
-        $params = [];
-        foreach ($claims as $name => $value) {
-            if (\is_string($value) || \is_int($value)) {
-                $params['{' . $name . '}'] = (string) $value;
-            }
-        }
-
-        return $params;
     }
 }
