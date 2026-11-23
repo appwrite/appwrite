@@ -55,7 +55,6 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Linkedin\Update as Upd
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Microsoft\Update as UpdateOAuth2Microsoft;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Naver\Update as UpdateOAuth2Naver;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Netlify\Update as UpdateOAuth2Netlify;
-use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Supabase\Update as UpdateOAuth2Supabase;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Notion\Update as UpdateOAuth2Notion;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Oidc\Update as UpdateOAuth2Oidc;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Okta\Update as UpdateOAuth2Okta;
@@ -72,6 +71,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Slack\Update as Update
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Spotify\Update as UpdateOAuth2Spotify;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Strava\Update as UpdateOAuth2Strava;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Stripe\Update as UpdateOAuth2Stripe;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Supabase\Update as UpdateOAuth2Supabase;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TikTok\Update as UpdateOAuth2TikTok;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Tradeshift\Update as UpdateOAuth2Tradeshift;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TradeshiftSandbox\Update as UpdateOAuth2TradeshiftSandbox;
