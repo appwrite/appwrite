@@ -1,29 +1,33 @@
-# RFC: A declared dependency graph, so CI tests what a change affects
+# RFC: An exact graph for Rust, a total map for PHP
 
 Status: draft · Author: loks0n · Last updated: 2026-11-23
 
 ## Summary
 
-CI already chooses which E2E suites a pull request runs, from a hand-kept map in `.github/ci/e2e.json`. The map has two weaknesses. A file it does not mention runs every suite, and nothing checks that what it does say is true. Ten of the last 40 pull request runs fell back to running everything, and those ten used 92% of the E2E minutes.
+CI chooses which E2E suites a pull request runs from a hand-kept map in `.github/ci/e2e.json`. Ten of the last 40 pull request runs fell back to running everything, and those ten used 92% of the E2E minutes.
 
-This RFC makes the map a graph that is declared for every file and checked against the code. Packages and crates already have one (`composer.json`, `Cargo.toml`). The PHP server does not, and neither does the edge from a crate to the package it implements. Once those exist, one command joins the three graphs and prints what a change affects.
+This RFC treats the two languages differently, on purpose.
 
-It does not adopt Bazel. [Alternatives](#alternatives-considered) says why, and what would change that.
+- **Rust gets an exact graph.** Cargo already has one and the compiler enforces it. What is missing is the edge from a crate to the PHP it serves. Today a change under `crates/` runs no E2E suite on a pull request.
+- **PHP gets a total map, and no more.** Every file is assigned to a suite, to `shared`, or to nothing. A file with no owner fails CI, where today it silently runs everything. Nothing tries to infer or enforce the PHP graph, and Utopia DI is left alone.
+
+The reasoning is in [Why not make PHP exact](#why-not-make-php-exact): the measurements say a precise PHP graph would not have changed which suites ran, and code that moves to a crate gets an exact graph by moving.
+
+It does not adopt Bazel. [Alternatives](#alternatives-considered) says why.
 
 ## Goals
 
-- Every tracked file has a declared owner: a suite, the shared core, checks only, or nothing. A file with no owner fails CI, where today it silently runs everything.
-- The declarations are checked. A suite whose code reaches a file it does not declare fails CI.
-- A change to a crate selects the packages it implements and the suites that use them, through declared edges.
-- One command, `bin/monorepo affected`, replaces `.github/scripts/changes.mjs` and the path lists in `e2e.json`.
-- The size of the shared core is a number CI prints, so shrinking it is visible work.
+- Every tracked file has a declared owner. The full-suite fallback is something a person wrote down, in a diff someone reviewed.
+- A change to a crate selects the suites that use what it serves, through declared edges.
+- `Dockerfile` and workflow changes stop running every suite on every push of a pull request.
+- One command, `bin/monorepo affected`, replaces `.github/scripts/changes.mjs`.
 
 ## Non-goals
 
+- Restructuring Utopia DI, or decoupling PHP modules, for the sake of the graph. See [Why not make PHP exact](#why-not-make-php-exact).
+- Inferring or enforcing PHP dependencies with a static tool.
 - Replacing Composer, Cargo or the Dockerfile. `appwrite-labs/cloud` consumes this repository through Composer and builds from the Dockerfile; the Packagist mirrors are split from `packages/`.
-- Subdividing a suite. A suite runs or it does not.
-- Caching test results across runs. That needs hermetic tests, and E2E runs against Docker Compose with real databases.
-- Replacing the dependency injection container with a framework. [Injection names a class](#injection-names-a-class) changes what a resource is keyed by and where it is defined; `Utopia\DI\Container` stays about a hundred lines.
+- Subdividing a suite, or caching test results across runs.
 
 ## Current state
 
@@ -54,97 +58,29 @@ In the ten expensive runs the triggers were:
 | Fixture lockfiles under `tests/resources/` | 1 | Renovate lock-file maintenance |
 | Shared bootstrap (`app/init`, `Response.php`, `.env`) | 1 | a new environment variable |
 
+Seven of the ten were triggered by a file that is not PHP source.
+
 ### Which graphs exist
 
 | Unit | Declared in | Enforced by |
 |---|---|---|
 | `packages/<name>`, 46 | `composer.json` requires | `bin/monorepo test`, which installs each package on its own |
 | `crates/<name>`, 12 | `Cargo.toml` | the compiler |
-| Crate to the package it implements | prose in `crates/extension/README.md`; `paths.extension` in `e2e.json` | nothing |
+| Crate to the PHP it serves | prose in `crates/extension/README.md`; `paths.extension` in `e2e.json` | nothing |
+| Package to the suites that use it | `paths` in `e2e.json`, for 6 of the 46 | nothing |
 | Server code to the suite that tests it | `paths` of 36 services in `e2e.json` | nothing |
 
 `bin/monorepo dependents` already walks the package graph, and the `Packages / Changed` job uses it to pick package jobs.
 
-### What an inferred graph finds
+### The Rust gap
 
-A prototype tokenized every PHP file under `app/`, `src/` and `packages/*/src`, resolved class references through the PSR-4 map, and walked the result: 3,171 files and 16,463 edges, in a few seconds.
+`crates/` is in the `checks` and `extension` path lists. Those run the static checks and the extension job, which builds the library and runs the tests of the packages it serves. They select no E2E suite. So a pull request that changes how `Utopia\Validator\Text` or `Utopia\Locale\Locale` behaves runs no E2E until it lands on `main`. Neither class has PHP source any more, and the server uses both on nearly every request.
 
-- 985 files (31%) are reachable from the bootstrap (`app/init`, `app/http.php`, `app/controllers`) before a request reaches a module. A change to any of them has to run every suite.
-- 35 of 46 packages have at least one file in that set.
-- 1,249 files outside it are reached by a median of 3 suites out of 36.
-
-Replayed on 31 of those pull requests, it changed the selection on two. The `packages/abuse` run went from every suite to none. A change to `packages/vcs/src/Adapter.php` went from 7 suites to all 36, because the bootstrap references the class; the hand-kept map says only the VCS suites matter.
-
-So inference alone is not the answer. It is cheap and it is a good check, but the core is large because `app/init` constructs every resource and modules ask for them by string (`->inject('dbForProject')`). No static tool sees through that.
-
-It also has a blind spot: a class the `utopia` extension registers has no PHP source. `validators` and `user-agent` came out as used by nothing.
-
-### How injection is used
-
-`Utopia\DI\Container` maps a string to a factory. The factories are defined centrally and modules name them by string.
-
-| | |
-|---|---|
-| Resources defined under `app/` | 158, of which 128 in `app/init/resources.php` and `app/init/resources/request.php` |
-| `->inject('name')` calls under `src/Appwrite/Platform` | 4,569, in 838 files across 33 units (30 modules, `Workers`, `Tasks`, `Installer`) |
-| Resources injected by at least half of the units | 9: `response`, `authorization`, `project`, `request`, `queueForEvents`, `dbForPlatform`, `dbForProject`, `user`, `publisherForDeletes` |
-| Resources injected by exactly one unit | 40 |
-| Resources injected by two or three units | 33 |
-| Resources with no injection, dependency or lookup in this repository | 11 |
-| Injections whose action parameter already has a class type | 92% |
-
-So the core is large by placement, not by need. Nine resources are used everywhere. Most of the rest belong to one module and are defined in a file every module's graph passes through.
+That gap grows with every class that moves to the extension. There are ten crates under `crates/utopia/` today.
 
 ## Target shape
 
-### Every file has an owner
-
-`e2e.json` gains a `shared` list: the files a change to which runs every suite. It starts as today's implicit set, written down. The lists are then total. A tracked file that matches none of `services[].paths`, `shared`, `checks`, `console` or `ignore` fails the `Checks` job with the file's name.
-
-That turns "this file runs everything" from a default into a decision someone made, in a diff someone reviewed.
-
-### The declarations are checked
-
-A new `bin/monorepo graph --check` builds the static graph above and fails when:
-
-- a suite's declared files reach a PHP file that is neither in that suite's `paths` nor in `shared`;
-- a file in `shared` is reached by nothing in the bootstrap, so it does not need to be there.
-
-Existing violations go in a baseline file, as `phpstan-baseline.neon` does for PHPStan. An entry that no longer holds fails the check, so the baseline only shrinks.
-
-The check does not select tests. Selection reads the declarations. The check keeps the declarations honest.
-
-### Injection names a class
-
-A resource becomes a class, and its key is that class's name:
-
-```php
-namespace Appwrite\Platform\Modules\Avatars\Resources;
-
-final class ClientForAvatars
-{
-    public const array DEPENDS = [];
-
-    public function __invoke(): Client
-    {
-        return new Client(/* ... */);
-    }
-}
-```
-
-```php
-->inject(ClientForAvatars::class)
-```
-
-Three things follow.
-
-- **The edge is in the source.** The action file imports the resource class, and the resource class imports what it constructs. Any static tool follows that: the checker in this RFC, PHPStan, an editor's "find usages". Nothing has to understand the container.
-- **A resource lives with its owner.** `ClientForAvatars` sits in the Avatars module. Its files leave `shared`, and a change to them selects the Avatars suite. The nine resources everything uses stay in a small shared kernel.
-- **The library does not change.** `Foo::class` is a string, so `Container::set()` and `Action::inject()` take it as they are. The change is a convention plus one helper that registers a resource class and reads `DEPENDS`. During the move the old name stays registered as an alias of the class, so the 4,569 call sites change by codemod, module by module, and Cloud's own injections keep working until it follows.
-
-A module using another module's resource imports it by name. That import is a declared dependency between two modules, and the check can hold it to an allowed list. Modules that should not know each other talk through events, as they already do through `queueForEvents`.
-
-### Crates declare what they implement
+### Rust: crates declare what they serve
 
 Each crate under `crates/utopia/` names its package in `Cargo.toml`:
 
@@ -153,17 +89,21 @@ Each crate under `crates/utopia/` names its package in `Cargo.toml`:
 implements = "utopia-php/image"
 ```
 
-`cargo metadata` prints it with the crate graph. `validate` fails when a package requires `ext-utopia` and no crate claims it, or a crate claims a package that does not. This replaces the package names hand-listed in `paths.extension`. That list and the code already disagree: `domains`, `emails` and `user-agent` require `ext-utopia` and are not in it.
+`cargo metadata` prints it with the crate graph, so a change to `crates/support/php-std` reaches every crate that depends on it, and through each of those its package.
 
-### One command
+From a package the PHP map takes over: the package's owner decides the suites. A package the whole server uses (`validators`, `locale`, `dsn`) is in `shared`, so a change to its crate runs every suite.
 
-```
-bin/monorepo affected [--base=<ref>] [--format=json]
-```
+`validate` fails when a package requires `ext-utopia` and no crate claims it, or a crate claims a package that does not exist. This replaces the package names hand-listed in `paths.extension`. That list and the code already disagree: `domains`, `emails` and `user-agent` require `ext-utopia` and are not in it.
 
-It reads the diff and the three graphs and prints the package jobs, the suites, the database matrix, and whether the extension and console jobs run. For each selected suite it prints the file and the edge that selected it, so a surprising run explains itself in the job log.
+When server code itself moves to Rust, as a crate behind the extension or as a service of its own, the same line declares which suite covers it. Its dependencies are then exact, with no further work.
 
-`changes.mjs` and the shell in the `packages` job that computes its matrix go away.
+### PHP: every file has an owner
+
+`e2e.json` gains a `shared` list: the files a change to which runs every suite. It starts as today's implicit set, written down. The lists are then total. A tracked file that matches none of `services[].paths`, `shared`, `checks`, `console` or `ignore` fails the `Checks` job with the file's name.
+
+Each package gets an owner the same way: the suites that use it, or `shared`. Six have one today. That leaves 40 decisions, made once.
+
+The map stays hand-kept and unchecked. It will sometimes be wrong. The push to `main` runs every suite, and that run is what catches it.
 
 ### What no graph can place
 
@@ -171,52 +111,121 @@ A `Dockerfile` or workflow change reaches every suite and nothing in particular.
 
 - On a pull request, a change that only touches `Dockerfile`, `.github/` or a lockfile runs a smoke set: one suite per runner class.
 - The merge queue runs every suite for them. `ci.yml` already handles `merge_group`.
-- A push to `main` keeps running every suite on one database, as today. That run is the backstop for anything a selection missed.
+- A push to `main` keeps running every suite on one database, as today.
 
 The three-database, two-mode matrix moves to the merge queue as well. On a pull request it is the most expensive thing CI does, and three runs of it were 66% of the sample's E2E minutes.
+
+### One command
+
+```
+bin/monorepo affected [--base=<ref>] [--format=json]
+```
+
+It reads the diff, `cargo metadata`, the package graph and `e2e.json`, and prints the package jobs, the suites, the database matrix, and whether the extension and console jobs run. For each selected suite it prints the file and the edge that selected it, so a surprising run explains itself in the job log.
+
+`changes.mjs` and the shell in the `packages` job that computes its matrix go away.
+
+## Why not make PHP exact
+
+Two prototypes measured what an exact PHP graph would buy.
+
+### A static graph
+
+A tokenizer read every PHP file under `app/`, `src/` and `packages/*/src`, resolved class references through the PSR-4 map, and walked the result: 3,171 files and 16,463 edges, in a few seconds.
+
+- 985 files (31%) are reachable from the bootstrap (`app/init`, `app/http.php`, `app/controllers`) before a request reaches a module. A change to any of them has to run every suite.
+- 35 of 46 packages have at least one file in that set.
+
+The core is that large because `app/init` constructs every resource and modules ask for them by string (`->inject('dbForProject')`).
+
+### The same graph, following injection
+
+A second pass followed each `->inject('name')` to the block that defines that name, so a resource counts against the files that inject it and not against `app/init`. That is the graph a restructured DI would give.
+
+| | Static | Following injection |
+|---|---|---|
+| Files in the core | 985 (31%) | 810 (26%) |
+| Packages with a file in the core | 35 | 30 |
+| Resources reached from the bootstrap | all 158, by construction | 88 |
+
+Then both were replayed on 32 recent pull requests, used only for PHP files the hand-kept map does not own.
+
+| | Suites selected across 32 pull requests |
+|---|---|
+| Today | 472 |
+| Static graph | 436 |
+| Following injection | 436 |
+
+One pull request changed, the `packages/abuse` one, and it changed the same way under both. Assigning `packages/abuse` an owner by hand gets the same result.
+
+So following injection moves the core from 31% to 26% and changes nothing that ran. The bootstrap and its hooks still reach 88 of the 158 resources, which is why the core does not fall further.
+
+### What restructuring DI would cost
+
+The shape that would put the edges in the source is a resource class keyed by its own name, defined in the module that owns it, and injected as `->inject(ClientForAvatars::class)`. It is a sound design and the library barely changes, since a class name is a string.
+
+The cost is in the call sites and in Cloud:
+
+| | |
+|---|---|
+| Resources defined under `app/` | 158 |
+| `->inject('name')` calls under `src/Appwrite/Platform` | 4,569, in 838 files |
+| Resources injected by at least half of the units | 9 |
+| Resources injected by exactly one unit | 40 |
+| `->inject('name')` calls in `appwrite-labs/cloud` | 2,988, in 729 files |
+| Names defined here that Cloud defines again, replacing the factory | 91 of 158 |
+| Resources Cloud adds | 76 |
+
+Cloud replaces more than half of the resources defined here by registering the same name again. Any move has to carry that, across two repositories, with both names live until Cloud finishes.
+
+That is a large migration for a graph that would not have changed a CI run in the sample. It may still be worth doing for other reasons, such as finding usages or deleting dead resources. It is not justified by test selection, so it is not in this RFC.
+
+The three questions the design left open have answers, recorded here in case it is picked up:
+
+- **Dependencies.** A constant listing resource classes, in parameter order, as `Container::set()` already takes them. Types cannot do it: `dbForProject` and `dbForPlatform` are both a `Database`.
+- **Scope.** Scope is which container a resource is registered in, as today: the process container, or a child made per request, per worker message or per realtime connection. A resource class does not need to know.
+- **Cloud's replacements.** Registering Cloud's class under this repository's class name replaces the factory, exactly as registering the same string does now.
 
 ## Alternatives considered
 
 ### Bazel
 
-Bazel enforces a graph by sandboxing: an action sees only its declared inputs. For a PHP package's unit tests that is what `bin/monorepo test` already does through Composer. It cannot subdivide E2E, because the thing under test is the whole server image. To gain anything there the server must first be split into targets with declared dependencies, which is this RFC.
+Bazel enforces a graph by sandboxing: an action sees only its declared inputs. It cannot subdivide E2E, because the thing under test is the whole server image.
 
 The costs are specific to this repository:
 
-- No maintained general PHP ruleset turned up in a search. The PHP rules that exist generate protobuf code. The rules would be ours to write and keep.
+- No maintained general PHP ruleset turned up in a search. The PHP rules that exist generate protobuf code.
 - Composer stays, for the mirrors and for Cloud. `BUILD` files would repeat `composer.json` unless a generator is written too.
 - The Dockerfile stays, for Cloud and for self-hosters.
 - It is a public repository. Every outside contributor would need Bazel to run a test.
 
-Once the graph in this RFC exists, Bazel is a replacement for `bin/monorepo affected` plus a cache. That is the point to decide, with a working graph to compare against.
+For Rust alone, Cargo already gives the graph this RFC needs. Bazel becomes worth another look when there are several Rust services with their own images and a cache would save real build time.
 
 ### moon and Nx
 
-Both run tasks over a project graph and have an `--affected` mode. Neither enforces that the graph is true. moon's documentation lists PHP as supported, with Composer coverage that looks partial. Nx has no first-party PHP support, only a community Composer plugin with one maintainer.
+Both run tasks over a project graph and have an `--affected` mode. moon's documentation lists PHP as supported, with Composer coverage that looks partial. Nx has no first-party PHP support, only a community Composer plugin with one maintainer. Neither adds something `cargo metadata` and `bin/monorepo dependents` do not already provide.
 
 ### Recorded coverage
 
-Run every suite nightly with a coverage driver, record which files each suite executes on the server, and select by intersecting that with the diff. It sees through the container, because it observes what ran. It is the only route found here to a small core without changing how modules inject.
-
-It is not in the phases because two things are unknown: whether a coverage driver works under Swoole's coroutines, and what it costs a nightly run. It needs a spike. If it works, its output is a second source for the check in `graph --check`, and a suite that executes a file it does not declare fails the same way.
+Run every suite nightly with a coverage driver, record which files each suite executes, and select by intersecting that with the diff. It observes what ran, so the container does not hide anything. It is the one route to an exact PHP graph that needs no code change. It is not proposed because the replay above suggests an exact PHP graph would not pay, and because nobody has checked that a coverage driver works under Swoole's coroutines.
 
 ## Phases
 
 ### Phase 0. Print the reason
 
-`changes.mjs` logs which file made a run select everything. No behaviour changes. This gives a baseline to compare the later phases against, from CI's own logs.
+`changes.mjs` logs which file made a run select everything. No behaviour changes. This gives a baseline from CI's own logs.
 
-### Phase 1. Make the map total
+### Phase 1. Make the PHP map total
 
-Write down `shared`. Assign the files that have no owner today: the fixture lockfiles go to Sites and Functions, package manifests and tests to the package jobs. A file with no owner fails `Checks`.
+Write down `shared`. Give each package an owner. Assign the files that have none today: the fixture lockfiles go to Sites and Functions, package manifests and tests to the package jobs. A file with no owner fails `Checks`.
 
 Done when: the full-suite fallback can only be reached through `shared`, `Dockerfile` or CI files.
 
-### Phase 2. Check the map
+### Phase 2. The Rust edges
 
-`bin/monorepo graph --check` with a baseline. `validate` and the crate `implements` metadata.
+`implements` in each crate's `Cargo.toml`, checked by `validate`. A change under `crates/` selects suites through its package.
 
-Done when: the check runs in `Checks` on every pull request, and deleting a real path from a suite's `paths` turns it red.
+Done when: a pull request that changes only `crates/utopia/image` runs the suites `packages/image` is assigned to, and one that changes `crates/utopia/validators` runs every suite.
 
 ### Phase 3. The rule for what no graph can place
 
@@ -228,36 +237,16 @@ Done when: a Renovate digest bump of the base image runs the smoke set on its pu
 
 Port the selection from `changes.mjs`. Run both in CI for a week and diff their output before removing the old one.
 
-### Phase 5. Shrink the core
-
-Move resources to class keys, in this order:
-
-1. The helper that registers a resource class, and the alias from each old name. No call site changes.
-2. The 40 resources one unit injects move into that unit as classes. A Rector rule rewrites that unit's `->inject('name')` calls. One pull request per module.
-3. The 33 that two or three units inject get an owner each; the others import it.
-4. The 11 with no use in this repository are checked against Cloud, then deleted or moved there.
-5. The nine everything injects move last, into the kernel, and the aliases go.
-
-`graph --check` prints the size of `shared` on every run. Done when `app/init` defines only the kernel.
-
-### Phase 6. Decide on a build tool
-
-With the graph declared and checked, compare `bin/monorepo affected` against Bazel on this repository: what selecting costs to maintain, and whether a cache would pay for itself.
-
 ## Risks
 
-- **A wrong declaration skips a suite that should have run.** The check catches a missing edge it can see. It cannot see string-keyed injection, which is why everything `app/init` constructs stays in `shared` until phase 5 moves it. The push to `main` runs every suite.
-- **The baseline becomes permanent.** An entry that no longer holds fails the check, so it cannot grow stale, but nothing forces it to shrink.
+- **A wrong owner skips a suite that should have run.** Nothing checks the PHP map. The push to `main` runs every suite, so a miss is found after merge, not before.
+- **Phase 2 makes some pull requests slower.** A crate change runs no E2E today. That is the gap being closed, and a crate that serves a `shared` package will run every suite.
 - **The smoke set misses a base image regression on the pull request.** The merge queue runs every suite before it lands.
-- **Cloud extends this repository and injects by the same names.** The aliases keep it working, and it has to finish its own move before they are removed. Its resources that override one defined here need a way to replace a class key, which the helper has to provide.
 - **The numbers are a small sample.** 40 runs, with one `packages/abuse` run worth 21% of the E2E minutes. Phase 0 replaces them with CI's own.
 
 ## Open questions
 
-- Does the declaration stay in one file, or move next to each module as a manifest? One file is simpler to check. A manifest is reviewed by the people who own the module.
-- Write the checker in `bin/monorepo`, or configure [Deptrac](https://github.com/qossmic/deptrac)? Deptrac enforces declared layers and fails on anything undeclared, which is the model here. It has not been tried against this repository.
-- PHPStan keeps a file dependency map in its result cache, and CI already runs PHPStan. Is that a sturdier source for the graph than a tokenizer?
-- Does a resource declare its dependencies in a constant, as sketched, or does the helper read them from attributes on `__invoke`'s parameters? Types alone are not enough: `dbForProject` and `dbForPlatform` are both a `Database`.
-- Request, worker-message and process scope are separate files today. Is scope an interface a resource class implements, or the namespace it lives in?
 - Which suites make up the smoke set?
 - Does the repository use the merge queue on every pull request, or only some? Phase 3 depends on it.
+- Should a crate that serves a `shared` package run every suite on the pull request, or the smoke set there and every suite in the queue?
+- When a PHP module is rewritten as a Rust service, where does its suite's entry live: still in `e2e.json`, or in the crate's metadata?
