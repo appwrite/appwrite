@@ -344,9 +344,12 @@ pub trait Adapter: Send + Sync {
     ) -> Result<()>;
 
     /// Reports a build check on a commit; `state` is `queued`, `pending`,
-    /// `success`, `failure`, `error` or `cancelled`. A provider with plain
+    /// `success`, `failure`, `error`, `cancelled`, `neutral` (nothing was
+    /// built, such as a skipped push) or `action_required` (waiting on
+    /// someone, such as a contributor to authorize). A provider with plain
     /// commit statuses carries the title as the status description and drops
-    /// the summary (`queued` is `pending` there), and the suite joins the
+    /// the summary (`queued` and `action_required` are `pending` there,
+    /// `neutral` is `success`), and the suite joins the
     /// name as `Site (Project)`; one with check runs overrides this to carry
     /// the summary and a conclusion, and files the run under its suite. The
     /// key and suite key identify the check and its suite where their names
@@ -370,8 +373,8 @@ pub trait Adapter: Send + Sync {
     ) -> Result<()> {
         let _ = (summary, key, suite_key);
         let context = if suite.is_empty() { name.to_owned() } else { format!("{name} ({suite})") };
-        let state = if state == "queued" { "pending" } else { state };
-        self.update_commit_status(repository_name, sha, owner, state, title, details_url, &context).await
+        self.update_commit_status(repository_name, sha, owner, check_status_state(state), title, details_url, &context)
+            .await
     }
 
     /// Reports a deployed resource on a commit: where it runs and where its
@@ -667,6 +670,17 @@ pub trait Git: Adapter {
 /// support: `<method>() is not supported by <name>`.
 pub(crate) fn unsupported(method: &str, name: &str) -> Error {
     Error::exception(format!("{method}() is not supported by {name}"), 0)
+}
+
+/// The commit status [`Adapter::update_check`] reports for a check state on a
+/// provider without check runs: `queued` and `action_required` wait as
+/// `pending`, `neutral` passes as `success`.
+pub(crate) fn check_status_state(state: &str) -> &str {
+    match state {
+        "queued" | "action_required" => "pending",
+        "neutral" => "success",
+        other => other,
+    }
 }
 
 /// A commit status's state for a check state: a commit status knows no

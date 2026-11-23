@@ -124,7 +124,7 @@ const COMMENT_SEPARATOR: char = '-';
 
 /// The run status and conclusion of each state [`Adapter::update_check`]
 /// takes.
-const CHECK_STATES: [(&str, &str, Option<&str>); 7] = [
+const CHECK_STATES: [(&str, &str, Option<&str>); 9] = [
     ("queued", "queued", None),
     ("pending", "in_progress", None),
     ("in_progress", "in_progress", None),
@@ -132,6 +132,8 @@ const CHECK_STATES: [(&str, &str, Option<&str>); 7] = [
     ("failure", "completed", Some("failure")),
     ("error", "completed", Some("failure")),
     ("cancelled", "completed", Some("cancelled")),
+    ("neutral", "completed", Some("neutral")),
+    ("action_required", "completed", Some("action_required")),
 ];
 
 /// The deployment status and conclusion of each state

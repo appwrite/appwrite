@@ -983,12 +983,21 @@ impl Adapter for GitHub {
             "pending" => ("in_progress", ""),
             "success" => ("completed", "success"),
             "cancelled" => ("completed", "cancelled"),
+            "neutral" => ("completed", "neutral"),
+            "action_required" => ("completed", "action_required"),
             _ => ("completed", "failure"),
         };
         // `parent::updateCheck()` with the joined name and no suite: a commit status.
         let fallback = || {
-            let state = if state == "queued" { "pending" } else { state };
-            self.update_commit_status(repository_name, sha, owner, state, title, details_url, &name)
+            self.update_commit_status(
+                repository_name,
+                sha,
+                owner,
+                crate::adapter::check_status_state(state),
+                title,
+                details_url,
+                &name,
+            )
         };
 
         let response = self
