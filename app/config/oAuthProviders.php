@@ -566,6 +566,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Stripe',
     ],
+    'supabase' => [
+        'name' => 'Supabase',
+        'developers' => 'https://supabase.com/docs/guides/integrations/build-a-supabase-oauth-integration',
+        'icon' => 'icon-supabase',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Supabase',
+    ],
     'tiktok' => [
         'name' => 'TikTok',
         'developers' => 'https://developers.tiktok.com/doc/login-kit-web',
