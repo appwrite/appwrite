@@ -21,9 +21,7 @@ faqs:
     answer: "We are at the beginning, and most of Appwrite still runs on PHP. We hope to move the services that carry most of our load in the coming weeks, and services with lighter load will follow in later phases. Our goal is to replace every line of code."
 ---
 
-2.6 times the requests per second. 8 times less CPU per request. 33 times less memory. Those are the first numbers from parts of Appwrite running on Rust, measured against the same code on PHP.
-
-After many years on PHP, we have decided to move Appwrite's server to Rust. We want to tell you why we made this choice, what we learned while exploring it, and what our first results look like. The work has already started, and Rust is serving real traffic today, but we still have a long way to go.
+After many years on PHP, we have decided to move Appwrite's server to Rust. We want to tell you why we made this choice, what we learned while exploring it, and what our first results look like. Those first results are promising: our Users API on Rust serves 2.6 times the requests per second of the same API on PHP, with 5.7 times less CPU per request and 33 times less memory. The work has already started, and Rust is serving real traffic today, but we still have a long way to go.
 
 We want to be clear about one thing first: this is not a story about PHP letting us down. PHP, together with Swoole, carried Appwrite from a side project to a platform that serves hundreds of thousands of developers. It gave us a fast language to build in, a mature ecosystem and a community we are proud to be part of. We are making this move because a new opportunity opened up, not because we were in pain.
 
@@ -39,6 +37,8 @@ When something that was impossible becomes possible, you take a fresh look. We d
 # The numbers
 
 On the same machine and the same workload, the Rust Users API serves 2.6 times the requests of the PHP one, with 5.7 times less CPU and 33 times less memory.
+
+![Users API on PHP and Rust: 2.6 times the throughput, 5.7 times less CPU per request and 33 times less memory](/images/blog/appwrite-is-moving-from-php-to-rust/users-api.avif)
 
 That result matters more because of where we started. Appwrite on PHP was never slow. Over the years, many independent benchmarks compared Appwrite with other backend platforms, and Appwrite was fast enough in all of them and usually came out on top. Rust is not fixing a weakness. It is raising a bar that was already high.
 
