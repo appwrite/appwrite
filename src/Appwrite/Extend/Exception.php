@@ -425,6 +425,8 @@ class Exception extends \Exception
     public const string DISTRIBUTION_APP_ALREADY_EXISTS = 'distribution_app_already_exists';
     public const string DISTRIBUTION_TARGET_ALREADY_EXISTS = 'distribution_target_already_exists';
     public const string DISTRIBUTION_RELEASE_ALREADY_EXISTS = 'distribution_release_already_exists';
+    public const string DISTRIBUTION_CONNECTION_ALREADY_EXISTS = 'distribution_connection_already_exists';
+    public const string DISTRIBUTION_SIGNING_IDENTITY_ALREADY_EXISTS = 'distribution_signing_identity_already_exists';
     public const string DISTRIBUTION_CONNECTION_IN_USE = 'distribution_connection_in_use';
     public const string DISTRIBUTION_SIGNING_IDENTITY_IN_USE = 'distribution_signing_identity_in_use';
     public const string DISTRIBUTION_CONNECTION_INVALID = 'distribution_connection_invalid';

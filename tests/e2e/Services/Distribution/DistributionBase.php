@@ -27,6 +27,20 @@ trait DistributionBase
         yield 'getVariable' => [Client::METHOD_GET, '/distribution/apps/missing/variables/missing', 'distribution.read'];
         yield 'updateVariable' => [Client::METHOD_PATCH, '/distribution/apps/missing/variables/missing', 'distribution.write'];
         yield 'deleteVariable' => [Client::METHOD_DELETE, '/distribution/apps/missing/variables/missing', 'distribution.write'];
+        yield 'createAppleConnection' => [Client::METHOD_POST, '/distribution/connections/apple', 'distribution.credentials.write'];
+        yield 'updateAppleConnection' => [Client::METHOD_PATCH, '/distribution/connections/apple/missing', 'distribution.credentials.write'];
+        yield 'createGoogleConnection' => [Client::METHOD_POST, '/distribution/connections/google', 'distribution.credentials.write'];
+        yield 'updateGoogleConnection' => [Client::METHOD_PATCH, '/distribution/connections/google/missing', 'distribution.credentials.write'];
+        yield 'listConnections' => [Client::METHOD_GET, '/distribution/connections', 'distribution.credentials.read'];
+        yield 'getConnection' => [Client::METHOD_GET, '/distribution/connections/missing', 'distribution.credentials.read'];
+        yield 'deleteConnection' => [Client::METHOD_DELETE, '/distribution/connections/missing', 'distribution.credentials.write'];
+        yield 'createIosSigningIdentity' => [Client::METHOD_POST, '/distribution/signing-identities/ios', 'distribution.credentials.write'];
+        yield 'createAndroidSigningIdentity' => [Client::METHOD_POST, '/distribution/signing-identities/android', 'distribution.credentials.write'];
+        yield 'listSigningIdentities' => [Client::METHOD_GET, '/distribution/signing-identities', 'distribution.credentials.read'];
+        yield 'getSigningIdentity' => [Client::METHOD_GET, '/distribution/signing-identities/missing', 'distribution.credentials.read'];
+        yield 'updateSigningIdentity' => [Client::METHOD_PATCH, '/distribution/signing-identities/missing', 'distribution.credentials.write'];
+        yield 'deleteSigningIdentity' => [Client::METHOD_DELETE, '/distribution/signing-identities/missing', 'distribution.credentials.write'];
+        yield 'getSigningIdentityDownload' => [Client::METHOD_GET, '/distribution/signing-identities/missing/download', 'distribution.credentials.write'];
     }
 
     /**
