@@ -21,6 +21,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { SettingsCardsList } from '@/components/global/shared/settings-search/SettingsCardsList'
+import { ConfirmActionDialog } from '@/components/global/shared/ConfirmActionDialog'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
@@ -43,8 +45,32 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import { MarketplaceAppLogo } from '../marketplace/_components/MarketplaceAppLogo'
 
-/** Apps installed on this organization from the marketplace, with a way to uninstall them. */
 export function InstalledApps() {
+  return (
+    <SettingsCardsList
+      cards={[
+        {
+          id: 'installed-apps',
+          search: {
+            title: 'Installed apps',
+            keywords: [
+              'installed',
+              'apps',
+              'installations',
+              'marketplace',
+              'access',
+              'uninstall',
+            ],
+          },
+          node: <InstalledAppsCard />,
+        },
+      ]}
+    />
+  )
+}
+
+/** Apps installed on this organization from the marketplace, with a way to edit their access or uninstall them. */
+function InstalledAppsCard() {
   const t = useT()
   const { orgId } = useParams({ strict: false })
   const { access } = useOrganizationScopes(orgId)
@@ -146,41 +172,20 @@ export function InstalledApps() {
         />
       ) : null}
 
-      <Dialog
+      <ConfirmActionDialog
         open={deleteTarget !== null}
         onOpenChange={(open) => {
-          if (!open && !deleteMutation.isPending) setDeleteTarget(null)
+          if (!open) setDeleteTarget(null)
         }}
-      >
-        <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>{t('Uninstall app')}</DialogTitle>
-            <DialogDescription className="text-[13px] mt-2">
-              {t(
-                'The app loses access to this organization immediately and its installation tokens stop working. You can install it again later.',
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setDeleteTarget(null)}
-              disabled={deleteMutation.isPending}
-            >
-              {t('Cancel')}
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={deleteMutation.isPending}
-              onClick={() => void handleDelete()}
-            >
-              {t('Uninstall')}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+        title={t('Uninstall app')}
+        description={t(
+          'The app loses access to this organization immediately and its installation tokens stop working. You can install it again later.',
+        )}
+        confirmLabel={t('Uninstall')}
+        confirmVariant="destructive"
+        onConfirm={() => void handleDelete()}
+        isConfirming={deleteMutation.isPending}
+      />
     </>
   )
 }
