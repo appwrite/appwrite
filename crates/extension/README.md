@@ -35,9 +35,11 @@ RUN apk add --no-cache libheif libstdc++ \
 - **Runtime packages:** `libheif` and `libstdc++` are needed for the extension to load at all,
   even if only `Domain` is used. `libheif` installs decoders only; encoding HEIC or AVIF through
   `Utopia\Image` also needs `libheif-plugins-all`.
-- **Version:** `<version>` is an Appwrite release, and `phpversion('utopia')` reports it, so a
-  package can require a minimum (`"ext-utopia": ">=2.8"`). `main` tracks the main branch and
-  reports the crate version.
+- **Version:** `<version>` is an Appwrite release, and `phpversion('utopia')` reports it, here and
+  in that release's `appwrite/appwrite` image. Every other build reports the crate version, `0.1.0`:
+  the `main` tag, a local build, and appwrite-labs/cloud's, which compiles its vendored copy. So a
+  package's `"ext-utopia"` constraint has to stay `*` until those builds report a version that
+  orders against releases.
 
 `.github/workflows/extension.yml` publishes it, smoke-testing each architecture on stock
 `php:8.5-cli-alpine` with exactly these packages first.
