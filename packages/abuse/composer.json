@@ -31,6 +31,7 @@
         "php": ">=8.5",
         "ext-pdo": "*",
         "ext-curl": "*",
+        "ext-openssl": "*",
         "ext-redis": "*",
         "adhocore/jwt": "^1.1",
         "psr/http-client": "^1.0",
