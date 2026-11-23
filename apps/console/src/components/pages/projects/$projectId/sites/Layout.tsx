@@ -112,6 +112,7 @@ function SiteLayoutContent() {
           'overview',
           'deployments',
           'logs',
+          'runtime-logs',
           'domains',
           'usage',
           'firewall',
@@ -149,6 +150,8 @@ function SiteLayoutContent() {
   const showUsageTab = features.usageStats && canSeeUsageNav(access, features)
   const showFirewallTab =
     isCloudProfile() && canSeeProjectNavItem(access, features, 'firewall')
+  // Runtime logs are served by Cloud only.
+  const showRuntimeLogsTab = isCloudProfile()
 
   const [cancelBuildDialogOpen, setCancelBuildDialogOpen] = useState(false)
   const [redeployDialogOpen, setRedeployDialogOpen] = useState(false)
@@ -339,6 +342,16 @@ function SiteLayoutContent() {
         to: '/projects/$projectId/sites/$siteId/logs',
         params: { projectId: projectId!, siteId: siteId! },
       },
+      ...(showRuntimeLogsTab
+        ? [
+            {
+              id: 'runtime-logs' as const,
+              label: t('Runtime logs'),
+              to: '/projects/$projectId/sites/$siteId/runtime-logs',
+              params: { projectId: projectId!, siteId: siteId! },
+            },
+          ]
+        : []),
       ...(showUsageTab
         ? [
             {
@@ -376,7 +389,15 @@ function SiteLayoutContent() {
           ]
         : []),
     ],
-    [projectId, siteId, showUsageTab, showFirewallTab, showSettingsTab, t],
+    [
+      projectId,
+      siteId,
+      showUsageTab,
+      showFirewallTab,
+      showRuntimeLogsTab,
+      showSettingsTab,
+      t,
+    ],
   )
 
   // Redirect from settings or variables when user lacks permission
@@ -391,7 +412,7 @@ function SiteLayoutContent() {
     }
   }, [showSettingsTab, activeTab, projectId, siteId, navigate])
 
-  const isLogsTabLayout = activeTab === 'logs'
+  const isLogsTabLayout = activeTab === 'logs' || activeTab === 'runtime-logs'
 
   const buildingAlert = isBuilding ? (
     <div className="border-b border-border bg-blue-500/5">
@@ -501,6 +522,7 @@ function SiteLayoutContent() {
             fullWidthBorder
             fullWidth={
               activeTab === 'logs' ||
+              activeTab === 'runtime-logs' ||
               activeTab === 'usage' ||
               activeTab === 'firewall'
             }
