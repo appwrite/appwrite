@@ -536,12 +536,17 @@ Http::init()
                 throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
             }
 
-            if (
-                array_key_exists($namespace, $project->getAttribute('services', []))
-                && ! $project->getAttribute('services', [])[$namespace]
-                && ! ($rolesSource->isPrivileged($authorization->getRoles()) || $rolesSource->isKey($authorization->getRoles()))
-            ) {
-                throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
+            // A route served under one SDK namespace can also belong to another service, such as team
+            // photos under avatars; its `services` label names the other switches it must respect.
+            $switches = $project->getAttribute('services', []);
+            foreach (\array_unique([$namespace, ...$route->getLabel('services', [])]) as $service) {
+                if (
+                    array_key_exists($service, $switches)
+                    && ! $switches[$service]
+                    && ! ($rolesSource->isPrivileged($authorization->getRoles()) || $rolesSource->isKey($authorization->getRoles()))
+                ) {
+                    throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
+                }
             }
         }
 

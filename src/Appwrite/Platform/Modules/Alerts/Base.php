@@ -64,8 +64,10 @@ class Base extends Action
         Database $dbForProject,
         Authorization $authorization,
         Severity $severity = Severity::Warning,
+        string $escalationId = '',
     ): void {
         $parsed = $this->parseRules($rules);
+        $this->checkEscalation($dbForPlatform, $authorization, $project, $escalationId);
 
         [$resourceId, $resourceInternalId] = $this->resolveResource($parsed, $project, $dbForProject, $authorization);
 
@@ -85,6 +87,7 @@ class Base extends Action
             'window' => $window,
             'cooldown' => $cooldown,
             'notify' => \array_values(\array_unique($notify)),
+            'escalationId' => $escalationId,
             'severity' => $severity->value,
             'enabled' => $enabled,
             'status' => Status::Ok->value,
@@ -125,8 +128,12 @@ class Base extends Action
         Database $dbForProject,
         Authorization $authorization,
         ?Severity $severity = null,
+        ?string $escalationId = null,
     ): void {
         $monitor = $this->getMonitor($dbForPlatform, $authorization, $project, $monitorId);
+        if ($escalationId !== null) {
+            $this->checkEscalation($dbForPlatform, $authorization, $project, $escalationId);
+        }
 
         if ($monitor->getAttribute('type') !== $type) {
             throw new Exception(Exception::MONITOR_TYPE_MISMATCH, "Monitor '{$monitorId}' is a {$monitor->getAttribute('type')} monitor, not a {$type} monitor.");
@@ -149,6 +156,7 @@ class Base extends Action
             'enabled' => $enabled,
             'notify' => $notify === null ? null : \array_values(\array_unique($notify)),
             'severity' => $severity?->value,
+            'escalationId' => $escalationId,
         ] as $key => $value) {
             if ($value !== null) {
                 $changes->setAttribute($key, $value);
@@ -169,6 +177,21 @@ class Base extends Action
         }
 
         $response->dynamic($monitor, Response::MODEL_MONITOR);
+    }
+
+    /**
+     * A monitor may only use an escalation of its project's organization.
+     */
+    protected function checkEscalation(Database $dbForPlatform, Authorization $authorization, Document $project, string $escalationId): void
+    {
+        if ($escalationId === '') {
+            return;
+        }
+
+        $escalation = $authorization->skip(fn () => $dbForPlatform->getDocument('escalations', $escalationId));
+        if ($escalation->isEmpty() || $escalation->getAttribute('teamInternalId') !== (string) $project->getAttribute('teamInternalId', '')) {
+            throw new Exception(Exception::ESCALATION_NOT_FOUND);
+        }
     }
 
     /**

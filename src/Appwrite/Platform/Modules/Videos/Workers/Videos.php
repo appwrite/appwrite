@@ -2358,6 +2358,9 @@ class Videos extends Action
                         ? DashManifest::duration($segment->duration)
                         : null,
                     'isInit' => $segment->init ? 1 : 0,
+                    // Bytes of this segment on the videos device, taken before
+                    // the file left scratch.
+                    'size' => $segment->size,
                 ], fn ($value) => $value !== null)));
             }
         }

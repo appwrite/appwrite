@@ -43,6 +43,8 @@ class Get extends Action
             ->httpAlias('/v1/teams/:teamId/photo')
             ->desc('Get photo')
             ->groups(['api', 'avatars'])
+            // Team photos belong to Teams too, so the project's Teams switch still covers them
+            ->label('services', ['teams'])
             ->label('scope', 'teams.read')
             ->label('sdk', new Method(
                 namespace: 'avatars',

@@ -10,7 +10,8 @@ use Utopia\Database\Query;
 /**
  * Removes monitors: the one a request deletes, and those scoped to a database,
  * bucket, function or site that is itself being deleted. A removed monitor's
- * schedule stops, its open alert is resolved, and its alert history stays.
+ * schedule stops, its open alert is resolved and stops escalating, and its
+ * alert history stays.
  */
 readonly class Monitors
 {
@@ -33,10 +34,11 @@ readonly class Monitors
                 Query::equal('status', [State::Firing->value]),
             ]);
             if (!$alert->isEmpty()) {
-                $this->dbForPlatform->updateDocument('monitorAlerts', $alert->getId(), new Document([
+                $alert = $this->dbForPlatform->updateDocument('monitorAlerts', $alert->getId(), new Document([
                     'status' => State::Resolved->value,
                     'resolvedAt' => DateTime::now(),
                 ]));
+                (new Escalations($this->dbForPlatform))->stop($alert);
             }
 
             $this->dbForPlatform->deleteDocument('monitors', $monitor->getId());
