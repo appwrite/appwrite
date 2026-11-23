@@ -125,7 +125,7 @@ trait Deployment
                 if ($validator->isValid($providerCommitMessage)) {
                     Span::add("{$logBase}.build.skipped.reason", $validator->getDescription());
                     Span::add("{$logBase}.build.skipped", 'true');
-                    $this->reportSkip($vcs, $providerInstallationId, $repository, $project, $resource, $providerCommitHash, 'The commit message asks to skip deployments.');
+                    $this->reportSkip($vcs, $providerInstallationId, $repository, $project, $resource, $providerCommitHash, 'the commit message asks to skip deployments');
                     continue;
                 }
 
@@ -134,7 +134,7 @@ trait Deployment
                 if (!$branchTrigger->isValid($providerBranch)) {
                     Span::add("{$logBase}.build.skipped.reason", 'branch');
                     Span::add("{$logBase}.build.skipped", 'true');
-                    $this->reportSkip($vcs, $providerInstallationId, $repository, $project, $resource, $providerCommitHash, "Branch '{$providerBranch}' does not match the deployment branches.");
+                    $this->reportSkip($vcs, $providerInstallationId, $repository, $project, $resource, $providerCommitHash, "branch '{$providerBranch}' does not match the deployment branches");
                     continue;
                 }
 
@@ -152,7 +152,7 @@ trait Deployment
                     if (!$pathMatched) {
                         Span::add("{$logBase}.build.skipped.reason", 'path');
                         Span::add("{$logBase}.build.skipped", 'true');
-                        $this->reportSkip($vcs, $providerInstallationId, $repository, $project, $resource, $providerCommitHash, 'No changed file matches the deployment paths.');
+                        $this->reportSkip($vcs, $providerInstallationId, $repository, $project, $resource, $providerCommitHash, 'no changed file matches the deployment paths');
                         continue;
                     }
                 }
@@ -742,8 +742,8 @@ trait Deployment
                 $providerCommitHash,
                 'neutral',
                 $resource->getAttribute('name'),
-                'Deployment skipped',
-                $reason,
+                // The title is all a commit status shows, so it carries the reason
+                "Deployment skipped: {$reason}",
                 suite: $project->getAttribute('name'),
                 key: "{$project->getId()}/{$resource->getCollection()}/{$resource->getId()}",
                 suiteKey: $project->getId(),
