@@ -39,14 +39,14 @@ import {
   emptyRuleForm,
   monitorInputFromForm,
   ruleFormFromMonitor,
-} from '@/components/pages/projects/$projectId/usage/monitors/RuleFields'
+} from '@/components/pages/projects/$projectId/monitors/RuleFields'
 import {
   emptyProbeForm,
   probeFormError,
   probeFormFromMonitor,
   probeInputFromForm,
-} from '@/components/pages/projects/$projectId/usage/monitors/ProbeFields'
-import { alertCondition } from '@/components/pages/projects/$projectId/usage/alerts/AlertHistory'
+} from '@/components/pages/projects/$projectId/monitors/ProbeFields'
+import { alertCondition } from '@/components/pages/projects/$projectId/monitors/alerts/AlertHistory'
 import {
   parseHeaders,
   parseStatusCodes,

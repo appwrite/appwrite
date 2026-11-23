@@ -53,7 +53,6 @@ import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
 import { RefreshButton } from '@/components/global/shared/RefreshButton'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 const REPO_PAGE_SIZE = 5
 
@@ -120,9 +119,8 @@ export function RepositoryPicker({
   className,
 }: RepositoryPickerProps) {
   const t = useT()
-  const { features } = useConsoleProfile()
   const { vcsProviders } = useConsoleVariables()
-  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features, vcsProviders)
+  const vcsOAuthProviders = getVisibleVcsOAuthProviders(vcsProviders)
   const vcsAuthUrl = (
     provider?: VcsProviderId,
     mode: 'create' | 'update' = 'create',

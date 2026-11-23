@@ -7,6 +7,8 @@
 
 use php_std::{mb, pcre};
 
+use crate::decimal;
+
 /// `preg_match('/[^\p{Z}\p{Cf}\s]/u', $value) !== 1`: the value holds only Unicode separators,
 /// format characters and whitespace (nothing at all included), or is not UTF-8, which
 /// `preg_match()` refuses.
@@ -34,16 +36,30 @@ pub fn text_length(value: &[u8], min: i64, length: i64) -> bool {
 
 /// `Text::getDescription()`, given `implode(', ', $this->allowList)` when the list is not
 /// empty.
-pub fn text_description(length: i64, min: i64, allow_list: Option<&[u8]>, require_non_blank: bool) -> Vec<u8> {
-    let mut message = b"Value must be a valid string".to_vec();
+///
+/// Appended to `message`.
+pub fn text_description(
+    length: i64,
+    min: i64,
+    allow_list: Option<&[u8]>,
+    require_non_blank: bool,
+    message: &mut Vec<u8>,
+) {
+    message.extend_from_slice(b"Value must be a valid string");
     if min == length {
-        message.extend_from_slice(format!(" and exactly {length} chars").as_bytes());
+        message.extend_from_slice(b" and exactly ");
+        decimal(length, message);
+        message.extend_from_slice(b" chars");
     } else {
         if min != 0 {
-            message.extend_from_slice(format!(" and at least {min} chars").as_bytes());
+            message.extend_from_slice(b" and at least ");
+            decimal(min, message);
+            message.extend_from_slice(b" chars");
         }
         if length != 0 {
-            message.extend_from_slice(format!(" and no longer than {length} chars").as_bytes());
+            message.extend_from_slice(b" and no longer than ");
+            decimal(length, message);
+            message.extend_from_slice(b" chars");
         }
     }
     if let Some(list) = allow_list {
@@ -54,7 +70,6 @@ pub fn text_description(length: i64, min: i64, allow_list: Option<&[u8]>, requir
     if require_non_blank {
         message.extend_from_slice(b" and not be blank");
     }
-    message
 }
 
 /// `preg_match('/^[A-Za-z_]\w*$/D', $value) === 1`: an ASCII letter or `_`, then ASCII letters,
@@ -71,15 +86,16 @@ pub fn identifier(value: &[u8]) -> bool {
     }
 }
 
-/// `Identifier::getDescription()`.
-pub fn identifier_description(length: i64) -> Vec<u8> {
-    let mut description =
-        b"Value must contain only letters, digits and underscores and must not start with a digit".to_vec();
+/// `Identifier::getDescription()`, appended to `description`.
+pub fn identifier_description(length: i64, description: &mut Vec<u8>) {
+    description
+        .extend_from_slice(b"Value must contain only letters, digits and underscores and must not start with a digit");
     if length != 0 {
-        description.extend_from_slice(format!(", and be at most {length} chars").as_bytes());
+        description.extend_from_slice(b", and be at most ");
+        decimal(length, description);
+        description.extend_from_slice(b" chars");
     }
     description.push(b'.');
-    description
 }
 
 /// PHP `strtolower()`: ASCII only, whatever the locale (PHP 8.2 and later).
@@ -87,12 +103,14 @@ pub fn ascii_lower(value: &[u8]) -> Vec<u8> {
     value.to_ascii_lowercase()
 }
 
-/// `WhiteList::getDescription()`, given `implode(', ', $this->list)`.
-pub fn white_list_description(list: &[u8]) -> Vec<u8> {
-    let mut message = b"Value must be one of (".to_vec();
+/// What `WhiteList::getDescription()` puts around `implode(', ', $this->list)`.
+pub const WHITE_LIST_DESCRIPTION: (&str, &str) = ("Value must be one of (", ")");
+
+/// `WhiteList::getDescription()`, given `implode(', ', $this->list)`, appended to `message`.
+pub fn white_list_description(list: &[u8], message: &mut Vec<u8>) {
+    message.extend_from_slice(WHITE_LIST_DESCRIPTION.0.as_bytes());
     message.extend_from_slice(list);
-    message.push(b')');
-    message
+    message.extend_from_slice(WHITE_LIST_DESCRIPTION.1.as_bytes());
 }
 
 /// PHP `mb_strtolower($value, 'UTF-8')`: full lower case, the final sigma rule, and `?` for
@@ -108,13 +126,12 @@ pub fn contains(haystack: &[u8], needle: &[u8]) -> bool {
     needle.is_empty() || haystack.windows(needle.len()).any(|window| window == needle)
 }
 
-/// `Contains::getDescription()`, given `implode(', ', $this->patterns)`.
-pub fn contains_description(patterns: &[u8], strict: bool) -> Vec<u8> {
-    let mut message = b"Value must contain one of (".to_vec();
+/// `Contains::getDescription()`, given `implode(', ', $this->patterns)`, appended to `message`.
+pub fn contains_description(patterns: &[u8], strict: bool, message: &mut Vec<u8>) {
+    message.extend_from_slice(b"Value must contain one of (");
     message.extend_from_slice(patterns);
     message.push(b')');
     message.extend_from_slice(if strict { b" (case-sensitive)" } else { b" (case-insensitive)" });
-    message
 }
 
 /// `Label::MAX_LENGTH`: the longest DNS label.
@@ -131,13 +148,9 @@ pub fn label(value: &[u8]) -> bool {
     !rest.is_empty() && rest.iter().all(u8::is_ascii_alphanumeric) && !value.iter().any(u8::is_ascii_uppercase)
 }
 
-/// `Label::getDescription()`.
-pub fn label_description() -> Vec<u8> {
-    format!(
-        "Value must be 1 to {LABEL_MAX_LENGTH} lowercase letters, digits and hyphens, and must not start or end with a hyphen."
-    )
-    .into_bytes()
-}
+/// `Label::getDescription()`: `Label::MAX_LENGTH` is [`LABEL_MAX_LENGTH`].
+pub const LABEL_DESCRIPTION: &str =
+    "Value must be 1 to 63 lowercase letters, digits and hyphens, and must not start or end with a hyphen.";
 
 #[cfg(test)]
 mod tests {
@@ -164,17 +177,46 @@ mod tests {
 
     #[test]
     fn descriptions() {
-        assert_eq!(text_description(10, 10, None, false), b"Value must be a valid string and exactly 10 chars");
+        fn described(describe: impl FnOnce(&mut Vec<u8>)) -> Vec<u8> {
+            let mut out = Vec::new();
+            describe(&mut out);
+            out
+        }
         assert_eq!(
-            text_description(10, 1, Some(b"a, b"), true),
+            described(|out| text_description(10, 10, None, false, out)),
+            b"Value must be a valid string and exactly 10 chars"
+        );
+        assert_eq!(
+            described(|out| text_description(10, 1, Some(b"a, b"), true, out)),
             b"Value must be a valid string and at least 1 chars and no longer than 10 chars and only consist of 'a, b' chars and not be blank"
         );
-        assert_eq!(text_description(0, 0, None, false), b"Value must be a valid string and exactly 0 chars");
         assert_eq!(
-            identifier_description(0),
+            described(|out| text_description(0, 0, None, false, out)),
+            b"Value must be a valid string and exactly 0 chars"
+        );
+        assert_eq!(
+            described(|out| text_description(-5, 2, None, false, out)),
+            b"Value must be a valid string and at least 2 chars and no longer than -5 chars"
+        );
+        assert_eq!(
+            described(|out| identifier_description(0, out)),
             b"Value must contain only letters, digits and underscores and must not start with a digit."
         );
-        assert_eq!(contains_description(b"a, b", false), b"Value must contain one of (a, b) (case-insensitive)");
+        assert_eq!(
+            described(|out| identifier_description(64, out)),
+            b"Value must contain only letters, digits and underscores and must not start with a digit, and be at most 64 chars."
+        );
+        assert_eq!(
+            described(|out| contains_description(b"a, b", false, out)),
+            b"Value must contain one of (a, b) (case-insensitive)"
+        );
+        assert_eq!(described(|out| white_list_description(b"a, b", out)), b"Value must be one of (a, b)");
+        assert_eq!(
+            LABEL_DESCRIPTION,
+            format!(
+                "Value must be 1 to {LABEL_MAX_LENGTH} lowercase letters, digits and hyphens, and must not start or end with a hyphen."
+            )
+        );
     }
 
     #[test]

@@ -42,6 +42,7 @@ import {
   slotX,
   type ProductKind,
 } from './layout'
+import { away, onLine } from './assembly'
 import { introStep, type FrameState } from './frame'
 
 /** The stage whose tool sweeps the screen instead of touching it (Databases). */
@@ -139,7 +140,10 @@ export class ProductLine {
     }
 
     PRODUCT_KINDS.forEach((kind, index) => {
-      kit.screenUniforms.uShape.value[index]!.set(...this.specs[kind].shape)
+      const spec = this.specs[kind]
+      kit.screenUniforms.uShape.value[index]!.set(...spec.shape)
+      kit.screenUniforms.uCutout.value[index]!.set(...spec.cutout)
+      kit.screenUniforms.uBezelTone.value[index] = spec.bezelTone
     })
   }
 
@@ -177,7 +181,8 @@ export class ProductLine {
       if (slot < -QUEUE_SLOTS - 1.5 || slot > GONE_SLOT) continue
       const kind = getProductKind(index)
       const size = DEVICE_SIZES[kind]
-      const x = slotX(slot)
+      // As the factory assembles, each carrier rolls in with its bay (see `assembly.ts`).
+      const x = slotX(slot) + away(frame.assembly, onLine(slot))
 
       this.carriers.setMatrixAt(
         count,
@@ -193,10 +198,14 @@ export class ProductLine {
       const bodies = this.bodies[kind]
       const bodyIndex = this.counts[kind]++
       bodies.setMatrixAt(bodyIndex, matrix)
-      bodies.setColorAt(
-        bodyIndex,
-        finishColor.copy(palette.finishes[getProductFinish(index)]!),
-      )
+      // Desktops come in colors; the Mac mini only in silver.
+      const finish =
+        kind === 'mini'
+          ? palette.finishes[0]!
+          : (kind === 'desktop' ? palette.desktopFinishes : palette.finishes)[
+              getProductFinish(index)
+            ]!
+      bodies.setColorAt(bodyIndex, finishColor.copy(finish))
 
       // Screen stage: the framework, then one layer per station that worked on it.
       let stage = 0
@@ -230,7 +239,7 @@ export class ProductLine {
       this.screenFx.setXYZW(
         count,
         flash + (stage === STATION_COUNT + 1 ? 0.05 : 0),
-        stage === WIPE_STAGE ? 1 : 0,
+        stage === WIPE_STAGE && this.specs[kind].flat ? 1 : 0,
         getProductFramework(index, kind),
         HUES[Math.floor(hash01(index * 5 + 11) * HUES.length)]!,
       )

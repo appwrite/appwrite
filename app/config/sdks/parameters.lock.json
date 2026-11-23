@@ -249,6 +249,20 @@
             "secret"
         ],
         "avatars.deletePhoto": [],
+        "avatars.getTeamPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "avatars.updateTeamPhoto": [
+            "teamId",
+            "file"
+        ],
+        "avatars.deleteTeamPhoto": [
+            "teamId"
+        ],
         "avatars.getBrowser": [
             "code",
             "width",
@@ -805,20 +819,6 @@
             "teamId",
             "name"
         ],
-        "teams.getPhoto": [
-            "teamId",
-            "width",
-            "height",
-            "quality",
-            "output"
-        ],
-        "teams.updatePhoto": [
-            "teamId",
-            "file"
-        ],
-        "teams.deletePhoto": [
-            "teamId"
-        ],
         "teams.updatePrefs": [
             "teamId",
             "prefs"
@@ -989,13 +989,15 @@
             "total"
         ],
         "videos.listCaptions": [
-            "videoId"
+            "videoId",
+            "queries",
+            "total"
         ],
         "videos.listCodecs": [],
         "videos.listRenditions": [
             "videoId",
-            "output",
-            "status"
+            "queries",
+            "total"
         ],
         "videos.update": [
             "videoId",
@@ -1300,6 +1302,20 @@
             "acknowledged"
         ],
         "avatars.deletePhoto": [],
+        "avatars.getTeamPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "avatars.updateTeamPhoto": [
+            "teamId",
+            "file"
+        ],
+        "avatars.deleteTeamPhoto": [
+            "teamId"
+        ],
         "avatars.getBrowser": [
             "code",
             "width",
@@ -2408,6 +2424,23 @@
             "qos",
             "expiry"
         ],
+        "messaging.createBirdEmailProvider": [
+            "providerId",
+            "name",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail",
+            "enabled"
+        ],
+        "messaging.createBirdSMSProvider": [
+            "providerId",
+            "name",
+            "from",
+            "apiKey",
+            "enabled"
+        ],
         "messaging.createEmail": [
             "messageId",
             "subject",
@@ -2477,7 +2510,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.createResendProvider": [
             "providerId",
@@ -2685,6 +2719,23 @@
             "qos",
             "expiry"
         ],
+        "messaging.updateBirdEmailProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail"
+        ],
+        "messaging.updateBirdSMSProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "from"
+        ],
         "messaging.updateEmail": [
             "messageId",
             "topics",
@@ -2754,7 +2805,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.updateResendProvider": [
             "providerId",
@@ -3401,6 +3453,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Bird": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Bitbucket": [
             "key",
             "secret",
@@ -3631,6 +3688,11 @@
         "project.updateOAuth2Stripe": [
             "clientId",
             "apiSecretKey",
+            "enabled"
+        ],
+        "project.updateOAuth2Supabase": [
+            "clientId",
+            "clientSecret",
             "enabled"
         ],
         "project.updateOAuth2TikTok": [
@@ -4834,20 +4896,6 @@
             "teamId",
             "name"
         ],
-        "teams.getPhoto": [
-            "teamId",
-            "width",
-            "height",
-            "quality",
-            "output"
-        ],
-        "teams.updatePhoto": [
-            "teamId",
-            "file"
-        ],
-        "teams.deletePhoto": [
-            "teamId"
-        ],
         "teams.updatePrefs": [
             "teamId",
             "prefs"
@@ -5158,6 +5206,9 @@
             "success",
             "failure"
         ],
+        "vcs.createInstallation": [
+            "installationId"
+        ],
         "vcs.createOriginInstallation": [
             "success",
             "failure"
@@ -5193,7 +5244,8 @@
         "vcs.listInstallations": [
             "queries",
             "search",
-            "total"
+            "total",
+            "shared"
         ],
         "vcs.listNamespaces": [
             "installationId",
@@ -5494,13 +5546,15 @@
             "total"
         ],
         "videos.listCaptions": [
-            "videoId"
+            "videoId",
+            "queries",
+            "total"
         ],
         "videos.listCodecs": [],
         "videos.listRenditions": [
             "videoId",
-            "output",
-            "status"
+            "queries",
+            "total"
         ],
         "videos.update": [
             "videoId",
@@ -5829,6 +5883,20 @@
             "acknowledged"
         ],
         "avatars.deletePhoto": [],
+        "avatars.getTeamPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "avatars.updateTeamPhoto": [
+            "teamId",
+            "file"
+        ],
+        "avatars.deleteTeamPhoto": [
+            "teamId"
+        ],
         "avatars.getBrowser": [
             "code",
             "width",
@@ -6913,6 +6981,23 @@
             "qos",
             "expiry"
         ],
+        "messaging.createBirdEmailProvider": [
+            "providerId",
+            "name",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail",
+            "enabled"
+        ],
+        "messaging.createBirdSMSProvider": [
+            "providerId",
+            "name",
+            "from",
+            "apiKey",
+            "enabled"
+        ],
         "messaging.createEmail": [
             "messageId",
             "subject",
@@ -6982,7 +7067,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.createResendProvider": [
             "providerId",
@@ -7190,6 +7276,23 @@
             "qos",
             "expiry"
         ],
+        "messaging.updateBirdEmailProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail"
+        ],
+        "messaging.updateBirdSMSProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "from"
+        ],
         "messaging.updateEmail": [
             "messageId",
             "topics",
@@ -7259,7 +7362,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.updateResendProvider": [
             "providerId",
@@ -7864,6 +7968,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Bird": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Bitbucket": [
             "key",
             "secret",
@@ -8094,6 +8203,11 @@
         "project.updateOAuth2Stripe": [
             "clientId",
             "apiSecretKey",
+            "enabled"
+        ],
+        "project.updateOAuth2Supabase": [
+            "clientId",
+            "clientSecret",
             "enabled"
         ],
         "project.updateOAuth2TikTok": [
@@ -9257,20 +9371,6 @@
             "teamId",
             "name"
         ],
-        "teams.getPhoto": [
-            "teamId",
-            "width",
-            "height",
-            "quality",
-            "output"
-        ],
-        "teams.updatePhoto": [
-            "teamId",
-            "file"
-        ],
-        "teams.deletePhoto": [
-            "teamId"
-        ],
         "teams.updatePrefs": [
             "teamId",
             "prefs"
@@ -9835,13 +9935,15 @@
             "total"
         ],
         "videos.listCaptions": [
-            "videoId"
+            "videoId",
+            "queries",
+            "total"
         ],
         "videos.listCodecs": [],
         "videos.listRenditions": [
             "videoId",
-            "output",
-            "status"
+            "queries",
+            "total"
         ],
         "videos.update": [
             "videoId",

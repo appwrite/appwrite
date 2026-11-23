@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react'
 import { Link, useParams } from '@tanstack/react-router'
 import { Check, Copy, ExternalLink, Info } from 'lucide-react'
 import { toast } from 'sonner'
@@ -178,7 +184,9 @@ export function View() {
           <SelectField label={t('Platform')} className="min-w-[160px]">
             <Select
               value={platformId}
-              onValueChange={(value) => setPlatformId(value as PlayerPlatformId)}
+              onValueChange={(value) =>
+                setPlatformId(value as PlayerPlatformId)
+              }
             >
               <SelectTrigger className="h-9 w-full text-[13px]">
                 <SelectValue />
@@ -352,14 +360,15 @@ export function View() {
               <Info className="mt-0.5 h-4 w-4 shrink-0" />
               <p>
                 {t(
-                  'Manifest, segment, and subtitle requests use the read permissions of the source file in Storage. Grant read access to Any for public playback, or to signed-in users for private videos.',
+                  'Manifest, segment, and subtitle requests use the read permissions of the video. Turn on public playback in Settings to let anyone watch, or grant read access to signed-in users for private videos.',
                 )}{' '}
                 <Link
-                  to="/projects/$projectId/storage/$bucketId"
-                  params={{ projectId, bucketId: video.bucketId }}
+                  to="/projects/$projectId/videos/$videoId/settings"
+                  params={{ projectId, videoId: video.$id }}
+                  hash="access"
                   className="text-foreground underline-offset-4 hover:underline"
                 >
-                  {t('Open bucket')}
+                  {t('Open access settings')}
                 </Link>
               </p>
             </div>

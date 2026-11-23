@@ -566,9 +566,9 @@ export function View({ variant = 'default' }: { variant?: HomeVariant }) {
           </div>
         </section>
 
-        {factory ? <ConsoleSection /> : null}
-
         <AiSection />
+
+        {factory ? <ConsoleSection /> : null}
 
         <TestimonialsSection />
 

@@ -12,7 +12,7 @@ use ext_php_rs::types::{ZendObject, ZendStr, Zval};
 use ext_php_rs::zend::{ClassEntry, ExecutorGlobals, ce};
 use utopia_emails::{Error, Lists};
 
-use crate::locale::Value;
+use crate::string::Value;
 use crate::string::{Bytes, PhpString};
 
 /// A PHP string of `bytes`.

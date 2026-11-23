@@ -538,6 +538,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_OPENSSL_KEY_OLDEST
       - _APP_EMAIL_SECURITY
       - _APP_EMAIL_CERTIFICATES
+      - _APP_CERTIFICATES_PROVIDER
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -1575,6 +1576,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_EXECUTOR_HOST
       - _APP_DATABASE_SHARED_TABLES
       - _APP_EMAIL_CERTIFICATES
+      - _APP_CERTIFICATES_PROVIDER
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE`,
   },
@@ -1919,6 +1921,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_DOMAIN_FUNCTIONS
       - _APP_DOMAIN_SITES
       - _APP_EMAIL_CERTIFICATES
+      - _APP_CERTIFICATES_PROVIDER
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER

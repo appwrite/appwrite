@@ -1,11 +1,7 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { z } from 'zod'
 import { projectQueryOptions, teamsQueryOptions } from '@/lib/react-query/hooks'
-import {
-  listSearchSchema,
-  queryParamToMap,
-  searchParamsFromRouterLocation,
-} from '@/lib/table-filters'
+import { listSearchSchema, queryParamToMap } from '@/lib/table-filters'
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { pageTitle } from '@/lib/utils/page-title'
 
@@ -29,25 +25,23 @@ export const Route = createFileRoute('/_public/projects/$projectId/auth/teams')(
   {
     head: () => ({ meta: [{ title: pageTitle('Teams', 'Auth') }] }),
     validateSearch: authTeamsSearchSchema,
-    loader: async ({ params, context, search: routeSearch, location }) => {
+    loaderDeps: ({ search }) => ({
+      teamsSearch: search.teamsSearch,
+      teamsPage: search.teamsPage,
+      teamsLimit: search.teamsLimit,
+      teamsQuery: search.teamsQuery,
+    }),
+    loader: async ({ params, context, deps }) => {
       if (typeof window === 'undefined') return
 
       const { projectId } = params
       const { queryClient } = context
       if (!projectId) return
 
-      const validatedSearch =
-        routeSearch ??
-        authTeamsSearchSchema.parse(
-          location.search && typeof location.search === 'object'
-            ? location.search
-            : Object.fromEntries(searchParamsFromRouterLocation(location)),
-        )
-
-      const teamsSearch = validatedSearch.teamsSearch?.trim() || undefined
-      const teamsPage = validatedSearch.teamsPage ?? DEFAULT_PAGE
-      const teamsLimit = validatedSearch.teamsLimit ?? GRID_DEFAULT_PAGE_SIZE
-      const teamsFilterMap = queryParamToMap(validatedSearch.teamsQuery ?? null)
+      const teamsSearch = deps.teamsSearch?.trim() || undefined
+      const teamsPage = deps.teamsPage ?? DEFAULT_PAGE
+      const teamsLimit = deps.teamsLimit ?? GRID_DEFAULT_PAGE_SIZE
+      const teamsFilterMap = queryParamToMap(deps.teamsQuery ?? null)
       const teamsFilterQueries =
         teamsFilterMap.size > 0
           ? Array.from(teamsFilterMap.values())

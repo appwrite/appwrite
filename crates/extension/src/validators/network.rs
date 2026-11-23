@@ -1,6 +1,5 @@
 //! The network leaf validators of `packages/validators`: `Hostname`, `Domain`, `Host`, `IP`,
-//! `URL` and `Phone`, over [`utopia_validators`], behind `validators-network` (and
-//! `validators`, whose base they extend).
+//! `URL` and `Phone`, over [`utopia_validators`], extending the base.
 //!
 //! Built by hand like the scalar and text batches: each PHP constructor's state lives in real
 //! typed protected properties, declared as `packages/validators` declares them, and every
@@ -20,13 +19,21 @@ use ext_php_rs::zend::{ClassEntry, ExecuteData, ce};
 use utopia_validators::{FilterValue, IpType, UrlComponent};
 
 use super::engine::{
-    self, MAY_BE_ARRAY, MAY_BE_BOOL, MAY_BE_LONG, MAY_BE_STRING, Property, array_arg, bool_arg, get, set, str_arg,
-    string, too_few,
+    self, Literal, MAY_BE_ARRAY, MAY_BE_BOOL, MAY_BE_LONG, MAY_BE_STRING, Property, array_arg, bool_arg, get, set,
+    str_arg, str_zval_arg, string, too_few,
 };
 use super::leaf::{
-    self, Method, PRIVATE, PUBLIC, VALUE, VALUE_MIXED, build, is_array, set_bool, set_str, stored, this, type_string,
-    value_arg,
+    self, Method, PRIVATE, PUBLIC, VALUE, VALUE_MIXED, build, is_array, set_bool, set_built, set_literal, set_str,
+    stored, this, type_string, value_arg,
 };
+
+/// The descriptions the classes return as they are.
+static HOSTNAME_DESCRIPTION: Literal = Literal::new(utopia_validators::HOSTNAME_DESCRIPTION);
+static DOMAIN_DESCRIPTION: Literal = Literal::new(utopia_validators::DOMAIN_DESCRIPTION);
+static IP_DESCRIPTION: Literal = Literal::new(utopia_validators::IP_DESCRIPTION);
+static PHONE_DESCRIPTION: Literal = Literal::new(utopia_validators::PHONE_DESCRIPTION);
+/// `IP::ALL`, the constructor's default.
+static IP_ALL: Literal = Literal::new("all");
 
 /// `MAY_BE_NULL`: a nullable type's `null`.
 const MAY_BE_NULL: u32 = 1 << 1;
@@ -178,7 +185,7 @@ extern "C" fn hostname_construct(ex: &mut ExecuteData, _: &mut Zval) {
 }
 
 extern "C" fn hostname_description(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, utopia_validators::HOSTNAME_DESCRIPTION.as_bytes());
+    set_literal(retval, &HOSTNAME_DESCRIPTION);
 }
 
 /// `Hostname::isValid()`'s allow-list loop over `list` for the hostname `value`. An entry that
@@ -190,7 +197,6 @@ fn hostname_listed(list: &Zval, value: &[u8]) -> Option<bool> {
     if list.is_empty() {
         return Some(true);
     }
-    let star = string(b"*");
     for item in engine::values(list) {
         let item = item.dereference();
         if let Some(allowed) = item.zend_str() {
@@ -200,7 +206,7 @@ fn hostname_listed(list: &Zval, value: &[u8]) -> Option<bool> {
             continue;
         }
         // `$value === $item` and `$item === '*'` are false for an entry that is not a string.
-        if engine::truthy(&engine::call("str_starts_with", &[item, &star])?) {
+        if engine::truthy(&engine::call("str_starts_with", &[item, &string(b"*")])?) {
             let rest = engine::call("substr", &[item, &long_zval(1)])?;
             if bytes(&rest).is_some_and(|suffix| value.ends_with(suffix)) {
                 return Some(true);
@@ -311,7 +317,7 @@ extern "C" fn domain_create_restriction(ex: &mut ExecuteData, retval: &mut Zval)
 }
 
 extern "C" fn domain_description(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, utopia_validators::DOMAIN_DESCRIPTION.as_bytes());
+    set_literal(retval, &DOMAIN_DESCRIPTION);
 }
 
 /// `foreach ($prefixDenyList as $deniedPrefix)` from `Domain`'s scope, calling `each` until it
@@ -480,8 +486,15 @@ extern "C" fn host_construct(ex: &mut ExecuteData, _: &mut Zval) {
 extern "C" fn host_description(ex: &mut ExecuteData, retval: &mut Zval) {
     let Some(this) = this(ex) else { return };
     let Some(whitelist) = get(stored(&HOST), this, &HOST_WHITELIST) else { return };
-    let Some(joined) = engine::implode(&whitelist) else { return };
-    set_str(retval, &utopia_validators::host_description(&joined));
+    // Built at its exact size when every host is a string, as most lists are.
+    if engine::implode_between(retval, utopia_validators::HOST_DESCRIPTION_PREFIX.as_bytes(), &whitelist, b"") {
+        return;
+    }
+    set_built(retval, |out, joined| {
+        engine::implode(&whitelist, joined)?;
+        utopia_validators::host_description(joined, out);
+        Some(())
+    });
 }
 
 extern "C" fn host_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
@@ -522,7 +535,8 @@ const IP_METHODS: &[Method] = &[
 ];
 
 fn ip_register(class: &'static mut ClassEntry, tables: ArgInfoTables) {
-    engine::declare_constant(class, "ALL", engine::interned(b"all"), 0);
+    IP_ALL.intern();
+    engine::declare_constant(class, "ALL", IP_ALL.zval(), 0);
     engine::declare_constant(class, "V4", engine::interned(b"ipv4"), 0);
     engine::declare_constant(class, "V6", engine::interned(b"ipv6"), 0);
     engine::inherited_constants_last(class, &INHERITED);
@@ -534,25 +548,25 @@ fn ip_register(class: &'static mut ClassEntry, tables: ArgInfoTables) {
 
 extern "C" fn ip_construct(ex: &mut ExecuteData, _: &mut Zval) {
     let kind = match engine::arg(ex, 0) {
-        Some(arg) => match str_arg(ex, 1, arg) {
+        Some(arg) => match str_zval_arg(ex, 1, arg) {
             Some(kind) => kind,
             None => return,
         },
-        None => b"all".to_vec(),
+        None => IP_ALL.zval(),
     };
     // `in_array($type, [self::ALL, self::V4, self::V6])`: no name is numeric, so loosely
     // equal strings are equal bytes.
-    if IpType::from_name(&kind).is_none() {
+    if IpType::from_name(kind.zend_str().map_or(&[], |kind| kind.as_bytes())).is_none() {
         let _ = throw(ce::exception(), "Unsupported IP type");
         return;
     }
     if let Some(this) = this(ex) {
-        set(stored(&IP), this, &IP_TYPE, string(&kind));
+        set(stored(&IP), this, &IP_TYPE, kind);
     }
 }
 
 extern "C" fn ip_description(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, utopia_validators::IP_DESCRIPTION.as_bytes());
+    set_literal(retval, &IP_DESCRIPTION);
 }
 
 extern "C" fn ip_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
@@ -642,19 +656,16 @@ extern "C" fn url_description(ex: &mut ExecuteData, retval: &mut Zval) {
     let scope = stored(&URL);
     let Some(transport) = get(scope, this, &URL_HTTPS_OR_LOOPBACK) else { return };
     let Some(schemes) = get(scope, this, &URL_ALLOWED_SCHEMES) else { return };
-    let joined = if schemes.array().is_some_and(|list| !list.is_empty()) {
-        match engine::implode(&schemes) {
-            Some(joined) => Some(joined),
-            None => return,
+    set_built(retval, |out, joined| {
+        let listed = schemes.array().is_some_and(|list| !list.is_empty());
+        if listed {
+            engine::implode(&schemes, joined)?;
         }
-    } else {
-        None
-    };
-    let Some(fragments) = get(scope, this, &URL_ALLOW_FRAGMENTS) else { return };
-    set_str(
-        retval,
-        &utopia_validators::url_description(joined.as_deref(), engine::truthy(&fragments), engine::truthy(&transport)),
-    );
+        let fragments = get(scope, this, &URL_ALLOW_FRAGMENTS)?;
+        let joined = listed.then_some(&joined[..]);
+        utopia_validators::url_description(joined, engine::truthy(&fragments), engine::truthy(&transport), out);
+        Some(())
+    });
 }
 
 /// `URL::isPrivateUseSchemeURI($value)`.
@@ -775,7 +786,7 @@ extern "C" fn phone_normalize(ex: &mut ExecuteData, retval: &mut Zval) {
 }
 
 extern "C" fn phone_description(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, utopia_validators::PHONE_DESCRIPTION.as_bytes());
+    set_literal(retval, &PHONE_DESCRIPTION);
 }
 
 extern "C" fn phone_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
@@ -798,8 +809,9 @@ extern "C" fn phone_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
 }
 
 /// Registers the batch's classes, each extending `Utopia\Validator\Validator`. Called from
-/// the module's startup (MINIT), with `validators-network` on.
+/// the module's startup (MINIT), after the base.
 pub fn register() -> ext_php_rs::error::Result<()> {
+    engine::intern(&[&HOSTNAME_DESCRIPTION, &DOMAIN_DESCRIPTION, &IP_DESCRIPTION, &PHONE_DESCRIPTION]);
     let base = (super::base_class as fn() -> &'static ClassEntry, super::BASE);
     build("Utopia\\Validator\\Hostname", base, HOSTNAME_METHODS, hostname_register)?;
     build("Utopia\\Validator\\Domain", base, DOMAIN_METHODS, domain_register)?;

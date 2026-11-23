@@ -851,18 +851,18 @@ fn parse_query(scope: &'static ClassEntry, query: &ZendHashTable, allow_raw: boo
     }
     let mut held = ZendHashTable::new();
     for (key, value) in values {
-        let value = if method.is_nested() {
-            match (late(scope, "parsequery", &mut [value.shallow_clone(), boolean(allow_raw)]), value.array()) {
-                (Some(parsed), _) => parsed?,
-                (None, Some(nested)) => parse_query(scope, nested, allow_raw)?,
-                (None, None) => {
-                    return Err(type_error(
-                        "Utopia\\Query\\Query::parseQuery(): Argument #1 ($query) must be of type array",
-                    ));
-                }
+        let value = if !method.is_nested() {
+            value.shallow_clone()
+        } else if let Some(child) = value.zend_str() {
+            // A client may send a child as a query string: `static::parse()` reads it.
+            parse_late(scope, child.as_bytes(), allow_raw)?
+        } else if let Some(nested) = value.array() {
+            match late(scope, "parsequery", &mut [value.shallow_clone(), boolean(allow_raw)]) {
+                Some(parsed) => parsed?,
+                None => parse_query(scope, nested, allow_raw)?,
             }
         } else {
-            value.shallow_clone()
+            return Err(invalid(format!("Invalid nested query. Must be an array or string, got {}", gettype(value))));
         };
         held.insert(key, value).map_err(PhpException::from)?;
     }

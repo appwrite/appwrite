@@ -2,7 +2,8 @@
 
 The `Password` proof hashes and verifies passwords using a pluggable hashing
 algorithm. Argon2 is used by default; any of the bundled hashes can be swapped
-in.
+in. The hashes come from the `utopia` PHP extension (`ext-utopia`); a PHP class can
+extend `Utopia\Auth\Hash` or any of them as it would a PHP class.
 
 ```php
 <?php

@@ -1,7 +1,6 @@
 //! The scalar leaf validators of `packages/validators`: `Boolean`, `Integer`,
 //! `FloatValidator`, `Numeric`, `Range` (a `Numeric`), `Port`, `HexColor` and `Wildcard`,
-//! over [`utopia_validators`], behind `validators-scalar` (and `validators`, whose base
-//! they extend).
+//! over [`utopia_validators`], extending the base.
 //!
 //! Each is built by hand, like the base: no Rust object, and the state its PHP
 //! constructor keeps in real typed protected properties, declared as `packages/validators`
@@ -13,18 +12,28 @@ use std::sync::atomic::{AtomicPtr, Ordering};
 
 use ext_php_rs::args::ArgInfoTables;
 use ext_php_rs::exception::throw;
-use ext_php_rs::types::Zval;
+use ext_php_rs::types::{ZendStr, Zval};
 use ext_php_rs::zend::{ClassEntry, ExecuteData};
 use utopia_validators::Integer as IntegerCheck;
 
 use super::engine::{
-    self, MAY_BE_BOOL, MAY_BE_LONG, MAY_BE_STRING, Property, bool_arg, get, input, long_arg, number_arg, set, str_arg,
-    string, too_few,
+    self, Literal, MAY_BE_BOOL, MAY_BE_LONG, MAY_BE_STRING, Property, bool_arg, get, input, long_arg, number_arg, set,
+    str_arg, str_zval_arg, too_few,
 };
 use super::leaf::{
-    self, Method, NUMBER, PRIVATE, PUBLIC, VALUE, VALUE_MIXED, build, is_array, set_bool, set_str, stored, this,
-    type_string, value_arg,
+    self, Method, NUMBER, PRIVATE, PUBLIC, TYPE_BOOLEAN, TYPE_FLOAT, TYPE_INTEGER, TYPE_MIXED, VALUE, VALUE_MIXED,
+    build, is_array, set_bool, set_built, set_literal, set_str, stored, this, type_string, value_arg,
 };
+
+/// The descriptions the classes return as they are.
+static BOOLEAN_DESCRIPTION: Literal = Literal::new("Value must be a valid boolean");
+static FLOAT_DESCRIPTION: Literal = Literal::new("Value must be a valid float");
+static NUMERIC_DESCRIPTION: Literal = Literal::new("Value must be a valid number");
+static PORT_DESCRIPTION: Literal = Literal::new(
+    "Value must be a port between 1 and 65535, optionally prefixed by a host IP address (e.g. 127.0.0.1:80)",
+);
+static HEX_COLOR_DESCRIPTION: Literal = Literal::new("Value must be a valid Hex color code");
+static WILDCARD_DESCRIPTION: Literal = Literal::new("Every input is valid");
 
 /// The constructor parameters here that do not declare a property: `Integer`'s `$bits` and
 /// `$unsigned`, which `Integer.php` declares on their own.
@@ -77,6 +86,7 @@ fn loose_construct(ex: &mut ExecuteData, scope: &ClassEntry, property: &Property
 }
 
 /// `$this->loose` of `scope`, `None` with the exception pending when it cannot be read.
+#[inline(always)]
 fn loose(ex: &mut ExecuteData, scope: &ClassEntry, property: &Property) -> Option<bool> {
     get(scope, this(ex)?, property).map(|value| engine::truthy(&value))
 }
@@ -85,10 +95,10 @@ extern "C" fn boolean_construct(ex: &mut ExecuteData, _: &mut Zval) {
     loose_construct(ex, stored(&BOOLEAN), &BOOLEAN_LOOSE);
 }
 extern "C" fn boolean_description(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, b"Value must be a valid boolean");
+    set_literal(retval, &BOOLEAN_DESCRIPTION);
 }
 extern "C" fn boolean_type(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, b"boolean");
+    set_literal(retval, &TYPE_BOOLEAN);
 }
 extern "C" fn boolean_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
     let Some(value) = value_arg(ex, "Utopia\\Validator\\Boolean::isValid") else { return };
@@ -126,10 +136,10 @@ extern "C" fn float_construct(ex: &mut ExecuteData, _: &mut Zval) {
     loose_construct(ex, stored(&FLOAT), &FLOAT_LOOSE);
 }
 extern "C" fn float_description(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, b"Value must be a valid float");
+    set_literal(retval, &FLOAT_DESCRIPTION);
 }
 extern "C" fn float_type(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, b"double");
+    set_literal(retval, &TYPE_FLOAT);
 }
 extern "C" fn float_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
     let Some(value) = value_arg(ex, "Utopia\\Validator\\FloatValidator::isValid") else { return };
@@ -227,11 +237,14 @@ fn integer_state(ex: &mut ExecuteData) -> Option<IntegerCheck> {
 
 extern "C" fn integer_description(ex: &mut ExecuteData, retval: &mut Zval) {
     if let Some(state) = integer_state(ex) {
-        set_str(retval, &state.description());
+        set_built(retval, |out, _| {
+            state.description(out);
+            Some(())
+        });
     }
 }
 extern "C" fn integer_type(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, b"integer");
+    set_literal(retval, &TYPE_INTEGER);
 }
 extern "C" fn integer_bits(ex: &mut ExecuteData, retval: &mut Zval) {
     if let Some(state) = integer_state(ex) {
@@ -247,7 +260,7 @@ extern "C" fn integer_format(ex: &mut ExecuteData, retval: &mut Zval) {
     // `$this->isUnsigned()`: a subclass may override it.
     let Some(this) = this(ex) else { return };
     let Ok(unsigned) = this.try_call_method("isUnsigned", vec![]) else { return };
-    if ext_php_rs::zend::ExecutorGlobals::has_exception() {
+    if engine::has_exception() {
         return;
     }
     let Some(bits) = get(stored(&INTEGER), this, &INTEGER_BITS) else { return };
@@ -295,10 +308,10 @@ fn numeric_class() -> &'static ClassEntry {
 }
 
 extern "C" fn numeric_description(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, b"Value must be a valid number");
+    set_literal(retval, &NUMERIC_DESCRIPTION);
 }
 extern "C" fn numeric_type(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, b"mixed");
+    set_literal(retval, &TYPE_MIXED);
 }
 extern "C" fn numeric_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
     let Some(value) = value_arg(ex, "Utopia\\Validator\\Numeric::isValid") else { return };
@@ -340,16 +353,16 @@ extern "C" fn range_construct(ex: &mut ExecuteData, _: &mut Zval) {
     let Some(min) = number_arg(ex, 1, min) else { return };
     let Some(max) = number_arg(ex, 2, max) else { return };
     let format = match engine::arg(ex, 2) {
-        Some(arg) => match str_arg(ex, 3, arg) {
+        Some(arg) => match str_zval_arg(ex, 3, arg) {
             Some(format) => format,
             None => return,
         },
-        None => b"integer".to_vec(),
+        None => TYPE_INTEGER.zval(),
     };
     let Some(this) = this(ex) else { return };
     set(scope, this, &RANGE_MIN, min);
     set(scope, this, &RANGE_MAX, max);
-    set(scope, this, &RANGE_FORMAT, string(&format));
+    set(scope, this, &RANGE_FORMAT, format);
 }
 
 fn range_property(ex: &mut ExecuteData, retval: &mut Zval, property: &Property) {
@@ -375,7 +388,10 @@ extern "C" fn range_description(ex: &mut ExecuteData, retval: &mut Zval) {
     let Some(this) = this(ex) else { return };
     let Some(min) = get(scope, this, &RANGE_MIN) else { return };
     let Some(max) = get(scope, this, &RANGE_MAX) else { return };
-    set_str(retval, &utopia_validators::range_description(engine::number(&min), engine::number(&max)));
+    set_built(retval, |out, _| {
+        utopia_validators::range_description(engine::number(&min), engine::number(&max), out);
+        Some(())
+    });
 }
 extern "C" fn range_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
     let Some(value) = value_arg(ex, "Utopia\\Validator\\Range::isValid") else { return };
@@ -388,8 +404,8 @@ extern "C" fn range_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
     let scope = stored(&RANGE);
     let Some(this) = this(ex) else { return };
     let Some(format) = get(scope, this, &RANGE_FORMAT) else { return };
-    let format = format.zend_str().map(|s| s.as_bytes().to_vec()).unwrap_or_default();
-    let Some(number) = utopia_validators::range_number(&format, input(value)) else {
+    let format = format.zend_str().map(ZendStr::as_bytes).unwrap_or_default();
+    let Some(number) = utopia_validators::range_number(format, input(value)) else {
         set_bool(retval, false);
         return;
     };
@@ -430,10 +446,7 @@ fn port_register(class: &'static mut ClassEntry, tables: ArgInfoTables) {
 }
 
 extern "C" fn port_description(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(
-        retval,
-        b"Value must be a port between 1 and 65535, optionally prefixed by a host IP address (e.g. 127.0.0.1:80)",
-    );
+    set_literal(retval, &PORT_DESCRIPTION);
 }
 extern "C" fn port_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
     let Some(value) = value_arg(ex, "Utopia\\Validator\\Port::isValid") else { return };
@@ -478,7 +491,7 @@ fn hex_color_register(class: &'static mut ClassEntry, tables: ArgInfoTables) {
 }
 
 extern "C" fn hex_color_description(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, b"Value must be a valid Hex color code");
+    set_literal(retval, &HEX_COLOR_DESCRIPTION);
 }
 extern "C" fn hex_color_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
     let Some(value) = value_arg(ex, "Utopia\\Validator\\HexColor::isValid") else { return };
@@ -503,7 +516,7 @@ fn wildcard_register(class: &'static mut ClassEntry, tables: ArgInfoTables) {
 }
 
 extern "C" fn wildcard_description(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, b"Every input is valid");
+    set_literal(retval, &WILDCARD_DESCRIPTION);
 }
 extern "C" fn wildcard_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
     if value_arg(ex, "Utopia\\Validator\\Wildcard::isValid").is_some() {
@@ -513,6 +526,14 @@ extern "C" fn wildcard_is_valid(ex: &mut ExecuteData, retval: &mut Zval) {
 
 /// Registers the batch's classes. Called from the module's startup (MINIT), after the base.
 pub fn register() -> ext_php_rs::error::Result<()> {
+    engine::intern(&[
+        &BOOLEAN_DESCRIPTION,
+        &FLOAT_DESCRIPTION,
+        &NUMERIC_DESCRIPTION,
+        &PORT_DESCRIPTION,
+        &HEX_COLOR_DESCRIPTION,
+        &WILDCARD_DESCRIPTION,
+    ]);
     let base = (super::base_class as fn() -> &'static ClassEntry, super::BASE);
     build("Utopia\\Validator\\Boolean", base, BOOLEAN_METHODS, boolean_register)?;
     build("Utopia\\Validator\\Integer", base, INTEGER_METHODS, integer_register)?;

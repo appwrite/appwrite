@@ -22,6 +22,7 @@ publish = false
 
 [workspace.dependencies]
 php-std = { path = "crates/support/php-std" }
+utopia-auth = { path = "crates/utopia/auth" }
 utopia-domains = { path = "crates/utopia/domains" }
 utopia-emails = { path = "crates/utopia/emails" }
 utopia-dsn = { path = "crates/utopia/dsn" }
@@ -37,6 +38,9 @@ ext-php-rs = "0.16.5"
 # Multi-needle substring search (utopia-user-agent: the bot table, in one pass).
 aho-corasick = "1"
 argon2 = { version = "0.5", features = ["std"] }
+# BLAKE2b for php-std's Argon2, which fills lanes on scoped threads (the `argon2` crate, a test
+# reference, fills them one after the other).
+blake2 = "0.10"
 blowfish = { version = "0.9", features = ["bcrypt"] }
 bytes = "1"
 cc = "1"
@@ -58,6 +62,9 @@ serde = "1"
 serde_json = { version = "1", features = ["raw_value", "preserve_order", "float_roundtrip"] }
 sha1 = "0.10"
 sha2 = "0.10"
+# Firebase's modified scrypt (utopia-auth): AES-256 in CTR mode, and wiping derived keys.
+aes = "0.8"
+zeroize = "1"
 sha3 = "0.10"
 # A stack sized for the work (the extension's Utopia\\Query AST: a tree as deep as PHP takes).
 stacker = "0.1"

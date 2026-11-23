@@ -126,12 +126,17 @@ export function continentsQueryOptions() {
  *
  * Uses the console SDK to fetch all available locale codes.
  */
-export function useLocaleCodes() {
-  return useQuery({
+export function localeCodesQueryOptions() {
+  return queryOptions({
     queryKey: ['localeCodes', 'console'],
     queryFn: fetchLocaleCodes,
-    staleTime: LONG_STALE_TIME, // Locale codes don't change often
+    staleTime: LONG_STALE_TIME,
+    gcTime: LONG_STALE_TIME,
   })
+}
+
+export function useLocaleCodes() {
+  return useQuery(localeCodesQueryOptions())
 }
 
 /**

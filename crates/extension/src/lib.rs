@@ -3,14 +3,18 @@
 //! (`packages/<name>`), as plain PHP.
 //!
 //! `Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN`,
-//! `Utopia\Locale\Locale`, `Utopia\UserAgent\UserAgent`, `Utopia\Domains\Domain` and
-//! `Utopia\Emails\Email` are always registered: they have no PHP implementation.
-//! Every other library still has one, and its classes are registered only when
-//! `_APP_EXTENSION_LIBRARIES` names its package (`query`, `validators`) or, for a package ported in
-//! batches, the package and the batch (`validators,validators-scalar`, `validators,validators-text`, `validators,validators-compose`), so each can be
-//! canaried and switched back to PHP with a restart, not a deploy.
+//! `Utopia\Locale\Locale`, `Utopia\UserAgent\UserAgent`, `Utopia\Domains\Domain`,
+//! `Utopia\Emails\Email`, the validators of `utopia-php/validators` (`Utopia\Validator\Validator`
+//! and its leaves) and the password hashes of `utopia-php/auth` (`Utopia\Auth\Hash` and
+//! `Hashes\*`) are always registered: they have no PHP implementation.
+//!
+//! A library that still has one registers its classes only when `_APP_EXTENSION_LIBRARIES` names
+//! its package (`if enabled("<package>")` in [`startup`] or [`get_module`]), so it can be canaried
+//! and switched back to PHP with a restart, not a deploy. `query` is the one that does today.
 
+mod auth;
 mod canvas;
+mod classes;
 mod domains;
 mod dsn;
 mod emails;
@@ -30,12 +34,14 @@ static ALLOCATOR: mimalloc::MiMalloc = mimalloc::MiMalloc;
 /// comma separated.
 const LIBRARIES: &str = "_APP_EXTENSION_LIBRARIES";
 
-/// Whether `_APP_EXTENSION_LIBRARIES` names `package`.
+/// Whether `_APP_EXTENSION_LIBRARIES` names `package`. Unused while no library is switchable; the
+/// next one to be canaried calls it.
+#[allow(dead_code)]
 fn enabled(package: &str) -> bool {
     std::env::var(LIBRARIES).is_ok_and(|list| list.split(',').any(|name| name.trim() == package))
 }
 
-/// The module PHP loads: every class of the extension that is switched on.
+/// The module PHP loads: every class of the extension.
 #[php_module]
 #[php(startup = startup)]
 pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
@@ -44,8 +50,6 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .class::<canvas::Canvas>()
         .class::<canvas::Font>()
         .class::<dsn::Dsn>()
-        .class::<locale::Locale>()
-        .class::<user_agent::UserAgent>()
         .class::<domains::Domain>()
         .class::<emails::Email>();
     let module = if enabled("query") {
@@ -100,27 +104,19 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     module.request_shutdown_function(request_shutdown)
 }
 
-/// Registers the classes built by hand rather than with `#[php_class]` that are switched on.
-/// Runs in MINIT, before the `#[php_class]` classes are registered.
+/// Registers the classes built by hand rather than with `#[php_class]`: `Locale`, `UserAgent`, the
+/// validators and the password hashes. Runs in MINIT, before the `#[php_class]` classes are registered.
 fn startup(_kind: i32, _module: i32) -> i32 {
-    if !enabled("validators") {
-        return 0;
-    }
-    // The leaves extend the base, so a batch is registered only with it.
     ext_php_rs::internal::startup_guard(|| {
+        locale::register()?;
+        user_agent::register()?;
+        // The leaves extend the base, so it is registered first.
         validators::register()?;
-        if enabled("validators-scalar") {
-            validators::scalar::register()?;
-        }
-        if enabled("validators-text") {
-            validators::text::register()?;
-        }
-        if enabled("validators-network") {
-            validators::network::register()?;
-        }
-        if enabled("validators-compose") {
-            validators::compose::register()?;
-        }
+        validators::scalar::register()?;
+        validators::text::register()?;
+        validators::network::register()?;
+        validators::compose::register()?;
+        auth::register()?;
         Ok(())
     })
 }

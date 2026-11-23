@@ -2,15 +2,12 @@ import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/sites/View'
 import {
   sitesQueryOptions,
-  siteTemplatesQueryOptions,
-  vcsInstallationsQueryOptions,
   fetchProject,
   organizationPlanQueryOptions,
   SITES_DEFAULT_SORT_BY,
   SITES_DEFAULT_SORT_ORDER,
 } from '@/lib/react-query/hooks'
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
-import { SITE_TEMPLATE_GALLERY_DEFAULT_PAGE_SIZE } from '@/lib/sites/site-template-wizard'
 import { listSearchSchema, parseListSearch } from '@/lib/table-filters'
 import { pageTitle } from '@/lib/utils/page-title'
 
@@ -42,7 +39,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/sites/')({
       staleTime: 5 * 60 * 1000,
     })
 
-    const [sites] = await Promise.all([
+    await Promise.all([
       queryClient.ensureQueryData(
         sitesQueryOptions(
           projectId,
@@ -60,22 +57,6 @@ export const Route = createFileRoute('/_public/projects/$projectId/sites/')({
           )
         : Promise.resolve(),
     ])
-
-    // An empty project shows Git providers and template quick starts; load
-    // them with the page.
-    if (sites.total === 0 && !search && !filterQueries?.length) {
-      await Promise.all([
-        queryClient.prefetchQuery(vcsInstallationsQueryOptions(projectId)),
-        queryClient.prefetchQuery(
-          siteTemplatesQueryOptions(
-            projectId,
-            undefined,
-            undefined,
-            SITE_TEMPLATE_GALLERY_DEFAULT_PAGE_SIZE,
-          ),
-        ),
-      ])
-    }
   },
   component: SitesIndexPage,
 })

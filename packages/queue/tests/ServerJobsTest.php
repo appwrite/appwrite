@@ -75,18 +75,20 @@ final class ServerJobsTest extends TestCase
                 [
                     'queue' => new Queue('database_db_main'),
                     'coroutines' => 1,
+                    'maxInFlight' => 2,
                 ],
                 [
                     'queue' => new Queue('v1-functions'),
                     'coroutines' => 8,
+                    'maxInFlight' => 16,
                 ],
             ],
         );
 
         $this->assertSame(
             [
-                ['queue' => 'database_db_main', 'coroutines' => 1, 'prefetch' => 1],
-                ['queue' => 'v1-functions', 'coroutines' => 8, 'prefetch' => 8],
+                ['queue' => 'database_db_main', 'coroutines' => 1, 'prefetch' => 1, 'maxInFlight' => 2],
+                ['queue' => 'v1-functions', 'coroutines' => 8, 'prefetch' => 8, 'maxInFlight' => 16],
             ],
             $adapter->consumed,
         );
@@ -102,7 +104,7 @@ final class ServerJobsTest extends TestCase
 
         $this->assertSame(
             [
-                ['queue' => 'v1-functions', 'coroutines' => 8, 'prefetch' => 8],
+                ['queue' => 'v1-functions', 'coroutines' => 8, 'prefetch' => 8, 'maxInFlight' => 16],
             ],
             $adapter->consumed,
         );
@@ -119,8 +121,8 @@ final class ServerJobsTest extends TestCase
 
         $this->assertSame(
             [
-                ['queue' => 'database_db_main', 'coroutines' => 1, 'prefetch' => 1],
-                ['queue' => 'v1-functions', 'coroutines' => 8, 'prefetch' => 8],
+                ['queue' => 'database_db_main', 'coroutines' => 1, 'prefetch' => 1, 'maxInFlight' => 2],
+                ['queue' => 'v1-functions', 'coroutines' => 8, 'prefetch' => 8, 'maxInFlight' => 16],
             ],
             $adapter->consumed,
         );
@@ -169,11 +171,11 @@ final class ServerJobsTest extends TestCase
     {
         $adapter = new RecordingAdapter(exclusive: true);
         $server = new Server($adapter);
-        $server->job('v1-functions');
+        $server->job('v1-functions', maxInFlight: 1);
 
         $server->start();
 
-        $this->assertSame([['queue' => 'v1-functions', 'coroutines' => 1, 'prefetch' => 1]], $adapter->consumed);
+        $this->assertSame([['queue' => 'v1-functions', 'coroutines' => 1, 'prefetch' => 1, 'maxInFlight' => 1]], $adapter->consumed);
     }
 
     /**
@@ -199,7 +201,7 @@ final class ServerJobsTest extends TestCase
 
         $server->start();
 
-        $this->assertSame([['queue' => 'v1-functions', 'coroutines' => 8, 'prefetch' => 8]], $adapter->consumed);
+        $this->assertSame([['queue' => 'v1-functions', 'coroutines' => 8, 'prefetch' => 8, 'maxInFlight' => 16]], $adapter->consumed);
     }
 
     /**
@@ -208,9 +210,9 @@ final class ServerJobsTest extends TestCase
      * backoff holds one of those N slots, so the handlers themselves fill the
      * ceiling and the queue stops being delivered into. Refuse it at boot.
      */
-    public function testStartRefusesACoroutineCapAtTheInFlightCeiling(): void
+    public function testStartRefusesInFlightLimitAtBrokerCeiling(): void
     {
-        $adapter = new RecordingAdapter(ceiling: 8);
+        $adapter = new RecordingAdapter(ceiling: 16);
         $server = new Server($adapter);
         $server->job('v1-functions', 8);
 
@@ -224,19 +226,30 @@ final class ServerJobsTest extends TestCase
 
         $this->assertInstanceOf(\Exception::class, $refusal, 'the cap must be refused');
         $this->assertStringContainsString("job('v1-functions', 8)", $refusal->getMessage());
-        $this->assertStringContainsString('at most 8 message(s) in flight', $refusal->getMessage());
+        $this->assertStringContainsString('at most 16 message(s) in flight', $refusal->getMessage());
         $this->assertSame([], $adapter->consumed, 'the refusal must land before the loops start');
     }
 
     public function testStartAcceptsACoroutineCapBelowTheInFlightCeiling(): void
     {
-        $adapter = new RecordingAdapter(ceiling: 16);
+        $adapter = new RecordingAdapter(ceiling: 17);
         $server = new Server($adapter);
         $server->job('v1-functions', 8);
 
         $server->start();
 
-        $this->assertSame([['queue' => 'v1-functions', 'coroutines' => 8, 'prefetch' => 8]], $adapter->consumed);
+        $this->assertSame([['queue' => 'v1-functions', 'coroutines' => 8, 'prefetch' => 8, 'maxInFlight' => 16]], $adapter->consumed);
+    }
+
+    public function testBufferSizeDoesNotSetTheBrokerInFlightLimit(): void
+    {
+        $adapter = new RecordingAdapter(ceiling: 17);
+        $server = new Server($adapter);
+        $server->job('jobs', coroutines: 2, prefetch: 32, maxInFlight: 8);
+
+        $server->start();
+
+        $this->assertSame([['queue' => 'jobs', 'coroutines' => 2, 'prefetch' => 32, 'maxInFlight' => 8]], $adapter->consumed);
     }
 
     /**
@@ -251,7 +264,7 @@ final class ServerJobsTest extends TestCase
 
         $server->start();
 
-        $this->assertSame([['queue' => 'v1-functions', 'coroutines' => 8, 'prefetch' => 8]], $adapter->consumed);
+        $this->assertSame([['queue' => 'v1-functions', 'coroutines' => 8, 'prefetch' => 8, 'maxInFlight' => 16]], $adapter->consumed);
     }
 
     /**
@@ -267,7 +280,7 @@ final class ServerJobsTest extends TestCase
 
         $server->start();
 
-        $this->assertSame([['queue' => 'v1-functions', 'coroutines' => 8, 'prefetch' => 8]], $adapter->consumed);
+        $this->assertSame([['queue' => 'v1-functions', 'coroutines' => 8, 'prefetch' => 8, 'maxInFlight' => 16]], $adapter->consumed);
     }
 
     public function testPrefetchDefaultsToCoroutines(): void
@@ -278,15 +291,20 @@ final class ServerJobsTest extends TestCase
 
         $this->assertSame(1, $server->prefetch('a'));
         $this->assertSame(4, $server->prefetch('b'));
+        $this->assertSame(2, $server->maxInFlight('a'));
+        $this->assertSame(8, $server->maxInFlight('b'));
+        $server->job('c', coroutines: 8, prefetch: 2, maxInFlight: 32);
+        $this->assertSame(2, $server->prefetch('c'));
+        $this->assertSame(32, $server->maxInFlight('c'));
     }
 
-    public function testPrefetchBelowCoroutinesIsRejectedBeforeRegisteringJob(): void
+    public function testNonPositiveLimitsAreRejectedBeforeRegisteringJob(): void
     {
         $server = new Server(new RecordingAdapter());
-        foreach ([0, 1, 3] as $prefetch) {
+        foreach ([[0, 1], [-1, 1], [1, 0], [1, -1]] as [$prefetch, $maxInFlight]) {
             try {
-                $server->job('invalid', coroutines: 4, prefetch: $prefetch);
-                $this->fail('Prefetch below concurrency must be rejected');
+                $server->job('invalid', coroutines: 4, prefetch: $prefetch, maxInFlight: $maxInFlight);
+                $this->fail('Non-positive limits must be rejected');
             } catch (\InvalidArgumentException $error) {
                 $this->assertStringContainsString('Prefetch', $error->getMessage());
                 $this->assertSame([], $server->jobs());
@@ -436,11 +454,13 @@ final class RecordingAdapter extends Adapter
         callable $errorCallback,
         Consumer $consumer,
         ?int $prefetch = null,
+        ?int $maxInFlight = null,
     ): void {
         $this->consumed[] = [
             'queue' => $queue->name,
             'coroutines' => $coroutines,
             'prefetch' => $prefetch,
+            'maxInFlight' => $maxInFlight,
         ];
     }
 }

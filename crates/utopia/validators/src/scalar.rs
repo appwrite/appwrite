@@ -3,7 +3,7 @@
 use php_std::filter::{self, FILTER_FLAG_IPV4, FILTER_FLAG_IPV6, FILTER_VALIDATE_IP, Options};
 use php_std::format::number_format;
 
-use crate::{Input, Number};
+use crate::{Input, Number, decimal};
 
 /// PHP `$a <= $b` on two numbers: exact between ints, as floats otherwise (NaN is never
 /// smaller or equal).
@@ -14,9 +14,34 @@ pub fn number_le(a: Number, b: Number) -> bool {
     }
 }
 
-/// PHP `number_format($number)`: rounded to an integer, digits grouped by `,`.
-fn grouped(number: Number) -> Vec<u8> {
-    number_format(number, 0, b".", b",")
+/// PHP `number_format($number)`, appended to `out`: rounded to an integer, digits grouped
+/// by `,`. An int is written straight into `out`.
+fn grouped(number: Number, out: &mut Vec<u8>) {
+    let Number::Int(int) = number else {
+        out.extend(number_format(number, 0, b".", b","));
+        return;
+    };
+    if int < 0 {
+        out.push(b'-');
+    }
+    let mut digits = [0u8; 20];
+    let mut n = int.unsigned_abs();
+    let mut start = digits.len();
+    loop {
+        start -= 1;
+        digits[start] = b'0' + (n % 10) as u8;
+        n /= 10;
+        if n == 0 {
+            break;
+        }
+    }
+    let digits = &digits[start..];
+    for (i, &digit) in digits.iter().enumerate() {
+        if i > 0 && (digits.len() - i).is_multiple_of(3) {
+            out.push(b',');
+        }
+        out.push(digit);
+    }
 }
 
 /// A boolean; when `loose`, also `'true'`, `'false'`, `'1'`, `'0'`, `1` and `0`.
@@ -136,17 +161,15 @@ impl Integer {
     /// `Value must be a valid signed 32-bit integer between -2,147,483,648 and 2,147,483,647`.
     ///
     /// PHP: `Integer::getDescription()`.
-    pub fn description(self) -> Vec<u8> {
-        let mut out = format!(
-            "Value must be a valid {} {}-bit integer between ",
-            if self.unsigned { "unsigned" } else { "signed" },
-            self.bits
-        )
-        .into_bytes();
-        out.extend(grouped(Number::Int(self.min())));
+    /// Appended to `out`.
+    pub fn description(self, out: &mut Vec<u8>) {
+        out.extend_from_slice(b"Value must be a valid ");
+        out.extend_from_slice(if self.unsigned { b"unsigned " } else { b"signed " });
+        decimal(self.bits, out);
+        out.extend_from_slice(b"-bit integer between ");
+        grouped(Number::Int(self.min()), out);
         out.extend_from_slice(b" and ");
-        out.extend(grouped(Number::Int(self.max())));
-        out
+        grouped(Number::Int(self.max()), out);
     }
 
     /// The OpenAPI format, `int32` or `uint8`, ..., given what `isUnsigned()` answers.
@@ -186,12 +209,12 @@ pub fn range(min: Number, max: Number, format: &[u8], value: Input<'_>) -> bool 
 /// them.
 ///
 /// PHP: `Range::getDescription()`.
-pub fn range_description(min: Number, max: Number) -> Vec<u8> {
-    let mut out = b"Value must be a valid range between ".to_vec();
-    out.extend(grouped(min));
+/// Appended to `out`.
+pub fn range_description(min: Number, max: Number, out: &mut Vec<u8>) {
+    out.extend_from_slice(b"Value must be a valid range between ");
+    grouped(min, out);
     out.extend_from_slice(b" and ");
-    out.extend(grouped(max));
-    out
+    grouped(max, out);
 }
 
 /// A port from 1 to 65535, optionally after an IPv4 address or a bracketed IPv6 one and a
@@ -275,10 +298,15 @@ mod tests {
         assert!(int.accepts(false, Input::Int(127)) && !int.accepts(false, Input::Int(128)));
         assert!(!int.accepts(false, Input::Str(b"5")) && int.accepts(true, Input::Str(b" 5 ")));
         assert!(!int.accepts(true, Input::Str(b"1e1")) && !int.accepts(true, Input::Float(1.0)));
-        assert_eq!(
-            String::from_utf8(int.description()).unwrap(),
-            "Value must be a valid signed 8-bit integer between -128 and 127"
-        );
+        let mut description = Vec::new();
+        int.description(&mut description);
+        assert_eq!(description, b"Value must be a valid signed 8-bit integer between -128 and 127");
+        let mut description = Vec::new();
+        range_description(Number::Int(i64::MIN), Number::Int(-1000), &mut description);
+        assert_eq!(description, b"Value must be a valid range between -9,223,372,036,854,775,808 and -1,000");
+        let mut description = Vec::new();
+        range_description(Number::Int(0), Number::Float(1.5e3), &mut description);
+        assert_eq!(description, b"Value must be a valid range between 0 and 1,500");
     }
 
     #[test]
