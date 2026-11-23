@@ -60,10 +60,22 @@ class Entire extends Git
     public const PLUGIN_JWT_SKEW = 30;
 
     /**
+     * A plugin JWT this close to its expiry is signed again before it is
+     * sent: one adapter serves a whole delivery, which can outlive it.
+     */
+    public const PLUGIN_JWT_REFRESH_MARGIN = 60;
+
+    /**
      * How long a minted installation token is reused. Tokens last about 45
      * minutes and are dropped five minutes before their own expiry.
      */
     public const TOKEN_CACHE_TTL = 60 * 40;
+
+    /**
+     * An installation token this close to its expiry is minted again before
+     * it is used.
+     */
+    public const TOKEN_REFRESH_MARGIN = 60 * 5;
 
     /**
      * The repository permissions the plugin registers, requested as a whole
@@ -189,6 +201,8 @@ class Entire extends Git
 
     protected string $jwtToken = '';
 
+    protected int $jwtExpiresAt = 0;
+
     /**
      * The plugin's private key, kept to sign a plugin JWT for another core:
      * a project's home core, which alone creates its repositories.
@@ -223,6 +237,12 @@ class Entire extends Git
     protected int $provisioningInterval = 1_000_000;
 
     protected string $accessToken = '';
+
+    /**
+     * When the installation token expires, as a Unix timestamp; 0 when
+     * Entire did not say.
+     */
+    protected int $accessTokenExpiresAt = 0;
 
     /**
      * Published Ed25519 JWKS entries, memoized per issuer origin.
@@ -307,25 +327,21 @@ class Entire extends Git
         $this->installationId = $installationId;
         $this->plugin = $appId;
         $this->privateKey = $privateKey;
-
-        // A plugin JWT lives five minutes and costs one signature, so every
-        // instance signs its own; only the minted access token is worth
-        // keeping across requests.
-        $this->jwtToken = $this->generatePluginJwt($privateKey, $appId);
+        $this->jwtExpiresAt = 0;
 
         $response = $this->cache->load('entire-' . $installationId, self::TOKEN_CACHE_TTL);
         $parsed = \is_string($response) ? json_decode($response, true) : null;
         $parsed = \is_array($parsed) ? $parsed : [];
 
-        // The token is dropped five minutes before its own expiry
         $expiresAt = $this->number($parsed, 'expiresAt');
         $accessToken = $this->text($parsed, 'accessToken');
-        if ($accessToken === '' || ($expiresAt > 0 && $expiresAt - 5 * self::LEEWAY <= time())) {
+        if ($accessToken === '' || $this->isTokenExpiring($expiresAt)) {
             $this->generateAccessToken($privateKey, $appId);
             return;
         }
 
         $this->accessToken = $accessToken;
+        $this->accessTokenExpiresAt = $expiresAt;
         $this->permissions = \array_key_exists('permissions', $parsed) ? $this->grantedPermissions($parsed['permissions']) : null;
     }
 
@@ -342,7 +358,6 @@ class Entire extends Git
             throw new Exception('Entire requires the plugin slug to sign the plugin JWT.');
         }
 
-        $this->jwtToken = $this->generatePluginJwt($privateKey, $appId);
         $this->mintAccessToken();
     }
 
@@ -355,7 +370,7 @@ class Entire extends Git
     {
         $path = '/plugins/' . rawurlencode($this->plugin) . '/installations/' . rawurlencode($this->installationId) . '/access-tokens';
         foreach ([self::PERMISSIONS, ...self::FALLBACK_PERMISSIONS] as $permissions) {
-            $response = $this->call(self::METHOD_POST, $path, ['Authorization' => 'Bearer ' . $this->jwtToken], ['permissions' => $permissions]);
+            $response = $this->call(self::METHOD_POST, $path, ['Authorization' => 'Bearer ' . $this->pluginJwt()], ['permissions' => $permissions]);
 
             if (!\in_array($this->text($this->body($response), 'code'), self::FALLBACK_CODES, true)) {
                 break;
@@ -374,12 +389,42 @@ class Entire extends Git
         $this->minted = true;
 
         $expiresAt = strtotime($this->text($responseBody, 'expires_at'));
+        $this->accessTokenExpiresAt = $expiresAt === false ? 0 : $expiresAt;
 
         $this->cache->save('entire-' . $this->installationId, json_encode([
             'accessToken' => $this->accessToken,
-            'expiresAt' => $expiresAt === false ? 0 : $expiresAt,
+            'expiresAt' => $this->accessTokenExpiresAt,
             'permissions' => $this->permissions,
         ]) ?: '{}');
+    }
+
+    protected function installationToken(): string
+    {
+        if ($this->accessToken !== '' && $this->isTokenExpiring($this->accessTokenExpiresAt)) {
+            $this->mintAccessToken();
+        }
+
+        return $this->accessToken;
+    }
+
+    /**
+     * Whether a token expiring at $expiresAt is within TOKEN_REFRESH_MARGIN
+     * of it; 0 is an unknown expiry, trusted until Entire refuses it.
+     */
+    protected function isTokenExpiring(int $expiresAt): bool
+    {
+        return $expiresAt > 0 && $expiresAt - self::TOKEN_REFRESH_MARGIN <= time();
+    }
+
+    protected function pluginJwt(): string
+    {
+        if ($this->jwtExpiresAt - self::PLUGIN_JWT_REFRESH_MARGIN <= time()) {
+            $expiresAt = time() - self::PLUGIN_JWT_SKEW + self::PLUGIN_JWT_EXPIRY;
+            $this->jwtToken = $this->generatePluginJwt($this->privateKey, $this->plugin);
+            $this->jwtExpiresAt = $expiresAt;
+        }
+
+        return $this->jwtToken;
     }
 
     /**
@@ -1171,7 +1216,7 @@ class Entire extends Git
             $response = $this->call(
                 self::METHOD_GET,
                 '/plugins/' . rawurlencode($this->plugin) . '/installations/' . rawurlencode($this->installationId) . '/repositories',
-                ['Authorization' => "Bearer {$this->jwtToken}"],
+                ['Authorization' => 'Bearer ' . $this->pluginJwt()],
                 $cursor === '' ? [] : ['cursor' => $cursor],
             );
 
@@ -1380,7 +1425,7 @@ class Entire extends Git
             $this->dataEndpoint($repositoryId) . '/api/' . $version,
             $method,
             $path,
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
             $params,
             $decode,
         );
@@ -1497,7 +1542,7 @@ class Entire extends Git
             throw new Exception('This Entire installation cannot create repositories yet. Connect an existing repository, or accept the plugin\'s updated permissions in Entire if it asks for them.', 403);
         }
 
-        $response = $this->call(self::METHOD_POST, '/repos', ['Authorization' => "Bearer {$this->accessToken}"], ['name' => $repositoryName]);
+        $response = $this->call(self::METHOD_POST, '/repos', ['Authorization' => 'Bearer ' . $this->installationToken()], ['name' => $repositoryName]);
 
         // Only the project's home core creates its repositories; another
         // jurisdiction's core names it
@@ -2615,12 +2660,13 @@ class Entire extends Git
      */
     protected function withToken(Command $command): Command
     {
-        if ($this->accessToken === '' || $this->accessToken === '0') {
+        $token = $this->installationToken();
+        if ($token === '' || $token === '0') {
             return $command;
         }
 
         return Command::and(
-            new Command('export')->argument('ENTIRE_TOKEN=' . $this->accessToken),
+            new Command('export')->argument('ENTIRE_TOKEN=' . $token),
             $command,
         );
     }

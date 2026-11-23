@@ -295,12 +295,6 @@ parameters:
 			path: src/Adapter/Git/GitHub.php
 
 		-
-			message: '#^Cannot access offset ''accessToken'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/Adapter/Git/GitHub.php
-
-		-
 			message: '#^Cannot access offset ''account'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 2
@@ -380,12 +374,6 @@ parameters:
 
 		-
 			message: '#^Cannot access offset ''items'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/Adapter/Git/GitHub.php
-
-		-
-			message: '#^Cannot access offset ''jwtToken'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: src/Adapter/Git/GitHub.php
@@ -728,12 +716,6 @@ parameters:
 
 		-
 			message: '#^Property Utopia\\VCS\\Adapter\\Git\\GitHub\:\:\$accessToken \(string\) does not accept mixed\.$#'
-			identifier: assign.propertyType
-			count: 2
-			path: src/Adapter/Git/GitHub.php
-
-		-
-			message: '#^Property Utopia\\VCS\\Adapter\\Git\\GitHub\:\:\$jwtToken \(string\) does not accept mixed\.$#'
 			identifier: assign.propertyType
 			count: 1
 			path: src/Adapter/Git/GitHub.php
