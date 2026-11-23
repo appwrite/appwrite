@@ -118,24 +118,26 @@ if (!$recaptcha->verify($_POST['g-recaptcha-response'], $_SERVER['REMOTE_ADDR'])
 
 *Notice: The code above is for example purpose only. It is always recommended to validate user input before using it in your code. If you are using a load balancer or any proxy server you might need to get user IP from the HTTP_X_FORWARDE‌​D_FOR header.*
 
-### Proof-of-work challenge
+### Challenges
 
-`ProofOfWork` makes a client spend CPU before it gets through. You issue a signed puzzle; the client finds a solution whose SHA-256 has enough leading zero bits; you verify it. Each puzzle can be redeemed once, tracked by a `Nonce` store. A passed challenge earns a `Clearance`, so later requests skip it. Both are bound to the client with `withParams()`, which returns a copy, the same as on the rate-limit adapters; tokens verify only with exactly the same params.
+A challenge is something a client must answer before it gets through. Like the adapters, every kind extends one base, `Utopia\Abuse\Challenge`: it holds the signed token and the params the challenge is bound to (`withParams()`, the same as on the adapters), and each kind implements `issue()` and `verify()`. Passing a challenge earns a `Clearance`, so later requests skip it.
+
+**Proof of work.** `ProofOfWork` makes a client spend CPU: it finds a solution whose SHA-256 has enough leading zero bits. Each puzzle can be redeemed once, tracked by a `Nonce` store.
 
 ```php
 <?php
 
-use Utopia\Abuse\Challenges\Clearance;
-use Utopia\Abuse\Challenges\Nonce\Redis as RedisNonce;
-use Utopia\Abuse\Challenges\ProofOfWork;
+use Utopia\Abuse\Challenge\Clearance;
+use Utopia\Abuse\Challenge\Nonce\Redis as RedisNonce;
+use Utopia\Abuse\Challenge\ProofOfWork;
 
-$challenge = new ProofOfWork('secret', new RedisNonce('pow', $redis));
+$challenge = new ProofOfWork('secret', new RedisNonce('pow', $redis), difficulty: 18);
 $clearance = new Clearance('secret');
 
 $client = ['ip' => $ip, 'ua' => $userAgent];
 
 // Issue a puzzle, then send $puzzle->token, $puzzle->nonce and $puzzle->difficulty to the client
-$puzzle = $challenge->withParams($client)->issue(difficulty: 18);
+$puzzle = $challenge->withParams($client)->issue();
 
 // Verify the client's solution and hand out a clearance
 $result = $challenge->withParams($client)->verify($token, $solution);
@@ -149,7 +151,34 @@ if (!$clearance->withParams($client)->verify($cookie, difficulty: 18, maxAge: 18
 }
 ```
 
-Puzzles last 120 seconds and clearances 30 minutes unless you pass a `ttl`. A nonce store outage rejects the solution unless you pass `acceptWhenNoncesUnavailable: true`. To bind to a network rather than an exact IP, use `Identity`: `new Identity()->ipPrefix($ip)` gives the /24 (IPv4) or /48 (IPv6) the address belongs to, and `userAgentHash()` hashes the User-Agent.
+Puzzles last 120 seconds and clearances 30 minutes unless you pass a `ttl`. Tokens verify only with exactly the same params. A nonce store outage rejects the solution (`Status::Unavailable`) unless you pass `acceptWhenNoncesUnavailable: true`. To bind to a network rather than an exact IP, use `Identity`: `new Identity()->ipPrefix($ip)` gives the /24 (IPv4) or /48 (IPv6) the address belongs to, and `userAgentHash()` hashes the User-Agent.
+
+**Adding a kind.** Extend `Challenge`, sign the claims your kind needs with `sign()`, and read them back with `open()`, which already rejects invalid tokens and mismatched params:
+
+```php
+final readonly class Riddle extends Challenge
+{
+    public function __construct(string $secret, private string $answer)
+    {
+        parent::__construct($secret, 'riddle', 'riddle', 60);
+    }
+
+    public function issue(array $claims = []): Prompt
+    {
+        return new Prompt($this->sign(['answer' => hash('sha256', $this->answer)], $claims));
+    }
+
+    public function verify(string $token, string $answer): Result
+    {
+        $claims = $this->open($token);
+        if ($claims instanceof Result) {
+            return $claims; // InvalidToken or BindingMismatch
+        }
+
+        return new Result(hash_equals($claims['answer'], hash('sha256', $answer)) ? Status::Valid : Status::Rejected, $claims);
+    }
+}
+```
 
 ## System Requirements
 
