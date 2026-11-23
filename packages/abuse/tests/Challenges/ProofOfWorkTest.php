@@ -90,6 +90,33 @@ final class ProofOfWorkTest extends TestCase
         $this->assertSame(21, ProofOfWork::bitsForLevel(5));
     }
 
+    #[DataProvider('unsolvableOrTrivialDifficulties')]
+    public function testIssueRejectsDifficultyOutsideTheDigestRange(int $difficulty): void
+    {
+        // Below 0 every solution passes; above 256 (the SHA-256 width) none can.
+        $pow = new ProofOfWork(self::SECRET, new InMemoryConsumer());
+
+        $this->expectException(\InvalidArgumentException::class);
+        $pow->issue('proj1', self::IP_PREFIX, self::UA_HASH, $difficulty);
+    }
+
+    /**
+     * @return Iterator<string, array{int}>
+     */
+    public static function unsolvableOrTrivialDifficulties(): Iterator
+    {
+        yield 'negative' => [-1];
+        yield 'wider than the digest' => [257];
+    }
+
+    public function testIssueAcceptsTheDigestRangeBounds(): void
+    {
+        $pow = new ProofOfWork(self::SECRET, new InMemoryConsumer());
+
+        $this->assertSame(0, $pow->issue('proj1', self::IP_PREFIX, self::UA_HASH, 0)['difficulty']);
+        $this->assertSame(256, $pow->issue('proj1', self::IP_PREFIX, self::UA_HASH, 256)['difficulty']);
+    }
+
     public function testBitsForLevelFallsBackToDefaultForUnknownLevels(): void
     {
         // 0 (unset) and out-of-range levels fall back to the default difficulty.

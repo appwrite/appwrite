@@ -28,6 +28,9 @@ final readonly class ProofOfWork
      */
     public const int DEFAULT_DIFFICULTY = 20;
 
+    /** SHA-256 digest width: the most leading zero bits a solution can have. */
+    public const int MAX_DIFFICULTY = 256;
+
     /** Token lifetime in seconds; also the nonce single-use window (TTL == exp). */
     public const int DEFAULT_TTL = 120;
 
@@ -61,10 +64,17 @@ final readonly class ProofOfWork
     /**
      * Mint a challenge token plus the fields the interstitial needs to solve it.
      *
+     * @throws InvalidArgumentException when $difficulty is outside 0..MAX_DIFFICULTY
+     *
      * @return array{token: string, nonce: string, difficulty: int}
      */
     public function issue(string $projectId, string $ipPrefix, string $uaHash, int $difficulty = self::DEFAULT_DIFFICULTY, int $clearanceTtl = 0, string $resourceId = ''): array
     {
+        // Below 0 every solution passes; above the digest width none can.
+        if ($difficulty < 0 || $difficulty > self::MAX_DIFFICULTY) {
+            throw new InvalidArgumentException('Difficulty must be between 0 and ' . self::MAX_DIFFICULTY . ' bits, got ' . $difficulty . '.');
+        }
+
         $nonce = \bin2hex(\random_bytes(16));
         $claims = [
             self::PURPOSE_CLAIM => self::PURPOSE,
