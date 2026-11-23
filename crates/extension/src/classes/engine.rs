@@ -307,6 +307,14 @@ fn own_slot<'a>(scope: &ClassEntry, this: &'a mut ZendObject, property: &Propert
     None
 }
 
+/// The slot of `property` in `this`, to read or write in place, when [`own_slot`] allows it (an
+/// object of exactly `scope`, not lazy): no copy of the value goes through memory, which a
+/// getter that only looks at it would then reload.
+#[inline(always)]
+pub fn property_slot<'a>(scope: &ClassEntry, this: &'a mut ZendObject, property: &Property) -> Option<&'a mut Zval> {
+    own_slot(scope, this, property)
+}
+
 /// `IS_PROP_UNINIT`: a typed property's slot that was never initialized (not one `unset()`).
 const PROP_UNINIT: u32 = 1;
 
@@ -778,7 +786,7 @@ pub fn identical(a: &Zval, b: &Zval) -> bool {
 /// `IS_ARRAY`, `IS_STRING` and the `IS_PTR` type of a hash table entry holding a pointer.
 const IS_ARRAY: u32 = 7;
 /// `IS_ARRAY_EX`: an array that counts references and may be collected.
-const IS_ARRAY_EX: u32 = IS_ARRAY | (1 << 8) | (1 << 9);
+pub const IS_ARRAY_EX: u32 = IS_ARRAY | (1 << 8) | (1 << 9);
 
 const IS_STRING: u32 = 6;
 /// `IS_STRING_EX`: a string that counts references.

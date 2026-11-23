@@ -44,6 +44,9 @@ import {
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
+import { RuntimeLogsView } from '@/components/global/shared/RuntimeLogsView'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { isCloudProfile } from '@/lib/console-profiles'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -389,6 +392,8 @@ export function DeploymentDetailView({
     useState(false)
   /** Below lg the logs and details panes share the screen; this picks which one is shown. */
   const [mobilePane, setMobilePane] = useState<'logs' | 'details'>('logs')
+  /** Build output, or what the running deployment wrote (Cloud only). */
+  const [logsSource, setLogsSource] = useState<'build' | 'runtime'>('build')
   const logsContainerRef = useRef<HTMLDivElement>(null)
   const lineRefs = useRef<Map<number, HTMLDivElement>>(new Map())
   /** Set on first scroll; until then we auto-scroll so initial load follows tail. */
@@ -450,6 +455,9 @@ export function DeploymentDetailView({
   // (e.g. a function ID like "website-api" contains "site" and would misclassify as a site).
   const isSiteDeployment = deploymentDetailRoute.includes('/sites/')
   const parentResourceParam = isSiteDeployment ? 'siteId' : 'functionId'
+  const { features } = useConsoleProfile()
+  // Cloud only: self-hosted doesn't serve `/v1/logs`, even with the flag on.
+  const showRuntimeLogs = isCloudProfile() && features.runtimeLogs
 
   /** Prefer the loaded model's id so mutations match the deployment the UI is showing. */
   const apiDeploymentId = deployment?.$id ?? deploymentId
@@ -1558,6 +1566,33 @@ export function DeploymentDetailView({
     )
   }
 
+  const logsSourceToggle = showRuntimeLogs ? (
+    <ToggleGroup
+      type="single"
+      variant="outline"
+      size="sm"
+      value={logsSource}
+      onValueChange={(value) => {
+        if (value === 'build' || value === 'runtime') setLogsSource(value)
+      }}
+      className="shrink-0"
+      aria-label={t('Logs source')}
+    >
+      <ToggleGroupItem
+        value="build"
+        className="h-9 px-3 text-[13px] font-medium data-[state=on]:bg-muted data-[state=on]:text-foreground"
+      >
+        {t('Build')}
+      </ToggleGroupItem>
+      <ToggleGroupItem
+        value="runtime"
+        className="h-9 px-3 text-[13px] font-medium data-[state=on]:bg-muted data-[state=on]:text-foreground"
+      >
+        {t('Runtime')}
+      </ToggleGroupItem>
+    </ToggleGroup>
+  ) : null
+
   return (
     <WizardLayout
       title={
@@ -2120,74 +2155,88 @@ export function DeploymentDetailView({
               mobilePane === 'logs' ? 'flex' : 'hidden',
             )}
           >
-            <div className="min-w-0 shrink-0 border-b border-border">
-              <TooltipProvider>
-                <div className="flex min-w-0 items-center gap-2 py-3 ps-6 pe-4 sm:pe-5">
-                  <div className="relative min-w-0 flex-1">
-                    <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      placeholder={t('Search logs...')}
-                      value={logsSearch}
-                      onChange={(e) => setLogsSearch(e.target.value)}
-                      className="h-9 w-full min-w-0 ps-9 text-[13px]"
+            {logsSource === 'runtime' ? (
+              <RuntimeLogsView
+                projectId={projectId}
+                resourceType={isSiteDeployment ? 'sites' : 'functions'}
+                resourceId={resourceId}
+                deploymentId={apiDeploymentId}
+                toolbarStart={logsSourceToggle}
+                className="ps-6 pe-4 sm:pe-5"
+              />
+            ) : (
+              <>
+                <div className="min-w-0 shrink-0 border-b border-border">
+                  <TooltipProvider>
+                    <div className="flex min-w-0 items-center gap-2 py-3 ps-6 pe-4 sm:pe-5">
+                      {logsSourceToggle}
+                      <div className="relative min-w-0 flex-1">
+                        <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          placeholder={t('Search logs...')}
+                          value={logsSearch}
+                          onChange={(e) => setLogsSearch(e.target.value)}
+                          className="h-9 w-full min-w-0 ps-9 text-[13px]"
+                        />
+                      </div>
+                      <TooltipPrimitive.Root>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleDownloadLogs}
+                            disabled={!buildLogs}
+                            className="h-9 w-9 shrink-0 p-0"
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{t('Download logs')}</p>
+                        </TooltipContent>
+                      </TooltipPrimitive.Root>
+                      <TooltipPrimitive.Root>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleCopyLogs}
+                            disabled={!buildLogs}
+                            className="h-9 w-9 shrink-0 p-0"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>
+                            {selectedLogLines.size > 0
+                              ? `Copy ${selectedLogLines.size} selected line${selectedLogLines.size === 1 ? '' : 's'} (⌘C / Ctrl+C)`
+                              : t('Copy logs')}
+                          </p>
+                        </TooltipContent>
+                      </TooltipPrimitive.Root>
+                    </div>
+                  </TooltipProvider>
+                </div>
+                <div
+                  ref={logsContainerRef}
+                  tabIndex={-1}
+                  className="flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-y-auto overflow-x-auto ps-6 pe-4 pb-44 sm:pe-5 outline-none"
+                >
+                  <div className="min-h-full min-w-0">
+                    <BuildLogsView
+                      buildLogs={buildLogs}
+                      searchTerm={logsSearch}
+                      selectedLines={selectedLogLines}
+                      onLineClick={handleLineClick}
+                      lineRefs={lineRefs}
+                      emptyMessage={t('No build logs available.')}
+                      lineHorizontalPaddingClass="ps-0 pe-0"
                     />
                   </div>
-                  <TooltipPrimitive.Root>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleDownloadLogs}
-                        disabled={!buildLogs}
-                        className="h-9 w-9 shrink-0 p-0"
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{t('Download logs')}</p>
-                    </TooltipContent>
-                  </TooltipPrimitive.Root>
-                  <TooltipPrimitive.Root>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleCopyLogs}
-                        disabled={!buildLogs}
-                        className="h-9 w-9 shrink-0 p-0"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>
-                        {selectedLogLines.size > 0
-                          ? `Copy ${selectedLogLines.size} selected line${selectedLogLines.size === 1 ? '' : 's'} (⌘C / Ctrl+C)`
-                          : t('Copy logs')}
-                      </p>
-                    </TooltipContent>
-                  </TooltipPrimitive.Root>
                 </div>
-              </TooltipProvider>
-            </div>
-            <div
-              ref={logsContainerRef}
-              tabIndex={-1}
-              className="flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-y-auto overflow-x-auto ps-6 pe-4 pb-44 sm:pe-5 outline-none"
-            >
-              <div className="min-h-full min-w-0">
-                <BuildLogsView
-                  buildLogs={buildLogs}
-                  searchTerm={logsSearch}
-                  selectedLines={selectedLogLines}
-                  onLineClick={handleLineClick}
-                  lineRefs={lineRefs}
-                  emptyMessage={t('No build logs available.')}
-                  lineHorizontalPaddingClass="ps-0 pe-0"
-                />
-              </div>
-            </div>
+              </>
+            )}
           </div>
 
           <aside
@@ -2201,7 +2250,7 @@ export function DeploymentDetailView({
         </div>
 
         {/* Scroll controls: fixed over logs; inset from right on lg+ to clear the side panel */}
-        {buildLogs && (
+        {buildLogs && logsSource === 'build' && (
           <div
             className={cn(
               'pointer-events-none fixed bottom-24 end-8 z-[101] lg:block lg:end-[calc(20rem+1.25rem)] xl:end-[calc(22rem+1.25rem)]',

@@ -99,6 +99,8 @@ export type ConsoleProfileFeatures = {
   analytics: boolean
   /** Appwrite push messaging provider (create wizard and its QoS/expiry settings). */
   appwritePush: boolean
+  /** Runtime logs for functions and sites (Runtime logs tabs and the deployment page Build / Runtime switch). Cloud only: served by `/v1/logs`. */
+  runtimeLogs: boolean
 }
 
 /** Short labels for debug UI (profile comparison, etc.). */
@@ -141,6 +143,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   blogDrafts: 'Blog drafts',
   analytics: 'Analytics',
   appwritePush: 'Appwrite push',
+  runtimeLogs: 'Runtime logs',
 }
 
 export type ConsoleProfile = {
@@ -196,6 +199,8 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       // Off until launch; enable from Debug → Feature flags.
       analytics: false,
       appwritePush: true,
+      // Off until launch; enable from Debug → Feature flags or the Previews menu.
+      runtimeLogs: false,
     },
   },
   'self-hosted': {
@@ -238,6 +243,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       blogDrafts: false,
       analytics: false,
       appwritePush: true,
+      runtimeLogs: false,
     },
   },
 }

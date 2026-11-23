@@ -41,33 +41,98 @@ RUN apk add --no-cache libheif libstdc++ \
   package's `"ext-utopia"` constraint has to stay `*` until those builds report a version that
   orders against releases.
 
+- **Tracking main:** a consumer that vendors this repository at a commit and must not compile it
+  takes `appwrite/utopia-extension:$(crates/extension/tag.sh)`. The script prints `build-<hash>`, a
+  hash of what the build reads (the Cargo workspace and the base image), and every publish from
+  `main` also carries that tag.
+
 `.github/workflows/extension.yml` publishes it, smoke-testing each architecture on stock
 `php:8.5-cli-alpine` with exactly these packages first.
+
+### Choosing the libraries: `utopia.libraries`
+
+A class the extension registers takes its name over for the whole process, so a Composer copy of
+the same class in `vendor/` is never loaded. A service that still ships older PHP copies of some of
+these packages registers only the libraries it uses, with `utopia.libraries` in its `utopia.ini`:
+
+```ini
+; Edge
+extension=/usr/local/lib/php/utopia.so
+utopia.libraries = "validators,dsn,user-agent"
+```
+
+```ini
+; DNS
+extension=/usr/local/lib/php/utopia.so
+utopia.libraries = "validators,dsn,domains"
+```
+
+| Name          | Classes                                                                          |
+|---------------|----------------------------------------------------------------------------------|
+| `auth`        | `Utopia\Auth\Hash`, `Utopia\Auth\Hashes\*`                                       |
+| `compression` | `Utopia\Compression\*`                                                           |
+| `detector`    | `Utopia\Detector\*`                                                              |
+| `domains`     | `Utopia\Domains\Domain`                                                          |
+| `dsn`         | `Utopia\DSN\DSN`                                                                 |
+| `emails`      | `Utopia\Emails\Email`, and `domains` with it                                     |
+| `image`       | `Utopia\Image\Canvas`, `Utopia\Image\Font`                                       |
+| `locale`      | `Utopia\Locale\Locale`                                                           |
+| `query`       | `Utopia\Query\*` but the builders                                                |
+| `query-builders` | `Utopia\Query\Builder\*`, and `query` with it                                |
+| `user-agent`  | `Utopia\UserAgent\UserAgent`                                                     |
+| `validators`  | `Utopia\Validator\Validator` and every validator of `packages/validators`        |
+
+- **Unset or empty** (the default, and what Appwrite and Cloud use): every library above but
+  `detector`, `compression`, `query` and `query-builders` registers, and
+  `_APP_EXTENSION_LIBRARIES` switches those four on (see
+  [Switching a class on](#switching-a-class-on)).
+- **Set:** only the libraries it names register, the switchable four included, and
+  `_APP_EXTENSION_LIBRARIES` is ignored. Names are the package names, the same ones
+  `_APP_EXTENSION_LIBRARIES` takes, comma separated; spaces around them are ignored. The old
+  `validators-scalar`, `validators-text`, `validators-network` and `validators-compose` each mean
+  `validators`: the validators register together, as every one extends `Utopia\Validator\Validator`.
+- **Dependencies:** `emails` brings `domains`, because `Utopia\Emails\Email` builds a
+  `Utopia\Domains\Domain`. No other library uses another's classes.
+- **Unknown names** are skipped with a startup warning that names them
+  (`PHP Startup: utopia.libraries: unknown library "…" ignored; …`); the rest of the
+  list still applies.
+- **When it is read:** once, when PHP loads the extension, from the configuration PHP has parsed by
+  then: `php.ini`, the scanned `conf.d` (`PHP_INI_SCAN_DIR`) files and `-d utopia.libraries=…` on
+  the command line all work. It is a `PHP_INI_SYSTEM` setting, shown by `ini_get()` and
+  `php --ri utopia`; `ini_set()` cannot change it, and changing the file takes a restart. Nothing is
+  checked after startup.
 
 ## Switching a class on
 
 `Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN`, `Utopia\Locale\Locale`,
 `Utopia\UserAgent\UserAgent`, `Utopia\Domains\Domain`, `Utopia\Emails\Email`, the validators
-of `packages/validators` and the password hashes of `packages/auth` are always registered: they
-have no PHP implementation. Their signatures are in `stubs/`, `packages/image/stubs/`,
+of `packages/validators` and the password hashes of `packages/auth` are registered unless
+`utopia.libraries` leaves them out: they have no PHP implementation. Their signatures are in `stubs/`, `packages/image/stubs/`,
 `packages/user-agent/stubs/`, `packages/domains/stubs/`, `packages/emails/stubs/`,
 `packages/validators/stubs/` and `packages/auth/stubs/` for PHPStan, which runs without the
 extension. A library that still has a PHP implementation is registered only when
-`_APP_EXTENSION_LIBRARIES` names its package; today that is `detector`. Otherwise Composer loads
-the package's PHP class as before:
+`_APP_EXTENSION_LIBRARIES` names its package; today those are `detector`, `compression`, `query`
+and `query-builders`, which is on only with `query`. Otherwise Composer loads the package's PHP
+class as before:
 
 ```sh
 _APP_EXTENSION_LIBRARIES=<package>,<package>   # those packages' classes from the extension
 ```
 
 The extension reads it once, when PHP loads the module, so changing it takes a restart and no
-deploy. Each library is canaried on Cloud this way before it becomes the default.
+deploy. Each library is canaried on Cloud this way before it becomes the default. A process that
+sets `utopia.libraries` does not read it: its list alone decides.
 
 CI runs `crates/extension/tests/run.sh` in the development image. It finds the switchable libraries
 from the `enabled()` calls in `src/lib.rs` and requires a parity corpus at `tests/<name>.php` for
 each. For every one it runs `packages/<name>/tests` on the extension and diffs the corpus on both
 implementations, first one library at a time, then with all of them on. A new library needs only
-its `enabled()` call, its corpus and its package tests; there is no CI step to add.
+its `enabled()` call, its corpus, its package tests and its name in `NAMES` (`src/libraries.rs`)
+and in `run.sh`'s `every`; there is no CI step to add.
+
+`tests/libraries.php` then checks `utopia.libraries`: with it unset, the extension must register
+exactly the classes listed in `tests/libraries.expected` (a class added to a default library adds
+a line there); with it set, only those of the libraries named.
 
 `tests/opcache.php` then declares a PHP subclass of every class the extension registers and runs
 with opcache on, with no switch and with all of them: opcache copies a cached subclass, with the
@@ -103,6 +168,12 @@ the static fallback are the crate's, shared with the service slices. `Invalid st
 `Invalid input type 'x'` are thrown as PHP's `\Exception` and `\InvalidArgumentException`, with the
 argument's bytes.
 
+What the leaves return (names, file and package lists, and each command for `yarn`, `npm`,
+`pnpm` and any other packager) is built from the crate once, in MINIT, as interned strings and
+persistent immutable arrays, and returned without an allocation, as PHP returns the literals
+OPcache holds. `detect()` reads the inputs where they lie and asks a native option nothing
+through PHP.
+
 `packages/detector/tests` run on the extension, and `tests/detector.php` (5,536 lines) is identical
 on both: reflection of every class, every leaf's answers and commands with every packager,
 adapters over 38 configurations, every pair of frameworks in both orders (675 cases), 3,000 seeded
@@ -122,6 +193,68 @@ Known differences from the PHP classes:
 - An overriding `dependencies()` or a PHP option's `getPackages()` is compared by its string
   values: PHP's `in_array(..., true)` also matched an integer package against an integer name.
 - An exception names the caller's file and line, since the classes have no PHP source.
+
+## Utopia\Compression
+
+Over `crates/utopia/compression`, registered when `_APP_EXTENSION_LIBRARIES` names `compression`:
+the abstract `Compression` and the seven algorithms of `packages/compression` (`Brotli`, `Deflate`,
+`GZIP`, `LZ4`, `Snappy`, `XZ`, `Zstd`), so none of the package's PHP classes loads. Off by default.
+
+Built by hand like the detector, in `src/compression.rs`: the same names, inheritance, constants,
+signatures and typed properties (`Brotli`'s `$level` and `$mode`, `Deflate`'s private `$level`,
+the promoted `$level` of `LZ4` and `Zstd`), so `instanceof` (which the HTTP response checks),
+`clone`, `==`, `serialize()`, `var_dump()` and PHP subclasses behave as in PHP. A subclass's
+`getName()` and `Brotli::getLevel()` are called as PHP calls them. `isSupported()` is abstract and
+static on the base, which the engine only allows an internal class through a flag set after
+registration.
+
+The codecs are the C libraries PHP's extensions link, at the same versions: the system's zlib and
+libzstd (the `libz.so.1` PHP loads and the `libzstd.so.1` ext-zstd loads, both already in
+`php:8.5-cli-alpine`), and C brotli 1.2.1 (`brotlic-sys`) and LZ4 1.10.0 (`lz4-sys`) built from
+source and linked statically; Snappy is the crate's port of snappy 1.2.1. Each is called with
+the parameters, buffer sizes and calls of `gzencode()`, `gzdecode()`, `gzdeflate()`, `gzinflate()`,
+`zstd_compress()`, `zstd_uncompress()`, `brotli_compress()`, `brotli_uncompress()`,
+`lz4_compress()`, `lz4_uncompress()`, `snappy_compress()` and `snappy_uncompress()`, so the bytes
+written are PHP's, byte for byte, and what PHP's function rejects (with which warning, returning
+`""`) is rejected the same way. `XZ` calls `xzencode()` and `xzdecode()` as the PHP class does: it
+works exactly when ext-xz is loaded, which `appwrite/base` does not.
+
+Where it is faster: the input is read in place from the PHP string, and the output is written
+straight into the PHP string returned (PHP's functions copy theirs once or twice, and grow it
+step by step), so decompressing 64 MB holds the input and the output and nothing else. A gzip
+trailer's length sizes the output at once. zlib's streams are kept per process and reset (zlib
+defines a reset stream as a new one); zstd's contexts and brotli's coders are created and freed
+per call, as PHP does, but zstd's and the brotli encoder's small blocks come from PHP's allocator
+rather than `malloc()`. A kept zstd context changed which error a corrupt frame reports, so none is kept.
+
+`packages/compression/tests` run on the extension, and `tests/compression.php` (5,702 lines) is
+identical on both: what every algorithm writes at every level (Brotli 0 to 11, LZ4 0 to 12, Zstd -5
+to 22) for 15 inputs up to 3 MB, read back by the class and by PHP's own function; what PHP's
+functions wrote (gzencode and gzdeflate at every level, zstd_compress at every level,
+brotli_compress at every level and mode, lz4_compress, snappy_compress, and their incremental forms)
+read by the classes; concatenated gzip members, gzip headers PHP never writes, trailing bytes,
+skippable and legacy zstd frames (`tests/fixtures/compression`, written by zstd 0.4.7 to 0.7.5);
+every algorithm's output truncated and corrupted at a dozen places; 65 MB both ways; levels,
+constructors and argument coercion; `fromName()` and 1,342 `fromAcceptEncoding()` cases (61 headers
+against 22 `$supported` lists); reflection of every class; PHP subclasses; and, in processes of
+their own, frames claiming more than `memory_limit`. The differences below are asserted at its end.
+Nothing in Appwrite or Cloud subclasses a compression class.
+
+Known differences from the PHP classes:
+
+- A warning (`gzdecode(): data error`) or exception names the caller's file and line, since the
+  classes have no PHP source.
+- A closure cannot be bound to the scope of an internal class: `Closure::bind()` into one warns
+  and returns `null`, where PHP's classes allowed it.
+- When `memory_limit` runs out, both end the request with the same fatal error at the same point;
+  the stack trace has no frame inside the package, and outside the frame and length claims the
+  corpus checks, the size it says was asked for can differ by the few bytes the buffers differ by.
+- The working memory of zstd's contexts and brotli's encoder comes from PHP's allocator in blocks
+  under 2 MiB (each freed by the end of the call), so it counts against `memory_limit` while a call
+  runs, where `malloc()` did not; near the limit, blocks come from `malloc()` again.
+
+Once every region runs it, PECL `brotli`, `zstd`, `lz4` and `snappy` can leave `appwrite/base`: the
+classes need none of them, and only the corpus's PHP side does.
 
 ## Utopia\DSN\DSN
 

@@ -1779,6 +1779,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Products' },
               ),
               createProfileFeatureFlagItem(
+                'Runtime logs',
+                'Show runtime logs for functions and sites (Runtime logs tabs and the deployment page Build / Runtime switch).',
+                'runtimeLogs',
+                profileId,
+                features.runtimeLogs,
+                { category: 'Products' },
+              ),
+              createProfileFeatureFlagItem(
                 'Native DBs: MongoDB',
                 'Enable dedicated MongoDB databases in the databases list.',
                 'nativeDbsMongo',
@@ -2109,6 +2117,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.alerts,
     features.reviews,
     features.appwritePush,
+    features.runtimeLogs,
     features.nativeDbsMongo,
     features.databasePitrRestore,
     features.databaseSpecifications,

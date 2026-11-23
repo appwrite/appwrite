@@ -31,6 +31,7 @@
       "packages/validators/",
       "packages/auth/",
       "packages/detector/",
+      "packages/compression/",
       "Dockerfile",
       ".dockerignore"
     ],
