@@ -1,0 +1,20 @@
+{
+    "data": {
+        "type": "builds",
+        "id": "b7e1c2d3-0000-4000-8000-000000000101",
+        "attributes": {
+            "version": "42",
+            "uploadedDate": "2026-11-20T10:00:00-08:00",
+            "processingState": "VALID",
+            "usesNonExemptEncryption": false,
+            "buildAudienceType": "APP_STORE_ELIGIBLE",
+            "expired": false
+        },
+        "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/builds/b7e1c2d3-0000-4000-8000-000000000101"
+        }
+    },
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/builds/b7e1c2d3-0000-4000-8000-000000000101"
+    }
+}

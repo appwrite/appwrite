@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Builds;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Locking\Lock;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Base;
 use Appwrite\Utopia\Response;
@@ -32,12 +33,14 @@ class Create extends Base
             ->param('appId', '', new Text(64), 'ID of the app the build belongs to.')
             ->param('version', '', new Text(64), 'Build number, as `CFBundleVersion`.')
             ->param('uploadedDate', null, new Nullable(new DatetimeValidator()), 'Upload time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Defaults to now.', true)
+            ->param('marketingVersion', null, new Nullable(new Text(64)), "Marketing version, as `CFBundleShortVersionString`, that the build's pre-release version carries.", true)
             ->inject('response')
             ->inject('cache')
+            ->inject('lock')
             ->callback($this->action(...));
     }
 
-    public function action(string $appId, string $version, ?string $uploadedDate, Response $response, Cache $cache): void
+    public function action(string $appId, string $version, ?string $uploadedDate, ?string $marketingVersion, Response $response, Cache $cache, Lock $lock): void
     {
         $isDevelopment = System::getEnv('_APP_ENV', 'production') === 'development';
 
@@ -49,9 +52,6 @@ class Create extends Base
             throw new Exception(Exception::GENERAL_MOCK, 'App not found: ' . $appId);
         }
 
-        $builds = $cache->load(self::CACHE_BUILDS . $appId, self::TTL);
-        $builds = \is_array($builds) ? $builds : [];
-
         $build = [
             'type' => 'builds',
             'id' => $this->uuid(),
@@ -60,11 +60,12 @@ class Create extends Base
                 'uploadedDate' => (new \DateTimeImmutable($uploadedDate ?? 'now'))->format(\DateTimeInterface::RFC3339_EXTENDED),
                 'processingState' => 'VALID',
             ],
+            self::INTERNAL => [
+                'marketingVersion' => $marketingVersion,
+            ],
         ];
 
-        $builds[] = $build;
-
-        $cache->save(self::CACHE_BUILDS . $appId, $builds);
+        $this->saveBuild($cache, $lock, $appId, $build);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

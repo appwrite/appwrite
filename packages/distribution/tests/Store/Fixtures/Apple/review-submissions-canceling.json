@@ -1,0 +1,79 @@
+{
+    "data": [
+        {
+            "type": "reviewSubmissions",
+            "id": "d9e3f4a5-3333-4333-8333-000000000001",
+            "attributes": {
+                "platform": "IOS",
+                "submittedDate": "2026-11-21T10:00:00-08:00",
+                "state": "CANCELING"
+            },
+            "relationships": {
+                "app": {
+                    "links": {
+                        "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/d9e3f4a5-3333-4333-8333-000000000001/relationships/app",
+                        "related": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/d9e3f4a5-3333-4333-8333-000000000001/app"
+                    }
+                },
+                "items": {
+                    "links": {
+                        "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/d9e3f4a5-3333-4333-8333-000000000001/relationships/items",
+                        "related": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/d9e3f4a5-3333-4333-8333-000000000001/items"
+                    },
+                    "data": [
+                        {
+                            "type": "reviewSubmissionItems",
+                            "id": "e0f4a5b6-4444-4444-8444-000000000001"
+                        }
+                    ]
+                },
+                "appStoreVersionForReview": {
+                    "links": {
+                        "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/d9e3f4a5-3333-4333-8333-000000000001/relationships/appStoreVersionForReview",
+                        "related": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/d9e3f4a5-3333-4333-8333-000000000001/appStoreVersionForReview"
+                    },
+                    "data": {
+                        "type": "appStoreVersions",
+                        "id": "b7c1d2e3-1111-4111-8111-000000000001"
+                    }
+                },
+                "submittedByActor": {
+                    "links": {
+                        "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/d9e3f4a5-3333-4333-8333-000000000001/relationships/submittedByActor",
+                        "related": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/d9e3f4a5-3333-4333-8333-000000000001/submittedByActor"
+                    }
+                },
+                "lastUpdatedByActor": {
+                    "links": {
+                        "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/d9e3f4a5-3333-4333-8333-000000000001/relationships/lastUpdatedByActor",
+                        "related": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/d9e3f4a5-3333-4333-8333-000000000001/lastUpdatedByActor"
+                    }
+                }
+            },
+            "links": {
+                "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/d9e3f4a5-3333-4333-8333-000000000001"
+            }
+        }
+    ],
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions"
+    },
+    "meta": {
+        "paging": {
+            "total": 1,
+            "limit": 5
+        }
+    },
+    "included": [
+        {
+            "type": "reviewSubmissionItems",
+            "id": "e0f4a5b6-4444-4444-8444-000000000001",
+            "attributes": {
+                "state": "REMOVED"
+            },
+            "links": {
+                "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissionItems/e0f4a5b6-4444-4444-8444-000000000001"
+            }
+        }
+    ]
+}

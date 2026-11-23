@@ -1,0 +1,35 @@
+{
+    "data": [
+        {
+            "type": "betaBuildLocalizations",
+            "id": "5d4c3b2a-0000-4000-8000-000000000201",
+            "attributes": {
+                "locale": "en-US",
+                "whatsNew": null
+            },
+            "links": {
+                "self": "https://api.appstoreconnect.apple.com/v1/betaBuildLocalizations/5d4c3b2a-0000-4000-8000-000000000201"
+            }
+        },
+        {
+            "type": "betaBuildLocalizations",
+            "id": "5d4c3b2a-0000-4000-8000-000000000202",
+            "attributes": {
+                "locale": "fr-FR",
+                "whatsNew": "Corrections de bugs"
+            },
+            "links": {
+                "self": "https://api.appstoreconnect.apple.com/v1/betaBuildLocalizations/5d4c3b2a-0000-4000-8000-000000000202"
+            }
+        }
+    ],
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/builds/b7e1c2d3-0000-4000-8000-000000000101/betaBuildLocalizations?limit=200"
+    },
+    "meta": {
+        "paging": {
+            "total": 2,
+            "limit": 200
+        }
+    }
+}

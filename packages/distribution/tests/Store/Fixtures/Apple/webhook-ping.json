@@ -1,0 +1,12 @@
+{
+    "data": {
+        "type": "webhookPings",
+        "id": "5a6b7c8d-9e0f-4a1b-8c2d-3e4f5a6b7c8d",
+        "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/webhookPings/5a6b7c8d-9e0f-4a1b-8c2d-3e4f5a6b7c8d"
+        }
+    },
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/webhookPings"
+    }
+}

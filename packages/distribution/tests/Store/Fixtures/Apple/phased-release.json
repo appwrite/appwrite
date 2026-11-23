@@ -1,0 +1,18 @@
+{
+    "data": {
+        "type": "appStoreVersionPhasedReleases",
+        "id": "c8d2e3f4-2222-4222-8222-000000000001",
+        "attributes": {
+            "phasedReleaseState": "INACTIVE",
+            "startDate": null,
+            "totalPauseDuration": 0,
+            "currentDayNumber": null
+        },
+        "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersionPhasedReleases/c8d2e3f4-2222-4222-8222-000000000001"
+        }
+    },
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersionPhasedReleases"
+    }
+}

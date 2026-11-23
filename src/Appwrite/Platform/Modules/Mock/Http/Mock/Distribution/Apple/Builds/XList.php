@@ -17,8 +17,9 @@ class XList extends Base
 {
     private const string SORT_ASCENDING = 'uploadedDate';
     private const string SORT_DESCENDING = '-uploadedDate';
+    private const string PLATFORM = 'IOS';
     private const array ALLOWED_QUERY = [
-        'filter' => ['app'],
+        'filter' => ['app', 'version', 'preReleaseVersion.version', 'preReleaseVersion.platform'],
         'fields' => ['builds'],
     ];
 
@@ -37,7 +38,7 @@ class XList extends Base
             ->label('scope', 'public')
             ->label('docs', false)
             ->label('mock', true)
-            ->param('filter', [], new Assoc(), 'Filters, as `filter[app]`. The app filter is required.', true)
+            ->param('filter', [], new Assoc(), 'Filters, as `filter[app]`, `filter[version]`, `filter[preReleaseVersion.version]` and `filter[preReleaseVersion.platform]`, each a comma-separated list. The app filter is required.', true)
             ->param('sort', self::SORT_DESCENDING, new Text(128, 0), 'Sort order, `uploadedDate` or `-uploadedDate`. Defaults to newest first.', true)
             ->param('fields', [], new Assoc(), 'Sparse fieldsets, as `fields[builds]`.', true)
             ->param('limit', 50, new Range(1, 200), 'Maximum number of builds to return.', true)
@@ -109,6 +110,10 @@ class XList extends Base
             \array_push($builds, ...(\is_array($seeded) ? $seeded : []));
         }
 
+        $builds = \array_values(\array_filter($builds, fn (array $build): bool => $this->matches($filter['version'] ?? null, $build['attributes']['version'])
+            && $this->matches($filter['preReleaseVersion.version'] ?? null, $build[self::INTERNAL]['marketingVersion'] ?? null)
+            && $this->matches($filter['preReleaseVersion.platform'] ?? null, $build[self::INTERNAL]['platform'] ?? self::PLATFORM)));
+
         $direction = $sort === self::SORT_ASCENDING ? 1 : -1;
 
         if ($direction === -1) {
@@ -122,13 +127,21 @@ class XList extends Base
         $data = [];
 
         foreach (\array_slice($builds, 0, $limit) as $build) {
-            $build['attributes'] = $this->select($build['attributes'], $fields, 'builds');
-            $data[] = $build;
+            $data[] = $this->exposeBuild($build, $fields);
         }
 
         $this->respond($response, [
             'data' => $data,
             'links' => ['self' => $this->link($request)],
         ]);
+    }
+
+    private function matches(mixed $filter, mixed $value): bool
+    {
+        if (!\is_string($filter) || $filter === '') {
+            return true;
+        }
+
+        return \in_array($value, \explode(',', $filter), true);
     }
 }

@@ -1,0 +1,21 @@
+{
+    "data": {
+        "type": "appStoreVersionLocalizations",
+        "id": "f1a5b6c7-5555-4555-8555-000000000003",
+        "attributes": {
+            "description": "An example app.",
+            "locale": "de-DE",
+            "keywords": "example",
+            "marketingUrl": null,
+            "promotionalText": null,
+            "supportUrl": "https://example.io/support",
+            "whatsNew": "Fehlerbehebungen."
+        },
+        "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations/f1a5b6c7-5555-4555-8555-000000000003"
+        }
+    },
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations"
+    }
+}

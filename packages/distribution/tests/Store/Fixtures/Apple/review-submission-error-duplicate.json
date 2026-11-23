@@ -1,0 +1,14 @@
+{
+    "errors": [
+        {
+            "id": "7a1b2c3d-6666-4666-8666-000000000001",
+            "status": "409",
+            "code": "ENTITY_ERROR.RELATIONSHIP.INVALID.DUPLICATE",
+            "title": "The provided entity includes a relationship with an invalid value",
+            "detail": "The appStoreVersion is already an item of this review submission.",
+            "source": {
+                "pointer": "/data/relationships/appStoreVersion"
+            }
+        }
+    ]
+}

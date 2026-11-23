@@ -1,0 +1,16 @@
+{
+    "data": {
+        "type": "betaBuildLocalizations",
+        "id": "5d4c3b2a-0000-4000-8000-000000000203",
+        "attributes": {
+            "locale": "de-DE",
+            "whatsNew": "Fehlerbehebungen"
+        },
+        "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/betaBuildLocalizations/5d4c3b2a-0000-4000-8000-000000000203"
+        }
+    },
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/betaBuildLocalizations"
+    }
+}

@@ -1,0 +1,12 @@
+{
+    "data": [],
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/apps/6450000001/appStoreVersions"
+    },
+    "meta": {
+        "paging": {
+            "total": 0,
+            "limit": 5
+        }
+    }
+}
