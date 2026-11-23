@@ -118,6 +118,31 @@ if (!$recaptcha->verify($_POST['g-recaptcha-response'], $_SERVER['REMOTE_ADDR'])
 
 *Notice: The code above is for example purpose only. It is always recommended to validate user input before using it in your code. If you are using a load balancer or any proxy server you might need to get user IP from the HTTP_X_FORWARDE‌​D_FOR header.*
 
+### Proof-of-work challenge
+
+`ProofOfWork` makes a client spend CPU before it gets through: you issue a signed token with a random nonce, the client finds a solution whose SHA-256 has enough leading zero bits, and you verify it. Each token can be redeemed once, tracked by a nonce store. A solved challenge earns a `Clearance` token so later requests skip it. Both tokens are bound to the client's coarse IP prefix and User-Agent hash.
+
+```php
+<?php
+
+use Utopia\Abuse\Challenges\Clearance;
+use Utopia\Abuse\Challenges\Identity;
+use Utopia\Abuse\Challenges\ProofOfWork;
+use Utopia\Abuse\Challenges\ProofOfWork\Nonce\RedisPool;
+
+$ipPrefix = Identity::ipPrefix($ip);
+$uaHash = Identity::uaHash($userAgent);
+
+$challenge = new ProofOfWork('secret', new RedisPool($redisPool));
+$issued = $challenge->issue('project', $ipPrefix, $uaHash, ProofOfWork::bitsForLevel(3));
+// Send $issued['token'], $issued['nonce'] and $issued['difficulty'] to the client.
+
+$result = $challenge->verify($token, $solution, $ipPrefix, $uaHash);
+if ($result->isValid()) {
+    $clearance = new Clearance('secret')->issue('project', '', $ipPrefix, $uaHash, $result->difficulty);
+}
+```
+
 ## System Requirements
 
 Utopia Abuse requires PHP 8.5 or later. We recommend using the latest PHP version whenever possible.

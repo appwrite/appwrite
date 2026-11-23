@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `Utopia\Abuse\Challenges`: the proof-of-work challenge, moved here from Appwrite Edge so other services can issue and verify the same tokens.
+  - `ProofOfWork` issues a signed challenge token and verifies a solution against it. It needs a nonce store (`ProofOfWork\Nonce\Consumer`); `ProofOfWork\Nonce\RedisPool` is the Redis one.
+  - `Clearance` issues and verifies the token a client gets after solving.
+  - `Identity` derives the coarse IP prefix and User-Agent hash both tokens are bound to.
+- Requires `adhocore/jwt` `^1.1`.
+
 ## 4.0.0 (unreleased)
 
 ### Breaking changes
