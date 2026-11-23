@@ -7,6 +7,9 @@
 # ext-zstd load (ZSTD_SYS_USE_PKG_CONFIG), rather than copies built from source.
 set -eu
 
+# appwrite/base ships python3 r1 and Alpine edge installs python3-ndbm r2 beside it on any apk add,
+# which fails on a file r1 owns: upgrade python3 first. Drop it once the base image carries r2.
+apk add --no-cache --upgrade python3
 apk add --no-cache rustup clang-dev libheif-dev build-base zlib-dev zstd-dev pkgconf
 rustup-init -y --default-toolchain none
 . "$HOME/.cargo/env"

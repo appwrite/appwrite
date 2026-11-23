@@ -26,7 +26,10 @@ FROM appwrite/base:2.5.1@sha256:54a8a40e5609eb406d52f01f3eb9df1d5bef2d3a27335ef8
 # the utopia libraries build; ffmpeg.org drops connections from CI runners.
 ARG FFMPEG_VERSION=8.1.2
 
-RUN apk add --no-cache \
+# appwrite/base ships python3 3.14.10-r1, and Alpine edge now installs python3-ndbm r2 beside it on
+# any `apk add`, which overwrites a file r1 owns and fails. Upgrading python3 first takes both to r2.
+# Drop it once the base image carries r2.
+RUN apk add --no-cache --upgrade python3 && apk add --no-cache \
         build-base nasm pkgconf git \
         x264-dev x265-dev libvpx-dev opus-dev lame-dev zlib-dev \
         libtheora-dev libvorbis-dev gnutls-dev \
@@ -73,6 +76,9 @@ FROM scratch AS extension
 COPY --from=extension-build /usr/local/src/target/release/libutopia.so /utopia.so
 
 FROM appwrite/base:2.5.1@sha256:54a8a40e5609eb406d52f01f3eb9df1d5bef2d3a27335ef87a2ea2f5621eab07 AS base
+
+# As in the ffmpeg stage: python3 before anything else is installed.
+RUN apk add --no-cache --upgrade python3
 
 LABEL maintainer="team@appwrite.io"
 
