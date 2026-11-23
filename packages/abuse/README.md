@@ -120,42 +120,36 @@ if (!$recaptcha->verify($_POST['g-recaptcha-response'], $_SERVER['REMOTE_ADDR'])
 
 ### Proof-of-work challenge
 
-`ProofOfWork` makes a client spend CPU before it gets through. You issue a signed puzzle; the client finds a solution whose SHA-256 has enough leading zero bits; you verify it. Each puzzle can be redeemed once, tracked by a `Nonce` store. A passed challenge earns a `Clearance`, so later requests skip it. You choose what both are bound to, for example the client's coarse IP prefix and User-Agent hash from `Identity`.
+`ProofOfWork` makes a client spend CPU before it gets through. You issue a signed puzzle; the client finds a solution whose SHA-256 has enough leading zero bits; you verify it. Each puzzle can be redeemed once, tracked by a `Nonce` store. A passed challenge earns a `Clearance`, so later requests skip it. Both are bound to the client with `withBinding()`, which returns a copy, like `withParams()` on the rate-limit adapters.
 
 ```php
 <?php
 
 use Utopia\Abuse\Challenges\Clearance;
-use Utopia\Abuse\Challenges\Identity;
 use Utopia\Abuse\Challenges\Nonce\Redis as RedisNonce;
 use Utopia\Abuse\Challenges\ProofOfWork;
-use Utopia\Abuse\Challenges\Token;
 
-$identity = new Identity();
-$binding = [
-    'ip' => $identity->ipPrefix($ip),
-    'ua' => $identity->userAgentHash($userAgent),
-];
+$challenge = new ProofOfWork('secret', new RedisNonce('pow', $redis));
+$clearance = new Clearance('secret');
 
-// The nonce key pattern is filled from the puzzle's claims.
-$challenge = new ProofOfWork(
-    new Token('secret', 'my-app-challenge', 'challenge', ttl: 120),
-    new RedisNonce('pow:{project}', $redis),
-);
+$client = ['ip' => $ip, 'ua' => $userAgent];
 
-$puzzle = $challenge->issue(18, $binding, ['project' => 'p1']);
-// Send $puzzle->token, $puzzle->nonce and $puzzle->difficulty to the client.
+// Issue a puzzle, then send $puzzle->token, $puzzle->nonce and $puzzle->difficulty to the client
+$puzzle = $challenge->withBinding($client)->issue(difficulty: 18);
 
-$clearance = new Clearance(new Token('secret', 'my-app-clearance', 'clearance', ttl: 1800));
-
-$result = $challenge->verify($token, $solution, $binding);
+// Verify the client's solution and hand out a clearance
+$result = $challenge->withBinding($client)->verify($token, $solution);
 if ($result->isValid()) {
-    $cookie = $clearance->issue($binding, $result->difficulty);
+    $cookie = $clearance->withBinding($client)->issue($result->difficulty);
 }
 
-// Later requests:
-$cleared = $clearance->verify($cookie, $binding, difficulty: 18, maxAge: 1800);
+// Later requests skip the challenge while the clearance holds
+if (!$clearance->withBinding($client)->verify($cookie, difficulty: 18, maxAge: 1800)) {
+    // challenge again
+}
 ```
+
+Puzzles last 120 seconds and clearances 30 minutes unless you pass a `ttl`. A nonce store outage rejects the solution unless you pass `acceptWhenNoncesUnavailable: true`. To bind to a network rather than an exact IP, use `Identity`: `new Identity()->ipPrefix($ip)` gives the /24 (IPv4) or /48 (IPv6) the address belongs to, and `userAgentHash()` hashes the User-Agent.
 
 ## System Requirements
 

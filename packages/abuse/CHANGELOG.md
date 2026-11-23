@@ -5,11 +5,12 @@
 ### Added
 
 - `Utopia\Abuse\Challenges`: a proof-of-work challenge and the clearance a client earns by passing it, so any service can issue and verify the same tokens.
-  - `Token`: a signed, expiring token for one purpose. Its signing key is derived from the secret and a label, so tokens for different purposes never verify as each other.
-  - `ProofOfWork`: issues a `Puzzle` (token, nonce, difficulty) and verifies a solution, returning a `ProofOfWork\Result`. The binding and extra claims are the caller's. Each puzzle can be redeemed once, tracked by a `Nonce` store. A store outage rejects the solution unless the caller opts into `acceptWhenNoncesUnavailable`.
-  - `Clearance`: issued after a challenge is passed and bound to whatever the caller chooses. Verify can require a minimum difficulty and a maximum age.
+  - `ProofOfWork`: `new ProofOfWork($secret, $nonces)`, then `withBinding([...])->issue($difficulty)` returns a `Puzzle` (token, nonce, difficulty) and `->verify($token, $solution)` returns a `ProofOfWork\Result`. Each puzzle can be redeemed once. A nonce store outage rejects the solution unless `acceptWhenNoncesUnavailable` is set.
+  - `Clearance`: `new Clearance($secret)`, then `withBinding([...])->issue($difficulty)` and `->verify($token, $difficulty, $maxAge)`.
+  - `withBinding()` returns a copy bound to the given fields; tokens verify only with exactly the same binding.
   - `Nonce`: the single-use nonce store, with a key pattern filled by `withParams()` like the rate-limit adapters. Backends: `Nonce\Redis`, `Nonce\RedisCluster`, `Nonce\RedisPool` and `Nonce\None`.
-  - `Identity`: a coarse IP prefix (configurable, /24 and /48 by default) and a User-Agent hash to bind tokens to.
+  - `Token`: the signed, purpose-bound token both are built on, for callers that need it directly.
+  - `Identity`: a coarse IP prefix (configurable, /24 and /48 by default) and a User-Agent hash to bind to.
 - Requires `adhocore/jwt` `^1.1`.
 
 ## 4.0.0 (unreleased)
