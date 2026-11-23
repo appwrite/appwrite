@@ -578,7 +578,14 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
                     };
                     parsed.cursor = Some((normalize_cursor_row(raw)?, method == Method::CursorBefore));
                 }
-                _ => {}
+                // A method with no clause here (and, or, groupBy, …) would widen the result
+                // to every row the other filters allowed.
+                _ => {
+                    return Err(Error::exception(format!(
+                        "Query method not supported by the ClickHouse audit adapter: {}",
+                        method.as_str()
+                    )));
+                }
             }
         }
         Ok(parsed)

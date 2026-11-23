@@ -14657,6 +14657,638 @@
       "state": []
     },
     {
+      "name": "testUnsupportedQueryMethodsAreRefusedNotSkipped",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {},
+          "bind": "adapter",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "audit.new",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "bind": "audit",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "audit.setup",
+          "args": {
+            "audit": {
+              "$ref": "audit"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "audit.cleanup",
+          "args": {
+            "audit": {
+              "$ref": "audit"
+            },
+            "datetime": "now"
+          },
+          "expect": true
+        },
+        {
+          "op": "audit.log",
+          "args": {
+            "audit": {
+              "$ref": "audit"
+            },
+            "user_id": "userId",
+            "event": "update",
+            "resource": "database/document/1",
+            "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36",
+            "ip": "127.0.0.1",
+            "data": {
+              "key1": "value1",
+              "key2": "value2",
+              "actorType": "member",
+              "resourceType": "document",
+              "resourceId": "res-1",
+              "projectId": "proj-1",
+              "projectInternalId": "proj-int-1",
+              "teamId": "team-1",
+              "teamInternalId": "team-int-1",
+              "hostname": "example.org",
+              "country": "us"
+            }
+          },
+          "expect": {
+            "actorId": "userId",
+            "event": "update",
+            "resource": "database/document/1",
+            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36",
+            "ip": "127.0.0.1",
+            "time": "<now>",
+            "actorType": "member",
+            "actorInternalId": null,
+            "resourceParent": "",
+            "resourceType": "document",
+            "resourceId": "res-1",
+            "resourceInternalId": null,
+            "country": "us",
+            "city": null,
+            "continentCode": null,
+            "subdivisions": null,
+            "isp": null,
+            "autonomousSystemNumber": null,
+            "autonomousSystemOrganization": null,
+            "connectionType": null,
+            "connectionUsageType": null,
+            "connectionOrganization": null,
+            "projectId": "proj-1",
+            "projectInternalId": "proj-int-1",
+            "teamId": "team-1",
+            "teamInternalId": "team-int-1",
+            "hostname": "example.org",
+            "sdk": null,
+            "sdkVersion": null,
+            "osCode": null,
+            "osName": null,
+            "osVersion": null,
+            "clientType": null,
+            "clientCode": null,
+            "clientName": null,
+            "clientVersion": null,
+            "clientEngine": null,
+            "clientEngineVersion": null,
+            "deviceName": null,
+            "deviceBrand": null,
+            "deviceModel": null,
+            "reason": null,
+            "data": {
+              "key1": "value1",
+              "key2": "value2"
+            },
+            "$id": "<uniqid>",
+            "userId": "userId",
+            "userType": "member",
+            "userInternalId": null
+          }
+        },
+        {
+          "op": "clock.sleep",
+          "args": {
+            "ms": 5
+          },
+          "expect": null
+        },
+        {
+          "op": "audit.log",
+          "args": {
+            "audit": {
+              "$ref": "audit"
+            },
+            "user_id": "userId",
+            "event": "update",
+            "resource": "database/document/2",
+            "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36",
+            "ip": "127.0.0.1",
+            "data": {
+              "key1": "value1",
+              "key2": "value2",
+              "actorType": "member",
+              "resourceType": "document",
+              "resourceId": "res-1",
+              "projectId": "proj-1",
+              "projectInternalId": "proj-int-1",
+              "teamId": "team-1",
+              "teamInternalId": "team-int-1",
+              "hostname": "example.org",
+              "country": "us"
+            }
+          },
+          "expect": {
+            "actorId": "userId",
+            "event": "update",
+            "resource": "database/document/2",
+            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36",
+            "ip": "127.0.0.1",
+            "time": "<now>",
+            "actorType": "member",
+            "actorInternalId": null,
+            "resourceParent": "",
+            "resourceType": "document",
+            "resourceId": "res-1",
+            "resourceInternalId": null,
+            "country": "us",
+            "city": null,
+            "continentCode": null,
+            "subdivisions": null,
+            "isp": null,
+            "autonomousSystemNumber": null,
+            "autonomousSystemOrganization": null,
+            "connectionType": null,
+            "connectionUsageType": null,
+            "connectionOrganization": null,
+            "projectId": "proj-1",
+            "projectInternalId": "proj-int-1",
+            "teamId": "team-1",
+            "teamInternalId": "team-int-1",
+            "hostname": "example.org",
+            "sdk": null,
+            "sdkVersion": null,
+            "osCode": null,
+            "osName": null,
+            "osVersion": null,
+            "clientType": null,
+            "clientCode": null,
+            "clientName": null,
+            "clientVersion": null,
+            "clientEngine": null,
+            "clientEngineVersion": null,
+            "deviceName": null,
+            "deviceBrand": null,
+            "deviceModel": null,
+            "reason": null,
+            "data": {
+              "key1": "value1",
+              "key2": "value2"
+            },
+            "$id": "<uniqid>",
+            "userId": "userId",
+            "userType": "member",
+            "userInternalId": null
+          }
+        },
+        {
+          "op": "clock.sleep",
+          "args": {
+            "ms": 5
+          },
+          "expect": null
+        },
+        {
+          "op": "audit.log",
+          "args": {
+            "audit": {
+              "$ref": "audit"
+            },
+            "user_id": "userId",
+            "event": "delete",
+            "resource": "database/document/2",
+            "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36",
+            "ip": "127.0.0.1",
+            "data": {
+              "key1": "value1",
+              "key2": "value2",
+              "actorType": "member",
+              "resourceType": "document",
+              "resourceId": "res-1",
+              "projectId": "proj-1",
+              "projectInternalId": "proj-int-1",
+              "teamId": "team-1",
+              "teamInternalId": "team-int-1",
+              "hostname": "example.org",
+              "country": "us"
+            }
+          },
+          "expect": {
+            "actorId": "userId",
+            "event": "delete",
+            "resource": "database/document/2",
+            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36",
+            "ip": "127.0.0.1",
+            "time": "<now>",
+            "actorType": "member",
+            "actorInternalId": null,
+            "resourceParent": "",
+            "resourceType": "document",
+            "resourceId": "res-1",
+            "resourceInternalId": null,
+            "country": "us",
+            "city": null,
+            "continentCode": null,
+            "subdivisions": null,
+            "isp": null,
+            "autonomousSystemNumber": null,
+            "autonomousSystemOrganization": null,
+            "connectionType": null,
+            "connectionUsageType": null,
+            "connectionOrganization": null,
+            "projectId": "proj-1",
+            "projectInternalId": "proj-int-1",
+            "teamId": "team-1",
+            "teamInternalId": "team-int-1",
+            "hostname": "example.org",
+            "sdk": null,
+            "sdkVersion": null,
+            "osCode": null,
+            "osName": null,
+            "osVersion": null,
+            "clientType": null,
+            "clientCode": null,
+            "clientName": null,
+            "clientVersion": null,
+            "clientEngine": null,
+            "clientEngineVersion": null,
+            "deviceName": null,
+            "deviceBrand": null,
+            "deviceModel": null,
+            "reason": null,
+            "data": {
+              "key1": "value1",
+              "key2": "value2"
+            },
+            "$id": "<uniqid>",
+            "userId": "userId",
+            "userType": "member",
+            "userInternalId": null
+          }
+        },
+        {
+          "op": "clock.sleep",
+          "args": {
+            "ms": 5
+          },
+          "expect": null
+        },
+        {
+          "op": "audit.log",
+          "args": {
+            "audit": {
+              "$ref": "audit"
+            },
+            "user_id": null,
+            "event": "insert",
+            "resource": "user/null",
+            "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36",
+            "ip": "127.0.0.1",
+            "data": {
+              "key1": "value1",
+              "key2": "value2",
+              "actorType": "member",
+              "resourceType": "document",
+              "resourceId": "res-1",
+              "projectId": "proj-1",
+              "projectInternalId": "proj-int-1",
+              "teamId": "team-1",
+              "teamInternalId": "team-int-1",
+              "hostname": "example.org",
+              "country": "us"
+            }
+          },
+          "expect": {
+            "actorId": null,
+            "event": "insert",
+            "resource": "user/null",
+            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36",
+            "ip": "127.0.0.1",
+            "time": "<now>",
+            "actorType": "member",
+            "actorInternalId": null,
+            "resourceParent": "",
+            "resourceType": "document",
+            "resourceId": "res-1",
+            "resourceInternalId": null,
+            "country": "us",
+            "city": null,
+            "continentCode": null,
+            "subdivisions": null,
+            "isp": null,
+            "autonomousSystemNumber": null,
+            "autonomousSystemOrganization": null,
+            "connectionType": null,
+            "connectionUsageType": null,
+            "connectionOrganization": null,
+            "projectId": "proj-1",
+            "projectInternalId": "proj-int-1",
+            "teamId": "team-1",
+            "teamInternalId": "team-int-1",
+            "hostname": "example.org",
+            "sdk": null,
+            "sdkVersion": null,
+            "osCode": null,
+            "osName": null,
+            "osVersion": null,
+            "clientType": null,
+            "clientCode": null,
+            "clientName": null,
+            "clientVersion": null,
+            "clientEngine": null,
+            "clientEngineVersion": null,
+            "deviceName": null,
+            "deviceBrand": null,
+            "deviceModel": null,
+            "reason": null,
+            "data": {
+              "key1": "value1",
+              "key2": "value2"
+            },
+            "$id": "<uniqid>",
+            "userId": null,
+            "userType": "member",
+            "userInternalId": null
+          }
+        },
+        {
+          "op": "audit.find",
+          "args": {
+            "audit": {
+              "$ref": "audit"
+            },
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "userId",
+                "values": [
+                  "userId"
+                ]
+              },
+              {
+                "method": "or",
+                "values": [
+                  [
+                    {
+                      "method": "equal",
+                      "attribute": "event",
+                      "values": [
+                        "create"
+                      ]
+                    }
+                  ],
+                  [
+                    {
+                      "method": "equal",
+                      "attribute": "event",
+                      "values": [
+                        "delete"
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Query method not supported by the ClickHouse audit adapter: or"
+            }
+          }
+        },
+        {
+          "op": "audit.count",
+          "args": {
+            "audit": {
+              "$ref": "audit"
+            },
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "userId",
+                "values": [
+                  "userId"
+                ]
+              },
+              {
+                "method": "or",
+                "values": [
+                  [
+                    {
+                      "method": "equal",
+                      "attribute": "event",
+                      "values": [
+                        "create"
+                      ]
+                    }
+                  ],
+                  [
+                    {
+                      "method": "equal",
+                      "attribute": "event",
+                      "values": [
+                        "delete"
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Query method not supported by the ClickHouse audit adapter: or"
+            }
+          }
+        },
+        {
+          "op": "audit.find",
+          "args": {
+            "audit": {
+              "$ref": "audit"
+            },
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "userId",
+                "values": [
+                  "userId"
+                ]
+              },
+              {
+                "method": "and",
+                "values": [
+                  [
+                    {
+                      "method": "equal",
+                      "attribute": "event",
+                      "values": [
+                        "create"
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Query method not supported by the ClickHouse audit adapter: and"
+            }
+          }
+        },
+        {
+          "op": "audit.count",
+          "args": {
+            "audit": {
+              "$ref": "audit"
+            },
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "userId",
+                "values": [
+                  "userId"
+                ]
+              },
+              {
+                "method": "and",
+                "values": [
+                  [
+                    {
+                      "method": "equal",
+                      "attribute": "event",
+                      "values": [
+                        "create"
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Query method not supported by the ClickHouse audit adapter: and"
+            }
+          }
+        },
+        {
+          "op": "audit.find",
+          "args": {
+            "audit": {
+              "$ref": "audit"
+            },
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "userId",
+                "values": [
+                  "userId"
+                ]
+              },
+              {
+                "method": "groupBy",
+                "values": [
+                  "event"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Query method not supported by the ClickHouse audit adapter: groupBy"
+            }
+          }
+        },
+        {
+          "op": "audit.count",
+          "args": {
+            "audit": {
+              "$ref": "audit"
+            },
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "userId",
+                "values": [
+                  "userId"
+                ]
+              },
+              {
+                "method": "groupBy",
+                "values": [
+                  "event"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Query method not supported by the ClickHouse audit adapter: groupBy"
+            }
+          }
+        },
+        {
+          "op": "audit.count",
+          "args": {
+            "audit": {
+              "$ref": "audit"
+            },
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "userId",
+                "values": [
+                  "userId"
+                ]
+              }
+            ]
+          },
+          "expect": 3
+        },
+        {
+          "op": "audit.cleanup",
+          "args": {
+            "audit": {
+              "$ref": "audit"
+            },
+            "datetime": "now"
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "clickhouse@audit-clickhouse"
+      ]
+    },
+    {
       "name": "testSetDatabaseValidatesEmpty",
       "steps": [
         {
