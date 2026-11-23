@@ -5,7 +5,7 @@
 // are checked together after merge and main's tip is never green on a skip.
 
 import { execFileSync } from "node:child_process";
-import { appendFileSync, readFileSync } from "node:fs";
+import { appendFileSync, readdirSync, readFileSync } from "node:fs";
 
 const config = JSON.parse(
   readFileSync(new URL("../ci/e2e.json", import.meta.url)),
@@ -106,13 +106,23 @@ const libraries = (files) => {
   }
   // --no-deps reads the manifests only: no build, no network, no lock resolution. Any installed
   // toolchain can do that, so the one rust-toolchain.toml pins is not downloaded for it.
-  const { packages, workspace_root: root } = JSON.parse(
-    execFileSync("cargo", ["metadata", "--no-deps", "--format-version", "1"], {
-      encoding: "utf8",
-      maxBuffer: 64 * 1024 * 1024,
-      env: { ...process.env, RUSTUP_TOOLCHAIN: "stable" },
-    }),
-  );
+  let metadata;
+  try {
+    metadata = execFileSync(
+      "cargo",
+      ["metadata", "--no-deps", "--format-version", "1"],
+      {
+        encoding: "utf8",
+        maxBuffer: 64 * 1024 * 1024,
+        env: { ...process.env, RUSTUP_TOOLCHAIN: "stable" },
+      },
+    );
+  } catch (error) {
+    // Without the graph every library is reached: a missing cargo costs time, not coverage.
+    console.log(`cargo metadata failed, taking every library: ${error.message}`);
+    return readdirSync("crates/utopia").sort();
+  }
+  const { packages, workspace_root: root } = JSON.parse(metadata);
   const crates = packages.map((crate) => ({
     name: crate.name,
     directory: crate.manifest_path.slice(root.length + 1, -"/Cargo.toml".length),
