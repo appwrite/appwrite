@@ -80,22 +80,17 @@ That gap grows with every class that moves to the extension. There are ten crate
 
 ## Target shape
 
-### Rust: crates declare what they serve
+### Rust: the crate graph selects suites
 
-Each crate under `crates/utopia/` names its package in `Cargo.toml`:
+The crate graph is Cargo's. `cargo metadata --no-deps` reads the manifests and prints every crate with the workspace crates it depends on: no build, no network. A change to `crates/support/php-std` reaches every crate that depends on it.
 
-```toml
-[package.metadata.appwrite]
-implements = "utopia-php/image"
-```
+The edge from a crate to PHP needs no new metadata. `crates/utopia/<name>` is the library the extension registers as `packages/<name>`; `NAMES` in `crates/extension/src/libraries.rs` lists them. So a changed crate names its package by its directory.
 
-`cargo metadata` prints it with the crate graph, so a change to `crates/support/php-std` reaches every crate that depends on it, and through each of those its package.
+From a package the PHP map takes over: the suites that own `packages/<name>/` run. A package no suite owns runs every suite, which is right for `validators`, `locale` and `dsn`, and coarse for `image`.
 
-From a package the PHP map takes over: the package's owner decides the suites. A package the whole server uses (`validators`, `locale`, `dsn`) is in `shared`, so a change to its crate runs every suite.
+The extension crate binds every library, so a change to it reaches all of them. So do `Cargo.toml`, `Cargo.lock`, `.cargo/` and `rust-toolchain.toml`. A crate's tests, benchmarks and docs reach none; the Extension job runs those.
 
-`validate` fails when a package requires `ext-utopia` and no crate claims it, or a crate claims a package that does not exist. This replaces the package names hand-listed in `paths.extension`. That list and the code already disagree: `domains`, `emails` and `user-agent` require `ext-utopia` and are not in it.
-
-When server code itself moves to Rust, as a crate behind the extension or as a service of its own, the same line declares which suite covers it. Its dependencies are then exact, with no further work.
+When server code itself moves to Rust, as a crate behind the extension or as a service of its own, its dependencies are in this graph from the first commit.
 
 ### PHP: every file has an owner
 
@@ -223,7 +218,7 @@ Done when: the full-suite fallback can only be reached through `shared`, `Docker
 
 ### Phase 2. The Rust edges
 
-`implements` in each crate's `Cargo.toml`, checked by `validate`. A change under `crates/` selects suites through its package.
+A change under `crates/` selects suites through Cargo's graph and its package. Implemented in #15973.
 
 Done when: a pull request that changes only `crates/utopia/image` runs the suites `packages/image` is assigned to, and one that changes `crates/utopia/validators` runs every suite.
 
@@ -249,4 +244,5 @@ Port the selection from `changes.mjs`. Run both in CI for a week and diff their 
 - Which suites make up the smoke set?
 - Does the repository use the merge queue on every pull request, or only some? Phase 3 depends on it.
 - Should a crate that serves a `shared` package run every suite on the pull request, or the smoke set there and every suite in the queue?
-- When a PHP module is rewritten as a Rust service, where does its suite's entry live: still in `e2e.json`, or in the crate's metadata?
+- When a PHP module is rewritten as a Rust service, where does its suite's entry live: still in `e2e.json`, or in the crate's `Cargo.toml` metadata?
+- The Extension job runs clippy, the tests and the parity corpus for the whole workspace on any crate change. Should it narrow to the crates the graph reaches?
