@@ -6,6 +6,8 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Abuse\Challenge\Clearance;
 use Utopia\Abuse\Challenge\Password;
 use Utopia\Abuse\Challenge\Status;
+use Utopia\Auth\Hashes\Bcrypt;
+use Utopia\Auth\Hashes\Scrypt;
 use Utopia\Auth\Proofs\Password as PasswordProof;
 
 final class PasswordTest extends TestCase
@@ -46,6 +48,26 @@ final class PasswordTest extends TestCase
 
         $this->assertSame(Status::Valid, $this->answer($password, 'appwrite'));
         $this->assertSame(Status::Rejected, $this->answer($password, 'Appwrite'));
+    }
+
+    public function testTheDefaultProofChecksABcryptHash(): void
+    {
+        $password = $this->password(new Bcrypt()->hash(self::PASSWORD));
+
+        $this->assertSame(Status::Valid, $this->answer($password, self::PASSWORD));
+        $this->assertSame(Status::Rejected, $this->answer($password, 'wrong'));
+    }
+
+    public function testAScryptHashNeedsAProofSetToScrypt(): void
+    {
+        $scrypt = new Scrypt();
+        $hash = $scrypt->hash(self::PASSWORD);
+
+        $this->assertSame(Status::Rejected, $this->answer($this->password($hash), self::PASSWORD));
+
+        $password = new Password(self::SECRET, $hash, new PasswordProof()->setHash($scrypt));
+        $this->assertSame(Status::Valid, $this->answer($password, self::PASSWORD));
+        $this->assertSame(Status::Rejected, $this->answer($password, 'wrong'));
     }
 
     public function testAnEmptyGuessNeverMatches(): void

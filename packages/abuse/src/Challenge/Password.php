@@ -8,9 +8,10 @@ use Utopia\Auth\Proofs\Password as PasswordProof;
 
 /**
  * Asks the client for a password the caller set, e.g. on a firewall rule. Only
- * a hash of it is kept, checked with utopia-php/auth's password proof, so any
- * hash auth verifies works (Argon2 by default, as Appwrite stores user
- * passwords). Create one with `new \Utopia\Auth\Proofs\Password()->hash(...)`.
+ * a hash of it is kept, checked with utopia-php/auth's password proof. Create
+ * one with `new \Utopia\Auth\Proofs\Password()->hash(...)` (Argon2, as Appwrite
+ * stores user passwords). The default proof also checks Bcrypt and PHPass
+ * hashes; for Scrypt, SHA or MD5 pass a proof set to that hash.
  *
  * It does not limit guesses: rate-limit verify() per client before calling it.
  */
@@ -25,7 +26,7 @@ final readonly class Password extends Challenge
     /**
      * @param  string  $secret  Signing secret
      * @param  string  $hash  The password's hash, from utopia-php/auth
-     * @param  Proof  $proof  Checks a guess against the hash
+     * @param  Proof  $proof  Checks a guess against the hash; set it to the hash's algorithm unless that is Argon2, Bcrypt or PHPass
      * @param  int  $ttl  Token lifetime in seconds
      * @param  string  $label  Derives the signing key from the secret; keep it stable or issued tokens stop verifying
      * @param  string  $purpose  Stored in each token so no other kind of token passes as one
