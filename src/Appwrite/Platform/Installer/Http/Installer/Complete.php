@@ -77,6 +77,18 @@ class Complete extends Action
             }
         }
 
+        Server::clearSessions();
+        $response->addCookie(
+            Server::SESSION_COOKIE,
+            '',
+            time() - 3600,
+            '/install',
+            null,
+            $request->getProtocol() === 'https',
+            true,
+            Response::COOKIE_SAMESITE_STRICT
+        );
+
         @unlink(Server::INSTALLER_CONFIG_FILE);
 
         $response->json(['success' => true]);
