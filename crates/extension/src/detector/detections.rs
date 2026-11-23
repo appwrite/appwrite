@@ -11,15 +11,17 @@ use utopia_detector::{
     TanStackStart, Vue, Yarn,
 };
 
+use std::sync::OnceLock;
+
 use super::{
     Class, DETECTION, DETECTION_NAME, FALLBACK_FILE, FRAMEWORK_DETECTION, FRAMEWORK_DETECTION_NAME,
-    FRAMEWORK_DETECTION_PACKAGER, FRAMEWORKS, JS, Method, PACKAGER_DETECTION, PACKAGER_DETECTION_NAME, PACKAGERS,
-    Param, RENDERING_DETECTION, RENDERING_DETECTION_NAME, RUNTIME_DETECTION, RUNTIME_DETECTION_NAME,
-    RUNTIME_DETECTION_PACKAGER, RUNTIMES, Ty, abstract_method, args, guard, index_of, list, method, nothing, read,
-    return_this, scope, write,
+    FRAMEWORK_DETECTION_PACKAGER, FRAMEWORKS, Frozen, JS, Method, PACKAGER_DETECTION, PACKAGER_DETECTION_NAME,
+    PACKAGERS, Param, RENDERING_DETECTION, RENDERING_DETECTION_NAME, RUNTIME_DETECTION, RUNTIME_DETECTION_NAME,
+    RUNTIME_DETECTION_PACKAGER, RUNTIMES, Ty, abstract_method, arity, guard, index_of, method, nothing, peek, read,
+    return_this, str_value, strings_, with_str, write,
 };
 use crate::classes::engine::{self, Declared, MAY_BE_NULL, MAY_BE_STRING, PropertyType};
-use crate::classes::leaf::{self, this};
+use crate::classes::leaf::{FunctionHandler, this};
 
 /// A protected property declared in the class body.
 const BODY: Declared = Declared { private: false, readonly: false, promoted: false };
@@ -147,7 +149,7 @@ pub fn bases() -> Vec<Class> {
             is_abstract: true,
             methods: vec![
                 method("__construct", construct, &[], Ty::None),
-                method("setPackager", set_packager, PACKAGER_PARAM, Ty::This),
+                method("setPackager", set_framework_packager, PACKAGER_PARAM, Ty::This),
                 abstract_method("getName", &[], Ty::Str),
                 abstract_method("getFiles", &[], Ty::Array),
                 method("getPackages", empty_list, &[], Ty::Array),
@@ -207,7 +209,7 @@ pub fn bases() -> Vec<Class> {
             is_abstract: true,
             methods: vec![
                 method("__construct", construct, &[], Ty::None),
-                method("setPackager", set_packager, PACKAGER_PARAM, Ty::This),
+                method("setPackager", set_runtime_packager, PACKAGER_PARAM, Ty::This),
                 abstract_method("getName", &[], Ty::Str),
                 abstract_method("getLanguages", &[], Ty::Array),
                 abstract_method("getFileExtensions", &[], Ty::Array),
@@ -228,23 +230,23 @@ fn declare_packager(class: &mut ClassEntry, property: &'static engine::Property)
 /// The frameworks, packagers, `SSR`, `XStatic` and runtimes, in that order.
 pub fn leaves() -> Vec<Class> {
     let mut classes = Vec::new();
-    for (name, parent, _, methods) in &FRAMEWORKS_TABLE {
+    for (f, (name, parent, _, methods)) in FRAMEWORKS_TABLE.iter().enumerate() {
         classes.push(Class {
             name,
             parent: Some(*parent),
             is_abstract: false,
-            methods: methods.iter().map(|m| framework_method(*m)).collect(),
+            methods: methods.iter().map(|m| framework_method(*m, f)).collect(),
             declare: nothing,
         });
     }
-    for (name, _) in &PACKAGERS_TABLE {
+    for (p, (name, _)) in PACKAGERS_TABLE.iter().enumerate() {
         classes.push(Class {
             name,
             parent: Some(PACKAGER_DETECTION),
             is_abstract: false,
             methods: vec![
-                method("getName", packager_name, &[], Ty::Str),
-                method("getFiles", packager_files, &[], Ty::Array),
+                method("getName", PACKAGER_NAME[p], &[], Ty::Str),
+                method("getFiles", PACKAGER_FILES[p], &[], Ty::Array),
             ],
             declare: nothing,
         });
@@ -271,18 +273,18 @@ pub fn leaves() -> Vec<Class> {
         ],
         declare: nothing,
     });
-    for (name, _) in &RUNTIMES_TABLE {
+    for (r, (name, _)) in RUNTIMES_TABLE.iter().enumerate() {
         classes.push(Class {
             name,
             parent: Some(RUNTIME_DETECTION),
             is_abstract: false,
             methods: vec![
-                method("getName", runtime_name, &[], Ty::Str),
-                method("getLanguages", runtime_languages, &[], Ty::Array),
-                method("getCommands", runtime_commands, &[], Ty::Str),
-                method("getFileExtensions", runtime_extensions, &[], Ty::Array),
-                method("getFiles", runtime_files, &[], Ty::Array),
-                method("getEntrypoint", runtime_entrypoint, &[], Ty::Str),
+                method("getName", RUNTIME_NAME[r], &[], Ty::Str),
+                method("getLanguages", RUNTIME_LANGUAGES[r], &[], Ty::Array),
+                method("getCommands", RUNTIME_COMMANDS[r], &[], Ty::Str),
+                method("getFileExtensions", RUNTIME_EXTENSIONS[r], &[], Ty::Array),
+                method("getFiles", RUNTIME_FILES[r], &[], Ty::Array),
+                method("getEntrypoint", RUNTIME_ENTRYPOINT[r], &[], Ty::Str),
             ],
             declare: nothing,
         });
@@ -290,17 +292,157 @@ pub fn leaves() -> Vec<Class> {
     classes
 }
 
-fn framework_method(m: M) -> Method {
+fn framework_method(m: M, f: usize) -> Method {
     match m {
-        M::Name => method("getName", framework_name, &[], Ty::Str),
-        M::Packages => method("getPackages", framework_packages, &[], Ty::Array),
-        M::Files => method("getFiles", framework_files, &[], Ty::Array),
-        M::Install => method("getInstallCommand", framework_install, &[], Ty::Str),
-        M::Build => method("getBuildCommand", framework_build, &[], Ty::Str),
-        M::Output => method("getOutputDirectory", framework_output, &[], Ty::Str),
-        M::Config => method("getConfigFiles", framework_config, &[], Ty::Array),
-        M::Adapter => method("getAdapter", framework_adapter, CONFIG_CONTENT, Ty::Str),
+        M::Name => method("getName", FRAMEWORK_NAME[f], &[], Ty::Str),
+        M::Packages => method("getPackages", FRAMEWORK_PACKAGES[f], &[], Ty::Array),
+        M::Files => method("getFiles", FRAMEWORK_FILES[f], &[], Ty::Array),
+        M::Install => method("getInstallCommand", FRAMEWORK_INSTALL[f], &[], Ty::Str),
+        M::Build => method("getBuildCommand", FRAMEWORK_BUILD[f], &[], Ty::Str),
+        M::Output => method("getOutputDirectory", FRAMEWORK_OUTPUT[f], &[], Ty::Str),
+        M::Config => method("getConfigFiles", FRAMEWORK_CONFIG[f], &[], Ty::Array),
+        M::Adapter => method("getAdapter", FRAMEWORK_ADAPTER[f], CONFIG_CONTENT, Ty::Str),
     }
+}
+
+// What the leaves return, frozen in MINIT -------------------------------------------------
+
+/// The packagers whose commands differ, in the order of a command table; anything else (`''`,
+/// `bun`) gets the last entry, as every leaf's `match` defaults it.
+const PACKAGER_SLOTS: [&str; 4] = ["yarn", "npm", "pnpm", ""];
+
+/// The command table entry for `$this->packager`.
+#[inline(always)]
+fn slot(packager: &[u8]) -> usize {
+    match packager {
+        b"yarn" => 0,
+        b"npm" => 1,
+        b"pnpm" => 2,
+        _ => 3,
+    }
+}
+
+/// A command for each of [`PACKAGER_SLOTS`].
+fn commands(command: impl Fn(&str) -> &'static str) -> [Frozen; 4] {
+    PACKAGER_SLOTS.map(|packager| Frozen::string(command(packager)))
+}
+
+struct FrameworkData {
+    name: Frozen,
+    files: Frozen,
+    packages: Frozen,
+    output: Frozen,
+    config: Frozen,
+    install: [Frozen; 4],
+    build: [Frozen; 4],
+}
+
+struct RuntimeData {
+    name: Frozen,
+    languages: Frozen,
+    extensions: Frozen,
+    files: Frozen,
+    entrypoint: Frozen,
+    commands: [Frozen; 4],
+}
+
+struct PackagerData {
+    name: Frozen,
+    files: Frozen,
+}
+
+static FRAMEWORK_DATA: OnceLock<Vec<FrameworkData>> = OnceLock::new();
+static RUNTIME_DATA: OnceLock<Vec<RuntimeData>> = OnceLock::new();
+static PACKAGER_DATA: OnceLock<Vec<PackagerData>> = OnceLock::new();
+/// `SSR::FRAMEWORK_FILES`, each list frozen.
+static SSR_DATA: OnceLock<Vec<(&'static str, Frozen)>> = OnceLock::new();
+
+/// Builds what the leaves return. Called in MINIT, before the classes are registered.
+pub fn freeze() {
+    FRAMEWORK_DATA.get_or_init(|| {
+        FRAMEWORKS_TABLE
+            .iter()
+            .map(|(_, _, framework, _)| {
+                let framework = *framework;
+                FrameworkData {
+                    name: Frozen::string(framework.name()),
+                    files: Frozen::list(framework.files()),
+                    packages: Frozen::list(framework.packages()),
+                    output: Frozen::string(framework.output_directory()),
+                    config: Frozen::list(framework.config_files()),
+                    install: commands(|packager| framework.install_command(packager)),
+                    build: commands(|packager| framework.build_command(packager)),
+                }
+            })
+            .collect()
+    });
+    RUNTIME_DATA.get_or_init(|| {
+        RUNTIMES_TABLE
+            .iter()
+            .map(|(_, runtime)| {
+                let runtime = *runtime;
+                RuntimeData {
+                    name: Frozen::string(runtime.name()),
+                    languages: Frozen::list(runtime.languages()),
+                    extensions: Frozen::list(runtime.file_extensions()),
+                    files: Frozen::list(runtime.files()),
+                    entrypoint: Frozen::string(runtime.entrypoint()),
+                    commands: commands(|packager| runtime.commands(packager)),
+                }
+            })
+            .collect()
+    });
+    PACKAGER_DATA.get_or_init(|| {
+        PACKAGERS_TABLE
+            .iter()
+            .map(|(_, packager)| PackagerData {
+                name: Frozen::string(packager.name()),
+                files: Frozen::list(packager.files()),
+            })
+            .collect()
+    });
+    SSR_DATA.get_or_init(|| {
+        Ssr::FRAMEWORK_FILES.iter().map(|(framework, files)| (*framework, Frozen::list(files))).collect()
+    });
+}
+
+/// Generic handlers, one instantiation per leaf, as a table.
+macro_rules! per_leaf {
+    ($handler:ident; $($i:literal)*) => {
+        [$($handler::<$i> as FunctionHandler),*]
+    };
+}
+
+const FRAMEWORK_NAME: [FunctionHandler; 15] = per_leaf!(framework_name; 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14);
+const FRAMEWORK_PACKAGES: [FunctionHandler; 15] = per_leaf!(framework_packages; 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14);
+const FRAMEWORK_FILES: [FunctionHandler; 15] = per_leaf!(framework_files; 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14);
+const FRAMEWORK_INSTALL: [FunctionHandler; 15] = per_leaf!(framework_install; 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14);
+const FRAMEWORK_BUILD: [FunctionHandler; 15] = per_leaf!(framework_build; 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14);
+const FRAMEWORK_OUTPUT: [FunctionHandler; 15] = per_leaf!(framework_output; 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14);
+const FRAMEWORK_CONFIG: [FunctionHandler; 15] = per_leaf!(framework_config; 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14);
+const FRAMEWORK_ADAPTER: [FunctionHandler; 15] = per_leaf!(framework_adapter; 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14);
+const PACKAGER_NAME: [FunctionHandler; 3] = per_leaf!(packager_name; 0 1 2);
+const PACKAGER_FILES: [FunctionHandler; 3] = per_leaf!(packager_files; 0 1 2);
+const RUNTIME_NAME: [FunctionHandler; 11] = per_leaf!(runtime_name; 0 1 2 3 4 5 6 7 8 9 10);
+const RUNTIME_LANGUAGES: [FunctionHandler; 11] = per_leaf!(runtime_languages; 0 1 2 3 4 5 6 7 8 9 10);
+const RUNTIME_COMMANDS: [FunctionHandler; 11] = per_leaf!(runtime_commands; 0 1 2 3 4 5 6 7 8 9 10);
+const RUNTIME_EXTENSIONS: [FunctionHandler; 11] = per_leaf!(runtime_extensions; 0 1 2 3 4 5 6 7 8 9 10);
+const RUNTIME_FILES: [FunctionHandler; 11] = per_leaf!(runtime_files; 0 1 2 3 4 5 6 7 8 9 10);
+const RUNTIME_ENTRYPOINT: [FunctionHandler; 11] = per_leaf!(runtime_entrypoint; 0 1 2 3 4 5 6 7 8 9 10);
+
+#[inline(always)]
+fn framework_data(f: usize) -> Option<&'static FrameworkData> {
+    FRAMEWORK_DATA.get()?.get(f)
+}
+
+#[inline(always)]
+fn runtime_data(r: usize) -> Option<&'static RuntimeData> {
+    RUNTIME_DATA.get()?.get(r)
+}
+
+#[inline(always)]
+fn packager_data(p: usize) -> Option<&'static PackagerData> {
+    PACKAGER_DATA.get()?.get(p)
 }
 
 // The bases' methods ----------------------------------------------------------------------
@@ -316,23 +458,25 @@ extern "C" fn empty_list(_: &mut ExecuteData, retval: &mut Zval) {
 /// `Framework::getAdapter(string $configContent): string`: `''`.
 extern "C" fn no_adapter(ex: &mut ExecuteData, retval: &mut Zval) {
     guard(|| {
-        let Some(mut args) = args(ex, 1, 1) else { return };
-        if engine::str_arg(ex, 1, args.remove(0)).is_some() {
-            leaf::set_str(retval, b"");
+        if !arity(ex, 1, 1) {
+            return;
+        }
+        let Some(arg) = engine::arg(ex, 0) else { return };
+        if with_str(ex, 1, arg, |_| ()).is_some() {
+            strings_().empty.set(retval);
         }
     });
 }
 
-/// `setPackager(string $packager): self` of `Detection\Framework` and `Detection\Runtime`.
-extern "C" fn set_packager(ex: &mut ExecuteData, retval: &mut Zval) {
+/// `setPackager(string $packager): self`, `$packager` declared by the class at `declared_in`.
+#[inline(always)]
+fn set_packager(ex: &mut ExecuteData, retval: &mut Zval, declared_in: usize, property: &engine::Property) {
     guard(|| {
-        let Some(mut args) = args(ex, 1, 1) else { return };
-        let Some(packager) = engine::str_zval_arg(ex, 1, args.remove(0)) else { return };
-        let (declared_in, property) = if index_of(scope(ex)) == Some(RUNTIME_DETECTION) {
-            (RUNTIME_DETECTION, &RUNTIME_DETECTION_PACKAGER)
-        } else {
-            (FRAMEWORK_DETECTION, &FRAMEWORK_DETECTION_PACKAGER)
-        };
+        if !arity(ex, 1, 1) {
+            return;
+        }
+        let Some(arg) = engine::arg(ex, 0) else { return };
+        let Some(packager) = str_value(ex, 1, arg) else { return };
         let Some(this) = this(ex) else { return };
         write(this, declared_in, property, packager);
         if !engine::has_exception() {
@@ -341,11 +485,23 @@ extern "C" fn set_packager(ex: &mut ExecuteData, retval: &mut Zval) {
     });
 }
 
+/// `Detection\Framework::setPackager()`.
+extern "C" fn set_framework_packager(ex: &mut ExecuteData, retval: &mut Zval) {
+    set_packager(ex, retval, FRAMEWORK_DETECTION, &FRAMEWORK_DETECTION_PACKAGER);
+}
+
+/// `Detection\Runtime::setPackager()`.
+extern "C" fn set_runtime_packager(ex: &mut ExecuteData, retval: &mut Zval) {
+    set_packager(ex, retval, RUNTIME_DETECTION, &RUNTIME_DETECTION_PACKAGER);
+}
+
 /// `Rendering::__construct(protected ?string $fallbackFile = null)`.
 extern "C" fn rendering_construct(ex: &mut ExecuteData, _: &mut Zval) {
     guard(|| {
-        let Some(args) = args(ex, 0, 1) else { return };
-        let fallback = match args.into_iter().next() {
+        if !arity(ex, 0, 1) {
+            return;
+        }
+        let fallback = match engine::arg(ex, 0) {
             Some(arg) => {
                 let Some(value) = engine::scalar_arg(ex, 1, arg, MAY_BE_STRING | MAY_BE_NULL, "?string") else {
                     return;
@@ -361,100 +517,92 @@ extern "C" fn rendering_construct(ex: &mut ExecuteData, _: &mut Zval) {
 
 /// `getFallbackFile(): ?string`.
 extern "C" fn fallback_file(ex: &mut ExecuteData, retval: &mut Zval) {
+    let Some(this) = this(ex) else { return };
+    if let Some(value) = read(this, RENDERING_DETECTION, &FALLBACK_FILE) {
+        *retval = value;
+    }
+}
+
+// The leaves' methods ---------------------------------------------------------------------
+
+/// The command table entry for `$this->packager` (declared by the class at `declared_in`);
+/// `None` with an exception pending (a subclass that unset it).
+#[inline(always)]
+fn packager_slot(ex: &mut ExecuteData, declared_in: usize, property: &engine::Property) -> Option<usize> {
+    let this = this(ex)?;
+    peek(this, declared_in, property, |value| slot(value.zend_str().map_or(&[][..], |s| s.as_bytes())))
+}
+
+extern "C" fn framework_name<const F: usize>(_: &mut ExecuteData, retval: &mut Zval) {
+    if let Some(data) = framework_data(F) {
+        data.name.set(retval);
+    }
+}
+
+extern "C" fn framework_packages<const F: usize>(_: &mut ExecuteData, retval: &mut Zval) {
+    if let Some(data) = framework_data(F) {
+        data.packages.set(retval);
+    }
+}
+
+extern "C" fn framework_files<const F: usize>(_: &mut ExecuteData, retval: &mut Zval) {
+    if let Some(data) = framework_data(F) {
+        data.files.set(retval);
+    }
+}
+
+extern "C" fn framework_install<const F: usize>(ex: &mut ExecuteData, retval: &mut Zval) {
+    let Some(slot) = packager_slot(ex, FRAMEWORK_DETECTION, &FRAMEWORK_DETECTION_PACKAGER) else { return };
+    if let Some(data) = framework_data(F) {
+        data.install[slot].set(retval);
+    }
+}
+
+extern "C" fn framework_build<const F: usize>(ex: &mut ExecuteData, retval: &mut Zval) {
+    let Some(slot) = packager_slot(ex, FRAMEWORK_DETECTION, &FRAMEWORK_DETECTION_PACKAGER) else { return };
+    if let Some(data) = framework_data(F) {
+        data.build[slot].set(retval);
+    }
+}
+
+extern "C" fn framework_output<const F: usize>(_: &mut ExecuteData, retval: &mut Zval) {
+    if let Some(data) = framework_data(F) {
+        data.output.set(retval);
+    }
+}
+
+extern "C" fn framework_config<const F: usize>(_: &mut ExecuteData, retval: &mut Zval) {
+    if let Some(data) = framework_data(F) {
+        data.config.set(retval);
+    }
+}
+
+extern "C" fn framework_adapter<const F: usize>(ex: &mut ExecuteData, retval: &mut Zval) {
     guard(|| {
-        let Some(this) = this(ex) else { return };
-        if let Some(value) = read(this, RENDERING_DETECTION, &FALLBACK_FILE) {
-            *retval = value;
+        if !arity(ex, 1, 1) {
+            return;
+        }
+        let Some(arg) = engine::arg(ex, 0) else { return };
+        let Some((_, _, framework, _)) = FRAMEWORKS_TABLE.get(F) else { return };
+        let Some(adapter) = with_str(ex, 1, arg, |config| framework.adapter(config)) else { return };
+        let strings = strings_();
+        match adapter {
+            Some(Adapter::Ssr) => strings.ssr.set(retval),
+            Some(Adapter::Static) => strings.static_.set(retval),
+            None => strings.empty.set(retval),
         }
     });
 }
 
-// The frameworks' methods -----------------------------------------------------------------
-
-/// The framework whose class declares the executing method.
-fn framework(ex: &ExecuteData) -> Option<&'static dyn Framework> {
-    framework_of(scope(ex))
-}
-
-/// `$this->packager` as the `match` of the commands compares it (bytes that are not UTF-8 match
-/// no packager).
-fn packager(ex: &mut ExecuteData, declared_in: usize, property: &engine::Property) -> Option<String> {
-    let this = this(ex)?;
-    let value = read(this, declared_in, property)?;
-    let bytes = value.zend_str().map(|s| s.as_bytes().to_vec()).unwrap_or_default();
-    Some(String::from_utf8(bytes).unwrap_or_default())
-}
-
-extern "C" fn framework_name(ex: &mut ExecuteData, retval: &mut Zval) {
-    if let Some(framework) = framework(ex) {
-        leaf::set_str(retval, framework.name().as_bytes());
+extern "C" fn packager_name<const P: usize>(_: &mut ExecuteData, retval: &mut Zval) {
+    if let Some(data) = packager_data(P) {
+        data.name.set(retval);
     }
 }
 
-extern "C" fn framework_packages(ex: &mut ExecuteData, retval: &mut Zval) {
-    if let Some(framework) = framework(ex) {
-        *retval = list(framework.packages().iter().map(|p| p.as_bytes()));
-    }
-}
-
-extern "C" fn framework_files(ex: &mut ExecuteData, retval: &mut Zval) {
-    if let Some(framework) = framework(ex) {
-        *retval = list(framework.files().iter().map(|f| f.as_bytes()));
-    }
-}
-
-extern "C" fn framework_install(ex: &mut ExecuteData, retval: &mut Zval) {
-    guard(|| {
-        let Some(framework) = framework(ex) else { return };
-        let Some(packager) = packager(ex, FRAMEWORK_DETECTION, &FRAMEWORK_DETECTION_PACKAGER) else { return };
-        leaf::set_str(retval, framework.install_command(&packager).as_bytes());
-    });
-}
-
-extern "C" fn framework_build(ex: &mut ExecuteData, retval: &mut Zval) {
-    guard(|| {
-        let Some(framework) = framework(ex) else { return };
-        let Some(packager) = packager(ex, FRAMEWORK_DETECTION, &FRAMEWORK_DETECTION_PACKAGER) else { return };
-        leaf::set_str(retval, framework.build_command(&packager).as_bytes());
-    });
-}
-
-extern "C" fn framework_output(ex: &mut ExecuteData, retval: &mut Zval) {
-    if let Some(framework) = framework(ex) {
-        leaf::set_str(retval, framework.output_directory().as_bytes());
-    }
-}
-
-extern "C" fn framework_config(ex: &mut ExecuteData, retval: &mut Zval) {
-    if let Some(framework) = framework(ex) {
-        *retval = list(framework.config_files().iter().map(|f| f.as_bytes()));
-    }
-}
-
-extern "C" fn framework_adapter(ex: &mut ExecuteData, retval: &mut Zval) {
-    guard(|| {
-        let Some(framework) = framework(ex) else { return };
-        let Some(mut args) = args(ex, 1, 1) else { return };
-        let Some(config) = engine::str_arg(ex, 1, args.remove(0)) else { return };
-        let adapter = framework.adapter(&config).map_or("", |adapter| match adapter {
-            Adapter::Ssr => "ssr",
-            Adapter::Static => "static",
-        });
-        leaf::set_str(retval, adapter.as_bytes());
-    });
-}
-
-// The packagers', renderings' and runtimes' methods ---------------------------------------
-
-extern "C" fn packager_name(ex: &mut ExecuteData, retval: &mut Zval) {
-    if let Some(packager) = packager_of(scope(ex)) {
-        leaf::set_str(retval, packager.name().as_bytes());
-    }
-}
-
-extern "C" fn packager_files(ex: &mut ExecuteData, retval: &mut Zval) {
-    if let Some(packager) = packager_of(scope(ex)) {
-        *retval = list(packager.files().iter().map(|f| f.as_bytes()));
+extern "C" fn packager_files<const P: usize>(_: &mut ExecuteData, retval: &mut Zval) {
+    if let Some(data) = packager_data(P) {
+        data.files.set(retval);
     }
 }
 
@@ -465,63 +613,74 @@ pub fn ssr_files_of(framework: &[u8]) -> &'static [&'static str] {
 
 extern "C" fn ssr_files(ex: &mut ExecuteData, retval: &mut Zval) {
     guard(|| {
-        let Some(mut args) = args(ex, 1, 1) else { return };
-        let Some(framework) = engine::str_arg(ex, 1, args.remove(0)) else { return };
-        *retval = list(ssr_files_of(&framework).iter().map(|f| f.as_bytes()));
+        if !arity(ex, 1, 1) {
+            return;
+        }
+        let Some(arg) = engine::arg(ex, 0) else { return };
+        let found = with_str(ex, 1, arg, |framework| {
+            SSR_DATA.get().and_then(|data| data.iter().find(|(name, _)| name.as_bytes() == framework))
+        });
+        match found {
+            Some(Some((_, files))) => files.set(retval),
+            Some(None) => *retval = engine::empty_array(),
+            None => {}
+        }
     });
 }
 
 extern "C" fn ssr_name(_: &mut ExecuteData, retval: &mut Zval) {
-    leaf::set_str(retval, b"ssr");
+    strings_().ssr.set(retval);
 }
 
 extern "C" fn static_name(_: &mut ExecuteData, retval: &mut Zval) {
-    leaf::set_str(retval, b"static");
+    strings_().static_.set(retval);
 }
 
 extern "C" fn static_files(ex: &mut ExecuteData, retval: &mut Zval) {
     guard(|| {
-        let Some(mut args) = args(ex, 1, 1) else { return };
-        if engine::str_arg(ex, 1, args.remove(0)).is_some() {
+        if !arity(ex, 1, 1) {
+            return;
+        }
+        let Some(arg) = engine::arg(ex, 0) else { return };
+        if with_str(ex, 1, arg, |_| ()).is_some() {
             *retval = engine::empty_array();
         }
     });
 }
 
-extern "C" fn runtime_name(ex: &mut ExecuteData, retval: &mut Zval) {
-    if let Some(runtime) = runtime_of(scope(ex)) {
-        leaf::set_str(retval, runtime.name().as_bytes());
+extern "C" fn runtime_name<const R: usize>(_: &mut ExecuteData, retval: &mut Zval) {
+    if let Some(data) = runtime_data(R) {
+        data.name.set(retval);
     }
 }
 
-extern "C" fn runtime_languages(ex: &mut ExecuteData, retval: &mut Zval) {
-    if let Some(runtime) = runtime_of(scope(ex)) {
-        *retval = list(runtime.languages().iter().map(|l| l.as_bytes()));
+extern "C" fn runtime_languages<const R: usize>(_: &mut ExecuteData, retval: &mut Zval) {
+    if let Some(data) = runtime_data(R) {
+        data.languages.set(retval);
     }
 }
 
-extern "C" fn runtime_commands(ex: &mut ExecuteData, retval: &mut Zval) {
-    guard(|| {
-        let Some(runtime) = runtime_of(scope(ex)) else { return };
-        let Some(packager) = packager(ex, RUNTIME_DETECTION, &RUNTIME_DETECTION_PACKAGER) else { return };
-        leaf::set_str(retval, runtime.commands(&packager).as_bytes());
-    });
-}
-
-extern "C" fn runtime_extensions(ex: &mut ExecuteData, retval: &mut Zval) {
-    if let Some(runtime) = runtime_of(scope(ex)) {
-        *retval = list(runtime.file_extensions().iter().map(|e| e.as_bytes()));
+extern "C" fn runtime_commands<const R: usize>(ex: &mut ExecuteData, retval: &mut Zval) {
+    let Some(slot) = packager_slot(ex, RUNTIME_DETECTION, &RUNTIME_DETECTION_PACKAGER) else { return };
+    if let Some(data) = runtime_data(R) {
+        data.commands[slot].set(retval);
     }
 }
 
-extern "C" fn runtime_files(ex: &mut ExecuteData, retval: &mut Zval) {
-    if let Some(runtime) = runtime_of(scope(ex)) {
-        *retval = list(runtime.files().iter().map(|f| f.as_bytes()));
+extern "C" fn runtime_extensions<const R: usize>(_: &mut ExecuteData, retval: &mut Zval) {
+    if let Some(data) = runtime_data(R) {
+        data.extensions.set(retval);
     }
 }
 
-extern "C" fn runtime_entrypoint(ex: &mut ExecuteData, retval: &mut Zval) {
-    if let Some(runtime) = runtime_of(scope(ex)) {
-        leaf::set_str(retval, runtime.entrypoint().as_bytes());
+extern "C" fn runtime_files<const R: usize>(_: &mut ExecuteData, retval: &mut Zval) {
+    if let Some(data) = runtime_data(R) {
+        data.files.set(retval);
+    }
+}
+
+extern "C" fn runtime_entrypoint<const R: usize>(_: &mut ExecuteData, retval: &mut Zval) {
+    if let Some(data) = runtime_data(R) {
+        data.entrypoint.set(retval);
     }
 }
