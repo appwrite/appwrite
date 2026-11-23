@@ -6,12 +6,16 @@
 //! `Utopia\Locale\Locale`, `Utopia\UserAgent\UserAgent`, `Utopia\Domains\Domain`,
 //! `Utopia\Emails\Email`, the validators of `utopia-php/validators` (`Utopia\Validator\Validator`
 //! and its leaves) and the password hashes of `utopia-php/auth` (`Utopia\Auth\Hash` and
-//! `Hashes\*`) are always registered: they have no PHP implementation.
+//! `Hashes\*`) are registered by default (`if stable("<package>")`): they have no PHP
+//! implementation.
 //!
 //! A library that still has one registers its classes only when `_APP_EXTENSION_LIBRARIES` names
 //! its package (`if enabled("<package>")` in [`startup`] or [`get_module`]), so it can be canaried
 //! and switched back to PHP with a restart, not a deploy: `detector` (`Utopia\Detector\*`) and
 //! `compression` (`Utopia\Compression\*`).
+//!
+//! The `utopia.libraries` php.ini setting, when set, replaces both: only the libraries it names
+//! register (see [`libraries`]).
 
 mod auth;
 mod canvas;
@@ -21,6 +25,7 @@ mod detector;
 mod domains;
 mod dsn;
 mod emails;
+mod libraries;
 mod locale;
 mod string;
 mod user_agent;
@@ -32,9 +37,18 @@ use ext_php_rs::prelude::*;
 /// comma separated.
 const LIBRARIES: &str = "_APP_EXTENSION_LIBRARIES";
 
-/// Whether `_APP_EXTENSION_LIBRARIES` names `package`.
+/// Whether a library that still has a PHP implementation registers: when `utopia.libraries` names
+/// `package`, or, with that unset, when `_APP_EXTENSION_LIBRARIES` does.
 fn enabled(package: &str) -> bool {
-    std::env::var(LIBRARIES).is_ok_and(|list| list.split(',').any(|name| name.trim() == package))
+    libraries::selected(package).unwrap_or_else(|| {
+        std::env::var(LIBRARIES).is_ok_and(|list| list.split(',').any(|name| name.trim() == package))
+    })
+}
+
+/// Whether a library with no PHP implementation left registers: unless `utopia.libraries` is set
+/// and does not name `package`.
+fn stable(package: &str) -> bool {
+    libraries::selected(package).unwrap_or(true)
 }
 
 /// The version `phpversion('utopia')` reports: `UTOPIA_EXTENSION_VERSION` when the build sets it
@@ -51,31 +65,45 @@ fn version() -> &'static str {
 #[php_module]
 #[php(startup = startup)]
 pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
-    let module = module
-        .name("utopia")
-        .version(version())
-        .class::<canvas::Canvas>()
-        .class::<canvas::Font>()
-        .class::<dsn::Dsn>()
-        .class::<domains::Domain>()
-        .class::<emails::Email>();
+    let mut module = module.name("utopia").version(version());
+    if stable("image") {
+        module = module.class::<canvas::Canvas>().class::<canvas::Font>();
+    }
+    if stable("dsn") {
+        module = module.class::<dsn::Dsn>();
+    }
+    if stable("domains") {
+        module = module.class::<domains::Domain>();
+    }
+    if stable("emails") {
+        module = module.class::<emails::Email>();
+    }
     module.request_shutdown_function(request_shutdown)
 }
 
 /// Registers the classes built by hand rather than with `#[php_class]`: `Locale`, `UserAgent`, the
 /// validators, the password hashes and, when switched on, the detector. Runs in MINIT, before the
-/// `#[php_class]` classes are registered.
-fn startup(_kind: i32, _module: i32) -> i32 {
+/// `#[php_class]` classes are registered. Also registers `utopia.libraries`.
+fn startup(_kind: i32, module: i32) -> i32 {
     ext_php_rs::internal::startup_guard(|| {
-        locale::register()?;
-        user_agent::register()?;
-        // The leaves extend the base, so it is registered first.
-        validators::register()?;
-        validators::scalar::register()?;
-        validators::text::register()?;
-        validators::network::register()?;
-        validators::compose::register()?;
-        auth::register()?;
+        libraries::startup(module);
+        if stable("locale") {
+            locale::register()?;
+        }
+        if stable("user-agent") {
+            user_agent::register()?;
+        }
+        if stable("validators") {
+            // The leaves extend the base, so it is registered first.
+            validators::register()?;
+            validators::scalar::register()?;
+            validators::text::register()?;
+            validators::network::register()?;
+            validators::compose::register()?;
+        }
+        if stable("auth") {
+            auth::register()?;
+        }
         if enabled("detector") {
             detector::register()?;
         }
