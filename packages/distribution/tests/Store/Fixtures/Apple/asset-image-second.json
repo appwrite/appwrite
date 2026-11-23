@@ -1,0 +1,47 @@
+{
+    "data": {
+        "type": "appAssetLibraryImages",
+        "id": "2b3c4d5e-9999-4999-8999-000000000002",
+        "attributes": {
+            "fileName": "screenshot.png",
+            "fileSize": 9,
+            "category": "APP_SCREENSHOTS_AND_PREVIEWS",
+            "referenceName": "2b3c4d5e-9999-4999-8999-000000000002",
+            "archived": false,
+            "state": "AWAITING_UPLOAD",
+            "stateDetails": [],
+            "specId": null,
+            "imageAsset": null,
+            "uploadOperations": [
+                {
+                    "method": "PUT",
+                    "url": "https://storage.test/apple/asset/2b3c4d5e-9999-4999-8999-000000000002/1",
+                    "length": 9,
+                    "offset": 0,
+                    "partNumber": 1,
+                    "expiration": "2026-11-24T10:00:00.000Z",
+                    "requestHeaders": [
+                        {
+                            "name": "Content-Type",
+                            "value": "application/octet-stream"
+                        }
+                    ]
+                }
+            ]
+        },
+        "relationships": {
+            "assetLibrary": {
+                "data": {
+                    "type": "appAssetLibraries",
+                    "id": "1a2b3c4d-8888-4888-8888-000000000001"
+                }
+            }
+        },
+        "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/appAssetLibraryImages/2b3c4d5e-9999-4999-8999-000000000002"
+        }
+    },
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appAssetLibraryImages/2b3c4d5e-9999-4999-8999-000000000002"
+    }
+}

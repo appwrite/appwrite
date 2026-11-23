@@ -1,0 +1,34 @@
+{
+    "data": [
+        {
+            "type": "appInfos",
+            "id": "e2a6b7c8-6666-4666-8666-000000000001",
+            "attributes": {
+                "appStoreAgeRating": "FOUR_PLUS",
+                "state": "READY_FOR_DISTRIBUTION",
+                "appStoreState": "READY_FOR_DISTRIBUTION",
+                "kidsAgeBand": null
+            },
+            "relationships": {
+                "appInfoLocalizations": {
+                    "links": {
+                        "self": "https://api.appstoreconnect.apple.com/v1/appInfos/e2a6b7c8-6666-4666-8666-000000000001/relationships/appInfoLocalizations",
+                        "related": "https://api.appstoreconnect.apple.com/v1/appInfos/e2a6b7c8-6666-4666-8666-000000000001/appInfoLocalizations"
+                    }
+                }
+            },
+            "links": {
+                "self": "https://api.appstoreconnect.apple.com/v1/appInfos/e2a6b7c8-6666-4666-8666-000000000001"
+            }
+        }
+    ],
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/apps/6450000001/appInfos"
+    },
+    "meta": {
+        "paging": {
+            "total": 1,
+            "limit": 200
+        }
+    }
+}

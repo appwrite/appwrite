@@ -3,10 +3,23 @@
 namespace Appwrite\Platform\Modules\Mock\Services;
 
 use Appwrite\Platform\Modules\Mock\Http\Mock\APIKey\Unprefixed\Create as CreateAPIKeyUnprefixed;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\AppAssetLibraryImages\Create as CreateDistributionAppleAssetLibraryImage;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\AppAssetLibraryImages\Delete as DeleteDistributionAppleAssetLibraryImage;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\AppAssetLibraryImages\Get as GetDistributionAppleAssetLibraryImage;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\AppAssetLibraryImages\Update as UpdateDistributionAppleAssetLibraryImage;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\AppAssetLibraryPlacementOrderingRequests\Create as CreateDistributionAppleAssetLibraryPlacementOrderingRequest;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\AppAssetLibraryPlacements\Create as CreateDistributionAppleAssetLibraryPlacement;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\AppAssetLibraryPlacements\Delete as DeleteDistributionAppleAssetLibraryPlacement;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\AppInfoLocalizations\Create as CreateDistributionAppleAppInfoLocalization;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\AppInfoLocalizations\Update as UpdateDistributionAppleAppInfoLocalization;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\AppInfos\AppInfoLocalizations\XList as ListDistributionAppleAppInfoLocalizations;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Apps\AppInfos\XList as ListDistributionAppleAppInfos;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Apps\AppStoreVersions\XList as ListDistributionAppleAppStoreVersions;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Apps\AssetLibrary\Get as GetDistributionAppleAssetLibrary;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Apps\Webhooks\XList as ListDistributionAppleWebhooks;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Apps\XList as ListDistributionAppleApps;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\AppStoreVersionLocalizations\Create as CreateDistributionAppleAppStoreVersionLocalization;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\AppStoreVersionLocalizations\Placements\XList as ListDistributionAppleAppStoreVersionLocalizationPlacements;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\AppStoreVersionLocalizations\Update as UpdateDistributionAppleAppStoreVersionLocalization;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\AppStoreVersionPhasedReleases\Create as CreateDistributionAppleAppStoreVersionPhasedRelease;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\AppStoreVersionPhasedReleases\Delete as DeleteDistributionAppleAppStoreVersionPhasedRelease;
@@ -44,6 +57,7 @@ use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Builds\Cre
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Deliveries\Create as CreateDistributionAppleSeedDelivery;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Deliveries\XList as ListDistributionAppleSeedDeliveries;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Groups\Create as CreateDistributionAppleSeedGroup;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Images\Create as CreateDistributionAppleSeedImage;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Keys\Create as CreateDistributionAppleSeedKey;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Reviews\Create as CreateDistributionAppleSeedReview;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Uploads\Create as CreateDistributionAppleSeedUpload;
@@ -56,6 +70,12 @@ use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Ed
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Create as CreateDistributionGoogleEdit;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Delete as DeleteDistributionGoogleEdit;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Get as GetDistributionGoogleEdit;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Listings\Create as CreateDistributionGoogleListing;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Listings\Get as GetDistributionGoogleListing;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Listings\Images\Create as CreateDistributionGoogleImage;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Listings\Images\Delete as DeleteDistributionGoogleImages;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Listings\Images\XList as ListDistributionGoogleImages;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Listings\Update as UpdateDistributionGoogleListing;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Tracks\Get as GetDistributionGoogleTrack;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Tracks\Update as UpdateDistributionGoogleTrack;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Google\Applications\Edits\Tracks\XList as ListDistributionGoogleTracks;
@@ -181,6 +201,26 @@ class Http extends Service
         $this->addAction('updateDistributionAppleReviewSubmission', UpdateDistributionAppleReviewSubmission::class);
         $this->addAction('createDistributionAppleAppStoreVersionReleaseRequest', CreateDistributionAppleAppStoreVersionReleaseRequest::class);
         $this->addAction('createDistributionAppleSeedReview', CreateDistributionAppleSeedReview::class);
+        $this->addAction('getDistributionAppleAssetLibrary', GetDistributionAppleAssetLibrary::class);
+        $this->addAction('createDistributionAppleAssetLibraryImage', CreateDistributionAppleAssetLibraryImage::class);
+        $this->addAction('getDistributionAppleAssetLibraryImage', GetDistributionAppleAssetLibraryImage::class);
+        $this->addAction('updateDistributionAppleAssetLibraryImage', UpdateDistributionAppleAssetLibraryImage::class);
+        $this->addAction('deleteDistributionAppleAssetLibraryImage', DeleteDistributionAppleAssetLibraryImage::class);
+        $this->addAction('createDistributionAppleSeedImage', CreateDistributionAppleSeedImage::class);
+        $this->addAction('listDistributionAppleAppStoreVersionLocalizationPlacements', ListDistributionAppleAppStoreVersionLocalizationPlacements::class);
+        $this->addAction('createDistributionAppleAssetLibraryPlacement', CreateDistributionAppleAssetLibraryPlacement::class);
+        $this->addAction('deleteDistributionAppleAssetLibraryPlacement', DeleteDistributionAppleAssetLibraryPlacement::class);
+        $this->addAction('createDistributionAppleAssetLibraryPlacementOrderingRequest', CreateDistributionAppleAssetLibraryPlacementOrderingRequest::class);
+        $this->addAction('listDistributionAppleAppInfos', ListDistributionAppleAppInfos::class);
+        $this->addAction('listDistributionAppleAppInfoLocalizations', ListDistributionAppleAppInfoLocalizations::class);
+        $this->addAction('createDistributionAppleAppInfoLocalization', CreateDistributionAppleAppInfoLocalization::class);
+        $this->addAction('updateDistributionAppleAppInfoLocalization', UpdateDistributionAppleAppInfoLocalization::class);
+        $this->addAction('getDistributionGoogleListing', GetDistributionGoogleListing::class);
+        $this->addAction('createDistributionGoogleListing', CreateDistributionGoogleListing::class);
+        $this->addAction('updateDistributionGoogleListing', UpdateDistributionGoogleListing::class);
+        $this->addAction('listDistributionGoogleImages', ListDistributionGoogleImages::class);
+        $this->addAction('deleteDistributionGoogleImages', DeleteDistributionGoogleImages::class);
+        $this->addAction('createDistributionGoogleImage', CreateDistributionGoogleImage::class);
         $this->addAction('shutdown', Shutdown::class);
     }
 }

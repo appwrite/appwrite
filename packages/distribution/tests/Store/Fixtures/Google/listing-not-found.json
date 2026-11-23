@@ -1,0 +1,14 @@
+{
+    "error": {
+        "code": 404,
+        "message": "Listing not found: en-US.",
+        "status": "NOT_FOUND",
+        "errors": [
+            {
+                "reason": "notFound",
+                "domain": "global",
+                "message": "Listing not found: en-US."
+            }
+        ]
+    }
+}

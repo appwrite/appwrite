@@ -1,0 +1,20 @@
+{
+    "data": {
+        "type": "appInfoLocalizations",
+        "id": "e2a6b7c8-6666-4666-8666-000000000011",
+        "attributes": {
+            "locale": "en-US",
+            "name": "Example Pro",
+            "subtitle": "Sync everything",
+            "privacyPolicyUrl": "https://example.io/privacy",
+            "privacyChoicesUrl": null,
+            "privacyPolicyText": null
+        },
+        "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/appInfoLocalizations/e2a6b7c8-6666-4666-8666-000000000011"
+        }
+    },
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/appInfoLocalizations/e2a6b7c8-6666-4666-8666-000000000011"
+    }
+}

@@ -19,6 +19,7 @@ use Utopia\Distribution\Exception\Unauthorized;
 use Utopia\Distribution\Exception\Unavailable;
 use Utopia\Distribution\Issue;
 use Utopia\Distribution\JWT;
+use Utopia\Distribution\Listing;
 use Utopia\Distribution\Progress;
 use Utopia\Distribution\Release;
 use Utopia\Distribution\State;
@@ -28,6 +29,7 @@ use Utopia\Psr7\ContentType;
 use Utopia\Psr7\Header;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory;
+use Utopia\Storage\Device;
 
 class Google extends Store
 {
@@ -50,6 +52,8 @@ class Google extends Store
     public const int CHUNK = 8388608;
 
     public const int NOTES_LIMIT = 500;
+
+    public const int IMAGE_LIMIT = 15728640;
 
     private const string APPLICATIONS = '/androidpublisher/v3/applications';
 
@@ -116,6 +120,18 @@ class Google extends Store
     private const string LIFECYCLE_NOT_FOUND = 'NOT_FOUND';
 
     private const string DRAFT_APP = 'DRAFT_APP';
+
+    private const string UPLOAD = '/upload';
+
+    private const string MEDIA = 'media';
+
+    private const string IMAGE = 'image/*';
+
+    private const array LISTING_FIELDS = [
+        Listing::FIELD_NAME => 'title',
+        Listing::FIELD_SHORT_DESCRIPTION => 'shortDescription',
+        Listing::FIELD_DESCRIPTION => 'fullDescription',
+    ];
 
     private readonly Factory $factory;
 
@@ -348,6 +364,50 @@ class Google extends Store
                 ? [...$release, 'status' => self::RELEASE_IN_PROGRESS]
                 : $this->complete($release),
         );
+    }
+
+    /**
+     * @param array<string, mixed> $external
+     *
+     * @return array<string, mixed>
+     */
+    #[\Override]
+    public function listing(Listing $listing, array $external): array
+    {
+        $packageName = $listing->identifier;
+        $sets = $this->sets($listing);
+
+        $editId = $external['editId'] ?? null;
+
+        if (
+            ($external['packageName'] ?? null) === $packageName
+            && \is_string($editId) && $editId !== ''
+            && ($external['committed'] ?? false) !== true
+        ) {
+            $this->write($packageName, $editId, $listing, $sets);
+
+            return [...$external, 'committed' => false];
+        }
+
+        $editId = $this->insert($packageName)['id'];
+
+        try {
+            $this->write($packageName, $editId, $listing, $sets);
+
+            $unsent = $this->commit($packageName, $editId);
+        } catch (\Throwable $throwable) {
+            $this->discard($packageName, $editId);
+
+            throw $throwable;
+        }
+
+        $result = ['packageName' => $packageName, 'committed' => true];
+
+        if ($unsent) {
+            $result['changesNotSentForReview'] = true;
+        }
+
+        return $result;
     }
 
     /**
@@ -1067,5 +1127,99 @@ class Google extends Store
     {
         return str_contains($exception->getMessage(), $text)
             || array_any($exception->getIssues(), static fn (Issue $issue): bool => str_contains($issue->message, $text));
+    }
+
+    /**
+     * @return array<string, non-empty-list<array{set: string, path: string, size: int<1, max>, width: int, height: int, digest: string}>>
+     */
+    private function sets(Listing $listing): array
+    {
+        $sets = [];
+        foreach ($listing->screenshots as $screenshot) {
+            if ($screenshot['size'] < 1 || $screenshot['size'] > self::IMAGE_LIMIT) {
+                throw new Invalid("Google Play image {$screenshot['path']} must be between 1 byte and " . self::IMAGE_LIMIT . ' bytes');
+            }
+
+            $sets[$screenshot['set']][] = $screenshot;
+        }
+
+        return $sets;
+    }
+
+    /**
+     * @param array<string, non-empty-list<array{set: string, path: string, size: int<1, max>, width: int, height: int, digest: string}>> $sets
+     */
+    private function write(string $packageName, string $editId, Listing $listing, array $sets): void
+    {
+        $this->describe($packageName, $editId, $listing);
+
+        foreach ($sets as $type => $screenshots) {
+            $this->illustrate($packageName, $editId, $listing, $type, $screenshots);
+        }
+    }
+
+    private function describe(string $packageName, string $editId, Listing $listing): void
+    {
+        $fields = [];
+        foreach (self::LISTING_FIELDS as $field => $name) {
+            if (isset($listing->fields[$field])) {
+                $fields[$name] = $listing->fields[$field];
+            }
+        }
+
+        if ($fields === []) {
+            return;
+        }
+
+        $uri = $this->listings($packageName, $editId, $listing->locale);
+
+        try {
+            $this->call($this->factory->json(Method::PATCH, $uri, $fields));
+        } catch (NotFound) {
+            $this->call($this->factory->json(Method::PUT, $uri, ['language' => $listing->locale, ...$fields]));
+        }
+    }
+
+    /**
+     * @param non-empty-list<array{set: string, path: string, size: int<1, max>, width: int, height: int, digest: string}> $screenshots
+     */
+    private function illustrate(string $packageName, string $editId, Listing $listing, string $type, array $screenshots): void
+    {
+        $device = $listing->device;
+        if (!$device instanceof Device) {
+            throw new Invalid('Listing screenshots need a device to read them from');
+        }
+
+        $uri = $this->listings($packageName, $editId, $listing->locale) . '/' . rawurlencode($type);
+
+        $current = [];
+        foreach ($this->list($this->call($this->factory->createRequest(Method::GET, $uri)), 'images') as $image) {
+            $sha256 = \is_array($image) ? ($image['sha256'] ?? null) : null;
+            $current[] = \is_string($sha256) ? strtolower($sha256) : '';
+        }
+
+        $digests = array_map(static fn (array $screenshot): string => strtolower($screenshot['digest']), $screenshots);
+
+        if ($current === $digests) {
+            return;
+        }
+
+        $this->call($this->factory->createRequest(Method::DELETE, $uri));
+
+        $upload = $this->listings($packageName, $editId, $listing->locale, self::UPLOAD) . '/' . rawurlencode($type);
+
+        foreach ($screenshots as $screenshot) {
+            $this->call(
+                $this->factory->query(Method::POST, $upload, ['uploadType' => self::MEDIA], [
+                    Header::CONTENT_TYPE => self::IMAGE,
+                    Header::CONTENT_LENGTH => (string) $screenshot['size'],
+                ])->withBody($device->read($screenshot['path'], 0, $screenshot['size'])),
+            );
+        }
+    }
+
+    private function listings(string $packageName, string $editId, string $language, string $prefix = ''): string
+    {
+        return $this->edits($packageName, $editId, $prefix) . '/listings/' . rawurlencode($language);
     }
 }
