@@ -1123,8 +1123,9 @@ fn is_url_byte(c: u8) -> bool {
     c.is_ascii_alphanumeric() || b"$-_.+!*'(),{}|\\^~[]`<>#%\";/?:@&=".contains(&c)
 }
 
-/// `php_filter_validate_url()`: `Err` for an invalid `uri_parser_class`.
-fn validate_url(s: &[u8], flags: i64, parser: Option<&[u8]>) -> Result<bool, Error> {
+/// `php_filter_validate_url()`: `filter_var($s, FILTER_VALIDATE_URL, $flags)` of a string,
+/// without the copy of the string it returns; `Err` for an invalid `uri_parser_class`.
+pub fn validate_url(s: &[u8], flags: i64, parser: Option<&[u8]>) -> Result<bool, Error> {
     // PHP sanitizes a copy and fails when that removed anything.
     if !s.iter().all(|&c| is_url_byte(c)) {
         return Ok(false);
@@ -1414,8 +1415,9 @@ fn ipv6_flags(ip: &[i32; 8]) -> Option<(bool, bool, bool)> {
     }
 }
 
-/// `php_filter_validate_ip()`.
-fn validate_ip(s: &[u8], flags: i64) -> bool {
+/// `php_filter_validate_ip()`: whether `filter_var($s, FILTER_VALIDATE_IP, $flags)` of a
+/// string succeeds, without the copy of the string it returns.
+pub fn validate_ip(s: &[u8], flags: i64) -> bool {
     let v6 = if s.contains(&b':') {
         true
     } else if s.contains(&b'.') {

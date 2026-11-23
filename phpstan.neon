@@ -12,6 +12,11 @@ parameters:
     - packages/image/stubs/Canvas.php
     - crates/extension/stubs/DSN.php
     - crates/extension/stubs/Locale.php
+    - packages/user-agent/stubs/UserAgent.php
+    - packages/domains/stubs/Domain.php
+    - packages/emails/stubs/Email.php
+    - packages/validators/stubs/Validators.php
+    - packages/auth/stubs/Hash.php
   scanDirectories:
     - vendor/swoole/ide-helper
   excludePaths:

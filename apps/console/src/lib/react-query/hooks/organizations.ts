@@ -22,6 +22,7 @@ import {
 import type { Organization } from '@/lib/utils/mock-data'
 import { listConsoleProjects } from '@/lib/appwrite/console-projects'
 import { sdk } from '@/lib/appwrite/sdk'
+import { updateReviewCredits } from '@/lib/appwrite/organization-review-credits'
 import {
   type BudgetUpdate,
   updateBudgetRecipients,
@@ -184,6 +185,7 @@ function createSelfHostedOrganizationPlan(): OrganizationPlan {
     storage: Number.MAX_SAFE_INTEGER,
     imageTransformations: Number.MAX_SAFE_INTEGER,
     screenshotsGenerated: Number.MAX_SAFE_INTEGER,
+    reviewCredits: 0,
     members: Number.MAX_SAFE_INTEGER,
     webhooks: Number.MAX_SAFE_INTEGER,
     wafRules: Number.MAX_SAFE_INTEGER,
@@ -209,6 +211,7 @@ function createSelfHostedOrganizationPlan(): OrganizationPlan {
     topics: Number.MAX_SAFE_INTEGER,
     authPhone: Number.MAX_SAFE_INTEGER,
     domains: 0,
+    analyticsProperties: 0,
     activityLogs: Number.MAX_SAFE_INTEGER,
     usageLogs: Number.MAX_SAFE_INTEGER,
     usageLogsIntervals: ['15m', '1h', '1d'],
@@ -2481,6 +2484,24 @@ export function useUpdateOrganizationBudget() {
       // Projects also carry billingLimits; refresh so project curtains clear
       await queryClient.refetchQueries({
         queryKey: ['project'],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to choose whether code reviews keep running past the included credits
+ * and bill the extra, or stop at the allowance.
+ */
+export function useUpdateOrganizationReviewCredits() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (params: { organizationId: string; overage: boolean }) =>
+      updateReviewCredits(sdk.forConsole.client, params),
+    onSuccess: async (_, variables) => {
+      await queryClient.refetchQueries({
+        queryKey: ['organization', variables.organizationId],
       })
     },
   })

@@ -16,7 +16,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:2.3.0@sha256:e9519544a2315be040f150625d07c0bb24693a043130fc9e5f628411d4dfd5a7 AS ffmpeg
+FROM appwrite/base:2.5.0@sha256:2284f9b74bce761750d4fb850c098fc8088e0282d266d90658ae17202c9119e8 AS ffmpeg
 
 # Same pin as utopia-php/video (docs/design.md, Dockerfile ARG FFMPEG_VERSION).
 # Alpine's apk ffmpeg is an older line and is not what the library CI tests against.
@@ -51,23 +51,28 @@ RUN apk add --no-cache \
     && rm -rf /tmp/ffmpeg
 
 # The utopia extension, built against the base image's own PHP headers and
-# libheif so the ABI matches. Alpine's Rust is older than the workspace needs.
-FROM appwrite/base:2.3.1@sha256:8476fd5f134f9953341152c45a7bf1bb5d08b0d039ce76018d062edd20457fd8 AS extension-build
-
-RUN apk add --no-cache rustup clang-dev libheif-dev build-base && \
-    rustup-init -y --profile minimal --default-toolchain 1.97.1
+# libheif so the ABI matches. The recipe is crates/extension/build.sh.
+FROM appwrite/base:2.5.0@sha256:2284f9b74bce761750d4fb850c098fc8088e0282d266d90658ae17202c9119e8 AS extension-build
 
 WORKDIR /usr/local/src
 
-COPY Cargo.toml Cargo.lock rustfmt.toml ./
+COPY Cargo.toml Cargo.lock rustfmt.toml rust-toolchain.toml ./
 COPY .cargo ./.cargo
 COPY crates ./crates
 
-RUN . "$HOME/.cargo/env" && \
-    cargo build --release --locked -p utopia-extension && \
-    strip target/release/libutopia.so
+# Stamped into phpversion('utopia') by the published image; empty here keeps the crate version.
+ARG UTOPIA_EXTENSION_VERSION=""
 
-FROM appwrite/base:2.3.1@sha256:8476fd5f134f9953341152c45a7bf1bb5d08b0d039ce76018d062edd20457fd8 AS base
+RUN crates/extension/build.sh
+
+# The extension on its own, published as appwrite/utopia-extension so PHP services outside this
+# image (Edge, DNS) can load the same build: COPY --from=appwrite/utopia-extension:<version>
+# /utopia.so. See crates/extension/README.md.
+FROM scratch AS extension
+
+COPY --from=extension-build /usr/local/src/target/release/libutopia.so /utopia.so
+
+FROM appwrite/base:2.5.0@sha256:2284f9b74bce761750d4fb850c098fc8088e0282d266d90658ae17202c9119e8 AS base
 
 LABEL maintainer="team@appwrite.io"
 
@@ -212,7 +217,7 @@ EXPOSE 80
 
 CMD [ "php", "app/http.php" ]
 
-FROM appwrite/base:2.3.1-xdebug@sha256:002619e443c3a259ffa64817c1c85683d2a795acc2263e54c75d8a9a60641bca AS xdebug
+FROM appwrite/base:2.5.0-xdebug@sha256:c736d070e2656f6a22fe32623ad0d2ae85122bf9ed1d63eba55c7eec7050d045 AS xdebug
 
 FROM base AS development
 
@@ -222,7 +227,7 @@ RUN printf 'opcache.validate_timestamps=1\nopcache.revalidate_freq=0\n' > /usr/l
 COPY ./docs /usr/src/code/docs
 COPY ./dev /usr/src/code/dev
 
-# appwrite/base:2.3.1 ships without XDebug, so it cannot reach production or
+# appwrite/base ships without XDebug, so it cannot reach production or
 # Cloud. The -xdebug tag is the same build with the extension; mounting it
 # rather than copying keeps xdebug.so out of every layer unless DEBUG asked
 # for it, and guarantees an ABI match because both tags are one base build.

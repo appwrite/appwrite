@@ -93,7 +93,7 @@ export function Domains({
     setCurrentPage(0)
   }
 
-  const { rules, total, isLoading, isFetching, isPlaceholderData, refetch } =
+  const { rules, total, isLoading, isFetching, isPlaceholderData } =
     useProjectDomains(projectId, region, currentPage, pageSize, search)
 
   // Deleting the last rule on the last page leaves an empty page; step back to the new last page.
@@ -203,7 +203,14 @@ export function Domains({
                     onRecords={handleRecords}
                     onDelete={handleDelete}
                   >
-                    <TableRow>
+                    <TableRow
+                      className="cursor-pointer"
+                      // The row opens its DNS records; its links and buttons keep their own action.
+                      onClick={(event) => {
+                        if ((event.target as HTMLElement).closest('a, button')) return
+                        handleRecords(rule)
+                      }}
+                    >
                       <TableCell className="px-4 py-3">
                         <a
                           href={visitUrl(rule.domain)}
@@ -252,9 +259,14 @@ export function Domains({
                         <DateTooltip
                           date={rule.$createdAt}
                           className="text-[12px] text-muted-foreground"
+                          live
                         />
                       </TableCell>
-                      <TableCell className="px-4 py-3 text-end">
+                      <TableCell
+                        className="px-4 py-3 text-end"
+                        // Its menu renders in a portal, whose clicks still bubble to the row.
+                        onClick={(event) => event.stopPropagation()}
+                      >
                         <div className="flex justify-end">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -338,8 +350,6 @@ export function Domains({
             open={viewLogsOpen}
             onOpenChange={setViewLogsOpen}
             rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
-            onRefresh={() => void refetch()}
-            isRefreshing={isFetching}
           />
 
           <DeleteDomainDialog

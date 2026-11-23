@@ -16,8 +16,17 @@ export const heReviewsDictionary: Record<string, string> = {
 
   // Empty states
   'Review pull requests with AI': 'סקירת Pull requests עם AI',
-  'Add a GitHub repository and every pull request gets a review with findings, a verdict, and a merge confidence grade. Mention the app in a comment to ask it anything.':
-    'הוסיפו repo מ-GitHub וכל Pull request יקבל סקירה עם ממצאים, החלטה וציון ביטחון למיזוג. תייגו את האפליקציה בתגובה כדי לשאול אותה כל שאלה.',
+  'Catch bugs and security issues before they merge. Choose the repositories to review, and every pull request in them gets a review on GitHub.':
+    'אתרו באגים ובעיות אבטחה לפני המיזוג. בחרו את ה-repos לסקירה, וכל Pull request בהם יקבל סקירה ב-GitHub.',
+  'Install the GitHub app on your account or organization, then turn on review for the repositories you pick.':
+    'התקינו את אפליקציית GitHub בחשבון או בארגון שלכם, ואז הפעילו סקירה ל-repos שבחרתם.',
+  'Get a review on every pull request': 'סקירה לכל Pull request',
+  'Each new pull request and commit gets a summary, findings on the lines they concern, a verdict, and a merge confidence grade.':
+    'כל Pull request וכל קומיט חדש מקבלים סיכום, ממצאים על השורות הרלוונטיות, החלטה וציון ביטחון למיזוג.',
+  'Talk to the reviewer': 'שיחה עם הסוקר',
+  'Mention the app in a comment to ask a question, request a new review, or have it remember a preference for later reviews.':
+    'תייגו את האפליקציה בתגובה כדי לשאול שאלה, לבקש סקירה חדשה או לבקש ממנה לזכור העדפה לסקירות הבאות.',
+  'No reviews match your filters': 'אין סקירות התואמות למסננים שלכם',
   'No reviews yet': 'עדיין אין סקירות',
   'Reviews show up here when a pull request is opened or gets new commits in one of your repositories.':
     'סקירות יופיעו כאן כש-Pull request נפתח או מקבל קומיטים חדשים באחד מה-repos שלכם.',
@@ -33,6 +42,9 @@ export const heReviewsDictionary: Record<string, string> = {
   'The review found nothing to flag.': 'הסקירה לא מצאה דבר שדורש תשומת לב.',
   'View comment': 'הצגת התגובה',
   'Open on GitHub': 'פתיחה ב-GitHub',
+  'Compare on GitHub': 'השוואה ב-GitHub',
+  'Open commit on GitHub': 'פתיחת הקומיט ב-GitHub',
+  'Filter findings by severity': 'סינון ממצאים לפי חומרה',
 
   // Statuses and verdicts
   Reviewing: 'בסקירה',
@@ -233,4 +245,42 @@ export const heReviewsDictionary: Record<string, string> = {
   'Delete learning': 'מחיקת למידה',
   'Later reviews and answers will no longer follow this learning. This action cannot be undone.':
     'סקירות ותשובות עתידיות לא יפעלו עוד לפי הלמידה הזו. לא ניתן לבטל פעולה זו.',
+
+  // Performance
+  Performance: 'ביצועים',
+  'Unknown author': 'מחבר לא ידוע',
+  'Date range': 'טווח תאריכים',
+  Author: 'מחבר',
+  'Pull requests': 'בקשות משיכה',
+  'First try': 'בניסיון הראשון',
+  'Findings / PR': 'ממצאים / PR',
+  'Critical / major': 'קריטי / משמעותי',
+  Fixed: 'תוקנו',
+  'Last review': 'סקירה אחרונה',
+  'Pull requests reviewed': 'בקשות משיכה שנסקרו',
+  '{count} authors': '{count} מחברים',
+  'Approval rate': 'שיעור אישור',
+  '{rate} approved by the first review': '{rate} אושרו בסקירה הראשונה',
+  'Findings per pull request': 'ממצאים לבקשת משיכה',
+  '{critical} critical, {major} major': '{critical} קריטיים, {major} משמעותיים',
+  'Fix rate': 'שיעור תיקון',
+  '{count} findings fixed by a later commit':
+    '{count} ממצאים תוקנו בקומיט מאוחר יותר',
+  'No completed reviews in this range': 'אין סקירות שהושלמו בטווח הזה',
+  'Performance shows how the authors of your pull requests fare in review once reviews complete. Try a longer range or another repository.':
+    'כאן מוצג איך מחברי בקשות המשיכה שלכם מצליחים בסקירה, לאחר שהסקירות מושלמות. נסו טווח ארוך יותר או מאגר אחר.',
+  'Counts completed reviews in the range. Approval and confidence go by each pull request’s latest review; fixed counts findings resolved by a later commit.':
+    'נספרות סקירות שהושלמו בטווח. אישור וביטחון נקבעים לפי הסקירה האחרונה של כל בקשת משיכה; תוקנו סופר ממצאים שנפתרו בקומיט מאוחר יותר.',
+
+  // Finding outcomes
+  'Useful findings': 'ממצאים מועילים',
+  '{resolved} fixed, {dismissed} dismissed':
+    '{resolved} תוקנו, {dismissed} נדחו',
+  Useful: 'מועילים',
+  Dismissed: 'נדחו',
+  'Findings by category': 'ממצאים לפי קטגוריה',
+  'Categories that are often dismissed are candidates for a learning that tells the reviewer to flag them less.':
+    'קטגוריות שנדחות לעיתים קרובות הן מועמדות ללמידה שתורה לסוקר לסמן אותן פחות.',
+  'Useful findings is the share of settled findings that were fixed rather than dismissed; findings still open count for neither.':
+    'ממצאים מועילים הם החלק מהממצאים שהוכרעו שתוקנו ולא נדחו; ממצאים שעדיין פתוחים אינם נספרים לאף צד.',
 }

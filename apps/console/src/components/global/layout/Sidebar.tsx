@@ -50,6 +50,7 @@ import {
   MessageSquare,
   Settings,
   BarChart3,
+  Gauge,
   Key,
   ChevronLeft,
   X,
@@ -124,6 +125,7 @@ interface SidebarCopy {
     activity: string
     logs: string
     usage: string
+    monitors: string
     analytics: string
     errors: string
     advisor: string
@@ -275,6 +277,12 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
           path: `/projects/${projectId}/usage`,
         },
         {
+          id: 'monitors',
+          label: sidebarCopy.items.monitors,
+          icon: Gauge,
+          path: `/projects/${projectId}/monitors`,
+        },
+        {
           id: 'errors',
           label: sidebarCopy.items.errors,
           icon: AlertTriangle,
@@ -365,6 +373,10 @@ export function ConsoleSidebar({
             return (
               features.analytics &&
               canSeeProjectNavItem(access, features, item.id)
+            )
+          if (item.id === 'monitors')
+            return (
+              features.alerts && canSeeProjectNavItem(access, features, item.id)
             )
           if (item.id === 'videos')
             return (

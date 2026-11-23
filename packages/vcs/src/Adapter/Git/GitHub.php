@@ -1307,6 +1307,8 @@ class GitHub extends Git
             'pending' => ['in_progress', ''],
             'success' => ['completed', 'success'],
             'cancelled' => ['completed', 'cancelled'],
+            'neutral' => ['completed', 'neutral'],
+            'action_required' => ['completed', 'action_required'],
             default => ['completed', 'failure'],
         };
 
@@ -1529,6 +1531,7 @@ class GitHub extends Git
                     'headCommitUrl' => $headCommitUrl,
                     'external' => $external,
                     'pullRequestNumber' => $pullRequestNumber,
+                    'pullRequestAuthor' => \is_array($payloadPullRequestUser) ? ($payloadPullRequestUser['login'] ?? '') : '',
                     'action' => $action,
                 ]];
             case 'issue_comment':
@@ -1550,10 +1553,14 @@ class GitHub extends Git
                         return [];
                     }
                     $pullRequestNumber = $payloadIssue['number'] ?? 0;
+                    $payloadPullRequestUser = $payloadIssue['user'] ?? [];
                 } else {
                     $payloadPullRequest = $payload['pull_request'] ?? [];
-                    $pullRequestNumber = \is_array($payloadPullRequest) ? ($payloadPullRequest['number'] ?? 0) : 0;
+                    $payloadPullRequest = \is_array($payloadPullRequest) ? $payloadPullRequest : [];
+                    $pullRequestNumber = $payloadPullRequest['number'] ?? 0;
+                    $payloadPullRequestUser = $payloadPullRequest['user'] ?? [];
                 }
+                $payloadPullRequestUser = \is_array($payloadPullRequestUser) ? $payloadPullRequestUser : [];
 
                 $repositoryId = $payloadRepository['id'] ?? '';
                 $commentId = $payloadComment['id'] ?? 0;
@@ -1566,6 +1573,8 @@ class GitHub extends Git
                     'owner' => $payloadRepositoryOwner['login'] ?? '',
                     'installationId' => $installationId,
                     'pullRequestNumber' => \is_int($pullRequestNumber) ? $pullRequestNumber : 0,
+                    // Who opened the pull request: the issue's author on a conversation comment.
+                    'pullRequestAuthor' => $payloadPullRequestUser['login'] ?? '',
                     'action' => $payload['action'] ?? '',
                     'commentId' => \is_int($commentId) ? $commentId : 0,
                     'commentKind' => $event === 'issue_comment' ? 'issue' : 'review',

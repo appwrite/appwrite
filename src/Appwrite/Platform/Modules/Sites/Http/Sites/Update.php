@@ -88,7 +88,7 @@ class Update extends Base
             ->param('adapter', null, new Nullable(new WhiteList(['static', 'ssr'])), 'Framework adapter defining rendering strategy. Allowed values are: static, ssr', true, enum: new Enum(name: 'Adapter'))
             ->param('fallbackFile', null, new Nullable(new Text(255, 0)), 'Fallback file for single page application sites.', true)
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
-            ->param('providerRepositoryId', '', new Nullable(new Text(128, 0)), 'Repository ID of the repo linked to the site.', true)
+            ->param('providerRepositoryId', null, new Nullable(new Text(128, 0)), 'Repository ID of the repo linked to the site.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
             ->param('providerSilentMode', null, new Nullable(new Boolean()), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, no comments or checks are posted to commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Directory(), 'Path to site code in the linked repo.', true)
@@ -237,7 +237,6 @@ class Update extends Base
         $outputDirectory ??= $site->getAttribute('outputDirectory', '');
         $adapter ??= $site->getAttribute('adapter', '');
         $fallbackFile ??= $site->getAttribute('fallbackFile', '');
-        $providerSilentMode ??= $site->getAttribute('providerSilentMode', false);
         $deploymentRetention ??= $site->getAttribute('deploymentRetention', 0);
 
         $repositoryId = $site->getAttribute('repositoryId', '');
@@ -245,11 +244,14 @@ class Update extends Base
 
         $isConnected = !empty($site->getAttribute('providerRepositoryId', ''));
 
+        // Disconnecting turns silent mode on, so a new connection starts without it
+        $providerSilentMode ??= !$isConnected && !empty($providerRepositoryId) ? false : $site->getAttribute('providerSilentMode', false);
+
         if (!empty($installationId) && $installation->getAttribute('projectId') !== $project->getId()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        // Explicit null providerRepositoryId on a connected site — preserve existing VCS values
+        // Omitted providerRepositoryId (null) on a connected site — preserve existing VCS values
         if ($isConnected && $providerRepositoryId === null) {
             $providerRepositoryId = $site->getAttribute('providerRepositoryId', '');
             $installationId = $site->getAttribute('installationId', '');
@@ -344,11 +346,14 @@ class Update extends Base
             $live = false;
         }
 
+        // Enforce Cold Start if spec limits or logging change; a runtime is built for its logging mode.
         if (!empty($site->getAttribute('deploymentId'))) {
             $specsChanged = false;
             if ($site->getAttribute('runtimeSpecification', '') !== $runtimeSpecification) {
                 $specsChanged = true;
             } elseif ($site->getAttribute('buildSpecification', '') !== $buildSpecification) {
+                $specsChanged = true;
+            } elseif ($site->getAttribute('logging', true) !== $logging) {
                 $specsChanged = true;
             }
 

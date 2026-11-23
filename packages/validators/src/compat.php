@@ -9,8 +9,9 @@ declare(strict_types=1);
 // checking a declared type, so a consumer typed against Utopia\Validator would
 // otherwise reject the moved class. The alias is guarded because a process can
 // load this file through more than one Composer autoloader (a monorepo's root
-// and the package's own).
-if (!class_exists(\Utopia\Validator::class, false)) {
+// and the package's own), and because the base class comes from the utopia
+// extension, which a process that only analyses code (PHPStan) may not load.
+if (class_exists(\Utopia\Validator\Validator::class, false) && !class_exists(\Utopia\Validator::class, false)) {
     class_alias(\Utopia\Validator\Validator::class, \Utopia\Validator::class);
 }
 

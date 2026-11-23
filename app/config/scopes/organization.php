@@ -21,4 +21,13 @@ return [
             "Access to create, update, and delete organization projects' API keys",
         "category" => "Projects",
     ],
+    "monitors.read" => [
+        "description" => "Access to read the organization's escalations",
+        "category" => "Alerts",
+    ],
+    "monitors.write" => [
+        "description" =>
+            "Access to create, update, and delete the organization's escalations",
+        "category" => "Alerts",
+    ],
 ];

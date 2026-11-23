@@ -11,6 +11,7 @@ use Utopia\Client\Adapter\Curl\Client;
 use Utopia\Client\Destinations\IPRange;
 use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Client\Exception\DestinationException;
+use Utopia\Client\Exception\NetworkException;
 use Utopia\Client\Tests\Adapter\AdapterContract;
 use Utopia\Client\Tests\Server\Http;
 use Utopia\Psr7\ContentType;
@@ -158,6 +159,66 @@ final class ClientTest extends AdapterContract
             'body' => (string) $response->getBody(),
             'peak' => memory_get_peak_usage() - $baseline,
         ];
+    }
+
+    public function testTheMaximumFileSizeCapsTheDecodedBody(): void
+    {
+        Http::serve(function (int $port): void {
+            // 280 KB of text compresses to well under the 10 KB cap, so cURL's own wire check passes.
+            $client = new Client(options: [\CURLOPT_MAXFILESIZE_LARGE => 10_000]);
+            $request = new \Utopia\Psr7\Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/gzip?repeat=40000');
+
+            try {
+                $client->sendRequest($request);
+                $this->fail('A decoded body past the maximum file size was accepted.');
+            } catch (NetworkException $networkException) {
+                $this->assertSame(\CURLE_FILESIZE_EXCEEDED, $networkException->getCode());
+            }
+
+            $small = new \Utopia\Psr7\Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/gzip?repeat=64');
+            $this->assertSame(64 * 7, \strlen((string) $client->sendRequest($small)->getBody()));
+        });
+    }
+
+    /**
+     * @return array<string, array{array<int, mixed>}>
+     */
+    public static function bodyOptions(): array
+    {
+        return [
+            'write callback' => [[\CURLOPT_WRITEFUNCTION => static fn (\CurlHandle $handle, string $chunk): int => \strlen($chunk)]],
+            'return transfer' => [[\CURLOPT_RETURNTRANSFER => true]],
+            'file' => [[\CURLOPT_FILE => \fopen('php://memory', 'w+')]],
+        ];
+    }
+
+    /**
+     * @param array<int, mixed> $options
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('bodyOptions')]
+    public function testTheAdapterKeepsTheResponseBodyAndItsCapOverCallerOptions(array $options): void
+    {
+        Http::serve(function (int $port) use ($options): void {
+            $client = new Client(options: $options + [\CURLOPT_MAXFILESIZE_LARGE => 10_000]);
+            $factory = new Request\Factory();
+
+            \ob_start();
+            try {
+                $response = $client->sendRequest($factory->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/gzip?repeat=64'));
+            } finally {
+                $printed = (string) \ob_get_clean();
+            }
+
+            $this->assertSame('', $printed);
+            $this->assertSame(64 * 7, \strlen((string) $response->getBody()));
+
+            try {
+                $client->sendRequest($factory->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/gzip?repeat=40000'));
+                $this->fail('A decoded body past the maximum file size was accepted.');
+            } catch (NetworkException $networkException) {
+                $this->assertSame(\CURLE_FILESIZE_EXCEEDED, $networkException->getCode());
+            }
+        });
     }
 
     public function testAnEnvironmentProxyCannotCarryARequestPastTheDestination(): void

@@ -15,43 +15,7 @@ class Comment
     ) {
     }
 
-    // TODO: Add more tips
-    protected array $tips = [
-        'Appwrite has crossed the 50K GitHub stars milestone with hundreds of active contributors',
-        'Our Discord community has grown to 24K developers, and counting',
-        'Sites auto-generate unique domains with the pattern https://randomstring.appwrite.network',
-        'Every Git commit and branch gets its own deployment URL automatically',
-        'Custom domains work with both CNAME for subdomains and NS records for apex domains',
-        'HTTPS and SSL certificates are handled automatically for all your Sites',
-        'Function builds can take up to 45 minutes before timing out',
-        'Schedule functions to run as often as every minute with cron expressions',
-        'Environment variables can be scoped per function or shared across your project',
-        'Function scopes give you fine-grained control over API permissions',
-        'Sites support three domain rule types: Active deployment, Git branch, and Redirect',
-        'Preview deployments create instant URLs for every branch and commit',
-        'Trigger functions via HTTP, SDKs, events, webhooks, or scheduled cron jobs',
-        'Each function runs in its own isolated container with custom environment variables',
-        'Build commands execute in runtime containers during deployment',
-        'Ephemeral API keys are generated automatically for each function execution',
-        'JWT tokens let functions act on behalf of users while preserving their permissions',
-        'Storage files get ClamAV malware scanning and encryption by default',
-        'Roll back Sites deployments instantly by switching between versions',
-        'Git integration provides automatic deployments with optional PR comments',
-        'Silent mode disables those chatty PR comments if you prefer peace and quiet',
-        'Environment variable changes require redeployment to take effect',
-        'SSR frameworks are fully supported with configurable build runtimes',
-        'Global CDN and DDoS protection come free with every Sites deployment',
-        'Deploy functions via zip upload or connect directly to your Git repo',
-        'Realtime gives you live updates for users, storage, functions, and databases',
-        'GraphQL API works alongside REST and WebSocket protocols',
-        'Messaging handles push notifications, emails, and SMS through one unified API',
-        'Teams feature lets you group users with membership management and role permissions',
-        'MCP server integration brings LLM superpowers to Claude Desktop and Cursor IDE',
-    ];
-
     protected string $statePrefix = '[appwrite]: #';
-
-    protected ?string $tip = null;
 
     /**
      * @var mixed[] $builds
@@ -63,7 +27,7 @@ class Comment
         return \count($this->builds) === 0;
     }
 
-    public function addBuild(Document $project, Document $resource, string $resourceType, string $buildStatus, string $deploymentId, array $action, string $previewUrl): void
+    public function addBuild(Document $project, Document $resource, string $resourceType, string $buildStatus, string $deploymentId, array $action, string $previewUrl, string $commitHash): void
     {
         // Unique index
         $id = $project->getId() . '_' . $resource->getId();
@@ -79,18 +43,14 @@ class Comment
             'deploymentId' => $deploymentId,
             'action' => $action,
             'previewUrl' => $previewUrl,
+            'commitHash' => $commitHash,
         ];
     }
 
     public function generateComment(): string
     {
-        if ($this->tip === null) {
-            $this->tip = $this->tips[\array_rand($this->tips)];
-        }
-
         $json = \json_encode([
             'builds' => $this->builds,
-            'tip' => $this->tip,
         ]);
 
         $text = $this->statePrefix . \base64_encode($json) . "\n\n";
@@ -106,127 +66,83 @@ class Comment
                 ];
             }
 
-            if ($build['resourceType'] === 'site') {
-                $projects[$build['projectId']]['site'][$build['resourceId']] = [
+            if ($build['resourceType'] === 'site' || $build['resourceType'] === 'function') {
+                $projects[$build['projectId']][$build['resourceType']][$build['resourceId']] = [
                     'name' => $build['resourceName'],
                     'region' => $build['region'],
                     'status' => $build['buildStatus'],
                     'deploymentId' => $build['deploymentId'],
                     'action' => $build['action'],
-                    'previewUrl' => $build['previewUrl'],
-                ];
-            } elseif ($build['resourceType'] === 'function') {
-                $projects[$build['projectId']]['function'][$build['resourceId']] = [
-                    'name' => $build['resourceName'],
-                    'region' => $build['region'],
-                    'status' => $build['buildStatus'],
-                    'deploymentId' => $build['deploymentId'],
-                    'action' => $build['action'],
+                    'previewUrl' => $build['previewUrl'] ?? '',
+                    // A comment posted before commits were named has none until its next build
+                    'commitHash' => $build['commitHash'] ?? '',
                 ];
             }
         }
+
+        // The heading says what the comment is, as the code review comment's does
+        $text .= "## Deployments\n\n";
 
         $i = 0;
         foreach ($projects as $projectId => $project) {
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
             $hostname = $this->platform['consoleHostname'] ?? '';
 
-            $text .= "## {$project['name']}\n\n";
-            $text .= "Project ID: `{$projectId}`\n\n";
+            $text .= "Project **{$project['name']}** · `{$projectId}`\n\n";
 
             $isOpen = $i === 0;
 
-            if (\count($project['site']) > 0) {
+            foreach (['site' => 'Sites', 'function' => 'Functions'] as $type => $title) {
+                $resources = $project[$type];
+
+                if (\count($resources) === 0) {
+                    continue;
+                }
+
+                $isSite = $type === 'site';
+                $collection = $isSite ? 'sites' : 'functions';
+
+                // Both tables read the same way: what it is, which commit, its status, then the links
+                $columns = $isSite
+                    ? ['Site', 'Commit', 'Status', 'Preview', 'QR', 'Details']
+                    : ['Function', 'Commit', 'Status', 'Details'];
+
                 $text .= "<details" . ($isOpen ? ' open' : '') . ">\n";
-                $text .= "<summary>Sites (" . \count($project['site']) . ")</summary>\n\n";
+                $text .= "<summary>{$title} (" . \count($resources) . ")</summary>\n\n";
                 $text .= "<br>\n\n";
+                $text .= '| ' . \implode(' | ', $columns) . " |\n";
+                $text .= '| ' . \implode(' | ', \array_fill(0, \count($columns), ':-')) . " |\n";
 
-                $text .= "| Site | Status | Logs | Preview | QR\n";
-                $text .= "| :- | :-  | :-  | :-  | :- |\n";
+                foreach ($resources as $resourceId => $resource) {
+                    $cells = [
+                        "**{$resource['name']}**",
+                        $resource['commitHash'] === '' ? '' : '`' . \substr($resource['commitHash'], 0, 7) . '`',
+                        $this->generateStatus($resource['status']),
+                    ];
 
-                foreach ($project['site'] as $siteId => $site) {
-                    $imageStatus = in_array($site['status'], ['processing', 'building']) ? 'building' : $site['status'];
+                    if ($isSite) {
+                        $qrImagePathLight = '/images/vcs/qr-light.svg';
+                        $qrImagePathDark = '/images/vcs/qr-dark.svg';
 
-                    $extension = $imageStatus === 'building' ? 'gif' : 'png';
+                        $qrUrl = $protocol . '://' . $hostname . '/v1/avatars/qr?text=' . \urlencode($resource['previewUrl']);
 
-                    $pathLight = '/images/vcs/status-' . $imageStatus . '-light.' . $extension;
-                    $pathDark = '/images/vcs/status-' . $imageStatus . '-dark.' . $extension;
-
-                    $status = match ($site['status']) {
-                        'waiting' => $this->generatImage($pathLight, $pathDark, 'Queued', 85) . ' _Queued_',
-                        'processing' => $this->generatImage($pathLight, $pathDark, 'Processing', 85) . ' _Processing_',
-                        'building' => $this->generatImage($pathLight, $pathDark, 'Building', 85) . ' _Building_',
-                        'ready' => $this->generatImage($pathLight, $pathDark, 'Ready', 85) . ' _Ready_',
-                        'failed' => $this->generatImage($pathLight, $pathDark, 'Failed', 85) . ' _Failed_',
-                        default => '',
-                    };
-
-                    if ($site['action']['type'] === 'logs') {
-                        $logsUrl = ($this->platform['consoleUrl'] ?? '') . "/projects/{$projectId}/sites/{$siteId}/deployments/{$site['deploymentId']}";
-                        $action = $site['deploymentId'] === '' ? '' : "[View Logs]({$logsUrl})";
-                    } else {
-                        $action = '[Authorize](' . $site['action']['url'] . ')';
+                        $cells[] = '[Preview URL](' . $resource['previewUrl'] . ')';
+                        $cells[] = $this->withImages
+                            ? '[' . $this->generatImage($qrImagePathLight, $qrImagePathDark, 'QR Code', 28) . '](' . $qrUrl . ')'
+                            : '[QR Code](' . $qrUrl . ')';
                     }
 
-                    $qrImagePathLight = '/images/vcs/qr-light.svg';
-                    $qrImagePathDark = '/images/vcs/qr-dark.svg';
+                    if ($resource['action']['type'] === 'logs') {
+                        $logsUrl = ($this->platform['consoleUrl'] ?? '') . "/projects/{$projectId}/{$collection}/{$resourceId}/deployments/{$resource['deploymentId']}";
+                        $cells[] = $resource['deploymentId'] === '' ? '' : "[View logs]({$logsUrl})";
+                    } else {
+                        $cells[] = '[Authorize](' . $resource['action']['url'] . ')';
+                    }
 
-                    $qrUrl = $protocol . '://' . $hostname . '/v1/avatars/qr?text=' . \urlencode($site['previewUrl']);
-                    $qr = $this->withImages
-                        ? '[' . $this->generatImage($qrImagePathLight, $qrImagePathDark, 'QR Code', 28) . '](' . $qrUrl . ')'
-                        : '[QR Code](' . $qrUrl . ')';
-
-                    $preview = '[Preview URL](' . $site['previewUrl'] . ')';
-
-                    $text .= "| &nbsp;**{$site['name']}**<br>`$siteId`";
-                    $text .= "| {$status}";
-                    $text .= "| {$action}";
-                    $text .= "| {$preview}";
-                    $text .= "| {$qr}";
-                    $text .= "|\n";
+                    $text .= '| ' . \implode(' | ', $cells) . " |\n";
                 }
 
                 $text .= "\n</details>\n\n";
-            }
-
-            if (\count($project['function']) > 0) {
-                $text .= "<details" . ($isOpen ? ' open' : '') . ">\n";
-                $text .= "<summary>Functions (" . \count($project['function']) . ")</summary>\n\n";
-                $text .= "<br>\n\n";
-                $text .= "| Function | ID | Status | Logs |\n";
-                $text .= "| :- | :-  | :-  | :- |\n";
-
-                foreach ($project['function'] as $functionId => $function) {
-                    $imageStatus = in_array($function['status'], ['processing', 'building']) ? 'building' : $function['status'];
-                    $extension = $imageStatus === 'building' ? 'gif' : 'png';
-
-                    $pathLight = '/images/vcs/status-' . $imageStatus . '-light.' . $extension;
-                    $pathDark = '/images/vcs/status-' . $imageStatus . '-dark.' . $extension;
-
-                    $status = match ($function['status']) {
-                        'waiting' => $this->generatImage($pathLight, $pathDark, 'Queued', 85) . ' _Queued_',
-                        'processing' => $this->generatImage($pathLight, $pathDark, 'Processing', 85) . ' _Processing_',
-                        'building' => $this->generatImage($pathLight, $pathDark, 'Building', 85) . ' _Building_',
-                        'ready' => $this->generatImage($pathLight, $pathDark, 'Ready', 85) . ' _Ready_',
-                        'failed' => $this->generatImage($pathLight, $pathDark, 'Failed', 85) . ' _Failed_',
-                        default => '',
-                    };
-
-                    if ($function['action']['type'] === 'logs') {
-                        $logsUrl = ($this->platform['consoleUrl'] ?? '') . "/projects/{$projectId}/functions/{$functionId}/deployments/{$function['deploymentId']}";
-                        $action = $function['deploymentId'] === '' ? '' : "[View Logs]({$logsUrl})";
-                    } else {
-                        $action = '[Authorize](' . $function['action']['url'] . ')';
-                    }
-
-                    $text .= "| &nbsp;**{$function['name']}**";
-                    $text .= "| `{$functionId}`";
-                    $text .= "| {$status}";
-                    $text .= "| {$action}";
-                    $text .= "|\n";
-                }
-
-                $text .= "</details>\n\n";
             }
 
             $isLast = $i === \count($projects) - 1;
@@ -238,9 +154,63 @@ class Comment
             $i++;
         }
 
-        $text .= "\n<br>\n\n> [!TIP]\n> {$this->tip}\n\n";
+        $text .= "\n<br>\n\n> [!TIP]\n> {$this->generateTip()}\n\n";
 
         return $text;
+    }
+
+    /**
+     * The status cell: the state image, then its label. A state with no image
+     * shows the label alone.
+     */
+    private function generateStatus(string $status): string
+    {
+        $label = match ($status) {
+            'waiting' => 'Queued',
+            'processing' => 'Processing',
+            'building' => 'Building',
+            'ready' => 'Ready',
+            'failed' => 'Failed',
+            'canceled' => 'Canceled',
+            default => '',
+        };
+
+        if ($label === '') {
+            return '';
+        }
+
+        // Nothing is drawn for a canceled build yet
+        if ($status === 'canceled') {
+            return "_{$label}_";
+        }
+
+        $imageStatus = \in_array($status, ['processing', 'building']) ? 'building' : $status;
+
+        $extension = $imageStatus === 'building' ? 'gif' : 'png';
+
+        $pathLight = '/images/vcs/status-' . $imageStatus . '-light.' . $extension;
+        $pathDark = '/images/vcs/status-' . $imageStatus . '-dark.' . $extension;
+
+        return $this->generatImage($pathLight, $pathDark, $label, 85) . " _{$label}_";
+    }
+
+    /**
+     * How to act on the comment, as the code review comment's tip says how to
+     * re-run a review: what a push does, and where the comment is switched off.
+     */
+    private function generateTip(): string
+    {
+        $settings = 'under **Git automation** in the settings of each site or function';
+
+        // One resource has one settings page to link
+        if (\count($this->builds) === 1) {
+            $build = \array_values($this->builds)[0];
+            $collection = $build['resourceType'] === 'site' ? 'sites' : 'functions';
+            $url = ($this->platform['consoleUrl'] ?? '') . "/projects/{$build['projectId']}/{$collection}/{$build['resourceId']}/settings/git";
+            $settings = "in [Git automation]({$url})";
+        }
+
+        return "Push a commit to redeploy, or switch these comments off {$settings}.";
     }
 
     public function generatImage(string $pathLight, string $pathDark, string $alt, int $width): string
@@ -256,7 +226,8 @@ class Comment
         $imageLight = $protocol . '://' . $hostname . $pathLight;
         $imageDark = $protocol . '://' . $hostname . $pathDark;
 
-        $imageUrl = '<picture><source media="(prefers-color-scheme: dark)" srcset="' . $imageDark . '"><img alt="' . $alt . '" width="' . $width . '" align="center" src="' . $imageLight . '"></picture>';
+        // absmiddle is vertical-align: middle; "center" puts the image's middle on the text baseline, so the label beside it rode high.
+        $imageUrl = '<picture><source media="(prefers-color-scheme: dark)" srcset="' . $imageDark . '"><img alt="' . $alt . '" width="' . $width . '" align="absmiddle" src="' . $imageLight . '"></picture>';
 
         return $imageUrl;
     }
@@ -272,7 +243,6 @@ class Comment
 
         if (\is_array($data) && \array_key_exists('builds', $data)) {
             $this->builds = \is_array($data['builds']) ? $data['builds'] : [];
-            $this->tip = $data['tip'] ?? null;
         } else {
             // Backward compatibility with old state format (builds array only)
             $this->builds = \is_array($data) ? $data : [];

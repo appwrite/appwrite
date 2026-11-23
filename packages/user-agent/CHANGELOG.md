@@ -2,6 +2,9 @@
 
 ## 0.2.0
 
+- `UserAgent` comes from the `utopia` PHP extension (`ext-utopia`), and the
+  PHP parser (`UserAgent.php`, `Detection\*`) is removed. The value objects
+  stay PHP. 0.1.x is the last release that parses in PHP.
 - Expanded operating-system coverage: iPadOS, tvOS, watchOS, HarmonyOS,
   OpenHarmony, Fire OS, webOS, Sailfish, BlackBerry, PlayStation, Nintendo,
   and popular Linux distributions (Debian, Fedora, Arch Linux, Mint, and

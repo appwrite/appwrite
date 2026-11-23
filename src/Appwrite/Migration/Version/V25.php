@@ -413,6 +413,19 @@ class V25 extends Migration
                     }
                     break;
 
+                case 'teams':
+                    // Added for custom team photos
+                    foreach (['photoId', 'photoSize'] as $attribute) {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
+                        }
+                    }
+
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
                 case 'users':
                     // Added in V23. An install whose V23 users step failed, or one that
                     // upgraded straight from 1.8.x, arrives here without them and every
@@ -598,11 +611,22 @@ class V25 extends Migration
                         $existed = $this->dbForProject->findCollection($id) !== null;
                         $this->createCollection($id);
                         if ($existed && $id === 'reviews') {
-                            try {
-                                $this->createAttributeFromCollection($this->dbForProject, $id, 'strength');
-                            } catch (Throwable $th) {
-                                Console::warning("Failed to create attribute \"strength\" in collection {$id}: {$th->getMessage()}");
+                            foreach (['strength', 'providerPullRequestAuthor'] as $attribute) {
+                                try {
+                                    $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
+                                } catch (Throwable $th) {
+                                    Console::warning("Failed to create attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
+                                }
                             }
+                        }
+                        // Segments created before each row stored its bytes. An existing
+                        // attribute is skipped; a second migrate hits that path.
+                        if ($existed && $id === 'videosRenditionsSegments') {
+                            try {
+                                $this->createAttributeFromCollection($this->dbForProject, $id, 'size');
+                            } catch (Duplicate) {
+                            }
+                            $this->dbForProject->purgeCachedCollection($id);
                         }
                     } finally {
                         $this->dbForProject->setTenant($tenant);
@@ -611,17 +635,46 @@ class V25 extends Migration
 
                 case 'monitors':
                 case 'monitorAlerts':
+                case 'escalations':
                     // New in 2.7.0. Platform collections, so only the console project visits them.
                     $this->createCollection($id);
-                    // Created before monitors had a severity, or alerts were acknowledged.
-                    $attributes = $id === 'monitorAlerts' ? ['severity', 'acknowledgedAt', 'acknowledgedBy', 'acknowledgedByName'] : ['severity'];
+                    // Created before monitors had a severity or an escalation, or alerts were acknowledged or escalated.
+                    $attributes = match ($id) {
+                        'monitorAlerts' => ['severity', 'acknowledgedAt', 'acknowledgedBy', 'acknowledgedByName', 'escalationId', 'escalationSteps', 'escalationUserIds', 'escalationRepeat', 'escalationStep', 'escalationRound', 'escalatesAt'],
+                        'monitors' => ['severity', 'escalationId'],
+                        default => [],
+                    };
                     foreach ($attributes as $attribute) {
                         try {
                             $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
                         } catch (Duplicate) {
                         }
                     }
+                    if ($id === 'monitors') {
+                        try {
+                            $this->createIndexFromCollection($this->dbForProject, $id, '_key_escalationId');
+                        } catch (Duplicate) {
+                        }
+                    }
                     $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'rules':
+                    // The latest DNS record checks from verification, shown on proxy rules and read from
+                    // ruleRecords. An existing attribute is skipped; any other failure propagates, since
+                    // without it no rule shows its checks.
+                    if ($collectionType === 'console' && $this->dbForProject->findCollection($id) !== null) {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'records');
+                        } catch (Duplicate) {
+                        }
+                        $this->dbForProject->purgeCachedCollection($id);
+                    }
+                    break;
+
+                case 'ruleRecords':
+                    // New with the DNS record checks. A platform collection, so only the console project visits it.
+                    $this->createCollection($id);
                     break;
 
                 case 'pushLedger':

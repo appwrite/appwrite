@@ -117,6 +117,14 @@ class Rule extends Model
                 'default' => '',
                 'example' => 'issued',
             ])
+            ->addRule('records', [
+                'type' => Response::MODEL_PROXY_RULE_RECORD,
+                'description' => 'DNS records the domain was last verified against, with what DNS returned for each. The CAA record, when listed, is required. CNAME, A and AAAA records are alternatives: the domain is verified when any one of them is. Empty until the domain is first checked.',
+                'required' => false,
+                'default' => [],
+                'example' => new \stdClass(),
+                'array' => true,
+            ])
         ;
     }
 

@@ -119,6 +119,8 @@
         "webhooks.write"
     ],
     "organization": [
+        "monitors.read",
+        "monitors.write",
         "organization.projects.keys.read",
         "organization.projects.keys.write",
         "projects.read",

@@ -523,6 +523,8 @@ return [
             Attribute::string(key: 'duration'),
             Attribute::integer(key: 'streamId', signed: false, default: 0),
             Attribute::integer(key: 'isInit', signed: false, default: 0),
+            // Bytes of this segment on the videos device.
+            Attribute::integer(key: 'size', width: IntegerWidth::Bits64, signed: false, default: 0),
         ],
         'indexes' => [
             Index::key(key: '_key_renditionId', attributes: ['renditionId']),
@@ -608,6 +610,8 @@ return [
             Attribute::string(key: 'providerRepositoryOwner'),
             Attribute::string(key: 'providerRepositoryName'),
             Attribute::string(key: 'providerPullRequestId', required: true),
+            // GitHub login of who opened the pull request. Empty for reviews queued before it was kept.
+            Attribute::string(key: 'providerPullRequestAuthor'),
             // The head the review was queued for, replaced by the head it actually reviews. Empty
             // for a mention until it starts: it reviews whatever the head is then.
             Attribute::string(key: 'providerCommitHash', size: 64),

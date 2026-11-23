@@ -40,7 +40,6 @@ import {
   useCreateProjectUser,
   useCreateProjectTeam,
   useProject,
-  useProjectSmtpEnabled,
   useOrganizationScopes,
 } from '@/lib/react-query/hooks'
 import {
@@ -274,8 +273,8 @@ export function View({
     return 'sessions'
   }, [location.pathname])
 
-  const { project } = useProject(projectId)
-  const { isSmtpEnabled } = useProjectSmtpEnabled(projectId)
+  const { project, projectData } = useProject(projectId)
+  const isSmtpEnabled = Boolean(projectData?.smtpEnabled)
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const showAuthSecuritySettings = canShowAuthSecuritySettings(access, features)
@@ -2319,7 +2318,7 @@ export function View({
         )}
 
         {activeTab === 'templates' && projectId && (
-          <Templates projectId={projectId} />
+          <Templates projectId={projectId} isSmtpEnabled={isSmtpEnabled} />
         )}
 
         {activeTab === 'settings' && projectId && (

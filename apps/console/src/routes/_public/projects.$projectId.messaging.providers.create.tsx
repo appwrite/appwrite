@@ -4,7 +4,7 @@ import { CreateProviderWizardView } from '@/components/pages/projects/$projectId
 import { pageTitle } from '@/lib/utils/page-title'
 
 /**
- * Outcome of the Resend one-click setup OAuth2 round trip
+ * Outcome of the one-click setup OAuth2 round trip (Resend, Bird)
  * (see `src/lib/smtp/quick-setup.ts`). The provider redirects straight back
  * here, because the OAuth2 token flow keeps the console session.
  *
@@ -16,6 +16,7 @@ import { pageTitle } from '@/lib/utils/page-title'
 const createProviderSearchSchema = z.object({
   smtpSetup: z.enum(['connected', 'failed']).optional().catch(undefined),
   smtpProvider: z.string().optional().catch(undefined),
+  smtpTarget: z.string().optional().catch(undefined),
   error: z.string().optional().catch(undefined),
 })
 

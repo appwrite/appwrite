@@ -16,8 +16,17 @@ export const jaReviewsDictionary: Record<string, string> = {
 
   // Empty states
   'Review pull requests with AI': 'AI でプルリクエストをレビュー',
-  'Add a GitHub repository and every pull request gets a review with findings, a verdict, and a merge confidence grade. Mention the app in a comment to ask it anything.':
-    'GitHub リポジトリを追加すると、すべてのプルリクエストに指摘事項、判定、マージの信頼度を含むレビューが付きます。コメントでアプリにメンションすると、何でも質問できます。',
+  'Catch bugs and security issues before they merge. Choose the repositories to review, and every pull request in them gets a review on GitHub.':
+    'バグやセキュリティの問題をマージ前に見つけます。レビューするリポジトリを選ぶと、そのリポジトリのすべてのプルリクエストが GitHub 上でレビューされます。',
+  'Install the GitHub app on your account or organization, then turn on review for the repositories you pick.':
+    'アカウントまたは組織に GitHub アプリをインストールし、選んだリポジトリのレビューをオンにします。',
+  'Get a review on every pull request': 'すべてのプルリクエストをレビュー',
+  'Each new pull request and commit gets a summary, findings on the lines they concern, a verdict, and a merge confidence grade.':
+    '新しいプルリクエストとコミットごとに、概要、該当する行への指摘事項、判定、マージの信頼度が付きます。',
+  'Talk to the reviewer': 'レビュアーと話す',
+  'Mention the app in a comment to ask a question, request a new review, or have it remember a preference for later reviews.':
+    'コメントでアプリにメンションすると、質問したり、新しいレビューを依頼したり、今後のレビューで守ってほしい方針を覚えさせたりできます。',
+  'No reviews match your filters': 'フィルターに一致するレビューはありません',
   'No reviews yet': 'まだレビューはありません',
   'Reviews show up here when a pull request is opened or gets new commits in one of your repositories.':
     'リポジトリでプルリクエストが作成されるか、新しいコミットが追加されると、ここにレビューが表示されます。',
@@ -34,6 +43,9 @@ export const jaReviewsDictionary: Record<string, string> = {
     'レビューで指摘事項は見つかりませんでした。',
   'View comment': 'コメントを表示',
   'Open on GitHub': 'GitHub で開く',
+  'Compare on GitHub': 'GitHub で比較',
+  'Open commit on GitHub': 'GitHub でコミットを開く',
+  'Filter findings by severity': '重要度で指摘事項を絞り込む',
 
   // Statuses and verdicts
   Reviewing: 'レビュー中',
@@ -236,4 +248,43 @@ export const jaReviewsDictionary: Record<string, string> = {
   'Delete learning': '学習を削除',
   'Later reviews and answers will no longer follow this learning. This action cannot be undone.':
     '以降のレビューと回答はこの学習に従わなくなります。この操作は元に戻せません。',
+
+  // Performance
+  Performance: 'パフォーマンス',
+  'Unknown author': '作成者不明',
+  'Date range': '期間',
+  Author: '作成者',
+  'Pull requests': 'プルリクエスト',
+  'First try': '初回承認',
+  'Findings / PR': '指摘 / PR',
+  'Critical / major': '重大 / 重要',
+  Fixed: '修正済み',
+  'Last review': '最新のレビュー',
+  'Pull requests reviewed': 'レビューしたプルリクエスト',
+  '{count} authors': '{count} 人の作成者',
+  'Approval rate': '承認率',
+  '{rate} approved by the first review': '{rate} が初回のレビューで承認',
+  'Findings per pull request': 'プルリクエストあたりの指摘',
+  '{critical} critical, {major} major': '重大 {critical} 件、重要 {major} 件',
+  'Fix rate': '修正率',
+  '{count} findings fixed by a later commit':
+    '{count} 件の指摘が後のコミットで修正',
+  'No completed reviews in this range':
+    'この期間に完了したレビューはありません',
+  'Performance shows how the authors of your pull requests fare in review once reviews complete. Try a longer range or another repository.':
+    'レビューが完了すると、プルリクエストの作成者ごとのレビュー結果がここに表示されます。より長い期間か別のリポジトリをお試しください。',
+  'Counts completed reviews in the range. Approval and confidence go by each pull request’s latest review; fixed counts findings resolved by a later commit.':
+    '期間内に完了したレビューを集計します。承認と信頼度は各プルリクエストの最新のレビューに基づき、修正済みは後のコミットで解決された指摘を数えます。',
+
+  // Finding outcomes
+  'Useful findings': '有用な指摘',
+  '{resolved} fixed, {dismissed} dismissed':
+    '修正 {resolved} 件、却下 {dismissed} 件',
+  Useful: '有用',
+  Dismissed: '却下',
+  'Findings by category': 'カテゴリ別の指摘',
+  'Categories that are often dismissed are candidates for a learning that tells the reviewer to flag them less.':
+    'よく却下されるカテゴリは、レビュアーに指摘を控えさせる学習の候補です。',
+  'Useful findings is the share of settled findings that were fixed rather than dismissed; findings still open count for neither.':
+    '有用な指摘は、決着した指摘のうち却下されずに修正されたものの割合です。未解決の指摘はどちらにも数えません。',
 }

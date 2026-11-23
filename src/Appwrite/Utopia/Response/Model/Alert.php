@@ -84,6 +84,31 @@ class Alert extends Model
                 'default' => '',
                 'example' => 'Jane Doe',
             ])
+            ->addRule('escalationId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'ID of the escalation notifying the team of this alert. Empty when the monitor notified its `notify` roles instead.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('escalationStep', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Index of the escalation\'s next step to notify, counting from 0. Equal to the number of steps once the last round has gone out.',
+                'default' => 0,
+                'example' => 1,
+            ])
+            ->addRule('escalationRound', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'How many times the escalation\'s steps have been repeated for this alert.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('escalatesAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'When the next step is notified, in ISO 8601 format. Null when nothing is due: the alert was acknowledged or resolved, or every step has gone out.',
+                'default' => null,
+                'required' => false,
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
             ->addRule('rules', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The monitor\'s rules when the alert fired, as query strings.',

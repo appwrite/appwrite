@@ -72,7 +72,6 @@ import {
 } from '@/components/ui/tooltip'
 import type { ProjectPlatform } from '@/lib/utils/platform'
 import type { AddAppKind } from '@/lib/add-app-wizard/types'
-import type { ApiKey } from '../shared/ApiKeysList'
 import { ApiKeyDrawer } from '../api-keys/ApiKeyDrawer'
 import { PlatformDrawer } from '../apps/_components/PlatformDrawer'
 import { toast } from 'sonner'
@@ -134,23 +133,12 @@ interface OverviewTab {
   isLoading?: boolean
 }
 
-export interface OverviewInitialData {
-  apiKeys: ApiKey[]
-  /** Raw listKeys response from loader; passed to useApiKeys to avoid duplicate fetch */
-  apiKeysRaw?: { keys?: unknown[] } | null
-  /** Prefetched platforms from listPlatforms; avoids empty-state flash in Apps section */
-  platforms?: ProjectPlatform[]
-  /** Prefetched MCP coding-agent connection; hides the connect CTA without a flash */
+interface ViewProps {
+  projectId: string
   mcpAgentConnected?: boolean
 }
 
-interface ViewProps {
-  projectId: string
-  /** Prefetched data from route loader; avoids loading spinner for API keys on first paint */
-  initialData?: OverviewInitialData
-}
-
-export function View({ projectId, initialData }: ViewProps) {
+export function View({ projectId, mcpAgentConnected }: ViewProps) {
   const t = useT()
   const { catalog } = useI18n()
   const navigate = useNavigate()
@@ -785,15 +773,7 @@ export function View({ projectId, initialData }: ViewProps) {
   // Fetch real project data from console SDK
   const { project: currentProject } = useProject(projectId)
 
-  // Fetch API keys using the hook; pass loader prefetch as initialData to avoid duplicate fetch
-  const { apiKeys, isLoading: isLoadingKeys } = useApiKeys(projectId, {
-    initialData: initialData?.apiKeysRaw,
-  })
-  const effectiveApiKeys =
-    apiKeys.length > 0 || initialData?.apiKeysRaw
-      ? apiKeys
-      : (initialData?.apiKeys ?? [])
-  const showLoadingKeys = isLoadingKeys && !initialData
+  const { apiKeys, isLoading: isLoadingKeys } = useApiKeys(projectId)
 
   // Create mutation
   const createMutation = useCreateApiKey(projectId)
@@ -804,18 +784,8 @@ export function View({ projectId, initialData }: ViewProps) {
   // Delete mutation
   const deleteMutation = useDeleteApiKey(projectId)
 
-  const { platforms: platformsFromHook, isLoading: isLoadingPlatforms } =
-    usePlatforms(projectId)
-  const platformsForIntegrations =
-    platformsFromHook.length > 0
-      ? platformsFromHook
-      : isLoadingPlatforms
-        ? (initialData?.platforms ?? [])
-        : platformsFromHook
-  const connectRows = overviewConnectRows(
-    platformsForIntegrations.length,
-    effectiveApiKeys.length,
-  )
+  const { platforms } = usePlatforms(projectId)
+  const connectRows = overviewConnectRows(platforms.length, apiKeys.length)
 
   // Get endpoint from project region (centralized in SDK)
   const projectEndpoint = useMemo(
@@ -891,7 +861,7 @@ export function View({ projectId, initialData }: ViewProps) {
   }
 
   const selectedKey = selectedKeyId
-    ? effectiveApiKeys.find((key) => key.id === selectedKeyId)
+    ? apiKeys.find((key) => key.id === selectedKeyId)
     : null
 
   // Get the full key data for update (we need to fetch it from the API)
@@ -1384,7 +1354,7 @@ export function View({ projectId, initialData }: ViewProps) {
         <ConnectAgentCta
           projectId={projectId}
           className="mb-6"
-          initialConnected={initialData?.mcpAgentConnected}
+          initialConnected={mcpAgentConnected}
         />
         <ProjectResources projectId={projectId} />
 
@@ -1398,7 +1368,7 @@ export function View({ projectId, initialData }: ViewProps) {
           <div className="grid min-w-0 grid-cols-1 gap-3 @[960px]:grid-cols-2 [&>*]:min-w-0">
             <AppsCard
               projectId={projectId}
-              platforms={platformsForIntegrations}
+              platforms={platforms}
               rows={connectRows}
               onAdd={goToAddAppWizard}
               onSelect={(platform) => {
@@ -1408,8 +1378,8 @@ export function View({ projectId, initialData }: ViewProps) {
             />
             <ApiKeysCard
               projectId={projectId}
-              apiKeys={effectiveApiKeys}
-              isLoading={showLoadingKeys}
+              apiKeys={apiKeys}
+              isLoading={isLoadingKeys}
               rows={connectRows}
               copiedField={copiedField}
               onCreate={handleCreateApiKey}

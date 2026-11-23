@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Utopia\Auth\Tests\Algorithms;
 
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Auth\Hashes\Argon2;
 
+#[RequiresPhpExtension('utopia')]
 final class Argon2Test extends TestCase
 {
     private Argon2 $argon2;

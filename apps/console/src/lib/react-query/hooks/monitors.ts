@@ -2,6 +2,7 @@
  * React Query hooks for monitors and the alerts they raise.
  */
 
+import { useCallback, useMemo } from 'react'
 import {
   infiniteQueryOptions,
   queryOptions,
@@ -13,13 +14,21 @@ import {
 import { ID, Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
+  createEscalation,
+  deleteEscalation,
+  listEscalations,
   listOrganizationMonitors,
   parseMonitor,
+  updateEscalation,
   type Alert,
   type AlertMetric,
   type AlertResourceType,
+  type EscalationInput,
   type MonitorInput,
+  type MonitorType,
   type ParsedMonitor,
+  type ProbeMonitorChanges,
+  type ProbeMonitorInput,
 } from '@/lib/appwrite/monitors'
 import { fetchAlertSeries, hasSeries } from '@/lib/alerts/series'
 import { DEFAULT_STALE_TIME } from './constants'
@@ -198,13 +207,33 @@ export function useCreateMonitor(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (input: MonitorInput) => {
+    mutationFn: async (input: MonitorInput | ProbeMonitorInput) => {
       if (!projectId) throw new Error('Project ID is required')
-      return parseMonitor(
-        await sdk
-          .forProject(projectId)
-          .monitors.createUsageMonitor({ monitorId: ID.unique(), ...input }),
-      )
+      const monitors = sdk.forProject(projectId).monitors
+      const monitorId = ID.unique()
+      if (!('params' in input)) {
+        return parseMonitor(
+          await monitors.createUsageMonitor({ monitorId, ...input }),
+        )
+      }
+      switch (input.type) {
+        case 'http':
+          return parseMonitor(
+            await monitors.createHttpMonitor({ monitorId, ...input.params }),
+          )
+        case 'dns':
+          return parseMonitor(
+            await monitors.createDnsMonitor({ monitorId, ...input.params }),
+          )
+        case 'tcp':
+          return parseMonitor(
+            await monitors.createTcpMonitor({ monitorId, ...input.params }),
+          )
+        case 'smtp':
+          return parseMonitor(
+            await monitors.createSmtpMonitor({ monitorId, ...input.params }),
+          )
+      }
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
@@ -221,17 +250,28 @@ export function useUpdateMonitor(projectId: string | null | undefined) {
   return useMutation({
     mutationFn: async ({
       monitorId,
+      type,
       changes,
     }: {
       monitorId: string
-      changes: Partial<MonitorInput>
+      /** Each type is updated through its own endpoint. */
+      type: MonitorType
+      changes: Partial<MonitorInput> | ProbeMonitorChanges
     }) => {
       if (!projectId) throw new Error('Project ID is required')
-      return parseMonitor(
-        await sdk
-          .forProject(projectId)
-          .monitors.updateUsageMonitor({ monitorId, ...changes }),
-      )
+      const monitors = sdk.forProject(projectId).monitors
+      const params = { monitorId, ...changes }
+      const updated =
+        type === 'http'
+          ? monitors.updateHttpMonitor(params)
+          : type === 'dns'
+            ? monitors.updateDnsMonitor(params)
+            : type === 'tcp'
+              ? monitors.updateTcpMonitor(params)
+              : type === 'smtp'
+                ? monitors.updateSmtpMonitor(params)
+                : monitors.updateUsageMonitor(params)
+      return parseMonitor(await updated)
     },
     // Pausing and resuming flip at once in the list, and roll back if the update fails.
     onMutate: async ({ monitorId, changes }) => {
@@ -311,4 +351,148 @@ export function organizationBudgetMonitorsQueryOptions(
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
   })
+}
+
+function organizationClient(organizationId: string | null | undefined) {
+  if (!organizationId) throw new Error('Organization ID is required')
+  return sdk.forConsole.organization(organizationId).client
+}
+
+async function collectPages<T extends { $id: string }>(
+  fetchPage: (queries: string[]) => Promise<T[]>,
+): Promise<T[]> {
+  const items: T[] = []
+  let cursor: string | undefined
+  do {
+    const queries = [Query.limit(PAGE_LIMIT)]
+    if (cursor) queries.push(Query.cursorAfter(cursor))
+    const page = await fetchPage(queries)
+    items.push(...page)
+    cursor = nextCursorAfter(page, PAGE_LIMIT)
+  } while (cursor)
+  return items
+}
+
+/** An organization's escalations, by name. */
+export function escalationsQueryOptions(
+  organizationId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['escalations', organizationId],
+    queryFn: () =>
+      collectPages(async (queries) => {
+        const response = await listEscalations(
+          organizationClient(organizationId),
+          { queries: [Query.orderAsc('name'), ...queries], total: false },
+        )
+        return response.escalations
+      }),
+    enabled: !!organizationId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+  })
+}
+
+export function useEscalations(organizationId: string | null | undefined) {
+  const { data, isLoading, error, refetch } = useQuery(
+    escalationsQueryOptions(organizationId),
+  )
+  return { escalations: data ?? [], isLoading, error, refetch }
+}
+
+export function useCreateEscalation(organizationId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (input: EscalationInput) =>
+      createEscalation(organizationClient(organizationId), {
+        escalationId: ID.unique(),
+        ...input,
+      }),
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['escalations', organizationId],
+      })
+    },
+  })
+}
+
+/** Sends only the fields passed in `changes`. */
+export function useUpdateEscalation(organizationId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      escalationId,
+      changes,
+    }: {
+      escalationId: string
+      changes: Partial<EscalationInput>
+    }) =>
+      updateEscalation(
+        organizationClient(organizationId),
+        escalationId,
+        changes,
+      ),
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['escalations', organizationId],
+      })
+    },
+  })
+}
+
+/** Refused with `escalation_in_use` while a monitor uses the escalation. */
+export function useDeleteEscalation(organizationId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (escalationId: string) =>
+      deleteEscalation(organizationClient(organizationId), escalationId),
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['escalations', organizationId],
+      })
+    },
+  })
+}
+
+/**
+ * The confirmed members an escalation step can name, and how a step names
+ * one: a member who left reads as their user ID.
+ */
+export function useEscalationMembers(
+  organizationId: string | null | undefined,
+) {
+  const { data, isLoading } = useQuery({
+    queryKey: ['escalation-members', organizationId],
+    enabled: !!organizationId,
+    staleTime: DEFAULT_STALE_TIME,
+    queryFn: () =>
+      collectPages(async (queries) => {
+        const response = await sdk.forConsole.teams.listMemberships({
+          teamId: organizationId!,
+          queries,
+          total: false,
+        })
+        return response.memberships
+      }),
+  })
+  const members = useMemo(
+    () =>
+      (data ?? [])
+        .filter((member) => member.confirm && member.userId)
+        .map((member) => ({
+          userId: member.userId,
+          name: member.userName || member.userEmail,
+          email: member.userEmail,
+        })),
+    [data],
+  )
+  const memberName = useCallback(
+    (userId: string) =>
+      members.find((member) => member.userId === userId)?.name ?? userId,
+    [members],
+  )
+  return { members, memberName, isLoading }
 }

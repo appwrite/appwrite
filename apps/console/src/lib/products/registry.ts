@@ -19,6 +19,7 @@ import type {
   ProductNavItemId,
   ProductRegistryItem,
 } from '@/lib/products/types'
+import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 
 export const PRODUCT_IDS = [
   'auth',
@@ -27,6 +28,7 @@ export const PRODUCT_IDS = [
   'storage',
   'functions',
   'messaging',
+  'videos',
   'realtime',
   'sites',
   'analytics',
@@ -88,6 +90,15 @@ export const PRODUCT_REGISTRY: Record<ProductId, ProductRegistryItem> = {
     tagline: 'Email, SMS, and push with topics and targets.',
     docsPath: '/docs/products/messaging',
   },
+  videos: {
+    id: 'videos',
+    name: 'Videos',
+    group: 'build',
+    path: '/products/videos',
+    icon: VIDEOS_PRODUCT_ICON,
+    tagline: 'Adaptive HLS, DASH, and CMAF streams with subtitles.',
+    docsPath: '/docs/products/videos',
+  },
   realtime: {
     id: 'realtime',
     name: 'Realtime',
@@ -142,6 +153,7 @@ export const PRODUCT_NAV_ITEM_IDS = [
   'storage',
   'functions',
   'messaging',
+  'videos',
   'realtime',
   'agent',
   'sites',
@@ -199,6 +211,14 @@ export const PRODUCT_NAV_REGISTRY: Record<ProductNavItemId, ProductNavItem> = {
     href: PRODUCT_REGISTRY.messaging.path,
     icon: PRODUCT_REGISTRY.messaging.icon,
     tagline: PRODUCT_REGISTRY.messaging.tagline,
+  },
+  videos: {
+    id: 'videos',
+    name: PRODUCT_REGISTRY.videos.name,
+    group: 'build',
+    href: PRODUCT_REGISTRY.videos.path,
+    icon: PRODUCT_REGISTRY.videos.icon,
+    tagline: PRODUCT_REGISTRY.videos.tagline,
   },
   realtime: {
     id: 'realtime',
@@ -350,6 +370,7 @@ export const PRODUCT_PAGE_EXPLORE_NAV_ITEM_IDS = [
   'storage',
   'functions',
   'messaging',
+  'videos',
   'realtime',
   'sites',
   'domains',

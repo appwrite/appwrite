@@ -1246,3 +1246,177 @@ export function useDeleteAnalyticsProperty(
     },
   })
 }
+
+// ─── Annotations ────────────────────────────────────────────────────────────
+
+/** The API's page cap. */
+const ANALYTICS_ANNOTATIONS_PAGE_SIZE = 100
+/** Bounds one chart window to 1,000 notes. */
+const ANALYTICS_ANNOTATIONS_MAX_PAGES = 10
+
+export async function fetchAnalyticsAnnotations(
+  projectId: string,
+  propertyId: string,
+  range: AnalyticsRange,
+) {
+  const annotations: Models.AnalyticsAnnotation[] = []
+  for (let page = 0; page < ANALYTICS_ANNOTATIONS_MAX_PAGES; page++) {
+    const last = annotations.at(-1)
+    const response = await withReadTimeout(
+      'listAnnotations',
+      sdk.forProject(projectId).analytics.listAnnotations({
+        propertyId,
+        queries: [
+          Query.greaterThanEqual('date', range.startAt),
+          Query.lessThanEqual('date', range.endAt),
+          Query.orderAsc('date'),
+          Query.limit(ANALYTICS_ANNOTATIONS_PAGE_SIZE),
+          ...(last ? [Query.cursorAfter(last.$id)] : []),
+        ],
+      }),
+    )
+    annotations.push(...(response.annotations ?? []))
+    if (
+      (response.annotations ?? []).length < ANALYTICS_ANNOTATIONS_PAGE_SIZE ||
+      annotations.length >= response.total
+    )
+      break
+  }
+  return annotations
+}
+
+export function analyticsAnnotationsQueryOptions(
+  projectId: string | null | undefined,
+  propertyId: string | null | undefined,
+  range: AnalyticsRange,
+) {
+  return queryOptions({
+    queryKey: [
+      'analytics',
+      'annotations',
+      projectId,
+      propertyId,
+      analyticsRangeKey(range),
+    ],
+    queryFn: () => fetchAnalyticsAnnotations(projectId!, propertyId!, range),
+    enabled: !!projectId && !!propertyId && isClientQueryEnabled,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useAnalyticsAnnotations(
+  projectId: string | null | undefined,
+  propertyId: string | null | undefined,
+  range: AnalyticsRange,
+) {
+  const { data } = useQuery(
+    analyticsAnnotationsQueryOptions(projectId, propertyId, range),
+  )
+  return { annotations: data ?? [] }
+}
+
+/**
+ * Display names of the members who wrote notes, by user ID. A user who has
+ * left the organization has no membership, so is missing from the map.
+ */
+export function useAnalyticsAnnotationAuthors(
+  organizationId: string | null | undefined,
+  userIds: readonly string[],
+) {
+  const { data } = useQuery({
+    queryKey: ['analytics', 'annotation-authors', organizationId, userIds],
+    queryFn: async () => {
+      const chunks: string[][] = []
+      // A query takes at most 100 values.
+      for (let index = 0; index < userIds.length; index += 100) {
+        chunks.push(userIds.slice(index, index + 100))
+      }
+      const responses = await Promise.all(
+        chunks.map((chunk) =>
+          sdk.forConsole.teams.listMemberships({
+            teamId: organizationId!,
+            queries: [Query.equal('userId', chunk), Query.limit(chunk.length)],
+          }),
+        ),
+      )
+      return new Map(
+        responses.flatMap((response) =>
+          response.memberships.map(
+            (membership) => [membership.userId, membership.userName] as const,
+          ),
+        ),
+      )
+    },
+    enabled: !!organizationId && userIds.length > 0 && isClientQueryEnabled,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnWindowFocus: false,
+  })
+  return { authors: data }
+}
+
+export type SaveAnalyticsAnnotationInput = {
+  /** Omit to create a note. */
+  annotationId?: string
+  date: string
+  content: string
+}
+
+export function useSaveAnalyticsAnnotation(
+  projectId: string | null | undefined,
+  propertyId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (input: SaveAnalyticsAnnotationInput) => {
+      if (!projectId || !propertyId) throw new Error('Property is required')
+      const analytics = sdk.forProject(projectId).analytics
+      const params = {
+        propertyId,
+        date: input.date,
+        content: input.content.trim(),
+      }
+      return input.annotationId
+        ? await analytics.updateAnnotation({
+            ...params,
+            annotationId: input.annotationId,
+          })
+        : await analytics.createAnnotation({
+            ...params,
+            annotationId: ID.unique(),
+          })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['analytics', 'annotations', projectId, propertyId],
+      })
+    },
+  })
+}
+
+export function useDeleteAnalyticsAnnotation(
+  projectId: string | null | undefined,
+  propertyId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (annotationId: string) => {
+      if (!projectId || !propertyId) throw new Error('Property is required')
+      await sdk.forProject(projectId).analytics.deleteAnnotation({
+        propertyId,
+        annotationId,
+      })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['analytics', 'annotations', projectId, propertyId],
+      })
+    },
+  })
+}

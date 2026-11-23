@@ -1,48 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Binary operation "%%" between mixed and 10 results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: src/Hashes/PHPass.php
-
-		-
-			message: '#^Binary operation "\+" between mixed and 3\|5 results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: src/Hashes/PHPass.php
-
-		-
-			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: src/Hashes/PHPass.php
-
-		-
-			message: '#^Binary operation "/" between mixed and 10 results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: src/Hashes/PHPass.php
-
-		-
-			message: '#^Offset float\|int\<min, 30\> might not exist on string\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: src/Hashes/PHPass.php
-
-		-
-			message: '#^Parameter \#1 \$codepoint of function chr expects int\<0, 255\>, int given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Hashes/PHPass.php
-
-		-
-			message: '#^Parameter \#1 \$codepoint of function chr expects int\<0, 255\>, int\<\-9, 264\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Hashes/PHPass.php
-
-		-
 			message: '#^Cannot access offset ''e'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1

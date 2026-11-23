@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/popover'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
-import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { InitialsAvatar, TeamAvatar } from '@/components/global/shared/Avatar'
 import {
   useTeams,
   useProject,
@@ -1278,7 +1278,7 @@ function ProjectSelectorContent({
                           : 'hover:bg-accent/50',
                       )}
                     >
-                      <InitialsAvatar name={team.name} size="sm" />
+                      <TeamAvatar teamId={team.$id} name={team.name} size="sm" />
                       <div className="min-w-0 flex flex-1 items-center gap-2">
                         <span className="truncate text-[13px] font-medium text-foreground">
                           {team.name}
@@ -1638,7 +1638,7 @@ function MobileProjectSelectorContent({
                           : 'hover:bg-accent/50',
                       )}
                     >
-                      <InitialsAvatar name={team.name} size="sm" />
+                      <TeamAvatar teamId={team.$id} name={team.name} size="sm" />
                       <div className="min-w-0 flex-1">
                         <span className="block truncate text-[14px] font-medium text-foreground">
                           {team.name}

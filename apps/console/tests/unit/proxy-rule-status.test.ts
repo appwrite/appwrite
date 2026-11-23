@@ -17,26 +17,26 @@ function expiresIn(ms: number): string {
 }
 
 describe('getRuleStatusBadgeConfig', () => {
-  test('keeps Verified when the server reports no certificate state', () => {
+  test('keeps Active when the server reports no certificate state', () => {
     expect(getRuleStatusBadgeConfig({ status: 'verified' }, NOW)).toEqual({
       variant: 'success',
-      label: 'Verified',
+      label: 'Active',
     })
     expect(
       getRuleStatusBadgeConfig(
         { status: 'verified', expireAt: '', certificateStatus: '' },
         NOW,
       ),
-    ).toEqual({ variant: 'success', label: 'Verified' })
+    ).toEqual({ variant: 'success', label: 'Active' })
     expect(
       getRuleStatusBadgeConfig(
         { status: 'verified', expireAt: 'not a date', certificateStatus: '' },
         NOW,
       ),
-    ).toEqual({ variant: 'success', label: 'Verified' })
+    ).toEqual({ variant: 'success', label: 'Active' })
   })
 
-  test('keeps a plain Verified badge for a healthy certificate, even close to expiry', () => {
+  test('keeps a plain Active badge for a healthy certificate, even close to expiry', () => {
     // Renewal is Appwrite's job: nothing to act on, so no warning and no date.
     for (const certificateStatus of [
       'issued',
@@ -55,7 +55,7 @@ describe('getRuleStatusBadgeConfig', () => {
             },
             NOW,
           ),
-        ).toEqual({ variant: 'success', label: 'Verified' })
+        ).toEqual({ variant: 'success', label: 'Active' })
       }
     }
   })

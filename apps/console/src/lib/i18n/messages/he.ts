@@ -124,6 +124,7 @@ export const heCatalog: EnCatalog = {
         github: 'GitHub',
         x: 'X',
         youtube: 'YouTube',
+        youtubeChannels: 'ערוצי YouTube',
         linkedIn: 'LinkedIn',
         instagram: 'Instagram',
         discord: 'Discord',
@@ -216,6 +217,7 @@ export const heCatalog: EnCatalog = {
           vsPlanetScale: 'Appwrite מול PlanetScale', // pragma: allowlist secret
           vsPostHog: 'Appwrite מול PostHog', // pragma: allowlist secret
           vsPlausible: 'Appwrite מול Plausible', // pragma: allowlist secret
+          vsMux: 'Appwrite מול Mux', // pragma: allowlist secret
           nextjsHosting: 'אירוח Next.js',
           reactHosting: 'אירוח React',
           vueHosting: 'אירוח Vue.js',
@@ -303,7 +305,7 @@ export const heCatalog: EnCatalog = {
       heroTitleLineOne: 'הענן בקוד פתוח',
       heroTitleLineTwo: 'לסוכנים ולמפתחים',
       heroDescriptionLineOne:
-        'Appwrite היא פלטפורמת OSS מוכוונת MCP וסוכנים לבנייה ולהרחבה של אפליקציות במהירות המחשבה.', // pragma: allowlist secret
+        'Appwrite היא פלטפורמת ענן מוכוונת MCP וסוכנים לבנייה ולהרחבה של אפליקציות במהירות המחשבה.', // pragma: allowlist secret
       heroDescriptionLineTwo:
         'תנו לסוכנים שלכם אימות, מסדי נתונים, אחסון, פונקציות, הודעות, Realtime ואירוח - הכל במקום אחד.',
       heroPreviewWorkspace: 'Appwrite', // pragma: allowlist secret
@@ -392,6 +394,7 @@ export const heCatalog: EnCatalog = {
         storage: 'אחסון',
         functions: 'פונקציות',
         messaging: 'הודעות',
+        videos: 'סרטונים',
         sites: 'אתרים',
         analytics: 'אנליטיקה',
       },
@@ -423,6 +426,7 @@ export const heCatalog: EnCatalog = {
           storageTagline: 'העלאה, עיבוד והגשה של קבצים דרך CDN.',
           functionsTagline: 'APIs, משימות Cron ומטפלי אירועים בקנה מידה רחב.',
           messagingTagline: 'אימייל, SMS ו-Push עם נושאים ויעדים.',
+          videosTagline: 'סטרימינג אדפטיבי ב-HLS, DASH ו-CMAF עם כתוביות.',
           sitesTagline: 'פריסות סטטיות, SSR ו-CSR מ-Git.',
           realtimeName: 'Realtime',
           realtimeTagline: 'אירועים חיים, ערוצים ונוכחות.',

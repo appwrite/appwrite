@@ -1,5 +1,16 @@
 # Change Log
 
+## 11.3.0
+
+* Added: `Account.CreateLDAPSession` for LDAP sign-in
+* Added: `Project.UpdateLDAP` and `Project.CreateLDAPTest` to configure and test a project's LDAP directory, the `ProjectLDAPEncryption` enum and `ldap*` fields on `Project`
+* Added: `Project.UpdateOAuth2Naver`, the `OAuth2Naver` model and `OAuthProvider.Naver`
+* Added: `Project.DeletePasswords` to force every user to reset their password
+* Added: `Sites.UpdateAnalytics` and `analyticsEnabled` and `analyticsPropertyId` on `Site`
+* Added: `reason` on `DomainPrice`, set when a domain was not priced for the requested registration type
+* Added: `ImageFormat.Auto` on `Storage.getFilePreview` and the avatar endpoints, serving avif or webp when the `Accept` header supports it
+* Updated: requests send `X-Appwrite-Response-Format: 2.7.2`
+
 ## 11.2.0
 
 * Updated: `Project.ListEnvironments`, `Project.CreateEnvironment`, `Project.GetEnvironment`, `Project.UpdateEnvironment` return `Environment` models instead of `Project`

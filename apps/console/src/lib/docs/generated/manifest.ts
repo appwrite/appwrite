@@ -504,7 +504,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Updates and migrations",
     "description": "Keep your self-hosted Appwrite instance up-to-date. Learn how to perform updates, manage versions, and ensure your self-hosted Appwrite stays current.",
     "layout": "article",
-    "readingTimeMinutes": 6
+    "readingTimeMinutes": 7
   },
   {
     "slug": "apis",
@@ -1380,6 +1380,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Organize your users and grant custom permissions for subscriptions or VIP users with labels.",
     "layout": "article",
     "readingTimeMinutes": 1
+  },
+  {
+    "slug": "products/auth/ldap",
+    "title": "LDAP login",
+    "description": "Let users sign in to your app with the username and password from your LDAP directory, such as Active Directory or OpenLDAP, with group restrictions and attribute mapping.",
+    "layout": "article",
+    "readingTimeMinutes": 11
   },
   {
     "slug": "products/auth/magic-url",
@@ -3007,7 +3014,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Deploy from Git",
     "description": "Learn to version and update your Appwrite Functions' code with deployments.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 7
   },
   {
     "slug": "products/functions/deploy-manually",
@@ -3126,7 +3133,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Appwrite Push",
     "description": "Deliver push notifications from Appwrite to apps built with the Web, Flutter, React Native, Android, and Apple SDKs, without Firebase or device tokens.",
     "layout": "article",
-    "readingTimeMinutes": 17
+    "readingTimeMinutes": 18
   },
   {
     "slug": "products/messaging/fcm",
@@ -3357,7 +3364,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Deploy from Git",
     "description": "Learn to version and update your Appwrite Sites' code with deployments.",
     "layout": "article",
-    "readingTimeMinutes": 6
+    "readingTimeMinutes": 8
   },
   {
     "slug": "products/sites/deploy-manually",
@@ -3615,6 +3622,83 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "slug": "products/storage/upload-download",
     "title": "Upload and download",
     "description": "Effortlessly upload and download files with Appwrite Storage. Learn how to handle file uploads, manage file versions, and ensure secure downloads in your applications.",
+    "layout": "article",
+    "readingTimeMinutes": 6
+  },
+  {
+    "slug": "products/videos",
+    "title": "Videos",
+    "description": "Stream video and audio with Appwrite Videos. Turn files in Storage into adaptive HLS, DASH, and CMAF streams with encoding profiles, captions, and scrubbing thumbnails.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
+    "slug": "products/videos/captions",
+    "title": "Captions",
+    "description": "Add WebVTT or SubRip captions to an Appwrite video, use subtitle tracks embedded in the source, and set a default language for players.",
+    "layout": "article",
+    "readingTimeMinutes": 6
+  },
+  {
+    "slug": "products/videos/inspector",
+    "title": "Inspect playback",
+    "description": "Use the Appwrite Videos inspector to watch a playback session's experience score, buffer, bitrate, network requests, and manifests.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
+    "slug": "products/videos/outputs",
+    "title": "Outputs",
+    "description": "Learn the difference between HLS, DASH, and CMAF outputs in Appwrite Videos, where to find each master manifest, and which players support them.",
+    "layout": "article",
+    "readingTimeMinutes": 5
+  },
+  {
+    "slug": "products/videos/permissions",
+    "title": "Permissions",
+    "description": "Learn how Appwrite Videos controls who can watch a stream with per-video permissions, and which scopes manage videos and encoding profiles.",
+    "layout": "article",
+    "readingTimeMinutes": 5
+  },
+  {
+    "slug": "products/videos/play",
+    "title": "Play a video in your app",
+    "description": "Play Appwrite Videos streams on the web, Apple platforms, Android, Flutter, and React Native by loading the master manifest in a standard player.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
+    "slug": "products/videos/profiles",
+    "title": "Encoding profiles",
+    "description": "Learn how Appwrite Videos encoding profiles set the resolution, bitrate, and codec of each rendition, and how profile changes apply.",
+    "layout": "article",
+    "readingTimeMinutes": 6
+  },
+  {
+    "slug": "products/videos/quick-start",
+    "title": "Start with Videos",
+    "description": "Create your first Appwrite video from a Storage file, encode an adaptive ladder, and play the stream in a browser.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/videos/renditions",
+    "title": "Renditions",
+    "description": "Learn how Appwrite Videos encodes a rendition per profile and output, how rendition status and progress work, and how to retry a failed encode.",
+    "layout": "article",
+    "readingTimeMinutes": 5
+  },
+  {
+    "slug": "products/videos/timeline",
+    "title": "Timeline",
+    "description": "Learn how Appwrite Videos generates sprite sheets and a WebVTT index for scrubbing thumbnails, and how to load them in your player.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
+    "slug": "products/videos/videos",
+    "title": "Videos",
+    "description": "Learn how an Appwrite video points at a Storage file, which metadata it holds, how its status is derived, and what deleting it removes.",
     "layout": "article",
     "readingTimeMinutes": 6
   },
@@ -4338,6 +4422,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Efficiently deploy your Appwrite teams using the Command-Line Tool (CLI).",
     "layout": "article",
     "readingTimeMinutes": 4
+  },
+  {
+    "slug": "tooling/command-line/terminal",
+    "title": "Terminal",
+    "description": "Browse, query, and manage your Appwrite projects in an interactive, keyboard-driven interface with the terminal command in the Appwrite CLI.",
+    "layout": "article",
+    "readingTimeMinutes": 8
   },
   {
     "slug": "tooling/command-line/topics",

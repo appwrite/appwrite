@@ -1,5 +1,25 @@
 # Change Log
 
+## 28.13.3
+
+* Fixed: `terminal` reads a Cloud project's usage within the history its plan keeps; the usage panel failed with `limit_history_exceeded`
+* Fixed: `terminal` names the Appwrite version and the `usage.read` scope only after a usage error they explain
+
+## 28.13.2
+
+* Fixed: `terminal` re-reads an open organization on Cloud; every refresh failed with `Not Found (404 http)`
+
+## 28.13.1
+
+* Fixed: `terminal` reached Cloud projects outside the default region instead of failing with `general_access_forbidden`
+
+## 28.13.0
+
+* Added: `account create-ldap-session` for LDAP sign-in
+* Added: `project update-ldap` and `project create-ldap-test` to configure and test a project's LDAP directory; output masks `ldapBindPassword`
+* Added: `sites update-analytics` to turn site analytics on or off
+* Updated: built against Go SDK `v7.20.0`
+
 ## 28.12.1
 
 * Fixed: `terminal` lists organizations on Cloud

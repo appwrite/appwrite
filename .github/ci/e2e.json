@@ -26,7 +26,11 @@
       "Cargo.lock",
       ".cargo/",
       "rustfmt.toml",
+      "rust-toolchain.toml",
       "packages/image/",
+      "packages/validators/",
+      "packages/auth/",
+      "packages/detector/",
       "Dockerfile",
       ".dockerignore"
     ],
@@ -36,6 +40,7 @@
       "Cargo.lock",
       ".cargo/",
       "rustfmt.toml",
+      "rust-toolchain.toml",
       ".github/",
       "docs/",
       "tests/unit/",
@@ -376,6 +381,8 @@
       "paths": [
         "src/Appwrite/Platform/Modules/Videos/",
         "src/Appwrite/Video/",
+        "src/Appwrite/Storage/",
+        "src/Appwrite/Platform/Modules/Storage/Http/Buckets/Files/Download/",
         "src/Appwrite/Event/Publisher/Video.php",
         "src/Appwrite/Event/Message/Video",
         "src/Appwrite/Platform/Modules/Project/Http/Project/Videos/Profiles/",
@@ -566,7 +573,7 @@
       "storage_antivirus": "disabled",
       "compose_profiles": "",
       "wait": "",
-      "services": ["Account", "Videos"]
+      "services": ["Account", "Realtime", "Videos"]
     },
     {
       "label": "Screenshots",

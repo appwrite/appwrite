@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 import { formatBitrate, formatResolution } from '@/lib/utils/video-format'
 import { useT } from '@/lib/i18n/translate'
 import { BufferVisualizer } from '../BufferVisualizer'
-import type { QoeMetrics, QoeState } from '../useQoeTracker'
+import { gradeUpscale, type QoeMetrics, type QoeState } from '../useQoeTracker'
 import type { StreamPlayerState } from '../useStreamPlayer'
 import { ChartLegend, TimeSeriesChart } from './TimeSeriesChart'
 import {
@@ -92,14 +92,7 @@ export function OverviewSection({
       : metrics.droppedRatio < 0.05
         ? 'fair'
         : 'poor'
-  const upscaleTone: Tone =
-    metrics.upscale == null
-      ? 'neutral'
-      : metrics.upscale <= 1.1
-        ? 'good'
-        : metrics.upscale <= 1.6
-          ? 'fair'
-          : 'poor'
+  const upscaleTone: Tone = gradeUpscale(metrics.upscale) ?? 'neutral'
   const bitrateShare =
     metrics.averageBitrate && metrics.maxBitrate
       ? metrics.averageBitrate / metrics.maxBitrate
@@ -135,8 +128,8 @@ export function OverviewSection({
           value={formatMs(metrics.startupMs)}
           tone={startupTone}
           hint={
-            player.manifestLoadedAt && player.loadStartedAt
-              ? `${t('Manifest')}: ${formatMs(player.manifestLoadedAt - player.loadStartedAt)}`
+            player.manifestLoadedAt && player.requestedAt
+              ? `${t('Manifest')}: ${formatMs(player.manifestLoadedAt - player.requestedAt)}`
               : undefined
           }
         />
@@ -413,14 +406,25 @@ function useFindings(
         ),
       })
     }
-    if (metrics.upscale != null && metrics.upscale > 1.6) {
+    const upscaleGrade = gradeUpscale(metrics.upscale)
+    if (
+      metrics.upscale != null &&
+      (upscaleGrade === 'fair' || upscaleGrade === 'poor')
+    ) {
+      const playing = stats?.videoHeight ?? 0
+      const larger = player.levels.some((l) => l.height > playing)
       list.push({
-        tone: 'warning',
+        tone: upscaleGrade === 'poor' ? 'error' : 'warning',
         title: t('Video is upscaled'),
-        metric: `${metrics.upscale.toFixed(1)}×`,
-        description: t(
-          'The player is larger than the rendition it receives, so the picture looks soft. Add a higher resolution rendition.',
-        ),
+        metric: `${metrics.upscale.toFixed(2)}×`,
+        description:
+          stats?.autoLevelEnabled === false && larger
+            ? t(
+                'The player is larger than the rendition it receives, so the picture looks soft. Quality is locked; switch to Auto quality to play a larger rendition.',
+              )
+            : t(
+                'The player is larger than the rendition it receives, so the picture looks soft. Add a higher resolution rendition.',
+              ),
       })
     }
     if (metrics.droppedRatio > 0.05) {

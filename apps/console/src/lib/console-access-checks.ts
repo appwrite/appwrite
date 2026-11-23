@@ -153,12 +153,20 @@ export function canCreateSite(
   return whenOrgRoles(access, features, access.canWriteSites)
 }
 
-/** Create videos, renditions, subtitles, timelines, and profiles (`videos.write`). */
+/** Create videos, renditions, and captions (`videos.write`). */
 export function canCreateVideo(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
 ): boolean {
   return whenOrgRoles(access, features, access.canWriteVideos)
+}
+
+/** Create, update, and delete encoding profiles (`project.videos.profiles.write`). */
+export function canManageVideoProfiles(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return whenOrgRoles(access, features, access.canWriteVideoProfiles)
 }
 
 /** Turn code review on or off for a repository (`reviews.write`). */
@@ -348,6 +356,7 @@ export function canSeeProjectNavItem(
     case 'sandboxes':
       return access.canSeeSandboxes
     case 'usage':
+    case 'monitors':
     case 'playground':
     case 'analytics':
       return access.canSeeProjects

@@ -2,20 +2,27 @@
 //! value objects and enums those classes take live in the Composer packages
 //! (`packages/<name>`), as plain PHP.
 //!
-//! `Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN` and
-//! `Utopia\Locale\Locale` are always registered: they have no PHP
-//! implementation. Every other library still has one, and its class is
-//! registered only when `_APP_EXTENSION_LIBRARIES` names its package
-//! (`user-agent`, `domains`, `emails`), so each can be canaried and switched back to PHP
-//! with a restart, not a deploy.
+//! `Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN`,
+//! `Utopia\Locale\Locale`, `Utopia\UserAgent\UserAgent`, `Utopia\Domains\Domain`,
+//! `Utopia\Emails\Email`, the validators of `utopia-php/validators` (`Utopia\Validator\Validator`
+//! and its leaves) and the password hashes of `utopia-php/auth` (`Utopia\Auth\Hash` and
+//! `Hashes\*`) are always registered: they have no PHP implementation.
+//!
+//! A library that still has one registers its classes only when `_APP_EXTENSION_LIBRARIES` names
+//! its package (`if enabled("<package>")` in [`startup`] or [`get_module`]), so it can be canaried
+//! and switched back to PHP with a restart, not a deploy: `detector` (`Utopia\Detector\*`).
 
+mod auth;
 mod canvas;
+mod classes;
+mod detector;
 mod domains;
 mod dsn;
 mod emails;
 mod locale;
 mod string;
 mod user_agent;
+mod validators;
 
 use ext_php_rs::prelude::*;
 
@@ -28,19 +35,50 @@ fn enabled(package: &str) -> bool {
     std::env::var(LIBRARIES).is_ok_and(|list| list.split(',').any(|name| name.trim() == package))
 }
 
-/// The module PHP loads: every class of the extension that is switched on.
+/// The version `phpversion('utopia')` reports: `UTOPIA_EXTENSION_VERSION` when the build sets it
+/// (the published image stamps the Appwrite release, so packages can require a minimum
+/// `ext-utopia`), the crate version otherwise.
+fn version() -> &'static str {
+    match option_env!("UTOPIA_EXTENSION_VERSION") {
+        Some(version) if !version.is_empty() => version,
+        _ => env!("CARGO_PKG_VERSION"),
+    }
+}
+
+/// The module PHP loads: every class of the extension.
 #[php_module]
+#[php(startup = startup)]
 pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     let module = module
         .name("utopia")
+        .version(version())
         .class::<canvas::Canvas>()
         .class::<canvas::Font>()
         .class::<dsn::Dsn>()
-        .class::<locale::Locale>();
-    let module = if enabled("domains") { module.class::<domains::Domain>() } else { module };
-    let module = if enabled("emails") { module.class::<emails::Email>() } else { module };
-    let module = if enabled("user-agent") { module.class::<user_agent::UserAgent>() } else { module };
+        .class::<domains::Domain>()
+        .class::<emails::Email>();
     module.request_shutdown_function(request_shutdown)
+}
+
+/// Registers the classes built by hand rather than with `#[php_class]`: `Locale`, `UserAgent`, the
+/// validators, the password hashes and, when switched on, the detector. Runs in MINIT, before the
+/// `#[php_class]` classes are registered.
+fn startup(_kind: i32, _module: i32) -> i32 {
+    ext_php_rs::internal::startup_guard(|| {
+        locale::register()?;
+        user_agent::register()?;
+        // The leaves extend the base, so it is registered first.
+        validators::register()?;
+        validators::scalar::register()?;
+        validators::text::register()?;
+        validators::network::register()?;
+        validators::compose::register()?;
+        auth::register()?;
+        if enabled("detector") {
+            detector::register()?;
+        }
+        Ok(())
+    })
 }
 
 /// Forgets what the classes hold for the request when it ends, as PHP frees its static state.

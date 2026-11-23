@@ -97,10 +97,16 @@ class Monitor extends Model
             ])
             ->addRule('notify', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Organization roles whose confirmed members get an email and a console notification when the monitor fires and resolves. Empty when the alert events are the only delivery.',
+                'description' => 'Organization roles whose confirmed members get an email and a console notification when the monitor fires and resolves. Empty when the alert events are the only delivery. Not used while `escalationId` is set.',
                 'default' => ['owner'],
                 'example' => ['owner'],
                 'array' => true,
+            ])
+            ->addRule('escalationId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'ID of the organization\'s escalation that notifies the team of this monitor\'s alerts, step by step until one is acknowledged. When set, `notify` is not used. Empty to notify the `notify` roles once.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
             ])
             ->addRule('severity', [
                 'type' => self::TYPE_ENUM,
