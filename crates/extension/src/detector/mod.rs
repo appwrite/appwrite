@@ -305,7 +305,7 @@ fn args(ex: &mut ExecuteData, required: usize, total: usize) -> Option<Vec<&'sta
 /// and its methods are these.
 fn native(ce: &ClassEntry) -> bool {
     /// `ZEND_INTERNAL_CLASS`.
-    const INTERNAL_CLASS: i8 = 1;
+    const INTERNAL_CLASS: std::ffi::c_char = 1;
     ce.type_ == INTERNAL_CLASS
 }
 
