@@ -1081,7 +1081,11 @@ class Appwrite extends Destination
         if ($this->onDuplicate !== OnDuplicate::Fail) {
             $existingAttr = $this->dbForProject->getDocument(self::META_ATTRIBUTES, $attributeMetaId);
             // Meta document without a schema column (run killed between the two writes): rebuild it whatever the timestamps or spec say.
-            $orphaned = !$existingAttr->isEmpty() && !$this->schemaHoldsAttribute($dbForDatabases, $this->tableCollectionId($database, $table), $resource->getKey());
+            $orphaned = !$existingAttr->isEmpty() && !\in_array(
+                $resource->getKey(),
+                \array_column($dbForDatabases->findCollection($this->tableCollectionId($database, $table))?->attributes() ?? [], 'key'),
+                true,
+            );
             $action = $orphaned ? SchemaAction::Overwrite : $this->onDuplicate->resolveSchemaAction(
                 !$existingAttr->isEmpty(),
                 $updatedAt,
@@ -1470,7 +1474,11 @@ class Appwrite extends Destination
             $collectionId = $this->tableCollectionId($database, $table);
             // Meta document without a schema index (run killed between the two writes, or the stuck-index bug
             // fixed in appwrite/appwrite#15471): rebuild it whatever the timestamps or spec say.
-            $orphaned = !$existingIdx->isEmpty() && !$this->schemaHoldsIndex($dbForDatabases, $collectionId, $resource->getKey());
+            $orphaned = !$existingIdx->isEmpty() && !\in_array(
+                $resource->getKey(),
+                \array_column($dbForDatabases->findCollection($collectionId)?->indexes() ?? [], 'key'),
+                true,
+            );
             $action = $orphaned ? SchemaAction::Overwrite : $this->onDuplicate->resolveSchemaAction(
                 !$existingIdx->isEmpty(),
                 $updatedAt,
@@ -2376,28 +2384,6 @@ class Appwrite extends Destination
         $this->bestEffort(fn () => $dbForDatabases->deleteIndex($collectionId, $indexKey));
         $this->bestEffort(fn () => $this->dbForProject->deleteDocument(self::META_INDEXES, $indexMetaId));
         $this->dbForProject->purgeCachedDocument($this->databaseCollectionId($database), $table->getId());
-    }
-
-    private function schemaHoldsAttribute(UtopiaDatabase $dbForDatabases, string $collectionId, string $key): bool
-    {
-        foreach ($dbForDatabases->findCollection($collectionId)?->attributes() ?? [] as $attribute) {
-            if ($attribute->key === $key) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private function schemaHoldsIndex(UtopiaDatabase $dbForDatabases, string $collectionId, string $key): bool
-    {
-        foreach ($dbForDatabases->findCollection($collectionId)?->indexes() ?? [] as $index) {
-            if ($index->key === $key) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /** Swallows deletion errors — a prior run or relationship cascade may have already removed the target. */
