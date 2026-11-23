@@ -3690,6 +3690,11 @@
             "apiSecretKey",
             "enabled"
         ],
+        "project.updateOAuth2Supabase": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2TikTok": [
             "clientId",
             "clientSecret",
@@ -8198,6 +8203,11 @@
         "project.updateOAuth2Stripe": [
             "clientId",
             "apiSecretKey",
+            "enabled"
+        ],
+        "project.updateOAuth2Supabase": [
+            "clientId",
+            "clientSecret",
             "enabled"
         ],
         "project.updateOAuth2TikTok": [
