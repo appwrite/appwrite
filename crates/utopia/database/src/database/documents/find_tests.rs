@@ -959,11 +959,21 @@ fn qualified_orders_and_tie_breaks_of_joins() {
         Query::join("as", "a", vec![Query::on("ref", "a.$id", "=")]).unwrap(),
         Query::left_join("bs", "b", vec![Query::on("$id", "b.owner", "=")]).unwrap(),
     ];
-    let (orders, types) =
-        super::find::add_tie_breaks(vec!["name".into()], vec![OrderDirection::Desc], &[], &joins, &joined, false, &[]);
+    let (orders, types) = super::find::add_tie_breaks(
+        &main,
+        vec!["name".into()],
+        vec![OrderDirection::Desc],
+        &[],
+        &joins,
+        &joined,
+        false,
+        &[],
+    )
+    .unwrap();
     assert_eq!(orders, ["name", "$sequence", "b.$id"]);
-    assert_eq!(types, [OrderDirection::Desc, OrderDirection::Asc, OrderDirection::Asc]);
+    assert_eq!(types, [OrderDirection::Desc, OrderDirection::Desc, OrderDirection::Asc]);
     let (orders, _) = super::find::add_tie_breaks(
+        &main,
         vec!["name".into()],
         vec![OrderDirection::Asc],
         &[],
@@ -971,8 +981,424 @@ fn qualified_orders_and_tie_breaks_of_joins() {
         &joined,
         false,
         &[Query::select(["name"])],
-    );
+    )
+    .unwrap();
     assert_eq!(orders, ["name", "$sequence"]);
+}
+
+// ---- FindLogicTest: the sequence tie break's direction (10.2.3) ----------
+
+/// The orders the one find on `indexes` over `testCol` sends the adapter.
+fn sent_orders(attributes: Vec<Attribute>, indexes: Vec<Index>, reads: Vec<Vec<Query>>) -> Vec<Orders> {
+    block_on(async {
+        let adapter = stub(vec![collection("testCol", attributes, indexes, None, true)], &BASE, none());
+        let db = uncached(adapter.clone());
+        for queries in reads {
+            db.find("testCol", queries, PermissionType::Read).await.unwrap();
+        }
+        finds(&adapter).into_iter().map(|(_, _, options)| (options.order_attributes, options.order_types)).collect()
+    })
+}
+
+/// The order attributes and directions a find sends the adapter.
+type Orders = (Vec<String>, Vec<OrderDirection>);
+
+fn orders(attributes: &[&str], types: &[OrderDirection]) -> Orders {
+    (attributes.iter().map(|a| (*a).to_owned()).collect(), types.to_vec())
+}
+
+const ASC: OrderDirection = OrderDirection::Asc;
+const DESC: OrderDirection = OrderDirection::Desc;
+
+#[test]
+fn descending_order_appends_descending_sequence_tie_break() {
+    let sent = sent_orders(vec![Attribute::integer("age")], Vec::new(), vec![vec![Query::order_desc("age", None)]]);
+    assert_eq!(sent, [orders(&["age", "$sequence"], &[DESC, DESC])]);
+}
+
+#[test]
+fn date_orders_follow_their_index_direction() {
+    let index = Index::key("updated_desc", ["$updatedAt"], Vec::new(), vec![Some(DESC)]).unwrap();
+    let sent = sent_orders(
+        Vec::new(),
+        vec![index],
+        vec![
+            vec![Query::order_desc("$createdAt", None)],
+            vec![Query::order_asc("$createdAt", None)],
+            vec![Query::order_desc("$updatedAt", None)],
+        ],
+    );
+    assert_eq!(
+        sent,
+        [
+            orders(&["$createdAt", "$sequence"], &[DESC, DESC]),
+            orders(&["$createdAt", "$sequence"], &[ASC, ASC]),
+            orders(&["$updatedAt", "$sequence"], &[DESC, ASC]),
+        ]
+    );
+}
+
+#[test]
+fn descending_index_keeps_ascending_sequence_tie_break() {
+    let index = Index::key("age_desc", ["age"], Vec::new(), vec![Some(DESC)]).unwrap();
+    let sent = sent_orders(
+        vec![Attribute::integer("age")],
+        vec![index],
+        vec![vec![Query::order_desc("age", None)], vec![Query::order_asc("age", None)]],
+    );
+    assert_eq!(sent, [orders(&["age", "$sequence"], &[DESC, ASC]), orders(&["age", "$sequence"], &[ASC, DESC])]);
+}
+
+/// An index of `compoundIndexTieBreakProvider()`: its type, attributes,
+/// orders and lengths.
+struct Spec(&'static str, &'static [&'static str], &'static [OrderDirection], &'static [i64]);
+
+/// `testCompoundIndexTieBreakDirection()` over every case of
+/// `compoundIndexTieBreakProvider()`.
+#[test]
+fn compound_index_tie_break_direction() {
+    let status_age_desc = Spec("key", &["status", "age"], &[ASC, DESC], &[]);
+    let status_age_asc = Spec("key", &["status", "age"], &[ASC, ASC], &[]);
+    let status_type_age_desc = Spec("key", &["status", "type", "age"], &[ASC, ASC, DESC], &[]);
+    let status_age_desc_type = || Spec("key", &["status", "age", "type"], &[ASC, DESC, ASC], &[]);
+    let status_name_desc_age = || Spec("key", &["status", "name", "age"], &[ASC, DESC, ASC], &[]);
+    let eq = |attribute: &str, values: &[&str]| {
+        Query::equal(attribute, values.iter().map(|v| (*v).to_owned()).collect::<Vec<_>>())
+    };
+    let desc = |attribute: &str| Query::order_desc(attribute, None);
+    let asc = |attribute: &str| Query::order_asc(attribute, None);
+    let page = doc(vec![
+        ("$id", string("page")),
+        ("$sequence", Value::Int(17)),
+        ("$collection", string("testCol")),
+        ("status", string("active")),
+        ("age", Value::Int(30)),
+    ]);
+    let age_tie = |types: [OrderDirection; 2]| orders(&["age", "$sequence"], &types);
+    let copy = |s: &Spec| Spec(s.0, s.1, s.2, s.3);
+
+    let cases: Vec<(&str, Vec<Spec>, Vec<Query>, Orders)> = vec![
+        (
+            "(status, age DESC), status = ?, age DESC reads forward",
+            vec![copy(&status_age_desc)],
+            vec![eq("status", &["active"]), desc("age")],
+            age_tie([DESC, ASC]),
+        ),
+        (
+            "(status, age DESC), status = ?, age ASC reads backward",
+            vec![copy(&status_age_desc)],
+            vec![eq("status", &["active"]), asc("age")],
+            age_tie([ASC, DESC]),
+        ),
+        (
+            "(status, age), status = ?, age DESC reads backward",
+            vec![copy(&status_age_asc)],
+            vec![eq("status", &["active"]), desc("age")],
+            age_tie([DESC, DESC]),
+        ),
+        (
+            "(status, age), status = ?, age ASC reads forward",
+            vec![copy(&status_age_asc)],
+            vec![eq("status", &["active"]), asc("age")],
+            age_tie([ASC, ASC]),
+        ),
+        (
+            "(status, type, age DESC), both pinned",
+            vec![copy(&status_type_age_desc)],
+            vec![eq("status", &["active"]), eq("type", &["a"]), desc("age")],
+            age_tie([DESC, ASC]),
+        ),
+        (
+            "(status, type, age DESC), only status pinned",
+            vec![copy(&status_type_age_desc)],
+            vec![eq("status", &["active"]), desc("age")],
+            age_tie([DESC, DESC]),
+        ),
+        (
+            "(status, age DESC), no status filter",
+            vec![copy(&status_age_desc)],
+            vec![desc("age")],
+            age_tie([DESC, DESC]),
+        ),
+        (
+            "(status, age DESC), status IN (a, b)",
+            vec![copy(&status_age_desc)],
+            vec![eq("status", &["active", "archived"]), desc("age")],
+            age_tie([DESC, DESC]),
+        ),
+        (
+            "(status, age DESC), status range filter",
+            vec![copy(&status_age_desc)],
+            vec![Query::greater_than("status", "a"), desc("age")],
+            age_tie([DESC, DESC]),
+        ),
+        (
+            "(age DESC) and (status, age DESC)",
+            vec![Spec("key", &["age"], &[DESC], &[]), copy(&status_age_desc)],
+            vec![eq("status", &["active"]), desc("age")],
+            age_tie([DESC, ASC]),
+        ),
+        (
+            "(name(64) DESC) prefix index",
+            vec![Spec("key", &["name"], &[DESC], &[64])],
+            vec![desc("name")],
+            orders(&["name", "$sequence"], &[DESC, DESC]),
+        ),
+        (
+            "(name(128) DESC) length covers the column",
+            vec![Spec("key", &["name"], &[DESC], &[128])],
+            vec![desc("name")],
+            orders(&["name", "$sequence"], &[DESC, ASC]),
+        ),
+        (
+            "(status(8), age DESC) prefix on a pinned column",
+            vec![Spec("key", &["status", "age"], &[ASC, DESC], &[8, 0])],
+            vec![eq("status", &["active"]), desc("age")],
+            age_tie([DESC, ASC]),
+        ),
+        (
+            "(status(8), name(16) DESC) prefix on the order column",
+            vec![Spec("key", &["status", "name"], &[ASC, DESC], &[8, 16])],
+            vec![eq("status", &["active"]), desc("name")],
+            orders(&["name", "$sequence"], &[DESC, DESC]),
+        ),
+        (
+            "(status, type, name, age DESC), all three pinned",
+            vec![Spec("key", &["status", "type", "name", "age"], &[ASC, ASC, ASC, DESC], &[])],
+            vec![eq("status", &["active"]), eq("type", &["a"]), eq("name", &["n"]), desc("age")],
+            age_tie([DESC, ASC]),
+        ),
+        (
+            "(status, type, age DESC), filters in another order",
+            vec![copy(&status_type_age_desc)],
+            vec![eq("type", &["a"]), eq("status", &["active"]), desc("age")],
+            age_tie([DESC, ASC]),
+        ),
+        (
+            "(status, age DESC), extra filters outside the index",
+            vec![copy(&status_age_desc)],
+            vec![eq("status", &["active"]), eq("type", &["a"]), Query::greater_than("name", "m"), desc("age")],
+            age_tie([DESC, ASC]),
+        ),
+        (
+            "(status, type, age DESC), only the second column pinned",
+            vec![copy(&status_type_age_desc)],
+            vec![eq("type", &["a"]), desc("age")],
+            age_tie([DESC, DESC]),
+        ),
+        (
+            "(status, type, age DESC), type range",
+            vec![copy(&status_type_age_desc)],
+            vec![eq("status", &["active"]), Query::greater_than("type", "a"), desc("age")],
+            age_tie([DESC, DESC]),
+        ),
+        (
+            "(status, type, age DESC), type IN (a, b)",
+            vec![copy(&status_type_age_desc)],
+            vec![eq("status", &["active"]), eq("type", &["a", "b"]), desc("age")],
+            age_tie([DESC, DESC]),
+        ),
+        (
+            "(status, age DESC, type), type unpinned after the order column",
+            vec![status_age_desc_type()],
+            vec![eq("status", &["active"]), desc("age")],
+            age_tie([DESC, DESC]),
+        ),
+        (
+            "(status, age DESC, type), type pinned after the order column",
+            vec![status_age_desc_type()],
+            vec![eq("status", &["active"]), eq("type", &["a"]), desc("age")],
+            age_tie([DESC, ASC]),
+        ),
+        (
+            "(status, age DESC, type), age ASC reads backward",
+            vec![status_age_desc_type()],
+            vec![eq("status", &["active"]), eq("type", &["a"]), asc("age")],
+            age_tie([ASC, DESC]),
+        ),
+        (
+            "(status, age DESC, type), type IS NULL",
+            vec![status_age_desc_type()],
+            vec![eq("status", &["active"]), Query::is_null("type"), desc("age")],
+            age_tie([DESC, ASC]),
+        ),
+        (
+            "(status, age DESC, type, name), type pinned between two order columns",
+            vec![Spec("key", &["status", "age", "type", "name"], &[ASC, DESC, ASC, ASC], &[])],
+            vec![eq("status", &["active"]), eq("type", &["a"]), desc("age"), asc("name")],
+            orders(&["age", "name", "$sequence"], &[DESC, ASC, ASC]),
+        ),
+        (
+            "(status, age DESC, type, name), type unpinned between two order columns",
+            vec![Spec("key", &["status", "age", "type", "name"], &[ASC, DESC, ASC, ASC], &[])],
+            vec![eq("status", &["active"]), desc("age"), asc("name")],
+            orders(&["age", "name", "$sequence"], &[DESC, ASC, DESC]),
+        ),
+        (
+            "(age DESC, status), status = ? after the only order column",
+            vec![Spec("key", &["age", "status"], &[DESC, ASC], &[])],
+            vec![eq("status", &["active"]), desc("age")],
+            age_tie([DESC, ASC]),
+        ),
+        (
+            "(type, age) unpinned, then (status, age DESC) pinned",
+            vec![Spec("key", &["type", "age"], &[ASC, ASC], &[]), copy(&status_age_desc)],
+            vec![eq("status", &["active"]), desc("age")],
+            age_tie([DESC, ASC]),
+        ),
+        (
+            "(status, type, age) partly pinned, then (status, age DESC) pinned",
+            vec![Spec("key", &["status", "type", "age"], &[ASC, ASC, ASC], &[]), copy(&status_age_desc)],
+            vec![eq("status", &["active"]), desc("age")],
+            age_tie([DESC, ASC]),
+        ),
+        (
+            "(status, age DESC), cursorAfter",
+            vec![copy(&status_age_desc)],
+            vec![eq("status", &["active"]), desc("age"), Query::cursor_after(&page)],
+            age_tie([DESC, ASC]),
+        ),
+        (
+            "(status, age DESC), cursorBefore",
+            vec![copy(&status_age_desc)],
+            vec![eq("status", &["active"]), desc("age"), Query::cursor_before(&page)],
+            age_tie([DESC, ASC]),
+        ),
+        (
+            "(status, name DESC, age), name DESC, age ASC reads forward",
+            vec![status_name_desc_age()],
+            vec![eq("status", &["active"]), desc("name"), asc("age")],
+            orders(&["name", "age", "$sequence"], &[DESC, ASC, ASC]),
+        ),
+        (
+            "(status, name DESC, age), name ASC, age DESC reads backward",
+            vec![status_name_desc_age()],
+            vec![eq("status", &["active"]), asc("name"), desc("age")],
+            orders(&["name", "age", "$sequence"], &[ASC, DESC, DESC]),
+        ),
+        (
+            "(status, name DESC, age), name DESC, age DESC mixes",
+            vec![status_name_desc_age()],
+            vec![eq("status", &["active"]), desc("name"), desc("age")],
+            orders(&["name", "age", "$sequence"], &[DESC, DESC, DESC]),
+        ),
+        (
+            "(status, age DESC), status != ?",
+            vec![copy(&status_age_desc)],
+            vec![Query::not_equal("status", "archived"), desc("age")],
+            age_tie([DESC, DESC]),
+        ),
+        (
+            "(status, age DESC), status IS NULL, age DESC",
+            vec![copy(&status_age_desc)],
+            vec![Query::is_null("status"), desc("age")],
+            age_tie([DESC, ASC]),
+        ),
+        (
+            "(status, age DESC), status IS NULL, age ASC",
+            vec![copy(&status_age_desc)],
+            vec![Query::is_null("status"), asc("age")],
+            age_tie([ASC, DESC]),
+        ),
+        (
+            "(status, type, age DESC), status IS NULL and type = ?",
+            vec![copy(&status_type_age_desc)],
+            vec![Query::is_null("status"), eq("type", &["a"]), desc("age")],
+            age_tie([DESC, ASC]),
+        ),
+        (
+            "(status, age DESC), status IS NOT NULL",
+            vec![copy(&status_age_desc)],
+            vec![Query::is_not_null("status"), desc("age")],
+            age_tie([DESC, DESC]),
+        ),
+        (
+            "(status, age DESC), status = ? nested in and()",
+            vec![copy(&status_age_desc)],
+            vec![Query::and([eq("status", &["active"]), Query::greater_than("age", 1)]), desc("age")],
+            age_tie([DESC, ASC]),
+        ),
+        (
+            "(status, type, age DESC), nested and(and())",
+            vec![copy(&status_type_age_desc)],
+            vec![
+                eq("status", &["active"]),
+                Query::and([
+                    Query::greater_than("age", 1),
+                    Query::and([eq("type", &["a"]), Query::less_than("age", 99)]),
+                ]),
+                desc("age"),
+            ],
+            age_tie([DESC, ASC]),
+        ),
+        (
+            "(status, age DESC), status = ? inside or()",
+            vec![copy(&status_age_desc)],
+            vec![Query::or([eq("status", &["active"]), Query::greater_than("age", 1)]), desc("age")],
+            age_tie([DESC, DESC]),
+        ),
+        (
+            "(status, age DESC), and() inside or()",
+            vec![copy(&status_age_desc)],
+            vec![
+                Query::or([
+                    Query::and([eq("status", &["active"]), Query::greater_than("age", 1)]),
+                    eq("status", &["archived"]),
+                ]),
+                desc("age"),
+            ],
+            age_tie([DESC, DESC]),
+        ),
+        (
+            "unique (status, age DESC)",
+            vec![Spec("unique", &["status", "age"], &[ASC, DESC], &[])],
+            vec![eq("status", &["active"]), desc("age")],
+            age_tie([DESC, ASC]),
+        ),
+        (
+            "fulltext (name) is ignored",
+            vec![Spec("fulltext", &["name"], &[], &[])],
+            vec![desc("name")],
+            orders(&["name", "$sequence"], &[DESC, DESC]),
+        ),
+        (
+            "(status, age) before (status, age DESC), first wins",
+            vec![copy(&status_age_asc), copy(&status_age_desc)],
+            vec![eq("status", &["active"]), desc("age")],
+            age_tie([DESC, DESC]),
+        ),
+        (
+            "(status, age DESC) before (status, age), first wins",
+            vec![copy(&status_age_desc), copy(&status_age_asc)],
+            vec![eq("status", &["active"]), desc("age")],
+            age_tie([DESC, ASC]),
+        ),
+    ];
+
+    for (name, specs, queries, expected) in cases {
+        let indexes = specs
+            .iter()
+            .enumerate()
+            .map(|(position, Spec(kind, attributes, directions, lengths))| {
+                let key = format!("index_{position}");
+                let lengths: Vec<Option<i64>> = lengths.iter().map(|l| Some(*l)).collect();
+                let directions: Vec<Option<OrderDirection>> = directions.iter().map(|d| Some(*d)).collect();
+                match *kind {
+                    "unique" => Index::unique(key, attributes.iter().copied(), lengths, directions).unwrap(),
+                    "fulltext" => Index::fulltext(key, attributes.iter().copied()),
+                    _ => Index::key(key, attributes.iter().copied(), lengths, directions).unwrap(),
+                }
+            })
+            .collect();
+        let attributes = vec![
+            Attribute::string("status", 32),
+            Attribute::string("type", 32),
+            Attribute::string("name", 128),
+            Attribute::integer("age"),
+        ];
+        let sent = sent_orders(attributes, indexes, vec![queries]);
+        assert_eq!(sent, [expected], "{name}");
+    }
 }
 
 // ---- CustomDocumentTypeTest ------------------------------------------------

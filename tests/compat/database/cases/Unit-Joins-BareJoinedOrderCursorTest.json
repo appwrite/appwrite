@@ -25870,13 +25870,13 @@
             },
             {
               "$document": {
-                "name": "store s2",
-                "it.store": "s2",
-                "it.name": "item i4",
+                "name": "store s3",
+                "it.store": null,
+                "it.name": null,
                 "it.price": null,
-                "it.$id": "i4",
-                "$id": "s2",
-                "$sequence": "2",
+                "it.$id": null,
+                "$id": "s3",
+                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -25887,13 +25887,13 @@
             },
             {
               "$document": {
-                "name": "store s3",
-                "it.store": null,
-                "it.name": null,
+                "name": "store s2",
+                "it.store": "s2",
+                "it.name": "item i4",
                 "it.price": null,
-                "it.$id": null,
-                "$id": "s3",
-                "$sequence": "3",
+                "it.$id": "i4",
+                "$id": "s2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -26402,13 +26402,13 @@
             },
             {
               "$document": {
-                "name": "store s2",
-                "it.store": "s2",
-                "it.name": "item i4",
+                "name": "store s3",
+                "it.store": null,
+                "it.name": null,
                 "it.price": null,
-                "it.$id": "i4",
-                "$id": "s2",
-                "$sequence": "2",
+                "it.$id": null,
+                "$id": "s3",
+                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -26419,13 +26419,13 @@
             },
             {
               "$document": {
-                "name": "store s3",
-                "it.store": null,
-                "it.name": null,
+                "name": "store s2",
+                "it.store": "s2",
+                "it.name": "item i4",
                 "it.price": null,
-                "it.$id": null,
-                "$id": "s3",
-                "$sequence": "3",
+                "it.$id": "i4",
+                "$id": "s2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -26934,13 +26934,13 @@
             },
             {
               "$document": {
-                "name": "store s2",
-                "it.store": "s2",
-                "it.name": "item i4",
+                "name": "store s3",
+                "it.store": null,
+                "it.name": null,
                 "it.price": null,
-                "it.$id": "i4",
-                "$id": "s2",
-                "$sequence": "2",
+                "it.$id": null,
+                "$id": "s3",
+                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -26951,13 +26951,13 @@
             },
             {
               "$document": {
-                "name": "store s3",
-                "it.store": null,
-                "it.name": null,
+                "name": "store s2",
+                "it.store": "s2",
+                "it.name": "item i4",
                 "it.price": null,
-                "it.$id": null,
-                "$id": "s3",
-                "$sequence": "3",
+                "it.$id": "i4",
+                "$id": "s2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -27511,13 +27511,13 @@
             },
             {
               "$document": {
-                "name": "store s2",
-                "it.store": "s2",
-                "it.name": "item i4",
+                "name": "store s3",
+                "it.store": null,
+                "it.name": null,
                 "it.price": null,
-                "it.$id": "i4",
-                "$id": "s2",
-                "$sequence": "2",
+                "it.$id": null,
+                "$id": "s3",
+                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -27528,13 +27528,13 @@
             },
             {
               "$document": {
-                "name": "store s3",
-                "it.store": null,
-                "it.name": null,
+                "name": "store s2",
+                "it.store": "s2",
+                "it.name": "item i4",
                 "it.price": null,
-                "it.$id": null,
-                "$id": "s3",
-                "$sequence": "3",
+                "it.$id": "i4",
+                "$id": "s2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -28114,13 +28114,13 @@
             },
             {
               "$document": {
-                "name": "store s2",
-                "it.store": "s2",
-                "it.name": "item i4",
+                "name": "store s3",
+                "it.store": null,
+                "it.name": null,
                 "it.price": null,
-                "it.$id": "i4",
-                "$id": "s2",
-                "$sequence": "2",
+                "it.$id": null,
+                "$id": "s3",
+                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -28131,13 +28131,13 @@
             },
             {
               "$document": {
-                "name": "store s3",
-                "it.store": null,
-                "it.name": null,
+                "name": "store s2",
+                "it.store": "s2",
+                "it.name": "item i4",
                 "it.price": null,
-                "it.$id": null,
-                "$id": "s3",
-                "$sequence": "3",
+                "it.$id": "i4",
+                "$id": "s2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -28718,13 +28718,13 @@
             },
             {
               "$document": {
-                "name": "store s2",
-                "it.store": "s2",
-                "it.name": "item i4",
+                "name": "store s3",
+                "it.store": null,
+                "it.name": null,
                 "it.price": null,
-                "it.$id": "i4",
-                "$id": "s2",
-                "$sequence": "2",
+                "it.$id": null,
+                "$id": "s3",
+                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -28735,13 +28735,13 @@
             },
             {
               "$document": {
-                "name": "store s3",
-                "it.store": null,
-                "it.name": null,
+                "name": "store s2",
+                "it.store": "s2",
+                "it.name": "item i4",
                 "it.price": null,
-                "it.$id": null,
-                "$id": "s3",
-                "$sequence": "3",
+                "it.$id": "i4",
+                "$id": "s2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -29322,13 +29322,13 @@
           "expect": [
             {
               "$document": {
-                "name": "store s2",
-                "it.store": "s2",
-                "it.name": "item i4",
+                "name": "store s3",
+                "it.store": null,
+                "it.name": null,
                 "it.price": null,
-                "it.$id": "i4",
-                "$id": "s2",
-                "$sequence": "2",
+                "it.$id": null,
+                "$id": "s3",
+                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -29339,13 +29339,13 @@
             },
             {
               "$document": {
-                "name": "store s3",
-                "it.store": null,
-                "it.name": null,
+                "name": "store s2",
+                "it.store": "s2",
+                "it.name": "item i4",
                 "it.price": null,
-                "it.$id": null,
-                "$id": "s3",
-                "$sequence": "3",
+                "it.$id": "i4",
+                "$id": "s2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -29940,25 +29940,7 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "store s3",
-                "it.store": null,
-                "it.name": null,
-                "it.price": null,
-                "it.$id": null,
-                "$id": "s3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "stores"
-              }
-            }
-          ]
+          "expect": []
         },
         {
           "op": "object.call",
@@ -30190,6 +30172,23 @@
                 "it.$id": "i5",
                 "$id": "s1",
                 "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "stores"
+              }
+            },
+            {
+              "$document": {
+                "name": "store s3",
+                "it.store": null,
+                "it.name": null,
+                "it.price": null,
+                "it.$id": null,
+                "$id": "s3",
+                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -30561,7 +30560,25 @@
               ]
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "store s2",
+                "it.store": "s2",
+                "it.name": "item i4",
+                "it.price": null,
+                "it.$id": "i4",
+                "$id": "s2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "stores"
+              }
+            }
+          ]
         },
         {
           "op": "object.call",
@@ -30729,23 +30746,6 @@
                 "it.$id": "i5",
                 "$id": "s1",
                 "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "stores"
-              }
-            },
-            {
-              "$document": {
-                "name": "store s2",
-                "it.store": "s2",
-                "it.name": "item i4",
-                "it.price": null,
-                "it.$id": "i4",
-                "$id": "s2",
-                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -31662,13 +31662,13 @@
           "expect": [
             {
               "$document": {
-                "name": "store s2",
-                "it.store": "s2",
-                "it.name": "item i4",
+                "name": "store s3",
+                "it.store": null,
+                "it.name": null,
                 "it.price": null,
-                "it.$id": "i4",
-                "$id": "s2",
-                "$sequence": "2",
+                "it.$id": null,
+                "$id": "s3",
+                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -31679,13 +31679,13 @@
             },
             {
               "$document": {
-                "name": "store s3",
-                "it.store": null,
-                "it.name": null,
+                "name": "store s2",
+                "it.store": "s2",
+                "it.name": "item i4",
                 "it.price": null,
-                "it.$id": null,
-                "$id": "s3",
-                "$sequence": "3",
+                "it.$id": "i4",
+                "$id": "s2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -31929,7 +31929,25 @@
               ]
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "store s2",
+                "it.store": "s2",
+                "it.name": "item i4",
+                "it.price": null,
+                "it.$id": "i4",
+                "$id": "s2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "stores"
+              }
+            }
+          ]
         },
         {
           "op": "object.call",
@@ -32105,9 +32123,9 @@
               "$document": {
                 "name": "store s1",
                 "it.store": "s1",
-                "it.name": "item i5",
-                "it.price": 5,
-                "it.$id": "i5",
+                "it.name": "item i2",
+                "it.price": 10,
+                "it.$id": "i2",
                 "$id": "s1",
                 "$sequence": "1",
                 "$createdAt": "<now>",
@@ -32120,13 +32138,13 @@
             },
             {
               "$document": {
-                "name": "store s2",
-                "it.store": "s2",
-                "it.name": "item i4",
-                "it.price": null,
-                "it.$id": "i4",
-                "$id": "s2",
-                "$sequence": "2",
+                "name": "store s1",
+                "it.store": "s1",
+                "it.name": "item i5",
+                "it.price": 5,
+                "it.$id": "i5",
+                "$id": "s1",
+                "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [

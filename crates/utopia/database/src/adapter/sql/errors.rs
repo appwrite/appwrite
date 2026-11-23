@@ -27,6 +27,18 @@ const MARIADB_INVALID_GEOMETRY_ERRORS: &[i64] = &[3037];
 /// ER_LONGITUDE_OUT_OF_RANGE and ER_LATITUDE_OUT_OF_RANGE (8.3.4).
 const MYSQL_INVALID_GEOMETRY_ERRORS: &[i64] = &[3037, 3616, 3617];
 
+/// `MariaDB::SCHEMA_LIMIT_ERRORS`: ER_TOO_MANY_KEYS, ER_TOO_MANY_KEY_PARTS,
+/// ER_TOO_BIG_FIELDLENGTH, ER_TOO_MANY_FIELDS and ER_TOO_BIG_ROWSIZE, a
+/// table definition the engine refuses for exceeding one of its own limits
+/// (10.2.3).
+const SCHEMA_LIMIT_ERRORS: &[(i64, &str)] = &[
+    (1069, "Index limit reached"),
+    (1070, "Index attribute limit reached"),
+    (1074, "Attribute size limit reached"),
+    (1117, "Column limit reached"),
+    (1118, "Row width limit reached"),
+];
+
 /// `Postgres::QUOTED_IDENTIFIER`.
 const QUOTED_IDENTIFIER: &[u8] = "/[\"\u{AB}\u{BB}\u{201C}\u{201D}\u{201E}\u{300C}\u{300D}][\\s\u{A0}\u{202F}]*([^\"\u{AB}\u{BB}\u{201C}\u{201D}\u{201E}\u{300C}\u{300D}]+?)[\\s\u{A0}\u{202F}]*[\"\u{AB}\u{BB}\u{201C}\u{201D}\u{201E}\u{300C}\u{300D}]/u".as_bytes();
 
@@ -135,6 +147,8 @@ impl Sql {
                     mapped(Kind::Limit, "Invalid argument for power function")
                 } else if is("22008", 7) {
                     mapped(Kind::Limit, "Datetime field overflow")
+                } else if is("54011", 7) {
+                    mapped(Kind::Limit, "Column limit reached")
                 } else if is("54000", 7) && message.contains("index row") {
                     mapped(Kind::Limit, "Index row size exceeds the maximum")
                 } else if is("42P01", 7) {
@@ -242,6 +256,8 @@ impl Sql {
             found(Kind::Duplicate, "Attribute already exists")
         } else if is("42000", 1061) {
             found(Kind::Duplicate, "Index already exists")
+        } else if let Some((_, limit)) = SCHEMA_LIMIT_ERRORS.iter().find(|(c, _)| code == Some(*c)) {
+            found(Kind::Limit, limit)
         } else if is("42000", 1071) {
             found(Kind::Index, "Index key length exceeds the maximum")
         } else if is("23000", 1062) {
@@ -369,6 +385,67 @@ mod tests {
         assert_eq!(
             mapped(&sqlite, driver("HY000", 1, "SQLSTATE[HY000]: General error: 1 integer overflow")),
             (Kind::Limit, "Value out of range".to_owned())
+        );
+    }
+
+    /// PHP 10.2.3 EngineErrorMappingTest::testTableDefinitionPastAnEngineLimitIsALimit
+    /// (MariaDB.php:1606-1609, Postgres.php:2017-2019): a table definition
+    /// past one of the engine's own limits is a limit.
+    #[utopia_async::test]
+    async fn table_definition_past_an_engine_limit_is_a_limit() {
+        let errors = [
+            (
+                "42000",
+                1118,
+                "SQLSTATE[42000]: Syntax error or access violation: 1118 Row size too large. The maximum row size for the used table type, not counting BLOBs, is 8126. This includes storage overhead, check the manual. You have to change some columns to TEXT or BLOBs",
+                "Row width limit reached",
+            ),
+            ("HY000", 1117, "SQLSTATE[HY000]: General error: 1117 Too many columns", "Column limit reached"),
+            (
+                "42000",
+                1069,
+                "SQLSTATE[42000]: Syntax error or access violation: 1069 Too many keys specified; max 64 keys allowed",
+                "Index limit reached",
+            ),
+            (
+                "42000",
+                1070,
+                "SQLSTATE[42000]: Syntax error or access violation: 1070 Too many key parts specified; max 16 parts allowed",
+                "Index attribute limit reached",
+            ),
+            (
+                "42000",
+                1074,
+                "SQLSTATE[42000]: Syntax error or access violation: 1074 Column length too big for column 'notes' (max = 16383); use BLOB or TEXT instead",
+                "Attribute size limit reached",
+            ),
+        ];
+        for engine in [Engine::MariaDb, Engine::MySql] {
+            let sql = adapter(engine).await;
+            for (state, code, message, expected) in errors {
+                assert_eq!(mapped(&sql, driver(state, code, message)), (Kind::Limit, expected.to_owned()));
+            }
+        }
+        let postgres = adapter(Engine::Postgres).await;
+        assert_eq!(
+            mapped(
+                &postgres,
+                driver("54011", 7, "SQLSTATE[54011]: Too many columns: 7 ERROR:  tables can have at most 1600 columns")
+            ),
+            (Kind::Limit, "Column limit reached".to_owned())
+        );
+        // testPostgresProgramLimitOtherThanAnIndexRowStaysRaw
+        assert_eq!(
+            mapped(
+                &postgres,
+                driver(
+                    "54000",
+                    7,
+                    "SQLSTATE[54000]: Program limit exceeded: 7 ERROR:  row is too big: size 8168, maximum size 8160"
+                )
+            )
+            .0,
+            Kind::Pdo
         );
     }
 }

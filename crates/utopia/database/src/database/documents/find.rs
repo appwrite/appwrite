@@ -4,14 +4,16 @@
 //! `resolveSumAttribute()`, `aliasedJoinCollections()`,
 //! `qualifyJoinedAttribute()`, `declaresSumAttribute()`,
 //! `validateSumAttribute()`, `getSumValidator()`, `cursor()`, `pages()`,
-//! `aggregate()`, `aliasAggregates()`, `addTieBreaks()`, `nextPageCheck()`,
-//! `showsJoinedRows()`, `joinMatchesAtMostOneRow()`,
-//! `assertDistinctCursorOrder()`, `qualifyJoinedOrders()` and
-//! `assertCursorHasOrderValues()` of `Trait\Documents`.
+//! `aggregate()`, `aliasAggregates()`, `tieBreakDirection()`,
+//! `addTieBreaks()`, `nextPageCheck()`, `showsJoinedRows()`,
+//! `joinMatchesAtMostOneRow()`, `assertDistinctCursorOrder()`,
+//! `qualifyJoinedOrders()` and `assertCursorHasOrderValues()` of
+//! `Trait\Documents`.
 
 use std::collections::VecDeque;
 use std::sync::Arc;
 
+use utopia_query::schema::IndexType;
 use utopia_query::{CursorDirection, Method, OrderDirection, Value as QValue};
 
 use super::super::{BoxFuture, BoxStream, Database, METADATA, internal_attributes, warning};
@@ -208,6 +210,7 @@ impl Database {
 
         if !is_aggregation && !distinct {
             (order_attributes, order_types) = add_tie_breaks(
+                collection,
                 order_attributes,
                 order_types,
                 &filters,
@@ -215,7 +218,7 @@ impl Database {
                 &joined_collections,
                 cursor.is_some(),
                 &selects,
-            );
+            )?;
         }
 
         if let Some(c) = &cursor {
@@ -1171,6 +1174,7 @@ impl PageCheck {
             assert_distinct_cursor_order(&parsed.selections, &orders)?;
         } else {
             (orders, _) = add_tie_breaks(
+                &check.collection,
                 orders,
                 parsed.order_types.clone(),
                 &parsed.filters,
@@ -1178,7 +1182,7 @@ impl PageCheck {
                 &check.joined_collections,
                 true,
                 &parsed.selections,
-            );
+            )?;
         }
         assert_cursor_has_order_values(&cursor, &orders)
     }
@@ -1240,13 +1244,105 @@ pub(crate) fn alias_aggregates(mut queries: Vec<Query>) -> Result<Vec<Query>> {
     Ok(queries)
 }
 
+/// The direction of the sequence tie break that lets an index serve the
+/// whole order (`tieBreakDirection()`).
+///
+/// InnoDB ends every secondary index with the primary key in ascending
+/// order, so an index whose attributes are exactly the order attributes also
+/// orders by sequence: ascending when the order reads the index forward,
+/// descending when it reads it backward. `(x)` serves `x DESC, _id DESC` and
+/// `(x DESC)` serves `x DESC, _id ASC`. With no such index the tie break
+/// follows the leading direction.
+///
+/// The index may also hold attributes a filter pins to a single value
+/// (`= ?` with one value or `IS NULL`, at the top level or inside `and()`
+/// groups, never inside `or()`), before, between or after the order
+/// attributes. Only key and unique indexes count, the first that serves the
+/// order decides, and a prefix length shorter than the order attribute's
+/// size disqualifies the index.
+///
+/// Fails as [`Collection::attributes`] and [`Collection::indexes`] do.
+fn tie_break_direction(
+    collection: &Collection,
+    order_attributes: &[String],
+    order_types: &[OrderDirection],
+    filters: &[Query],
+) -> Result<OrderDirection> {
+    let leading = order_types.first().copied().unwrap_or(OrderDirection::Asc);
+    if order_attributes.is_empty() {
+        return Ok(leading);
+    }
+
+    let mut pinned: Vec<&str> = Vec::new();
+    let mut pending: Vec<&utopia_query::Query> = filters.iter().map(|f| &**f).collect();
+    while let Some(filter) = pending.pop() {
+        match filter.method() {
+            Method::And => pending.extend(filter.nested()),
+            Method::IsNull => pinned.push(filter.attribute()),
+            Method::Equal if filter.values().len() == 1 => pinned.push(filter.attribute()),
+            _ => {}
+        }
+    }
+
+    let attributes = collection.attributes()?;
+    let size = |key: &str| attributes.iter().rev().find(|a| a.key == key).and_then(|a| a.size);
+
+    'indexes: for index in collection.indexes()? {
+        if !matches!(index.kind, IndexType::Key | IndexType::Unique) {
+            continue;
+        }
+
+        let mut forward: Option<bool> = None;
+        let mut matched = 0;
+        for (position, attribute) in index.attributes.iter().enumerate() {
+            if matched < order_attributes.len() && *attribute == order_attributes[matched] {
+                let requested = order_types.get(matched).copied().unwrap_or(OrderDirection::Asc);
+                if !matches!(requested, OrderDirection::Asc | OrderDirection::Desc) {
+                    continue 'indexes;
+                }
+
+                // A prefix shorter than the column cannot be read in value
+                // order; one that covers the whole column can.
+                let length = index.lengths.get(position).copied().flatten().unwrap_or(0);
+                if length > 0 && size(attribute).is_none_or(|size| length < size) {
+                    continue 'indexes;
+                }
+
+                let same = requested == index.orders.get(position).copied().flatten().unwrap_or(OrderDirection::Asc);
+                if forward.is_some_and(|forward| forward != same) {
+                    continue 'indexes;
+                }
+                forward = Some(same);
+                matched += 1;
+                continue;
+            }
+
+            if !pinned.contains(&attribute.as_str()) {
+                continue 'indexes;
+            }
+        }
+
+        if matched != order_attributes.len() {
+            continue;
+        }
+
+        return Ok(if forward == Some(true) { OrderDirection::Asc } else { OrderDirection::Desc });
+    }
+
+    Ok(leading)
+}
+
 /// The orders with the tie breaks that make a page boundary stable
 /// (`addTieBreaks()`): `$sequence` unless the orders hold `$id` or
-/// `$sequence` (in the leading order's direction when it is `$createdAt` or
-/// `$updatedAt`), then each joined `$id` where the rows show the join or a
-/// cursor pages them, unless the join matches at most one row. A vector
-/// search without a cursor gets none: the index answers only the distance.
+/// `$sequence` (in the direction [`tie_break_direction`] picks), then each
+/// joined `$id` where the rows show the join or a cursor pages them, unless
+/// the join matches at most one row. A vector search without a cursor gets
+/// none: the index answers only the distance.
+///
+/// Fails as [`tie_break_direction`] does.
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn add_tie_breaks(
+    collection: &Collection,
     mut order_attributes: Vec<String>,
     mut order_types: Vec<OrderDirection>,
     filters: &[Query],
@@ -1254,31 +1350,23 @@ pub(crate) fn add_tie_breaks(
     joined_collections: &Joined,
     paged: bool,
     selects: &[Query],
-) -> (Vec<String>, Vec<OrderDirection>) {
+) -> Result<(Vec<String>, Vec<OrderDirection>)> {
     let unique =
         order_attributes.iter().any(|a| a == document::ID) || order_attributes.iter().any(|a| a == document::SEQUENCE);
     let vector_search = filters
         .iter()
         .any(|f| matches!(f.method(), Method::VectorCosine | Method::VectorDot | Method::VectorEuclidean));
     if vector_search && !paged {
-        return (order_attributes, order_types);
+        return Ok((order_attributes, order_types));
     }
 
     if !unique {
-        let leading = order_attributes.first().cloned();
-        let leading_type = order_types.first().copied().unwrap_or(OrderDirection::Asc);
+        order_types.push(tie_break_direction(collection, &order_attributes, &order_types, filters)?);
         order_attributes.push(document::SEQUENCE.to_owned());
-        order_types.push(
-            if leading.as_deref().is_some_and(|l| l == document::CREATED_AT || l == document::UPDATED_AT) {
-                leading_type
-            } else {
-                OrderDirection::Asc
-            },
-        );
     }
 
     if joins.is_empty() || (!paged && !shows_joined_rows(selects, joined_collections)) {
-        return (order_attributes, order_types);
+        return Ok((order_attributes, order_types));
     }
 
     if joined_collections.len() == joins.len() {
@@ -1296,7 +1384,7 @@ pub(crate) fn add_tie_breaks(
         }
     }
 
-    (order_attributes, order_types)
+    Ok((order_attributes, order_types))
 }
 
 /// Whether a read's rows show anything of its joins (`showsJoinedRows()`):

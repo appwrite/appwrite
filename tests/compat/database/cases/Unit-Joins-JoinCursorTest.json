@@ -10632,6 +10632,24 @@
             },
             {
               "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
                 "name": "a1",
                 "rank": 1,
                 "n.author": "a1",
@@ -10658,24 +10676,6 @@
                 "n.$id": "n2",
                 "$id": "a1",
                 "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -11304,6 +11304,24 @@
           "expect": [
             {
               "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
                 "name": "a1",
                 "rank": 1,
                 "n.author": "a1",
@@ -11330,24 +11348,6 @@
                 "n.$id": "n2",
                 "$id": "a1",
                 "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -12008,24 +12008,6 @@
                 "name": "a2",
                 "rank": 2,
                 "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
                 "n.rank": null,
                 "n.label": "x",
                 "n.$id": "n6",
@@ -12460,6 +12442,24 @@
                 ],
                 "$collection": "authors"
               }
+            },
+            {
+              "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
             }
           ]
         },
@@ -12669,24 +12669,6 @@
             }
           },
           "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
             {
               "$document": {
                 "name": "a2",
@@ -13031,6 +13013,24 @@
             },
             {
               "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
                 "name": "a1",
                 "rank": 1,
                 "n.author": "a1",
@@ -13355,6 +13355,42 @@
           "expect": [
             {
               "$document": {
+                "name": "a1",
+                "rank": 1,
+                "n.author": "a1",
+                "n.rank": 1,
+                "n.label": "x",
+                "n.$id": "n1",
+                "$id": "a1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "a1",
+                "rank": 1,
+                "n.author": "a1",
+                "n.rank": 1,
+                "n.label": "x",
+                "n.$id": "n2",
+                "$id": "a1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
                 "name": "a2",
                 "rank": 2,
                 "n.author": "a2",
@@ -13587,42 +13623,6 @@
                 "n.rank": 2,
                 "n.label": "y",
                 "n.$id": "n3",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "rank": 1,
-                "n.author": "a1",
-                "n.rank": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "rank": 1,
-                "n.author": "a1",
-                "n.rank": 1,
-                "n.label": "x",
-                "n.$id": "n2",
                 "$id": "a1",
                 "$sequence": "1",
                 "$createdAt": "<now>",
@@ -14166,6 +14166,24 @@
             },
             {
               "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
                 "name": "a1",
                 "rank": 1,
                 "n.author": "a1",
@@ -14192,24 +14210,6 @@
                 "n.$id": "n2",
                 "$id": "a1",
                 "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -14676,14 +14676,14 @@
             },
             {
               "$document": {
-                "name": "a1",
-                "rank": 1,
-                "n.author": "a1",
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
                 "n.rank": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "$id": "a1",
-                "$sequence": "1",
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -15021,9 +15021,9 @@
                 "name": "a2",
                 "rank": 2,
                 "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
+                "n.rank": null,
+                "n.label": "x",
+                "n.$id": "n6",
                 "$id": "a2",
                 "$sequence": "2",
                 "$createdAt": "<now>",
@@ -15342,14 +15342,32 @@
           "expect": [
             {
               "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": null,
+                "name": "a1",
+                "rank": 1,
+                "n.author": "a1",
+                "n.rank": 1,
                 "n.label": "x",
-                "n.$id": "n6",
-                "$id": "a2",
-                "$sequence": "2",
+                "n.$id": "n1",
+                "$id": "a1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "a1",
+                "rank": 1,
+                "n.author": "a1",
+                "n.rank": 1,
+                "n.label": "x",
+                "n.$id": "n2",
+                "$id": "a1",
+                "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -15573,7 +15591,7 @@
                 "n.author": "a1",
                 "n.rank": 1,
                 "n.label": "x",
-                "n.$id": "n2",
+                "n.$id": "n1",
                 "$id": "a1",
                 "$sequence": "1",
                 "$createdAt": "<now>",
@@ -15586,14 +15604,14 @@
             },
             {
               "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
+                "name": "a1",
+                "rank": 1,
+                "n.author": "a1",
                 "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
+                "n.label": "x",
+                "n.$id": "n2",
+                "$id": "a1",
+                "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -15910,14 +15928,14 @@
           "expect": [
             {
               "$document": {
-                "name": "a1",
-                "rank": 1,
-                "n.author": "a1",
-                "n.rank": 2,
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
                 "n.label": "y",
-                "n.$id": "n3",
-                "$id": "a1",
-                "$sequence": "1",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -48610,6 +48628,24 @@
             },
             {
               "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
                 "name": "a1",
                 "rank": 1,
                 "n.author": "a1",
@@ -48646,14 +48682,14 @@
             },
             {
               "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
+                "name": "a3",
+                "rank": 3,
+                "n.author": null,
+                "n.rank": null,
+                "n.label": null,
+                "n.$id": null,
+                "$id": "a3",
+                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -48672,24 +48708,6 @@
                 "n.$id": "n6",
                 "$id": "a2",
                 "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a3",
-                "rank": 3,
-                "n.author": null,
-                "n.rank": null,
-                "n.label": null,
-                "n.$id": null,
-                "$id": "a3",
-                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -49398,6 +49416,24 @@
           "expect": [
             {
               "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
                 "name": "a1",
                 "rank": 1,
                 "n.author": "a1",
@@ -49434,14 +49470,14 @@
             },
             {
               "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
+                "name": "a3",
+                "rank": 3,
+                "n.author": null,
+                "n.rank": null,
+                "n.label": null,
+                "n.$id": null,
+                "$id": "a3",
+                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -49460,24 +49496,6 @@
                 "n.$id": "n6",
                 "$id": "a2",
                 "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a3",
-                "rank": 3,
-                "n.author": null,
-                "n.rank": null,
-                "n.label": null,
-                "n.$id": null,
-                "$id": "a3",
-                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -50215,14 +50233,14 @@
             },
             {
               "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
+                "name": "a3",
+                "rank": 3,
+                "n.author": null,
+                "n.rank": null,
+                "n.label": null,
+                "n.$id": null,
+                "$id": "a3",
+                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -50241,24 +50259,6 @@
                 "n.$id": "n6",
                 "$id": "a2",
                 "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a3",
-                "rank": 3,
-                "n.author": null,
-                "n.rank": null,
-                "n.label": null,
-                "n.$id": null,
-                "$id": "a3",
-                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -50786,6 +50786,24 @@
                 ],
                 "$collection": "authors"
               }
+            },
+            {
+              "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
             }
           ]
         },
@@ -50997,14 +51015,14 @@
           "expect": [
             {
               "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
+                "name": "a3",
+                "rank": 3,
+                "n.author": null,
+                "n.rank": null,
+                "n.label": null,
+                "n.$id": null,
+                "$id": "a3",
+                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -51023,24 +51041,6 @@
                 "n.$id": "n6",
                 "$id": "a2",
                 "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a3",
-                "rank": 3,
-                "n.author": null,
-                "n.rank": null,
-                "n.label": null,
-                "n.$id": null,
-                "$id": "a3",
-                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -51473,6 +51473,24 @@
             },
             {
               "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
                 "name": "a1",
                 "rank": 1,
                 "n.author": "a1",
@@ -51797,14 +51815,32 @@
           "expect": [
             {
               "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": null,
+                "name": "a1",
+                "rank": 1,
+                "n.author": "a1",
+                "n.rank": 1,
                 "n.label": "x",
-                "n.$id": "n6",
-                "$id": "a2",
-                "$sequence": "2",
+                "n.$id": "n1",
+                "$id": "a1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "a1",
+                "rank": 1,
+                "n.author": "a1",
+                "n.rank": 1,
+                "n.label": "x",
+                "n.$id": "n2",
+                "$id": "a1",
+                "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -51823,6 +51859,24 @@
                 "n.$id": null,
                 "$id": "a3",
                 "$sequence": "3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": null,
+                "n.label": "x",
+                "n.$id": "n6",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -52145,42 +52199,6 @@
                 "n.rank": 2,
                 "n.label": "y",
                 "n.$id": "n3",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "rank": 1,
-                "n.author": "a1",
-                "n.rank": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "rank": 1,
-                "n.author": "a1",
-                "n.rank": 1,
-                "n.label": "x",
-                "n.$id": "n2",
                 "$id": "a1",
                 "$sequence": "1",
                 "$createdAt": "<now>",
@@ -52594,26 +52612,7 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a3",
-                "rank": 3,
-                "n.author": null,
-                "n.rank": null,
-                "n.label": null,
-                "n.$id": null,
-                "$id": "a3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": []
         },
         {
           "op": "object.call",
@@ -52841,6 +52840,24 @@
             },
             {
               "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
                 "name": "a1",
                 "rank": 1,
                 "n.author": "a1",
@@ -52877,14 +52894,14 @@
             },
             {
               "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
+                "name": "a3",
+                "rank": 3,
+                "n.author": null,
+                "n.rank": null,
+                "n.label": null,
+                "n.$id": null,
+                "$id": "a3",
+                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -53394,7 +53411,26 @@
               ]
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": null,
+                "n.label": "x",
+                "n.$id": "n6",
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            }
+          ]
         },
         {
           "op": "object.call",
@@ -53524,6 +53560,24 @@
             },
             {
               "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
                 "name": "a1",
                 "rank": 1,
                 "n.author": "a1",
@@ -53550,42 +53604,6 @@
                 "n.$id": "n2",
                 "$id": "a1",
                 "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "$id": "a2",
-                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -54150,14 +54168,14 @@
             },
             {
               "$document": {
-                "name": "a1",
-                "rank": 1,
-                "n.author": "a1",
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
                 "n.rank": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "$id": "a1",
-                "$sequence": "1",
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -54492,14 +54510,14 @@
             },
             {
               "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
+                "name": "a3",
+                "rank": 3,
+                "n.author": null,
+                "n.rank": null,
+                "n.label": null,
+                "n.$id": null,
+                "$id": "a3",
+                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -54816,14 +54834,14 @@
           "expect": [
             {
               "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": null,
+                "name": "a1",
+                "rank": 1,
+                "n.author": "a1",
+                "n.rank": 1,
                 "n.label": "x",
-                "n.$id": "n6",
-                "$id": "a2",
-                "$sequence": "2",
+                "n.$id": "n1",
+                "$id": "a1",
+                "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -54834,14 +54852,14 @@
             },
             {
               "$document": {
-                "name": "a3",
-                "rank": 3,
-                "n.author": null,
-                "n.rank": null,
-                "n.label": null,
-                "n.$id": null,
-                "$id": "a3",
-                "$sequence": "3",
+                "name": "a1",
+                "rank": 1,
+                "n.author": "a1",
+                "n.rank": 1,
+                "n.label": "x",
+                "n.$id": "n2",
+                "$id": "a1",
+                "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -55155,7 +55173,26 @@
               ]
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": null,
+                "n.label": "x",
+                "n.$id": "n6",
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            }
+          ]
         },
         {
           "op": "object.call",
@@ -55267,14 +55304,14 @@
           "expect": [
             {
               "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
+                "name": "a1",
+                "rank": 1,
+                "n.author": "a1",
                 "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
+                "n.label": "x",
+                "n.$id": "n1",
+                "$id": "a1",
+                "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -55285,14 +55322,14 @@
             },
             {
               "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": null,
+                "name": "a1",
+                "rank": 1,
+                "n.author": "a1",
+                "n.rank": 1,
                 "n.label": "x",
-                "n.$id": "n6",
-                "$id": "a2",
-                "$sequence": "2",
+                "n.$id": "n2",
+                "$id": "a1",
+                "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -55612,27 +55649,9 @@
                 "name": "a1",
                 "rank": 1,
                 "n.author": "a1",
-                "n.rank": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "rank": 1,
-                "n.author": "a1",
-                "n.rank": 1,
-                "n.label": "x",
-                "n.$id": "n2",
+                "n.rank": 2,
+                "n.label": "y",
+                "n.$id": "n3",
                 "$id": "a1",
                 "$sequence": "1",
                 "$createdAt": "<now>",
@@ -55959,6 +55978,24 @@
                 "n.$id": "n3",
                 "$id": "a1",
                 "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -97282,6 +97319,24 @@
             },
             {
               "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
                 "name": "a1",
                 "rank": 1,
                 "n.author": "a1",
@@ -97308,24 +97363,6 @@
                 "n.$id": "n2",
                 "$id": "a1",
                 "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -98012,6 +98049,24 @@
             },
             {
               "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
                 "name": "a1",
                 "rank": 1,
                 "n.author": "a1",
@@ -98038,24 +98093,6 @@
                 "n.$id": "n2",
                 "$id": "a1",
                 "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -98783,6 +98820,24 @@
           "expect": [
             {
               "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
                 "name": "a1",
                 "rank": 1,
                 "n.author": "a1",
@@ -98809,24 +98864,6 @@
                 "n.$id": "n2",
                 "$id": "a1",
                 "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -99554,24 +99591,6 @@
                 "name": "a2",
                 "rank": 2,
                 "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
                 "n.rank": null,
                 "n.label": "x",
                 "n.$id": "n6",
@@ -100022,6 +100041,24 @@
                 ],
                 "$collection": "authors"
               }
+            },
+            {
+              "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
             }
           ]
         },
@@ -100281,24 +100318,6 @@
             }
           },
           "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
             {
               "$document": {
                 "name": "a2",
@@ -100649,6 +100668,24 @@
                 "n.$id": "n3",
                 "$id": "a1",
                 "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -101033,6 +101070,42 @@
           "expect": [
             {
               "$document": {
+                "name": "a1",
+                "rank": 1,
+                "n.author": "a1",
+                "n.rank": 1,
+                "n.label": "x",
+                "n.$id": "n1",
+                "$id": "a1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "a1",
+                "rank": 1,
+                "n.author": "a1",
+                "n.rank": 1,
+                "n.label": "x",
+                "n.$id": "n2",
+                "$id": "a1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
                 "name": "a2",
                 "rank": 2,
                 "n.author": "a2",
@@ -101281,42 +101354,6 @@
                 "n.rank": 2,
                 "n.label": "y",
                 "n.$id": "n3",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "rank": 1,
-                "n.author": "a1",
-                "n.rank": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "rank": 1,
-                "n.author": "a1",
-                "n.rank": 1,
-                "n.label": "x",
-                "n.$id": "n2",
                 "$id": "a1",
                 "$sequence": "1",
                 "$createdAt": "<now>",
@@ -101926,6 +101963,24 @@
             },
             {
               "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
                 "name": "a1",
                 "rank": 1,
                 "n.author": "a1",
@@ -101952,24 +102007,6 @@
                 "n.$id": "n2",
                 "$id": "a1",
                 "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -102760,14 +102797,14 @@
           "expect": [
             {
               "$document": {
-                "name": "a1",
-                "rank": 1,
-                "n.author": "a1",
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
                 "n.rank": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "$id": "a1",
-                "$sequence": "1",
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -102783,7 +102820,7 @@
                 "n.author": "a1",
                 "n.rank": 1,
                 "n.label": "x",
-                "n.$id": "n2",
+                "n.$id": "n1",
                 "$id": "a1",
                 "$sequence": "1",
                 "$createdAt": "<now>",
@@ -103100,24 +103137,6 @@
             }
           },
           "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
             {
               "$document": {
                 "name": "a2",
@@ -103558,7 +103577,7 @@
                 "n.author": "a1",
                 "n.rank": 1,
                 "n.label": "x",
-                "n.$id": "n2",
+                "n.$id": "n1",
                 "$id": "a1",
                 "$sequence": "1",
                 "$createdAt": "<now>",
@@ -103571,14 +103590,14 @@
             },
             {
               "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
+                "name": "a1",
+                "rank": 1,
+                "n.author": "a1",
                 "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
+                "n.label": "x",
+                "n.$id": "n2",
+                "$id": "a1",
+                "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -103895,14 +103914,14 @@
           "expect": [
             {
               "$document": {
-                "name": "a1",
-                "rank": 1,
-                "n.author": "a1",
-                "n.rank": 2,
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
                 "n.label": "y",
-                "n.$id": "n3",
-                "$id": "a1",
-                "$sequence": "1",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -133903,6 +133922,24 @@
             },
             {
               "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
                 "name": "a1",
                 "rank": 1,
                 "n.author": "a1",
@@ -133939,14 +133976,14 @@
             },
             {
               "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
+                "name": "a3",
+                "rank": 3,
+                "n.author": null,
+                "n.rank": null,
+                "n.label": null,
+                "n.$id": null,
+                "$id": "a3",
+                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -133965,24 +134002,6 @@
                 "n.$id": "n6",
                 "$id": "a2",
                 "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a3",
-                "rank": 3,
-                "n.author": null,
-                "n.rank": null,
-                "n.label": null,
-                "n.$id": null,
-                "$id": "a3",
-                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -134749,6 +134768,24 @@
             },
             {
               "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
                 "name": "a1",
                 "rank": 1,
                 "n.author": "a1",
@@ -134785,14 +134822,14 @@
             },
             {
               "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
+                "name": "a3",
+                "rank": 3,
+                "n.author": null,
+                "n.rank": null,
+                "n.label": null,
+                "n.$id": null,
+                "$id": "a3",
+                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -134811,24 +134848,6 @@
                 "n.$id": "n6",
                 "$id": "a2",
                 "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a3",
-                "rank": 3,
-                "n.author": null,
-                "n.rank": null,
-                "n.label": null,
-                "n.$id": null,
-                "$id": "a3",
-                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -135636,6 +135655,24 @@
           "expect": [
             {
               "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
                 "name": "a1",
                 "rank": 1,
                 "n.author": "a1",
@@ -135672,14 +135709,14 @@
             },
             {
               "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
+                "name": "a3",
+                "rank": 3,
+                "n.author": null,
+                "n.rank": null,
+                "n.label": null,
+                "n.$id": null,
+                "$id": "a3",
+                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -135698,24 +135735,6 @@
                 "n.$id": "n6",
                 "$id": "a2",
                 "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a3",
-                "rank": 3,
-                "n.author": null,
-                "n.rank": null,
-                "n.label": null,
-                "n.$id": null,
-                "$id": "a3",
-                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -136520,14 +136539,14 @@
             },
             {
               "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
+                "name": "a3",
+                "rank": 3,
+                "n.author": null,
+                "n.rank": null,
+                "n.label": null,
+                "n.$id": null,
+                "$id": "a3",
+                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -136546,24 +136565,6 @@
                 "n.$id": "n6",
                 "$id": "a2",
                 "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a3",
-                "rank": 3,
-                "n.author": null,
-                "n.rank": null,
-                "n.label": null,
-                "n.$id": null,
-                "$id": "a3",
-                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -137107,6 +137108,24 @@
                 ],
                 "$collection": "authors"
               }
+            },
+            {
+              "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
             }
           ]
         },
@@ -137368,14 +137387,14 @@
           "expect": [
             {
               "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
+                "name": "a3",
+                "rank": 3,
+                "n.author": null,
+                "n.rank": null,
+                "n.label": null,
+                "n.$id": null,
+                "$id": "a3",
+                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -137394,24 +137413,6 @@
                 "n.$id": "n6",
                 "$id": "a2",
                 "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a3",
-                "rank": 3,
-                "n.author": null,
-                "n.rank": null,
-                "n.label": null,
-                "n.$id": null,
-                "$id": "a3",
-                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -137860,6 +137861,24 @@
             },
             {
               "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
                 "name": "a1",
                 "rank": 1,
                 "n.author": "a1",
@@ -138234,14 +138253,32 @@
           "expect": [
             {
               "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": null,
+                "name": "a1",
+                "rank": 1,
+                "n.author": "a1",
+                "n.rank": 1,
                 "n.label": "x",
-                "n.$id": "n6",
-                "$id": "a2",
-                "$sequence": "2",
+                "n.$id": "n1",
+                "$id": "a1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "a1",
+                "rank": 1,
+                "n.author": "a1",
+                "n.rank": 1,
+                "n.label": "x",
+                "n.$id": "n2",
+                "$id": "a1",
+                "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -138260,6 +138297,24 @@
                 "n.$id": null,
                 "$id": "a3",
                 "$sequence": "3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": null,
+                "n.label": "x",
+                "n.$id": "n6",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -138598,42 +138653,6 @@
                 "n.rank": 2,
                 "n.label": "y",
                 "n.$id": "n3",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "rank": 1,
-                "n.author": "a1",
-                "n.rank": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "rank": 1,
-                "n.author": "a1",
-                "n.rank": 1,
-                "n.label": "x",
-                "n.$id": "n2",
                 "$id": "a1",
                 "$sequence": "1",
                 "$createdAt": "<now>",
@@ -139097,26 +139116,7 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a3",
-                "rank": 3,
-                "n.author": null,
-                "n.rank": null,
-                "n.label": null,
-                "n.$id": null,
-                "$id": "a3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": []
         },
         {
           "op": "object.call",
@@ -139360,6 +139360,24 @@
             },
             {
               "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
                 "name": "a1",
                 "rank": 1,
                 "n.author": "a1",
@@ -139396,14 +139414,14 @@
             },
             {
               "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
+                "name": "a3",
+                "rank": 3,
+                "n.author": null,
+                "n.rank": null,
+                "n.label": null,
+                "n.$id": null,
+                "$id": "a3",
+                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -139963,7 +139981,26 @@
               ]
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": null,
+                "n.label": "x",
+                "n.$id": "n6",
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            }
+          ]
         },
         {
           "op": "object.call",
@@ -140109,6 +140146,24 @@
             },
             {
               "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
                 "name": "a1",
                 "rank": 1,
                 "n.author": "a1",
@@ -140135,42 +140190,6 @@
                 "n.$id": "n2",
                 "$id": "a1",
                 "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "$id": "a2",
-                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -141059,14 +141078,14 @@
           "expect": [
             {
               "$document": {
-                "name": "a1",
-                "rank": 1,
-                "n.author": "a1",
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
                 "n.rank": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "$id": "a1",
-                "$sequence": "1",
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -141082,7 +141101,7 @@
                 "n.author": "a1",
                 "n.rank": 1,
                 "n.label": "x",
-                "n.$id": "n2",
+                "n.$id": "n1",
                 "$id": "a1",
                 "$sequence": "1",
                 "$createdAt": "<now>",
@@ -141401,14 +141420,14 @@
           "expect": [
             {
               "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
+                "name": "a3",
+                "rank": 3,
+                "n.author": null,
+                "n.rank": null,
+                "n.label": null,
+                "n.$id": null,
+                "$id": "a3",
+                "$sequence": "3",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -141740,26 +141759,7 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a3",
-                "rank": 3,
-                "n.author": null,
-                "n.rank": null,
-                "n.label": null,
-                "n.$id": null,
-                "$id": "a3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": []
         },
         {
           "op": "object.call",
@@ -141969,14 +141969,14 @@
           "expect": [
             {
               "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
+                "name": "a1",
+                "rank": 1,
+                "n.author": "a1",
                 "n.rank": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "$id": "a2",
-                "$sequence": "2",
+                "n.label": "x",
+                "n.$id": "n1",
+                "$id": "a1",
+                "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -141987,14 +141987,14 @@
             },
             {
               "$document": {
-                "name": "a2",
-                "rank": 2,
-                "n.author": "a2",
-                "n.rank": null,
+                "name": "a1",
+                "rank": 1,
+                "n.author": "a1",
+                "n.rank": 1,
                 "n.label": "x",
-                "n.$id": "n6",
-                "$id": "a2",
-                "$sequence": "2",
+                "n.$id": "n2",
+                "$id": "a1",
+                "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -142311,19 +142311,17 @@
           "expect": [
             {
               "$document": {
-                "name": "a1",
-                "rank": 1,
-                "n.author": "a1",
-                "n.rank": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
+                "name": null,
+                "rank": null,
+                "n.author": "zz",
+                "n.rank": 9,
+                "n.label": "z",
+                "n.$id": "n5",
+                "$id": "",
+                "$sequence": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
                 "$collection": "authors"
               }
             },
@@ -142332,9 +142330,9 @@
                 "name": "a1",
                 "rank": 1,
                 "n.author": "a1",
-                "n.rank": 1,
-                "n.label": "x",
-                "n.$id": "n2",
+                "n.rank": 2,
+                "n.label": "y",
+                "n.$id": "n3",
                 "$id": "a1",
                 "$sequence": "1",
                 "$createdAt": "<now>",
@@ -142653,22 +142651,6 @@
           "expect": [
             {
               "$document": {
-                "name": null,
-                "rank": null,
-                "n.author": "zz",
-                "n.rank": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
                 "name": "a1",
                 "rank": 1,
                 "n.author": "a1",
@@ -142677,6 +142659,24 @@
                 "n.$id": "n3",
                 "$id": "a1",
                 "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "a2",
+                "rank": 2,
+                "n.author": "a2",
+                "n.rank": 1,
+                "n.label": "y",
+                "n.$id": "n4",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [

@@ -25784,28 +25784,6 @@
           "expect": [
             {
               "$document": {
-                "name": "Alice",
-                "ord.customerId": "alice",
-                "ord.productId": null,
-                "ord.status": "paid",
-                "ord.amount": 20,
-                "ord.placedAt": null,
-                "prod.name": "Lamp",
-                "prod.price": 10,
-                "ord.$id": "a-only",
-                "prod.$id": "lamp",
-                "$id": "alice",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"user:reader\")"
-                ],
-                "$collection": "customers"
-              }
-            },
-            {
-              "$document": {
                 "name": "Bob",
                 "ord.customerId": "bob",
                 "ord.productId": null,
@@ -25818,6 +25796,28 @@
                 "prod.$id": "lamp",
                 "$id": "bob",
                 "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"user:reader\")"
+                ],
+                "$collection": "customers"
+              }
+            },
+            {
+              "$document": {
+                "name": "Alice",
+                "ord.customerId": "alice",
+                "ord.productId": null,
+                "ord.status": "paid",
+                "ord.amount": 20,
+                "ord.placedAt": null,
+                "prod.name": "Lamp",
+                "prod.price": 10,
+                "ord.$id": "a-only",
+                "prod.$id": "lamp",
+                "$id": "alice",
+                "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -26177,28 +26177,6 @@
                 "ord.status": "paid",
                 "ord.amount": 40,
                 "ord.placedAt": null,
-                "prod.name": "Lamp",
-                "prod.price": 10,
-                "ord.$id": "b-only",
-                "prod.$id": "lamp",
-                "$id": "bob",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"user:reader\")"
-                ],
-                "$collection": "customers"
-              }
-            },
-            {
-              "$document": {
-                "name": "Bob",
-                "ord.customerId": "bob",
-                "ord.productId": null,
-                "ord.status": "paid",
-                "ord.amount": 40,
-                "ord.placedAt": null,
                 "prod.name": "Desk",
                 "prod.price": 30,
                 "ord.$id": "b-only",
@@ -26459,7 +26437,30 @@
               ]
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "Bob",
+                "ord.customerId": "bob",
+                "ord.productId": null,
+                "ord.status": "paid",
+                "ord.amount": 40,
+                "ord.placedAt": null,
+                "prod.name": "Lamp",
+                "prod.price": 10,
+                "ord.$id": "b-only",
+                "prod.$id": "lamp",
+                "$id": "bob",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"user:reader\")"
+                ],
+                "$collection": "customers"
+              }
+            }
+          ]
         },
         {
           "op": "object.call",
@@ -26655,30 +26656,7 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "Alice",
-                "ord.customerId": "alice",
-                "ord.productId": null,
-                "ord.status": "paid",
-                "ord.amount": 20,
-                "ord.placedAt": null,
-                "prod.name": "Lamp",
-                "prod.price": 10,
-                "ord.$id": "a-only",
-                "prod.$id": "lamp",
-                "$id": "alice",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"user:reader\")"
-                ],
-                "$collection": "customers"
-              }
-            }
-          ]
+          "expect": []
         },
         {
           "op": "object.call",

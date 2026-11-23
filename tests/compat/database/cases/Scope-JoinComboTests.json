@@ -4078,13 +4078,13 @@
           "expect": [
             {
               "$document": {
-                "name": "Main",
-                "sec.mainId": "m1",
+                "name": "Unmatched",
+                "sec.mainId": "m2",
                 "sec.score": 313,
-                "sec.secret": "visible",
-                "sec.$id": "j-combo-auth",
-                "$id": "m1",
-                "$sequence": "1",
+                "sec.secret": "visible-m2",
+                "sec.$id": "j-combo-m2",
+                "$id": "m2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -4095,13 +4095,13 @@
             },
             {
               "$document": {
-                "name": "Unmatched",
-                "sec.mainId": "m2",
+                "name": "Main",
+                "sec.mainId": "m1",
                 "sec.score": 313,
-                "sec.secret": "visible-m2",
-                "sec.$id": "j-combo-m2",
-                "$id": "m2",
-                "$sequence": "2",
+                "sec.secret": "visible",
+                "sec.$id": "j-combo-auth",
+                "$id": "m1",
+                "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -4175,13 +4175,13 @@
           "expect": [
             {
               "$document": {
-                "name": "Main",
-                "sec.mainId": "m1",
+                "name": "Unmatched",
+                "sec.mainId": "m2",
                 "sec.score": 313,
-                "sec.secret": "visible",
-                "sec.$id": "j-combo-auth",
-                "$id": "m1",
-                "$sequence": "1",
+                "sec.secret": "visible-m2",
+                "sec.$id": "j-combo-m2",
+                "$id": "m2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -4192,13 +4192,13 @@
             },
             {
               "$document": {
-                "name": "Unmatched",
-                "sec.mainId": "m2",
+                "name": "Main",
+                "sec.mainId": "m1",
                 "sec.score": 313,
-                "sec.secret": "visible-m2",
-                "sec.$id": "j-combo-m2",
-                "$id": "m2",
-                "$sequence": "2",
+                "sec.secret": "visible",
+                "sec.$id": "j-combo-auth",
+                "$id": "m1",
+                "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -4264,13 +4264,13 @@
           "expect": [
             {
               "$document": {
-                "name": "Unmatched",
-                "sec.mainId": "m2",
+                "name": "Main",
+                "sec.mainId": "m1",
                 "sec.score": 313,
-                "sec.secret": "visible-m2",
-                "sec.$id": "j-combo-m2",
-                "$id": "m2",
-                "$sequence": "2",
+                "sec.secret": "visible",
+                "sec.$id": "j-combo-auth",
+                "$id": "m1",
+                "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [

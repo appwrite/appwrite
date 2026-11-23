@@ -103,6 +103,7 @@ impl Database {
         }
         if !parsed.distinct {
             (order_attributes, order_types) = add_tie_breaks(
+                &definition,
                 order_attributes,
                 order_types,
                 &parsed.filters,
@@ -110,7 +111,7 @@ impl Database {
                 &joined_collections,
                 true,
                 &parsed.selections,
-            );
+            )?;
         }
 
         let mut joined_orders: Vec<(String, Vec<Query>)> = Vec::new();

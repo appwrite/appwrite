@@ -199,18 +199,26 @@ impl Database {
     }
 
     /// `document` without the attributes the collection does not declare
-    /// (`$`-prefixed keys are kept), when dropping unknown attributes is on
-    /// and the adapter defines attributes (`removeUnknownAttributes()`).
-    /// `known` are the keys the caller already collected.
+    /// (`$`-prefixed keys are kept), when the adapter defines attributes and
+    /// either dropping unknown attributes is on or the collection is
+    /// `_metadata` (`removeUnknownAttributes()`). `known` are the keys the
+    /// caller already collected.
+    ///
+    /// The metadata schema is declared in code, so a key it does not
+    /// declare is a physical column this version does not know, which a
+    /// read hands back because the adapter selects every column; left on
+    /// the definition it would fail structure validation and take the
+    /// schema operation with it.
     pub(crate) fn remove_unknown_attributes(
         &self,
         collection: &Collection,
         mut document: Document,
         known: Option<&[&str]>,
     ) -> Document {
-        if !self.is_dropping_unknown_attributes()
-            || !self.inner.adapter.supports(crate::capability::Capability::DefinedAttributes)
-        {
+        if !self.inner.adapter.supports(crate::capability::Capability::DefinedAttributes) {
+            return document;
+        }
+        if !self.is_dropping_unknown_attributes() && collection.id() != super::METADATA {
             return document;
         }
         let collected: Vec<String>;

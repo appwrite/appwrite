@@ -46041,14 +46041,14 @@
           "expect": [
             {
               "$document": {
-                "$id": "r6c0",
+                "$id": "r6c2",
                 "f": 3.141592653589793,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "19"
+                "$sequence": "21"
               }
             }
           ]
@@ -46105,14 +46105,14 @@
           "expect": [
             {
               "$document": {
-                "$id": "r6c1",
-                "f": 3.141592653589793,
+                "$id": "r5c2",
+                "f": 0.30000000000000004,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "20"
+                "$sequence": "18"
               }
             }
           ]
@@ -46169,14 +46169,14 @@
           "expect": [
             {
               "$document": {
-                "$id": "r6c2",
+                "$id": "r6c0",
                 "f": 3.141592653589793,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "21"
+                "$sequence": "19"
               }
             }
           ]
@@ -46233,14 +46233,14 @@
           "expect": [
             {
               "$document": {
-                "$id": "r5c0",
-                "f": 0.30000000000000004,
+                "$id": "r6c1",
+                "f": 3.141592653589793,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "16"
+                "$sequence": "20"
               }
             }
           ]
@@ -46297,14 +46297,14 @@
           "expect": [
             {
               "$document": {
-                "$id": "r5c1",
-                "f": 0.30000000000000004,
+                "$id": "r4c2",
+                "f": 0.3,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "17"
+                "$sequence": "15"
               }
             }
           ]
@@ -46361,14 +46361,14 @@
           "expect": [
             {
               "$document": {
-                "$id": "r5c2",
+                "$id": "r5c0",
                 "f": 0.30000000000000004,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "18"
+                "$sequence": "16"
               }
             }
           ]
@@ -46425,14 +46425,14 @@
           "expect": [
             {
               "$document": {
-                "$id": "r4c0",
-                "f": 0.3,
+                "$id": "r5c1",
+                "f": 0.30000000000000004,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "13"
+                "$sequence": "17"
               }
             }
           ]
@@ -46489,14 +46489,14 @@
           "expect": [
             {
               "$document": {
-                "$id": "r4c1",
-                "f": 0.3,
+                "$id": "r3c2",
+                "f": 1e-300,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "14"
+                "$sequence": "12"
               }
             }
           ]
@@ -46553,14 +46553,14 @@
           "expect": [
             {
               "$document": {
-                "$id": "r4c2",
+                "$id": "r4c0",
                 "f": 0.3,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "15"
+                "$sequence": "13"
               }
             }
           ]
@@ -46617,14 +46617,14 @@
           "expect": [
             {
               "$document": {
-                "$id": "r3c0",
-                "f": 1e-300,
+                "$id": "r4c1",
+                "f": 0.3,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "10"
+                "$sequence": "14"
               }
             }
           ]
@@ -46681,14 +46681,14 @@
           "expect": [
             {
               "$document": {
-                "$id": "r3c1",
-                "f": 1e-300,
+                "$id": "r2c2",
+                "f": 5e-324,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "11"
+                "$sequence": "9"
               }
             }
           ]
@@ -46745,14 +46745,14 @@
           "expect": [
             {
               "$document": {
-                "$id": "r3c2",
+                "$id": "r3c0",
                 "f": 1e-300,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "12"
+                "$sequence": "10"
               }
             }
           ]
@@ -46809,14 +46809,14 @@
           "expect": [
             {
               "$document": {
-                "$id": "r2c0",
-                "f": 5e-324,
+                "$id": "r3c1",
+                "f": 1e-300,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "7"
+                "$sequence": "11"
               }
             }
           ]
@@ -46873,14 +46873,14 @@
           "expect": [
             {
               "$document": {
-                "$id": "r2c1",
-                "f": 5e-324,
+                "$id": "r1c2",
+                "f": 0.0,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "8"
+                "$sequence": "6"
               }
             }
           ]
@@ -46937,14 +46937,14 @@
           "expect": [
             {
               "$document": {
-                "$id": "r2c2",
+                "$id": "r2c0",
                 "f": 5e-324,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "9"
+                "$sequence": "7"
               }
             }
           ]
@@ -47001,14 +47001,14 @@
           "expect": [
             {
               "$document": {
-                "$id": "r1c0",
-                "f": 0.0,
+                "$id": "r2c1",
+                "f": 5e-324,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "4"
+                "$sequence": "8"
               }
             }
           ]
@@ -47065,14 +47065,14 @@
           "expect": [
             {
               "$document": {
-                "$id": "r1c1",
-                "f": 0.0,
+                "$id": "r0c2",
+                "f": -5e-324,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "5"
+                "$sequence": "3"
               }
             }
           ]
@@ -47129,14 +47129,14 @@
           "expect": [
             {
               "$document": {
-                "$id": "r1c2",
+                "$id": "r1c0",
                 "f": 0.0,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "6"
+                "$sequence": "4"
               }
             }
           ]
@@ -47193,14 +47193,14 @@
           "expect": [
             {
               "$document": {
-                "$id": "r0c0",
-                "f": -5e-324,
+                "$id": "r1c1",
+                "f": 0.0,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "1"
+                "$sequence": "5"
               }
             }
           ]
@@ -47254,20 +47254,7 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "$id": "r0c1",
-                "f": -5e-324,
-                "$collection": "float_cursor",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$tenant": "999",
-                "$sequence": "2"
-              }
-            }
-          ]
+          "expect": []
         },
         {
           "op": "database.find",
@@ -47321,14 +47308,14 @@
           "expect": [
             {
               "$document": {
-                "$id": "r0c2",
+                "$id": "r0c0",
                 "f": -5e-324,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "3"
+                "$sequence": "1"
               }
             }
           ]
@@ -47382,7 +47369,20 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "$id": "r0c1",
+                "f": -5e-324,
+                "$collection": "float_cursor",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$tenant": "999",
+                "$sequence": "2"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -48259,14 +48259,14 @@
           "expect": [
             {
               "$document": {
-                "$id": "r6c0",
+                "$id": "r6c2",
                 "f": 3.141592653589793,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "19"
+                "$sequence": "21"
               }
             },
             {
@@ -48335,26 +48335,26 @@
           "expect": [
             {
               "$document": {
-                "$id": "r6c2",
+                "$id": "r6c0",
                 "f": 3.141592653589793,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "21"
+                "$sequence": "19"
               }
             },
             {
               "$document": {
-                "$id": "r5c0",
+                "$id": "r5c2",
                 "f": 0.30000000000000004,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "16"
+                "$sequence": "18"
               }
             }
           ]
@@ -48411,26 +48411,26 @@
           "expect": [
             {
               "$document": {
-                "$id": "r5c1",
-                "f": 0.30000000000000004,
+                "$id": "r4c2",
+                "f": 0.3,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "17"
+                "$sequence": "15"
               }
             },
             {
               "$document": {
-                "$id": "r5c2",
-                "f": 0.30000000000000004,
+                "$id": "r4c1",
+                "f": 0.3,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "18"
+                "$sequence": "14"
               }
             }
           ]
@@ -48487,26 +48487,26 @@
           "expect": [
             {
               "$document": {
-                "$id": "r4c0",
-                "f": 0.3,
+                "$id": "r5c1",
+                "f": 0.30000000000000004,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "13"
+                "$sequence": "17"
               }
             },
             {
               "$document": {
-                "$id": "r4c1",
-                "f": 0.3,
+                "$id": "r5c0",
+                "f": 0.30000000000000004,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "14"
+                "$sequence": "16"
               }
             }
           ]
@@ -48563,26 +48563,26 @@
           "expect": [
             {
               "$document": {
-                "$id": "r4c2",
+                "$id": "r4c0",
                 "f": 0.3,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "15"
+                "$sequence": "13"
               }
             },
             {
               "$document": {
-                "$id": "r3c0",
+                "$id": "r3c2",
                 "f": 1e-300,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "10"
+                "$sequence": "12"
               }
             }
           ]
@@ -48639,26 +48639,26 @@
           "expect": [
             {
               "$document": {
-                "$id": "r3c1",
-                "f": 1e-300,
+                "$id": "r2c2",
+                "f": 5e-324,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "11"
+                "$sequence": "9"
               }
             },
             {
               "$document": {
-                "$id": "r3c2",
-                "f": 1e-300,
+                "$id": "r2c1",
+                "f": 5e-324,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "12"
+                "$sequence": "8"
               }
             }
           ]
@@ -48715,26 +48715,26 @@
           "expect": [
             {
               "$document": {
-                "$id": "r2c0",
-                "f": 5e-324,
+                "$id": "r3c1",
+                "f": 1e-300,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "7"
+                "$sequence": "11"
               }
             },
             {
               "$document": {
-                "$id": "r2c1",
-                "f": 5e-324,
+                "$id": "r3c0",
+                "f": 1e-300,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "8"
+                "$sequence": "10"
               }
             }
           ]
@@ -48791,26 +48791,26 @@
           "expect": [
             {
               "$document": {
-                "$id": "r2c2",
+                "$id": "r2c0",
                 "f": 5e-324,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "9"
+                "$sequence": "7"
               }
             },
             {
               "$document": {
-                "$id": "r1c0",
+                "$id": "r1c2",
                 "f": 0.0,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "4"
+                "$sequence": "6"
               }
             }
           ]
@@ -48867,26 +48867,26 @@
           "expect": [
             {
               "$document": {
-                "$id": "r1c1",
-                "f": 0.0,
+                "$id": "r0c2",
+                "f": -5e-324,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "5"
+                "$sequence": "3"
               }
             },
             {
               "$document": {
-                "$id": "r1c2",
-                "f": 0.0,
+                "$id": "r0c1",
+                "f": -5e-324,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "6"
+                "$sequence": "2"
               }
             }
           ]
@@ -48943,26 +48943,26 @@
           "expect": [
             {
               "$document": {
-                "$id": "r0c0",
-                "f": -5e-324,
+                "$id": "r1c1",
+                "f": 0.0,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "1"
+                "$sequence": "5"
               }
             },
             {
               "$document": {
-                "$id": "r0c1",
-                "f": -5e-324,
+                "$id": "r1c0",
+                "f": 0.0,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "2"
+                "$sequence": "4"
               }
             }
           ]
@@ -49019,14 +49019,14 @@
           "expect": [
             {
               "$document": {
-                "$id": "r0c2",
+                "$id": "r0c0",
                 "f": -5e-324,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "3"
+                "$sequence": "1"
               }
             }
           ]
@@ -49080,7 +49080,32 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "$id": "r0c1",
+                "f": -5e-324,
+                "$collection": "float_cursor",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$tenant": "999",
+                "$sequence": "2"
+              }
+            },
+            {
+              "$document": {
+                "$id": "r0c0",
+                "f": -5e-324,
+                "$collection": "float_cursor",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$tenant": "999",
+                "$sequence": "1"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -49697,14 +49722,14 @@
           "expect": [
             {
               "$document": {
-                "$id": "r6c0",
+                "$id": "r6c2",
                 "f": 3.141592653589793,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "19"
+                "$sequence": "21"
               }
             },
             {
@@ -49721,26 +49746,26 @@
             },
             {
               "$document": {
-                "$id": "r6c2",
+                "$id": "r6c0",
                 "f": 3.141592653589793,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "21"
+                "$sequence": "19"
               }
             },
             {
               "$document": {
-                "$id": "r5c0",
+                "$id": "r5c2",
                 "f": 0.30000000000000004,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "16"
+                "$sequence": "18"
               }
             }
           ]
@@ -49797,26 +49822,26 @@
           "expect": [
             {
               "$document": {
-                "$id": "r5c1",
-                "f": 0.30000000000000004,
+                "$id": "r4c2",
+                "f": 0.3,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "17"
+                "$sequence": "15"
               }
             },
             {
               "$document": {
-                "$id": "r5c2",
-                "f": 0.30000000000000004,
+                "$id": "r4c1",
+                "f": 0.3,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "18"
+                "$sequence": "14"
               }
             },
             {
@@ -49833,14 +49858,14 @@
             },
             {
               "$document": {
-                "$id": "r4c1",
-                "f": 0.3,
+                "$id": "r3c2",
+                "f": 1e-300,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "14"
+                "$sequence": "12"
               }
             }
           ]
@@ -49897,26 +49922,26 @@
           "expect": [
             {
               "$document": {
-                "$id": "r4c2",
+                "$id": "r4c0",
                 "f": 0.3,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "15"
+                "$sequence": "13"
               }
             },
             {
               "$document": {
-                "$id": "r3c0",
+                "$id": "r3c2",
                 "f": 1e-300,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "10"
+                "$sequence": "12"
               }
             },
             {
@@ -49933,14 +49958,14 @@
             },
             {
               "$document": {
-                "$id": "r3c2",
+                "$id": "r3c0",
                 "f": 1e-300,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "12"
+                "$sequence": "10"
               }
             }
           ]
@@ -49997,26 +50022,26 @@
           "expect": [
             {
               "$document": {
-                "$id": "r2c0",
-                "f": 5e-324,
+                "$id": "r3c1",
+                "f": 1e-300,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "7"
+                "$sequence": "11"
               }
             },
             {
               "$document": {
-                "$id": "r2c1",
-                "f": 5e-324,
+                "$id": "r3c0",
+                "f": 1e-300,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "8"
+                "$sequence": "10"
               }
             },
             {
@@ -50033,14 +50058,14 @@
             },
             {
               "$document": {
-                "$id": "r1c0",
-                "f": 0.0,
+                "$id": "r2c1",
+                "f": 5e-324,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "4"
+                "$sequence": "8"
               }
             }
           ]
@@ -50097,38 +50122,14 @@
           "expect": [
             {
               "$document": {
-                "$id": "r1c1",
-                "f": 0.0,
-                "$collection": "float_cursor",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$tenant": "999",
-                "$sequence": "5"
-              }
-            },
-            {
-              "$document": {
-                "$id": "r1c2",
-                "f": 0.0,
-                "$collection": "float_cursor",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$tenant": "999",
-                "$sequence": "6"
-              }
-            },
-            {
-              "$document": {
-                "$id": "r0c0",
+                "$id": "r0c2",
                 "f": -5e-324,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "1"
+                "$sequence": "3"
               }
             },
             {
@@ -50141,6 +50142,18 @@
                 "$permissions": [],
                 "$tenant": "999",
                 "$sequence": "2"
+              }
+            },
+            {
+              "$document": {
+                "$id": "r0c0",
+                "f": -5e-324,
+                "$collection": "float_cursor",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$tenant": "999",
+                "$sequence": "1"
               }
             }
           ]
@@ -50197,14 +50210,14 @@
           "expect": [
             {
               "$document": {
-                "$id": "r0c2",
+                "$id": "r0c0",
                 "f": -5e-324,
                 "$collection": "float_cursor",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$tenant": "999",
-                "$sequence": "3"
+                "$sequence": "1"
               }
             }
           ]
@@ -50258,7 +50271,32 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "$id": "r0c1",
+                "f": -5e-324,
+                "$collection": "float_cursor",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$tenant": "999",
+                "$sequence": "2"
+              }
+            },
+            {
+              "$document": {
+                "$id": "r0c0",
+                "f": -5e-324,
+                "$collection": "float_cursor",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$tenant": "999",
+                "$sequence": "1"
+              }
+            }
+          ]
         }
       ]
     },
@@ -121854,9 +121892,7 @@
             {
               "$document": {
                 "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
+                  "read(\"user:x\")",
                   "create(\"any\")",
                   "create(\"user:1x\")",
                   "create(\"user:2x\")",
@@ -121867,28 +121903,26 @@
                   "delete(\"user:1x\")",
                   "delete(\"user:2x\")"
                 ],
-                "name": "Work in Progress",
+                "name": "Work in Progress 2",
                 "director": "TBD",
-                "year": 2025,
+                "year": 2026,
                 "price": 0.0,
                 "active": false,
                 "genres": [],
                 "with-dash": "Works3",
+                "nullable": "Not null",
                 "$id": "<uniqid>",
                 "$collection": "movies_u000000000046",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
-                "$sequence": "5",
-                "nullable": null
+                "$sequence": "6"
               }
             },
             {
               "$document": {
                 "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
+                  "read(\"user:x\")",
                   "create(\"any\")",
                   "create(\"user:1x\")",
                   "create(\"user:2x\")",
@@ -121899,31 +121933,26 @@
                   "delete(\"user:1x\")",
                   "delete(\"user:2x\")"
                 ],
-                "name": "Frozen II",
-                "director": "Chris Buck & Jennifer Lee",
-                "year": 2019,
-                "price": 39.5,
-                "active": true,
-                "genres": [
-                  "animation",
-                  "kids"
-                ],
-                "with-dash": "Works",
+                "name": "Work in Progress 2",
+                "director": "TBD",
+                "year": 2026,
+                "price": 0.0,
+                "active": false,
+                "genres": [],
+                "with-dash": "Works3",
+                "nullable": "Not null",
                 "$id": "<uniqid>",
                 "$collection": "movies_u000000000046",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
-                "$sequence": "2",
-                "nullable": null
+                "$sequence": "6"
               }
             },
             {
               "$document": {
                 "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
+                  "read(\"user:x\")",
                   "create(\"any\")",
                   "create(\"user:1x\")",
                   "create(\"user:2x\")",
@@ -121934,24 +121963,20 @@
                   "delete(\"user:1x\")",
                   "delete(\"user:2x\")"
                 ],
-                "name": "Captain Marvel",
-                "director": "Anna Boden & Ryan Fleck",
-                "year": 2019,
-                "price": 25.99,
-                "active": true,
-                "genres": [
-                  "science fiction",
-                  "action",
-                  "comics"
-                ],
-                "with-dash": "Works2",
+                "name": "Work in Progress 2",
+                "director": "TBD",
+                "year": 2026,
+                "price": 0.0,
+                "active": false,
+                "genres": [],
+                "with-dash": "Works3",
+                "nullable": "Not null",
                 "$id": "<uniqid>",
                 "$collection": "movies_u000000000046",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
-                "$sequence": "4",
-                "nullable": null
+                "$sequence": "6"
               }
             },
             {
@@ -121992,9 +122017,7 @@
             {
               "$document": {
                 "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
+                  "read(\"user:x\")",
                   "create(\"any\")",
                   "create(\"user:1x\")",
                   "create(\"user:2x\")",
@@ -122005,24 +122028,20 @@
                   "delete(\"user:1x\")",
                   "delete(\"user:2x\")"
                 ],
-                "name": "Captain America: The First Avenger",
-                "director": "Joe Johnston",
-                "year": 2011,
-                "price": 25.94,
-                "active": true,
-                "genres": [
-                  "science fiction",
-                  "action",
-                  "comics"
-                ],
-                "with-dash": "Works2",
+                "name": "Work in Progress 2",
+                "director": "TBD",
+                "year": 2026,
+                "price": 0.0,
+                "active": false,
+                "genres": [],
+                "with-dash": "Works3",
+                "nullable": "Not null",
                 "$id": "<uniqid>",
                 "$collection": "movies_u000000000046",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
-                "$sequence": "3",
-                "nullable": null
+                "$sequence": "6"
               }
             }
           ]
@@ -122112,9 +122131,7 @@
             {
               "$document": {
                 "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
+                  "read(\"user:x\")",
                   "create(\"any\")",
                   "create(\"user:1x\")",
                   "create(\"user:2x\")",
@@ -122125,31 +122142,26 @@
                   "delete(\"user:1x\")",
                   "delete(\"user:2x\")"
                 ],
-                "name": "Frozen II",
-                "director": "Chris Buck & Jennifer Lee",
-                "year": 2019,
-                "price": 39.5,
-                "active": true,
-                "genres": [
-                  "animation",
-                  "kids"
-                ],
-                "with-dash": "Works",
+                "name": "Work in Progress 2",
+                "director": "TBD",
+                "year": 2026,
+                "price": 0.0,
+                "active": false,
+                "genres": [],
+                "with-dash": "Works3",
+                "nullable": "Not null",
                 "$id": "<uniqid>",
                 "$collection": "movies_u000000000046",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
-                "$sequence": "2",
-                "nullable": null
+                "$sequence": "6"
               }
             },
             {
               "$document": {
                 "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
+                  "read(\"user:x\")",
                   "create(\"any\")",
                   "create(\"user:1x\")",
                   "create(\"user:2x\")",
@@ -122160,24 +122172,20 @@
                   "delete(\"user:1x\")",
                   "delete(\"user:2x\")"
                 ],
-                "name": "Captain Marvel",
-                "director": "Anna Boden & Ryan Fleck",
-                "year": 2019,
-                "price": 25.99,
-                "active": true,
-                "genres": [
-                  "science fiction",
-                  "action",
-                  "comics"
-                ],
-                "with-dash": "Works2",
+                "name": "Work in Progress 2",
+                "director": "TBD",
+                "year": 2026,
+                "price": 0.0,
+                "active": false,
+                "genres": [],
+                "with-dash": "Works3",
+                "nullable": "Not null",
                 "$id": "<uniqid>",
                 "$collection": "movies_u000000000046",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
-                "$sequence": "4",
-                "nullable": null
+                "$sequence": "6"
               }
             }
           ]
@@ -122270,6 +122278,36 @@
           "expect": [
             {
               "$document": {
+                "$permissions": [
+                  "read(\"user:x\")",
+                  "create(\"any\")",
+                  "create(\"user:1x\")",
+                  "create(\"user:2x\")",
+                  "update(\"any\")",
+                  "update(\"user:1x\")",
+                  "update(\"user:2x\")",
+                  "delete(\"any\")",
+                  "delete(\"user:1x\")",
+                  "delete(\"user:2x\")"
+                ],
+                "name": "Work in Progress 2",
+                "director": "TBD",
+                "year": 2026,
+                "price": 0.0,
+                "active": false,
+                "genres": [],
+                "with-dash": "Works3",
+                "nullable": "Not null",
+                "$id": "<uniqid>",
+                "$collection": "movies_u000000000046",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$tenant": "999",
+                "$sequence": "6"
+              }
+            },
+            {
+              "$document": {
                 "$id": "frozen",
                 "$permissions": [
                   "read(\"any\")",
@@ -122300,42 +122338,6 @@
                 "$updatedAt": "<now>",
                 "$tenant": "999",
                 "$sequence": "1",
-                "nullable": null
-              }
-            },
-            {
-              "$document": {
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "name": "Captain America: The First Avenger",
-                "director": "Joe Johnston",
-                "year": 2011,
-                "price": 25.94,
-                "active": true,
-                "genres": [
-                  "science fiction",
-                  "action",
-                  "comics"
-                ],
-                "with-dash": "Works2",
-                "$id": "<uniqid>",
-                "$collection": "movies_u000000000046",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$tenant": "999",
-                "$sequence": "3",
                 "nullable": null
               }
             }
@@ -123817,9 +123819,7 @@
             {
               "$document": {
                 "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
+                  "read(\"user:x\")",
                   "create(\"any\")",
                   "create(\"user:1x\")",
                   "create(\"user:2x\")",
@@ -123830,28 +123830,26 @@
                   "delete(\"user:1x\")",
                   "delete(\"user:2x\")"
                 ],
-                "name": "Work in Progress",
+                "name": "Work in Progress 2",
                 "director": "TBD",
-                "year": 2025,
+                "year": 2026,
                 "price": 0.0,
                 "active": false,
                 "genres": [],
                 "with-dash": "Works3",
+                "nullable": "Not null",
                 "$id": "<uniqid>",
                 "$collection": "movies_u000000000046",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
-                "$sequence": "5",
-                "nullable": null
+                "$sequence": "6"
               }
             },
             {
               "$document": {
                 "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
+                  "read(\"user:x\")",
                   "create(\"any\")",
                   "create(\"user:1x\")",
                   "create(\"user:2x\")",
@@ -123862,31 +123860,26 @@
                   "delete(\"user:1x\")",
                   "delete(\"user:2x\")"
                 ],
-                "name": "Frozen II",
-                "director": "Chris Buck & Jennifer Lee",
-                "year": 2019,
-                "price": 39.5,
-                "active": true,
-                "genres": [
-                  "animation",
-                  "kids"
-                ],
-                "with-dash": "Works",
+                "name": "Work in Progress 2",
+                "director": "TBD",
+                "year": 2026,
+                "price": 0.0,
+                "active": false,
+                "genres": [],
+                "with-dash": "Works3",
+                "nullable": "Not null",
                 "$id": "<uniqid>",
                 "$collection": "movies_u000000000046",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
-                "$sequence": "2",
-                "nullable": null
+                "$sequence": "6"
               }
             },
             {
               "$document": {
                 "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
+                  "read(\"user:x\")",
                   "create(\"any\")",
                   "create(\"user:1x\")",
                   "create(\"user:2x\")",
@@ -123897,24 +123890,20 @@
                   "delete(\"user:1x\")",
                   "delete(\"user:2x\")"
                 ],
-                "name": "Captain Marvel",
-                "director": "Anna Boden & Ryan Fleck",
-                "year": 2019,
-                "price": 25.99,
-                "active": true,
-                "genres": [
-                  "science fiction",
-                  "action",
-                  "comics"
-                ],
-                "with-dash": "Works2",
+                "name": "Work in Progress 2",
+                "director": "TBD",
+                "year": 2026,
+                "price": 0.0,
+                "active": false,
+                "genres": [],
+                "with-dash": "Works3",
+                "nullable": "Not null",
                 "$id": "<uniqid>",
                 "$collection": "movies_u000000000046",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
-                "$sequence": "4",
-                "nullable": null
+                "$sequence": "6"
               }
             },
             {
@@ -123955,9 +123944,7 @@
             {
               "$document": {
                 "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
+                  "read(\"user:x\")",
                   "create(\"any\")",
                   "create(\"user:1x\")",
                   "create(\"user:2x\")",
@@ -123968,24 +123955,20 @@
                   "delete(\"user:1x\")",
                   "delete(\"user:2x\")"
                 ],
-                "name": "Captain America: The First Avenger",
-                "director": "Joe Johnston",
-                "year": 2011,
-                "price": 25.94,
-                "active": true,
-                "genres": [
-                  "science fiction",
-                  "action",
-                  "comics"
-                ],
-                "with-dash": "Works2",
+                "name": "Work in Progress 2",
+                "director": "TBD",
+                "year": 2026,
+                "price": 0.0,
+                "active": false,
+                "genres": [],
+                "with-dash": "Works3",
+                "nullable": "Not null",
                 "$id": "<uniqid>",
                 "$collection": "movies_u000000000046",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
-                "$sequence": "3",
-                "nullable": null
+                "$sequence": "6"
               }
             }
           ]
@@ -124079,9 +124062,7 @@
             {
               "$document": {
                 "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
+                  "read(\"user:x\")",
                   "create(\"any\")",
                   "create(\"user:1x\")",
                   "create(\"user:2x\")",
@@ -124092,24 +124073,20 @@
                   "delete(\"user:1x\")",
                   "delete(\"user:2x\")"
                 ],
-                "name": "Captain Marvel",
-                "director": "Anna Boden & Ryan Fleck",
-                "year": 2019,
-                "price": 25.99,
-                "active": true,
-                "genres": [
-                  "science fiction",
-                  "action",
-                  "comics"
-                ],
-                "with-dash": "Works2",
+                "name": "Work in Progress 2",
+                "director": "TBD",
+                "year": 2026,
+                "price": 0.0,
+                "active": false,
+                "genres": [],
+                "with-dash": "Works3",
+                "nullable": "Not null",
                 "$id": "<uniqid>",
                 "$collection": "movies_u000000000046",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
-                "$sequence": "4",
-                "nullable": null
+                "$sequence": "6"
               }
             },
             {
@@ -124238,9 +124215,7 @@
             {
               "$document": {
                 "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
+                  "read(\"user:x\")",
                   "create(\"any\")",
                   "create(\"user:1x\")",
                   "create(\"user:2x\")",
@@ -124251,28 +124226,26 @@
                   "delete(\"user:1x\")",
                   "delete(\"user:2x\")"
                 ],
-                "name": "Work in Progress",
+                "name": "Work in Progress 2",
                 "director": "TBD",
-                "year": 2025,
+                "year": 2026,
                 "price": 0.0,
                 "active": false,
                 "genres": [],
                 "with-dash": "Works3",
+                "nullable": "Not null",
                 "$id": "<uniqid>",
                 "$collection": "movies_u000000000046",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
-                "$sequence": "5",
-                "nullable": null
+                "$sequence": "6"
               }
             },
             {
               "$document": {
                 "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
+                  "read(\"user:x\")",
                   "create(\"any\")",
                   "create(\"user:1x\")",
                   "create(\"user:2x\")",
@@ -124283,23 +124256,20 @@
                   "delete(\"user:1x\")",
                   "delete(\"user:2x\")"
                 ],
-                "name": "Frozen II",
-                "director": "Chris Buck & Jennifer Lee",
-                "year": 2019,
-                "price": 39.5,
-                "active": true,
-                "genres": [
-                  "animation",
-                  "kids"
-                ],
-                "with-dash": "Works",
+                "name": "Work in Progress 2",
+                "director": "TBD",
+                "year": 2026,
+                "price": 0.0,
+                "active": false,
+                "genres": [],
+                "with-dash": "Works3",
+                "nullable": "Not null",
                 "$id": "<uniqid>",
                 "$collection": "movies_u000000000046",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
-                "$sequence": "2",
-                "nullable": null
+                "$sequence": "6"
               }
             }
           ]
@@ -124422,9 +124392,7 @@
             {
               "$document": {
                 "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
+                  "read(\"user:x\")",
                   "create(\"any\")",
                   "create(\"user:1x\")",
                   "create(\"user:2x\")",
@@ -124435,20 +124403,20 @@
                   "delete(\"user:1x\")",
                   "delete(\"user:2x\")"
                 ],
-                "name": "Work in Progress",
+                "name": "Work in Progress 2",
                 "director": "TBD",
-                "year": 2025,
+                "year": 2026,
                 "price": 0.0,
                 "active": false,
                 "genres": [],
                 "with-dash": "Works3",
+                "nullable": "Not null",
                 "$id": "<uniqid>",
                 "$collection": "movies_u000000000046",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
-                "$sequence": "5",
-                "nullable": null
+                "$sequence": "6"
               }
             }
           ]
@@ -130020,41 +129988,6 @@
           "expect": [
             {
               "$document": {
-                "$id": "frozen",
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "name": "Frozen",
-                "director": "Chris Buck & Jennifer Lee",
-                "year": 2013,
-                "price": 39.5,
-                "active": true,
-                "genres": [
-                  "animation",
-                  "kids"
-                ],
-                "with-dash": "Works",
-                "$collection": "movies_u000000000046",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$tenant": "999",
-                "$sequence": "1",
-                "nullable": null
-              }
-            },
-            {
-              "$document": {
                 "$permissions": [
                   "read(\"any\")",
                   "read(\"user:1\")",
@@ -130085,6 +130018,41 @@
                 "$updatedAt": "<now>",
                 "$tenant": "999",
                 "$sequence": "2",
+                "nullable": null
+              }
+            },
+            {
+              "$document": {
+                "$id": "frozen",
+                "$permissions": [
+                  "read(\"any\")",
+                  "read(\"user:1\")",
+                  "read(\"user:2\")",
+                  "create(\"any\")",
+                  "create(\"user:1x\")",
+                  "create(\"user:2x\")",
+                  "update(\"any\")",
+                  "update(\"user:1x\")",
+                  "update(\"user:2x\")",
+                  "delete(\"any\")",
+                  "delete(\"user:1x\")",
+                  "delete(\"user:2x\")"
+                ],
+                "name": "Frozen",
+                "director": "Chris Buck & Jennifer Lee",
+                "year": 2013,
+                "price": 39.5,
+                "active": true,
+                "genres": [
+                  "animation",
+                  "kids"
+                ],
+                "with-dash": "Works",
+                "$collection": "movies_u000000000046",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$tenant": "999",
+                "$sequence": "1",
                 "nullable": null
               }
             }
@@ -272469,6 +272437,327 @@
           "op": "database.is_dropping_unknown_attributes",
           "args": {},
           "expect": false
+        }
+      ]
+    },
+    {
+      "name": "DocumentTests::testMetadataDropsUnknownAttributes",
+      "state": [
+        "redis-json@database-redis-adapter"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "redis": true,
+            "cache": "none",
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "testMetadataDropsUnknownAttributes",
+                "name": "testMetadataDropsUnknownAttributes",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "testMetadataDropsUnknownAttributes",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "known",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 128,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "known",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.is_dropping_unknown_attributes",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.collection_definition",
+          "args": {},
+          "bind": "metadata"
+        },
+        {
+          "op": "database.encode",
+          "args": {
+            "collection": {
+              "$ref": "metadata"
+            },
+            "document": {
+              "$document": {
+                "$id": "testMetadataDropsUnknownAttributes",
+                "$collection": "_metadata",
+                "name": "testMetadataDropsUnknownAttributes",
+                "documentSecurity": false,
+                "unreleased": "dropped"
+              }
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "testMetadataDropsUnknownAttributes"
+          },
+          "bind": "definition"
+        },
+        {
+          "op": "database.encode",
+          "args": {
+            "collection": {
+              "$ref": "definition"
+            },
+            "document": {
+              "$document": {
+                "$id": "strict",
+                "$collection": "testMetadataDropsUnknownAttributes",
+                "known": "kept",
+                "unknown": "refused"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "strict",
+              "$collection": "testMetadataDropsUnknownAttributes",
+              "known": "kept",
+              "unknown": "refused"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "testMetadataDropsUnknownAttributes",
+            "document": {
+              "$document": {
+                "$id": "strict",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "known": "kept",
+                "unknown": "refused"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Unknown attribute: \"unknown\""
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "testMetadataDropsUnknownAttributes"
+          }
+        }
+      ]
+    },
+    {
+      "name": "DocumentTests::testMetadataDropsUnknownAttributesOnSchemaUpdate",
+      "state": [
+        "redis-json@database-redis-adapter"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "redis": true,
+            "cache": "none",
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
         }
       ]
     },
