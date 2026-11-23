@@ -6,7 +6,9 @@ name: Extension
 #
 #   COPY --from=appwrite/utopia-extension:<version> /utopia.so /usr/local/lib/php/utopia.so
 #
-# A release publishes <version> and latest; main publishes main. Each
+# A release publishes <version> and latest; main publishes main. A manual run
+# on any other branch only builds and smoke-tests, so an unreviewed ref can
+# never replace a published tag. Each
 # architecture builds on its own native runner (no QEMU) and is smoke-tested on
 # stock php:8.5-cli-alpine with only the documented runtime packages before it
 # is pushed. See crates/extension/README.md.
@@ -108,11 +110,13 @@ jobs:
             "
 
       - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        if: github.event_name == 'release' || github.ref == 'refs/heads/main'
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Push
+        if: github.event_name == 'release' || github.ref == 'refs/heads/main'
         env:
           STAMP: ${{ steps.version.outputs.stamp }}
           TAG: ${{ steps.version.outputs.tag }}
@@ -125,6 +129,7 @@ jobs:
   manifest:
     name: Manifest
     needs: build
+    if: github.event_name == 'release' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     steps:
       - uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
