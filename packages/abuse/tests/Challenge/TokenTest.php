@@ -159,7 +159,7 @@ final class TokenTest extends TestCase
     public static function reservedClaims(): iterable
     {
         yield 'purpose' => [Token::PURPOSE_CLAIM];
-        yield 'expiry' => [Token::EXPIRY_CLAIM];
+        yield 'expiry' => ['exp'];
         yield 'issued at' => ['iat'];
         yield 'binding names' => [Token::BINDING_CLAIM];
     }

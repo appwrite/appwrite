@@ -15,7 +15,7 @@ final readonly class Token
 {
     public const string PURPOSE_CLAIM = 'purpose';
 
-    public const string EXPIRY_CLAIM = 'exp';
+    private const string EXPIRY_CLAIM = 'exp';
 
     /** Names of the claims that form the binding, so verify can require all of them. */
     public const string BINDING_CLAIM = 'binding';

@@ -3,7 +3,6 @@
 namespace Utopia\Abuse\Tests\Challenge;
 
 use Utopia\Abuse\Challenge;
-use Utopia\Abuse\Challenge\Prompt;
 use Utopia\Abuse\Challenge\Result;
 use Utopia\Abuse\Challenge\Status;
 
@@ -19,9 +18,9 @@ final readonly class Riddle extends Challenge
     }
 
     #[\Override]
-    public function issue(array $claims = []): Prompt
+    public function issue(array $claims = []): string
     {
-        return new Prompt($this->sign(['answer' => \hash('sha256', $this->answer)], $claims));
+        return $this->sign(['answer' => \hash('sha256', $this->answer)], $claims);
     }
 
     #[\Override]

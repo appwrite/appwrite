@@ -17,7 +17,7 @@ final readonly class Password extends Challenge
 {
     public const string CIPHER = 'aes-128-gcm';
 
-    /** Prompt lifetime in seconds: how long the form stays valid. */
+    /** Token lifetime in seconds: how long the form stays valid. */
     public const int DEFAULT_TTL = 600;
 
     /** Length of {@see version()} in hex characters. */
@@ -27,9 +27,9 @@ final readonly class Password extends Challenge
      * @param  string  $secret  Signing secret
      * @param  string  $password  The password, encrypted with {@see encrypt()} or Appwrite's `encrypt` filter
      * @param  array<array-key, string>  $keys  Decryption keys, keyed by version where known; others are tried in order during a rotation
-     * @param  int  $ttl  Prompt lifetime in seconds
-     * @param  string  $label  Derives the signing key from the secret; keep it stable or issued prompts stop verifying
-     * @param  string  $purpose  Stored in each prompt so no other kind of token passes as one
+     * @param  int  $ttl  Token lifetime in seconds
+     * @param  string  $label  Derives the signing key from the secret; keep it stable or issued tokens stop verifying
+     * @param  string  $purpose  Stored in each token so no other kind of token passes as one
      *
      * @throws \InvalidArgumentException
      */
@@ -49,9 +49,9 @@ final readonly class Password extends Challenge
     }
 
     #[\Override]
-    public function issue(array $claims = []): Prompt
+    public function issue(array $claims = []): string
     {
-        return new Prompt($this->sign([], $claims));
+        return $this->sign([], $claims);
     }
 
     /**

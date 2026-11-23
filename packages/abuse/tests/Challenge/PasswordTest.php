@@ -37,7 +37,7 @@ final class PasswordTest extends TestCase
     {
         $bound = $password->withParams(self::CLIENT);
 
-        return $bound->verify($bound->issue()->token, $guess)->status;
+        return $bound->verify($bound->issue(), $guess)->status;
     }
 
     public function testAPasswordEncryptedByAppwriteMatches(): void
@@ -88,21 +88,21 @@ final class PasswordTest extends TestCase
         }
     }
 
-    public function testAPromptVerifiesOnlyForTheSameParams(): void
+    public function testATokenVerifiesOnlyForTheSameParams(): void
     {
-        $prompt = $this->password()->withParams(self::CLIENT)->issue();
+        $token = $this->password()->withParams(self::CLIENT)->issue();
 
-        $this->assertSame(Status::BindingMismatch, $this->password()->verify($prompt->token, self::PASSWORD)->status);
-        $this->assertSame(Status::BindingMismatch, $this->password()->withParams([...self::CLIENT, 'ip' => '198.51.100.0/24'])->verify($prompt->token, self::PASSWORD)->status);
-        $this->assertSame(Status::Valid, $this->password()->withParams(self::CLIENT)->verify($prompt->token, self::PASSWORD)->status);
+        $this->assertSame(Status::BindingMismatch, $this->password()->verify($token, self::PASSWORD)->status);
+        $this->assertSame(Status::BindingMismatch, $this->password()->withParams([...self::CLIENT, 'ip' => '198.51.100.0/24'])->verify($token, self::PASSWORD)->status);
+        $this->assertSame(Status::Valid, $this->password()->withParams(self::CLIENT)->verify($token, self::PASSWORD)->status);
     }
 
-    public function testATokenFromAnotherChallengeIsNotAPrompt(): void
+    public function testATokenFromAnotherChallengeIsRejected(): void
     {
         $other = new Password('other-secret', self::APPWRITE_ENCRYPTED, ['1' => self::KEY])->issue();
         $clearance = new Clearance(self::SECRET)->issue();
 
-        $this->assertSame(Status::InvalidToken, $this->password()->verify($other->token, self::PASSWORD)->status);
+        $this->assertSame(Status::InvalidToken, $this->password()->verify($other, self::PASSWORD)->status);
         $this->assertSame(Status::InvalidToken, $this->password()->verify($clearance, self::PASSWORD)->status);
     }
 

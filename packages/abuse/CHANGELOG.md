@@ -4,8 +4,8 @@
 
 ### Added
 
-- `Utopia\Abuse\Challenge`: the base for things a client must answer before it gets through, like `Adapter` is for rate limits. It holds the signed token and the params it is bound to (`withParams()` / `withParam()`). Each kind implements `issue(array $claims = []): Prompt` and `verify(string $token, string $answer): Result`, using the protected `sign()` and `claimsFrom()`.
-- `Challenge\ProofOfWork`: `new ProofOfWork($secret, $nonces, difficulty: 18)`. `issue()` returns a `ProofOfWork\Puzzle` (token, nonce, difficulty) and `verify($token, $solution)` returns a `Challenge\Result`. Each puzzle can be redeemed once. A nonce store outage rejects the solution unless `acceptWhenNoncesUnavailable` is set.
+- `Utopia\Abuse\Challenge`: the base for things a client must answer before it gets through, like `Adapter` is for rate limits. It holds the signed token and the params it is bound to (`withParams()` / `withParam()`). Each kind implements `issue(array $claims = []): string` (the signed token the client sends back) and `verify(string $token, string $answer): Result`, using the protected `sign()` and `claimsFrom()`.
+- `Challenge\ProofOfWork`: `new ProofOfWork($secret, $nonces, difficulty: 18)`. `issue()` returns the token; the client finds an answer against `ProofOfWork::seed($token)` and `verify($token, $answer)` returns a `Challenge\Result`. Each token can be answered once. A nonce store outage rejects the solution unless `acceptWhenNoncesUnavailable` is set.
 - `Challenge\Password`: asks for a password the caller set, held encrypted in Appwrite's `encrypt`-filter envelope (`Password::encrypt()`), with keys tried in order during a rotation. It does not limit guesses; callers rate-limit verify. `version()` identifies the stored password so a clearance can end when it changes.
 - `Challenge\Result` and `Challenge\Status` (`Valid`, `InvalidToken`, `BindingMismatch`, `Rejected`, `Replay`, `Unavailable`), shared by every kind.
 - `Challenge\Clearance`: issued after a challenge is passed. `withParams([...])->issue($difficulty)` and `->verify($token, $difficulty, $maxAge)`.

@@ -103,8 +103,8 @@ final class ClearanceTest extends TestCase
             Token::PURPOSE_CLAIM => 'clearance',
             ...self::BINDING,
             Token::BINDING_CLAIM => ['ip', 'project', 'resource', 'ua'],
-            Clearance::DIFFICULTY_CLAIM => 18,
-            Clearance::ISSUED_AT_CLAIM => \time() - 1000,
+            'difficulty' => 18,
+            'issuedAt' => \time() - 1000,
             'exp' => \time() + 3600,
         ]);
 
@@ -121,8 +121,8 @@ final class ClearanceTest extends TestCase
         $legacy = new JWT(\hash_hmac('sha256', 'label', self::SECRET), 'HS256', 1800, 0)->encode([
             Token::PURPOSE_CLAIM => 'clearance',
             ...self::BINDING,
-            Clearance::DIFFICULTY_CLAIM => 18,
-            Clearance::ISSUED_AT_CLAIM => \time(),
+            'difficulty' => 18,
+            'issuedAt' => \time(),
             'exp' => \time() + 1800,
         ]);
 
@@ -133,13 +133,13 @@ final class ClearanceTest extends TestCase
     {
         $clearance = $this->clearance();
 
-        $this->assertFalse($clearance->withParams(self::BINDING)->verify($this->token()->issue([Clearance::DIFFICULTY_CLAIM => 18], binding: self::BINDING)));
-        $this->assertFalse($clearance->withParams(self::BINDING)->verify($this->token()->issue([Clearance::ISSUED_AT_CLAIM => \time()], binding: self::BINDING)));
+        $this->assertFalse($clearance->withParams(self::BINDING)->verify($this->token()->issue(['difficulty' => 18], binding: self::BINDING)));
+        $this->assertFalse($clearance->withParams(self::BINDING)->verify($this->token()->issue(['issuedAt' => \time()], binding: self::BINDING)));
     }
 
     public function testATokenIssuedForAnotherPurposeIsNotAClearance(): void
     {
-        $challenge = $this->token('challenge')->issue([Clearance::DIFFICULTY_CLAIM => 99, Clearance::ISSUED_AT_CLAIM => \time()], binding: self::BINDING);
+        $challenge = $this->token('challenge')->issue(['difficulty' => 99, 'issuedAt' => \time()], binding: self::BINDING);
 
         $this->assertFalse($this->clearance()->withParams(self::BINDING)->verify($challenge));
     }
@@ -182,7 +182,7 @@ final class ClearanceTest extends TestCase
         $issued = $clearance->issue();
 
         $this->assertTrue($clearance->verify($issued));
-        $this->assertFalse($clearance->verify($puzzle->token));
+        $this->assertFalse($clearance->verify($puzzle));
         $this->assertSame(Status::InvalidToken, new ProofOfWork(self::SECRET, new Memory(), 0)->verify($issued, '0')->status);
     }
 
@@ -217,8 +217,8 @@ final class ClearanceTest extends TestCase
      */
     public static function reservedNames(): iterable
     {
-        yield 'difficulty' => [Clearance::DIFFICULTY_CLAIM];
-        yield 'issue time' => [Clearance::ISSUED_AT_CLAIM];
+        yield 'difficulty' => ['difficulty'];
+        yield 'issue time' => ['issuedAt'];
         yield 'purpose' => [Token::PURPOSE_CLAIM];
     }
 

@@ -16,9 +16,9 @@ final readonly class Clearance
     /** Lifetime in seconds (30 minutes). Short on purpose: it tolerates IP drift. */
     public const int DEFAULT_TTL = 1800;
 
-    public const string DIFFICULTY_CLAIM = 'difficulty';
+    private const string DIFFICULTY_CLAIM = 'difficulty';
 
-    public const string ISSUED_AT_CLAIM = 'issuedAt';
+    private const string ISSUED_AT_CLAIM = 'issuedAt';
 
     private Token $token;
 

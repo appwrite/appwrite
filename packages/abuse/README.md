@@ -122,7 +122,7 @@ if (!$recaptcha->verify($_POST['g-recaptcha-response'], $_SERVER['REMOTE_ADDR'])
 
 A challenge is something a client must answer before it gets through. Like the adapters, every kind extends one base, `Utopia\Abuse\Challenge`: it holds the signed token and the params the challenge is bound to (`withParams()`, the same as on the adapters), and each kind implements `issue()` and `verify()`. Passing a challenge earns a `Clearance`, so later requests skip it.
 
-**Proof of work.** `ProofOfWork` makes a client spend CPU: it finds a solution whose SHA-256 has enough leading zero bits. Each puzzle can be redeemed once, tracked by a `Nonce` store.
+**Proof of work.** `ProofOfWork` makes a client spend CPU: it finds an answer whose SHA-256, together with the token's seed, has enough leading zero bits. Each token can be answered once, tracked by a `Nonce` store.
 
 ```php
 <?php
@@ -136,8 +136,10 @@ $clearance = new Clearance('secret');
 
 $client = ['ip' => $ip, 'ua' => $userAgent];
 
-// Issue a puzzle, then send $puzzle->token, $puzzle->nonce and $puzzle->difficulty to the client
-$puzzle = $challenge->withParams($client)->issue();
+// Issue a token, then send it to the client with its seed and the difficulty:
+// the client finds $answer where sha256("$seed:$answer") starts with 18 zero bits
+$token = $challenge->withParams($client)->issue();
+$seed = ProofOfWork::seed($token);
 
 // Verify the client's solution and hand out a clearance
 $result = $challenge->withParams($client)->verify($token, $solution);
@@ -151,7 +153,7 @@ if (!$clearance->withParams($client)->verify($cookie, difficulty: 18, maxAge: 18
 }
 ```
 
-Puzzles last 120 seconds and clearances 30 minutes unless you pass a `ttl`. Tokens verify only with exactly the same params. A nonce store outage rejects the solution (`Status::Unavailable`) unless you pass `acceptWhenNoncesUnavailable: true`. To bind to a network rather than an exact IP, use `Identity`: `new Identity()->ipPrefix($ip)` gives the /24 (IPv4) or /48 (IPv6) the address belongs to, and `userAgentHash()` hashes the User-Agent.
+Proof-of-work tokens last 120 seconds and clearances 30 minutes unless you pass a `ttl`. Tokens verify only with exactly the same params. A nonce store outage rejects the solution (`Status::Unavailable`) unless you pass `acceptWhenNoncesUnavailable: true`. To bind to a network rather than an exact IP, use `Identity`: `new Identity()->ipPrefix($ip)` gives the /24 (IPv4) or /48 (IPv6) the address belongs to, and `userAgentHash()` hashes the User-Agent.
 
 **Password.** `Password` asks for a password you set, e.g. on a firewall rule. Store it encrypted with `Password::encrypt()` (the same envelope as Appwrite's `encrypt` database filter) and pass the keys to decrypt it. It does not limit guesses: rate-limit verify per client yourself, e.g. with a `TimeLimit` adapter.
 
@@ -164,7 +166,7 @@ $stored = Password::encrypt('open sesame', $key, version: '1');   // keep this, 
 
 $password = new Password('secret', $stored, keys: ['1' => $key]);
 
-$prompt = $password->withParams($client)->issue();                       // render a form with $prompt->token
+$token = $password->withParams($client)->issue();                        // render a form carrying $token
 $result = $password->withParams($client)->verify($token, $guess);        // Valid or Rejected
 
 // Tie the clearance to this version of the password, so changing it ends every clearance
@@ -177,7 +179,6 @@ $pass = $clearance->withParams([...$client, 'version' => $password->version()])-
 <?php
 
 use Utopia\Abuse\Challenge;
-use Utopia\Abuse\Challenge\Prompt;
 use Utopia\Abuse\Challenge\Result;
 use Utopia\Abuse\Challenge\Status;
 
@@ -188,9 +189,9 @@ final readonly class Riddle extends Challenge
         parent::__construct($secret, 'riddle', 'riddle', 60);
     }
 
-    public function issue(array $claims = []): Prompt
+    public function issue(array $claims = []): string
     {
-        return new Prompt($this->sign(['answer' => hash('sha256', $this->answer)], $claims));
+        return $this->sign(['answer' => hash('sha256', $this->answer)], $claims);
     }
 
     public function verify(string $token, string $answer): Result
