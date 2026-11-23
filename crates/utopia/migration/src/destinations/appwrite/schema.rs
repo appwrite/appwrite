@@ -803,9 +803,19 @@ impl Appwrite {
         if self.on_duplicate != OnDuplicate::Fail {
             let existing =
                 self.db_for_project.get_document(META_ATTRIBUTES, &attribute_meta_id, Vec::new(), false).await?;
-            let mut action =
-                self.on_duplicate.resolve_schema_action(!existing.is_empty(), Some(&updated_at), existing.updated_at());
-            if action != SchemaAction::Create
+            // Meta document without a schema column (run killed between the two writes): rebuild it whatever the timestamps or spec say.
+            let orphaned = !existing.is_empty()
+                && !match db.find_collection(&table_collection_id(&database, &table)).await? {
+                    Some(collection) => collection.attributes()?.iter().any(|a| a.key == key),
+                    None => false,
+                };
+            let mut action = if orphaned {
+                SchemaAction::Overwrite
+            } else {
+                self.on_duplicate.resolve_schema_action(!existing.is_empty(), Some(&updated_at), existing.updated_at())
+            };
+            if !orphaned
+                && action != SchemaAction::Create
                 && self.attribute_spec_matches(&existing, f, &r.description(), t, relationship)
             {
                 action = SchemaAction::Skip;
@@ -817,7 +827,9 @@ impl Appwrite {
                     Some(false)
                 }
                 SchemaAction::Overwrite => {
-                    let updated = if relationship {
+                    let updated = if orphaned {
+                        false
+                    } else if relationship {
                         self.update_relationship_in_place(&database, &table, r, t, &updated_at, &existing, &db).await?
                     } else {
                         self.update_attribute_in_place(&database, &table, r, t, &updated_at, &existing, &db).await?
@@ -833,7 +845,7 @@ impl Appwrite {
                 return Ok(early);
             }
             if action == SchemaAction::Overwrite {
-                self.drop_attribute_for_recreate(&database, &table, r, &db, &existing).await?;
+                self.drop_attribute_for_recreate(&database, &table, r, &db, &existing, !orphaned).await?;
             }
         }
 
@@ -1017,14 +1029,15 @@ impl Appwrite {
         r: &ResourceRef,
         db: &Db,
         existing: &Document,
+        in_schema: bool,
     ) -> Result<()> {
         let f = r.as_field().expect("a field");
         let collection_id = table_collection_id(database, table);
         let attribute_meta_id = meta_id(database, table, &f.key);
         let relationship = f.field_type() == column::RELATIONSHIP;
-        if relationship {
+        if in_schema && relationship {
             db.delete_relationship(&collection_id, &f.key).await?;
-        } else {
+        } else if in_schema {
             db.delete_attribute(&collection_id, &f.key).await?;
         }
         self.db_for_project.delete_document(META_ATTRIBUTES, &attribute_meta_id).await?;
@@ -1273,9 +1286,20 @@ impl Appwrite {
 
         if self.on_duplicate != OnDuplicate::Fail {
             let existing = self.db_for_project.get_document(META_INDEXES, &index_meta_id, Vec::new(), false).await?;
-            let mut action =
-                self.on_duplicate.resolve_schema_action(!existing.is_empty(), Some(&updated_at), existing.updated_at());
-            if action != SchemaAction::Create && self.index_spec_matches(&existing, r) {
+            let collection_id = table_collection_id(&database, &table);
+            // Meta document without a schema index (run killed between the two writes, or the stuck-index bug
+            // fixed in appwrite/appwrite#15471): rebuild it whatever the timestamps or spec say.
+            let orphaned = !existing.is_empty()
+                && !match db.find_collection(&collection_id).await? {
+                    Some(collection) => collection.indexes()?.iter().any(|index| index.key == i.key),
+                    None => false,
+                };
+            let mut action = if orphaned {
+                SchemaAction::Overwrite
+            } else {
+                self.on_duplicate.resolve_schema_action(!existing.is_empty(), Some(&updated_at), existing.updated_at())
+            };
+            if !orphaned && action != SchemaAction::Create && self.index_spec_matches(&existing, r) {
                 action = SchemaAction::Skip;
             }
             if action == SchemaAction::Skip {
@@ -1284,7 +1308,9 @@ impl Appwrite {
                 return Ok(false);
             }
             if action == SchemaAction::Overwrite {
-                db.delete_index(&table_collection_id(&database, &table), &i.key).await?;
+                if !orphaned {
+                    db.delete_index(&collection_id, &i.key).await?;
+                }
                 self.db_for_project.delete_document(META_INDEXES, &index_meta_id).await?;
                 self.db_for_project.purge_cached_document(&database_collection_id(&database), table.id()).await?;
                 table = self
