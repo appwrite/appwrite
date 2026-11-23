@@ -456,10 +456,13 @@ compares each public one, and the interfaces each builder implements.
 
 What a subclass can rely on:
 
-- A protected method it overrides is the one the build calls, in the order PHP calls them, for 55
-  of them: `build()`, the `compile*()` methods, the clause hooks (`buildTableClause()` and the
-  rest), the `LIKE` and comparison helpers, and the spatial, JSON, conflict and aggregate
-  expressions. `parent::compileFilter()` runs the native one.
+- A protected method it overrides is the one the build calls, in the order PHP calls them: `build()`,
+  the `compile*()` methods, the clause hooks, the validators and every other helper, 73 in all.
+  `parent::compileFilter()` runs the native one. An override is handed the package's own objects: a
+  `Query`, a `Case\Expression`, a `Statement`, a `ParsedQuery`, and `$parts` by reference. Nothing
+  is converted for a method no subclass overrides.
+- `createTokenizer()` and `createAstSerializer()` are among them: `toAst()` reads a CTE with the
+  tokenizer a subclass returns, and `fromAst()` writes what stays raw SQL with its serializer.
 - `bindings`, `pendingQueries` and `resolvedAttributeCache` are protected properties it reads,
   assigns and changes in place (`$this->pendingQueries[] = $query`), as the package's own traits do.
   PHP is handed a copy the builder holds, and the next native call reads it back.
@@ -476,15 +479,10 @@ so the two cannot disagree.
 
 Known differences:
 
-- Twenty protected helpers can be called but not overridden: a build runs the builder's own. They
-  are `validateTable()`, `validateRows()`, `validateAndGetColumns()`, `addBindings()`,
-  `compileCase()`, `compileInsertBody()`, `compileAssignments()`, `compileWhereClauses()`,
-  `compileOrderAndLimit()`, `buildAfterJoinsClause()`, `compileVectorOrderExpression()`,
-  `resolveJoinFilterPlacement()`, `createTokenizer()`, `createAstSerializer()`,
-  `appendReturning()`, `resetReturning()`, `resetGroupByModifier()`, `getSpatialTypeFromWkt()`,
-  `applyNamedTypedBindings()` and `enclose()`.
-- `compileWhereClauses()`, `compileOrderAndLimit()` and `buildAfterJoinsClause()` group the
-  builder's own queries, whatever `ParsedQuery` they are handed.
+- `compileWhereClauses()`, `compileOrderAndLimit()` and `buildAfterJoinsClause()`, called on their
+  own, group the builder's own queries, whatever `ParsedQuery` they are handed. An override is
+  handed the one PHP's `Query::groupByType()` makes of them.
+- `getSpatialTypeFromWkt()` can be overridden to no effect, as in PHP, where nothing calls it.
 - `validateAndGetColumns()` with no rows is a `ValidationException`. PHP warns and then fails on
   the missing row.
 - The other protected properties of PHP's builders (`table`, `unions`, `lockMode` and about fifty
@@ -496,7 +494,7 @@ Known differences:
 - `resolvedAttributeCache` has no order.
 - The classes declare a constructor and no `__clone()`. PHP's declare the reverse.
 
-Three things check them. `tests/query-builders.php` is a corpus like the others: 15,715 cases, the
+Three things check them. `tests/query-builders.php` is a corpus like the others: 15,787 cases, the
 same on PHP and on the extension. The package's own 5,828 tests pass on the native builders, but for
 two that read the PHP class's source and private state and are skipped there. utopia-php/database
 10.2.3 subclasses four of the builders, overrides 23 of their methods and serializes queries for its

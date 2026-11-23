@@ -998,6 +998,17 @@ pub(super) fn nodes(select: &ast::Select) -> PhpResult<Zval> {
     Ok(Builder(&classes).select(select))
 }
 
+/// The crate's expression as the package's node, for a serializer a subclass made.
+pub(super) fn expression_node(expression: &ast::Expression) -> PhpResult<Zval> {
+    let classes = classes()?;
+    Ok(Builder(&classes).expression(expression))
+}
+
+/// A `Statement\Select` PHP's own parser returned, as the crate's.
+pub(super) fn read_select(select: &Zval) -> PhpResult<ast::Select> {
+    read(&Statement(select))
+}
+
 /// The package's `Statement\Select` as the crate's, for a builder's `fromAst()`.
 pub(super) fn read(statement: &Statement<'_>) -> PhpResult<ast::Select> {
     let classes = classes()?;

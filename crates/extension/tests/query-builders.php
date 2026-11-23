@@ -1114,3 +1114,48 @@ foreach ($dialects as $dialect) {
     }
     emit($dialect . ' clone method', outcome(fn () => (new ReflectionMethod($class, '__clone'))->isPublic()));
 }
+
+// A subclass's own tokenizer reads a CTE in toAst(), and its own serializer writes what fromAst() keeps raw.
+class TaggingSerializer extends Utopia\Query\AST\Serializer
+{
+    #[Override]
+    public function serializeExpression(Utopia\Query\AST\Expression $expression): string
+    {
+        // Not through the parent: PHP's serializer calls this for every nested expression, and the
+        // extension's writes them itself, which is the serializers' own known difference.
+        return 'own_' . (new ReflectionClass($expression))->getShortName();
+    }
+}
+class CountingTokenizer extends Utopia\Query\Tokenizer\Tokenizer
+{
+    public static int $read = 0;
+
+    #[Override]
+    public function tokenize(string $sql): array
+    {
+        self::$read++;
+
+        return parent::tokenize(str_replace('renamed', 'actual', $sql));
+    }
+}
+foreach ($dialects as $dialect) {
+    eval("class Makes{$dialect} extends Utopia\\Query\\Builder\\{$dialect} { protected function createTokenizer(): Utopia\\Query\\Tokenizer\\Tokenizer { return new CountingTokenizer(); } protected function createAstSerializer(): Utopia\\Query\\AST\\Serializer { return new TaggingSerializer(); } }");
+    $class = 'Makes' . $dialect;
+    $serializer = new Utopia\Query\AST\Serializer();
+    emit($dialect . ' factories', [
+        outcome(function () use ($class, $serializer) {
+            CountingTokenizer::$read = 0;
+            $inner = (new $class())->from('u')->select(['renamed'])->filter([Query::equal('a', [1])]);
+            $ast = (new $class())->from('c')->with('c', $inner)->toAst();
+
+            return [$serializer->serialize($ast), CountingTokenizer::$read];
+        }),
+        outcome(function () use ($class) {
+            $parser = new Utopia\Query\AST\Parser();
+            $tokens = Utopia\Query\Tokenizer\Tokenizer::filter((new Utopia\Query\Tokenizer\Tokenizer())->tokenize('SELECT a, UPPER(b) AS u FROM t WHERE LOWER(c) = 1 AND d = 2 ORDER BY LENGTH(e)'));
+            $built = $class::fromAst($parser->parse($tokens));
+
+            return [$built::class, $built->build()];
+        }),
+    ]);
+}

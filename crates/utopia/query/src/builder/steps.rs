@@ -164,11 +164,15 @@ pub enum Step {
     ResetGroupByModifier,
     /// `applyNamedTypedBindings()`.
     ApplyNamedTypedBindings,
+    /// `createTokenizer()`: asked to read a CTE's SQL with the tokenizer it returns.
+    CreateTokenizer,
+    /// `createAstSerializer()`: not run as a step; `fromAst()` is handed what it returns.
+    CreateAstSerializer,
 }
 
 impl Step {
     /// Every step, in the order of the enum.
-    pub const ALL: [Step; 71] = [
+    pub const ALL: [Step; 73] = [
         Step::CompileFilter,
         Step::CompileOrder,
         Step::CompileLimit,
@@ -240,6 +244,8 @@ impl Step {
         Step::ResetReturning,
         Step::ResetGroupByModifier,
         Step::ApplyNamedTypedBindings,
+        Step::CreateTokenizer,
+        Step::CreateAstSerializer,
     ];
 
     /// The PHP method.
@@ -316,6 +322,8 @@ impl Step {
             Step::ResetReturning => "resetReturning",
             Step::ResetGroupByModifier => "resetGroupByModifier",
             Step::ApplyNamedTypedBindings => "applyNamedTypedBindings",
+            Step::CreateTokenizer => "createTokenizer",
+            Step::CreateAstSerializer => "createAstSerializer",
         }
     }
 }
@@ -374,6 +382,8 @@ pub enum Ret {
     Placement(Placement),
     /// Column names.
     Columns(Vec<php_std::ArrayKey>),
+    /// A parsed statement.
+    Select(Box<crate::ast::Select>),
 }
 
 impl Ret {
@@ -540,6 +550,10 @@ impl<D: Dialect> Builder<D> {
                 self.core.group_by_modifier = None;
                 Ok(Ret::None)
             }
+            (Step::CreateTokenizer, [Arg::Str(sql)]) => crate::ast::Parser::new()
+                .with_literal(D::LITERAL)
+                .parse_sql(sql)
+                .map(|read| Ret::Select(Box::new(read))),
             (Step::EscapeLikeValue, [Arg::Value(value)]) => {
                 let escaped = crate::builder::core::escape_like_value(value, D::LIKE_ESCAPE);
                 Ok(Ret::Str(escaped.iter().map(|&byte| char::from(byte)).collect()))

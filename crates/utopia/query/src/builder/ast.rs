@@ -6,6 +6,7 @@ use crate::ast::{
 };
 use crate::builder::AstDialect;
 use crate::builder::core::{Builder, Dialect, assert_join_on_predicate, first, on_parts};
+use crate::builder::steps::{Arg, Ret, Step};
 use crate::builder::types::{Condition, CteClause};
 use crate::enums::OrderDirection;
 use crate::error::{Error, Result};
@@ -92,17 +93,38 @@ fn column_string(reference: &Column) -> String {
 
 /// What `fromAst()` reads a statement with: the dialect's serializer, for what stays raw SQL, and
 /// the character its `LIKE` escapes with when a pattern names none.
-struct Reading {
-    serializer: Serializer,
+struct Reading<'w> {
+    serializer: &'w dyn AstWriter,
     /// PHP: `IMPLICIT_LIKE_ESCAPE`.
     implicit: Option<u8>,
 }
 
-impl std::ops::Deref for Reading {
-    type Target = Serializer;
+impl Reading<'_> {
+    fn serialize(&self, statement: &Select) -> Result<String> {
+        self.serializer.serialize(statement)
+    }
 
-    fn deref(&self) -> &Serializer {
-        &self.serializer
+    fn serialize_expression(&self, expression: &Expression) -> Result<String> {
+        self.serializer.serialize_expression(expression)
+    }
+}
+
+/// What writes the SQL `fromAst()` keeps raw: the dialect's [`Serializer`], or the one a
+/// subclass's `createAstSerializer()` returns.
+pub trait AstWriter {
+    /// A statement as SQL.
+    fn serialize(&self, statement: &Select) -> Result<String>;
+    /// An expression as SQL.
+    fn serialize_expression(&self, expression: &Expression) -> Result<String>;
+}
+
+impl AstWriter for Serializer {
+    fn serialize(&self, statement: &Select) -> Result<String> {
+        Serializer::serialize(self, statement)
+    }
+
+    fn serialize_expression(&self, expression: &Expression) -> Result<String> {
+        Serializer::serialize_expression(self, expression)
     }
 }
 
@@ -158,7 +180,7 @@ fn like_to_query(
     pattern: &str,
     escape: Option<&Expression>,
     negated: bool,
-    reading: &Reading,
+    reading: &Reading<'_>,
 ) -> Result<Option<Query>> {
     let character = match escape {
         None => reading.implicit.map(char::from),
@@ -220,19 +242,18 @@ impl<D: Dialect> Builder<D> {
         let limit = grouped.limit.map(|l| Literal { value: Value::Int(l) }.into());
         let offset = grouped.offset.map(|o| Literal { value: Value::Int(o) }.into());
         let parser = Parser::new().with_literal(D::LITERAL);
-        let ctes = self
-            .core
-            .ctes
-            .iter()
-            .map(|cte| {
-                Ok(Cte {
-                    name: cte.name.clone(),
-                    query: parser.parse_sql(&cte.query)?,
-                    columns: cte.columns.clone(),
-                    recursive: cte.recursive,
-                })
-            })
-            .collect::<Result<_>>()?;
+        let mut ctes = Vec::with_capacity(self.core.ctes.len());
+        for cte in self.core.ctes.clone() {
+            // A subclass's `createTokenizer()` reads the CTE when it has one.
+            let query = match self.overrides(Step::CreateTokenizer) {
+                true => match self.step(Step::CreateTokenizer, &[Arg::Str(&cte.query)])? {
+                    Ret::Select(read) => *read,
+                    _ => parser.parse_sql(&cte.query)?,
+                },
+                false => parser.parse_sql(&cte.query)?,
+            };
+            ctes.push(Cte { name: cte.name, query, columns: cte.columns, recursive: cte.recursive });
+        }
 
         Ok(Select {
             columns,
@@ -462,11 +483,15 @@ impl<D: Dialect> Builder<D> {
     ///
     /// PHP: `Builder::fromAst()`.
     pub fn from_ast(select: &Select) -> Result<Self> {
+        Self::from_ast_with(select, &serializer(D::ast_dialect()).with_literal(D::LITERAL))
+    }
+
+    /// [`Self::from_ast`], writing what stays raw SQL with `writer`.
+    ///
+    /// PHP: `fromAst()` in a subclass that overrides `createAstSerializer()`.
+    pub fn from_ast_with(select: &Select, writer: &dyn AstWriter) -> Result<Self> {
         let mut builder = Self::new();
-        let serializer = Reading {
-            serializer: serializer(D::ast_dialect()).with_literal(D::LITERAL),
-            implicit: D::IMPLICIT_LIKE_ESCAPE,
-        };
+        let serializer = Reading { serializer: writer, implicit: D::IMPLICIT_LIKE_ESCAPE };
 
         if let Some(TableSource::Table(table)) = &select.from {
             builder.from(table.name.clone(), table.alias.clone().unwrap_or_default());
@@ -536,7 +561,7 @@ impl<D: Dialect> Builder<D> {
         Ok(builder)
     }
 
-    fn apply_ast_columns(&mut self, select: &Select, serializer: &Reading) -> Result<()> {
+    fn apply_ast_columns(&mut self, select: &Select, serializer: &Reading<'_>) -> Result<()> {
         let mut columns = Vec::new();
         for expression in &select.columns {
             match expression {
@@ -617,7 +642,7 @@ impl<D: Dialect> Builder<D> {
         Ok(())
     }
 
-    fn apply_ast_joins(&mut self, select: &Select, serializer: &Reading) -> Result<()> {
+    fn apply_ast_joins(&mut self, select: &Select, serializer: &Reading<'_>) -> Result<()> {
         for join in &select.joins {
             let TableSource::Table(table) = &join.table else { continue };
             let method = match join.kind.to_ascii_uppercase().as_str() {
@@ -649,7 +674,7 @@ fn func_attribute(func: &Func) -> String {
 }
 
 /// PHP: `Builder::astJoinConditionToQueries()`.
-fn join_condition_to_queries(condition: &Expression, serializer: &Reading) -> Result<Vec<Query>> {
+fn join_condition_to_queries(condition: &Expression, serializer: &Reading<'_>) -> Result<Vec<Query>> {
     if let Expression::Binary(b) = condition {
         let operator = b.operator.to_ascii_uppercase();
         if operator == "AND" {
@@ -676,13 +701,13 @@ fn join_condition_to_queries(condition: &Expression, serializer: &Reading) -> Re
     }
 }
 
-fn join_condition_to_query(condition: &Expression, serializer: &Reading) -> Result<Query> {
+fn join_condition_to_query(condition: &Expression, serializer: &Reading<'_>) -> Result<Query> {
     let mut queries = join_condition_to_queries(condition, serializer)?;
     Ok(if queries.len() == 1 { queries.remove(0) } else { Query::and(queries) })
 }
 
 /// PHP: `Builder::astWhereToQueries()`.
-fn where_to_queries(expression: &Expression, serializer: &Reading) -> Result<Vec<Query>> {
+fn where_to_queries(expression: &Expression, serializer: &Reading<'_>) -> Result<Vec<Query>> {
     if let Expression::Binary(b) = expression
         && b.operator.eq_ignore_ascii_case("AND")
     {
@@ -697,7 +722,7 @@ fn where_to_queries(expression: &Expression, serializer: &Reading) -> Result<Vec
 }
 
 /// PHP: `Builder::astExpressionToSingleQuery()`.
-fn expression_to_query(expression: &Expression, serializer: &Reading) -> Result<Option<Query>> {
+fn expression_to_query(expression: &Expression, serializer: &Reading<'_>) -> Result<Option<Query>> {
     match expression {
         Expression::Binary(b) => {
             let operator = b.operator.to_ascii_uppercase();

@@ -38,7 +38,7 @@ use ext_php_rs::zend::{ClassEntry, ExecutorGlobals, ce};
 use php_std::types::KeyRef;
 use php_std::{ArrayKey as Key, Str};
 use utopia_query::builder::{
-    AnyBuilder, Arg, AsofOperator, Binding, Builder, CaseExpression, ClickHouseDialect, Condition, Dialect,
+    AnyBuilder, Arg, AsofOperator, AstWriter, Binding, Builder, CaseExpression, ClickHouseDialect, Condition, Dialect,
     ExplainOptions, Format, FormattedInsertStatement, IndexHint, JoinBuilder, JoinOn, JoinType, Kind, MariaDbDialect,
     MongoDbDialect, MySqlDialect, Operator, Overrides, PostgreSqlDialect, Ret, SqliteDialect, Statement, Step,
     VectorMetric, WindowFrame,
@@ -790,24 +790,13 @@ impl<D: Dialect + Text> State<D> {
                 }
             });
         }
-        let mut returned = Zval::new();
-        // SAFETY: `object` is the live builder whose method is running; `function` is a
-        // method of its class, found in its function table this request, and the arguments
-        // are initialized and outlive the call.
-        unsafe {
-            ext_php_rs::ffi::zend_call_known_function(
-                function,
-                object,
-                (*object).ce,
-                &raw mut returned,
-                u32::try_from(zvals.len()).unwrap_or(u32::MAX),
-                zvals.as_mut_ptr(),
-                std::ptr::null_mut(),
-            );
+        // `createTokenizer()` takes nothing: the SQL is for the tokenizer it returns.
+        if step == Step::CreateTokenizer {
+            let [Arg::Str(sql)] = arguments else { return None };
+            let tokenizer = invoke(object, function, &mut [])?;
+            return self.tokenized(&tokenizer, sql).ok().map(|read| Ret::Select(Box::new(read)));
         }
-        if !ExecutorGlobals::get().exception.is_null() {
-            return None;
-        }
+        let returned = invoke(object, function, &mut zvals)?;
         let strings = |list: &Zval| -> Vec<String> {
             let items = list.dereference().array().into_iter().flat_map(ZendHashTable::values);
             items.filter_map(Zval::zend_str).map(|item| self.text(item.as_bytes())).collect()
@@ -865,6 +854,22 @@ impl<D: Dialect + Text> State<D> {
         }
         parts.set_hashtable(held);
         Ok(())
+    }
+
+    /// `$sql` read as PHP reads a CTE: the tokenizer's tokens, filtered, through the package's parser
+    /// with the dialect's string rules.
+    fn tokenized(&self, tokenizer: &Zval, sql: &str) -> PhpResult<utopia_query::ast::Select> {
+        let tokenizer = tokenizer.object().ok_or_else(pending)?;
+        let tokens =
+            tokenizer.try_call_method("tokenize", vec![&string(&bytes(D::JSON, sql))]).map_err(|_| pending())?;
+        let filter =
+            ZendCallable::try_from_name("Utopia\\Query\\Tokenizer\\Tokenizer::filter").map_err(PhpException::from)?;
+        let tokens = filter.try_call(vec![&tokens]).map_err(|_| pending())?;
+        let rules = utopia_query::StringLiteral::CASES.iter().find(|(rules, _)| *rules == D::LITERAL);
+        let rules = enum_case("Utopia\\Query\\StringLiteral", rules.map_or("Backslash", |found| found.1))?;
+        let parser = construct(class("Utopia\\Query\\AST\\Parser")?, &mut [rules])?;
+        let select = parser.try_call_method("parse", vec![&tokens]).map_err(|_| pending())?;
+        super::ast::read_select(&select)
     }
 
     /// The crate's `CASE` as the package's `Case\Expression`, built through its own methods.
@@ -1361,6 +1366,66 @@ impl<'a> FromZval<'a> for Grouped {
     fn from_zval(zval: &'a Zval) -> Option<Self> {
         let object = zval.object()?;
         class(PARSED).is_ok_and(|class| object.instance_of(class)).then_some(Grouped)
+    }
+}
+
+/// Calls `function`, a method of `object`'s class, whatever its visibility. `None` when it threw:
+/// the exception stays pending.
+fn invoke(object: *mut ZendObject, function: *mut zend_function, arguments: &mut [Zval]) -> Option<Zval> {
+    let mut returned = Zval::new();
+    // SAFETY: `object` is a live builder and `function` a method of its class, found in its
+    // function table this request; the arguments are initialized and outlive the call.
+    unsafe {
+        ext_php_rs::ffi::zend_call_known_function(
+            function,
+            object,
+            (*object).ce,
+            &raw mut returned,
+            u32::try_from(arguments.len()).unwrap_or(u32::MAX),
+            arguments.as_mut_ptr(),
+            std::ptr::null_mut(),
+        );
+    }
+    ExecutorGlobals::get().exception.is_null().then_some(returned)
+}
+
+/// The exception PHP has pending, or a plain one when it has none.
+fn pending() -> PhpException {
+    match thrown() {
+        Err(pending) => pending,
+        Ok(()) => PhpException::from_message("A method of the package failed".to_owned()),
+    }
+}
+
+/// The serializer a subclass's `createAstSerializer()` returned, which `fromAst()` writes what stays
+/// raw SQL with.
+struct Written {
+    serializer: Zval,
+    json: bool,
+}
+
+impl Written {
+    fn call(&self, method: &str, node: PhpResult<Zval>) -> Result<String, Error> {
+        let failed = || Error::Validation(format!("{method}() failed"));
+        let node = node.map_err(|_| failed())?;
+        let serializer = self.serializer.object().ok_or_else(failed)?;
+        let written = serializer.try_call_method(method, vec![&node]).map_err(|_| failed())?;
+        let written = written.zend_str().ok_or_else(failed)?;
+        Ok(if self.json {
+            String::from_utf8_lossy(written.as_bytes()).into_owned()
+        } else {
+            wide(written.as_bytes()).into_owned()
+        })
+    }
+}
+
+impl AstWriter for Written {
+    fn serialize(&self, statement: &utopia_query::ast::Select) -> Result<String, Error> {
+        self.call("serialize", super::ast::nodes(statement))
+    }
+
+    fn serialize_expression(&self, expression: &utopia_query::ast::Expression) -> Result<String, Error> {
+        self.call("serializeExpression", super::ast::expression_node(expression))
     }
 }
 
@@ -4312,6 +4377,9 @@ macro_rules! builder_class {
             $($methods)*
             #[php(name = "toAst")]
             pub fn to_ast(self_: &mut ZendClassObject<$class>) -> PhpResult<Zval> {
+                // A CTE is read with a subclass's own tokenizer.
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
                 let select = self_.0.with(Builder::to_ast).map_err(|error| raised(&error))?;
                 super::ast::nodes(&select)
             }
@@ -4320,9 +4388,20 @@ macro_rules! builder_class {
             #[php(name = "fromAst")]
             pub fn from_ast(ast: super::ast::Statement<'_>) -> PhpResult<Zval> {
                 let select = super::ast::read(&ast)?;
-                let mut built = Builder::<$dialect>::from_ast(&select).map_err(|error| raised(&error))?;
+                let class = called_scope();
+                let mut object = construct(class, &mut [])?.into_zval(false).map_err(PhpException::from)?;
+                // A subclass's own serializer writes what stays raw SQL.
+                let factory = declared(class)[Step::CreateAstSerializer as usize];
+                let built = match object.object_mut().filter(|_| !factory.is_null()) {
+                    Some(made) => {
+                        let serializer = invoke(std::ptr::from_mut(made), factory, &mut []).ok_or_else(pending)?;
+                        let writer = Written { serializer, json: <$dialect as Text>::JSON };
+                        Builder::<$dialect>::from_ast_with(&select, &writer)
+                    }
+                    None => Builder::<$dialect>::from_ast(&select),
+                };
+                let mut built = built.map_err(|error| raised(&error))?;
                 built.set_overrides(Arc::new(Subclass::<$class>(PhantomData)));
-                let object = construct(called_scope(), &mut [])?.into_zval(false).map_err(PhpException::from)?;
                 if let Some(state) = object.object().and_then(ZendClassObject::<$class>::from_zend_obj) {
                     state.0.with(|builder| *builder = built);
                 }

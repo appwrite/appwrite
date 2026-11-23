@@ -28,6 +28,7 @@
 
 mod api;
 mod ast;
+pub use ast::AstWriter;
 mod case;
 mod clickhouse;
 mod core;
