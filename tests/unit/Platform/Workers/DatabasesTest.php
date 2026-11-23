@@ -6,16 +6,23 @@ namespace Tests\Unit\Platform\Workers;
 
 use Appwrite\Event\Realtime;
 use Appwrite\Platform\Modules\Databases\Workers\Databases;
+use PDOException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
+use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Attribute;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception as DatabaseException;
+use Utopia\Database\Exception\NotFound;
+use Utopia\Database\Exception\Timeout;
 use Utopia\Database\Relationship;
 use Utopia\Database\RelationshipDeleteAction;
 use Utopia\Database\RelationshipType;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Queue\Message;
+use Utopia\Queue\PermanentFailure;
 
 require_once __DIR__ . '/../../../../app/init.php';
 
@@ -66,6 +73,119 @@ final class DatabasesTest extends TestCase
             ->willReturnArgument(1);
 
         $this->process(DATABASE_TYPE_CREATE_ATTRIBUTE, ['$id' => 'attr1'], [], $dbForProject, $dbForDatabases);
+    }
+
+    /**
+     * A wide table of varchar columns passes the library's 65535-byte width check but not
+     * InnoDB's 8126-byte inline row limit, so MySQL refuses the ALTER with 1118. That is the
+     * customer's definition being refused: the column is failed with the reason and the job
+     * returns, which acknowledges it. Rethrowing redelivered it five times over ~22 minutes of
+     * backoff, each attempt holding an ack-pending slot, until 16 of them blocked the pool.
+     */
+    public function testCreateAttributeRefusedForRowSizeIsFailedAndNotRetried(): void
+    {
+        $refusal = self::mapped(self::engineError('42000', 1118, 'SQLSTATE[42000]: Syntax error or access violation: 1118 Row size too large. The maximum row size for the used table type, not counting BLOBs, is 8126. This includes storage overhead, check the manual. You have to change some columns to TEXT or BLOBs'));
+
+        $updates = $this->processFailedCreate(DATABASE_TYPE_CREATE_ATTRIBUTE, 'attributes', self::column(), 'createAttribute', $refusal);
+
+        $this->assertSame([['attributes/attr1', 'failed', 'Row width limit reached']], $updates);
+    }
+
+    /**
+     * @return array<string, array{0: PDOException, 1: string}>
+     */
+    public static function engineLimitProvider(): array
+    {
+        return [
+            'too many columns' => [self::engineError('HY000', 1117, 'SQLSTATE[HY000]: General error: 1117 Too many columns'), 'Column limit reached'],
+            'too many indexes' => [self::engineError('42000', 1069, 'SQLSTATE[42000]: Syntax error or access violation: 1069 Too many keys specified; max 64 keys allowed'), 'Index limit reached'],
+        ];
+    }
+
+    #[DataProvider('engineLimitProvider')]
+    public function testCreateIndexRefusedForAnEngineLimitIsFailedAndNotRetried(PDOException $error, string $reason): void
+    {
+        $updates = $this->processFailedCreate(DATABASE_TYPE_CREATE_INDEX, 'indexes', new Document(['$id' => 'index1', 'key' => 'by_notes', 'type' => 'key', 'attributes' => ['notes']]), 'createIndex', self::mapped($error));
+
+        $this->assertSame([['indexes/index1', 'failed', $reason]], $updates);
+    }
+
+    public function testCreateAttributeOnATableThatNoLongerExistsIsFailedAndNotRetried(): void
+    {
+        $updates = $this->processFailedCreate(DATABASE_TYPE_CREATE_ATTRIBUTE, 'attributes', self::column(), 'createAttribute', new NotFound('Collection not found'));
+
+        $this->assertSame([['attributes/attr1', 'failed', 'Collection not found']], $updates);
+    }
+
+    public function testCreateRelationshipToACollectionThatNoLongerExistsIsFailedAndNotRetried(): void
+    {
+        $attribute = new Document([
+            '$id' => 'attr1',
+            'key' => 'author',
+            'type' => ColumnType::Relationship->value,
+            'options' => ['relatedCollection' => 'authors'],
+        ]);
+
+        $dbForProject = $this->createStub(Database::class);
+        $dbForProject->method('getDocument')->willReturnCallback(
+            static fn (string $collection): Document => $collection === 'attributes' ? $attribute : new Document()
+        );
+        $updates = [];
+        $dbForProject->method('updateDocument')->willReturnCallback(self::recordUpdates($updates));
+
+        $dbForDatabases = $this->createMock(Database::class);
+        $dbForDatabases->expects($this->never())->method('createRelationship');
+
+        $this->process(DATABASE_TYPE_CREATE_ATTRIBUTE, ['$id' => 'attr1'], [], $dbForProject, $dbForDatabases);
+
+        $this->assertSame([['attributes/attr1', 'failed', 'Collection/Table not found']], $updates);
+    }
+
+    /**
+     * A timeout or a lost connection says nothing about the definition: the next delivery may
+     * well succeed, so the job still fails and is redelivered on the queue's backoff.
+     */
+    public function testCreateAttributeInterruptedByATimeoutIsRetried(): void
+    {
+        $this->expectException(Timeout::class);
+
+        $this->processFailedCreate(DATABASE_TYPE_CREATE_ATTRIBUTE, 'attributes', self::column(), 'createAttribute', new Timeout('Query timed out'));
+    }
+
+    /**
+     * @return array<string, array{0: string}>
+     */
+    public static function collectionJobProvider(): array
+    {
+        return [
+            'create attribute' => [DATABASE_TYPE_CREATE_ATTRIBUTE],
+            'delete attribute' => [DATABASE_TYPE_DELETE_ATTRIBUTE],
+            'create index' => [DATABASE_TYPE_CREATE_INDEX],
+            'delete index' => [DATABASE_TYPE_DELETE_INDEX],
+            'delete collection' => [DATABASE_TYPE_DELETE_COLLECTION],
+        ];
+    }
+
+    /**
+     * A job whose payload names no collection fails the same way on every delivery, so it is
+     * dead-lettered at the first attempt instead of holding an ack-pending slot through the
+     * whole backoff.
+     */
+    #[DataProvider('collectionJobProvider')]
+    public function testJobWithoutACollectionIsAPermanentFailure(string $type): void
+    {
+        $this->expectException(PermanentFailure::class);
+        $this->expectExceptionMessage('Missing collection/table');
+
+        $this->process($type, ['$id' => 'attr1'], null, $this->createStub(Database::class), $this->createStub(Database::class));
+    }
+
+    public function testJobOfAnUnknownTypeIsAPermanentFailure(): void
+    {
+        $this->expectException(PermanentFailure::class);
+        $this->expectExceptionMessage('No database operation for type: compactCollection');
+
+        $this->process('compactCollection', [], [], $this->createStub(Database::class), $this->createStub(Database::class));
     }
 
     public function testCreateRelationshipBuildsTheRelationshipFromStoredOptions(): void
@@ -206,10 +326,82 @@ final class DatabasesTest extends TestCase
     }
 
     /**
-     * @param array<string, mixed> $document
-     * @param array<string, mixed> $collection
+     * Runs a create job whose DDL fails with $failure and returns the status and error writes
+     * made to its metadata document. Returning at all means the job was acknowledged.
+     *
+     * @return list<array{0: string, 1: mixed, 2: mixed}>
      */
-    private function process(string $type, array $document, array $collection, Database $dbForProject, Database $dbForDatabases): void
+    private function processFailedCreate(string $type, string $metadata, Document $document, string $method, \Throwable $failure): array
+    {
+        $dbForProject = $this->createStub(Database::class);
+        $dbForProject->method('getDocument')->willReturnCallback(
+            static fn (string $collection): Document => $collection === $metadata ? $document : new Document()
+        );
+        $updates = [];
+        $dbForProject->method('updateDocument')->willReturnCallback(self::recordUpdates($updates));
+
+        $dbForDatabases = $this->createMock(Database::class);
+        $dbForDatabases->expects($this->once())
+            ->method($method)
+            ->with(self::PHYSICAL_COLLECTION)
+            ->willThrowException($failure);
+
+        $this->process($type, $document->getArrayCopy(), [], $dbForProject, $dbForDatabases);
+
+        return $updates;
+    }
+
+    private static function column(): Document
+    {
+        return new Document(['$id' => 'attr1', 'key' => 'notes', 'type' => ColumnType::String->value, 'size' => 255]);
+    }
+
+    /**
+     * @param list<array{0: string, 1: mixed, 2: mixed}> $updates
+     */
+    private static function recordUpdates(array &$updates): \Closure
+    {
+        return static function (string $collection, string $id, Document $update) use (&$updates): Document {
+            $updates[] = [$collection . '/' . $id, $update->getAttribute('status'), $update->getAttribute('error')];
+
+            return $update;
+        };
+    }
+
+    /**
+     * What the adapter the worker runs on makes of an engine error.
+     */
+    private static function mapped(PDOException $error): \Throwable
+    {
+        $adapter = new class (new stdClass()) extends MySQL {
+            public function map(PDOException $error): \Throwable
+            {
+                return $this->processException($error);
+            }
+        };
+
+        return $adapter->map($error);
+    }
+
+    private static function engineError(string $state, int $code, string $message): PDOException
+    {
+        $error = new class ($message, $state) extends PDOException {
+            public function __construct(string $message, string $state)
+            {
+                parent::__construct($message);
+                $this->code = $state;
+            }
+        };
+        $error->errorInfo = [$state, $code, $message];
+
+        return $error;
+    }
+
+    /**
+     * @param array<string, mixed> $document
+     * @param array<string, mixed>|null $collection Merged over the default collection, or null for none.
+     */
+    private function process(string $type, array $document, ?array $collection, Database $dbForProject, Database $dbForDatabases): void
     {
         $dbForPlatform = $this->createStub(Database::class);
         $dbForPlatform->method('getDocument')->willReturn(new Document(['$id' => 'proj1']));
@@ -235,7 +427,7 @@ final class DatabasesTest extends TestCase
             'payload' => [
                 'type' => $type,
                 'database' => ['$id' => 'db1', '$sequence' => '30360'],
-                'collection' => ['$id' => 'proof', '$sequence' => '1', ...$collection],
+                'collection' => $collection === null ? [] : ['$id' => 'proof', '$sequence' => '1', ...$collection],
                 'document' => $document,
             ],
         ]);
