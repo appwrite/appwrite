@@ -222,11 +222,14 @@ function corsHeaders(route: Route): Record<string, string> {
 }
 
 /** Turns the runtime logs flag on the way the debug menu does. */
-async function enableRuntimeLogs(page: Page) {
-  await page.context().addInitScript(() => {
+async function enableRuntimeLogs(
+  page: Page,
+  id: 'cloud' | 'self-hosted' = 'cloud',
+) {
+  await page.context().addInitScript((id) => {
     const profile = {
-      id: 'cloud',
-      label: 'Cloud',
+      id,
+      label: id,
       description: 'E2E override - runtime logs enabled',
       features: { runtimeLogs: true },
     }
@@ -234,7 +237,7 @@ async function enableRuntimeLogs(page: Page) {
     document.cookie = `debug_console_profile=${encodeURIComponent(
       JSON.stringify({ id: profile.id, features: profile.features }),
     )}; path=/; SameSite=Lax`
-  })
+  }, id)
 }
 
 async function mockAppwriteApi(page: Page) {
@@ -468,6 +471,28 @@ test.describe('runtime logs', () => {
     await expect(page.getByRole('tab', { name: 'Runtime logs' })).toHaveCount(0)
 
     // A direct link falls back to the function
+    await page.goto(
+      `/projects/${PROJECT.$id}/functions/${FUNCTION.$id}/runtime-logs`,
+      { waitUntil: 'domcontentloaded' },
+    )
+    await expect(page).not.toHaveURL(/runtime-logs/, { timeout: 30_000 })
+  })
+
+  test('self-hosted keeps runtime logs hidden even with the flag on', async ({
+    page,
+  }) => {
+    await enableRuntimeLogs(page, 'self-hosted')
+    await mockAppwriteApi(page)
+
+    await page.goto(`/projects/${PROJECT.$id}/functions/${FUNCTION.$id}`, {
+      waitUntil: 'domcontentloaded',
+    })
+    await expect(page.getByRole('tab', { name: 'Executions' })).toBeVisible({
+      timeout: 30_000,
+    })
+    await expect(page.getByRole('tab', { name: 'Runtime logs' })).toHaveCount(0)
+
+    // Self-hosted servers have no /v1/logs, so a direct link falls back too
     await page.goto(
       `/projects/${PROJECT.$id}/functions/${FUNCTION.$id}/runtime-logs`,
       { waitUntil: 'domcontentloaded' },
