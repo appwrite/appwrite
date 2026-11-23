@@ -1,0 +1,154 @@
+name: Extension
+
+# Publishes the utopia extension on its own as appwrite/utopia-extension, so PHP
+# services outside the Appwrite image (Edge, DNS) load the same build the
+# packages in packages/ are stubbed against:
+#
+#   COPY --from=appwrite/utopia-extension:<version> /utopia.so /usr/local/lib/php/utopia.so
+#
+# A release publishes <version> and latest; main publishes main. A manual run
+# on any other branch only builds and smoke-tests, so an unreviewed ref can
+# never replace a published tag. Each
+# architecture builds on its own native runner (no QEMU) and is smoke-tested on
+# stock php:8.5-cli-alpine with only the documented runtime packages before it
+# is pushed. See crates/extension/README.md.
+
+on:
+  release:
+    types: [published]
+  push:
+    branches: [main]
+    paths:
+      - 'crates/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'rust-toolchain.toml'
+      - '.cargo/**'
+      - 'Dockerfile'
+      - '.github/workflows/extension.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: extension-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  IMAGE: appwrite/utopia-extension
+  # Runtime packages a consumer installs next to the .so; the smoke test uses
+  # exactly these, so the README cannot drift from what loads.
+  RUNTIME_PACKAGES: libheif libstdc++
+
+jobs:
+  build:
+    name: Build (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      # A release stamps its version into phpversion('utopia'); main and manual
+      # runs keep the crate version and publish under the main tag.
+      - name: Resolve version
+        id: version
+        env:
+          RELEASE: ${{ github.event.release.tag_name }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "release" ]; then
+            echo "stamp=$RELEASE" >> "$GITHUB_OUTPUT"
+            echo "tag=$RELEASE" >> "$GITHUB_OUTPUT"
+          else
+            echo "stamp=" >> "$GITHUB_OUTPUT"
+            echo "tag=main" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      - name: Build
+        env:
+          STAMP: ${{ steps.version.outputs.stamp }}
+        run: |
+          docker buildx build --target extension \
+            --build-arg UTOPIA_EXTENSION_VERSION="$STAMP" \
+            --output type=local,dest=out .
+          ls -la out/utopia.so
+
+      - name: Smoke test on stock PHP
+        env:
+          STAMP: ${{ steps.version.outputs.stamp }}
+        run: |
+          docker run --rm -v "$PWD/out/utopia.so:/usr/local/lib/php/utopia.so:ro" \
+            -e STAMP="$STAMP" php:8.5-cli-alpine sh -euc "
+              apk add --no-cache $RUNTIME_PACKAGES > /dev/null
+              php -d extension=/usr/local/lib/php/utopia.so -r '
+                extension_loaded(\"utopia\") || exit(\"utopia did not load\n\");
+                \$stamp = getenv(\"STAMP\");
+                if (\$stamp !== \"\" && phpversion(\"utopia\") !== \$stamp) {
+                    exit(\"phpversion(utopia) is \" . phpversion(\"utopia\") . \", expected \$stamp\n\");
+                }
+                \$checks = [
+                    \"domain\" => (new Utopia\Domains\Domain(\"www.example.co.uk\"))->getRegisterable() === \"example.co.uk\",
+                    \"email\" => (new Utopia\Emails\Email(\"someone@example.com\"))->getDomain() === \"example.com\",
+                    \"hash\" => (new ReflectionClass(Utopia\Auth\Hashes\Argon2::class))->isInternal(),
+                    \"validator\" => (new ReflectionClass(Utopia\Validator\Text::class))->isInternal(),
+                ];
+                foreach (\$checks as \$name => \$ok) {
+                    \$ok || exit(\"\$name check failed\n\");
+                }
+                echo \"utopia \", phpversion(\"utopia\"), \" loads on \", PHP_VERSION, \" (\", php_uname(\"m\"), \")\n\";
+              '
+            "
+
+      - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        if: github.event_name == 'release' || github.ref == 'refs/heads/main'
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push
+        if: github.event_name == 'release' || github.ref == 'refs/heads/main'
+        env:
+          STAMP: ${{ steps.version.outputs.stamp }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          docker buildx build --target extension \
+            --build-arg UTOPIA_EXTENSION_VERSION="$STAMP" \
+            --platform "linux/${{ matrix.arch }}" \
+            --tag "$IMAGE:$TAG-${{ matrix.arch }}" --push .
+
+  manifest:
+    name: Manifest
+    needs: build
+    if: github.event_name == 'release' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Publish
+        env:
+          RELEASE: ${{ github.event.release.tag_name }}
+        run: |
+          tag=main
+          extra=""
+          if [ "$GITHUB_EVENT_NAME" = "release" ]; then
+            tag="$RELEASE"
+            extra="--tag $IMAGE:latest"
+          fi
+          docker buildx imagetools create --tag "$IMAGE:$tag" $extra \
+            "$IMAGE:$tag-amd64" "$IMAGE:$tag-arm64"
+          docker buildx imagetools inspect "$IMAGE:$tag"
