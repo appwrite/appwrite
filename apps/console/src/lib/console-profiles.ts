@@ -99,7 +99,7 @@ export type ConsoleProfileFeatures = {
   analytics: boolean
   /** Appwrite push messaging provider (create wizard and its QoS/expiry settings). */
   appwritePush: boolean
-  /** Runtime logs for functions and sites (Runtime logs tabs and the deployment page Build / Runtime switch). Cloud only: served by `/v1/logs`. */
+  /** Runtime logs: the project Logs page, the Runtime logs tabs on functions and sites, and the deployment page Build / Runtime switch. Cloud only: served by `/v1/logs`. */
   runtimeLogs: boolean
 }
 
@@ -199,7 +199,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       // Off until launch; enable from Debug → Feature flags.
       analytics: false,
       appwritePush: true,
-      // Off until launch; enable from Debug → Feature flags or the Previews menu.
+      // Off until launch; enable from Debug → Feature flags.
       runtimeLogs: false,
     },
   },
