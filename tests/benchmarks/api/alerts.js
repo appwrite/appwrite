@@ -7,6 +7,11 @@ const bench = define({
     scopes: [],
     scenarios: [],
     skipped: [
+        { skipped: 'GET /v1/organization/escalations', reason: 'added on main after the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'POST /v1/organization/escalations', reason: 'added on main after the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'GET /v1/organization/escalations/:escalationId', reason: 'added on main after the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'PUT /v1/organization/escalations/:escalationId', reason: 'added on main after the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'DELETE /v1/organization/escalations/:escalationId', reason: 'added on main after the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
         { skipped: 'GET /v1/alerts', reason: 'added on main in the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
         { skipped: 'GET /v1/alerts/:alertId', reason: 'added on main in the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
         { skipped: 'PATCH /v1/alerts/:alertId', reason: 'added on main in the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
