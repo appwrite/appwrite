@@ -10,11 +10,13 @@
 //!
 //! A library that still has one registers its classes only when `_APP_EXTENSION_LIBRARIES` names
 //! its package (`if enabled("<package>")` in [`startup`] or [`get_module`]), so it can be canaried
-//! and switched back to PHP with a restart, not a deploy. `query` is the one that does today.
+//! and switched back to PHP with a restart, not a deploy: `detector` (`Utopia\Detector\*`) and
+//! `query` (`Utopia\Query\*`, with `query-builders` for its builders).
 
 mod auth;
 mod canvas;
 mod classes;
+mod detector;
 mod domains;
 mod dsn;
 mod emails;
@@ -34,11 +36,19 @@ static ALLOCATOR: mimalloc::MiMalloc = mimalloc::MiMalloc;
 /// comma separated.
 const LIBRARIES: &str = "_APP_EXTENSION_LIBRARIES";
 
-/// Whether `_APP_EXTENSION_LIBRARIES` names `package`. Unused while no library is switchable; the
-/// next one to be canaried calls it.
-#[allow(dead_code)]
+/// Whether `_APP_EXTENSION_LIBRARIES` names `package`.
 fn enabled(package: &str) -> bool {
     std::env::var(LIBRARIES).is_ok_and(|list| list.split(',').any(|name| name.trim() == package))
+}
+
+/// The version `phpversion('utopia')` reports: `UTOPIA_EXTENSION_VERSION` when the build sets it
+/// (the published image stamps the Appwrite release, so packages can require a minimum
+/// `ext-utopia`), the crate version otherwise.
+fn version() -> &'static str {
+    match option_env!("UTOPIA_EXTENSION_VERSION") {
+        Some(version) if !version.is_empty() => version,
+        _ => env!("CARGO_PKG_VERSION"),
+    }
 }
 
 /// The module PHP loads: every class of the extension.
@@ -47,6 +57,7 @@ fn enabled(package: &str) -> bool {
 pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     let module = module
         .name("utopia")
+        .version(version())
         .class::<canvas::Canvas>()
         .class::<canvas::Font>()
         .class::<dsn::Dsn>()
@@ -120,7 +131,8 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
 }
 
 /// Registers the classes built by hand rather than with `#[php_class]`: `Locale`, `UserAgent`, the
-/// validators and the password hashes. Runs in MINIT, before the `#[php_class]` classes are registered.
+/// validators, the password hashes and, when switched on, the detector. Runs in MINIT, before the
+/// `#[php_class]` classes are registered.
 fn startup(_kind: i32, _module: i32) -> i32 {
     ext_php_rs::internal::startup_guard(|| {
         locale::register()?;
@@ -134,6 +146,9 @@ fn startup(_kind: i32, _module: i32) -> i32 {
         auth::register()?;
         if enabled("query") {
             query::features::register(enabled("query-builders"))?;
+        }
+        if enabled("detector") {
+            detector::register()?;
         }
         Ok(())
     })

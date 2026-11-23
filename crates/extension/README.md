@@ -18,6 +18,32 @@ docker compose exec appwrite php --ri utopia
 Built on [ext-php-rs](https://github.com/extphprs/ext-php-rs); it needs `php-config`
 and libclang at build time.
 
+## Using it outside Appwrite
+
+The packages it serves (`auth`, `domains`, `emails`, `image`, `user-agent`, `validators`) require
+`ext-utopia`, and their `utopia-php/<name>` mirrors ship stubs for the classes it registers. Other
+PHP services load the same build from the `appwrite/utopia-extension` image (amd64 and arm64):
+
+```dockerfile
+COPY --from=appwrite/utopia-extension:<version> /utopia.so /usr/local/lib/php/utopia.so
+RUN apk add --no-cache libheif libstdc++ \
+    && echo 'extension=/usr/local/lib/php/utopia.so' > /usr/local/etc/php/conf.d/utopia.ini
+```
+
+- **ABI:** PHP 8.5, non-thread-safe, musl (Alpine): `php:8.5-cli-alpine`, `appwrite/base` and
+  `appwrite/utopia-base:php-8.5-*` all qualify. A glibc or ZTS PHP cannot load it.
+- **Runtime packages:** `libheif` and `libstdc++` are needed for the extension to load at all,
+  even if only `Domain` is used. `libheif` installs decoders only; encoding HEIC or AVIF through
+  `Utopia\Image` also needs `libheif-plugins-all`.
+- **Version:** `<version>` is an Appwrite release, and `phpversion('utopia')` reports it, here and
+  in that release's `appwrite/appwrite` image. Every other build reports the crate version, `0.1.0`:
+  the `main` tag, a local build, and appwrite-labs/cloud's, which compiles its vendored copy. So a
+  package's `"ext-utopia"` constraint has to stay `*` until those builds report a version that
+  orders against releases.
+
+`.github/workflows/extension.yml` publishes it, smoke-testing each architecture on stock
+`php:8.5-cli-alpine` with exactly these packages first.
+
 ## Switching a class on
 
 `Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN`, `Utopia\Locale\Locale`,
@@ -27,8 +53,8 @@ have no PHP implementation. Their signatures are in `stubs/`, `packages/image/st
 `packages/user-agent/stubs/`, `packages/domains/stubs/`, `packages/emails/stubs/`,
 `packages/validators/stubs/` and `packages/auth/stubs/` for PHPStan, which runs without the
 extension. A library that still has a PHP implementation is registered only when
-`_APP_EXTENSION_LIBRARIES` names its package; none does today. Otherwise Composer loads the
-package's PHP class as before:
+`_APP_EXTENSION_LIBRARIES` names its package; today that is `detector`. Otherwise Composer loads
+the package's PHP class as before:
 
 ```sh
 _APP_EXTENSION_LIBRARIES=<package>,<package>   # those packages' classes from the extension
@@ -54,6 +80,48 @@ registered unconditionally. Its corpus goes with it, since there is nothing left
 against; the package's own tests keep running on the extension. The package stays published at its
 last release for projects outside this repository; the root `composer.json` keeps `replace`-ing a
 package removed whole so it is never installed here.
+
+## Utopia\Detector
+
+Over `crates/utopia/detector`, registered when `_APP_EXTENSION_LIBRARIES` names `detector`: every
+class of `packages/detector` (the `Detector` and `Detection` bases, the `Framework`, `Packager`,
+`Rendering` and `Runtime` detectors, `Strategy`, and the 15 frameworks, 3 packagers, 2 renderings
+and 11 runtimes), so none of the package's PHP classes loads. Off by default.
+
+Built by hand like the validators (`src/classes/`), in `src/detector/`: the same names, inheritance
+chain, constants, signatures and typed properties (`$options`, `$inputs`, `$packager`, `$framework`,
+`$strategy`, `$fallbackFile`, `Strategy`'s private `$value`), so `get_parent_class()` (which the
+framework ranking counts), `instanceof`, `==`, `clone`, `serialize()` and `var_dump()` behave as in
+PHP. Each leaf answers from the crate's struct of the same name. `detect()` follows the PHP method
+step by step: a native option answers from the crate, any other (a PHP subclass, or a PHP class
+extending a base) has its own `getName()`, `getFiles()`, `getPackages()`, `getLanguages()`,
+`getFileExtensions()` and `setPackager()` called as PHP calls them, as many times and in the same
+order; a subclass overriding `Framework::dependencies()` or `Strategy::getValue()` is called too.
+The ranking (most matches, then fewest parents, then Astro yielding to the runner-up), the
+`package.json` / `pubspec.yaml` parsing (`json_decode`, then `yaml_parse`, through `php-std`) and
+the static fallback are the crate's, shared with the service slices. `Invalid strategy: x` and
+`Invalid input type 'x'` are thrown as PHP's `\Exception` and `\InvalidArgumentException`, with the
+argument's bytes.
+
+`packages/detector/tests` run on the extension, and `tests/detector.php` (5,536 lines) is identical
+on both: reflection of every class, every leaf's answers and commands with every packager,
+adapters over 38 configurations, every pair of frameworks in both orders (675 cases), 3,000 seeded
+random projects, 40 real-world projects through all four detectors, 42 manifests (valid, invalid,
+deeply nested, YAML), rendering builds, runtime strategies, argument coercion and errors, PHP
+subclasses of the bases, leaves and detectors, and a 5,000-file repository. The differences below
+are asserted at its end. Nothing in Appwrite or Cloud subclasses a detector class.
+
+Known differences from the PHP classes:
+
+- The warnings and deprecations `yaml_parse()` raises for a manifest or `pubspec.yaml` that is not
+  YAML are not raised. PHP silences them with `@`, so only an error handler that ignores
+  `error_reporting()` saw them.
+- A PHP option whose `getName()` answers differently from one call to the next is scored under
+  each answer, as in PHP, without PHP's `Undefined array key` warning for a name it had not
+  answered first.
+- An overriding `dependencies()` or a PHP option's `getPackages()` is compared by its string
+  values: PHP's `in_array(..., true)` also matched an integer package against an integer name.
+- An exception names the caller's file and line, since the classes have no PHP source.
 
 ## Utopia\DSN\DSN
 

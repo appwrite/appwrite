@@ -2610,6 +2610,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "utopia-detector"
+version = "0.1.0"
+dependencies = [
+ "memchr",
+ "php-std",
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "utopia-domains"
 version = "0.1.0"
 dependencies = [
@@ -2644,6 +2653,7 @@ dependencies = [
  "php-std",
  "stacker",
  "utopia-auth",
+ "utopia-detector",
  "utopia-domains",
  "utopia-dsn",
  "utopia-emails",

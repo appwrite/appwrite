@@ -75,35 +75,11 @@ Once your Appwrite instance is set up, create a project and copy both the Appwri
 
 ## Create your SvelteKit web app
 
-In order to create your SvelteKit application, open your terminal and enter the command `npm create svelte@latest` to create a project.
+Create a minimal SvelteKit application with ESLint and Prettier.
 
 ```bash
-npm create svelte@latest
-
-create-svelte version 6.0.10
-
-┌  Welcome to SvelteKit!
-│
-◇  Where should we create your project?
-│  appwrite-email-otp
-│
-◇  Which Svelte app template?
-│  Skeleton project
-│
-◇  Add type checking with TypeScript?
-│  No
-│
-◇  Select additional options (use arrow keys/space bar)
-│  Add ESLint for code linting, Add Prettier for code formatting
-│
-└  Your project is ready!
-```
-
-Once that is done, enter the directory and install any existing dependencies.
-
-```bash
+npx sv create appwrite-email-otp --template minimal --no-types --add eslint prettier --install npm
 cd appwrite-email-otp
-npm i
 ```
 
 Also, create a file `.env` in the root directory and add your Appwrite API endpoint and project ID.

@@ -754,6 +754,222 @@ if (class_exists(\Utopia\Query\Builder\MongoDB::class)) {
     }
 }
 
+if (class_exists(\Utopia\Detector\Detection::class)) {
+    abstract class ExtendsUtopiaDetectorDetection extends \Utopia\Detector\Detection
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detector::class)) {
+    abstract class ExtendsUtopiaDetectorDetector extends \Utopia\Detector\Detector
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Framework::class)) {
+    abstract class ExtendsUtopiaDetectorDetectionFramework extends \Utopia\Detector\Detection\Framework
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Framework\JS::class)) {
+    abstract class ExtendsUtopiaDetectorDetectionFrameworkJS extends \Utopia\Detector\Detection\Framework\JS
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Packager::class)) {
+    abstract class ExtendsUtopiaDetectorDetectionPackager extends \Utopia\Detector\Detection\Packager
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Rendering::class)) {
+    abstract class ExtendsUtopiaDetectorDetectionRendering extends \Utopia\Detector\Detection\Rendering
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Runtime::class)) {
+    abstract class ExtendsUtopiaDetectorDetectionRuntime extends \Utopia\Detector\Detection\Runtime
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detector\Strategy::class)) {
+    class ExtendsUtopiaDetectorDetectorStrategy extends \Utopia\Detector\Detector\Strategy
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detector\Framework::class)) {
+    class ExtendsUtopiaDetectorDetectorFramework extends \Utopia\Detector\Detector\Framework
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detector\Packager::class)) {
+    class ExtendsUtopiaDetectorDetectorPackager extends \Utopia\Detector\Detector\Packager
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detector\Rendering::class)) {
+    class ExtendsUtopiaDetectorDetectorRendering extends \Utopia\Detector\Detector\Rendering
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detector\Runtime::class)) {
+    class ExtendsUtopiaDetectorDetectorRuntime extends \Utopia\Detector\Detector\Runtime
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Framework\Analog::class)) {
+    class ExtendsUtopiaDetectorDetectionFrameworkAnalog extends \Utopia\Detector\Detection\Framework\Analog
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Framework\Angular::class)) {
+    class ExtendsUtopiaDetectorDetectionFrameworkAngular extends \Utopia\Detector\Detection\Framework\Angular
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Framework\Astro::class)) {
+    class ExtendsUtopiaDetectorDetectionFrameworkAstro extends \Utopia\Detector\Detection\Framework\Astro
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Framework\Flutter::class)) {
+    class ExtendsUtopiaDetectorDetectionFrameworkFlutter extends \Utopia\Detector\Detection\Framework\Flutter
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Framework\Jaspr::class)) {
+    class ExtendsUtopiaDetectorDetectionFrameworkJaspr extends \Utopia\Detector\Detection\Framework\Jaspr
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Framework\Lynx::class)) {
+    class ExtendsUtopiaDetectorDetectionFrameworkLynx extends \Utopia\Detector\Detection\Framework\Lynx
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Framework\NextJs::class)) {
+    class ExtendsUtopiaDetectorDetectionFrameworkNextJs extends \Utopia\Detector\Detection\Framework\NextJs
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Framework\Nuxt::class)) {
+    class ExtendsUtopiaDetectorDetectionFrameworkNuxt extends \Utopia\Detector\Detection\Framework\Nuxt
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Framework\React::class)) {
+    class ExtendsUtopiaDetectorDetectionFrameworkReact extends \Utopia\Detector\Detection\Framework\React
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Framework\ReactNative::class)) {
+    class ExtendsUtopiaDetectorDetectionFrameworkReactNative extends \Utopia\Detector\Detection\Framework\ReactNative
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Framework\Remix::class)) {
+    class ExtendsUtopiaDetectorDetectionFrameworkRemix extends \Utopia\Detector\Detection\Framework\Remix
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Framework\Svelte::class)) {
+    class ExtendsUtopiaDetectorDetectionFrameworkSvelte extends \Utopia\Detector\Detection\Framework\Svelte
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Framework\SvelteKit::class)) {
+    class ExtendsUtopiaDetectorDetectionFrameworkSvelteKit extends \Utopia\Detector\Detection\Framework\SvelteKit
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Framework\TanStackStart::class)) {
+    class ExtendsUtopiaDetectorDetectionFrameworkTanStackStart extends \Utopia\Detector\Detection\Framework\TanStackStart
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Framework\Vue::class)) {
+    class ExtendsUtopiaDetectorDetectionFrameworkVue extends \Utopia\Detector\Detection\Framework\Vue
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Packager\NPM::class)) {
+    class ExtendsUtopiaDetectorDetectionPackagerNPM extends \Utopia\Detector\Detection\Packager\NPM
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Packager\PNPM::class)) {
+    class ExtendsUtopiaDetectorDetectionPackagerPNPM extends \Utopia\Detector\Detection\Packager\PNPM
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Packager\Yarn::class)) {
+    class ExtendsUtopiaDetectorDetectionPackagerYarn extends \Utopia\Detector\Detection\Packager\Yarn
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Rendering\SSR::class)) {
+    class ExtendsUtopiaDetectorDetectionRenderingSSR extends \Utopia\Detector\Detection\Rendering\SSR
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Rendering\XStatic::class)) {
+    class ExtendsUtopiaDetectorDetectionRenderingXStatic extends \Utopia\Detector\Detection\Rendering\XStatic
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Runtime\Bun::class)) {
+    class ExtendsUtopiaDetectorDetectionRuntimeBun extends \Utopia\Detector\Detection\Runtime\Bun
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Runtime\CPP::class)) {
+    class ExtendsUtopiaDetectorDetectionRuntimeCPP extends \Utopia\Detector\Detection\Runtime\CPP
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Runtime\Dart::class)) {
+    class ExtendsUtopiaDetectorDetectionRuntimeDart extends \Utopia\Detector\Detection\Runtime\Dart
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Runtime\Deno::class)) {
+    class ExtendsUtopiaDetectorDetectionRuntimeDeno extends \Utopia\Detector\Detection\Runtime\Deno
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Runtime\Dotnet::class)) {
+    class ExtendsUtopiaDetectorDetectionRuntimeDotnet extends \Utopia\Detector\Detection\Runtime\Dotnet
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Runtime\Java::class)) {
+    class ExtendsUtopiaDetectorDetectionRuntimeJava extends \Utopia\Detector\Detection\Runtime\Java
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Runtime\Node::class)) {
+    class ExtendsUtopiaDetectorDetectionRuntimeNode extends \Utopia\Detector\Detection\Runtime\Node
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Runtime\PHP::class)) {
+    class ExtendsUtopiaDetectorDetectionRuntimePHP extends \Utopia\Detector\Detection\Runtime\PHP
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Runtime\Python::class)) {
+    class ExtendsUtopiaDetectorDetectionRuntimePython extends \Utopia\Detector\Detection\Runtime\Python
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Runtime\Ruby::class)) {
+    class ExtendsUtopiaDetectorDetectionRuntimeRuby extends \Utopia\Detector\Detection\Runtime\Ruby
+    {
+    }
+}
+if (class_exists(\Utopia\Detector\Detection\Runtime\Swift::class)) {
+    class ExtendsUtopiaDetectorDetectionRuntimeSwift extends \Utopia\Detector\Detection\Runtime\Swift
+    {
+    }
+}
+
 $extended = [];
 foreach ((new ReflectionExtension('utopia'))->getClassNames() as $name) {
     $class = new ReflectionClass($name);

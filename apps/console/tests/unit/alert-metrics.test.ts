@@ -130,6 +130,7 @@ describe('alert rule form', () => {
     const input = monitorInputFromForm(emptyRuleForm(), t)
     expect(Object.keys(input).sort()).toEqual([
       'cooldown',
+      'escalationId',
       'name',
       'notify',
       'rules',
@@ -137,6 +138,8 @@ describe('alert rule form', () => {
       'window',
     ])
     expect(input.notify).toEqual(['owner'])
+    // Empty clears an escalation, so moving a monitor back to roles stops its escalation.
+    expect(input.escalationId).toBe('')
     expect(input.severity).toBe('warning')
   })
 
@@ -355,6 +358,7 @@ describe('probe monitors', () => {
         timeout: 10,
         cooldown: 3600,
         notify: ['owner'],
+        escalationId: '',
         severity: 'warning',
         url: 'https://example.com/health',
         method: 'GET',
@@ -371,6 +375,7 @@ describe('probe monitors', () => {
     })
     expect(Object.keys(smtp.params).sort()).toEqual([
       'cooldown',
+      'escalationId',
       'host',
       'interval',
       'name',
