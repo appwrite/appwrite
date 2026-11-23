@@ -120,6 +120,14 @@ function row(
   }
 }
 
+/** `user-a` is a project user; `user-b` was sent by a server and has none. */
+const PROJECT_USER = {
+  ...ACCOUNT,
+  $id: 'user-a',
+  name: 'Jane Cooper',
+  email: 'jane@acme.example',
+} satisfies Partial<Models.User<Models.Preferences>>
+
 type MockOptions = {
   identifyUsers?: boolean
   /** User IDs present in the data (sent by a server with an API key). */
@@ -213,8 +221,9 @@ function metricsFor(url: URL, options: MockOptions): Models.AnalyticsMetric[] {
   const dimension = listParam(url, 'dimensions')[0]
   const users = options.hasUsers ? 37 : 0
   const queries = listParam(url, 'queries').map((query) => JSON.parse(query))
+  // A property with no identified traffic has nothing for any one user.
   if (queries.some((query) => query.attribute === 'userId'))
-    return userMetricsFor(url, dimension)
+    return options.hasUsers ? userMetricsFor(url, dimension) : []
   const eventName = queries.find(
     (query) => query.attribute === 'eventName',
   )?.values[0]
@@ -420,6 +429,26 @@ async function mockAppwriteApi(
       })
     }
 
+    if (apiPath === '/users') {
+      const ids = listParam(url, 'queries')
+        .map((query) => JSON.parse(query))
+        .find((query) => query.attribute === '$id')?.values as
+        | string[]
+        | undefined
+      const users = ids?.includes(PROJECT_USER.$id) ? [PROJECT_USER] : []
+      return json(200, { total: users.length, users })
+    }
+    if (apiPath === `/users/${PROJECT_USER.$id}`) return json(200, PROJECT_USER)
+    if (apiPath === `/users/${PROJECT_USER.$id}/mfa/factors`)
+      return json(200, {
+        totp: false,
+        phone: false,
+        email: false,
+        recoveryCode: false,
+      })
+    if (apiPath === `/users/${PROJECT_USER.$id}/sessions`)
+      return json(200, { total: 0, sessions: [] })
+
     if (apiPath === '/account') return json(200, ACCOUNT)
     if (apiPath === '/account/prefs') {
       return request.method() === 'PATCH'
@@ -480,6 +509,11 @@ async function openProperty(page: Page, path = '') {
   })
 }
 
+/** The active filter chips row, under the overview controls. */
+function filterChips(page: Page) {
+  return page.getByText('Filtered by', { exact: true }).locator('xpath=..')
+}
+
 /** Card headings with an info hint read as "<title> More info". */
 function cardHeading(page: Page, title: string) {
   return page.getByRole('heading', {
@@ -528,9 +562,15 @@ test.describe('analytics property (mocked API)', () => {
       .filter({ has: page.getByText('Users', { exact: true }) })
     await expect(usersMetric).toContainText('37')
 
+    // Project users read as people and link to Auth; other IDs stay IDs.
     const users = card(page, 'Users')
-    await expect(users.getByText('user-a')).toBeVisible()
-    await expect(users.getByRole('link')).toHaveCount(0)
+    await expect(users.getByText('Jane Cooper')).toBeVisible()
+    await expect(users.getByText('user-b')).toBeVisible()
+    await expect(users.getByRole('link')).toHaveCount(1)
+    await expect(users.getByRole('link')).toHaveAttribute(
+      'href',
+      `/projects/${PROJECT_ID}/auth/users/user-a`,
+    )
 
     const props = card(page, 'Event properties')
     await expect(props.getByRole('tab', { name: 'plan' })).toBeVisible()
@@ -606,7 +646,7 @@ test.describe('analytics property (mocked API)', () => {
     await openProperty(page)
 
     await card(page, 'Users')
-      .getByText('user-a')
+      .getByText('Jane Cooper')
       .click({ timeout: 30_000 })
     await expect(page).toHaveURL(
       new RegExp(`/analytics/${PROPERTY_ID}/users/user-a$`),
@@ -655,7 +695,7 @@ test.describe('analytics property (mocked API)', () => {
     await pages.getByText('/docs').click()
     await expect(page).toHaveURL(new RegExp(`/analytics/${PROPERTY_ID}\\?`))
     await expect(page.getByText('Filtered by')).toBeVisible()
-    await expect(page.locator('main')).toContainText('user-a')
+    await expect(page.locator('main')).toContainText('Jane Cooper')
     await expect(page.locator('main')).toContainText('/docs')
   })
 
@@ -676,9 +716,38 @@ test.describe('analytics property (mocked API)', () => {
     await mockAppwriteApi(page, { hasUsers: true })
     await openProperty(page)
 
-    await expect(card(page, 'Users').getByText('user-a')).toBeVisible({
+    await expect(card(page, 'Users').getByText('Jane Cooper')).toBeVisible({
       timeout: 30_000,
     })
+  })
+
+  test('filters by a user and names them on the chip', async ({ page }) => {
+    const mock = await mockAppwriteApi(page, {
+      identifyUsers: true,
+      hasUsers: true,
+    })
+    await openProperty(page)
+
+    // A row opens the user's page; filtering is in the row's menu.
+    const users = card(page, 'Users')
+    await users
+      .getByText('Jane Cooper')
+      .click({ button: 'right', timeout: 30_000 })
+    await page.getByRole('menuitem', { name: 'Filter by this value' }).click()
+
+    const chips = filterChips(page)
+    await expect(chips.getByText('Jane Cooper')).toBeVisible()
+    await expect(chips.getByText('user-a')).toHaveCount(0)
+    await expect
+      .poll(() =>
+        mock.metrics.some((url) =>
+          listParam(url, 'queries').some(
+            (query) => query.includes('userId') && query.includes('user-a'),
+          ),
+        ),
+      )
+      .toBe(true)
+    await attachScreenshot(page, 'property-user-filter')
   })
 
   test('uses app terms and leaves bounce rate off a mobile property', async ({
@@ -1157,5 +1226,69 @@ test.describe('analytics property (mocked API)', () => {
     await expect(siteCard).toContainText('Disabled - no tracker is added.')
     expect(mock.siteAnalytics).toHaveLength(1)
     await attachScreenshot(page, 'site-settings-analytics-limit')
+  })
+})
+
+test.describe('auth user analytics (mocked API)', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await useProfile(page)
+  })
+
+  async function openUserAnalytics(page: Page) {
+    await page.goto(
+      `/projects/${PROJECT_ID}/auth/users/${PROJECT_USER.$id}/analytics`,
+      { waitUntil: 'domcontentloaded' },
+    )
+  }
+
+  test("shows the user's events, pages and a filtered link", async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, { identifyUsers: true, hasUsers: true })
+    await openUserAnalytics(page)
+
+    const propertyCard = page
+      .locator('div.rounded-xl')
+      .filter({ has: page.getByRole('heading', { name: 'Acme site' }) })
+    await expect(propertyCard.getByText('13', { exact: true })).toBeVisible({
+      timeout: 30_000,
+    })
+    await expect(propertyCard.getByText('Last active')).toBeVisible()
+
+    // Custom events only, ranked by this user's events.
+    await expect(propertyCard.getByText('signup')).toBeVisible()
+    await expect(
+      propertyCard.getByText('pageview', { exact: true }),
+    ).toHaveCount(0)
+    const pages = propertyCard.getByText(/^\/(docs|pricing)$/)
+    await expect(pages.first()).toHaveText('/docs')
+    await attachScreenshot(page, 'auth-user-analytics')
+
+    await propertyCard.getByRole('link', { name: 'View in analytics' }).click()
+    await expect(page).toHaveURL(
+      new RegExp(`/analytics/${PROPERTY_ID}\\?query=.*user-a`),
+    )
+    await expect(filterChips(page).getByText('Jane Cooper')).toBeVisible({
+      timeout: 30_000,
+    })
+  })
+
+  test('explains user identification when no property records users', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page)
+    await openUserAnalytics(page)
+
+    await expect(
+      page.getByText('Link Jane Cooper to their analytics'),
+    ).toBeVisible({ timeout: 30_000 })
+    await expect(
+      page.getByRole('link', { name: 'Open property settings' }),
+    ).toHaveAttribute(
+      'href',
+      `/projects/${PROJECT_ID}/analytics/${PROPERTY_ID}/settings`,
+    )
+    await attachScreenshot(page, 'auth-user-analytics-off')
   })
 })

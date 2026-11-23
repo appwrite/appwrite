@@ -218,6 +218,8 @@ type BreakdownPanelProps = {
   emptyLabel?: string
   /** External URL for a row (pages, hostnames): adds an open-in-new icon. */
   rowHref?: (value: string, tabId: string) => string | undefined
+  /** Hover hint for the row link (e.g. "View user"); defaults to the URL. */
+  rowHrefTitle?: string
   /** Which measure ranks and sizes the rows. */
   valueKey?: 'visitors' | 'events'
   /** Mobile properties count users, not visitors. */
@@ -249,6 +251,7 @@ export function BreakdownPanel({
   mono = false,
   emptyLabel,
   rowHref,
+  rowHrefTitle,
   valueKey = 'visitors',
   mobile = false,
   onRowClick,
@@ -402,6 +405,7 @@ export function BreakdownPanel({
                   color={rowColor?.(entry, index)}
                   mono={mono && !!entry.value}
                   href={entry.value ? rowHref?.(entry.value, active.id) : undefined}
+                  hrefTitle={rowHrefTitle && t(rowHrefTitle)}
                   {...filterRowProps(entry.value)}
                 />
               )
@@ -447,6 +451,7 @@ export function BreakdownPanel({
           mono={mono}
           emptyLabel={emptyLabel}
           rowHref={rowHref}
+          rowHrefTitle={rowHrefTitle}
           onRowClick={
             onRowClick
               ? (entry) => entry.value && onRowClick(entry.value)

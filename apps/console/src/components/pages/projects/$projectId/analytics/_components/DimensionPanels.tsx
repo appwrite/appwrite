@@ -23,7 +23,17 @@ import {
 import { BREAKDOWN_DIALOG_MAX_ROWS } from './BreakdownDialog'
 import { useAnalyticsFilters } from './analytics-filters-context'
 import type { AnalyticsFilter } from '@/lib/analytics/analytics-filters'
-import { BrowserIcon, ChannelIcon, CountryFlag, SourceFavicon } from './BreakdownRow'
+import {
+  analyticsUserLabel,
+  useAnalyticsUserDirectory,
+} from '@/lib/analytics/user-directory'
+import {
+  AnalyticsUserAvatar,
+  BrowserIcon,
+  ChannelIcon,
+  CountryFlag,
+  SourceFavicon,
+} from './BreakdownRow'
 
 // Bars stay neutral (the BreakdownRow default), like Usage's breakdowns:
 // rows are told apart by their icon and label, not a colour per rank.
@@ -383,17 +393,39 @@ export function useShowUsersPanel(
   return !!property?.identifyUsers || (data?.breakdown.length ?? 0) > 0
 }
 
+/** The user's page in Auth. */
+export function analyticsUserHref(projectId: string, userId: string): string {
+  return `/projects/${encodeURIComponent(projectId)}/auth/users/${encodeURIComponent(userId)}`
+}
+
+/**
+ * Identified users as people: photo and name (or email). A row opens the
+ * user's analytics in this property; project users also link to Auth. IDs
+ * with no project user (sent by a server with an API key) stay IDs and get no
+ * Auth link.
+ */
 export function UsersPanel(props: PanelProps) {
   const navigate = useNavigate()
-  // Opens the user's analytics, not Auth: an ID sent with an API key may not be a project user.
+  const lookup = useAnalyticsUserDirectory(props.projectId)
   return (
     <BreakdownPanel
       {...props}
       title="Users"
-      description="Identified users, ranked by visitors"
+      description="Signed-in users, ranked by visitors"
       info="users"
       tabs={USER_TABS}
-      mono
+      formatLabel={(value) => analyticsUserLabel(value, lookup(value))}
+      renderLeading={(entry) => (
+        <AnalyticsUserAvatar
+          projectId={props.projectId}
+          userId={entry.value!}
+          user={lookup(entry.value)}
+        />
+      )}
+      rowHref={(value) =>
+        lookup(value) ? analyticsUserHref(props.projectId, value) : undefined
+      }
+      rowHrefTitle="View user"
       emptyLabel="No identified users in this range"
       onRowClick={(userId) =>
         navigate({
