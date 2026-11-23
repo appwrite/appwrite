@@ -10,6 +10,7 @@ import type {
 } from '@/lib/api-explorer/types'
 import {
   getSpecMode,
+  getReferencePlatformForMode,
   isReferencePlatform,
   isReferenceService,
   isReferenceVersion,
@@ -195,16 +196,32 @@ export async function loadApiReferenceService(
   const parsed = parseOpenApiSpec(spec, mode)
   const service = parsed.services.find((item) => item.id === serviceId)
 
-  if (!service) {
-    return {
-      id: serviceId,
-      label:
-        SERVICE_LABELS[serviceId as ReferenceService] ??
-        getServiceLabel(serviceId),
-      description: getServiceDescriptionFromSpec(spec, serviceId),
-      methods: [],
-    }
+ if (!service) {
+  let serverOnly = false
+
+  if (platform.startsWith('client-')) {
+    const serverPlatform = getReferencePlatformForMode('server', platform)
+    const serverSpec = await loadReferenceOpenApiSpec(
+      version,
+      serverPlatform,
+    )
+    const serverParsed = parseOpenApiSpec(serverSpec, 'server')
+
+    serverOnly = serverParsed.services.some(
+      (item) => item.id === serviceId,
+    )
   }
+
+  return {
+    id: serviceId,
+    label:
+      SERVICE_LABELS[serviceId as ReferenceService] ??
+      getServiceLabel(serviceId),
+    description: getServiceDescriptionFromSpec(spec, serviceId),
+    methods: [],
+    serverOnly,
+  }
+}
 
   const demos = await loadMethodDemos(version, platform, service.methods)
 
