@@ -17,7 +17,9 @@
 //! strings pass as they are and one that is not UTF-8 fails the statement as `json_encode()`
 //! does.
 
-#![allow(non_snake_case)]
+// The parameters are named as PHP names them, and a fluent method names its lifetime whether or not
+// an argument borrows.
+#![allow(non_snake_case, clippy::needless_lifetimes)]
 
 use std::borrow::Cow;
 use std::cell::{Cell, RefCell};
@@ -423,6 +425,19 @@ impl<D: Dialect + Text> State<D> {
     fn strings(&self, given: &Arr<'_>) -> Vec<String> {
         let items = given.table().into_iter().flat_map(ZendHashTable::values);
         items.filter_map(|item| item.zend_str().map(|name| self.text(name.as_bytes()))).collect()
+    }
+
+    /// The pairs of an array of strings by name.
+    fn pairs(&self, given: &Arr<'_>) -> Vec<(String, String)> {
+        let items = given.table().into_iter().flatten();
+        items
+            .map(|(name, value)| {
+                let value = value
+                    .zend_str()
+                    .map_or_else(|| value.string().unwrap_or_default(), |text| self.text(text.as_bytes()));
+                (self.text(name.to_string().as_bytes()), value)
+            })
+            .collect()
     }
 
     /// `$this->bindings`: a list of `Binding`.
@@ -2565,6 +2580,915 @@ macro_rules! builder_class {
             }
         }, $($rest,)*);
     };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, postgres_more, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(name = "updateFromWhere")]
+            pub fn update_from_where<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                condition: PhpString<'_>,
+                bindings: &[&Zval],
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let condition = self_.0.text(condition.bytes());
+                let bindings = bindings.iter().map(|value| self_.0.value(value)).collect::<PhpResult<Vec<Value>>>()?;
+                self_.0.with(|builder| {
+                    builder.update_from_where(condition, bindings);
+                });
+                Ok(self_)
+            }
+
+            #[php(name = "distinctOn")]
+            pub fn distinct_on<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                columns: Arr<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let columns = self_.0.strings(&columns);
+                self_.0.with(|builder| {
+                    builder.distinct_on(columns);
+                });
+                self_
+            }
+
+            #[php(name = "forUpdateOf")]
+            pub fn for_update_of<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                table: PhpString<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let table = self_.0.text(table.bytes());
+                self_.0.with(|builder| {
+                    builder.for_update_of(table);
+                });
+                self_
+            }
+
+            #[php(name = "forShareOf")]
+            pub fn for_share_of<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                table: PhpString<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let table = self_.0.text(table.bytes());
+                self_.0.with(|builder| {
+                    builder.for_share_of(table);
+                });
+                self_
+            }
+
+            #[php(name = "selectAggregateFilter", defaults(alias = "\"\"", bindings = "Arr::Empty"))]
+            pub fn select_aggregate_filter<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                aggregateExpr: PhpString<'_>,
+                filterCondition: PhpString<'_>,
+                alias: PhpString<'_>,
+                bindings: Arr<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let aggregateExpr = self_.0.text(aggregateExpr.bytes());
+                let filterCondition = self_.0.text(filterCondition.bytes());
+                let alias = self_.0.text(alias.bytes());
+                let bindings: Vec<Value> = self_.0.values(&bindings)?.values().cloned().collect();
+                self_.0.change(|builder| builder.select_aggregate_filter(&aggregateExpr, &filterCondition, &alias, bindings).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "arrayAgg", defaults(alias = "\"\""))]
+            pub fn array_agg<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let column = self_.0.text(column.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.change(|builder| builder.array_agg(&column, &alias).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "boolAnd", defaults(alias = "\"\""))]
+            pub fn bool_and<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let column = self_.0.text(column.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.change(|builder| builder.bool_and(&column, &alias).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "boolOr", defaults(alias = "\"\""))]
+            pub fn bool_or<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let column = self_.0.text(column.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.change(|builder| builder.bool_or(&column, &alias).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(defaults(alias = "\"\""))]
+            pub fn every_<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let column = self_.0.text(column.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.change(|builder| builder.every(&column, &alias).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(defaults(alias = "\"\""))]
+            pub fn mode_<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let column = self_.0.text(column.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.change(|builder| builder.mode(&column, &alias).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "percentileCont", defaults(alias = "\"\""))]
+            pub fn percentile_cont<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                fraction: Float,
+                orderColumn: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let fraction = fraction.0;
+                let orderColumn = self_.0.text(orderColumn.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.change(|builder| builder.percentile_cont(fraction, &orderColumn, &alias).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "percentileDisc", defaults(alias = "\"\""))]
+            pub fn percentile_disc<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                fraction: Float,
+                orderColumn: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let fraction = fraction.0;
+                let orderColumn = self_.0.text(orderColumn.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.change(|builder| builder.percentile_disc(fraction, &orderColumn, &alias).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "mergeInto")]
+            pub fn merge_into<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                target: PhpString<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let target = self_.0.text(target.bytes());
+                self_.0.with(|builder| {
+                    builder.merge_into(target);
+                });
+                self_
+            }
+
+            pub fn on_<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                condition: PhpString<'_>,
+                bindings: &[&Zval],
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let condition = self_.0.text(condition.bytes());
+                let bindings = bindings.iter().map(|value| self_.0.value(value)).collect::<PhpResult<Vec<Value>>>()?;
+                self_.0.with(|builder| {
+                    builder.on(condition, bindings);
+                });
+                Ok(self_)
+            }
+
+            #[php(name = "whenMatched")]
+            pub fn when_matched<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                action: PhpString<'_>,
+                bindings: &[&Zval],
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let action = self_.0.text(action.bytes());
+                let bindings = bindings.iter().map(|value| self_.0.value(value)).collect::<PhpResult<Vec<Value>>>()?;
+                self_.0.with(|builder| {
+                    builder.when_matched(action, bindings);
+                });
+                Ok(self_)
+            }
+
+            #[php(name = "whenNotMatched")]
+            pub fn when_not_matched<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                action: PhpString<'_>,
+                bindings: &[&Zval],
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let action = self_.0.text(action.bytes());
+                let bindings = bindings.iter().map(|value| self_.0.value(value)).collect::<PhpResult<Vec<Value>>>()?;
+                self_.0.with(|builder| {
+                    builder.when_not_matched(action, bindings);
+                });
+                Ok(self_)
+            }
+
+            #[php(name = "executeMerge")]
+            pub fn execute_merge(
+                self_: &mut ZendClassObject<$class>,
+            ) -> PhpResult<Zval> {
+                let built = self_.0.with(|builder| builder.execute_merge());
+                self_.0.statement(built)
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, max_execution_time, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(name = "maxExecutionTime")]
+            pub fn max_execution_time<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                ms: Int,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let ms = ms.0;
+                self_.0.change(|builder| builder.max_execution_time(ms).map(|_| ()))?;
+                Ok(self_)
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, clickhouse_more, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            pub fn final_(self_: &mut ZendClassObject<$class>) -> &mut ZendClassObject<$class> {
+                self_.0.with(|builder| {
+                    builder.final_();
+                });
+                self_
+            }
+
+            pub fn sample<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                fraction: Float,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let fraction = fraction.0;
+                self_.0.change(|builder| builder.sample(fraction).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "useNamedBindings", defaults(enabled = "Bool(true)"))]
+            pub fn use_named_bindings<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                enabled: Bool,
+            ) -> &'a mut ZendClassObject<$class> {
+                let enabled = enabled.0;
+                self_.0.with(|builder| {
+                    builder.use_named_bindings(enabled);
+                });
+                self_
+            }
+
+            #[php(name = "withParamType")]
+            pub fn with_param_type<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+                r#type: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let column = self_.0.text(column.bytes());
+                let r#type = self_.0.text(r#type.bytes());
+                self_.0.change(|builder| builder.with_param_type(column, &r#type).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "withParamTypes")]
+            pub fn with_param_types<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                types: Arr<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let types = self_.0.pairs(&types);
+                self_.0.change(|builder| builder.with_param_types(types).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            pub fn settings<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                settings: Arr<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let settings = self_.0.pairs(&settings);
+                self_.0.change(|builder| builder.settings(settings).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "insertFormat", defaults(columns = "Arr::Empty"))]
+            pub fn insert_format<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                format: PhpString<'_>,
+                columns: Arr<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let format = self_.0.text(format.bytes());
+                let columns = self_.0.strings(&columns);
+                self_.0.change(|builder| builder.insert_format(&format, columns).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "deleteMode")]
+            pub fn delete_mode<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                mode: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let mode = self_.0.text(mode.bytes());
+                self_.0.change(|builder| (match utopia_query::builder::DeleteMode::parse(&mode) { Ok(mode) => { builder.delete_mode(mode); Ok(()) } Err(error) => Err(error) }).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(defaults(alias = "\"\""))]
+            pub fn quantile<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                level: Float,
+                column: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let level = level.0;
+                let column = self_.0.text(column.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.change(|builder| builder.quantile(level, &column, &alias).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "quantileExact", defaults(alias = "\"\""))]
+            pub fn quantile_exact<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                level: Float,
+                column: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let level = level.0;
+                let column = self_.0.text(column.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.change(|builder| builder.quantile_exact(level, &column, &alias).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(defaults(alias = "\"\""))]
+            pub fn median<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let column = self_.0.text(column.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.change(|builder| builder.median(&column, &alias).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(defaults(alias = "\"\""))]
+            pub fn uniq<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let column = self_.0.text(column.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.change(|builder| builder.uniq(&column, &alias).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "uniqExact", defaults(alias = "\"\""))]
+            pub fn uniq_exact<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let column = self_.0.text(column.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.change(|builder| builder.uniq_exact(&column, &alias).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "uniqCombined", defaults(alias = "\"\""))]
+            pub fn uniq_combined<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let column = self_.0.text(column.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.change(|builder| builder.uniq_combined(&column, &alias).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "argMin", defaults(alias = "\"\""))]
+            pub fn arg_min<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                valueColumn: PhpString<'_>,
+                argColumn: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let valueColumn = self_.0.text(valueColumn.bytes());
+                let argColumn = self_.0.text(argColumn.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.change(|builder| builder.arg_min(&valueColumn, &argColumn, &alias).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "argMax", defaults(alias = "\"\""))]
+            pub fn arg_max<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                valueColumn: PhpString<'_>,
+                argColumn: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let valueColumn = self_.0.text(valueColumn.bytes());
+                let argColumn = self_.0.text(argColumn.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.change(|builder| builder.arg_max(&valueColumn, &argColumn, &alias).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "topK", defaults(alias = "\"\""))]
+            pub fn top_k<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                k: Int,
+                column: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let k = k.0;
+                let column = self_.0.text(column.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.change(|builder| builder.top_k(k, &column, &alias).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "topKWeighted", defaults(alias = "\"\""))]
+            pub fn top_k_weighted<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                k: Int,
+                column: PhpString<'_>,
+                weightColumn: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let k = k.0;
+                let column = self_.0.text(column.bytes());
+                let weightColumn = self_.0.text(weightColumn.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.change(|builder| builder.top_k_weighted(k, &column, &weightColumn, &alias).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "anyValue", defaults(alias = "\"\""))]
+            pub fn any_value<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let column = self_.0.text(column.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.change(|builder| builder.any_value(&column, &alias).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "anyLastValue", defaults(alias = "\"\""))]
+            pub fn any_last_value<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let column = self_.0.text(column.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.change(|builder| builder.any_last_value(&column, &alias).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "groupUniqArray", defaults(alias = "\"\""))]
+            pub fn group_uniq_array<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let column = self_.0.text(column.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.change(|builder| builder.group_uniq_array(&column, &alias).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "groupArrayMovingAvg", defaults(alias = "\"\""))]
+            pub fn group_array_moving_avg<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let column = self_.0.text(column.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.change(|builder| builder.group_array_moving_avg(&column, &alias).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "groupArrayMovingSum", defaults(alias = "\"\""))]
+            pub fn group_array_moving_sum<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let column = self_.0.text(column.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.change(|builder| builder.group_array_moving_sum(&column, &alias).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "arrayJoin", defaults(alias = "\"\""))]
+            pub fn array_join<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let column = self_.0.text(column.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.with(|builder| {
+                    builder.array_join(column, alias);
+                });
+                self_
+            }
+
+            #[php(name = "leftArrayJoin", defaults(alias = "\"\""))]
+            pub fn left_array_join<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let column = self_.0.text(column.bytes());
+                let alias = self_.0.text(alias.bytes());
+                self_.0.with(|builder| {
+                    builder.left_array_join(column, alias);
+                });
+                self_
+            }
+
+            #[php(name = "limitBy")]
+            pub fn limit_by<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                count: Int,
+                columns: Arr<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let count = count.0;
+                let columns = self_.0.strings(&columns);
+                self_.0.with(|builder| {
+                    builder.limit_by(count, columns);
+                });
+                self_
+            }
+
+            pub fn prewhere<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                queries: Arr<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let queries = self_.0.queries(&queries)?;
+                self_.0.with(|builder| {
+                    builder.prewhere(queries);
+                });
+                Ok(self_)
+            }
+
+            #[php(name = "orderWithFill", defaults(direction = "\"ASC\""), optional = direction)]
+            pub fn order_with_fill<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+                direction: PhpString<'_>,
+                from: Option<&Zval>,
+                to: Option<&Zval>,
+                step: Option<&Zval>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let column = self_.0.text(column.bytes());
+                let direction = self_.0.text(direction.bytes());
+                let from = from.filter(|from| !from.is_null()).map(|from| self_.0.value(from)).transpose()?;
+                let to = to.filter(|to| !to.is_null()).map(|to| self_.0.value(to)).transpose()?;
+                let step = step.filter(|step| !step.is_null()).map(|step| self_.0.value(step)).transpose()?;
+                self_.0.change(|builder| builder.order_with_fill(&column, &direction, from, to, step).map(|_| ()))?;
+                Ok(self_)
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, mongo_updates, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            pub fn push<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                field: PhpString<'_>,
+                value: &Zval,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let field = self_.0.text(field.bytes());
+                let value = self_.0.value(value)?;
+                self_.0.change(|builder| builder.push(&field, value).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            pub fn pull<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                field: PhpString<'_>,
+                value: &Zval,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let field = self_.0.text(field.bytes());
+                let value = self_.0.value(value)?;
+                self_.0.change(|builder| builder.pull(&field, value).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "addToSet")]
+            pub fn add_to_set<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                field: PhpString<'_>,
+                value: &Zval,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let field = self_.0.text(field.bytes());
+                let value = self_.0.value(value)?;
+                self_.0.change(|builder| builder.add_to_set(&field, value).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "unsetFields")]
+            pub fn unset_fields<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                fields: &[&Zval],
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let fields: Vec<String> = fields.iter().filter_map(|value| value.zend_str()).map(|value| self_.0.text(value.as_bytes())).collect();
+                self_.0.change(|builder| builder.unset_fields(fields).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            pub fn rename_<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                oldField: PhpString<'_>,
+                newField: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let oldField = self_.0.text(oldField.bytes());
+                let newField = self_.0.text(newField.bytes());
+                self_.0.change(|builder| builder.rename(&oldField, &newField).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            pub fn multiply<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                field: PhpString<'_>,
+                factor: &Zval,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let field = self_.0.text(field.bytes());
+                let factor = self_.0.value(factor)?;
+                self_.0.change(|builder| builder.multiply(&field, factor).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "popFirst")]
+            pub fn pop_first<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                field: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let field = self_.0.text(field.bytes());
+                self_.0.change(|builder| builder.pop_first(&field).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "popLast")]
+            pub fn pop_last<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                field: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let field = self_.0.text(field.bytes());
+                self_.0.change(|builder| builder.pop_last(&field).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "pullAll")]
+            pub fn pull_all<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                field: PhpString<'_>,
+                values: Arr<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let field = self_.0.text(field.bytes());
+                let values = self_.0.values(&values)?;
+                self_.0.change(|builder| builder.pull_all(&field, values).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "updateMin")]
+            pub fn update_min<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                field: PhpString<'_>,
+                value: &Zval,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let field = self_.0.text(field.bytes());
+                let value = self_.0.value(value)?;
+                self_.0.change(|builder| builder.update_min(&field, value).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "updateMax")]
+            pub fn update_max<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                field: PhpString<'_>,
+                value: &Zval,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let field = self_.0.text(field.bytes());
+                let value = self_.0.value(value)?;
+                self_.0.change(|builder| builder.update_max(&field, value).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "currentDate", defaults(r#type = "\"date\""))]
+            pub fn current_date<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                field: PhpString<'_>,
+                r#type: PhpString<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let field = self_.0.text(field.bytes());
+                let r#type = self_.0.text(r#type.bytes());
+                self_.0.change(|builder| builder.current_date(&field, &r#type).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "pushEach", optional = position)]
+            pub fn push_each<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                field: PhpString<'_>,
+                values: Arr<'_>,
+                position: Option<Int>,
+                slice: Option<Int>,
+                sort: Option<Arr<'_>>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let field = self_.0.text(field.bytes());
+                let values = self_.0.values(&values)?;
+                let position = position.map(|position| position.0);
+                let slice = slice.map(|slice| slice.0);
+                let sort = sort.map(|sort| self_.0.values(&sort)).transpose()?;
+                self_.0.change(|builder| builder.push_each(&field, values, position, slice, sort).map(|_| ()))?;
+                Ok(self_)
+            }
+
+            #[php(name = "arrayFilter")]
+            pub fn array_filter<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                identifier: PhpString<'_>,
+                condition: Arr<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let identifier = self_.0.text(identifier.bytes());
+                let condition = self_.0.values(&condition)?;
+                self_.0.with(|builder| {
+                    builder.array_filter(&identifier, condition);
+                });
+                Ok(self_)
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, mongo_stages, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(defaults(output = "Arr::Empty"), optional = defaultBucket)]
+            pub fn bucket<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                groupBy: PhpString<'_>,
+                boundaries: Arr<'_>,
+                defaultBucket: Option<PhpString<'_>>,
+                output: Arr<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let groupBy = self_.0.text(groupBy.bytes());
+                let boundaries = self_.0.values(&boundaries)?;
+                let defaultBucket = defaultBucket.map(|defaultBucket| self_.0.text(defaultBucket.bytes()));
+                let output = self_.0.values(&output)?;
+                self_.0.with(|builder| {
+                    builder.bucket(&groupBy, boundaries, defaultBucket.as_deref(), output);
+                });
+                Ok(self_)
+            }
+
+            #[php(name = "bucketAuto", defaults(output = "Arr::Empty"))]
+            pub fn bucket_auto<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                groupBy: PhpString<'_>,
+                buckets: Int,
+                output: Arr<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let groupBy = self_.0.text(groupBy.bytes());
+                let buckets = buckets.0;
+                let output = self_.0.values(&output)?;
+                self_.0.with(|builder| {
+                    builder.bucket_auto(&groupBy, buckets, output);
+                });
+                Ok(self_)
+            }
+
+            #[php(name = "graphLookup", optional = maxDepth)]
+            pub fn graph_lookup<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                from: PhpString<'_>,
+                startWith: PhpString<'_>,
+                connectFromField: PhpString<'_>,
+                connectToField: PhpString<'_>,
+                r#as: PhpString<'_>,
+                maxDepth: Option<Int>,
+                depthField: Option<PhpString<'_>>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let from = self_.0.text(from.bytes());
+                let startWith = self_.0.text(startWith.bytes());
+                let connectFromField = self_.0.text(connectFromField.bytes());
+                let connectToField = self_.0.text(connectToField.bytes());
+                let r#as = self_.0.text(r#as.bytes());
+                let maxDepth = maxDepth.map(|maxDepth| maxDepth.0);
+                let depthField = depthField.map(|depthField| self_.0.text(depthField.bytes()));
+                self_.0.with(|builder| {
+                    builder.graph_lookup(&from, &startWith, &connectFromField, &connectToField, &r#as, maxDepth, depthField.as_deref());
+                });
+                self_
+            }
+
+            #[php(name = "mergeIntoCollection", optional = on)]
+            pub fn merge_into_collection<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                collection: PhpString<'_>,
+                on: Option<Arr<'_>>,
+                whenMatched: Option<Arr<'_>>,
+                whenNotMatched: Option<Arr<'_>>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let collection = self_.0.text(collection.bytes());
+                let on = on.map(|on| self_.0.values(&on)).transpose()?;
+                let whenMatched = whenMatched.map(|whenMatched| self_.0.values(&whenMatched)).transpose()?;
+                let whenNotMatched = whenNotMatched.map(|whenNotMatched| self_.0.values(&whenNotMatched)).transpose()?;
+                self_.0.with(|builder| {
+                    builder.merge_into_collection(&collection, on, whenMatched, whenNotMatched);
+                });
+                Ok(self_)
+            }
+
+            #[php(name = "outputToCollection", optional = database)]
+            pub fn output_to_collection<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                collection: PhpString<'_>,
+                database: Option<PhpString<'_>>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let collection = self_.0.text(collection.bytes());
+                let database = database.map(|database| self_.0.text(database.bytes()));
+                self_.0.with(|builder| {
+                    builder.output_to_collection(&collection, database.as_deref());
+                });
+                self_
+            }
+
+            #[php(name = "replaceRoot")]
+            pub fn replace_root<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                newRootExpression: PhpString<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let newRootExpression = self_.0.text(newRootExpression.bytes());
+                self_.0.with(|builder| {
+                    builder.replace_root(&newRootExpression);
+                });
+                self_
+            }
+
+            #[php(optional = index)]
+            pub fn search_<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                searchDefinition: Arr<'_>,
+                index: Option<PhpString<'_>>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let searchDefinition = self_.0.values(&searchDefinition)?;
+                let index = index.map(|index| self_.0.text(index.bytes()));
+                self_.0.with(|builder| {
+                    builder.search(searchDefinition, index.as_deref());
+                });
+                Ok(self_)
+            }
+
+            #[php(name = "searchMeta", optional = index)]
+            pub fn search_meta<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                searchDefinition: Arr<'_>,
+                index: Option<PhpString<'_>>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let searchDefinition = self_.0.values(&searchDefinition)?;
+                let index = index.map(|index| self_.0.text(index.bytes()));
+                self_.0.with(|builder| {
+                    builder.search_meta(searchDefinition, index.as_deref());
+                });
+                Ok(self_)
+            }
+
+            #[php(name = "vectorSearch", optional = index)]
+            pub fn vector_search<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                path: PhpString<'_>,
+                queryVector: Arr<'_>,
+                numCandidates: Int,
+                limit: Int,
+                index: Option<PhpString<'_>>,
+                filter: Option<Arr<'_>>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let path = self_.0.text(path.bytes());
+                let queryVector = self_.0.values(&queryVector)?;
+                let numCandidates = numCandidates.0;
+                let limit = limit.0;
+                let index = index.map(|index| self_.0.text(index.bytes()));
+                let filter = filter.map(|filter| self_.0.values(&filter)).transpose()?;
+                self_.0.with(|builder| {
+                    builder.vector_search(&path, queryVector, numCandidates, limit, index.as_deref(), filter);
+                });
+                Ok(self_)
+            }
+        }, $($rest,)*);
+    };
     // FEATURES
     (@add [$(#[$meta:meta])*] $class:ident, $dialect:ty, {$($methods:tt)*},) => {
         $(#[$meta])*
@@ -3696,7 +4620,7 @@ builder_class!(
     #[php(extends(Sql))]
     MySqlBuilder,
     MySqlDialect,
-    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, mysql_family, explain_format, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, hints, conditional_aggregates, json_aggregates, json, search, not_search, spatial_filters, transactions]
+    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, mysql_family, explain_format, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, hints, conditional_aggregates, json_aggregates, json, search, not_search, spatial_filters, transactions, max_execution_time]
 );
 builder_class!(
     /// `Utopia\Query\Builder\MariaDB`.
@@ -3705,7 +4629,7 @@ builder_class!(
     #[php(extends(MySqlBuilder))]
     MariaDbBuilder,
     MariaDbDialect,
-    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, returning, mysql_family, explain_format, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, hints, conditional_aggregates, json_aggregates, json, search, not_search, sequences, spatial_filters, transactions]
+    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, returning, mysql_family, explain_format, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, hints, conditional_aggregates, json_aggregates, json, search, not_search, sequences, spatial_filters, transactions, max_execution_time]
 );
 builder_class!(
     /// `Utopia\Query\Builder\PostgreSQL`.
@@ -3714,7 +4638,7 @@ builder_class!(
     #[php(extends(Sql))]
     PostgreSqlBuilder,
     PostgreSqlDialect,
-    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, returning, postgres_from, explain_postgres, cross_joins, full_outer_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, cube, conditional_aggregates, json_aggregates, json, search, not_search, tablesample, sequences, spatial_filters, transactions]
+    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, returning, postgres_from, explain_postgres, cross_joins, full_outer_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, cube, conditional_aggregates, json_aggregates, json, search, not_search, tablesample, sequences, spatial_filters, transactions, postgres_more]
 );
 builder_class!(
     /// `Utopia\Query\Builder\SQLite`.
@@ -3732,7 +4656,7 @@ builder_class!(
     #[php(extends(Base))]
     ClickHouseBuilder,
     ClickHouseDialect,
-    [literal, raw_sql, explain_plain, cross_joins, full_outer_joins, statistical_clickhouse, bitwise, raw_sql_more, rollup, cube, totals, hints, conditional_aggregates, json_aggregates, tablesample]
+    [literal, raw_sql, explain_plain, cross_joins, full_outer_joins, statistical_clickhouse, bitwise, raw_sql_more, rollup, cube, totals, hints, conditional_aggregates, json_aggregates, tablesample, clickhouse_more]
 );
 builder_class!(
     /// `Utopia\Query\Builder\MongoDB`.
@@ -3741,5 +4665,5 @@ builder_class!(
     #[php(extends(Base))]
     MongoDbBuilder,
     MongoDbDialect,
-    [upsert, insert_or_ignore, explain_plain, search, tablesample]
+    [upsert, insert_or_ignore, explain_plain, search, tablesample, mongo_updates, mongo_stages]
 );
