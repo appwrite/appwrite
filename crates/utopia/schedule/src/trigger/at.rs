@@ -36,21 +36,23 @@ use crate::moment;
 #[derive(Debug, Clone)]
 pub struct At {
     time: DateTime,
+    catch_up: bool,
 }
 
 impl At {
-    /// A single occurrence at `time`.
+    /// A single occurrence at `time`. With `catch_up`, a missed occurrence is
+    /// due at the start of the next window.
     ///
-    /// PHP: `new At($time)`.
-    pub fn new(time: DateTime) -> Self {
-        Self { time }
+    /// PHP: `new At($time, $catchUp)`.
+    pub fn new(time: DateTime, catch_up: bool) -> Self {
+        Self { time, catch_up }
     }
 
     /// A single occurrence `seconds` after `from`.
     ///
     /// PHP: `At::in($seconds, $from)`.
     pub fn after(seconds: i64, from: &DateTime) -> Self {
-        Self { time: moment::by_seconds(from, seconds) }
+        Self { time: moment::by_seconds(from, seconds), catch_up: false }
     }
 
     /// A single occurrence `seconds` from now (the wall clock, in UTC).
@@ -68,9 +70,11 @@ impl At {
 }
 
 impl Trigger for At {
-    /// The moment, when it falls inside `[start, end)`.
+    /// The moment, when it falls inside `[start, end)`; with catch-up, a moment
+    /// before `start` is due at `start`.
     fn occurrences_between(&self, start: &DateTime, end: &DateTime) -> Vec<DateTime> {
-        if self.time >= *start && self.time < *end { vec![self.time.clone()] } else { Vec::new() }
+        let due = if self.catch_up && self.time < *start { start } else { &self.time };
+        if due >= start && due < end { vec![due.clone()] } else { Vec::new() }
     }
 
     /// Never: an `At` fires once.

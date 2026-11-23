@@ -30,7 +30,7 @@ use Utopia\Telemetry\Adapter\Test as TestTelemetry;
  *
  * Moments are `"Y-m-d H:i:s.u"` strings (`new DateTimeImmutable($s)`, UTC) or
  * `{"time": ..., "tz": ...}`; triggers are specs (`{"cron": ...}`,
- * `{"interval": n, "anchor": moment}`, `{"at": moment}`, `{"in": n, "from":
+ * `{"interval": n, "anchor": moment}`, `{"at": moment, "catch_up"?: bool}`, `{"in": n, "from":
  * moment}`, `{"shifted": trigger, "seconds": n}`); a source is a script
  * (Script) whose rows, change feed, failures and `make` results come from the
  * case.
@@ -183,7 +183,7 @@ final class Adapter implements Base, Benchmarks
         return match (true) {
             isset($t['cron']) => new Cron($t['cron']),
             isset($t['interval']) => new Interval($t['interval'], isset($t['anchor']) ? self::moment($t['anchor']) : null),
-            isset($t['at']) => new At(self::moment($t['at'])),
+            isset($t['at']) => new At(self::moment($t['at']), $t['catch_up'] ?? false),
             isset($t['in']) => At::in($t['in'], self::moment($t['from'])),
             isset($t['shifted']) => new Shifted(self::trigger($t['shifted']), $t['seconds']),
             default => throw new Fault('unknown trigger ' . json_encode($t)),

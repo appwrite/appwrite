@@ -2309,6 +2309,62 @@
       ]
     },
     {
+      "name": "at with catch-up fires a missed moment at the window start",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "at": "2026-08-17 15:59:00.000000",
+          "catch_up": true
+        },
+        "start": "2026-08-17 16:00:00.000000",
+        "end": "2026-08-17 16:01:00.000000"
+      },
+      "expect": [
+        "2026-08-17 16:00:00.000000 UTC"
+      ]
+    },
+    {
+      "name": "at without catch-up drops a missed moment",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "at": "2026-08-17 15:59:00.000000",
+          "catch_up": false
+        },
+        "start": "2026-08-17 16:00:00.000000",
+        "end": "2026-08-17 16:01:00.000000"
+      },
+      "expect": []
+    },
+    {
+      "name": "at with catch-up keeps a moment inside its window",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "at": "2026-08-17 16:00:30.000000",
+          "catch_up": true
+        },
+        "start": "2026-08-17 16:00:00.000000",
+        "end": "2026-08-17 16:01:00.000000"
+      },
+      "expect": [
+        "2026-08-17 16:00:30.000000 UTC"
+      ]
+    },
+    {
+      "name": "at with catch-up waits for a future moment",
+      "op": "trigger.occurrences",
+      "args": {
+        "trigger": {
+          "at": "2026-08-17 16:02:00.000000",
+          "catch_up": true
+        },
+        "start": "2026-08-17 16:00:00.000000",
+        "end": "2026-08-17 16:01:00.000000"
+      },
+      "expect": []
+    },
+    {
       "name": "at does not fire outside its window",
       "op": "trigger.occurrences",
       "args": {

@@ -249,7 +249,8 @@ fn trigger(t: &Value) -> Result<Arc<dyn Trigger>, BoxError> {
         return Ok(Arc::new(Interval::new(int(t, "interval")?, anchor.as_ref())?));
     }
     if let Some(at) = t.get("at").filter(|v| !v.is_null()) {
-        return Ok(Arc::new(At::new(moment(at)?)));
+        let catch_up = t.get("catch_up").and_then(Value::as_bool).unwrap_or(false);
+        return Ok(Arc::new(At::new(moment(at)?, catch_up)));
     }
     if t.get("in").is_some_and(|v| !v.is_null()) {
         let from = moment(t.get("from").unwrap_or(&Value::Null))?;
