@@ -2996,9 +2996,13 @@
             "password",
             "port"
         ],
+        "migrations.createSupabaseProjectCredentials": [
+            "projectRef"
+        ],
         "migrations.delete": [
             "migrationId"
         ],
+        "migrations.deleteSupabaseOAuth2": [],
         "migrations.get": [
             "migrationId"
         ],
@@ -3036,6 +3040,7 @@
             "search",
             "total"
         ],
+        "migrations.listSupabaseProjects": [],
         "migrations.retry": [
             "migrationId"
         ],
