@@ -84,14 +84,15 @@ class Create extends Action
     public function action(
         Response $response,
         User $user,
-        Document $session,
+        ?Document $session,
         Database $dbForProject,
         Event $queueForEvents
     ): void {
         // Recovery codes outlive sessions and password resets, so once MFA is in force, issuing them
         // needs the same recent challenge as listing or regenerating them. Before that, they are the
-        // first step of setting up MFA and there is no second factor to challenge.
-        if ($user->getMinimumFactors() > 1 && !$user->sessionChallengeRecent($session->getId())) {
+        // first step of setting up MFA and there is no second factor to challenge. A request without a
+        // session (an account key) has nothing that could have completed a challenge.
+        if ($user->getMinimumFactors() > 1 && ($session === null || !$user->sessionChallengeRecent($session->getId()))) {
             throw new Exception(Exception::USER_CHALLENGE_REQUIRED);
         }
 
