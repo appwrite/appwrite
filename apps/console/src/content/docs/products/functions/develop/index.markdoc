@@ -15,7 +15,7 @@ Here's everything that happens during a function execution.
 1. The active [deployment](/docs/products/functions/deployments)'s executor will handle the request.
 1. The Executor passes in request information like headers, body or path through the `context.req` object of your exported function.
 1. The runtime executes the code you defined, you can log through the `context.log()` or `context.error()` methods.
-1. Function terminates when you return results using `return context.res.text()`, `return context.res.json()` or similar. In Node.js 18 and later, Bun, and Deno, it can also [return a Fetch API `Response`](#native-response).
+1. Function terminates when you return results using `return context.res.text()`, `return context.res.json()` or similar. In Node.js 18 and later, Bun, Deno, Python, and Dart, it can also [return a native response](#native-response).
 
 [Locally developed functions](/docs/products/functions/develop-locally) follow the same lifecycle on your local machine.
 
@@ -506,7 +506,7 @@ If you prefer to learn through more examples like this, explore the [examples pa
 # Context object {% #context-object %}
 Context is an object passed into every function to handle communication to both the end users, and logging to the Appwrite Console.
 All input, output, and logging **must be handled through the context object** passed in.
-The one exception is the response in Node.js 18 and later, Bun, and Deno, where a function can [return a Fetch API `Response`](#native-response) instead.
+The one exception is the response in Node.js 18 and later, Bun, Deno, Python, and Dart, where a function can [return a native response](#native-response) instead.
 
 You'll find these properties in the context object.
 
@@ -577,7 +577,7 @@ Explore the request object with the following function, which logs all request p
 * Returns the binary body.
 ---
 * `req.raw`
-* Returns the request as a Fetch API `Request`. Available in Node.js 18 and later, Bun, and Deno. Learn more in [native request and response](#native-request-response).
+* Returns the request object of the runtime's web server, such as a Fetch API `Request` in Node.js 18 and later, Bun, and Deno. Learn more in [native request and response](#native-request-response).
 ---
 {% /table %}
 
@@ -891,8 +891,8 @@ There are several possible ways to send a response, explore them in the followin
 * `sendStream`
 * Sends the body in chunks as your function produces them. Learn more in [streaming responses](#streaming-responses).
 ---
-* Fetch API `Response`
-* Sends the status, headers, and body of a `Response` your function returns, in place of a `res` method. Available in Node.js 18 and later, Bun, and Deno. Learn more in [native request and response](#native-response).
+* Native response
+* Sends the status, headers, and body of a response object your function returns, in place of a `res` method. Return a Fetch API `Response` in Node.js 18 and later, Bun, and Deno, an aiohttp `web.Response` in Python, or a shelf `Response` in Dart. Learn more in [native request and response](#native-response).
 {% /table %}
 
 {% multicode %}
@@ -1529,7 +1529,7 @@ namespace runtime {
 
 The Node.js example works the same on Bun. In Go, set the status code and headers with `Context.Res.WithStatusCode()` and `Context.Res.WithHeaders()`. In Swift, the status code and headers are the `statusCode:` and `headers:` arguments.
 
-In Node.js 18 and later, Bun, and Deno, a function can also [return a Fetch API `Response`](#native-response). In Dart, it can return a [shelf](https://pub.dev/packages/shelf) `Response`, after you add `shelf` to your `pubspec.yaml`. A streamed body in these responses is sent the same way as `sendStream()`.
+In Node.js 18 and later, Bun, and Deno, a function can also [return a Fetch API `Response`](#native-response). In Dart, it can return a [shelf](https://pub.dev/packages/shelf) `Response`, after you add `shelf` to your `pubspec.yaml`. A streamed body in these responses is sent the same way as `sendStream()`. Python's native response, an aiohttp `web.Response`, doesn't stream.
 
 {% multicode %}
 ```server-nodejs
@@ -1607,15 +1607,30 @@ If you read the stream with the browser [`EventSource`](https://developer.mozill
 
 Self-hosted Appwrite 2.7.1 and earlier do not stream responses.
 
-## Native Request and Response {% #native-request-response %}
+## Native request and response {% #native-request-response %}
 
-In Node.js 18 and later, Bun, and Deno, a function can work with the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) `Request` and `Response` classes built into the runtime. `req.raw` returns the incoming request as a `Request`, and your function can return a `Response` instead of calling a `res` method. Code written as a handler that takes a `Request` and returns a `Response`, such as a [Hono](https://hono.dev) app, runs in a function without an adapter.
+Every runtime runs your function inside a web server. `req.raw` gives you that server's own request object, so you can use its methods and the libraries written for it. In Node.js 18 and later, Bun, Deno, Python, and Dart, your function can also return a native response object instead of calling a `res` method.
 
-The `node-14.5` and `node-16.0` runtimes have no `Request` or `Response` class. In those runtimes, and in other languages, use `req` and the `res` methods.
+| Runtime                | Request                     | Request type                                                                                                  | Response you can return                                                                                         |
+|------------------------|-----------------------------|---------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
+| Node.js 18+, Bun, Deno | `req.raw`                   | Fetch API [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request)                               | Fetch API [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response)                               |
+| Python                 | `context.req.raw`           | aiohttp [`web.Request`](https://docs.aiohttp.org/en/stable/web_reference.html#aiohttp.web.Request)            | aiohttp [`web.Response`](https://docs.aiohttp.org/en/stable/web_reference.html#aiohttp.web.Response)            |
+| Dart                   | `context.req.raw`           | shelf [`Request`](https://pub.dev/documentation/shelf/latest/shelf/Request-class.html)                        | shelf [`Response`](https://pub.dev/documentation/shelf/latest/shelf/Response-class.html)                        |
+| PHP                    | `$context->req->raw`        | `Swoole\Http\Request`                                                                                         | Not available                                                                                                   |
+| Ruby                   | `context.req.raw`           | `Sinatra::Request`                                                                                            | Not available                                                                                                   |
+| Go                     | `Context.Req.Raw`           | [`*http.Request`](https://pkg.go.dev/net/http#Request)                                                        | Not available                                                                                                   |
+| .NET                   | `Context.Req.Raw`           | ASP.NET Core [`HttpRequest`](https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.httprequest) | Not available                                                                                                 |
+| Kotlin                 | `context.req.raw`           | Javalin `Context`                                                                                             | Not available                                                                                                   |
+| Java                   | `context.getReq().getRaw()` | Javalin `Context`                                                                                             | Not available                                                                                                   |
+| Swift                  | `context.req.raw`           | Vapor `Request`                                                                                               | Not available                                                                                                   |
+| C++                    | `context.req.raw`           | Drogon `HttpRequestPtr`                                                                                       | Not available                                                                                                   |
+| Rust                   | `context.req.raw`           | `Option<http::Request<Vec<u8>>>`                                                                              | Not available                                                                                                   |
+
+The deprecated `node-14.5`, `dart-2.15`, and `swift-5.5` runtimes have no `req.raw` and don't accept native responses. The `node-16.0` runtime has no `Request` or `Response` class, so use `req` and the `res` methods there. In Go, require `github.com/open-runtimes/types-for-go/v4` `v4.0.9` or later in your `go.mod`. In Rust, use `openruntimes-types-for-rust` `1.0.3` or later.
 
 ### Read the request {% #native-request %}
 
-`req.raw` is built from the same data as the rest of `req`:
+In Node.js 18 and later, Bun, and Deno, `req.raw` is a Fetch API `Request` built from the same data as the rest of `req`:
 
 - Its URL is `req.url` and its method is `req.method`.
 - Its headers are `req.headers`, including Appwrite headers such as `x-appwrite-key` and `x-appwrite-user-id`.
@@ -1624,7 +1639,230 @@ The `node-14.5` and `node-16.0` runtimes have no `Request` or `Response` class. 
 
 `req.raw` throws an error for `CONNECT`, `TRACE`, and `TRACK` requests, because the `Request` class doesn't accept those methods.
 
-This function reads a form sent with `POST` through `formData()`, which parses both URL-encoded and multipart bodies.
+In the other runtimes, `req.raw` is the web server's own request object:
+
+- It has the Appwrite headers, and also the `x-open-runtimes-*` headers the runtime uses internally. `req.headers` leaves those out.
+- The runtime reads the body before your function runs and then makes it readable again, so you can read it through `req.raw` too. In .NET, set `Context.Req.Raw.Body.Position` to `0` before you read it.
+- In Python, the body-reading methods of `context.req.raw` are coroutines, so declare your function with `async def`. `await context.req.raw.post()` parses URL-encoded forms but fails on multipart bodies, because the runtime has already read them. To parse a multipart body, pass `context.req.body_binary` to a multipart parser.
+
+This function reads the method, path, and body through `req.raw` and returns them as JSON.
+
+{% multicode %}
+```server-nodejs
+export default async ({ req, res }) => {
+    const raw = req.raw;
+
+    return res.json({
+        method: raw.method,
+        path: new URL(raw.url).pathname,
+        body: await raw.text()
+    });
+};
+```
+```bun
+export default async ({ req, res }) => {
+    const raw = req.raw;
+
+    return res.json({
+        method: raw.method,
+        path: new URL(raw.url).pathname,
+        body: await raw.text()
+    });
+};
+```
+```deno
+export default async ({ req, res }: any) => {
+    const raw = req.raw;
+
+    return res.json({
+        method: raw.method,
+        path: new URL(raw.url).pathname,
+        body: await raw.text()
+    });
+};
+```
+```php
+<?php
+
+return function ($context) {
+    $raw = $context->req->raw;
+
+    return $context->res->json([
+        'method' => $raw->getMethod(),
+        'path' => $raw->server['path_info'],
+        'body' => $raw->rawContent(),
+    ]);
+};
+```
+```python
+async def main(context):
+    raw = context.req.raw
+
+    return context.res.json({
+        "method": raw.method,
+        "path": raw.path,
+        "body": await raw.text(),
+    })
+```
+```ruby
+def main(context)
+    raw = context.req.raw
+    raw.body.rewind
+
+    return context.res.json({
+        'method' => raw.request_method,
+        'path' => raw.path,
+        'body' => raw.body.read
+    })
+end
+```
+```go
+package handler
+
+import (
+	"io"
+
+	"github.com/open-runtimes/types-for-go/v4/openruntimes"
+)
+
+func Main(Context openruntimes.Context) openruntimes.Response {
+	raw := Context.Req.Raw
+
+	body, err := io.ReadAll(raw.Body)
+	if err != nil {
+		return Context.Res.Text(err.Error(), Context.Res.WithStatusCode(500))
+	}
+
+	return Context.Res.Json(map[string]interface{}{
+		"method": raw.Method,
+		"path":   raw.URL.Path,
+		"body":   string(body),
+	})
+}
+```
+```dart
+import 'dart:async';
+
+Future<dynamic> main(final context) async {
+    final raw = context.req.raw;
+
+    return context.res.json({
+        'method': raw.method,
+        'path': raw.requestedUri.path,
+        'body': await raw.readAsString(),
+    });
+}
+```
+```swift
+func main(context: RuntimeContext) async throws -> RuntimeOutput {
+    let raw = context.req.raw
+
+    return try context.res.json([
+        "method": raw.method.string,
+        "path": raw.url.path,
+        "body": raw.body.string ?? "",
+    ])
+}
+```
+```csharp
+namespace DotNetRuntime;
+
+public class Handler {
+    public async Task<RuntimeOutput> Main(RuntimeContext Context)
+    {
+        var raw = Context.Req.Raw;
+        raw.Body.Position = 0;
+        var body = await new StreamReader(raw.Body).ReadToEndAsync();
+
+        return Context.Res.Json(new Dictionary<string, object?>()
+        {
+            { "method", raw.Method },
+            { "path", raw.Path.Value },
+            { "body", body }
+        });
+    }
+}
+```
+```kotlin
+package io.openruntimes.kotlin.src
+
+import io.openruntimes.kotlin.RuntimeContext
+import io.openruntimes.kotlin.RuntimeOutput
+
+class Main {
+    fun main(context: RuntimeContext): RuntimeOutput {
+        val raw = context.req.raw
+
+        return context.res.json(mutableMapOf(
+            "method" to raw.method(),
+            "path" to raw.path(),
+            "body" to raw.body()
+        ))
+    }
+}
+```
+```java
+package io.openruntimes.java.src;
+
+import io.openruntimes.java.RuntimeContext;
+import io.openruntimes.java.RuntimeOutput;
+import java.util.HashMap;
+import java.util.Map;
+
+public class Main {
+    public RuntimeOutput main(RuntimeContext context) {
+        Map<String, Object> json = new HashMap<>();
+        json.put("method", context.getReq().getRaw().method());
+        json.put("path", context.getReq().getRaw().path());
+        json.put("body", context.getReq().getRaw().body());
+
+        return context.getRes().json(json);
+    }
+}
+```
+```cpp
+#include "../RuntimeResponse.h"
+#include "../RuntimeRequest.h"
+#include "../RuntimeOutput.h"
+#include "../RuntimeContext.h"
+
+namespace runtime {
+  class Handler {
+    public:
+      static RuntimeOutput main(RuntimeContext &context) {
+        auto raw = context.req.raw;
+
+        Json::Value json;
+        json["method"] = raw->getMethodString();
+        json["path"] = raw->getPath();
+        json["body"] = std::string(raw->getBody());
+
+        return context.res.json(json);
+      }
+  };
+}
+```
+```rust
+use openruntimes::{Context, Response};
+use serde_json::json;
+
+pub fn main(context: Context) -> Response {
+    let raw = context.req.raw.as_ref().expect("context.req.raw is set");
+
+    context.res.json(
+        json!({
+            "method": raw.method().as_str(),
+            "path": raw.uri().path(),
+            "body": String::from_utf8_lossy(raw.body()).to_string(),
+        }),
+        None,
+        None,
+    )
+}
+```
+{% /multicode %}
+
+In Node.js 18 and later, Bun, and Deno, `formData()` parses both URL-encoded and multipart bodies. This function reads a form sent with `POST`.
 
 {% multicode %}
 ```server-nodejs
@@ -1664,7 +1902,11 @@ export default async ({ req, res }: any) => {
 
 ### Return a response {% #native-response %}
 
-When your function returns a `Response`, Appwrite sends its status, headers, and body to the client. A `ReadableStream` body is sent in chunks, the same way as [`sendStream()`](#streaming-responses).
+In Node.js 18 and later, Bun, Deno, Python, and Dart, your function can return a native response instead of calling a `res` method. Appwrite sends its status, headers, and body to the client.
+
+- In Node.js, Bun, and Deno, return a Fetch API `Response`. A `ReadableStream` body is sent in chunks, the same way as [`sendStream()`](#streaming-responses).
+- In Python, return an aiohttp `web.Response`, including one built by a helper such as `web.json_response()`. The Python runtime already includes aiohttp, so you don't need to add it to `requirements.txt`. The body must be in memory, so returning a `web.StreamResponse` or `web.FileResponse` fails the execution. To stream from Python, use `sendStream()`.
+- In Dart, return a shelf `Response` after you add `shelf` to your `pubspec.yaml`. A `Stream` body is sent in chunks, the same way as `sendStream()`. If the body is a `String` with non-ASCII characters, set the `content-type` header yourself, because shelf otherwise labels it `application/octet-stream`.
 
 {% multicode %}
 ```server-nodejs
@@ -1700,13 +1942,40 @@ export default async () => {
     });
 };
 ```
+```python
+from aiohttp import web
+
+def main(context):
+    return web.json_response(
+        {"status": "ok"},
+        status=200,
+        headers={"cache-control": "max-age=60"}
+    )
+```
+```dart
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:shelf/shelf.dart' as shelf;
+
+Future<dynamic> main(final context) async {
+    return shelf.Response(
+        200,
+        body: jsonEncode({'status': 'ok'}),
+        headers: {
+            'content-type': 'application/json',
+            'cache-control': 'max-age=60'
+        },
+    );
+}
+```
 {% /multicode %}
 
-If a returned `Response` sets more than one cookie, use `node-20.0` or later, Bun, or Deno. Earlier Node.js versions join the cookies into a single `set-cookie` header, and browsers don't split it back into separate cookies.
+If a returned `Response` sets more than one cookie, use `node-20.0` or later, Bun, or Deno. Earlier Node.js versions join the cookies into a single `set-cookie` header, and browsers don't split it back into separate cookies. Python and Dart send each cookie in its own `set-cookie` header, including cookies added with aiohttp's `set_cookie()`.
 
 ### Use a web framework {% #native-frameworks %}
 
-Frameworks built on the Fetch API take a `Request` and return a `Response`. Pass them `req.raw` and return what they give back. This function serves two routes with [Hono](https://hono.dev). In Node.js and Bun, add `hono` to your `package.json` first.
+In Node.js 18 and later, Bun, and Deno, frameworks built on the Fetch API take a `Request` and return a `Response`. Pass them `req.raw` and return what they give back. This function serves two routes with [Hono](https://hono.dev). In Node.js and Bun, add `hono` to your `package.json` first.
 
 {% multicode %}
 ```server-nodejs
