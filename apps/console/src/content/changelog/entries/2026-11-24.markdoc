@@ -1,0 +1,27 @@
+---
+layout: changelog
+title: "Use native Request and Response objects in JavaScript functions"
+date: 2026-11-24
+cover: /images/blog/announcing-native-request-response/cover.avif
+tags: functions
+---
+
+JavaScript functions on Node.js 18 and later, Bun, and Deno now work with the Fetch API `Request` and `Response` classes. [`context.req.raw`](/docs/products/functions/develop#native-request) returns the incoming request as a `Request`, and a function can [return a `Response`](/docs/products/functions/develop#native-response) instead of calling a `context.res` method.
+
+```js
+export default async ({ req }) => {
+    const form = await req.raw.formData();
+
+    return new Response(`Hello, ${form.get('name')}!`);
+};
+```
+
+Frameworks built on the Fetch API, such as Hono, also run in a function without an adapter. `context.req` and the `context.res` methods work as before.
+
+{% arrow_link href="/blog/post/announcing-native-request-response" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/functions/develop#native-request-response" %}
+Use native Request and Response
+{% /arrow_link %}

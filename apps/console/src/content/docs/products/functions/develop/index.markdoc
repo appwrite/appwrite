@@ -15,7 +15,7 @@ Here's everything that happens during a function execution.
 1. The active [deployment](/docs/products/functions/deployments)'s executor will handle the request.
 1. The Executor passes in request information like headers, body or path through the `context.req` object of your exported function.
 1. The runtime executes the code you defined, you can log through the `context.log()` or `context.error()` methods.
-1. Function terminates when you return results using `return context.res.text()`, `return context.res.json()` or similar.
+1. Function terminates when you return results using `return context.res.text()`, `return context.res.json()` or similar. In Node.js 18 and later, Bun, and Deno, it can also [return a Fetch API `Response`](#native-response).
 
 [Locally developed functions](/docs/products/functions/develop-locally) follow the same lifecycle on your local machine.
 
@@ -506,6 +506,7 @@ If you prefer to learn through more examples like this, explore the [examples pa
 # Context object {% #context-object %}
 Context is an object passed into every function to handle communication to both the end users, and logging to the Appwrite Console.
 All input, output, and logging **must be handled through the context object** passed in.
+The one exception is the response in Node.js 18 and later, Bun, and Deno, where a function can [return a Fetch API `Response`](#native-response) instead.
 
 You'll find these properties in the context object.
 
@@ -574,6 +575,9 @@ Explore the request object with the following function, which logs all request p
 ---
 * `req.bodyBinary`
 * Returns the binary body.
+---
+* `req.raw`
+* Returns the request as a Fetch API `Request`. Available in Node.js 18 and later, Bun, and Deno. Learn more in [native request and response](#native-request-response).
 ---
 {% /table %}
 
@@ -886,6 +890,9 @@ There are several possible ways to send a response, explore them in the followin
 ---
 * `sendStream`
 * Sends the body in chunks as your function produces them. Learn more in [streaming responses](#streaming-responses).
+---
+* Fetch API `Response`
+* Sends the status, headers, and body of a `Response` your function returns, in place of a `res` method. Available in Node.js 18 and later, Bun, and Deno. Learn more in [native request and response](#native-response).
 {% /table %}
 
 {% multicode %}
@@ -1522,7 +1529,7 @@ namespace runtime {
 
 The Node.js example works the same on Bun. In Go, set the status code and headers with `Context.Res.WithStatusCode()` and `Context.Res.WithHeaders()`. In Swift, the status code and headers are the `statusCode:` and `headers:` arguments.
 
-In Node.js 18 and later, Bun, and Deno, a function can also return a Fetch API `Response`. In Dart, it can return a [shelf](https://pub.dev/packages/shelf) `Response`, after you add `shelf` to your `pubspec.yaml`. A streamed body in these responses is sent the same way as `sendStream()`.
+In Node.js 18 and later, Bun, and Deno, a function can also [return a Fetch API `Response`](#native-response). In Dart, it can return a [shelf](https://pub.dev/packages/shelf) `Response`, after you add `shelf` to your `pubspec.yaml`. A streamed body in these responses is sent the same way as `sendStream()`.
 
 {% multicode %}
 ```server-nodejs
@@ -1599,6 +1606,144 @@ Executions created with the [Create execution](/docs/references/cloud/client-web
 If you read the stream with the browser [`EventSource`](https://developer.mozilla.org/en-US/docs/Web/API/EventSource) API, close it when you receive your final event. Otherwise it reconnects when the response ends and runs your function again.
 
 Self-hosted Appwrite 2.7.1 and earlier do not stream responses.
+
+## Native Request and Response {% #native-request-response %}
+
+In Node.js 18 and later, Bun, and Deno, a function can work with the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) `Request` and `Response` classes built into the runtime. `req.raw` returns the incoming request as a `Request`, and your function can return a `Response` instead of calling a `res` method. Code written as a handler that takes a `Request` and returns a `Response`, such as a [Hono](https://hono.dev) app, runs in a function without an adapter.
+
+The `node-14.5` and `node-16.0` runtimes have no `Request` or `Response` class. In those runtimes, and in other languages, use `req` and the `res` methods.
+
+### Read the request {% #native-request %}
+
+`req.raw` is built from the same data as the rest of `req`:
+
+- Its URL is `req.url` and its method is `req.method`.
+- Its headers are `req.headers`, including Appwrite headers such as `x-appwrite-key` and `x-appwrite-user-id`.
+- Its body can be read once, as with any `Request`. `GET` and `HEAD` requests have no body.
+- Reading its body doesn't change `req.bodyText`, `req.bodyJson`, or `req.bodyBinary`.
+
+`req.raw` throws an error for `CONNECT`, `TRACE`, and `TRACK` requests, because the `Request` class doesn't accept those methods.
+
+This function reads a form sent with `POST` through `formData()`, which parses both URL-encoded and multipart bodies.
+
+{% multicode %}
+```server-nodejs
+export default async ({ req, res }) => {
+    if (req.method !== 'POST') {
+        return res.text('Send the form with POST', 405);
+    }
+
+    const form = await req.raw.formData();
+
+    return res.text(`Hello, ${form.get('name')}!`);
+};
+```
+```bun
+export default async ({ req, res }) => {
+    if (req.method !== 'POST') {
+        return res.text('Send the form with POST', 405);
+    }
+
+    const form = await req.raw.formData();
+
+    return res.text(`Hello, ${form.get('name')}!`);
+};
+```
+```deno
+export default async ({ req, res }: any) => {
+    if (req.method !== "POST") {
+        return res.text("Send the form with POST", 405);
+    }
+
+    const form = await req.raw.formData();
+
+    return res.text(`Hello, ${form.get("name")}!`);
+};
+```
+{% /multicode %}
+
+### Return a response {% #native-response %}
+
+When your function returns a `Response`, Appwrite sends its status, headers, and body to the client. A `ReadableStream` body is sent in chunks, the same way as [`sendStream()`](#streaming-responses).
+
+{% multicode %}
+```server-nodejs
+export default async () => {
+    return new Response(JSON.stringify({ status: 'ok' }), {
+        status: 200,
+        headers: {
+            'content-type': 'application/json',
+            'cache-control': 'max-age=60'
+        }
+    });
+};
+```
+```bun
+export default async () => {
+    return new Response(JSON.stringify({ status: 'ok' }), {
+        status: 200,
+        headers: {
+            'content-type': 'application/json',
+            'cache-control': 'max-age=60'
+        }
+    });
+};
+```
+```deno
+export default async () => {
+    return new Response(JSON.stringify({ status: "ok" }), {
+        status: 200,
+        headers: {
+            "content-type": "application/json",
+            "cache-control": "max-age=60"
+        }
+    });
+};
+```
+{% /multicode %}
+
+If a returned `Response` sets more than one cookie, use `node-20.0` or later, Bun, or Deno. Earlier Node.js versions join the cookies into a single `set-cookie` header, and browsers don't split it back into separate cookies.
+
+### Use a web framework {% #native-frameworks %}
+
+Frameworks built on the Fetch API take a `Request` and return a `Response`. Pass them `req.raw` and return what they give back. This function serves two routes with [Hono](https://hono.dev). In Node.js and Bun, add `hono` to your `package.json` first.
+
+{% multicode %}
+```server-nodejs
+import { Hono } from 'hono';
+
+const app = new Hono();
+
+app.get('/', (c) => c.text('Hello from Hono!'));
+app.get('/users/:id', (c) => c.json({ id: c.req.param('id') }));
+
+export default async ({ req }) => app.fetch(req.raw);
+```
+```bun
+import { Hono } from 'hono';
+
+const app = new Hono();
+
+app.get('/', (c) => c.text('Hello from Hono!'));
+app.get('/users/:id', (c) => c.json({ id: c.req.param('id') }));
+
+export default async ({ req }) => app.fetch(req.raw);
+```
+```deno
+import { Hono } from "npm:hono";
+
+const app = new Hono();
+
+app.get("/", (c) => c.text("Hello from Hono!"));
+app.get("/users/:id", (c) => c.json({ id: c.req.param("id") }));
+
+export default async ({ req }: any) => app.fetch(req.raw);
+```
+{% /multicode %}
+
+Hono matches routes against the request path. For a request to the function's [domain](/docs/products/functions/domains), that's the path in the URL. For an [execution you create](/docs/products/functions/execute), it's the path you pass when you create it.
+
+To call `log()` and `error()` from your routes, pass the context to Hono as its environment with `app.fetch(req.raw, context)`, then use `c.env.log()` inside a route.
 
 ## Logging {% #logging %}
 To protect user privacy, the request and response objects are not logged to the Appwrite Console by default.

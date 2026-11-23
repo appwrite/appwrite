@@ -3035,7 +3035,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Develop Appwrite Functions",
     "description": "Master serverless function development with Appwrite. Learn how to write and test functions locally, debug code, and optimize for efficient execution.",
     "layout": "article",
-    "readingTimeMinutes": 11
+    "readingTimeMinutes": 13
   },
   {
     "slug": "products/functions/develop-locally",

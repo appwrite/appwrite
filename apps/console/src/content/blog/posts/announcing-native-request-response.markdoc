@@ -1,0 +1,281 @@
+---
+layout: post
+title: "Announcing native Request and Response in JS functions"
+description: JavaScript functions on Node.js, Bun, and Deno can now read a Fetch API Request and return a Response, so code written for the Fetch API runs in them as is.
+date: 2026-11-24
+cover: /images/blog/announcing-native-request-response/cover.avif
+timeToRead: 6
+author: aditya-oberai
+category: announcements
+featured: false
+faqs:
+  - question: "How do I return a Response object from an Appwrite Function?"
+    answer: "In Node.js 18 and later, Bun, and Deno, return a Fetch API `Response`, such as `return new Response('Hello', { status: 200 })`. Appwrite sends its status, headers, and body to the client, and a `ReadableStream` body is streamed. See [Return a response](/docs/products/functions/develop#native-response)."
+  - question: "How do I get the Fetch API Request in an Appwrite Function?"
+    answer: "Read `context.req.raw`. It returns a `Request` with the same URL, method, headers, and body as `context.req`. You can read its body once, and `context.req.bodyText`, `bodyJson`, and `bodyBinary` keep working after you do. See [Read the request](/docs/products/functions/develop#native-request)."
+  - question: "Which runtimes support native Request and Response?"
+    answer: "Node.js 18 and later, every Bun version, and every Deno version. The deprecated `node-14.5` and `node-16.0` runtimes don't have the `Request` and `Response` classes, so functions on those runtimes keep using `context.req` and the `context.res` methods."
+  - question: "Do I have to change my existing functions?"
+    answer: "No. `context.req` and the `context.res` methods work exactly as before. One function can also mix both, for example by reading a form from `context.req.raw` and answering with `context.res.json()`."
+  - question: "Does Appwrite have a Hono integration?"
+    answer: "No integration is needed. Hono's `app.fetch()` takes a `Request` and returns a `Response`, so a function that exports `async ({ req }) => app.fetch(req.raw)` runs a Hono app. Any other framework that exposes its app as a function from `Request` to `Response` works the same way."
+  - question: "How do I use log() and the Appwrite API key inside Hono routes?"
+    answer: "Appwrite headers such as `x-appwrite-key` and `x-appwrite-user-id` are on the request, so a route reads them with `c.req.header()`. To log, pass the function context to Hono with `app.fetch(req.raw, context)` and call `c.env.log()` inside a route."
+---
+
+Most JavaScript runtimes and frameworks now handle HTTP requests the same way. A handler takes a [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) and returns a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response). `Bun.serve()`, `Deno.serve()`, and Cloudflare Workers work that way, and so do frameworks built on the same classes, such as Hono.
+
+Appwrite Functions had their own shape. `context.req` held the parsed request, and you built the answer with `context.res.text()` or `context.res.json()`. That works for a single endpoint, but code written for the Fetch API needed an adapter before it could run in a function. Even reading a multipart form meant wrapping `req.bodyBinary` in a temporary `Response` just to call `formData()` on it.
+
+Today, we are announcing **native Request and Response support in JavaScript functions**. In Node.js 18 and later, Bun, and Deno, `context.req.raw` gives you the incoming request as a Fetch API `Request`, and your function can return a `Response` instead of calling a `context.res` method.
+
+# What native Request and Response give you
+
+- **The standard request methods.** `context.req.raw` is a real `Request`, so `formData()`, `json()`, `text()`, `arrayBuffer()`, and `blob()` all work on it, including for multipart uploads.
+- **Responses you build yourself.** Return `new Response(body, { status, headers })` and Appwrite sends it to the client as written.
+- **Responses built by other libraries.** If a library returns a `Response`, your function can return it as is. A `ReadableStream` body is streamed to the client, the same way as [`res.sendStream()`](/blog/post/announcing-streaming-responses).
+- **Frameworks built on the Fetch API.** A framework whose app takes a `Request` and returns a `Response`, such as Hono, now runs in a function without an adapter.
+- **Nothing to migrate.** `context.req` and `context.res` work as before, and a function can use both.
+
+# Use Request and Response in Node.js, Bun, and Deno
+
+This function reads a form from `context.req.raw` and answers with a `Response`. It uses only the classes built into the runtime, with no Appwrite helpers.
+
+{% multicode %}
+```server-nodejs
+export default async ({ req }) => {
+    if (req.method !== 'POST') {
+        return new Response('Send the form with POST', { status: 405 });
+    }
+
+    const form = await req.raw.formData();
+    const name = form.get('name');
+
+    return new Response(`Hello, ${name}!`, {
+        headers: { 'content-type': 'text/plain' }
+    });
+};
+```
+```bun
+export default async ({ req }) => {
+    if (req.method !== 'POST') {
+        return new Response('Send the form with POST', { status: 405 });
+    }
+
+    const form = await req.raw.formData();
+    const name = form.get('name');
+
+    return new Response(`Hello, ${name}!`, {
+        headers: { 'content-type': 'text/plain' }
+    });
+};
+```
+```deno
+export default async ({ req }: any) => {
+    if (req.method !== "POST") {
+        return new Response("Send the form with POST", { status: 405 });
+    }
+
+    const form = await req.raw.formData();
+    const name = form.get("name");
+
+    return new Response(`Hello, ${name}!`, {
+        headers: { "content-type": "text/plain" }
+    });
+};
+```
+{% /multicode %}
+
+`context.req.raw` has the same URL, method, headers, and body as `context.req`, including Appwrite headers such as `x-appwrite-key` and `x-appwrite-user-id`. You can read its body once, like any `Request`, and `req.bodyText`, `req.bodyJson`, and `req.bodyBinary` keep working after you do. `formData()` parses URL-encoded HTML forms and multipart uploads, and `form.get('file')` returns a `File` with its name, type, and contents.
+
+Until now, reading a multipart body meant building a `Response` around the raw bytes, as the [email trigger](/docs/products/functions/email) examples do. With `context.req.raw`, it's one call:
+
+{% tabs %}
+{% tabsitem #form-after title="After" %}
+
+```server-nodejs
+const form = await req.raw.formData();
+```
+
+{% /tabsitem %}
+
+{% tabsitem #form-before title="Before" %}
+
+```server-nodejs
+const form = await new Response(req.bodyBinary, {
+    headers: { 'content-type': req.headers['content-type'] }
+}).formData();
+```
+
+{% /tabsitem %}
+{% /tabs %}
+
+# Return the Response a library builds
+
+Some libraries finish their work by building a `Response`. The [Vercel AI SDK](https://ai-sdk.dev) is one. In the [streaming announcement](/blog/post/announcing-streaming-responses), we passed its text stream to `res.sendStream()`. Now the function can return the SDK's own response:
+
+{% multicode %}
+```server-nodejs
+import { streamText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+export default async ({ req }) => {
+    const result = streamText({
+        model: openai('gpt-5-mini'),
+        prompt: req.bodyJson.prompt
+    });
+
+    return result.toTextStreamResponse();
+};
+```
+```bun
+import { streamText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+export default async ({ req }) => {
+    const result = streamText({
+        model: openai('gpt-5-mini'),
+        prompt: req.bodyJson.prompt
+    });
+
+    return result.toTextStreamResponse();
+};
+```
+```deno
+import { streamText } from "npm:ai";
+import { openai } from "npm:@ai-sdk/openai";
+
+export default async ({ req }: any) => {
+    const result = streamText({
+        model: openai("gpt-5-mini"),
+        prompt: req.bodyJson.prompt
+    });
+
+    return result.toTextStreamResponse();
+};
+```
+{% /multicode %}
+
+Its body is a `ReadableStream`, so the reply reaches the browser as the model writes it. The same streaming rules apply as for `sendStream()`. Clients see the chunks when they call the function through its domain, and the stream ends at the function's timeout or after 60 seconds, whichever comes first.
+
+# Run Fetch API frameworks such as Hono
+
+Appwrite doesn't ship an integration for any particular framework, and it doesn't need one. A framework built on the Fetch API exposes your app as a single function that takes a `Request` and returns a `Response`. That's the same shape `Bun.serve()` and `Deno.serve()` call. Until now, running one of these frameworks in a function meant writing an adapter that turned `context.req` into a `Request` and copied the `Response` back into a `context.res` call. Now you pass `context.req.raw` in and return what comes out:
+
+{% tabs %}
+{% tabsitem #framework-after title="After" %}
+
+```server-nodejs
+export default async ({ req }) => app.fetch(req.raw);
+```
+
+{% /tabsitem %}
+
+{% tabsitem #framework-before title="Before" %}
+
+```server-nodejs
+export default async ({ req, res }) => {
+    const request = new Request(req.url, {
+        method: req.method,
+        headers: req.headers,
+        body: ['GET', 'HEAD'].includes(req.method) ? undefined : req.bodyBinary
+    });
+
+    const response = await app.fetch(request);
+    const body = Buffer.from(await response.arrayBuffer());
+
+    return res.binary(body, response.status, Object.fromEntries(response.headers));
+};
+```
+
+{% /tabsitem %}
+{% /tabs %}
+
+[Hono](https://hono.dev) is one of these frameworks. Its `app.fetch()` method is that single function, so the whole integration is the last line of this function:
+
+{% multicode %}
+```server-nodejs
+import { Hono } from 'hono';
+
+const app = new Hono();
+
+app.get('/', (c) => c.text('Hello from Hono!'));
+
+app.get('/me', (c) => {
+    const userId = c.req.header('x-appwrite-user-id');
+    if (!userId) {
+        return c.json({ message: 'Sign in first' }, 401);
+    }
+
+    return c.json({ userId });
+});
+
+export default async ({ req }) => app.fetch(req.raw);
+```
+```bun
+import { Hono } from 'hono';
+
+const app = new Hono();
+
+app.get('/', (c) => c.text('Hello from Hono!'));
+
+app.get('/me', (c) => {
+    const userId = c.req.header('x-appwrite-user-id');
+    if (!userId) {
+        return c.json({ message: 'Sign in first' }, 401);
+    }
+
+    return c.json({ userId });
+});
+
+export default async ({ req }) => app.fetch(req.raw);
+```
+```deno
+import { Hono } from "npm:hono";
+
+const app = new Hono();
+
+app.get("/", (c) => c.text("Hello from Hono!"));
+
+app.get("/me", (c) => {
+    const userId = c.req.header("x-appwrite-user-id");
+    if (!userId) {
+        return c.json({ message: "Sign in first" }, 401);
+    }
+
+    return c.json({ userId });
+});
+
+export default async ({ req }: any) => app.fetch(req.raw);
+```
+{% /multicode %}
+
+Add `hono` to your `package.json` in Node.js and Bun. Deno imports it with an `npm:` specifier. A few details make this fit the rest of Appwrite Functions:
+
+- **Routes match the request path.** A request to the function's [domain](/docs/products/functions/domains) uses the path in its URL. An [execution](/docs/products/functions/execute) created from an SDK uses the path you pass when you create it, so a signed-in user can call `/me` from your app.
+- **Appwrite headers come along.** `x-appwrite-key`, `x-appwrite-user-id`, `x-appwrite-trigger`, and the other [function headers](/docs/products/functions/develop#headers) are on the `Request`, so routes read them with `c.req.header()`.
+- **Logging still works.** Pass the function context as Hono's environment with `app.fetch(req.raw, context)`, then call `c.env.log()` or `c.env.error()` inside a route.
+
+Any other framework that exposes its app as a function from `Request` to `Response` works the same way.
+
+# When to use native Request and Response
+
+Reach for `context.req.raw` and `Response` when:
+
+- You need `formData()` or another standard body parser.
+- A library you use takes a `Request` or returns a `Response`.
+- You're moving a handler from `Bun.serve()`, `Deno.serve()`, or Cloudflare Workers and want to keep its `Request` in, `Response` out shape.
+- One function serves several routes and you want a framework such as Hono instead of a hand-written `switch` on `req.path`.
+
+Stay with `context.req` and `context.res` when the function is a single endpoint. `req.bodyJson` and `res.json()` are shorter than parsing and building the objects yourself. The `context.res` methods also look the same in every Appwrite runtime, which helps if your team writes functions in more than one language.
+
+One limit to know about. If a returned `Response` sets more than one cookie, use `node-20.0` or later, Bun, or Deno. Earlier Node.js versions join the cookies into a single `set-cookie` header, and browsers don't split it back into separate cookies.
+
+# Getting started with native Request and Response
+
+Native Request and Response support is available on Appwrite Cloud today in the Node.js 18 and later, Bun, and Deno runtimes. Pick one of those runtimes, read the request from `req.raw`, and return a `Response` when that's simpler than a `context.res` method.
+
+- [Native request and response in Functions](/docs/products/functions/develop#native-request-response)
+- [Streaming responses in Functions](/docs/products/functions/develop#streaming-responses)
+- [Function runtimes](/docs/products/functions/runtimes)
+- [Sign up for Appwrite Cloud](https://cloud.appwrite.io)
