@@ -167,12 +167,18 @@ export function ImportWizardView() {
     const url = new URL(window.location.href)
     const outcome = url.searchParams.get(SUPABASE_CONNECT_PARAM)
     if (!outcome) return
+    const reason = url.searchParams.get('error')
     url.searchParams.delete(SUPABASE_CONNECT_PARAM)
+    url.searchParams.delete('error')
     window.history.replaceState(window.history.state, '', url.toString())
     setProvider('Supabase')
     setStep(2)
     if (outcome === 'failed') {
-      toast.error(t('Supabase did not grant access'))
+      toast.error(
+        reason === 'already_connected'
+          ? t('This Supabase account is connected to another console user')
+          : t('Supabase did not grant access'),
+      )
     }
   }, [t])
 
