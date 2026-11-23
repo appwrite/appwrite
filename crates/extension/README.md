@@ -568,10 +568,29 @@ two that read the PHP class's source and private state and are skipped there. ut
 10.2.3 subclasses four of the builders, overrides 23 of their methods and serializes queries for its
 cache keys. Its 13,217 unit tests give the same result on the native builders as on PHP.
 
-A typical read (five queries, three columns) builds in 3.7 µs against PHP's 11 µs, and in 3.9 µs
-against 10.6 µs through utopia-php/database's MySQL builder. Its PostgreSQL builder overrides
-`compileFilter()` in PHP, and takes 6.1 µs against 11.1 µs. Measured on an M-series Mac without the
-JIT, before the last hundred methods moved.
+Microseconds per call, release build, OPcache on, no JIT, an M-series Mac, median of seven runs.
+A read is five queries and three columns. `Database\*` is utopia-php/database 10.2.3's subclass.
+
+| operation | PHP | Rust | Rust/PHP |
+|---|---:|---:|---:|
+| read, `Builder\MySQL` | 10.88 | 3.74 | 0.34 |
+| read, `Database\Builder\MySQL` | 10.76 | 3.82 | 0.36 |
+| read, `Builder\PostgreSQL` | 10.65 | 3.65 | 0.34 |
+| read, `Database\Builder\Postgres` | 11.25 | 6.31 | 0.56 |
+| read, `Database\Builder\SQLite` | 11.00 | 4.87 | 0.44 |
+| read, `Builder\ClickHouse` | 8.73 | 3.56 | 0.41 |
+| read, `Builder\MongoDB` | 6.65 | 4.46 | 0.67 |
+| join, aggregate, group, having | 9.55 | 2.91 | 0.30 |
+| update | 3.56 | 1.91 | 0.54 |
+| delete | 2.74 | 1.29 | 0.47 |
+| insert, one row | 2.14 | 1.49 | 0.70 |
+| insert, ten rows | 7.41 | 6.80 | 0.92 |
+| upsert | 2.21 | 1.73 | 0.78 |
+| a new builder, `from()`, `build()` | 1.89 | 0.90 | 0.48 |
+
+The database library's Postgres and SQLite builders override `compileFilter()` and its helpers in
+PHP, so each filter crosses into PHP and back. An insert is mostly its rows crossing from PHP: ten
+rows take almost as long as PHP's own.
 
 ## Utopia\Validator\Validator
 
