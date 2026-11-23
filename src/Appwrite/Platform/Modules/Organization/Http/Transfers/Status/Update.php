@@ -49,6 +49,8 @@ class Update extends Action
                 name: 'updateProjectTransferStatus',
                 description: <<<EOT
                 Claim a project with the transfer ID and secret its owner shared with you. The project moves to your organization, and the transfer can't be used again.
+
+                The project's API keys are deleted, because the previous owner may still hold them. Create new keys for the project once you have claimed it.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::ORGANIZATION],
                 responses: [
@@ -141,6 +143,12 @@ class Update extends Action
             foreach (['installations', 'repositories', 'vcsComments'] as $collection) {
                 $this->updatePermissions($collection, $project, $permissions, $dbForPlatform);
             }
+
+            // The previous owner may still hold copies of the project's keys, so they stop working
+            $dbForPlatform->deleteDocuments('keys', [
+                Query::equal('resourceType', ['projects']),
+                Query::equal('resourceInternalId', [$project->getSequence()]),
+            ]);
 
             // Other links for this project were issued by the previous owner, so they stop working
             $dbForPlatform->deleteDocuments('transfers', [
