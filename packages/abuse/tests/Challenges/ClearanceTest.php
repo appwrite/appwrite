@@ -52,6 +52,27 @@ final class ClearanceTest extends TestCase
         yield 'a field it was not bound to' => ['session', 's1'];
     }
 
+    public function testVerifyingWithPartOfTheBindingIsRejected(): void
+    {
+        // Leaving a field out must not drop it from the check.
+        $clearance = $this->clearance();
+        $issued = $clearance->issue(self::BINDING);
+
+        $partial = self::BINDING;
+        unset($partial['ua']);
+        $this->assertFalse($clearance->verify($issued, $partial));
+        $this->assertFalse($clearance->verify($issued, []));
+    }
+
+    public function testAnUnboundClearanceOnlyVerifiesWithoutABinding(): void
+    {
+        $clearance = $this->clearance();
+        $issued = $clearance->issue([]);
+
+        $this->assertTrue($clearance->verify($issued, []));
+        $this->assertFalse($clearance->verify($issued, ['ip' => '203.0.113.0/24']));
+    }
+
     public function testAnEmptyBindingValueOnlyMatchesAnEmptyValue(): void
     {
         $clearance = $this->clearance();
@@ -76,6 +97,7 @@ final class ClearanceTest extends TestCase
         $old = new JWT(\hash_hmac('sha256', 'label', self::SECRET), 'HS256', 1800, 0)->encode([
             Token::PURPOSE_CLAIM => 'clearance',
             ...self::BINDING,
+            Token::BINDING_CLAIM => ['ip', 'project', 'resource', 'ua'],
             Clearance::DIFFICULTY_CLAIM => 18,
             Clearance::ISSUED_AT_CLAIM => \time() - 1000,
             'exp' => \time() + 3600,
@@ -86,6 +108,20 @@ final class ClearanceTest extends TestCase
         $this->assertFalse($clearance->verify($old, self::BINDING, 18, 900));
         // No age limit when maxAge is 0.
         $this->assertTrue($clearance->verify($old, self::BINDING, 18));
+    }
+
+    public function testATokenThatDoesNotRecordItsBindingIsRejected(): void
+    {
+        // Without the recorded names there is no way to tell which fields were bound.
+        $legacy = new JWT(\hash_hmac('sha256', 'label', self::SECRET), 'HS256', 1800, 0)->encode([
+            Token::PURPOSE_CLAIM => 'clearance',
+            ...self::BINDING,
+            Clearance::DIFFICULTY_CLAIM => 18,
+            Clearance::ISSUED_AT_CLAIM => \time(),
+            'exp' => \time() + 1800,
+        ]);
+
+        $this->assertFalse($this->clearance()->verify($legacy, self::BINDING));
     }
 
     public function testAClearanceMissingItsDifficultyOrIssueTimeIsRejected(): void

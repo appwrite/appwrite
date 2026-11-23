@@ -174,6 +174,18 @@ final class ProofOfWorkTest extends TestCase
         $this->assertSame(Status::Valid, $pow->verify($puzzle->token, $solution, self::BINDING)->status);
     }
 
+    public function testVerifyingWithPartOfTheBindingIsRejected(): void
+    {
+        $pow = $this->pow();
+        $puzzle = $pow->issue(8, self::BINDING);
+        $solution = $this->solve($puzzle->nonce, 8);
+
+        $this->assertSame(Status::BindingMismatch, $pow->verify($puzzle->token, $solution, ['ip' => self::BINDING['ip']])->status);
+        $this->assertSame(Status::BindingMismatch, $pow->verify($puzzle->token, $solution)->status);
+        // Neither attempt used the nonce.
+        $this->assertSame(Status::Valid, $pow->verify($puzzle->token, $solution, self::BINDING)->status);
+    }
+
     public function testBindingIsMissingFromTheToken(): void
     {
         $pow = $this->pow();

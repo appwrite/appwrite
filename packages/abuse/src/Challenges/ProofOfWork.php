@@ -36,8 +36,8 @@ final readonly class ProofOfWork
     }
 
     /**
-     * Sign a puzzle. The binding must match on verify; claims are carried
-     * through and returned by verify.
+     * Sign a puzzle. Verify must pass the same binding, every field of it;
+     * claims are carried through and returned by verify.
      *
      * @param  array<string, string>  $binding
      * @param  array<string, string|int>  $claims
@@ -56,25 +56,22 @@ final readonly class ProofOfWork
                 throw new \InvalidArgumentException("claim '{$name}' is reserved");
             }
         }
-        if (\array_intersect_key($binding, $claims) !== []) {
-            throw new \InvalidArgumentException('binding and claims must not share names');
-        }
 
         $nonce = \bin2hex(\random_bytes(16));
         $token = $this->token->issue([
             'nonce' => $nonce,
             'difficulty' => $difficulty,
             ...$claims,
-            ...$binding,
             'iatMs' => (int) (\microtime(true) * 1000),
-        ]);
+        ], binding: $binding);
 
         return new Puzzle($token, $nonce, $difficulty);
     }
 
     /**
-     * Verify a solution. The binding is checked before the nonce is used, so a
-     * token presented by another client never spends the owner's attempt.
+     * Verify a solution. The binding (the same fields as at issue) is checked
+     * before the nonce is used, so a token presented by another client never
+     * spends the owner's attempt.
      *
      * @param  array<string, string>  $binding
      */
@@ -85,10 +82,8 @@ final readonly class ProofOfWork
             return new Result(Status::InvalidToken);
         }
 
-        foreach ($binding as $name => $value) {
-            if (($claims[$name] ?? null) !== $value) {
-                return new Result(Status::BindingMismatch);
-            }
+        if (!Token::isBoundTo($claims, $binding)) {
+            return new Result(Status::BindingMismatch);
         }
 
         $nonce = $claims['nonce'] ?? null;

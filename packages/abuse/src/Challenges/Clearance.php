@@ -22,7 +22,7 @@ final readonly class Clearance
     }
 
     /**
-     * @param  array<string, string>  $binding  Must match exactly on verify
+     * @param  array<string, string>  $binding  Verify must pass the same fields and values
      * @param  int  $difficulty  The difficulty of the challenge that was passed
      * @param  int  $ttl  Lifetime in seconds; 0 or less uses the token's default
      * @param  array<string, string|int>  $claims  Carried along, not checked
@@ -36,21 +36,18 @@ final readonly class Clearance
                 throw new \InvalidArgumentException("claim '{$name}' is reserved");
             }
         }
-        if (\array_intersect_key($binding, $claims) !== []) {
-            throw new \InvalidArgumentException('binding and claims must not share names');
-        }
 
         return $this->token->issue([
             ...$claims,
-            ...$binding,
             self::DIFFICULTY_CLAIM => $difficulty,
             // Not `iat`: the JWT library would expire the token at iat + its fixed max age
             self::ISSUED_AT_CLAIM => \time(),
-        ], $ttl);
+        ], $ttl, $binding);
     }
 
     /**
-     * True when the clearance is valid and unexpired, its binding matches, it
+     * True when the clearance is valid and unexpired, it is bound to exactly
+     * this binding (every field, same values), it
      * was earned at no less than $difficulty, and it is younger than $maxAge
      * seconds (no age limit when $maxAge is 0 or less). A mismatch returns false
      * so the caller challenges again rather than blocking.
@@ -64,10 +61,8 @@ final readonly class Clearance
             return false;
         }
 
-        foreach ($binding as $name => $value) {
-            if (($claims[$name] ?? null) !== $value) {
-                return false;
-            }
+        if (!Token::isBoundTo($claims, $binding)) {
+            return false;
         }
 
         $passed = $claims[self::DIFFICULTY_CLAIM] ?? null;

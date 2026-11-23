@@ -101,6 +101,40 @@ final class TokenTest extends TestCase
         $this->assertGreaterThanOrEqual($before + 3600, $claims['exp']);
     }
 
+    public function testTheBindingIsStoredWithItsNames(): void
+    {
+        $token = $this->token();
+        $claims = $token->verify($token->issue(['a' => 'b'], binding: ['ua' => 'u', 'ip' => 'i']));
+
+        $this->assertIsArray($claims);
+        $this->assertSame('i', $claims['ip']);
+        $this->assertSame(['ip', 'ua'], $claims[Token::BINDING_CLAIM]);
+    }
+
+    public function testIsBoundToRequiresTheSameNamesAndValues(): void
+    {
+        $token = $this->token();
+        $claims = $token->verify($token->issue([], binding: ['ip' => 'i', 'ua' => 'u']));
+        $this->assertIsArray($claims);
+
+        $this->assertTrue(Token::isBoundTo($claims, ['ua' => 'u', 'ip' => 'i']));
+        $this->assertFalse(Token::isBoundTo($claims, ['ip' => 'i']));
+        $this->assertFalse(Token::isBoundTo($claims, []));
+        $this->assertFalse(Token::isBoundTo($claims, ['ip' => 'i', 'ua' => 'other']));
+        $this->assertFalse(Token::isBoundTo($claims, ['ip' => 'i', 'ua' => 'u', 'extra' => 'x']));
+        // A claim that is not part of the binding cannot stand in for it.
+        $claims = $token->verify($token->issue(['ip' => 'i']));
+        $this->assertIsArray($claims);
+        $this->assertFalse(Token::isBoundTo($claims, ['ip' => 'i']));
+        $this->assertTrue(Token::isBoundTo($claims, []));
+    }
+
+    public function testBindingAndClaimsMustNotShareNames(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->token()->issue(['ip' => 'a'], binding: ['ip' => 'b']);
+    }
+
     #[DataProvider('reservedClaims')]
     public function testReservedClaimsAreRefused(string $name): void
     {
@@ -116,6 +150,7 @@ final class TokenTest extends TestCase
         yield 'purpose' => [Token::PURPOSE_CLAIM];
         yield 'expiry' => [Token::EXPIRY_CLAIM];
         yield 'issued at' => ['iat'];
+        yield 'binding names' => [Token::BINDING_CLAIM];
     }
 
     /**

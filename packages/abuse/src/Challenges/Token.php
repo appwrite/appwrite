@@ -17,6 +17,9 @@ final readonly class Token
 
     public const string EXPIRY_CLAIM = 'exp';
 
+    /** Names of the claims that form the binding, so verify can require all of them. */
+    public const string BINDING_CLAIM = 'binding';
+
     private JWT $jwt;
 
     /**
@@ -47,24 +50,35 @@ final readonly class Token
     }
 
     /**
-     * Sign the claims with this token's purpose and an expiry.
+     * Sign the claims with this token's purpose and an expiry, bound to the
+     * given fields. The binding's values are stored as claims and its names
+     * recorded, so {@see isBoundTo()} can require the whole binding.
      *
      * @param  array<string, string|int>  $claims
      * @param  int  $ttl  Lifetime in seconds; 0 or less uses the default
+     * @param  array<string, string>  $binding
      *
-     * @throws \InvalidArgumentException when a claim uses a reserved name
+     * @throws \InvalidArgumentException when a name is reserved or used by both claims and binding
      */
-    public function issue(array $claims, int $ttl = 0): string
+    public function issue(array $claims, int $ttl = 0, array $binding = []): string
     {
-        foreach ([self::PURPOSE_CLAIM, self::EXPIRY_CLAIM, 'iat'] as $reserved) {
-            if (\array_key_exists($reserved, $claims)) {
-                throw new \InvalidArgumentException("claim '{$reserved}' is reserved");
+        foreach ([...\array_keys($claims), ...\array_keys($binding)] as $name) {
+            if (\in_array($name, [self::PURPOSE_CLAIM, self::EXPIRY_CLAIM, self::BINDING_CLAIM, 'iat'], true)) {
+                throw new \InvalidArgumentException("claim '{$name}' is reserved");
             }
         }
+        if (\array_intersect_key($binding, $claims) !== []) {
+            throw new \InvalidArgumentException('binding and claims must not share names');
+        }
+
+        $names = \array_keys($binding);
+        \sort($names);
 
         return $this->jwt->encode([
             self::PURPOSE_CLAIM => $this->purpose,
             ...$claims,
+            ...$binding,
+            self::BINDING_CLAIM => $names,
             self::EXPIRY_CLAIM => \time() + ($ttl > 0 ? $ttl : $this->ttl),
         ]);
     }
@@ -92,5 +106,29 @@ final readonly class Token
         }
 
         return $claims;
+    }
+
+    /**
+     * True when the verified claims are bound to exactly this binding: the same
+     * field names, each with the same value. Leaving a field out fails, so a
+     * caller cannot drop part of the binding by accident.
+     *
+     * @param  array<mixed>  $claims  From {@see verify()}
+     * @param  array<string, string>  $binding
+     */
+    public static function isBoundTo(array $claims, array $binding): bool
+    {
+        $names = $claims[self::BINDING_CLAIM] ?? null;
+        if (!\is_array($names)) {
+            return false;
+        }
+
+        $expected = \array_keys($binding);
+        \sort($expected);
+        if ($names !== $expected) {
+            return false;
+        }
+
+        return \array_all($binding, fn (string $value, string $name): bool => ($claims[$name] ?? null) === $value);
     }
 }
