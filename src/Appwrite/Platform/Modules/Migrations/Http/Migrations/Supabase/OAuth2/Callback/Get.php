@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\Supabase\OAuth2\Callback;
 
 use Appwrite\Auth\EncryptionKey;
-use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Migrations\Http\Migrations\Supabase\Base;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
@@ -43,6 +42,7 @@ class Get extends Base
             ->inject('user')
             ->inject('dbForPlatform')
             ->inject('clientForOAuth2')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -55,6 +55,7 @@ class Get extends Base
         User $user,
         Database $dbForPlatform,
         Client $clientForOAuth2,
+        array $platform,
     ): void {
         $oauth2 = $this->oauth2($clientForOAuth2, $request);
         $state = $oauth2->parseState($state) ?? [];
@@ -62,8 +63,11 @@ class Get extends Base
         $nonce = $state['nonce'] ?? '';
         $binding = $state['binding'] ?? '';
 
+        // A state this user did not start is not trusted, so neither are the URLs inside it
         if (!\is_string($nonce) || !\is_string($binding) || $nonce === '' || !\hash_equals(\hash_hmac('sha256', $nonce . ':' . $user->getId(), EncryptionKey::current()), $binding)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This Supabase connection was started by another session. Start it again from the console.');
+            $this->redirect($response, $platform['consoleUrl'] ?? '');
+
+            return;
         }
 
         // Both URLs passed the console hostname check before they went into the state
@@ -71,10 +75,7 @@ class Get extends Base
         $failure = $state['failure'] ?? '';
 
         if ($error !== '' || $code === '') {
-            $response
-                ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-                ->addHeader('Pragma', 'no-cache')
-                ->redirect($failure);
+            $this->redirect($response, $failure, 'access_denied');
 
             return;
         }
@@ -85,11 +86,15 @@ class Get extends Base
             $expiry = $oauth2->getAccessTokenExpiry($code);
             $accountId = $oauth2->getUserID($accessToken);
         } catch (\Throwable) {
-            throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Supabase did not grant access. Try connecting your Supabase account again.');
+            $this->redirect($response, $failure, 'access_denied');
+
+            return;
         }
 
         if ($accessToken === '' || $refreshToken === '' || $accountId === '') {
-            throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Supabase did not grant access. Try connecting your Supabase account again.');
+            $this->redirect($response, $failure, 'access_denied');
+
+            return;
         }
 
         $identity = $dbForPlatform->findOne('identities', [
@@ -98,7 +103,9 @@ class Get extends Base
         ]);
 
         if (!$identity->isEmpty() && $identity->getAttribute('userInternalId') !== $user->getSequence()) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This Supabase account is connected to another console user.');
+            $this->redirect($response, $failure, 'already_connected');
+
+            return;
         }
 
         $tokens = [
@@ -127,9 +134,21 @@ class Get extends Base
             $dbForPlatform->updateDocument('identities', $identity->getId(), new Document($tokens));
         }
 
+        $this->redirect($response, $success);
+    }
+
+    /**
+     * Back to the console, with the reason on a failure so the wizard can say what went wrong
+     */
+    private function redirect(Response $response, string $url, string $error = ''): void
+    {
+        if ($error !== '') {
+            $url .= (\str_contains($url, '?') ? '&' : '?') . \http_build_query(['error' => $error]);
+        }
+
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect($success);
+            ->redirect($url);
     }
 }
