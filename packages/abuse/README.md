@@ -156,6 +156,13 @@ Puzzles last 120 seconds and clearances 30 minutes unless you pass a `ttl`. Toke
 **Adding a kind.** Extend `Challenge`, sign the claims your kind needs with `sign()`, and read them back with `claimsFrom()`, which already rejects invalid tokens and mismatched params:
 
 ```php
+<?php
+
+use Utopia\Abuse\Challenge;
+use Utopia\Abuse\Challenge\Prompt;
+use Utopia\Abuse\Challenge\Result;
+use Utopia\Abuse\Challenge\Status;
+
 final readonly class Riddle extends Challenge
 {
     public function __construct(string $secret, private string $answer)
