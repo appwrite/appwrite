@@ -23,9 +23,6 @@ enum Status: string
     /** The prompt was already answered: the submission is a replay. */
     case Replay = 'replay';
 
-    /** Too many attempts: the client must wait before trying again. */
-    case Limited = 'limited';
-
     /** A store the challenge needs could not be reached, and the challenge requires it. */
     case Unavailable = 'unavailable';
 }

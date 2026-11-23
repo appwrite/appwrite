@@ -153,20 +153,19 @@ if (!$clearance->withParams($client)->verify($cookie, difficulty: 18, maxAge: 18
 
 Puzzles last 120 seconds and clearances 30 minutes unless you pass a `ttl`. Tokens verify only with exactly the same params. A nonce store outage rejects the solution (`Status::Unavailable`) unless you pass `acceptWhenNoncesUnavailable: true`. To bind to a network rather than an exact IP, use `Identity`: `new Identity()->ipPrefix($ip)` gives the /24 (IPv4) or /48 (IPv6) the address belongs to, and `userAgentHash()` hashes the User-Agent.
 
-**Password.** `Password` asks for a password you set, e.g. on a firewall rule. Store it encrypted with `Password::encrypt()` (the same envelope as Appwrite's `encrypt` database filter) and pass the keys to decrypt it. Any rate-limit adapter can limit guesses; its key is filled from the prompt's params.
+**Password.** `Password` asks for a password you set, e.g. on a firewall rule. Store it encrypted with `Password::encrypt()` (the same envelope as Appwrite's `encrypt` database filter) and pass the keys to decrypt it. It does not limit guesses: rate-limit verify per client yourself, e.g. with a `TimeLimit` adapter.
 
 ```php
 <?php
 
-use Utopia\Abuse\Adapter\TimeLimit\Redis as TimeLimit;
 use Utopia\Abuse\Challenge\Password;
 
 $stored = Password::encrypt('open sesame', $key, version: '1');   // keep this, not the password
 
-$password = new Password('secret', $stored, keys: ['1' => $key], attempts: new TimeLimit('pw:{ip}', 5, 300, $redis));
+$password = new Password('secret', $stored, keys: ['1' => $key]);
 
 $prompt = $password->withParams($client)->issue();                       // render a form with $prompt->token
-$result = $password->withParams($client)->verify($token, $guess);        // Valid, Rejected or Limited
+$result = $password->withParams($client)->verify($token, $guess);        // Valid or Rejected
 
 // Tie the clearance to this version of the password, so changing it ends every clearance
 $pass = $clearance->withParams([...$client, 'version' => $password->version()])->issue();

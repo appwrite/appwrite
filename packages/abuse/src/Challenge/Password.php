@@ -2,16 +2,16 @@
 
 namespace Utopia\Abuse\Challenge;
 
-use Throwable;
-use Utopia\Abuse\Adapter;
 use Utopia\Abuse\Challenge;
 
 /**
  * Asks the client for a password the caller set, e.g. on a firewall rule. The
  * password is held encrypted, in the same envelope Appwrite's `encrypt` database
  * filter writes (AES-128-GCM, base64 data, hex IV and tag, key version), so it
- * is never stored or passed around in plaintext. Wrong guesses are limited by
- * any rate-limit adapter.
+ * is never stored or passed around in plaintext.
+ *
+ * It does not limit guesses: rate-limit verify() per client, e.g. with a
+ * TimeLimit adapter, before calling it.
  */
 final readonly class Password extends Challenge
 {
@@ -27,9 +27,7 @@ final readonly class Password extends Challenge
      * @param  string  $secret  Signing secret
      * @param  string  $password  The password, encrypted with {@see encrypt()} or Appwrite's `encrypt` filter
      * @param  array<array-key, string>  $keys  Decryption keys, keyed by version where known; others are tried in order during a rotation
-     * @param  Adapter|null  $attempts  Limits guesses; key placeholders such as "{ip}" are filled from the prompt's claims
      * @param  int  $ttl  Prompt lifetime in seconds
-     * @param  bool  $acceptWhenAttemptsUnavailable  When the limiter fails, check the password anyway instead of rejecting
      * @param  string  $label  Derives the signing key from the secret; keep it stable or issued prompts stop verifying
      * @param  string  $purpose  Stored in each prompt so no other kind of token passes as one
      *
@@ -39,9 +37,7 @@ final readonly class Password extends Challenge
         string $secret,
         private string $password,
         private array $keys,
-        private ?Adapter $attempts = null,
         int $ttl = self::DEFAULT_TTL,
-        private bool $acceptWhenAttemptsUnavailable = false,
         string $label = 'password',
         string $purpose = 'password',
     ) {
@@ -59,8 +55,7 @@ final readonly class Password extends Challenge
     }
 
     /**
-     * Check a guess. The attempt is counted before the password is compared, so
-     * a limited client learns nothing about its guess.
+     * Check a guess against the stored password.
      */
     #[\Override]
     public function verify(string $token, string $answer): Result
@@ -70,24 +65,7 @@ final readonly class Password extends Challenge
             return $claims;
         }
 
-        $error = null;
-        if ($this->attempts instanceof Adapter) {
-            try {
-                if ($this->attempts->withParams(self::keyParams($claims))->check()->limited) {
-                    return new Result(Status::Limited, $claims);
-                }
-            } catch (Throwable $e) {
-                if (!$this->acceptWhenAttemptsUnavailable) {
-                    return new Result(Status::Unavailable, $claims, error: $e);
-                }
-                // The limiter did not run; the password is still checked below.
-                $error = $e;
-            }
-        }
-
-        $status = $this->matches($answer) ? Status::Valid : Status::Rejected;
-
-        return new Result($status, $claims, error: $error);
+        return new Result($this->matches($answer) ? Status::Valid : Status::Rejected, $claims);
     }
 
     /**

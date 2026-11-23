@@ -3,12 +3,9 @@
 namespace Utopia\Abuse\Tests\Challenge;
 
 use PHPUnit\Framework\TestCase;
-use Utopia\Abuse\Adapter;
 use Utopia\Abuse\Challenge\Clearance;
 use Utopia\Abuse\Challenge\Password;
 use Utopia\Abuse\Challenge\Status;
-use Utopia\Abuse\Tests\TimeLimit\Memory;
-use Utopia\Abuse\Tests\TimeLimit\Store;
 
 final class PasswordTest extends TestCase
 {
@@ -31,9 +28,9 @@ final class PasswordTest extends TestCase
     /**
      * @param  array<array-key, string>  $keys
      */
-    private function password(string $encrypted = self::APPWRITE_ENCRYPTED, array $keys = ['1' => self::KEY], ?Adapter $attempts = null, bool $acceptWhenAttemptsUnavailable = false): Password
+    private function password(string $encrypted = self::APPWRITE_ENCRYPTED, array $keys = ['1' => self::KEY]): Password
     {
-        return new Password(self::SECRET, $encrypted, $keys, $attempts, acceptWhenAttemptsUnavailable: $acceptWhenAttemptsUnavailable);
+        return new Password(self::SECRET, $encrypted, $keys);
     }
 
     private function answer(Password $password, string $guess): Status
@@ -107,42 +104,6 @@ final class PasswordTest extends TestCase
 
         $this->assertSame(Status::InvalidToken, $this->password()->verify($other->token, self::PASSWORD)->status);
         $this->assertSame(Status::InvalidToken, $this->password()->verify($clearance, self::PASSWORD)->status);
-    }
-
-    public function testGuessesAreLimitedPerClient(): void
-    {
-        $store = new Store(\time());
-        $password = $this->password(attempts: new Memory('pw:{ip}', 2, 300, $store));
-
-        $this->assertSame(Status::Rejected, $this->answer($password, 'one'));
-        $this->assertSame(Status::Rejected, $this->answer($password, 'two'));
-        // Once limited, even the right password is refused.
-        $this->assertSame(Status::Limited, $this->answer($password, self::PASSWORD));
-
-        // The limiter key was filled from the prompt's params, so another network still has its attempts.
-        $other = $password->withParams([...self::CLIENT, 'ip' => '198.51.100.0/24']);
-        $this->assertSame(Status::Valid, $other->verify($other->issue()->token, self::PASSWORD)->status);
-    }
-
-    public function testALimiterOutageRejectsByDefault(): void
-    {
-        $bound = $this->password(attempts: new Unreachable('pw:{ip}', 5, 300))->withParams(self::CLIENT);
-        $result = $bound->verify($bound->issue()->token, self::PASSWORD);
-
-        $this->assertSame(Status::Unavailable, $result->status);
-        $this->assertInstanceOf(\RuntimeException::class, $result->error);
-    }
-
-    public function testALimiterOutageChecksThePasswordWhenTheCallerAcceptsIt(): void
-    {
-        $password = $this->password(attempts: new Unreachable('pw:{ip}', 5, 300), acceptWhenAttemptsUnavailable: true);
-
-        $bound = $password->withParams(self::CLIENT);
-        $valid = $bound->verify($bound->issue()->token, self::PASSWORD);
-        $this->assertSame(Status::Valid, $valid->status);
-        $this->assertInstanceOf(\RuntimeException::class, $valid->error);
-
-        $this->assertSame(Status::Rejected, $this->answer($password, 'wrong'));
     }
 
     public function testVersionChangesWhenThePasswordIsEncryptedAgain(): void
