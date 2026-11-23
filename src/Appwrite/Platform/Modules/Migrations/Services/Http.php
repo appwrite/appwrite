@@ -15,6 +15,11 @@ use Appwrite\Platform\Modules\Migrations\Http\Migrations\JSON\Imports\Create as 
 use Appwrite\Platform\Modules\Migrations\Http\Migrations\NHost\Create as CreateNHostMigration;
 use Appwrite\Platform\Modules\Migrations\Http\Migrations\NHost\Report\Get as GetNHostReport;
 use Appwrite\Platform\Modules\Migrations\Http\Migrations\Supabase\Create as CreateSupabaseMigration;
+use Appwrite\Platform\Modules\Migrations\Http\Migrations\Supabase\OAuth2\Callback\Get as GetSupabaseOAuth2Callback;
+use Appwrite\Platform\Modules\Migrations\Http\Migrations\Supabase\OAuth2\Delete as DeleteSupabaseOAuth2;
+use Appwrite\Platform\Modules\Migrations\Http\Migrations\Supabase\OAuth2\Get as GetSupabaseOAuth2;
+use Appwrite\Platform\Modules\Migrations\Http\Migrations\Supabase\Projects\Credentials\Create as CreateSupabaseProjectCredentials;
+use Appwrite\Platform\Modules\Migrations\Http\Migrations\Supabase\Projects\XList as ListSupabaseProjects;
 use Appwrite\Platform\Modules\Migrations\Http\Migrations\Supabase\Report\Get as GetSupabaseReport;
 use Appwrite\Platform\Modules\Migrations\Http\Migrations\Update as UpdateMigration;
 use Appwrite\Platform\Modules\Migrations\Http\Migrations\XList as ListMigrations;
@@ -43,6 +48,11 @@ class Http extends Service
         // Supabase source
         $this->addAction('createSupabaseMigration', CreateSupabaseMigration::class);
         $this->addAction('getSupabaseReport', GetSupabaseReport::class);
+        $this->addAction('getSupabaseOAuth2', GetSupabaseOAuth2::class);
+        $this->addAction('getSupabaseOAuth2Callback', GetSupabaseOAuth2Callback::class);
+        $this->addAction('deleteSupabaseOAuth2', DeleteSupabaseOAuth2::class);
+        $this->addAction('listSupabaseProjects', ListSupabaseProjects::class);
+        $this->addAction('createSupabaseProjectCredentials', CreateSupabaseProjectCredentials::class);
 
         // NHost source
         $this->addAction('createNHostMigration', CreateNHostMigration::class);
