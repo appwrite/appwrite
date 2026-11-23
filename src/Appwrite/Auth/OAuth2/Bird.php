@@ -130,7 +130,8 @@ class Bird extends OAuth2
      * the consent screen says so, `/v1/auth/me` refuses integration tokens,
      * and the token response names the workspace instead of a user. The
      * workspace is therefore the identity, so within a project one Appwrite
-     * user can link a given Bird workspace.
+     * user can link a given Bird workspace. Every member of the workspace
+     * gets the same ID, so it cannot sign anyone in (see isLinkOnly()).
      *
      * @param string $accessToken
      *
@@ -139,6 +140,17 @@ class Bird extends OAuth2
     public function getUserID(string $accessToken): string
     {
         return (string) ($this->tokens['workspace_id'] ?? $this->getWorkspace($accessToken)['id'] ?? '');
+    }
+
+    /**
+     * The workspace ID is shared by everyone in the workspace, so it can only
+     * attach to an account that is already signed in.
+     *
+     * @return bool
+     */
+    public function isLinkOnly(): bool
+    {
+        return true;
     }
 
     /**

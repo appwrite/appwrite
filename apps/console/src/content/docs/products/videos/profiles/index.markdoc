@@ -29,7 +29,7 @@ New projects have no profiles. Create the ones you need before you encode your f
 | `width`, `height` | Target picture size in pixels |
 | `videoBitRate` | Target video bitrate in **kilobits per second** |
 | `audioBitRate` | Target audio bitrate in **kilobits per second** |
-| `codec` | Video codec. Defaults to `h264` (H.264), the only codec available today. `GET /v1/videos/codecs` lists the codecs you can use |
+| `codec` | Video codec. Defaults to `h264` (H.264), the only codec available today. `videos.listCodecs()` lists the codecs you can use |
 
 Width and height can be from 16 to 4,320 pixels. Video bitrate can be from 32 to 20,000 kbps, and audio bitrate from 32 to 512 kbps. Two profiles cannot share the same width, height, bitrates, and codec. A duplicate returns the `video_profile_already_exists` error.
 

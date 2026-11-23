@@ -131,6 +131,10 @@ type MockOptions = {
   mobileEvents?: boolean
   /** The project is at its plan's analytics property limit. */
   propertyLimitReached?: boolean
+  /** The plan's `analyticsProperties`; the mocked project holds one property. */
+  planPropertyLimit?: number
+  /** Holds the plan-limit count (the limit-1 property list) until it resolves. */
+  countGate?: Promise<void>
 }
 
 const MOBILE_EVENT_COUNTS: Record<string, number> = {
@@ -322,11 +326,18 @@ async function mockAppwriteApi(
       }
       return json(200, property(identifyUsers, options.type))
     }
-    if (apiPath === '/analytics/properties')
+    if (apiPath === '/analytics/properties') {
+      const isCount = listParam(url, 'queries').some((query) => {
+        const { method, values } = JSON.parse(query)
+        return method === 'limit' && values[0] === 1
+      })
+      // The route loader awaits the full list, so only the count waits.
+      if (isCount) await options.countGate
       return json(200, {
         total: 1,
         properties: [property(identifyUsers, options.type)],
       })
+    }
 
     if (apiPath === `/sites/${SITE_ID}/analytics`) {
       mock.siteAnalytics.push(request)
@@ -350,6 +361,14 @@ async function mockAppwriteApi(
       return json(200, { total: 0, frameworks: [] })
     if (apiPath === '/vcs/installations')
       return json(200, { total: 0, installations: [] })
+
+    if (apiPath === `/organizations/${ORGANIZATION.$id}/plan`) {
+      return json(200, {
+        $id: ORGANIZATION.billingPlan,
+        name: 'Free',
+        analyticsProperties: options.planPropertyLimit ?? 0,
+      })
+    }
 
     if (apiPath === '/account') return json(200, ACCOUNT)
     if (apiPath === '/account/prefs') {
@@ -692,6 +711,68 @@ test.describe('analytics property (mocked API)', () => {
     )
   })
 
+  test('edits and deletes from a note popover without adding a note', async ({
+    page,
+  }) => {
+    const mock = await mockAppwriteApi(page)
+    await openProperty(page)
+
+    await page.getByRole('button', { name: 'Add note' }).click({
+      timeout: 30_000,
+    })
+    const dialog = page.getByRole('dialog')
+    await dialog.getByLabel('Note text').fill('Launched pricing page')
+    await dialog.getByRole('button', { name: 'Add', exact: true }).click()
+    await expect(page.getByText('Note added')).toBeVisible()
+    await expect(dialog).toHaveCount(0)
+
+    const popover = page.locator('[data-slot="popover-content"]')
+    await page.getByRole('button', { name: 'Show notes' }).click()
+    await popover.getByRole('button', { name: 'Edit note' }).click()
+    await expect(dialog).toHaveCount(1)
+    await expect(dialog).toContainText('Edit note')
+    await dialog.getByRole('button', { name: 'Cancel' }).click()
+    await expect(dialog).toHaveCount(0)
+
+    await page.getByRole('button', { name: 'Show notes' }).click()
+    await popover.getByRole('button', { name: 'Delete note' }).click()
+    await expect(dialog).toHaveCount(1)
+    await expect(dialog).toContainText('Delete note')
+    await dialog.getByRole('button', { name: 'Delete', exact: true }).click()
+    await expect(page.getByText('Note deleted')).toBeVisible()
+    expect(mock.annotations).toEqual([])
+    await expect(dialog).toHaveCount(0)
+  })
+
+  test('wraps a long unbroken note', async ({ page }) => {
+    await mockAppwriteApi(page)
+    await openProperty(page)
+
+    await page.getByRole('button', { name: 'Add note' }).click({
+      timeout: 30_000,
+    })
+    const dialog = page.getByRole('dialog')
+    await dialog.getByLabel('Note text').fill('a'.repeat(600))
+    await expect(dialog.getByText('512/512')).toBeVisible()
+    const viewport = page.viewportSize()!
+    const box = await dialog.boundingBox()
+    expect(box!.x + box!.width).toBeLessThanOrEqual(viewport.width)
+    await expect(
+      dialog.getByRole('button', { name: 'Add', exact: true }),
+    ).toBeInViewport({ ratio: 1 })
+    await dialog.getByRole('button', { name: 'Add', exact: true }).click()
+    await expect(page.getByText('Note added')).toBeVisible()
+
+    await page.getByRole('button', { name: 'Show notes' }).click()
+    const popover = page.locator('[data-slot="popover-content"]')
+    await expect(popover.getByText('a'.repeat(512))).toBeVisible()
+    const popoverBox = await popover.boundingBox()
+    const textBox = await popover.getByText('a'.repeat(512)).boundingBox()
+    expect(textBox!.x + textBox!.width).toBeLessThanOrEqual(
+      popoverBox!.x + popoverBox!.width,
+    )
+  })
+
   test('zooms on a drag without adding a note', async ({ page }) => {
     const mock = await mockAppwriteApi(page)
     await openProperty(page)
@@ -720,6 +801,76 @@ test.describe('analytics property (mocked API)', () => {
     await expect(page.getByRole('dialog')).toHaveCount(0)
     await chart.click({ position: { x: box.width * 0.5, y: box.height / 2 } })
     await expect(page.getByRole('dialog')).toContainText('Add note')
+  })
+
+  test('blocks Create property at the plan limit', async ({ page }) => {
+    await mockAppwriteApi(page, { planPropertyLimit: 1 })
+    await page.goto(`/projects/${PROJECT_ID}/analytics`, {
+      waitUntil: 'domcontentloaded',
+    })
+
+    await expect(
+      page.getByText("You've reached the limit of 1 analytics property"),
+    ).toBeVisible({ timeout: 30_000 })
+    // A disabled header create renders as an aria-disabled span, not a link.
+    await expect(
+      page.locator('[aria-disabled]').filter({ hasText: 'Create property' }),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('link', { name: 'Create property' }),
+    ).toHaveCount(0)
+    await attachScreenshot(page, 'analytics-property-limit')
+  })
+
+  test('leaves Create property on below the plan limit', async ({ page }) => {
+    await mockAppwriteApi(page, { planPropertyLimit: 5 })
+    await page.goto(`/projects/${PROJECT_ID}/analytics`, {
+      waitUntil: 'domcontentloaded',
+    })
+
+    await expect(page.getByText('Acme site').first()).toBeVisible({
+      timeout: 30_000,
+    })
+    await expect(
+      page.getByRole('link', { name: 'Create property' }),
+    ).toBeVisible()
+    await expect(page.getByText("You've reached the limit of")).toHaveCount(0)
+  })
+
+  test('blocks the create form at the plan limit', async ({ page }) => {
+    await mockAppwriteApi(page, { planPropertyLimit: 1 })
+    await page.goto(`/projects/${PROJECT_ID}/analytics/add`, {
+      waitUntil: 'domcontentloaded',
+    })
+
+    await expect(page.getByTestId('analytics-property-plan-limit')).toHaveText(
+      'Your current plan includes up to 1 analytics property per project. Upgrade your plan to create another.',
+      { timeout: 30_000 },
+    )
+    await expect(
+      page.getByRole('button', { name: 'Create property' }),
+    ).toBeDisabled()
+  })
+
+  test('holds the create form until the plan limit is known', async ({
+    page,
+  }) => {
+    let releaseCount = () => {}
+    const countGate = new Promise<void>((resolve) => {
+      releaseCount = resolve
+    })
+    await mockAppwriteApi(page, { planPropertyLimit: 5, countGate })
+    await page.goto(`/projects/${PROJECT_ID}/analytics/add`, {
+      waitUntil: 'domcontentloaded',
+    })
+
+    const create = page.getByRole('button', { name: 'Create property' })
+    await expect(create).toBeDisabled({ timeout: 30_000 })
+    releaseCount()
+    await expect(create).toBeEnabled()
+    await expect(page.getByTestId('analytics-property-plan-limit')).toHaveCount(
+      0,
+    )
   })
 
   test('turns user identification on', async ({ page }) => {
