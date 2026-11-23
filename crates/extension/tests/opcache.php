@@ -243,16 +243,227 @@ if (class_exists(\Utopia\Emails\Email::class)) {
     {
     }
 }
+if (interface_exists(\Utopia\Query\Classifier::class)) {
+    interface ExtendsUtopiaQueryClassifier extends \Utopia\Query\Classifier
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Schema\Feature\AnalyzeTable::class)) {
+    interface ExtendsUtopiaQuerySchemaFeatureAnalyzeTable extends \Utopia\Query\Schema\Feature\AnalyzeTable
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Schema\Feature\ColumnComments::class)) {
+    interface ExtendsUtopiaQuerySchemaFeatureColumnComments extends \Utopia\Query\Schema\Feature\ColumnComments
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Schema\Feature\CreatePartition::class)) {
+    interface ExtendsUtopiaQuerySchemaFeatureCreatePartition extends \Utopia\Query\Schema\Feature\CreatePartition
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Schema\Feature\Databases::class)) {
+    interface ExtendsUtopiaQuerySchemaFeatureDatabases extends \Utopia\Query\Schema\Feature\Databases
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Schema\Feature\DropPartition::class)) {
+    interface ExtendsUtopiaQuerySchemaFeatureDropPartition extends \Utopia\Query\Schema\Feature\DropPartition
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Schema\Feature\ForeignKeys::class)) {
+    interface ExtendsUtopiaQuerySchemaFeatureForeignKeys extends \Utopia\Query\Schema\Feature\ForeignKeys
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Schema\Feature\MaterializedViews::class)) {
+    interface ExtendsUtopiaQuerySchemaFeatureMaterializedViews extends \Utopia\Query\Schema\Feature\MaterializedViews
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Schema\Feature\Partitioning::class)) {
+    interface ExtendsUtopiaQuerySchemaFeaturePartitioning extends \Utopia\Query\Schema\Feature\Partitioning
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Schema\Feature\Procedures::class)) {
+    interface ExtendsUtopiaQuerySchemaFeatureProcedures extends \Utopia\Query\Schema\Feature\Procedures
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Schema\Feature\RenameIndex::class)) {
+    interface ExtendsUtopiaQuerySchemaFeatureRenameIndex extends \Utopia\Query\Schema\Feature\RenameIndex
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Schema\Feature\ReplaceView::class)) {
+    interface ExtendsUtopiaQuerySchemaFeatureReplaceView extends \Utopia\Query\Schema\Feature\ReplaceView
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Schema\Feature\Sequences::class)) {
+    interface ExtendsUtopiaQuerySchemaFeatureSequences extends \Utopia\Query\Schema\Feature\Sequences
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Schema\Feature\TableComments::class)) {
+    interface ExtendsUtopiaQuerySchemaFeatureTableComments extends \Utopia\Query\Schema\Feature\TableComments
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Schema\Feature\Triggers::class)) {
+    interface ExtendsUtopiaQuerySchemaFeatureTriggers extends \Utopia\Query\Schema\Feature\Triggers
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Schema\Feature\Types::class)) {
+    interface ExtendsUtopiaQuerySchemaFeatureTypes extends \Utopia\Query\Schema\Feature\Types
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Schema\Feature\Views::class)) {
+    interface ExtendsUtopiaQuerySchemaFeatureViews extends \Utopia\Query\Schema\Feature\Views
+    {
+    }
+}
+if (class_exists(\Utopia\Query\Classifier\SQL::class)) {
+    abstract class ExtendsUtopiaQueryClassifierSQL extends \Utopia\Query\Classifier\SQL
+    {
+    }
+}
+if (class_exists(\Utopia\Query\Classifier\MySQL::class)) {
+    class ExtendsUtopiaQueryClassifierMySQL extends \Utopia\Query\Classifier\MySQL
+    {
+    }
+}
+if (class_exists(\Utopia\Query\Classifier\PostgreSQL::class)) {
+    class ExtendsUtopiaQueryClassifierPostgreSQL extends \Utopia\Query\Classifier\PostgreSQL
+    {
+    }
+}
+if (class_exists(\Utopia\Query\Classifier\MongoDB::class)) {
+    class ExtendsUtopiaQueryClassifierMongoDB extends \Utopia\Query\Classifier\MongoDB
+    {
+    }
+}
+if (class_exists(\Utopia\Query\NativeQuery::class)) {
+    class ExtendsUtopiaQueryNativeQuery extends \Utopia\Query\NativeQuery
+    {
+    }
+}
+if (class_exists(\Utopia\Query\Tokenizer\Tokenizer::class)) {
+    class ExtendsUtopiaQueryTokenizerTokenizer extends \Utopia\Query\Tokenizer\Tokenizer
+    {
+    }
+}
+if (class_exists(\Utopia\Query\Tokenizer\MySQL::class)) {
+    class ExtendsUtopiaQueryTokenizerMySQL extends \Utopia\Query\Tokenizer\MySQL
+    {
+    }
+}
+if (class_exists(\Utopia\Query\Tokenizer\MariaDB::class)) {
+    class ExtendsUtopiaQueryTokenizerMariaDB extends \Utopia\Query\Tokenizer\MariaDB
+    {
+    }
+}
+if (class_exists(\Utopia\Query\Tokenizer\PostgreSQL::class)) {
+    class ExtendsUtopiaQueryTokenizerPostgreSQL extends \Utopia\Query\Tokenizer\PostgreSQL
+    {
+    }
+}
+if (class_exists(\Utopia\Query\Tokenizer\SQLite::class)) {
+    class ExtendsUtopiaQueryTokenizerSQLite extends \Utopia\Query\Tokenizer\SQLite
+    {
+    }
+}
+if (class_exists(\Utopia\Query\Tokenizer\ClickHouse::class)) {
+    class ExtendsUtopiaQueryTokenizerClickHouse extends \Utopia\Query\Tokenizer\ClickHouse
+    {
+    }
+}
+if (class_exists(\Utopia\Query\AST\Parser::class)) {
+    class ExtendsUtopiaQueryASTParser extends \Utopia\Query\AST\Parser
+    {
+    }
+}
+if (class_exists(\Utopia\Query\AST\Serializer::class)) {
+    class ExtendsUtopiaQueryASTSerializer extends \Utopia\Query\AST\Serializer
+    {
+    }
+}
+if (class_exists(\Utopia\Query\AST\Serializer\MySQL::class)) {
+    class ExtendsUtopiaQueryASTSerializerMySQL extends \Utopia\Query\AST\Serializer\MySQL
+    {
+    }
+}
+if (class_exists(\Utopia\Query\AST\Serializer\MariaDB::class)) {
+    class ExtendsUtopiaQueryASTSerializerMariaDB extends \Utopia\Query\AST\Serializer\MariaDB
+    {
+    }
+}
+if (class_exists(\Utopia\Query\AST\Serializer\PostgreSQL::class)) {
+    class ExtendsUtopiaQueryASTSerializerPostgreSQL extends \Utopia\Query\AST\Serializer\PostgreSQL
+    {
+    }
+}
+if (class_exists(\Utopia\Query\AST\Serializer\SQLite::class)) {
+    class ExtendsUtopiaQueryASTSerializerSQLite extends \Utopia\Query\AST\Serializer\SQLite
+    {
+    }
+}
+if (class_exists(\Utopia\Query\AST\Serializer\ClickHouse::class)) {
+    class ExtendsUtopiaQueryASTSerializerClickHouse extends \Utopia\Query\AST\Serializer\ClickHouse
+    {
+    }
+}
+if (class_exists(\Utopia\Query\Schema::class)) {
+    abstract class ExtendsUtopiaQuerySchema extends \Utopia\Query\Schema
+    {
+    }
+}
+if (class_exists(\Utopia\Query\Schema\SQL::class)) {
+    abstract class ExtendsUtopiaQuerySchemaSQL extends \Utopia\Query\Schema\SQL
+    {
+    }
+}
+if (class_exists(\Utopia\Query\Schema\MySQL::class)) {
+    class ExtendsUtopiaQuerySchemaMySQL extends \Utopia\Query\Schema\MySQL
+    {
+    }
+}
+if (class_exists(\Utopia\Query\Schema\PostgreSQL::class)) {
+    class ExtendsUtopiaQuerySchemaPostgreSQL extends \Utopia\Query\Schema\PostgreSQL
+    {
+    }
+}
+if (class_exists(\Utopia\Query\Schema\SQLite::class)) {
+    class ExtendsUtopiaQuerySchemaSQLite extends \Utopia\Query\Schema\SQLite
+    {
+    }
+}
+if (class_exists(\Utopia\Query\Schema\ClickHouse::class)) {
+    class ExtendsUtopiaQuerySchemaClickHouse extends \Utopia\Query\Schema\ClickHouse
+    {
+    }
+}
+if (class_exists(\Utopia\Query\Schema\MongoDB::class)) {
+    class ExtendsUtopiaQuerySchemaMongoDB extends \Utopia\Query\Schema\MongoDB
+    {
+    }
+}
 
 $extended = [];
 foreach ((new ReflectionExtension('utopia'))->getClassNames() as $name) {
     $class = new ReflectionClass($name);
-    if (!$class->isFinal() && $class->getName() === $name) {
+    // An enum the extension registers is not marked final, and still cannot be extended.
+    if (!$class->isFinal() && !$class->isEnum() && $class->getName() === $name) {
         $extended[$name] = 'Extends' . str_replace('\\', '', $name);
     }
 }
 foreach ($extended as $name => $child) {
-    if (!class_exists($child, false)) {
+    if (!class_exists($child, false) && !interface_exists($child, false)) {
         fwrite(STDERR, $name . ' has no subclass here; add one' . PHP_EOL);
         exit(1);
     }
