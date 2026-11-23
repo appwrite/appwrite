@@ -38,7 +38,7 @@ class XList extends Action
             ->setHttpPath('/v1/organization/projects/:projectId/keys')
             ->desc('List project keys')
             ->groups(['api', 'organization'])
-            ->label('scope', ['organization.projects.keys.read', 'keys.read'])
+            ->label('scope', [self::SCOPE_READ, 'keys.read'])
             ->label('sdk', new Method(
                 namespace: 'organization',
                 group: 'keys',
@@ -80,7 +80,7 @@ class XList extends Action
         ?Key $apiKey,
         Request $request,
     ) {
-        $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey, 'organization.projects.keys.read');
+        $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey, self::SCOPE_READ);
 
         try {
             $queries = Query::parseQueries($queries);
@@ -132,7 +132,7 @@ class XList extends Action
         // keys write scope, or a key whose grant covers them. A JWT never sees them.
         foreach ($keys as $key) {
             if (
-                \array_intersect(['organization.projects.keys.write', 'keys.write'], $request->getScopes()) === []
+                \array_intersect([self::SCOPE_WRITE, 'keys.write'], $request->getScopes()) === []
                 || $request->getHeaderLine('x-appwrite-jwt', '') !== ''
                 || ($apiKey !== null && !$apiKey->mayCreate(API_KEY_STANDARD, $key->getAttribute('scopes', []), $key->getAttribute('expire')))
             ) {

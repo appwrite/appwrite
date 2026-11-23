@@ -31,7 +31,7 @@ class Get extends Action
             ->setHttpPath('/v1/organization/projects/:projectId/keys/:keyId')
             ->desc('Get project key')
             ->groups(['api', 'organization'])
-            ->label('scope', ['organization.projects.keys.read', 'keys.read'])
+            ->label('scope', [self::SCOPE_READ, 'keys.read'])
             ->label('sdk', new Method(
                 namespace: 'organization',
                 group: 'keys',
@@ -68,7 +68,7 @@ class Get extends Action
         ?Key $apiKey,
         Request $request,
     ) {
-        $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey, 'organization.projects.keys.read');
+        $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey, self::SCOPE_READ);
 
         $key = $authorization->skip(fn () => $dbForPlatform->getDocument('keys', $keyId));
 
@@ -79,7 +79,7 @@ class Get extends Action
         // Secrets are only for callers that could have created the key: a session with the
         // keys write scope, or a key whose grant covers it. A JWT never sees them.
         if (
-            \array_intersect(['organization.projects.keys.write', 'keys.write'], $request->getScopes()) === []
+            \array_intersect([self::SCOPE_WRITE, 'keys.write'], $request->getScopes()) === []
             || $request->getHeaderLine('x-appwrite-jwt', '') !== ''
             || ($apiKey !== null && !$apiKey->mayCreate(API_KEY_STANDARD, $key->getAttribute('scopes', []), $key->getAttribute('expire')))
         ) {

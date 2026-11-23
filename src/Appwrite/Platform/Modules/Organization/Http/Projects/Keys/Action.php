@@ -11,6 +11,14 @@ use Utopia\Database\Document;
 class Action extends AppwriteAction
 {
     /**
+     * Organization scopes for managing a project's keys. The routes also accept the project scopes
+     * `keys.read` and `keys.write`, which only a project key may use (see getProject()).
+     */
+    protected const string SCOPE_READ = 'organization.projects.keys.read';
+
+    protected const string SCOPE_WRITE = 'organization.projects.keys.write';
+
+    /**
      * Resolve the project whose keys are managed and make sure it belongs to the organization.
      *
      * A key bound to one project must not reach the keys of a sibling project in the same organization.
