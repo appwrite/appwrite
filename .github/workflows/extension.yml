@@ -187,6 +187,12 @@ jobs:
     if: needs.build.outputs.tag != '' || needs.build.outputs.build != ''
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    # Runs on different refs can share a build tag and both find it missing. One
+    # at a time per tag, and the second finds the first's manifest below. A
+    # release publishes no build tag and waits on nothing.
+    concurrency:
+      group: extension-manifest-${{ needs.build.outputs.build || github.run_id }}
+      cancel-in-progress: false
     steps:
       - uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
@@ -205,6 +211,12 @@ jobs:
             extra="--tag $IMAGE:latest"
           fi
           for tag in $TAG $BUILD; do
+            # The manifest holds its images by digest, so the build tag stays on the first
+            # run's library even though a second run has moved the per-architecture tags.
+            if [ "$tag" = "$BUILD" ] && docker buildx imagetools inspect "$IMAGE:$tag" > /dev/null 2>&1; then
+              echo "$IMAGE:$tag was published by another run."
+              continue
+            fi
             # shellcheck disable=SC2086 # $extra is an optional argument
             docker buildx imagetools create --tag "$IMAGE:$tag" $extra \
               "$IMAGE:$tag-amd64" "$IMAGE:$tag-arm64"
