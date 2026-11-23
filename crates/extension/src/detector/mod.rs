@@ -304,8 +304,8 @@ fn args(ex: &mut ExecuteData, required: usize, total: usize) -> Option<Vec<&'sta
 /// Whether `ce` is a class of this extension (not a PHP subclass): its properties have no hooks
 /// and its methods are these.
 fn native(ce: &ClassEntry) -> bool {
-    /// `ZEND_INTERNAL_CLASS`.
-    const INTERNAL_CLASS: i8 = 1;
+    /// `ZEND_INTERNAL_CLASS`. `zend_class_entry.type` is a C `char`: signed on x86-64, unsigned on aarch64.
+    const INTERNAL_CLASS: std::ffi::c_char = 1;
     ce.type_ == INTERNAL_CLASS
 }
 
