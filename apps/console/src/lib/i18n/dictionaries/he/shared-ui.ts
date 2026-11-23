@@ -141,6 +141,11 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Connect existing repository': 'חיבור repo קיים',
   'Connect to GitHub': 'התחברות ל-GitHub',
   'Connect to GitLab': 'התחברות ל-GitLab',
+  'Connect Entire': 'חיבור Entire',
+  'Add Entire account': 'הוספת חשבון Entire',
+  'Add Origin account': 'הוספת חשבון Origin',
+  'Add Bitbucket account': 'הוספת חשבון Bitbucket',
+  'Add Gitea account': 'הוספת חשבון Gitea',
   'Console user': 'משתמש קונסולה',
   'Contact Support': 'פנייה לתמיכה',
   'Contact sales': 'פנייה למכירות',
@@ -581,6 +586,7 @@ export const heSharedUiDictionary: Record<string, string> = {
 
   Secret: 'סודי',
   'Select a bucket to browse files': 'בחרו באקט כדי לעיין בקבצים',
+  'This file type is not supported.': 'סוג קובץ זה אינו נתמך.',
   'Select a timezone': 'בחירת אזור זמן',
   'Select a service to build': 'בחרו שירות לבנייה',
   'Select all': 'בחירת הכול',
@@ -1420,6 +1426,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Appwrite Analytics': 'Appwrite Analytics',
   'Visitor, page, and campaign tracking.':
     'מעקב אחרי מבקרים, עמודים וקמפיינים.',
+  'Appwrite Videos': 'Appwrite Videos',
+  'Transcode, stream, and caption videos.': 'קידוד, הזרמה וכתוביות לסרטונים.',
   'Project environments': 'סביבות פרויקט',
   'Switch or clone staging and production.':
     'מעבר או שכפול בין staging לפרודקשן.',
@@ -1436,4 +1444,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   'No thanks': 'לא תודה',
   'One-time ask, promise. May your builds be ever green.':
     'מבקשים רק פעם אחת, מבטיחים. שה-builds שלכם יהיו תמיד ירוקים.',
+  'Settings · Identity servers': 'הגדרות · שרתי זהויות',
+  'LDAP directory sign-in': 'התחברות דרך ספריית LDAP',
 }

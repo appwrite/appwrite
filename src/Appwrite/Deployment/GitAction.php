@@ -101,6 +101,7 @@ final class GitAction
         self::check($status, $vcs, $commitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform);
         self::deployment($status, $vcs, $commitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform);
 
+        // A posted comment is finished even if comments were switched off since
         $commentId = $deployment->getAttribute('providerCommentId', '');
         if (empty($commentId)) {
             return;
@@ -126,7 +127,7 @@ final class GitAction
 
             $comment = new Comment($platform, $vcs->supportsCommentImages());
             $comment->parseComment($vcs->getComment($owner, $repositoryName, $commentId));
-            $comment->addBuild($project, $resource, $isSite ? 'site' : 'function', $status, $deployment->getId(), ['type' => 'logs'], $previewUrl);
+            $comment->addBuild($project, $resource, $isSite ? 'site' : 'function', $status, $deployment->getId(), ['type' => 'logs'], $previewUrl, $commitHash);
             $vcs->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
         } finally {
             $dbForPlatform->deleteDocument('vcsCommentLocks', $commentId);
@@ -151,7 +152,7 @@ final class GitAction
         Database $dbForPlatform,
         array $platform,
     ): void {
-        if ($commitHash === '' || $resource->getAttribute('providerSilentMode', false) === true) {
+        if ($commitHash === '' || $resource->getAttribute('providerSilentMode', false) === true || $resource->getAttribute('providerStatuses', true) === false) {
             return;
         }
 
@@ -228,7 +229,7 @@ final class GitAction
         Database $dbForPlatform,
         array $platform,
     ): void {
-        if ($commitHash === '' || $resource->getAttribute('providerSilentMode', false) === true) {
+        if ($commitHash === '' || $resource->getAttribute('providerSilentMode', false) === true || $resource->getAttribute('providerStatuses', true) === false) {
             return;
         }
 

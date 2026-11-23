@@ -20,6 +20,7 @@ export type BillingProjectResourceCategory =
   | 'compute'
   | 'avatars'
   | 'realtime'
+  | 'reviews'
   | 'addons'
 
 export type BillingProjectResourceMapping = {
@@ -67,6 +68,7 @@ export const BILLING_PROJECT_RESOURCE_CATEGORY_ORDER: BillingProjectResourceCate
     'compute',
     'avatars',
     'realtime',
+    'reviews',
   ]
 
 export const BILLING_PROJECT_RESOURCE_CATEGORY_LABELS: Record<
@@ -82,6 +84,7 @@ export const BILLING_PROJECT_RESOURCE_CATEGORY_LABELS: Record<
   compute: 'Compute',
   avatars: 'Avatars',
   realtime: 'Realtime',
+  reviews: 'Reviews',
 }
 
 type PlanUsageNameMap = Record<string, { name?: string } | undefined>
@@ -282,6 +285,12 @@ const BASE_PROJECT_RESOURCES: Record<string, BillingProjectResourceMapping> = {
     planKey: 'authPhone',
     category: 'auth',
   },
+  reviewCredits: {
+    name: 'Code review credits',
+    format: 'number',
+    planKey: 'reviewCredits',
+    category: 'reviews',
+  },
 }
 
 /** Display order for resources within each billing category. */
@@ -300,6 +309,7 @@ export const BILLING_PROJECT_RESOURCE_ID_ORDER: string[] = [
   'realtime',
   'realtimeMessages',
   'realtimeBandwidth',
+  'reviewCredits',
 ]
 
 function formatDedicatedDbEngineLabel(engine: string): string {
@@ -741,6 +751,7 @@ const BILLING_PLAN_RESOURCE_PROPERTY_MAP: Record<string, string> = {
   realtime: 'realtime',
   realtimeMessages: 'realtimeMessages',
   realtimeBandwidth: 'realtimeBandwidth',
+  reviewCredits: 'reviewCredits',
 }
 
 function getBillingPlanRawResourceLimit(
@@ -913,6 +924,10 @@ export function buildOrganizationUsageCategoriesFromAggregation(
         aggregationResources,
         'realtimeBandwidth',
       ),
+    },
+    reviewCredits: {
+      usage: aggregationResourceValue(aggregationResources, 'reviewCredits'),
+      cost: aggregationResourceAmount(aggregationResources, 'reviewCredits'),
     },
   }
 

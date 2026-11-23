@@ -124,6 +124,7 @@ export const jaCatalog: EnCatalog = {
         github: 'GitHub',
         x: 'X',
         youtube: 'YouTube',
+        youtubeChannels: 'YouTube チャンネル',
         linkedIn: 'LinkedIn',
         instagram: 'Instagram',
         discord: 'Discord',
@@ -165,6 +166,7 @@ export const jaCatalog: EnCatalog = {
           network: 'Network',
           analytics: 'アナリティクス',
           firewall: 'Firewall',
+          mcp1: 'MCP1',
         },
         learn: {
           ...enCatalog.app.footer.expanded.learn,
@@ -215,6 +217,7 @@ export const jaCatalog: EnCatalog = {
           vsPlanetScale: 'Appwrite vs. PlanetScale', // pragma: allowlist secret
           vsPostHog: 'Appwrite vs. PostHog', // pragma: allowlist secret
           vsPlausible: 'Appwrite vs. Plausible', // pragma: allowlist secret
+          vsMux: 'Appwrite vs. Mux', // pragma: allowlist secret
           nextjsHosting: 'Next.js ホスティング',
           reactHosting: 'React ホスティング',
           vueHosting: 'Vue.js ホスティング',
@@ -301,7 +304,7 @@ export const jaCatalog: EnCatalog = {
       heroTitleLineOne: 'エージェント＆開発者のための',
       heroTitleLineTwo: 'オープンソースクラウド',
       heroDescriptionLineOne:
-        'Appwrite は、思考の速さでアプリを構築しスケールするための MCP＆エージェントファーストの OSS プラットフォームです。', // pragma: allowlist secret
+        'Appwrite は、思考の速さでアプリを構築しスケールするための MCP＆エージェントファーストのクラウドプラットフォームです。', // pragma: allowlist secret
       heroDescriptionLineTwo:
         'エージェントに Auth、DB、ストレージ、Functions、メッセージング、Realtime、ホスティングを提供し、すべてが一つの場所に。',
       heroPreviewWorkspace: 'Appwrite', // pragma: allowlist secret
@@ -391,6 +394,7 @@ export const jaCatalog: EnCatalog = {
         storage: 'ストレージ',
         functions: 'Functions',
         messaging: 'メッセージング',
+        videos: '動画',
         sites: 'サイト',
         analytics: 'アナリティクス',
       },
@@ -421,6 +425,7 @@ export const jaCatalog: EnCatalog = {
           storageTagline: 'CDN でファイルをアップロード、変換、配信。',
           functionsTagline: '大規模な API、Cron ジョブ、イベントハンドラー。',
           messagingTagline: 'トピックとターゲットでメール、SMS、プッシュ。',
+          videosTagline: '字幕付きのアダプティブ HLS、DASH、CMAF ストリーミング。',
           sitesTagline: 'Git から静的、SSR、CSR デプロイ。',
           realtimeName: 'Realtime',
           realtimeTagline: 'ライブイベント、チャンネル、プレゼンス。',

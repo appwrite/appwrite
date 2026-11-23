@@ -773,8 +773,7 @@ export const heAuthStorageDictionary: Record<string, string> = {
   Never: 'אף פעם',
   'New password': 'סיסמה חדשה',
   'Next page': 'עמוד הבא',
-  'No OAuth identities linked to this user.':
-    'אין זהויות OAuth מקושרות למשתמש זה.',
+  'No identities linked to this user.': 'אין זהויות מקושרות למשתמש זה.',
   'No OAuth2 apps': 'אין אפליקציות OAuth2',
   'Connect with': 'התחברות עם',
   'Connect with Appwrite': 'התחברות עם Appwrite',
@@ -1341,8 +1340,8 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'User deleted successfully': 'המשתמש נמחק בהצלחה',
   'User has connected an authenticator app for two-factor authentication.':
     'המשתמש חיבר אפליקציית אימות לאימות דו-שלבי.',
-  "User identities are the user's connected OAuth accounts. The user can sign in using these identities.":
-    'זהויות משתמש הן חשבונות ה-OAuth המחוברים של המשתמש. המשתמש יכול להתחבר באמצעות זהויות אלו.',
+  'Identities link this user to accounts they sign in with elsewhere, such as an OAuth2 provider or an LDAP directory.':
+    'זהויות מקשרות את המשתמש הזה לחשבונות שאיתם הוא מתחבר במקומות אחרים, כמו ספק OAuth2 או ספריית LDAP.',
   'User impersonation': 'התחזות למשתמש',
   'User impersonation has been disabled for this account':
     'התחזות למשתמש הושבתה עבור חשבון זה',
@@ -1760,4 +1759,26 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'All users must now reset their password.':
     'כל המשתמשים נדרשים כעת לאפס את הסיסמה שלהם.',
   'Failed to reset passwords': 'איפוס הסיסמאות נכשל',
+  // Auth overview
+  'The Free plan includes {count} monthly active users.':
+    'תוכנית Free כוללת {count} משתמשים פעילים חודשיים.',
+  'Upgrade for more': 'שדרגו כדי לקבל יותר',
+  '1 social provider': 'ספק OAuth אחד',
+  '{count} social providers': '{count} ספקי OAuth',
+  'Recent users': 'משתמשים אחרונים',
+  'Users will appear here when they sign up': 'משתמשים יופיעו כאן לאחר שיירשמו',
+  'Last sign-up': 'הרשמה אחרונה',
+  '{enabled} of {total}': '{enabled} מתוך {total}',
+  '{enabled} of {total} enabled': '{enabled} מתוך {total} מופעלות',
+  'No social providers enabled': 'לא הופעלו ספקי OAuth',
+  'Configure methods': 'הגדרת שיטות אימות',
+  'Configure providers': 'הגדרת ספקי OAuth',
+  'Configure policies': 'הגדרת כללי מדיניות',
+  'Sessions, passwords and limits': 'סשנים, סיסמאות ומגבלות',
+  'No active users yet': 'עדיין אין משתמשים פעילים',
+  "Couldn't load active users": 'לא ניתן היה לטעון משתמשים פעילים',
+  'No sign-ups yet': 'עדיין אין הרשמות',
+  "Couldn't load sign-ups": 'לא ניתן היה לטעון הרשמות',
+  'sign-ups': 'הרשמות',
+  second: 'שנייה',
 }

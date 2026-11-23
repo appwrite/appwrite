@@ -6,6 +6,10 @@
  */
 
 import {
+  parseVideoSubtitleSize,
+  type VideoSubtitleSize,
+} from '@/lib/videos/player-subtitle-display'
+import {
   clampRightPaneWidthPx,
   RIGHT_PANE_DEFAULT_WIDTH_PX,
   RIGHT_PANE_MAX_WIDTH_PX,
@@ -256,49 +260,6 @@ export function mergeAgentsDismissedProjectIdsPrefs(
   return {
     ...(prefs ?? {}),
     [USER_PREFS_KEY_AGENTS_DISMISSED_PROJECT_IDS]: JSON.stringify(next),
-  }
-}
-
-/**
- * Project IDs where the Premium Geo DB overview promo was dismissed.
- * Value: JSON string of project ID strings.
- */
-export const USER_PREFS_KEY_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS =
-  'console.premiumGeoOverview.dismissedProjectIds'
-
-const MAX_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS = 200
-
-export function parsePremiumGeoOverviewDismissedProjectIds(
-  prefs: UserPrefs | null | undefined,
-): string[] {
-  return parseProjectIdList(
-    prefs?.[USER_PREFS_KEY_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS],
-  ).slice(0, MAX_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS)
-}
-
-export function isPremiumGeoOverviewPromoDismissed(
-  prefs: UserPrefs | null | undefined,
-  projectId: string,
-): boolean {
-  if (!projectId) return false
-  return parsePremiumGeoOverviewDismissedProjectIds(prefs).includes(projectId)
-}
-
-export function mergePremiumGeoOverviewDismissedProjectIdsPrefs(
-  prefs: UserPrefs | null | undefined,
-  projectId: string,
-): UserPrefs {
-  const current = parsePremiumGeoOverviewDismissedProjectIds(prefs)
-  const next = current.includes(projectId)
-    ? current
-    : [...current, projectId].slice(
-        0,
-        MAX_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS,
-      )
-  return {
-    ...(prefs ?? {}),
-    [USER_PREFS_KEY_PREMIUM_GEO_OVERVIEW_DISMISSED_PROJECT_IDS]:
-      JSON.stringify(next),
   }
 }
 
@@ -1806,6 +1767,8 @@ export type VideoPlayerPrefs = {
   quality: number | null
   /** Subtitle language (or track name when untagged); `'off'` disables; `null` keeps the player default. */
   subtitles: string | null
+  /** Native cue text scale in the stream player. */
+  subtitleSize: VideoSubtitleSize | null
 }
 
 export const VIDEO_PLAYER_PREFS_DEFAULT: VideoPlayerPrefs = {
@@ -1814,6 +1777,7 @@ export const VIDEO_PLAYER_PREFS_DEFAULT: VideoPlayerPrefs = {
   output: null,
   quality: null,
   subtitles: null,
+  subtitleSize: null,
 }
 
 const VIDEO_PLAYER_OUTPUTS: readonly VideoPlayerOutputPref[] = [
@@ -1854,6 +1818,7 @@ export function parseVideoPlayerPrefs(
       typeof parsed.subtitles === 'string' && parsed.subtitles
         ? parsed.subtitles.slice(0, 64)
         : null,
+    subtitleSize: parseVideoSubtitleSize(parsed.subtitleSize),
   }
 }
 
@@ -1869,6 +1834,7 @@ export function mergeVideoPlayerPrefsIntoPrefs(
       output: value.output,
       quality: value.quality,
       subtitles: value.subtitles,
+      subtitleSize: value.subtitleSize,
     }),
   }
 }
@@ -1878,6 +1844,52 @@ export function buildVideosSidebarWidthPrefs(widthPx: number): UserPrefs {
     [USER_PREFS_KEY_VIDEOS_SIDEBAR_WIDTH]: String(
       clampTableViewSidebarWidthPx(widthPx, VIDEOS_SIDEBAR_BOUNDS),
     ),
+  }
+}
+
+/**
+ * Full key: `console.videos.createSource` - last source tab in the create
+ * video wizard. Account-wide, not per project. Value: `upload` | `storage` | `demo`.
+ */
+export const USER_PREFS_KEY_VIDEOS_CREATE_SOURCE = 'console.videos.createSource'
+
+export type VideoCreateSourcePref = 'upload' | 'storage' | 'demo'
+
+export const VIDEO_CREATE_SOURCE_DEFAULT: VideoCreateSourcePref = 'upload'
+
+const VIDEO_CREATE_SOURCES: readonly VideoCreateSourcePref[] = [
+  'upload',
+  'storage',
+  'demo',
+]
+
+/** Explicit saved tab, or null when the account has no valid value. */
+export function readVideoCreateSourcePref(
+  prefs: UserPrefs | null | undefined,
+): VideoCreateSourcePref | null {
+  const raw = prefs?.[USER_PREFS_KEY_VIDEOS_CREATE_SOURCE]
+  if (
+    typeof raw === 'string' &&
+    VIDEO_CREATE_SOURCES.includes(raw as VideoCreateSourcePref)
+  ) {
+    return raw as VideoCreateSourcePref
+  }
+  return null
+}
+
+export function parseVideoCreateSourcePref(
+  prefs: UserPrefs | null | undefined,
+): VideoCreateSourcePref {
+  return readVideoCreateSourcePref(prefs) ?? VIDEO_CREATE_SOURCE_DEFAULT
+}
+
+export function mergeVideoCreateSourcePrefIntoPrefs(
+  prefs: UserPrefs,
+  value: VideoCreateSourcePref,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_VIDEOS_CREATE_SOURCE]: value,
   }
 }
 

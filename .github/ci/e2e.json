@@ -27,6 +27,8 @@
       ".cargo/",
       "rustfmt.toml",
       "packages/image/",
+      "packages/validators/",
+      "packages/auth/",
       "Dockerfile",
       ".dockerignore"
     ],
@@ -369,6 +371,28 @@
       ]
     },
     {
+      "name": "Videos",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Videos/",
+        "src/Appwrite/Video/",
+        "src/Appwrite/Storage/",
+        "src/Appwrite/Platform/Modules/Storage/Http/Buckets/Files/Download/",
+        "src/Appwrite/Event/Publisher/Video.php",
+        "src/Appwrite/Event/Message/Video",
+        "src/Appwrite/Platform/Modules/Project/Http/Project/Videos/Profiles/",
+        "src/Appwrite/Platform/Workers/Deletes.php",
+        "src/Appwrite/Utopia/Response/Model/Video",
+        "src/Appwrite/Utopia/Database/Validator/Queries/Videos.php",
+        "src/Appwrite/Usage/Video.php",
+        "src/Appwrite/Messaging/Adapter/Realtime.php",
+        "app/views/videos/",
+        "app/config/videos-"
+      ]
+    },
+    {
       "name": "ProjectWebhooks",
       "runner": "e2e",
       "functional": false,
@@ -411,6 +435,16 @@
     },
     {
       "name": "VCSEntire",
+      "runner": "e2e",
+      "functional": false,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/VCS/",
+        "packages/vcs/"
+      ]
+    },
+    {
+      "name": "VCSOrigin",
       "runner": "e2e",
       "functional": false,
       "processes": null,
@@ -482,7 +516,11 @@
         "src/Appwrite/Platform/Modules/Project/",
         "src/Appwrite/Platform/Workers/StatsResources.php",
         "src/Appwrite/Platform/Workers/StatsUsage.php",
-        "packages/smtp/"
+        "packages/smtp/",
+        "src/Appwrite/Auth/LDAP/",
+        "src/Appwrite/Platform/Modules/Account/Base.php",
+        "src/Appwrite/Platform/Modules/Account/Http/Account/Sessions/LDAP/",
+        "dev/openldap/"
       ]
     },
     {
@@ -532,7 +570,7 @@
       "storage_antivirus": "disabled",
       "compose_profiles": "",
       "wait": "",
-      "services": ["Account"]
+      "services": ["Account", "Realtime", "Videos"]
     },
     {
       "label": "Screenshots",
@@ -563,7 +601,7 @@
       "compose_profiles": "s3",
       "wait": "executor",
       "storage_device": "s3",
-      "services": ["Functions", "Project", "Storage"]
+      "services": ["Functions", "Project", "Storage", "Videos"]
     },
     {
       "label": "Response Cache",

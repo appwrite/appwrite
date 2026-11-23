@@ -509,6 +509,92 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId, $headers);
     }
 
+    public function testGitAutomationSwitches(): void
+    {
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $installationId = $this->createInstallationHelper()['$id'];
+
+        $repository = $this->giteaApiHelper(Client::METHOD_POST, '/api/v1/user/repos', [
+            'name' => 'automation-' . \uniqid(),
+            'auto_init' => true,
+            'default_branch' => 'main',
+            'private' => false,
+        ]);
+        $this->assertEquals(201, $repository['headers']['status-code'], \json_encode($repository['body']));
+        $repositoryName = $repository['body']['name'];
+        $repositoryPath = '/api/v1/repos/' . self::GITEA_USERNAME . '/' . $repositoryName;
+
+        $switches = [
+            'Automation enabled' => [],
+            'Automation without deployments' => ['providerDeployments' => false],
+            'Automation without comments' => ['providerComments' => false],
+            'Automation without statuses' => ['providerStatuses' => false],
+        ];
+        $functionIds = [];
+        foreach ($switches as $name => $params) {
+            $function = $this->client->call(Client::METHOD_POST, '/functions', $headers, [
+                'functionId' => Id::unique(),
+                'name' => $name,
+                'runtime' => 'node-22',
+                'entrypoint' => 'index.js',
+                'installationId' => $installationId,
+                'providerRepositoryId' => (string) $repository['body']['id'],
+                'providerBranch' => 'main',
+                ...$params,
+            ]);
+            $this->assertEquals(201, $function['headers']['status-code'], \json_encode($function['body']));
+            $functionIds[$name] = $function['body']['$id'];
+        }
+
+        $workdir = \sys_get_temp_dir() . '/vcs-gitea-' . \uniqid();
+        $endpoint = System::getEnv('_APP_VCS_GITEA_ENDPOINT', 'http://gitea:3000');
+        $remote = \str_replace('://', '://' . self::GITEA_USERNAME . ':' . self::GITEA_PASSWORD . '@', $endpoint)
+            . '/' . self::GITEA_USERNAME . '/' . $repositoryName . '.git';
+
+        $this->gitHelper("git clone {$remote} {$workdir}", \sys_get_temp_dir());
+        $this->gitHelper('git checkout -b automation', $workdir);
+        $this->writeFunctionHelper($workdir, 'automation');
+        $this->gitHelper('git add index.js && git commit -m "Add function"', $workdir);
+        $this->gitHelper('git push origin automation', $workdir);
+
+        $pullRequest = $this->giteaApiHelper(Client::METHOD_POST, $repositoryPath . '/pulls', [
+            'title' => 'Automation',
+            'head' => 'automation',
+            'base' => 'main',
+        ]);
+        $this->assertEquals(201, $pullRequest['headers']['status-code'], \json_encode($pullRequest['body']));
+        $commitHash = $pullRequest['body']['head']['sha'];
+
+        $this->waitForNewDeploymentReadyHelper($functionIds['Automation enabled'], []);
+        $this->waitForNewDeploymentReadyHelper($functionIds['Automation without comments'], []);
+        $this->waitForNewDeploymentReadyHelper($functionIds['Automation without statuses'], []);
+
+        $this->assertEventually(function () use ($repositoryPath, $commitHash) {
+            $statuses = $this->giteaApiHelper(Client::METHOD_GET, $repositoryPath . '/commits/' . $commitHash . '/statuses');
+            $this->assertEquals(200, $statuses['headers']['status-code']);
+
+            $contexts = \implode("\n", \array_column($statuses['body'], 'context'));
+            $this->assertStringContainsString('Automation enabled', $contexts);
+            $this->assertStringContainsString('Automation without comments', $contexts);
+            $this->assertStringNotContainsString('Automation without statuses', $contexts);
+        }, 60000, 1000);
+
+        $this->assertEventually(function () use ($repositoryPath, $pullRequest) {
+            $comments = $this->giteaApiHelper(Client::METHOD_GET, $repositoryPath . '/issues/' . $pullRequest['body']['number'] . '/comments');
+            $this->assertEquals(200, $comments['headers']['status-code']);
+
+            $summary = \implode("\n", \array_column($comments['body'], 'body'));
+            $this->assertStringContainsString('Automation enabled', $summary);
+            $this->assertStringContainsString('Automation without statuses', $summary);
+            $this->assertStringNotContainsString('Automation without comments', $summary);
+        }, 60000, 1000);
+
+        $this->assertSame([], $this->listDeploymentIdsHelper($functionIds['Automation without deployments']));
+    }
+
     public function testClosePullRequestRemovesAuthorization(): void
     {
         /**

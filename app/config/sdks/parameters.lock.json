@@ -34,6 +34,11 @@
         "account.createJWT": [
             "duration"
         ],
+        "account.createLDAPSession": [
+            "username",
+            "password",
+            "duration"
+        ],
         "account.createMFAAuthenticator": [
             "type"
         ],
@@ -244,6 +249,20 @@
             "secret"
         ],
         "avatars.deletePhoto": [],
+        "avatars.getTeamPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "avatars.updateTeamPhoto": [
+            "teamId",
+            "file"
+        ],
+        "avatars.deleteTeamPhoto": [
+            "teamId"
+        ],
         "avatars.getBrowser": [
             "code",
             "width",
@@ -879,6 +898,121 @@
             "permissions",
             "transactionId"
         ],
+        "videos.create": [
+            "bucketId",
+            "fileId",
+            "name",
+            "permissions"
+        ],
+        "videos.createCaption": [
+            "videoId",
+            "bucketId",
+            "fileId",
+            "name",
+            "code",
+            "default"
+        ],
+        "videos.createRendition": [
+            "videoId",
+            "profileId",
+            "output"
+        ],
+        "videos.delete": [
+            "videoId"
+        ],
+        "videos.deleteCaption": [
+            "videoId",
+            "captionId"
+        ],
+        "videos.deleteRendition": [
+            "videoId",
+            "renditionId"
+        ],
+        "videos.get": [
+            "videoId"
+        ],
+        "videos.getCaptionManifest": [
+            "videoId",
+            "output",
+            "captionId"
+        ],
+        "videos.getCaptionSegment": [
+            "videoId",
+            "output",
+            "captionId",
+            "segmentId"
+        ],
+        "videos.getCmafDashManifest": [
+            "videoId"
+        ],
+        "videos.getCmafHlsManifest": [
+            "videoId"
+        ],
+        "videos.getCmafStreamManifest": [
+            "videoId",
+            "renditionId",
+            "streamId"
+        ],
+        "videos.getDashManifest": [
+            "videoId"
+        ],
+        "videos.getHlsManifest": [
+            "videoId"
+        ],
+        "videos.getRendition": [
+            "videoId",
+            "renditionId"
+        ],
+        "videos.getSegment": [
+            "videoId",
+            "output",
+            "renditionId",
+            "segmentId"
+        ],
+        "videos.getStreamManifest": [
+            "videoId",
+            "renditionId",
+            "streamId"
+        ],
+        "videos.getThumbnail": [
+            "videoId",
+            "thumbnailId",
+            "width",
+            "height",
+            "output"
+        ],
+        "videos.getTimelines": [
+            "videoId"
+        ],
+        "videos.list": [
+            "queries",
+            "total"
+        ],
+        "videos.listCaptions": [
+            "videoId",
+            "queries",
+            "total"
+        ],
+        "videos.listCodecs": [],
+        "videos.listRenditions": [
+            "videoId",
+            "queries",
+            "total"
+        ],
+        "videos.update": [
+            "videoId",
+            "name",
+            "permissions"
+        ],
+        "videos.updateCaption": [
+            "videoId",
+            "captionId",
+            "bucketId",
+            "fileId",
+            "name",
+            "code",
+            "default"
+        ],
         "account.createDevice": [],
         "account.getDevice": [
             "deviceId"
@@ -924,6 +1058,11 @@
             "name"
         ],
         "account.createJWT": [
+            "duration"
+        ],
+        "account.createLDAPSession": [
+            "username",
+            "password",
             "duration"
         ],
         "account.createMFAAuthenticator": [
@@ -1163,6 +1302,20 @@
             "acknowledged"
         ],
         "avatars.deletePhoto": [],
+        "avatars.getTeamPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "avatars.updateTeamPhoto": [
+            "teamId",
+            "file"
+        ],
+        "avatars.deleteTeamPhoto": [
+            "teamId"
+        ],
         "avatars.getBrowser": [
             "code",
             "width",
@@ -2043,7 +2196,10 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description"
+            "description",
+            "providerComments",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "functions.createDeployment": [
             "functionId",
@@ -2187,7 +2343,10 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description"
+            "description",
+            "providerComments",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "functions.updateDeploymentStatus": [
             "functionId",
@@ -2265,6 +2424,23 @@
             "qos",
             "expiry"
         ],
+        "messaging.createBirdEmailProvider": [
+            "providerId",
+            "name",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail",
+            "enabled"
+        ],
+        "messaging.createBirdSMSProvider": [
+            "providerId",
+            "name",
+            "from",
+            "apiKey",
+            "enabled"
+        ],
         "messaging.createEmail": [
             "messageId",
             "subject",
@@ -2334,7 +2510,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.createResendProvider": [
             "providerId",
@@ -2542,6 +2719,23 @@
             "qos",
             "expiry"
         ],
+        "messaging.updateBirdEmailProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail"
+        ],
+        "messaging.updateBirdSMSProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "from"
+        ],
         "messaging.updateEmail": [
             "messageId",
             "topics",
@@ -2611,7 +2805,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.updateResendProvider": [
             "providerId",
@@ -3006,6 +3201,10 @@
             "expire",
             "description"
         ],
+        "project.createLDAPTest": [
+            "username",
+            "password"
+        ],
         "project.createLinuxPlatform": [
             "platformId",
             "name",
@@ -3024,6 +3223,14 @@
             "value",
             "secret",
             "description"
+        ],
+        "project.createVideoProfile": [
+            "name",
+            "videoBitRate",
+            "audioBitRate",
+            "width",
+            "height",
+            "codec"
         ],
         "project.createWebPlatform": [
             "platformId",
@@ -3050,6 +3257,9 @@
         "project.deleteVariable": [
             "variableId"
         ],
+        "project.deleteVideoProfile": [
+            "profileId"
+        ],
         "project.get": [],
         "project.getEmailTemplate": [
             "templateId",
@@ -3073,6 +3283,9 @@
         "project.getPrefs": [],
         "project.getVariable": [
             "variableId"
+        ],
+        "project.getVideoProfile": [
+            "profileId"
         ],
         "project.listEmailTemplates": [
             "queries",
@@ -3100,6 +3313,11 @@
         ],
         "project.listVariables": [
             "queries",
+            "total"
+        ],
+        "project.listVideoProfiles": [
+            "queries",
+            "codec",
             "total"
         ],
         "project.updateAndroidPlatform": [
@@ -3149,6 +3367,24 @@
             "expire",
             "description"
         ],
+        "project.updateLDAP": [
+            "enabled",
+            "hosts",
+            "port",
+            "encryption",
+            "verification",
+            "certificate",
+            "timeout",
+            "baseDn",
+            "bindDn",
+            "bindPassword",
+            "userFilter",
+            "requiredGroupDn",
+            "idAttribute",
+            "emailAttribute",
+            "nameAttribute",
+            "phoneAttribute"
+        ],
         "project.updateLabels": [
             "labels"
         ],
@@ -3194,6 +3430,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Atlassian": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Auth0": [
             "clientId",
             "clientSecret",
@@ -3208,6 +3449,11 @@
             "enabled"
         ],
         "project.updateOAuth2Autodesk": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Bird": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -3299,6 +3545,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Instagram": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Kakao": [
             "clientId",
             "clientSecret",
@@ -3317,6 +3568,16 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Line": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Linear": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Linkedin": [
             "clientId",
             "primaryClientSecret",
@@ -3330,6 +3591,11 @@
             "prompt"
         ],
         "project.updateOAuth2Naver": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Netlify": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -3358,6 +3624,11 @@
             "enabled",
             "prompt"
         ],
+        "project.updateOAuth2Patreon": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Paypal": [
             "clientId",
             "secretKey",
@@ -3373,7 +3644,22 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Railway": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Reddit": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Resend": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Roblox": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -3390,6 +3676,11 @@
             "enabled"
         ],
         "project.updateOAuth2Spotify": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Strava": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -3419,6 +3710,16 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Vercel": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2VK": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Webflow": [
             "clientId",
             "clientSecret",
@@ -3435,6 +3736,11 @@
             "enabled"
         ],
         "project.updateOAuth2WordPress": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2WorkOS": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -3540,6 +3846,14 @@
             "secret",
             "description"
         ],
+        "project.updateVideoProfile": [
+            "profileId",
+            "name",
+            "videoBitRate",
+            "audioBitRate",
+            "width",
+            "height"
+        ],
         "project.updateWebPlatform": [
             "platformId",
             "name",
@@ -3632,7 +3946,11 @@
         ],
         "reviews.createRepository": [
             "installationId",
-            "providerRepositoryId"
+            "providerRepositoryId",
+            "strength"
+        ],
+        "reviews.deleteLearning": [
+            "learningId"
         ],
         "reviews.deleteRepository": [
             "repositoryId"
@@ -3644,14 +3962,34 @@
             "queries",
             "total"
         ],
+        "reviews.listAuthors": [
+            "range",
+            "repositoryId"
+        ],
+        "reviews.listCategories": [
+            "range",
+            "repositoryId"
+        ],
         "reviews.listEvents": [
             "reviewId",
+            "queries",
+            "total"
+        ],
+        "reviews.listLearnings": [
             "queries",
             "total"
         ],
         "reviews.listRepositories": [
             "queries",
             "total"
+        ],
+        "reviews.updateInstallation": [
+            "installationId",
+            "newRepositories"
+        ],
+        "reviews.updateRepositoryStrength": [
+            "repositoryId",
+            "strength"
         ],
         "sites.create": [
             "siteId",
@@ -3678,7 +4016,10 @@
             "runtimeSpecification",
             "deploymentRetention",
             "scopes",
-            "description"
+            "description",
+            "providerComments",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "sites.createDeployment": [
             "siteId",
@@ -3814,7 +4155,10 @@
             "runtimeSpecification",
             "deploymentRetention",
             "scopes",
-            "description"
+            "description",
+            "providerComments",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "sites.updateDeploymentStatus": [
             "siteId",
@@ -4857,6 +5201,9 @@
             "success",
             "failure"
         ],
+        "vcs.createInstallation": [
+            "installationId"
+        ],
         "vcs.createOriginInstallation": [
             "success",
             "failure"
@@ -4892,7 +5239,8 @@
         "vcs.listInstallations": [
             "queries",
             "search",
-            "total"
+            "total",
+            "shared"
         ],
         "vcs.listNamespaces": [
             "installationId",
@@ -5102,6 +5450,121 @@
             "documents",
             "transactionId"
         ],
+        "videos.create": [
+            "bucketId",
+            "fileId",
+            "name",
+            "permissions"
+        ],
+        "videos.createCaption": [
+            "videoId",
+            "bucketId",
+            "fileId",
+            "name",
+            "code",
+            "default"
+        ],
+        "videos.createRendition": [
+            "videoId",
+            "profileId",
+            "output"
+        ],
+        "videos.delete": [
+            "videoId"
+        ],
+        "videos.deleteCaption": [
+            "videoId",
+            "captionId"
+        ],
+        "videos.deleteRendition": [
+            "videoId",
+            "renditionId"
+        ],
+        "videos.get": [
+            "videoId"
+        ],
+        "videos.getCaptionManifest": [
+            "videoId",
+            "output",
+            "captionId"
+        ],
+        "videos.getCaptionSegment": [
+            "videoId",
+            "output",
+            "captionId",
+            "segmentId"
+        ],
+        "videos.getCmafDashManifest": [
+            "videoId"
+        ],
+        "videos.getCmafHlsManifest": [
+            "videoId"
+        ],
+        "videos.getCmafStreamManifest": [
+            "videoId",
+            "renditionId",
+            "streamId"
+        ],
+        "videos.getDashManifest": [
+            "videoId"
+        ],
+        "videos.getHlsManifest": [
+            "videoId"
+        ],
+        "videos.getRendition": [
+            "videoId",
+            "renditionId"
+        ],
+        "videos.getSegment": [
+            "videoId",
+            "output",
+            "renditionId",
+            "segmentId"
+        ],
+        "videos.getStreamManifest": [
+            "videoId",
+            "renditionId",
+            "streamId"
+        ],
+        "videos.getThumbnail": [
+            "videoId",
+            "thumbnailId",
+            "width",
+            "height",
+            "output"
+        ],
+        "videos.getTimelines": [
+            "videoId"
+        ],
+        "videos.list": [
+            "queries",
+            "total"
+        ],
+        "videos.listCaptions": [
+            "videoId",
+            "queries",
+            "total"
+        ],
+        "videos.listCodecs": [],
+        "videos.listRenditions": [
+            "videoId",
+            "queries",
+            "total"
+        ],
+        "videos.update": [
+            "videoId",
+            "name",
+            "permissions"
+        ],
+        "videos.updateCaption": [
+            "videoId",
+            "captionId",
+            "bucketId",
+            "fileId",
+            "name",
+            "code",
+            "default"
+        ],
         "webhooks.create": [
             "webhookId",
             "url",
@@ -5185,6 +5648,11 @@
             "accessToken",
             "accessTokenExpiry",
             "name"
+        ],
+        "account.createLDAPSession": [
+            "username",
+            "password",
+            "duration"
         ],
         "account.createMFAAuthenticator": [
             "type"
@@ -5410,6 +5878,20 @@
             "acknowledged"
         ],
         "avatars.deletePhoto": [],
+        "avatars.getTeamPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "avatars.updateTeamPhoto": [
+            "teamId",
+            "file"
+        ],
+        "avatars.deleteTeamPhoto": [
+            "teamId"
+        ],
         "avatars.getBrowser": [
             "code",
             "width",
@@ -6276,7 +6758,10 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description"
+            "description",
+            "providerComments",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "functions.createDeployment": [
             "functionId",
@@ -6410,7 +6895,10 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description"
+            "description",
+            "providerComments",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "functions.updateDeploymentStatus": [
             "functionId",
@@ -6488,6 +6976,23 @@
             "qos",
             "expiry"
         ],
+        "messaging.createBirdEmailProvider": [
+            "providerId",
+            "name",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail",
+            "enabled"
+        ],
+        "messaging.createBirdSMSProvider": [
+            "providerId",
+            "name",
+            "from",
+            "apiKey",
+            "enabled"
+        ],
         "messaging.createEmail": [
             "messageId",
             "subject",
@@ -6557,7 +7062,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.createResendProvider": [
             "providerId",
@@ -6765,6 +7271,23 @@
             "qos",
             "expiry"
         ],
+        "messaging.updateBirdEmailProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail"
+        ],
+        "messaging.updateBirdSMSProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "from"
+        ],
         "messaging.updateEmail": [
             "messageId",
             "topics",
@@ -6834,7 +7357,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.updateResendProvider": [
             "providerId",
@@ -7187,6 +7711,10 @@
             "scopes",
             "duration"
         ],
+        "project.createLDAPTest": [
+            "username",
+            "password"
+        ],
         "project.createLinuxPlatform": [
             "platformId",
             "name",
@@ -7205,6 +7733,14 @@
             "value",
             "secret",
             "description"
+        ],
+        "project.createVideoProfile": [
+            "name",
+            "videoBitRate",
+            "audioBitRate",
+            "width",
+            "height",
+            "codec"
         ],
         "project.createWebPlatform": [
             "platformId",
@@ -7231,6 +7767,9 @@
         "project.deleteVariable": [
             "variableId"
         ],
+        "project.deleteVideoProfile": [
+            "profileId"
+        ],
         "project.get": [],
         "project.getEmailTemplate": [
             "templateId",
@@ -7254,6 +7793,9 @@
         "project.getPrefs": [],
         "project.getVariable": [
             "variableId"
+        ],
+        "project.getVideoProfile": [
+            "profileId"
         ],
         "project.listEmailTemplates": [
             "queries",
@@ -7281,6 +7823,11 @@
         ],
         "project.listVariables": [
             "queries",
+            "total"
+        ],
+        "project.listVideoProfiles": [
+            "queries",
+            "codec",
             "total"
         ],
         "project.updateAndroidPlatform": [
@@ -7330,6 +7877,24 @@
             "expire",
             "description"
         ],
+        "project.updateLDAP": [
+            "enabled",
+            "hosts",
+            "port",
+            "encryption",
+            "verification",
+            "certificate",
+            "timeout",
+            "baseDn",
+            "bindDn",
+            "bindPassword",
+            "userFilter",
+            "requiredGroupDn",
+            "idAttribute",
+            "emailAttribute",
+            "nameAttribute",
+            "phoneAttribute"
+        ],
         "project.updateLabels": [
             "labels"
         ],
@@ -7375,6 +7940,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Atlassian": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Auth0": [
             "clientId",
             "clientSecret",
@@ -7389,6 +7959,11 @@
             "enabled"
         ],
         "project.updateOAuth2Autodesk": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Bird": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -7480,6 +8055,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Instagram": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Kakao": [
             "clientId",
             "clientSecret",
@@ -7498,6 +8078,16 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Line": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Linear": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Linkedin": [
             "clientId",
             "primaryClientSecret",
@@ -7511,6 +8101,11 @@
             "prompt"
         ],
         "project.updateOAuth2Naver": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Netlify": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -7539,6 +8134,11 @@
             "enabled",
             "prompt"
         ],
+        "project.updateOAuth2Patreon": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Paypal": [
             "clientId",
             "secretKey",
@@ -7554,7 +8154,22 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Railway": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Reddit": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Resend": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Roblox": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -7571,6 +8186,11 @@
             "enabled"
         ],
         "project.updateOAuth2Spotify": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Strava": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -7600,6 +8220,16 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Vercel": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2VK": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Webflow": [
             "clientId",
             "clientSecret",
@@ -7616,6 +8246,11 @@
             "enabled"
         ],
         "project.updateOAuth2WordPress": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2WorkOS": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -7721,6 +8356,14 @@
             "secret",
             "description"
         ],
+        "project.updateVideoProfile": [
+            "profileId",
+            "name",
+            "videoBitRate",
+            "audioBitRate",
+            "width",
+            "height"
+        ],
         "project.updateWebPlatform": [
             "platformId",
             "name",
@@ -7783,7 +8426,11 @@
         ],
         "reviews.createRepository": [
             "installationId",
-            "providerRepositoryId"
+            "providerRepositoryId",
+            "strength"
+        ],
+        "reviews.deleteLearning": [
+            "learningId"
         ],
         "reviews.deleteRepository": [
             "repositoryId"
@@ -7795,14 +8442,34 @@
             "queries",
             "total"
         ],
+        "reviews.listAuthors": [
+            "range",
+            "repositoryId"
+        ],
+        "reviews.listCategories": [
+            "range",
+            "repositoryId"
+        ],
         "reviews.listEvents": [
             "reviewId",
+            "queries",
+            "total"
+        ],
+        "reviews.listLearnings": [
             "queries",
             "total"
         ],
         "reviews.listRepositories": [
             "queries",
             "total"
+        ],
+        "reviews.updateInstallation": [
+            "installationId",
+            "newRepositories"
+        ],
+        "reviews.updateRepositoryStrength": [
+            "repositoryId",
+            "strength"
         ],
         "sites.create": [
             "siteId",
@@ -7829,7 +8496,10 @@
             "runtimeSpecification",
             "deploymentRetention",
             "scopes",
-            "description"
+            "description",
+            "providerComments",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "sites.createDeployment": [
             "siteId",
@@ -7955,7 +8625,10 @@
             "runtimeSpecification",
             "deploymentRetention",
             "scopes",
-            "description"
+            "description",
+            "providerComments",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "sites.updateDeploymentStatus": [
             "siteId",
@@ -9160,6 +9833,121 @@
             "collectionId",
             "documents",
             "transactionId"
+        ],
+        "videos.create": [
+            "bucketId",
+            "fileId",
+            "name",
+            "permissions"
+        ],
+        "videos.createCaption": [
+            "videoId",
+            "bucketId",
+            "fileId",
+            "name",
+            "code",
+            "default"
+        ],
+        "videos.createRendition": [
+            "videoId",
+            "profileId",
+            "output"
+        ],
+        "videos.delete": [
+            "videoId"
+        ],
+        "videos.deleteCaption": [
+            "videoId",
+            "captionId"
+        ],
+        "videos.deleteRendition": [
+            "videoId",
+            "renditionId"
+        ],
+        "videos.get": [
+            "videoId"
+        ],
+        "videos.getCaptionManifest": [
+            "videoId",
+            "output",
+            "captionId"
+        ],
+        "videos.getCaptionSegment": [
+            "videoId",
+            "output",
+            "captionId",
+            "segmentId"
+        ],
+        "videos.getCmafDashManifest": [
+            "videoId"
+        ],
+        "videos.getCmafHlsManifest": [
+            "videoId"
+        ],
+        "videos.getCmafStreamManifest": [
+            "videoId",
+            "renditionId",
+            "streamId"
+        ],
+        "videos.getDashManifest": [
+            "videoId"
+        ],
+        "videos.getHlsManifest": [
+            "videoId"
+        ],
+        "videos.getRendition": [
+            "videoId",
+            "renditionId"
+        ],
+        "videos.getSegment": [
+            "videoId",
+            "output",
+            "renditionId",
+            "segmentId"
+        ],
+        "videos.getStreamManifest": [
+            "videoId",
+            "renditionId",
+            "streamId"
+        ],
+        "videos.getThumbnail": [
+            "videoId",
+            "thumbnailId",
+            "width",
+            "height",
+            "output"
+        ],
+        "videos.getTimelines": [
+            "videoId"
+        ],
+        "videos.list": [
+            "queries",
+            "total"
+        ],
+        "videos.listCaptions": [
+            "videoId",
+            "queries",
+            "total"
+        ],
+        "videos.listCodecs": [],
+        "videos.listRenditions": [
+            "videoId",
+            "queries",
+            "total"
+        ],
+        "videos.update": [
+            "videoId",
+            "name",
+            "permissions"
+        ],
+        "videos.updateCaption": [
+            "videoId",
+            "captionId",
+            "bucketId",
+            "fileId",
+            "name",
+            "code",
+            "default"
         ],
         "webhooks.create": [
             "webhookId",

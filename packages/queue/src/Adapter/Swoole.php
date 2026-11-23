@@ -135,7 +135,7 @@ class Swoole extends Adapter
     }
 
     /**
-     * @param array<int, array{queue: Queue, coroutines: int, prefetch?: int, consumer?: Consumer}> $queues
+     * @param array<int, array{queue: Queue, coroutines: int, prefetch?: int, maxInFlight?: int, consumer?: Consumer}> $queues
      */
     #[\Override]
     public function consume(
@@ -169,6 +169,7 @@ class Swoole extends Adapter
                             $errorCallback,
                             $spec['consumer'] ?? $this->consumer,
                             $spec['prefetch'] ?? $spec['coroutines'],
+                            $spec['maxInFlight'] ?? null,
                         );
                     } finally {
                         $waitGroup->done();
@@ -210,16 +211,19 @@ class Swoole extends Adapter
         callable $errorCallback,
         Consumer $consumer,
         ?int $prefetch = null,
+        ?int $maxInFlight = null,
     ): void {
         if ($consumer !== $this->consumer) {
             $this->consumers[] = $consumer;
         }
         $prefetch ??= $coroutines;
-        if ($coroutines < 1 || $prefetch < $coroutines) {
-            throw new \InvalidArgumentException('Prefetch must be at least the positive number of coroutines');
+        $maxInFlight ??= $coroutines + $prefetch;
+        if ($coroutines < 1 || $prefetch < 1 || $maxInFlight < 1) {
+            throw new \InvalidArgumentException('Coroutines, prefetch and maxInFlight must be positive');
         }
         $running = new Channel($coroutines);
-        $available = new Channel($prefetch);
+        $buffer = new Channel($prefetch);
+        $available = new Channel(1);
         $waitGroup = new WaitGroup();
         $finished = new Channel(1);
         /** @var \ArrayObject<int, Message> $deliveries */
@@ -256,39 +260,27 @@ class Swoole extends Adapter
                 }
             });
         }
-        try {
-            while (!$this->isStopped()) {
-                while ($prefetch - \count($deliveries) < max(1, intdiv($prefetch, 2)) && !$this->isStopped()) {
-                    $available->pop(0.1);
-                }
-                if ($this->isStopped()) {
-                    break;
-                }
-                $messages = $this->nextBatchFrom($errorCallback, $queue, $consumer, $prefetch - \count($deliveries));
-                foreach ($messages as $message) {
-                    $deliveries[spl_object_id($message)] = $message;
-                }
-                foreach ($messages as $index => $message) {
+        $dispatching = new WaitGroup();
+        $dispatching->add();
+        Coroutine::create(function () use ($buffer, $running, $available, $waitGroup, $dispatching, $queue, $consumer, $messageCallback, $successCallback, $errorCallback, &$deliveries): void {
+            $waiting = [];
+            try {
+                while (true) {
+                    // Leave messages in the receive buffer until a handler can take one.
                     $running->push(true);
+                    /** @var Message|false $message */
+                    $message = $buffer->pop();
+                    if ($message === false) {
+                        $running->pop();
+                        break;
+                    }
                     if ($this->isStopped()) {
                         $running->pop();
-                        $waiting = \array_slice($messages, $index);
-                        try {
-                            if (\is_callable([$consumer, 'release'])) {
-                                $consumer->release($queue, ...$waiting);
-                            }
-                        } catch (\Throwable $error) {
-                            try {
-                                $errorCallback(null, $error);
-                            } catch (\Throwable $reportFailure) {
-                                $this->reportUnreported($error, $reportFailure);
-                            }
-                        } finally {
-                            foreach ($waiting as $pending) {
-                                unset($deliveries[spl_object_id($pending)]);
-                            }
-                        }
-                        break;
+                        $waiting[] = $message;
+                        continue;
+                    }
+                    if (!$available->isFull()) {
+                        $available->push(true);
                     }
                     $waitGroup->add();
                     Coroutine::create(function () use ($message, $queue, $consumer, $messageCallback, $successCallback, $errorCallback, $running, $available, $waitGroup, &$deliveries): void {
@@ -312,8 +304,59 @@ class Swoole extends Adapter
                         }
                     });
                 }
+            } finally {
+                try {
+                    if ($waiting !== [] && \is_callable([$consumer, 'release'])) {
+                        $consumer->release($queue, ...$waiting);
+                    }
+                } catch (\Throwable $error) {
+                    try {
+                        $errorCallback(null, $error);
+                    } catch (\Throwable $reportFailure) {
+                        $this->reportUnreported($error, $reportFailure);
+                    }
+                } finally {
+                    foreach ($waiting as $pending) {
+                        unset($deliveries[spl_object_id($pending)]);
+                    }
+                    $dispatching->done();
+                }
+            }
+        });
+        // NATS ADR-37: refill the receive buffer at its half-full watermark.
+        // Outstanding deliveries have a separate cap, including pending confirmations.
+        $threshold = intdiv($prefetch, 2);
+        try {
+            while (!$this->isStopped()) {
+                while (($buffer->length() > $threshold || \count($deliveries) >= $maxInFlight) && !$this->isStopped()) {
+                    $available->pop(0.1);
+                }
+                // Let ready confirmations release their credits before sizing the fetch.
+                // A channel wake-up otherwise interrupts the first result in a batch.
+                $receiver = Coroutine::getCid();
+                Event::defer(static function () use ($receiver): void {
+                    Coroutine::resume($receiver);
+                });
+                Coroutine::yield();
+                if ($this->isStopped()) {
+                    break;
+                }
+                /** @var int $buffered */
+                $buffered = $buffer->length();
+                $messages = $this->nextBatchFrom($errorCallback, $queue, $consumer, min($prefetch - $buffered, $maxInFlight - \count($deliveries)), static function (Message $message) use ($deliveries, $buffer): void {
+                    $deliveries[spl_object_id($message)] = $message;
+                    $buffer->push($message);
+                });
+                foreach ($messages as $message) {
+                    $deliveries[spl_object_id($message)] = $message;
+                }
+                foreach ($messages as $message) {
+                    $buffer->push($message);
+                }
             }
         } finally {
+            $buffer->close();
+            $dispatching->wait();
             // Keep renewing until every handler and confirmation has finished.
             while ($deliveries->count() > 0) {
                 $available->pop(0.1);

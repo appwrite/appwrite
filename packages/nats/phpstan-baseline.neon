@@ -1513,12 +1513,6 @@ parameters:
 			path: src/Transport/WebSocketTransport.php
 
 		-
-			message: '#^Parameter \#2 \$length of function fread expects int\<1, max\>, int given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Transport/WebSocketTransport.php
-
-		-
 			message: '#^Parameter \#1 \$input of method Utopia\\NATS\\Tests\\Auth\\NKeyAuthTest\:\:base32Decode\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -1606,12 +1600,6 @@ parameters:
 			message: '#^Cannot call method getData\(\) on mixed\.$#'
 			identifier: method.nonObject
 			count: 2
-			path: tests/ConsumerPullRequestTest.php
-
-		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 1
 			path: tests/ConsumerPullRequestTest.php
 
 		-
@@ -1953,12 +1941,6 @@ parameters:
 		-
 			message: '#^Cannot access offset ''version'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: tests/Protocol/ParserTest.php
-
-		-
-			message: '#^Method Utopia\\NATS\\Transport\\Transport@anonymous/tests/Protocol/ParserTest\.php\:17\:\:upgradeTls\(\) has parameter \$options with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
 			count: 1
 			path: tests/Protocol/ParserTest.php
 

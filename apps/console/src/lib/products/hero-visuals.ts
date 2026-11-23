@@ -10,6 +10,7 @@ import { PostgresHeroArt } from '@/components/pages/products/hero-art/PostgresHe
 import { RealtimeHeroArt } from '@/components/pages/products/hero-art/RealtimeHeroArt'
 import { SitesHeroArt } from '@/components/pages/products/hero-art/SitesHeroArt'
 import { StorageHeroArt } from '@/components/pages/products/hero-art/StorageHeroArt'
+import { VideosHeroArt } from '@/components/pages/products/hero-art/VideosHeroArt'
 import type { ProductId } from '@/lib/products/types'
 
 /** Animated centerpiece for each product hero (beside the copy or below it, per `PRODUCT_THEMES`). */
@@ -20,6 +21,7 @@ export const PRODUCT_HERO_ART: Record<ProductId, ComponentType> = {
   storage: StorageHeroArt,
   functions: FunctionsHeroArt,
   messaging: MessagingHeroArt,
+  videos: VideosHeroArt,
   realtime: RealtimeHeroArt,
   sites: SitesHeroArt,
   analytics: AnalyticsHeroArt,

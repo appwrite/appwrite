@@ -3,18 +3,23 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Bus\Events\RuleUpdated;
+use Appwrite\Certificates\External;
+use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Mail as MailMessage;
+use Appwrite\Event\Message\Notification as NotificationMessage;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
+use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model\Rule;
+use Appwrite\Utopia\Response\Model\RuleRecord;
 use Exception;
 use Throwable;
 use Utopia\Bus\Bus;
@@ -65,6 +70,7 @@ class Certificates extends Action
             ->inject('message')
             ->inject('dbForPlatform')
             ->inject('publisherForMails')
+            ->inject('publisherForNotifications')
             ->inject('queueForEvents')
             ->inject('queueForWebhooks')
             ->inject('publisherForFunctions')
@@ -72,6 +78,7 @@ class Certificates extends Action
             ->inject('publisherForCertificates')
             ->inject('certificates')
             ->inject('plan')
+            ->inject('platform')
             ->inject('authorization')
             ->inject('bus')
             ->callback($this->action(...));
@@ -81,6 +88,7 @@ class Certificates extends Action
      * @param Message $message
      * @param Database $dbForPlatform
      * @param MailPublisher $publisherForMails
+     * @param NotificationPublisher $publisherForNotifications
      * @param Event $queueForEvents
      * @param Webhook $queueForWebhooks
      * @param FunctionPublisher $publisherForFunctions
@@ -88,6 +96,7 @@ class Certificates extends Action
      * @param Certificate $publisherForCertificates
      * @param Provider $certificates
      * @param array $plan
+     * @param array $platform
      * @param ValidatorAuthorization $authorization
      * @return void
      * @throws Throwable
@@ -97,6 +106,7 @@ class Certificates extends Action
         Message $message,
         Database $dbForPlatform,
         MailPublisher $publisherForMails,
+        NotificationPublisher $publisherForNotifications,
         Event $queueForEvents,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
@@ -104,6 +114,7 @@ class Certificates extends Action
         Certificate $publisherForCertificates,
         Provider $certificates,
         array $plan,
+        array $platform,
         ValidatorAuthorization $authorization,
         Bus $bus,
     ): void {
@@ -130,7 +141,7 @@ class Certificates extends Action
                 break;
 
             case \Appwrite\Event\Certificate::ACTION_GENERATION:
-                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $publisherForMails, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $certificates, $authorization, $bus, $skipRenewCheck, $plan, $validationDomain, $skipDomainValidation);
+                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $publisherForMails, $publisherForNotifications, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $certificates, $authorization, $bus, $skipRenewCheck, $plan, $platform, $validationDomain, $skipDomainValidation);
                 break;
 
             default:
@@ -183,7 +194,7 @@ class Certificates extends Action
 
         try {
             // Verify DNS records
-            $this->validateDomain($rule, $domain, $validationDomain);
+            $this->validateDomain($rule, $domain, $dbForPlatform, $validationDomain);
             // Reset logs and status for the rule
             $rule->setAttribute('logs', '');
             $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
@@ -192,7 +203,7 @@ class Certificates extends Action
         } catch (AppwriteException $err) {
             Console::warning('Domain verification failed: ' . $err->getMessage());
             $date = \date('H:i:s');
-            $logs = "\033[90m[{$date}] \033[31mDNS verification failed: \033[0m\n";
+            $logs = "\033[90m[{$date}] \033[31mDNS check failed: \033[0m\n";
             $logs .= \mb_strcut($err->getMessage(), 0, 500000); // Limit to 500kb
             $rule->setAttribute('logs', $logs);
         } finally {
@@ -224,6 +235,7 @@ class Certificates extends Action
      * @param ?string $domainType
      * @param Database $dbForPlatform
      * @param MailPublisher $publisherForMails
+     * @param NotificationPublisher $publisherForNotifications
      * @param Event $queueForEvents
      * @param Webhook $queueForWebhooks
      * @param FunctionPublisher $publisherForFunctions
@@ -232,6 +244,7 @@ class Certificates extends Action
      * @param ValidatorAuthorization $authorization
      * @param bool $skipRenewCheck
      * @param array $plan
+     * @param array $platform
      * @param string|null $validationDomain
      * @param bool $skipDomainValidation DNS already passed for this rule
      * @return void
@@ -248,6 +261,7 @@ class Certificates extends Action
         ?string $domainType,
         Database $dbForPlatform,
         MailPublisher $publisherForMails,
+        NotificationPublisher $publisherForNotifications,
         Event $queueForEvents,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
@@ -257,6 +271,7 @@ class Certificates extends Action
         Bus $bus,
         bool $skipRenewCheck = false,
         array $plan = [],
+        array $platform = [],
         ?string $validationDomain = null,
         bool $skipDomainValidation = false
     ): void {
@@ -334,7 +349,7 @@ class Certificates extends Action
             // already passed for this rule: a second run of the same check can
             // only agree, or fail on a transient and contradict that result.
             if (!$skipRenewCheck && !$skipDomainValidation) {
-                $this->validateDomain($rule, $domain, $validationDomain);
+                $this->validateDomain($rule, $domain, $dbForPlatform, $validationDomain);
             }
 
             $awaitingProvider = !$certificates->isInstantGeneration($domain->get(), $domainType);
@@ -429,7 +444,15 @@ class Certificates extends Action
             $logs .= $waiting && $e instanceof CertificateException && $e->isBlocked()
                 ? "\033[90m[{$date}] \033[33mSSL certificate is waiting on domain verification: \033[0m\n"
                 : "\033[90m[{$date}] \033[31mSSL certificate issuance failed: \033[0m\n";
-            $logs .= \rtrim(\mb_strcut($e->getMessage(), 0, 500000)) . "\n"; // Limit to 500kb
+            // A CDN provider's own failure is about Appwrite's account, not the domain, so the owner
+            // gets a generic line; the worker still reports the raw error
+            // TODO: ask the provider whether its errors are the owner's, instead of checking its class
+            $logs .= $e instanceof CertificateException
+                || ($e instanceof AppwriteException && $e->getType() === AppwriteException::RULE_VERIFICATION_FAILED)
+                || $certificates instanceof LetsEncrypt
+                || $certificates instanceof External
+                ? \rtrim(\mb_strcut($e->getMessage(), 0, 500000)) . "\n" // Limit to 500kb
+                : "We couldn't issue the certificate due to an issue on our side. We'll retry automatically.\n";
 
             // Update attributes on certificate document
             $certificate->setAttributes([
@@ -462,6 +485,16 @@ class Certificates extends Action
                     $this->notifyError($domain->get(), $e->getMessage(), $attempts, $renewing, $certificate->getAttribute('expireDate'), $publisherForMails, $plan, $dbForPlatform->getDocument('projects', 'console'));
                 }
 
+                // The domain failed verification on its own configuration: its records do not point
+                // here, a CAA record blocks the certificate authority, or the name is not a valid
+                // public domain. The outcome is recorded above and maintenance retries it. A queue
+                // redelivery would only repeat it within minutes, count each run as another attempt,
+                // and email the owner again. Resolver errors keep their own type and still retry.
+                if ($e instanceof AppwriteException && $e->getType() === AppwriteException::RULE_VERIFICATION_FAILED) {
+                    Span::add('certificate.verification_failed', true);
+                    return;
+                }
+
                 throw $e;
             }
         } finally {
@@ -473,6 +506,11 @@ class Certificates extends Action
             $rule->setAttribute('certificateId', $certificate->getId());
             $rule->setAttribute('logs', $logs);
             $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $bus);
+
+            // A renewal was already live, so only a first issuance tells the owners
+            if (!$renewing && $rule->getAttribute('status') === RULE_STATUS_VERIFIED) {
+                $this->sendVerifiedAlert($rule, $dbForPlatform, $publisherForNotifications, $platform, $plan);
+            }
         }
     }
 
@@ -574,6 +612,10 @@ class Certificates extends Action
             'renewAt' => $certificate->getAttribute('renewDate', ''),
             'expireAt' => $certificate->getAttribute('expireDate', ''),
             'certificateStatus' => $certificate->getAttribute('status', ''),
+            'records' => \array_map(
+                fn (Document|array $record) => (new RuleRecord())->payload($record instanceof Document ? $record : new Document($record)),
+                $rule->getAttribute('records', []),
+            ),
         ])));
 
         $queueForEvents
@@ -612,12 +654,13 @@ class Certificates extends Action
      *
      * @param Document $rule Rule to validate
      * @param Domain $domain Domain to validate
+     * @param Database $dbForPlatform Database the record checks are stored in
      * @param string|null $validationDomain Override for main domain check
      *
      * @return void
      * @throws Exception
      */
-    private function validateDomain(Document $rule, Domain $domain, ?string $validationDomain = null): void
+    private function validateDomain(Document $rule, Domain $domain, Database $dbForPlatform, ?string $validationDomain = null): void
     {
         $mainDomain = $validationDomain ?? $this->getMainDomain();
         $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
@@ -634,11 +677,10 @@ class Certificates extends Action
 
         try {
             $this->verifyRule($rule);
-        } catch (AppwriteException $err) {
-            $msg = $err->getMessage() . "\n";
-            $msg .= "Verify your DNS records are correctly configured and try again.\n";
-            $msg .= "If they're correct and it still fails, please retry after sometime. DNS records can take up to 48 hours to propagate.\n";
-            throw new AppwriteException($err->getType(), $msg);
+        } finally {
+            // The checks are stored whether or not the domain passed. The rule write that
+            // follows reads them back for the events.
+            $this->updateRecords($rule, $dbForPlatform);
         }
     }
 
@@ -726,5 +768,100 @@ class Certificates extends Action
             preview: $preview,
             variables: $emailVariables,
         ));
+    }
+
+    /**
+     * Mail and notify the project owners, the same way webhook alerts do.
+     * Protected for workers that verify a rule outside certificate generation.
+     */
+    protected function sendVerifiedAlert(Document $rule, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, array $platform, array $plan): void
+    {
+        $projectId = (string) $rule->getAttribute('projectId', '');
+        if ($projectId === '' || $projectId === 'console') {
+            return;
+        }
+
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+        if ($project->isEmpty()) {
+            return;
+        }
+
+        $memberships = $dbForPlatform->find('memberships', [
+            Query::equal('teamInternalId', [$project->getAttribute('teamInternalId')]),
+            Query::equal('confirm', [true]),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]);
+
+        $userIds = [];
+        foreach ($memberships as $membership) {
+            if (\in_array('owner', $membership->getAttribute('roles', []), true)) {
+                $userIds[] = $membership->getAttribute('userId');
+            }
+        }
+
+        if (empty($userIds)) {
+            return;
+        }
+
+        $users = $dbForPlatform->find('users', [
+            Query::equal('$id', \array_values(\array_unique($userIds))),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]);
+
+        $projectInternalId = (string) $project->getSequence();
+        $domain = $rule->getAttribute('domain', '');
+
+        // A site or function lists its own domains; API domains are in project settings
+        $resourceId = $rule->getAttribute('deploymentResourceId', '');
+        $path = match ($resourceId === '' ? '' : $rule->getAttribute('deploymentResourceType', '')) {
+            'site' => "/projects/{$projectId}/sites/{$resourceId}/domains",
+            'function' => "/projects/{$projectId}/functions/{$resourceId}/domains",
+            default => "/projects/{$projectId}/settings/domains",
+        };
+
+        foreach ($users as $user) {
+            $userId = $user->getId();
+            $recipient = [
+                'resourceType' => RESOURCE_TYPE_USERS,
+                'resourceId' => $userId,
+                'resourceInternalId' => (string) $user->getSequence(),
+                'parentResourceType' => RESOURCE_TYPE_PROJECTS,
+                'parentResourceId' => $projectId,
+                'parentResourceInternalId' => $projectInternalId,
+            ];
+
+            $recipients = [['address' => $userId, 'channel' => NOTIFICATION_TYPE_CONSOLE] + $recipient];
+            if (!empty($user->getAttribute('email'))) {
+                $recipients[] = ['address' => $user->getAttribute('email'), 'channel' => NOTIFICATION_TYPE_EMAIL] + $recipient;
+            }
+
+            $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-domain-verified.tpl');
+            $template->setParam('{{user}}', (string) ($user->getAttribute('name', 'there') ?: 'there'));
+            $template->setParam('{{domain}}', $domain);
+            $template->setParam('{{project}}', $project->getAttribute('name'));
+            $template->setParam('{{host}}', $platform['consoleUrl'] ?? '');
+            $template->setParam('{{path}}', $path);
+
+            $publisherForNotifications->enqueue(new NotificationMessage(
+                project: $project,
+                recipients: $recipients,
+                template: MAIL_TEMPLATE_DOMAIN_VERIFIED,
+                deduplicationKey: 'rule:' . $rule->getId() . ':verified:' . $rule->getUpdatedAt(),
+                subject: 'Your domain ' . $domain . ' is live',
+                bodyTemplate: __DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl',
+                body: $template->render(),
+                preview: 'Domain "' . $domain . '" on project "' . $project->getAttribute('name') . '" is verified and live.',
+                variables: [
+                    'logoUrl' => $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL,
+                    'accentColor' => $plan['accentColor'] ?? APP_EMAIL_ACCENT_COLOR,
+                    'twitter' => $plan['twitterUrl'] ?? APP_SOCIAL_TWITTER,
+                    'discord' => $plan['discordUrl'] ?? APP_SOCIAL_DISCORD,
+                    'github' => $plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE,
+                    'terms' => $plan['termsUrl'] ?? APP_EMAIL_TERMS_URL,
+                    'privacy' => $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL,
+                    'platform' => $plan['platformName'] ?? APP_NAME,
+                ],
+            ));
+        }
     }
 }

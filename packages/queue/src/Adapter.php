@@ -123,7 +123,7 @@ abstract class Adapter
      * @param callable(Message): void $successCallback
      * @param callable(?Message, \Throwable): void $errorCallback Receives null when
      *        the failure was in obtaining a message rather than handling one.
-     * @param array<int, array{queue: Queue, coroutines: int, prefetch?: int, consumer?: Consumer}> $queues
+     * @param array<int, array{queue: Queue, coroutines: int, prefetch?: int, maxInFlight?: int, consumer?: Consumer}> $queues
      *        Queue identity and concurrency come from Server::job(); sequential
      *        adapters run specs one after another, Swoole runs independent loops.
      */
@@ -148,12 +148,13 @@ abstract class Adapter
                 $errorCallback,
                 $spec['consumer'] ?? $this->consumer,
                 $spec['prefetch'] ?? $spec['coroutines'],
+                $spec['maxInFlight'] ?? null,
             );
         }
     }
 
     /**
-     * One-queue loop. `$coroutines` and `$prefetch` are accepted for adapter
+     * One-queue loop. Handler, receive-buffer and in-flight limits are accepted for adapter
      * parity; the sequential fallback processes one message at a time.
      *
      * Binds `$this->queue` / `$this->consumer` for the duration so the hot
@@ -171,9 +172,10 @@ abstract class Adapter
         callable $errorCallback,
         Consumer $consumer,
         ?int $prefetch = null,
+        ?int $maxInFlight = null,
     ): void {
         // Sequential adapters receive and acknowledge one message at a time.
-        unset($coroutines, $prefetch);
+        unset($coroutines, $prefetch, $maxInFlight);
 
         $previousConsumer = $this->consumer;
         $this->queue = $queue;
@@ -281,11 +283,16 @@ abstract class Adapter
      * Claim up to $max messages at once.
      *
      * @param callable(?Message, \Throwable): void $errorCallback
+     * @param null|callable(Message): void $onMessage
      * @return list<Message>
      */
-    protected function nextBatchFrom(callable $errorCallback, Queue $queue, Consumer $consumer, int $max): array
+    protected function nextBatchFrom(callable $errorCallback, Queue $queue, Consumer $consumer, int $max, ?callable $onMessage = null): array
     {
         try {
+            if ($onMessage !== null && $consumer instanceof Consumer\Streaming) {
+                $consumer->receiveEach($queue, static::RECEIVE_TIMEOUT, $max, $onMessage);
+                return [];
+            }
             return $consumer->receive($queue, static::RECEIVE_TIMEOUT, $max);
         } catch (\Throwable $error) {
             try {

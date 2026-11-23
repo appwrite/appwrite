@@ -32,7 +32,7 @@ final class InitJobsTest extends TestCase
             'workers' => ['all'],
             'jobs' => [
                 'databases' => ['queue' => 'database_db_main', 'coroutines' => 1],
-                'functions' => ['queue' => 'v1-functions', 'coroutines' => 8],
+                'functions' => ['queue' => 'v1-functions', 'coroutines' => 8, 'prefetch' => 3, 'maxInFlight' => 20],
             ],
         ]);
 
@@ -40,7 +40,8 @@ final class InitJobsTest extends TestCase
         $this->assertSame(1, $server->coroutines('database_db_main'));
         $this->assertSame(8, $server->coroutines('v1-functions'));
         $this->assertSame(1, $server->prefetch('database_db_main'));
-        $this->assertSame(8, $server->prefetch('v1-functions'));
+        $this->assertSame(3, $server->prefetch('v1-functions'));
+        $this->assertSame(20, $server->maxInFlight('v1-functions'));
     }
 
     public function testDedicatedDatabasesRegistersSingleCapOfOne(): void

@@ -39,7 +39,7 @@ import {
 } from '@/components/ui/table'
 import { useT } from '@/lib/i18n/translate'
 import { toast } from 'sonner'
-import type { Models } from '@appwrite.io/console'
+import { AnalyticsPropertyType, type Models } from '@appwrite.io/console'
 import {
   getDefaultAnalyticsRange,
   getPreviousAnalyticsRange,
@@ -55,6 +55,8 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { canCreateAnalyticsProperty } from '@/lib/console-access-checks'
 import { DeleteProperty } from './_components/DeleteProperty'
+import { useAnalyticsPropertiesPlanLimit } from './_components/useAnalyticsPropertiesPlanLimit'
+import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 import { AnalyticsEmptyState } from './_components/AnalyticsEmptyState'
 import { PropertyContextMenu } from './_components/PropertyContextMenu'
 import { LiveVisitors } from './_components/LiveVisitors'
@@ -158,6 +160,8 @@ export function View() {
   const createPermissionTooltip = noCreatePermission
     ? t("You don't have permission to create analytics properties.")
     : undefined
+  const planLimit = useAnalyticsPropertiesPlanLimit(projectId)
+  const isCreateDisabled = noCreatePermission || planLimit.isAtLimit
 
   const deleteMutation = useDeleteAnalyticsProperty(projectId)
 
@@ -267,10 +271,23 @@ export function View() {
         createAnalyticsAction="create-analytics-property"
         createTo="/projects/$projectId/analytics/add"
         createParams={{ projectId: projectId as string }}
-        createDisabled={noCreatePermission}
+        createDisabled={isCreateDisabled}
         createDisabledTooltip={createPermissionTooltip}
         showFilters
         fullWidthBorder
+        contentAfterBorder={
+          planLimit.isLoaded ? (
+            <PlanLimitWarning
+              currentCount={planLimit.currentCount}
+              limit={planLimit.limit}
+              planName={planLimit.planName}
+              resourceName="analytics properties"
+              resourceNameSingular="analytics property"
+              orgId={planLimit.orgId}
+              fullWidth={false}
+            />
+          ) : undefined
+        }
         // First run: the empty state carries the create action, so the
         // search / view toggle / create toolbar is hidden (as in Stores, Auth).
         hideToolbar={showsFirstRunEmptyState}
@@ -287,7 +304,7 @@ export function View() {
                 params: { projectId: projectId as string },
               })
             }
-            createDisabled={noCreatePermission}
+            createDisabled={isCreateDisabled}
             createDisabledTooltip={createPermissionTooltip}
           />
         ) : viewMode === 'grid' ? (
@@ -378,6 +395,10 @@ export function View() {
                             projectId={projectId as string}
                             propertyId={property.$id}
                             variant="inline"
+                            mobile={
+                              propertyType(property) ===
+                              AnalyticsPropertyType.Mobile
+                            }
                           />
                         </span>
                       )}
@@ -566,6 +587,10 @@ export function View() {
                               projectId={projectId as string}
                               propertyId={property.$id}
                               variant="inline"
+                              mobile={
+                                propertyType(property) ===
+                                AnalyticsPropertyType.Mobile
+                              }
                             />
                           ) : (
                             <span className="text-[13px] text-muted-foreground">

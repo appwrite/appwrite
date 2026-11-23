@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Utopia\Validator\Tests;
 
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Validator\Text;
 
+#[RequiresPhpExtension('utopia')]
 final class TextTest extends TestCase
 {
     public function testCanValidateText(): void

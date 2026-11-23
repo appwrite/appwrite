@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Utopia\Auth\Tests\Algorithms;
 
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Auth\Hashes\Bcrypt;
 
+#[RequiresPhpExtension('utopia')]
 final class BcryptTest extends TestCase
 {
     private Bcrypt $bcrypt;

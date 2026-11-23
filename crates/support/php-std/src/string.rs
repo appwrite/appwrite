@@ -35,9 +35,6 @@
 //! | `escapeshellarg` | [`escapeshellarg`] |
 //! | `ctype_alnum`, `ctype_digit`, `ctype_xdigit` | [`ctype_alnum`], [`ctype_digit`], [`ctype_xdigit`] ([`Ctype`] for any value) |
 //! | `(string) $value` (`zval_get_string`) | [`to_php_string`] |
-//!
-//! Every function here is checked against the real PHP function by
-//! `bin/compat fuzz php-std` (operations `string.*`).
 
 use std::borrow::Cow;
 use std::fmt;
@@ -1329,7 +1326,7 @@ pub fn password_hash_argon2id(
     threads: i64,
     salt: &[u8; 16],
 ) -> Result<Vec<u8>, Error> {
-    use argon2::{Algorithm, Argon2, Params, Version};
+    use crate::argon2::{Algorithm, Params, hash};
     if !(8..=0xFFFF_FFFF).contains(&memory_cost) {
         return Err(Error::Value("Memory cost is outside of allowed memory range".into()));
     }
@@ -1347,11 +1344,9 @@ pub fn password_hash_argon2id(
     if m > ARGON2_MEMORY_LIMIT {
         return Err(failed());
     }
-    let params = Params::new(m, t, p, Some(32)).map_err(|_| failed())?;
+    let params = Params::new(Algorithm::Argon2id, 0x13, m, t, p).ok_or_else(failed)?;
     let mut out = [0u8; 32];
-    Argon2::new(Algorithm::Argon2id, Version::V0x13, params)
-        .hash_password_into(password, salt, &mut out)
-        .map_err(|_| failed())?;
+    hash(&params, password, salt, &mut out).ok_or_else(failed)?;
     let b64 = |b: &[u8]| crate::encoding::base64_encode(b).trim_end_matches('=').to_owned();
     Ok(format!("$argon2id$v=19$m={m},t={t},p={p}${}${}", b64(salt), b64(&out)).into_bytes())
 }
@@ -1359,8 +1354,8 @@ pub fn password_hash_argon2id(
 /// PHP `password_verify($password, $hash)`.
 pub fn password_verify(password: &[u8], hash: &[u8]) -> bool {
     match password_ident(hash) {
-        Some(b"argon2i") => argon2_verify(password, hash, argon2::Algorithm::Argon2i, b"argon2i"),
-        Some(b"argon2id") => argon2_verify(password, hash, argon2::Algorithm::Argon2id, b"argon2id"),
+        Some(b"argon2i") => argon2_verify(password, hash, crate::argon2::Algorithm::Argon2i, b"argon2i"),
+        Some(b"argon2id") => argon2_verify(password, hash, crate::argon2::Algorithm::Argon2id, b"argon2id"),
         _ => {
             // php_password_bcrypt_verify: php_crypt() and a constant-time compare.
             let Some(computed) = php_crypt(password, hash) else {
@@ -1431,8 +1426,8 @@ fn argon2_base64(s: &[u8]) -> Option<(Vec<u8>, &[u8])> {
 }
 
 /// `argon2_verify()` as PHP's argon2 password algorithms call it.
-fn argon2_verify(password: &[u8], hash: &[u8], algorithm: argon2::Algorithm, name: &[u8]) -> bool {
-    use argon2::{Argon2, Params, Version};
+fn argon2_verify(password: &[u8], hash: &[u8], algorithm: crate::argon2::Algorithm, name: &[u8]) -> bool {
+    use crate::argon2::Params;
     let parse = || {
         let s = hash.strip_prefix(b"$")?.strip_prefix(name)?;
         let (version, s) = match argon2_u32(s, b"$v=") {
@@ -1450,19 +1445,14 @@ fn argon2_verify(password: &[u8], hash: &[u8], algorithm: argon2::Algorithm, nam
     let Some((version, [m, t, p], salt, expected)) = parse() else {
         return false;
     };
-    let version = match version {
-        0x10 => Version::V0x10,
-        0x13 => Version::V0x13,
-        _ => return false,
-    };
     if expected.len() < 4 || salt.len() < 8 || m > ARGON2_MEMORY_LIMIT {
         return false;
     }
-    let Ok(params) = Params::new(m, t, p, Some(expected.len())) else {
+    let Some(params) = Params::new(algorithm, version, m, t, p) else {
         return false;
     };
     let mut out = vec![0u8; expected.len()];
-    if Argon2::new(algorithm, version, params).hash_password_into(password, &salt, &mut out).is_err() {
+    if crate::argon2::hash(&params, password, &salt, &mut out).is_none() {
         return false;
     }
     out.iter().zip(&expected).fold(0u8, |acc, (a, b)| acc | (a ^ b)) == 0

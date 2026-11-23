@@ -909,6 +909,7 @@ final class MessagingTest extends TestCase
             'A query must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' values.' => [Query::equal('id', [...$values, 'one more'])->toString()],
             'A query must be at most ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.' => [Query::equal('id', [\str_repeat('x', APP_LIMIT_ARRAY_ELEMENT_SIZE)])->toString()],
             'A subscription must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries, counting the ones nested in and/or.' => [...$nested, Query::equal('a', ['b'])->toString()],
+            'A query must be a string.' => [['equal', 'x']],
         ] as $message => $queries) {
             try {
                 Realtime::convertQueries($queries);
@@ -917,6 +918,13 @@ final class MessagingTest extends TestCase
                 $this->assertSame($message, $e->getMessage());
             }
         }
+    }
+
+    public function testConvertQueriesRejectsSelectOtherThanAll(): void
+    {
+        $this->expectException(QueryException::class);
+        $this->expectExceptionMessage('Only select("*") is allowed in Realtime queries.');
+        Realtime::convertQueries([Query::select(['name'])->toString()]);
     }
 
     public function testCountQueriesIncludesNested(): void
@@ -1588,6 +1596,25 @@ final class MessagingTest extends TestCase
         $this->assertContains('presences', $result['channels']);
         $this->assertContains('presences.' . $presenceId, $result['channels']);
         $this->assertContains(Role::any()->toString(), $result['roles']);
+    }
+
+    public function testFromPayloadVideoRenditionChannels(): void
+    {
+        $result = Realtime::fromPayload(
+            event: 'videos.video1.renditions.rendition1.update',
+            payload: new Document([
+                '$id' => 'rendition1',
+                // Roles come only from the stamped payload ACL — not the project team.
+                '$permissions' => [Permission::read(Role::user('user1'))],
+            ]),
+            project: new Document(['$id' => 'project1', 'teamId' => 'team1']),
+        );
+
+        $this->assertContains('videos.video1.renditions.rendition1', $result['channels']);
+        $this->assertContains('console', $result['channels']);
+        $this->assertContains('projects.project1', $result['channels']);
+        $this->assertContains(Role::user('user1')->toString(), $result['roles']);
+        $this->assertNotContains(Role::team('team1')->toString(), $result['roles']);
     }
 
     public function testFromPayloadTeamCreateSetsPermissionsChangedAndTeamRole(): void

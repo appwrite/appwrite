@@ -10,6 +10,17 @@ checksum = "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa"
 
 [[package]]
 name = "aes"
+version = "0.8.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b169f7a6d4742236a0a00c541b845991d0ac43e546831af1249753ab4c3aa3a0"
+dependencies = [
+ "cfg-if",
+ "cipher 0.4.4",
+ "cpufeatures 0.2.17",
+]
+
+[[package]]
+name = "aes"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc0fc36d7440d015b45468ba08a21e80e056ebbd014c611c6298bb7503e04bd1"
@@ -693,9 +704,9 @@ dependencies = [
 
 [[package]]
 name = "ext-php-rs"
-version = "0.16.4"
+version = "0.16.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af52a43b4a06ff1aa4068018c15e7480f7cab2ecb1231710497686587a964156"
+checksum = "c1d72e0a34c9c88383f784dc538404d5ed1b3a3451245fe7a3c05b78a859c8f1"
 dependencies = [
  "anyhow",
  "bindgen",
@@ -717,18 +728,18 @@ dependencies = [
 
 [[package]]
 name = "ext-php-rs-build"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27fdebdb7e4287ce25231551be917d80281d5befaee335ba9b1b77ffb01a1c6b"
+checksum = "d5f815ea2c4c677aecd7d74a6078ad56dd2a63d6d58aa87b75fd44852f48777f"
 dependencies = [
  "anyhow",
 ]
 
 [[package]]
 name = "ext-php-rs-derive"
-version = "0.12.4"
+version = "0.12.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28378724430eac91c5db4004e16699dd68deaf519d2c74f7dd970af3d1b298a2"
+checksum = "a28870f7a35eada8b2571d2db76dda8d8ab786c9d645282cb8a8a6c9d9fd4855"
 dependencies = [
  "convert_case",
  "darling",
@@ -1098,6 +1109,8 @@ checksum = "cc4e190f5d26ca7051642629da2c52fc03bde85a03197c99408dcd291734c855"
 dependencies = [
  "equivalent",
  "hashbrown",
+ "serde",
+ "serde_core",
 ]
 
 [[package]]
@@ -1295,9 +1308,9 @@ checksum = "4744e383959f0db86ede514b809b1c53251889093803c05267acc7d4e7030d70"
 
 [[package]]
 name = "lock_api"
-version = "0.4.14"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "224399e74b87b5f3557511d98dff8b14089b3dadafcab6bb93eab67d3aace965"
+checksum = "65d91b22da179613dcf4d6ec8349563f52a363f6849e03b00dd0a185ec4a59af"
 dependencies = [
  "scopeguard",
 ]
@@ -1578,9 +1591,9 @@ dependencies = [
 
 [[package]]
 name = "parking_lot"
-version = "0.12.5"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "93857453250e3077bd71ff98b6a65ea6621a19bb0f559a85248955ac12c45a1a"
+checksum = "a9cf937ca4e1d0b7578784559063422fc39ae7c5a00f02471f2614d5486fd226"
 dependencies = [
  "lock_api",
  "parking_lot_core",
@@ -1588,11 +1601,10 @@ dependencies = [
 
 [[package]]
 name = "parking_lot_core"
-version = "0.9.12"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2621685985a2ebf1c516881c026032ac7deafcda1a2c9b7850dc81e3dfcb64c1"
+checksum = "9cfff060068cc18aa7815010fcaf80c68c7fb9e85fc7f5c0f9bf142c21d19826"
 dependencies = [
- "cfg-if",
  "libc",
  "redox_syscall",
  "smallvec",
@@ -1652,6 +1664,7 @@ name = "php-std"
 version = "0.1.0"
 dependencies = [
  "argon2",
+ "blake2",
  "blowfish",
  "bytes",
  "cc",
@@ -1674,6 +1687,7 @@ dependencies = [
  "unsafe-libyaml",
  "whirlpool",
  "xxhash-rust",
+ "zeroize",
 ]
 
 [[package]]
@@ -1926,9 +1940,9 @@ dependencies = [
 
 [[package]]
 name = "redox_syscall"
-version = "0.5.18"
+version = "0.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ed2bf2547551a7053d6fdfafda3f938979645c44812fbfcda098faae3f1a362d"
+checksum = "580c875845b41ecb1564ad1ae4703044cef774145e3d7a94dc2b3fa7c97868fd"
 dependencies = [
  "bitflags",
 ]
@@ -2525,11 +2539,56 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3a3b425286980a367278453f3b6d28cdcb134b574e5a35824a6ff5eebad50bb6"
 
 [[package]]
+name = "utopia-auth"
+version = "0.1.0"
+dependencies = [
+ "aes 0.8.4",
+ "getrandom 0.3.4",
+ "md-5",
+ "php-std",
+ "sha2 0.10.9",
+ "zeroize",
+]
+
+[[package]]
+name = "utopia-domains"
+version = "0.1.0"
+dependencies = [
+ "php-std",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "utopia-dsn"
+version = "0.1.0"
+dependencies = [
+ "php-std",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "utopia-emails"
+version = "0.1.0"
+dependencies = [
+ "php-std",
+ "serde_json",
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "utopia-extension"
 version = "0.1.0"
 dependencies = [
  "ext-php-rs",
+ "php-std",
+ "utopia-auth",
+ "utopia-domains",
+ "utopia-dsn",
+ "utopia-emails",
  "utopia-image",
+ "utopia-locale",
+ "utopia-user-agent",
+ "utopia-validators",
 ]
 
 [[package]]
@@ -2549,6 +2608,34 @@ dependencies = [
  "thiserror 2.0.21",
  "webp",
  "zeno",
+]
+
+[[package]]
+name = "utopia-locale"
+version = "0.1.0"
+dependencies = [
+ "foldhash",
+ "indexmap",
+ "php-std",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "utopia-user-agent"
+version = "0.1.0"
+dependencies = [
+ "aho-corasick",
+ "memchr",
+ "php-std",
+]
+
+[[package]]
+name = "utopia-validators"
+version = "0.1.0"
+dependencies = [
+ "php-std",
 ]
 
 [[package]]
@@ -2865,7 +2952,7 @@ version = "9.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3476fd497ac8af5b1ec7b51acab7bef380f7e8dd8e0487595bafd839417a302"
 dependencies = [
- "aes",
+ "aes 0.9.4",
  "bzip2",
  "constant_time_eq",
  "crc32fast",

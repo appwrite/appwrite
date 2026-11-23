@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { AlertCircle } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,10 +15,11 @@ import {
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { useT } from '@/lib/i18n/translate'
 import {
-  RECORD_NUMBER_MAX,
   RECORD_TTL_MAX,
   parseRecordNumber,
+  recordNumberFieldMessage,
 } from '@/lib/domains/record-numeric-fields'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 
 const DNS_RECORD_TYPES = [
   'A',
@@ -62,7 +65,7 @@ interface CreateRecordDialogProps {
     weight?: number
     port?: number
     comment?: string
-  }) => void
+  }) => void | Promise<unknown>
   isLoading?: boolean
 }
 
@@ -81,9 +84,16 @@ export function CreateRecordDialog({
   const [weight, setWeight] = useState('')
   const [port, setPort] = useState('')
   const [comment, setComment] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<{
+    priority?: string
+    weight?: string
+    port?: string
+  }>({})
+  const [error, setError] = useState<string | null>(null)
 
-  // Reset form when dialog closes
+  // Reset form when dialog closes, and drop a previous rejection on reopen.
   useEffect(() => {
+    setError(null)
     if (!open) {
       setType('A')
       setName('')
@@ -93,39 +103,83 @@ export function CreateRecordDialog({
       setWeight('')
       setPort('')
       setComment('')
+      setFieldErrors({})
     }
   }, [open])
 
+  const change =
+    (setter: (value: string) => void, field?: 'priority' | 'weight' | 'port') =>
+    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setter(event.target.value)
+      setError(null)
+      if (field) {
+        setFieldErrors((prev) =>
+          prev[field] ? { ...prev, [field]: undefined } : prev,
+        )
+      }
+    }
+
   const handleOpenChange = (newOpen: boolean) => {
     if (!isLoading) {
+      if (!newOpen) setError(null)
       onOpenChange(newOpen)
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name.trim() || !value.trim()) return
+    // MX defaults to priority 10, so only a value typed in is checked.
+    const priorityError =
+      type === 'SRV' || (type === 'MX' && priority.trim())
+        ? recordNumberFieldMessage(priority, 'priority')
+        : null
+    const weightError =
+      type === 'SRV' ? recordNumberFieldMessage(weight, 'weight') : null
+    const portError =
+      type === 'SRV' ? recordNumberFieldMessage(port, 'port') : null
+
+    setFieldErrors({
+      priority: priorityError ?? undefined,
+      weight: weightError ?? undefined,
+      port: portError ?? undefined,
+    })
+
+    if (
+      isLoading ||
+      !name.trim() ||
+      !value.trim() ||
+      priorityError ||
+      weightError ||
+      portError
+    ) {
+      return
+    }
 
     const parsedTtl = parseRecordNumber(ttl)
     const parsedPriority = parseRecordNumber(priority)
     const parsedWeight = parseRecordNumber(weight)
     const parsedPort = parseRecordNumber(port)
 
-    onCreate({
-      type,
-      name: name.trim(),
-      value: value.trim(),
-      ttl: parsedTtl ?? DEFAULT_TTL,
-      priority:
-        type === 'MX'
-          ? (parsedPriority ?? DEFAULT_MX_PRIORITY)
-          : type === 'SRV'
-            ? parsedPriority
-            : undefined,
-      weight: type === 'SRV' ? parsedWeight : undefined,
-      port: type === 'SRV' ? parsedPort : undefined,
-      comment: comment.trim() || undefined,
-    })
+    setError(null)
+    try {
+      await onCreate({
+        type,
+        name: name.trim(),
+        value: value.trim(),
+        ttl: parsedTtl ?? DEFAULT_TTL,
+        priority:
+          type === 'MX'
+            ? (parsedPriority ?? DEFAULT_MX_PRIORITY)
+            : type === 'SRV'
+              ? parsedPriority
+              : undefined,
+        weight: type === 'SRV' ? parsedWeight : undefined,
+        port: type === 'SRV' ? parsedPort : undefined,
+        comment: comment.trim() || undefined,
+      })
+    } catch (submitError) {
+      setError(getErrorMessage(submitError))
+    }
   }
 
   const requiresPriority = type === 'MX' || type === 'SRV'
@@ -137,14 +191,11 @@ export function CreateRecordDialog({
       onOpenChange={handleOpenChange}
       title={t('Create DNS Record')}
       maxWidth="sm:max-w-lg"
->
+    >
       <>
         <div className="border-t border-border shrink-0" />
 
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-1 flex-col min-h-0"
->
+        <form onSubmit={handleSubmit} className="flex flex-1 flex-col min-h-0">
           <div className="flex-1 overflow-y-auto">
             <div className="px-6 py-6">
               <div className="space-y-5">
@@ -154,20 +205,23 @@ export function CreateRecordDialog({
                   </Label>
                   <Select
                     value={type}
-                    onValueChange={setType}
+                    onValueChange={(next) => {
+                      setType(next)
+                      // MX records almost always use priority 10.
+                      if (next === 'MX' && !priority.trim()) {
+                        setPriority(DEFAULT_MX_PRIORITY.toString())
+                      }
+                      setFieldErrors({})
+                      setError(null)
+                    }}
                     disabled={isLoading}
->
-                    <SelectTrigger
-                      id="type"
->
+                  >
+                    <SelectTrigger id="type">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {DNS_RECORD_TYPES.map((recordType) => (
-                        <SelectItem
-                          key={recordType}
-                          value={recordType}
->
+                        <SelectItem key={recordType} value={recordType}>
                           {recordType}
                         </SelectItem>
                       ))}
@@ -187,7 +241,7 @@ export function CreateRecordDialog({
                   <Input
                     id="name"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={change(setName)}
                     placeholder={t('@ or subdomain')}
                     disabled={isLoading}
                     autoFocus
@@ -206,7 +260,7 @@ export function CreateRecordDialog({
                   <Input
                     id="value"
                     value={value}
-                    onChange={(e) => setValue(e.target.value)}
+                    onChange={change(setValue)}
                     placeholder={
                       type === 'A'
                         ? '192.0.2.1'
@@ -234,7 +288,7 @@ export function CreateRecordDialog({
                     id="ttl"
                     type="number"
                     value={ttl}
-                    onChange={(e) => setTtl(e.target.value)}
+                    onChange={change(setTtl)}
                     min="1"
                     max={RECORD_TTL_MAX}
                     disabled={isLoading}
@@ -247,20 +301,29 @@ export function CreateRecordDialog({
                 {requiresPriority && (
                   <div className="space-y-2">
                     <Label htmlFor="priority">
-                      {t('Priority')} <span className="text-destructive">*</span>
+                      {t('Priority')}{' '}
+                      <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="priority"
                       type="number"
                       value={priority}
-                      onChange={(e) => setPriority(e.target.value)}
+                      onChange={change(setPriority, 'priority')}
                       placeholder={
                         type === 'MX' ? DEFAULT_MX_PRIORITY.toString() : '0'
                       }
-                      min="0"
-                      max={RECORD_NUMBER_MAX}
+                      step="any"
                       disabled={isLoading}
+                      aria-invalid={!!fieldErrors.priority}
+                      className={
+                        fieldErrors.priority ? 'border-destructive' : ''
+                      }
                     />
+                    {fieldErrors.priority && (
+                      <p className="text-[12px] text-destructive">
+                        {t(fieldErrors.priority)}
+                      </p>
+                    )}
                     <p className="text-[12px] text-muted-foreground">
                       {type === 'MX'
                         ? t('Lower numbers have higher priority')
@@ -273,18 +336,27 @@ export function CreateRecordDialog({
                   <>
                     <div className="space-y-2">
                       <Label htmlFor="weight">
-                        {t('Weight')} <span className="text-destructive">*</span>
+                        {t('Weight')}{' '}
+                        <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id="weight"
                         type="number"
                         value={weight}
-                        onChange={(e) => setWeight(e.target.value)}
+                        onChange={change(setWeight, 'weight')}
                         placeholder="10"
-                        min="0"
-                        max={RECORD_NUMBER_MAX}
+                        step="any"
                         disabled={isLoading}
+                        aria-invalid={!!fieldErrors.weight}
+                        className={
+                          fieldErrors.weight ? 'border-destructive' : ''
+                        }
                       />
+                      {fieldErrors.weight && (
+                        <p className="text-[12px] text-destructive">
+                          {t(fieldErrors.weight)}
+                        </p>
+                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -295,12 +367,18 @@ export function CreateRecordDialog({
                         id="port"
                         type="number"
                         value={port}
-                        onChange={(e) => setPort(e.target.value)}
+                        onChange={change(setPort, 'port')}
                         placeholder="443"
-                        min="0"
-                        max={RECORD_NUMBER_MAX}
+                        step="any"
                         disabled={isLoading}
+                        aria-invalid={!!fieldErrors.port}
+                        className={fieldErrors.port ? 'border-destructive' : ''}
                       />
+                      {fieldErrors.port && (
+                        <p className="text-[12px] text-destructive">
+                          {t(fieldErrors.port)}
+                        </p>
+                      )}
                     </div>
                   </>
                 )}
@@ -310,7 +388,7 @@ export function CreateRecordDialog({
                   <Textarea
                     id="comment"
                     value={comment}
-                    onChange={(e) => setComment(e.target.value)}
+                    onChange={change(setComment)}
                     placeholder={t('Optional comment')}
                     disabled={isLoading}
                     rows={3}
@@ -320,21 +398,33 @@ export function CreateRecordDialog({
             </div>
           </div>
 
-          <div className="flex-shrink-0 flex items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
-            <Button
-              type="submit"
-              disabled={isLoading || !name.trim() || !value.trim()}
->
-              {t('Create Record')}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleOpenChange(false)}
-              disabled={isLoading}
->
-              {t('Cancel')}
-            </Button>
+          <div className="flex-shrink-0 border-t border-border bg-muted/30">
+            {error ? (
+              <div className="px-6 pt-4">
+                <Alert variant="destructive" className="border-destructive/30">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="text-[13px]">
+                    {error}
+                  </AlertDescription>
+                </Alert>
+              </div>
+            ) : null}
+            <div className="flex items-center justify-start gap-2 px-6 py-4">
+              <Button
+                type="submit"
+                disabled={isLoading || !name.trim() || !value.trim()}
+              >
+                {t('Create Record')}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleOpenChange(false)}
+                disabled={isLoading}
+              >
+                {t('Cancel')}
+              </Button>
+            </div>
           </div>
         </form>
       </>

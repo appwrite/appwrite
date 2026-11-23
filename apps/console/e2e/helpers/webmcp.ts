@@ -65,7 +65,11 @@ async function installRegistry(page: Page): Promise<void> {
           },
         }))
       },
-      async executeTool(registered: { name: string }, input: object = {}) {
+      async executeTool(
+        registered: { name: string },
+        input: object = {},
+        options: { signal?: AbortSignal } = {},
+      ) {
         const tool = tools.get(registered.name)
         if (!tool)
           throw new DOMException(
@@ -94,7 +98,9 @@ async function installRegistry(page: Page): Promise<void> {
         )
         return JSON.stringify(
           await Promise.race([
-            execute(input, { signal: new AbortController().signal }),
+            execute(input, {
+              signal: options.signal ?? new AbortController().signal,
+            }),
             unregistered,
           ]),
         )

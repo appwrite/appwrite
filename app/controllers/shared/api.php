@@ -20,6 +20,7 @@ use Appwrite\Locking\Lock;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Platform\Modules\Storage\Config\CacheControl;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
+use Appwrite\Platform\Modules\Videos\Base as VideosBase;
 use Appwrite\Reference\Renderer;
 use Appwrite\SDK\Method;
 use Appwrite\Usage\Context;
@@ -771,6 +772,16 @@ Http::init()
                 }
             }
 
+            $miss = static function () use ($response, $storageCacheOperationsCounter): void {
+                $storageCacheOperationsCounter->add(1, ['result' => 'miss']);
+                Span::add('storage.cache.hit', false);
+                $response
+                    ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+                    ->addHeader('Pragma', 'no-cache')
+                    ->addHeader('Expires', '0')
+                    ->addHeader('X-Appwrite-Cache', 'miss');
+            };
+
             if (! empty($data) && ! $cacheLog->isEmpty()) {
                 $cacheControl = \sprintf('private, max-age=%d', $timestamp);
                 $parts = explode('/', $cacheLog->getAttribute('resourceType', ''));
@@ -813,6 +824,19 @@ Http::init()
                     if ($file->isEmpty()) {
                         throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
                     }
+
+                    // Cached before this file existed: a deleted file with the same ID, whose
+                    // entries the deletes worker has not purged yet.
+                    if ($cacheLog->getCreatedAt() < $file->getCreatedAt()) {
+                        $authorization->skip(fn () => $dbForProject->deleteDocument('cache', $cacheLog->getId()));
+                        $cache->purge($key);
+                        $fallback?->purge($key);
+                        Span::add('storage.cache.superseded', true);
+                        $miss();
+
+                        return;
+                    }
+
                     Span::add('storage.bucket.id', $bucketId);
                     Span::add('storage.file.id', $fileId);
                     // Do not update transformedAt if it's a console user
@@ -841,6 +865,13 @@ Http::init()
                             negotiated: $negotiated,
                         ));
                     }
+                } elseif ($type === 'video') {
+                    // Thumbnail previews inherit access from the video document's
+                    // `$permissions` — re-check that before serving cached bytes.
+                    $videoId = $parts[1] ?? null;
+                    VideosBase::getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
+
+                    Span::add('video.id', $videoId);
                 }
 
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');
@@ -859,8 +890,23 @@ Http::init()
                     ->addHeader('Cache-Control', $cacheControl)
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'));
-                if ($negotiated) {
-                    $response->addHeader('Vary', 'Accept');
+
+                // The action that sets Vary never runs on a hit. Repeat the
+                // route's cache.vary headers so a private cache does not reuse
+                // negotiated bytes for a different Accept. Negotiated `auto`
+                // params vary on Accept even when the route lists no headers.
+                $vary = $route->getLabel('cache.vary', []);
+                if (! \is_array($vary)) {
+                    $vary = [];
+                }
+                if ($negotiated && ! \in_array('accept', \array_map('strtolower', $vary), true)) {
+                    $vary[] = 'accept';
+                }
+                if ($vary !== []) {
+                    $response->addHeader('Vary', \implode(', ', \array_map(
+                        static fn (string $header): string => \ucwords($header, '-'),
+                        $vary
+                    )));
                 }
                 $storageCacheOperationsCounter->add(1, ['result' => 'hit']);
                 if (! $isImageTransformation || ! $isDisabled) {
@@ -868,13 +914,7 @@ Http::init()
                     $response->send($data);
                 }
             } else {
-                $storageCacheOperationsCounter->add(1, ['result' => 'miss']);
-                Span::add('storage.cache.hit', false);
-                $response
-                    ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
-                    ->addHeader('Pragma', 'no-cache')
-                    ->addHeader('Expires', '0')
-                    ->addHeader('X-Appwrite-Cache', 'miss');
+                $miss();
             }
         }
     });

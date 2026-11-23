@@ -137,11 +137,12 @@ describe('VerifyDomainContent CAA record', () => {
 })
 
 describe('VerifyDomainContent apex domain', () => {
-  test('opens on the A record, not a CNAME on @', async () => {
+  test('offers an ALIAS to the CNAME target, not an A record', async () => {
     a = '1.2.3.4'
     const view = await renderContent('api', 'custom.com')
-    expect(view.queryAllByText('1.2.3.4').length).toBeGreaterThan(0)
-    expect(view.queryAllByText('target.example.com')).toHaveLength(0)
+    expect(view.queryAllByText('ALIAS or ANAME').length).toBeGreaterThan(0)
+    expect(view.queryAllByText('target.example.com').length).toBeGreaterThan(0)
+    expect(view.queryAllByText('1.2.3.4')).toHaveLength(0)
   })
 
   test('offers no A record for a site on the edge network, which it does not serve', async () => {

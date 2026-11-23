@@ -1,5 +1,4 @@
 import type { Models } from '@appwrite.io/console'
-import { useNavigate } from '@tanstack/react-router'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -14,6 +13,7 @@ import {
   FileText,
   RefreshCw,
   Globe,
+  Pencil,
   Copy,
   Link2,
   FileJson,
@@ -28,11 +28,7 @@ import {
   openInNewTab,
   openInNewWindow,
 } from '@/lib/utils/context-menu'
-import {
-  canRetryRule,
-  canViewRuleLogs,
-  getApexDomain,
-} from '@/lib/utils/proxy-domains'
+import { canRetryRule, canViewRuleLogs } from '@/lib/utils/proxy-domains'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { useT } from '@/lib/i18n/translate'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
@@ -42,10 +38,10 @@ import { useVisitUrl } from '@/hooks/use-visit-url'
 interface ProxyRuleContextMenuProps {
   projectId: string
   rule: Models.ProxyRule
-  projectTeamId?: string
-  apexToOrgDomainId: Map<string, string>
   onViewLogs: (rule: Models.ProxyRule) => void
   onRetry: (rule: Models.ProxyRule) => void
+  onUpdate?: (rule: Models.ProxyRule) => void
+  onRecords: (rule: Models.ProxyRule) => void
   onDelete: (rule: Models.ProxyRule) => void
   children: React.ReactNode
 }
@@ -53,30 +49,16 @@ interface ProxyRuleContextMenuProps {
 export function ProxyRuleContextMenu({
   projectId,
   rule,
-  projectTeamId,
-  apexToOrgDomainId,
   onViewLogs,
   onRetry,
+  onUpdate,
+  onRecords,
   onDelete,
   children,
 }: ProxyRuleContextMenuProps) {
   const t = useT()
   const visitUrl = useVisitUrl()
-  const navigate = useNavigate()
   const ruleUrl = domainUrl(rule.domain)
-  const apex = getApexDomain(rule.domain)
-  const orgDomainId = apex
-    ? apexToOrgDomainId.get(apex.toLowerCase())
-    : undefined
-  const canOpenDnsRecords = !!projectTeamId && !!orgDomainId
-
-  const handleOpenDnsRecords = () => {
-    if (!projectTeamId || !orgDomainId) return
-    navigate({
-      to: '/organizations/$orgId/domains/$domainId',
-      params: { orgId: projectTeamId, domainId: orgDomainId },
-    })
-  }
 
   return (
     <ContextMenu>
@@ -100,9 +82,16 @@ export function ProxyRuleContextMenu({
             {t('Retry')}
           </ContextMenuItem>
         )}
+        {onUpdate && (
+          <ContextMenuItem
+            onSelect={() => openDialogAfterOverlayCloses(() => onUpdate(rule))}
+          >
+            <ContextMenuIcon icon={Pencil} />
+            {t('Update')}
+          </ContextMenuItem>
+        )}
         <ContextMenuItem
-          onSelect={handleOpenDnsRecords}
-          disabled={!canOpenDnsRecords}
+          onSelect={() => openDialogAfterOverlayCloses(() => onRecords(rule))}
         >
           <ContextMenuIcon icon={Globe} />
           {t('DNS Records')}

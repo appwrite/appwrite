@@ -26,6 +26,7 @@
         "test": "phpunit --configuration phpunit.xml --testsuite unit"
     },
     "require": {
-        "php": ">=8.5"
+        "php": ">=8.5",
+        "ext-utopia": "*"
     }
 }

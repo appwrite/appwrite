@@ -99,6 +99,9 @@ return [
             Attribute::string(key: 'providerBranch'),
             Attribute::string(key: 'providerRootDirectory'),
             Attribute::boolean(key: 'providerSilentMode', default: false),
+            Attribute::boolean(key: 'providerComments', default: true),
+            Attribute::boolean(key: 'providerDeployments', default: true),
+            Attribute::boolean(key: 'providerStatuses', default: true),
             Attribute::boolean(key: 'logging', required: true),
             Attribute::string(key: 'runtime', size: 2048),
             Attribute::integer(key: 'deploymentRetention', default: 0),
@@ -161,6 +164,9 @@ return [
             Attribute::string(key: 'providerBranch'),
             Attribute::string(key: 'providerRootDirectory'),
             Attribute::boolean(key: 'providerSilentMode', default: false),
+            Attribute::boolean(key: 'providerComments', default: true),
+            Attribute::boolean(key: 'providerDeployments', default: true),
+            Attribute::boolean(key: 'providerStatuses', default: true),
             Attribute::boolean(key: 'logging', required: true),
             Attribute::string(key: 'framework', size: 2048),
             Attribute::string(key: 'outputDirectory', size: 16384),
@@ -602,6 +608,8 @@ return [
             Attribute::string(key: 'providerRepositoryOwner'),
             Attribute::string(key: 'providerRepositoryName'),
             Attribute::string(key: 'providerPullRequestId', required: true),
+            // GitHub login of who opened the pull request. Empty for reviews queued before it was kept.
+            Attribute::string(key: 'providerPullRequestAuthor'),
             // The head the review was queued for, replaced by the head it actually reviews. Empty
             // for a mention until it starts: it reviews whatever the head is then.
             Attribute::string(key: 'providerCommitHash', size: 64),
@@ -621,6 +629,8 @@ return [
             // Why a review was skipped or failed, shown to the project's users.
             Attribute::string(key: 'reason', size: 2048),
             Attribute::string(key: 'providerReviewId'),
+            // The repository's strength when the review was queued: what it runs and is billed at.
+            Attribute::string(key: 'strength', size: 16, default: 'normal'),
             Attribute::datetime(key: 'startedAt'),
             Attribute::datetime(key: 'completedAt'),
         ],

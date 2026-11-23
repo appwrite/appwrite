@@ -37,6 +37,8 @@ abstract class OAuth2
      */
     protected array $scopes;
 
+    protected string $deviceId = '';
+
     /**
      * OAuth2 constructor.
      *
@@ -56,6 +58,14 @@ abstract class OAuth2
         foreach ($scopes as $scope) {
             $this->addScope($scope);
         }
+    }
+
+    /**
+     * Device the provider reported on the callback, for providers that bind tokens to it.
+     */
+    public function setDeviceId(string $deviceId): void
+    {
+        $this->deviceId = $deviceId;
     }
 
     /**
@@ -127,6 +137,22 @@ abstract class OAuth2
     public function getUserPhoto(string $accessToken): string
     {
         return '';
+    }
+
+    /**
+     * Whether the provider's identity may only be linked to an account that
+     * is already signed in, never used to sign in.
+     *
+     * Sign-in trusts getUserID() to name one person. A provider whose grant
+     * names something people share, such as a workspace, would let anyone
+     * who can authorize it sign in as whoever linked it first, so such a
+     * provider returns true here.
+     *
+     * @return bool
+     */
+    public function isLinkOnly(): bool
+    {
+        return false;
     }
 
     /**

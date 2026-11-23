@@ -91,6 +91,114 @@ export function suggestProjectEnvironmentName(
 }
 
 /**
+ * Where a project stands against its organization's plan for environments. The
+ * plan caps environments per project, and a cap of 0 is a plan without them
+ * (Free and Start), not one without a cap. `unknown` until both the plan and the
+ * project's environments have loaded, so nothing is offered or refused on a guess.
+ * The self-hosted plan is `unknown` too: environments are Cloud's, and there it
+ * is the fallback for a plan request that failed (as `isCronAllowed` reads it),
+ * so it says nothing about what the plan offers. The API still refuses what the
+ * plan does not allow.
+ */
+export type ProjectEnvironmentsAllowance =
+  | { status: 'unknown' }
+  | { status: 'not-offered' }
+  | { status: 'available'; limit: number }
+  | { status: 'at-limit'; limit: number }
+
+export function projectEnvironmentsAllowance(
+  plan: { $id?: string; environments?: number | null } | null | undefined,
+  environmentCount: number | undefined,
+): ProjectEnvironmentsAllowance {
+  if (!plan || plan.$id === 'self-hosted' || environmentCount === undefined) {
+    return { status: 'unknown' }
+  }
+  const limit = Number(plan.environments ?? 0)
+  if (!Number.isFinite(limit) || limit <= 0) return { status: 'not-offered' }
+  return environmentCount >= limit
+    ? { status: 'at-limit', limit }
+    : { status: 'available', limit }
+}
+
+/**
+ * The plan to point a project at when its own offers no environments: the
+ * lowest plan above it that has them and that an organization can move to on
+ * its own, so the upgrade it names is one the wizard can complete. Null when
+ * the current plan is unknown or no such plan exists, and then there is
+ * nothing to upsell.
+ */
+export function projectEnvironmentsUpgradePlan<
+  T extends {
+    order: number
+    environments?: number | null
+    selfService?: boolean
+    isAvailable?: boolean
+  },
+>(
+  currentPlan: { order: number } | null | undefined,
+  plans: Readonly<Record<string, T>>,
+): T | null {
+  if (!currentPlan) return null
+  let upgrade: T | null = null
+  for (const plan of Object.values(plans)) {
+    if (plan.order <= currentPlan.order) continue
+    if (Number(plan.environments ?? 0) <= 0) continue
+    if (plan.selfService === false || plan.isAvailable === false) continue
+    if (!upgrade || plan.order < upgrade.order) upgrade = plan
+  }
+  return upgrade
+}
+
+/**
+ * Environments a project usually keeps beside production, shown in the
+ * switcher to a project whose plan offers none. They are examples to pick, not
+ * environments: picking one opens the upgrade. A name already used by an
+ * environment the project kept is left out, under any of its aliases, so the
+ * list never offers what is already there. The names are names, as the ones the
+ * creation wizard suggests, and stay as written; the descriptions are wrapped
+ * in t() where they render.
+ */
+export interface ProjectEnvironmentExample {
+  id: 'staging' | 'preview' | 'development'
+  name: string
+  /** One short line: the switcher shows it on a single line and cuts the rest. */
+  description: string
+  aliases: readonly string[]
+}
+
+const PROJECT_ENVIRONMENT_EXAMPLES: readonly ProjectEnvironmentExample[] = [
+  {
+    id: 'staging',
+    name: 'Staging',
+    description: 'Test before you release',
+    aliases: ['staging', 'stage'],
+  },
+  {
+    id: 'preview',
+    name: 'Preview',
+    description: 'Share work in progress',
+    aliases: ['preview'],
+  },
+  {
+    id: 'development',
+    name: 'Development',
+    description: 'Break things freely',
+    aliases: ['development', 'dev'],
+  },
+]
+
+export function projectEnvironmentExamples(
+  takenNames: readonly string[],
+): ProjectEnvironmentExample[] {
+  const taken = new Set(
+    takenNames.map((name) => name.trim().toLowerCase()).filter(Boolean),
+  )
+  return PROJECT_ENVIRONMENT_EXAMPLES.filter(
+    (example) => !example.aliases.some((alias) => taken.has(alias)),
+  )
+}
+
+/**
  * The environment a project document answers as, or null for production: while
  * the Console is in an environment, the project answers as that environment.
  * The pinned Console SDK's `Models.Project` does not carry `environmentId` yet.
@@ -326,4 +434,60 @@ export function migrationProgress(statusCounters: unknown): number {
   }
 
   return total === 0 ? 0 : Math.round((done / total) * 100)
+}
+
+/**
+ * Failed copies whose card was dismissed, kept across reloads: a failed copy
+ * is shown again on every visit until then, and never after. Local storage,
+ * since the card is this browser's reminder, not project state.
+ */
+const DISMISSED_FAILED_COPIES_KEY = 'console:environment-copy:dismissed'
+const DISMISSED_FAILED_COPIES_LIMIT = 50
+
+export function readDismissedFailedCopies(): string[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const stored = JSON.parse(
+      window.localStorage.getItem(DISMISSED_FAILED_COPIES_KEY) ?? '[]',
+    )
+    return Array.isArray(stored)
+      ? stored.filter((id): id is string => typeof id === 'string')
+      : []
+  } catch {
+    return []
+  }
+}
+
+export function rememberDismissedFailedCopy(migrationId: string): void {
+  if (typeof window === 'undefined') return
+  try {
+    const dismissed = readDismissedFailedCopies().filter(
+      (id) => id !== migrationId,
+    )
+    dismissed.push(migrationId)
+    window.localStorage.setItem(
+      DISMISSED_FAILED_COPIES_KEY,
+      JSON.stringify(dismissed.slice(-DISMISSED_FAILED_COPIES_LIMIT)),
+    )
+  } catch {
+    /* private mode / storage disabled */
+  }
+}
+
+/**
+ * Whether the copy found when an environment is opened gets its card back:
+ * one still under way always, one that failed until its card is dismissed.
+ * A completed copy has nothing left to say.
+ */
+export function showsCopyAfterReload(
+  migration: { $id: string; status: string },
+  dismissedFailedCopies: readonly string[],
+): boolean {
+  if (migration.status === 'pending' || migration.status === 'processing') {
+    return true
+  }
+  return (
+    migration.status === 'failed' &&
+    !dismissedFailedCopies.includes(migration.$id)
+  )
 }

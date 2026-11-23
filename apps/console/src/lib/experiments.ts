@@ -10,7 +10,7 @@ import {
 export const QUALITY_ACCOUNT_LABEL = 'quality'
 
 export type Experiment = {
-  flag: 'analytics' | 'projectEnvironments'
+  flag: 'alerts' | 'analytics' | 'projectEnvironments' | 'videos'
   name: string
   description: string
   /** Day the experiment reached the popover, as `YYYY-MM-DD`. */
@@ -33,6 +33,18 @@ export const EXPERIMENTS: readonly Experiment[] = [
     name: 'Project environments',
     description: 'Switch or clone staging and production.',
     introducedAt: '2026-10-29',
+  },
+  {
+    flag: 'alerts',
+    name: 'Monitors and alerts',
+    description: 'Get alerted when project usage crosses a threshold.',
+    introducedAt: '2026-11-19',
+  },
+  {
+    flag: 'videos',
+    name: 'Appwrite Videos',
+    description: 'Transcode, stream, and caption videos.',
+    introducedAt: '2026-11-19',
   },
 ]
 

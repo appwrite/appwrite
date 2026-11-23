@@ -168,12 +168,21 @@ export const heSitesDictionary: Record<string, string> = {
   Retry: 'ניסיון חוזר',
   Logs: 'לוגים',
   Records: 'רשומות',
+  'Update domain': 'עדכון דומיין',
+  'Its DNS records and certificate stay the same.':
+    'רשומות ה-DNS והתעודה שלו יישארו ללא שינוי.',
+  'Domain has been updated': 'הדומיין עודכן',
+  'Failed to update domain': 'עדכון הדומיין נכשל',
+  'A domain cannot switch between serving a deployment and redirecting. Delete it and add it again.':
+    'דומיין לא יכול לעבור בין הגשת פריסה להפניה. יש למחוק אותו ולהוסיף אותו מחדש.',
   'Domain has been deleted': 'הדומיין נמחק',
   'Loading domains...': 'טוען דומיינים...',
   Verified: 'מאומת',
   'Generating certificate': 'מנפיק תעודה',
   'Verification failed': 'האימות נכשל',
   'Certificate generation failed': 'הנפקת התעודה נכשלה',
+  'A DNS record has the wrong value or name. Open Records to see which one and what to change it to.':
+    'לרשומת DNS יש ערך או שם שגויים. פתחו את הרשומות כדי לראות איזו רשומה ולמה לשנות אותה.',
   'Waiting for DNS': 'ממתין ל-DNS',
   'Appwrite checks the DNS records every few minutes for 3 days after the domain is added. Use Check now to look again right away.':
     'Appwrite בודק את רשומות ה-DNS כל כמה דקות במשך 3 ימים לאחר הוספת הדומיין. לחצו על "בדוק עכשיו" כדי לבדוק מיד.',
@@ -183,6 +192,20 @@ export const heSitesDictionary: Record<string, string> = {
   'Check now': 'בדוק עכשיו',
   'Not verified yet. Appwrite keeps checking.':
     'עדיין לא אומת. Appwrite ממשיך לבדוק.',
+  'Not needed. Your {type} record is set.':
+    'אין צורך ברשומה הזו. רשומת ה-{type} שלכם מוגדרת.',
+  'Called CNAME flattening on Cloudflare (set it to DNS only) and Alias on Route 53. Some providers name it ANAME.':
+    'ב-Cloudflare זה נקרא CNAME flattening (הגדירו DNS only), וב-Route 53 זה נקרא Alias. יש ספקים שקוראים לזה ANAME.',
+  'It points to {found}. Change it to {value}.':
+    'היא מפנה אל {found}. שנו אותה ל-{value}.',
+  'It was added as {found}. In your DNS provider, enter only {name} as the host.':
+    'היא נוספה בשם {found}. אצל ספק ה-DNS, הזינו רק {name} בתור ה-Host.',
+  "Enter only {name} in your DNS provider's Host or Name field. Most providers add {apex} for you.":
+    'הזינו רק {name} בשדה Host או Name אצל ספק ה-DNS. רוב הספקים מוסיפים את {apex} בעצמם.',
+  'Your domain points somewhere else. Set this record to {value}.':
+    'הדומיין שלכם מפנה למקום אחר. הגדירו את הרשומה הזו ל-{value}.',
+  'and {n} more': 'ועוד {n}',
+  'DNS is set up': 'ה-DNS מוגדר',
   'Certificate expired': 'פג תוקף התעודה',
   'Renewal failed': 'חידוש התעודה נכשל',
   'Certificate blocked': 'הנפקת התעודה חסומה',
@@ -190,6 +213,8 @@ export const heSitesDictionary: Record<string, string> = {
     'התעודה ממתינה לרשומת DNS. הוסיפו את הרשומה שמופיעה בלוגים ולאחר מכן נסו שוב.',
   'The certificate is waiting on a DNS record. Add the record shown in View logs.':
     'התעודה ממתינה לרשומת DNS. הוסיפו את הרשומה שמופיעה בלוגים.',
+  'The SSL certificate could not be issued. Check View logs, then Retry.':
+    'לא ניתן היה להנפיק את תעודת ה-SSL. בדקו את הלוגים ולאחר מכן נסו שוב.',
   'Renewal blocked': 'חידוש התעודה חסום',
   'Certificate renewal started': 'חידוש התעודה התחיל',
   'Certificate expires on {date}.': 'תוקף התעודה יפוג ב-{date}.',
@@ -424,6 +449,8 @@ export const heSitesDictionary: Record<string, string> = {
     'הדומיין הזה כבר מפנה ל-Appwrite. כדי להוכיח שהוא שלכם, הוסיפו את רשומת ה-TXT הזו ולאחר מכן בצעו אימות.',
   'This domain is used by another project. Add this TXT record to prove it is yours, then verify to move it here.':
     'הדומיין הזה נמצא בשימוש בפרויקט אחר. כדי להוכיח שהוא שלכם, הוסיפו את רשומת ה-TXT הזו ולאחר מכן בצעו אימות כדי להעביר אותו לכאן.',
+  "This domain's DNS is managed by another organization. Add this TXT record to that domain's DNS, or ask that organization's owners to add it, then verify. The domain stays in that organization.":
+    'ה-DNS של הדומיין הזה מנוהל על ידי ארגון אחר. הוסיפו את רשומת ה-TXT הזו ל-DNS של הדומיין, או בקשו מבעלי הארגון להוסיף אותה, ולאחר מכן בצעו אימות. הדומיין נשאר בארגון ההוא.',
   Required: 'שדה חובה',
   Invalid: 'לא תקין',
   'Invalid URL': 'כתובת URL לא תקינה',
@@ -606,15 +633,56 @@ export const heSitesDictionary: Record<string, string> = {
   'Create your first site': 'יצירת האתר הראשון שלכם',
   'Deploy web apps from Git or a template. Every push gets a build, a preview URL, and fast global delivery.':
     'פרסו אפליקציות ווב מ-Git או מתבנית. כל Push מקבל Build, כתובת תצוגה מקדימה והפצה גלובלית מהירה.',
-  'Connect a repository': 'חיבור מאגר',
-  'Deploy on every push to your production branch, with a preview URL for every other branch.':
-    'פריסה בכל Push ל-Branch של הפרודקשן, עם כתובת תצוגה מקדימה לכל Branch אחר.',
-  'Pick a framework': 'בחירת Framework',
-  'Appwrite detects TanStack Start, Next.js, Nuxt, SvelteKit, and more, and sets up the build for you.':
-    'Appwrite מזהה את TanStack Start,‏ Next.js,‏ Nuxt,‏ SvelteKit ועוד, ומגדיר עבורכם את ה-Build.',
-  'Go live': 'עלייה לאוויר',
-  'Get an appwrite.network URL right away, then add your own domain.':
-    'קבלו כתובת appwrite.network מיד, ואז הוסיפו דומיין משלכם.',
+  'Connect a Git provider to deploy on every push.':
+    'חברו ספק Git כדי לפרוס בכל Push.',
+  'Deploy a working site in a few clicks, then make it yours.':
+    'פרסו אתר עובד בכמה קליקים, ואז התאימו אותו לצרכים שלכם.',
   "This site's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
     'התקנת ה-Git של האתר הזה כבר לא מגיעה ל-repo שלו, ולכן Push חדש לא ייפרס. נתקו את ה-repo ואז חברו אותו מחדש דרך ההתקנה שבה הוא נמצא עכשיו.',
+  'Action needed': 'נדרשת פעולה',
+  'Last check': 'בדיקה אחרונה',
+  'Found:': 'נמצא:',
+  'Wrong value': 'ערך שגוי',
+  'Wrong name': 'שם שגוי',
+  'Found at:': 'נמצא ב:',
+  'Wrong type': 'סוג שגוי',
+  'Found {type}:': 'נמצאה רשומת {type}:',
+  'Your domain has an {type} record ({found}) instead of a CNAME, often a URL redirect or parking record at your DNS provider. Delete it, then add the CNAME below.':
+    'לדומיין יש רשומת {type} ({found}) במקום CNAME, לרוב רשומת הפניית URL או חניה אצל ספק ה-DNS. מחקו אותה, ואז הוסיפו את ה-CNAME שלמטה.',
+  'Blocks certificate': 'התעודה חסומה',
+  "Couldn't check": 'לא ניתן לבדוק',
+  Alternative: 'חלופה',
+  'CAA record': 'רשומת CAA',
+  '{type} record': 'רשומת {type}',
+  'ALIAS or ANAME': 'ALIAS או ANAME',
+  'DNS lookup': 'בדיקת DNS',
+  'Domain verification': 'אימות הדומיין',
+  'Point your domain': 'הפניית הדומיין',
+  'Allow the SSL certificate': 'אישור תעודת ה-SSL',
+  'Required · any one': 'חובה · אחת מהן',
+  "We couldn't check DNS. This is on our side; Appwrite will try again.":
+    'לא הצלחנו לבדוק את ה-DNS. הבעיה אצלנו, ו-Appwrite ינסה שוב.',
+  'A CAA record on your domain blocks the certificate. Add the CAA record below next to it (recommended), or delete your existing CAA records.':
+    'רשומת CAA בדומיין שלכם חוסמת את התעודה. הוסיפו לצדה את רשומת ה-CAA שלמטה (מומלץ), או מחקו את רשומות ה-CAA הקיימות.',
+  'Add the records below at your DNS provider. Appwrite checks again automatically for 3 days.':
+    'הוסיפו את הרשומות שלמטה אצל ספק ה-DNS שלכם. Appwrite בודק שוב באופן אוטומטי במשך 3 ימים.',
+  'Automatic checks have stopped. Fix the records below, then verify again.':
+    'הבדיקות האוטומטיות הופסקו. תקנו את הרשומות שלמטה ולאחר מכן אמתו שוב.',
+  "We couldn't check the CAA record. This is on our side; Appwrite will try again.":
+    'לא הצלחנו לבדוק את רשומת ה-CAA. הבעיה אצלנו, ו-Appwrite ינסה שוב.',
+  'Your {type} record is set. Add the CAA record below to finish.':
+    'רשומת ה-{type} שלכם מוגדרת. הוסיפו את רשומת ה-CAA שלמטה כדי לסיים.',
+  'All records are verified.': 'כל הרשומות אומתו.',
+  'Appwrite will issue the SSL certificate next.':
+    'בשלב הבא Appwrite יפיק את תעודת ה-SSL.',
+  'Not detected yet': 'עדיין אין רשומה',
+  'Not detected': 'אין רשומה',
+  'Tracked pageviews and events are billed as analytics usage, which adds up quickly on a high-traffic site.':
+    'צפיות בדפים ואירועים שנמדדים מחויבים כשימוש באנליטיקה, והעלות מצטברת מהר באתר עם תנועה גבוהה.',
+  'If your site sets a Content-Security-Policy, in a header or a <meta> tag, add these sources. Otherwise the browser blocks the tracker and no data is recorded.':
+    'אם האתר שלכם מגדיר Content-Security-Policy, בכותרת או בתגית <meta>, הוסיפו את המקורות האלה. אחרת הדפדפן חוסם את סקריפט המעקב ולא נאספים נתונים.',
+  'Enable analytics': 'הפעלת אנליטיקה',
+  'Production domains only. Preview deployments are not tracked.':
+    'דומיינים של סביבת הייצור בלבד. פריסות תצוגה מקדימה אינן נמדדות.',
+  'Failed to enable analytics': 'הפעלת האנליטיקה נכשלה',
 }
