@@ -460,6 +460,47 @@ if (class_exists(\Utopia\Detector\Detection\Runtime\Swift::class)) {
     }
 }
 
+if (class_exists(\Utopia\Compression\Compression::class)) {
+    abstract class ExtendsUtopiaCompressionCompression extends \Utopia\Compression\Compression
+    {
+    }
+}
+if (class_exists(\Utopia\Compression\Algorithms\Brotli::class)) {
+    class ExtendsUtopiaCompressionAlgorithmsBrotli extends \Utopia\Compression\Algorithms\Brotli
+    {
+    }
+}
+if (class_exists(\Utopia\Compression\Algorithms\Deflate::class)) {
+    class ExtendsUtopiaCompressionAlgorithmsDeflate extends \Utopia\Compression\Algorithms\Deflate
+    {
+    }
+}
+if (class_exists(\Utopia\Compression\Algorithms\GZIP::class)) {
+    class ExtendsUtopiaCompressionAlgorithmsGZIP extends \Utopia\Compression\Algorithms\GZIP
+    {
+    }
+}
+if (class_exists(\Utopia\Compression\Algorithms\LZ4::class)) {
+    class ExtendsUtopiaCompressionAlgorithmsLZ4 extends \Utopia\Compression\Algorithms\LZ4
+    {
+    }
+}
+if (class_exists(\Utopia\Compression\Algorithms\Snappy::class)) {
+    class ExtendsUtopiaCompressionAlgorithmsSnappy extends \Utopia\Compression\Algorithms\Snappy
+    {
+    }
+}
+if (class_exists(\Utopia\Compression\Algorithms\XZ::class)) {
+    class ExtendsUtopiaCompressionAlgorithmsXZ extends \Utopia\Compression\Algorithms\XZ
+    {
+    }
+}
+if (class_exists(\Utopia\Compression\Algorithms\Zstd::class)) {
+    class ExtendsUtopiaCompressionAlgorithmsZstd extends \Utopia\Compression\Algorithms\Zstd
+    {
+    }
+}
+
 $extended = [];
 foreach ((new ReflectionExtension('utopia'))->getClassNames() as $name) {
     $class = new ReflectionClass($name);
