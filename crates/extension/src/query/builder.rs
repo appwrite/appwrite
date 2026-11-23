@@ -600,7 +600,7 @@ pub trait Native: RegisteredClass {
 
 /// Creates an object of `C`, or of a PHP subclass, with its builder already in it. A subclass may
 /// declare a constructor that never calls the parent's, which PHP's own classes have none of.
-extern "C" fn create<C: Native>(class: *mut ClassEntry) -> *mut ZendObject {
+pub(super) extern "C" fn create<C: Native>(class: *mut ClassEntry) -> *mut ZendObject {
     // SAFETY: PHP passes the class it is creating an object of, and the object is initialised below.
     let mut held = unsafe { ZendClassObject::<C>::new_uninit(class.as_ref()) };
     held.initialize(C::fresh());
@@ -608,25 +608,6 @@ extern "C" fn create<C: Native>(class: *mut ClassEntry) -> *mut ZendObject {
     // PHP owns the object from here.
     std::mem::forget(held);
     object
-}
-
-/// Has PHP create every builder with [`create`]. ext-php-rs installs its own handler when it registers
-/// the class, which leaves the object empty until the constructor runs, so this runs after that.
-pub fn request_startup() {
-    fn creates<C: Native>() {
-        let class = std::ptr::from_ref(C::get_metadata().ce()).cast_mut();
-        // SAFETY: an internal class lives as long as the process, and nothing else is running yet.
-        unsafe { (*class).__bindgen_anon_2.create_object = Some(create::<C>) };
-    }
-    static ONCE: std::sync::Once = std::sync::Once::new();
-    ONCE.call_once(|| {
-        creates::<MySqlBuilder>();
-        creates::<MariaDbBuilder>();
-        creates::<PostgreSqlBuilder>();
-        creates::<SqliteBuilder>();
-        creates::<ClickHouseBuilder>();
-        creates::<MongoDbBuilder>();
-    });
 }
 
 /// The steps a PHP subclass of `C` overrides, called on the object whose method is running.

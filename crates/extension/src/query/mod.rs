@@ -5,6 +5,7 @@
 pub mod ast;
 pub mod builder;
 pub mod classifier;
+pub mod features;
 pub mod schema;
 pub mod tokenizer;
 pub mod value;

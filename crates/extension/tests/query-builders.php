@@ -827,3 +827,19 @@ foreach ($dialects as $dialect) {
         outcome(fn () => array_map(fn (string $property) => (new ReflectionProperty($class, $property))->isProtected(), ['bindings', 'pendingQueries', 'resolvedAttributeCache'])),
     ]);
 }
+
+// The interfaces a builder implements, of those the extension has so far, and what a subclass can
+// rely on: fluent methods return static, and a constructor need not call the parent's.
+$features = ['Aggregates', 'CTEs', 'Deletes', 'Hooks', 'InsertOrIgnore', 'Inserts', 'Joins', 'MariaDB\\Returning', 'PostgreSQL\\Returning', 'Selects', 'Unions', 'Updates', 'Upsert', 'UpsertSelect', 'Windows'];
+foreach ($dialects as $dialect) {
+    eval("class Built{$dialect} extends Utopia\\Query\\Builder\\{$dialect} { public function __construct(public bool \$flag = false) {} public function from(string \$table = '', string \$alias = ''): static { return parent::from('own_' . \$table, \$alias); } }");
+    $class = 'Built' . $dialect;
+    emit($dialect . ' as a class', [
+        array_values(array_filter($features, fn (string $feature) => is_subclass_of($class, 'Utopia\\Query\\Builder\\Feature\\' . $feature))),
+        array_map(fn (string $method) => (string) (new ReflectionMethod('Utopia\\Query\\Builder\\' . $dialect, $method))->getReturnType(), ['from', 'select', 'filter', 'limit', 'set']),
+        (string) (new ReflectionMethod('Utopia\\Query\\Builder\\Feature\\Selects', 'from'))->getReturnType(),
+        outcome(fn () => (new $class(true))->from('t')->select(['a'])->build()),
+        outcome(fn () => (clone new $class())->from('t')->build()),
+        outcome(fn () => (new $class(true))->flag),
+    ]);
+}
