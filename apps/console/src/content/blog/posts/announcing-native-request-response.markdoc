@@ -5,7 +5,7 @@ description: JavaScript functions on Node.js, Bun, and Deno can now read a Fetch
 date: 2026-11-24
 cover: /images/blog/announcing-native-request-response/cover.avif
 timeToRead: 6
-author: aditya-oberai
+author: matej-baco
 category: announcements
 featured: false
 faqs:
