@@ -526,6 +526,79 @@ pub fn dependencies(manifest: &[u8]) -> Vec<Vec<u8>> {
     names
 }
 
+/// One option as a framework detector scores it.
+///
+/// PHP: the option's entries in `detect()`'s `$frameworkMatches` and
+/// `$fameworkParents`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Score<'a> {
+    /// The option's name (`getName()`).
+    pub name: &'a [u8],
+    /// How many of its files and packages the inputs hold ([`matches`]).
+    pub matches: usize,
+    /// How many classes its PHP class extends ([`Framework::parents`]).
+    pub parents: usize,
+}
+
+/// How many of an option's `files` are among the file `inputs`, plus how many
+/// of its `packages` each manifest's [`dependencies`] declare. A file or
+/// package the option lists twice counts twice.
+///
+/// PHP: `count(array_intersect($detector->getFiles(), $files))` plus the
+/// `in_array($packageNeeded, $dependencies, true)` hits of `detect()`.
+pub fn matches<'a>(
+    files: impl IntoIterator<Item = &'a [u8]>,
+    packages: impl IntoIterator<Item = &'a [u8]>,
+    inputs: &[&[u8]],
+    manifests: &[Vec<Vec<u8>>],
+) -> usize {
+    let packages: usize = packages
+        .into_iter()
+        .map(|p| manifests.iter().filter(|dependencies| dependencies.iter().any(|d| d == p)).count())
+        .sum();
+    packages + files.into_iter().filter(|f| inputs.contains(f)).count()
+}
+
+/// The name of the framework a detector picks from `scores`, one per option
+/// in the order the options were added: options sharing a name add up; the
+/// most matches win; a tie goes to the fewest parents, except that Astro
+/// yields to the runner-up. `None` when nothing matches.
+///
+/// PHP: the ranking in `Framework::detect()` (a stable `arsort()`, then a
+/// stable `usort()` on parents).
+pub fn best<'a>(scores: impl IntoIterator<Item = Score<'a>>) -> Option<&'a [u8]> {
+    // By name, in the order the names first appear.
+    let mut merged: Vec<Score<'a>> = Vec::new();
+    for score in scores {
+        match merged.iter_mut().find(|s| s.name == score.name) {
+            Some(merged) => {
+                merged.matches += score.matches;
+                merged.parents += score.parents;
+            }
+            None => merged.push(score),
+        }
+    }
+
+    merged.retain(|s| s.matches > 0);
+    // A stable sort, most matches first, as PHP's arsort().
+    merged.sort_by_key(|s| std::cmp::Reverse(s.matches));
+    let highest = merged.first()?.matches;
+    merged.retain(|s| s.matches == highest);
+    if merged.len() == 1 {
+        return Some(merged[0].name);
+    }
+
+    // A stable sort, fewest parents first, as PHP's usort().
+    merged.sort_by_key(|s| s.parents);
+    // Astro renders the other frameworks' components: an equal match goes to
+    // the other framework.
+    if merged[0].name == Astro.name().as_bytes() && merged[0].matches == merged[1].matches {
+        Some(merged[1].name)
+    } else {
+        Some(merged[0].name)
+    }
+}
+
 /// Finds a project's framework by scoring every option: one point per
 /// framework file among the file inputs, and one per framework package
 /// declared in each manifest input. The highest score wins; a tie goes to
@@ -612,40 +685,18 @@ impl FrameworkDetector {
     /// returns.
     pub fn detect(&self) -> Option<Detected<'_, dyn Framework>> {
         let manifests: Vec<Vec<Vec<u8>>> = self.manifests.iter().map(|m| dependencies(m)).collect();
-
-        // Scores by name, in the order the names first appear: matches and parents.
-        let mut scores: Vec<(&str, usize, usize)> = Vec::new();
-        for option in &self.options {
-            if !scores.iter().any(|(name, _, _)| *name == option.name()) {
-                scores.push((option.name(), 0, 0));
-            }
-        }
-        for option in &self.options {
-            let Some(score) = scores.iter_mut().find(|(name, _, _)| *name == option.name()) else { continue };
-            for dependencies in &manifests {
-                score.1 += option.packages().iter().filter(|p| dependencies.iter().any(|d| d == p.as_bytes())).count();
-            }
-            score.1 += option.files().iter().filter(|f| self.files.iter().any(|i| i == *f)).count();
-            score.2 += option.parents();
-        }
-
-        scores.retain(|(_, matches, _)| *matches > 0);
-        // A stable sort, most matches first, as PHP's arsort().
-        scores.sort_by_key(|s| std::cmp::Reverse(s.1));
-        let highest = scores.first()?.1;
-        scores.retain(|(_, matches, _)| *matches == highest);
-
-        let best = if scores.len() == 1 {
-            scores[0].0
-        } else {
-            // A stable sort, fewest parents first, as PHP's usort().
-            scores.sort_by_key(|s| s.2);
-            // Astro renders the other frameworks' components: an equal match
-            // goes to the other framework.
-            if scores[0].0 == Astro.name() && scores[0].1 == scores[1].1 { scores[1].0 } else { scores[0].0 }
-        };
-
-        self.options.iter().find(|o| o.name() == best).map(|o| Detected::new(o.as_ref(), &self.packager))
+        let files: Vec<&[u8]> = self.files.iter().map(|f| f.as_bytes()).collect();
+        let best = best(self.options.iter().map(|option| Score {
+            name: option.name().as_bytes(),
+            matches: matches(
+                option.files().iter().map(|f| f.as_bytes()),
+                option.packages().iter().map(|p| p.as_bytes()),
+                &files,
+                &manifests,
+            ),
+            parents: option.parents(),
+        }))?;
+        self.options.iter().find(|o| o.name().as_bytes() == best).map(|o| Detected::new(o.as_ref(), &self.packager))
     }
 }
 

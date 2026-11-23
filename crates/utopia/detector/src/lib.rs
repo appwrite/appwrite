@@ -84,10 +84,10 @@ mod runtime;
 pub use error::Error;
 pub use framework::{
     Adapter, Analog, Angular, Astro, Flutter, Framework, FrameworkDetector, Input, Jaspr, Lynx, NextJs, Nuxt, React,
-    ReactNative, Remix, Svelte, SvelteKit, TanStackStart, Vue, dependencies,
+    ReactNative, Remix, Score, Svelte, SvelteKit, TanStackStart, Vue, best, dependencies, matches,
 };
 pub use packager::{Npm, Packager, PackagerDetector, Pnpm, Yarn};
-pub use rendering::{Rendered, Rendering, RenderingDetector, Ssr, Static};
+pub use rendering::{Rendered, Rendering, RenderingDetector, Ssr, Static, html_fallback};
 pub use runtime::{
     Bun, Cpp, Dart, Deno, Dotnet, Java, Node, Php, Python, Ruby, Runtime, RuntimeDetector, Strategy, Swift,
 };

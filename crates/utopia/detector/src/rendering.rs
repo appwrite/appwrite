@@ -168,6 +168,19 @@ impl std::fmt::Debug for dyn Rendering + '_ {
     }
 }
 
+/// The only file among `inputs` with the extension `html`, the static
+/// output's fallback; `None` with none or several.
+///
+/// PHP: the `pathinfo($file, PATHINFO_EXTENSION) === 'html'` scan at the end
+/// of `Rendering::detect()`.
+pub fn html_fallback<'a>(inputs: impl IntoIterator<Item = &'a [u8]>) -> Option<&'a [u8]> {
+    let mut html = inputs.into_iter().filter(|f| pathinfo_extension(f) == b"html");
+    match (html.next(), html.next()) {
+        (Some(only), None) => Some(only),
+        _ => None,
+    }
+}
+
 /// Tells how a framework's build is served from the build's file names: the
 /// first option, in the order they were added, with one of its files for the
 /// framework among the inputs; otherwise static output, falling back to the
@@ -232,10 +245,9 @@ impl RenderingDetector {
     }
 
     fn static_fallback(&self) -> Static {
-        let mut html = self.inputs.iter().filter(|f| pathinfo_extension(f.as_bytes()) == b"html");
-        match (html.next(), html.next()) {
-            (Some(only), None) => Static::with_fallback(only.clone()),
-            _ => Static::new(),
+        match html_fallback(self.inputs.iter().map(String::as_bytes)) {
+            Some(only) => Static::with_fallback(String::from_utf8_lossy(only)),
+            None => Static::new(),
         }
     }
 
