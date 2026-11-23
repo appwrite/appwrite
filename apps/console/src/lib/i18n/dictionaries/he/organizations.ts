@@ -640,6 +640,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'שבוע Init הסתיים. גלו כל השקה וצפו בהקלטות המפגשים.',
   'Initial term': 'תקופה ראשונית',
   'Install app': 'התקנת אפליקציה',
+  '1 install': 'התקנה אחת',
+  '{count} installs': '{count} התקנות',
   'Invalid Selection': 'בחירה לא תקינה',
   'Invalid email address': 'כתובת אימייל לא תקינה',
   'Invalid payment method response': 'התקבלה תגובה לא תקינה מאמצעי התשלום',
