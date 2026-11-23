@@ -18,6 +18,30 @@ docker compose exec appwrite php --ri utopia
 Built on [ext-php-rs](https://github.com/extphprs/ext-php-rs); it needs `php-config`
 and libclang at build time.
 
+## Using it outside Appwrite
+
+The packages it serves (`auth`, `domains`, `emails`, `image`, `user-agent`, `validators`) require
+`ext-utopia`, and their `utopia-php/<name>` mirrors ship stubs for the classes it registers. Other
+PHP services load the same build from the `appwrite/utopia-extension` image (amd64 and arm64):
+
+```dockerfile
+COPY --from=appwrite/utopia-extension:<version> /utopia.so /usr/local/lib/php/utopia.so
+RUN apk add --no-cache libheif libstdc++ \
+    && echo 'extension=/usr/local/lib/php/utopia.so' > /usr/local/etc/php/conf.d/utopia.ini
+```
+
+- **ABI:** PHP 8.5, non-thread-safe, musl (Alpine): `php:8.5-cli-alpine`, `appwrite/base` and
+  `appwrite/utopia-base:php-8.5-*` all qualify. A glibc or ZTS PHP cannot load it.
+- **Runtime packages:** `libheif` and `libstdc++` are needed for the extension to load at all,
+  even if only `Domain` is used. `libheif` installs decoders only; encoding HEIC or AVIF through
+  `Utopia\Image` also needs `libheif-plugins-all`.
+- **Version:** `<version>` is an Appwrite release, and `phpversion('utopia')` reports it, so a
+  package can require a minimum (`"ext-utopia": ">=2.8"`). `main` tracks the main branch and
+  reports the crate version.
+
+`.github/workflows/extension.yml` publishes it, smoke-testing each architecture on stock
+`php:8.5-cli-alpine` with exactly these packages first.
+
 ## Switching a class on
 
 `Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN`, `Utopia\Locale\Locale`,

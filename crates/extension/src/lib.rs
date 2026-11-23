@@ -36,12 +36,23 @@ fn enabled(package: &str) -> bool {
     std::env::var(LIBRARIES).is_ok_and(|list| list.split(',').any(|name| name.trim() == package))
 }
 
+/// The version `phpversion('utopia')` reports: `UTOPIA_EXTENSION_VERSION` when the build sets it
+/// (the published image stamps the Appwrite release, so packages can require a minimum
+/// `ext-utopia`), the crate version otherwise.
+fn version() -> &'static str {
+    match option_env!("UTOPIA_EXTENSION_VERSION") {
+        Some(version) if !version.is_empty() => version,
+        _ => env!("CARGO_PKG_VERSION"),
+    }
+}
+
 /// The module PHP loads: every class of the extension.
 #[php_module]
 #[php(startup = startup)]
 pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     let module = module
         .name("utopia")
+        .version(version())
         .class::<canvas::Canvas>()
         .class::<canvas::Font>()
         .class::<dsn::Dsn>()

@@ -60,7 +60,17 @@ COPY Cargo.toml Cargo.lock rustfmt.toml rust-toolchain.toml ./
 COPY .cargo ./.cargo
 COPY crates ./crates
 
+# Stamped into phpversion('utopia') by the published image; empty here keeps the crate version.
+ARG UTOPIA_EXTENSION_VERSION=""
+
 RUN crates/extension/build.sh
+
+# The extension on its own, published as appwrite/utopia-extension so PHP services outside this
+# image (Edge, DNS) can load the same build: COPY --from=appwrite/utopia-extension:<version>
+# /utopia.so. See crates/extension/README.md.
+FROM scratch AS extension
+
+COPY --from=extension-build /usr/local/src/target/release/libutopia.so /utopia.so
 
 FROM appwrite/base:2.5.0@sha256:2284f9b74bce761750d4fb850c098fc8088e0282d266d90658ae17202c9119e8 AS base
 
