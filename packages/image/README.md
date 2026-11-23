@@ -1,7 +1,7 @@
 # Utopia Image
 
 > [!IMPORTANT]
-> This package is now implemented in Rust and served by the `utopia` PHP extension built from [appwrite/appwrite](https://github.com/appwrite/appwrite/tree/main/crates/extension), so it requires `ext-utopia` and is no longer published on its own. The [`utopia-php/image`](https://github.com/utopia-php/image) mirror is archived: its last PHP release, [`0.8.12`](https://packagist.org/packages/utopia-php/image#0.8.12), keeps working from Packagist and needs no extension. Development happens in [`packages/image`](https://github.com/appwrite/appwrite/tree/main/packages/image).
+> `Utopia\Image\Canvas` and `Utopia\Image\Font` are implemented in Rust and served by the `utopia` PHP extension; the value types (`Format`, `Gravity`, `Point`, `Text` and the rest) remain PHP. The extension is built from [appwrite/appwrite](https://github.com/appwrite/appwrite/tree/main/crates/extension), so this package requires `ext-utopia` and is no longer published on its own. The [`utopia-php/image`](https://github.com/utopia-php/image) mirror is archived: its last PHP release, [`0.8.12`](https://packagist.org/packages/utopia-php/image#0.8.12), keeps working from Packagist and needs no extension. Development happens in [`packages/image`](https://github.com/appwrite/appwrite/tree/main/packages/image).
 
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/image.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)

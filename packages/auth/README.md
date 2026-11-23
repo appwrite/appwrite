@@ -1,7 +1,7 @@
 # Utopia Auth
 
 > [!IMPORTANT]
-> This package is now implemented in Rust and served by the `utopia` PHP extension built from [appwrite/appwrite](https://github.com/appwrite/appwrite/tree/main/crates/extension), so it requires `ext-utopia` and is no longer published on its own. The [`utopia-php/auth`](https://github.com/utopia-php/auth) mirror is archived: its last PHP release, [`0.12.0`](https://packagist.org/packages/utopia-php/auth#0.12.0), keeps working from Packagist and needs no extension. Development happens in [`packages/auth`](https://github.com/appwrite/appwrite/tree/main/packages/auth).
+> The password hashes (`Utopia\Auth\Hash` and `Utopia\Auth\Hashes\*`) are implemented in Rust and served by the `utopia` PHP extension; proofs, issuers, verifiers, passkeys and OAuth2 remain PHP. The extension is built from [appwrite/appwrite](https://github.com/appwrite/appwrite/tree/main/crates/extension), so this package requires `ext-utopia` and is no longer published on its own. The [`utopia-php/auth`](https://github.com/utopia-php/auth) mirror is archived: its last PHP release, [`0.12.0`](https://packagist.org/packages/utopia-php/auth#0.12.0), keeps working from Packagist and needs no extension. Development happens in [`packages/auth`](https://github.com/appwrite/appwrite/tree/main/packages/auth).
 
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/auth.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)

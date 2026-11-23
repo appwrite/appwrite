@@ -1,7 +1,7 @@
 # Utopia User Agent
 
 > [!IMPORTANT]
-> This package is now implemented in Rust and served by the `utopia` PHP extension built from [appwrite/appwrite](https://github.com/appwrite/appwrite/tree/main/crates/extension), so it requires `ext-utopia` and is no longer published on its own. The [`utopia-php/user-agent`](https://github.com/utopia-php/user-agent) mirror is archived: its last PHP release, [`0.1.2`](https://packagist.org/packages/utopia-php/user-agent#0.1.2), keeps working from Packagist and needs no extension. Development happens in [`packages/user-agent`](https://github.com/appwrite/appwrite/tree/main/packages/user-agent).
+> `Utopia\UserAgent\UserAgent` is implemented in Rust and served by the `utopia` PHP extension; the `Bot`, `Client`, `Device` and `OperatingSystem` value classes remain PHP. The extension is built from [appwrite/appwrite](https://github.com/appwrite/appwrite/tree/main/crates/extension), so this package requires `ext-utopia` and is no longer published on its own. The [`utopia-php/user-agent`](https://github.com/utopia-php/user-agent) mirror is archived: its last PHP release, [`0.1.2`](https://packagist.org/packages/utopia-php/user-agent#0.1.2), keeps working from Packagist and needs no extension. Development happens in [`packages/user-agent`](https://github.com/appwrite/appwrite/tree/main/packages/user-agent).
 
 A fast user-agent parser and device detector for PHP.
 
