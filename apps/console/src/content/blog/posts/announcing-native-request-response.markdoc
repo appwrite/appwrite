@@ -1,20 +1,22 @@
 ---
 layout: post
-title: "Announcing native Request and Response in JS functions"
-description: JavaScript functions on Node.js, Bun, and Deno can now read a Fetch API Request and return a Response, so code written for the Fetch API runs in them as is.
+title: "Announcing native request and response in Appwrite Functions"
+description: Every Appwrite Functions runtime now hands your code its native request object, and Node.js, Bun, Deno, Python, and Dart functions can return native responses.
 date: 2026-11-24
 cover: /images/blog/announcing-native-request-response/cover.avif
-timeToRead: 6
+timeToRead: 7
 author: matej-baco
 category: announcements
 featured: false
 faqs:
-  - question: "How do I return a Response object from an Appwrite Function?"
-    answer: "In Node.js 18 and later, Bun, and Deno, return a Fetch API `Response`, such as `return new Response('Hello', { status: 200 })`. Appwrite sends its status, headers, and body to the client, and a `ReadableStream` body is streamed. See [Return a response](/docs/products/functions/develop#native-response)."
-  - question: "How do I get the Fetch API Request in an Appwrite Function?"
-    answer: "Read `context.req.raw`. It returns a `Request` with the same URL, method, headers, and body as `context.req`. You can read its body once, and `context.req.bodyText`, `bodyJson`, and `bodyBinary` keep working after you do. See [Read the request](/docs/products/functions/develop#native-request)."
-  - question: "Which runtimes support native Request and Response?"
-    answer: "Node.js 18 and later, every Bun version, and every Deno version. The deprecated `node-14.5` and `node-16.0` runtimes don't have the `Request` and `Response` classes, so functions on those runtimes keep using `context.req` and the `context.res` methods."
+  - question: "How do I return a native response from an Appwrite Function?"
+    answer: "Return the response type of your runtime's web server instead of calling a `context.res` method: a Fetch API `Response` in Node.js 18 and later, Bun, and Deno, an aiohttp `web.Response` in Python, or a shelf `Response` in Dart. Appwrite sends its status, headers, and body to the client. See [Return a response](/docs/products/functions/develop#native-response)."
+  - question: "How do I get the native request in an Appwrite Function?"
+    answer: "Read `context.req.raw`. It's a Fetch API `Request` in Node.js, Bun, and Deno, an aiohttp `web.Request` in Python, a shelf `Request` in Dart, and an `*http.Request` in Go. The other runtimes pass their own server's request type. The parsed fields on `context.req` keep working after you read its body. See [Read the request](/docs/products/functions/develop#native-request)."
+  - question: "Which runtimes support native request and response?"
+    answer: "Every runtime has `context.req.raw` except the deprecated `node-14.5`, `node-16.0`, `dart-2.15`, and `swift-5.5` runtimes. Native responses work in Node.js 18 and later, Bun, Deno, Python, and Dart. Functions in PHP, Ruby, Go, .NET, Kotlin, Java, Swift, C++, and Rust answer through the `context.res` methods."
+  - question: "Can a Python function stream a native response?"
+    answer: "No. The Python runtime accepts an aiohttp `web.Response` with an in-memory body, and returning a `web.StreamResponse` or `web.FileResponse` fails the execution. Use `context.res.sendStream()` to stream from Python. Native responses do stream in Node.js, Bun, Deno, and Dart."
   - question: "Do I have to change my existing functions?"
     answer: "No. `context.req` and the `context.res` methods work exactly as before. One function can also mix both, for example by reading a form from `context.req.raw` and answering with `context.res.json()`."
   - question: "Does Appwrite have a Hono integration?"
@@ -23,17 +25,18 @@ faqs:
     answer: "Appwrite headers such as `x-appwrite-key` and `x-appwrite-user-id` are on the request, so a route reads them with `c.req.header()`. To log, pass the function context to Hono with `app.fetch(req.raw, context)` and call `c.env.log()` inside a route."
 ---
 
-Most JavaScript runtimes and frameworks now handle HTTP requests the same way. A handler takes a [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) and returns a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response). `Bun.serve()`, `Deno.serve()`, and Cloudflare Workers work that way, and so do frameworks built on the same classes, such as Hono.
+Every Appwrite Functions runtime runs your code inside a web server, and each of those servers has its own request and response types. The JavaScript runtimes use the Fetch API's [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) and [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response), the same classes behind `Bun.serve()`, `Deno.serve()`, Cloudflare Workers, and frameworks such as Hono. Python runs on [aiohttp](https://docs.aiohttp.org), Dart on [shelf](https://pub.dev/packages/shelf), Go on `net/http`, and .NET on ASP.NET Core.
 
-Appwrite Functions had their own shape. `context.req` held the parsed request, and you built the answer with `context.res.text()` or `context.res.json()`. That works for a single endpoint, but code written for the Fetch API needed an adapter before it could run in a function. Even reading a multipart form meant wrapping `req.bodyBinary` in a temporary `Response` just to call `formData()` on it.
+Until now, your function never saw those objects. `context.req` held a parsed copy of the request, and you built the answer with `context.res.text()` or `context.res.json()`. That works for a single endpoint, but code written for the server's own types needed an adapter before it could run in a function. Even reading a multipart form in Node.js meant wrapping `req.bodyBinary` in a temporary `Response` just to call `formData()` on it.
 
-Today, we are announcing **native Request and Response support in JavaScript functions**. In Node.js 18 and later, Bun, and Deno, `context.req.raw` gives you the incoming request as a Fetch API `Request`, and your function can return a `Response` instead of calling a `context.res` method.
+Today, we are announcing **native request and response support in Appwrite Functions**. Every runtime now passes its web server's request to your function as `context.req.raw`. In Node.js 18 and later, Bun, Deno, Python, and Dart, your function can also return a native response instead of calling a `context.res` method.
 
-# What native Request and Response give you
+# What native request and response give you
 
-- **The standard request methods.** `context.req.raw` is a real `Request`, so `formData()`, `json()`, `text()`, `arrayBuffer()`, and `blob()` all work on it, including for multipart uploads.
-- **Responses you build yourself.** Return `new Response(body, { status, headers })` and Appwrite sends it to the client as written.
-- **Responses built by other libraries.** If a library returns a `Response`, your function can return it as is. A `ReadableStream` body is streamed to the client, the same way as [`res.sendStream()`](/blog/post/announcing-streaming-responses).
+- **The server's request in every runtime.** `context.req.raw` is a Fetch API `Request` in Node.js, Bun, and Deno, an aiohttp `web.Request` in Python, a shelf `Request` in Dart, and an `*http.Request` in Go. The other runtimes pass their server's request type too.
+- **Standard body parsers in JavaScript.** `formData()`, `json()`, `text()`, `arrayBuffer()`, and `blob()` all work on `context.req.raw`, including for multipart uploads.
+- **Native responses in five runtimes.** Return a Fetch API `Response` in Node.js, Bun, or Deno, an aiohttp `web.Response` in Python, or a shelf `Response` in Dart, and Appwrite sends it to the client as written.
+- **Responses built by other libraries.** If a JavaScript library returns a `Response`, your function can return it as is. A `ReadableStream` body is streamed to the client, the same way as [`res.sendStream()`](/blog/post/announcing-streaming-responses).
 - **Frameworks built on the Fetch API.** A framework whose app takes a `Request` and returns a `Response`, such as Hono, now runs in a function without an adapter.
 - **Nothing to migrate.** `context.req` and `context.res` work as before, and a function can use both.
 
@@ -258,22 +261,89 @@ Add `hono` to your `package.json` in Node.js and Bun. Deno imports it with an `n
 
 Any other framework that exposes its app as a function from `Request` to `Response` works the same way.
 
-# When to use native Request and Response
+# Return native responses from Python and Dart
 
-Reach for `context.req.raw` and `Response` when:
+Python and Dart functions can return the response type of their runtime's server too. In Python, that's an aiohttp [`web.Response`](https://docs.aiohttp.org/en/stable/web_reference.html#aiohttp.web.Response), including the ones built by helpers such as `web.json_response()`. In Dart, it's a shelf [`Response`](https://pub.dev/documentation/shelf/latest/shelf/Response-class.html).
 
-- You need `formData()` or another standard body parser.
-- A library you use takes a `Request` or returns a `Response`.
-- You're moving a handler from `Bun.serve()`, `Deno.serve()`, or Cloudflare Workers and want to keep its `Request` in, `Response` out shape.
-- One function serves several routes and you want a framework such as Hono instead of a hand-written `switch` on `req.path`.
+This function answers with JSON and sets a cookie. In Python, aiohttp's `set_cookie()` writes the `set-cookie` header and its attributes for you.
+
+{% multicode %}
+```python
+from aiohttp import web
+
+def main(context):
+    response = web.json_response({"theme": "dark"})
+    response.set_cookie("theme", "dark", max_age=3600, httponly=True, secure=True)
+
+    return response
+```
+```dart
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:shelf/shelf.dart' as shelf;
+
+Future<dynamic> main(final context) async {
+    return shelf.Response.ok(
+        jsonEncode({'theme': 'dark'}),
+        headers: {
+            'content-type': 'application/json',
+            'set-cookie': 'theme=dark; Max-Age=3600; Path=/; HttpOnly; Secure'
+        },
+    );
+}
+```
+{% /multicode %}
+
+A few details differ between the two:
+
+- **Python already includes aiohttp.** There's nothing to add to `requirements.txt`. In Dart, add `shelf` to your `pubspec.yaml`.
+- **Python responses need an in-memory body.** Returning a `web.StreamResponse` or `web.FileResponse` fails the execution, so keep using `context.res.sendStream()` to stream from Python.
+- **Dart responses can stream.** A shelf `Response` with a `Stream` body is sent in chunks, the same way as `sendStream()`.
+- **Each cookie keeps its own header.** Python and Dart send every `set-cookie` header separately, so browsers store all of them.
+
+# Read the native request in every runtime
+
+`context.req.raw` works in every runtime, not only the ones that accept native responses. Each runtime passes the request object of its own web server, so you can use that server's helpers or hand the request to a library written for it.
+
+| Runtime                | `context.req.raw` is       |
+|------------------------|----------------------------|
+| Node.js 18+, Bun, Deno | Fetch API `Request`        |
+| Python                 | aiohttp `web.Request`      |
+| Dart                   | shelf `Request`            |
+| PHP                    | `Swoole\Http\Request`      |
+| Ruby                   | `Sinatra::Request`         |
+| Go                     | `*http.Request`            |
+| .NET                   | ASP.NET Core `HttpRequest` |
+| Kotlin, Java           | Javalin `Context`          |
+| Swift                  | Vapor `Request`            |
+| C++                    | Drogon `HttpRequestPtr`    |
+| Rust                   | `http::Request<Vec<u8>>`   |
+
+Outside JavaScript, keep three details in mind:
+
+- **The body is readable again.** The runtime reads the body before your function runs, then rewinds or buffers it, so you can read it through `raw` as well. In .NET, set `Context.Req.Raw.Body.Position` to `0` first.
+- **Python can't parse multipart bodies from `raw`.** `await context.req.raw.post()` handles URL-encoded forms, but fails on multipart bodies because the runtime has already read them.
+- **Go and Rust need newer type packages.** Go needs `github.com/open-runtimes/types-for-go/v4` `v4.0.9` or later, and Rust needs `openruntimes-types-for-rust` `1.0.3` or later.
+
+The [native request docs](/docs/products/functions/develop#native-request) show how to read `raw` in all 14 languages.
+
+# When to use native request and response
+
+Reach for `context.req.raw` and native responses when:
+
+- You need `formData()` or another standard body parser in JavaScript.
+- A library you use takes your runtime's request type or returns its response type.
+- You're moving a handler from `Bun.serve()`, `Deno.serve()`, Cloudflare Workers, aiohttp, or shelf and want to keep its request in, response out shape.
+- One JavaScript function serves several routes and you want a framework such as Hono instead of a hand-written `switch` on `req.path`.
 
 Stay with `context.req` and `context.res` when the function is a single endpoint. `req.bodyJson` and `res.json()` are shorter than parsing and building the objects yourself. The `context.res` methods also look the same in every Appwrite runtime, which helps if your team writes functions in more than one language.
 
-One limit to know about. If a returned `Response` sets more than one cookie, use `node-20.0` or later, Bun, or Deno. Earlier Node.js versions join the cookies into a single `set-cookie` header, and browsers don't split it back into separate cookies.
+One limit to know about. If a returned `Response` in Node.js sets more than one cookie, use `node-20.0` or later. Earlier Node.js versions join the cookies into a single `set-cookie` header, and browsers don't split it back into separate cookies. Bun, Deno, Python, and Dart keep them separate.
 
-# Getting started with native Request and Response
+# Getting started with native request and response
 
-Native Request and Response support is available on Appwrite Cloud today in the Node.js 18 and later, Bun, and Deno runtimes. Pick one of those runtimes, read the request from `req.raw`, and return a `Response` when that's simpler than a `context.res` method.
+Native request and response support is available on Appwrite Cloud today. `context.req.raw` works in every runtime except the deprecated `node-14.5`, `node-16.0`, `dart-2.15`, and `swift-5.5`, and native responses work in Node.js 18 and later, Bun, Deno, Python, and Dart. Read the request from `req.raw` when your server's own type helps, and return a native response when that's simpler than a `context.res` method.
 
 - [Native request and response in Functions](/docs/products/functions/develop#native-request-response)
 - [Streaming responses in Functions](/docs/products/functions/develop#streaming-responses)
