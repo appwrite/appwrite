@@ -400,7 +400,7 @@ trait Deployment
                             $owner,
                             $repositoryName,
                             $providerCommitHash,
-                            'queued',
+                            'action_required',
                             $resource->getAttribute('name'),
                             $message,
                             "Authorize the build: {$authorizeUrl}",
