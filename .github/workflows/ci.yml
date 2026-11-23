@@ -936,6 +936,10 @@ jobs:
           _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
           _APP_DOCUMENTSDB: enabled
           _APP_VECTORSDB: enabled
+          # Distribution is on only for its own lane, against the Mock stores; every other lane keeps it off.
+          _APP_DISTRIBUTION: ${{ matrix.service.name == 'Distribution' && 'enabled' || 'disabled' }}
+          _APP_DISTRIBUTION_APPLE_ENDPOINT: http://appwrite/v1/mock/distribution/apple
+          _APP_DISTRIBUTION_GOOGLE_ENDPOINT: http://appwrite/v1/mock/distribution/google
           # Only the Projects suite waits for the scheduler to reach a project of each cohort; empty keeps the default.
           _APP_MAINTENANCE_INTERVAL: ${{ matrix.service.name == 'Projects' && '30' || '' }}
           _APP_MAINTENANCE_INACTIVE_INTERVAL: ${{ matrix.service.name == 'Projects' && '30' || '' }}

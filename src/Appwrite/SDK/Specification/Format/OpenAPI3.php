@@ -709,6 +709,7 @@ class OpenAPI3 extends Format
                     case \Utopia\Database\Validator\Key::class:
                     case \Appwrite\Utopia\Database\Validator\ProjectId::class:
                     case \Appwrite\Platform\Modules\Compute\Validator\VariableKey::class:
+                    case \Appwrite\Platform\Modules\Distribution\Validator\VariableKey::class:
                     case \Utopia\Validator\Text::class:
                     case \Appwrite\Vcs\Validator\Directory::class:
                         $node['schema']['type'] = $validator->getType();

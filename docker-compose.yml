@@ -293,6 +293,9 @@ services:
       - _APP_DOCUMENTSDB
       - _APP_VECTORSDB
       - _APP_EMBEDDING
+      - _APP_DISTRIBUTION
+      - _APP_DISTRIBUTION_APPLE_ENDPOINT
+      - _APP_DISTRIBUTION_GOOGLE_ENDPOINT
   appwrite-console:
     logging:
       driver: json-file
