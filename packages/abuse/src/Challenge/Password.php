@@ -82,10 +82,14 @@ final readonly class Password extends Challenge
      * Encrypt a password for storage, recording the key version so the reader
      * can pick the right key after a rotation.
      *
+     * @throws \InvalidArgumentException when the password is empty: it would let anyone through
      * @throws \RuntimeException when the key is empty or encryption fails
      */
     public static function encrypt(string $password, string $key, string $version): string
     {
+        if ($password === '') {
+            throw new \InvalidArgumentException('Refusing to encrypt an empty password.');
+        }
         if ($key === '') {
             throw new \RuntimeException('Refusing to encrypt a password with an empty key.');
         }
@@ -134,8 +138,9 @@ final readonly class Password extends Challenge
         foreach ($keys as $key) {
             $password = $key === '' ? false : \openssl_decrypt($data, self::CIPHER, $key, 0, $iv, $tag);
             if ($password !== false) {
+                // An empty stored password would accept an empty guess; never treat it as set.
                 // Compare digests so the time taken does not depend on length.
-                return \hash_equals(\hash('sha256', $password), \hash('sha256', $guess));
+                return $password !== '' && \hash_equals(\hash('sha256', $password), \hash('sha256', $guess));
             }
         }
 

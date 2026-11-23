@@ -128,6 +128,24 @@ final class PasswordTest extends TestCase
         $this->assertFalse($clearance->withParams([...self::CLIENT, 'version' => $after->version()])->verify($pass));
     }
 
+    public function testEncryptRefusesAnEmptyPassword(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        Password::encrypt('', self::KEY, '1');
+    }
+
+    public function testAnEmptyStoredPasswordNeverMatches(): void
+    {
+        // Written elsewhere (e.g. Appwrite's `encrypt` filter), an empty password must not accept an empty guess.
+        $iv = \random_bytes(12);
+        $tag = '';
+        $data = (string) \openssl_encrypt('', 'aes-128-gcm', self::KEY, 0, $iv, $tag);
+        $empty = (string) \json_encode(['data' => $data, 'method' => 'aes-128-gcm', 'iv' => \bin2hex($iv), 'tag' => \bin2hex($tag), 'version' => '1']);
+
+        $this->assertSame(Status::Rejected, $this->answer($this->password($empty), ''));
+        $this->assertSame(Status::Rejected, $this->answer($this->password($empty), 'anything'));
+    }
+
     public function testEncryptRefusesAnEmptyKey(): void
     {
         $this->expectException(\RuntimeException::class);
