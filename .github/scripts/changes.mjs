@@ -86,6 +86,72 @@ const databaseReferences = (commit) => {
     .join(",");
 };
 
+// The libraries a change under crates/ reaches, by the name of their package: the extension
+// registers crates/utopia/<name> as the classes of packages/<name>. Cargo's own graph says which
+// crates depend on the one that changed, so a change to php-std reaches every library and a
+// change to one library reaches that library. The extension crate binds all of them, as do the
+// workspace's manifests. A crate's tests, benchmarks and docs reach none: the Extension job
+// runs those.
+const libraries = (files) => {
+  const changed = files.filter(
+    (file) =>
+      !file.endsWith(".md") &&
+      !/\/(tests|bench|benches)\//.test(file) &&
+      (file.startsWith("crates/") ||
+        file.startsWith(".cargo/") ||
+        ["Cargo.toml", "Cargo.lock", "rust-toolchain.toml"].includes(file)),
+  );
+  if (changed.length === 0) {
+    return [];
+  }
+  // --no-deps reads the manifests only: no build, no network, no lock resolution. Any installed
+  // toolchain can do that, so the one rust-toolchain.toml pins is not downloaded for it.
+  const { packages, workspace_root: root } = JSON.parse(
+    execFileSync("cargo", ["metadata", "--no-deps", "--format-version", "1"], {
+      encoding: "utf8",
+      maxBuffer: 64 * 1024 * 1024,
+      env: { ...process.env, RUSTUP_TOOLCHAIN: "stable" },
+    }),
+  );
+  const crates = packages.map((crate) => ({
+    name: crate.name,
+    directory: crate.manifest_path.slice(root.length + 1, -"/Cargo.toml".length),
+    dependencies: crate.dependencies
+      .filter((dependency) => dependency.path)
+      .map((dependency) => dependency.name),
+  }));
+  const library = (crate) =>
+    crate.directory.startsWith("crates/utopia/")
+      ? crate.directory.slice("crates/utopia/".length)
+      : null;
+  const every = crates.map(library).filter(Boolean);
+  const reached = new Set();
+  for (const file of changed) {
+    const owner = crates
+      .filter((crate) => file.startsWith(`${crate.directory}/`))
+      .sort((a, b) => b.directory.length - a.directory.length)[0];
+    if (!owner || owner.directory === "crates/extension") {
+      return every;
+    }
+    const queue = [owner];
+    const seen = new Set();
+    while (queue.length > 0) {
+      const crate = queue.pop();
+      if (seen.has(crate.name)) {
+        continue;
+      }
+      seen.add(crate.name);
+      if (library(crate)) {
+        reached.add(library(crate));
+      }
+      queue.push(
+        ...crates.filter((other) => other.dependencies.includes(crate.name)),
+      );
+    }
+  }
+  return [...reached].sort();
+};
+
 const everything =
   event === "workflow_dispatch" ||
   (ref.startsWith("refs/heads/") && ref.endsWith(".x"));
@@ -132,6 +198,21 @@ if (!everything) {
       }
       owners.forEach((service) => selected.add(service.name));
     }
+  }
+  // A library's classes have no PHP source, so the suites that use them are the ones that own
+  // its package. A library no suite owns is one the whole server uses.
+  for (const name of libraries(files)) {
+    server = true;
+    const owners = config.services.filter((service) =>
+      claims(`packages/${name}/`, service.paths),
+    );
+    if (owners.length === 0) {
+      all = true;
+    }
+    owners.forEach((service) => selected.add(service.name));
+    console.log(
+      `crate library ${name}: ${owners.map((service) => service.name).join(", ") || "every suite"}`,
+    );
   }
 }
 
