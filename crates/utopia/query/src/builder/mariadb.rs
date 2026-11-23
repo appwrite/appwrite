@@ -68,6 +68,8 @@ impl MySqlFamily for MariaDbDialect {
 
 impl Dialect for MariaDbDialect {
     const CLASS: &'static str = "Utopia\\Query\\Builder\\MariaDB";
+    const LIKE_ESCAPE: u8 = b'!';
+    const DECLARES_LIKE_ESCAPE: bool = true;
 
     fn compile_random(_b: &Builder<Self>) -> String {
         "RAND()".into()

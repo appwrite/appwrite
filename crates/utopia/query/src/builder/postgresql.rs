@@ -648,6 +648,7 @@ fn select_keyword_len(query: &str) -> Option<usize> {
 impl Dialect for PostgreSqlDialect {
     const CLASS: &'static str = "Utopia\\Query\\Builder\\PostgreSQL";
     const WRAP: char = '"';
+    const LITERAL: crate::StringLiteral = crate::StringLiteral::Extended;
 
     fn quote_string(value: &[u8]) -> Vec<u8> {
         quote_bytes(value, false)

@@ -103,7 +103,15 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     };
     // The builders are a batch of their own while they are being moved.
     let module = if enabled("query") && enabled("query-builders") {
-        module.class::<query::builder::MySqlBuilder>()
+        module
+            .class::<query::builder::Base>()
+            .class::<query::builder::Sql>()
+            .class::<query::builder::MySqlBuilder>()
+            .class::<query::builder::MariaDbBuilder>()
+            .class::<query::builder::PostgreSqlBuilder>()
+            .class::<query::builder::SqliteBuilder>()
+            .class::<query::builder::ClickHouseBuilder>()
+            .class::<query::builder::MongoDbBuilder>()
     } else {
         module
     };

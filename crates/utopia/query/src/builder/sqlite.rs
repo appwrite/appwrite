@@ -70,6 +70,8 @@ fn json_each_conditions(b: &mut Builder<SqliteDialect>, attribute: &str, values:
 
 impl Dialect for SqliteDialect {
     const CLASS: &'static str = "Utopia\\Query\\Builder\\SQLite";
+    const DECLARES_LIKE_ESCAPE: bool = true;
+    const LITERAL: crate::StringLiteral = crate::StringLiteral::Standard;
 
     fn quote_string(value: &[u8]) -> Vec<u8> {
         quote_bytes(value, false)

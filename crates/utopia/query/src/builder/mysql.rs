@@ -422,6 +422,8 @@ pub(crate) fn json_path<D: Dialect>(b: &mut Builder<D>, attribute: &str, values:
 
 impl Dialect for MySqlDialect {
     const CLASS: &'static str = "Utopia\\Query\\Builder\\MySQL";
+    const LIKE_ESCAPE: u8 = b'!';
+    const DECLARES_LIKE_ESCAPE: bool = true;
 
     fn compile_random(_b: &Builder<Self>) -> String {
         "RAND()".into()

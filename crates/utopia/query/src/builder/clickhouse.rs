@@ -425,6 +425,7 @@ fn select_function(b: &mut ClickHouse, expression: String, alias: &str) -> Resul
 
 impl Dialect for ClickHouseDialect {
     const CLASS: &'static str = "Utopia\\Query\\Builder\\ClickHouse";
+    const LITERAL: crate::StringLiteral = crate::StringLiteral::BackslashUtf8;
 
     fn compile_random(_b: &Builder<Self>) -> String {
         "rand()".into()
@@ -455,8 +456,8 @@ impl Dialect for ClickHouseDialect {
             let not = if not { "NOT " } else { "" };
             return Ok(format!("{not}{function}({attribute}, ?)"));
         }
-        b.add_binding(like_pattern(prefix, &raw, suffix), column);
-        Ok(format!("{attribute} {} ?", if not { "NOT LIKE" } else { "LIKE" }))
+        b.add_binding(like_pattern(prefix, &raw, suffix, Self::LIKE_ESCAPE), column);
+        b.like_predicate(attribute, not)
     }
 
     fn compile_contains(
