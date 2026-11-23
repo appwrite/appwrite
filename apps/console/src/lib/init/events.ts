@@ -319,7 +319,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
         'Init November 30 - December 4 has ended. Browse the full recap below.',
       introTitle: 'Everything we shipped',
       introDescription:
-        'From Appwrite Analytics and Videos to Appwrite Zero, the TablesDB upgrade, Monitors, and Beep. Explore the full launch timeline.',
+        'From Appwrite Analytics and Videos to Appwrite Zero, Monitors, Beep, and Reviews. Explore the full launch timeline.',
       getInvolvedSectionTitle: 'Keep exploring',
       getInvolved: [
         {
