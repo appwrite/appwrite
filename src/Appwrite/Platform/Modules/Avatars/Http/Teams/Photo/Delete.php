@@ -34,6 +34,8 @@ class Delete extends Base
             ->httpAlias('/v1/teams/:teamId/photo')
             ->desc('Delete photo')
             ->groups(['api', 'avatars', 'teams'])
+            // Team photos belong to Teams too, so the project's Teams switch still covers them
+            ->label('services', ['teams'])
             ->label('event', 'teams.[teamId].update')
             ->label('scope', 'teams.write')
             ->label('audits.event', 'team.update')

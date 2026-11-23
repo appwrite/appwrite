@@ -77,6 +77,8 @@ export function CreateMonitor({
         ...emptyProbeForm(next),
         name: current.name,
         notify: current.notify,
+        recipients: current.recipients,
+        escalationId: current.escalationId,
         severity: current.severity,
         cooldown: current.cooldown,
         interval: current.interval,
@@ -164,6 +166,7 @@ export function CreateMonitor({
                 />
               ) : (
                 <ProbeFields
+                  projectId={projectId}
                   form={probe}
                   onChange={(changes) =>
                     setProbe((current) => ({ ...current, ...changes }))

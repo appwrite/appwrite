@@ -3052,7 +3052,8 @@
             "cooldown",
             "enabled",
             "notify",
-            "severity"
+            "severity",
+            "escalationId"
         ],
         "monitors.delete": [
             "monitorId"
@@ -3072,7 +3073,8 @@
             "cooldown",
             "enabled",
             "notify",
-            "severity"
+            "severity",
+            "escalationId"
         ],
         "notifications.list": [
             "queries",
@@ -3086,6 +3088,12 @@
             "projectId",
             "scopes",
             "duration"
+        ],
+        "organization.createEscalation": [
+            "escalationId",
+            "name",
+            "steps",
+            "repeat"
         ],
         "organization.createProject": [
             "projectId",
@@ -3105,6 +3113,9 @@
             "recipientId",
             "expire"
         ],
+        "organization.deleteEscalation": [
+            "escalationId"
+        ],
         "organization.deleteProject": [
             "projectId"
         ],
@@ -3114,6 +3125,9 @@
         ],
         "organization.deleteProjectTransfer": [
             "transferId"
+        ],
+        "organization.getEscalation": [
+            "escalationId"
         ],
         "organization.getProject": [
             "projectId"
@@ -3125,6 +3139,10 @@
         "organization.getProjectTransfer": [
             "transferId",
             "secret"
+        ],
+        "organization.listEscalations": [
+            "queries",
+            "total"
         ],
         "organization.listProjectKeys": [
             "projectId",
@@ -3140,6 +3158,12 @@
             "queries",
             "search",
             "total"
+        ],
+        "organization.updateEscalation": [
+            "escalationId",
+            "name",
+            "steps",
+            "repeat"
         ],
         "organization.updateProject": [
             "projectId",
@@ -7609,7 +7633,8 @@
             "cooldown",
             "enabled",
             "notify",
-            "severity"
+            "severity",
+            "escalationId"
         ],
         "monitors.delete": [
             "monitorId"
@@ -7629,7 +7654,8 @@
             "cooldown",
             "enabled",
             "notify",
-            "severity"
+            "severity",
+            "escalationId"
         ],
         "organization.createEphemeralProjectKey": [
             "projectId",
