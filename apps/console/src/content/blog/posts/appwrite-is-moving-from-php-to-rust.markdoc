@@ -23,7 +23,7 @@ faqs:
 
 After many years on PHP, we have decided to move Appwrite's server to Rust. We want to tell you why we made this choice, what we learned while exploring it, and what our first results look like. Those first results are promising: our Users API on Rust serves 2.6 times the requests per second of the same API on PHP, with 5.7 times less CPU per request and 33 times less memory. The work has already started, and Rust is serving real traffic today, but we still have a long way to go.
 
-We want to be clear about one thing first: this is not a story about PHP letting us down. PHP, together with Swoole, carried Appwrite from a side project to a platform that serves hundreds of thousands of developers. It gave us a fast language to build in, a mature ecosystem and a community we are proud to be part of. We are making this move because a new opportunity opened up, not because we were in pain.
+PHP has served us well. Together with Swoole, it carried Appwrite from a side project to a platform that serves hundreds of thousands of developers. It gave us a fast language to build in, a mature ecosystem and a community we are proud to be part of. We are making this move because a new opportunity opened up.
 
 # Why now
 
