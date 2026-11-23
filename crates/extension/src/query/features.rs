@@ -10,7 +10,7 @@
 //!
 //! - a fluent method returns `static`, where ext-php-rs declares the class it is written on;
 //! - the builders implement the interfaces, which needs those return types to agree;
-//! - PHP creates a builder with its state already in it (see [`super::builder::create`]).
+//! - PHP creates a builder with its state already in it and lets it change a protected property in place (see [`prepare`]).
 
 use std::ffi::CStr;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -22,7 +22,7 @@ use ext_php_rs::types::ZendStr;
 use ext_php_rs::zend::ClassEntry;
 
 use super::builder::{
-    ClickHouseBuilder, MariaDbBuilder, MongoDbBuilder, MySqlBuilder, Native, PostgreSqlBuilder, SqliteBuilder, create,
+    ClickHouseBuilder, MariaDbBuilder, MongoDbBuilder, MySqlBuilder, Native, PostgreSqlBuilder, SqliteBuilder, prepare,
 };
 use crate::classes::engine;
 
@@ -233,8 +233,8 @@ struct Dialect {
     name: &'static str,
     methods: Methods,
     class: fn() -> &'static ClassEntry,
-    /// Has PHP create its objects with [`create`].
-    creates: fn(),
+    /// See [`prepare`].
+    prepare: fn(),
 }
 
 impl Dialect {
@@ -243,11 +243,7 @@ impl Dialect {
             name: C::CLASS_NAME,
             methods: C::method_builders,
             class: || C::get_metadata().ce(),
-            creates: || {
-                let class = std::ptr::from_ref(C::get_metadata().ce()).cast_mut();
-                // SAFETY: an internal class lives as long as the process, and no script has run yet.
-                unsafe { (*class).__bindgen_anon_2.create_object = Some(create::<C>) };
-            },
+            prepare: prepare::<C>,
         }
     }
 }
@@ -352,7 +348,7 @@ unsafe extern "C" fn finish() -> i32 {
     let native: Vec<Vec<String>> = DIALECTS.iter().map(|dialect| names(dialect.methods)).collect();
     for (dialect, methods) in DIALECTS.iter().zip(&native) {
         fluent((dialect.class)(), methods);
-        (dialect.creates)();
+        (dialect.prepare)();
     }
     for (name, dialects, _) in FEATURES {
         let Some(interface) = registered(name) else { continue };

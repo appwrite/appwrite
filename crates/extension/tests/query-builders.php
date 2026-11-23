@@ -781,7 +781,18 @@ trait OwnsState
         return $this;
     }
 
-    // Assigned whole: the extension's properties cannot be appended to in place.
+    public function poke(string $attribute): static
+    {
+        $this->pendingQueries[] = Query::greaterThan($attribute, 7);
+        $this->bindings[] = new Builder\Binding('pushed', 'col');
+        $this->resolvedAttributeCache['seen'] = 'as';
+        $this->pendingQueries[0] = Query::select(['z']);
+        $this->bindings[0] = new Builder\Binding($attribute, null);
+        unset($this->resolvedAttributeCache['gone']);
+
+        return $this;
+    }
+
     public function grow(): static
     {
         $this->pendingQueries = [...$this->pendingQueries, Query::greaterThan('grown', 7)];
@@ -830,6 +841,10 @@ foreach ($dialects as $dialect) {
         }),
         outcome(fn () => $start()->rewrite()->build()),
         outcome(fn () => $start()->rewrite()->peek()),
+        outcome(fn () => $start()->poke('pushed')->peek()),
+        outcome(fn () => $start()->poke('pushed')->build()),
+        outcome(fn () => $start()->poke('one')->limit(3)->poke('two')->peek()),
+        outcome(fn () => $start()->poke('one')->poke('two')->build()),
         outcome(fn () => $start()->grow()->peek()),
         outcome(fn () => $start()->grow()->build()),
         outcome(fn () => array_map(fn (string $property) => (new ReflectionProperty($class, $property))->isProtected(), ['bindings', 'pendingQueries', 'resolvedAttributeCache'])),

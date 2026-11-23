@@ -228,6 +228,29 @@ pub struct State<D: Dialect + Text> {
     /// The statement the last `afterBuild()` callback returned, and its query: `build()`
     /// hands back that very object.
     returned: RefCell<Option<(Zval, String)>>,
+    /// The protected properties PHP was given a pointer into, to append to or change in place.
+    /// The next call reads them back.
+    shared: RefCell<[Option<Box<Zval>>; 3]>,
+    touched: Cell<bool>,
+}
+
+/// The protected properties a subclass can change in place.
+#[derive(Clone, Copy)]
+enum Property {
+    Bindings,
+    PendingQueries,
+    ResolvedAttributeCache,
+}
+
+impl Property {
+    fn named(name: &[u8]) -> Option<Self> {
+        match name {
+            b"bindings" => Some(Self::Bindings),
+            b"pendingQueries" => Some(Self::PendingQueries),
+            b"resolvedAttributeCache" => Some(Self::ResolvedAttributeCache),
+            _ => None,
+        }
+    }
 }
 
 impl<D: Dialect + Text> State<D> {
@@ -246,11 +269,49 @@ impl<D: Dialect + Text> State<D> {
             named: Cell::new(false),
             executor: RefCell::new(None),
             returned: RefCell::new(None),
+            shared: RefCell::new([None, None, None]),
+            touched: Cell::new(false),
+        }
+    }
+
+    /// A pointer to `property` as PHP holds it, for `$this->pendingQueries[] = $query` and the like.
+    fn share(&self, property: Property) -> *mut Zval {
+        let value = match property {
+            Property::Bindings => self.bound().unwrap_or_else(|_| empty()),
+            Property::PendingQueries => self.pending().unwrap_or_else(|_| empty()),
+            Property::ResolvedAttributeCache => self.resolved(),
+        };
+        self.touched.set(true);
+        std::ptr::from_mut(&mut **self.shared.borrow_mut()[property as usize].insert(Box::new(value)))
+    }
+
+    /// Reads back what PHP did to the properties it was given a pointer into.
+    fn absorb(&self) {
+        self.touched.set(false);
+        let [bindings, pending, resolved] = self.shared.take();
+        if let Some(bindings) = bindings {
+            self.bind(&bindings);
+        }
+        // Left alone when PHP only read it: a build that is running is reading the same queries.
+        if let Some(pending) = pending
+            && let Ok(queries) = self.queries(&Arr::Given(&pending))
+        {
+            self.with(|builder| {
+                if builder.pending() != queries.as_slice() {
+                    builder.set_pending(queries);
+                }
+            });
+        }
+        if let Some(resolved) = resolved {
+            self.resolve(&resolved);
         }
     }
 
     /// Runs `work` on the builder: the one the crate lent when an override is running.
     fn with<T>(&self, work: impl FnOnce(&mut Builder<D>) -> T) -> T {
+        if self.touched.get() {
+            self.absorb();
+        }
         let lent = self.lent.get();
         let builder = if lent.is_null() { self.own.as_ptr() } else { lent };
         // SAFETY: the lent pointer is the `&mut` of the build that is waiting on the override
@@ -605,11 +666,58 @@ pub trait Native: RegisteredClass {
 
     /// An object of the class with a new builder.
     fn fresh() -> Self;
+
+    /// Where the class keeps ext-php-rs's handler for a pointer to a property.
+    fn pointers() -> &'static std::sync::atomic::AtomicUsize;
+}
+
+/// A pointer to a property of a builder, for PHP to write through. ext-php-rs has none to give for a
+/// property a getter backs, so `$this->pendingQueries[] = $query` would change nothing. Its handler
+/// still runs first, for the visibility check.
+unsafe extern "C" fn pointer<C: Native>(
+    object: *mut ZendObject,
+    member: *mut ext_php_rs::types::ZendStr,
+    kind: std::ffi::c_int,
+    cache: *mut *mut std::ffi::c_void,
+) -> *mut Zval {
+    // SAFETY: stored from the handler itself in `prepare`.
+    let original: unsafe extern "C" fn(
+        *mut ZendObject,
+        *mut ext_php_rs::types::ZendStr,
+        std::ffi::c_int,
+        *mut *mut std::ffi::c_void,
+    ) -> *mut Zval = unsafe { std::mem::transmute(C::pointers().load(std::sync::atomic::Ordering::Acquire)) };
+    // SAFETY: PHP passes a live object and the name of the property.
+    let found = unsafe { original(object, member, kind, cache) };
+    if !found.is_null() || ExecutorGlobals::has_exception() {
+        return found;
+    }
+    // SAFETY: as above.
+    let (object, name) = unsafe { (&*object, (*member).as_bytes()) };
+    match (ZendClassObject::<C>::from_zend_obj(object), Property::named(name)) {
+        (Some(builder), Some(property)) => builder.state().share(property),
+        _ => found,
+    }
+}
+
+/// Has PHP create objects of `C` with [`create`] and write to their properties through [`pointer`].
+/// Runs once every class is registered.
+pub(super) fn prepare<C: Native>() {
+    let metadata = C::get_metadata();
+    let handlers = std::ptr::from_ref(metadata.handlers()).cast_mut();
+    // SAFETY: an internal class and its handlers live as long as the process, and no script has run.
+    unsafe {
+        if let Some(original) = (*handlers).get_property_ptr_ptr {
+            C::pointers().store(original as usize, std::sync::atomic::Ordering::Release);
+            (*handlers).get_property_ptr_ptr = Some(pointer::<C>);
+        }
+        (*std::ptr::from_ref(metadata.ce()).cast_mut()).__bindgen_anon_2.create_object = Some(create::<C>);
+    }
 }
 
 /// Creates an object of `C`, or of a PHP subclass, with its builder already in it. A subclass may
 /// declare a constructor that never calls the parent's, which PHP's own classes have none of.
-pub(super) extern "C" fn create<C: Native>(class: *mut ClassEntry) -> *mut ZendObject {
+extern "C" fn create<C: Native>(class: *mut ClassEntry) -> *mut ZendObject {
     // SAFETY: PHP passes the class it is creating an object of, and the object is initialised below.
     let mut held = unsafe { ZendClassObject::<C>::new_uninit(class.as_ref()) };
     held.initialize(C::fresh());
@@ -2472,6 +2580,11 @@ macro_rules! builder_class {
 
             fn fresh() -> Self {
                 Self(State::new::<$class>())
+            }
+
+            fn pointers() -> &'static std::sync::atomic::AtomicUsize {
+                static ORIGINAL: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+                &ORIGINAL
             }
         }
 
