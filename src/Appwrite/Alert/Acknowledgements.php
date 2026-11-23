@@ -9,8 +9,10 @@ use Utopia\Database\Document;
 
 /**
  * Acknowledging a firing alert: one member says they have it, and everyone who
- * can read the alert sees who and when. It changes nothing else; the monitor
- * keeps being evaluated and the alert resolves as before, keeping who handled it.
+ * can read the alert sees who and when. Its escalation stops, and goes on from
+ * the next step if the acknowledgement is undone. Nothing else changes; the
+ * monitor keeps being evaluated and the alert resolves as before, keeping who
+ * handled it.
  */
 readonly class Acknowledgements
 {
@@ -47,7 +49,10 @@ readonly class Acknowledgements
             'acknowledgedByName' => '',
         ]);
 
-        return $this->dbForPlatform->getAuthorization()->skip(fn () => $this->dbForPlatform->updateDocument('monitorAlerts', $alert->getId(), $changes));
+        $alert = $this->dbForPlatform->getAuthorization()->skip(fn () => $this->dbForPlatform->updateDocument('monitorAlerts', $alert->getId(), $changes));
+        $escalations = new Escalations($this->dbForPlatform);
+
+        return $acknowledged ? $escalations->stop($alert) : $escalations->resume($alert, new \DateTimeImmutable());
     }
 
     /**

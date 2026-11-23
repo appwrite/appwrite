@@ -23,6 +23,9 @@ final class Alerts extends Database
 {
     private const int PAGE = 1000;
 
+    /** Escalating alerts' timers, which the same scheduler fires. */
+    private readonly Escalations $escalations;
+
     /**
      * @param \Closure(list<Document>): array<string, int> $intervals seconds between evaluations, by schedule ID, for one page of schedules; a schedule left out is not run
      */
@@ -32,18 +35,21 @@ final class Alerts extends Database
     ) {
         // The worker loads the monitor and its project, so make() reads neither.
         parent::__construct($dbForPlatform, null, null);
+        $this->escalations = new Escalations($dbForPlatform);
     }
 
     #[\Override]
     public function snapshot(): iterable
     {
         yield from $this->paged(parent::snapshot());
+        yield from $this->escalations->snapshot();
     }
 
     #[\Override]
     public function since(\DateTimeImmutable $moment): iterable
     {
         yield from $this->paged(parent::since($moment));
+        yield from $this->escalations->since($moment);
     }
 
     /**
@@ -58,6 +64,10 @@ final class Alerts extends Database
             throw new \InvalidArgumentException('Schedule row carries no document');
         }
 
+        if ($schedule->getAttribute('resourceType') === SCHEDULE_RESOURCE_TYPE_ESCALATION) {
+            return $this->escalations->make($row);
+        }
+
         $projectId = (string) $schedule->getAttribute('projectId');
 
         return new Entry(
@@ -67,6 +77,7 @@ final class Alerts extends Database
             ]),
             [
                 'monitorId' => (string) $schedule->getAttribute('resourceId'),
+                'alertId' => '',
                 'project' => $projectId === '' ? new Document() : new Document([
                     '$id' => $projectId,
                     '$sequence' => (string) $schedule->getAttribute('projectInternalId'),
