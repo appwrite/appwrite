@@ -93,7 +93,7 @@ class Get extends Base
         }
 
         $identity = $dbForPlatform->findOne('identities', [
-            Query::equal('provider', ['supabase']),
+            Query::equal('provider', [self::PROVIDER]),
             Query::equal('providerUid', [$accountId]),
         ]);
 
@@ -118,7 +118,7 @@ class Get extends Base
                 ],
                 'userInternalId' => $user->getSequence(),
                 'userId' => $user->getId(),
-                'provider' => 'supabase',
+                'provider' => self::PROVIDER,
                 'providerUid' => $accountId,
                 'providerEmail' => '',
                 ...$tokens,

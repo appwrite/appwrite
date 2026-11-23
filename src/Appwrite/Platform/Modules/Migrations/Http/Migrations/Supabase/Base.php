@@ -19,6 +19,11 @@ use Utopia\System\System;
  */
 abstract class Base extends Action
 {
+    /**
+     * Identity provider of the connection, apart from Supabase sign in so the two never share a record
+     */
+    protected const string PROVIDER = 'supabase-migrations';
+
     protected function oauth2(Client $clientForOAuth2, Request $request, array $state = []): OAuth2Supabase
     {
         $appId = System::getEnv('_APP_MIGRATIONS_SUPABASE_CLIENT_ID', '');
@@ -42,7 +47,7 @@ abstract class Base extends Action
     protected function getIdentity(Database $dbForPlatform, Document $user): Document
     {
         $identity = $dbForPlatform->findOne('identities', [
-            Query::equal('provider', ['supabase']),
+            Query::equal('provider', [self::PROVIDER]),
             Query::equal('userInternalId', [$user->getSequence()]),
         ]);
 
