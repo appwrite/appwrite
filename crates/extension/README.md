@@ -577,8 +577,8 @@ the PHP object that owns it for that reason: kept per thread, 476 of the 720 los
 Run by hand on 2026-11-23, on the Alpine image built for arm64, and not part of CI:
 
 - Appwrite's `Databases` and `TablesDB` E2E suites on the compose stack with the switch on in every
-  service, on PostgreSQL and on MariaDB: 3,946 of 3,949 tests pass on each. The three that fail
-  need the embedding service, and fail the same way with the switch off.
+  service, on PostgreSQL and on MariaDB: 3,949 tests on each, 865 skipped and three failed. The
+  three need the embedding service, and fail the same way with the switch off.
 - Both corpora and the coroutine test under valgrind, with PHP on the system allocator: no invalid
   read, write or free in the builders, and the same warnings as the PHP classes give. The `query`
   corpus reports 19 invalid accesses, all on the stack `stacker` grows for a deep AST, which
