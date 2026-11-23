@@ -445,6 +445,17 @@ final class StorageCustomServerTest extends Scope
             $this->assertGreaterThanOrEqual(2, \count($this->getCacheKeys($filesystem)));
         }, 240_000, 100);
 
+        // A preview's cache row and file are written in the shutdown hook, after its response, so
+        // the bucket DELETE could list rows before the last ones exist and orphan their files. Nothing
+        // reports a finished hook; the filesystem holding the same keys across two reads does.
+        $previous = null;
+        $this->assertEventually(function () use (&$previous, $filesystem): void {
+            $keys = $this->getCacheKeys($filesystem);
+            $settled = $keys === $previous;
+            $previous = $keys;
+            $this->assertTrue($settled, 'the filesystem cache is still being written');
+        }, 30_000, 1000);
+
         $delete = $this->client->call(Client::METHOD_DELETE, \dirname($path), $headers);
         $this->assertSame(204, $delete['headers']['status-code']);
 
