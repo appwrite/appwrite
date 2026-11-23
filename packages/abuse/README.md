@@ -136,13 +136,12 @@ $clearance = new Clearance('secret');
 
 $client = ['ip' => $ip, 'ua' => $userAgent];
 
-// Issue a token, then send it to the client with its seed and the difficulty:
-// the client finds $answer where sha256("$seed:$answer") starts with 18 zero bits
+// Issue a token, then send $token->value, $token->seed and $token->difficulty to the client:
+// it finds $answer where sha256("$seed:$answer") starts with $difficulty zero bits
 $token = $challenge->withParams($client)->issue();
-$seed = ProofOfWork::seed($token);
 
-// Verify the client's solution and hand out a clearance
-$result = $challenge->withParams($client)->verify($token, $solution);
+// Verify the client's answer and hand out a clearance
+$result = $challenge->withParams($client)->verify($value, $answer);
 if ($result->isValid()) {
     $cookie = $clearance->withParams($client)->issue($result->difficulty);
 }
@@ -166,8 +165,8 @@ $stored = Password::encrypt('open sesame', $key, version: '1');   // keep this, 
 
 $password = new Password('secret', $stored, keys: ['1' => $key]);
 
-$token = $password->withParams($client)->issue();                        // render a form carrying $token
-$result = $password->withParams($client)->verify($token, $guess);        // Valid or Rejected
+$token = $password->withParams($client)->issue();                        // render a form carrying $token->value
+$result = $password->withParams($client)->verify($value, $guess);        // Valid or Rejected
 
 // Tie the clearance to this version of the password, so changing it ends every clearance
 $pass = $clearance->withParams([...$client, 'version' => $password->version()])->issue();
@@ -181,6 +180,7 @@ $pass = $clearance->withParams([...$client, 'version' => $password->version()])-
 use Utopia\Abuse\Challenge;
 use Utopia\Abuse\Challenge\Result;
 use Utopia\Abuse\Challenge\Status;
+use Utopia\Abuse\Challenge\Token;
 
 final readonly class Riddle extends Challenge
 {
@@ -189,9 +189,9 @@ final readonly class Riddle extends Challenge
         parent::__construct($secret, 'riddle', 'riddle', 60);
     }
 
-    public function issue(array $claims = []): string
+    public function issue(array $claims = []): Token
     {
-        return $this->sign(['answer' => hash('sha256', $this->answer)], $claims);
+        return new Token($this->sign(['answer' => hash('sha256', $this->answer)], $claims));
     }
 
     public function verify(string $token, string $answer): Result

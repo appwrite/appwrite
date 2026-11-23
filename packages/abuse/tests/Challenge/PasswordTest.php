@@ -37,7 +37,7 @@ final class PasswordTest extends TestCase
     {
         $bound = $password->withParams(self::CLIENT);
 
-        return $bound->verify($bound->issue(), $guess)->status;
+        return $bound->verify($bound->issue()->value, $guess)->status;
     }
 
     public function testAPasswordEncryptedByAppwriteMatches(): void
@@ -92,9 +92,9 @@ final class PasswordTest extends TestCase
     {
         $token = $this->password()->withParams(self::CLIENT)->issue();
 
-        $this->assertSame(Status::BindingMismatch, $this->password()->verify($token, self::PASSWORD)->status);
-        $this->assertSame(Status::BindingMismatch, $this->password()->withParams([...self::CLIENT, 'ip' => '198.51.100.0/24'])->verify($token, self::PASSWORD)->status);
-        $this->assertSame(Status::Valid, $this->password()->withParams(self::CLIENT)->verify($token, self::PASSWORD)->status);
+        $this->assertSame(Status::BindingMismatch, $this->password()->verify($token->value, self::PASSWORD)->status);
+        $this->assertSame(Status::BindingMismatch, $this->password()->withParams([...self::CLIENT, 'ip' => '198.51.100.0/24'])->verify($token->value, self::PASSWORD)->status);
+        $this->assertSame(Status::Valid, $this->password()->withParams(self::CLIENT)->verify($token->value, self::PASSWORD)->status);
     }
 
     public function testATokenFromAnotherChallengeIsRejected(): void
@@ -102,7 +102,7 @@ final class PasswordTest extends TestCase
         $other = new Password('other-secret', self::APPWRITE_ENCRYPTED, ['1' => self::KEY])->issue();
         $clearance = new Clearance(self::SECRET)->issue();
 
-        $this->assertSame(Status::InvalidToken, $this->password()->verify($other, self::PASSWORD)->status);
+        $this->assertSame(Status::InvalidToken, $this->password()->verify($other->value, self::PASSWORD)->status);
         $this->assertSame(Status::InvalidToken, $this->password()->verify($clearance, self::PASSWORD)->status);
     }
 

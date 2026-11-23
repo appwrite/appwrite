@@ -20,7 +20,7 @@ final readonly class Clearance
 
     private const string ISSUED_AT_CLAIM = 'issuedAt';
 
-    private Token $token;
+    private Issuer $issuer;
 
     /** @var array<string, string> */
     private array $params;
@@ -39,7 +39,7 @@ final readonly class Clearance
         string $label = 'clearance',
         string $purpose = 'clearance',
     ) {
-        $this->token = new Token($secret, $label, $purpose, $ttl);
+        $this->issuer = new Issuer($secret, $label, $purpose, $ttl);
         $this->params = [];
     }
 
@@ -75,7 +75,7 @@ final readonly class Clearance
             }
         }
 
-        return $this->token->issue([
+        return $this->issuer->issue([
             ...$claims,
             self::DIFFICULTY_CLAIM => $difficulty,
             // Not `iat`: the JWT library would expire the token at iat + its fixed max age
@@ -91,8 +91,8 @@ final readonly class Clearance
      */
     public function verify(string $token, int $difficulty = 0, int $maxAge = 0): bool
     {
-        $claims = $this->token->verify($token);
-        if ($claims === null || !Token::paramsMatch($claims, $this->params)) {
+        $claims = $this->issuer->verify($token);
+        if ($claims === null || !Issuer::paramsMatch($claims, $this->params)) {
             return false;
         }
 

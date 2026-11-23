@@ -5,6 +5,7 @@ namespace Utopia\Abuse\Tests\Challenge;
 use Utopia\Abuse\Challenge;
 use Utopia\Abuse\Challenge\Result;
 use Utopia\Abuse\Challenge\Status;
+use Utopia\Abuse\Challenge\Token;
 
 /**
  * The smallest possible challenge, to prove a new kind needs only a constructor,
@@ -18,9 +19,9 @@ final readonly class Riddle extends Challenge
     }
 
     #[\Override]
-    public function issue(array $claims = []): string
+    public function issue(array $claims = []): Token
     {
-        return $this->sign(['answer' => \hash('sha256', $this->answer)], $claims);
+        return new Token($this->sign(['answer' => \hash('sha256', $this->answer)], $claims));
     }
 
     #[\Override]

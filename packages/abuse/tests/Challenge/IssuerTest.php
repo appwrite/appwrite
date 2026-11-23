@@ -5,46 +5,46 @@ namespace Utopia\Abuse\Tests\Challenge;
 use Ahc\Jwt\JWT;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Utopia\Abuse\Challenge\Token;
+use Utopia\Abuse\Challenge\Issuer;
 
-final class TokenTest extends TestCase
+final class IssuerTest extends TestCase
 {
     private const string SECRET = 'token-secret';
 
-    private function token(string $label = 'label', string $purpose = 'purpose', int $ttl = 60): Token
+    private function issuer(string $label = 'label', string $purpose = 'purpose', int $ttl = 60): Issuer
     {
-        return new Token(self::SECRET, $label, $purpose, $ttl);
+        return new Issuer(self::SECRET, $label, $purpose, $ttl);
     }
 
     public function testIssueThenVerifyReturnsTheClaims(): void
     {
-        $token = $this->token();
+        $token = $this->issuer();
         $claims = $token->verify($token->issue(['user' => 'u1', 'level' => 3]));
 
         $this->assertIsArray($claims);
         $this->assertSame('u1', $claims['user']);
         $this->assertSame(3, $claims['level']);
-        $this->assertSame('purpose', $claims[Token::PURPOSE_CLAIM]);
+        $this->assertSame('purpose', $claims[Issuer::PURPOSE_CLAIM]);
     }
 
     public function testTokenForAnotherPurposeIsRejected(): void
     {
         // Same secret and label, different purpose: the purpose claim must match.
-        $issued = $this->token(purpose: 'challenge')->issue([]);
+        $issued = $this->issuer(purpose: 'challenge')->issue([]);
 
-        $this->assertNull($this->token(purpose: 'clearance')->verify($issued));
+        $this->assertNull($this->issuer(purpose: 'clearance')->verify($issued));
     }
 
     public function testTokenSignedUnderAnotherLabelIsRejected(): void
     {
-        $issued = $this->token(label: 'one')->issue([]);
+        $issued = $this->issuer(label: 'one')->issue([]);
 
-        $this->assertNull($this->token(label: 'two')->verify($issued));
+        $this->assertNull($this->issuer(label: 'two')->verify($issued));
     }
 
     public function testSigningKeyIsDerivedNotTheSecretItself(): void
     {
-        $issued = $this->token()->issue([]);
+        $issued = $this->issuer()->issue([]);
 
         $this->expectException(\Ahc\Jwt\JWTException::class);
         new JWT(self::SECRET, 'HS256', 60, 0)->decode($issued);
@@ -52,7 +52,7 @@ final class TokenTest extends TestCase
 
     public function testTokenDecodesWithTheLabelDerivedKey(): void
     {
-        $issued = $this->token(label: 'my-label')->issue(['a' => 'b']);
+        $issued = $this->issuer(label: 'my-label')->issue(['a' => 'b']);
 
         $claims = new JWT(\hash_hmac('sha256', 'my-label', self::SECRET), 'HS256', 60, 0)->decode($issued);
         $this->assertSame('b', $claims['a']);
@@ -60,24 +60,24 @@ final class TokenTest extends TestCase
 
     public function testTamperedTokenIsRejected(): void
     {
-        $issued = $this->token()->issue([]);
+        $issued = $this->issuer()->issue([]);
         $issued[\strlen($issued) - 1] = $issued[\strlen($issued) - 1] === 'a' ? 'b' : 'a';
 
-        $this->assertNull($this->token()->verify($issued));
+        $this->assertNull($this->issuer()->verify($issued));
     }
 
     public function testGarbageAndEmptyTokensAreRejected(): void
     {
-        $this->assertNull($this->token()->verify(''));
-        $this->assertNull($this->token()->verify('not.a.jwt'));
+        $this->assertNull($this->issuer()->verify(''));
+        $this->assertNull($this->issuer()->verify('not.a.jwt'));
     }
 
     public function testExpiredTokenIsRejected(): void
     {
         $jwt = new JWT(\hash_hmac('sha256', 'label', self::SECRET), 'HS256', 60, 0);
-        $expired = $jwt->encode([Token::PURPOSE_CLAIM => 'purpose', 'exp' => \time() - 10]);
+        $expired = $jwt->encode([Issuer::PURPOSE_CLAIM => 'purpose', 'exp' => \time() - 10]);
 
-        $this->assertNull($this->token()->verify($expired));
+        $this->assertNull($this->issuer()->verify($expired));
     }
 
     public function testTokenWithoutAnExpiryIsRejected(): void
@@ -85,16 +85,16 @@ final class TokenTest extends TestCase
         // The JWT library only checks `exp` when present; a token must not live forever.
         $jwt = new JWT(\hash_hmac('sha256', 'label', self::SECRET), 'HS256', 60, 0);
         // With `iat` set the library does not add `exp` itself.
-        $noExpiry = $jwt->encode([Token::PURPOSE_CLAIM => 'purpose', Token::BINDING_CLAIM => [], 'iat' => \time()]);
+        $noExpiry = $jwt->encode([Issuer::PURPOSE_CLAIM => 'purpose', Issuer::BINDING_CLAIM => [], 'iat' => \time()]);
         $this->assertArrayNotHasKey('exp', $jwt->decode($noExpiry));
 
-        $this->assertNull($this->token()->verify($noExpiry));
+        $this->assertNull($this->issuer()->verify($noExpiry));
     }
 
     public function testDefaultTtlSetsTheExpiry(): void
     {
         $before = \time();
-        $claims = $this->token(ttl: 120)->verify($this->token(ttl: 120)->issue([]));
+        $claims = $this->issuer(ttl: 120)->verify($this->issuer(ttl: 120)->issue([]));
 
         $this->assertIsArray($claims);
         $this->assertGreaterThanOrEqual($before + 120, $claims['exp']);
@@ -103,7 +103,7 @@ final class TokenTest extends TestCase
 
     public function testTtlOverrideWins(): void
     {
-        $token = $this->token(ttl: 60);
+        $token = $this->issuer(ttl: 60);
         $before = \time();
         $claims = $token->verify($token->issue([], 3600));
 
@@ -114,43 +114,43 @@ final class TokenTest extends TestCase
 
     public function testTheBindingIsStoredWithItsNames(): void
     {
-        $token = $this->token();
+        $token = $this->issuer();
         $claims = $token->verify($token->issue(['a' => 'b'], binding: ['ua' => 'u', 'ip' => 'i']));
 
         $this->assertIsArray($claims);
         $this->assertSame('i', $claims['ip']);
-        $this->assertSame(['ip', 'ua'], $claims[Token::BINDING_CLAIM]);
+        $this->assertSame(['ip', 'ua'], $claims[Issuer::BINDING_CLAIM]);
     }
 
     public function testParamsMatchRequiresTheSameNamesAndValues(): void
     {
-        $token = $this->token();
+        $token = $this->issuer();
         $claims = $token->verify($token->issue([], binding: ['ip' => 'i', 'ua' => 'u']));
         $this->assertIsArray($claims);
 
-        $this->assertTrue(Token::paramsMatch($claims, ['ua' => 'u', 'ip' => 'i']));
-        $this->assertFalse(Token::paramsMatch($claims, ['ip' => 'i']));
-        $this->assertFalse(Token::paramsMatch($claims, []));
-        $this->assertFalse(Token::paramsMatch($claims, ['ip' => 'i', 'ua' => 'other']));
-        $this->assertFalse(Token::paramsMatch($claims, ['ip' => 'i', 'ua' => 'u', 'extra' => 'x']));
+        $this->assertTrue(Issuer::paramsMatch($claims, ['ua' => 'u', 'ip' => 'i']));
+        $this->assertFalse(Issuer::paramsMatch($claims, ['ip' => 'i']));
+        $this->assertFalse(Issuer::paramsMatch($claims, []));
+        $this->assertFalse(Issuer::paramsMatch($claims, ['ip' => 'i', 'ua' => 'other']));
+        $this->assertFalse(Issuer::paramsMatch($claims, ['ip' => 'i', 'ua' => 'u', 'extra' => 'x']));
         // A claim that is not part of the binding cannot stand in for it.
         $claims = $token->verify($token->issue(['ip' => 'i']));
         $this->assertIsArray($claims);
-        $this->assertFalse(Token::paramsMatch($claims, ['ip' => 'i']));
-        $this->assertTrue(Token::paramsMatch($claims, []));
+        $this->assertFalse(Issuer::paramsMatch($claims, ['ip' => 'i']));
+        $this->assertTrue(Issuer::paramsMatch($claims, []));
     }
 
     public function testBindingAndClaimsMustNotShareNames(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->token()->issue(['ip' => 'a'], binding: ['ip' => 'b']);
+        $this->issuer()->issue(['ip' => 'a'], binding: ['ip' => 'b']);
     }
 
     #[DataProvider('reservedClaims')]
     public function testReservedClaimsAreRefused(string $name): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->token()->issue([$name => 'x']);
+        $this->issuer()->issue([$name => 'x']);
     }
 
     /**
@@ -158,10 +158,10 @@ final class TokenTest extends TestCase
      */
     public static function reservedClaims(): iterable
     {
-        yield 'purpose' => [Token::PURPOSE_CLAIM];
+        yield 'purpose' => [Issuer::PURPOSE_CLAIM];
         yield 'expiry' => ['exp'];
         yield 'issued at' => ['iat'];
-        yield 'binding names' => [Token::BINDING_CLAIM];
+        yield 'binding names' => [Issuer::BINDING_CLAIM];
     }
 
     /**
@@ -171,7 +171,7 @@ final class TokenTest extends TestCase
     public function testInvalidConfigurationIsRefused(array $arguments): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        new Token(...$arguments);
+        new Issuer(...$arguments);
     }
 
     /**

@@ -4,14 +4,14 @@
 
 ### Added
 
-- `Utopia\Abuse\Challenge`: the base for things a client must answer before it gets through, like `Adapter` is for rate limits. It holds the signed token and the params it is bound to (`withParams()` / `withParam()`). Each kind implements `issue(array $claims = []): string` (the signed token the client sends back) and `verify(string $token, string $answer): Result`, using the protected `sign()` and `claimsFrom()`.
-- `Challenge\ProofOfWork`: `new ProofOfWork($secret, $nonces, difficulty: 18)`. `issue()` returns the token; the client finds an answer against `ProofOfWork::seed($token)` and `verify($token, $answer)` returns a `Challenge\Result`. Each token can be answered once. A nonce store outage rejects the solution unless `acceptWhenNoncesUnavailable` is set.
-- `Challenge\Password`: asks for a password the caller set, held encrypted in Appwrite's `encrypt`-filter envelope (`Password::encrypt()`), with keys tried in order during a rotation. It does not limit guesses; callers rate-limit verify. `version()` identifies the stored password so a clearance can end when it changes.
+- `Utopia\Abuse\Challenge`: the base for things a client must answer before it gets through, like `Adapter` is for rate limits. It holds the signed token and the params it is bound to (`withParams()` / `withParam()`). Each kind implements `issue(array $claims = []): Challenge\Token` (`->value` is the signed token the client sends back) and `verify(string $token, string $answer): Result`, using the protected `sign()` and `claimsFrom()`.
+- `Challenge\ProofOfWork`: `new ProofOfWork($secret, $nonces, difficulty: 18)`. `issue()` returns a `ProofOfWork\Token` (`value`, `seed`, `difficulty`); the client finds an answer against the seed, and `verify($value, $answer)` returns a `Challenge\Result`. Each token can be answered once. A nonce store outage rejects the solution unless `acceptWhenNoncesUnavailable` is set.
 - `Challenge\Result` and `Challenge\Status` (`Valid`, `InvalidToken`, `BindingMismatch`, `Rejected`, `Replay`, `Unavailable`), shared by every kind.
 - `Challenge\Clearance`: issued after a challenge is passed. `withParams([...])->issue($difficulty)` and `->verify($token, $difficulty, $maxAge)`.
 - `Challenge\Nonce`: the single-use nonce store, with a key pattern filled by `withParams()`. Backends: `Nonce\Redis`, `Nonce\RedisCluster`, `Nonce\RedisPool` and `Nonce\None`.
-- `Challenge\Token`: the signed, purpose-bound token everything is built on. `Challenge\Identity`: a coarse IP prefix (configurable, /24 and /48 by default) and a User-Agent hash to bind to.
-- Requires `adhocore/jwt` `^1.1` and `ext-openssl`.
+- `Challenge\Issuer`: issues the signed, purpose-bound tokens everything is built on, and checks them. `Challenge\Identity`: a coarse IP prefix (configurable, /24 and /48 by default) and a User-Agent hash to bind to.
+- Requires `adhocore/jwt` `^1.1`.
+- `Challenge\Password`: asks for a password the caller set, held encrypted in Appwrite's `encrypt`-filter envelope (`Password::encrypt()`), with keys tried in order during a rotation. It does not limit guesses; callers rate-limit verify. `version()` identifies the stored password so a clearance can end when it changes.
 
 ## 4.0.0 (unreleased)
 

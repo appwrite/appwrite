@@ -49,9 +49,9 @@ final readonly class Password extends Challenge
     }
 
     #[\Override]
-    public function issue(array $claims = []): string
+    public function issue(array $claims = []): Token
     {
-        return $this->sign([], $claims);
+        return new Token($this->sign([], $claims));
     }
 
     /**
