@@ -308,6 +308,10 @@ The first time someone signs in, Appwrite links their directory entry to an acco
 
 If the account with the matching email address never verified it, Appwrite treats the directory as the address's owner: it signs that account out everywhere and removes its password, phone number, MFA, and other identities before linking it, as it does for [OAuth2](/docs/products/auth/oauth2) sign-ins.
 
+{% info title="Only administrators should be able to change email addresses" %}
+Appwrite trusts the email attribute the way it trusts an OAuth2 provider's verified email, so anyone who can set an entry's email to an existing user's address can sign in as that user. Make sure only directory administrators can write the email attribute (`mail` by default). Active Directory and most hosted directories already work this way. Check self-managed OpenLDAP and 389 Directory Server: an access rule such as `by self write` on the whole entry lets users change their own email address.
+{% /info %}
+
 Each linked account gets an [identity](/docs/products/auth/identities) with the provider `ldap`, which you can see on the user's **Identities** tab under **Auth** > **Users**. New accounts follow your [email policies](/docs/products/auth/email-policies) and your project's user limit, and blocked users can't sign in.
 
 On every sign-in, the account's name, email address, and phone number follow the directory:
