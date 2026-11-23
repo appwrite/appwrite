@@ -3,12 +3,14 @@ import type { Models } from '@appwrite.io/console'
 import { expect, test } from './fixtures'
 
 /**
- * Runtime logs on a function, a site, and a deployment's detail page.
+ * Runtime logs on a function, a site, a deployment's detail page, and the
+ * project's Logs page.
  *
  * `/v1/logs` needs a deploymentId for functions and sites, so each view lists
  * the lines of one deployment: the picker on the resource tabs defaults to the
  * active deployment, and the deployment page reads its own. The stream filter
- * is sent to the API; the search box filters the lines already loaded.
+ * is sent to the API; the search box filters the lines already loaded. The
+ * project's Logs page names no resource and lists every one.
  *
  * The API is mocked at the network layer.
  */
@@ -188,6 +190,18 @@ function logsFor(resourceType: string, resourceId: string) {
   ]
 }
 
+const FUNCTION_LINE = 'function says hello'
+const SITE_LINE = 'site rendered /pricing'
+const DATABASE_LINE = 'checkpoint complete'
+
+function projectLogs() {
+  return [
+    log('plog1', 'functions', FUNCTION.$id, ACTIVE, 'stdout', FUNCTION_LINE, 5),
+    log('plog2', 'sites', SITE.$id, ACTIVE, 'stderr', SITE_LINE, 10),
+    log('plog3', 'databases', 'compute1', '', 'stdout', DATABASE_LINE, 15),
+  ]
+}
+
 type ParsedQuery = { method: string; attribute?: string; values?: unknown[] }
 
 function queries(url: URL): ParsedQuery[] {
@@ -265,6 +279,17 @@ async function mockAppwriteApi(page: Page) {
     if (apiPath === '/logs') {
       const resourceType = url.searchParams.get('resourceType') ?? ''
       const resourceId = url.searchParams.get('resourceId') ?? ''
+      if (!resourceType && !resourceId) {
+        // The project's Logs page: every resource, narrowed by queries.
+        const types = equalValues(url, 'resourceType')
+        const streams = equalValues(url, 'stream')
+        const logs = projectLogs().filter(
+          (row) =>
+            (!types || types.includes(row.resourceType)) &&
+            (!streams || streams.includes(row.stream)),
+        )
+        return json(200, { total: 0, logs })
+      }
       const deploymentIds = equalValues(url, 'deploymentId')
       if (!deploymentIds) {
         return json(400, {
@@ -459,6 +484,42 @@ test.describe('runtime logs', () => {
     await expect(logs).toContainText(STDOUT)
   })
 
+  test('the project Logs page lists every resource', async ({ page }) => {
+    await enableRuntimeLogs(page)
+    await mockAppwriteApi(page)
+
+    await page.goto(`/projects/${PROJECT.$id}/logs`, {
+      waitUntil: 'domcontentloaded',
+    })
+    const logs = page.getByRole('log')
+    await expect(logs).toContainText(FUNCTION_LINE, { timeout: 30_000 })
+    await expect(logs).toContainText(SITE_LINE)
+    await expect(logs).toContainText(DATABASE_LINE)
+    await expect(
+      page.locator(`a[href$="/projects/${PROJECT.$id}/logs"]`).first(),
+    ).toBeVisible()
+
+    // The resource filter goes to the API
+    await page.getByRole('combobox', { name: 'Resource' }).click()
+    await page.getByRole('option', { name: 'Sites' }).click()
+    await expect(logs).toContainText(SITE_LINE)
+    await expect(logs).not.toContainText(FUNCTION_LINE)
+    await expect(logs).not.toContainText(DATABASE_LINE)
+
+    await page.getByRole('combobox', { name: 'Resource' }).click()
+    await page.getByRole('option', { name: 'All resources' }).click()
+    await expect(logs).toContainText(FUNCTION_LINE)
+
+    // A row links to its resource's own runtime logs, on that deployment
+    await logs.getByRole('link', { name: `function/${FUNCTION.$id}` }).click()
+    await expect(page).toHaveURL(
+      new RegExp(
+        `/functions/${FUNCTION.$id}/runtime-logs\\?deploymentId=${ACTIVE}`,
+      ),
+      { timeout: 30_000 },
+    )
+  })
+
   test('the tab stays hidden while the flag is off', async ({ page }) => {
     await mockAppwriteApi(page)
 
@@ -469,6 +530,9 @@ test.describe('runtime logs', () => {
       timeout: 30_000,
     })
     await expect(page.getByRole('tab', { name: 'Runtime logs' })).toHaveCount(0)
+    await expect(
+      page.locator(`a[href$="/projects/${PROJECT.$id}/logs"]`),
+    ).toHaveCount(0)
 
     // A direct link falls back to the function
     await page.goto(
@@ -476,6 +540,12 @@ test.describe('runtime logs', () => {
       { waitUntil: 'domcontentloaded' },
     )
     await expect(page).not.toHaveURL(/runtime-logs/, { timeout: 30_000 })
+
+    // And the project Logs page to the overview
+    await page.goto(`/projects/${PROJECT.$id}/logs`, {
+      waitUntil: 'domcontentloaded',
+    })
+    await expect(page).toHaveURL(/\/overview/, { timeout: 30_000 })
   })
 
   test('self-hosted keeps runtime logs hidden even with the flag on', async ({

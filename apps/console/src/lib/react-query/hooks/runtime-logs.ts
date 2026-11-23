@@ -1,6 +1,7 @@
 /**
  * React Query hooks for runtime logs: the lines a function, site or dedicated
- * database wrote to stdout and stderr (Cloud `/v1/logs`).
+ * database wrote to stdout and stderr (Cloud `/v1/logs`). A null resource type
+ * reads every resource in the project.
  */
 
 import { infiniteQueryOptions } from '@tanstack/react-query'
@@ -9,6 +10,9 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { nextCursorAfter } from './cursor'
 
 export type RuntimeLogResourceType = 'functions' | 'sites' | 'databases'
+
+/** One resource, or `null` for every resource in the project. */
+export type RuntimeLogScope = RuntimeLogResourceType | null
 
 export type RuntimeLogStream = 'all' | 'stdout' | 'stderr'
 
@@ -26,18 +30,24 @@ export type RuntimeLogRange = keyof typeof RUNTIME_LOG_RANGES
 export const RUNTIME_LOGS_PAGE_LIMIT = 100
 
 export interface RuntimeLogsFilter {
-  /** Required for functions and sites; ignored for databases. */
+  /** Required for functions and sites; ignored for databases and the project. */
   deploymentId?: string
+  /** Narrows a project-wide list to one kind of resource. */
+  resourceType?: RuntimeLogResourceType
   stream: RuntimeLogStream
   range: RuntimeLogRange
 }
 
 function filterQueries(
-  resourceType: RuntimeLogResourceType,
+  resourceType: RuntimeLogScope,
   filter: RuntimeLogsFilter,
 ): string[] {
   const queries: string[] = []
-  if (resourceType !== 'databases' && filter.deploymentId) {
+  if (resourceType === null) {
+    if (filter.resourceType) {
+      queries.push(Query.equal('resourceType', [filter.resourceType]))
+    }
+  } else if (resourceType !== 'databases' && filter.deploymentId) {
     queries.push(Query.equal('deploymentId', [filter.deploymentId]))
   }
   if (filter.stream !== 'all') {
@@ -60,12 +70,45 @@ function rangeQuery(range: RuntimeLogRange): string[] {
 /** True when the filter names everything the API needs to answer. */
 export function canListRuntimeLogs(
   projectId: string | null | undefined,
-  resourceType: RuntimeLogResourceType,
+  resourceType: RuntimeLogScope,
   resourceId: string | null | undefined,
   filter: RuntimeLogsFilter,
 ): boolean {
-  if (!projectId || !resourceId) return false
+  if (!projectId) return false
+  if (resourceType === null) return true
+  if (!resourceId) return false
   return resourceType === 'databases' || !!filter.deploymentId
+}
+
+/**
+ * The pinned Console SDK requires a resource, so a project-wide list calls the
+ * route directly. Switch to `logs.list()` once the SDK makes both optional.
+ */
+async function listRuntimeLogs(
+  projectId: string,
+  resourceType: RuntimeLogScope,
+  resourceId: string | null | undefined,
+  queries: string[],
+): Promise<Models.RuntimeLog[]> {
+  const project = sdk.forProject(projectId)
+  if (resourceType !== null) {
+    const response = await project.logs.list({
+      resourceType,
+      resourceId: resourceId!,
+      queries,
+      total: false,
+    })
+    return response.logs ?? []
+  }
+  const client = project.client
+  const uri = new URL(client.config.endpoint + '/logs')
+  for (const query of queries) uri.searchParams.append('queries[]', query)
+  uri.searchParams.set('total', 'false')
+  const response = (await client.call('get', uri, {
+    'X-Appwrite-Project': client.config.project,
+    'content-type': 'application/json',
+  })) as Models.RuntimeLogList
+  return response.logs ?? []
 }
 
 /**
@@ -74,7 +117,7 @@ export function canListRuntimeLogs(
  */
 export function runtimeLogsInfiniteQueryOptions(
   projectId: string | null | undefined,
-  resourceType: RuntimeLogResourceType,
+  resourceType: RuntimeLogScope,
   resourceId: string | null | undefined,
   filter: RuntimeLogsFilter,
 ) {
@@ -88,13 +131,13 @@ export function runtimeLogsInfiniteQueryOptions(
         Query.limit(RUNTIME_LOGS_PAGE_LIMIT),
       ]
       if (pageParam) queries.push(Query.cursorAfter(pageParam))
-      const response = await sdk.forProject(projectId!).logs.list({
+      const logs = await listRuntimeLogs(
+        projectId!,
         resourceType,
-        resourceId: resourceId!,
+        resourceId,
         queries,
-        total: false,
-      })
-      return { logs: response.logs ?? [] }
+      )
+      return { logs }
     },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) =>
@@ -111,21 +154,15 @@ export function runtimeLogsInfiniteQueryOptions(
  */
 export async function fetchRuntimeLogsSince(
   projectId: string,
-  resourceType: RuntimeLogResourceType,
-  resourceId: string,
+  resourceType: RuntimeLogScope,
+  resourceId: string | null | undefined,
   filter: RuntimeLogsFilter,
   since: string,
 ): Promise<Models.RuntimeLog[]> {
-  const response = await sdk.forProject(projectId).logs.list({
-    resourceType,
-    resourceId,
-    queries: [
-      ...filterQueries(resourceType, filter),
-      Query.greaterThanEqual('timestamp', since),
-      Query.orderAsc('timestamp'),
-      Query.limit(RUNTIME_LOGS_PAGE_LIMIT),
-    ],
-    total: false,
-  })
-  return response.logs ?? []
+  return listRuntimeLogs(projectId, resourceType, resourceId, [
+    ...filterQueries(resourceType, filter),
+    Query.greaterThanEqual('timestamp', since),
+    Query.orderAsc('timestamp'),
+    Query.limit(RUNTIME_LOGS_PAGE_LIMIT),
+  ])
 }
