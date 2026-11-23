@@ -1,8 +1,8 @@
 <?php
 
-namespace Utopia\Abuse\Tests\E2E\Challenges\Nonce;
+namespace Utopia\Abuse\Tests\E2E\Challenge\Nonce;
 
-use Utopia\Abuse\Challenges\Nonce\RedisPool;
+use Utopia\Abuse\Challenge\Nonce\RedisPool;
 use Utopia\Abuse\Tests\E2E\Services;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Pool;

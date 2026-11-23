@@ -1,9 +1,9 @@
 <?php
 
-namespace Utopia\Abuse\Tests\E2E\Challenges\Nonce;
+namespace Utopia\Abuse\Tests\E2E\Challenge\Nonce;
 
 use PHPUnit\Framework\TestCase;
-use Utopia\Abuse\Challenges\Nonce;
+use Utopia\Abuse\Challenge\Nonce;
 
 abstract class Base extends TestCase
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Abuse\Challenges;
+namespace Utopia\Abuse\Challenge;
 
 /**
  * The credential a client gets after passing a challenge, so later requests can

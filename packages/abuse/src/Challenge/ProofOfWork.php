@@ -1,22 +1,20 @@
 <?php
 
-namespace Utopia\Abuse\Challenges;
+namespace Utopia\Abuse\Challenge;
 
 use Throwable;
-use Utopia\Abuse\Challenges\ProofOfWork\Puzzle;
-use Utopia\Abuse\Challenges\ProofOfWork\Result;
-use Utopia\Abuse\Challenges\ProofOfWork\Status;
+use Utopia\Abuse\Challenge;
+use Utopia\Abuse\Challenge\ProofOfWork\Puzzle;
 
 /**
  * Leading-zero-bits proof-of-work. A client must find a solution whose
  * SHA-256(nonce ":" solution) starts with at least `difficulty` zero bits.
  *
- * Issue signs the nonce, difficulty, binding and claims into a token, with no
- * server-side write. Verify checks the token and binding, uses the nonce once
- * before checking the solution (so one puzzle buys one attempt), then checks the
- * solution.
+ * Issue signs the nonce and difficulty into a token, with no server-side write.
+ * Verify checks the token and params, uses the nonce once before checking the
+ * solution (so one puzzle buys one attempt), then checks the solution.
  */
-final readonly class ProofOfWork
+final readonly class ProofOfWork extends Challenge
 {
     /** SHA-256 digest width: the most leading zero bits a solution can have. */
     public const int MAX_DIFFICULTY = 256;
@@ -24,16 +22,10 @@ final readonly class ProofOfWork
     /** Puzzle lifetime in seconds; also how long a used nonce is remembered. */
     public const int DEFAULT_TTL = 120;
 
-    private const array RESERVED_CLAIMS = ['nonce', 'difficulty', 'iatMs'];
-
-    private Token $token;
-
-    /** @var array<string, string> */
-    private array $params;
-
     /**
      * @param  string  $secret  Signing secret
      * @param  Nonce  $nonces  Remembers used nonces; key placeholders such as "{project}" are filled from the puzzle's claims
+     * @param  int  $difficulty  Leading zero bits a solution needs, 0–256; issue() can override it per puzzle
      * @param  int  $ttl  Puzzle lifetime in seconds
      * @param  bool  $acceptWhenNoncesUnavailable  When the nonce store fails, check the solution anyway instead of rejecting
      * @param  string  $label  Derives the signing key from the secret; keep it stable or issued puzzles stop verifying
@@ -44,78 +36,48 @@ final readonly class ProofOfWork
     public function __construct(
         string $secret,
         private Nonce $nonces,
+        private int $difficulty,
         int $ttl = self::DEFAULT_TTL,
         private bool $acceptWhenNoncesUnavailable = false,
         string $label = 'challenge',
         string $purpose = 'challenge',
     ) {
-        $this->token = new Token($secret, $label, $purpose, $ttl);
-        $this->params = [];
+        self::assertDifficulty($difficulty);
+        parent::__construct($secret, $label, $purpose, $ttl);
     }
 
     /**
-     * A copy with these params added, like the rate-limit adapters' withParams().
-     * Params are the fields tokens are bound to, e.g. the client's IP prefix and User-Agent hash: puzzles
-     * issued from it verify only with exactly the same params.
-     *
-     * @param  array<string, string>  $params
-     */
-    public function withParams(array $params): static
-    {
-        return clone($this, ['params' => [...$this->params, ...$params]]);
-    }
-
-    public function withParam(string $name, string $value): static
-    {
-        return $this->withParams([$name => $value]);
-    }
-
-    /**
-     * Sign a puzzle bound to these params. Claims are carried through and
-     * returned by verify.
-     *
      * @param  array<string, string|int>  $claims
+     * @param  int|null  $difficulty  Overrides the constructor's difficulty for this puzzle
      *
      * @throws \InvalidArgumentException
      */
-    public function issue(int $difficulty, array $claims = []): Puzzle
+    #[\Override]
+    public function issue(array $claims = [], ?int $difficulty = null): Puzzle
     {
-        // Below 0 every solution passes; above the digest width none can.
-        if ($difficulty < 0 || $difficulty > self::MAX_DIFFICULTY) {
-            throw new \InvalidArgumentException('difficulty must be between 0 and ' . self::MAX_DIFFICULTY . ', got ' . $difficulty);
-        }
-
-        foreach ([...\array_keys($this->params), ...\array_keys($claims)] as $name) {
-            if (\in_array($name, self::RESERVED_CLAIMS, true)) {
-                throw new \InvalidArgumentException("claim '{$name}' is reserved");
-            }
-        }
+        $difficulty ??= $this->difficulty;
+        self::assertDifficulty($difficulty);
 
         $nonce = \bin2hex(\random_bytes(16));
-        $token = $this->token->issue([
+        $token = $this->sign([
             'nonce' => $nonce,
             'difficulty' => $difficulty,
-            ...$claims,
             'iatMs' => (int) (\microtime(true) * 1000),
-        ], binding: $this->params);
+        ], $claims);
 
         return new Puzzle($token, $nonce, $difficulty);
     }
 
     /**
-     * Verify a solution. The params must equal the ones the puzzle was issued
-     * with; it is checked before the nonce is used, so a puzzle presented by
-     * another client never spends the owner's attempt.
+     * Verify a solution. Params are checked before the nonce is used, so a
+     * puzzle presented by another client never spends the owner's attempt.
      */
-    public function verify(string $token, string $solution): Result
+    #[\Override]
+    public function verify(string $token, string $answer): Result
     {
-        $claims = $this->token->verify($token);
-        if ($claims === null) {
-            return new Result(Status::InvalidToken);
-        }
-
-        if (!Token::isBoundTo($claims, $this->params)) {
-            return new Result(Status::BindingMismatch);
+        $claims = $this->open($token);
+        if ($claims instanceof Result) {
+            return $claims;
         }
 
         $nonce = $claims['nonce'] ?? null;
@@ -127,27 +89,39 @@ final readonly class ProofOfWork
         $issuedMs = $claims['iatMs'] ?? 0;
         $elapsedMs = \max(0, (int) (\microtime(true) * 1000) - (\is_int($issuedMs) ? $issuedMs : 0));
 
-        $nonceError = null;
+        $error = null;
         try {
             $fresh = $this->nonces->withParams(self::placeholders($claims))->consume($nonce, $this->token->ttl);
-        } catch (Throwable $error) {
+        } catch (Throwable $e) {
             if (!$this->acceptWhenNoncesUnavailable) {
-                return new Result(Status::NonceUnavailable, $claims, $difficulty, $elapsedMs, $error);
+                return new Result(Status::Unavailable, $claims, $difficulty, $elapsedMs, $e);
             }
             // The replay guard did not run; the solution is still checked below.
             $fresh = true;
-            $nonceError = $error;
+            $error = $e;
         }
 
         if (!$fresh) {
             return new Result(Status::Replay, $claims, $difficulty, $elapsedMs);
         }
 
-        if (!self::meetsDifficulty($nonce, $solution, $difficulty)) {
-            return new Result(Status::InvalidSolution, $claims, $difficulty, $elapsedMs, $nonceError);
+        if (!self::meetsDifficulty($nonce, $answer, $difficulty)) {
+            return new Result(Status::Rejected, $claims, $difficulty, $elapsedMs, $error);
         }
 
-        return new Result(Status::Valid, $claims, $difficulty, $elapsedMs, $nonceError);
+        return new Result(Status::Valid, $claims, $difficulty, $elapsedMs, $error);
+    }
+
+    /**
+     * Below 0 every solution passes; above the digest width none can.
+     *
+     * @throws \InvalidArgumentException
+     */
+    private static function assertDifficulty(int $difficulty): void
+    {
+        if ($difficulty < 0 || $difficulty > self::MAX_DIFFICULTY) {
+            throw new \InvalidArgumentException('difficulty must be between 0 and ' . self::MAX_DIFFICULTY . ', got ' . $difficulty);
+        }
     }
 
     /**

@@ -1,10 +1,10 @@
 <?php
 
-namespace Utopia\Abuse\Tests\Challenges;
+namespace Utopia\Abuse\Tests\Challenge;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Utopia\Abuse\Challenges\Identity;
+use Utopia\Abuse\Challenge\Identity;
 
 final class IdentityTest extends TestCase
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Abuse\Challenges;
+namespace Utopia\Abuse\Challenge;
 
 /**
  * Single-use nonces: the first claim of a nonce succeeds, every later claim

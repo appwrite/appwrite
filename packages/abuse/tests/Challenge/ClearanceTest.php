@@ -1,15 +1,15 @@
 <?php
 
-namespace Utopia\Abuse\Tests\Challenges;
+namespace Utopia\Abuse\Tests\Challenge;
 
 use Ahc\Jwt\JWT;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Utopia\Abuse\Challenges\Clearance;
-use Utopia\Abuse\Challenges\ProofOfWork;
-use Utopia\Abuse\Challenges\ProofOfWork\Status;
-use Utopia\Abuse\Challenges\Token;
-use Utopia\Abuse\Tests\Challenges\Nonce\Memory;
+use Utopia\Abuse\Challenge\Clearance;
+use Utopia\Abuse\Challenge\ProofOfWork;
+use Utopia\Abuse\Challenge\Status;
+use Utopia\Abuse\Challenge\Token;
+use Utopia\Abuse\Tests\Challenge\Nonce\Memory;
 
 final class ClearanceTest extends TestCase
 {
@@ -177,13 +177,13 @@ final class ClearanceTest extends TestCase
     public function testDefaultLabelsKeepPuzzlesAndClearancesApart(): void
     {
         // Same secret, default labels and purposes: neither token passes as the other.
-        $puzzle = new ProofOfWork(self::SECRET, new Memory())->issue(0);
+        $puzzle = new ProofOfWork(self::SECRET, new Memory(), 0)->issue();
         $clearance = new Clearance(self::SECRET);
         $issued = $clearance->issue();
 
         $this->assertTrue($clearance->verify($issued));
         $this->assertFalse($clearance->verify($puzzle->token));
-        $this->assertSame(Status::InvalidToken, new ProofOfWork(self::SECRET, new Memory())->verify($issued, '0')->status);
+        $this->assertSame(Status::InvalidToken, new ProofOfWork(self::SECRET, new Memory(), 0)->verify($issued, '0')->status);
     }
 
     public function testTtlSetsTheExpiry(): void

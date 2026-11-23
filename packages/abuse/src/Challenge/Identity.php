@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Abuse\Challenges;
+namespace Utopia\Abuse\Challenge;
 
 /**
  * The coarse client identity challenge tokens are bound to: an IP prefix and a

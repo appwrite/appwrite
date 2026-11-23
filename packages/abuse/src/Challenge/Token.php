@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia\Abuse\Challenges;
+namespace Utopia\Abuse\Challenge;
 
 use Ahc\Jwt\JWT;
 use Throwable;

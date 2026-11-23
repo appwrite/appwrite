@@ -1,8 +1,8 @@
 <?php
 
-namespace Utopia\Abuse\Challenges\Nonce;
+namespace Utopia\Abuse\Challenge\Nonce;
 
-use Utopia\Abuse\Challenges\Nonce;
+use Utopia\Abuse\Challenge\Nonce;
 
 /**
  * Remembers nothing, so every non-empty nonce claims: turns the replay guard off.

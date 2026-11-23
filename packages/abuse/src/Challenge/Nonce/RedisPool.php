@@ -1,8 +1,8 @@
 <?php
 
-namespace Utopia\Abuse\Challenges\Nonce;
+namespace Utopia\Abuse\Challenge\Nonce;
 
-use Utopia\Abuse\Challenges\Nonce;
+use Utopia\Abuse\Challenge\Nonce;
 use Utopia\Pools\Pool;
 
 final readonly class RedisPool extends Nonce

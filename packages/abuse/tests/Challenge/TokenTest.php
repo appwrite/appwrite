@@ -1,11 +1,11 @@
 <?php
 
-namespace Utopia\Abuse\Tests\Challenges;
+namespace Utopia\Abuse\Tests\Challenge;
 
 use Ahc\Jwt\JWT;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Utopia\Abuse\Challenges\Token;
+use Utopia\Abuse\Challenge\Token;
 
 final class TokenTest extends TestCase
 {

@@ -1,8 +1,8 @@
 <?php
 
-namespace Utopia\Abuse\Tests\E2E\Challenges\Nonce;
+namespace Utopia\Abuse\Tests\E2E\Challenge\Nonce;
 
-use Utopia\Abuse\Challenges\Nonce\RedisCluster;
+use Utopia\Abuse\Challenge\Nonce\RedisCluster;
 use Utopia\Abuse\Tests\E2E\Services;
 
 final class RedisClusterTest extends Base

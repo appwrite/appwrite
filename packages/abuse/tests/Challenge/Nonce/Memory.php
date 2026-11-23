@@ -1,8 +1,8 @@
 <?php
 
-namespace Utopia\Abuse\Tests\Challenges\Nonce;
+namespace Utopia\Abuse\Tests\Challenge\Nonce;
 
-use Utopia\Abuse\Challenges\Nonce;
+use Utopia\Abuse\Challenge\Nonce;
 
 /**
  * In-memory nonce store for tests. Claimed keys are kept in a shared

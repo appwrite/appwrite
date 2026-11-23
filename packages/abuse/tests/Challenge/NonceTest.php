@@ -1,10 +1,10 @@
 <?php
 
-namespace Utopia\Abuse\Tests\Challenges;
+namespace Utopia\Abuse\Tests\Challenge;
 
 use PHPUnit\Framework\TestCase;
-use Utopia\Abuse\Challenges\Nonce\None;
-use Utopia\Abuse\Tests\Challenges\Nonce\Memory;
+use Utopia\Abuse\Challenge\Nonce\None;
+use Utopia\Abuse\Tests\Challenge\Nonce\Memory;
 
 final class NonceTest extends TestCase
 {
