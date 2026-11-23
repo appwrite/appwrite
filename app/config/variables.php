@@ -2028,6 +2028,201 @@ return [
         ],
     ],
     [
+        'category' => 'Distribution',
+        'description' => 'Builds, signs and submits iOS and Android apps to the App Store and Google Play. Optional: Distribution stays off until `_APP_DISTRIBUTION` is `enabled`. Android builds and signing run as jobs on the open-runtimes orchestrator, which calls back through `_APP_JOBS_ENDPOINT`; iOS builds run on enrolled macOS runners.',
+        'variables' => [
+            [
+                'name' => '_APP_DISTRIBUTION',
+                'description' => 'Enables Distribution, which builds, signs and submits iOS and Android apps to the App Store and Google Play. Set it to `enabled` to turn it on. While it is `disabled`, every Distribution API route answers that the service is disabled and the internal Distribution routes reject every call. The default value is `disabled`.',
+                'introduction' => '2.8.0',
+                'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DISTRIBUTION_JOBS_HOST',
+                'description' => 'The host of the open-runtimes orchestrator that runs untrusted Distribution build jobs. Empty uses `_APP_JOBS_HOST`.',
+                'introduction' => '2.8.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DISTRIBUTION_JOBS_SECRET',
+                'description' => 'The secret used to authenticate with the orchestrator at `_APP_DISTRIBUTION_JOBS_HOST`. Empty uses `_APP_JOBS_SECRET`. **Keep it a secret**.',
+                'introduction' => '2.8.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DISTRIBUTION_SIGNING_JOBS_HOST',
+                'description' => 'The host of the orchestrator that runs trusted Distribution signing jobs, which handle signing keys. Set it to keep signing on a separate plane from untrusted builds. Empty uses `_APP_DISTRIBUTION_JOBS_HOST`, and then `_APP_JOBS_HOST`.',
+                'introduction' => '2.8.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DISTRIBUTION_SIGNING_JOBS_SECRET',
+                'description' => 'The secret used to authenticate with the orchestrator at `_APP_DISTRIBUTION_SIGNING_JOBS_HOST`. Empty uses `_APP_DISTRIBUTION_JOBS_SECRET`, and then `_APP_JOBS_SECRET`. **Keep it a secret**.',
+                'introduction' => '2.8.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DISTRIBUTION_CALLBACK_SECRET',
+                'description' => 'The secret that signs and verifies the callbacks Distribution build jobs send to Appwrite. Empty uses `_APP_JOBS_SECRET`. **Keep it a secret**.',
+                'introduction' => '2.8.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DISTRIBUTION_SIGNING_CALLBACK_SECRET',
+                'description' => 'The secret that signs and verifies the callbacks Distribution signing jobs send to Appwrite. Empty uses `_APP_JOBS_SECRET`. **Keep it a secret**.',
+                'introduction' => '2.8.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DISTRIBUTION_IMAGE_ANDROID',
+                'description' => 'The Docker image that builds Android apps. The default value is `appwrite/distribution-android:1.0.0`.',
+                'introduction' => '2.8.0',
+                'default' => 'appwrite/distribution-android:1.0.0',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DISTRIBUTION_IMAGE_TOOLS',
+                'description' => 'The Docker image that signs and inspects app binaries. The default value is `appwrite/distribution-tools:1.0.0`.',
+                'introduction' => '2.8.0',
+                'default' => 'appwrite/distribution-tools:1.0.0',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DISTRIBUTION_BUILD_TIMEOUT',
+                'description' => 'The maximum number of seconds one Distribution build may take. The default value is 3600 seconds (1 hour).',
+                'introduction' => '2.8.0',
+                'default' => '3600',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DISTRIBUTION_BUILD_SPECIFICATION',
+                'description' => 'The CPU and memory specification of Android build jobs, as a slug from `app/config/distribution.php`. The default value is `d-4vcpu-8gb`.',
+                'introduction' => '2.8.0',
+                'default' => 'd-4vcpu-8gb',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DISTRIBUTION_SIZE_LIMIT',
+                'description' => 'The maximum size, in bytes, of an app binary uploaded or built for Distribution. The default value is 4000000000 bytes (4 GB).',
+                'introduction' => '2.8.0',
+                'default' => '4000000000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DISTRIBUTION_LOGS_LIMIT',
+                'description' => 'The maximum size, in bytes, of the logs kept for one Distribution build. Past it, the worker writes one truncation marker and drops the rest of the output. The default value is 50000000 bytes (50 MB).',
+                'introduction' => '2.8.0',
+                'default' => '50000000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DISTRIBUTION_ARTIFACT_RETENTION',
+                'description' => 'How long, in seconds, an app binary is kept after it is created. Maintenance deletes expired binaries, except one a submission in progress still uses. The default value is 7776000 seconds (90 days).',
+                'introduction' => '2.8.0',
+                'default' => '7776000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DISTRIBUTION_VOLUME',
+                'description' => 'The Docker volume holding Distribution storage. Build jobs attach it by name, so it must match the volume mounted at `/storage/distribution`. The default value is `appwrite-distribution`.',
+                'introduction' => '2.8.0',
+                'default' => 'appwrite-distribution',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DISTRIBUTION_RUNNER_SECRET',
+                'description' => 'The secret macOS runners present to enrol and lease iOS builds. Leave it empty to keep the runner routes closed: no runner can enrol and iOS builds wait for one. **Keep it a secret**.',
+                'introduction' => '2.8.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DISTRIBUTION_IOS_SIGNING',
+                'description' => 'How iOS builds are signed on a macOS runner. `inject` signs inside the build VM. The default value is `inject`.',
+                'introduction' => '2.8.0',
+                'default' => 'inject',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DISTRIBUTION_APPLE_ENDPOINT',
+                'description' => 'Overrides the App Store Connect API endpoint, for tests against a fake store. Refused in production. Empty uses the real endpoint.',
+                'introduction' => '2.8.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DISTRIBUTION_GOOGLE_ENDPOINT',
+                'description' => 'Overrides the Google Play Developer API endpoint, for tests against a fake store. Refused in production. Empty uses the real endpoint.',
+                'introduction' => '2.8.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DISTRIBUTION_BUILDS_QUEUE_NAME',
+                'description' => 'The name of the queue the Distribution builds worker reads. The default value is `v1-distribution-builds`.',
+                'introduction' => '2.8.0',
+                'default' => 'v1-distribution-builds',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DISTRIBUTION_SUBMISSIONS_QUEUE_NAME',
+                'description' => 'The name of the queue the Distribution submissions worker reads. The default value is `v1-distribution-submissions`.',
+                'introduction' => '2.8.0',
+                'default' => 'v1-distribution-submissions',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+        ],
+    ],
+    [
         'category' => 'Maintenance',
         'description' => '',
         'variables' => [

@@ -56,6 +56,9 @@ class Event
     public const VIDEOS_QUEUE_NAME = 'v1-videos';
     public const VIDEOS_CLASS_NAME = 'VideosV1';
 
+    public const DISTRIBUTION_BUILDS_QUEUE_NAME = 'v1-distribution-builds';
+    public const DISTRIBUTION_SUBMISSIONS_QUEUE_NAME = 'v1-distribution-submissions';
+
     protected string $queue = '';
     protected string $class = '';
     protected string $event = '';

@@ -9,6 +9,7 @@ use Appwrite\Platform\Modules\Avatars;
 use Appwrite\Platform\Modules\Console;
 use Appwrite\Platform\Modules\Core;
 use Appwrite\Platform\Modules\Databases;
+use Appwrite\Platform\Modules\Distribution;
 use Appwrite\Platform\Modules\Functions;
 use Appwrite\Platform\Modules\GraphQL;
 use Appwrite\Platform\Modules\Health;
@@ -70,5 +71,6 @@ class Appwrite extends Platform
         $this->addModule(new Reviews\Module());
         $this->addModule(new Videos\Module());
         $this->addModule(new Alerts\Module());
+        $this->addModule(new Distribution\Module());
     }
 }

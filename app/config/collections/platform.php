@@ -578,6 +578,57 @@ $platformCollections = [
         ],
     ],
 
+    'distributionRunners' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('distributionRunners'),
+        'name' => 'Distribution Runners',
+        'attributes' => [
+            Attribute::string(key: 'name', size: 128, required: true),
+            Attribute::string(key: 'platform', size: 16, required: true),
+            Attribute::string(key: 'labels', size: 128, default: [], array: true),
+            Attribute::string(key: 'secret', size: 512, required: true, filters: ['encrypt']),
+            Attribute::string(key: 'status', size: 16, default: 'offline'),
+            Attribute::string(key: 'version', size: 32),
+            Attribute::integer(key: 'capacity', default: 1, signed: false),
+            Attribute::string(key: 'region', size: 10, required: true),
+            Attribute::datetime(key: 'seenAt'),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_platform_status', attributes: ['platform', 'status']),
+            Index::key(key: '_key_seenAt', attributes: ['seenAt']),
+        ],
+    ],
+
+    'distributionLeases' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('distributionLeases'),
+        'name' => 'Distribution Leases',
+        'attributes' => [
+            Attribute::string(key: 'projectId', required: true),
+            Attribute::id(key: 'projectInternalId', required: true),
+            Attribute::string(key: 'buildId', required: true),
+            Attribute::string(key: 'platform', size: 16, required: true),
+            Attribute::string(key: 'runnerPlatform', size: 16, required: true),
+            Attribute::string(key: 'labels', size: 128, default: [], array: true),
+            Attribute::string(key: 'region', size: 10, required: true),
+            Attribute::string(key: 'endpoint', size: 2048, required: true),
+            Attribute::string(key: 'status', size: 16, default: 'queued'),
+            Attribute::string(key: 'runnerId'),
+            Attribute::id(key: 'runnerInternalId'),
+            Attribute::string(key: 'token', size: 512, filters: ['encrypt']),
+            Attribute::integer(key: 'attempt', default: 1, signed: false),
+            Attribute::datetime(key: 'expiresAt'),
+            Attribute::datetime(key: 'queuedAt'),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_status_runnerPlatform_queuedAt', attributes: ['status', 'runnerPlatform', 'queuedAt']),
+            Index::key(key: '_key_project', attributes: ['projectInternalId']),
+            Index::key(key: '_key_build', attributes: ['projectInternalId', 'buildId']),
+            Index::key(key: '_key_expiresAt', attributes: ['expiresAt']),
+            Index::key(key: '_key_runner', attributes: ['runnerInternalId']),
+        ],
+    ],
+
 ];
 
 // Organization API keys subquery

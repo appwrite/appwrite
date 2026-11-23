@@ -193,6 +193,12 @@ trait ProjectCustom
                     'videos.play',
                     'videos.read',
                     'videos.write',
+                    'distribution.read',
+                    'distribution.write',
+                    'distribution.credentials.read',
+                    'distribution.credentials.write',
+                    'distribution.submissions.read',
+                    'distribution.submissions.write',
                 ],
             ]);
 

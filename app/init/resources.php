@@ -11,6 +11,8 @@ use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
 use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Event\Publisher\DistributionBuild as DistributionBuildPublisher;
+use Appwrite\Event\Publisher\DistributionSubmission as DistributionSubmissionPublisher;
 use Appwrite\Event\Publisher\Execution as ExecutionPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Jobs as JobsPublisher;
@@ -261,6 +263,16 @@ $container->set('publisherForScreenshots', fn (Publisher $publisher) => new Scre
 $container->set('publisherForVideos', fn (Publisher $publisher) => new VideoPublisher(
     $publisher,
     new Queue(System::getEnv('_APP_VIDEOS_QUEUE_NAME', Event::VIDEOS_QUEUE_NAME))
+), ['publisher']);
+
+$container->set('publisherForDistributionBuilds', fn (Publisher $publisher) => new DistributionBuildPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_DISTRIBUTION_BUILDS_QUEUE_NAME', Event::DISTRIBUTION_BUILDS_QUEUE_NAME))
+), ['publisher']);
+
+$container->set('publisherForDistributionSubmissions', fn (Publisher $publisher) => new DistributionSubmissionPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_DISTRIBUTION_SUBMISSIONS_QUEUE_NAME', Event::DISTRIBUTION_SUBMISSIONS_QUEUE_NAME))
 ), ['publisher']);
 
 $container->set('publisherForUsage', fn (Publisher $publisher) => new UsagePublisher(

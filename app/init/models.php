@@ -74,6 +74,18 @@ use Appwrite\Utopia\Response\Model\DetectionFramework;
 use Appwrite\Utopia\Response\Model\DetectionRuntime;
 use Appwrite\Utopia\Response\Model\DetectionVariable;
 use Appwrite\Utopia\Response\Model\Device;
+use Appwrite\Utopia\Response\Model\DistributionApp;
+use Appwrite\Utopia\Response\Model\DistributionArtifact;
+use Appwrite\Utopia\Response\Model\DistributionBuild;
+use Appwrite\Utopia\Response\Model\DistributionCheck;
+use Appwrite\Utopia\Response\Model\DistributionCheckIssue;
+use Appwrite\Utopia\Response\Model\DistributionConnection;
+use Appwrite\Utopia\Response\Model\DistributionListing;
+use Appwrite\Utopia\Response\Model\DistributionLog;
+use Appwrite\Utopia\Response\Model\DistributionRelease;
+use Appwrite\Utopia\Response\Model\DistributionSigningIdentity;
+use Appwrite\Utopia\Response\Model\DistributionSubmission;
+use Appwrite\Utopia\Response\Model\DistributionTarget;
 use Appwrite\Utopia\Response\Model\Document as ModelDocument;
 use Appwrite\Utopia\Response\Model\Embedding;
 use Appwrite\Utopia\Response\Model\EphemeralKey;
@@ -305,6 +317,17 @@ Response::setModel(new BaseList('Video Codecs List', Response::MODEL_VIDEO_CODEC
 Response::setModel(new BaseList('Video Profiles List', Response::MODEL_VIDEO_PROFILE_LIST, 'profiles', Response::MODEL_VIDEO_PROFILE));
 Response::setModel(new BaseList('Video Renditions List', Response::MODEL_VIDEO_RENDITION_LIST, 'renditions', Response::MODEL_VIDEO_RENDITION));
 Response::setModel(new BaseList('Video Captions List', Response::MODEL_VIDEO_CAPTION_LIST, 'captions', Response::MODEL_VIDEO_CAPTION));
+Response::setModel(new BaseList('Distribution Apps List', Response::MODEL_DISTRIBUTION_APP_LIST, 'apps', Response::MODEL_DISTRIBUTION_APP));
+Response::setModel(new BaseList('Distribution Targets List', Response::MODEL_DISTRIBUTION_TARGET_LIST, 'targets', Response::MODEL_DISTRIBUTION_TARGET));
+Response::setModel(new BaseList('Distribution Connections List', Response::MODEL_DISTRIBUTION_CONNECTION_LIST, 'connections', Response::MODEL_DISTRIBUTION_CONNECTION));
+Response::setModel(new BaseList('Distribution Signing Identities List', Response::MODEL_DISTRIBUTION_SIGNING_IDENTITY_LIST, 'signingIdentities', Response::MODEL_DISTRIBUTION_SIGNING_IDENTITY));
+Response::setModel(new BaseList('Distribution Builds List', Response::MODEL_DISTRIBUTION_BUILD_LIST, 'builds', Response::MODEL_DISTRIBUTION_BUILD));
+Response::setModel(new BaseList('Distribution Logs List', Response::MODEL_DISTRIBUTION_LOG_LIST, 'logs', Response::MODEL_DISTRIBUTION_LOG));
+Response::setModel(new BaseList('Distribution Artifacts List', Response::MODEL_DISTRIBUTION_ARTIFACT_LIST, 'artifacts', Response::MODEL_DISTRIBUTION_ARTIFACT));
+Response::setModel(new BaseList('Distribution Releases List', Response::MODEL_DISTRIBUTION_RELEASE_LIST, 'releases', Response::MODEL_DISTRIBUTION_RELEASE));
+Response::setModel(new BaseList('Distribution Submissions List', Response::MODEL_DISTRIBUTION_SUBMISSION_LIST, 'submissions', Response::MODEL_DISTRIBUTION_SUBMISSION));
+Response::setModel(new BaseList('Distribution Listings List', Response::MODEL_DISTRIBUTION_LISTING_LIST, 'listings', Response::MODEL_DISTRIBUTION_LISTING));
+Response::setModel(new BaseList('Distribution Checks List', Response::MODEL_DISTRIBUTION_CHECK_LIST, 'checks', Response::MODEL_DISTRIBUTION_CHECK));
 Response::setModel(new BaseList('Teams List', Response::MODEL_TEAM_LIST, 'teams', Response::MODEL_TEAM));
 Response::setModel(new BaseList('Memberships List', Response::MODEL_MEMBERSHIP_LIST, 'memberships', Response::MODEL_MEMBERSHIP));
 Response::setModel(new BaseList('Sites List', Response::MODEL_SITE_LIST, 'sites', Response::MODEL_SITE));
@@ -639,6 +662,20 @@ Response::setModel(new VideoCodec());
 Response::setModel(new VideoProfile());
 Response::setModel(new VideoRendition());
 Response::setModel(new VideoCaption());
+
+// Distribution
+Response::setModel(new DistributionApp());
+Response::setModel(new DistributionTarget());
+Response::setModel(new DistributionConnection());
+Response::setModel(new DistributionSigningIdentity());
+Response::setModel(new DistributionBuild());
+Response::setModel(new DistributionLog());
+Response::setModel(new DistributionArtifact());
+Response::setModel(new DistributionRelease());
+Response::setModel(new DistributionSubmission());
+Response::setModel(new DistributionListing());
+Response::setModel(new DistributionCheck());
+Response::setModel(new DistributionCheckIssue());
 
 // Tests (keep last)
 Response::setModel(new Mock());

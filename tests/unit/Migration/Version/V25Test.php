@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Migration\Version;
 
+use Appwrite\Distribution\Framework;
 use Appwrite\Migration\Version\V25;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None as NoCache;
@@ -324,6 +325,61 @@ final class V25Test extends TestCase
         foreach ($added as $collection) {
             $rows = $authorization->skip(fn () => $database->find($collection));
             $this->assertCount($collection === 'videos' ? 1 : 0, $rows);
+        }
+    }
+
+    public function testCreatesDistributionCollectionsForProjectFromPreviousRelease(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // These collections did not exist on 2.7.0. Seed its schema before running the upgrade.
+        $added = [
+            'distributionApps',
+            'distributionTargets',
+            'distributionConnections',
+            'distributionSigningIdentities',
+            'distributionBuilds',
+            'distributionLogs',
+            'distributionArtifacts',
+            'distributionReleases',
+            'distributionSubmissions',
+            'distributionListings',
+        ];
+        $collections = Config::getParam('collections', [])['projects'];
+        foreach ($collections as $id => $collection) {
+            if (\in_array($id, $added, true) || ($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($collection['attributes']),
+                indexes: \array_values($collection['indexes']),
+            ));
+        }
+        $database->createCollection(Collection::create(id: 'audit'));
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $authorization->skip(fn () => $database->createDocument('distributionApps', new Document([
+            '$id' => 'mobile-app',
+            'name' => 'Preserved app',
+            'framework' => Framework::Flutter->value,
+        ])));
+        $migration->execute();
+
+        $app = $authorization->skip(fn () => $database->getDocument('distributionApps', 'mobile-app'));
+        $this->assertSame('Preserved app', $app->getAttribute('name'));
+        $this->assertSame(Framework::Flutter->value, $app->getAttribute('framework'));
+        foreach ($added as $collection) {
+            $rows = $authorization->skip(fn () => $database->find($collection));
+            $this->assertCount($collection === 'distributionApps' ? 1 : 0, $rows);
         }
     }
 

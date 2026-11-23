@@ -60,6 +60,7 @@ use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Webhook;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Swoole\Http\Response as SwooleResponse;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Queries\Base;
 use Utopia\Database\Validator\Query\Limit;
@@ -926,6 +927,77 @@ final class FormatTest extends TestCase
         $this->assertArrayNotHasKey('default', $message['scheduledAt'], 'A time-dependent default would change the spec on every build.');
         $this->assertSame('', $antivirus['version']['default']);
         $this->assertArrayNotHasKey('default', $antivirus['status'], 'An enum property must not take a default outside the enum.');
+    }
+
+    public function testDistributionModelsBuildValidSchemas(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $types = [
+            Response::MODEL_DISTRIBUTION_APP,
+            Response::MODEL_DISTRIBUTION_APP_LIST,
+            Response::MODEL_DISTRIBUTION_TARGET,
+            Response::MODEL_DISTRIBUTION_TARGET_LIST,
+            Response::MODEL_DISTRIBUTION_CONNECTION,
+            Response::MODEL_DISTRIBUTION_CONNECTION_LIST,
+            Response::MODEL_DISTRIBUTION_SIGNING_IDENTITY,
+            Response::MODEL_DISTRIBUTION_SIGNING_IDENTITY_LIST,
+            Response::MODEL_DISTRIBUTION_BUILD,
+            Response::MODEL_DISTRIBUTION_BUILD_LIST,
+            Response::MODEL_DISTRIBUTION_LOG,
+            Response::MODEL_DISTRIBUTION_LOG_LIST,
+            Response::MODEL_DISTRIBUTION_ARTIFACT,
+            Response::MODEL_DISTRIBUTION_ARTIFACT_LIST,
+            Response::MODEL_DISTRIBUTION_RELEASE,
+            Response::MODEL_DISTRIBUTION_RELEASE_LIST,
+            Response::MODEL_DISTRIBUTION_SUBMISSION,
+            Response::MODEL_DISTRIBUTION_SUBMISSION_LIST,
+            Response::MODEL_DISTRIBUTION_LISTING,
+            Response::MODEL_DISTRIBUTION_LISTING_LIST,
+            Response::MODEL_DISTRIBUTION_CHECK,
+            Response::MODEL_DISTRIBUTION_CHECK_LIST,
+            Response::MODEL_DISTRIBUTION_CHECK_ISSUE,
+        ];
+
+        $routes = \array_map(fn (string $type): Route => (new Route('GET', '/v1/tests/' . $type))
+            ->desc('Get ' . $type)
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'get' . \ucfirst($type),
+                description: 'Get ' . $type . '.',
+                auth: [AuthType::ADMIN],
+                responses: [new SDKResponse(code: 200, model: $type)],
+            )), $types);
+
+        $models = \array_values((new Response(new SwooleResponse()))->getModels());
+        $services = [['name' => 'distribution', 'description' => 'Distribution.']];
+
+        $openApi = (new OpenAPI3(new Container(), $services, $routes, $models, [], ['console' => 0], 'console'))->parse();
+        $schemas = $openApi['components']['schemas'];
+
+        $this->assertSame([], Method::$errors);
+
+        foreach ($types as $type) {
+            $this->assertArrayHasKey($type, $schemas, "The {$type} schema must be emitted.");
+
+            foreach ($schemas[$type]['properties'] ?? [] as $name => $property) {
+                if (!isset($property['oneOf'])) {
+                    continue;
+                }
+
+                $values = \array_merge(...\array_column($property['oneOf'], 'enum'));
+
+                $this->assertArrayHasKey('default', $property, "{$type}.{$name} must emit its enum default.");
+                $this->assertContains($property['default'], $values, "{$type}.{$name} default must be an enum member.");
+                $this->assertStringStartsWith('Distribution', $property['title'], "{$type}.{$name} must use a Distribution-prefixed SDK enum name.");
+            }
+        }
+
+        $this->assertSame('string', $schemas[Response::MODEL_DISTRIBUTION_LOG]['properties']['sequence']['type']);
+        $this->assertArrayNotHasKey('credentials', $schemas[Response::MODEL_DISTRIBUTION_CONNECTION]['properties']);
+        $this->assertArrayNotHasKey('secret', $schemas[Response::MODEL_DISTRIBUTION_SIGNING_IDENTITY]['properties']);
     }
 
     /**

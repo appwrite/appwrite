@@ -73,6 +73,19 @@ final class CollectionSchemaTest extends TestCase
         }
     }
 
+    public function testDistributionRequiredAttributesHaveNoDefault(): void
+    {
+        $invalid = [];
+
+        foreach ($this->attributes() as $path => $attribute) {
+            if (\str_starts_with($path, 'projects.distribution') && $attribute->required && $attribute->default !== null) {
+                $invalid[] = $path;
+            }
+        }
+
+        $this->assertSame([], $invalid, 'Utopia Database rejects a default on a required attribute, so creating these attributes later would throw');
+    }
+
     /**
      * @return array<string, Attribute>
      */

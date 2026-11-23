@@ -171,6 +171,31 @@ class Response extends SwooleResponse
     public const MODEL_VIDEO_CAPTION = 'videoCaption';
     public const MODEL_VIDEO_CAPTION_LIST = 'videoCaptionList';
 
+    // Distribution
+    public const MODEL_DISTRIBUTION_APP = 'distributionApp';
+    public const MODEL_DISTRIBUTION_APP_LIST = 'distributionAppList';
+    public const MODEL_DISTRIBUTION_TARGET = 'distributionTarget';
+    public const MODEL_DISTRIBUTION_TARGET_LIST = 'distributionTargetList';
+    public const MODEL_DISTRIBUTION_CONNECTION = 'distributionConnection';
+    public const MODEL_DISTRIBUTION_CONNECTION_LIST = 'distributionConnectionList';
+    public const MODEL_DISTRIBUTION_SIGNING_IDENTITY = 'distributionSigningIdentity';
+    public const MODEL_DISTRIBUTION_SIGNING_IDENTITY_LIST = 'distributionSigningIdentityList';
+    public const MODEL_DISTRIBUTION_BUILD = 'distributionBuild';
+    public const MODEL_DISTRIBUTION_BUILD_LIST = 'distributionBuildList';
+    public const MODEL_DISTRIBUTION_LOG = 'distributionLog';
+    public const MODEL_DISTRIBUTION_LOG_LIST = 'distributionLogList';
+    public const MODEL_DISTRIBUTION_ARTIFACT = 'distributionArtifact';
+    public const MODEL_DISTRIBUTION_ARTIFACT_LIST = 'distributionArtifactList';
+    public const MODEL_DISTRIBUTION_RELEASE = 'distributionRelease';
+    public const MODEL_DISTRIBUTION_RELEASE_LIST = 'distributionReleaseList';
+    public const MODEL_DISTRIBUTION_SUBMISSION = 'distributionSubmission';
+    public const MODEL_DISTRIBUTION_SUBMISSION_LIST = 'distributionSubmissionList';
+    public const MODEL_DISTRIBUTION_LISTING = 'distributionListing';
+    public const MODEL_DISTRIBUTION_LISTING_LIST = 'distributionListingList';
+    public const MODEL_DISTRIBUTION_CHECK = 'distributionCheck';
+    public const MODEL_DISTRIBUTION_CHECK_LIST = 'distributionCheckList';
+    public const MODEL_DISTRIBUTION_CHECK_ISSUE = 'distributionCheckIssue';
+
     // Locale
     public const MODEL_LOCALE = 'locale';
     public const MODEL_LOCALE_CODE = 'localeCode';

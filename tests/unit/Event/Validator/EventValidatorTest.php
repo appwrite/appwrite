@@ -138,6 +138,11 @@ final class EventValidatorTest extends TestCase
         $this->assertTrue($this->object->isValid('tablesdb.books.tables.chapters.rows.*.upsert'));
         $this->assertTrue($this->object->isValid('documentsdb.*.collections.*.documents.*.upsert'));
         $this->assertTrue($this->object->isValid('vectorsdb.*.collections.*.documents.*.upsert'));
+        $this->assertTrue($this->object->isValid('distributionApps.*.builds.*.logs.*.create'));
+        $this->assertTrue($this->object->isValid('distributionApps.*.submissions.*.update'));
+        $this->assertTrue($this->object->isValid('distributionApps.app1.submissions.*.update'));
+        $this->assertTrue($this->object->isValid('distributionConnections.*'));
+        $this->assertTrue($this->object->isValid('distributionSigningIdentities.*.create'));
 
         /**
          * Test for FAILURE
@@ -163,5 +168,7 @@ final class EventValidatorTest extends TestCase
         $this->assertFalse($this->object->isValid('tablesdb.*.tables.*.rows.*.unknown'));
         $this->assertFalse($this->object->isValid('tablesdb.*.tables..rows.*.create'));
         $this->assertFalse($this->object->isValid('tablesdb.*.tables..rows.*.upsert'));
+        $this->assertFalse($this->object->isValid('distributionApps.*.submissions.*.delete'));
+        $this->assertFalse($this->object->isValid('distributionApps.*.builds.*.logs.*.update'));
     }
 }
