@@ -8,7 +8,7 @@ use Utopia\Abuse\Challenge\Status;
 
 /**
  * The smallest possible challenge, to prove a new kind needs only a constructor,
- * issue() and verify(): the prompt carries a hash of the expected answer.
+ * issue() and verify(): the token carries a hash of the expected answer.
  */
 final readonly class Riddle extends Challenge
 {
