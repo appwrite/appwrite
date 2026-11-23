@@ -23,6 +23,7 @@ publish = false
 [workspace.dependencies]
 php-std = { path = "crates/support/php-std" }
 utopia-auth = { path = "crates/utopia/auth" }
+utopia-compression = { path = "crates/utopia/compression" }
 utopia-detector = { path = "crates/utopia/detector" }
 utopia-domains = { path = "crates/utopia/domains" }
 utopia-emails = { path = "crates/utopia/emails" }
@@ -42,6 +43,8 @@ argon2 = { version = "0.5", features = ["std"] }
 # reference, fills them one after the other).
 blake2 = "0.10"
 blowfish = { version = "0.9", features = ["bcrypt"] }
+# C brotli 1.2.1, built from source and linked statically: the library PHP's ext-brotli links.
+brotlic-sys = "0.2.5"
 bytes = "1"
 cc = "1"
 foldhash = "0.2"
@@ -81,10 +84,18 @@ image-webp = "0.2"
 # tables, neither of which the `image` crate's encoder has. Pure Rust.
 jpeg-encoder = "0.7"
 kamadak-exif = "0.6"
+# The system zlib (no `static`): the library PHP itself links, so Deflate and GZIP write its bytes.
+libz-sys = { version = "1", default-features = false, features = ["libc"] }
 # libheif (a system library): AVIF and HEIC decoding, HEIC encoding. utopia-image's `libheif` feature.
 libheif-rs = { version = "3", default-features = false, features = ["v1_17"] }
+# LZ4 1.10.0, built from source and linked statically, as PHP's ext-lz4 links it.
+lz4-sys = "1.11.1"
+lzma-rust2 = { version = "0.22", default-features = false, features = ["std", "encoder", "xz"] }
 png = "0.18"
 thiserror = "2"
+# libzstd 1.5.7, built from source and linked statically, as PHP's ext-zstd links it. No
+# `zstdmt`: multithreaded compression would start threads in a process that forks.
+zstd-safe = { version = "8", default-features = false, features = ["std"] }
 # libwebp, built from source and linked statically: lossy WebP. utopia-image's `libwebp` feature.
 webp = { version = "0.3", default-features = false }
 
