@@ -37,6 +37,7 @@ use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Limit as LimitException;
+use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Format;
 use Utopia\Database\Id;
@@ -1489,7 +1490,7 @@ class Appwrite extends Destination
             }
 
             if ($action === SchemaAction::Overwrite) {
-                $dbForDatabases->deleteIndex($this->tableCollectionId($database, $table), $resource->getKey());
+                $this->dropFromSchema(fn () => $dbForDatabases->deleteIndex($this->tableCollectionId($database, $table), $resource->getKey()));
                 $this->dbForProject->deleteDocument(self::META_INDEXES, $indexMetaId);
                 $this->dbForProject->purgeCachedDocument($this->databaseCollectionId($database), $table->getId());
                 // Reload $table — in-memory copy still holds the dropped index, so IndexValidator below would over-count.
@@ -1753,9 +1754,9 @@ class Appwrite extends Destination
         $isRelationship = $resource->getType() === Column::TYPE_RELATIONSHIP;
 
         if ($isRelationship) {
-            $dbForDatabases->deleteRelationship($collectionId, $resource->getKey());
+            $this->dropFromSchema(fn () => $dbForDatabases->deleteRelationship($collectionId, $resource->getKey()));
         } else {
-            $dbForDatabases->deleteAttribute($collectionId, $resource->getKey());
+            $this->dropFromSchema(fn () => $dbForDatabases->deleteAttribute($collectionId, $resource->getKey()));
         }
 
         $this->dbForProject->deleteDocument(self::META_ATTRIBUTES, $attributeMetaId);
@@ -2367,6 +2368,27 @@ class Appwrite extends Destination
         $this->bestEffort(fn () => $dbForDatabases->deleteIndex($collectionId, $indexKey));
         $this->bestEffort(fn () => $this->dbForProject->deleteDocument(self::META_INDEXES, $indexMetaId));
         $this->dbForProject->purgeCachedDocument($this->databaseCollectionId($database), $table->getId());
+    }
+
+    /**
+     * Drops a column or index from the destination schema, treating "the schema no longer
+     * holds it" as the end state the drop asked for rather than an error.
+     *
+     * The meta document and the schema are two non-atomic writes, so a run killed between
+     * them — or a destination carrying an orphan left by the stuck-index bug fixed in
+     * appwrite/appwrite#15471 — leaves a meta document whose schema counterpart is gone.
+     * `NotFound` there used to abort the import and strand the orphan for good, since the
+     * caller never reached the meta delete that would have let the recreate through. Unlike
+     * {@see self::bestEffort()} this narrows to `NotFound`, so a dependent index
+     * (`Dependency`) or a relationship dropped as a column still surfaces.
+     */
+    private function dropFromSchema(callable $drop): void
+    {
+        try {
+            $drop();
+        } catch (NotFoundException) {
+            // Already absent from the schema; the caller still removes the meta document.
+        }
     }
 
     /** Swallows deletion errors — a prior run or relationship cascade may have already removed the target. */
