@@ -4,11 +4,12 @@ namespace Utopia\Abuse\Challenge;
 
 use Throwable;
 use Utopia\Abuse\Challenge;
+use Utopia\Abuse\Challenge\ProofOfWork\Token as ProofOfWorkToken;
 
 /**
  * Leading-zero-bits proof-of-work. A client must find an answer whose
- * SHA-256(seed ":" answer) starts with at least `difficulty` zero bits, where
- * the seed is {@see seed()} of the token it was issued.
+ * SHA-256(seed ":" answer) starts with at least `difficulty` zero bits; the
+ * issued token carries the seed and the difficulty.
  *
  * Issue signs a random nonce and the difficulty into a token, with no
  * server-side write. Verify checks the token and params, records the nonce as
@@ -54,16 +55,18 @@ final readonly class ProofOfWork extends Challenge
      * @throws \InvalidArgumentException
      */
     #[\Override]
-    public function issue(array $claims = [], ?int $difficulty = null): string
+    public function issue(array $claims = [], ?int $difficulty = null): ProofOfWorkToken
     {
         $difficulty ??= $this->difficulty;
         self::checkDifficulty($difficulty);
 
-        return $this->sign([
+        $value = $this->sign([
             'nonce' => \bin2hex(\random_bytes(16)),
             'difficulty' => $difficulty,
             'iatMs' => (int) (\microtime(true) * 1000),
         ], $claims);
+
+        return new ProofOfWorkToken($value, self::seed($value), $difficulty);
     }
 
     /**
@@ -89,7 +92,7 @@ final readonly class ProofOfWork extends Challenge
 
         $error = null;
         try {
-            $fresh = $this->nonces->withParams(self::keyParams($claims))->consume($nonce, $this->token->ttl);
+            $fresh = $this->nonces->withParams(self::keyParams($claims))->consume($nonce, $this->issuer->ttl);
         } catch (Throwable $e) {
             if (!$this->acceptWhenNoncesUnavailable) {
                 return new Result(Status::Unavailable, $claims, $difficulty, $elapsedMs, $e);
@@ -125,9 +128,8 @@ final readonly class ProofOfWork extends Challenge
 
     /**
      * What the client hashes its answers against: SHA-256 of the token, in hex.
-     * Callers send it to the client alongside the token and difficulty.
      */
-    public static function seed(string $token): string
+    private static function seed(string $token): string
     {
         return \hash('sha256', $token);
     }

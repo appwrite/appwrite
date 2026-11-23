@@ -6,9 +6,9 @@ use Ahc\Jwt\JWT;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Abuse\Challenge\Clearance;
+use Utopia\Abuse\Challenge\Issuer;
 use Utopia\Abuse\Challenge\ProofOfWork;
 use Utopia\Abuse\Challenge\Status;
-use Utopia\Abuse\Challenge\Token;
 use Utopia\Abuse\Tests\Challenge\Nonce\Memory;
 
 final class ClearanceTest extends TestCase
@@ -17,9 +17,9 @@ final class ClearanceTest extends TestCase
 
     private const array BINDING = ['project' => 'p1', 'resource' => 'r1', 'ip' => '203.0.113.0/24', 'ua' => 'ua-hash'];
 
-    private function token(string $purpose = 'clearance'): Token
+    private function issuer(string $purpose = 'clearance'): Issuer
     {
-        return new Token(self::SECRET, 'label', $purpose, 1800);
+        return new Issuer(self::SECRET, 'label', $purpose, 1800);
     }
 
     private function clearance(string $secret = self::SECRET): Clearance
@@ -100,9 +100,9 @@ final class ClearanceTest extends TestCase
     public function testMaxAgeLimitsHowOldAClearanceMayBe(): void
     {
         $old = new JWT(\hash_hmac('sha256', 'label', self::SECRET), 'HS256', 1800, 0)->encode([
-            Token::PURPOSE_CLAIM => 'clearance',
+            Issuer::PURPOSE_CLAIM => 'clearance',
             ...self::BINDING,
-            Token::BINDING_CLAIM => ['ip', 'project', 'resource', 'ua'],
+            Issuer::BINDING_CLAIM => ['ip', 'project', 'resource', 'ua'],
             'difficulty' => 18,
             'issuedAt' => \time() - 1000,
             'exp' => \time() + 3600,
@@ -119,7 +119,7 @@ final class ClearanceTest extends TestCase
     {
         // Without the recorded names there is no way to tell which fields were bound.
         $legacy = new JWT(\hash_hmac('sha256', 'label', self::SECRET), 'HS256', 1800, 0)->encode([
-            Token::PURPOSE_CLAIM => 'clearance',
+            Issuer::PURPOSE_CLAIM => 'clearance',
             ...self::BINDING,
             'difficulty' => 18,
             'issuedAt' => \time(),
@@ -133,13 +133,13 @@ final class ClearanceTest extends TestCase
     {
         $clearance = $this->clearance();
 
-        $this->assertFalse($clearance->withParams(self::BINDING)->verify($this->token()->issue(['difficulty' => 18], binding: self::BINDING)));
-        $this->assertFalse($clearance->withParams(self::BINDING)->verify($this->token()->issue(['issuedAt' => \time()], binding: self::BINDING)));
+        $this->assertFalse($clearance->withParams(self::BINDING)->verify($this->issuer()->issue(['difficulty' => 18], binding: self::BINDING)));
+        $this->assertFalse($clearance->withParams(self::BINDING)->verify($this->issuer()->issue(['issuedAt' => \time()], binding: self::BINDING)));
     }
 
     public function testATokenIssuedForAnotherPurposeIsNotAClearance(): void
     {
-        $challenge = $this->token('challenge')->issue(['difficulty' => 99, 'issuedAt' => \time()], binding: self::BINDING);
+        $challenge = $this->issuer('challenge')->issue(['difficulty' => 99, 'issuedAt' => \time()], binding: self::BINDING);
 
         $this->assertFalse($this->clearance()->withParams(self::BINDING)->verify($challenge));
     }
@@ -182,7 +182,7 @@ final class ClearanceTest extends TestCase
         $issued = $clearance->issue();
 
         $this->assertTrue($clearance->verify($issued));
-        $this->assertFalse($clearance->verify($puzzle));
+        $this->assertFalse($clearance->verify($puzzle->value));
         $this->assertSame(Status::InvalidToken, new ProofOfWork(self::SECRET, new Memory(), 0)->verify($issued, '0')->status);
     }
 
@@ -190,7 +190,7 @@ final class ClearanceTest extends TestCase
     {
         $before = \time();
         $issued = $this->clearance()->withParams(self::BINDING)->issue(ttl: 3600);
-        $claims = $this->token()->verify($issued);
+        $claims = $this->issuer()->verify($issued);
 
         $this->assertIsArray($claims);
         $this->assertGreaterThanOrEqual($before + 3600, $claims['exp']);
@@ -201,7 +201,7 @@ final class ClearanceTest extends TestCase
     {
         $issued = $this->clearance()->withParams(self::BINDING)->issue(claims: ['note' => 'x']);
 
-        $this->assertSame('x', $this->token()->verify($issued)['note'] ?? null);
+        $this->assertSame('x', $this->issuer()->verify($issued)['note'] ?? null);
         $this->assertTrue($this->clearance()->withParams(self::BINDING)->verify($issued));
     }
 
@@ -219,7 +219,7 @@ final class ClearanceTest extends TestCase
     {
         yield 'difficulty' => ['difficulty'];
         yield 'issue time' => ['issuedAt'];
-        yield 'purpose' => [Token::PURPOSE_CLAIM];
+        yield 'purpose' => [Issuer::PURPOSE_CLAIM];
     }
 
     public function testABindingThatSharesANameWithAClaimIsRefused(): void

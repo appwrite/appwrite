@@ -2,6 +2,7 @@
 
 namespace Utopia\Abuse;
 
+use Utopia\Abuse\Challenge\Issuer;
 use Utopia\Abuse\Challenge\Result;
 use Utopia\Abuse\Challenge\Status;
 use Utopia\Abuse\Challenge\Token;
@@ -14,7 +15,7 @@ use Utopia\Abuse\Challenge\Token;
  */
 abstract readonly class Challenge
 {
-    protected Token $token;
+    protected Issuer $issuer;
 
     /** @var array<string, string> */
     protected array $params;
@@ -29,7 +30,7 @@ abstract readonly class Challenge
      */
     public function __construct(string $secret, string $label, string $purpose, int $ttl)
     {
-        $this->token = new Token($secret, $label, $purpose, $ttl);
+        $this->issuer = new Issuer($secret, $label, $purpose, $ttl);
         $this->params = [];
     }
 
@@ -58,7 +59,7 @@ abstract readonly class Challenge
      *
      * @throws \InvalidArgumentException
      */
-    abstract public function issue(array $claims = []): string;
+    abstract public function issue(array $claims = []): Token;
 
     /**
      * Check the client's answer to a token issued with the same params.
@@ -81,7 +82,7 @@ abstract readonly class Challenge
             }
         }
 
-        return $this->token->issue([...$claims, ...$own], $ttl, $this->params);
+        return $this->issuer->issue([...$claims, ...$own], $ttl, $this->params);
     }
 
     /**
@@ -92,12 +93,12 @@ abstract readonly class Challenge
      */
     protected function claimsFrom(string $token): array|Result
     {
-        $claims = $this->token->verify($token);
+        $claims = $this->issuer->verify($token);
         if ($claims === null) {
             return new Result(Status::InvalidToken);
         }
 
-        if (!Token::paramsMatch($claims, $this->params)) {
+        if (!Issuer::paramsMatch($claims, $this->params)) {
             return new Result(Status::BindingMismatch);
         }
 
