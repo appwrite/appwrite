@@ -663,3 +663,167 @@ foreach ($dialects as $dialect) {
     $out[] = outcome(fn () => (new ('Tags' . $dialect)())->from('t')->join('u', 't.id', 'u.tid')->helpers());
     emit($dialect . ' more steps', $out);
 }
+
+// --- What only some dialects have --------------------------------------------------------------
+
+// A shape is applied where the dialect has every method it calls, so each dialect answers for its own.
+$featured = [
+    'selectRaw' => [['selectRaw'], fn ($b) => $b->from('t')->selectRaw('COUNT(*) AS n')->selectRaw('? + x AS y', [5])->select(['a'])],
+    'whereRaw' => [['whereRaw'], fn ($b) => $b->from('t')->whereRaw('a = ? OR b = ?', [1, 'x'])->filter([Query::equal('c', [2])])->whereRaw('d IS NULL')],
+    'orderByRaw' => [['orderByRaw'], fn ($b) => $b->from('t')->orderByRaw('FIELD(a, ?, ?)', [1, 2])->sortAsc('b')],
+    'groupByRaw' => [['groupByRaw', 'havingRaw'], fn ($b) => $b->from('t')->count('*', 'n')->groupByRaw('DATE(created) , ?', ['x'])->havingRaw('COUNT(*) > ?', [3])],
+    'setRaw' => [['setRaw'], fn ($b) => $b->from('t')->set(['a' => 1])->setRaw('n', 'n + ?', [1])->setRaw('m', 'NOW()')->filter([Query::equal('id', [9])])],
+    'setRaw alone' => [['setRaw'], fn ($b) => $b->from('t')->setRaw('n', 'n + 1')],
+    'insert expression' => [['insertColumnExpression'], fn ($b) => $b->into('t')->set(['a' => 1, 'g' => 'POINT(1 2)'])->insertColumnExpression('g', 'ST_GeomFromText(?, ?)', [4326])],
+    'conflict raw' => [['conflictSetRaw'], fn ($b) => $b->into('t')->set(['id' => 1, 'n' => 2, 'm' => 3])->onConflict(['id'], ['n', 'm'])->conflictSetRaw('n', 'n + ?', [1])],
+    'for update' => [['forUpdate'], fn ($b) => $b->from('t')->filter([Query::equal('id', [1])])->forUpdate()],
+    'for share' => [['forShare'], fn ($b) => $b->from('t')->forShare()->limit(1)],
+    'upsert' => [['upsert'], fn ($b) => $b->into('t')->set(['id' => 1, 'a' => 2, 'b' => 3])->onConflict(['id'], ['a', 'b'])],
+    'upsert rows' => [['upsert'], fn ($b) => $b->into('t')->set(['id' => 1, 'a' => 2])->set(['id' => 2, 'a' => 3])->onConflict(['id'], ['a'])],
+    'upsert no keys' => [['upsert'], fn ($b) => $b->into('t')->set(['id' => 1, 'a' => 2])],
+    'upsert no update' => [['upsert'], fn ($b) => $b->into('t')->set(['id' => 1])->onConflict(['id'], [])],
+    'upsert select' => [['upsertSelect'], fn ($b) => $b->into('t')->fromSelect(['id', 'a'], (new ($b::class)())->from('u')->select(['id', 'a']))->onConflict(['id'], ['a'])],
+    'returning' => [['returning'], fn ($b) => $b->into('t')->set(['a' => 1])->returning()],
+    'returning columns' => [['returning'], fn ($b) => $b->from('t')->set(['a' => 1])->filter([Query::equal('id', [1])])->returning(['id', 'a'])],
+    'returning upsert' => [['returning', 'upsert'], fn ($b) => $b->into('t')->set(['id' => 1, 'a' => 2])->onConflict(['id'], ['a'])->returning(['id'])],
+    'updateJoin' => [['updateJoin'], fn ($b) => $b->from('t')->set(['a' => 1])->updateJoin('u', 't.id', 'u.tid', 'x')->filter([Query::equal('x.b', [2])])],
+    'deleteJoin' => [['deleteJoin'], fn ($b) => $b->from('t')->deleteJoin('t', 'u', 't.id', 'u.tid')->filter([Query::equal('u.b', [2])])],
+    'updateFrom' => [['updateFrom'], fn ($b) => $b->from('t')->set(['a' => 1])->updateFrom('u', 'x')->whereRaw('t.id = x.tid')],
+    'deleteUsing' => [['deleteUsing'], fn ($b) => $b->from('t')->deleteUsing('u', 't.id = u.tid AND u.a = ? AND u.b = ?', 1, 'x')->filter([Query::equal('c', [3])])],
+];
+$ends = [
+    'build' => fn ($b) => $b->build(),
+    'insert' => fn ($b) => $b->insert(),
+    'update' => fn ($b) => $b->update(),
+    'delete' => fn ($b) => $b->delete(),
+    'upsert' => fn ($b) => $b->upsert(),
+    'upsertSelect' => fn ($b) => $b->upsertSelect(),
+    'insertOrIgnore' => fn ($b) => $b->insertOrIgnore(),
+    'insertSelect' => fn ($b) => $b->insertSelect(),
+    'raw' => fn ($b) => $b->toRawSql(),
+];
+foreach ($dialects as $dialect) {
+    foreach ($featured as $name => [$needs, $shape]) {
+        $out = [];
+        foreach (['Utopia\\Query\\Builder\\' . $dialect, 'Wraps' . $dialect] as $class) {
+            if (array_filter($needs, fn ($method) => ! method_exists($class, $method))) {
+                $out[] = 'no such method';
+
+                continue;
+            }
+            foreach ($ends as $method => $end) {
+                $out[] = ! method_exists($class, $method === 'raw' ? 'toRawSql' : $method) ? 'no such end' : outcome(function () use ($class, $shape, $end) {
+                    $builder = new $class();
+                    $shape($builder);
+
+                    return $end($builder);
+                });
+            }
+        }
+        emit($dialect . ' feature ' . $name, $out);
+    }
+    // explain() takes what the dialect's EXPLAIN takes.
+    $explained = [];
+    $parameters = count((new ReflectionMethod('Utopia\\Query\\Builder\\' . $dialect, 'explain'))->getParameters());
+    foreach ([[], [true], [false, 'JSON'], [true, 'json'], [true, true, true, 'YAML'], [false, false, true], [true, 'tree'], [false, 'bad format']] as $arguments) {
+        if (count($arguments) > $parameters) {
+            continue;
+        }
+        $explained[] = outcome(fn () => (new ('Utopia\\Query\\Builder\\' . $dialect)())->from('t')->filter([Query::equal('a', [1])])->explain(...$arguments));
+    }
+    emit($dialect . ' explain', $explained);
+}
+
+// A subclass's own build(), and the protected properties it reads and writes.
+trait OwnsBuild
+{
+    public int $builds = 0;
+
+    public function build(): Builder\Statement
+    {
+        $this->builds++;
+        $built = parent::build();
+
+        return new Builder\Statement('/*own*/' . $built->query, $built->bindings, $built->readOnly);
+    }
+}
+trait OwnsState
+{
+    /** @return array<mixed> */
+    public function peek(): array
+    {
+        // The cache has no order worth keeping: the extension's is a hash map.
+        $resolved = $this->resolvedAttributeCache;
+        ksort($resolved);
+
+        return [
+            array_map(fn (Builder\Binding $binding) => [$binding->value, $binding->column], $this->bindings),
+            array_map(fn (Query $query) => $query->toString(), $this->pendingQueries),
+            $resolved,
+        ];
+    }
+
+    public function wipe(): static
+    {
+        $this->bindings = [];
+        $this->resolvedAttributeCache = [];
+
+        return $this;
+    }
+
+    public function rewrite(): static
+    {
+        $this->pendingQueries = array_map(
+            fn (Query $query) => $query->getMethod() === Utopia\Query\Method::Equal ? Query::notEqual($query->getAttribute(), $query->getValues()[0]) : $query,
+            $this->pendingQueries,
+        );
+
+        return $this;
+    }
+
+    // Assigned whole: the extension's properties cannot be appended to in place.
+    public function grow(): static
+    {
+        $this->pendingQueries = [...$this->pendingQueries, Query::greaterThan('grown', 7)];
+        $this->bindings = [...$this->bindings, new Builder\Binding('extra', 'col')];
+
+        return $this;
+    }
+}
+foreach ($dialects as $dialect) {
+    eval("class Owns{$dialect} extends Utopia\\Query\\Builder\\{$dialect} { use OwnsBuild; use OwnsState; }");
+    $class = 'Owns' . $dialect;
+    $start = fn () => (new $class())->from('t')->select(['a'])->filter([Query::equal('a', [1]), Query::lessThan('b', 2)])->sortAsc('a');
+    emit($dialect . ' own build', [
+        outcome(fn () => $start()->build()),
+        outcome(fn () => method_exists($class, 'toRawSql') ? $start()->toRawSql() : 'none'),
+        outcome(fn () => (new ReflectionMethod($class, 'explain'))->getNumberOfRequiredParameters() === 0 ? $start()->explain() : 'none'),
+        outcome(function () use ($start) {
+            $builder = $start();
+            $builder->build();
+            method_exists($builder, 'toRawSql') && $builder->toRawSql();
+
+            return $builder->builds;
+        }),
+    ]);
+    emit($dialect . ' own state', [
+        outcome(fn () => $start()->peek()),
+        outcome(function () use ($start) {
+            $builder = $start();
+            $builder->build();
+
+            return $builder->peek();
+        }),
+        outcome(function () use ($start) {
+            $builder = $start();
+            $builder->build();
+
+            return [$builder->wipe()->peek(), $builder->getBindings()];
+        }),
+        outcome(fn () => $start()->rewrite()->build()),
+        outcome(fn () => $start()->rewrite()->peek()),
+        outcome(fn () => $start()->grow()->peek()),
+        outcome(fn () => $start()->grow()->build()),
+        outcome(fn () => array_map(fn (string $property) => (new ReflectionProperty($class, $property))->isProtected(), ['bindings', 'pendingQueries', 'resolvedAttributeCache'])),
+    ]);
+}

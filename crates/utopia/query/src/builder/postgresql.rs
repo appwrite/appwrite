@@ -790,7 +790,7 @@ impl Dialect for PostgreSqlDialect {
         if !["", "TEXT", "XML", "JSON", "YAML"].contains(&format.as_str()) {
             return Err(Error::Validation(format!("Invalid EXPLAIN format: {}", options.format)));
         }
-        let result = Self::build(b)?;
+        let result = b.built()?;
         let mut flags = Vec::new();
         if analyze {
             flags.push("ANALYZE".to_owned());

@@ -327,7 +327,7 @@ impl<D: Dialect> Builder<D> {
     }
 
     fn raw_sql(&mut self, widened: bool) -> Result<String> {
-        let result = self.build()?;
+        let result = self.built()?;
         let mut sql = result.query;
         let mut offset = 0;
         for binding in &result.bindings {
@@ -346,6 +346,40 @@ impl<D: Dialect> Builder<D> {
             }
         }
         Ok(sql)
+    }
+
+    /// The bindings so far, each with the column it was bound against.
+    ///
+    /// PHP: the protected `$bindings`.
+    pub fn binding_list(&self) -> &[crate::builder::Binding] {
+        &self.core.bindings
+    }
+
+    /// Replaces the bindings.
+    pub fn set_binding_list(&mut self, bindings: Vec<crate::builder::Binding>) -> &mut Self {
+        self.core.bindings = bindings;
+        self
+    }
+
+    /// Replaces the queries to compile.
+    ///
+    /// PHP: the protected `$pendingQueries`.
+    pub fn set_pending(&mut self, queries: Vec<Query>) -> &mut Self {
+        self.core.pending = queries;
+        self
+    }
+
+    /// The attributes resolved so far, and what each resolved to.
+    ///
+    /// PHP: the protected `$resolvedAttributeCache`.
+    pub fn resolved_attributes(&self) -> impl Iterator<Item = (&str, &str)> {
+        self.core.resolved.iter().map(|(attribute, resolved)| (attribute.as_str(), resolved.as_str()))
+    }
+
+    /// Replaces the resolved attributes.
+    pub fn set_resolved_attributes(&mut self, resolved: impl IntoIterator<Item = (String, String)>) -> &mut Self {
+        self.core.resolved = resolved.into_iter().collect();
+        self
     }
 
     /// The bindings of the last statement built.

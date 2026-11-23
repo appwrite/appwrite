@@ -36,8 +36,9 @@ use ext_php_rs::zend::{ClassEntry, ExecutorGlobals, ce};
 use php_std::types::KeyRef;
 use php_std::{ArrayKey as Key, Str};
 use utopia_query::builder::{
-    AnyBuilder, Arg, Builder, ClickHouseDialect, Condition, Dialect, JoinBuilder, JoinOn, JoinType, MariaDbDialect,
-    MongoDbDialect, MySqlDialect, Overrides, PostgreSqlDialect, Ret, SqliteDialect, Statement, Step, WindowFrame,
+    AnyBuilder, Arg, Binding, Builder, ClickHouseDialect, Condition, Dialect, ExplainOptions, JoinBuilder, JoinOn,
+    JoinType, MariaDbDialect, MongoDbDialect, MySqlDialect, Overrides, PostgreSqlDialect, Ret, SqliteDialect,
+    Statement, Step, WindowFrame,
 };
 use utopia_query::hook::{self, Hook};
 use utopia_query::{Array, Error, Method, NullsPosition, Object, Query, Value};
@@ -51,6 +52,28 @@ use crate::string::PhpString;
 
 const BUILDER: &str = "Utopia\\Query\\Builder";
 const HOOK: &str = "Utopia\\Query\\Hook";
+/// One of the protected array properties, as PHP holds it.
+pub struct Slot(Zval);
+
+impl IntoZval for Slot {
+    const TYPE: DataType = DataType::Array;
+    const NULLABLE: bool = false;
+
+    fn set_zval(self, zval: &mut Zval, _persistent: bool) -> ext_php_rs::error::Result<()> {
+        *zval = self.0;
+        Ok(())
+    }
+}
+
+impl<'a> FromZval<'a> for Slot {
+    const TYPE: DataType = DataType::Array;
+
+    fn from_zval(zval: &'a Zval) -> Option<Self> {
+        zval.is_array().then(|| Self(zval.shallow_clone()))
+    }
+}
+
+const BINDING: &str = "Utopia\\Query\\Builder\\Binding";
 const CONDITION: &str = "Utopia\\Query\\Builder\\Condition";
 const JOIN_BUILDER: &str = "Utopia\\Query\\Builder\\JoinBuilder";
 const JOIN_ON: &str = "Utopia\\Query\\Builder\\JoinOn";
@@ -332,6 +355,77 @@ impl<D: Dialect + Text> State<D> {
         items.filter_map(|item| item.zend_str().map(|name| self.text(name.as_bytes()))).collect()
     }
 
+    /// `$this->bindings`: a list of `Binding`.
+    fn bound(&self) -> PhpResult<Zval> {
+        let bindings = self.with(|builder| builder.binding_list().to_vec());
+        if bindings.is_empty() {
+            return Ok(empty());
+        }
+        let mut out = Vec::with_capacity(bindings.len());
+        for binding in &bindings {
+            let column = binding.column.as_deref().map_or_else(null, |column| string(&bytes(D::JSON, column)));
+            let mut arguments = [zval(D::JSON, &binding.value)?, column];
+            out.push(construct(class(BINDING)?, &mut arguments)?.into_zval(false).map_err(PhpException::from)?);
+        }
+        out.into_zval(false).map_err(PhpException::from)
+    }
+
+    /// `$this->bindings = $bindings`: each a `Binding`, or a value on its own.
+    fn bind(&self, bindings: &Zval) {
+        let mut list = Vec::new();
+        for item in bindings.array().into_iter().flat_map(ZendHashTable::values) {
+            let binding = item.object().filter(|object| class(BINDING).is_ok_and(|class| object.instance_of(class)));
+            let fields = binding.and_then(|_| properties(item));
+            let value = fields.map_or(Some(item), |fields| property(fields, "value"));
+            let Ok(value) = value.map_or(Ok(Value::Null), |value| self.value(value)) else { continue };
+            let column = fields.and_then(|fields| property(fields, "column")).and_then(Zval::zend_str);
+            list.push(Binding::new(value, column.map(|column| self.text(column.as_bytes()))));
+        }
+        self.with(|builder| {
+            builder.set_binding_list(list);
+        });
+    }
+
+    /// `$this->pendingQueries`: a list of `Query`.
+    fn pending(&self) -> PhpResult<Zval> {
+        let pending = self.with(|builder| builder.pending().to_vec());
+        if pending.is_empty() {
+            return Ok(empty());
+        }
+        let queries = pending.iter().map(|query| query_object(D::JSON, query)).collect::<PhpResult<Vec<_>>>()?;
+        queries.into_zval(false).map_err(PhpException::from)
+    }
+
+    /// `$this->resolvedAttributeCache`: what each attribute resolved to.
+    fn resolved(&self) -> Zval {
+        let mut table = ZendHashTable::new();
+        self.with(|builder| {
+            for (attribute, resolved) in builder.resolved_attributes() {
+                let key = bytes(D::JSON, attribute);
+                let _ = table.insert(String::from_utf8_lossy(&key).as_ref(), string(&bytes(D::JSON, resolved)));
+            }
+        });
+        if table.is_empty() {
+            return empty();
+        }
+        let mut out = Zval::new();
+        out.set_hashtable(table);
+        out
+    }
+
+    /// `$this->resolvedAttributeCache = $resolved`.
+    fn resolve(&self, resolved: &Zval) {
+        let mut pairs = Vec::new();
+        for (attribute, found) in resolved.array().into_iter().flatten() {
+            if let Some(found) = found.zend_str() {
+                pairs.push((self.text(attribute.to_string().as_bytes()), self.text(found.as_bytes())));
+            }
+        }
+        self.with(|builder| {
+            builder.set_resolved_attributes(pairs);
+        });
+    }
+
     /// The queries of an array argument.
     fn queries(&self, given: &Arr<'_>) -> PhpResult<Vec<Query>> {
         given.table().into_iter().flat_map(ZendHashTable::values).map(|query| self.query(query)).collect()
@@ -422,7 +516,7 @@ impl<D: Dialect + Text> State<D> {
     fn step(&self, step: Step, arguments: &[Arg<'_>]) -> PhpResult<Bytes> {
         match self.with(|builder| builder.base(step, arguments)).map_err(|error| raised(&error))? {
             Ret::Str(text) => Ok(Bytes(self.written(&text)?.into_owned())),
-            Ret::None => Ok(Bytes(Vec::new())),
+            _ => Ok(Bytes(Vec::new())),
         }
     }
 
@@ -463,10 +557,16 @@ impl<D: Dialect + Text> State<D> {
         if !ExecutorGlobals::get().exception.is_null() {
             return None;
         }
-        Some(match returned.zend_str() {
-            Some(text) => Ret::Str(self.text(text.as_bytes())),
-            None => Ret::None,
-        })
+        if let Some(text) = returned.zend_str() {
+            return Some(Ret::Str(self.text(text.as_bytes())));
+        }
+        // `build()` returns a statement.
+        let Some(fields) = properties(&returned) else { return Some(Ret::None) };
+        let query = property(fields, "query").and_then(Zval::zend_str).map(|query| self.text(query.as_bytes()));
+        let bindings = property(fields, "bindings").and_then(Zval::array).into_iter().flat_map(ZendHashTable::values);
+        let mut statement = Statement::new(query.unwrap_or_default(), bindings.map(bound).collect());
+        statement.read_only = property(fields, "readOnly").and_then(Zval::bool).unwrap_or(false);
+        Some(Ret::Statement(statement))
     }
 }
 
@@ -692,6 +792,26 @@ fn join_object(json: bool, join: &JoinBuilder) -> PhpResult<Zval> {
         unsafe { object.properties_table.as_mut_ptr().add(slot).write(items) };
     }
     object.into_zval(false).map_err(PhpException::from)
+}
+
+/// `returning()`'s columns: the ones given, or every column.
+pub enum Returned<'a> {
+    Given(&'a Zval),
+    Star,
+}
+
+impl<'a> FromZval<'a> for Returned<'a> {
+    const TYPE: DataType = DataType::Array;
+
+    fn from_zval(zval: &'a Zval) -> Option<Self> {
+        zval.is_array().then_some(Returned::Given(zval))
+    }
+}
+
+impl StubLiteral for Returned<'_> {
+    fn stub_literal(&self) -> String {
+        "['*']".to_owned()
+    }
 }
 
 /// A `JoinBuilder` argument.
@@ -931,7 +1051,403 @@ impl<'a> FromZval<'a> for Columns<'a> {
 /// A builder class: its state, and the methods every dialect has. Every class declares its
 /// own, since a parent's native method would read its own Rust type.
 macro_rules! builder_class {
-    ($(#[$meta:meta])* $class:ident, $dialect:ty $(, sql = $sql:literal)? $(, spatial = $spatial:literal)? $(, literal = $literal:literal)?) => {
+    ($(#[$meta:meta])* $class:ident, $dialect:ty, [$($feature:ident),*]) => {
+        builder_class!(@add [$(#[$meta])*] $class, $dialect, {}, $($feature,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, sql, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(name = "compileSearchExpression", vis = "protected")]
+            pub fn compile_search_expression(
+                self_: &mut ZendClassObject<$class>,
+                attribute: PhpString<'_>,
+                values: Arr<'_>,
+                not: bool,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let (attribute, values) = (self_.0.text(attribute.bytes()), self_.0.values(&values)?);
+                self_.0.step(Step::CompileSearchExpression, &[Arg::Str(&attribute), Arg::Values(&values), Arg::Bool(not)])
+            }
+
+            #[php(name = "compileJsonContainsExpression", vis = "protected")]
+            pub fn compile_json_contains_expression(
+                self_: &mut ZendClassObject<$class>,
+                attribute: PhpString<'_>,
+                values: Arr<'_>,
+                not: bool,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let (attribute, values) = (self_.0.text(attribute.bytes()), self_.0.values(&values)?);
+                self_.0.step(Step::CompileJsonContainsExpression, &[Arg::Str(&attribute), Arg::Values(&values), Arg::Bool(not)])
+            }
+
+            #[php(name = "compileJsonOverlapsExpression", vis = "protected")]
+            pub fn compile_json_overlaps_expression(
+                self_: &mut ZendClassObject<$class>,
+                attribute: PhpString<'_>,
+                values: Arr<'_>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let (attribute, values) = (self_.0.text(attribute.bytes()), self_.0.values(&values)?);
+                self_.0.step(Step::CompileJsonOverlapsExpression, &[Arg::Str(&attribute), Arg::Values(&values)])
+            }
+
+            #[php(name = "compileSpatialFilter", vis = "protected")]
+            pub fn compile_spatial_filter(
+                self_: &mut ZendClassObject<$class>,
+                method: MethodArgument,
+                attribute: PhpString<'_>,
+                query: QueryArgument<'_>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let (attribute, query) = (self_.0.text(attribute.bytes()), self_.0.query(query.0)?);
+                self_.0.step(Step::CompileSpatialFilter, &[Arg::Method(method.0), Arg::Str(&attribute), Arg::Query(&query)])
+            }
+
+            #[php(name = "compileArrayFilter", vis = "protected")]
+            pub fn compile_array_filter(
+                self_: &mut ZendClassObject<$class>,
+                method: MethodArgument,
+                attribute: PhpString<'_>,
+                query: QueryArgument<'_>,
+            ) -> PhpResult<Bytes> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let (attribute, query) = (self_.0.text(attribute.bytes()), self_.0.query(query.0)?);
+                self_.0.step(Step::CompileArrayFilter, &[Arg::Method(method.0), Arg::Str(&attribute), Arg::Query(&query)])
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, spatial, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(name = "geometryToWkt", vis = "protected")]
+            pub fn geometry_to_wkt(&self, geometry: Arr<'_>) -> PhpResult<Bytes> {
+                let geometry = self.0.values(&geometry)?;
+                let wkt = utopia_query::builder::geometry_to_wkt(&geometry).map_err(|error| raised(&error))?;
+                Ok(Bytes(wkt.into_bytes()))
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, literal, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(name = "quoteLiteral", vis = "protected")]
+            pub fn quote_literal(&self, identifier: PhpString<'_>) -> PhpResult<Bytes> {
+                let identifier = self.0.text(identifier.bytes());
+                let quoted = utopia_query::quote_literal(&identifier, <$dialect as Dialect>::WRAP);
+                Ok(Bytes(self.0.written(&quoted.map_err(|error| raised(&error))?)?.into_owned()))
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, raw_sql, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(name = "selectRaw", defaults(bindings = "Arr::Empty"))]
+            pub fn select_raw<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                expression: PhpString<'_>,
+                bindings: Arr<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let expression = self_.0.text(expression.bytes());
+                let bound: Vec<Value> = self_.0.values(&bindings)?.values().cloned().collect();
+                self_.0.with(|builder| {
+                    builder.select_raw(expression, bound);
+                });
+                Ok(self_)
+            }
+
+            #[php(name = "whereRaw", defaults(bindings = "Arr::Empty"))]
+            pub fn where_raw<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                expression: PhpString<'_>,
+                bindings: Arr<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let expression = self_.0.text(expression.bytes());
+                let bound: Vec<Value> = self_.0.values(&bindings)?.values().cloned().collect();
+                self_.0.with(|builder| {
+                    builder.where_raw(expression, bound);
+                });
+                Ok(self_)
+            }
+
+            #[php(name = "orderByRaw", defaults(bindings = "Arr::Empty"))]
+            pub fn order_by_raw<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                expression: PhpString<'_>,
+                bindings: Arr<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let expression = self_.0.text(expression.bytes());
+                let bound: Vec<Value> = self_.0.values(&bindings)?.values().cloned().collect();
+                self_.0.with(|builder| {
+                    builder.order_by_raw(expression, bound);
+                });
+                Ok(self_)
+            }
+
+            #[php(name = "groupByRaw", defaults(bindings = "Arr::Empty"))]
+            pub fn group_by_raw<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                expression: PhpString<'_>,
+                bindings: Arr<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let expression = self_.0.text(expression.bytes());
+                let bound: Vec<Value> = self_.0.values(&bindings)?.values().cloned().collect();
+                self_.0.with(|builder| {
+                    builder.group_by_raw(expression, bound);
+                });
+                Ok(self_)
+            }
+
+            #[php(name = "havingRaw", defaults(bindings = "Arr::Empty"))]
+            pub fn having_raw<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                expression: PhpString<'_>,
+                bindings: Arr<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let expression = self_.0.text(expression.bytes());
+                let bound: Vec<Value> = self_.0.values(&bindings)?.values().cloned().collect();
+                self_.0.with(|builder| {
+                    builder.having_raw(expression, bound);
+                });
+                Ok(self_)
+            }
+
+            #[php(name = "setRaw", defaults(bindings = "Arr::Empty"))]
+            pub fn set_raw<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+                expression: PhpString<'_>,
+                bindings: Arr<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let (column, expression) = (self_.0.text(column.bytes()), self_.0.text(expression.bytes()));
+                let bound: Vec<Value> = self_.0.values(&bindings)?.values().cloned().collect();
+                self_.0.with(|builder| {
+                    builder.set_raw(column, expression, bound);
+                });
+                Ok(self_)
+            }
+
+            #[php(name = "conflictSetRaw", defaults(bindings = "Arr::Empty"))]
+            pub fn conflict_set_raw<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+                expression: PhpString<'_>,
+                bindings: Arr<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let (column, expression) = (self_.0.text(column.bytes()), self_.0.text(expression.bytes()));
+                let bound: Vec<Value> = self_.0.values(&bindings)?.values().cloned().collect();
+                self_.0.with(|builder| {
+                    builder.conflict_set_raw(column, expression, bound);
+                });
+                Ok(self_)
+            }
+
+            #[php(name = "insertColumnExpression", defaults(extraBindings = "Arr::Empty"))]
+            pub fn insert_column_expression<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                column: PhpString<'_>,
+                expression: PhpString<'_>,
+                extraBindings: Arr<'_>,
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let (column, expression) = (self_.0.text(column.bytes()), self_.0.text(expression.bytes()));
+                let bound: Vec<Value> = self_.0.values(&extraBindings)?.values().cloned().collect();
+                self_.0.with(|builder| {
+                    builder.insert_column_expression(column, expression, bound);
+                });
+                Ok(self_)
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, locking, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(name = "forUpdate")]
+            pub fn for_update(self_: &mut ZendClassObject<$class>) -> &mut ZendClassObject<$class> {
+                self_.0.with(|builder| {
+                    builder.for_update();
+                });
+                self_
+            }
+
+            #[php(name = "forShare")]
+            pub fn for_share(self_: &mut ZendClassObject<$class>) -> &mut ZendClassObject<$class> {
+                self_.0.with(|builder| {
+                    builder.for_share();
+                });
+                self_
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, upsert, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(name = "upsert")]
+            pub fn upsert(self_: &mut ZendClassObject<$class>) -> PhpResult<Zval> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let built = self_.0.with(Builder::upsert);
+                self_.0.statement(built)
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, upsert_select, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(name = "upsertSelect")]
+            pub fn upsert_select(self_: &mut ZendClassObject<$class>) -> PhpResult<Zval> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let built = self_.0.with(Builder::upsert_select);
+                self_.0.statement(built)
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, insert_or_ignore, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(name = "insertOrIgnore")]
+            pub fn insert_or_ignore(self_: &mut ZendClassObject<$class>) -> PhpResult<Zval> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let built = self_.0.with(Builder::insert_or_ignore);
+                self_.0.statement(built)
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, returning, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(defaults(columns = "Returned::Star"))]
+            pub fn returning<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                columns: Returned<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let columns = match columns {
+                    Returned::Given(columns) => self_.0.strings(&Arr::Given(columns)),
+                    Returned::Star => vec!["*".to_owned()],
+                };
+                self_.0.with(|builder| {
+                    builder.returning(columns);
+                });
+                self_
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, mysql_family, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(name = "updateJoin", defaults(alias = "\"\""))]
+            pub fn update_join<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                table: PhpString<'_>,
+                left: PhpString<'_>,
+                right: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let state = &self_.0;
+                let (table, alias) = (state.text(table.bytes()), state.text(alias.bytes()));
+                let (left, right) = (state.text(left.bytes()), state.text(right.bytes()));
+                state.with(|builder| {
+                    builder.update_join(table, left, right, alias);
+                });
+                self_
+            }
+
+            #[php(name = "deleteJoin")]
+            pub fn delete_join<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                alias: PhpString<'_>,
+                table: PhpString<'_>,
+                left: PhpString<'_>,
+                right: PhpString<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let state = &self_.0;
+                let (table, alias) = (state.text(table.bytes()), state.text(alias.bytes()));
+                let (left, right) = (state.text(left.bytes()), state.text(right.bytes()));
+                state.with(|builder| {
+                    builder.delete_join(alias, table, left, right);
+                });
+                self_
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, postgres_from, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(name = "updateFrom", defaults(alias = "\"\""))]
+            pub fn update_from<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                table: PhpString<'_>,
+                alias: PhpString<'_>,
+            ) -> &'a mut ZendClassObject<$class> {
+                let (table, alias) = (self_.0.text(table.bytes()), self_.0.text(alias.bytes()));
+                self_.0.with(|builder| {
+                    builder.update_from(table, alias);
+                });
+                self_
+            }
+
+            #[php(name = "deleteUsing")]
+            pub fn delete_using<'a>(
+                self_: &'a mut ZendClassObject<$class>,
+                table: PhpString<'_>,
+                condition: PhpString<'_>,
+                bindings: &[&Zval],
+            ) -> PhpResult<&'a mut ZendClassObject<$class>> {
+                let (table, condition) = (self_.0.text(table.bytes()), self_.0.text(condition.bytes()));
+                let bound = bindings.iter().map(|binding| self_.0.value(binding)).collect::<PhpResult<Vec<Value>>>()?;
+                self_.0.with(|builder| {
+                    builder.delete_using(table, condition, bound);
+                });
+                Ok(self_)
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, explain_plain, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(defaults(analyze = "Bool(false)"))]
+            pub fn explain(self_: &mut ZendClassObject<$class>, analyze: Bool) -> PhpResult<Zval> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let built = self_.0.with(|builder| builder.explain(analyze.0));
+                self_.0.statement(built)
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, explain_format, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(defaults(analyze = "Bool(false)", format = "\"\""))]
+            pub fn explain(self_: &mut ZendClassObject<$class>, analyze: Bool, format: PhpString<'_>) -> PhpResult<Zval> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let options = ExplainOptions { format: self_.0.text(format.bytes()), ..ExplainOptions::default() };
+                let built = self_.0.with(|builder| builder.explain_with(analyze.0, &options));
+                self_.0.statement(built)
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, explain_postgres, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(defaults(analyze = "Bool(false)", verbose = "Bool(false)", buffers = "Bool(false)", format = "\"\""))]
+            pub fn explain(self_: &mut ZendClassObject<$class>, analyze: Bool, verbose: Bool, buffers: Bool, format: PhpString<'_>) -> PhpResult<Zval> {
+                let object = std::ptr::from_mut(&mut self_.std);
+                let _running = self_.0.running(object);
+                let options = ExplainOptions { verbose: verbose.0, buffers: buffers.0, format: self_.0.text(format.bytes()) };
+                let built = self_.0.with(|builder| builder.explain_with(analyze.0, &options));
+                self_.0.statement(built)
+            }
+        }, $($rest,)*);
+    };
+    // FEATURES
+    (@add [$(#[$meta:meta])*] $class:ident, $dialect:ty, {$($methods:tt)*},) => {
         $(#[$meta])*
         #[derive(Clone)]
         pub struct $class(State<$dialect>);
@@ -946,6 +1462,41 @@ macro_rules! builder_class {
 
         #[php_impl]
         impl $class {
+            /// The protected properties a subclass reads and writes.
+            #[php(getter, name = "bindings", vis = "protected")]
+            pub fn bindings_property(&self) -> Slot {
+                Slot(self.0.bound().unwrap_or_else(|_| empty()))
+            }
+
+            #[php(setter, name = "bindings", vis = "protected")]
+            pub fn set_bindings_property(&self, bindings: Slot) {
+                self.0.bind(&bindings.0);
+            }
+
+            #[php(getter, name = "pendingQueries", vis = "protected")]
+            pub fn pending_queries_property(&self) -> Slot {
+                Slot(self.0.pending().unwrap_or_else(|_| empty()))
+            }
+
+            #[php(setter, name = "pendingQueries", vis = "protected")]
+            pub fn set_pending_queries_property(&self, queries: Slot) {
+                if let Ok(queries) = self.0.queries(&Arr::Given(&queries.0)) {
+                    self.0.with(|builder| {
+                        builder.set_pending(queries);
+                    });
+                }
+            }
+
+            #[php(getter, name = "resolvedAttributeCache", vis = "protected")]
+            pub fn resolved_attribute_cache_property(&self) -> Slot {
+                Slot(self.0.resolved())
+            }
+
+            #[php(setter, name = "resolvedAttributeCache", vis = "protected")]
+            pub fn set_resolved_attribute_cache_property(&self, resolved: Slot) {
+                self.0.resolve(&resolved.0);
+            }
+
             pub fn __construct() -> Self {
                 Self(State::new::<$class>())
             }
@@ -1349,14 +1900,6 @@ macro_rules! builder_class {
                 let object = std::ptr::from_mut(&mut self_.std);
                 let _running = self_.0.running(object);
                 self_.0.raw()
-            }
-
-            #[php(defaults(analyze = "Bool(false)"))]
-            pub fn explain(self_: &mut ZendClassObject<$class>, analyze: Bool) -> PhpResult<Zval> {
-                let object = std::ptr::from_mut(&mut self_.std);
-                let _running = self_.0.running(object);
-                let built = self_.0.with(|builder| builder.explain(analyze.0));
-                self_.0.statement(built)
             }
 
             pub fn insert(self_: &mut ZendClassObject<$class>) -> PhpResult<Zval> {
@@ -1933,15 +2476,6 @@ macro_rules! builder_class {
                 Ok(Bytes(self.0.written(&quoted.map_err(|error| raised(&error))?)?.into_owned()))
             }
 
-            $(
-                #[php(name = "quoteLiteral", vis = "protected")]
-                pub fn quote_literal(&self, identifier: PhpString<'_>) -> PhpResult<Bytes> {
-                    let _: bool = $literal;
-                    let identifier = self.0.text(identifier.bytes());
-                    let quoted = utopia_query::quote_literal(&identifier, <$dialect as Dialect>::WRAP);
-                    Ok(Bytes(self.0.written(&quoted.map_err(|error| raised(&error))?)?.into_owned()))
-                }
-            )?
 
             #[php(name = "getLikeKeyword", vis = "protected")]
             pub fn get_like_keyword(&self) -> &'static str {
@@ -1953,82 +2487,7 @@ macro_rules! builder_class {
                 self.0.bindings()
             }
 
-            $(
-                #[php(name = "compileSearchExpression", vis = "protected")]
-                pub fn compile_search_expression(
-                    self_: &mut ZendClassObject<$class>,
-                    attribute: PhpString<'_>,
-                    values: Arr<'_>,
-                    not: bool,
-                ) -> PhpResult<Bytes> {
-                    let _: bool = $sql;
-                    let object = std::ptr::from_mut(&mut self_.std);
-                    let _running = self_.0.running(object);
-                    let (attribute, values) = (self_.0.text(attribute.bytes()), self_.0.values(&values)?);
-                    self_.0.step(Step::CompileSearchExpression, &[Arg::Str(&attribute), Arg::Values(&values), Arg::Bool(not)])
-                }
 
-                #[php(name = "compileJsonContainsExpression", vis = "protected")]
-                pub fn compile_json_contains_expression(
-                    self_: &mut ZendClassObject<$class>,
-                    attribute: PhpString<'_>,
-                    values: Arr<'_>,
-                    not: bool,
-                ) -> PhpResult<Bytes> {
-                    let object = std::ptr::from_mut(&mut self_.std);
-                    let _running = self_.0.running(object);
-                    let (attribute, values) = (self_.0.text(attribute.bytes()), self_.0.values(&values)?);
-                    self_.0.step(Step::CompileJsonContainsExpression, &[Arg::Str(&attribute), Arg::Values(&values), Arg::Bool(not)])
-                }
-
-                #[php(name = "compileJsonOverlapsExpression", vis = "protected")]
-                pub fn compile_json_overlaps_expression(
-                    self_: &mut ZendClassObject<$class>,
-                    attribute: PhpString<'_>,
-                    values: Arr<'_>,
-                ) -> PhpResult<Bytes> {
-                    let object = std::ptr::from_mut(&mut self_.std);
-                    let _running = self_.0.running(object);
-                    let (attribute, values) = (self_.0.text(attribute.bytes()), self_.0.values(&values)?);
-                    self_.0.step(Step::CompileJsonOverlapsExpression, &[Arg::Str(&attribute), Arg::Values(&values)])
-                }
-
-                #[php(name = "compileSpatialFilter", vis = "protected")]
-                pub fn compile_spatial_filter(
-                    self_: &mut ZendClassObject<$class>,
-                    method: MethodArgument,
-                    attribute: PhpString<'_>,
-                    query: QueryArgument<'_>,
-                ) -> PhpResult<Bytes> {
-                    let object = std::ptr::from_mut(&mut self_.std);
-                    let _running = self_.0.running(object);
-                    let (attribute, query) = (self_.0.text(attribute.bytes()), self_.0.query(query.0)?);
-                    self_.0.step(Step::CompileSpatialFilter, &[Arg::Method(method.0), Arg::Str(&attribute), Arg::Query(&query)])
-                }
-
-                #[php(name = "compileArrayFilter", vis = "protected")]
-                pub fn compile_array_filter(
-                    self_: &mut ZendClassObject<$class>,
-                    method: MethodArgument,
-                    attribute: PhpString<'_>,
-                    query: QueryArgument<'_>,
-                ) -> PhpResult<Bytes> {
-                    let object = std::ptr::from_mut(&mut self_.std);
-                    let _running = self_.0.running(object);
-                    let (attribute, query) = (self_.0.text(attribute.bytes()), self_.0.query(query.0)?);
-                    self_.0.step(Step::CompileArrayFilter, &[Arg::Method(method.0), Arg::Str(&attribute), Arg::Query(&query)])
-                }
-            )?
-
-            $(
-                #[php(name = "geometryToWkt", vis = "protected")]
-                pub fn geometry_to_wkt(&self, geometry: Arr<'_>) -> PhpResult<Bytes> {
-                    let _: bool = $spatial;
-                    let geometry = self.0.values(&geometry)?;
-                    let wkt = utopia_query::builder::geometry_to_wkt(&geometry).map_err(|error| raised(&error))?;
-                    Ok(Bytes(wkt.into_bytes()))
-                }
-            )?
 
             #[php(name = "compileLike", vis = "protected", optional = column)]
             pub fn compile_like(
@@ -2069,6 +2528,8 @@ macro_rules! builder_class {
                 let (value, column) = (self_.0.value(value)?, self_.0.maybe(column.as_ref()));
                 self_.0.step(Step::AddBinding, &[Arg::Value(&value), Arg::MaybeStr(column.as_deref())]).map(drop)
             }
+
+            $($methods)*
         }
     };
 }
@@ -2107,9 +2568,7 @@ builder_class!(
     #[php(extends(Sql))]
     MySqlBuilder,
     MySqlDialect,
-    sql = true,
-    spatial = true,
-    literal = true
+    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, mysql_family, explain_format]
 );
 builder_class!(
     /// `Utopia\Query\Builder\MariaDB`.
@@ -2118,9 +2577,7 @@ builder_class!(
     #[php(extends(MySqlBuilder))]
     MariaDbBuilder,
     MariaDbDialect,
-    sql = true,
-    spatial = true,
-    literal = true
+    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, returning, mysql_family, explain_format]
 );
 builder_class!(
     /// `Utopia\Query\Builder\PostgreSQL`.
@@ -2129,9 +2586,7 @@ builder_class!(
     #[php(extends(Sql))]
     PostgreSqlBuilder,
     PostgreSqlDialect,
-    sql = true,
-    spatial = true,
-    literal = true
+    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, returning, postgres_from, explain_postgres]
 );
 builder_class!(
     /// `Utopia\Query\Builder\SQLite`.
@@ -2140,8 +2595,7 @@ builder_class!(
     #[php(extends(Sql))]
     SqliteBuilder,
     SqliteDialect,
-    sql = true,
-    literal = true
+    [sql, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, explain_plain]
 );
 builder_class!(
     /// `Utopia\Query\Builder\ClickHouse`.
@@ -2150,7 +2604,7 @@ builder_class!(
     #[php(extends(Base))]
     ClickHouseBuilder,
     ClickHouseDialect,
-    literal = true
+    [literal, raw_sql, explain_plain]
 );
 builder_class!(
     /// `Utopia\Query\Builder\MongoDB`.
@@ -2158,5 +2612,6 @@ builder_class!(
     #[php(name = "Utopia\\Query\\Builder\\MongoDB")]
     #[php(extends(Base))]
     MongoDbBuilder,
-    MongoDbDialect
+    MongoDbDialect,
+    [upsert, insert_or_ignore, explain_plain]
 );

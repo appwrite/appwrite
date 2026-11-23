@@ -10,6 +10,7 @@ use std::sync::Arc;
 
 use crate::builder::core::{Builder, Dialect};
 use crate::builder::join::JoinBuilder;
+use crate::builder::types::Statement;
 use crate::error::{Error, Result};
 use crate::method::Method;
 use crate::query::Query;
@@ -68,11 +69,13 @@ pub enum Step {
     CompileLike,
     /// `addBinding(mixed $value, ?string $column = null): void`.
     AddBinding,
+    /// `build(): Statement`.
+    Build,
 }
 
 impl Step {
     /// Every step, in the order of the enum.
-    pub const ALL: [Step; 25] = [
+    pub const ALL: [Step; 26] = [
         Step::CompileFilter,
         Step::CompileOrder,
         Step::CompileLimit,
@@ -98,6 +101,7 @@ impl Step {
         Step::ResolveAndWrap,
         Step::CompileLike,
         Step::AddBinding,
+        Step::Build,
     ];
 
     /// The PHP method.
@@ -128,6 +132,7 @@ impl Step {
             Step::ResolveAndWrap => "resolveAndWrap",
             Step::CompileLike => "compileLike",
             Step::AddBinding => "addBinding",
+            Step::Build => "build",
         }
     }
 }
@@ -154,19 +159,21 @@ pub enum Arg<'a> {
 }
 
 /// What a [`Step`] returns.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub enum Ret {
     /// `void`.
     None,
     /// A `string`.
     Str(String),
+    /// A `Statement`.
+    Statement(Statement),
 }
 
 impl Ret {
     fn string(self) -> Result<String> {
         match self {
             Ret::Str(text) => Ok(text),
-            Ret::None => Err(Error::Validation("A builder step returned nothing where it returns a string".into())),
+            _ => Err(Error::Validation("A builder step did not return a string".into())),
         }
     }
 }
@@ -258,6 +265,7 @@ impl<D: Dialect> Builder<D> {
                 self.base_add_binding((*value).clone(), *column);
                 Ok(Ret::None)
             }
+            (Step::Build, []) => self.build().map(Ret::Statement),
             // A step only some dialects have.
             _ => D::base_step(self, step, arguments).unwrap_or_else(|| Err(wrong(step))),
         }
@@ -268,6 +276,15 @@ impl<D: Dialect> Builder<D> {
         match self.overridden(step, arguments) {
             Some(result) => result,
             None => self.base(step, arguments),
+        }
+    }
+
+    /// `$this->build()`: the subclass's own when it overrides it. `explain()` and
+    /// `toRawSql()` build through this.
+    pub(crate) fn built(&mut self) -> Result<Statement> {
+        match self.step(Step::Build, &[])? {
+            Ret::Statement(statement) => Ok(statement),
+            _ => Err(Error::Validation("build() did not return a statement".into())),
         }
     }
 

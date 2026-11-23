@@ -1221,7 +1221,7 @@ impl<D: Dialect> Builder<D> {
     }
 
     pub(crate) fn base_explain(&mut self, analyze: bool) -> Result<Statement> {
-        let result = D::build(self)?;
+        let result = self.built()?;
         let prefix = if analyze { "EXPLAIN ANALYZE " } else { "EXPLAIN " };
         Ok(Statement::with_parts(
             format!("{prefix}{}", result.query),

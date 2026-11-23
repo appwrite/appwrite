@@ -333,7 +333,7 @@ pub(crate) fn insert_default_values<D: Dialect>(b: &mut Builder<D>) -> Result<St
 
 /// `EXPLAIN [ANALYZE] [FORMAT=...]`.
 pub(crate) fn explain<D: Dialect>(b: &mut Builder<D>, analyze: bool, options: &ExplainOptions) -> Result<Statement> {
-    let result = D::build(b)?;
+    let result = b.built()?;
     let mut prefix = "EXPLAIN".to_owned();
     if analyze {
         prefix.push_str(" ANALYZE");
