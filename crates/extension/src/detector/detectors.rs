@@ -4,20 +4,23 @@
 //! option's own method otherwise), the crate's ranking, manifest parsing and static fallback, and
 //! `setPackager()` on the option it returns.
 
-use ext_php_rs::types::{ZendHashTable, ZendObject, Zval};
+use std::borrow::Cow;
+
+use ext_php_rs::types::{ZendObject, Zval};
 use ext_php_rs::zend::{ClassEntry, ExecuteData};
 use php_std::path::pathinfo_extension;
-use utopia_detector::{Score, Strategy};
+use utopia_detector::{Framework, Score, Strategy};
 
 use super::detections::{framework_of, packager_of, runtime_of, ssr_files_of};
 use super::{
-    Class, DETECTION, DETECTION_NAME, DETECTOR, FRAMEWORK, FRAMEWORK_DETECTION, FRAMEWORK_DETECTION_NAME,
-    FRAMEWORK_DETECTION_PACKAGER, FRAMEWORK_OPTIONS, FRAMEWORK_PACKAGER, GET_FILE_EXTENSIONS, GET_FILES, GET_LANGUAGES,
-    GET_NAME, GET_PACKAGES, GET_VALUE, INPUTS, OPTIONS, PACKAGER_DETECTION_NAME, PACKAGER_OPTIONS, Param, RENDERING,
-    RENDERING_DETECTION_NAME, RENDERING_FRAMEWORK, RENDERING_OPTIONS, RUNTIME, RUNTIME_DETECTION,
-    RUNTIME_DETECTION_NAME, RUNTIME_DETECTION_PACKAGER, RUNTIME_OPTIONS, RUNTIME_PACKAGER, RUNTIME_STRATEGY,
-    SET_PACKAGER, SSR, STRATEGY, STRATEGY_NAME, STRATEGY_VALUE, Ty, XSTATIC, abstract_method, append, args, class,
-    guard, list, method, protected_method, read, return_this, strings, throw, write,
+    Class, DETECTION, DETECTION_NAME, DETECTOR, FALLBACK_FILE, FRAMEWORK, FRAMEWORK_DETECTION,
+    FRAMEWORK_DETECTION_NAME, FRAMEWORK_DETECTION_PACKAGER, FRAMEWORK_OPTIONS, FRAMEWORK_PACKAGER, Frozen,
+    GET_FILE_EXTENSIONS, GET_FILES, GET_LANGUAGES, GET_NAME, GET_PACKAGES, GET_VALUE, INPUTS, OPTIONS,
+    PACKAGER_DETECTION_NAME, PACKAGER_OPTIONS, Param, RENDERING, RENDERING_DETECTION_NAME, RENDERING_FRAMEWORK,
+    RENDERING_OPTIONS, RUNTIME, RUNTIME_DETECTION, RUNTIME_DETECTION_NAME, RUNTIME_DETECTION_PACKAGER, RUNTIME_OPTIONS,
+    RUNTIME_PACKAGER, RUNTIME_STRATEGY, SET_PACKAGER, SSR, STRATEGY, STRATEGY_NAME, STRATEGY_VALUE, Ty, XSTATIC,
+    abstract_method, add_ref, append, arity, class, guard, guard_engine, list, method, protected_method, read,
+    return_this, str_value, strings, strings_, throw, with_str, write,
 };
 use crate::classes::engine::{
     self, Declared, Key, MAY_BE_ARRAY, MAY_BE_STRING, PropertyType, call_method, call_own_method, dimension,
@@ -171,51 +174,87 @@ fn declare_string(class: &mut ClassEntry, property: &'static engine::Property, d
 /// `public function __construct() {}` (the detectors' `parent::__construct()` does nothing).
 extern "C" fn construct(_: &mut ExecuteData, _: &mut Zval) {}
 
-/// The `string $content, string $type = ''` of `addInput()`, coerced.
-fn input_args(ex: &mut ExecuteData) -> Option<(Zval, Zval)> {
-    let mut args = args(ex, 1, 2)?.into_iter();
-    let content = engine::str_zval_arg(ex, 1, args.next()?)?;
-    let kind = match args.next() {
-        Some(arg) => engine::str_zval_arg(ex, 2, arg)?,
-        None => engine::string(b""),
-    };
-    Some((content, kind))
-}
-
-/// `$this->inputs[] = ['type' => $type, 'content' => $content];`, then `return $this;`.
-fn push_input(ex: &mut ExecuteData, retval: &mut Zval, content: Zval, kind: Zval) {
-    let mut input = ZendHashTable::new();
-    if input.insert("type", kind).is_err() || input.insert("content", content).is_err() {
+/// `addInput(string $content, string $type = '')`: `$this->inputs[] = ['type' => $type,
+/// 'content' => $content]`, then `return $this`. A `Framework` (`check`) first refuses a type
+/// other than `file` and `packages` with an `\InvalidArgumentException`. The arguments go into
+/// the new array where they lie, with a reference added, as PHP's literal takes them.
+#[inline(always)]
+fn add_input_to(ex: &mut ExecuteData, retval: &mut Zval, check: bool) {
+    if !arity(ex, 1, 2) {
         return;
     }
-    let mut value = Zval::new();
-    value.set_hashtable(input);
+    let Some(content_arg) = engine::arg(ex, 0) else { return };
+    let coerced_content;
+    let content: &Zval = if content_arg.is_string() {
+        content_arg
+    } else {
+        let Some(value) = engine::str_zval_arg(ex, 1, content_arg) else { return };
+        coerced_content = value;
+        &coerced_content
+    };
+    let strings = strings_();
+    let coerced_kind;
+    let kind: &Zval = match engine::arg(ex, 1) {
+        Some(arg) if arg.is_string() => arg,
+        Some(arg) => {
+            let Some(value) = str_value(ex, 2, arg) else { return };
+            coerced_kind = value;
+            &coerced_kind
+        }
+        None => &strings.empty.0,
+    };
+    if check {
+        let bytes = kind.zend_str().map_or(&[][..], |s| s.as_bytes());
+        if !std::str::from_utf8(bytes).is_ok_and(|kind| utopia_detector::Input::new(kind).is_ok()) {
+            throw("InvalidArgumentException", &[b"Invalid input type '".as_slice(), bytes, b"'"].concat());
+            return;
+        }
+    }
+    let mut input = std::mem::MaybeUninit::<Zval>::uninit();
+    // SAFETY: a new table of two, filled with the interned keys PHP's literal uses; each value is
+    // copied where it lies, with the reference `add_ref` adds. The zval is written field by field
+    // before it is read.
+    unsafe {
+        let table = ext_php_rs::ffi::_zend_new_array(2);
+        add_ref(kind, false);
+        ext_php_rs::ffi::zend_hash_add_new(table, strings.type_key.0.value.str_, std::ptr::from_ref(kind).cast_mut());
+        add_ref(content, false);
+        ext_php_rs::ffi::zend_hash_add_new(
+            table,
+            strings.content_key.0.value.str_,
+            std::ptr::from_ref(content).cast_mut(),
+        );
+        let input = input.as_mut_ptr();
+        (*input).value.arr = table;
+        (*input).u1.type_info = engine::IS_ARRAY_EX;
+        (*input).u2.next = 0;
+    }
+    // SAFETY: written above.
+    let input = unsafe { input.assume_init_ref() };
     let Some(this) = this(ex) else { return };
-    if append(this, DETECTOR, &INPUTS, "inputs", value).is_some() {
+    if append(this, DETECTOR, &INPUTS, "inputs", input, true).is_some() {
         return_this(ex, retval);
     }
 }
 
 /// `Detector::addInput(string $content, string $type = ''): self`.
 extern "C" fn add_input(ex: &mut ExecuteData, retval: &mut Zval) {
-    guard(|| {
-        let Some((content, kind)) = input_args(ex) else { return };
-        push_input(ex, retval, content, kind);
-    });
+    guard(|| add_input_to(ex, retval, false));
 }
 
 /// `Detector::addOption(Detection $option): self`.
 extern "C" fn add_option(ex: &mut ExecuteData, retval: &mut Zval) {
     guard(|| {
-        let Some(mut args) = args(ex, 1, 1) else { return };
-        let option = args.remove(0).dereference();
+        if !arity(ex, 1, 1) {
+            return;
+        }
+        let Some(option) = engine::arg(ex, 0).map(|arg| arg.dereference()) else { return };
         if !option.object().is_some_and(|object| object.instance_of(class(DETECTION))) {
             engine::type_error(ex, 1, DETECTION_NAME, option);
             return;
         }
-        let option = option.shallow_clone();
         let Some(this) = this(ex) else { return };
-        if append(this, DETECTOR, &OPTIONS, "options", option).is_some() {
+        if append(this, DETECTOR, &OPTIONS, "options", option, false).is_some() {
             return_this(ex, retval);
         }
     });
@@ -224,39 +263,39 @@ extern "C" fn add_option(ex: &mut ExecuteData, retval: &mut Zval) {
 /// `Strategy::__construct(string $value)`: one of the three strategies, or `\Exception`.
 extern "C" fn strategy_construct(ex: &mut ExecuteData, _: &mut Zval) {
     guard(|| {
-        let Some(mut args) = args(ex, 1, 1) else { return };
-        let Some(value) = engine::str_arg(ex, 1, args.remove(0)) else { return };
-        match std::str::from_utf8(&value).ok().map(Strategy::new) {
-            Some(Ok(strategy)) => {
-                let Some(this) = this(ex) else { return };
-                write(this, STRATEGY, &STRATEGY_VALUE, engine::string(strategy.value().as_bytes()));
-            }
+        if !arity(ex, 1, 1) {
+            return;
+        }
+        let Some(arg) = engine::arg(ex, 0) else { return };
+        let Some(value) = str_value(ex, 1, arg) else { return };
+        let bytes = value.zend_str().map_or(&[][..], |s| s.as_bytes());
+        if std::str::from_utf8(bytes).is_ok_and(|value| Strategy::new(value).is_ok()) {
+            let Some(this) = this(ex) else { return };
+            write(this, STRATEGY, &STRATEGY_VALUE, value);
+        } else {
             // The crate's message, with the value's bytes as they were passed.
-            _ => throw("Exception", &[b"Invalid strategy: ".as_slice(), &value].concat()),
+            throw("Exception", &[b"Invalid strategy: ".as_slice(), bytes].concat());
         }
     });
 }
 
 /// `Strategy::getValue(): string`.
 extern "C" fn strategy_value(ex: &mut ExecuteData, retval: &mut Zval) {
-    guard(|| {
-        let Some(this) = this(ex) else { return };
-        if let Some(value) = read(this, STRATEGY, &STRATEGY_VALUE) {
-            *retval = value;
-        }
-    });
+    let Some(this) = this(ex) else { return };
+    if let Some(value) = read(this, STRATEGY, &STRATEGY_VALUE) {
+        *retval = value;
+    }
 }
 
 /// `Framework::__construct(string $packager = 'pnpm')`.
 extern "C" fn framework_construct(ex: &mut ExecuteData, _: &mut Zval) {
     guard(|| {
-        let Some(args) = args(ex, 0, 1) else { return };
-        let packager = match args.into_iter().next() {
+        let packager = match engine::arg(ex, 0) {
             Some(arg) => {
-                let Some(packager) = engine::str_zval_arg(ex, 1, arg) else { return };
+                let Some(packager) = str_value(ex, 1, arg) else { return };
                 packager
             }
-            None => engine::string(b"pnpm"),
+            None => strings_().pnpm.zval(),
         };
         let Some(this) = this(ex) else { return };
         write(this, FRAMEWORK, &FRAMEWORK_PACKAGER, packager);
@@ -266,22 +305,17 @@ extern "C" fn framework_construct(ex: &mut ExecuteData, _: &mut Zval) {
 /// `Framework::addInput()`: a type other than `file` and `packages` is an
 /// `\InvalidArgumentException`.
 extern "C" fn framework_add_input(ex: &mut ExecuteData, retval: &mut Zval) {
-    guard(|| {
-        let Some((content, kind)) = input_args(ex) else { return };
-        let bytes = kind.zend_str().map(|s| s.as_bytes().to_vec()).unwrap_or_default();
-        if !std::str::from_utf8(&bytes).is_ok_and(|kind| utopia_detector::Input::new(kind).is_ok()) {
-            throw("InvalidArgumentException", &[b"Invalid input type '".as_slice(), &bytes, b"'"].concat());
-            return;
-        }
-        push_input(ex, retval, content, kind);
-    });
+    guard(|| add_input_to(ex, retval, true));
 }
 
 /// `Rendering::__construct(string $framework)`.
 extern "C" fn rendering_construct(ex: &mut ExecuteData, _: &mut Zval) {
     guard(|| {
-        let Some(mut args) = args(ex, 1, 1) else { return };
-        let Some(framework) = engine::str_zval_arg(ex, 1, args.remove(0)) else { return };
+        if !arity(ex, 1, 1) {
+            return;
+        }
+        let Some(arg) = engine::arg(ex, 0) else { return };
+        let Some(framework) = str_value(ex, 1, arg) else { return };
         let Some(this) = this(ex) else { return };
         write(this, RENDERING, &RENDERING_FRAMEWORK, framework);
     });
@@ -290,20 +324,21 @@ extern "C" fn rendering_construct(ex: &mut ExecuteData, _: &mut Zval) {
 /// `Runtime::__construct(Strategy $strategy, string $packager = 'pnpm')`.
 extern "C" fn runtime_construct(ex: &mut ExecuteData, _: &mut Zval) {
     guard(|| {
-        let Some(args) = args(ex, 1, 2) else { return };
-        let mut args = args.into_iter();
-        let Some(strategy) = args.next().map(|arg| arg.dereference()) else { return };
+        if !arity(ex, 1, 2) {
+            return;
+        }
+        let Some(strategy) = engine::arg(ex, 0).map(|arg| arg.dereference()) else { return };
         if !strategy.object().is_some_and(|object| object.instance_of(class(STRATEGY))) {
             engine::type_error(ex, 1, STRATEGY_NAME, strategy);
             return;
         }
         let strategy = strategy.shallow_clone();
-        let packager = match args.next() {
+        let packager = match engine::arg(ex, 1) {
             Some(arg) => {
-                let Some(packager) = engine::str_zval_arg(ex, 2, arg) else { return };
+                let Some(packager) = str_value(ex, 2, arg) else { return };
                 packager
             }
-            None => engine::string(b"pnpm"),
+            None => strings_().pnpm.zval(),
         };
         let Some(this) = this(ex) else { return };
         write(this, RUNTIME, &RUNTIME_STRATEGY, strategy);
@@ -313,22 +348,51 @@ extern "C" fn runtime_construct(ex: &mut ExecuteData, _: &mut Zval) {
 
 // What detect() shares ------------------------------------------------------------------
 
-/// The values of the array property `property` (`$this->inputs`, `$this->options`), each a new
-/// reference, so the array may change while they are used.
-fn items(this: &mut ZendObject, property: &engine::Property) -> Option<Vec<Zval>> {
-    let array = read(this, DETECTOR, property)?;
-    Some(array.array().map_or_else(Vec::new, |table| {
-        engine::values(table).map(|value| value.dereference().shallow_clone()).collect()
-    }))
+/// The values of an array property held for `detect()` (a reference to it is kept, so a method
+/// `detect()` calls that changes the property leaves these as they were), references resolved.
+fn values_of(array: &Zval) -> Vec<&Zval> {
+    array.array().map_or_else(Vec::new, |table| engine::values(table).map(Zval::dereference).collect())
 }
 
-/// `$input['content']` of each input, as PHP's `(string)` makes it.
-fn contents<'a>(inputs: impl IntoIterator<Item = &'a Zval>) -> Option<Vec<Vec<u8>>> {
-    inputs.into_iter().map(|input| engine::to_string(&dimension(input, "content")?)).collect()
+/// `$input[$key]` found without the engine (no key to build or hash), when `$input` is an array
+/// holding it; `None` sends the caller the engine's way, with its warnings.
+#[inline]
+fn field<'a>(input: &'a Zval, key: &Frozen) -> Option<&'a Zval> {
+    let table = input.array()?;
+    // SAFETY: a live table and an interned key; the value found lives as long as the table.
+    unsafe {
+        ext_php_rs::ffi::zend_hash_find(std::ptr::from_ref(table).cast(), key.0.value.str_)
+            .as_ref()
+            .map(Zval::dereference)
+    }
+}
+
+/// `$input['content']` as PHP's `(string)` makes it: the string's own bytes when it is one.
+fn content(input: &Zval) -> Option<Cow<'_, [u8]>> {
+    if let Some(string) = field(input, &strings_().content_key).and_then(Zval::zend_str) {
+        return Some(Cow::Borrowed(string.as_bytes()));
+    }
+    Some(Cow::Owned(engine::to_string(&dimension(input, "content")?)?))
+}
+
+/// `$input['content']` itself, as an argument.
+fn content_value(input: &Zval) -> Option<Zval> {
+    match field(input, &strings_().content_key) {
+        Some(value) => Some(value.shallow_clone()),
+        None => dimension(input, "content"),
+    }
+}
+
+/// `$input['content']` of each input.
+fn contents<'a>(inputs: &[&'a Zval]) -> Option<Vec<Cow<'a, [u8]>>> {
+    inputs.iter().map(|input| content(input)).collect()
 }
 
 /// Whether `$input['type'] === $kind`.
 fn is_type(input: &Zval, kind: &[u8]) -> Option<bool> {
+    if let Some(value) = field(input, &strings_().type_key) {
+        return Some(value.zend_str().is_some_and(|s| s.as_bytes() == kind));
+    }
     let value = dimension(input, "type")?;
     Some(value.zend_str().is_some_and(|s| s.as_bytes() == kind))
 }
@@ -339,7 +403,7 @@ fn class_of(option: &Zval) -> Option<&ClassEntry> {
     option.object().and_then(|object| unsafe { object.ce.as_ref() })
 }
 
-/// `$option->method(...$args)`'s string values (an array of names), in order.
+/// `$option->method(...$args)`'s values as `(string)` makes them (an array of names), in order.
 fn called_strings(option: &Zval, method: &engine::Callee, args: &[&Zval]) -> Option<Vec<Vec<u8>>> {
     strings(&call_method(option, method, args)?)
 }
@@ -347,16 +411,18 @@ fn called_strings(option: &Zval, method: &engine::Callee, args: &[&Zval]) -> Opt
 /// The string values of `$option->method()` (what `in_array(..., true)` can find among strings).
 fn called_string_values(option: &Zval, method: &engine::Callee) -> Option<Vec<Vec<u8>>> {
     let value = call_method(option, method, &[])?;
-    Some(value.array().map_or_else(Vec::new, |table| {
-        engine::values(table).filter_map(|item| item.dereference().zend_str().map(|s| s.as_bytes().to_vec())).collect()
-    }))
+    Some(string_values(&value))
 }
 
-/// `$option->getName()`.
-fn name_of(option: &Zval) -> Option<Vec<u8>> {
-    if let Some(framework) = class_of(option).and_then(|ce| framework_of(ce)) {
-        return Some(framework.name().as_bytes().to_vec());
-    }
+/// The string values of an array, in order.
+fn string_values(value: &Zval) -> Vec<Vec<u8>> {
+    value.array().map_or_else(Vec::new, |table| {
+        engine::values(table).filter_map(|item| item.dereference().zend_str().map(|s| s.as_bytes().to_vec())).collect()
+    })
+}
+
+/// `$option->getName()` on an option that is not native.
+fn called_name(option: &Zval) -> Option<Vec<u8>> {
     engine::to_string(&call_method(option, &GET_NAME, &[])?)
 }
 
@@ -382,8 +448,8 @@ fn set_packager(
 }
 
 /// Whether `bytes` is among `inputs`.
-fn among(inputs: &[Vec<u8>], bytes: &[u8]) -> bool {
-    inputs.iter().any(|input| input.as_slice() == bytes)
+fn among<T: AsRef<[u8]>>(inputs: &[T], bytes: &[u8]) -> bool {
+    inputs.iter().any(|input| input.as_ref() == bytes)
 }
 
 // Framework -----------------------------------------------------------------------------
@@ -406,15 +472,17 @@ fn overrides_dependencies(this: &ZendObject) -> bool {
 /// `Framework::dependencies(string $manifest): array`.
 extern "C" fn dependencies(ex: &mut ExecuteData, retval: &mut Zval) {
     guard(|| {
-        let Some(mut args) = args(ex, 1, 1) else { return };
-        let Some(manifest) = engine::str_arg(ex, 1, args.remove(0)) else { return };
-        let names = utopia_detector::dependencies(&manifest);
+        if !arity(ex, 1, 1) {
+            return;
+        }
+        let Some(arg) = engine::arg(ex, 0) else { return };
+        let Some(names) = with_str(ex, 1, arg, utopia_detector::dependencies) else { return };
         *retval = list(names.iter().map(Vec::as_slice));
     });
 }
 
 extern "C" fn framework_detect(ex: &mut ExecuteData, retval: &mut Zval) {
-    guard(|| {
+    guard_engine(|| {
         let Some(this) = this(ex) else { return };
         if let Some(found) = detect_framework(this) {
             *retval = found;
@@ -425,84 +493,96 @@ extern "C" fn framework_detect(ex: &mut ExecuteData, retval: &mut Zval) {
 /// `Framework::detect()`: the option the crate ranks first, or `None` (`null`, or an exception
 /// pending).
 fn detect_framework(this: &mut ZendObject) -> Option<Zval> {
-    let inputs = items(this, &INPUTS)?;
+    let inputs = read(this, DETECTOR, &INPUTS)?;
+    let inputs = values_of(&inputs);
     let mut file_inputs = Vec::new();
     for input in &inputs {
         if is_type(input, b"file")? {
-            file_inputs.push(input);
+            file_inputs.push(*input);
         }
     }
-    let files = contents(file_inputs)?;
+    let files = contents(&file_inputs)?;
     let mut manifest_inputs = Vec::new();
     for input in &inputs {
         if is_type(input, b"packages")? {
-            manifest_inputs.push(input);
+            manifest_inputs.push(*input);
         }
     }
     let overridden = overrides_dependencies(this);
     let mut manifests = Vec::with_capacity(manifest_inputs.len());
     for input in manifest_inputs {
-        let content = dimension(input, "content")?;
         manifests.push(if overridden {
-            let names = call_own_method(this, "dependencies", &[&content])?;
-            names.array().map_or_else(Vec::new, |table| {
-                engine::values(table)
-                    .filter_map(|item| item.dereference().zend_str().map(|s| s.as_bytes().to_vec()))
-                    .collect()
-            })
+            let content = content_value(input)?;
+            string_values(&call_own_method(this, "dependencies", &[&content])?)
         } else {
-            utopia_detector::dependencies(&engine::to_string(&content)?)
+            utopia_detector::dependencies(&content(input)?)
         });
     }
 
-    let options = items(this, &OPTIONS)?;
+    let options = read(this, DETECTOR, &OPTIONS)?;
+    let options = values_of(&options);
+    let natives: Vec<Option<&'static dyn Framework>> =
+        options.iter().map(|option| class_of(option).and_then(|ce| framework_of(ce))).collect();
+    let file_refs: Vec<&[u8]> = files.iter().map(|file| &**file).collect();
     // What PHP adds up under the key `getName()` gives at each step, in order: both arrays start
     // at 0 for every option, then each option adds one per package found, its files, and one
-    // per parent class, asking for its name each time. A native option answers from the crate.
-    let mut entries: Vec<(Vec<u8>, usize, usize)> = Vec::new();
-    for option in &options {
-        let name = name_of(option)?;
-        name_of(option)?;
-        entries.push((name, 0, 0));
+    // per parent class, asking for its name each time. A native option answers from the crate,
+    // all at once: nothing it does can be seen.
+    let mut entries: Vec<(Cow<'static, [u8]>, usize, usize)> = Vec::with_capacity(options.len() * 2);
+    for (option, native) in options.iter().zip(&natives) {
+        match native {
+            Some(framework) => entries.push((Cow::Borrowed(framework.name().as_bytes()), 0, 0)),
+            None => {
+                let name = called_name(option)?;
+                called_name(option)?;
+                entries.push((Cow::Owned(name), 0, 0));
+            }
+        }
     }
-    let file_refs: Vec<&[u8]> = files.iter().map(Vec::as_slice).collect();
-    for option in &options {
-        let native = class_of(option).and_then(|ce| framework_of(ce));
+    for (option, native) in options.iter().zip(&natives) {
+        if let Some(framework) = native {
+            let matches = utopia_detector::matches(
+                framework.files().iter().map(|f| f.as_bytes()),
+                framework.packages().iter().map(|p| p.as_bytes()),
+                &file_refs,
+                &manifests,
+            );
+            let parents = class_of(option).map_or(0, parents);
+            entries.push((Cow::Borrowed(framework.name().as_bytes()), matches, parents));
+            continue;
+        }
         for manifest in &manifests {
-            let packages = match native {
-                Some(framework) => framework.packages().iter().map(|p| p.as_bytes().to_vec()).collect(),
-                None => called_string_values(option, &GET_PACKAGES)?,
-            };
-            for package in &packages {
+            for package in called_string_values(option, &GET_PACKAGES)? {
                 if utopia_detector::matches([], [package.as_slice()], &[], std::slice::from_ref(manifest)) > 0 {
-                    entries.push((name_of(option)?, 1, 0));
+                    entries.push((Cow::Owned(called_name(option)?), 1, 0));
                 }
             }
         }
-        let option_files = match native {
-            Some(framework) => framework.files().iter().map(|f| f.as_bytes().to_vec()).collect(),
-            None => called_strings(option, &GET_FILES, &[])?,
-        };
+        let option_files = called_strings(option, &GET_FILES, &[])?;
         let matches = utopia_detector::matches(option_files.iter().map(Vec::as_slice), [], &file_refs, &[]);
-        entries.push((name_of(option)?, matches, 0));
+        entries.push((Cow::Owned(called_name(option)?), matches, 0));
         for _ in 0..class_of(option).map_or(0, parents) {
-            entries.push((name_of(option)?, 0, 1));
+            entries.push((Cow::Owned(called_name(option)?), 0, 1));
         }
     }
     let scores = entries.iter().map(|(name, matches, parents)| Score { name, matches: *matches, parents: *parents });
 
-    let best = utopia_detector::best(scores)?.to_vec();
+    let best = utopia_detector::best(scores)?;
     // PHP keys the scores by name: a name that is a decimal integer becomes an integer key, which
     // `getName() === $bestFramework` never matches.
-    if matches!(Key::of(&best), Key::Index(_)) {
+    if matches!(Key::of(best), Key::Index(_)) {
         return None;
     }
-    for mut option in options {
-        if name_of(&option)? == best {
+    for (option, native) in options.iter().zip(&natives) {
+        let name = match native {
+            Some(framework) => Cow::Borrowed(framework.name().as_bytes()),
+            None => Cow::Owned(called_name(option)?),
+        };
+        if *name == *best {
             let packager = read(this, FRAMEWORK, &FRAMEWORK_PACKAGER)?;
-            let native = class_of(&option).and_then(|ce| framework_of(ce)).is_some();
-            set_packager(&mut option, native, FRAMEWORK_DETECTION, &FRAMEWORK_DETECTION_PACKAGER, packager)?;
-            return Some(option);
+            let mut found = option.shallow_clone();
+            set_packager(&mut found, native.is_some(), FRAMEWORK_DETECTION, &FRAMEWORK_DETECTION_PACKAGER, packager)?;
+            return Some(found);
         }
     }
     None
@@ -511,7 +591,7 @@ fn detect_framework(this: &mut ZendObject) -> Option<Zval> {
 // Packager ------------------------------------------------------------------------------
 
 extern "C" fn packager_detect(ex: &mut ExecuteData, retval: &mut Zval) {
-    guard(|| {
+    guard_engine(|| {
         let Some(this) = this(ex) else { return };
         if let Some(found) = detect_packager(this) {
             *retval = found;
@@ -521,14 +601,16 @@ extern "C" fn packager_detect(ex: &mut ExecuteData, retval: &mut Zval) {
 
 /// `Packager::detect()`: the first option with one of its files among the inputs.
 fn detect_packager(this: &mut ZendObject) -> Option<Zval> {
-    let files = contents(&items(this, &INPUTS)?)?;
-    for option in items(this, &OPTIONS)? {
-        let found = match class_of(&option).and_then(|ce| packager_of(ce)) {
+    let inputs = read(this, DETECTOR, &INPUTS)?;
+    let files = contents(&values_of(&inputs))?;
+    let options = read(this, DETECTOR, &OPTIONS)?;
+    for option in values_of(&options) {
+        let found = match class_of(option).and_then(|ce| packager_of(ce)) {
             Some(packager) => packager.files().iter().any(|f| among(&files, f.as_bytes())),
-            None => called_strings(&option, &GET_FILES, &[])?.iter().any(|f| among(&files, f)),
+            None => called_strings(option, &GET_FILES, &[])?.iter().any(|f| among(&files, f)),
         };
         if found {
-            return Some(option);
+            return Some(option.shallow_clone());
         }
     }
     None
@@ -537,7 +619,7 @@ fn detect_packager(this: &mut ZendObject) -> Option<Zval> {
 // Runtime -------------------------------------------------------------------------------
 
 extern "C" fn runtime_detect(ex: &mut ExecuteData, retval: &mut Zval) {
-    guard(|| {
+    guard_engine(|| {
         let Some(this) = this(ex) else { return };
         if let Some(found) = detect_runtime(this) {
             *retval = found;
@@ -547,7 +629,8 @@ extern "C" fn runtime_detect(ex: &mut ExecuteData, retval: &mut Zval) {
 
 /// `Runtime::detect()`: the first option matching the inputs by the strategy.
 fn detect_runtime(this: &mut ZendObject) -> Option<Zval> {
-    let inputs = contents(&items(this, &INPUTS)?)?;
+    let inputs = read(this, DETECTOR, &INPUTS)?;
+    let inputs = contents(&values_of(&inputs))?;
     let mut strategy = read(this, RUNTIME, &RUNTIME_STRATEGY)?;
     let value = match strategy.object_mut() {
         Some(object) if std::ptr::eq(object.ce, class(STRATEGY)) => read(object, STRATEGY, &STRATEGY_VALUE)?,
@@ -558,26 +641,28 @@ fn detect_runtime(this: &mut ZendObject) -> Option<Zval> {
         Strategy::Extension => inputs.iter().map(|input| pathinfo_extension(input)).collect(),
         _ => Vec::new(),
     };
-    for mut option in items(this, &OPTIONS)? {
-        let native = class_of(&option).and_then(|ce| runtime_of(ce));
+    let options = read(this, DETECTOR, &OPTIONS)?;
+    for option in values_of(&options) {
+        let native = class_of(option).and_then(|ce| runtime_of(ce));
         let found = match (strategy, native) {
             (Strategy::FileMatch, Some(runtime)) => runtime.files().iter().any(|f| among(&inputs, f.as_bytes())),
-            (Strategy::FileMatch, None) => called_strings(&option, &GET_FILES, &[])?.iter().any(|f| among(&inputs, f)),
+            (Strategy::FileMatch, None) => called_strings(option, &GET_FILES, &[])?.iter().any(|f| among(&inputs, f)),
             (Strategy::Extension, Some(runtime)) => {
                 runtime.file_extensions().iter().any(|e| extensions.contains(&e.as_bytes()))
             }
             (Strategy::Extension, None) => {
-                called_strings(&option, &GET_FILE_EXTENSIONS, &[])?.iter().any(|e| extensions.contains(&e.as_slice()))
+                called_strings(option, &GET_FILE_EXTENSIONS, &[])?.iter().any(|e| extensions.contains(&e.as_slice()))
             }
             (Strategy::Languages, Some(runtime)) => runtime.languages().iter().any(|l| among(&inputs, l.as_bytes())),
             (Strategy::Languages, None) => {
-                called_strings(&option, &GET_LANGUAGES, &[])?.iter().any(|l| among(&inputs, l))
+                called_strings(option, &GET_LANGUAGES, &[])?.iter().any(|l| among(&inputs, l))
             }
         };
         if found {
             let packager = read(this, RUNTIME, &RUNTIME_PACKAGER)?;
-            set_packager(&mut option, native.is_some(), RUNTIME_DETECTION, &RUNTIME_DETECTION_PACKAGER, packager)?;
-            return Some(option);
+            let mut found = option.shallow_clone();
+            set_packager(&mut found, native.is_some(), RUNTIME_DETECTION, &RUNTIME_DETECTION_PACKAGER, packager)?;
+            return Some(found);
         }
     }
     None
@@ -586,7 +671,7 @@ fn detect_runtime(this: &mut ZendObject) -> Option<Zval> {
 // Rendering -----------------------------------------------------------------------------
 
 extern "C" fn rendering_detect(ex: &mut ExecuteData, retval: &mut Zval) {
-    guard(|| {
+    guard_engine(|| {
         let Some(this) = this(ex) else { return };
         if let Some(found) = detect_rendering(this) {
             *retval = found;
@@ -597,30 +682,32 @@ extern "C" fn rendering_detect(ex: &mut ExecuteData, retval: &mut Zval) {
 /// `Rendering::detect()`: the first option with one of its files for the framework among the
 /// inputs, or a new `XStatic` with the only HTML file as its fallback.
 fn detect_rendering(this: &mut ZendObject) -> Option<Zval> {
-    let files = contents(&items(this, &INPUTS)?)?;
-    for option in items(this, &OPTIONS)? {
+    let inputs = read(this, DETECTOR, &INPUTS)?;
+    let files = contents(&values_of(&inputs))?;
+    let options = read(this, DETECTOR, &OPTIONS)?;
+    for option in values_of(&options) {
         // `$strategy->getFiles($this->framework)`: read for each option.
         let framework = read(this, RENDERING, &RENDERING_FRAMEWORK)?;
-        let framework_bytes = framework.zend_str().map(|s| s.as_bytes().to_vec()).unwrap_or_default();
-        let ce = class_of(&option).map(std::ptr::from_ref);
+        let ce = class_of(option).map(std::ptr::from_ref);
         let found = if ce == Some(std::ptr::from_ref(class(SSR))) {
-            ssr_files_of(&framework_bytes).iter().any(|f| among(&files, f.as_bytes()))
+            let name = framework.zend_str().map_or(&[][..], |s| s.as_bytes());
+            ssr_files_of(name).iter().any(|f| among(&files, f.as_bytes()))
         } else if ce == Some(std::ptr::from_ref(class(XSTATIC))) {
             false
         } else {
-            called_strings(&option, &GET_FILES, &[&framework])?.iter().any(|f| among(&files, f))
+            called_strings(option, &GET_FILES, &[&framework])?.iter().any(|f| among(&files, f))
         };
         if found {
-            return Some(option);
+            return Some(option.shallow_clone());
         }
     }
 
-    let fallback = match utopia_detector::html_fallback(files.iter().map(Vec::as_slice)) {
+    let fallback = match utopia_detector::html_fallback(files.iter().map(|file| &**file)) {
         Some(file) => engine::string(file),
         None => Zval::null(),
     };
     let mut object = ZendObject::new(class(XSTATIC));
-    engine::initialize(class(XSTATIC), &mut object, &super::FALLBACK_FILE, fallback);
+    engine::initialize(class(XSTATIC), &mut object, &FALLBACK_FILE, fallback);
     let mut zval = Zval::new();
     zval.set_object(&mut object);
     Some(zval)
