@@ -843,3 +843,75 @@ foreach ($dialects as $dialect) {
         outcome(fn () => (new $class(true))->flag),
     ]);
 }
+
+// Methods called by name with each argument list, on every dialect that has them, ended every way.
+$calls = [
+    'crossJoin' => [['u'], ['u', 'x'], ['bad`name', 'x y']],
+    'naturalJoin' => [['u'], ['u', 'x']],
+    'fullOuterJoin' => [['u', 't.id', 'u.tid'], ['u', 't.id', 'u.tid', '<', 'x'], ['u', 't.id', 'u.tid', 'bad']],
+    'forUpdateSkipLocked' => [[]], 'forUpdateNoWait' => [[]], 'forShareSkipLocked' => [[]], 'forShareNoWait' => [[]],
+    'stddev' => [['a'], ['a', 's'], ['a b', 'x']], 'stddevPop' => [['a'], ['a', 's']], 'stddevSamp' => [['a', 's']],
+    'variance' => [['a'], ['a', 'v']], 'varPop' => [['a', 'v']], 'varSamp' => [['a']],
+    'bitAnd' => [['a'], ['a', 'x']], 'bitOr' => [['a', 'x']], 'bitXor' => [['a']],
+    'selectCast' => [['a', 'INT'], ['a', 'DECIMAL(10,2)', 'd'], ['a', 'drop table'], ['a', 'INT', 'bad alias']],
+    'whereColumn' => [['a', '=', 'b'], ['t.a', '<=', 'u.b'], ['a', 'LIKE', 'b'], ['a', ';', 'b']],
+    'withRollup' => [[]], 'withCube' => [[]], 'withTotals' => [[]],
+    'hint' => [['NO_INDEX_MERGE(t)'], ['max_threads=4'], ['bad;hint'], ['']],
+    'countWhen' => [['a > ?', 'n', 1], ['a > 1'], ['a > ? AND b = ?', '', 1, 'x'], ['a', 'bad alias']],
+    'sumWhen' => [['a', 'b > ?', 's', 1], ['a', 'b > 1']], 'avgWhen' => [['a', 'b > ?', 's', 1.5]],
+    'minWhen' => [['a', 'b IS NULL']], 'maxWhen' => [['a', 'b = ?', 'm', true]],
+    'jsonArrayAgg' => [['a'], ['a', 'j']], 'jsonObjectAgg' => [['k', 'v'], ['k', 'v', 'o']],
+    'filterJsonContains' => [['tags', 'x'], ['tags', ['x', 'y']], ['tags', 5], ['tags', null], ['tags', ['k' => 'v']]],
+    'filterJsonNotContains' => [['tags', 'x'], ['tags', [1, 2]]],
+    'filterJsonOverlaps' => [['tags', ['x', 'y']], ['tags', []], ['tags', [1, 'a', true, null]]],
+    'filterJsonPath' => [['data', 'a.b', '=', 1], ['data', '$.a[0]', '>', 'x'], ['data', 'a', 'bad', 1], ['data', "a'b", '=', 1]],
+    'setJsonAppend' => [['tags', ['x']], ['tags', []], ['tags', ['x', 2, null]]],
+    'setJsonPrepend' => [['tags', ['x', 'y']]],
+    'setJsonInsert' => [['tags', 0, 'x'], ['tags', 3, ['a' => 1]], ['tags', -1, 'x']],
+    'setJsonRemove' => [['tags', 'x'], ['tags', 5], ['tags', ['a']]],
+    'setJsonIntersect' => [['tags', ['x', 'y']]], 'setJsonDiff' => [['tags', ['x']]], 'setJsonUnique' => [['tags']],
+    'setJsonPath' => [['data', '$.a.b', 1], ['data', 'a', 'x'], ['data', "$.a'", null]],
+    'filterSearch' => [['body', 'hello world'], ['body', ''], ['body', '+a -b "c d"*']],
+    'filterNotSearch' => [['body', 'hello'], ['body', 'a@b.c']],
+    'tablesample' => [[10.0], [0.5, 'SYSTEM'], [150.0], [10, 'bad'], [-1.0]],
+    'nextVal' => [['seq'], ['seq', 'n'], ['bad seq']], 'currVal' => [['seq', 'c']],
+    'filterDistance' => [['loc', [1.0, 2.0], '<', 100.0], ['loc', [1, 2], '>=', 5, true], ['loc', [1, 2], 'bad', 5.0], ['loc', [], '<', 1.0]],
+    'filterIntersects' => [['area', [1, 2]], ['area', [[0, 0], [1, 1]]], ['area', [[[0, 0], [1, 0], [1, 1], [0, 0]]]], ['area', []]],
+    'filterNotIntersects' => [['area', [1, 2]]], 'filterCrosses' => [['area', [[0, 0], [1, 1]]]], 'filterNotCrosses' => [['area', [1, 2]]],
+    'filterOverlaps' => [['area', [[[0, 0], [1, 0], [1, 1], [0, 0]]]]], 'filterNotOverlaps' => [['area', [1, 2]]],
+    'filterTouches' => [['area', [1, 2]]], 'filterNotTouches' => [['area', [1, 2]]],
+    'filterCovers' => [['area', [1, 2]]], 'filterNotCovers' => [['area', [1, 2]]],
+    'filterSpatialEquals' => [['area', [1, 2]]], 'filterNotSpatialEquals' => [['area', [1, 2]]],
+];
+$finishes = ['build', 'update', 'delete', 'insert', 'toRawSql'];
+foreach ($dialects as $dialect) {
+    foreach ($calls as $method => $lists) {
+        foreach (['Utopia\\Query\\Builder\\' . $dialect, 'Wraps' . $dialect] as $class) {
+            // MongoDB's hint() takes a key pattern too, and is not moved yet.
+            if (! method_exists($class, $method) || ($dialect === 'MongoDB' && $method === 'hint')) {
+                continue;
+            }
+            $out = [];
+            foreach ($lists as $arguments) {
+                foreach ($finishes as $finish) {
+                    $out[] = ! method_exists($class, $finish) ? 'none' : outcome(function () use ($class, $method, $arguments, $finish) {
+                        $builder = (new $class())->from('t', 't')->select(['a'])->set(['z' => 1])->filter([Query::equal('c', [1])]);
+                        $builder->{$method}(...$arguments);
+
+                        return [$builder->{$finish}(), $builder->getBindings()];
+                    });
+                }
+            }
+            emit($class . ' ' . $method, $out);
+        }
+    }
+    // The transaction statements.
+    $class = 'Utopia\\Query\\Builder\\' . $dialect;
+    if (method_exists($class, 'begin')) {
+        emit($dialect . ' transactions', [
+            outcome(fn () => (new $class())->begin()), outcome(fn () => (new $class())->commit()), outcome(fn () => (new $class())->rollback()),
+            outcome(fn () => (new $class())->savepoint('sp')), outcome(fn () => (new $class())->savepoint('bad name')), outcome(fn () => (new $class())->savepoint('')),
+            outcome(fn () => (new $class())->releaseSavepoint('sp')), outcome(fn () => (new $class())->rollbackToSavepoint('sp')), outcome(fn () => (new $class())->rollbackToSavepoint('a;b')),
+        ]);
+    }
+}

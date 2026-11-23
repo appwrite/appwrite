@@ -221,6 +221,38 @@ impl<'a> FromZval<'a> for Int {
     }
 }
 
+/// A `float` parameter, converted the way PHP converts one outside `strict_types`.
+#[derive(Clone, Copy)]
+pub struct Float(pub(super) f64);
+
+impl StubLiteral for Float {
+    fn stub_literal(&self) -> String {
+        self.0.to_string()
+    }
+}
+
+impl<'a> FromZval<'a> for Float {
+    const TYPE: DataType = DataType::Double;
+
+    fn from_zval(zval: &'a Zval) -> Option<Self> {
+        if let Some(number) = zval.double() {
+            return Some(Self(number));
+        }
+        #[allow(clippy::cast_precision_loss)]
+        if let Some(long) = zval.long() {
+            return Some(Self(long as f64));
+        }
+        if let Some(bool) = zval.bool() {
+            return Some(Self(f64::from(u8::from(bool))));
+        }
+        zval.zend_str()?;
+        if !call("is_numeric", vec![zval]).ok()?.bool()? {
+            return None;
+        }
+        call("floatval", vec![zval]).ok()?.double().map(Self)
+    }
+}
+
 /// A `bool` parameter, converted the way PHP converts one outside `strict_types`.
 #[derive(Clone, Copy)]
 pub struct Bool(pub(super) bool);

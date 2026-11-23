@@ -600,8 +600,12 @@ pub(crate) mod json_sets {
         b.core.json_sets.set(
             column,
             Condition::new(
-                format!("JSON_REMOVE({wrapped}, JSON_UNQUOTE(JSON_SEARCH({wrapped}, 'one', ?)))"),
-                vec![value],
+                // The value is a LIKE pattern to JSON_SEARCH, and a value that is not there removes nothing.
+                format!(
+                    "COALESCE(JSON_REMOVE({wrapped}, JSON_UNQUOTE(JSON_SEARCH({wrapped}, 'one', ?, {}))), {wrapped})",
+                    D::LITERAL.quote(&char::from(D::LIKE_ESCAPE).to_string())?
+                ),
+                vec![crate::value::string(crate::builder::core::escape_like_value(&value, D::LIKE_ESCAPE))],
             ),
         );
         Ok(())
