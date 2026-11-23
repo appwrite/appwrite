@@ -5,7 +5,7 @@ import {
   projectQueryOptions,
   projectFunctionQueryOptions,
 } from '@/lib/react-query/hooks'
-import { isFeatureEnabled } from '@/lib/console-profiles'
+import { isCloudProfile, isFeatureEnabled } from '@/lib/console-profiles'
 import { pageTitle } from '@/lib/utils/page-title'
 
 const searchSchema = z.object({
@@ -17,7 +17,8 @@ export const Route = createFileRoute(
 )({
   validateSearch: searchSchema,
   beforeLoad: ({ params }) => {
-    if (!isFeatureEnabled('runtimeLogs')) {
+    // Cloud only: self-hosted doesn't serve `/v1/logs`, even with the flag on.
+    if (!isCloudProfile() || !isFeatureEnabled('runtimeLogs')) {
       throw redirect({
         to: '/projects/$projectId/functions/$functionId',
         params,

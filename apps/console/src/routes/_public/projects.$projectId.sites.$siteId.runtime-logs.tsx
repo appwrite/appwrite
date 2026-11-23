@@ -2,7 +2,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { z } from 'zod'
 import { View } from '@/components/pages/projects/$projectId/sites/RuntimeLogs'
 import { projectQueryOptions, siteQueryOptions } from '@/lib/react-query/hooks'
-import { isFeatureEnabled } from '@/lib/console-profiles'
+import { isCloudProfile, isFeatureEnabled } from '@/lib/console-profiles'
 import { pageTitle } from '@/lib/utils/page-title'
 
 const searchSchema = z.object({
@@ -14,7 +14,8 @@ export const Route = createFileRoute(
 )({
   validateSearch: searchSchema,
   beforeLoad: ({ params }) => {
-    if (!isFeatureEnabled('runtimeLogs')) {
+    // Cloud only: self-hosted doesn't serve `/v1/logs`, even with the flag on.
+    if (!isCloudProfile() || !isFeatureEnabled('runtimeLogs')) {
       throw redirect({
         to: '/projects/$projectId/sites/$siteId',
         params,

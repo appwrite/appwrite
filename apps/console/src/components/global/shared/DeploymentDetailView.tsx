@@ -46,6 +46,7 @@ import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
 import { RuntimeLogsView } from '@/components/global/shared/RuntimeLogsView'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { isCloudProfile } from '@/lib/console-profiles'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -455,7 +456,8 @@ export function DeploymentDetailView({
   const isSiteDeployment = deploymentDetailRoute.includes('/sites/')
   const parentResourceParam = isSiteDeployment ? 'siteId' : 'functionId'
   const { features } = useConsoleProfile()
-  const showRuntimeLogs = features.runtimeLogs
+  // Cloud only: self-hosted doesn't serve `/v1/logs`, even with the flag on.
+  const showRuntimeLogs = isCloudProfile() && features.runtimeLogs
 
   /** Prefer the loaded model's id so mutations match the deployment the UI is showing. */
   const apiDeploymentId = deployment?.$id ?? deploymentId
