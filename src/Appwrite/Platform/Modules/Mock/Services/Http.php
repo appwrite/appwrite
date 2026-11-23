@@ -47,6 +47,15 @@ use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\BuildUploadFiles
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\BuildUploads\Create as CreateDistributionAppleBuildUpload;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\BuildUploads\Delete as DeleteDistributionAppleBuildUpload;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\BuildUploads\Get as GetDistributionAppleBuildUpload;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\BundleIdCapabilities\Create as CreateDistributionAppleBundleIdCapability;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\BundleIds\Create as CreateDistributionAppleBundleId;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\BundleIds\Profiles\XList as ListDistributionAppleBundleIdProfiles;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\BundleIds\XList as ListDistributionAppleBundleIds;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Certificates\Create as CreateDistributionAppleCertificate;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Certificates\Delete as DeleteDistributionAppleCertificate;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Certificates\XList as ListDistributionAppleCertificates;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Profiles\Create as CreateDistributionAppleProfile;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Profiles\Delete as DeleteDistributionAppleProfile;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\ReviewSubmissionItems\Create as CreateDistributionAppleReviewSubmissionItem;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\ReviewSubmissions\Create as CreateDistributionAppleReviewSubmission;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\ReviewSubmissions\Update as UpdateDistributionAppleReviewSubmission;
@@ -60,6 +69,7 @@ use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Groups\Cre
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Images\Create as CreateDistributionAppleSeedImage;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Keys\Create as CreateDistributionAppleSeedKey;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Reviews\Create as CreateDistributionAppleSeedReview;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Teams\Create as CreateDistributionAppleSeedTeam;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Seeds\Uploads\Create as CreateDistributionAppleSeedUpload;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\Storage\Parts\Update as UpdateDistributionAppleStoragePart;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Distribution\Apple\WebhookPings\Create as CreateDistributionAppleWebhookPing;
@@ -223,6 +233,16 @@ class Http extends Service
         $this->addAction('deleteDistributionGoogleImages', DeleteDistributionGoogleImages::class);
         $this->addAction('createDistributionGoogleImage', CreateDistributionGoogleImage::class);
         $this->addAction('listDistributionGoogleSeedListings', ListDistributionGoogleSeedListings::class);
+        $this->addAction('listDistributionAppleCertificates', ListDistributionAppleCertificates::class);
+        $this->addAction('createDistributionAppleCertificate', CreateDistributionAppleCertificate::class);
+        $this->addAction('deleteDistributionAppleCertificate', DeleteDistributionAppleCertificate::class);
+        $this->addAction('listDistributionAppleBundleIds', ListDistributionAppleBundleIds::class);
+        $this->addAction('createDistributionAppleBundleId', CreateDistributionAppleBundleId::class);
+        $this->addAction('createDistributionAppleBundleIdCapability', CreateDistributionAppleBundleIdCapability::class);
+        $this->addAction('listDistributionAppleBundleIdProfiles', ListDistributionAppleBundleIdProfiles::class);
+        $this->addAction('createDistributionAppleProfile', CreateDistributionAppleProfile::class);
+        $this->addAction('deleteDistributionAppleProfile', DeleteDistributionAppleProfile::class);
+        $this->addAction('createDistributionAppleSeedTeam', CreateDistributionAppleSeedTeam::class);
         $this->addAction('shutdown', Shutdown::class);
     }
 }
