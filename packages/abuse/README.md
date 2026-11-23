@@ -122,7 +122,7 @@ if (!$recaptcha->verify($_POST['g-recaptcha-response'], $_SERVER['REMOTE_ADDR'])
 
 A challenge is something a client must answer before it gets through. Like the adapters, every kind extends one base, `Utopia\Abuse\Challenge`: it holds the signed token and the params the challenge is bound to (`withParams()`, the same as on the adapters), and each kind implements `issue()` and `verify()`. Passing a challenge earns a `Clearance`, so later requests skip it.
 
-**Proof of work.** `ProofOfWork` makes a client spend CPU: it finds an answer whose SHA-256, together with the token's seed, has enough leading zero bits. Each token can be answered once, tracked by a `Nonce` store.
+**Proof of work.** `ProofOfWork` makes a client spend CPU: it finds an answer whose SHA-256, together with the token's nonce, has enough leading zero bits. Each token can be answered once, tracked by a `Nonce` store.
 
 ```php
 <?php
@@ -136,8 +136,8 @@ $clearance = new Clearance('secret');
 
 $client = ['ip' => $ip, 'ua' => $userAgent];
 
-// Issue a token, then send $token->value, $token->seed and $token->difficulty to the client:
-// it finds $answer where sha256("$seed:$answer") starts with $difficulty zero bits
+// Issue a token, then send $token->value, $token->nonce and $token->difficulty to the client:
+// it finds $answer where sha256("$nonce:$answer") starts with $difficulty zero bits
 $token = $challenge->withParams($client)->issue();
 
 // Verify the client's answer and hand out a clearance

@@ -8,8 +8,8 @@ use Utopia\Abuse\Challenge\ProofOfWork\Token as ProofOfWorkToken;
 
 /**
  * Leading-zero-bits proof-of-work. A client must find an answer whose
- * SHA-256(seed ":" answer) starts with at least `difficulty` zero bits; the
- * issued token carries the seed and the difficulty.
+ * SHA-256(nonce ":" answer) starts with at least `difficulty` zero bits; the
+ * issued token carries the nonce and the difficulty.
  *
  * Issue signs a random nonce and the difficulty into a token, with no
  * server-side write. Verify checks the token and params, records the nonce as
@@ -60,13 +60,14 @@ final readonly class ProofOfWork extends Challenge
         $difficulty ??= $this->difficulty;
         self::checkDifficulty($difficulty);
 
+        $nonce = \bin2hex(\random_bytes(16));
         $value = $this->sign([
-            'nonce' => \bin2hex(\random_bytes(16)),
+            'nonce' => $nonce,
             'difficulty' => $difficulty,
             'iatMs' => (int) (\microtime(true) * 1000),
         ], $claims);
 
-        return new ProofOfWorkToken($value, self::seed($value), $difficulty);
+        return new ProofOfWorkToken($value, $nonce, $difficulty);
     }
 
     /**
@@ -106,7 +107,7 @@ final readonly class ProofOfWork extends Challenge
             return new Result(Status::Replay, $claims, $difficulty, $elapsedMs);
         }
 
-        if (!self::isSolution(self::seed($token), $answer, $difficulty)) {
+        if (!self::isSolution($nonce, $answer, $difficulty)) {
             return new Result(Status::Rejected, $claims, $difficulty, $elapsedMs, $error);
         }
 
@@ -127,20 +128,12 @@ final readonly class ProofOfWork extends Challenge
     }
 
     /**
-     * What the client hashes its answers against: SHA-256 of the token, in hex.
-     */
-    private static function seed(string $token): string
-    {
-        return \hash('sha256', $token);
-    }
-
-    /**
-     * Whether the answer solves the puzzle: SHA-256(seed ":" answer) reaches
+     * Whether the answer solves the puzzle: SHA-256(nonce ":" answer) reaches
      * the difficulty. One hash — the same rule on client and server.
      */
-    public static function isSolution(string $seed, string $answer, int $difficulty): bool
+    public static function isSolution(string $nonce, string $answer, int $difficulty): bool
     {
-        return self::difficultyOf(\hash('sha256', $seed . ':' . $answer, true)) >= $difficulty;
+        return self::difficultyOf(\hash('sha256', $nonce . ':' . $answer, true)) >= $difficulty;
     }
 
     /**
