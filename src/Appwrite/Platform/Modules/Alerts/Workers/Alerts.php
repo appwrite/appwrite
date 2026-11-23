@@ -243,7 +243,7 @@ class Alerts extends Action
             if ($status === Status::Firing && !$escalation->isEmpty()) {
                 // The escalation's first step is notified now or after its delay, and the rest follow on their timers.
                 $alert = $escalations->start($alert, $escalation, $now);
-                $this->escalate($monitor, $alert, $project, $value, $now, $dbForPlatform, $publisherForNotifications, $platform, $dbForProject);
+                $alert = $this->escalate($monitor, $alert, $project, $value, $now, $dbForPlatform, $publisherForNotifications, $platform, $dbForProject);
             } elseif ($alert->getAttribute('escalationId', '') !== '') {
                 // The resolution goes to everyone the escalation reached, who may be nobody yet.
                 $audience = new Audience([], $alert->getAttribute('escalationUserIds', []));
@@ -641,7 +641,7 @@ class Alerts extends Action
         NotificationPublisher $publisherForNotifications,
         array $platform,
         ?Database $dbForProject = null,
-    ): void {
+    ): Document {
         $escalations = new Escalations($dbForPlatform);
         // The steps the alert started with, whatever its escalation holds now.
         $escalation = Escalation::fromAlert($alert);
@@ -652,9 +652,7 @@ class Alerts extends Action
             $round = (int) $alert->getAttribute('escalationRound', 0);
             $step = $escalation->steps[$index] ?? null;
             if ($step === null) {
-                $escalations->stop($alert);
-
-                return;
+                return $escalations->stop($alert);
             }
 
             Span::add('alert.escalation.step', $index);
@@ -683,6 +681,8 @@ class Alerts extends Action
         if (!$notified && $alert->getAttribute('escalatesAt') !== null) {
             $escalations->arm($alert);
         }
+
+        return $alert;
     }
 
     /**
