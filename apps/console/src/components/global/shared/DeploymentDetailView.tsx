@@ -45,7 +45,7 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
 import { RuntimeLogsView } from '@/components/global/shared/RuntimeLogsView'
-import { isCloudProfile } from '@/lib/console-profiles'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -454,7 +454,8 @@ export function DeploymentDetailView({
   // (e.g. a function ID like "website-api" contains "site" and would misclassify as a site).
   const isSiteDeployment = deploymentDetailRoute.includes('/sites/')
   const parentResourceParam = isSiteDeployment ? 'siteId' : 'functionId'
-  const showRuntimeLogs = isCloudProfile()
+  const { features } = useConsoleProfile()
+  const showRuntimeLogs = features.runtimeLogs
 
   /** Prefer the loaded model's id so mutations match the deployment the UI is showing. */
   const apiDeploymentId = deployment?.$id ?? deploymentId

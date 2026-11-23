@@ -158,8 +158,7 @@ function FunctionLayoutContent() {
   const showUsageTab = features.usageStats && canSeeUsageNav(access, features)
   const showFirewallTab =
     isCloudProfile() && canSeeProjectNavItem(access, features, 'firewall')
-  // Runtime logs are served by Cloud only.
-  const showRuntimeLogsTab = isCloudProfile()
+  const showRuntimeLogsTab = features.runtimeLogs
 
   const [filtersOpen, setFiltersOpen] = useState(false)
   const functionFilterMap = useMemo(() => {

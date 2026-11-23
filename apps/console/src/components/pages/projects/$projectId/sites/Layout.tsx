@@ -150,8 +150,7 @@ function SiteLayoutContent() {
   const showUsageTab = features.usageStats && canSeeUsageNav(access, features)
   const showFirewallTab =
     isCloudProfile() && canSeeProjectNavItem(access, features, 'firewall')
-  // Runtime logs are served by Cloud only.
-  const showRuntimeLogsTab = isCloudProfile()
+  const showRuntimeLogsTab = features.runtimeLogs
 
   const [cancelBuildDialogOpen, setCancelBuildDialogOpen] = useState(false)
   const [redeployDialogOpen, setRedeployDialogOpen] = useState(false)

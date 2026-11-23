@@ -129,6 +129,27 @@ const STDOUT = 'Listening on port 3000'
 const STDERR = 'TypeError: Cannot read properties of undefined'
 const OTHER_DEPLOYMENT = 'Served by the older deployment'
 
+/** One clock for every fixture row, so live-tail rows land after the listed ones. */
+const BASE = Date.now()
+
+/** Rows that arrive while Live is on: more than one page, newer than the listed rows. */
+const LIVE_ROWS = 150
+
+function liveRows(resourceType: string, resourceId: string) {
+  return Array.from({ length: LIVE_ROWS }, (_, i) => ({
+    ...log(
+      `live${String(i).padStart(3, '0')}`,
+      resourceType,
+      resourceId,
+      ACTIVE,
+      'stdout',
+      `live line ${String(i).padStart(3, '0')}`,
+      0,
+    ),
+    timestamp: new Date(BASE - 4000 + i * 10).toISOString(),
+  }))
+}
+
 function log(
   id: string,
   resourceType: string,
@@ -145,7 +166,7 @@ function log(
     resourceInternalId: '1',
     deploymentId,
     region: 'tor',
-    timestamp: new Date(Date.now() - seconds * 1000).toISOString(),
+    timestamp: new Date(BASE - seconds * 1000).toISOString(),
     stream,
     message,
   }
@@ -167,22 +188,28 @@ function logsFor(resourceType: string, resourceId: string) {
   ]
 }
 
-/** Values of the equal("<attribute>", [...]) queries in a list request. */
-function equalValues(url: URL, attribute: string): string[] | undefined {
-  const raws = [...url.searchParams]
+type ParsedQuery = { method: string; attribute?: string; values?: unknown[] }
+
+function queries(url: URL): ParsedQuery[] {
+  return [...url.searchParams]
     .filter(([key]) => key.startsWith('queries'))
-    .map(([, value]) => value)
-  for (const raw of raws) {
-    const query = JSON.parse(raw) as {
-      method: string
-      attribute?: string
-      values?: unknown[]
-    }
-    if (query.method === 'equal' && query.attribute === attribute) {
-      return (query.values ?? []).map(String)
-    }
-  }
-  return undefined
+    .map(([, value]) => JSON.parse(value) as ParsedQuery)
+}
+
+/** Values of the `<method>("<attribute>", [...])` query in a list request. */
+function queryValues(
+  url: URL,
+  method: string,
+  attribute: string,
+): string[] | undefined {
+  const query = queries(url).find(
+    (q) => q.method === method && q.attribute === attribute,
+  )
+  return query ? (query.values ?? []).map(String) : undefined
+}
+
+function equalValues(url: URL, attribute: string): string[] | undefined {
+  return queryValues(url, 'equal', attribute)
 }
 
 function corsHeaders(route: Route): Record<string, string> {
@@ -192,6 +219,22 @@ function corsHeaders(route: Route): Record<string, string> {
     'access-control-allow-headers': '*',
     'access-control-allow-methods': '*',
   }
+}
+
+/** Turns the runtime logs flag on the way the debug menu does. */
+async function enableRuntimeLogs(page: Page) {
+  await page.context().addInitScript(() => {
+    const profile = {
+      id: 'cloud',
+      label: 'Cloud',
+      description: 'E2E override - runtime logs enabled',
+      features: { runtimeLogs: true },
+    }
+    window.localStorage.setItem('debug:consoleProfile', JSON.stringify(profile))
+    document.cookie = `debug_console_profile=${encodeURIComponent(
+      JSON.stringify({ id: profile.id, features: profile.features }),
+    )}; path=/; SameSite=Lax`
+  })
 }
 
 async function mockAppwriteApi(page: Page) {
@@ -229,6 +272,15 @@ async function mockAppwriteApi(page: Page) {
         })
       }
       const streams = equalValues(url, 'stream')
+      const since = queryValues(url, 'greaterThanEqual', 'timestamp')?.[0]
+      const ascending = queries(url).some((q) => q.method === 'orderAsc')
+      if (ascending && since) {
+        // Live tail: newer rows, oldest first, one page at a time.
+        const logs = liveRows(resourceType, resourceId)
+          .filter((row) => Date.parse(row.timestamp) >= Date.parse(since))
+          .slice(0, 100)
+        return json(200, { total: 0, logs })
+      }
       const logs = logsFor(resourceType, resourceId).filter(
         (row) =>
           deploymentIds.includes(row.deploymentId) &&
@@ -338,6 +390,7 @@ test.describe('runtime logs', () => {
   test('a function lists its active deployment runtime logs', async ({
     page,
   }) => {
+    await enableRuntimeLogs(page)
     await mockAppwriteApi(page)
 
     await page.goto(
@@ -356,6 +409,7 @@ test.describe('runtime logs', () => {
   })
 
   test('a site lists its active deployment runtime logs', async ({ page }) => {
+    await enableRuntimeLogs(page)
     await mockAppwriteApi(page)
 
     await page.goto(`/projects/${PROJECT.$id}/sites/${SITE.$id}/runtime-logs`, {
@@ -368,6 +422,7 @@ test.describe('runtime logs', () => {
   test('a deployment page switches from build to runtime logs', async ({
     page,
   }) => {
+    await enableRuntimeLogs(page)
     await mockAppwriteApi(page)
 
     await page.goto(
@@ -379,5 +434,44 @@ test.describe('runtime logs', () => {
     const logs = page.getByRole('log')
     await expect(logs).toContainText(OTHER_DEPLOYMENT, { timeout: 30_000 })
     await expect(logs).not.toContainText(STDOUT)
+  })
+
+  test('live tail reads every new page', async ({ page }) => {
+    await enableRuntimeLogs(page)
+    await mockAppwriteApi(page)
+
+    await page.goto(
+      `/projects/${PROJECT.$id}/functions/${FUNCTION.$id}/runtime-logs`,
+      { waitUntil: 'domcontentloaded' },
+    )
+    const logs = page.getByRole('log')
+    await expect(logs).toContainText(STDOUT, { timeout: 30_000 })
+
+    await page.getByRole('button', { name: 'Live' }).click()
+
+    // 150 new rows span two pages; one poll reads both, each row once
+    await expect(logs.getByText(/^live line \d+$/)).toHaveCount(LIVE_ROWS)
+    await expect(logs).toContainText('live line 000')
+    await expect(logs).toContainText('live line 149')
+    await expect(logs).toContainText(STDOUT)
+  })
+
+  test('the tab stays hidden while the flag is off', async ({ page }) => {
+    await mockAppwriteApi(page)
+
+    await page.goto(`/projects/${PROJECT.$id}/functions/${FUNCTION.$id}`, {
+      waitUntil: 'domcontentloaded',
+    })
+    await expect(page.getByRole('tab', { name: 'Executions' })).toBeVisible({
+      timeout: 30_000,
+    })
+    await expect(page.getByRole('tab', { name: 'Runtime logs' })).toHaveCount(0)
+
+    // A direct link falls back to the function
+    await page.goto(
+      `/projects/${PROJECT.$id}/functions/${FUNCTION.$id}/runtime-logs`,
+      { waitUntil: 'domcontentloaded' },
+    )
+    await expect(page).not.toHaveURL(/runtime-logs/, { timeout: 30_000 })
   })
 })

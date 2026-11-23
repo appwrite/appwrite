@@ -2,7 +2,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { z } from 'zod'
 import { View } from '@/components/pages/projects/$projectId/sites/RuntimeLogs'
 import { projectQueryOptions, siteQueryOptions } from '@/lib/react-query/hooks'
-import { isCloudProfile } from '@/lib/console-profiles'
+import { isFeatureEnabled } from '@/lib/console-profiles'
 import { pageTitle } from '@/lib/utils/page-title'
 
 const searchSchema = z.object({
@@ -14,8 +14,7 @@ export const Route = createFileRoute(
 )({
   validateSearch: searchSchema,
   beforeLoad: ({ params }) => {
-    // Runtime logs are served by Cloud only.
-    if (!isCloudProfile()) {
+    if (!isFeatureEnabled('runtimeLogs')) {
       throw redirect({
         to: '/projects/$projectId/sites/$siteId',
         params,
