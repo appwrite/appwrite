@@ -453,6 +453,306 @@ if (class_exists(\Utopia\Query\Schema\MongoDB::class)) {
     {
     }
 }
+if (interface_exists(\Utopia\Query\Builder\Feature\Aggregates::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureAggregates extends \Utopia\Query\Builder\Feature\Aggregates
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\BitwiseAggregates::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureBitwiseAggregates extends \Utopia\Query\Builder\Feature\BitwiseAggregates
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\CTEs::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureCTEs extends \Utopia\Query\Builder\Feature\CTEs
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\ClickHouse\ApproximateAggregates::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureClickHouseApproximateAggregates extends \Utopia\Query\Builder\Feature\ClickHouse\ApproximateAggregates
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\ClickHouse\ArrayJoins::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureClickHouseArrayJoins extends \Utopia\Query\Builder\Feature\ClickHouse\ArrayJoins
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\ClickHouse\AsofJoins::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureClickHouseAsofJoins extends \Utopia\Query\Builder\Feature\ClickHouse\AsofJoins
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\ClickHouse\LimitBy::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureClickHouseLimitBy extends \Utopia\Query\Builder\Feature\ClickHouse\LimitBy
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\ClickHouse\WithFill::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureClickHouseWithFill extends \Utopia\Query\Builder\Feature\ClickHouse\WithFill
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\ConditionalAggregates::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureConditionalAggregates extends \Utopia\Query\Builder\Feature\ConditionalAggregates
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\CrossJoins::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureCrossJoins extends \Utopia\Query\Builder\Feature\CrossJoins
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\Cube::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureCube extends \Utopia\Query\Builder\Feature\Cube
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\Deletes::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureDeletes extends \Utopia\Query\Builder\Feature\Deletes
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\FullOuterJoins::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureFullOuterJoins extends \Utopia\Query\Builder\Feature\FullOuterJoins
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\FullTextSearch::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureFullTextSearch extends \Utopia\Query\Builder\Feature\FullTextSearch
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\Hints::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureHints extends \Utopia\Query\Builder\Feature\Hints
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\Hooks::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureHooks extends \Utopia\Query\Builder\Feature\Hooks
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\InsertOrIgnore::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureInsertOrIgnore extends \Utopia\Query\Builder\Feature\InsertOrIgnore
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\Inserts::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureInserts extends \Utopia\Query\Builder\Feature\Inserts
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\Joins::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureJoins extends \Utopia\Query\Builder\Feature\Joins
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\Json::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureJson extends \Utopia\Query\Builder\Feature\Json
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\LateralJoins::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureLateralJoins extends \Utopia\Query\Builder\Feature\LateralJoins
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\Locking::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureLocking extends \Utopia\Query\Builder\Feature\Locking
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\MariaDB\Returning::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureMariaDBReturning extends \Utopia\Query\Builder\Feature\MariaDB\Returning
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\MongoDB\ArrayPushModifiers::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureMongoDBArrayPushModifiers extends \Utopia\Query\Builder\Feature\MongoDB\ArrayPushModifiers
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\MongoDB\AtlasSearch::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureMongoDBAtlasSearch extends \Utopia\Query\Builder\Feature\MongoDB\AtlasSearch
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\MongoDB\ConditionalArrayUpdates::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureMongoDBConditionalArrayUpdates extends \Utopia\Query\Builder\Feature\MongoDB\ConditionalArrayUpdates
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\MongoDB\FieldUpdates::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureMongoDBFieldUpdates extends \Utopia\Query\Builder\Feature\MongoDB\FieldUpdates
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\MongoDB\PipelineStages::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureMongoDBPipelineStages extends \Utopia\Query\Builder\Feature\MongoDB\PipelineStages
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\NegatedFullTextSearch::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureNegatedFullTextSearch extends \Utopia\Query\Builder\Feature\NegatedFullTextSearch
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\PostgreSQL\AggregateFilter::class)) {
+    interface ExtendsUtopiaQueryBuilderFeaturePostgreSQLAggregateFilter extends \Utopia\Query\Builder\Feature\PostgreSQL\AggregateFilter
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\PostgreSQL\DistinctOn::class)) {
+    interface ExtendsUtopiaQueryBuilderFeaturePostgreSQLDistinctOn extends \Utopia\Query\Builder\Feature\PostgreSQL\DistinctOn
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\PostgreSQL\LockingOf::class)) {
+    interface ExtendsUtopiaQueryBuilderFeaturePostgreSQLLockingOf extends \Utopia\Query\Builder\Feature\PostgreSQL\LockingOf
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\PostgreSQL\Merge::class)) {
+    interface ExtendsUtopiaQueryBuilderFeaturePostgreSQLMerge extends \Utopia\Query\Builder\Feature\PostgreSQL\Merge
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\PostgreSQL\OrderedSetAggregates::class)) {
+    interface ExtendsUtopiaQueryBuilderFeaturePostgreSQLOrderedSetAggregates extends \Utopia\Query\Builder\Feature\PostgreSQL\OrderedSetAggregates
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\PostgreSQL\Returning::class)) {
+    interface ExtendsUtopiaQueryBuilderFeaturePostgreSQLReturning extends \Utopia\Query\Builder\Feature\PostgreSQL\Returning
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\PostgreSQL\VectorSearch::class)) {
+    interface ExtendsUtopiaQueryBuilderFeaturePostgreSQLVectorSearch extends \Utopia\Query\Builder\Feature\PostgreSQL\VectorSearch
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\RawSql::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureRawSql extends \Utopia\Query\Builder\Feature\RawSql
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\Rollup::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureRollup extends \Utopia\Query\Builder\Feature\Rollup
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\Selects::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureSelects extends \Utopia\Query\Builder\Feature\Selects
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\Sequences::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureSequences extends \Utopia\Query\Builder\Feature\Sequences
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\Spatial::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureSpatial extends \Utopia\Query\Builder\Feature\Spatial
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\StatisticalAggregates::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureStatisticalAggregates extends \Utopia\Query\Builder\Feature\StatisticalAggregates
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\StringAggregates::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureStringAggregates extends \Utopia\Query\Builder\Feature\StringAggregates
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\TableSampling::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureTableSampling extends \Utopia\Query\Builder\Feature\TableSampling
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\Totals::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureTotals extends \Utopia\Query\Builder\Feature\Totals
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\Transactions::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureTransactions extends \Utopia\Query\Builder\Feature\Transactions
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\Unions::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureUnions extends \Utopia\Query\Builder\Feature\Unions
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\Updates::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureUpdates extends \Utopia\Query\Builder\Feature\Updates
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\Upsert::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureUpsert extends \Utopia\Query\Builder\Feature\Upsert
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\UpsertSelect::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureUpsertSelect extends \Utopia\Query\Builder\Feature\UpsertSelect
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Builder\Feature\Windows::class)) {
+    interface ExtendsUtopiaQueryBuilderFeatureWindows extends \Utopia\Query\Builder\Feature\Windows
+    {
+    }
+}
+if (interface_exists(\Utopia\Query\Compiler::class)) {
+    interface ExtendsUtopiaQueryCompiler extends \Utopia\Query\Compiler
+    {
+    }
+}
+if (class_exists(\Utopia\Query\Builder::class)) {
+    abstract class ExtendsUtopiaQueryBuilder extends \Utopia\Query\Builder
+    {
+    }
+}
+if (class_exists(\Utopia\Query\Builder\SQL::class)) {
+    abstract class ExtendsUtopiaQueryBuilderSQL extends \Utopia\Query\Builder\SQL
+    {
+    }
+}
+if (class_exists(\Utopia\Query\Builder\MySQL::class)) {
+    class ExtendsUtopiaQueryBuilderMySQL extends \Utopia\Query\Builder\MySQL
+    {
+    }
+}
+if (class_exists(\Utopia\Query\Builder\MariaDB::class)) {
+    class ExtendsUtopiaQueryBuilderMariaDB extends \Utopia\Query\Builder\MariaDB
+    {
+    }
+}
+if (class_exists(\Utopia\Query\Builder\PostgreSQL::class)) {
+    class ExtendsUtopiaQueryBuilderPostgreSQL extends \Utopia\Query\Builder\PostgreSQL
+    {
+    }
+}
+if (class_exists(\Utopia\Query\Builder\SQLite::class)) {
+    class ExtendsUtopiaQueryBuilderSQLite extends \Utopia\Query\Builder\SQLite
+    {
+    }
+}
+if (class_exists(\Utopia\Query\Builder\ClickHouse::class)) {
+    class ExtendsUtopiaQueryBuilderClickHouse extends \Utopia\Query\Builder\ClickHouse
+    {
+    }
+}
+if (class_exists(\Utopia\Query\Builder\MongoDB::class)) {
+    class ExtendsUtopiaQueryBuilderMongoDB extends \Utopia\Query\Builder\MongoDB
+    {
+    }
+}
 
 $extended = [];
 foreach ((new ReflectionExtension('utopia'))->getClassNames() as $name) {

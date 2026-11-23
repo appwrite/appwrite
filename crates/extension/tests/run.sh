@@ -16,12 +16,15 @@ vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php packages/i
 for library in $libraries; do
     echo "== $library" >&2
     [ -f "$tests/$library.php" ] || { echo "missing parity corpus $tests/$library.php" >&2; exit 1; }
+    # The builders are part of the query package, and are on only with the rest of it.
+    package=$library; switches=$library
+    [ "$library" = query-builders ] && package=query && switches=query,query-builders
     # packages/query/tests/E2E needs MySQL, PostgreSQL, ClickHouse and MongoDB servers.
-    unit=; [ "$library" = query ] && unit='--exclude-filter \\E2E\\'
+    unit=; [ "$package" = query ] && unit='--exclude-filter \\E2E\\'
     # shellcheck disable=SC2086
-    _APP_EXTENSION_LIBRARIES=$library vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php $unit "packages/$library/tests"
+    _APP_EXTENSION_LIBRARIES=$switches vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php $unit "packages/$package/tests"
     _APP_EXTENSION_LIBRARIES= php "$tests/$library.php" > "$output/$library.php.jsonl"
-    _APP_EXTENSION_LIBRARIES=$library php "$tests/$library.php" > "$output/$library.rust.jsonl"
+    _APP_EXTENSION_LIBRARIES=$switches php "$tests/$library.php" > "$output/$library.rust.jsonl"
     diff "$output/$library.php.jsonl" "$output/$library.rust.jsonl"
     [ -s "$output/$library.rust.jsonl" ] || { echo "$library corpus printed nothing" >&2; exit 1; }
 done
