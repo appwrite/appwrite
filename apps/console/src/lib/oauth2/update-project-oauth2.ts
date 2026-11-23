@@ -73,6 +73,7 @@ const OAUTH2_UPDATE_BY_PROVIDER: Partial<
   [ProjectOAuthProviderId.Spotify]: (p, b) => p.updateOAuth2Spotify(b),
   [ProjectOAuthProviderId.Strava]: (p, b) => p.updateOAuth2Strava(b),
   [ProjectOAuthProviderId.Stripe]: (p, b) => p.updateOAuth2Stripe(b),
+  [ProjectOAuthProviderId.Supabase]: (p, b) => p.updateOAuth2Supabase(b),
   [ProjectOAuthProviderId.Tiktok]: (p, b) => p.updateOAuth2TikTok(b),
   [ProjectOAuthProviderId.Tradeshift]: (p, b) => p.updateOAuth2Tradeshift(b),
   [ProjectOAuthProviderId.TradeshiftBox]: (p, b) =>
