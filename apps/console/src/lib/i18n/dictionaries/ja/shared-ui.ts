@@ -1392,6 +1392,12 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'AUGUST 31 - SEPTEMBER 4': '8月31日 - 9月4日',
   'NOVEMBER 30 - DECEMBER 4': '11月30日 - 12月4日',
   'Starts in': '開始まで',
+  'Five days, a new reveal every day, live streams, and giveaways. Claim your ticket.':
+    '5日間、毎日新しい発表、ライブ配信、プレゼント。チケットを手に入れましょう。',
+  "Init 5 is live. Catch today's reveal and the launch stream.":
+    'Init 5 開催中。今日の発表とローンチ配信をお見逃しなく。',
+  'Init 5 is a wrap. Explore every launch and rewatch the streams.':
+    'Init 5 は終了しました。すべてのローンチを確認し、配信をもう一度ご覧ください。',
   'Ask us anything': '何でも聞いてください',
   'Bring your questions about every Init 5 launch. The team answers live on r/appwrite.':
     'Init 5 のすべてのローンチについて質問をお寄せください。チームが r/appwrite でライブで回答します。',

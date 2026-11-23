@@ -305,6 +305,12 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
         href: `#${INIT_PRIZES_SECTION_ID}`,
       },
     ],
+    promoBanner: {
+      before:
+        'Five days, a new reveal every day, live streams, and giveaways. Claim your ticket.',
+      during: 'Init 5 is live. Catch today\'s reveal and the launch stream.',
+      after: 'Init 5 is a wrap. Explore every launch and rewatch the streams.',
+    },
     recap: {
       headline: 'Init recap',
       description:

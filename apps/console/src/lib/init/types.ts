@@ -282,6 +282,14 @@ export interface LaunchEventRecap {
   ticket?: LaunchEventRecapTicketCopy
 }
 
+/** Site-wide promo banner copy for each phase of the event. */
+export interface LaunchEventPromoBanner {
+  before: string
+  /** Shown while live when today's launch has no title to lead with. */
+  during: string
+  after: string
+}
+
 export interface LaunchEvent {
   id: string
   slug: string
@@ -317,6 +325,8 @@ export interface LaunchEvent {
   prizes?: LaunchEventPrizes
   /** Copy and labels shown after the launch week ends. */
   recap?: LaunchEventRecap
+  /** Site-wide promo banner copy; falls back to the generic Init copy. */
+  promoBanner?: LaunchEventPromoBanner
   /** Availability cards shown after the final Init day. */
   releaseAvailability?: LaunchEventReleaseAvailability
   getInvolved: LaunchEventInvolvement[]

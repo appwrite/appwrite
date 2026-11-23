@@ -1429,6 +1429,12 @@ export const heSharedUiDictionary: Record<string, string> = {
   'AUGUST 31 - SEPTEMBER 4': '31 באוגוסט - 4 בספטמבר',
   'NOVEMBER 30 - DECEMBER 4': '30 בנובמבר - 4 בדצמבר',
   'Starts in': 'מתחיל בעוד',
+  'Five days, a new reveal every day, live streams, and giveaways. Claim your ticket.':
+    'חמישה ימים, חשיפה חדשה בכל יום, שידורים חיים והגרלות. שריינו את הכרטיס שלכם.',
+  "Init 5 is live. Catch today's reveal and the launch stream.":
+    'Init 5 באוויר. אל תפספסו את החשיפה של היום ואת שידור ההשקה.',
+  'Init 5 is a wrap. Explore every launch and rewatch the streams.':
+    'Init 5 הסתיים. גלו כל השקה וצפו שוב בשידורים.',
   'Ask us anything': 'שאלו אותנו הכול',
   'Bring your questions about every Init 5 launch. The team answers live on r/appwrite.':
     'הביאו את השאלות שלכם על כל השקה של Init 5. הצוות עונה בשידור חי ב-r/appwrite.',

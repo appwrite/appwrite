@@ -1,7 +1,8 @@
 import { Link } from '@tanstack/react-router'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { InitWordmark } from '@/components/pages/init/_components/InitWordmark'
+import { Init5CompactMark } from '@/components/pages/init/_components/init5/Init5FiveMark'
 import { Badge } from '@/components/ui/badge'
 import { getEnvProfileFeatures } from '@/lib/console-profiles'
 import { useDebugOverrides } from '@/lib/debug-overrides'
@@ -11,6 +12,21 @@ import {
 } from '@/lib/init/org-promo-banner'
 import type { LaunchEventCta } from '@/lib/init/types'
 import { useT } from '@/lib/i18n/translate'
+
+/** Init 5 wears the hero's light trails; earlier weeks keep the plain mark. */
+const LIGHT_TRAIL_EVENT_IDS = new Set(['init-nov-2026'])
+
+function usePrefersReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(false)
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReduced(media.matches)
+    const onChange = () => setReduced(media.matches)
+    media.addEventListener('change', onChange)
+    return () => media.removeEventListener('change', onChange)
+  }, [])
+  return reduced
+}
 
 const BADGE_VARIANT: Record<InitOrgPromoPhase, 'info' | 'success' | 'warning'> =
   {
@@ -54,12 +70,18 @@ function InitOrgPromoBannerLink({
 
 export function InitOrgPromoBanner() {
   const t = useT()
-  const { mockInitCurrentDay } = useDebugOverrides()
+  const { mockInitCurrentDay, mockInitActiveEventId } = useDebugOverrides()
+  const reducedMotion = usePrefersReducedMotion()
   const content = useMemo(() => {
     if (!getEnvProfileFeatures().init) return null
-    return getInitOrgPromoBannerContent({ currentDay: mockInitCurrentDay })
-  }, [mockInitCurrentDay])
+    return getInitOrgPromoBannerContent({
+      currentDay: mockInitCurrentDay,
+      activeEventId: mockInitActiveEventId,
+    })
+  }, [mockInitCurrentDay, mockInitActiveEventId])
   if (!content) return null
+
+  const lightTrails = LIGHT_TRAIL_EVENT_IDS.has(content.eventId)
 
   return (
     <div className="relative w-full shrink-0 overflow-hidden border-b border-border bg-background">
@@ -75,7 +97,16 @@ export function InitOrgPromoBanner() {
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-muted/0 transition-colors duration-300 ease-out group-hover/banner:bg-muted/30"
         />
-        <InitWordmark className="relative z-10 shrink-0 text-[20px] text-foreground transition-colors duration-300 ease-out group-hover/banner:text-foreground sm:text-[22px]" />
+        {lightTrails ? (
+          <Init5CompactMark
+            animate={!reducedMotion}
+            className="end-4 opacity-80 sm:end-6 lg:end-[8%]"
+          />
+        ) : null}
+        <InitWordmark
+          lightTrails={lightTrails}
+          className="relative z-10 shrink-0 text-[20px] text-foreground transition-colors duration-300 ease-out group-hover/banner:text-foreground sm:text-[22px]"
+        />
         <span
           aria-hidden
           className="relative z-10 hidden shrink-0 text-muted-foreground/40 sm:inline"
@@ -83,7 +114,7 @@ export function InitOrgPromoBanner() {
           ·
         </span>
         <span className="relative z-10 hidden shrink-0 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground md:inline">
-          {content.dateRangeLabel}
+          {t(content.dateRangeLabel)}
         </span>
         {content.badgeLabel ? (
           <>
@@ -99,6 +130,11 @@ export function InitOrgPromoBanner() {
             >
               {t(content.badgeLabel)}
             </Badge>
+            {content.day ? (
+              <span className="relative z-10 hidden shrink-0 text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground sm:inline">
+                {t('Day')} {content.day}
+              </span>
+            ) : null}
           </>
         ) : null}
         <span
