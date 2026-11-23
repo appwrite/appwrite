@@ -6,7 +6,17 @@ import {
 } from '@tanstack/react-query'
 import { Query, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import {
+  mergeBeepPrefs,
+  readBeepPrefs,
+  type BeepPrefs,
+} from '@/lib/notifications/beep-prefs'
 import { DEFAULT_STALE_TIME, isClientQueryEnabled } from './constants'
+import {
+  syncConsoleAccountAfterMutation,
+  updateAccountPrefs,
+  type ConsoleAccountCache,
+} from './auth'
 
 export const CONSOLE_NOTIFICATIONS_LIMIT = 50
 
@@ -16,7 +26,9 @@ export const consoleNotificationsQueryKey = [
   CONSOLE_NOTIFICATIONS_LIMIT,
 ] as const
 
-export async function fetchConsoleNotifications(limit = CONSOLE_NOTIFICATIONS_LIMIT) {
+export async function fetchConsoleNotifications(
+  limit = CONSOLE_NOTIFICATIONS_LIMIT,
+) {
   const response = await sdk.forConsole.notifications.list({
     queries: [Query.orderDesc('$createdAt'), Query.limit(limit)],
   })
@@ -126,4 +138,62 @@ export function useMarkAllConsoleNotificationsRead() {
       })
     },
   })
+}
+
+/**
+ * Push settings shared with Beep, read from the account and changed against
+ * the server's latest copy: Beep may have changed them on a phone since the
+ * account was loaded, and `updatePrefs` replaces every key at once.
+ */
+export function useBeepPrefs(account: ConsoleAccountCache | undefined) {
+  const queryClient = useQueryClient()
+  const beep = readBeepPrefs(
+    account?.prefs as Record<string, unknown> | undefined,
+  )
+
+  const mutation = useMutation({
+    mutationFn: async (change: (current: BeepPrefs) => BeepPrefs) => {
+      const latest = (await sdk.forConsole.account.getPrefs()) as Record<
+        string,
+        unknown
+      >
+      const cached = (account?.prefs ?? {}) as Record<string, unknown>
+      return await updateAccountPrefs(
+        mergeBeepPrefs(cached, change(readBeepPrefs(latest))),
+        'beep-push-settings',
+        { force: true },
+      )
+    },
+    onMutate: (change) => {
+      queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
+        { queryKey: ['account', 'console'] },
+        (current) =>
+          current
+            ? {
+                ...current,
+                prefs: mergeBeepPrefs(
+                  current.prefs,
+                  change(readBeepPrefs(current.prefs)),
+                ),
+              }
+            : current,
+      )
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+    onError: () => {
+      // Drop the optimistic copy; the account reloads with what was saved.
+      void queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    },
+  })
+
+  return {
+    beep,
+    error: mutation.error,
+    change: mutation.mutate,
+    isPending: mutation.isPending,
+  }
 }
