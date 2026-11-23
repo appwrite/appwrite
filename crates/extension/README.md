@@ -285,8 +285,6 @@ given as JSON strings. It asserts these known differences:
 - A call that both omits an argument and passes a wrong one raises `ArgumentCountError`, a subclass
   of the `TypeError` PHP raises for it. The corpus compares the two as `TypeError`.
 - `isset()` on a protected property from outside the class is `true`. Reading it is refused.
-- `serialize()` refuses the object, as it does every class with Rust state. Nothing in Appwrite
-  serializes a query.
 - A query that holds itself (`$query->setValues([$query])`) ends `toString()`, `toArray()`,
   `shape()`, `fingerprint()` and `validate()` with the engine's `Error` for infinite recursion. PHP
   builds arrays until memory runs out, which is fatal. `clone`, `groupByType()` and `getByType()`

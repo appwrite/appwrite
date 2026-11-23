@@ -15,6 +15,7 @@ use ext_php_rs::boxed::ZBox;
 use ext_php_rs::class::RegisteredClass;
 use ext_php_rs::convert::{FromZval, IntoZval, StubLiteral};
 use ext_php_rs::exception::PhpException;
+use ext_php_rs::ffi::{zend_hash_str_find, zend_hash_str_update};
 use ext_php_rs::flags::DataType;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendClassObject, ZendHashTable, ZendObject, ZendStr, Zval};
@@ -625,6 +626,36 @@ fn query_of(zval: &Zval) -> Option<&ZendClassObject<Query>> {
     ZendClassObject::<Query>::from_zend_obj(object)
 }
 
+/// `table[name] = value`, for a name with a NUL in it.
+fn insert(table: &mut ZendHashTable, name: &[u8], mut value: Zval) {
+    // SAFETY: the table takes the value, which is then not dropped here.
+    unsafe { zend_hash_str_update(table, name.as_ptr().cast(), name.len(), &raw mut value) };
+    std::mem::forget(value);
+}
+
+/// Creates a `Query`, or a PHP subclass, with its state already in it: `unserialize()` creates the
+/// object without its constructor.
+extern "C" fn create(class: *mut ClassEntry) -> *mut ZendObject {
+    // SAFETY: PHP passes the class it is creating an object of, and the object is initialised below.
+    let mut held = unsafe { ZendClassObject::<Query>::new_uninit(class.as_ref()) };
+    held.initialize(Query::new(Method::Equal, b"", empty(), b""));
+    let object = std::ptr::from_mut(held.get_mut_zend_obj());
+    // PHP owns the object from here.
+    std::mem::forget(held);
+    object
+}
+
+/// Lets PHP serialize a `Query`, which ext-php-rs forbids for a class that holds Rust state, and
+/// create one with [`create`]. Runs once every class is registered.
+pub(super) fn prepare() {
+    let class = std::ptr::from_ref(base()).cast_mut();
+    // SAFETY: an internal class lives as long as the process, and no script has run yet.
+    unsafe {
+        (*class).ce_flags &= !ext_php_rs::flags::ClassFlags::NotSerializable.bits();
+        (*class).__bindgen_anon_2.create_object = Some(create);
+    }
+}
+
 /// What a query holds, for the builders to read: its method, attribute, values, alias,
 /// attribute type and whether it is on an array.
 pub(super) type Parts<'a> = (Method, &'a [u8], &'a Zval, &'a [u8], &'a [u8], bool);
@@ -1128,6 +1159,73 @@ impl Query {
         let attribute = attribute.bytes();
         let alias = alias.bytes();
         Ok(Self::new(method_of(method)?, attribute, values, alias))
+    }
+
+    /// `serialize($query)`: what PHP writes for the class it replaces, a property at a time in the
+    /// order `Query.php` declares them, then the properties a subclass declares.
+    pub fn __serialize(self_: &ZendClassObject<Query>) -> PhpResult<ZBox<ZendHashTable>> {
+        let mut out = ZendHashTable::new();
+        let fields = [
+            (&b"\0*\0method"[..], method_case(self_.method)?),
+            (b"\0*\0attribute", string(&self_.attribute)),
+            (b"\0*\0attributeType", string(&self_.attribute_type)),
+            (b"\0*\0onArray", self_.on_array.into_zval(false).map_err(PhpException::from)?),
+            (b"\0*\0values", self_.values.shallow_clone()),
+            (b"\0*\0alias", string(&self_.alias)),
+            (b"\0*\0aliasDefaulted", self_.alias_defaulted.into_zval(false).map_err(PhpException::from)?),
+        ];
+        for (name, value) in fields {
+            insert(&mut out, name, value);
+        }
+        for (name, value) in self_.std.get_properties().map_err(PhpException::from)? {
+            let value = value.indirect().unwrap_or(value);
+            if let ext_php_rs::types::ArrayKey::String(name) = &name
+                && value.get_type() != DataType::Undef
+                && unsafe { zend_hash_str_find(&raw const *out, name.as_ptr().cast(), name.len()) }.is_null()
+            {
+                insert(&mut out, name.as_bytes(), value.shallow_clone());
+            }
+        }
+        Ok(out)
+    }
+
+    /// `unserialize()`: reads what [`Self::__serialize`], or PHP's own class, wrote.
+    pub fn __unserialize(self_: &mut ZendClassObject<Query>, data: Arr<'_>) -> PhpResult<()> {
+        for (name, value) in data.table().into_iter().flatten() {
+            let ext_php_rs::types::ArrayKey::String(name) = name else { continue };
+            // A protected or private property is written as `\0*\0name` or `\0Class\0name`.
+            let short = name.as_bytes().rsplit(|byte| *byte == 0).next().unwrap_or_default();
+            let text = || value.zend_str().map(|text| text.as_bytes().to_vec()).unwrap_or_default();
+            match short {
+                b"method" => {
+                    self_.method = value.object().and_then(case_method).ok_or_else(|| {
+                        type_error(
+                            "Cannot assign a value that is not a Method to property Utopia\\Query\\Query::$method",
+                        )
+                    })?;
+                }
+                b"attribute" => self_.attribute = text(),
+                b"attributeType" => self_.attribute_type = text(),
+                b"onArray" => self_.on_array = value.bool().unwrap_or(false),
+                b"values" if value.is_array() => self_.values = value.shallow_clone(),
+                b"alias" => self_.alias = text(),
+                b"aliasDefaulted" => self_.alias_defaulted = value.bool().unwrap_or(false),
+                // A property a subclass declares is written to its slot, whatever its visibility.
+                _ => {
+                    let fields = self_.std.get_properties().map_err(PhpException::from)?;
+                    // SAFETY: the table is the object's, and the name is the key as serialized.
+                    let slot = unsafe { zend_hash_str_find(fields, name.as_ptr().cast(), name.len()).as_mut() };
+                    match slot.and_then(|slot| slot.indirect_mut()) {
+                        Some(slot) => *slot = value.shallow_clone(),
+                        None => {
+                            let name = String::from_utf8_lossy(short).into_owned();
+                            self_.std.set_property(&name, value.shallow_clone()).map_err(PhpException::from)?;
+                        }
+                    }
+                }
+            }
+        }
+        Ok(())
     }
 
     #[php(name = "getMethod")]

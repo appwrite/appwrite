@@ -132,8 +132,8 @@ fn startup(_kind: i32, _module: i32) -> i32 {
         validators::network::register()?;
         validators::compose::register()?;
         auth::register()?;
-        if enabled("query") && enabled("query-builders") {
-            query::features::register()?;
+        if enabled("query") {
+            query::features::register(enabled("query-builders"))?;
         }
         Ok(())
     })

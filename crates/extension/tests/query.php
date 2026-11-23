@@ -2384,13 +2384,6 @@ if (isset($extra['throws']) !== $requested) {
     exit(1);
 }
 
-// serialize() refuses a class with Rust state. Nothing in Appwrite serializes a query.
-$serialized = outcome(fn () => strlen(serialize(Query::limit(1))) > 0);
-if (isset($serialized['throws']) !== $requested) {
-    fwrite(STDERR, 'serialize() gives ' . json_encode($serialized) . ': the known difference changed' . PHP_EOL);
-    exit(1);
-}
-
 // PHP's serialize() calls serializeExpression() and quoteIdentifier() on $this, so a subclass's own take part in a
 // statement; the extension's serializers write a whole statement themselves.
 $own = new class () extends AST\Serializer {
@@ -2485,3 +2478,53 @@ if ($held !== [! $requested, ! $requested, ! $requested]) {
     fwrite(STDERR, 'The literal property is ' . json_encode($held) . ': the known difference changed' . PHP_EOL);
     exit(1);
 }
+
+// serialize() and unserialize(): the text is what PHP's own class writes, so one reads what the other wrote.
+// utopia-php/database hashes it for its cache keys. A subclass keeps the properties it declares.
+class SerializedQuery extends Query
+{
+    public int $extra = 3;
+
+    /** @var array<string, int> */
+    protected array $more = ['k' => 1];
+
+    private ?string $own = 'p';
+
+    /** @return array<mixed> */
+    public function held(): array
+    {
+        return [$this->extra, $this->more, $this->own];
+    }
+
+    public function change(): static
+    {
+        $this->extra = 9;
+        $this->more = [];
+        $this->own = null;
+
+        return $this;
+    }
+}
+$nested = Query::or([Query::equal('a', [1, 'x', 1.5, null, true]), new Query(Method::Join, 't', [], 't'), Query::and([Query::isNull("b\0c")])]);
+$nested->setOnArray(true);
+$typed = new SerializedQuery(Method::Equal, 'a', [1]);
+$typed->setAttributeType('object');
+foreach (['plain' => Query::limit(5), 'nested' => $nested, 'subclass' => $typed, 'changed' => (new SerializedQuery(Method::Select, '', ['a']))->change()] as $name => $query) {
+    $text = serialize($query);
+    $back = unserialize($text);
+    emit('serialize ' . $name, [
+        bin2hex($text),
+        md5(serialize(['queries' => [$query], 'context' => ['k' => 1]])),
+        $back::class,
+        $back->toString(),
+        [$back->onArray(), $back->getAttributeType(), $back->getAlias(), $back->getMethod()->value],
+        $back instanceof SerializedQuery ? $back->held() : null,
+        serialize($back) === $text,
+        serialize(clone $back) === $text,
+    ]);
+}
+emit('unserialize', [
+    outcome(fn () => unserialize('O:18:"Utopia\Query\Query":0:{}')->getAttribute()),
+    outcome(fn () => unserialize('O:18:"Utopia\Query\Query":1:{s:9:"' . "\0*\0" . 'method";s:3:"bad";}')),
+    outcome(fn () => unserialize('O:18:"Utopia\Query\Query":2:{s:9:"' . "\0*\0" . 'method";E:25:"Utopia\Query\Method:Equal";s:5:"other";i:1;}')->toString()),
+]);

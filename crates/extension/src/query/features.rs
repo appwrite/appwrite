@@ -5,9 +5,10 @@
 //! cannot disagree. It is registered only once every one of its methods is native, which is how the
 //! list grows while the builders are being moved.
 //!
-//! Three things wait for [`finish`], which PHP runs after every extension has registered its classes
+//! Four things wait for [`finish`], which PHP runs after every extension has registered its classes
 //! and before it preloads or compiles any script:
 //!
+//! - a `Query` can be serialized and unserialized (see [`super::value::prepare`]);
 //! - a fluent method returns `static`, where ext-php-rs declares the class it is written on;
 //! - the builders implement the interfaces, which needs those return types to agree;
 //! - PHP creates a builder with its state already in it and lets it change a protected property in place (see [`prepare`]).
@@ -268,8 +269,21 @@ fn names(methods: Methods) -> Vec<String> {
     methods().into_iter().map(|method| name(method).unwrap_or_default()).collect()
 }
 
-/// Registers the interfaces whose methods are all native. Runs in MINIT, before the classes.
-pub fn register() -> ext_php_rs::error::Result<()> {
+/// Whether the builders are on.
+static BUILDERS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Registers the interfaces whose methods are all native, when the builders are on, and has [`finish`]
+/// run. Runs in MINIT, before the classes.
+pub fn register(builders: bool) -> ext_php_rs::error::Result<()> {
+    BUILDERS.store(builders, Ordering::Release);
+    // SAFETY: MINIT runs on one thread, and the hook is PHP's to be chained like this.
+    unsafe {
+        PREVIOUS.store(zend_post_startup_cb.map_or(0, |previous| previous as usize), Ordering::Release);
+        zend_post_startup_cb = Some(finish);
+    }
+    if !builders {
+        return Ok(());
+    }
     let native: Vec<Vec<String>> = DIALECTS.iter().map(|dialect| names(dialect.methods)).collect();
     for (name, dialects, methods) in FEATURES {
         // The first dialect that implements it lends its signatures.
@@ -288,11 +302,6 @@ pub fn register() -> ext_php_rs::error::Result<()> {
                 Box::leak(tables);
             })
             .register()?;
-    }
-    // SAFETY: MINIT runs on one thread, and the hook is PHP's to be chained like this.
-    unsafe {
-        PREVIOUS.store(zend_post_startup_cb.map_or(0, |previous| previous as usize), Ordering::Release);
-        zend_post_startup_cb = Some(finish);
     }
     Ok(())
 }
@@ -344,6 +353,10 @@ unsafe extern "C" fn finish() -> i32 {
         if unsafe { previous() } != 0 {
             return -1;
         }
+    }
+    super::value::prepare();
+    if !BUILDERS.load(Ordering::Acquire) {
+        return 0;
     }
     let native: Vec<Vec<String>> = DIALECTS.iter().map(|dialect| names(dialect.methods)).collect();
     for (dialect, methods) in DIALECTS.iter().zip(&native) {
