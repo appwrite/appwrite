@@ -1244,14 +1244,14 @@ class Deletes extends Action
             $dbForPlatform->deleteDocument('projects', $project->getId());
         }
 
-        // The organization's escalation policies go with it.
+        // The organization's escalations go with it.
         try {
-            $this->deleteByGroup('escalationPolicies', [
+            $this->deleteByGroup('escalations', [
                 Query::equal('teamInternalId', [$document->getSequence()]),
                 Query::orderAsc(),
             ], $dbForPlatform);
         } catch (Throwable $th) {
-            Console::error('Failed to delete escalation policies: ' . $th->getMessage());
+            Console::error('Failed to delete escalations: ' . $th->getMessage());
         }
     }
 

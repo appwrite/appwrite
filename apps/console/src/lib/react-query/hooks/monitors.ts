@@ -14,16 +14,16 @@ import {
 import { ID, Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
-  createEscalationPolicy,
-  deleteEscalationPolicy,
-  listEscalationPolicies,
+  createEscalation,
+  deleteEscalation,
+  listEscalations,
   listOrganizationMonitors,
   parseMonitor,
-  updateEscalationPolicy,
+  updateEscalation,
   type Alert,
   type AlertMetric,
   type AlertResourceType,
-  type EscalationPolicyInput,
+  type EscalationInput,
   type MonitorInput,
   type MonitorType,
   type ParsedMonitor,
@@ -33,7 +33,6 @@ import {
 import { fetchAlertSeries, hasSeries } from '@/lib/alerts/series'
 import { DEFAULT_STALE_TIME } from './constants'
 import { nextCursorAfter } from './cursor'
-import { useOrganizationMemberships } from './teams'
 
 /** The API caps a page at 100; the tabs list them all client-side like webhooks. */
 const PAGE_LIMIT = 100
@@ -359,95 +358,100 @@ function organizationClient(organizationId: string | null | undefined) {
   return sdk.forConsole.organization(organizationId).client
 }
 
-/** An organization's escalation policies, by name. */
-export function escalationPoliciesQueryOptions(
+async function collectPages<T extends { $id: string }>(
+  fetchPage: (queries: string[]) => Promise<T[]>,
+): Promise<T[]> {
+  const items: T[] = []
+  let cursor: string | undefined
+  do {
+    const queries = [Query.limit(PAGE_LIMIT)]
+    if (cursor) queries.push(Query.cursorAfter(cursor))
+    const page = await fetchPage(queries)
+    items.push(...page)
+    cursor = nextCursorAfter(page, PAGE_LIMIT)
+  } while (cursor)
+  return items
+}
+
+/** An organization's escalations, by name. */
+export function escalationsQueryOptions(
   organizationId: string | null | undefined,
 ) {
   return queryOptions({
-    queryKey: ['escalation-policies', organizationId],
-    queryFn: async () => {
-      const response = await listEscalationPolicies(
-        organizationClient(organizationId),
-        { queries: [Query.orderAsc('name'), Query.limit(PAGE_LIMIT)] },
-      )
-      return response.escalationPolicies ?? []
-    },
+    queryKey: ['escalations', organizationId],
+    queryFn: () =>
+      collectPages(async (queries) => {
+        const response = await listEscalations(
+          organizationClient(organizationId),
+          { queries: [Query.orderAsc('name'), ...queries], total: false },
+        )
+        return response.escalations
+      }),
     enabled: !!organizationId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
   })
 }
 
-export function useEscalationPolicies(
-  organizationId: string | null | undefined,
-) {
+export function useEscalations(organizationId: string | null | undefined) {
   const { data, isLoading, error, refetch } = useQuery(
-    escalationPoliciesQueryOptions(organizationId),
+    escalationsQueryOptions(organizationId),
   )
-  return { policies: data ?? [], isLoading, error, refetch }
+  return { escalations: data ?? [], isLoading, error, refetch }
 }
 
-export function useCreateEscalationPolicy(
-  organizationId: string | null | undefined,
-) {
+export function useCreateEscalation(organizationId: string | null | undefined) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (input: EscalationPolicyInput) =>
-      createEscalationPolicy(organizationClient(organizationId), {
-        escalationPolicyId: ID.unique(),
+    mutationFn: (input: EscalationInput) =>
+      createEscalation(organizationClient(organizationId), {
+        escalationId: ID.unique(),
         ...input,
       }),
     onSuccess: async () => {
       await queryClient.refetchQueries({
-        queryKey: ['escalation-policies', organizationId],
+        queryKey: ['escalations', organizationId],
       })
     },
   })
 }
 
 /** Sends only the fields passed in `changes`. */
-export function useUpdateEscalationPolicy(
-  organizationId: string | null | undefined,
-) {
+export function useUpdateEscalation(organizationId: string | null | undefined) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: ({
-      escalationPolicyId,
+      escalationId,
       changes,
     }: {
-      escalationPolicyId: string
-      changes: Partial<EscalationPolicyInput>
+      escalationId: string
+      changes: Partial<EscalationInput>
     }) =>
-      updateEscalationPolicy(
+      updateEscalation(
         organizationClient(organizationId),
-        escalationPolicyId,
+        escalationId,
         changes,
       ),
     onSuccess: async () => {
       await queryClient.refetchQueries({
-        queryKey: ['escalation-policies', organizationId],
+        queryKey: ['escalations', organizationId],
       })
     },
   })
 }
 
-/** Refused with `escalation_policy_in_use` while a monitor uses the policy. */
-export function useDeleteEscalationPolicy(
-  organizationId: string | null | undefined,
-) {
+/** Refused with `escalation_in_use` while a monitor uses the escalation. */
+export function useDeleteEscalation(organizationId: string | null | undefined) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (escalationPolicyId: string) =>
-      deleteEscalationPolicy(
-        organizationClient(organizationId),
-        escalationPolicyId,
-      ),
+    mutationFn: (escalationId: string) =>
+      deleteEscalation(organizationClient(organizationId), escalationId),
     onSuccess: async () => {
       await queryClient.refetchQueries({
-        queryKey: ['escalation-policies', organizationId],
+        queryKey: ['escalations', organizationId],
       })
     },
   })
@@ -460,25 +464,30 @@ export function useDeleteEscalationPolicy(
 export function useEscalationMembers(
   organizationId: string | null | undefined,
 ) {
-  const { memberships, isLoading } = useOrganizationMemberships(
-    organizationId,
-    0,
-    PAGE_LIMIT,
-  )
+  const { data, isLoading } = useQuery({
+    queryKey: ['escalation-members', organizationId],
+    enabled: !!organizationId,
+    staleTime: DEFAULT_STALE_TIME,
+    queryFn: () =>
+      collectPages(async (queries) => {
+        const response = await sdk.forConsole.teams.listMemberships({
+          teamId: organizationId!,
+          queries,
+          total: false,
+        })
+        return response.memberships
+      }),
+  })
   const members = useMemo(
     () =>
-      memberships.flatMap((membership) =>
-        membership.userId && membership.status !== 'pending'
-          ? [
-              {
-                userId: membership.userId,
-                name: membership.userName || membership.userEmail,
-                email: membership.userEmail,
-              },
-            ]
-          : [],
-      ),
-    [memberships],
+      (data ?? [])
+        .filter((member) => member.confirm && member.userId)
+        .map((member) => ({
+          userId: member.userId,
+          name: member.userName || member.userEmail,
+          email: member.userEmail,
+        })),
+    [data],
   )
   const memberName = useCallback(
     (userId: string) =>

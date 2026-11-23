@@ -6,32 +6,32 @@ use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\Document;
 
-class EscalationPolicy extends Model
+class Escalation extends Model
 {
     public function __construct()
     {
         $this
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Escalation policy ID.',
+                'description' => 'Escalation ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Escalation policy creation date in ISO 8601 format.',
+                'description' => 'Escalation creation date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Escalation policy update date in ISO 8601 format.',
+                'description' => 'Escalation update date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Escalation policy name.',
+                'description' => 'Escalation name.',
                 'default' => '',
                 'example' => 'Platform',
             ])
@@ -52,12 +52,12 @@ class EscalationPolicy extends Model
 
     public function getName(): string
     {
-        return 'Escalation Policy';
+        return 'Escalation';
     }
 
     public function getType(): string
     {
-        return Response::MODEL_ESCALATION_POLICY;
+        return Response::MODEL_ESCALATION;
     }
 
     /**

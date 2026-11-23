@@ -30,10 +30,10 @@ import {
   functionsQueryOptions,
   sitesQueryOptions,
   useEscalationMembers,
-  useEscalationPolicies,
+  useEscalations,
   useProject,
 } from '@/lib/react-query/hooks'
-import { policySummary } from '@/lib/alerts/escalation'
+import { escalationSummary } from '@/lib/alerts/escalation'
 import {
   buildRules,
   type AlertComparator,
@@ -75,13 +75,13 @@ export type RuleForm = {
   window: number
   cooldown: number
   notify: string[]
-  /** Notify the roles once, or step by step with an escalation policy. */
+  /** Notify the roles once, or step by step with an escalation. */
   recipients: Recipients
-  escalationPolicyId: string
+  escalationId: string
   severity: MonitorSeverity
 }
 
-export type Recipients = 'roles' | 'policy'
+export type Recipients = 'roles' | 'escalation'
 
 const RESOURCE_PICKER_LIMIT = 100
 
@@ -98,7 +98,7 @@ export function emptyRuleForm(): RuleForm {
     cooldown: 3600,
     notify: ['owner'],
     recipients: 'roles',
-    escalationPolicyId: '',
+    escalationId: '',
     severity: 'warning',
   }
 }
@@ -121,8 +121,8 @@ export function ruleFormFromMonitor(rule: ParsedMonitor): RuleForm {
     window: rule.window,
     cooldown: rule.cooldown,
     notify: rule.notify,
-    recipients: rule.escalationPolicyId ? 'policy' : 'roles',
-    escalationPolicyId: rule.escalationPolicyId ?? '',
+    recipients: rule.escalationId ? 'escalation' : 'roles',
+    escalationId: rule.escalationId ?? '',
     severity: rule.severity,
   }
 }
@@ -248,8 +248,8 @@ export function monitorInputFromForm(
     window: metricDefinition(form.metric).counter ? form.window : undefined,
     cooldown: form.cooldown,
     notify: form.notify,
-    escalationPolicyId:
-      form.recipients === 'policy' ? form.escalationPolicyId : '',
+    escalationId:
+      form.recipients === 'escalation' ? form.escalationId : '',
     severity: form.severity,
   }
 }
@@ -265,8 +265,8 @@ export function ruleFormError(
   if (!Number.isFinite(form.threshold) || form.threshold < 0) {
     return t('Enter a threshold of 0 or more.')
   }
-  if (form.recipients === 'policy' && !form.escalationPolicyId) {
-    return t('Select an escalation policy.')
+  if (form.recipients === 'escalation' && !form.escalationId) {
+    return t('Select an escalation.')
   }
   return undefined
 }
@@ -676,7 +676,7 @@ export function RuleFields({
         escalation={{
           organizationId: project?.teamId,
           recipients: form.recipients,
-          escalationPolicyId: form.escalationPolicyId,
+          escalationId: form.escalationId,
         }}
         onChange={onChange}
         disabled={disabled}
@@ -703,30 +703,30 @@ export function NotifyFields({
 }: {
   notify: string[]
   severity: MonitorSeverity
-  /** Offers an escalation policy instead of the roles. */
+  /** Offers an escalation instead of the roles. */
   escalation?: {
     organizationId: string | undefined
     recipients: Recipients
-    escalationPolicyId: string
+    escalationId: string
   }
   onChange: (changes: {
     notify?: string[]
     severity?: MonitorSeverity
     recipients?: Recipients
-    escalationPolicyId?: string
+    escalationId?: string
   }) => void
   disabled?: boolean
 }) {
   const t = useT()
-  const policy = escalation?.recipients === 'policy'
+  const usesEscalation = escalation?.recipients === 'escalation'
   return (
     <section>
       <SectionHeading
         title={t('Notify')}
         description={
-          policy
+          usesEscalation
             ? t(
-                'Each step of the policy is notified in turn until someone acknowledges the alert.',
+                'Each step of the escalation is notified in turn until someone acknowledges the alert.',
               )
             : t(
                 'Members with these roles get an email and a console notification when the monitor fires and again when it resolves.',
@@ -745,7 +745,7 @@ export function NotifyFields({
           {(
             [
               { value: 'roles', label: 'Notify roles once' },
-              { value: 'policy', label: 'Escalation policy' },
+              { value: 'escalation', label: 'Escalation' },
             ] as const
           ).map((option) => (
             <RadioGroupPrimitive.Item
@@ -763,11 +763,11 @@ export function NotifyFields({
           ))}
         </RadioGroupPrimitive.Root>
       )}
-      {escalation && policy ? (
-        <EscalationPolicyPicker
+      {escalation && usesEscalation ? (
+        <EscalationPicker
           organizationId={escalation.organizationId}
-          value={escalation.escalationPolicyId}
-          onChange={(escalationPolicyId) => onChange({ escalationPolicyId })}
+          value={escalation.escalationId}
+          onChange={(escalationId) => onChange({ escalationId })}
           disabled={disabled}
         />
       ) : (
@@ -864,8 +864,8 @@ export function NotifyFields({
   )
 }
 
-/** One of the organization's escalation policies, with what its steps do. */
-function EscalationPolicyPicker({
+/** One of the organization's escalations, with what its steps do. */
+function EscalationPicker({
   organizationId,
   value,
   onChange,
@@ -873,30 +873,30 @@ function EscalationPolicyPicker({
 }: {
   organizationId: string | undefined
   value: string
-  onChange: (escalationPolicyId: string) => void
+  onChange: (escalationId: string) => void
   disabled?: boolean
 }) {
   const t = useT()
-  const { policies, isLoading, error, refetch } =
-    useEscalationPolicies(organizationId)
+  const { escalations, isLoading, error, refetch } =
+    useEscalations(organizationId)
   const { memberName } = useEscalationMembers(organizationId)
-  const selected = policies.find((policy) => policy.$id === value)
+  const selected = escalations.find((escalation) => escalation.$id === value)
   const manage = organizationId ? (
     <Link
-      to="/organizations/$orgId/settings/escalation-policies"
+      to="/organizations/$orgId/settings/escalations"
       params={{ orgId: organizationId }}
       className="text-[12px] text-foreground underline underline-offset-2"
     >
-      {policies.length === 0 && !isLoading
-        ? t('Create a policy')
-        : t('Manage policies')}
+      {escalations.length === 0 && !isLoading
+        ? t('Create an escalation')
+        : t('Manage escalations')}
     </Link>
   ) : null
 
   if (error) {
     return (
       <div className="flex items-center gap-2 text-[13px] text-destructive">
-        <span>{t('Could not load escalation policies.')}</span>
+        <span>{t('Could not load escalations.')}</span>
         <button
           type="button"
           className="underline underline-offset-2"
@@ -908,10 +908,10 @@ function EscalationPolicyPicker({
     )
   }
 
-  if (!isLoading && policies.length === 0) {
+  if (!isLoading && escalations.length === 0) {
     return (
       <p className="text-[13px] text-muted-foreground">
-        {t('Your organization has no escalation policies yet.')} {manage}
+        {t('Your organization has no escalations yet.')} {manage}
       </p>
     )
   }
@@ -925,15 +925,15 @@ function EscalationPolicyPicker({
         }}
         disabled={disabled}
       >
-        <SelectTrigger className="w-full" aria-label={t('Escalation policy')}>
+        <SelectTrigger className="w-full" aria-label={t('Escalation')}>
           <SelectValue
-            placeholder={isLoading ? t('Loading...') : t('Select a policy')}
+            placeholder={isLoading ? t('Loading...') : t('Select an escalation')}
           />
         </SelectTrigger>
         <SelectContent>
-          {policies.map((policy) => (
-            <SelectItem key={policy.$id} value={policy.$id}>
-              {policy.name}
+          {escalations.map((escalation) => (
+            <SelectItem key={escalation.$id} value={escalation.$id}>
+              {escalation.name}
             </SelectItem>
           ))}
         </SelectContent>
@@ -941,7 +941,7 @@ function EscalationPolicyPicker({
       <p className="text-[12px] text-muted-foreground">
         {selected && (
           <>
-            {policySummary(
+            {escalationSummary(
               selected.steps,
               memberName,
               (role) => t(roleLabel(role)),

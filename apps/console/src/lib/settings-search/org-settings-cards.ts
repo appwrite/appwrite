@@ -174,8 +174,8 @@ export const ORG_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
     ],
   },
   {
-    sectionId: 'escalation-policies',
-    title: 'Escalation policies',
+    sectionId: 'escalations',
+    title: 'Escalations',
     keywords: [
       'escalation',
       'on-call',

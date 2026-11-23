@@ -91,8 +91,8 @@ export type MonitorInput = {
   /** Critical pushes ring through silent and Do Not Disturb on devices that allow critical alerts. */
   severity?: MonitorSeverity
   enabled?: boolean
-  /** An organization escalation policy that replaces `notify`; empty notifies the roles. */
-  escalationPolicyId?: string
+  /** An organization escalation that replaces `notify`; empty notifies the roles. */
+  escalationId?: string
 }
 
 /** Who one escalation step notifies, after waiting `delay` seconds. */
@@ -105,8 +105,8 @@ export type EscalationStep = {
   userIds: string[]
 }
 
-/** An organization's escalation policy: steps notified in turn until someone acknowledges the alert. */
-export type EscalationPolicy = {
+/** An organization's escalation: steps notified in turn until someone acknowledges the alert. */
+export type Escalation = {
   $id: string
   $createdAt: string
   $updatedAt: string
@@ -116,13 +116,13 @@ export type EscalationPolicy = {
   repeat: number
 }
 
-export type EscalationPolicyList = {
+export type EscalationList = {
   total: number
-  escalationPolicies: EscalationPolicy[]
+  escalations: Escalation[]
 }
 
-/** An escalation policy's writable fields. */
-export type EscalationPolicyInput = {
+/** An escalation's writable fields. */
+export type EscalationInput = {
   name: string
   steps: EscalationStep[]
   repeat: number
@@ -151,8 +151,8 @@ export type ProbeSettings = {
   timeout?: number
   cooldown?: number
   notify?: string[]
-  /** An organization escalation policy that replaces `notify`; empty notifies the roles. */
-  escalationPolicyId?: string
+  /** An organization escalation that replaces `notify`; empty notifies the roles. */
+  escalationId?: string
   severity?: MonitorSeverity
   enabled?: boolean
 }

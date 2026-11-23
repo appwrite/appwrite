@@ -26,14 +26,14 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { policySummary } from '@/lib/alerts/escalation'
-import type { EscalationPolicy } from '@/lib/appwrite/monitors'
+import { escalationSummary } from '@/lib/alerts/escalation'
+import type { Escalation } from '@/lib/appwrite/monitors'
 import { canWriteMonitors } from '@/lib/console-access-checks'
 import { useT } from '@/lib/i18n/translate'
 import {
-  useDeleteEscalationPolicy,
+  useDeleteEscalation,
   useEscalationMembers,
-  useEscalationPolicies,
+  useEscalations,
   useOrganizationScopes,
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -41,28 +41,28 @@ import {
   closeDialogBeforeOverlayUnmount,
   openDialogAfterOverlayCloses,
 } from '@/lib/utils/overlay-lock'
-import { EscalationPolicyDialog } from './_components/EscalationPolicyDialog'
+import { EscalationDialog } from './_components/EscalationDialog'
 
-/** The organization's escalation policies, which monitors notify step by step. */
-export function EscalationPolicies() {
+/** The organization's escalations, which monitors notify step by step. */
+export function Escalations() {
   const t = useT()
   const params = useParams({ strict: false })
   const orgId = params.orgId as string | undefined
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(orgId)
   const canWrite = canWriteMonitors(access, features)
-  const { policies, isLoading, error, refetch } = useEscalationPolicies(orgId)
+  const { escalations, isLoading, error, refetch } = useEscalations(orgId)
   const { memberName } = useEscalationMembers(orgId)
-  const deleteMutation = useDeleteEscalationPolicy(orgId)
-  const [editing, setEditing] = useState<EscalationPolicy | null>(null)
+  const deleteMutation = useDeleteEscalation(orgId)
+  const [editing, setEditing] = useState<Escalation | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [toDelete, setToDelete] = useState<EscalationPolicy | null>(null)
+  const [toDelete, setToDelete] = useState<Escalation | null>(null)
 
   if (!orgId) return null
 
-  const openDialog = (policy: EscalationPolicy | null) =>
+  const openDialog = (escalation: Escalation | null) =>
     openDialogAfterOverlayCloses(() => {
-      setEditing(policy)
+      setEditing(escalation)
       setDialogOpen(true)
     })
 
@@ -71,16 +71,16 @@ export function EscalationPolicies() {
     deleteMutation.mutate(toDelete.$id, {
       onSuccess: () => {
         closeDialogBeforeOverlayUnmount(() => setToDelete(null))
-        toast.success(t('Escalation policy has been deleted'))
+        toast.success(t('Escalation has been deleted'))
       },
       onError: (err: Error) =>
         toast.error(
           err instanceof AppwriteException &&
-            err.type === 'escalation_policy_in_use'
+            err.type === 'escalation_in_use'
             ? t(
-                'Monitors use this policy. Move them to another policy or to roles first.',
+                'Monitors use this escalation. Move them to another escalation or to roles first.',
               )
-            : getErrorMessage(err, t('Failed to delete escalation policy')),
+            : getErrorMessage(err, t('Failed to delete escalation')),
         ),
     })
   }
@@ -94,7 +94,7 @@ export function EscalationPolicies() {
       disabled={!canWrite}
     >
       <Plus className="me-1.5 h-3.5 w-3.5" />
-      {t('Create policy')}
+      {t('Create escalation')}
     </Button>
   )
 
@@ -103,11 +103,11 @@ export function EscalationPolicies() {
       <div className="flex flex-wrap items-start justify-between gap-3 px-6 py-4">
         <div>
           <h3 className="text-[15px] font-semibold text-foreground">
-            {t('Escalation policies')}
+            {t('Escalations')}
           </h3>
           <p className="mt-1 text-[13px] text-muted-foreground">
             {t(
-              'Notify your team step by step until someone acknowledges the alert. Pick a policy on any monitor.',
+              'Notify your team step by step until someone acknowledges the alert. Pick an escalation on any monitor.',
             )}
           </p>
         </div>
@@ -131,7 +131,7 @@ export function EscalationPolicies() {
           </div>
         ) : error ? (
           <div className="flex items-center gap-2 px-6 py-4 text-[13px] text-destructive">
-            <span>{t('Could not load escalation policies.')}</span>
+            <span>{t('Could not load escalations.')}</span>
             <button
               type="button"
               className="underline underline-offset-2"
@@ -140,41 +140,41 @@ export function EscalationPolicies() {
               {t('Retry')}
             </button>
           </div>
-        ) : policies.length === 0 ? (
+        ) : escalations.length === 0 ? (
           <p className="px-6 py-6 text-[13px] text-muted-foreground">
-            {t('No escalation policies yet.')}
+            {t('No escalations yet.')}
           </p>
         ) : (
           <ul className="divide-y divide-border">
-            {policies.map((policy) => (
+            {escalations.map((escalation) => (
               <li
-                key={policy.$id}
+                key={escalation.$id}
                 className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-6 py-3"
               >
                 <div className="min-w-0">
                   <p className="truncate text-[13px] font-medium text-foreground">
-                    {policy.name}
+                    {escalation.name}
                   </p>
                   <p className="truncate text-[12px] text-muted-foreground">
-                    {policySummary(
-                      policy.steps,
+                    {escalationSummary(
+                      escalation.steps,
                       memberName,
                       (role) => t(roleLabel(role)),
                       t,
                     )}
-                    {policy.repeat > 0 &&
-                      ` · ${t('repeats {count}×').replace('{count}', String(policy.repeat))}`}
+                    {escalation.repeat > 0 &&
+                      ` · ${t('repeats {count}×').replace('{count}', String(escalation.repeat))}`}
                   </p>
                 </div>
                 {canWrite && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <RowActionsMenuTrigger
-                        aria-label={`${t('Actions for')} ${policy.name}`}
+                        aria-label={`${t('Actions for')} ${escalation.name}`}
                       />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => openDialog(policy)}>
+                      <DropdownMenuItem onClick={() => openDialog(escalation)}>
                         <MenuItemContent icon={Pencil}>
                           {t('Edit')}
                         </MenuItemContent>
@@ -183,7 +183,7 @@ export function EscalationPolicies() {
                         className="text-destructive focus:text-destructive"
                         onClick={() =>
                           openDialogAfterOverlayCloses(() =>
-                            setToDelete(policy),
+                            setToDelete(escalation),
                           )
                         }
                       >
@@ -200,11 +200,11 @@ export function EscalationPolicies() {
         )}
       </div>
 
-      <EscalationPolicyDialog
+      <EscalationDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         organizationId={orgId}
-        policy={editing}
+        escalation={editing}
       />
 
       <Dialog
@@ -215,7 +215,7 @@ export function EscalationPolicies() {
       >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>{t('Delete escalation policy')}</DialogTitle>
+            <DialogTitle>{t('Delete escalation')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               {t('Are you sure you want to delete')}{' '}
               <strong>{toDelete?.name}</strong>?{' '}

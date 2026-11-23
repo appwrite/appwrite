@@ -5,12 +5,12 @@ namespace Appwrite\Platform\Modules\Alerts\Services;
 use Appwrite\Platform\Modules\Alerts\Http\Alerts\Get as GetAlert;
 use Appwrite\Platform\Modules\Alerts\Http\Alerts\Update as UpdateAlert;
 use Appwrite\Platform\Modules\Alerts\Http\Alerts\XList as ListAlerts;
-use Appwrite\Platform\Modules\Alerts\Http\EscalationPolicies\Create as CreateEscalationPolicy;
-use Appwrite\Platform\Modules\Alerts\Http\EscalationPolicies\Delete as DeleteEscalationPolicy;
-use Appwrite\Platform\Modules\Alerts\Http\EscalationPolicies\Get as GetEscalationPolicy;
-use Appwrite\Platform\Modules\Alerts\Http\EscalationPolicies\Init as InitEscalationPolicies;
-use Appwrite\Platform\Modules\Alerts\Http\EscalationPolicies\Update as UpdateEscalationPolicy;
-use Appwrite\Platform\Modules\Alerts\Http\EscalationPolicies\XList as ListEscalationPolicies;
+use Appwrite\Platform\Modules\Alerts\Http\Escalations\Create as CreateEscalation;
+use Appwrite\Platform\Modules\Alerts\Http\Escalations\Delete as DeleteEscalation;
+use Appwrite\Platform\Modules\Alerts\Http\Escalations\Get as GetEscalation;
+use Appwrite\Platform\Modules\Alerts\Http\Escalations\Init as InitEscalations;
+use Appwrite\Platform\Modules\Alerts\Http\Escalations\Update as UpdateEscalation;
+use Appwrite\Platform\Modules\Alerts\Http\Escalations\XList as ListEscalations;
 use Appwrite\Platform\Modules\Alerts\Http\Init;
 use Appwrite\Platform\Modules\Alerts\Http\Monitors\Delete as DeleteMonitor;
 use Appwrite\Platform\Modules\Alerts\Http\Monitors\Get as GetMonitor;
@@ -37,11 +37,11 @@ class Http extends Service
         $this->addAction('getAlert', GetAlert::class);
         $this->addAction('updateAlert', UpdateAlert::class);
 
-        $this->addAction('initEscalationPolicies', InitEscalationPolicies::class);
-        $this->addAction('createEscalationPolicy', CreateEscalationPolicy::class);
-        $this->addAction('listEscalationPolicies', ListEscalationPolicies::class);
-        $this->addAction('getEscalationPolicy', GetEscalationPolicy::class);
-        $this->addAction('updateEscalationPolicy', UpdateEscalationPolicy::class);
-        $this->addAction('deleteEscalationPolicy', DeleteEscalationPolicy::class);
+        $this->addAction('initEscalations', InitEscalations::class);
+        $this->addAction('createEscalation', CreateEscalation::class);
+        $this->addAction('listEscalations', ListEscalations::class);
+        $this->addAction('getEscalation', GetEscalation::class);
+        $this->addAction('updateEscalation', UpdateEscalation::class);
+        $this->addAction('deleteEscalation', DeleteEscalation::class);
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Alerts\Http\EscalationPolicies;
+namespace Appwrite\Platform\Modules\Alerts\Http\Escalations;
 
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -18,33 +18,33 @@ class Get extends Base
 
     public static function getName(): string
     {
-        return 'getEscalationPolicy';
+        return 'getEscalation';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/organization/escalation-policies/:escalationPolicyId')
-            ->desc('Get escalation policy')
-            ->groups(['api', 'organization', 'escalationPolicies'])
+            ->setHttpPath('/v1/organization/escalations/:escalationId')
+            ->desc('Get escalation')
+            ->groups(['api', 'organization', 'escalations'])
             ->label('scope', 'monitors.read')
             ->label('sdk', new Method(
                 namespace: 'organization',
-                group: 'escalationPolicies',
-                name: 'getEscalationPolicy',
+                group: 'escalations',
+                name: 'getEscalation',
                 description: <<<EOT
-                Get one of your organization's escalation policies by its ID.
+                Get one of your organization's escalations by its ID.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::ORGANIZATION],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_ESCALATION_POLICY,
+                        model: Response::MODEL_ESCALATION,
                     ),
                 ]
             ))
-            ->param('escalationPolicyId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Escalation policy ID.', false, ['dbForPlatform'])
+            ->param('escalationId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Escalation ID.', false, ['dbForPlatform'])
             ->inject('response')
             ->inject('team')
             ->inject('dbForPlatform')
@@ -53,12 +53,12 @@ class Get extends Base
     }
 
     public function action(
-        string $escalationPolicyId,
+        string $escalationId,
         Response $response,
         Document $team,
         Database $dbForPlatform,
         Authorization $authorization,
     ): void {
-        $response->dynamic($this->getPolicy($dbForPlatform, $authorization, $team, $escalationPolicyId), Response::MODEL_ESCALATION_POLICY);
+        $response->dynamic($this->getEscalation($dbForPlatform, $authorization, $team, $escalationId), Response::MODEL_ESCALATION);
     }
 }

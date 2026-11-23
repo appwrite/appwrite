@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Alerts\Http\EscalationPolicies;
+namespace Appwrite\Platform\Modules\Alerts\Http\Escalations;
 
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -21,25 +21,25 @@ class Delete extends Base
 
     public static function getName(): string
     {
-        return 'deleteEscalationPolicy';
+        return 'deleteEscalation';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_DELETE)
-            ->setHttpPath('/v1/organization/escalation-policies/:escalationPolicyId')
-            ->desc('Delete escalation policy')
-            ->groups(['api', 'organization', 'escalationPolicies'])
+            ->setHttpPath('/v1/organization/escalations/:escalationId')
+            ->desc('Delete escalation')
+            ->groups(['api', 'organization', 'escalations'])
             ->label('scope', 'monitors.write')
-            ->label('audits.event', 'escalationPolicy.delete')
-            ->label('audits.resource', 'escalationPolicy/{request.escalationPolicyId}')
+            ->label('audits.event', 'escalation.delete')
+            ->label('audits.resource', 'escalation/{request.escalationId}')
             ->label('sdk', new Method(
                 namespace: 'organization',
-                group: 'escalationPolicies',
-                name: 'deleteEscalationPolicy',
+                group: 'escalations',
+                name: 'deleteEscalation',
                 description: <<<EOT
-                Delete an escalation policy. A policy that a monitor uses cannot be deleted: move the monitor to another policy or to `notify` roles first. Alerts still escalating through it stop escalating.
+                Delete an escalation. An escalation that a monitor uses cannot be deleted: move the monitor to another escalation or to `notify` roles first. Open alerts keep the steps they started with.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::ORGANIZATION],
                 responses: [
@@ -50,7 +50,7 @@ class Delete extends Base
                 ],
                 contentType: ContentType::NONE,
             ))
-            ->param('escalationPolicyId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Escalation policy ID.', false, ['dbForPlatform'])
+            ->param('escalationId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Escalation ID.', false, ['dbForPlatform'])
             ->inject('response')
             ->inject('team')
             ->inject('dbForPlatform')
@@ -59,22 +59,22 @@ class Delete extends Base
     }
 
     public function action(
-        string $escalationPolicyId,
+        string $escalationId,
         Response $response,
         Document $team,
         Database $dbForPlatform,
         Authorization $authorization,
     ): void {
-        $policy = $this->getPolicy($dbForPlatform, $authorization, $team, $escalationPolicyId);
+        $escalation = $this->getEscalation($dbForPlatform, $authorization, $team, $escalationId);
 
         $monitor = $authorization->skip(fn () => $dbForPlatform->findOne('monitors', [
-            Query::equal('escalationPolicyId', [$policy->getId()]),
+            Query::equal('escalationId', [$escalation->getId()]),
         ]));
         if (!$monitor->isEmpty()) {
-            throw new Exception(Exception::ESCALATION_POLICY_IN_USE, "Escalation policy '{$policy->getId()}' is used by monitor '{$monitor->getId()}'.");
+            throw new Exception(Exception::ESCALATION_IN_USE, "Escalation '{$escalation->getId()}' is used by monitor '{$monitor->getId()}'.");
         }
 
-        $authorization->skip(fn () => $dbForPlatform->deleteDocument('escalationPolicies', $policy->getId()));
+        $authorization->skip(fn () => $dbForPlatform->deleteDocument('escalations', $escalation->getId()));
 
         $response->noContent();
     }

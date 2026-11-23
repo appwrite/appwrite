@@ -210,11 +210,11 @@ export type Alert = {
    */
   notifications: number
   /**
-   * ID of the escalation policy notifying the alert's steps in turn. Empty when the monitor notifies roles instead.
+   * ID of the escalation notifying the alert's steps in turn. Empty when the monitor notifies roles instead.
    */
-  escalationPolicyId: string
+  escalationId: string
   /**
-   * Index of the next escalation step to notify. Equals the policy's number of steps once every step has gone out.
+   * Index of the next escalation step to notify. Equals the escalation's number of steps once every step has gone out.
    */
   escalationStep: number
   /**
@@ -374,9 +374,9 @@ export type Monitor = {
    */
   notify: string[]
   /**
-   * ID of the organization escalation policy that notifies the monitor's alerts step by step. Empty when `notify` roles are notified instead.
+   * ID of the organization escalation that notifies the monitor's alerts step by step. Empty when `notify` roles are notified instead.
    */
-  escalationPolicyId: string
+  escalationId: string
   /**
    * How urgent the monitor's alerts are: `info`, `warning`, `error` or `critical`. Critical alerts may be delivered with higher urgency by the notification channels that support it.
    */

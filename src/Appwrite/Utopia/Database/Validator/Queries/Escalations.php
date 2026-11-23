@@ -2,7 +2,7 @@
 
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
-class EscalationPolicies extends Base
+class Escalations extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
         'name',
@@ -12,6 +12,6 @@ class EscalationPolicies extends Base
 
     public function __construct()
     {
-        parent::__construct('escalationPolicies', self::ALLOWED_ATTRIBUTES);
+        parent::__construct('escalations', self::ALLOWED_ATTRIBUTES);
     }
 }

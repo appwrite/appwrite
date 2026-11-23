@@ -10,7 +10,7 @@ import { RESOURCE_TYPES, formatLength } from '@/lib/alerts/metrics'
 import { PROBE_TYPES } from '@/lib/alerts/probes'
 import { useT } from '@/lib/i18n/translate'
 import {
-  useEscalationPolicies,
+  useEscalations,
   useProject,
   useUpdateAlert,
 } from '@/lib/react-query/hooks'
@@ -157,19 +157,19 @@ function Acknowledgement({
   )
 }
 
-/** Where an escalating alert's policy has got to, and what happens next. */
+/** Where an escalating alert's escalation has got to, and what happens next. */
 function Escalation({ projectId, alert }: { projectId: string; alert: Alert }) {
   const t = useT()
   const { project } = useProject(projectId)
-  const { policies } = useEscalationPolicies(
-    alert.escalationPolicyId ? project?.teamId : null,
+  const { escalations } = useEscalations(
+    alert.escalationId ? project?.teamId : null,
   )
   const state = escalationState(alert)
   if (!state) return null
-  const policy = policies.find(
-    (entry) => entry.$id === alert.escalationPolicyId,
+  const escalation = escalations.find(
+    (entry) => entry.$id === alert.escalationId,
   )
-  const total = policy?.steps.length
+  const total = escalation?.steps.length
   const step =
     alert.escalationStep === 0
       ? t('No step notified yet')
@@ -189,14 +189,14 @@ function Escalation({ projectId, alert }: { projectId: string; alert: Alert }) {
       <dd className="min-w-0 truncate text-foreground">
         {project?.teamId ? (
           <Link
-            to="/organizations/$orgId/settings/escalation-policies"
+            to="/organizations/$orgId/settings/escalations"
             params={{ orgId: project.teamId }}
             className="underline underline-offset-2"
           >
-            {policy?.name ?? t('Escalation policy')}
+            {escalation?.name ?? t('Escalation')}
           </Link>
         ) : (
-          (policy?.name ?? t('Escalation policy'))
+          (escalation?.name ?? t('Escalation'))
         )}
       </dd>
       <dt className="text-muted-foreground">{t('Notified')}</dt>

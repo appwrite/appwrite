@@ -4,7 +4,7 @@ import type { Alert, EscalationStep } from '@/lib/appwrite/monitors'
 /** Roles a step can notify; the server validates them against its own list. */
 export const ESCALATION_ROLES = ['owner', 'developer']
 
-/** Most rounds a policy can add after the first. */
+/** Most rounds an escalation can add after the first. */
 export const MAX_REPEAT = 9
 
 /** Most seconds a step can wait: 30 days. */
@@ -32,15 +32,15 @@ export function stepAudience(
 export function escalationState(
   alert: Alert,
 ): 'waiting' | 'acknowledged' | 'resolved' | 'finished' | null {
-  if (!alert.escalationPolicyId) return null
+  if (!alert.escalationId) return null
   if (alert.acknowledgedAt) return 'acknowledged'
   if (alert.escalatesAt) return 'waiting'
   if (alert.status === 'resolved') return 'resolved'
   return 'finished'
 }
 
-/** A policy's steps in one line: `Developers now → Ana, Ben after 10 m`. */
-export function policySummary(
+/** An escalation's steps in one line: `Developers now → Ana, Ben after 10 m`. */
+export function escalationSummary(
   steps: EscalationStep[],
   memberName: (userId: string) => string,
   roleLabel: (role: string) => string,

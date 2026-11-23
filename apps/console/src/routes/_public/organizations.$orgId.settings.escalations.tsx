@@ -1,13 +1,13 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { pageTitle } from '@/lib/utils/page-title'
 import {
-  escalationPoliciesQueryOptions,
+  escalationsQueryOptions,
   fetchOrganizations,
 } from '@/lib/react-query/hooks'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 
 export const Route = createFileRoute(
-  '/_public/organizations/$orgId/settings/escalation-policies',
+  '/_public/organizations/$orgId/settings/escalations',
 )({
   beforeLoad: ({ params }) => {
     if (!getActiveProfileFeatures().alerts) {
@@ -19,7 +19,7 @@ export const Route = createFileRoute(
     }
   },
   head: () => ({
-    meta: [{ title: pageTitle('Escalation policies', 'Organization') }],
+    meta: [{ title: pageTitle('Escalations', 'Organization') }],
   }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return
@@ -31,14 +31,14 @@ export const Route = createFileRoute(
         staleTime: 5 * 60 * 1000,
       }),
       queryClient
-        .ensureQueryData(escalationPoliciesQueryOptions(params.orgId))
+        .ensureQueryData(escalationsQueryOptions(params.orgId))
         .catch(() => undefined),
     ])
   },
-  component: EscalationPoliciesPage,
+  component: EscalationsPage,
 })
 
 // The organization overview renders the settings content.
-function EscalationPoliciesPage() {
+function EscalationsPage() {
   return null
 }

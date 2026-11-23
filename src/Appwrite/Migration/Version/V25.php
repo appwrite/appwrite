@@ -626,13 +626,13 @@ class V25 extends Migration
 
                 case 'monitors':
                 case 'monitorAlerts':
-                case 'escalationPolicies':
+                case 'escalations':
                     // New in 2.7.0. Platform collections, so only the console project visits them.
                     $this->createCollection($id);
-                    // Created before monitors had a severity or an escalation policy, or alerts were acknowledged or escalated.
+                    // Created before monitors had a severity or an escalation, or alerts were acknowledged or escalated.
                     $attributes = match ($id) {
-                        'monitorAlerts' => ['severity', 'acknowledgedAt', 'acknowledgedBy', 'acknowledgedByName', 'escalationPolicyId', 'escalationSteps', 'escalationRepeat', 'escalationStep', 'escalationRound', 'escalatesAt'],
-                        'monitors' => ['severity', 'escalationPolicyId'],
+                        'monitorAlerts' => ['severity', 'acknowledgedAt', 'acknowledgedBy', 'acknowledgedByName', 'escalationId', 'escalationSteps', 'escalationUserIds', 'escalationRepeat', 'escalationStep', 'escalationRound', 'escalatesAt'],
+                        'monitors' => ['severity', 'escalationId'],
                         default => [],
                     };
                     foreach ($attributes as $attribute) {
@@ -643,7 +643,7 @@ class V25 extends Migration
                     }
                     if ($id === 'monitors') {
                         try {
-                            $this->createIndexFromCollection($this->dbForProject, $id, '_key_escalationPolicyId');
+                            $this->createIndexFromCollection($this->dbForProject, $id, '_key_escalationId');
                         } catch (Duplicate) {
                         }
                     }

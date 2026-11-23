@@ -362,11 +362,11 @@ class Exception extends \Exception
     public const string ALERT_NOT_FOUND = 'alert_not_found';
     public const string ALERT_RESOLVED = 'alert_resolved';
 
-    /** Escalation policies */
-    public const string ESCALATION_POLICY_NOT_FOUND = 'escalation_policy_not_found';
-    public const string ESCALATION_POLICY_ALREADY_EXISTS = 'escalation_policy_already_exists';
-    public const string ESCALATION_POLICY_IN_USE = 'escalation_policy_in_use';
-    public const string ESCALATION_POLICY_MEMBER_NOT_FOUND = 'escalation_policy_member_not_found';
+    /** Escalations */
+    public const string ESCALATION_NOT_FOUND = 'escalation_not_found';
+    public const string ESCALATION_ALREADY_EXISTS = 'escalation_already_exists';
+    public const string ESCALATION_IN_USE = 'escalation_in_use';
+    public const string ESCALATION_MEMBER_NOT_FOUND = 'escalation_member_not_found';
 
     /** Router */
     public const string ROUTER_HOST_NOT_FOUND = 'router_host_not_found';

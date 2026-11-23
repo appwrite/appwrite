@@ -1,5 +1,5 @@
 /**
- * Escalation policies belong to an organization and are not in the pinned
+ * Escalations belong to an organization and are not in the pinned
  * Console SDK, so these call the routes directly. Pass the client of
  * `sdk.forConsole.organization(organizationId)`, which carries the
  * `X-Appwrite-Organization` header the routes act on.
@@ -8,12 +8,12 @@
 import type { Client } from '@appwrite.io/console'
 
 import type {
-  EscalationPolicy,
-  EscalationPolicyInput,
-  EscalationPolicyList,
+  Escalation,
+  EscalationInput,
+  EscalationList,
 } from './models'
 
-const PATH = '/organization/escalation-policies'
+const PATH = '/organization/escalations'
 
 function call<T>(
   client: Client,
@@ -33,43 +33,43 @@ function call<T>(
   ) as Promise<T>
 }
 
-function policyPath(escalationPolicyId: string): string {
-  return `${PATH}/${encodeURIComponent(escalationPolicyId)}`
+function escalationPath(escalationId: string): string {
+  return `${PATH}/${encodeURIComponent(escalationId)}`
 }
 
-export function listEscalationPolicies(
+export function listEscalations(
   client: Client,
   params: { queries?: string[]; total?: boolean } = {},
-): Promise<EscalationPolicyList> {
+): Promise<EscalationList> {
   return call(client, 'get', PATH, params)
 }
 
-export function getEscalationPolicy(
+export function getEscalation(
   client: Client,
-  escalationPolicyId: string,
-): Promise<EscalationPolicy> {
-  return call(client, 'get', policyPath(escalationPolicyId))
+  escalationId: string,
+): Promise<Escalation> {
+  return call(client, 'get', escalationPath(escalationId))
 }
 
-export function createEscalationPolicy(
+export function createEscalation(
   client: Client,
-  params: { escalationPolicyId: string } & EscalationPolicyInput,
-): Promise<EscalationPolicy> {
+  params: { escalationId: string } & EscalationInput,
+): Promise<Escalation> {
   return call(client, 'post', PATH, params)
 }
 
 /** Sends only the fields passed. */
-export function updateEscalationPolicy(
+export function updateEscalation(
   client: Client,
-  escalationPolicyId: string,
-  changes: Partial<EscalationPolicyInput>,
-): Promise<EscalationPolicy> {
-  return call(client, 'put', policyPath(escalationPolicyId), changes)
+  escalationId: string,
+  changes: Partial<EscalationInput>,
+): Promise<Escalation> {
+  return call(client, 'put', escalationPath(escalationId), changes)
 }
 
-export function deleteEscalationPolicy(
+export function deleteEscalation(
   client: Client,
-  escalationPolicyId: string,
+  escalationId: string,
 ): Promise<void> {
-  return call(client, 'delete', policyPath(escalationPolicyId))
+  return call(client, 'delete', escalationPath(escalationId))
 }

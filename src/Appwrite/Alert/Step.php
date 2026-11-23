@@ -3,7 +3,7 @@
 namespace Appwrite\Alert;
 
 /**
- * One step of an escalation policy: who it notifies, and how long it waits
+ * One step of an escalation: who it notifies, and how long it waits
  * first, after the alert fires for the first step and after the previous step
  * for the others.
  */

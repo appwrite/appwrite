@@ -76,7 +76,7 @@ export type ProbeForm = {
   cooldown: number
   notify: string[]
   recipients: Recipients
-  escalationPolicyId: string
+  escalationId: string
   severity: MonitorSeverity
 }
 
@@ -105,7 +105,7 @@ export function emptyProbeForm(type: ProbeType): ProbeForm {
     cooldown: 3600,
     notify: ['owner'],
     recipients: 'roles',
-    escalationPolicyId: '',
+    escalationId: '',
     severity: 'warning',
   }
 }
@@ -133,8 +133,8 @@ export function probeFormFromMonitor(
     timeout: monitor.timeout,
     cooldown: monitor.cooldown,
     notify: monitor.notify,
-    recipients: monitor.escalationPolicyId ? 'policy' : 'roles',
-    escalationPolicyId: monitor.escalationPolicyId ?? '',
+    recipients: monitor.escalationId ? 'escalation' : 'roles',
+    escalationId: monitor.escalationId ?? '',
     severity: monitor.severity,
   }
 }
@@ -157,8 +157,8 @@ export function probeInputFromForm(form: ProbeForm): ProbeMonitorInput {
     timeout: form.timeout,
     cooldown: form.cooldown,
     notify: form.notify,
-    escalationPolicyId:
-      form.recipients === 'policy' ? form.escalationPolicyId : '',
+    escalationId:
+      form.recipients === 'escalation' ? form.escalationId : '',
     severity: form.severity,
   }
   switch (form.type) {
@@ -238,8 +238,8 @@ export function probeFormError(
   if (form.timeout > form.interval) {
     return t('The timeout must not be longer than the interval.')
   }
-  if (form.recipients === 'policy' && !form.escalationPolicyId) {
-    return t('Select an escalation policy.')
+  if (form.recipients === 'escalation' && !form.escalationId) {
+    return t('Select an escalation.')
   }
   return undefined
 }
@@ -652,7 +652,7 @@ export function ProbeFields({
         escalation={{
           organizationId: project?.teamId,
           recipients: form.recipients,
-          escalationPolicyId: form.escalationPolicyId,
+          escalationId: form.escalationId,
         }}
         onChange={onChange}
         disabled={disabled}

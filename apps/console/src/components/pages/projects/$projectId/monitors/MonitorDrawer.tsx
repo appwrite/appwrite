@@ -19,7 +19,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import {
-  useEscalationPolicies,
+  useEscalations,
   useProject,
   useUpdateMonitor,
 } from '@/lib/react-query/hooks'
@@ -366,8 +366,8 @@ export function MonitorDrawer({
   const t = useT()
   const updateMutation = useUpdateMonitor(projectId)
   const { project } = useProject(projectId)
-  const { policies } = useEscalationPolicies(
-    monitor?.escalationPolicyId ? project?.teamId : null,
+  const { escalations } = useEscalations(
+    monitor?.escalationId ? project?.teamId : null,
   )
   const [form, setForm] = useState<RuleForm>(emptyRuleForm)
   const [probe, setProbe] = useState<ProbeForm>(() => emptyProbeForm('http'))
@@ -662,15 +662,15 @@ export function MonitorDrawer({
                   {t('Notifies')}
                 </dt>
                 <dd className="m-0 min-w-0 border-t border-border py-2 text-foreground">
-                  {monitor.escalationPolicyId ? (
+                  {monitor.escalationId ? (
                     <Link
-                      to="/organizations/$orgId/settings/escalation-policies"
+                      to="/organizations/$orgId/settings/escalations"
                       params={{ orgId: project?.teamId ?? '' }}
                       className="underline underline-offset-2"
                     >
-                      {policies.find(
-                        (policy) => policy.$id === monitor.escalationPolicyId,
-                      )?.name ?? t('Escalation policy')}
+                      {escalations.find(
+                        (escalation) => escalation.$id === monitor.escalationId,
+                      )?.name ?? t('Escalation')}
                     </Link>
                   ) : monitor.notify.length === 0 ? (
                     t('Nobody, only its events')

@@ -22,12 +22,12 @@ return [
         "category" => "Projects",
     ],
     "monitors.read" => [
-        "description" => "Access to read the organization's escalation policies",
+        "description" => "Access to read the organization's escalations",
         "category" => "Alerts",
     ],
     "monitors.write" => [
         "description" =>
-            "Access to create, update, and delete the organization's escalation policies",
+            "Access to create, update, and delete the organization's escalations",
         "category" => "Alerts",
     ],
 ];

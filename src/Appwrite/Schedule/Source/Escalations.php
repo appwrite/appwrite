@@ -65,6 +65,6 @@ final class Escalations extends Database
     #[\Override]
     protected function trigger(array $schedule): Trigger
     {
-        return new At(new \DateTimeImmutable((string) $schedule['schedule']));
+        return new At(new \DateTimeImmutable((string) $schedule['schedule']), catchUp: true);
     }
 }

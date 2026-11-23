@@ -84,21 +84,21 @@ class Alert extends Model
                 'default' => '',
                 'example' => 'Jane Doe',
             ])
-            ->addRule('escalationPolicyId', [
+            ->addRule('escalationId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'ID of the escalation policy notifying the team of this alert. Empty when the monitor notified its `notify` roles instead.',
+                'description' => 'ID of the escalation notifying the team of this alert. Empty when the monitor notified its `notify` roles instead.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('escalationStep', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Index of the policy\'s next step to notify, counting from 0. Equal to the number of steps once the last round has gone out.',
+                'description' => 'Index of the escalation\'s next step to notify, counting from 0. Equal to the number of steps once the last round has gone out.',
                 'default' => 0,
                 'example' => 1,
             ])
             ->addRule('escalationRound', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'How many times the policy\'s steps have been repeated for this alert.',
+                'description' => 'How many times the escalation\'s steps have been repeated for this alert.',
                 'default' => 0,
                 'example' => 0,
             ])

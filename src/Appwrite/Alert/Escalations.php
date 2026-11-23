@@ -9,7 +9,7 @@ use Utopia\Database\Query;
 use Utopia\System\System;
 
 /**
- * An alert's escalation: which step of its policy is notified next, and when.
+ * An alert's escalation: which step of its escalation is notified next, and when.
  * The time is kept on the alert (`escalatesAt`) and in the alert's row in
  * `schedules`, which the alerts scheduler fires once when it is due. Moving
  * `resourceUpdatedAt` re-arms that row, so every write touches it.
@@ -24,45 +24,45 @@ readonly class Escalations
     }
 
     /**
-     * The organization's policy, or an empty document when it is gone or
+     * The organization's escalation, or an empty document when it is gone or
      * belongs to another organization, as it does once a project is transferred.
      */
-    public function policy(string $escalationPolicyId, string $teamInternalId): Document
+    public function escalation(string $escalationId, string $teamInternalId): Document
     {
-        if ($escalationPolicyId === '') {
+        if ($escalationId === '') {
             return new Document();
         }
 
-        $policy = $this->dbForPlatform->getAuthorization()->skip(fn () => $this->dbForPlatform->getDocument('escalationPolicies', $escalationPolicyId));
+        $escalation = $this->dbForPlatform->getAuthorization()->skip(fn () => $this->dbForPlatform->getDocument('escalations', $escalationId));
 
-        return $policy->getAttribute('teamInternalId') === $teamInternalId ? $policy : new Document();
+        return $escalation->getAttribute('teamInternalId') === $teamInternalId ? $escalation : new Document();
     }
 
     /**
-     * Starts escalating a firing alert through the policy, whose steps and
+     * Starts escalating a firing alert through the escalation, whose steps and
      * repeats the alert keeps: the first step is due its delay from now. An
      * alert already escalating is left as it is, so a retried evaluation goes
      * on from where the first one got to.
      */
-    public function start(Document $alert, Document $policy, \DateTimeImmutable $now): Document
+    public function start(Document $alert, Document $escalation, \DateTimeImmutable $now): Document
     {
-        if ($alert->getAttribute('escalationPolicyId', '') !== '') {
+        if ($alert->getAttribute('escalationId', '') !== '') {
             return $alert;
         }
 
-        $parsed = Policy::fromDocument($policy);
+        $parsed = Escalation::fromDocument($escalation);
         $steps = $parsed->steps;
         if ($steps === []) {
             return $alert;
         }
 
         return $this->write($alert, [
-            'escalationPolicyId' => $policy->getId(),
+            'escalationId' => $escalation->getId(),
             'escalationSteps' => $parsed->toArray(),
             'escalationRepeat' => $parsed->repeat,
             'escalationStep' => 0,
             'escalationRound' => 0,
-            'escalatesAt' => self::format($now->modify('+' . $steps[0]->delay . ' seconds')),
+            'escalatesAt' => $alert->getAttribute('acknowledgedAt') === null ? self::format($now->modify('+' . $steps[0]->delay . ' seconds')) : null,
         ]);
     }
 
@@ -70,21 +70,26 @@ readonly class Escalations
      * Moves on once the alert's current step has been notified: to the next
      * step, or to the first again for another round, or to nothing once the
      * last round is done, leaving `escalationStep` past the last step.
+     *
+     * @param list<string> $userIds members notified by this step
      */
-    public function advance(Document $alert, Policy $policy, int $cooldown, \DateTimeImmutable $now): Document
+    public function advance(Document $alert, Escalation $escalation, int $cooldown, \DateTimeImmutable $now, array $userIds): Document
     {
         $step = (int) $alert->getAttribute('escalationStep', 0);
         $round = (int) $alert->getAttribute('escalationRound', 0);
-        $next = $policy->after($step, $round, $cooldown);
+        $next = $escalation->after($step, $round, $cooldown);
 
-        return $this->write($alert, $next === null ? [
-            'escalationStep' => \count($policy->steps),
+        $changes = $next === null ? [
+            'escalationStep' => \count($escalation->steps),
             'escalatesAt' => null,
         ] : [
             'escalationStep' => $next['step'],
             'escalationRound' => $next['round'],
             'escalatesAt' => self::format($now->modify('+' . $next['delay'] . ' seconds')),
-        ]);
+        ];
+        $changes['escalationUserIds'] = \array_values(\array_unique([...$alert->getAttribute('escalationUserIds', []), ...$userIds]));
+
+        return $this->write($alert, $changes);
     }
 
     /**
@@ -93,7 +98,7 @@ readonly class Escalations
      */
     public function stop(Document $alert): Document
     {
-        if ($alert->getAttribute('escalationPolicyId', '') === '') {
+        if ($alert->getAttribute('escalationId', '') === '') {
             return $alert;
         }
 
@@ -107,11 +112,11 @@ readonly class Escalations
      */
     public function resume(Document $alert, \DateTimeImmutable $now): Document
     {
-        if ($alert->getAttribute('escalationPolicyId', '') === '' || $alert->getAttribute('escalatesAt') !== null) {
+        if ($alert->getAttribute('escalationId', '') === '' || $alert->getAttribute('escalatesAt') !== null) {
             return $alert;
         }
 
-        $step = Policy::fromAlert($alert)->steps[(int) $alert->getAttribute('escalationStep', 0)] ?? null;
+        $step = Escalation::fromAlert($alert)->steps[(int) $alert->getAttribute('escalationStep', 0)] ?? null;
         if ($step === null) {
             return $alert;
         }

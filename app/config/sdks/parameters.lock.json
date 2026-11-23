@@ -3048,7 +3048,7 @@
             "enabled",
             "notify",
             "severity",
-            "escalationPolicyId"
+            "escalationId"
         ],
         "monitors.delete": [
             "monitorId"
@@ -3069,7 +3069,7 @@
             "enabled",
             "notify",
             "severity",
-            "escalationPolicyId"
+            "escalationId"
         ],
         "notifications.list": [
             "queries",
@@ -3084,8 +3084,8 @@
             "scopes",
             "duration"
         ],
-        "organization.createEscalationPolicy": [
-            "escalationPolicyId",
+        "organization.createEscalation": [
+            "escalationId",
             "name",
             "steps",
             "repeat"
@@ -3108,8 +3108,8 @@
             "recipientId",
             "expire"
         ],
-        "organization.deleteEscalationPolicy": [
-            "escalationPolicyId"
+        "organization.deleteEscalation": [
+            "escalationId"
         ],
         "organization.deleteProject": [
             "projectId"
@@ -3121,8 +3121,8 @@
         "organization.deleteProjectTransfer": [
             "transferId"
         ],
-        "organization.getEscalationPolicy": [
-            "escalationPolicyId"
+        "organization.getEscalation": [
+            "escalationId"
         ],
         "organization.getProject": [
             "projectId"
@@ -3135,7 +3135,7 @@
             "transferId",
             "secret"
         ],
-        "organization.listEscalationPolicies": [
+        "organization.listEscalations": [
             "queries",
             "total"
         ],
@@ -3154,8 +3154,8 @@
             "search",
             "total"
         ],
-        "organization.updateEscalationPolicy": [
-            "escalationPolicyId",
+        "organization.updateEscalation": [
+            "escalationId",
             "name",
             "steps",
             "repeat"
@@ -7620,7 +7620,7 @@
             "enabled",
             "notify",
             "severity",
-            "escalationPolicyId"
+            "escalationId"
         ],
         "monitors.delete": [
             "monitorId"
@@ -7641,7 +7641,7 @@
             "enabled",
             "notify",
             "severity",
-            "escalationPolicyId"
+            "escalationId"
         ],
         "organization.createEphemeralProjectKey": [
             "projectId",

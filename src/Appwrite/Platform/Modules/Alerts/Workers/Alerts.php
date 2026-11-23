@@ -6,10 +6,10 @@ use Appwrite\Alert\Audience;
 use Appwrite\Alert\Change;
 use Appwrite\Alert\Comparator;
 use Appwrite\Alert\Email;
+use Appwrite\Alert\Escalation;
 use Appwrite\Alert\Escalations;
 use Appwrite\Alert\Events;
 use Appwrite\Alert\Meter;
-use Appwrite\Alert\Policy;
 use Appwrite\Alert\Quantity;
 use Appwrite\Alert\Schedules;
 use Appwrite\Alert\Severity;
@@ -45,14 +45,11 @@ use Utopia\Usage\Tenant;
  * `.resolved`) for webhooks, functions and realtime. The organization's members
  * holding a role its `notify` names are notified by email, by push and in the console:
  * on entering `firing` (at most once per cooldown) and on returning to `ok`. A monitor
- * with an escalation policy notifies the policy's steps instead, one after another
+ * with an escalation notifies the escalation's steps instead, one after another
  * until a member acknowledges the alert or it resolves.
  */
 class Alerts extends Action
 {
-    /** Seconds an escalation step may be early and still be notified. */
-    private const int ESCALATION_SKEW = 5;
-
     public static function getName(): string
     {
         return 'alerts';
@@ -194,7 +191,7 @@ class Alerts extends Action
 
         $notify = false;
         // A monitor that notifies no role announces nothing, so it starts no cooldown; its events still fire.
-        $silent = $monitor->getAttribute('escalationPolicyId', '') === '' && $monitor->getAttribute('notify', [User::ROLE_OWNER]) === [];
+        $silent = $monitor->getAttribute('escalationId', '') === '' && $monitor->getAttribute('notify', [User::ROLE_OWNER]) === [];
         if ($status === Status::Firing && !$announced && !$silent) {
             // Cooldown counts from the last announced firing, so a monitor flapping
             // around its threshold is reported once per cooldown, and a firing
@@ -242,14 +239,14 @@ class Alerts extends Action
         if ($notify) {
             Span::add('monitor.notified', true);
             $escalations = new Escalations($dbForPlatform);
-            $policy = $escalations->policy((string) $monitor->getAttribute('escalationPolicyId', ''), (string) $project->getAttribute('teamInternalId', ''));
-            if ($status === Status::Firing && !$policy->isEmpty()) {
-                // The policy's first step is notified now or after its delay, and the rest follow on their timers.
-                $alert = $escalations->start($alert, $policy, $now);
+            $escalation = $escalations->escalation((string) $monitor->getAttribute('escalationId', ''), (string) $project->getAttribute('teamInternalId', ''));
+            if ($status === Status::Firing && !$escalation->isEmpty()) {
+                // The escalation's first step is notified now or after its delay, and the rest follow on their timers.
+                $alert = $escalations->start($alert, $escalation, $now);
                 $this->escalate($monitor, $alert, $project, $value, $now, $dbForPlatform, $publisherForNotifications, $platform, $dbForProject);
-            } elseif ($alert->getAttribute('escalationPolicyId', '') !== '') {
+            } elseif ($alert->getAttribute('escalationId', '') !== '') {
                 // The resolution goes to everyone the escalation reached, who may be nobody yet.
-                $audience = Policy::fromAlert($alert)->reached((int) $alert->getAttribute('escalationStep', 0), (int) $alert->getAttribute('escalationRound', 0));
+                $audience = new Audience([], $alert->getAttribute('escalationUserIds', []));
                 if (!$audience->isEmpty()) {
                     $this->notify($monitor, $alert, $project, $status, $value, $evaluatedAt, $dbForPlatform, $publisherForNotifications, $platform, $dbForProject, $audience);
                 }
@@ -440,10 +437,11 @@ class Alerts extends Action
      * changed, so an at-least-once redelivery of the same evaluation sends
      * nothing twice while the next transition always gets through.
      *
-     * An escalation names its own `$audience`, a step of its policy, and the key
+     * An escalation names its own `$audience`, a step of its escalation, and the key
      * of that step; without one the monitor's `notify` roles are notified.
      *
      * @param array<string, mixed> $platform
+     * @return list<string> IDs of members notified
      */
     protected function notify(
         Document $monitor,
@@ -457,14 +455,14 @@ class Alerts extends Action
         array $platform,
         ?Database $dbForProject = null,
         ?Audience $audience = null,
-    ): void {
+    ): array {
         $audience ??= new Audience($monitor->getAttribute('notify', [User::ROLE_OWNER]));
 
         // The project's organization, not the one stored on the monitor: a transferred
         // project's alerts go to the members of the organization it moved to.
         $members = $this->members($dbForPlatform, (string) $project->getAttribute('teamInternalId', ''), $audience->roles, $audience->userIds);
         if ($members === []) {
-            return;
+            return [];
         }
 
         // Named after the evaluation the decision was made against, so a retried
@@ -587,6 +585,8 @@ class Alerts extends Action
                 ],
             ));
         }
+
+        return \array_map(fn (array $member): string => $member[0]->getId(), $members);
     }
 
     /**
@@ -643,16 +643,14 @@ class Alerts extends Action
         ?Database $dbForProject = null,
     ): void {
         $escalations = new Escalations($dbForPlatform);
-        // The steps the alert started with, whatever its policy holds now.
-        $policy = Policy::fromAlert($alert);
-        // The scheduler's clock may run slightly ahead of this worker's.
-        $horizon = $now->modify('+' . self::ESCALATION_SKEW . ' seconds');
+        // The steps the alert started with, whatever its escalation holds now.
+        $escalation = Escalation::fromAlert($alert);
         $notified = false;
 
-        while (($due = $alert->getAttribute('escalatesAt')) !== null && new \DateTimeImmutable($due) <= $horizon) {
+        while ($alert->getAttribute('acknowledgedAt') === null && ($due = $alert->getAttribute('escalatesAt')) !== null && new \DateTimeImmutable($due) <= $now) {
             $index = (int) $alert->getAttribute('escalationStep', 0);
             $round = (int) $alert->getAttribute('escalationRound', 0);
-            $step = $policy->steps[$index] ?? null;
+            $step = $escalation->steps[$index] ?? null;
             if ($step === null) {
                 $escalations->stop($alert);
 
@@ -662,7 +660,7 @@ class Alerts extends Action
             Span::add('alert.escalation.step', $index);
             Span::add('alert.escalation.round', $round);
 
-            $this->notify(
+            $userIds = $this->notify(
                 $monitor,
                 $alert,
                 $project,
@@ -676,7 +674,8 @@ class Alerts extends Action
                 new Audience($step->roles, $step->userIds, 'escalation:' . $alert->getId() . ':' . $round . ':' . $index),
             );
 
-            $alert = $escalations->advance($alert, $policy, (int) $monitor->getAttribute('cooldown', 0), $now);
+            $now = new \DateTimeImmutable();
+            $alert = $escalations->advance($alert, $escalation, (int) $monitor->getAttribute('cooldown', 0), $now, $userIds);
             $notified = true;
         }
 

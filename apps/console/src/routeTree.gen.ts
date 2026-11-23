@@ -235,7 +235,7 @@ import { Route as PublicOrganizationsOrgIdMarketplaceIndexRouteImport } from './
 import { Route as PublicOrganizationsOrgIdSettingsBillingRouteImport } from './routes/_public/organizations.$orgId.settings.billing'
 import { Route as PublicOrganizationsOrgIdSettingsComplianceRouteImport } from './routes/_public/organizations.$orgId.settings.compliance'
 import { Route as PublicOrganizationsOrgIdSettingsDangerZoneRouteImport } from './routes/_public/organizations.$orgId.settings.danger-zone'
-import { Route as PublicOrganizationsOrgIdSettingsEscalationPoliciesRouteImport } from './routes/_public/organizations.$orgId.settings.escalation-policies'
+import { Route as PublicOrganizationsOrgIdSettingsEscalationsRouteImport } from './routes/_public/organizations.$orgId.settings.escalations'
 import { Route as PublicOrganizationsOrgIdSettingsMembersRouteImport } from './routes/_public/organizations.$orgId.settings.members'
 import { Route as PublicOrganizationsOrgIdSettingsOauthAppsRouteImport } from './routes/_public/organizations.$orgId.settings.oauth-apps'
 import { Route as PublicOrganizationsOrgIdSettingsPartnersRouteImport } from './routes/_public/organizations.$orgId.settings.partners'
@@ -1740,10 +1740,10 @@ const PublicOrganizationsOrgIdSettingsDangerZoneRoute =
     path: '/danger-zone',
     getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
   } as any)
-const PublicOrganizationsOrgIdSettingsEscalationPoliciesRoute =
-  PublicOrganizationsOrgIdSettingsEscalationPoliciesRouteImport.update({
-    id: '/escalation-policies',
-    path: '/escalation-policies',
+const PublicOrganizationsOrgIdSettingsEscalationsRoute =
+  PublicOrganizationsOrgIdSettingsEscalationsRouteImport.update({
+    id: '/escalations',
+    path: '/escalations',
     getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
   } as any)
 const PublicOrganizationsOrgIdSettingsMembersRoute =
@@ -3883,7 +3883,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/settings/billing': typeof PublicOrganizationsOrgIdSettingsBillingRoute
   '/organizations/$orgId/settings/compliance': typeof PublicOrganizationsOrgIdSettingsComplianceRoute
   '/organizations/$orgId/settings/danger-zone': typeof PublicOrganizationsOrgIdSettingsDangerZoneRoute
-  '/organizations/$orgId/settings/escalation-policies': typeof PublicOrganizationsOrgIdSettingsEscalationPoliciesRoute
+  '/organizations/$orgId/settings/escalations': typeof PublicOrganizationsOrgIdSettingsEscalationsRoute
   '/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/organizations/$orgId/settings/partners': typeof PublicOrganizationsOrgIdSettingsPartnersRoute
@@ -4360,7 +4360,7 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/settings/billing': typeof PublicOrganizationsOrgIdSettingsBillingRoute
   '/organizations/$orgId/settings/compliance': typeof PublicOrganizationsOrgIdSettingsComplianceRoute
   '/organizations/$orgId/settings/danger-zone': typeof PublicOrganizationsOrgIdSettingsDangerZoneRoute
-  '/organizations/$orgId/settings/escalation-policies': typeof PublicOrganizationsOrgIdSettingsEscalationPoliciesRoute
+  '/organizations/$orgId/settings/escalations': typeof PublicOrganizationsOrgIdSettingsEscalationsRoute
   '/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/organizations/$orgId/settings/partners': typeof PublicOrganizationsOrgIdSettingsPartnersRoute
@@ -4844,7 +4844,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/settings/billing': typeof PublicOrganizationsOrgIdSettingsBillingRoute
   '/_public/organizations/$orgId/settings/compliance': typeof PublicOrganizationsOrgIdSettingsComplianceRoute
   '/_public/organizations/$orgId/settings/danger-zone': typeof PublicOrganizationsOrgIdSettingsDangerZoneRoute
-  '/_public/organizations/$orgId/settings/escalation-policies': typeof PublicOrganizationsOrgIdSettingsEscalationPoliciesRoute
+  '/_public/organizations/$orgId/settings/escalations': typeof PublicOrganizationsOrgIdSettingsEscalationsRoute
   '/_public/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/_public/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/_public/organizations/$orgId/settings/partners': typeof PublicOrganizationsOrgIdSettingsPartnersRoute
@@ -5352,7 +5352,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/settings/billing'
     | '/organizations/$orgId/settings/compliance'
     | '/organizations/$orgId/settings/danger-zone'
-    | '/organizations/$orgId/settings/escalation-policies'
+    | '/organizations/$orgId/settings/escalations'
     | '/organizations/$orgId/settings/members'
     | '/organizations/$orgId/settings/oauth-apps'
     | '/organizations/$orgId/settings/partners'
@@ -5829,7 +5829,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/settings/billing'
     | '/organizations/$orgId/settings/compliance'
     | '/organizations/$orgId/settings/danger-zone'
-    | '/organizations/$orgId/settings/escalation-policies'
+    | '/organizations/$orgId/settings/escalations'
     | '/organizations/$orgId/settings/members'
     | '/organizations/$orgId/settings/oauth-apps'
     | '/organizations/$orgId/settings/partners'
@@ -6312,7 +6312,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/settings/billing'
     | '/_public/organizations/$orgId/settings/compliance'
     | '/_public/organizations/$orgId/settings/danger-zone'
-    | '/_public/organizations/$orgId/settings/escalation-policies'
+    | '/_public/organizations/$orgId/settings/escalations'
     | '/_public/organizations/$orgId/settings/members'
     | '/_public/organizations/$orgId/settings/oauth-apps'
     | '/_public/organizations/$orgId/settings/partners'
@@ -8242,11 +8242,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsDangerZoneRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
     }
-    '/_public/organizations/$orgId/settings/escalation-policies': {
-      id: '/_public/organizations/$orgId/settings/escalation-policies'
-      path: '/escalation-policies'
-      fullPath: '/organizations/$orgId/settings/escalation-policies'
-      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsEscalationPoliciesRouteImport
+    '/_public/organizations/$orgId/settings/escalations': {
+      id: '/_public/organizations/$orgId/settings/escalations'
+      path: '/escalations'
+      fullPath: '/organizations/$orgId/settings/escalations'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsEscalationsRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
     }
     '/_public/organizations/$orgId/settings/members': {
@@ -10633,7 +10633,7 @@ interface PublicOrganizationsOrgIdSettingsRouteChildren {
   PublicOrganizationsOrgIdSettingsBillingRoute: typeof PublicOrganizationsOrgIdSettingsBillingRoute
   PublicOrganizationsOrgIdSettingsComplianceRoute: typeof PublicOrganizationsOrgIdSettingsComplianceRoute
   PublicOrganizationsOrgIdSettingsDangerZoneRoute: typeof PublicOrganizationsOrgIdSettingsDangerZoneRoute
-  PublicOrganizationsOrgIdSettingsEscalationPoliciesRoute: typeof PublicOrganizationsOrgIdSettingsEscalationPoliciesRoute
+  PublicOrganizationsOrgIdSettingsEscalationsRoute: typeof PublicOrganizationsOrgIdSettingsEscalationsRoute
   PublicOrganizationsOrgIdSettingsMembersRoute: typeof PublicOrganizationsOrgIdSettingsMembersRoute
   PublicOrganizationsOrgIdSettingsOauthAppsRoute: typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   PublicOrganizationsOrgIdSettingsPartnersRoute: typeof PublicOrganizationsOrgIdSettingsPartnersRoute
@@ -10647,8 +10647,8 @@ const PublicOrganizationsOrgIdSettingsRouteChildren: PublicOrganizationsOrgIdSet
       PublicOrganizationsOrgIdSettingsComplianceRoute,
     PublicOrganizationsOrgIdSettingsDangerZoneRoute:
       PublicOrganizationsOrgIdSettingsDangerZoneRoute,
-    PublicOrganizationsOrgIdSettingsEscalationPoliciesRoute:
-      PublicOrganizationsOrgIdSettingsEscalationPoliciesRoute,
+    PublicOrganizationsOrgIdSettingsEscalationsRoute:
+      PublicOrganizationsOrgIdSettingsEscalationsRoute,
     PublicOrganizationsOrgIdSettingsMembersRoute:
       PublicOrganizationsOrgIdSettingsMembersRoute,
     PublicOrganizationsOrgIdSettingsOauthAppsRoute:

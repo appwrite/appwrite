@@ -8,6 +8,7 @@ use Appwrite\Schedule\Source\Alerts;
 use Appwrite\Schedule\Source\Functions;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
+use Utopia\Schedule\Clock\Test as TestClock;
 use Utopia\Schedule\Scheduler;
 
 final class DatabaseTest extends TestCase
@@ -143,6 +144,18 @@ final class DatabaseTest extends TestCase
             [new \DateTimeImmutable('2026-10-29 00:10:00.000')],
             $entries['outage']->trigger->occurrencesBetween(new \DateTimeImmutable('2026-10-29 00:00:00'), new \DateTimeImmutable('2026-10-29 01:00:00')),
         );
+        // An active escalation remains owed after downtime beyond the scheduler's recovery window.
+        $clock = new TestClock(new \DateTimeImmutable('2026-10-29 01:00:00'));
+        $scheduler = new Scheduler($source, clock: $clock);
+        $scheduler->reconcile(true);
+        $scheduler->tick();
+        $scheduler->commit();
+        $clock->advance(1);
+        $this->assertContains('outage', \array_column(\array_column($scheduler->tick(), 'payload'), 'alertId'));
+        $scheduler->commit();
+        $scheduler->reconcile(true);
+        $clock->advance(1);
+        $this->assertNotContains('outage', \array_column(\array_column($scheduler->tick(), 'payload'), 'alertId'));
     }
 
     public function testAlertIntervalChangeReschedulesTheMonitor(): void

@@ -64,10 +64,10 @@ class Base extends Action
         Database $dbForProject,
         Authorization $authorization,
         Severity $severity = Severity::Warning,
-        string $escalationPolicyId = '',
+        string $escalationId = '',
     ): void {
         $parsed = $this->parseRules($rules);
-        $this->checkPolicy($dbForPlatform, $authorization, $project, $escalationPolicyId);
+        $this->checkEscalation($dbForPlatform, $authorization, $project, $escalationId);
 
         [$resourceId, $resourceInternalId] = $this->resolveResource($parsed, $project, $dbForProject, $authorization);
 
@@ -87,7 +87,7 @@ class Base extends Action
             'window' => $window,
             'cooldown' => $cooldown,
             'notify' => \array_values(\array_unique($notify)),
-            'escalationPolicyId' => $escalationPolicyId,
+            'escalationId' => $escalationId,
             'severity' => $severity->value,
             'enabled' => $enabled,
             'status' => Status::Ok->value,
@@ -128,11 +128,11 @@ class Base extends Action
         Database $dbForProject,
         Authorization $authorization,
         ?Severity $severity = null,
-        ?string $escalationPolicyId = null,
+        ?string $escalationId = null,
     ): void {
         $monitor = $this->getMonitor($dbForPlatform, $authorization, $project, $monitorId);
-        if ($escalationPolicyId !== null) {
-            $this->checkPolicy($dbForPlatform, $authorization, $project, $escalationPolicyId);
+        if ($escalationId !== null) {
+            $this->checkEscalation($dbForPlatform, $authorization, $project, $escalationId);
         }
 
         if ($monitor->getAttribute('type') !== $type) {
@@ -156,7 +156,7 @@ class Base extends Action
             'enabled' => $enabled,
             'notify' => $notify === null ? null : \array_values(\array_unique($notify)),
             'severity' => $severity?->value,
-            'escalationPolicyId' => $escalationPolicyId,
+            'escalationId' => $escalationId,
         ] as $key => $value) {
             if ($value !== null) {
                 $changes->setAttribute($key, $value);
@@ -180,17 +180,17 @@ class Base extends Action
     }
 
     /**
-     * A monitor may only use an escalation policy of its project's organization.
+     * A monitor may only use an escalation of its project's organization.
      */
-    protected function checkPolicy(Database $dbForPlatform, Authorization $authorization, Document $project, string $escalationPolicyId): void
+    protected function checkEscalation(Database $dbForPlatform, Authorization $authorization, Document $project, string $escalationId): void
     {
-        if ($escalationPolicyId === '') {
+        if ($escalationId === '') {
             return;
         }
 
-        $policy = $authorization->skip(fn () => $dbForPlatform->getDocument('escalationPolicies', $escalationPolicyId));
-        if ($policy->isEmpty() || $policy->getAttribute('teamInternalId') !== (string) $project->getAttribute('teamInternalId', '')) {
-            throw new Exception(Exception::ESCALATION_POLICY_NOT_FOUND);
+        $escalation = $authorization->skip(fn () => $dbForPlatform->getDocument('escalations', $escalationId));
+        if ($escalation->isEmpty() || $escalation->getAttribute('teamInternalId') !== (string) $project->getAttribute('teamInternalId', '')) {
+            throw new Exception(Exception::ESCALATION_NOT_FOUND);
         }
     }
 

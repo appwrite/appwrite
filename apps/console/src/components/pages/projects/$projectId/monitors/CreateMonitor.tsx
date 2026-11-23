@@ -78,7 +78,7 @@ export function CreateMonitor({
         name: current.name,
         notify: current.notify,
         recipients: current.recipients,
-        escalationPolicyId: current.escalationPolicyId,
+        escalationId: current.escalationId,
         severity: current.severity,
         cooldown: current.cooldown,
         interval: current.interval,

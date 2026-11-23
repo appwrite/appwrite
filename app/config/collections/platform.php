@@ -213,7 +213,7 @@ $platformCollections = [
             Attribute::integer(key: 'window', required: true, default: 3600, signed: false),
             Attribute::integer(key: 'cooldown', required: true, default: 3600, signed: false),
             Attribute::string(key: 'notify', size: 32, default: ['owner'], array: true),
-            Attribute::string(key: 'escalationPolicyId', default: ''),
+            Attribute::string(key: 'escalationId', default: ''),
             Attribute::string(key: 'severity', size: 16, default: 'warning'),
             Attribute::boolean(key: 'enabled', required: true, default: true),
             Attribute::string(key: 'status', size: 16, required: true, default: 'ok'),
@@ -229,7 +229,7 @@ $platformCollections = [
             Index::key(key: '_key_projectInternalId', attributes: ['projectInternalId']),
             Index::key(key: '_key_resource', attributes: ['resourceType', 'resourceInternalId']),
             Index::key(key: '_key_region_enabled', attributes: ['region', 'enabled']),
-            Index::key(key: '_key_escalationPolicyId', attributes: ['escalationPolicyId']),
+            Index::key(key: '_key_escalationId', attributes: ['escalationId']),
             Index::fulltext(key: '_fulltext_search', attributes: ['search']),
         ],
     ],
@@ -263,8 +263,9 @@ $platformCollections = [
             Attribute::datetime(key: 'acknowledgedAt'),
             Attribute::string(key: 'acknowledgedBy', default: ''),
             Attribute::string(key: 'acknowledgedByName', size: 128, default: ''),
-            Attribute::string(key: 'escalationPolicyId', default: ''),
+            Attribute::string(key: 'escalationId', default: ''),
             Attribute::string(key: 'escalationSteps', size: 65535, default: [], filters: [Filter::Json]),
+            Attribute::string(key: 'escalationUserIds', size: 1_000_000, default: [], filters: [Filter::Json]),
             Attribute::integer(key: 'escalationRepeat', default: 0, signed: false),
             Attribute::integer(key: 'escalationStep', default: 0, signed: false),
             Attribute::integer(key: 'escalationRound', default: 0, signed: false),
@@ -281,10 +282,10 @@ $platformCollections = [
         ],
     ],
 
-    'escalationPolicies' => [
+    'escalations' => [
         '$collection' => Id::custom(Database::METADATA),
-        '$id' => Id::custom('escalationPolicies'),
-        'name' => 'Escalation Policies',
+        '$id' => Id::custom('escalations'),
+        'name' => 'Escalations',
         'attributes' => [
             Attribute::string(key: 'name', size: 128, required: true, default: ''),
             Attribute::string(key: 'teamId', required: true, default: ''),

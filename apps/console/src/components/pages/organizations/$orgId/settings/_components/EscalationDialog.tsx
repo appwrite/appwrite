@@ -43,52 +43,47 @@ import {
   MAX_DELAY,
   MAX_REPEAT,
 } from '@/lib/alerts/escalation'
-import type {
-  EscalationPolicy,
-  EscalationPolicyInput,
-} from '@/lib/appwrite/monitors'
+import type { Escalation, EscalationInput } from '@/lib/appwrite/monitors'
 import { useT } from '@/lib/i18n/translate'
 import { useModalAwarePopover } from '@/lib/layout/modal-portal-host'
 import {
-  useCreateEscalationPolicy,
+  useCreateEscalation,
   useEscalationMembers,
-  useUpdateEscalationPolicy,
+  useUpdateEscalation,
 } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 
-/** A step as the form edits it: the wait in minutes. */
-type StepForm = { minutes: number; roles: string[]; userIds: string[] }
+/** A step as the form edits it: the wait in seconds. */
+type StepForm = { seconds: number; roles: string[]; userIds: string[] }
 
-type PolicyForm = { name: string; steps: StepForm[]; repeat: number }
+type EscalationForm = { name: string; steps: StepForm[]; repeat: number }
 
-const MAX_MINUTES = MAX_DELAY / 60
-
-function emptyForm(): PolicyForm {
+function emptyForm(): EscalationForm {
   return {
     name: '',
-    steps: [{ minutes: 0, roles: ['owner'], userIds: [] }],
+    steps: [{ seconds: 0, roles: ['owner'], userIds: [] }],
     repeat: 0,
   }
 }
 
-function formFromPolicy(policy: EscalationPolicy): PolicyForm {
+function formFromEscalation(escalation: Escalation): EscalationForm {
   return {
-    name: policy.name,
-    steps: policy.steps.map((step) => ({
-      minutes: Math.round(step.delay / 60),
+    name: escalation.name,
+    steps: escalation.steps.map((step) => ({
+      seconds: step.delay,
       roles: step.roles,
       userIds: step.userIds,
     })),
-    repeat: policy.repeat,
+    repeat: escalation.repeat,
   }
 }
 
-function inputFromForm(form: PolicyForm): EscalationPolicyInput {
+function inputFromForm(form: EscalationForm): EscalationInput {
   return {
     name: form.name.trim(),
     steps: form.steps.map((step) => ({
-      delay: step.minutes * 60,
+      delay: step.seconds,
       roles: step.roles,
       userIds: step.userIds,
     })),
@@ -209,43 +204,43 @@ function MemberSelect({
   )
 }
 
-interface EscalationPolicyDialogProps {
+interface EscalationDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   organizationId: string
-  /** The policy to edit; null creates one. */
-  policy: EscalationPolicy | null
+  /** The escalation to edit; null creates one. */
+  escalation: Escalation | null
 }
 
-/** Creates an escalation policy, or edits one. */
-export function EscalationPolicyDialog({
+/** Creates an escalation, or edits one. */
+export function EscalationDialog({
   open,
   onOpenChange,
   organizationId,
-  policy,
-}: EscalationPolicyDialogProps) {
+  escalation,
+}: EscalationDialogProps) {
   const t = useT()
-  const createMutation = useCreateEscalationPolicy(organizationId)
-  const updateMutation = useUpdateEscalationPolicy(organizationId)
+  const createMutation = useCreateEscalation(organizationId)
+  const updateMutation = useUpdateEscalation(organizationId)
   const isPending = createMutation.isPending || updateMutation.isPending
-  const [form, setForm] = useState<PolicyForm>(emptyForm)
+  const [form, setForm] = useState<EscalationForm>(emptyForm)
 
   useEffect(() => {
-    if (open) setForm(policy ? formFromPolicy(policy) : emptyForm())
-  }, [open, policy])
+    if (open) setForm(escalation ? formFromEscalation(escalation) : emptyForm())
+  }, [open, escalation])
 
   const changes = useMemo(() => {
-    if (!policy) return inputFromForm(form)
-    const before = inputFromForm(formFromPolicy(policy))
+    if (!escalation) return inputFromForm(form)
+    const before = inputFromForm(formFromEscalation(escalation))
     const after = inputFromForm(form)
-    const sparse: Partial<EscalationPolicyInput> = {}
+    const sparse: Partial<EscalationInput> = {}
     if (before.name !== after.name) sparse.name = after.name
     if (JSON.stringify(before.steps) !== JSON.stringify(after.steps)) {
       sparse.steps = after.steps
     }
     if (before.repeat !== after.repeat) sparse.repeat = after.repeat
     return sparse
-  }, [form, policy])
+  }, [form, escalation])
 
   const error = !form.name.trim()
     ? t('Enter a name.')
@@ -253,7 +248,7 @@ export function EscalationPolicyDialog({
           (step) => step.roles.length === 0 && step.userIds.length === 0,
         )
       ? t('Each step needs a role or a member.')
-      : policy && Object.keys(changes).length === 0
+      : escalation && Object.keys(changes).length === 0
         ? t('No changes to save.')
         : undefined
 
@@ -275,9 +270,9 @@ export function EscalationPolicyDialog({
     const options = {
       onSuccess: () => {
         toast.success(
-          policy
-            ? t('Escalation policy has been updated')
-            : t('Escalation policy has been created'),
+          escalation
+            ? t('Escalation has been updated')
+            : t('Escalation has been created'),
         )
         onOpenChange(false)
       },
@@ -285,17 +280,14 @@ export function EscalationPolicyDialog({
         toast.error(
           getErrorMessage(
             err,
-            policy
-              ? t('Failed to update escalation policy')
-              : t('Failed to create escalation policy'),
+            escalation
+              ? t('Failed to update escalation')
+              : t('Failed to create escalation'),
           ),
         ),
     }
-    if (policy) {
-      updateMutation.mutate(
-        { escalationPolicyId: policy.$id, changes },
-        options,
-      )
+    if (escalation) {
+      updateMutation.mutate({ escalationId: escalation.$id, changes }, options)
     } else {
       createMutation.mutate(inputFromForm(form), options)
     }
@@ -306,9 +298,7 @@ export function EscalationPolicyDialog({
       <DialogContent className="sm:max-w-2xl p-0 max-h-[90dvh] flex flex-col">
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>
-            {policy
-              ? t('Edit escalation policy')
-              : t('Create escalation policy')}
+            {escalation ? t('Edit escalation') : t('Create escalation')}
           </DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             {t(
@@ -321,13 +311,13 @@ export function EscalationPolicyDialog({
           <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-5">
             <div>
               <Label
-                htmlFor="escalation-policy-name"
+                htmlFor="escalation-name"
                 className="text-[13px] font-semibold"
               >
                 {t('Name')}
               </Label>
               <Input
-                id="escalation-policy-name"
+                id="escalation-name"
                 className="mt-2"
                 placeholder={t('On-call')}
                 value={form.name}
@@ -385,23 +375,23 @@ export function EscalationPolicyDialog({
                         {t('Wait')}
                       </span>
                       <NumberInput
-                        aria-label={t('Minutes to wait')}
+                        aria-label={t('Seconds to wait')}
                         className="h-9 w-24"
                         min={0}
-                        max={MAX_MINUTES}
+                        max={MAX_DELAY}
                         step={1}
-                        value={step.minutes}
-                        onValueChange={(minutes) =>
+                        value={step.seconds}
+                        onValueChange={(seconds) =>
                           updateStep(index, {
-                            minutes: Math.max(0, Math.round(minutes)),
+                            seconds: Math.max(0, Math.round(seconds)),
                           })
                         }
                         disabled={isPending}
                       />
                       <span className="text-[13px] text-muted-foreground">
                         {index === 0
-                          ? t('minutes after the alert fires')
-                          : t('minutes after the previous step')}
+                          ? t('seconds after the alert fires')
+                          : t('seconds after the previous step')}
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -468,7 +458,7 @@ export function EscalationPolicyDialog({
                     ...current,
                     steps: [
                       ...current.steps,
-                      { minutes: 15, roles: [], userIds: [] },
+                      { seconds: 900, roles: [], userIds: [] },
                     ],
                   }))
                 }
@@ -532,7 +522,7 @@ export function EscalationPolicyDialog({
                 <TooltipTrigger asChild>
                   <span className="inline-flex">
                     <Button type="submit" disabled className="w-full">
-                      {policy ? t('Update') : t('Create')}
+                      {escalation ? t('Update') : t('Create')}
                     </Button>
                   </span>
                 </TooltipTrigger>
@@ -540,7 +530,7 @@ export function EscalationPolicyDialog({
               </Tooltip>
             ) : (
               <Button type="submit" disabled={isPending}>
-                {policy ? t('Update') : t('Create')}
+                {escalation ? t('Update') : t('Create')}
               </Button>
             )}
           </div>

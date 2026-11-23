@@ -516,7 +516,7 @@ export function Monitors({
                       </Tooltip>
                     )}
                     {monitor.notify.length === 0 &&
-                      !monitor.escalationPolicyId && (
+                      !monitor.escalationId && (
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <span

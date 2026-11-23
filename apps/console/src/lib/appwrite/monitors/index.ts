@@ -1,10 +1,10 @@
 export type * from './models'
 export {
-  createEscalationPolicy,
-  deleteEscalationPolicy,
-  getEscalationPolicy,
-  listEscalationPolicies,
-  updateEscalationPolicy,
+  createEscalation,
+  deleteEscalation,
+  getEscalation,
+  listEscalations,
+  updateEscalation,
 } from './escalation'
 export { listOrganizationMonitors } from './organization'
 export { buildRules, parseMonitor, parseRules } from './rules'

@@ -1,12 +1,12 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Alerts\Http\EscalationPolicies;
+namespace Appwrite\Platform\Modules\Alerts\Http\Escalations;
 
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Utopia\Database\Validator\Queries\EscalationPolicies;
+use Appwrite\Utopia\Database\Validator\Queries\Escalations;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -24,33 +24,33 @@ class XList extends Base
 
     public static function getName(): string
     {
-        return 'listEscalationPolicies';
+        return 'listEscalations';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/organization/escalation-policies')
-            ->desc('List escalation policies')
-            ->groups(['api', 'organization', 'escalationPolicies'])
+            ->setHttpPath('/v1/organization/escalations')
+            ->desc('List escalations')
+            ->groups(['api', 'organization', 'escalations'])
             ->label('scope', 'monitors.read')
             ->label('sdk', new Method(
                 namespace: 'organization',
-                group: 'escalationPolicies',
-                name: 'listEscalationPolicies',
+                group: 'escalations',
+                name: 'listEscalations',
                 description: <<<EOT
-                Get a list of your organization's escalation policies. Use `Query.search('search', term)` to search policy IDs and names.
+                Get a list of your organization's escalations. Use `Query.search('search', term)` to search escalation IDs and names.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::ORGANIZATION],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_ESCALATION_POLICY_LIST,
+                        model: Response::MODEL_ESCALATION_LIST,
                     ),
                 ]
             ))
-            ->param('queries', [], new EscalationPolicies(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . \implode(', ', EscalationPolicies::ALLOWED_ATTRIBUTES), true)
+            ->param('queries', [], new Escalations(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . \implode(', ', Escalations::ALLOWED_ATTRIBUTES), true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('team')
@@ -88,14 +88,14 @@ class XList extends Base
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
 
-            $escalationPolicyId = $cursor->getValue();
-            $cursorDocument = $authorization->skip(fn () => $dbForPlatform->findOne('escalationPolicies', [
-                Query::equal('$id', [$escalationPolicyId]),
+            $escalationId = $cursor->getValue();
+            $cursorDocument = $authorization->skip(fn () => $dbForPlatform->findOne('escalations', [
+                Query::equal('$id', [$escalationId]),
                 Query::equal('teamInternalId', [$teamInternalId]),
             ]));
 
             if ($cursorDocument->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Escalation policy '{$escalationPolicyId}' for the 'cursor' value not found.");
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Escalation '{$escalationId}' for the 'cursor' value not found.");
             }
 
             $cursor->setValue($cursorDocument);
@@ -104,15 +104,15 @@ class XList extends Base
         $filterQueries = Query::groupByType($queries)->filters;
 
         try {
-            $policies = $authorization->skip(fn () => $dbForPlatform->find('escalationPolicies', $queries));
-            $total = $includeTotal ? $authorization->skip(fn () => $dbForPlatform->count('escalationPolicies', $filterQueries, APP_LIMIT_COUNT)) : 0;
+            $escalations = $authorization->skip(fn () => $dbForPlatform->find('escalations', $queries));
+            $total = $includeTotal ? $authorization->skip(fn () => $dbForPlatform->count('escalations', $filterQueries, APP_LIMIT_COUNT)) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
 
         $response->dynamic(new Document([
-            'escalationPolicies' => $policies,
+            'escalations' => $escalations,
             'total' => $total,
-        ]), Response::MODEL_ESCALATION_POLICY_LIST);
+        ]), Response::MODEL_ESCALATION_LIST);
     }
 }

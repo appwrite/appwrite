@@ -5,10 +5,10 @@ namespace Appwrite\Alert;
 use Utopia\Database\Document;
 
 /**
- * An escalation policy's steps and repeats, and where an alert's escalation
+ * An escalation's steps and repeats, and where an alert's escalation
  * goes after each step.
  */
-readonly class Policy
+readonly class Escalation
 {
     /** Longest wait before a step, as long as a monitor's longest cooldown. */
     public const int MAX_DELAY = 2592000;
@@ -37,7 +37,7 @@ readonly class Policy
     public static function parse(array $steps, int $repeat, array $roles): self
     {
         if ($steps === []) {
-            throw new \InvalidArgumentException('An escalation policy needs at least one step.');
+            throw new \InvalidArgumentException('An escalation needs at least one step.');
         }
 
         $parsed = [];
@@ -79,7 +79,7 @@ readonly class Policy
 
     /**
      * The steps and repeats an escalating alert started with, which it keeps
-     * however its policy is edited later, as it keeps its monitor's rules.
+     * however its escalation is edited later, as it keeps its monitor's rules.
      */
     public static function fromAlert(Document $alert): self
     {
@@ -89,14 +89,14 @@ readonly class Policy
         ]));
     }
 
-    public static function fromDocument(Document $policy): self
+    public static function fromDocument(Document $escalation): self
     {
         return new self(
             \array_values(\array_map(
                 fn (array|Document $step) => Step::fromArray($step instanceof Document ? $step->getArrayCopy() : $step),
-                $policy->getAttribute('steps', []),
+                $escalation->getAttribute('steps', []),
             )),
-            (int) $policy->getAttribute('repeat', 0),
+            (int) $escalation->getAttribute('repeat', 0),
         );
     }
 
@@ -140,17 +140,4 @@ readonly class Policy
         return null;
     }
 
-    /**
-     * Everyone notified once the steps before `$step` of `$round` have gone out,
-     * who are told when the alert resolves.
-     */
-    public function reached(int $step, int $round): Audience
-    {
-        $steps = $round > 0 ? $this->steps : \array_slice($this->steps, 0, $step);
-
-        return new Audience(
-            \array_values(\array_unique(\array_merge([], ...\array_map(fn (Step $step) => $step->roles, $steps)))),
-            \array_values(\array_unique(\array_merge([], ...\array_map(fn (Step $step) => $step->userIds, $steps)))),
-        );
-    }
 }
