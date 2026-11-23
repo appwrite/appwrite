@@ -275,6 +275,14 @@ impl<D: Dialect> Builder<D> {
         &mut self,
         callback: impl Fn(Statement) -> Result<Statement> + Send + Sync + 'static,
     ) -> &mut Self {
+        self.after_build_owned(move |_, statement| callback(statement))
+    }
+
+    /// As [`Self::after_build`], with the [owner](Self::set_owner) of the builder that built.
+    pub fn after_build_owned(
+        &mut self,
+        callback: impl Fn(usize, Statement) -> Result<Statement> + Send + Sync + 'static,
+    ) -> &mut Self {
         let callback: AfterBuild = Arc::new(callback);
         self.core.after_build.push(callback);
         self

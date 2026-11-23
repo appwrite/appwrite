@@ -421,6 +421,18 @@ impl<D: Dialect> Builder<D> {
         self
     }
 
+    /// Says whose builder this is, for the overrides and `after_build_owned` callbacks to read
+    /// back: state kept beside the builder would cross when two builds interleave on a thread.
+    pub fn set_owner(&mut self, owner: usize) -> &mut Self {
+        self.core.owner = owner;
+        self
+    }
+
+    /// The owner [`Self::set_owner`] set, or zero: a clone has none.
+    pub fn owner(&self) -> usize {
+        self.core.owner
+    }
+
     /// Whether a subclass overrides `step`.
     pub(crate) fn overrides(&self, step: Step) -> bool {
         self.core.steps & (1 << step as u32) != 0

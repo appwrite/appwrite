@@ -900,7 +900,7 @@ impl Builder<MongoDbDialect> {
         let mut result =
             if self.needs_aggregation(&grouped) { self.build_aggregate(&grouped)? } else { self.build_find(&grouped)? };
         for callback in self.core.after_build.clone() {
-            result = callback(result)?;
+            result = callback(self.core.owner, result)?;
         }
         Ok(result)
     }

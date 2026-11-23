@@ -551,6 +551,9 @@ Known differences:
   own, group the builder's own queries, whatever `ParsedQuery` they are handed. An override is
   handed the one PHP's `Query::groupByType()` makes of them.
 - `getSpatialTypeFromWkt()` can be overridden to no effect, as in PHP, where nothing calls it.
+- An override of `quote()`, `quoteLiteral()`, `getLikeKeyword()`, `getBindingValues()` or
+  `geometryToWkt()` is not called by a build. PHP calls each. No subclass in Appwrite, Cloud or
+  utopia-php/database overrides one.
 - `validateAndGetColumns()` with no rows is a `ValidationException`. PHP warns and then fails on
   the missing row.
 - The other protected properties of PHP's builders (`table`, `unions`, `lockMode` and about fifty
@@ -562,11 +565,14 @@ Known differences:
 - `resolvedAttributeCache` has no order.
 - The classes declare a constructor and no `__clone()`. PHP's declare the reverse.
 
-Three things check them. `tests/query-builders.php` is a corpus like the others: 15,787 cases, the
+Four things check them. `tests/query-builders.php` is a corpus like the others: 15,787 cases, the
 same on PHP and on the extension. The package's own 5,828 tests pass on the native builders, but for
 two that read the PHP class's source and private state and are skipped there. utopia-php/database
 10.2.3 subclasses four of the builders, overrides 23 of their methods and serializes queries for its
 cache keys. Its 13,217 unit tests give the same result on the native builders as on PHP.
+`tests/query-coroutines.php` builds 720 statements in Swoole coroutines whose overrides and
+callbacks sleep in the middle of a build, so builds interleave on one thread. Each builder carries
+the PHP object that owns it for that reason: kept per thread, 476 of the 720 lost their overrides.
 
 Microseconds per call, release build, OPcache on, no JIT, an M-series Mac, median of seven runs.
 A read is five queries and three columns. `Database\*` is utopia-php/database 10.2.3's subclass.

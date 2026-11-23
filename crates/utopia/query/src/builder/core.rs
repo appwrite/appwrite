@@ -104,7 +104,7 @@ impl<T> Ordered<T> {
 pub type BeforeBuild<D> = Arc<dyn Fn(&mut Builder<D>) -> Result<()> + Send + Sync>;
 
 /// A callback run on every built statement, returning the statement to use.
-pub type AfterBuild = Arc<dyn Fn(Statement) -> Result<Statement> + Send + Sync>;
+pub type AfterBuild = Arc<dyn Fn(usize, Statement) -> Result<Statement> + Send + Sync>;
 
 /// The state of a builder that every dialect shares: what PHP's abstract
 /// `Builder` and its traits hold.
@@ -168,6 +168,8 @@ pub struct Core {
     pub(crate) overrides: Option<Arc<dyn crate::builder::Overrides>>,
     pub(crate) class: Option<String>,
     pub(crate) steps: u128,
+    /// Whose builder this is, to the overrides and `after_build` callbacks: a clone has no owner.
+    pub(crate) owner: usize,
 }
 
 /// A query builder for one dialect: from a table, with queries (filters,
@@ -190,7 +192,9 @@ pub struct Builder<D: Dialect> {
 impl<D: Dialect> Clone for Builder<D> {
     /// A deep copy (subqueries included); hooks, callbacks and the executor are shared.
     fn clone(&self) -> Self {
-        Builder { core: self.core.clone(), before_build: self.before_build.clone(), dialect: self.dialect.clone() }
+        let mut core = self.core.clone();
+        core.owner = 0;
+        Builder { core, before_build: self.before_build.clone(), dialect: self.dialect.clone() }
     }
 }
 
@@ -639,7 +643,7 @@ impl<D: Dialect> Builder<D> {
 
         let mut result = Statement::with_parts(sql, self.binding_values(), true, self.core.executor.clone(), None);
         for callback in self.core.after_build.clone() {
-            result = callback(result)?;
+            result = callback(self.core.owner, result)?;
         }
         Ok(result)
     }

@@ -35,6 +35,15 @@ for library in $libraries; do
     diff "$output/$library.php.jsonl" "$output/$library.all.jsonl"
 done
 
+# The builders when a build yields and another runs on the same thread.
+case ",$all," in *,query-builders,*)
+    echo "== query coroutines" >&2
+    _APP_EXTENSION_LIBRARIES= php "$tests/query-coroutines.php" > "$output/coroutines.php.jsonl"
+    _APP_EXTENSION_LIBRARIES=query,query-builders php "$tests/query-coroutines.php" > "$output/coroutines.rust.jsonl"
+    diff "$output/coroutines.php.jsonl" "$output/coroutines.rust.jsonl"
+    ;;
+esac
+
 # A PHP subclass of every class, cached by opcache: what the extension's defaults and constants
 # must survive (opcache frees what it copies into shared memory as PHP's allocator's).
 for with in "" ${libraries:+"$all"}; do
