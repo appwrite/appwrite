@@ -1,0 +1,41 @@
+{
+    "kind": "androidpublisher#tracksListResponse",
+    "tracks": [
+        {
+            "track": "production",
+            "releases": [
+                {
+                    "versionCodes": ["9"],
+                    "status": "completed"
+                }
+            ]
+        },
+        {
+            "track": "beta",
+            "releases": [
+                {
+                    "versionCodes": ["10"],
+                    "status": "inProgress",
+                    "userFraction": 0.2
+                },
+                {
+                    "versionCodes": ["8"],
+                    "status": "completed"
+                }
+            ]
+        },
+        {
+            "track": "alpha",
+            "releases": []
+        },
+        {
+            "track": "internal",
+            "releases": [
+                {
+                    "name": "Draft without a bundle",
+                    "status": "draft"
+                }
+            ]
+        }
+    ]
+}

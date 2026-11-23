@@ -1,0 +1,12 @@
+{
+    "data": [],
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/apps?filter%5BbundleId%5D=io.example.missing&fields%5Bapps%5D=name%2CbundleId%2Csku%2CprimaryLocale&limit=200"
+    },
+    "meta": {
+        "paging": {
+            "total": 0,
+            "limit": 200
+        }
+    }
+}

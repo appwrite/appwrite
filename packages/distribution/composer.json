@@ -1,0 +1,48 @@
+{
+    "name": "utopia-php/distribution",
+    "description": "App Store Connect and Google Play clients, store credentials and code-signing primitives",
+    "type": "library",
+    "keywords": [
+        "php",
+        "app-store",
+        "google-play",
+        "distribution",
+        "signing",
+        "utopia"
+    ],
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Distribution\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Distribution\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --configuration phpunit.xml --testsuite unit"
+    },
+    "require": {
+        "php": ">=8.5",
+        "ext-dom": "*",
+        "ext-hash": "*",
+        "ext-json": "*",
+        "ext-openssl": "*",
+        "psr/http-client": "^1.0",
+        "psr/http-factory": "^1.0",
+        "psr/http-message": "^1.1 || ^2.0",
+        "utopia-php/psr7": "^0.2.2",
+        "utopia-php/storage": "^5.0"
+    },
+    "suggest": {
+        "utopia-php/client": "A PSR-18 client with cURL and Swoole coroutine transports to pass to the store adapters."
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": false,
+            "tbachert/spi": false
+        }
+    }
+}

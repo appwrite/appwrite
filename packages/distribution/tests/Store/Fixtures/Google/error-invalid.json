@@ -1,0 +1,14 @@
+{
+    "error": {
+        "code": 400,
+        "message": "Only releases with status draft may be created on draft app.",
+        "status": "INVALID_ARGUMENT",
+        "errors": [
+            {
+                "reason": "badRequest",
+                "domain": "global",
+                "message": "Only releases with status draft may be created on draft app."
+            }
+        ]
+    }
+}

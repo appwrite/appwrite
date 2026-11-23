@@ -1,0 +1,49 @@
+{
+    "data": [
+        {
+            "type": "builds",
+            "id": "a1b2c3d4-0000-4000-8000-000000000003",
+            "attributes": {
+                "version": "9",
+                "uploadedDate": "2026-11-20T10:00:00-08:00",
+                "processingState": "VALID"
+            },
+            "links": {
+                "self": "https://api.appstoreconnect.apple.com/v1/builds/a1b2c3d4-0000-4000-8000-000000000003"
+            }
+        },
+        {
+            "type": "builds",
+            "id": "a1b2c3d4-0000-4000-8000-000000000002",
+            "attributes": {
+                "version": "abc",
+                "uploadedDate": "2026-11-19T10:00:00-08:00",
+                "processingState": "INVALID"
+            },
+            "links": {
+                "self": "https://api.appstoreconnect.apple.com/v1/builds/a1b2c3d4-0000-4000-8000-000000000002"
+            }
+        },
+        {
+            "type": "builds",
+            "id": "a1b2c3d4-0000-4000-8000-000000000001",
+            "attributes": {
+                "version": "10",
+                "uploadedDate": "2026-11-18T10:00:00-08:00",
+                "processingState": "VALID"
+            },
+            "links": {
+                "self": "https://api.appstoreconnect.apple.com/v1/builds/a1b2c3d4-0000-4000-8000-000000000001"
+            }
+        }
+    ],
+    "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/builds?filter%5Bapp%5D=6450000001&sort=-uploadedDate&limit=200&fields%5Bbuilds%5D=version"
+    },
+    "meta": {
+        "paging": {
+            "total": 3,
+            "limit": 200
+        }
+    }
+}

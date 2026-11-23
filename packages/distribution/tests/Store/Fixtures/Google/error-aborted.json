@@ -1,0 +1,14 @@
+{
+    "error": {
+        "code": 409,
+        "message": "The edit has already been committed.",
+        "status": "ABORTED",
+        "errors": [
+            {
+                "reason": "editAlreadyCommitted",
+                "domain": "androidpublisher",
+                "message": "The edit has already been committed."
+            }
+        ]
+    }
+}

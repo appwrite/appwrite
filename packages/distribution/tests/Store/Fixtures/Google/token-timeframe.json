@@ -1,0 +1,4 @@
+{
+    "error": "invalid_grant",
+    "error_description": "Invalid JWT: Token must be a short-lived token (60 minutes) and in a reasonable timeframe. Check your iat and exp values in the JWT claim."
+}
