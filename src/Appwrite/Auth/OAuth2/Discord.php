@@ -51,7 +51,8 @@ class Discord extends OAuth2
                 'client_id' => $this->appID,
                 'state' => \json_encode($this->state),
                 'scope' => \implode(' ', $this->getScopes()),
-                'redirect_uri' => $this->callback
+                'redirect_uri' => $this->callback,
+                'prompt' => $this->getPrompt() ?: null,
             ]);
 
         return $url;
@@ -74,7 +75,7 @@ class Discord extends OAuth2
                     'code' => $code,
                     'redirect_uri' => $this->callback,
                     'client_id' => $this->appID,
-                    'client_secret' => $this->appSecret,
+                    'client_secret' => $this->getClientSecret(),
                     'scope' => \implode(' ', $this->getScopes())
                 ])
             ), true);
@@ -98,7 +99,7 @@ class Discord extends OAuth2
                 'grant_type' => 'refresh_token',
                 'refresh_token' => $refreshToken,
                 'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
+                'client_secret' => $this->getClientSecret(),
             ])
         ), true);
 
@@ -214,5 +215,50 @@ class Discord extends OAuth2
         }
 
         return $this->user;
+    }
+
+    /**
+     * Extracts the Client Secret from the JSON stored in appSecret
+     *
+     * @return string
+     */
+    protected function getClientSecret(): string
+    {
+        $secret = $this->getAppSecret();
+
+        return $secret['clientSecret'] ?? $this->appSecret;
+    }
+
+    /**
+     * Extracts the prompt values from the JSON stored in appSecret
+     *
+     * @return string
+     */
+    protected function getPrompt(): string
+    {
+        $secret = $this->getAppSecret();
+
+        return \implode(' ', $secret['prompt'] ?? []);
+    }
+
+    /**
+     * Decode the JSON stored in appSecret.
+     * Falls back to treating the raw string as the client secret for backwards compatibility.
+     *
+     * @return array
+     */
+    protected function getAppSecret(): array
+    {
+        try {
+            $secret = \json_decode($this->appSecret, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\Throwable $th) {
+            return ['clientSecret' => $this->appSecret];
+        }
+
+        if (!\is_array($secret)) {
+            return ['clientSecret' => $this->appSecret];
+        }
+
+        return $secret;
     }
 }

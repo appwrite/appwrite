@@ -2,11 +2,20 @@
 
 namespace Appwrite\Utopia\Database\Documents;
 
+use Appwrite\Auth\MFA\Type\TOTP;
+use Appwrite\Deletes\Targets;
+use Appwrite\Hooks\Hooks;
+use Appwrite\Messaging\Adapter\Mqtt;
+use Utopia\Auth\Hashes\Argon2;
 use Utopia\Auth\Proof;
 use Utopia\Auth\Proofs\Token;
+use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Permission;
+use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Roles;
 
 class User extends Document
@@ -134,11 +143,15 @@ class User extends Document
      *
      * @return bool|string
      */
-    public function sessionVerify(string $secret, Token $proofForToken)
+    public function sessionVerify(string $secret, Token $proofForToken, ?string $invalidatedAt)
     {
         $sessions = $this->getAttribute('sessions', []);
 
         foreach ($sessions as $session) {
+            if ($invalidatedAt !== null && DateTime::formatTz($session->getCreatedAt()) <= $invalidatedAt) {
+                continue;
+            }
+
             if (
                 $session->isSet('secret') &&
                 $session->isSet('provider') &&
@@ -159,15 +172,490 @@ class User extends Document
      * Used by JWT authentication, which binds to a session ID rather than a
      * session secret.
      */
-    public function sessionActive(string $sessionId): bool
+    public function sessionActive(string $sessionId, ?string $invalidatedAt): bool
     {
-        $session = $this->find('$id', $sessionId, 'sessions');
+        $session = $this->getSession($sessionId);
 
-        if (empty($session)) {
+        if ($session === null) {
+            return false;
+        }
+
+        if ($invalidatedAt !== null && DateTime::formatTz($session->getCreatedAt()) <= $invalidatedAt) {
             return false;
         }
 
         return $session->isSet('expire')
             && DateTime::formatTz(DateTime::format(new \DateTime($session->getAttribute('expire')))) >= DateTime::formatTz(DateTime::now());
+    }
+
+    /**
+     * Unix timestamp at which a session of the user expires, or null when the user
+     * has no such session or it has no expiry.
+     *
+     * Used by realtime, which holds a connection open past the request that
+     * authenticated it and so has to end it at this time.
+     */
+    public function getSessionExpiry(string $sessionId): ?int
+    {
+        $session = $this->getSession($sessionId);
+
+        if ($session === null || !$session->isSet('expire')) {
+            return null;
+        }
+
+        return (new \DateTime($session->getAttribute('expire')))->getTimestamp();
+    }
+
+    /**
+     * Number of factors a session of the user must hold: two once MFA is enabled and the
+     * user has a verified second factor, otherwise one.
+     */
+    public function getMinimumFactors(): int
+    {
+        $hasMoreFactors = $this->getAttribute('emailVerification', false)
+            || $this->getAttribute('phoneVerification', false)
+            || (TOTP::getAuthenticatorFromUser($this)?->getAttribute('verified') ?? false);
+
+        return ($this->getAttribute('mfa', false) && $hasMoreFactors) ? 2 : 1;
+    }
+
+    /**
+     * Check that a session of the user holds every factor its MFA settings require.
+     */
+    public function sessionFactorsMet(string $sessionId): bool
+    {
+        $session = $this->getSession($sessionId);
+
+        return $session !== null && \count($session->getAttribute('factors', [])) >= $this->getMinimumFactors();
+    }
+
+    /**
+     * Check that a session of the user completed an MFA challenge within the recent window.
+     */
+    public function sessionChallengeRecent(string $sessionId): bool
+    {
+        $verifiedAt = $this->getSession($sessionId)?->getAttribute('mfaUpdatedAt');
+
+        if (empty($verifiedAt)) {
+            return false;
+        }
+
+        $maxAllowedDate = DateTime::addSeconds(new \DateTime($verifiedAt), MFA_RECENT_DURATION);
+
+        return DateTime::formatTz($maxAllowedDate) >= DateTime::formatTz(DateTime::now());
+    }
+
+    /**
+     * Roles of the user's confirmed membership of a team, or none when it is not a member.
+     *
+     * @return array<string>
+     */
+    public function getMembershipRoles(string $teamId): array
+    {
+        foreach ($this->getAttribute('memberships', []) as $membership) {
+            if ($membership->getAttribute('confirm', false) === true && $membership->getAttribute('teamId') === $teamId) {
+                return $membership->getAttribute('roles', []);
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * Is the user a confirmed owner of the organization?
+     *
+     * Reads the membership from the database rather than the user's own `memberships`,
+     * which is capped at a page and absent on a user loaded without it.
+     */
+    public function isOwner(Database $dbForPlatform, string $teamInternalId): bool
+    {
+        $sequence = $this->getSequence();
+
+        if (empty($sequence) || $teamInternalId === '') {
+            return false;
+        }
+
+        $membership = $dbForPlatform->findOne('memberships', [
+            Query::equal('teamInternalId', [$teamInternalId]),
+            Query::equal('userInternalId', [$sequence]),
+            Query::equal('confirm', [true]),
+        ]);
+
+        return \in_array(self::ROLE_OWNER, $membership->getAttribute('roles', []), true);
+    }
+
+    private function getSession(string $sessionId): ?Document
+    {
+        return \array_find($this->getAttribute('sessions', []), static fn (Document $session): bool => $session->getId() === $sessionId);
+    }
+
+    public static function invalidateAuthentication(Database $dbForProject, Document $user, ?string $keepSessionId = null): void
+    {
+        foreach ($user->getAttribute('sessions', []) as $session) {
+            if (!$session instanceof Document) {
+                continue;
+            }
+            if ($keepSessionId !== null && $session->getId() === $keepSessionId) {
+                continue;
+            }
+            $dbForProject->deleteDocument('sessions', $session->getId());
+        }
+
+        $sequence = $user->getSequence();
+        if ($sequence === '' || $sequence === null) {
+            return;
+        }
+
+        $dbForProject->deleteDocuments('challenges', [
+            Query::equal('userInternalId', [$sequence]),
+        ]);
+    }
+
+    /**
+     * Delete the user's pending recovery links and codes. Each was issued to reset the
+     * password as it stood, so once the password changes none of them is needed.
+     * The caller purges the cached user document, which lists the tokens.
+     */
+    public static function deleteRecoveryTokens(Database $dbForProject, Document $user): void
+    {
+        $sequence = $user->getSequence();
+        if ($sequence === '' || $sequence === null) {
+            return;
+        }
+
+        $dbForProject->deleteDocuments('tokens', [
+            Query::equal('userInternalId', [$sequence]),
+            Query::equal('type', [TOKEN_TYPE_RECOVERY, TOKEN_TYPE_RECOVERY_OTP]),
+        ]);
+    }
+
+    /**
+     * Claim an account registered with an address whose owner has now proven it: under the
+     * user row lock, re-read the account and, while the address is still unproven, revoke every
+     * other way in and mark it proven in the same transaction.
+     *
+     * The lock orders the claim against the account's other writers that take it, so of two concurrent
+     * claims only the first revokes and a request that re-checks the account under the same lock, such
+     * as issuing an email token, sees it claimed. `$user` is left holding the locked row, so a caller
+     * that persists it as a whole document cannot bring back what the winning claim revoked, and
+     * can compare its address with the one it proved to tell whether the account moved away from it.
+     * `$proven` is the channel of the proven address, MESSAGE_TYPE_EMAIL or MESSAGE_TYPE_SMS.
+     * Returns true when this claim revoked the credentials, so the caller can purge the cached
+     * user and mirror the revocation to MQTT and realtime once the transaction has committed.
+     */
+    public static function claim(Database $dbForProject, Document $user, Document $project, string $proven = MESSAGE_TYPE_EMAIL, ?Mqtt $mqtt = null): bool
+    {
+        $verification = $proven === MESSAGE_TYPE_SMS ? 'phoneVerification' : 'emailVerification';
+        $channel = $proven === MESSAGE_TYPE_SMS ? 'phone' : 'email';
+        $address = $user->getAttribute($channel);
+
+        $claimed = false;
+        $dbForProject->withTransaction(function () use ($dbForProject, $user, $project, $proven, $verification, $channel, $address, $mqtt, &$claimed): void {
+            $claimed = false; // A retried attempt starts over
+            $locked = $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+            if ($locked->isEmpty()) {
+                return;
+            }
+
+            // The claim decides on the locked row, and leaves the caller holding it in place of the copy
+            // it came with, which a claim that got here first has already stripped of its credentials
+            $user->setAttributes($locked->getArrayCopy());
+
+            // The proof covers the address the caller read, not one the account moved to since. A blocked
+            // account keeps its credentials, so proving its address now would stop a later claim revoking them
+            if ($locked->getAttribute($channel) !== $address || $locked->getAttribute('status') === false) {
+                return;
+            }
+
+            // An address already proven was claimed by someone who holds it, so there is nothing left to revoke
+            if (!$locked->getAttribute($verification, false)) {
+                self::revokeCredentials($dbForProject, $user, $project, $proven, $mqtt);
+                $dbForProject->updateDocument('users', $user->getId(), new Document([$verification => true]));
+                $claimed = true;
+            }
+
+            $user->setAttribute($verification, true);
+        });
+
+        return $claimed;
+    }
+
+    /**
+     * Take the user row lock for a sign-in about to link an identity or issue a session, and tell whether the
+     * account is still the one the request authenticated against. Call it first in the transaction that persists
+     * the sign-in, so the writes that follow are ordered against claim(), which takes the same lock.
+     *
+     * A claim proves an address that was unverified, so it always turns a verification flag on, and it deletes
+     * every session and identity the request may have resolved the account through. `$snapshot` is the account
+     * as the request read it and `$grounds` the documents it got in through, as collection => id. What the request
+     * read before a claim committed is stale, so nothing it decided on that copy may be written after the claim.
+     * The grounds are read for update too, so a database whose snapshot predates the lock still sees them gone.
+     *
+     * @param array<string, string> $grounds
+     */
+    public static function lockUnchanged(Database $dbForProject, Document $snapshot, array $grounds): bool
+    {
+        $locked = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('users', $snapshot->getId(), forUpdate: true));
+
+        if ($locked->isEmpty() || $locked->getAttribute('status') === false) {
+            return false;
+        }
+
+        foreach (['email', 'phone'] as $address) {
+            if (($locked->getAttribute($address) ?? '') !== ($snapshot->getAttribute($address) ?? '')) {
+                return false;
+            }
+        }
+
+        foreach (['emailVerification', 'phoneVerification'] as $verification) {
+            if ((bool) $locked->getAttribute($verification, false) !== (bool) $snapshot->getAttribute($verification, false)) {
+                return false;
+            }
+        }
+
+        foreach ($grounds as $collection => $id) {
+            if ($dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument($collection, $id, forUpdate: true))->isEmpty()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Reserve the email target for an address a sign-in fills in on an account that had none. Call it inside the
+     * transaction that persists the sign-in, after lockUnchanged(), so a sign-in that is refused writes no target
+     * and the address stays free. Returns the target it created, or null when the account already holds one.
+     *
+     * @throws Duplicate when another user holds a target for the address
+     */
+    public static function reserveEmailTarget(Database $dbForProject, Document $user, string $email): ?Document
+    {
+        // The identifier unique index spans all users. Persisting the email while another
+        // user owns the target would leave this user unreachable by email messaging.
+        $existing = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->findOne('targets', [
+            Query::equal('identifier', [$email]),
+        ]));
+
+        if (!$existing->isEmpty()) {
+            if ($existing->getAttribute('userInternalId') !== $user->getSequence()) {
+                throw new Duplicate('The address is already a target of another user');
+            }
+
+            return null;
+        }
+
+        return $dbForProject->createDocument('targets', new Document([
+            '$permissions' => [
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
+            ],
+            'userId' => $user->getId(),
+            'userInternalId' => $user->getSequence(),
+            'providerType' => MESSAGE_TYPE_EMAIL,
+            'identifier' => $email,
+        ]));
+    }
+
+    /**
+     * Undo what a committed sign-in wrote to the account when its identity link is refused afterwards by
+     * confirmIdentity(): each attribute it changed goes back to the value in `$snapshot`, the account as the
+     * request read it, unless something else has changed it since, and the email target it reserved is released.
+     * The address it filled in and its verification and metadata are reverted as one, with the target, and only when
+     * none of them has changed since.
+     * Takes the user row lock; call it inside a transaction.
+     *
+     * @param array<string, mixed> $changes The attributes the sign-in wrote to the account
+     */
+    public static function revertSignIn(Database $dbForProject, Document $snapshot, array $changes, ?Document $target): void
+    {
+        $authorization = $dbForProject->getAuthorization();
+        $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $snapshot->getId(), forUpdate: true));
+
+        if ($locked->isEmpty()) {
+            return;
+        }
+
+        $unchanged = fn (string $key): bool => $locked->getAttribute($key) === $changes[$key];
+
+        // The address and what was recorded about it go back together, or not at all: a claim of the address since
+        // the commit verified it, and the account keeps it, the verification and its target
+        $address = \array_intersect_key($changes, \array_flip(['email', 'emailVerification', 'emailCanonical', 'emailIsCanonical', 'emailIsCorporate', 'emailIsDisposable', 'emailIsFree']));
+        $releaseAddress = $address !== [] && \array_all(\array_keys($address), $unchanged);
+
+        $revert = [];
+        foreach (\array_keys($changes) as $key) {
+            $before = $snapshot->getAttribute($key);
+            if ($before === $changes[$key]) {
+                continue;
+            }
+            if (\array_key_exists($key, $address) ? $releaseAddress : $unchanged($key)) {
+                $revert[$key] = $before;
+            }
+        }
+
+        if ($revert !== []) {
+            $authorization->skip(fn () => $dbForProject->updateDocument('users', $locked->getId(), new Document($revert)));
+        }
+
+        if ($target !== null && ($address === [] || $releaseAddress)) {
+            $authorization->skip(function () use ($dbForProject, $target) {
+                if (!$dbForProject->getDocument('targets', $target->getId())->isEmpty()) {
+                    $dbForProject->deleteDocument('targets', $target->getId());
+                }
+            });
+        }
+    }
+
+    /**
+     * Revoke every way into the account other than the address just proven: password,
+     * sessions, tokens, MFA factors, passkeys, identities, account keys, the other
+     * address and every target not on the proven channel.
+     *
+     * Used when the owner of an email or phone claims an account that was
+     * registered with it but never verified, so nobody else keeps access.
+     * `$proven` is the channel of the proven address, MESSAGE_TYPE_EMAIL or MESSAGE_TYPE_SMS.
+     * Persists the revocation in one transaction and mirrors it on `$user`.
+     */
+    public static function revokeCredentials(Database $dbForProject, Document $user, Document $project, string $proven = MESSAGE_TYPE_EMAIL, ?Mqtt $mqtt = null): void
+    {
+        $sequence = $user->getSequence();
+        if ($sequence === '' || $sequence === null || $user->getAttribute('status') === false) {
+            return;
+        }
+
+        $hash = new Argon2();
+        $attributes = [
+            'password' => null,
+            'hash' => $hash->getName(),
+            'hashOptions' => $hash->getOptions(),
+            'passwordHistory' => [],
+            'passwordUpdate' => null,
+            'passwordPwned' => null,
+            'mfa' => false,
+            'mfaRecoveryCodes' => [],
+        ];
+
+        // The address that was not proven belongs to whoever registered the account
+        $attributes += $proven === MESSAGE_TYPE_SMS
+            ? [
+                'email' => null,
+                'emailVerification' => false,
+                'emailCanonical' => null,
+                'emailIsCanonical' => null,
+                'emailIsCorporate' => null,
+                'emailIsDisposable' => null,
+                'emailIsFree' => null,
+            ]
+            : [
+                'phone' => null,
+                'phoneVerification' => false,
+            ];
+
+        $dbForProject->withTransaction(function () use ($dbForProject, $user, $project, $sequence, $attributes, $proven, $mqtt) {
+            foreach (['sessions', 'tokens', 'challenges', 'authenticators', 'identities'] as $collection) {
+                $dbForProject->deleteDocuments($collection, [
+                    Query::equal('userInternalId', [$sequence]),
+                ]);
+            }
+
+            if ($project->getId() === 'console') {
+                $dbForProject->deleteDocuments('keys', [
+                    Query::equal('resourceType', ['users']),
+                    Query::equal('resourceInternalId', [$sequence]),
+                ]);
+            }
+
+            Targets::delete($dbForProject, Query::and([
+                Query::equal('userInternalId', [$sequence]),
+                Query::notEqual('providerType', $proven),
+            ]), $mqtt, $project->getId());
+
+            // Editions revoke the credentials they keep in their own collections
+            (new Hooks())->trigger('credentialsRevoked', [$dbForProject, $user, $project]);
+
+            $dbForProject->updateDocument('users', $user->getId(), new Document($attributes));
+        });
+
+        $user
+            ->setAttributes($attributes)
+            ->setAttribute('sessions', [])
+            ->setAttribute('tokens', [])
+            ->setAttribute('challenges', [])
+            ->setAttribute('authenticators', [])
+            ->setAttribute('targets', []);
+    }
+
+    /**
+     * Attach a provider identity to the user it names, keeping the invariant that a
+     * provider email is only ever held by the identities of a single user.
+     *
+     * The invariant cannot be a unique index, because one user may hold several
+     * identities reporting the same email, and reading before the insert is a
+     * time-of-check race: two users linking the same verified address at the same
+     * moment both pass the read and both write. So the row goes in first and the
+     * ownership is read again afterwards. Each of those reads happens after its own
+     * commit, so two racers can never both come up clean, and whichever sees a
+     * foreign identity drops the row it just wrote. A dead heat refuses both links
+     * rather than leaving the email with two owners.
+     *
+     * Inside a transaction the second read cannot see a link another request has not
+     * committed yet, so a caller that links there runs confirmIdentity() once its own
+     * transaction has committed.
+     *
+     * @return bool false when another user's identity holds the provider email, in
+     *              which case nothing of this link was persisted
+     * @throws Duplicate when (provider, providerUid) is already linked to a user
+     */
+    public static function linkIdentity(Database $dbForProject, Document $identity): bool
+    {
+        $providerEmail = (string) $identity->getAttribute('providerEmail', '');
+        $userInternalId = $identity->getAttribute('userInternalId');
+
+        // Reject the ordinary conflict without writing a row at all
+        if (self::identityEmailTaken($dbForProject, $providerEmail, $userInternalId)) {
+            return false;
+        }
+
+        $created = $dbForProject->createDocument('identities', $identity);
+
+        return self::confirmIdentity($dbForProject, $created);
+    }
+
+    /**
+     * The read linkIdentity() makes after its write: false, with the identity deleted, when
+     * another user's identity holds its provider email. Called on its own for an identity
+     * linked inside a transaction, after that transaction has committed.
+     */
+    public static function confirmIdentity(Database $dbForProject, Document $identity): bool
+    {
+        if (!self::identityEmailTaken($dbForProject, (string) $identity->getAttribute('providerEmail', ''), $identity->getAttribute('userInternalId'))) {
+            return true;
+        }
+
+        // Authorization is skipped so a lost race always cleans up after itself
+        $dbForProject->getAuthorization()->skip(
+            fn () => $dbForProject->deleteDocument('identities', $identity->getId())
+        );
+
+        return false;
+    }
+
+    /**
+     * Whether an identity of a user other than $userInternalId already holds $providerEmail.
+     *
+     * @phpstan-impure the answer changes as concurrent requests write their own identities
+     */
+    private static function identityEmailTaken(Database $dbForProject, string $providerEmail, ?string $userInternalId): bool
+    {
+        if ($providerEmail === '') {
+            return false;
+        }
+
+        return !$dbForProject->findOne('identities', [
+            Query::equal('providerEmail', [$providerEmail]),
+            Query::notEqual('userInternalId', $userInternalId),
+        ])->isEmpty();
     }
 }

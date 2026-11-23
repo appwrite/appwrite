@@ -1,0 +1,7 @@
+parameters:
+    level: 6
+    paths:
+        - src
+        - tests
+    scanDirectories:
+        - vendor/swoole/ide-helper

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
+use Appwrite\Auth\Key;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
@@ -14,12 +15,13 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
+use Appwrite\Vcs\Validator\Directory;
 use Executor\Executor;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
@@ -27,6 +29,7 @@ use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -34,7 +37,6 @@ use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git;
 
 class Update extends Base
 {
@@ -72,24 +74,24 @@ class Update extends Base
                     )
                 ]
             ))
-            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Site ID.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Site name. Max length: 128 chars.')
             ->param('framework', '', new WhiteList(\array_keys(Config::getParam('frameworks')), true), 'Sites framework.', enum: new Enum(name: 'Framework'))
-            ->param('enabled', true, new Boolean(), 'Is site enabled? When set to \'disabled\', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.', true)
-            ->param('logging', true, new Boolean(), 'When disabled, request logs will exclude logs and errors, and site responses will be slightly faster.', true)
-            ->param('timeout', 30, new Range(1, (int) System::getEnv('_APP_SITES_TIMEOUT', 30)), 'Maximum request time in seconds.', true)
-            ->param('installCommand', '', new Text(8192, 0), 'Install Command.', true)
-            ->param('buildCommand', '', new Text(8192, 0), 'Build Command.', true)
-            ->param('startCommand', '', new Text(8192, 0), 'Custom start command. Leave empty to use default.', true)
-            ->param('outputDirectory', '', new Text(8192, 0), 'Output Directory for site.', true)
+            ->param('enabled', null, new Nullable(new Boolean()), 'Is site enabled? When set to \'disabled\', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.', true)
+            ->param('logging', null, new Nullable(new Boolean()), 'When disabled, request logs will exclude logs and errors, and site responses will be slightly faster.', true)
+            ->param('timeout', null, new Nullable(new Range(1, (int) System::getEnv('_APP_SITES_TIMEOUT', 30))), 'Maximum request time in seconds.', true)
+            ->param('installCommand', null, new Nullable(new Text(8192, 0)), 'Install Command.', true)
+            ->param('buildCommand', null, new Nullable(new Text(8192, 0)), 'Build Command.', true)
+            ->param('startCommand', null, new Nullable(new Text(8192, 0)), 'Custom start command. Leave empty to use default.', true)
+            ->param('outputDirectory', null, new Nullable(new Text(8192, 0)), 'Output Directory for site.', true)
             ->param('buildRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use during build step.', true, enum: new Enum(name: 'BuildRuntime'))
-            ->param('adapter', '', new WhiteList(['static', 'ssr']), 'Framework adapter defining rendering strategy. Allowed values are: static, ssr', true, enum: new Enum(name: 'Adapter'))
-            ->param('fallbackFile', '', new Text(255, 0), 'Fallback file for single page application sites.', true)
+            ->param('adapter', null, new Nullable(new WhiteList(['static', 'ssr'])), 'Framework adapter defining rendering strategy. Allowed values are: static, ssr', true, enum: new Enum(name: 'Adapter'))
+            ->param('fallbackFile', null, new Nullable(new Text(255, 0)), 'Fallback file for single page application sites.', true)
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
-            ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the site.', true)
+            ->param('providerRepositoryId', null, new Nullable(new Text(128, 0)), 'Repository ID of the repo linked to the site.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
-            ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.', true)
-            ->param('providerRootDirectory', '', new Text(128, 0), 'Path to site code in the linked repo.', true)
+            ->param('providerSilentMode', null, new Nullable(new Boolean()), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, no comments or checks are posted to commits and pull requests.', true)
+            ->param('providerRootDirectory', '', new Directory(), 'Path to site code in the linked repo.', true)
             ->param('providerBranches', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
             ->param('providerPaths', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
             ->param('buildSpecification', null, fn (array $plan) => new Nullable(new Specification(
@@ -99,14 +101,18 @@ class Update extends Base
                 System::getEnv('_APP_COMPUTE_MEMORY', 0),
                 'buildSpecifications'
             )), 'Build specification for the site deployments.', true, ['plan'], example: 's-1vcpu-512mb')
-            ->param('runtimeSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+            ->param('runtimeSpecification', null, fn (array $plan) => new Nullable(new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
-            ), 'Runtime specification for the SSR executions.', true, ['plan'], example: 's-1vcpu-512mb')
-            ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
+            )), 'Runtime specification for the SSR executions.', true, ['plan'], example: 's-1vcpu-512mb')
+            ->param('deploymentRetention', null, new Nullable(new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION)), 'Days to keep non-active deployments before deletion. Value 0 keeps all deployments unless the server applies a default retention.', true)
             ->param('scopes', null, new Nullable(new ArrayList(new WhiteList(\array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_SCOPES_SIZE)), 'List of scopes allowed for API key auto-generated for every site build and SSR execution. Maximum of ' . APP_LIMIT_ARRAY_SCOPES_SIZE . ' scopes are allowed.', true, enum: new Enum(name: 'ProjectKeyScopes'))
+            ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the site.', true)
+            ->param('providerComments', null, new Nullable(new Boolean()), 'Post a build summary on pull requests for the repo linked to the site. Commit statuses are still reported when disabled. Ignored in silent mode.', true)
+            ->param('providerDeployments', null, new Nullable(new Boolean()), 'Deploy every push that matches the branch and path rules for the repo linked to the site. When disabled, deploy manually.', true)
+            ->param('providerStatuses', null, new Nullable(new Boolean()), 'Report the build status on each commit for the repo linked to the site. Ignored in silent mode.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -119,8 +125,11 @@ class Update extends Base
             ->inject('executor')
             ->inject('authorization')
             ->inject('deployments')
+            ->inject('buildTimeout')
             ->inject('bus')
             ->inject('platform')
+            ->inject('apiKey')
+            ->inject('deviceForBuilds')
             ->callback($this->action(...));
     }
 
@@ -128,27 +137,31 @@ class Update extends Base
         string $siteId,
         string $name,
         string $framework,
-        bool $enabled,
-        bool $logging,
-        int $timeout,
-        string $installCommand,
-        string $buildCommand,
-        string $startCommand,
-        string $outputDirectory,
+        ?bool $enabled,
+        ?bool $logging,
+        ?int $timeout,
+        ?string $installCommand,
+        ?string $buildCommand,
+        ?string $startCommand,
+        ?string $outputDirectory,
         string $buildRuntime,
-        string $adapter,
-        string $fallbackFile,
+        ?string $adapter,
+        ?string $fallbackFile,
         string $installationId,
         ?string $providerRepositoryId,
         string $providerBranch,
-        bool $providerSilentMode,
+        ?bool $providerSilentMode,
         string $providerRootDirectory,
         ?array $providerBranches,
         ?array $providerPaths,
         ?string $buildSpecification,
-        string $runtimeSpecification,
-        int $deploymentRetention,
+        ?string $runtimeSpecification,
+        ?int $deploymentRetention,
         ?array $scopes,
+        ?string $description,
+        ?bool $providerComments,
+        ?bool $providerDeployments,
+        ?bool $providerStatuses,
         Request $request,
         Response $response,
         Database $dbForProject,
@@ -161,8 +174,11 @@ class Update extends Base
         Executor $executor,
         Authorization $authorization,
         Deployments $deployments,
+        int $buildTimeout,
         Bus $bus,
-        array $platform
+        array $platform,
+        ?Key $apiKey,
+        ?Device $deviceForBuilds = null,
     ) {
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
@@ -186,6 +202,11 @@ class Update extends Base
             throw new Exception(Exception::SITE_NOT_FOUND);
         }
 
+        // Scopes the site already has stay; only new ones need the key to hold them
+        if ($apiKey !== null && !$apiKey->mayGrant(\array_diff($scopes ?? [], $site->getAttribute('scopes', [])))) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'An API key cannot grant scopes it does not hold.');
+        }
+
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if (!empty($installationId) && $installation->isEmpty()) {
@@ -204,12 +225,27 @@ class Update extends Base
             $buildRuntime = $site->getAttribute('buildRuntime');
         }
 
+        $description ??= $site->getAttribute('description', '');
         $buildSpecification ??= $site->getAttribute('buildSpecification', APP_SITES_BUILD_SPECIFICATION_DEFAULT);
+        $runtimeSpecification ??= $site->getAttribute('runtimeSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT);
+        $enabled ??= $site->getAttribute('enabled', true);
+        $logging ??= $site->getAttribute('logging', true);
+        $timeout ??= $site->getAttribute('timeout', 30);
+        $installCommand ??= $site->getAttribute('installCommand', '');
+        $buildCommand ??= $site->getAttribute('buildCommand', '');
+        $startCommand ??= $site->getAttribute('startCommand', '');
+        $outputDirectory ??= $site->getAttribute('outputDirectory', '');
+        $adapter ??= $site->getAttribute('adapter', '');
+        $fallbackFile ??= $site->getAttribute('fallbackFile', '');
+        $deploymentRetention ??= $site->getAttribute('deploymentRetention', 0);
 
         $repositoryId = $site->getAttribute('repositoryId', '');
         $repositoryInternalId = $site->getAttribute('repositoryInternalId', '');
 
         $isConnected = !empty($site->getAttribute('providerRepositoryId', ''));
+
+        // Disconnecting turns silent mode on, so a new connection starts without it
+        $providerSilentMode ??= !$isConnected && !empty($providerRepositoryId) ? false : $site->getAttribute('providerSilentMode', false);
 
         if (!empty($installationId) && $installation->getAttribute('projectId') !== $project->getId()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
@@ -249,9 +285,12 @@ class Update extends Base
         }
 
         if (!$isConnected && !empty($providerRepositoryId)) {
+            $providerAdapter = $vcsFactory->fromInstallation($installation);
+            [$owner, $repositoryName] = $this->resolveInstallationRepository($providerAdapter, $installation, $providerRepositoryId);
+
             $teamId = $project->getAttribute('teamId', '');
             $repository = new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 '$permissions' => $this->getPermissions($teamId, $project->getId()),
                 'installationId' => $installation->getId(),
                 'installationInternalId' => $installation->getSequence(),
@@ -268,15 +307,28 @@ class Update extends Base
             $repositoryInternalId = $repository->getSequence();
 
             try {
-                $providerAdapter = $vcsFactory->fromInstallation($installation);
-                if (!\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $providerAdapter->getSupportedWebhookScopes(), true)) {
-                    $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
-                    $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
-                    $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
-                }
+                $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
             } catch (\Throwable $error) {
                 $dbForPlatform->deleteDocument('repositories', $repository->getId());
                 throw $error;
+            }
+        }
+
+        // Reconnecting a connected site only moves the site to the new installation, while
+        // webhook deployments take theirs from the repository link
+        if ($isConnected && !empty($providerRepositoryId) && !empty($repositoryId) && !$installation->isEmpty()) {
+            $repository = $dbForPlatform->getDocument('repositories', $repositoryId);
+            if (
+                !$repository->isEmpty()
+                && $repository->getAttribute('providerRepositoryId') === $providerRepositoryId
+                && $repository->getAttribute('installationInternalId') !== $installation->getSequence()
+            ) {
+                $this->resolveInstallationRepository($vcsFactory->fromInstallation($installation), $installation, $providerRepositoryId);
+
+                $dbForPlatform->updateDocument('repositories', $repository->getId(), new Document([
+                    'installationId' => $installation->getId(),
+                    'installationInternalId' => $installation->getSequence(),
+                ]));
             }
         }
 
@@ -294,11 +346,14 @@ class Update extends Base
             $live = false;
         }
 
+        // Enforce Cold Start if spec limits or logging change; a runtime is built for its logging mode.
         if (!empty($site->getAttribute('deploymentId'))) {
             $specsChanged = false;
             if ($site->getAttribute('runtimeSpecification', '') !== $runtimeSpecification) {
                 $specsChanged = true;
             } elseif ($site->getAttribute('buildSpecification', '') !== $buildSpecification) {
+                $specsChanged = true;
+            } elseif ($site->getAttribute('logging', true) !== $logging) {
                 $specsChanged = true;
             }
 
@@ -314,8 +369,10 @@ class Update extends Base
             }
         }
 
+        $previous = $site;
         $site = $dbForProject->updateDocument('sites', $site->getId(), new Document(array_merge($site->getArrayCopy(), [
             'name' => $name,
+            'description' => $description,
             'framework' => $framework,
             'enabled' => $enabled,
             'logging' => $logging,
@@ -334,20 +391,25 @@ class Update extends Base
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
+            'providerComments' => $providerComments ?? $site->getAttribute('providerComments', true),
+            'providerDeployments' => $providerDeployments ?? $site->getAttribute('providerDeployments', true),
+            'providerStatuses' => $providerStatuses ?? $site->getAttribute('providerStatuses', true),
             'providerBranches' => $providerBranches ?? $site->getAttribute('providerBranches', []),
             'providerPaths' => $providerPaths ?? $site->getAttribute('providerPaths', []),
             'buildSpecification' => $buildSpecification,
             'runtimeSpecification' => $runtimeSpecification,
-            'search' => implode(' ', [$siteId, $name, $framework]),
+            'search' => implode(' ', [$siteId, $name, $description, $framework]),
             'buildRuntime' => $buildRuntime,
             'adapter' => $adapter,
             'fallbackFile' => $fallbackFile,
             'scopes' => $scopes ?? $site->getAttribute('scopes', []),
         ])));
 
+        $this->deleteStaleBuildCache($deviceForBuilds, $project->getId(), $previous, $site);
+
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->redeployVcsSite($request, $site, $project, $installation, $dbForProject, $dbForPlatform, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $authorization, $deployments, $bus, $platform);
+            $this->redeployVcsSite($request, $site, $project, $installation, $dbForProject, $dbForPlatform, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $authorization, $deployments, $buildTimeout, $bus, $platform);
         }
 
         $queueForEvents->setParam('siteId', $site->getId());

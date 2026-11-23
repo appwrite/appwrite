@@ -11,9 +11,9 @@ use Tests\E2E\Scopes\SchemaPolling;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Traits\DatabasesUrlHelpers;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 final class DatabasesNumericTypesTest extends Scope
 {
@@ -44,7 +44,7 @@ final class DatabasesNumericTypesTest extends Scope
         ];
 
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', $headers, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Numeric Types Test Database',
         ]);
 
@@ -52,7 +52,7 @@ final class DatabasesNumericTypesTest extends Scope
         $databaseId = $database['body']['$id'];
 
         $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', $headers, [
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'Numeric Types Table',
             'rowSecurity' => true,
             'permissions' => [
@@ -130,7 +130,7 @@ final class DatabasesNumericTypesTest extends Scope
         ];
 
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', $headers, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Numeric Types Test Database',
         ]);
 
@@ -138,7 +138,7 @@ final class DatabasesNumericTypesTest extends Scope
         $databaseId = $database['body']['$id'];
 
         $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', $headers, [
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'Numeric Types Table',
             'rowSecurity' => true,
             'permissions' => [
@@ -197,7 +197,7 @@ final class DatabasesNumericTypesTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Numeric Types Test Database',
         ]);
 
@@ -339,7 +339,7 @@ final class DatabasesNumericTypesTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'rowId' => ID::unique(),
+            'rowId' => Id::unique(),
             'data' => [
                 'integer_field' => 5,
                 'bigint_field' => 456,

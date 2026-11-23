@@ -1,0 +1,691 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Parameter \#2 \$schemas of static method Utopia\\OpenAPI\\Model\\CompositeSchema\:\:detectStringEnum\(\) expects list\<Utopia\\OpenAPI\\Model\\Schema\>, array\<int, Utopia\\OpenAPI\\Model\\Schema\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Model/CompositeSchema.php
+
+		-
+			message: '#^Property Utopia\\OpenAPI\\Model\\CompositeSchema\:\:\$schemas \(list\<Utopia\\OpenAPI\\Model\\Schema\>\) does not accept array\<int, Utopia\\OpenAPI\\Model\\Schema\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Model/CompositeSchema.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\:\:decode\(\) has parameter \$input with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Parser.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\:\:decode\(\) should return array\<string, mixed\> but returns array\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Parser.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\:\:decode\(\) should return array\<string, mixed\> but returns array\<mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Parser.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\:\:detectVersion\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Parser.php
+
+		-
+			message: '#^Parameter \#1 \$version of method Utopia\\OpenAPI\\Parser\:\:reader\(\) expects Utopia\\OpenAPI\\Version, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser.php
+
+		-
+			message: '#^Parameter \#2 \$sourceVersion of method Utopia\\OpenAPI\\Parser\:\:reader\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser.php
+
+		-
+			message: '#^Part \$sourceVersion \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 1
+			path: src/Parser.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 2
+			path: src/Parser/AbstractReader.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\\AbstractReader\:\:parseMediaTypes\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Parser/AbstractReader.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\\AbstractReader\:\:parseOpenApi2OAuthFlows\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Parser/AbstractReader.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\\AbstractReader\:\:parseSecurityScheme\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Parser/AbstractReader.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, Closure\(bool\|float\|GMP\|int\|resource\|string\|null\)\: string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/AbstractReader.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\OpenAPI\\Parser\\Value\:\:optionalString\(\) expects array\<string, mixed\>, array given\.$#'
+			identifier: argument.type
+			count: 9
+			path: src/Parser/AbstractReader.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\OpenAPI\\Parser\\Value\:\:requiredString\(\) expects array\<string, mixed\>, array given\.$#'
+			identifier: argument.type
+			count: 6
+			path: src/Parser/AbstractReader.php
+
+		-
+			message: '#^Parameter \$content of class Utopia\\OpenAPI\\Model\\Header constructor expects array\<string, Utopia\\OpenAPI\\Model\\MediaType\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/AbstractReader.php
+
+		-
+			message: '#^Cannot access offset ''in'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Cannot access offset ''required'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Cannot access offset ''type'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 2
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\\OpenAPI2\:\:mergeRawParameters\(\) has parameter \$inherited with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\\OpenAPI2\:\:mergeRawParameters\(\) has parameter \$operation with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\\OpenAPI2\:\:mergeRawParameters\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\\OpenAPI2\:\:parseFormBody\(\) has parameter \$consumes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\\OpenAPI2\:\:parseFormBody\(\) has parameter \$form with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\\OpenAPI2\:\:parseOperation\(\) has parameter \$pathParameters with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\\OpenAPI2\:\:parseOperation\(\) has parameter \$rootConsumes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\\OpenAPI2\:\:parseOperation\(\) has parameter \$rootProduces with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\\OpenAPI2\:\:parseOperation\(\) has parameter \$rootSecurity with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\\OpenAPI2\:\:parseParameter\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\\OpenAPI2\:\:parsePaths\(\) has parameter \$rootConsumes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\\OpenAPI2\:\:parsePaths\(\) has parameter \$rootProduces with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\\OpenAPI2\:\:parsePaths\(\) has parameter \$rootSecurity with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\\OpenAPI2\:\:rawParameterIdentity\(\) has parameter \$parameter with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_unique expects an array of values castable to string, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, Closure\(bool\|float\|GMP\|int\|resource\|string\|null\)\: string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Parameter \#1 \$data of method Utopia\\OpenAPI\\Parser\\OpenAPI2\:\:parseParameter\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Parameter \#1 \$data of method Utopia\\OpenAPI\\Parser\\Schema\\Reader\:\:readParameterFields\(\) expects array\<string, mixed\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Parameter \#1 \$data of method Utopia\\OpenAPI\\Parser\\Schema\\Reader\:\:readParameterFields\(\) expects array\<string, mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\OpenAPI\\Parser\\Value\:\:extensions\(\) expects array\<int\|string, mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\OpenAPI\\Parser\\Value\:\:optionalString\(\) expects array\<string, mixed\>, array given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\OpenAPI\\Parser\\Value\:\:requiredString\(\) expects array\<string, mixed\>, array given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\OpenAPI\\Parser\\Value\:\:requiredString\(\) expects array\<string, mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Parameter \#1 \$parameter of method Utopia\\OpenAPI\\Parser\\OpenAPI2\:\:rawParameterIdentity\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Parameter \#2 \$array of function array_key_exists expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Parameter \$content of class Utopia\\OpenAPI\\Model\\RequestBody constructor expects array\<string, Utopia\\OpenAPI\\Model\\MediaType\>, array\<Utopia\\OpenAPI\\Model\\MediaType\> given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Parameter \$content of class Utopia\\OpenAPI\\Model\\Response constructor expects array\<string, Utopia\\OpenAPI\\Model\\MediaType\>, array\<Utopia\\OpenAPI\\Model\\MediaType\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Parameter \$security of class Utopia\\OpenAPI\\Model\\Operation constructor expects list\<Utopia\\OpenAPI\\Model\\SecurityRequirement\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 4
+			path: src/Parser/OpenAPI2.php
+
+		-
+			message: '#^Cannot call method identity\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Parser/OpenAPI3.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: src/Parser/OpenAPI3.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\\OpenAPI3\:\:mergeParameters\(\) has parameter \$operation with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Parser/OpenAPI3.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\\OpenAPI3\:\:mergeParameters\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Parser/OpenAPI3.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\\OpenAPI3\:\:parseOperation\(\) has parameter \$inheritedServers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Parser/OpenAPI3.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\\OpenAPI3\:\:parseOperation\(\) has parameter \$pathParameters with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Parser/OpenAPI3.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\\OpenAPI3\:\:parseOperation\(\) has parameter \$rootSecurity with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Parser/OpenAPI3.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\\OpenAPI3\:\:parsePaths\(\) has parameter \$rootSecurity with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Parser/OpenAPI3.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\\OpenAPI3\:\:parsePaths\(\) has parameter \$rootServers with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Parser/OpenAPI3.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, Closure\(bool\|float\|GMP\|int\|resource\|string\|null\)\: string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/OpenAPI3.php
+
+		-
+			message: '#^Parameter \#1 \$inherited of method Utopia\\OpenAPI\\Parser\\OpenAPI3\:\:mergeParameters\(\) expects list\<Utopia\\OpenAPI\\Model\\Parameter\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/OpenAPI3.php
+
+		-
+			message: '#^Parameter \$content of class Utopia\\OpenAPI\\Model\\Parameter constructor expects array\<string, Utopia\\OpenAPI\\Model\\MediaType\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/OpenAPI3.php
+
+		-
+			message: '#^Parameter \$content of class Utopia\\OpenAPI\\Model\\RequestBody constructor expects array\<string, Utopia\\OpenAPI\\Model\\MediaType\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/OpenAPI3.php
+
+		-
+			message: '#^Parameter \$content of class Utopia\\OpenAPI\\Model\\Response constructor expects array\<string, Utopia\\OpenAPI\\Model\\MediaType\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/OpenAPI3.php
+
+		-
+			message: '#^Parameter \$parameters of class Utopia\\OpenAPI\\Model\\Operation constructor expects list\<Utopia\\OpenAPI\\Model\\Parameter\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/OpenAPI3.php
+
+		-
+			message: '#^Parameter \$security of class Utopia\\OpenAPI\\Model\\Operation constructor expects list\<Utopia\\OpenAPI\\Model\\SecurityRequirement\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/OpenAPI3.php
+
+		-
+			message: '#^Parameter \$servers of class Utopia\\OpenAPI\\Model\\Operation constructor expects list\<Utopia\\OpenAPI\\Model\\Server\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/OpenAPI3.php
+
+		-
+			message: '#^Parameter \$servers of class Utopia\\OpenAPI\\Model\\PathItem constructor expects list\<Utopia\\OpenAPI\\Model\\Server\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/OpenAPI3.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 2
+			path: src/Parser/OpenAPI3.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Parser/Schema/Reader.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, Closure\(bool\|float\|GMP\|int\|resource\|string\|null\)\: string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/Schema/Reader.php
+
+		-
+			message: '#^Parameter \#1 \$items of class Utopia\\OpenAPI\\Model\\ArraySchema constructor expects Utopia\\OpenAPI\\Model\\Schema, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/Schema/Reader.php
+
+		-
+			message: '#^Parameter \#1 \$properties of class Utopia\\OpenAPI\\Model\\ObjectSchema constructor expects array\<string, Utopia\\OpenAPI\\Model\\Schema\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/Schema/Reader.php
+
+		-
+			message: '#^Parameter \#1 \$reference of class Utopia\\OpenAPI\\Model\\ReferenceSchema constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/Schema/Reader.php
+
+		-
+			message: '#^Parameter \#1 \$title of class Utopia\\OpenAPI\\Model\\AnySchema constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Parser/Schema/Reader.php
+
+		-
+			message: '#^Parameter \#1 \$title of class Utopia\\OpenAPI\\Model\\BooleanSchema constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/Schema/Reader.php
+
+		-
+			message: '#^Parameter \#1 \$title of class Utopia\\OpenAPI\\Model\\NeverSchema constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/Schema/Reader.php
+
+		-
+			message: '#^Parameter \#1 \$value of function count expects array\|Countable, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/Schema/Reader.php
+
+		-
+			message: '#^Parameter \#5 \$title of class Utopia\\OpenAPI\\Model\\CompositeSchema constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 4
+			path: src/Parser/Schema/Reader.php
+
+		-
+			message: '#^Parameter \#6 \$title of class Utopia\\OpenAPI\\Model\\IntegerSchema constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/Schema/Reader.php
+
+		-
+			message: '#^Parameter \#6 \$title of class Utopia\\OpenAPI\\Model\\NumberSchema constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/Schema/Reader.php
+
+		-
+			message: '#^Parameter \$deprecated of class Utopia\\OpenAPI\\Model\\StringSchema constructor expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/Schema/Reader.php
+
+		-
+			message: '#^Parameter \$description of class Utopia\\OpenAPI\\Model\\StringSchema constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/Schema/Reader.php
+
+		-
+			message: '#^Parameter \$enum of class Utopia\\OpenAPI\\Model\\StringSchema constructor expects list\<mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/Schema/Reader.php
+
+		-
+			message: '#^Parameter \$extensions of class Utopia\\OpenAPI\\Model\\StringSchema constructor expects array\<string, mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/Schema/Reader.php
+
+		-
+			message: '#^Parameter \$format of class Utopia\\OpenAPI\\Model\\StringSchema constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/Schema/Reader.php
+
+		-
+			message: '#^Parameter \$nullable of class Utopia\\OpenAPI\\Model\\StringSchema constructor expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/Schema/Reader.php
+
+		-
+			message: '#^Parameter \$readOnly of class Utopia\\OpenAPI\\Model\\StringSchema constructor expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/Schema/Reader.php
+
+		-
+			message: '#^Parameter \$title of class Utopia\\OpenAPI\\Model\\StringSchema constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/Schema/Reader.php
+
+		-
+			message: '#^Parameter \$writeOnly of class Utopia\\OpenAPI\\Model\\StringSchema constructor expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/Schema/Reader.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\\Value\:\:object\(\) should return array\<string, mixed\> but returns array\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Parser/Value.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Parser\\Value\:\:object\(\) should return array\<string, mixed\> but returns array\<mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Parser/Value.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Reference\\LocalResolver\:\:resolveObject\(\) has parameter \$trail with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Reference/LocalResolver.php
+
+		-
+			message: '#^Parameter \#1 \$trail of class Utopia\\OpenAPI\\Reference\\ResolutionContext constructor expects list\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Reference/LocalResolver.php
+
+		-
+			message: '#^Parameter \#1 \$input of static method Utopia\\OpenAPI\\Parser\:\:parse\(\) expects array\<string, mixed\>\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/CrossVersionFixtureTest.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Tests\\ParserTest\:\:securityAlternatives\(\) return type has no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/ParserTest.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Tests\\ParserTest\:\:testSecuritySchemeNames\(\) has parameter \$accepted with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/ParserTest.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Tests\\ParserTest\:\:testSecuritySchemeNames\(\) has parameter \$alternatives with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/ParserTest.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Tests\\ParserTest\:\:testSecuritySchemeNames\(\) has parameter \$required with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/ParserTest.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, Closure\(array\)\: Utopia\\OpenAPI\\Model\\SecurityRequirement given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/ParserTest.php
+
+		-
+			message: '#^Parameter \#1 \$schemes of class Utopia\\OpenAPI\\Model\\SecurityRequirement constructor expects array\<string, list\<string\>\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/ParserTest.php
+
+		-
+			message: '#^Parameter \$security of class Utopia\\OpenAPI\\Model\\Operation constructor expects list\<Utopia\\OpenAPI\\Model\\SecurityRequirement\>, array\<Utopia\\OpenAPI\\Model\\SecurityRequirement\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/ParserTest.php
+
+		-
+			message: '#^Cannot access an offset on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/Schema/ReaderTest.php
+
+		-
+			message: '#^Cannot access offset ''\$ref'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Schema/ReaderTest.php
+
+		-
+			message: '#^Cannot access offset ''const'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Schema/ReaderTest.php
+
+		-
+			message: '#^Cannot access offset ''enum'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Schema/ReaderTest.php
+
+		-
+			message: '#^Cannot access offset ''kind'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 5
+			path: tests/Schema/ReaderTest.php
+
+		-
+			message: '#^Cannot access offset ''nullable'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Schema/ReaderTest.php
+
+		-
+			message: '#^Cannot access offset ''properties'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 8
+			path: tests/Schema/ReaderTest.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Schema/ReaderTest.php
+
+		-
+			message: '#^Cannot access offset 1 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 12
+			path: tests/Schema/ReaderTest.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Tests\\Schema\\ReaderTest\:\:branch\(\) has parameter \$conditions with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/Schema/ReaderTest.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Tests\\Schema\\ReaderTest\:\:testUnsupportedUnionsDoNotReturnPartialCases\(\) has parameter \$raw with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/Schema/ReaderTest.php
+
+		-
+			message: '#^Method Utopia\\OpenAPI\\Tests\\Schema\\ReaderTest\:\:unsupportedSchemas\(\) return type has no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/Schema/ReaderTest.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_replace expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Schema/ReaderTest.php

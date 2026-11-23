@@ -4,7 +4,7 @@ namespace Tests\E2E\Services\Notifications;
 
 use Ahc\Jwt\JWT;
 use Tests\E2E\Client;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\System\System;
 
 /**
@@ -88,6 +88,25 @@ trait NotificationsBase
 
         // Cache the seeded alert id for downstream tests in the same process.
         self::$seededAlertId = $alertId;
+    }
+
+    public function testListNotificationsTotal(): void
+    {
+        self::$seededAlertId ??= $this->seedWebhookFailureAlert();
+
+        $response = $this->client->call(Client::METHOD_GET, '/notifications', $this->getConsoleAlertHeaders(), [
+            'total' => true,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $response['body']['total']);
+        $this->assertNotEmpty($response['body']['notifications']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/notifications', $this->getConsoleAlertHeaders(), [
+            'total' => false,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['total']);
+        $this->assertNotEmpty($response['body']['notifications']);
     }
 
     /**
@@ -490,7 +509,7 @@ trait NotificationsBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-mode' => 'admin',
         ], [
-            'webhookId' => ID::unique(),
+            'webhookId' => Id::unique(),
             'name' => $webhookName,
             'events' => ['users.*.create'],
             'url' => 'http://request-catcher-webhook:1/',
@@ -512,7 +531,7 @@ trait NotificationsBase
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $projectId,
             ], $this->getHeaders()), [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email' => $email,
                 'password' => 'password',
                 'name' => 'Webhook Failure Driver',
@@ -579,7 +598,7 @@ trait NotificationsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => 'Stranger',

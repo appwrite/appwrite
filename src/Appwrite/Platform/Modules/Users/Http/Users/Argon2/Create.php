@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Users\Http\Users\Argon2;
 
-use Appwrite\Auth\Validator\Password;
+use Appwrite\Auth\Validator\Hash\Argon2 as Argon2Validator;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Users\Base;
@@ -12,6 +12,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Hashes\Argon2;
+use Utopia\Auth\Proofs\Password as ProofsPassword;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Emails\Validator\Email as EmailValidator;
@@ -50,23 +51,24 @@ class Create extends Base
                     )
                 ]
             ))
-            ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
+            ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('email', '', new EmailValidator(), 'User email.')
-            ->param('password', '', new Password(), 'User password hashed using Argon2.')
+            ->param('password', '', new Argon2Validator(), 'User password hashed using Argon2.')
             ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
             ->inject('response')
             ->inject('project')
             ->inject('dbForProject')
             ->inject('hooks')
             ->inject('plan')
+            ->inject('proofForPassword')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan): void
+    public function action(string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan, ProofsPassword $proofForPassword): void
     {
         $argon2 = new Argon2();
 
-        $user = $this->createUser($argon2, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks, $plan);
+        $user = $this->createUser($argon2, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks, $plan, $proofForPassword);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

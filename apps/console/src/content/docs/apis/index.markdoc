@@ -1,0 +1,48 @@
+---
+layout: article
+title: APIs
+description: Explore the ways to talk to Appwrite. Access every service through the REST and GraphQL APIs, subscribe to changes in Realtime, and react to events with webhooks.
+---
+
+Every Appwrite service is available through a consistent set of APIs. You can call them directly over [REST](/docs/apis/rest) or [GraphQL](/docs/apis/graphql), subscribe to changes in [Realtime](/docs/apis/realtime), or react to changes using [events](/docs/apis/events) and [webhooks](/docs/apis/webhooks).
+
+Most applications don't call these APIs by hand. Instead, use one of the official [SDKs](/docs/sdks), which wrap every endpoint for your language and platform, and browse the [API reference](/docs/references) for the full list of services and methods. The pages below describe the underlying protocols and conventions for when you need to integrate directly.
+
+# Protocols {% #protocols %}
+
+Choose the protocol that fits your use case. REST and GraphQL cover the same endpoints, while Realtime delivers updates as they happen.
+
+{% cards %}
+{% cards_item href="/docs/apis/rest" title="REST" %}
+Access every Appwrite endpoint over HTTP without an SDK, including authentication, file uploads, queries, and permissions.
+{% /cards_item %}
+{% cards_item href="/docs/apis/graphql" title="GraphQL" %}
+Query and mutate your data through a single GraphQL endpoint.
+{% /cards_item %}
+{% cards_item href="/docs/apis/realtime" title="Realtime" %}
+Subscribe to channels and receive updates over WebSockets the moment your data changes.
+{% /cards_item %}
+{% /cards %}
+
+# Event-driven workflows {% #event-driven-workflows %}
+
+React to project changes with events emitted by Appwrite and webhooks delivered to your own endpoints.
+
+{% cards %}
+{% cards_item href="/docs/apis/events" title="Events" %}
+The full list of events Appwrite emits so you can react to changes across your project.
+{% /cards_item %}
+{% cards_item href="/docs/apis/webhooks" title="Webhooks" %}
+Trigger external workflows by delivering events to your own HTTP endpoints.
+{% /cards_item %}
+{% /cards %}
+
+# API responses {% #api-responses %}
+
+Understand the responses Appwrite returns and handle errors so your application can recover gracefully.
+
+{% cards %}
+{% cards_item href="/docs/apis/response-codes" title="Response codes" %}
+HTTP status codes, error types, and patterns for handling errors gracefully in your application.
+{% /cards_item %}
+{% /cards %}

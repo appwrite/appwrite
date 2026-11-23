@@ -1,0 +1,148 @@
+---
+layout: article
+title: Knex
+description: Use Knex.js with an Appwrite native MySQL database. Configure the mysql2 client, run migrations against the direct connection, and pool runtime traffic from serverless environments.
+---
+
+Appwrite's native MySQL database is a standard MySQL engine (default **8.4**), so [Knex](https://knexjs.org/) works against it with no Appwrite-specific configuration. Point Knex's `mysql2` client at the connection string from the [Connections](/docs/products/databases/mysql/connections) page and use the query builder and migration CLI as you would against any MySQL server.
+
+{% info title="Before you start" %}
+You'll need a native MySQL database in a `ready` state and its credentials. See [native MySQL databases](/docs/products/databases/mysql) to create one and [Connections](/docs/products/databases/mysql/connections) to retrieve the connection string. The username is `admin.<hash>`, and the database name is `default`.
+{% /info %}
+
+# Set the connection string {% #connection-string %}
+
+Fetch the connection details with [`mysql.get()`](/docs/products/databases/mysql/connections#credentials). That call returns one `connectionString` on the engine port (`3306`). Use it as `DIRECT_URL`, copy it to `DATABASE_URL`, and change only the port to `6033` for the [connection pooler](/docs/products/databases/mysql/connection-pooling). Never commit them:
+
+```env
+DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:6033/default"
+DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
+```
+
+Use the pooled `DATABASE_URL` (port `6033`) for runtime traffic and `DIRECT_URL` (port `3306`) for migrations and CLI tools. Connections on Appwrite Cloud are encrypted with TLS. If Knex or `mysql2` does not infer TLS from the connection string, set SSL on the connection object and keep certificate verification enabled against Node's standard trust store. See [Network security](/docs/products/databases/mysql/network-security) for TLS and network controls.
+
+# Install and configure Knex {% #driver %}
+
+Install Knex and `mysql2`:
+
+```bash
+npm install knex mysql2
+npm install -D typescript ts-node @types/node
+```
+
+Create a Knex instance with `client: 'mysql2'`:
+
+```ts
+import knex from 'knex';
+
+export const db = knex({
+  client: 'mysql2',
+  connection: {
+    uri: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: true }
+  },
+  pool: { min: 0, max: 10 }
+});
+```
+
+`ssl: { rejectUnauthorized: true }` validates the server certificate against Node's built-in CA store. You can also pass the connection string as a plain string when your environment already forces TLS with verification. A `knexfile.js` keeps runtime and CLI configuration together:
+
+```js
+require('dotenv').config();
+
+module.exports = {
+  client: 'mysql2',
+  connection: {
+    uri: process.env.DIRECT_URL || process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: true }
+  },
+  migrations: {
+    directory: './migrations',
+    tableName: 'knex_migrations'
+  },
+  pool: { min: 0, max: 10 }
+};
+```
+
+# Run migrations {% #migrate %}
+
+Point the Knex CLI at `DIRECT_URL` on the **direct** engine port (`3306`), not the pooler, because migrations issue DDL that needs a session-level connection.
+
+```bash
+npx knex migrate:make create_users --knexfile knexfile.js
+npx knex migrate:latest --knexfile knexfile.js
+```
+
+Example migration:
+
+```js
+exports.up = function (knex) {
+  return knex.schema.createTable('users', (table) => {
+    table.increments('id').primary();
+    table.string('email', 255).notNullable().unique();
+    table.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
+  });
+};
+
+exports.down = function (knex) {
+  return knex.schema.dropTable('users');
+};
+```
+
+The `admin.<hash>` user owns the `default` database and can run schema changes.
+
+# Query with Knex {% #query %}
+
+Once the schema is migrated, use the query builder. MySQL inserts return an insert id rather than the full row unless you select it back:
+
+```ts
+import { db } from './db';
+
+const [id] = await db('users').insert({ email: 'ada@example.com' });
+const user = await db('users').where({ id }).first();
+
+const recent = await db('users')
+  .select('*')
+  .orderBy('created_at', 'desc')
+  .limit(10);
+```
+
+On long-running servers, create the Knex instance once at module scope and reuse it. On serverless, keep a single instance per module scope so warm invocations reuse the pool, and use the Appwrite pooler for runtime traffic. Call `db.destroy()` on shutdown.
+
+Libraries built on Knex, such as Objection.js, use the same connection string and pooler guidance.
+
+# Pool connections from serverless {% #pooling %}
+
+Each running instance opens its own connections to the engine. On serverless and edge platforms such as Vercel, Netlify, and Cloudflare, short-lived instances can fan out into more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/mysql/connection-pooling). The primary `DATABASE_URL` already uses the pooler port (`6033`) on the same hostname.
+
+Keep `knexfile` migrations pointed at `DIRECT_URL` so DDL still runs over a session-level connection.
+
+Keep the runtime Knex pool small on serverless (`pool.max` of `1` or a few connections per isolate). Session-level features such as user variables and temporary tables need the direct port or a session-mode pooler. See the [pooler modes](/docs/products/databases/mysql/connection-pooling#modes) page for the trade-offs. Confirm the pooler port on the [Connections](/docs/products/databases/mysql/connections) page if your project shows a different value.
+
+# Use a branch for previews and CI {% #branches %}
+
+[Branches](/docs/products/databases/mysql/branches) are isolated copies of a database with their own hostname and connection string. They're ideal for running migrations against throwaway data in a pull-request preview or an integration-test job:
+
+1. Create a branch from the API and read its `connectionString`.
+2. Export it as `DIRECT_URL` and `DATABASE_URL` for the preview or CI job.
+3. Run `knex migrate:latest` and your test suite against the branch.
+4. Delete the branch when the job finishes.
+
+Because a branch starts from a storage snapshot, the schema and data match the source database at branch time, so migrations run against representative data without touching production.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/mysql/connections" title="Connections" %}
+Retrieve credentials and rotate the primary password.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/connection-pooling" title="Connection pooler" %}
+Pool modes, ports, and read/write splitting for serverless workloads.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/branches" title="Branches" %}
+Ephemeral database copies for preview environments and CI.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/network-security" title="Network security" %}
+TLS and network controls for native MySQL databases.
+{% /cards_item %}
+{% /cards %}

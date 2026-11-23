@@ -71,6 +71,16 @@ return [
             "Access to update project\'s policies",
         "category" => "Project",
     ],
+    "project.videos.profiles.read" => [
+        "description" =>
+            "Access to read the project\'s video encode profiles",
+        "category" => "Project",
+    ],
+    "project.videos.profiles.write" => [
+        "description" =>
+            "Access to create, update, and delete the project\'s video encode profiles",
+        "category" => "Project",
+    ],
     "project.oauth2.read" => [
         "description" =>
             "Access to read project\'s OAuth2 configuration.",
@@ -79,6 +89,11 @@ return [
     "project.oauth2.write" => [
         "description" =>
             "Access to update project\'s OAuth2 configuration.",
+        "category" => "Project",
+    ],
+    "project.ldap.write" => [
+        "description" =>
+            "Access to update and test project\'s LDAP configuration.",
         "category" => "Project",
     ],
     "templates.read" => [
@@ -407,6 +422,22 @@ return [
             "Access to create, update, and delete webhooks",
         'category' => 'Other',
     ],
+    'monitors.read' => [
+        'description' => 'Access to read monitors',
+        'category' => 'Other',
+    ],
+    'monitors.write' => [
+        'description' => 'Access to create, update, and delete monitors',
+        'category' => 'Other',
+    ],
+    'alerts.read' => [
+        'description' => 'Access to read the alerts monitors raise',
+        'category' => 'Other',
+    ],
+    'alerts.write' => [
+        'description' => 'Access to acknowledge the alerts monitors raise',
+        'category' => 'Other',
+    ],
     'locale.read' => [
         'description' => 'Access to use Locale service',
         'category' => 'Other',
@@ -415,13 +446,20 @@ return [
         'description' => 'Access to use Avatars service',
         'category' => 'Other',
     ],
+    'avatars.write' => [
+        'description' => 'Access to update and delete the user photo',
+        'category' => 'Other',
+    ],
     'health.read' => [
         'description' => 'Access to use Health service',
         'category' => 'Other',
     ],
+    // The Assistant endpoint is gone, but OAuth2 clients registered with this scope
+    // (e.g. the ChatGPT app) still request it, so it must stay a known scope.
     'assistant.read' => [
-        'description' => 'Access to use Assistant service',
+        'description' => 'Access to use Assistant service. This scope is deprecated, the Assistant service has been removed.',
         'category' => 'Other',
+        'deprecated' => true,
     ],
     'migrations.read' => [
         'description' => 'Access to read migrations',
@@ -467,6 +505,15 @@ return [
         'description' => 'Access to delete reports under Advisor service.',
         'category' => 'Advisor',
     ],
+    // Reviews
+    'reviews.read' => [
+        'description' => 'Access to read code review repositories and reviews.',
+        'category' => 'Reviews',
+    ],
+    'reviews.write' => [
+        'description' => 'Access to turn code review on and off for repositories.',
+        'category' => 'Reviews',
+    ],
     'presences.read' => [
         'description' => 'Access to read your project\'s presences',
         'category' => 'Presences',
@@ -474,5 +521,19 @@ return [
     'presences.write' => [
         'description' => 'Access to create, update, and delete your project\'s presences',
         'category' => 'Presences',
+    ],
+
+    // Videos
+    'videos.play' => [
+        'description' => 'Access to play your project\'s video streams and related media',
+        'category' => 'Videos',
+    ],
+    'videos.read' => [
+        'description' => 'Access to read your project\'s video content',
+        'category' => 'Videos',
+    ],
+    'videos.write' => [
+        'description' => 'Access to create, update, and delete your project\'s video content',
+        'category' => 'Videos',
     ],
 ];

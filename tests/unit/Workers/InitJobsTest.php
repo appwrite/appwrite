@@ -31,14 +31,17 @@ final class InitJobsTest extends TestCase
             'workerName' => 'all',
             'workers' => ['all'],
             'jobs' => [
-                'databases' => ['queue' => 'database_db_main', 'maxCoroutines' => 1],
-                'functions' => ['queue' => 'v1-functions', 'maxCoroutines' => 8],
+                'databases' => ['queue' => 'database_db_main', 'coroutines' => 1],
+                'functions' => ['queue' => 'v1-functions', 'coroutines' => 8, 'prefetch' => 3, 'maxInFlight' => 20],
             ],
         ]);
 
         $this->assertCount(2, $server->jobs());
         $this->assertSame(1, $server->coroutines('database_db_main'));
         $this->assertSame(8, $server->coroutines('v1-functions'));
+        $this->assertSame(1, $server->prefetch('database_db_main'));
+        $this->assertSame(3, $server->prefetch('v1-functions'));
+        $this->assertSame(20, $server->maxInFlight('v1-functions'));
     }
 
     public function testDedicatedDatabasesRegistersSingleCapOfOne(): void
@@ -50,7 +53,7 @@ final class InitJobsTest extends TestCase
         $platform->init(Service::TYPE_WORKER, [
             'workerName' => 'databases',
             'jobs' => [
-                'databases' => ['queue' => 'database_db_main', 'maxCoroutines' => 1],
+                'databases' => ['queue' => 'database_db_main', 'coroutines' => 1],
             ],
         ]);
 
@@ -92,9 +95,9 @@ final class InitJobsTest extends TestCase
 
 final class FakeConsumer implements Consumer
 {
-    public function receive(Queue $queue, int $timeout): ?Message
+    public function receive(Queue $queue, int $timeout, int $n = 1): array
     {
-        return null;
+        return [];
     }
 
     public function commit(Queue $queue, Message $message): void

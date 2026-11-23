@@ -1,0 +1,33 @@
+# Benchmark harness: runs the Swoole bench server (tests/bench/server.php)
+# under a fixed 4 CPU / 4 GB cgroup limit so cgroup-aware sizing in Mode
+# sees a realistic pod, not the 14-core host.
+#
+#   MODE=a SLEEP_MS=0  CPU_ITERS=0    docker compose -f tests/bench/docker-compose.yml up --build -d
+#   k6 run -e BASE_URL=http://localhost:9501 tests/bench/benchmark.js
+#
+# MODE      a = HYPERLOOP_A (process), b = HYPERLOOP_B (coroutine)
+# SLEEP_MS  per-request wait, models a downstream call (I/O workload)
+# CPU_ITERS rounds of sha256 per request (CPU-bound workload)
+services:
+    swoole:
+        build:
+            context: ../..
+            dockerfile: Dockerfile.swoole
+        command: ["php", "tests/bench/server.php"]
+        environment:
+            MODE: ${MODE:-b}
+            SLEEP_MS: ${SLEEP_MS:-50}
+            CPU_ITERS: ${CPU_ITERS:-1000}
+        ports:
+            - "${BENCH_PORT:-9501}:80"
+        deploy:
+            resources:
+                limits:
+                    cpus: "4"
+                    memory: 4g
+        healthcheck:
+            test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1', 80) ? 0 : 1);"]
+            interval: 2s
+            timeout: 2s
+            retries: 15
+            start_period: 2s

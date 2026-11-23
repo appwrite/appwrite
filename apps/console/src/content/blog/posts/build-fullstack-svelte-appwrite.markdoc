@@ -1,0 +1,976 @@
+---
+layout: post
+title: Building a full-stack app with Svelte and Appwrite
+description: Learn how to build full-stack apps with Svelte and Appwrite by building an expense tracker.
+date: 2025-01-31
+lastUpdated: 2026-06-29
+cover: /images/blog/build-fullstack-svelte-appwrite/cover.avif
+timeToRead: 15
+author: ebenezer-don
+category: tutorials
+faqs:
+  - question: "Does Appwrite work with SvelteKit?"
+    answer: "Yes. Appwrite has a JavaScript Web SDK that works seamlessly with SvelteKit on both client and server. You can use it from +page.svelte files, +page.server.js load functions, or SvelteKit form actions. SSR sessions work through cookies."
+  - question: "How do I authenticate users in a SvelteKit app with Appwrite?"
+    answer: "Use [Appwrite Auth](/docs/products/auth) via the Account API on the client to handle email/password, OAuth, or magic URL flows. For SSR, store the session in a cookie and use a server-side Appwrite client (with the session set) inside +page.server.js to fetch user-scoped data."
+  - question: "Can I use Appwrite with TypeScript in Svelte?"
+    answer: "Yes. The Appwrite Web SDK ships with full TypeScript types. The tutorial uses JavaScript for simplicity, but you can swap in TypeScript by picking that option in sv create and importing types directly from the appwrite package."
+  - question: "How do I enforce that users only see their own data?"
+    answer: "Enable row security on your table and set per-row permissions when creating rows. Use the user's ID as the read/write permission so other users can't access their data. [Appwrite Databases](/docs/products/databases) handles the permission checks automatically."
+  - question: "What's the difference between table-level and row-level permissions?"
+    answer: "Table-level permissions apply to all rows in the table. Row-level (Row security) lets each row carry its own permissions, which is what you want for multi-tenant data like a personal expense tracker. Enable Row security to use it."
+  - question: "Do I need to host Svelte and Appwrite separately?"
+    answer: "Not necessarily. You can deploy the SvelteKit frontend on [Appwrite Sites](/docs/products/sites) and use the same project for backend services, keeping everything under one console. Or you can deploy SvelteKit elsewhere (Netlify, Vercel) and point at Appwrite for the backend."
+---
+
+Managing personal finances is a common need, and building an expense tracker is an excellent way to learn full-stack development with Svelte. In this tutorial, we'll create a web application that helps users track their spending.
+
+Users will be able to sign up, log their expenses, and categorize them to view spending patterns. By the end, you will have built an app that looks and functions like this:
+
+![Expense app demo](/images/blog/build-fullstack-svelte-appwrite/expense-app-demo.avif)
+
+You can also try out the app using this [live URL](https://expense-appwrite-svelte.netlify.app/). We'll use SvelteKit with JavaScript for our frontend so that we can take advantage of its built-in routing. For styling, we'll use Tailwind CSS. And on the backend, we'll use Appwrite to handle user authentication and database operations.
+
+You'll learn how to implement authentication flows, manage application state, handle form submissions, and create an intuitive user interface.
+
+## Prerequisites
+
+This tutorial assumes you have basic knowledge of TypeScript and Svelte. You'll need:
+
+- Node.js version 18 or later installed on your system
+- pnpm as your package manager
+- An Appwrite instance (either self-hosted or cloud)
+
+## Project setup and initial configuration
+
+Let's start by creating a new Svelte project. Open your terminal and run:
+
+```bash
+npx sv create expense-app
+```
+
+When prompted to select a template, choose "Sveltekit minimal". For type checking, you can select "Yes" or "No", depending on your preference, but we'll go with "No" for this tutorial.
+
+For the question "What would you like to add to your project?", select "prettier" and "tailwindcss". Next, choose your preferred package manager, then create your Sveltekit project. In this tutorial, we'll use **pnpm**.
+
+With that done, you should have your new Sveltekit project named `expense-app`. You can test it by running:
+
+```bash
+pnpm dev
+```
+
+Next, navigate to the project directory and install the additional dependencies we need. We'll use `appwrite` for authentication and database operations, and `date-fns` for date formatting:
+
+```bash
+cd expense-app
+pnpm install
+pnpm add appwrite date-fns
+```
+
+## Environment configuration
+
+Our application needs to communicate with [Appwrite](https://cloud.appwrite.io/?doFollow=true), which requires several configuration values. Create a `.env` file in your project root and add these environment variables:
+
+```
+PUBLIC_APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
+PUBLIC_APPWRITE_PROJECT_ID=your-project-id
+PUBLIC_APPWRITE_DATABASE_ID=expense-db
+PUBLIC_APPWRITE_TABLE_ID=expenses
+```
+
+The `PUBLIC_` prefix makes these variables available to our client-side code in Svelte. You'll need to replace `your-project-id` with your actual Appwrite project ID, which we'll create in the next step.
+
+## Setting up Appwrite
+
+Before we continue with the frontend implementation, we need to configure our Appwrite backend. Log into your [Appwrite Console](https://cloud.appwrite.io/console?doFollow=true) and follow these steps:
+
+1. Create a new project
+2. Open the **Databases** tab from the sidebar and create a database with the ID "expense-db"
+3. In your new database, create a table with the ID "expenses"
+
+The expenses table needs several columns to store the expense data effectively. Open the **Columns** tab of your new table and add the following columns:
+
+```md
+- `userId` (Text, required)
+- `amount` (Float, required)
+- `category` (Enum, required)
+  - Elements: "food", "rent", "transportation", "entertainment", "shopping", "healthcare", "utilities", "education", "other"
+- `description` (Text, required)
+- `date` (DateTime, required)
+- `createdAt` (DateTime, required)
+- `updatedAt` (DateTime, required)
+```
+
+Notice that the `category` column is an enumerated type with a set of predefined values. This structured approach helps us organize and filter expenses effectively. We have both a `date` column and a `createdAt` column because when an expense is created is not necessarily the same as when it occurred.
+
+To ensure that users can only access their own expenses, Open the table's **Settings** tab and scroll to **Permissions**. Click **Add role**, select **Users** and check **Create** permission.
+
+Next, enable **Row security** to allow users to access their rows. We'll ensure this by giving users the **Read** permission when creating rows in our code.
+
+![permissions-row-security](/images/blog/build-fullstack-svelte-appwrite/permissions-document-security.avif)
+
+## Project structure
+
+Our application needs a clear structure to make it easy to maintain. Create the following directory structure in your project:
+
+```
+src/
+├── lib/
+│   ├── stores/
+│   │   └── auth.js
+│   └── appwrite.js
+├── routes/
+│   ├── auth/
+│   │   └── +page.svelte
+│   ├── +layout.svelte
+│   └── +page.svelte
+├── app.html
+└── app.css
+
+```
+
+This structure follows Svelte's conventions while keeping our code organized and maintainable. The `lib` directory contains reusable utilities and stores, while `routes` handles our application's pages and layouts. We'll use the `lib/stores/auth.js` store to manage our user state, and the `lib/appwrite.js` file to handle our Appwrite operations.
+
+The `routes` directory contains our application's pages and layouts. The `+layout.svelte` file is our main layout component, which we'll use to handle our application's structure and ensure that users can only access protected routes if they're authenticated.
+
+## Styling the application
+
+For our expense tracker, we'll use Tailwind CSS for styling. The styling includes:
+
+- Custom color variables for consistent theming
+- Base styles for typography and common elements
+- Component-specific classes for our custom UI elements
+- Interactive element styles with hover and focus states
+
+You can find the complete CSS code here: [Complete app.css code](https://github.com/appwrite-community/svelte-expense-tracker/blob/main/src/app.css). Copy this code into your `src/app.css` file. There's no need to do anything else to make this work if you selected the "tailwindcss" option when creating your project.
+
+Having these styles in place will ensure that each component you create looks good from the start.
+
+## Base HTML template
+
+For the base `src/app.html` file, we'll use the default Sveltekit template, but you might want to update the meta tags to include a title and description.
+
+```html
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Expense Tracker</title>
+		%sveltekit.head%
+	</head>
+	<body data-sveltekit-preload-data="hover">
+		<div style="display: contents">%sveltekit.body%</div>
+	</body>
+</html>
+
+```
+
+This template provides the basic structure for our application. The `data-sveltekit-preload-data="hover"` attribute enables SvelteKit's built-in preloading feature to make navigation faster.
+
+## Setting up the Appwrite client
+
+Let's set up our connection to Appwrite. If you haven't already, create a new file in the `src/lib` directory named `appwrite.js`. We'll use this file to configure the Appwrite client and provide access to our database and account services.
+
+```js
+import { Client, Account, TablesDB } from 'appwrite'
+import {
+	PUBLIC_APPWRITE_ENDPOINT,
+	PUBLIC_APPWRITE_PROJECT_ID,
+	PUBLIC_APPWRITE_DATABASE_ID,
+	PUBLIC_APPWRITE_TABLE_ID
+} from '$env/static/public'
+
+const client = new Client()
+
+client.setEndpoint(PUBLIC_APPWRITE_ENDPOINT).setProject(PUBLIC_APPWRITE_PROJECT_ID)
+
+export const account = new Account(client)
+export const tablesDB = new TablesDB(client)
+
+// Table IDs from environment variables
+export const EXPENSES_TABLE_ID = PUBLIC_APPWRITE_TABLE_ID
+export const DATABASE_ID = PUBLIC_APPWRITE_DATABASE_ID
+
+```
+
+This configuration file initializes our connection to Appwrite. The `Client` class creates a new Appwrite client instance, which we configure with our endpoint and project ID from our environment variables. We then create instances of the `TablesDB` and `Account` services, which we'll use throughout our application for database operations and user authentication.
+
+Finally, we export the table IDs from our environment variables so that we can use them in other parts of our application.
+
+## Managing authentication state
+
+Our Svelte application needs to track the current user's authentication state. For that, we'll use a Svelte store. Create a new file in the `src/lib/stores` directory named `auth.js` and add the following code:
+
+```js
+import { writable } from 'svelte/store'
+import { account } from '$lib/appwrite'
+
+export const user = writable(null)
+
+export async function initAuth() {
+	try {
+		const currentUser = await account.get()
+		user.set(currentUser)
+		return currentUser
+	} catch (error) {
+		console.error('Error initializing auth:', error)
+		user.set(null)
+		return null
+	}
+}
+
+```
+
+This creates a Svelte store named `user` to manage our user state. The store starts with null when no user is logged in. When a user authenticates, we'll update this store with their information, making it available throughout our application.
+
+In the `initAuth` function, we're using the `account.get()` method to retrieve the current user's information from Appwrite. If successful, we update our `user` store with the user's information and return it. If there's an error, we log it and return null.
+
+We'll also need a `login` and `register` function to handle user authentication:
+
+```js
+export async function login(email, password) {
+	try {
+		await account.createEmailPasswordSession({
+			email,
+			password
+		})
+		await initAuth()
+	} catch (error) {
+		console.error('Login error:', error)
+		throw error
+	}
+}
+
+export async function register(email, password, name) {
+	try {
+		await account.create({
+			userId: ID.unique(),
+			email,
+			password,
+			name
+		})
+		await login(email, password)
+	} catch (error) {
+		console.error('Registration error:', error)
+		throw error
+	}
+}
+
+```
+
+In the `login` function, we're using the `account.createEmailPasswordSession` method to create a new email/password session for the user. This method automatically logs the user in and updates our `user` store with the user's information.
+
+For the `register` function, we're using the `account.create` method to create a new user account. We then call the `login` function to log the user in after creating their account.
+
+Appwrite also provides other authentication methods, such as OAuth, Google, and Apple. You can learn more about them in our [docs](https://appwrite.io/docs/products/auth?doFollow=true).
+
+Finally, we'll add a `logout` function to the `auth.js` file to handle user logout:
+
+```js
+export async function logout() {
+	try {
+		await account.deleteSession({
+		    sessionId: 'current'
+		})
+		user.set(null)
+	} catch (error) {
+		console.error('Logout error:', error)
+	}
+}
+
+```
+
+The `logout` function uses the `account.deleteSession('current')` method to delete the current user's session from Appwrite. This effectively logs the user out and updates our `user` store to null.
+
+With this setup, we're ready to implement our authentication flow.
+
+## Building the authentication page
+
+For the authentication page, we'll create a new file in the `src/routes/auth` directory and name it `+page.svelte`. This file will handle the sign-in and sign-up functionality. For the JavaScript functionality of our authentication page, add the following `<script>` code:
+
+```svelte
+<script>
+	import { account } from '$lib/appwrite'
+	import { goto } from '$app/navigation'
+	import { ID } from 'appwrite'
+	import { login, register, user } from '$lib/stores/auth'
+
+	let email = ''
+	let password = ''
+	let name = ''
+	let isLogin = true
+	let loading = false
+	let error = null
+
+	async function handleSubmit() {
+		try {
+			loading = true
+			error = null
+
+			if (isLogin) {
+				await login(email, password)
+			} else {
+				await register(email, password, name)
+			}
+
+			// Update user store after successful login
+			const currentUser = await account.get()
+			user.set(currentUser)
+			goto('/')
+		} catch (e) {
+			console.error('Auth error:', e)
+			error = isLogin ? 'Invalid credentials' : 'Failed to create account'
+		} finally {
+			loading = false
+		}
+	}
+</script>
+
+```
+
+Here, we're handling the authentication form submission and logic. In the `handleSubmit` function, we check if the user is logging in or registering. We then call the appropriate function (`login` or `register`) and update our `user` store with the user's information. Finally, we redirect the user to the home page using the `goto` function.
+
+For the template section, add the following code:
+
+```svelte
+<div class="auth-container">
+	<div class="auth-content">
+		<div class="auth-header">
+			<div class="mb-3 text-4xl">💰</div>
+			<h2 class="auth-title">
+				{isLogin ? 'Welcome back!' : 'Create your account'}
+			</h2>
+			<p class="auth-subtitle">
+				{isLogin
+					? "Track your expenses with ease. Let's get you signed in."
+					: 'Start your journey to better expense management'}
+			</p>
+		</div>
+
+		{#if error}
+			<div class="auth-error">
+				{error}
+			</div>
+		{/if}
+
+		<form on:submit|preventDefault={handleSubmit} class="auth-form">
+			{#if !isLogin}
+				<div>
+					<label for="name" class="form-label"> Full Name </label>
+					<input
+						type="text"
+						id="name"
+						bind:value={name}
+						required
+						class="input form-input-container"
+						placeholder="John Doe"
+					/>
+				</div>
+			{/if}
+
+			<div>
+				<label for="email" class="form-label"> Email address </label>
+				<input
+					type="email"
+					id="email"
+					bind:value={email}
+					required
+					class="input form-input-container"
+					placeholder="you@example.com"
+				/>
+			</div>
+
+			<div>
+				<label for="password" class="form-label"> Password </label>
+				<input
+					type="password"
+					id="password"
+					bind:value={password}
+					required
+					minlength="8"
+					class="input form-input-container"
+					placeholder="••••••••"
+				/>
+			</div>
+
+			<div>
+				<button
+					type="submit"
+					class="btn btn-primary w-full {loading ? 'opacity-75 cursor-not-allowed' : ''}"
+					disabled={loading}
+				>
+					{#if loading}
+						<div class="loading-spinner-small mr-2"></div>
+					{/if}
+					{isLogin ? 'Sign in' : 'Create account'}
+				</button>
+			</div>
+		</form>
+
+		<div class="text-center">
+			<button
+				on:click={() => (isLogin = !isLogin)}
+				class="text-sm text-primary-600 hover:text-primary-500"
+			>
+				{isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+			</button>
+		</div>
+	</div>
+</div>
+
+```
+
+This template creates an interface for both signing in and creating new accounts. The form dynamically changes based on whether the user is logging in or signing up, showing additional fields when needed.
+
+Notice that we're using the CSS classes from our `app.css` file to style our component. The template also handles loading states and error messages which will provide clear feedback to users during the authentication process.
+
+With this done, you can navigate to the `/auth` route in your browser and test the authentication functionality.
+
+## Creating our layout component
+
+Let's structure our application's layout with the `src/routes/+layout.svelte` file. Here, we'll check the user's authentication status when the application loads, and redirect the user to the authentication page if they're not authenticated. We'll also add our app's navbar to this file, so that it can be accessed from any page.
+
+First, add the `script` section to handle our layout's logic:
+
+```svelte
+<script lang="ts">
+	import '../app.css'
+	import { page } from '$app/stores'
+	import { onMount } from 'svelte'
+	import { user, initAuth, logout } from '$lib/stores/auth'
+	import { goto } from '$app/navigation'
+
+	let isDropdownOpen = false
+
+	onMount(async () => {
+		try {
+			const currentUser = await initAuth()
+			if (!currentUser && !$page.url.pathname.startsWith('/auth')) {
+				goto('/auth')
+			}
+		} catch (error) {
+			if (!$page.url.pathname.startsWith('/auth')) {
+				goto('/auth')
+			}
+		}
+	})
+
+	const toggleDropdown = () => {
+		isDropdownOpen = !isDropdownOpen
+	}
+
+	const handleLogout = async () => {
+		try {
+			await logout()
+			goto('/auth')
+		} catch (error) {
+			console.error('Logout failed:', error)
+		}
+	}
+</script>
+```
+
+In the `onMount` function, we're checking the user's authentication status when the application loads. If the user is not authenticated, we redirect them to the authentication page. This function runs when the component is first mounted.
+
+The `toggleDropdown` function handles the dropdown menu's open/close state, which we'll use to show the logout button in the navbar. We can also use this dropdown for other purposes, like showing the user's profile information.
+
+The `handleLogout` function handles the user's logout process. It calls the `logout` function from our `auth.js` file and redirects the user to the authentication page.
+
+Next, let's add the template section for our layout's UI:
+
+```svelte
+<div class="layout-container">
+	<nav class="main-nav">
+		<div class="nav-container">
+			<div class="nav-content">
+				<div class="flex items-center">
+					<a href="/" class="brand-link">
+						<span class="brand-emoji">💰</span>
+						<span class="brand-text">ExpenseTracker</span>
+					</a>
+				</div>
+
+				{#if $user}
+					<div class="user-nav">
+						<div class="user-dropdown">
+							<button on:click={toggleDropdown} class="user-button">
+								<img
+									src={`https://api.dicebear.com/7.x/initials/svg?seed=${$user?.name || 'User'}`}
+									alt="avatar"
+									class="user-avatar"
+								/>
+								<span>{$user?.name || 'User'}</span>
+							</button>
+							{#if isDropdownOpen}
+								<div class="dropdown-menu">
+									<button on:click={handleLogout} class="dropdown-item"> Sign out </button>
+								</div>
+							{/if}
+						</div>
+					</div>
+				{/if}
+			</div>
+		</div>
+	</nav>
+
+	<main class="main-content">
+		{#if !$page.url.pathname.startsWith('/auth')}
+			<div class="content-container">
+				<slot />
+			</div>
+		{:else}
+			<slot />
+		{/if}
+	</main>
+
+	<footer class="main-footer">
+		<div class="footer-container">
+			<p class="footer-text">
+				&copy; {new Date().getFullYear()} ExpenseTracker. All rights reserved.
+			</p>
+		</div>
+	</footer>
+</div>
+```
+
+Here, we're adding a navbar to our layout. The navbar contains a brand logo and a user dropdown menu which displays the user's avatar and name. We're getting the user's avatar from the `api.dicebear.com` URL, which generates an avatar based on the user's initials. The user's name is gotten from the `user` store, and it's what handles the dropdown menu's open/close state.
+
+Notice that we've also added a footer to our layout. This footer contains a copyright notice. You can customize this footer to fit your app's needs, and provide links to your app's privacy policy and terms of service.
+
+## Building the main expense tracker page
+
+The heart of our application is the expense tracker page. This component handles displaying, creating, updating, and deleting expenses, along with showing important statistics. Let's build this page in the `src/routes/+page.svelte` file.
+
+We'll start with our imports and state management:
+
+```svelte
+<script lang="ts">
+	import { onMount } from 'svelte'
+	import { tablesDB, account } from '$lib/appwrite'
+	import { DATABASE_ID, EXPENSES_TABLE_ID } from '$lib/appwrite'
+	import { Query, Permission, Role, ID } from 'appwrite'
+	import { formatDistanceToNow } from 'date-fns'
+
+	let expenses = []
+	let loading = true
+	let error = null
+	let showForm = false
+	let formData = {
+		amount: '',
+		description: '',
+		category: 'other'
+	}
+
+	let editingExpense = null
+	let editFormData = {
+		amount: '',
+		description: '',
+		category: 'other'
+	}
+</script>
+```
+
+Here we're setting up our component's state. The `expenses` array will hold our list of expenses, while `loading` and `error` handle our application's loading and error states. We maintain separate form data for creating new expenses and editing existing ones.
+
+Next, let's define our expense categories and statistics tracking:
+
+```js
+const categories = [
+  { id: 'food', name: 'Food & Dining', icon: '🍽️' },
+  { id: 'rent', name: 'Rent', icon: '🏠' },
+  { id: 'transportation', name: 'Transportation', icon: '🚗' },
+  { id: 'entertainment', name: 'Entertainment', icon: '🎮' },
+  { id: 'shopping', name: 'Shopping', icon: '🛍️' },
+  { id: 'healthcare', name: 'Healthcare', icon: '🏥' },
+  { id: 'utilities', name: 'Utilities', icon: '💡' },
+  { id: 'education', name: 'Education', icon: '📚' },
+  { id: 'other', name: 'Other', icon: '📦' }
+]
+
+let stats = {
+  total: 0,
+  thisMonth: 0,
+  thisWeek: 0
+}
+
+$: currentAmount = editingExpense ? editFormData.amount : formData.amount
+$: currentDescription = editingExpense ? editFormData.description : formData.description
+$: currentCategory = editingExpense ? editFormData.category : formData.category
+```
+
+We're using reactive declarations to handle form data. These statements ensure our form always shows the correct data whether we're editing an existing expense or creating a new one.
+
+Now let's implement our core functionality for fetching and managing expenses:
+
+```js
+onMount(async () => {
+  await fetchExpenses()
+})
+
+async function fetchExpenses() {
+  try {
+    loading = true
+    const response = await tablesDB.listRows({
+      databaseId: DATABASE_ID,
+      tableId: EXPENSES_TABLE_ID,
+      queries: [
+        Query.orderDesc('$createdAt')
+      ]
+    })
+    expenses = response.rows
+    calculateStats()
+  } catch (e) {
+    error = 'Failed to load expenses'
+    console.error('Error fetching expenses:', e)
+  } finally {
+    loading = false
+  }
+}
+
+function calculateStats() {
+  const now = new Date()
+  const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+  const thisWeek = new Date(now.setDate(now.getDate() - now.getDay()))
+
+  stats.total = expenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0)
+  stats.thisMonth = expenses
+    .filter((exp) => new Date(exp.$createdAt) >= thisMonth)
+    .reduce((sum, exp) => sum + parseFloat(exp.amount), 0)
+  stats.thisWeek = expenses
+    .filter((exp) => new Date(exp.$createdAt) >= thisWeek)
+    .reduce((sum, exp) => sum + parseFloat(exp.amount), 0)
+}
+```
+
+The `fetchExpenses` function retrieves our expenses from Appwrite and sorts them by creation date, but you might want to sort instead by the date of the expense, depending on how you want to display expenses. After fetching, we calculate statistics including total expenses, this month's expenses, and this week's expenses.
+
+Let's add the functionality for creating and updating expenses:
+
+```js
+async function handleSubmit() {
+  try {
+    const user = await account.get()
+    const now = new Date().toISOString()
+    const expenseData = {
+      amount: parseFloat(currentAmount),
+      description: currentDescription,
+      category: currentCategory,
+      userId: user.$id,
+      date: now,
+      createdAt: now,
+      updatedAt: now
+    }
+
+    if (editingExpense) {
+      await tablesDB.updateRow({
+        databaseId: DATABASE_ID,
+        tableId: EXPENSES_TABLE_ID,
+        rowId: editingExpense.$id,
+        data: {
+          ...expenseData,
+          updatedAt: now
+        }
+      })
+    } else {
+      await tablesDB.createRow({
+        databaseId: DATABASE_ID,
+        tableId: EXPENSES_TABLE_ID,
+        rowId: ID.unique(),
+        data: expenseData,
+        permissions: [
+          Permission.read(Role.user(user.$id)),
+          Permission.update(Role.user(user.$id)),
+          Permission.delete(Role.user(user.$id))
+        ]
+      })
+    }
+
+    // Reset form
+    formData = { amount: '', description: '', category: 'other' }
+    editFormData = { amount: '', description: '', category: 'other' }
+    editingExpense = null
+    showForm = false
+    await fetchExpenses()
+  } catch (e) {
+    console.error('Error saving expense:', e)
+    error = 'Failed to save expense'
+  }
+}
+```
+
+The `handleSubmit` function handles both creating new expenses and updating existing ones. When creating a new expense, we set row-level permissions to ensure users can access their expenses. Here, we're giving users the **Read**, **Update**, and **Delete** permissions.
+
+Finally, let's add utility functions for managing expenses:
+
+```js
+async function deleteExpense(id) {
+  try {
+    await tablesDB.deleteRow({
+      databaseId: DATABASE_ID,
+      tableId: EXPENSES_TABLE_ID,
+      rowId: id
+    })
+    await fetchExpenses()
+  } catch (e) {
+    error = 'Failed to delete expense'
+    console.error('Error deleting expense:', e)
+  }
+}
+
+function formatAmount(amount) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(amount)
+}
+
+function getCategoryIcon(categoryId) {
+  return categories.find((cat) => cat.id === categoryId)?.icon || '📦'
+}
+
+function getCategoryName(categoryId) {
+  return categories.find((cat) => cat.id === categoryId)?.name || 'Other'
+}
+
+function editExpense(expense) {
+  editingExpense = expense
+  editFormData = {
+    amount: expense.amount.toString(),
+    description: expense.description,
+    category: expense.category
+  }
+  showForm = true
+}
+```
+
+Remember to close the script section using `</script>`.
+
+These utility functions handle tasks like formatting currency amounts, retrieving category information, and setting up the edit form when modifying an expense.
+
+## Building the user interface
+
+Now that we have our core functionality in place, let's build the user interface. Our UI will consist of three main sections: statistics overview, expense form, and expense list. Let's add this template section to our `src/routes/+page.svelte` file:
+
+```svelte
+<div class="page-container">
+	<!-- Stats Overview -->
+	<div class="stats-grid">
+		<div class="stats-card stats-card-primary">
+			<h3 class="stats-title">Total Expenses</h3>
+			<p class="stats-value">{formatAmount(stats.total)}</p>
+		</div>
+		<div class="stats-card stats-card-accent">
+			<h3 class="stats-title">This Month</h3>
+			<p class="stats-value">{formatAmount(stats.thisMonth)}</p>
+		</div>
+		<div class="stats-card stats-card-neutral">
+			<h3 class="stats-title">This Week</h3>
+			<p class="stats-value">{formatAmount(stats.thisWeek)}</p>
+		</div>
+	</div>
+```
+
+The statistics overview provides users with a quick snapshot of their spending patterns. We display three key metrics: total expenses, monthly expenses, and weekly expenses. Each metric is presented in its own card with distinct styling for visual separation.
+
+Next, we'll add the button to create new expenses and the expense form modal:
+
+```svelte
+<!-- Add Expense Button -->
+<div class="flex justify-end">
+	<button on:click={() => (showForm = true)} class="btn btn-primary"> Add Expense </button>
+</div>
+
+<!-- Add Expense Form -->
+{#if showForm}
+	<div class="modal-overlay">
+		<div class="modal-container">
+			<div class="modal-header">
+				<h2 class="modal-title">
+					{editingExpense ? 'Edit Expense' : 'Add New Expense'}
+				</h2>
+				<button on:click={() => (showForm = false)} class="close-button" aria-label="Close modal">
+					<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M6 18L18 6M6 6l12 12"
+						/>
+					</svg>
+				</button>
+			</div>
+			<form on:submit|preventDefault={handleSubmit} class="form-container">
+				<div>
+					<label for="amount" class="form-label"> Amount </label>
+					<input
+						type="number"
+						id="amount"
+						bind:value={currentAmount}
+						step="0.01"
+						required
+						class="input form-input-container"
+						placeholder="0.00"
+					/>
+				</div>
+				<div>
+					<label for="description" class="form-label"> Description </label>
+					<input
+						type="text"
+						id="description"
+						bind:value={currentDescription}
+						required
+						class="input form-input-container"
+						placeholder="What did you spend on?"
+					/>
+				</div>
+				<div>
+					<label for="category" class="form-label"> Category </label>
+					<select id="category" bind:value={currentCategory} class="input form-input-container">
+						{#each categories as category}
+							<option value={category.id}>
+								{category.icon}
+								{category.name}
+							</option>
+						{/each}
+					</select>
+				</div>
+				<div class="flex justify-end space-x-3">
+					<button type="button" on:click={() => (showForm = false)} class="btn btn-secondary">
+						Cancel
+					</button>
+					<button type="submit" class="btn btn-primary">
+						{editingExpense ? 'Update Expense' : 'Add Expense'}
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
+{/if}
+```
+
+The expense form appears in a modal overlay when users click the "Add Expense" button or choose to edit an existing expense. The form adapts its behavior based on whether we're creating a new expense or editing an existing one. We use Svelte's reactive bindings to keep our form inputs synchronized with our component's state.
+
+Finally, let's implement the expenses list that displays all recorded expenses:
+
+```svelte
+<!-- Expenses List -->
+<div class="expense-list">
+	<h2 class="modal-title">Recent Expenses</h2>
+	{#if loading}
+		<div class="flex justify-center py-8">
+			<div class="loading-spinner"></div>
+		</div>
+	{:else if error}
+		<div class="auth-error">
+			<p>{error}</p>
+		</div>
+	{:else if expenses.length === 0}
+		<div class="empty-state">
+			<div class="empty-state-icon">💸</div>
+			<h3 class="empty-state-title">No expenses yet</h3>
+			<p class="empty-state-text">Start tracking your expenses by adding one above!</p>
+		</div>
+	{:else}
+		<div class="expense-list">
+			{#each expenses as expense}
+				<div class="expense-item">
+					<div class="expense-details">
+						<div class="expense-icon">
+							{getCategoryIcon(expense.category)}
+						</div>
+						<div>
+							<p class="expense-description">{expense.description}</p>
+							<p class="expense-meta">
+								{getCategoryName(expense.category)} •
+								{formatDistanceToNow(new Date(expense.$createdAt), { addSuffix: true })}
+							</p>
+						</div>
+					</div>
+					<div class="expense-actions">
+						<p class="expense-amount">
+							{formatAmount(expense.amount)}
+						</p>
+						<button
+							on:click={() => editExpense(expense)}
+							class="action-button action-button-edit"
+							aria-label="Edit expense"
+						>
+							<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+								<path
+									d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"
+								/>
+							</svg>
+						</button>
+						<button
+							on:click={() => deleteExpense(expense.$id)}
+							class="action-button action-button-delete"
+							aria-label="Delete expense"
+						>
+							<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+								<path
+									fill-rule="evenodd"
+									d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+									clip-rule="evenodd"
+								/>
+							</svg>
+						</button>
+					</div>
+				</div>
+			{/each}
+		</div>
+	{/if}
+</div>
+```
+
+The expenses list handles multiple states:
+
+- A loading state with a spinner while data is being fetched
+- An error state if something goes wrong
+- An empty state when no expenses exist
+- A list of expense items when data is available
+
+Each expense item displays:
+
+- The expense category icon
+- The description
+- The category name
+- The time since the expense was created
+- The amount
+- Edit and delete buttons
+
+The list is ordered with the most recent expenses first, making it easy for users to track their latest spending.
+
+## Running and testing the application
+
+With all components and styles in place, we can now run our application. Start the development server using:
+
+```bash
+pnpm dev
+```
+
+Visit the displayed URL in your browser, and you should see a fully functional expense tracking application that looks like this:
+
+![Expense app final look](/images/blog/build-fullstack-svelte-appwrite/expense-app-final-look.avif)
+
+## Next steps
+
+The expense tracker can be enhanced in several ways. Data visualization with charts would help users understand their spending patterns over time. Advanced filtering and search would make it easier to find specific expenses or analyze spending by category.
+
+Data export would let users analyze their expenses in external tools. Custom categories would let users organize expenses in ways that make sense for them. Budget tracking with alerts could help users stay within spending limits, while receipt image uploads would provide better expense documentation.
+
+## Conclusion
+
+In this tutorial, we built an expense tracking application using SvelteKit and Appwrite. We implemented core features including user authentication, database storage, and a responsive interface that works on different devices.
+
+The component-based structure we used makes the code easier to maintain and update. We covered practical aspects like securing user data, managing state, and handling form submissions - skills that apply to many web applications.
+
+Use this project as a starting point and build upon it based on what you need. The code is available on [GitHub](https://github.com/appwrite-community/svelte-expense-app) if you want to explore it further. You can also visit the [live application](https://expense-appwrite-svelte.netlify.app) to see it in action.
+
+If you have any questions or feedback, you can reach out to me on [LinkedIn](https://www.linkedin.com/in/ebenezerdon/) or join our [Discord community](https://appwrite.io/discord).
+
+## Further reading
+
+- [Start with SvelteKit](https://appwrite.io/docs/quick-starts/sveltekit)
+- [Building a chat app with Appwrite and Google Gemini](https://appwrite.io/blog/post/build-a-chat-app-with-appwrite-and-gemini)

@@ -78,6 +78,10 @@ final class EventValidatorTest extends TestCase
         $this->assertTrue($this->object->isValid('tablesdb.books'));
         $this->assertTrue($this->object->isValid('tablesdb.books.tables.chapters'));
         $this->assertTrue($this->object->isValid('tablesdb.books.tables.*'));
+        $this->assertTrue($this->object->isValid('monitors.*.alerts.*.firing'));
+        $this->assertTrue($this->object->isValid('monitors.*.alerts.*.resolved'));
+        $this->assertTrue($this->object->isValid('monitors.egress.alerts.*'));
+        $this->assertTrue($this->object->isValid('monitors.*'));
         $this->assertTrue($this->object->isValid('tablesdb.books.tables.chapters.columns.name.create'));
         $this->assertTrue($this->object->isValid('documentsdb.books.collections.chapters.documents.prolog.create'));
         $this->assertTrue($this->object->isValid('documentsdb.books.collections.chapters.documents.prolog'));
@@ -128,6 +132,12 @@ final class EventValidatorTest extends TestCase
         $this->assertTrue($this->object->isValid('teams.*'));
         $this->assertTrue($this->object->isValid('users.*'));
         $this->assertTrue($this->object->isValid('teams.*.memberships.*.update.status'));
+        $this->assertTrue($this->object->isValid('databases.*.collections.*.documents.*.upsert'));
+        $this->assertTrue($this->object->isValid('databases.books.tables.chapters.rows.prolog.upsert'));
+        $this->assertTrue($this->object->isValid('tablesdb.*.tables.*.rows.*.upsert'));
+        $this->assertTrue($this->object->isValid('tablesdb.books.tables.chapters.rows.*.upsert'));
+        $this->assertTrue($this->object->isValid('documentsdb.*.collections.*.documents.*.upsert'));
+        $this->assertTrue($this->object->isValid('vectorsdb.*.collections.*.documents.*.upsert'));
 
         /**
          * Test for FAILURE
@@ -136,6 +146,7 @@ final class EventValidatorTest extends TestCase
         $this->assertFalse($this->object->isValid(null));
         $this->assertFalse($this->object->isValid(''));
         $this->assertFalse($this->object->isValid('unknown.*'));
+        $this->assertFalse($this->object->isValid('monitors.*.alerts.*.create'));
         $this->assertFalse($this->object->isValid('tables'));
         $this->assertFalse($this->object->isValid('tables.*.unknown'));
         $this->assertFalse($this->object->isValid('tables.*.rows.*.unknown'));
@@ -148,5 +159,9 @@ final class EventValidatorTest extends TestCase
         $this->assertFalse($this->object->isValid('users.torsten.unknown'));
         $this->assertFalse($this->object->isValid('users.torsten.delete.email'));
         $this->assertFalse($this->object->isValid('teams.*.memberships.*.update.unknown'));
+        $this->assertFalse($this->object->isValid('tablesdb.*.tables.*.upsert'));
+        $this->assertFalse($this->object->isValid('tablesdb.*.tables.*.rows.*.unknown'));
+        $this->assertFalse($this->object->isValid('tablesdb.*.tables..rows.*.create'));
+        $this->assertFalse($this->object->isValid('tablesdb.*.tables..rows.*.upsert'));
     }
 }

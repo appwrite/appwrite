@@ -40,6 +40,7 @@ final class SitesCustomClientTest extends Scope
             $this->assertArrayHasKey('screenshotDark', $template);
             $this->assertArrayHasKey('screenshotLight', $template);
             $this->assertArrayHasKey('tagline', $template);
+            $this->assertIsArray($template['scopes']);
         }
 
         // List templates with pagination
@@ -117,6 +118,24 @@ final class SitesCustomClientTest extends Scope
         $this->assertEquals(400, $templates['headers']['status-code']);
     }
 
+    public function testListTemplatesTotal(): void
+    {
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $templates = $this->client->call(Client::METHOD_GET, '/sites/templates', $headers, ['total' => true]);
+        $this->assertEquals(200, $templates['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(\count($templates['body']['templates']), $templates['body']['total']);
+        $this->assertGreaterThan(0, $templates['body']['total']);
+
+        $templates = $this->client->call(Client::METHOD_GET, '/sites/templates', $headers, ['total' => false]);
+        $this->assertEquals(200, $templates['headers']['status-code']);
+        $this->assertEquals(0, $templates['body']['total']);
+        $this->assertNotEmpty($templates['body']['templates']);
+    }
+
     public function testListTemplatesHidesInternalFields()
     {
         $templates = $this->client->call(Client::METHOD_GET, '/sites/templates', array_merge([
@@ -153,6 +172,7 @@ final class SitesCustomClientTest extends Scope
         $this->assertEquals('github', $template['body']['vcsProvider']);
         $this->assertEquals('Simple React application integrated with Appwrite SDK.', $template['body']['tagline']);
         $this->assertIsArray($template['body']['frameworks']);
+        $this->assertIsArray($template['body']['scopes']);
         $this->assertStringContainsString('/images/sites/templates/starter-for-react-dark.png', (string) $template['body']['screenshotDark']);
         $this->assertStringContainsString('/images/sites/templates/starter-for-react-light.png', (string) $template['body']['screenshotLight']);
 
@@ -161,5 +181,22 @@ final class SitesCustomClientTest extends Scope
          */
         $template = $this->getTemplate('invalid-template-id');
         $this->assertEquals(404, $template['headers']['status-code']);
+    }
+
+    public function testTemplateDeploymentCannotBeChangedByAProjectUser(): void
+    {
+        ['siteId' => $siteId, 'deploymentId' => $deploymentId] = $this->setupTemplateDeployment();
+
+        $this->assertSame(401, $this->cancelDeployment($siteId, $deploymentId)['headers']['status-code']);
+        $this->assertSame(401, $this->deleteDeployment($siteId, $deploymentId)['headers']['status-code']);
+
+        $deployment = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments/' . $deploymentId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertSame(200, $deployment['headers']['status-code'], 'A refused user request leaves the deployment in place');
+
+        $this->cleanupSite($siteId);
     }
 }

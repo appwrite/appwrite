@@ -1,0 +1,115 @@
+<?php
+
+namespace Utopia\Migration\Resources\Sites;
+
+use Utopia\Migration\Resource;
+use Utopia\Migration\Transfer;
+
+class Deployment extends Resource
+{
+    public function __construct(
+        string $id,
+        private readonly Site $site,
+        private readonly int $size,
+        private int $start = 0,
+        private int $end = 0,
+        private string $data = '',
+        private readonly bool $activated = false
+    ) {
+        $this->id = $id;
+    }
+
+    /**
+     * @param array<string, mixed> $array
+     * @return self
+     */
+    public static function fromArray(array $array): self
+    {
+        return new self(
+            $array['id'],
+            Site::fromArray($array['site']),
+            $array['size'],
+            $array['start'] ?? 0,
+            $array['end'] ?? 0,
+            $array['data'] ?? '',
+            $array['activated'] ?? false
+        );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function jsonSerialize(): array
+    {
+        return [
+            'id' => $this->id,
+            'site' => $this->site,
+            'size' => $this->size,
+            'start' => $this->start,
+            'end' => $this->end,
+            'data' => $this->data,
+            'activated' => $this->activated,
+        ];
+    }
+
+    public static function getName(): string
+    {
+        return Resource::TYPE_SITE_DEPLOYMENT;
+    }
+
+    public function getGroup(): string
+    {
+        return Transfer::GROUP_SITES;
+    }
+
+    public function getSite(): Site
+    {
+        return $this->site;
+    }
+
+    public function getSize(): int
+    {
+        return $this->size;
+    }
+
+    public function setStart(int $start): self
+    {
+        $this->start = $start;
+
+        return $this;
+    }
+
+    public function getStart(): int
+    {
+        return $this->start;
+    }
+
+    public function setEnd(int $end): self
+    {
+        $this->end = $end;
+
+        return $this;
+    }
+
+    public function getEnd(): int
+    {
+        return $this->end;
+    }
+
+    public function setData(string $data): self
+    {
+        $this->data = $data;
+
+        return $this;
+    }
+
+    public function getData(): string
+    {
+        return $this->data;
+    }
+
+    public function getActivated(): bool
+    {
+        return $this->activated;
+    }
+}

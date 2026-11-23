@@ -1,0 +1,34 @@
+{
+    "name": "utopia-php/image",
+    "description": "A simple Image manipulation library",
+    "type": "library",
+    "keywords": [
+        "php",
+        "framework",
+        "upf",
+        "utopia",
+        "image"
+    ],
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Image\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Image\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --testsuite unit"
+    },
+    "require": {
+        "php": ">=8.2",
+        "ext-utopia": "*"
+    },
+    "require-dev": {
+        "ext-gd": "*"
+    },
+    "minimum-stability": "dev"
+}

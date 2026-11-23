@@ -19,6 +19,11 @@ final class StorageCacheControl extends CacheControl
         public readonly bool $fileSecurity,
         public readonly ?Document $cacheLog = null,
         ?Route $route = null,
+        /**
+         * The response format was negotiated from the request's Accept header (`output=auto`).
+         * The response varies by Accept, so a shared cache that ignores `Vary` must not store it.
+         */
+        public readonly bool $negotiated = false,
     ) {
         parent::__construct(
             source: $source,

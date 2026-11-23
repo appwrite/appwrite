@@ -1,0 +1,147 @@
+---
+layout: article
+title: Actions
+description: "Learn Firewall actions in Appwrite: deny, bypass, challenge, rate limit, and redirect, including status codes and rate-limit behavior."
+---
+
+When a request matches a rule's [conditions](/docs/products/firewall/conditions), Appwrite applies the rule **action**. Only one action runs per request, because evaluation stops at the first matching enabled rule. See [Priority](/docs/products/firewall/priority).
+
+There is no separate **Allow** action. Use **Bypass** to allowlist traffic that should skip later deny or rate limit rules.
+
+# Available actions {% #available-actions %}
+
+| Action | Client outcome |
+|--------|----------------|
+| **Deny** | `403` with an access-denied error |
+| **Bypass** | Request continues, and later Firewall rules are skipped |
+| **Challenge** | Client must pass a challenge before the request continues |
+| **Rate limit** | Under quota: continue and stop further rules. Over quota: `429` with `Retry-After` |
+| **Redirect** | HTTP redirect (`300` to `399`) to the configured location |
+
+# Response headers {% #which-rule-fired %}
+
+When Firewall stops a request, the response carries two headers that name the rule and the action it applied:
+
+```
+X-Appwrite-WAF-Rule: 6f2c1b9a
+X-Appwrite-WAF-Action: deny
+```
+
+A challenge adds `X-Appwrite-WAF-Challenge-Type`. The headers arrive with the response. The traffic overview updates later.
+
+Only API rules add the headers to allowed requests.
+
+# Deny {% #deny %}
+
+Deny rejects matching requests before they reach your application logic. Use it to block abusive IPs, lock down sensitive paths, or reject traffic from specific countries.
+
+# Bypass {% #bypass %}
+
+Bypass allows the request and **stops** Firewall evaluation. Later rules (including deny and rate limit) do not run for that request.
+
+Typical uses:
+
+- Allowlist a trusted office IP before a broader deny rule
+- Exempt health-check user agents or monitoring paths from rate limits
+
+Give bypass rules a lower priority number than the deny or rate limit rules they override, so they run first.
+
+# Challenge {% #challenge %}
+
+Challenge verifies matching requests before allowing them through. Clients that pass the challenge reach your application. Clients that fail do not.
+
+Use challenge instead of deny on paths that attract abuse, such as sign-in and sign-up, where a deny rule would also block legitimate users.
+
+| Setting | Purpose | Limits |
+|---------|---------|--------|
+| **Difficulty** | Client-side proof-of-work cost. Higher values slow automated clients more, and also slow the challenge for legitimate users | `1` (easiest) to `5` (hardest), Console default `3` |
+| **TTL (seconds)** | How long a visitor stays cleared after they pass the challenge | `900` (15 minutes) to `86400` (24 hours), Console default `1800` (30 minutes) |
+
+## Only browser navigation gets a challenge page {% #only-browser-navigation %}
+
+Appwrite serves the challenge page only for `GET` requests that accept HTML. Form posts, `fetch` calls, requests for a site's CSS and images, and every request matched by an **API** rule get `403` with a challenge-required error instead.
+
+See [Challenge automated traffic](/docs/products/firewall/challenge-bots) for a worked example.
+
+## Known bots are denied, not challenged {% #known-bots-are-denied %}
+
+Appwrite denies obvious automated clients before it issues a challenge, including requests with no `User-Agent` and those containing a marker such as `curl/`, `python-requests`, `go-http-client`, or `headlesschrome`.
+
+They count as **Denied** and never as **Challenged**, so a challenge rule aimed at them does nothing. Use **Deny** for clients you already know are scripts, and **Challenge** for traffic that might be a browser.
+
+## Clearance lasts for the whole site {% #clearance %}
+
+Once a visitor solves a challenge, they stay cleared for the length of the TTL across every challenge rule on that hostname, not just the rule that challenged them.
+
+To challenge **every** visitor to a site without building a rule by hand, use [Attack mode](/docs/products/firewall/attack-mode).
+
+# Rate limit {% #rate-limit %}
+
+Rate limit throttles matching requests that go over a quota. Each rule counts its own quota, separately for every client.
+
+| Setting | Purpose | Limits |
+|---------|---------|--------|
+| **Request limit** | Requests allowed per interval | `1` to `1000000` (Console default `100`) |
+| **Interval (seconds)** | Length of the window the request limit applies over | `1` to `86400` (Console default `60`) |
+| **Limit by** | What counts as one client | **IP address** (`ip`) or **User ID** (`userId`), Console default **IP address** |
+| **Strategy** | How the quota is enforced over time (see [Rate limit strategies](#rate-limit-strategies)) | `fixedWindow`, `slidingWindow`, or `tokenBucket` (Console default `fixedWindow`) |
+| **Max bucket size** | Token bucket only: the largest burst allowed. The other strategies ignore it | `1` to `1000000` (Console default `50`) |
+
+Appwrite allows a matching request under the quota and skips later rules, the same as a bypass. A request over the quota gets `429` with a `Retry-After` header.
+
+Treat that header as a minimum wait. With sliding window or token bucket, a client that retries the moment it expires may still be throttled.
+
+If the rate limiter itself is unavailable, Appwrite allows the request. A rule can therefore look inactive during an outage.
+
+You choose the strategy when you create the rule and cannot change it afterward. Through the API, an update that sends a different strategy is ignored without an error.
+
+## Per-user quotas {% #limit-by-user %}
+
+With **Limit by** set to **User ID**, each signed-in user gets their own quota, regardless of IP address.
+
+An **API** rule uses the user already signed in on the request. A **Functions** or **Sites** rule reads a user JWT from the `x-appwrite-user-jwt` header, so your client has to send one.
+
+A request with no signed-in user skips the rule and continues to the rules below it. Every other action stops evaluation on a match. This skip is the only exception.
+
+If signed-out traffic also needs a quota, add a second rule limited by **IP address**.
+
+# Rate limit strategies {% #rate-limit-strategies %}
+
+All three strategies hold a client to the same rate over time. They differ in how they treat bursts.
+
+## Fixed window {% #fixed-window %}
+
+{% rate_limit_animation strategy="fixedWindow" /%}
+
+Requests are counted in back-to-back windows of the interval length, and the count resets at each boundary. Windows follow the clock, not a client's first request, so every client resets at the same moment.
+
+A client can send a full quota at the end of one window and another at the start of the next, so brief bursts of up to twice the limit get through. Choose fixed window when that is acceptable. It is the default.
+
+## Sliding window {% #sliding-window %}
+
+{% rate_limit_animation strategy="slidingWindow" /%}
+
+The previous window's count fades out instead of resetting, so no boundary burst gets through. Choose sliding window when you want an even rate.
+
+## Token bucket {% #token-bucket %}
+
+{% rate_limit_animation strategy="tokenBucket" /%}
+
+A bucket refills at **Request limit** per **Interval**, up to **Max bucket size**. Each request spends one token, and requests are throttled once the bucket is empty.
+
+A client that has been quiet spends its saved tokens in a burst, while its sustained rate stays at the limit. Choose token bucket for clients that legitimately burst, such as batch writes or retries after a reconnect. Set **Max bucket size** to the largest burst you are willing to serve, since a misbehaving client can spend it too.
+
+# Redirect {% #redirect %}
+
+Redirect sends matching clients to another URL without running later Firewall rules.
+
+| Setting | Purpose |
+|---------|---------|
+| **Redirect location** | Absolute or path location (for example `https://example.com` or `/maintenance`). Default `/`. |
+| **Status code** | HTTP redirect status from `300` to `399` (default `302`) |
+
+Use redirects for maintenance pages and deprecated paths, or to move traffic off a path without denying it.
+
+{% arrow_link href="/docs/products/firewall/rate-limit-auth" %}
+Rate limit authentication traffic
+{% /arrow_link %}

@@ -2,11 +2,14 @@
 
 namespace Appwrite\Platform\Installer;
 
+use Appwrite\Installer\Secret;
 use Appwrite\Platform\Installer\Http\Installer\Error;
 use Appwrite\Platform\Installer\Runtime\Config;
 use Appwrite\Platform\Installer\Runtime\State;
 use Swoole\Http\Server as SwooleServer;
 use Swoole\Runtime;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Http\Adapter\Swoole\Response;
 use Utopia\Http\Adapter\Swoole\Server as SwooleAdapter;
@@ -36,6 +39,8 @@ class Server
     public const string STATUS_ERROR = 'error';
 
     public const string CSRF_COOKIE = 'appwrite-installer-csrf';
+
+    private static ?Secret $secret = null;
 
     public const array INSTALLER_CSP = [
         "default-src 'self'",
@@ -120,14 +125,29 @@ class Server
             $this->startDockerInstaller($opts);
         }
 
+        self::$secret = Secret::fromEnvironment();
+        $this->printInstallerSecret();
         $this->printInstallerUrl($host, $port);
         $this->startSwooleServer($host, (int) $port, $readyFile);
+    }
+
+    public static function secret(): Secret
+    {
+        return self::$secret ??= new Secret('');
+    }
+
+    private function printInstallerSecret(): void
+    {
+        fwrite(STDOUT, PHP_EOL);
+        fwrite(STDOUT, 'Installer secret: ' . self::secret()->value . PHP_EOL);
+        fwrite(STDOUT, 'Provide it as the ' . Secret::HEADER . ' header, or open the URL below.' . PHP_EOL);
+        fwrite(STDOUT, PHP_EOL);
     }
 
     private function printInstallerUrl(string $host, string $port): void
     {
         $displayHost = $host === self::INSTALLER_WEB_HOST ? 'localhost' : $host;
-        $url = "http://$displayHost:$port";
+        $url = "http://$displayHost:$port/?secret=" . self::secret()->value;
         fwrite(STDOUT, "Open $url" . PHP_EOL);
     }
 
@@ -298,8 +318,9 @@ class Server
 
     private function removeDockerInstallerContainer(string $container): void
     {
-        $name = escapeshellarg($container);
-        exec("docker rm -f $name >/dev/null 2>&1");
+        $stdout = '';
+        $stderr = '';
+        Console::execute((new Command('docker'))->argument('rm')->flag('-f')->argument($container), '', $stdout, $stderr);
     }
 
     private function cleanupWebInstallerFiles(): void
@@ -330,16 +351,15 @@ class Server
 
     private function dockerImageExists(string $image): bool
     {
-        $result = 1;
-        exec("docker image inspect " . escapeshellarg($image) . " >/dev/null 2>&1", $output, $result);
-        return $result === 0;
+        $stdout = '';
+        $stderr = '';
+        return Console::execute((new Command('docker'))->argument('image')->argument('inspect')->argument($image), '', $stdout, $stderr) === 0;
     }
 
     private function buildDockerInstallerImage(string $image): void
     {
         fwrite(STDOUT, "Building Docker image: {$image}\n");
-        $buildCommand = 'docker compose build appwrite';
-        passthru($buildCommand, $status);
+        $status = $this->attach((new Command('docker'))->argument('compose')->argument('build')->argument('appwrite'));
         if ($status !== 0 || !$this->dockerImageExists($image)) {
             fwrite(STDERR, "Failed to build Docker image: $image\n");
             fwrite(STDERR, "Try: docker compose build appwrite\n");
@@ -349,10 +369,9 @@ class Server
 
     private function ensureLocalInstallerTag(string $source, string $target): void
     {
-        $sourceArg = escapeshellarg($source);
-        $targetArg = escapeshellarg($target);
-        exec("docker tag {$sourceArg} {$targetArg}", $tagOutput, $tagStatus);
-        if ($tagStatus !== 0) {
+        $stdout = '';
+        $stderr = '';
+        if (Console::execute((new Command('docker'))->argument('tag')->argument($source)->argument($target), '', $stdout, $stderr) !== 0) {
             fwrite(STDERR, "Failed to tag Docker image {$source} as {$target}\n");
             exit(1);
         }
@@ -387,28 +406,36 @@ class Server
             $configJson = '{}';
         }
 
-        $args = [
-            'docker',
-            'run',
-            '-i',
-            '--rm',
-            '--name', $container,
-            '--label', 'com.docker.compose.project=appwrite-installer',
-            '--label', 'com.docker.compose.service=appwrite-installer',
-            '--add-host', 'host.docker.internal:host-gateway',
-            '-p', "127.0.0.1:$port:" . self::INSTALLER_WEB_PORT,
-            '--volume', '/var/run/docker.sock:/var/run/docker.sock',
-            '--volume', "$volumePath:/usr/src/code:rw",
-            '--volume', "$volumePath:$volumePath:rw",
-        ];
-        $args[] = '-e';
-        $args[] = 'APPWRITE_INSTALLER_CONFIG=' . $configJson;
-        $args[] = '--entrypoint=' . $entrypoint;
-        $args[] = $image;
+        $command = (new Command('docker'))
+            ->argument('run')
+            ->flag('-i')
+            ->flag('--rm')
+            ->option('--name', $container)
+            ->option('--label', 'com.docker.compose.project=appwrite-installer')
+            ->option('--label', 'com.docker.compose.service=appwrite-installer')
+            ->option('--add-host', 'host.docker.internal:host-gateway')
+            ->option('-p', "127.0.0.1:$port:" . self::INSTALLER_WEB_PORT)
+            ->option('--volume', '/var/run/docker.sock:/var/run/docker.sock')
+            ->option('--volume', "$volumePath:/usr/src/code:rw")
+            ->option('--volume', "$volumePath:$volumePath:rw")
+            ->option('-e', 'APPWRITE_INSTALLER_CONFIG=' . $configJson)
+            ->option('--entrypoint', $entrypoint)
+            ->argument($image);
 
-        $command = implode(' ', array_map(escapeshellarg(...), $args));
-        passthru($command, $status);
-        exit($status);
+        exit($this->attach($command));
+    }
+
+    /**
+     * Run a command on this terminal: it reads its input and streams its
+     * output as it happens. Its argv reaches the program directly, so nothing
+     * passes through a shell.
+     */
+    private function attach(Command $command): int
+    {
+        $pipes = [];
+        $process = proc_open($command->toArray(), [STDIN, STDOUT, STDERR], $pipes);
+
+        return \is_resource($process) ? proc_close($process) : 1;
     }
 }
 

@@ -40,7 +40,7 @@ class Delete extends PlatformAction
                 namespace: 'presences',
                 group: 'presences',
                 name: 'delete',
-                desc: 'Delete presence',
+                summary: 'Delete presence',
                 description: '/docs/references/presences/delete.md',
                 auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
@@ -51,7 +51,7 @@ class Delete extends PlatformAction
                 ],
                 contentType: ContentType::NONE,
             ))
-            ->param('presenceId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Presence unique ID.', false, ['dbForProject'])
+            ->param('presenceId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Presence unique ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')

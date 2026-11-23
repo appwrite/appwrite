@@ -19,6 +19,9 @@ use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
  */
 class Response extends SwooleResponse
 {
+    public const string DISPOSITION_INLINE = 'inline';
+    public const string DISPOSITION_ATTACHMENT = 'attachment';
+
     // General
     public const MODEL_NONE = 'none';
     public const MODEL_ANY = 'any';
@@ -29,15 +32,8 @@ class Response extends SwooleResponse
     public const MODEL_METRIC_LIST = 'metricList';
     public const MODEL_METRIC_BREAKDOWN = 'metricBreakdown';
     public const MODEL_ERROR_DEV = 'errorDev';
-    public const MODEL_USAGE_DOCUMENTSDBS = 'usageDocumentsDBs';
-    public const MODEL_USAGE_DOCUMENTSDB = 'usageDocumentsDB';
-    public const MODEL_USAGE_VECTORSDBS = 'usageVectorsDBs';
-    public const MODEL_USAGE_VECTORSDB = 'usageVectorsDB';
     public const MODEL_USAGE_USERS = 'usageUsers';
     public const MODEL_USAGE_PRESENCE = 'usagePresence';
-    public const MODEL_USAGE_FUNCTIONS = 'usageFunctions';
-    public const MODEL_USAGE_FUNCTION = 'usageFunction';
-    public const MODEL_USAGE_SITE = 'usageSite';
     public const MODEL_USAGE_PROJECT = 'usageProject';
     public const MODEL_USAGE_DATA_POINT = 'usageDataPoint';
     public const MODEL_USAGE_METRIC = 'usageMetric';
@@ -126,9 +122,11 @@ class Response extends SwooleResponse
     public const MODEL_USER_LIST = 'userList';
     public const MODEL_SESSION = 'session';
     public const MODEL_SESSION_LIST = 'sessionList';
+    public const MODEL_DEVICE = 'device';
     public const MODEL_IDENTITY = 'identity';
     public const MODEL_IDENTITY_LIST = 'identityList';
     public const MODEL_TOKEN = 'token';
+    public const MODEL_TOKEN_SECRET = 'tokenSecret';
     public const MODEL_JWT = 'jwt';
     public const MODEL_PREFERENCES = 'preferences';
 
@@ -138,6 +136,11 @@ class Response extends SwooleResponse
     public const MODEL_MFA_CHALLENGE = 'mfaChallenge';
     public const MODEL_MFA_CHALLENGE_SECRET = 'mfaChallengeSecret';
     public const MODEL_MFA_RECOVERY_CODES = 'mfaRecoveryCodes';
+
+    // Passkeys
+    public const MODEL_PASSKEY = 'passkey';
+    public const MODEL_PASSKEY_LIST = 'passkeyList';
+    public const MODEL_PASSKEY_CHALLENGE = 'passkeyChallenge';
 
     // Users password algos
     public const MODEL_ALGO_MD5 = 'algoMd5';
@@ -155,6 +158,18 @@ class Response extends SwooleResponse
     public const MODEL_BUCKET_LIST = 'bucketList';
     public const MODEL_RESOURCE_TOKEN = 'resourceToken';
     public const MODEL_RESOURCE_TOKEN_LIST = 'resourceTokenList';
+
+    // Videos
+    public const MODEL_VIDEO = 'video';
+    public const MODEL_VIDEO_LIST = 'videoList';
+    public const MODEL_VIDEO_CODEC = 'videoCodec';
+    public const MODEL_VIDEO_CODEC_LIST = 'videoCodecList';
+    public const MODEL_VIDEO_PROFILE = 'videoProfile';
+    public const MODEL_VIDEO_PROFILE_LIST = 'videoProfileList';
+    public const MODEL_VIDEO_RENDITION = 'videoRendition';
+    public const MODEL_VIDEO_RENDITION_LIST = 'videoRenditionList';
+    public const MODEL_VIDEO_CAPTION = 'videoCaption';
+    public const MODEL_VIDEO_CAPTION_LIST = 'videoCaptionList';
 
     // Locale
     public const MODEL_LOCALE = 'locale';
@@ -237,6 +252,7 @@ class Response extends SwooleResponse
     // Proxy
     public const MODEL_PROXY_RULE = 'proxyRule';
     public const MODEL_PROXY_RULE_LIST = 'proxyRuleList';
+    public const MODEL_PROXY_RULE_RECORD = 'proxyRuleRecord';
 
     // Schedules
     public const MODEL_SCHEDULE = 'schedule';
@@ -259,11 +275,15 @@ class Response extends SwooleResponse
     public const MODEL_PROJECT_PROTOCOL = 'projectProtocol';
     public const MODEL_WEBHOOK = 'webhook';
     public const MODEL_WEBHOOK_LIST = 'webhookList';
+    public const MODEL_MONITOR = 'monitor';
+    public const MODEL_MONITOR_LIST = 'monitorList';
+    public const MODEL_ALERT = 'alert';
+    public const MODEL_ALERT_LIST = 'alertList';
     public const MODEL_KEY = 'key';
     public const MODEL_KEY_LIST = 'keyList';
     public const MODEL_EPHEMERAL_KEY = 'ephemeralKey';
-    public const MODEL_DEV_KEY = 'devKey';
-    public const MODEL_DEV_KEY_LIST = 'devKeyList';
+    public const MODEL_TRANSFER = 'transfer';
+    public const MODEL_TRANSFER_LIST = 'transferList';
     public const MODEL_MOCK_NUMBER = 'mockNumber';
     public const MODEL_MOCK_NUMBER_LIST = 'mockNumberList';
     public const MODEL_POLICY_LIST = 'policyList';
@@ -271,6 +291,8 @@ class Response extends SwooleResponse
     public const MODEL_POLICY_PASSWORD_HISTORY = 'policyPasswordHistory';
     public const MODEL_POLICY_PASSWORD_STRENGTH = 'policyPasswordStrength';
     public const MODEL_POLICY_PASSWORD_PERSONAL_DATA = 'policyPasswordPersonalData';
+    public const MODEL_POLICY_PASSWORD_PWNED = 'policyPasswordPwned';
+    public const MODEL_POLICY_PASSWORD_ROTATION = 'policyPasswordRotation';
     public const MODEL_POLICY_SESSION_ALERT = 'policySessionAlert';
     public const MODEL_POLICY_SESSION_DURATION = 'policySessionDuration';
     public const MODEL_POLICY_SESSION_INVALIDATION = 'policySessionInvalidation';
@@ -278,6 +300,13 @@ class Response extends SwooleResponse
     public const MODEL_POLICY_USER_LIMIT = 'policyUserLimit';
     public const MODEL_POLICY_MEMBERSHIP_PRIVACY = 'policyMembershipPrivacy';
     public const MODEL_POLICY_MFA_FACTORS = 'policyMfaFactors';
+    public const MODEL_POLICY_DENY_ALIASED_EMAIL = 'policyDenyAliasedEmail';
+    public const MODEL_POLICY_DENY_DISPOSABLE_EMAIL = 'policyDenyDisposableEmail';
+    public const MODEL_POLICY_DENY_FREE_EMAIL = 'policyDenyFreeEmail';
+    public const MODEL_POLICY_DENY_CORPORATE_EMAIL = 'policyDenyCorporateEmail';
+    public const MODEL_POLICY_DENY_REALTIME_GUESTS = 'policyDenyRealtimeGuests';
+    public const MODEL_POLICY_PASSKEY = 'policyPasskey';
+    public const MODEL_POLICY_ACCOUNT_DEVICES = 'policyAccountDevices';
     public const MODEL_AUTH_PROVIDER = 'authProvider';
     public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
     public const MODEL_PLATFORM_APPLE = 'platformApple';
@@ -302,11 +331,25 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_GOOGLE = 'oAuth2Google';
     public const MODEL_OAUTH2_CLOUDFLARE = 'oAuth2Cloudflare';
     public const MODEL_OAUTH2_HUGGINGFACE = 'oAuth2HuggingFace';
+    public const MODEL_OAUTH2_INSTAGRAM = 'oAuth2Instagram';
+    public const MODEL_OAUTH2_PATREON = 'oAuth2Patreon';
+    public const MODEL_OAUTH2_STRAVA = 'oAuth2Strava';
+    public const MODEL_OAUTH2_VK = 'oAuth2VK';
+    public const MODEL_OAUTH2_NETLIFY = 'oAuth2Netlify';
+    public const MODEL_OAUTH2_RAILWAY = 'oAuth2Railway';
+    public const MODEL_OAUTH2_REDDIT = 'oAuth2Reddit';
+    public const MODEL_OAUTH2_VERCEL = 'oAuth2Vercel';
+    public const MODEL_OAUTH2_ATLASSIAN = 'oAuth2Atlassian';
+    public const MODEL_OAUTH2_LINE = 'oAuth2Line';
+    public const MODEL_OAUTH2_LINEAR = 'oAuth2Linear';
+    public const MODEL_OAUTH2_ROBLOX = 'oAuth2Roblox';
+    public const MODEL_OAUTH2_WORKOS = 'oAuth2WorkOS';
     public const MODEL_OAUTH2_ZOOM = 'oAuth2Zoom';
     public const MODEL_OAUTH2_ZOHO = 'oAuth2Zoho';
     public const MODEL_OAUTH2_YANDEX = 'oAuth2Yandex';
     public const MODEL_OAUTH2_X = 'oAuth2X';
     public const MODEL_OAUTH2_WORDPRESS = 'oAuth2WordPress';
+    public const MODEL_OAUTH2_WEBFLOW = 'oAuth2Webflow';
     public const MODEL_OAUTH2_TWITCH = 'oAuth2Twitch';
     public const MODEL_OAUTH2_STRIPE = 'oAuth2Stripe';
     public const MODEL_OAUTH2_SPOTIFY = 'oAuth2Spotify';
@@ -334,8 +377,11 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_KICK = 'oAuth2Kick';
     public const MODEL_OAUTH2_MICROSOFT = 'oAuth2Microsoft';
     public const MODEL_OAUTH2_RESEND = 'oAuth2Resend';
+    public const MODEL_OAUTH2_BIRD = 'oAuth2Bird';
     public const MODEL_OAUTH2_TIKTOK = 'oAuth2TikTok';
     public const MODEL_OAUTH2_KAKAO = 'oAuth2Kakao';
+    public const MODEL_OAUTH2_NAVER = 'oAuth2Naver';
+    public const MODEL_OAUTH2_VIPPS = 'oAuth2Vipps';
     public const MODEL_OAUTH2_PROVIDER_LIST = 'oAuth2ProviderList';
 
     // Health
@@ -353,6 +399,21 @@ class Response extends SwooleResponse
     public const MODEL_INSIGHT_CTA = 'insightCTA';
     public const MODEL_REPORT = 'report';
     public const MODEL_REPORT_LIST = 'reportList';
+
+    // Reviews
+    public const MODEL_REVIEW = 'review';
+    public const MODEL_REVIEW_LIST = 'reviewList';
+    public const MODEL_REVIEW_FINDING = 'reviewFinding';
+    public const MODEL_REVIEW_EVENT = 'reviewEvent';
+    public const MODEL_REVIEW_EVENT_LIST = 'reviewEventList';
+    public const MODEL_REVIEW_REPOSITORY = 'reviewRepository';
+    public const MODEL_REVIEW_REPOSITORY_LIST = 'reviewRepositoryList';
+    public const MODEL_REVIEW_AUTHOR = 'reviewAuthor';
+    public const MODEL_REVIEW_AUTHOR_LIST = 'reviewAuthorList';
+    public const MODEL_REVIEW_CATEGORY = 'reviewCategory';
+    public const MODEL_REVIEW_CATEGORY_LIST = 'reviewCategoryList';
+    public const MODEL_REVIEW_LEARNING = 'reviewLearning';
+    public const MODEL_REVIEW_LEARNING_LIST = 'reviewLearningList';
 
     // Console
     public const MODEL_CONSOLE_VARIABLES = 'consoleVariables';
@@ -379,6 +440,8 @@ class Response extends SwooleResponse
      * @var bool
      */
     protected bool $showSensitive = false;
+
+    protected bool $hideCredentials = false;
 
     /**
      * @var array<string, Model>
@@ -482,8 +545,11 @@ class Response extends SwooleResponse
             $document->setAttribute('impersonatorUserId', $this->impersonatorUser->getId());
         }
 
-        $output = $this->output(clone $document, $model);
-        $output = $this->applyFilters($output, $model, raw: clone $document);
+        // output() clones the document itself, filters get their own copy as raw content
+        $output = $this->output($document, $model);
+        if ($this->hasFilters()) {
+            $output = $this->applyFilters($output, $model, raw: clone $document);
+        }
 
         switch ($this->getContentType()) {
             case self::CONTENT_TYPE_JSON:
@@ -531,6 +597,12 @@ class Response extends SwooleResponse
         $model      = $this->getModel($model);
         $output     = [];
 
+        foreach ($data as $attribute => $value) {
+            if ($value instanceof \BackedEnum) {
+                $data->setAttribute($attribute, $value->value);
+            }
+        }
+
         $data = $model->filter($data);
 
         if ($model->isAny()) {
@@ -568,20 +640,7 @@ class Response extends SwooleResponse
 
                         if (\is_array($rule['type'])) {
                             foreach ($rule['type'] as $type) {
-                                $condition = false;
-                                foreach ($this->getModel($type)->conditions as $attribute => $val) {
-
-                                    if (\is_array($val)) {
-                                        $condition = \in_array($item->getAttribute($attribute), $val);
-                                    } else {
-                                        $condition = $item->getAttribute($attribute) === $val;
-                                    }
-
-                                    if (!$condition) {
-                                        break;
-                                    }
-                                }
-                                if ($condition) {
+                                if ($this->getModel($type)->matches($item)) {
                                     $ruleType = $type;
                                     break;
                                 }
@@ -591,7 +650,11 @@ class Response extends SwooleResponse
                         }
 
                         if ($ruleType === null || !self::hasModel($ruleType)) {
-                            throw new Exception('Missing model for rule: ' . ($ruleType ?? 'null') . ' (key: ' . $key . ')');
+                            $typeValue = $item->getAttribute('type');
+                            if ($typeValue instanceof \BackedEnum) {
+                                $typeValue = $typeValue->value;
+                            }
+                            throw new Exception('Missing model for rule: ' . ($ruleType ?? 'null') . ' (key: ' . $key . ', type: ' . (\is_scalar($typeValue) ? (string) $typeValue : \get_debug_type($typeValue)) . ')');
                         }
 
                         $data[$key][$index] = $this->output($item, $ruleType);
@@ -612,6 +675,16 @@ class Response extends SwooleResponse
                 if ((!$isPrivilegedUser && !$isAppUser) && !$this->showSensitive) {
                     $data->setAttribute($key, '');
                 }
+            }
+
+            if ($rule['credential'] && ($this->hideCredentials || $this->impersonatorUser !== null)) {
+                $data->setAttribute($key, $rule['default'] ?? '');
+            }
+
+            if ($rule['type'] === Model::TYPE_DATETIME) {
+                $data->setAttribute($key, $rule['array']
+                    ? \array_map(Model::formatDatetime(...), $data[$key])
+                    : Model::formatDatetime($data[$key]));
             }
 
             $output[$key] = $data[$key];
@@ -792,8 +865,39 @@ class Response extends SwooleResponse
         $this->user = $user;
     }
 
+    public function setHideCredentials(bool $hideCredentials): void
+    {
+        $this->hideCredentials = $hideCredentials;
+    }
+
     public function setImpersonatorUser(Document $impersonatorUser): void
     {
         $this->impersonatorUser = $impersonatorUser->isEmpty() ? null : $impersonatorUser;
+    }
+
+    /**
+     * RFC 6266 disposition with a printable ASCII fallback and an RFC 5987 UTF-8 name.
+     */
+    public function setContentDisposition(string $type, string $filename): static
+    {
+        $fallback = '';
+        $length = \strlen($filename);
+        for ($i = 0; $i < $length; $i++) {
+            $char = $filename[$i];
+            $code = \ord($char);
+            if ($code >= 0xC0) {
+                $fallback .= '_';
+                continue;
+            }
+            if ($code < 32 || $code >= 127 || $char === '"' || $char === '\\' || $char === ';') {
+                continue;
+            }
+            $fallback .= $char;
+        }
+
+        $fallback = $fallback !== '' ? $fallback : 'download';
+        $encoded = \rawurlencode($filename !== '' ? $filename : 'download');
+
+        return $this->setHeader('Content-Disposition', $type . '; filename="' . $fallback . '"; filename*=UTF-8\'\'' . $encoded);
     }
 }

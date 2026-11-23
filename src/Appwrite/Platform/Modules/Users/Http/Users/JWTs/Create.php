@@ -3,18 +3,19 @@
 namespace Appwrite\Platform\Modules\Users\Http\Users\JWTs;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\KeywordId;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\Range;
 
 class Create extends Action
@@ -47,16 +48,23 @@ class Create extends Action
                     )
                 ]
             ))
-            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
-            ->param('sessionId', 'recent()', fn (Database $dbForProject) => new KeywordId('recent()', $dbForProject->getAdapter()->getMaxUIDLength()), 'Session ID. Use the string \'recent()\' to use the most recent session, which is also the default.', true, ['dbForProject'], example: 'recent()')
+            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID.', false, ['dbForProject'])
+            ->param('sessionId', 'recent()', fn (Database $dbForProject) => new KeywordId('recent()', $dbForProject->getMaxUidLength()), 'Session ID. Use the string \'recent()\' to use the most recent session, which is also the default.', true, ['dbForProject'], example: 'recent()')
             ->param('duration', 900, new Range(0, 3600), 'Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('project')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, string $sessionId, int $duration, Response $response, Database $dbForProject): void
+    public function action(string $userId, string $sessionId, int $duration, Response $response, Database $dbForProject, Document $project, Request $request): void
     {
+        // As on the account JWT route: a JWT can't mint the next one and outlive itself
+        if ($request->getHeaderLine('x-appwrite-jwt', '') !== '') {
+            throw new Exception(Exception::USER_JWT_CREATION_DENIED);
+        }
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -80,11 +88,12 @@ class Create extends Action
             }
         }
 
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $duration, 0);
+        $jwt = new JWT(EncryptionKey::current(), 'HS256', $duration, 0);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(new Document(['jwt' => $jwt->encode([
+                'projectId' => $project->getId(),
                 'userId' => $user->getId(),
                 'sessionId' => $session->isEmpty() ? '' : $session->getId()
             ])]), Response::MODEL_JWT);

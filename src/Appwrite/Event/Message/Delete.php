@@ -13,23 +13,23 @@ final class Delete extends Base
         public readonly ?string $resource = null,
         public readonly ?string $resourceType = null,
         public readonly ?string $datetime = null,
-        public readonly ?string $hourlyUsageRetentionDatetime = null,
     ) {
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [
-            'project' => $this->project?->getArrayCopy(),
+            'project' => $this->project === null ? null : ProjectContext::fromDocument($this->project)->toArray(),
             'type' => $this->type,
             'document' => $this->document?->getArrayCopy(),
             'resource' => $this->resource,
             'resourceType' => $this->resourceType,
             'datetime' => $this->datetime,
-            'hourlyUsageRetentionDatetime' => $this->hourlyUsageRetentionDatetime,
         ];
     }
 
+    #[\Override]
     public static function fromArray(array $data): static
     {
         return new self(
@@ -39,7 +39,6 @@ final class Delete extends Base
             resource: $data['resource'] ?? null,
             resourceType: $data['resourceType'] ?? null,
             datetime: $data['datetime'] ?? null,
-            hourlyUsageRetentionDatetime: $data['hourlyUsageRetentionDatetime'] ?? null,
         );
     }
 }

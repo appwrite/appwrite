@@ -18,6 +18,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Structure as StructureException;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Permissions;
@@ -51,7 +52,7 @@ class Update extends PlatformAction
                     namespace: 'presences',
                     group: 'presences',
                     name: 'update',
-                    desc: 'Update presence',
+                    summary: 'Update presence',
                     description: '/docs/references/presences/update.md',
                     auth: [AuthType::SESSION, AuthType::ADMIN],
                     responses: [
@@ -74,7 +75,7 @@ class Update extends PlatformAction
                     namespace: 'presences',
                     group: 'presences',
                     name: 'update',
-                    desc: 'Update presence',
+                    summary: 'Update presence',
                     description: '/docs/references/presences/update.md',
                     auth: [AuthType::KEY, AuthType::JWT],
                     responses: [
@@ -94,7 +95,7 @@ class Update extends PlatformAction
                     ],
                 ),
             ])
-            ->param('presenceId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Presence unique ID.', false, ['dbForProject'])
+            ->param('presenceId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Presence unique ID.', false, ['dbForProject'])
             ->param('userId', null, new UID(), 'User ID.', true)
             ->param('status', null, new Text(Database::LENGTH_KEY), 'Presence status.', true)
             ->param('expiresAt', null, fn () => new DatetimeValidator(
@@ -103,7 +104,7 @@ class Update extends PlatformAction
                 requireDateInFuture: true
             ), 'Presence expiry datetime.', true)
             ->param('metadata', null, new JSONObject(), 'Presence metadata object.', true)
-            ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [PermissionType::Read, PermissionType::Update, PermissionType::Delete, PermissionType::Write]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('purge', false, new Boolean(true), 'When true, purge cached responses used by list presences endpoint.', true)
             ->inject('response')
             ->inject('dbForProject')
@@ -171,14 +172,21 @@ class Update extends PlatformAction
 
         $updates = new Document($updateData);
 
+        // A permission change can narrow who may read the presence. The list cache keys only on the
+        // caller's roles and query and returns rows verbatim, so a narrowed presence keeps being
+        // served from a still-valid page unless the cache is dropped. Purge on any permission change,
+        // not only when the caller opts in with purge=true.
+        $permissionsChanged = false;
         if ($permissions !== null) {
             $presenceState->setPermissions($updates, $permissions, $user, $authorization);
+            $permissionsChanged = true;
         } elseif ($userId !== null && $userId !== $presence->getAttribute('userId')) {
             $presenceState->setPermissions($updates, null, $user, $authorization, ownerOverride: $userId);
+            $permissionsChanged = true;
         }
 
         if (empty($updateData) && $permissions === null) {
-            if ($purge) {
+            if ($purge || $permissionsChanged) {
                 $presenceState->purgeListCache($dbForProject);
             }
             $response->dynamic($presence, Response::MODEL_PRESENCE);
@@ -195,8 +203,12 @@ class Update extends PlatformAction
             throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT, $e->getMessage(), previous: $e);
         }
 
-        if ($purge) {
+        if ($purge || $permissionsChanged) {
             $presenceState->purgeListCache($dbForProject);
+        }
+
+        if ($presence->isEmpty()) {
+            throw new Exception(Exception::PRESENCE_NOT_FOUND, params: [$presenceId]);
         }
 
         $queueForEvents->setParam('presenceId', $presence->getId());

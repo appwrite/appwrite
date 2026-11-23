@@ -10,16 +10,22 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Services\GraphQL\Base;
+use Tests\E2E\Services\GraphQL\QueryJoinCombos;
+use Tests\E2E\Services\GraphQL\QueryJoinPermissions;
 use Utopia\Database\Database;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\RelationshipDeleteAction;
+use Utopia\Database\RelationshipType;
+use Utopia\Database\Role;
 
 final class DatabaseServerTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
     use Base;
+    use QueryJoinPermissions;
+    use QueryJoinCombos;
 
     /**
      * Static cache for database data
@@ -71,7 +77,7 @@ final class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => ID::unique(),
+                'databaseId' => Id::unique(),
                 'name' => 'Actors',
             ]
         ];
@@ -113,7 +119,7 @@ final class DatabaseServerTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $database['_id'],
-                'collectionId' => ID::unique(),
+                'collectionId' => Id::unique(),
                 'name' => 'Actors',
                 'documentSecurity' => false,
                 'permissions' => [
@@ -137,7 +143,7 @@ final class DatabaseServerTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $database['_id'],
-                'collectionId' => ID::unique(),
+                'collectionId' => Id::unique(),
                 'name' => 'Movies',
                 'documentSecurity' => false,
                 'permissions' => [
@@ -630,7 +636,7 @@ final class DatabaseServerTest extends Scope
             'variables' => [
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection']['_id'],
-                'documentId' => ID::unique(),
+                'documentId' => Id::unique(),
                 'data' => [
                     'name' => 'John Doe',
                     'tags' => ['first', 'second'],
@@ -688,7 +694,7 @@ final class DatabaseServerTest extends Scope
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection2']['_id'],          // Movies
                 'relatedCollectionId' => $data['collection']['_id'],    // Actors
-                'type' => Database::RELATION_ONE_TO_MANY,
+                'type' => RelationshipType::OneToMany->value,
                 'twoWay' => true,
                 'key' => 'actors',
                 'twoWayKey' => 'movie'
@@ -739,7 +745,7 @@ final class DatabaseServerTest extends Scope
         $payload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => ID::unique(),
+                'databaseId' => Id::unique(),
                 'name' => 'Bulk',
             ],
         ];
@@ -752,7 +758,7 @@ final class DatabaseServerTest extends Scope
         $payload['query'] = $query;
         $payload['variables'] = [
             'databaseId' => $databaseId,
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Operations',
             'documentSecurity' => false,
             'permissions' => [
@@ -790,7 +796,7 @@ final class DatabaseServerTest extends Scope
         $query = $this->getQuery(self::CREATE_DOCUMENTS);
         $documents = [];
         for ($i = 1; $i <= 10; $i++) {
-            $documents[] = ['$id' => ID::unique(), 'name' => 'Doc #' . $i];
+            $documents[] = ['$id' => Id::unique(), 'name' => 'Doc #' . $i];
         }
 
         $payload['query'] = $query;
@@ -1472,7 +1478,7 @@ final class DatabaseServerTest extends Scope
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection2']['_id'],          // Movies
                 'relatedCollectionId' => $data['collection']['_id'],    // Actors
-                'type' => Database::RELATION_ONE_TO_MANY,
+                'type' => RelationshipType::OneToMany->value,
                 'twoWay' => true,
                 'key' => 'actors',
                 'twoWayKey' => 'movie'
@@ -1514,7 +1520,7 @@ final class DatabaseServerTest extends Scope
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection2']['_id'],
                 'key' => 'actors',
-                'onDelete' => Database::RELATION_MUTATE_CASCADE,
+                'onDelete' => RelationshipDeleteAction::Cascade->value,
             ]
         ];
 
@@ -1757,7 +1763,7 @@ final class DatabaseServerTest extends Scope
             'variables' => [
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection']['_id'],
-                'documentId' => ID::unique(),
+                'documentId' => Id::unique(),
                 'data' => [
                     'name' => 'John Doe',
                     'tags' => ['first', 'second'],
@@ -2460,7 +2466,7 @@ final class DatabaseServerTest extends Scope
                 'databaseId' => $data['databaseId'],
                 'collectionId' => $data['collectionId'],
                 'documents' => [
-                    ['$id' => ID::unique(), 'name' => 'Doc #1000'],
+                    ['$id' => Id::unique(), 'name' => 'Doc #1000'],
                     ['name' => 'Doc #11'],
                 ],
             ],

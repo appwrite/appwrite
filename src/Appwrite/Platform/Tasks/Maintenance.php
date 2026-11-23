@@ -6,19 +6,34 @@ use Appwrite\Certificates\Certificates;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
-use DateInterval;
-use DateTime;
-use Utopia\Console;
+use Appwrite\Maintenance\Grid;
+use Appwrite\Maintenance\Sweep;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
+use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Validator\WhiteList;
 
 class Maintenance extends Action
 {
+    /**
+     * How close to expiry a certificate is checked whatever its renew date or
+     * attempts say. LetsEncrypt renews from 30 days before expiry and Fastly from
+     * about ten, so a certificate this close has stopped renewing.
+     */
+    private const CERTIFICATE_RENEWAL_DEADLINE = 60 * 60 * 24 * 7;
+
+    /**
+     * How long after expiry a certificate is still checked, so a late provider
+     * renewal or a DNS fix still recovers it.
+     */
+    private const CERTIFICATE_EXPIRED_WINDOW = 60 * 60 * 24 * 30;
+
     public static function getName(): string
     {
         return 'maintenance';
@@ -43,65 +58,33 @@ class Maintenance extends Action
         Console::success(APP_NAME . ' maintenance process v1 has started');
 
         $interval = (int) System::getEnv('_APP_MAINTENANCE_INTERVAL', '86400'); // 1 day
-        $usageStatsRetentionHourly = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_HOURLY', '8640000'); //100 days
         $cacheRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
         $schedulesDeletionRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_SCHEDULES', '86400'); // 1 Day
+        $alertsRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ALERTS', '7776000'); // 90 days
         $jobInitTime = System::getEnv('_APP_MAINTENANCE_START_TIME', '00:00'); // (hour:minutes)
 
         $now = new \DateTime();
         $now->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-        $next = new \DateTime($now->format("Y-m-d $jobInitTime"));
-        $next->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+        $next = new Grid($jobInitTime, $interval)->next($now);
         $delay = $next->getTimestamp() - $now->getTimestamp();
 
-        /**
-         * If time passed for the target day.
-         */
-        if ($delay <= 0) {
-            $next->add(\DateInterval::createFromDateString('1 days'));
-            $delay = $next->getTimestamp() - $now->getTimestamp();
-        }
-
-        $action = function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $console, $publisherForDeletes, $publisherForCertificates, $certificateIssuer) {
+        $action = function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $alertsRetention, $dbForPlatform, $console, $publisherForDeletes, $publisherForCertificates, $certificateIssuer) {
             $time = DatabaseDateTime::now();
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
 
-            // Iterate through project only if it was accessed in last 30 days
-            $dateInterval  = DateInterval::createFromDateString('30 days');
-            $before30days = (new DateTime())->sub($dateInterval);
-
-            $dbForPlatform->skipFilters(
-                fn () => $dbForPlatform->foreach(
-                    'projects',
-                    function (Document $project) use ($publisherForDeletes, $usageStatsRetentionHourly) {
-                        $publisherForDeletes->enqueue(new DeleteMessage(
-                            project: $project,
-                            type: DELETE_TYPE_MAINTENANCE,
-                            hourlyUsageRetentionDatetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly),
-                        ));
-                    },
-                    [
-                        Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
-                        Query::greaterThanEqual('accessedAt', DatabaseDateTime::format($before30days)),
-                        Query::orderAsc('$sequence'), // accessedAt Can be updated during iteration
-                        Query::limit(1000),
-                    ]
-                ),
-                APP_PROJECTS_SUBQUERIES
-            );
-
-            $publisherForDeletes->enqueue(new DeleteMessage(
+            // Projects are maintained by schedule-maintenance, a slot at a time, so the deletes queue never takes them all at once.
+            $this->step('console_delete', fn () => $publisherForDeletes->enqueue(new DeleteMessage(
                 project: $console,
                 type: DELETE_TYPE_MAINTENANCE,
-                hourlyUsageRetentionDatetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly),
-            ));
+            )));
 
-            $this->notifyDeleteConnections($publisherForDeletes);
-            $this->renewCertificates($dbForPlatform, $publisherForCertificates, $certificateIssuer);
-            $this->notifyDeleteCache($cacheRetention, $publisherForDeletes);
-            $this->notifyDeleteSchedules($schedulesDeletionRetention, $publisherForDeletes);
-            $this->notifyDeleteCSVExports($publisherForDeletes);
+            $this->step('delete_connections', fn () => $this->notifyDeleteConnections($publisherForDeletes));
+            $this->step('renew_certificates', fn () => $this->renewCertificates($dbForPlatform, $publisherForCertificates, $certificateIssuer));
+            $this->step('delete_cache', fn () => $this->notifyDeleteCache($cacheRetention, $console, $publisherForDeletes));
+            $this->step('delete_schedules', fn () => $this->notifyDeleteSchedules($schedulesDeletionRetention, $publisherForDeletes));
+            $this->step('delete_alerts', fn () => $this->notifyDeleteAlerts($alertsRetention, $publisherForDeletes));
+            $this->step('delete_csv_exports', fn () => $this->notifyDeleteCSVExports($publisherForDeletes));
         };
 
         if ($type === 'loop') {
@@ -111,8 +94,72 @@ class Maintenance extends Action
                 $action();
             }, $interval, $delay);
         } elseif ($type === 'trigger') {
+            // A manual run maintains every active project now, rather than waiting for its slot.
+            $this->notifyDeleteProjects($dbForPlatform, $publisherForDeletes);
             $action();
         }
+    }
+
+    /**
+     * Run one maintenance step and record its time and memory.
+     *
+     * The task is one long-lived process, so its span only flushes when the
+     * process exits; a kernel OOM kill never flushes it. The log line written
+     * before each step is what survives such a kill: the last `start` without a
+     * matching `done` names the step that was running.
+     */
+    private function step(string $name, callable $run): void
+    {
+        $startedAt = \microtime(true);
+        $memory = \memory_get_usage();
+        \memory_reset_peak_usage();
+
+        Console::info(\sprintf('[maintenance] step=%s start memory=%.1fMB', $name, $memory / 1048576));
+
+        $run();
+
+        $duration = \microtime(true) - $startedAt;
+        $delta = \memory_get_usage() - $memory;
+        $peak = \memory_get_peak_usage();
+
+        Span::add("maintenance.{$name}.duration", $duration);
+        Span::add("maintenance.{$name}.memory_delta", $delta);
+        Span::add("maintenance.{$name}.memory_peak", $peak);
+
+        Console::info(\sprintf(
+            '[maintenance] step=%s done duration=%.2fs memory_delta=%.1fMB memory_peak=%.1fMB',
+            $name,
+            $duration,
+            $delta / 1048576,
+            $peak / 1048576,
+        ));
+    }
+
+    private function notifyDeleteProjects(Database $dbForPlatform, DeletePublisher $publisherForDeletes): void
+    {
+        $since = DatabaseDateTime::addSeconds(new \DateTime(), -Sweep::INACTIVITY);
+
+        $dbForPlatform->skipFilters(
+            function () use ($dbForPlatform, $publisherForDeletes, $since): void {
+                $projects = $dbForPlatform->cursor(
+                    'projects',
+                    [
+                        Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+                        Query::greaterThanEqual('accessedAt', $since),
+                        Query::orderAsc('$sequence'), // accessedAt Can be updated during iteration
+                    ],
+                    batchSize: 1000,
+                );
+
+                foreach ($projects as $project) {
+                    $publisherForDeletes->enqueue(new DeleteMessage(
+                        project: $project,
+                        type: DELETE_TYPE_MAINTENANCE,
+                    ));
+                }
+            },
+            APP_PROJECTS_SUBQUERIES
+        );
     }
 
     private function notifyDeleteConnections(DeletePublisher $publisherForDeletes): void
@@ -139,17 +186,56 @@ class Maintenance extends Action
             Query::limit(200), // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
         ]);
 
+        // Out of attempts or without a renew date, a renewal is never scheduled
+        // again and its certificate would expire silently. One about to expire, or
+        // expired within the window, is checked regardless, so the worker renews
+        // it or reports why it cannot.
+        $due = \array_map(fn (Document $certificate) => $certificate->getId(), $documents);
+        try {
+            $expiring = $dbForPlatform->find('certificates', [
+                Query::greaterThan('expireDate', $time),
+                Query::lessThanEqual('expireDate', DatabaseDateTime::addSeconds(new \DateTime(), self::CERTIFICATE_RENEWAL_DEADLINE)),
+                Query::lessThan('$updatedAt', DatabaseDateTime::addSeconds(new \DateTime(), -60 * 60 * 12)), // At most twice a day, however often maintenance runs
+                Query::orderAsc('expireDate'),
+                Query::limit(100),
+            ]);
+            // A separate batch, so expired certificates never take the place of ones still serving
+            $expired = $dbForPlatform->find('certificates', [
+                Query::greaterThan('expireDate', DatabaseDateTime::addSeconds(new \DateTime(), -self::CERTIFICATE_EXPIRED_WINDOW)),
+                Query::lessThanEqual('expireDate', $time),
+                Query::lessThan('$updatedAt', DatabaseDateTime::addSeconds(new \DateTime(), -60 * 60 * 12)),
+                Query::orderDesc('expireDate'),
+                Query::limit(100),
+            ]);
+            $expiring = \array_merge($expiring, $expired);
+        } catch (QueryException $e) {
+            // A schema without expireDate (the migration has not run yet) must not stop the renewals above
+            Console::warning("[{$time}] Skipping certificates about to expire: " . $e->getMessage());
+            $expiring = [];
+        }
+
+        foreach ($expiring as $certificate) {
+            if (!\in_array($certificate->getId(), $due, true)) {
+                $documents[] = $certificate;
+            }
+        }
+
         if (\count($documents) === 0) {
             Console::info("[{$time}] No certificates for renewal.");
             return;
         }
 
         Console::info("[{$time}] Found " . \count($documents) . " certificates for renewal, scheduling jobs.");
+        Console::info(\sprintf('[maintenance] step=renew_certificates queries_done certificates=%d memory=%.1fMB', \count($documents), \memory_get_usage() / 1048576));
 
         $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
         $appRegion = System::getEnv('_APP_REGION', 'default');
 
-        foreach ($documents as $certificate) {
+        foreach ($documents as $index => $certificate) {
+            if ($index > 0 && $index % 25 === 0) {
+                Console::info(\sprintf('[maintenance] step=renew_certificates progress=%d/%d memory=%.1fMB', $index, \count($documents), \memory_get_usage() / 1048576));
+            }
+
             $domain = $certificate->getAttribute('domain');
             $rule = $isMd5 ?
                 $dbForPlatform->getDocument('rules', md5($domain)) :
@@ -183,19 +269,28 @@ class Maintenance extends Action
         }
     }
 
-    private function notifyDeleteCache($interval, DeletePublisher $publisherForDeletes): void
+    private function notifyDeleteCache(int $interval, Document $console, DeletePublisher $publisherForDeletes): void
     {
         $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $console,
             type: DELETE_TYPE_CACHE_BY_TIMESTAMP,
             datetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $interval),
         ));
     }
 
-    private function notifyDeleteSchedules($interval, DeletePublisher $publisherForDeletes): void
+    private function notifyDeleteSchedules(int $interval, DeletePublisher $publisherForDeletes): void
     {
         $publisherForDeletes->enqueue(new DeleteMessage(
             type: DELETE_TYPE_SCHEDULES,
             datetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $interval),
+        ));
+    }
+
+    private function notifyDeleteAlerts(int $retention, DeletePublisher $publisherForDeletes): void
+    {
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            type: DELETE_TYPE_ALERTS,
+            datetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $retention),
         ));
     }
 }

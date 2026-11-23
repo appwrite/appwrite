@@ -1,0 +1,31 @@
+---
+layout: article
+title: Breached passwords
+description: Configure breached password detection for your self-hosted Appwrite instance with _APP_PWNED_PASSWORDS_DSN. Connect Have I Been Pwned or your own breach service so Auth can flag, reject, and block leaked passwords.
+---
+
+Appwrite 2.3 and later can check user passwords against known data breaches with the [breached passwords](/docs/products/auth/security#breached-passwords) policy. On a self-hosted instance, the policy needs a breach service, which you set with the `_APP_PWNED_PASSWORDS_DSN` environment variable.
+
+The default value, `none://localhost`, reports every password as safe. Until you change it, the policy has no effect even when it's turned on in the Console: nothing is rejected or blocked, and every checked password is recorded as not breached.
+
+# Environment variables {% #environment-variables %}
+
+Set `_APP_PWNED_PASSWORDS_DSN` in the `.env` file of your Appwrite installation to one of these values.
+
+| Value | Breach service |
+| --- | --- |
+| `none://localhost` | Default. No service is called, and every password is reported as safe. |
+| `hibp://localhost` | The public [Have I Been Pwned](https://haveibeenpwned.com/Passwords) range API. Appwrite sends only the first five characters of the password's SHA-1 hash. |
+| `appwrite://<SECRET>@appwrite-pwned/v1/detection` | An Appwrite Pwned service that you run yourself, authenticated with `<SECRET>`. The service receives the full unsalted SHA-1 hash. Add `?tls=true` to connect over HTTPS. |
+
+To check passwords against Have I Been Pwned, add this line to your `.env` file:
+
+```sh
+_APP_PWNED_PASSWORDS_DSN=hibp://localhost
+```
+
+{% partial file="update-variables.md" /%}
+
+# Configure the policy {% #configure-policy %}
+
+Once the breach service is set, configure the policy for each project under **Auth** > **Policies** > **Passwords** > **Breached passwords** in the Appwrite Console. The [Auth security docs](/docs/products/auth/security#configure-breached-passwords) cover the enforcement options and the errors your app needs to handle.

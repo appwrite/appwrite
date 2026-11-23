@@ -8,12 +8,15 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
+use Utopia\Database\RelationshipDeleteAction;
+use Utopia\Database\RelationshipType;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Platform\Enum;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 class Create extends RelationshipCreate
@@ -54,25 +57,27 @@ class Create extends RelationshipCreate
                     )
                 ]
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Table ID.', false, ['dbForProject'])
-            ->param('relatedTableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Related Table ID.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Table ID.', false, ['dbForProject'])
+            ->param('relatedTableId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Related Table ID.', false, ['dbForProject'])
             ->param('type', '', new WhiteList([
-                Database::RELATION_ONE_TO_ONE,
-                Database::RELATION_MANY_TO_ONE,
-                Database::RELATION_MANY_TO_MANY,
-                Database::RELATION_ONE_TO_MANY
+                RelationshipType::OneToOne->value,
+                RelationshipType::ManyToOne->value,
+                RelationshipType::ManyToMany->value,
+                RelationshipType::OneToMany->value
             ], true), 'Relationship type. Possible values are: oneToOne, oneToMany, manyToOne, manyToMany.', enum: new Enum(name: 'RelationshipType'))
             ->param('twoWay', false, new Boolean(), 'Is Two Way?', true)
-            ->param('key', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'Column Key.', true, ['dbForProject'])
-            ->param('twoWayKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'Two Way Column Key.', true, ['dbForProject'])
-            ->param('onDelete', Database::RELATION_MUTATE_RESTRICT, new WhiteList([
-                Database::RELATION_MUTATE_CASCADE,
-                Database::RELATION_MUTATE_RESTRICT,
-                Database::RELATION_MUTATE_SET_NULL
+            ->param('key', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getMaxUidLength())), 'Column Key.', true, ['dbForProject'])
+            ->param('twoWayKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getMaxUidLength())), 'Two Way Column Key.', true, ['dbForProject'])
+            ->param('onDelete', RelationshipDeleteAction::Restrict->value, new WhiteList([
+                RelationshipDeleteAction::Cascade->value,
+                RelationshipDeleteAction::Restrict->value,
+                RelationshipDeleteAction::SetNull->value
             ], true), 'Delete constraint. Possible values are: cascade, restrict, setNull.', true, enum: new Enum(name: 'RelationMutate'))
+            ->param('description', '', new Text(1024, 0), 'Optional description for the column.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')

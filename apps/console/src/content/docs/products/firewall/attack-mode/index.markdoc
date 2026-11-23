@@ -1,0 +1,40 @@
+---
+layout: article
+title: Attack mode
+description: Turn on Attack mode in Appwrite Firewall to challenge every visitor to a site until you turn it off.
+---
+
+**Attack mode** is a one-click [challenge](/docs/products/firewall/actions#challenge) for the [site](/docs/products/sites) selected in Firewall. Use it during a traffic spike or an abuse incident to put a proof-of-work challenge in front of every visitor.
+
+Attack mode is available only for **Sites**. It does not apply to the project API or to Functions. Select a site in the Firewall resource selector to see the **Attack mode** button.
+
+# Turn it on {% #turn-it-on %}
+
+The first time you turn Attack mode on, Appwrite creates a rule. The project needs a free slot under its [plan limit](/docs/products/firewall/rules#plan-limits).
+
+Attack mode runs at priority `0`, ahead of bypass rules at the wizard default of `10`. If you rely on bypass rules to allowlist trusted traffic, give them a negative priority before you turn Attack mode on.
+
+1. Open **Firewall** in your project.
+2. Select the site you want to protect.
+3. Click **Attack mode**.
+4. Confirm **Turn on**.
+
+While Attack mode is on, a banner appears under the Firewall header: **Attack mode is on. Every visitor is challenged.**
+
+# What it creates {% #what-it-creates %}
+
+Appwrite creates (or re-enables) a **Challenge** rule named **Attack mode** on that site. The rule:
+
+- Matches **Path** **Starts with** `/`, so it matches every request to the site
+- Uses [priority](/docs/products/firewall/priority) `0`, so it runs before every rule at the wizard default
+- Uses difficulty `3` and a TTL of `1800` seconds
+
+The rule appears in the site's rules list like any other rule.
+
+# Turn it off {% #turn-it-off %}
+
+Click **Attack mode** again, or **Turn off** on the banner, and confirm. Appwrite disables the rule rather than deleting it, so you can turn it back on later. The rule stays in the project and counts toward [plan limits](/docs/products/firewall/rules#plan-limits).
+
+{% arrow_link href="/docs/products/firewall/actions#challenge" %}
+Challenge action
+{% /arrow_link %}

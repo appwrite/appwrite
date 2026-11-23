@@ -1,0 +1,55 @@
+{
+    "name": "utopia-php/circuit-breaker",
+    "description": "Light & simple Circuit Breaker for PHP to prevent cascading failures in distributed systems.",
+    "type": "library",
+    "keywords": [
+        "php",
+        "framework",
+        "upf",
+        "utopia",
+        "circuit-breaker",
+        "fault-tolerance",
+        "resilience"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Team Appwrite",
+            "email": "team@appwrite.io"
+        }
+    ],
+    "require": {
+        "php": ">=8.2"
+    },
+    "require-dev": {
+        "utopia-php/telemetry": "^0.4.6"
+    },
+    "suggest": {
+        "utopia-php/telemetry": "Required when passing telemetry adapters.",
+        "ext-opentelemetry": "Required by utopia-php/telemetry when using OpenTelemetry metrics.",
+        "ext-protobuf": "Required by utopia-php/telemetry when using OpenTelemetry metrics.",
+        "ext-redis": "Required when using Utopia\\CircuitBreaker\\Adapter\\Redis with the phpredis extension.",
+        "ext-swoole": "Required when using Utopia\\CircuitBreaker\\Adapter\\SwooleTable."
+    },
+    "autoload": {
+        "psr-4": {
+            "Utopia\\CircuitBreaker\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\CircuitBreaker\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --testsuite unit",
+        "test:e2e": "phpunit --testsuite e2e"
+    },
+    "minimum-stability": "stable",
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true,
+            "tbachert/spi": true
+        }
+    }
+}

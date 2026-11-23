@@ -5,6 +5,8 @@ namespace Appwrite\Platform\Installer\Http\Installer;
 use Appwrite\Platform\Installer\Runtime\Config;
 use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Http\Adapter\Swoole\Response;
 use Utopia\Platform\Action;
@@ -35,9 +37,7 @@ class Reset extends Action
 
     public function action(string $installId, bool $hard, Request $request, Response $response, State $state, Config $config): void
     {
-        if (!Validate::validateCsrf($request)) {
-            $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
-            $response->json(['success' => false, 'message' => 'Invalid CSRF token']);
+        if (!Validate::authorize($request, $response)) {
             return;
         }
 
@@ -79,30 +79,24 @@ class Reset extends Action
         $envFile = $path . '/' . $envFileName;
 
         if (file_exists($composeFile)) {
-            $command = [
-                'docker', 'compose',
-            ];
+            $command = (new Command('docker'))->argument('compose');
             if (file_exists($envFile)) {
-                $command[] = '--env-file';
-                $command[] = $envFile;
+                $command->option('--env-file', $envFile);
             }
-            $command = array_map(escapeshellarg(...), [
-                ...$command,
-                '-f',
-                $composeFile,
-                ...($isLocal ? ['--project-name', 'appwrite'] : []),
-                '--project-directory',
-                $path,
-                'down',
-                '-v',
-                '--remove-orphans',
-            ]);
+            $command->option('-f', $composeFile);
+            if ($isLocal) {
+                $command->option('--project-name', 'appwrite');
+            }
+            $command
+                ->option('--project-directory', $path)
+                ->argument('down')
+                ->flag('-v')
+                ->flag('--remove-orphans');
 
-            $output = [];
-            @exec(implode(' ', $command) . ' 2>&1', $output, $exitCode);
-
-            if ($exitCode !== 0) {
-                return 'Failed to stop containers: ' . trim(implode("\n", $output));
+            $stdout = '';
+            $stderr = '';
+            if (Console::execute($command, '', $stdout, $stderr) !== 0) {
+                return 'Failed to stop containers: ' . trim($stdout . "\n" . $stderr);
             }
 
             @unlink($composeFile);

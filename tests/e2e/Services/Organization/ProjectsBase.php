@@ -5,7 +5,7 @@ namespace Tests\E2E\Services\Organization;
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\System\System;
 
@@ -23,7 +23,7 @@ trait ProjectsBase
             return self::$cachedOrganization;
         }
 
-        $teamId = ID::unique();
+        $teamId = Id::unique();
         $team = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -75,7 +75,7 @@ trait ProjectsBase
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getOrganizationHeaders()), [
-                'projectId' => ID::unique(),
+                'projectId' => Id::unique(),
                 'name' => 'Organization Project Test',
                 'region' => System::getEnv('_APP_REGION', 'default'),
             ]);
@@ -106,7 +106,7 @@ trait ProjectsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Organization Project Test',
             'region' => System::getEnv('_APP_REGION', 'default'),
         ]);
@@ -124,7 +124,7 @@ trait ProjectsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getConsoleHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Organization Project Test',
             'region' => System::getEnv('_APP_REGION', 'default'),
         ]);
@@ -138,7 +138,7 @@ trait ProjectsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => '',
             'region' => System::getEnv('_APP_REGION', 'default'),
         ]);
@@ -149,7 +149,7 @@ trait ProjectsBase
     public function testCreateDuplicateProject(): void
     {
         $organization = $this->setupOrganization();
-        $projectId = ID::unique();
+        $projectId = Id::unique();
 
         $response = $this->client->call(Client::METHOD_POST, '/organization/projects', array_merge([
             'content-type' => 'application/json',
@@ -201,7 +201,7 @@ trait ProjectsBase
         /**
          * Test for FAILURE - project not found
          */
-        $response = $this->client->call(Client::METHOD_GET, '/organization/projects/' . ID::unique(), array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/organization/projects/' . Id::unique(), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()));
@@ -215,7 +215,7 @@ trait ProjectsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getConsoleHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Other Organization',
         ]);
         $this->assertContains($otherTeam['headers']['status-code'], [200]);
@@ -227,7 +227,7 @@ trait ProjectsBase
         ], array_merge($this->getConsoleHeaders(), [
             'x-appwrite-organization' => $otherTeamId,
         ])), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Other Organization Project',
             'region' => System::getEnv('_APP_REGION', 'default'),
         ]);
@@ -264,7 +264,7 @@ trait ProjectsBase
         /**
          * Test for FAILURE - project not found
          */
-        $response = $this->client->call(Client::METHOD_PATCH, '/organization/projects/' . ID::unique(), array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/organization/projects/' . Id::unique(), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()), [
@@ -294,7 +294,7 @@ trait ProjectsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project To Delete',
             'region' => System::getEnv('_APP_REGION', 'default'),
         ]);
@@ -341,7 +341,7 @@ trait ProjectsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Second Organization Project',
             'region' => System::getEnv('_APP_REGION', 'default'),
         ]);
@@ -463,20 +463,34 @@ trait ProjectsBase
 
     public function testListProjectsQuerySelect(): void
     {
-        $data = $this->setupOrganizationProject();
-        $projectId = $data['projectId'];
+        $name = 'Select Organization Project ' . Id::unique();
+
+        $project = $this->client->call(Client::METHOD_POST, '/organization/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getOrganizationHeaders()), [
+            'projectId' => Id::unique(),
+            'name' => $name,
+            'region' => System::getEnv('_APP_REGION', 'default'),
+        ]);
+
+        $this->assertEquals(201, $project['headers']['status-code']);
+        $projectId = $project['body']['$id'];
 
         $response = $this->client->call(Client::METHOD_GET, '/organization/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getOrganizationHeaders()), [
             'queries' => [
+                Query::equal('$id', [$projectId])->toString(),
                 Query::select(['name'])->toString(),
             ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['projects']);
-        $this->assertEquals('Organization Project Test', $response['body']['projects'][0]['name']);
+        $this->assertCount(1, $response['body']['projects']);
+        $this->assertSame($projectId, $response['body']['projects'][0]['$id']);
+        $this->assertSame($name, $response['body']['projects'][0]['name']);
+        $this->assertArrayNotHasKey('teamId', $response['body']['projects'][0]);
     }
 }

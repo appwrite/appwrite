@@ -11,6 +11,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Query\Method;
 
 require_once __DIR__ . '/../../../../../../app/init.php';
 require_once __DIR__ . '/../../../../../../src/Appwrite/Platform/Modules/Databases/Constants.php';
@@ -108,7 +109,7 @@ final class IndexesListTest extends TestCase
     private static function satisfies(Document $record, array $queries): bool
     {
         foreach ($queries as $query) {
-            if ($query->getMethod() !== Query::TYPE_EQUAL) {
+            if ($query->getMethod() !== Method::Equal) {
                 continue;
             }
             if (!\in_array($record->getAttribute($query->getAttribute()), $query->getValues(), true)) {

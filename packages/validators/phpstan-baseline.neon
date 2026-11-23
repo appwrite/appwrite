@@ -1,0 +1,31 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Cannot call method getType\(\) on Utopia\\Validator\\Assoc\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/AssocTest.php
+
+		-
+			message: '#^Cannot call method isArray\(\) on Utopia\\Validator\\Assoc\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/AssocTest.php
+
+		-
+			message: '#^Cannot call method isValid\(\) on Utopia\\Validator\\Assoc\|null\.$#'
+			identifier: method.nonObject
+			count: 9
+			path: tests/AssocTest.php
+
+		-
+			message: '#^Cannot call method getDescription\(\) on Utopia\\Validator\\URL\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/URLTest.php
+
+		-
+			message: '#^Cannot call method isValid\(\) on Utopia\\Validator\\URL\|null\.$#'
+			identifier: method.nonObject
+			count: 12
+			path: tests/URLTest.php

@@ -7,10 +7,10 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Services\Functions\FunctionsBase;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use WebSocket\TimeoutException;
 
 trait RealtimeQueryBase
@@ -114,7 +114,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Query Test DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -124,7 +124,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Test Collection',
             'permissions' => [
                 Permission::create(Role::user($user['$id'])),
@@ -152,7 +152,7 @@ trait RealtimeQueryBase
             $this->assertEquals('available', $response['body']['status']);
         }, 30000, 250);
 
-        $targetDocumentId = ID::unique();
+        $targetDocumentId = Id::unique();
 
         // Subscribe with query for specific document ID
         $client = $this->getWebsocket(['documents'], [
@@ -183,7 +183,7 @@ trait RealtimeQueryBase
         $this->assertEquals($targetDocumentId, $event['data']['payload']['$id']);
 
         // Create document with different ID - should NOT receive event
-        $otherDocumentId = ID::unique();
+        $otherDocumentId = Id::unique();
         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -212,7 +212,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'NotEqual Test DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -222,7 +222,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Test Collection',
             'permissions' => [
                 Permission::create(Role::user($user['$id'])),
@@ -250,7 +250,7 @@ trait RealtimeQueryBase
             $this->assertEquals('available', $response['body']['status']);
         }, 30000, 250);
 
-        $excludedDocumentId = ID::unique();
+        $excludedDocumentId = Id::unique();
 
         // Subscribe with query that excludes specific document ID
         $client = $this->getWebsocket(['documents'], [
@@ -263,7 +263,7 @@ trait RealtimeQueryBase
         $this->assertConnectionStatusIfSupported($client);
 
         // Create document with different ID - should receive event
-        $allowedDocumentId = ID::unique();
+        $allowedDocumentId = Id::unique();
         $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -310,7 +310,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'GreaterThan Test DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -320,7 +320,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Test Collection',
             'permissions' => [
                 Permission::create(Role::user($user['$id'])),
@@ -362,7 +362,7 @@ trait RealtimeQueryBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'score' => 75
             ],
@@ -380,7 +380,7 @@ trait RealtimeQueryBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'score' => 30
             ],
@@ -404,7 +404,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'LesserThan Test DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -414,7 +414,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Test Collection',
             'permissions' => [
                 Permission::create(Role::user($user['$id'])),
@@ -456,7 +456,7 @@ trait RealtimeQueryBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'age' => 15
             ],
@@ -474,7 +474,7 @@ trait RealtimeQueryBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'age' => 25
             ],
@@ -498,7 +498,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'GreaterEqual Test DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -508,7 +508,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Test Collection',
             'permissions' => [
                 Permission::create(Role::user($user['$id'])),
@@ -550,7 +550,7 @@ trait RealtimeQueryBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'priority' => 5
             ],
@@ -568,7 +568,7 @@ trait RealtimeQueryBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'priority' => 8
             ],
@@ -586,7 +586,7 @@ trait RealtimeQueryBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'priority' => 3
             ],
@@ -610,7 +610,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'LesserEqual Test DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -620,7 +620,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Test Collection',
             'permissions' => [
                 Permission::create(Role::user($user['$id'])),
@@ -662,7 +662,7 @@ trait RealtimeQueryBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'level' => 10
             ],
@@ -680,7 +680,7 @@ trait RealtimeQueryBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'level' => 7
             ],
@@ -698,7 +698,7 @@ trait RealtimeQueryBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'level' => 15
             ],
@@ -722,7 +722,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'IsNull Test DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -732,7 +732,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Test Collection',
             'permissions' => [
                 Permission::create(Role::user($user['$id'])),
@@ -775,7 +775,7 @@ trait RealtimeQueryBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'description' => null
             ],
@@ -792,7 +792,7 @@ trait RealtimeQueryBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'description' => 'Has description'
             ],
@@ -816,7 +816,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'IsNotNull Test DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -826,7 +826,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Test Collection',
             'permissions' => [
                 Permission::create(Role::user($user['$id'])),
@@ -869,7 +869,7 @@ trait RealtimeQueryBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'email' => 'test@example.com'
             ],
@@ -887,7 +887,7 @@ trait RealtimeQueryBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [],
             'permissions' => [
                 Permission::read(Role::any()),
@@ -909,7 +909,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'And Test DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -919,7 +919,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Test Collection',
             'permissions' => [
                 Permission::create(Role::user($user['$id'])),
@@ -980,7 +980,7 @@ trait RealtimeQueryBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'status' => 'active',
                 'priority' => 8
@@ -1000,7 +1000,7 @@ trait RealtimeQueryBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'status' => 'active',
                 'priority' => 3
@@ -1022,7 +1022,7 @@ trait RealtimeQueryBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'status' => 'inactive',
                 'priority' => 9
@@ -1047,7 +1047,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Or Test DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -1057,7 +1057,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Test Collection',
             'permissions' => [
                 Permission::create(Role::user($user['$id'])),
@@ -1103,7 +1103,7 @@ trait RealtimeQueryBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'type' => 'urgent'
             ],
@@ -1121,7 +1121,7 @@ trait RealtimeQueryBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'type' => 'critical'
             ],
@@ -1139,7 +1139,7 @@ trait RealtimeQueryBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'type' => 'normal'
             ],
@@ -1163,7 +1163,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Complex Query Test DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -1173,7 +1173,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Test Collection',
             'permissions' => [
                 Permission::create(Role::user($user['$id'])),
@@ -1237,7 +1237,7 @@ trait RealtimeQueryBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'category' => 'premium',
                 'score' => 85
@@ -1257,7 +1257,7 @@ trait RealtimeQueryBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'category' => 'vip',
                 'score' => 90
@@ -1277,7 +1277,7 @@ trait RealtimeQueryBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'category' => 'premium',
                 'score' => 70
@@ -1299,7 +1299,7 @@ trait RealtimeQueryBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'category' => 'standard',
                 'score' => 85
@@ -1331,7 +1331,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Scoped Channel DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -1341,7 +1341,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Scoped Channel Collection',
             'permissions' => [
                 Permission::create(Role::user($user['$id'])),
@@ -1382,7 +1382,7 @@ trait RealtimeQueryBase
         }
 
         // Create document in that collection - should receive event on the scoped channel
-        $documentId = ID::unique();
+        $documentId = Id::unique();
         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -1415,7 +1415,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Scoped Channel Query DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -1425,7 +1425,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Scoped Channel Query Collection',
             'permissions' => [
                 Permission::create(Role::user($user['$id'])),
@@ -1453,7 +1453,7 @@ trait RealtimeQueryBase
             $this->assertEquals('available', $response['body']['status']);
         }, 30000, 250);
 
-        $targetDocumentId = ID::unique();
+        $targetDocumentId = Id::unique();
 
         // Subscribe with query for specific document ID on the fully-qualified documents channel
         $scopedChannel = 'databases.' . $databaseId . '.collections.' . $collectionId . '.documents';
@@ -1488,7 +1488,7 @@ trait RealtimeQueryBase
         $this->assertEquals($targetDocumentId, $event['data']['payload']['$id']);
 
         // Create document with different ID - should NOT receive event
-        $otherDocumentId = ID::unique();
+        $otherDocumentId = Id::unique();
         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -1524,7 +1524,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Query Test Bucket',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1533,7 +1533,7 @@ trait RealtimeQueryBase
         ]);
         $bucketId = $bucket['body']['$id'];
 
-        $targetFileId = ID::unique();
+        $targetFileId = Id::unique();
 
         // Subscribe with query for specific file ID
         $client = $this->getWebsocket(['files'], [
@@ -1562,7 +1562,7 @@ trait RealtimeQueryBase
         $this->assertEquals($targetFileId, $event['data']['payload']['$id']);
 
         // Create file with different ID - should NOT receive event
-        $otherFileId = ID::unique();
+        $otherFileId = Id::unique();
         $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $projectId,
@@ -1596,7 +1596,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Multiple Queries Test DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -1606,7 +1606,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Test Collection',
             'permissions' => [
                 Permission::create(Role::user($user['$id'])),
@@ -1634,7 +1634,7 @@ trait RealtimeQueryBase
             $this->assertEquals('available', $response['body']['status']);
         }, 30000, 250);
 
-        $targetDocId = ID::unique();
+        $targetDocId = Id::unique();
 
         // Subscribe with multiple 'queries' (AND logic - ALL 'queries' must match for event to be received)
         $client = $this->getWebsocket(['documents'], [
@@ -1669,7 +1669,7 @@ trait RealtimeQueryBase
         // Create document matching NEITHER query - should not receive event
         // keeping it here as below are the documents created with status=>active
         // so it will also be received, but the query key can be used to distinguish it
-        $anotherDocId = ID::unique();
+        $anotherDocId = Id::unique();
         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -1726,7 +1726,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Query Keys Test DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -1736,7 +1736,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Query Keys Collection',
             'permissions' => [
                 Permission::create(Role::user($user['$id'])),
@@ -1827,7 +1827,7 @@ trait RealtimeQueryBase
         }
 
         // 1) Create active/gold document -> should match Q1 and complex, and be seen by all
-        $docActiveGoldId = ID::unique();
+        $docActiveGoldId = Id::unique();
         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -1878,7 +1878,7 @@ trait RealtimeQueryBase
         $this->assertNotEmpty($eventComplex['data']['subscriptions']);
 
         // 2) Create pending/silver document -> should match Q2 only, and be seen by all
-        $docPendingSilverId = ID::unique();
+        $docPendingSilverId = Id::unique();
         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -1950,7 +1950,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Multiple Query Keys Test DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -1960,7 +1960,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Multiple Query Keys Collection',
             'permissions' => [
                 Permission::create(Role::user($user['$id'])),
@@ -2012,7 +2012,7 @@ trait RealtimeQueryBase
         $this->assertConnectionStatusIfSupported($clientQ2);
 
         // 1) active document -> only queryStatusActive subscription should see it
-        $docActiveId = ID::unique();
+        $docActiveId = Id::unique();
         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -2042,7 +2042,7 @@ trait RealtimeQueryBase
         }
 
         // 2) pending document -> only queryStatusPending subscription should see it
-        $docPendingId = ID::unique();
+        $docPendingId = Id::unique();
         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -2088,7 +2088,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Permission Change Test DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -2098,7 +2098,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Permission Change Collection',
             'permissions' => [
                 Permission::create(Role::user($userId)),
@@ -2127,7 +2127,7 @@ trait RealtimeQueryBase
             $this->assertEquals('available', $response['body']['status']);
         }, 30000, 250);
 
-        $targetDocumentId = ID::unique();
+        $targetDocumentId = Id::unique();
 
         // Subscribe with query for specific document ID
         $client = $this->getWebsocket(['documents'], [
@@ -2183,7 +2183,7 @@ trait RealtimeQueryBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $teamOwnerEmail,
             'password' => $teamOwnerPassword,
             'name' => 'Team Owner',
@@ -2208,7 +2208,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $projectId,
             'cookie' => 'a_session_' . $projectId . '=' . $teamOwnerSession,
         ], [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Test Team',
         ]);
         $teamId = $team['body']['$id'];
@@ -2227,7 +2227,7 @@ trait RealtimeQueryBase
         sleep(1);
 
         // Verify subscription is still working after permission change
-        $nonMatchingDocumentId = ID::unique();
+        $nonMatchingDocumentId = Id::unique();
         $document2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -2251,7 +2251,7 @@ trait RealtimeQueryBase
         }
 
         // Create a NEW document with a different ID - should NOT receive event
-        $targetDocumentId2 = ID::unique();
+        $targetDocumentId2 = Id::unique();
         $document3 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -2455,7 +2455,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Action Channel DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -2465,7 +2465,7 @@ trait RealtimeQueryBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
@@ -2581,7 +2581,7 @@ trait RealtimeQueryBase
         $this->assertConnectionStatusIfSupported($clientUpdate);
         $this->assertConnectionStatusIfSupported($clientUpsert);
 
-        $documentId = ID::unique();
+        $documentId = Id::unique();
         $this->createActor($databaseId, $collectionId, $documentId, 'Chris Evans');
 
         // Create event delivers only to the .create subscriber.
@@ -2645,7 +2645,7 @@ trait RealtimeQueryBase
         ]), [
             'documents' => [
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Robert Downey Jr.',
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -2707,7 +2707,7 @@ trait RealtimeQueryBase
         }
 
         // Creating a *different* document should not trigger the watched-id subscription.
-        $this->createActor($databaseId, $collectionId, ID::unique(), 'Other Actor');
+        $this->createActor($databaseId, $collectionId, Id::unique(), 'Other Actor');
 
         try {
             $clientWatched->receive();
@@ -2842,7 +2842,7 @@ trait RealtimeQueryBase
             $this->assertContains($deleteChannel, $connected['data']['channels']);
         }
 
-        $documentId = ID::unique();
+        $documentId = Id::unique();
         $this->createActor($databaseId, $collectionId, $documentId, 'About To Be Deleted');
 
         // Create event must not arrive — the action filter is `delete`.
@@ -2891,7 +2891,7 @@ trait RealtimeQueryBase
             $this->assertContains('documents.bogus', $connected['data']['channels']);
         }
 
-        $documentId = ID::unique();
+        $documentId = Id::unique();
         $this->createActor($databaseId, $collectionId, $documentId, 'No Bogus Listener');
 
         $this->client->call(Client::METHOD_DELETE, "/databases/{$databaseId}/collections/{$collectionId}/documents/{$documentId}", array_merge([

@@ -1,0 +1,54 @@
+{
+    "name": "utopia-php/pools",
+    "description": "A simple library to manage connection pools",
+    "type": "library",
+    "keywords": [
+        "php",
+        "framework",
+        "utopia",
+        "pools"
+    ],
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "authors": [
+        {
+            "name": "Team Appwrite",
+            "email": "team@appwrite.io"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Pools\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Pools\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --configuration phpunit.xml --testsuite unit"
+    },
+    "require": {
+        "php": ">=8.4",
+        "utopia-php/telemetry": "^0.4.6"
+    },
+    "require-dev": {
+        "swoole/ide-helper": "6.*"
+    },
+    "suggest": {
+        "ext-mongodb": "Needed to support MongoDB database pools",
+        "ext-redis": "Needed to support Redis cache pools",
+        "ext-pdo": "Needed to support MariaDB, MySQL or SQLite database pools",
+        "ext-swoole": "Needed to support Swoole based pool adapter"
+    },
+    "config": {
+        "platform": {
+            "php": "8.4"
+        },
+        "allow-plugins": {
+            "php-http/discovery": false,
+            "tbachert/spi": false
+        }
+    }
+}

@@ -10,9 +10,9 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
 
@@ -27,6 +27,7 @@ final class VCSGitHubConsoleClientTest extends Scope
     public string $providerRepositoryId2 = '708688544'; // function1.4 (private)
     public string $providerRepositoryId3 = '943139433'; // svelte-starter (public)
     public string $providerRepositoryId4 = '943245292'; // templates-for-sites (public)
+    public string $foreignProviderRepositoryId = '180190854'; // appwrite/appwrite (public, outside the installation)
 
     private static array $cachedInstallationId = [];
     private static array $cachedFunctionData = [];
@@ -72,7 +73,7 @@ final class VCSGitHubConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'php-8.0',
@@ -109,6 +110,107 @@ final class VCSGitHubConsoleClientTest extends Scope
         ]);
 
         $this->assertNotEmpty($response['body']['installationId']);
+    }
+
+    public function testGitHubCallbackRejectsUnverifiedInstallation(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $failure = 'http://localhost/console/project-' . $projectId . '/failure';
+        $before = $this->countGitHubInstallationsHelper($projectId);
+
+        /**
+         * Test for FAILURE
+         */
+        $missingCode = $this->client->call(Client::METHOD_GET, '/vcs/github/callback', array_merge([
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'installation_id' => $this->providerInstallationId,
+            'setup_action' => 'install',
+            'state' => $this->buildGitHubState($projectId, $failure),
+        ], true, false);
+
+        $this->assertSame(301, $missingCode['headers']['status-code']);
+        $this->assertStringStartsWith($failure . '?error=', (string) $missingCode['headers']['location']);
+        $this->assertStringContainsString('authorization code', \urldecode((string) $missingCode['headers']['location']));
+
+        $this->assertSame($before, $this->countGitHubInstallationsHelper($projectId));
+    }
+
+    public function testGitHubCallbackRejectsUnboundState(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $failure = 'http://localhost/console/project-' . $projectId . '/failure';
+
+        /**
+         * Test for FAILURE
+         */
+        $otherUser = $this->callGitHubCallbackHelper($this->buildGitHubState($projectId, $failure, 'user-' . \uniqid()));
+
+        $this->assertSame(301, $otherUser['headers']['status-code']);
+        $this->assertStringStartsWith($failure . '?error=', (string) $otherUser['headers']['location']);
+        $this->assertStringContainsString('different Appwrite account', \urldecode((string) $otherUser['headers']['location']));
+
+        $expired = $this->callGitHubCallbackHelper($this->buildGitHubState($projectId, $failure, expire: \time() - 60));
+
+        $this->assertSame(301, $expired['headers']['status-code']);
+        $this->assertStringContainsString('expired', \urldecode((string) $expired['headers']['location']));
+
+        $state = $this->buildGitHubState($projectId, $failure);
+        $first = $this->callGitHubCallbackHelper($state);
+
+        $this->assertSame(301, $first['headers']['status-code']);
+        $this->assertStringContainsString('organization owners', \urldecode((string) $first['headers']['location']));
+
+        $replay = $this->callGitHubCallbackHelper($state);
+
+        $this->assertSame(301, $replay['headers']['status-code']);
+        $this->assertStringContainsString('already used', \urldecode((string) $replay['headers']['location']));
+    }
+
+    private function buildGitHubState(string $projectId, string $failure, ?string $userId = null, ?int $expire = null): string
+    {
+        $userId ??= $this->getRoot()['$id'];
+        $expire ??= \time() + 600;
+        $nonce = \bin2hex(\random_bytes(16));
+
+        return (string) \json_encode([
+            'projectId' => $projectId,
+            'userId' => $userId,
+            'success' => $failure,
+            'failure' => $failure,
+            'expire' => $expire,
+            'nonce' => $nonce,
+            'signature' => \hash_hmac('sha256', (string) \json_encode([$projectId, $userId, $failure, $failure, $expire, $nonce]), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function callGitHubCallbackHelper(string $state): array
+    {
+        // No installation id: the setup_action=request path, which needs no GitHub call
+        return $this->client->call(Client::METHOD_GET, '/vcs/github/callback', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'setup_action' => 'request',
+            'state' => $state,
+        ], true, false);
+    }
+
+    private function countGitHubInstallationsHelper(string $projectId): int
+    {
+        $installations = $this->client->call(Client::METHOD_GET, '/vcs/installations', array_merge([
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('provider', ['github'])->toString(),
+            ],
+        ]);
+
+        $this->assertSame(200, $installations['headers']['status-code']);
+
+        return $installations['body']['total'];
     }
 
     public function testGetInstallation(): void
@@ -589,6 +691,31 @@ final class VCSGitHubConsoleClientTest extends Scope
         $this->assertEquals(400, $repositoryBranches['headers']['status-code']);
     }
 
+    public function testListTotal(): void
+    {
+        $installationId = $this->setupInstallation();
+        $headers = array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $lists = [
+            ['/vcs/github/installations/' . $installationId . '/providerRepositories', ['type' => 'runtime'], 'runtimeProviderRepositories'],
+            ['/vcs/github/installations/' . $installationId . '/providerRepositories/' . $this->providerRepositoryId . '/branches', [], 'branches'],
+            ['/vcs/installations/' . $installationId . '/namespaces', [], 'namespaces'],
+        ];
+
+        foreach ($lists as [$path, $params, $key]) {
+            $response = $this->client->call(Client::METHOD_GET, $path, $headers, $params + ['total' => true]);
+            $this->assertEquals(200, $response['headers']['status-code'], $path);
+            $this->assertGreaterThan(0, $response['body']['total'], $path);
+
+            $response = $this->client->call(Client::METHOD_GET, $path, $headers, $params + ['total' => false]);
+            $this->assertEquals(200, $response['headers']['status-code'], $path);
+            $this->assertEquals(0, $response['body']['total'], $path);
+            $this->assertNotEmpty($response['body'][$key], $path);
+        }
+    }
+
     public function testCreateFunctionUsingVCS(): void
     {
         $installationId = $this->setupInstallation();
@@ -597,7 +724,7 @@ final class VCSGitHubConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'php-8.0',
@@ -621,9 +748,8 @@ final class VCSGitHubConsoleClientTest extends Scope
         $this->assertEquals('main', $function['body']['providerBranch']);
     }
 
-    public function testGitHubPushCreatesFunctionDeploymentWithoutProjectHeader(): void
+    private function sendPushEvent(?string $providerInstallationId = null): array
     {
-        $data = $this->setupFunctionUsingVCS();
         $github = new GitHub(new Cache(new None()));
         $github->initializeVariables(
             $this->providerInstallationId,
@@ -645,7 +771,7 @@ final class VCSGitHubConsoleClientTest extends Scope
                 'html_url' => 'https://github.com/appwrite-test/ruby-starter',
                 'owner' => ['name' => 'appwrite-test'],
             ],
-            'installation' => ['id' => (int) $this->providerInstallationId],
+            'installation' => ['id' => (int) ($providerInstallationId ?? $this->providerInstallationId)],
             'head_commit' => [
                 'author' => [
                     'name' => $commit['commitAuthor'],
@@ -668,18 +794,48 @@ final class VCSGitHubConsoleClientTest extends Scope
         $headers = [
             'content-type' => 'application/json',
             'x-github-event' => 'push',
-        ];
-        $secret = System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
-        if (!empty($secret)) {
-            $headers['x-hub-signature-256'] = 'sha256=' . \hash_hmac(
+            'x-hub-signature-256' => 'sha256=' . \hash_hmac(
                 'sha256',
                 \json_encode($payload, JSON_THROW_ON_ERROR),
-                $secret,
-            );
-        }
+                System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', ''),
+            ),
+        ];
 
         // GitHub webhooks are public and intentionally have no x-appwrite-project header.
         $event = $this->client->call(Client::METHOD_POST, '/vcs/github/events', $headers, $payload);
+
+        return ['event' => $event, 'commit' => $commit];
+    }
+
+    public function testCreateEventWithInvalidSignature(): void
+    {
+        $payload = [
+            'action' => 'deleted',
+            'installation' => ['id' => (int) $this->providerInstallationId],
+        ];
+
+        $event = $this->client->call(Client::METHOD_POST, '/vcs/github/events', [
+            'content-type' => 'application/json',
+            'x-github-event' => 'installation',
+        ], $payload);
+
+        $this->assertEquals(403, $event['headers']['status-code']);
+        $this->assertEquals('general_access_forbidden', $event['body']['type']);
+
+        $event = $this->client->call(Client::METHOD_POST, '/vcs/github/events', [
+            'content-type' => 'application/json',
+            'x-github-event' => 'installation',
+            'x-hub-signature-256' => 'sha256=' . \hash_hmac('sha256', \json_encode($payload, JSON_THROW_ON_ERROR), 'wrong-secret'),
+        ], $payload);
+
+        $this->assertEquals(403, $event['headers']['status-code']);
+        $this->assertEquals('general_access_forbidden', $event['body']['type']);
+    }
+
+    public function testGitHubPushCreatesFunctionDeploymentWithoutProjectHeader(): void
+    {
+        $data = $this->setupFunctionUsingVCS();
+        ['event' => $event, 'commit' => $commit] = $this->sendPushEvent();
 
         $this->assertEquals(200, $event['headers']['status-code']);
 
@@ -697,6 +853,117 @@ final class VCSGitHubConsoleClientTest extends Scope
         $this->assertSame($data['functionId'], $deployments['body']['deployments'][0]['resourceId']);
     }
 
+    public function testGitHubPushForDeletedFunctionIsSkipped(): void
+    {
+        $installationId = $this->setupInstallation();
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => Id::unique(),
+            'name' => 'Deleted before push',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'installationId' => $installationId,
+            'providerRepositoryId' => $this->providerRepositoryId,
+            'providerBranch' => 'main',
+        ]);
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+
+        $delete = $this->client->call(Client::METHOD_DELETE, '/functions/' . $function['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $delete['headers']['status-code']);
+
+        ['event' => $event] = $this->sendPushEvent();
+
+        $this->assertEquals(200, $event['headers']['status-code']);
+    }
+
+    public function testGitHubPushFromAnotherInstallationIsIgnored(): void
+    {
+        $data = $this->setupFunctionUsingVCS();
+        $headers = array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $before = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments', $headers, [
+            'queries' => [Query::equal('type', ['vcs'])->toString()],
+        ]);
+        $this->assertEquals(200, $before['headers']['status-code']);
+
+        ['event' => $event] = $this->sendPushEvent('1');
+
+        $this->assertEquals(200, $event['headers']['status-code']);
+
+        $after = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments', $headers, [
+            'queries' => [Query::equal('type', ['vcs'])->toString()],
+        ]);
+        $this->assertEquals(200, $after['headers']['status-code']);
+        $this->assertSame($before['body']['total'], $after['body']['total']);
+    }
+
+    public function testConnectRepositoryOutsideInstallationRejected(): void
+    {
+        $installationId = $this->setupInstallation();
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', $headers, [
+            'functionId' => Id::unique(),
+            'name' => 'Foreign repository',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'installationId' => $installationId,
+            'providerRepositoryId' => $this->foreignProviderRepositoryId,
+            'providerBranch' => 'main',
+        ]);
+
+        $this->assertEquals(404, $function['headers']['status-code']);
+        $this->assertEquals('provider_repository_not_found', $function['body']['type']);
+
+        $site = $this->client->call(Client::METHOD_POST, '/sites', $headers, [
+            'siteId' => Id::unique(),
+            'name' => 'Foreign repository',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'installationId' => $installationId,
+            'providerRepositoryId' => $this->foreignProviderRepositoryId,
+            'providerBranch' => 'main',
+        ]);
+
+        $this->assertEquals(404, $site['headers']['status-code']);
+        $this->assertEquals('provider_repository_not_found', $site['body']['type']);
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', $headers, [
+            'functionId' => Id::unique(),
+            'name' => 'Foreign repository',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+        ]);
+        $this->assertEquals(201, $function['headers']['status-code']);
+
+        $update = $this->client->call(Client::METHOD_PUT, '/functions/' . $function['body']['$id'], $headers, [
+            'name' => 'Foreign repository',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'installationId' => $installationId,
+            'providerRepositoryId' => $this->foreignProviderRepositoryId,
+            'providerBranch' => 'main',
+        ]);
+
+        $this->assertEquals(404, $update['headers']['status-code']);
+        $this->assertEquals('provider_repository_not_found', $update['body']['type']);
+
+        $this->client->call(Client::METHOD_DELETE, '/functions/' . $function['body']['$id'], $headers);
+    }
+
     public function testUpdateFunctionUsingVCS(): void
     {
         $data = $this->setupFunctionUsingVCS();
@@ -705,7 +972,7 @@ final class VCSGitHubConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'php-8.0',
@@ -758,7 +1025,7 @@ final class VCSGitHubConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test Site VCS',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -802,13 +1069,13 @@ final class VCSGitHubConsoleClientTest extends Scope
         ];
 
         $team = $this->createTeamFixture($consoleHeaders, [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Cross Project Team',
         ]);
         $this->assertEquals(200, $team['headers']['status-code']);
 
         $project2 = $this->client->call(Client::METHOD_POST, '/projects', $consoleHeaders, [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Cross Project Test',
             'teamId' => $team['body']['$id'],
             'region' => System::getEnv('_APP_REGION', 'default'),
@@ -817,7 +1084,7 @@ final class VCSGitHubConsoleClientTest extends Scope
         $project2Id = $project2['body']['$id'];
 
         $key = $this->client->call(Client::METHOD_POST, '/projects/' . $project2Id . '/keys', $consoleHeaders, [
-            'keyId' => ID::unique(),
+            'keyId' => Id::unique(),
             'name' => 'Test Key',
             'scopes' => ['functions.write', 'sites.write'],
         ]);
@@ -832,7 +1099,7 @@ final class VCSGitHubConsoleClientTest extends Scope
         try {
             // createFunction with installation from project 1 → should fail
             $function = $this->client->call(Client::METHOD_POST, '/functions', $headers2, [
-                'functionId' => ID::unique(),
+                'functionId' => Id::unique(),
                 'name' => 'Test Cross',
                 'runtime' => 'php-8.0',
                 'entrypoint' => 'index.php',
@@ -844,7 +1111,7 @@ final class VCSGitHubConsoleClientTest extends Scope
 
             // createSite with installation from project 1 → should fail
             $site = $this->client->call(Client::METHOD_POST, '/sites', $headers2, [
-                'siteId' => ID::unique(),
+                'siteId' => Id::unique(),
                 'name' => 'Test Cross Site',
                 'framework' => 'other',
                 'buildRuntime' => 'node-22',
@@ -856,7 +1123,7 @@ final class VCSGitHubConsoleClientTest extends Scope
 
             // updateFunction with cross-project installation → should fail
             $fn = $this->client->call(Client::METHOD_POST, '/functions', $headers2, [
-                'functionId' => ID::unique(),
+                'functionId' => Id::unique(),
                 'name' => 'Test No VCS',
                 'runtime' => 'php-8.0',
                 'entrypoint' => 'index.php',
@@ -875,7 +1142,7 @@ final class VCSGitHubConsoleClientTest extends Scope
 
             // updateSite with cross-project installation → should fail
             $siteNoVcs = $this->client->call(Client::METHOD_POST, '/sites', $headers2, [
-                'siteId' => ID::unique(),
+                'siteId' => Id::unique(),
                 'name' => 'Test No VCS Site',
                 'framework' => 'other',
                 'buildRuntime' => 'node-22',

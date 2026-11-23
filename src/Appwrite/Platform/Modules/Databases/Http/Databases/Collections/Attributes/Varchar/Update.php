@@ -15,11 +15,12 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
-use Utopia\Validator;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
+use Utopia\Validator\Validator;
 
 class Update extends Action
 {
@@ -71,8 +72,10 @@ class Update extends Action
             ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.', example: 'Hello World')
             ->param('size', null, new Nullable(new Range(1, 16381, Validator::TYPE_INTEGER)), 'Maximum size of the varchar attribute.', true)
             ->param('newKey', null, new Nullable(new Key()), 'New Attribute Key.', true)
+            ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the attribute.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));
@@ -86,8 +89,10 @@ class Update extends Action
         ?string        $default,
         ?int           $size,
         ?string        $newKey,
+        ?string        $description,
         UtopiaResponse $response,
         Database       $dbForProject,
+        callable       $getDatabasesDB,
         Event          $queueForEvents,
         Authorization  $authorization
     ): void {
@@ -96,13 +101,15 @@ class Update extends Action
             collectionId: $collectionId,
             key: $key,
             dbForProject: $dbForProject,
+            getDatabasesDB: $getDatabasesDB,
             queueForEvents: $queueForEvents,
             authorization: $authorization,
-            type: Database::VAR_VARCHAR,
+            type: ColumnType::Varchar->value,
             size: $size,
             default: $default,
             required: $required,
-            newKey: $newKey
+            newKey: $newKey,
+            description: $description
         );
 
         $response

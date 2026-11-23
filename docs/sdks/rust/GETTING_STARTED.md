@@ -1,68 +1,77 @@
 ## Getting Started
 
 ### Init your SDK
-Initialize your SDK with your Appwrite server API endpoint and project ID which can be found on your project settings page and your new API secret Key from project's API keys section.
+
+Create a client with your Appwrite API endpoint, project ID and an API key. You can find the project ID in your project settings, and create an API key with the scopes you need in your project's API keys section.
 
 ```rust
-use appwrite::client::Client;
+use appwrite::Client;
 
 let client = Client::new()
-    .set_endpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
-    .set_project("5df5acd0d48c2") // Your project ID
-    .set_key("919c2d18fb5d4...a2ae413da83346ad2") // Your secret API key
-    .set_self_signed(true); // Use only on dev mode with a self-signed SSL cert
+    .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .set_project("<YOUR_PROJECT_ID>")
+    .set_key("<YOUR_API_KEY>");
 ```
 
-### Make Your First Request
-Once your SDK object is set, create any of the Appwrite service objects and choose any request to send. Full documentation for any service method you would like to use can be found in your SDK documentation or in the [API References](https://appwrite.io/docs) section.
+If you self-host Appwrite, use your own endpoint, such as `https://<HOSTNAME_OR_IP>/v1`. Add `.set_self_signed(true)` only in development, when your server uses a self-signed certificate.
+
+### Make your first request
+
+Create a service from the client and call any of its methods. Every method is `async` and returns `appwrite::Result<T>`. Optional parameters take an `Option`; pass `None` to skip one.
 
 ```rust
-use appwrite::client::Client;
-use appwrite::services::users::Users;
 use appwrite::id::ID;
+use appwrite::services::Users;
+use appwrite::Client;
 
-let client = Client::new()
-    .set_endpoint("https://[HOSTNAME_OR_IP]/v1")
-    .set_project("5df5acd0d48c2")
-    .set_key("919c2d18fb5d4...a2ae413da83346ad2")
-    .set_self_signed(true);
+#[tokio::main]
+async fn main() -> appwrite::Result<()> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<YOUR_PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
 
-let users = Users::new(&client);
+    let users = Users::new(&client);
 
-let user = users.create(
-    ID::unique(),
-    Some("email@example.com"),
-    Some("+123456789"),
-    Some("password"),
-    Some("Walter O'Brien"),
-).await?;
+    let user = users
+        .create(
+            ID::unique(),
+            Some("email@example.com"),
+            None,
+            Some("password"),
+            Some("Walter O'Brien"),
+        )
+        .await?;
 
-println!("{}", user.name);
-println!("{}", user.email);
+    println!("{} {} {}", user.id, user.name, user.email);
+
+    Ok(())
+}
 ```
 
-### Error Handling
-The Appwrite Rust SDK returns `Result` types. You can handle errors using standard Rust error handling patterns. Below is an example.
+### Error handling
+
+Failed requests return an `AppwriteError` with the HTTP status `code`, the `message`, the error type and the raw `response` body.
 
 ```rust
-use appwrite::error::AppwriteError;
-
-match users.create(
-    ID::unique(),
-    Some("email@example.com"),
-    Some("+123456789"),
-    Some("password"),
-    Some("Walter O'Brien"),
-).await {
+match users
+    .create(ID::unique(), Some("email@example.com"), None, None, None)
+    .await
+{
     Ok(user) => println!("{}", user.name),
-    Err(AppwriteError { message, code, .. }) => {
-        eprintln!("Error {}: {}", code, message);
-    }
+    Err(error) => eprintln!(
+        "Appwrite error {} ({}): {}",
+        error.code,
+        error.get_type().unwrap_or("unknown"),
+        error.message
+    ),
 }
 ```
 
 ### Learn more
-You can use the following resources to learn more and get help
-- 🚀 [Getting Started Tutorial](https://appwrite.io/docs/getting-started-for-server)
-- 📜 [Appwrite Docs](https://appwrite.io/docs)
-- 💬 [Discord Community](https://appwrite.io/discord)
+
+- [Rust quick start](https://appwrite.io/docs/quick-starts/rust)
+- [Rust API reference](https://appwrite.io/docs/references/cloud/server-rust)
+- [Crate documentation](https://docs.rs/appwrite)
+- [Appwrite docs](https://appwrite.io/docs)
+- [Discord community](https://appwrite.io/discord)

@@ -1,0 +1,16 @@
+.git
+node_modules
+dist
+.output
+.nitro
+.tanstack
+.cache
+.vite
+coverage
+test-results
+playwright-report
+e2e/.auth
+.env
+.env.*
+Dockerfile
+.dockerignore

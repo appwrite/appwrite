@@ -18,12 +18,16 @@ class Service
         $ports = (isset($this->service['ports']) && is_array($this->service['ports'])) ? $this->service['ports'] : [];
         $this->service['ports'] = [];
 
-        array_walk($ports, function (&$value, $key) {
-            $split = explode(':', $value);
-            $this->service['ports'][
-                $split[0]
-            ] = (isset($split[1])) ? $split[1] : '';
-        });
+        foreach ($ports as $port) {
+            $port = (string) $port;
+            $separator = strrpos($port, ':');
+            if ($separator === false) {
+                $this->service['ports'][$port] = '';
+                continue;
+            }
+
+            $this->service['ports'][substr($port, 0, $separator)] = substr($port, $separator + 1);
+        }
 
         $this->service['environment'] = (isset($this->service['environment']) && is_array($this->service['environment'])) ? $this->service['environment'] : [];
         $this->service['environment'] = new Env(implode("\n", $this->service['environment']));
@@ -68,7 +72,7 @@ class Service
     }
 
     /**
-     * @return array
+     * @return array<string, string> published port (with any host IP) => container port
      */
     public function getPorts(): array
     {

@@ -7,8 +7,12 @@ namespace Tests\Unit\Vcs;
 use Appwrite\Auth\OAuth2;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
 use Appwrite\Extend\Exception;
+use Appwrite\Vcs\Factory;
 use Appwrite\Vcs\InstallationTokens;
 use PHPUnit\Framework\TestCase;
+use Utopia\Cache\Cache;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -346,6 +350,54 @@ final class InstallationTokensTest extends TestCase
         ]);
     }
 
+    public function testGithubProviderSkipsPersonalTokenRefresh(): void
+    {
+        $installation = new Document([
+            '$id' => 'installation1',
+            'provider' => 'github',
+            'personal' => true,
+            'personalAccessToken' => 'stale-token',
+            'personalRefreshToken' => 'stale-refresh',
+            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), -3600),
+        ]);
+
+        // Empty registry: oauth2FromProvider('github') would throw if it were
+        // ever called, proving GitHub never reaches the OAuth2 refresh path.
+        $vcsFactory = new Factory($this->createStub(Cache::class), new Client(new CurlAdapter()), []);
+
+        $result = (new InstallationTokens())->refreshForInstallation($installation, $this->db(), $vcsFactory);
+
+        $this->assertSame('stale-token', $result->getAttribute('personalAccessToken'));
+    }
+
+    public function testNonGithubProviderStillRefreshesPersonalToken(): void
+    {
+        $oauth2 = $this->fakeOAuth2();
+        $vcsFactory = new Factory($this->createStub(Cache::class), new Client(new CurlAdapter()), [
+            'gitlab' => [
+                'oauth2' => fn () => $oauth2,
+                'variables' => [],
+            ],
+        ]);
+
+        $db = $this->createMock(Database::class);
+        $db->expects($this->once())->method('updateDocument')->willReturnArgument(2);
+
+        $installation = new Document([
+            '$id' => 'installation1',
+            'provider' => 'gitlab',
+            'personal' => true,
+            'personalAccessToken' => 'stale-token',
+            'personalRefreshToken' => 'stale-refresh',
+            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), -3600),
+        ]);
+
+        $result = (new InstallationTokens())->refreshForInstallation($installation, $db, $vcsFactory);
+
+        $this->assertSame('fresh-token', $result->getAttribute('personalAccessToken'));
+        $this->assertSame(1, $oauth2->refreshCalls);
+    }
+
     /**
      * @param string $refresh One of: ok, refused, invalidGrant, empty, throw.
      */
@@ -357,7 +409,7 @@ final class InstallationTokensTest extends TestCase
 
             public function __construct(protected bool $emptyUserId, protected string $refresh)
             {
-                parent::__construct('id', 'secret', '');
+                parent::__construct(new Client(new CurlAdapter()), 'id', 'secret', '');
             }
 
             public function getName(): string

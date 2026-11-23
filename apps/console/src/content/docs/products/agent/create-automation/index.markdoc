@@ -1,0 +1,38 @@
+---
+layout: article
+title: Create an automation
+description: Schedule a recurring Appwrite Agent prompt with a cron schedule and optional model.
+---
+
+Create an automation when you want the Agent to run the same prompt on a schedule and leave each result in a conversation you can review later. Every run creates a new thread linked to the automation, so history stays organized outside the main Agents list.
+
+Write the prompt as if you will not be present to clarify. Name what to inspect, how to format the answer, and whether the run should only report or also take actions.
+
+# Create {% #create %}
+
+1. Sign in to [Appwrite Cloud](https://cloud.appwrite.io).
+2. Go to `/agent/automations` (or `/agent/automations/create`).
+3. Click the create action if you are on the list view.
+4. Enter a **name**.
+5. Write the **prompt** the Agent should run each time.
+6. Set a **schedule** with the cron editor (for example weekly on Monday; that is also the default).
+7. Optionally set a **title prefix**, choose a **model**, and confirm a **context project** if the prompt is project-specific.
+8. Leave **Enabled** on, then save.
+
+# Review a run {% #review-a-run %}
+
+When the schedule fires, open the automation and its linked conversations. Read the Agent output, tool activity, and any inline resource cards or charts the same way you would in an ordinary chat. Runs do not appear in the main Agents sidebar.
+
+# Update or pause {% #update-or-pause %}
+
+1. Open the automation from `/agent/automations/{automationId}` or the automations panel.
+2. Change the prompt, schedule, model, context project, or enabled state.
+3. Save your changes.
+
+Disable the automation to pause future runs without deleting it. Re-enable when you want the schedule to resume.
+
+{% info title="MCP for live data" %}
+Automations that inspect or change project resources need [Appwrite MCP](/docs/products/agent/mcp) connected and enabled on the account that owns the automation. Guidance-only prompts can run without tools.
+{% /info %}
+
+See [Automations](/docs/products/agent/automations) for fields, run behavior, and example prompts.

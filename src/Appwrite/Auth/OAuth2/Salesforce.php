@@ -58,7 +58,8 @@ class Salesforce extends OAuth2
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'scope' => \implode(' ', $this->getScopes()),
-            'state' => \json_encode($this->state)
+            'state' => \json_encode($this->state),
+            'prompt' => $this->getPrompt() ?: null,
         ]);
     }
 
@@ -71,7 +72,7 @@ class Salesforce extends OAuth2
     {
         if (empty($this->tokens)) {
             $headers = [
-                'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),
+                'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->getClientSecret()),
                 'Content-Type: application/x-www-form-urlencoded',
             ];
             $this->tokens = \json_decode($this->request(
@@ -97,7 +98,7 @@ class Salesforce extends OAuth2
     public function refreshTokens(string $refreshToken): array
     {
         $headers = [
-            'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),
+            'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->getClientSecret()),
             'Content-Type: application/x-www-form-urlencoded',
         ];
         $this->tokens = \json_decode($this->request(
@@ -197,5 +198,50 @@ class Salesforce extends OAuth2
             $this->user = \json_decode($user, true);
         }
         return $this->user;
+    }
+
+    /**
+     * Extracts the Client Secret from the JSON stored in appSecret
+     *
+     * @return string
+     */
+    protected function getClientSecret(): string
+    {
+        $secret = $this->getAppSecret();
+
+        return $secret['clientSecret'] ?? $this->appSecret;
+    }
+
+    /**
+     * Extracts the prompt values from the JSON stored in appSecret
+     *
+     * @return string
+     */
+    protected function getPrompt(): string
+    {
+        $secret = $this->getAppSecret();
+
+        return \implode(' ', $secret['prompt'] ?? []);
+    }
+
+    /**
+     * Decode the JSON stored in appSecret.
+     * Falls back to treating the raw string as the client secret for backwards compatibility.
+     *
+     * @return array
+     */
+    protected function getAppSecret(): array
+    {
+        try {
+            $secret = \json_decode($this->appSecret, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\Throwable $th) {
+            return ['clientSecret' => $this->appSecret];
+        }
+
+        if (!\is_array($secret)) {
+            return ['clientSecret' => $this->appSecret];
+        }
+
+        return $secret;
     }
 }

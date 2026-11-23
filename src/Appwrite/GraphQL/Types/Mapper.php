@@ -11,8 +11,8 @@ use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Definition\UnionType;
 use Utopia\Http\Http;
 use Utopia\Http\Route;
-use Utopia\Validator;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Validator;
 
 class Mapper
 {
@@ -314,10 +314,17 @@ class Mapper
             case \Appwrite\Utopia\Database\Validator\Queries\Variables::class:
             case \Utopia\Database\Validator\Authorization::class:
             case \Utopia\Database\Validator\Permissions::class:
-            case \Utopia\Database\Validator\Queries::class:
+            case \Utopia\Database\Validator\Queries\Base::class:
             case \Utopia\Database\Validator\Queries\Documents::class:
             case \Utopia\Database\Validator\Roles::class:
+                // utopia-php/waf is not a dependency here, so the class is named rather than referenced.
+            case 'Utopia\WAF\Validator\Conditions':
                 $type = Type::listOf(Type::string());
+                break;
+            case \Utopia\Validator\Multiple::class:
+                $type = $validator->getType() === Validator::TYPE_ARRAY
+                    ? Type::listOf(Type::string())
+                    : Type::string();
                 break;
             case \Utopia\Validator\Boolean::class:
                 $type = Type::boolean();

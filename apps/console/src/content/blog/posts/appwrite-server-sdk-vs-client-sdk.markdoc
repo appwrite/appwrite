@@ -1,0 +1,218 @@
+---
+layout: post
+title: "How to use Appwrite's Server SDK vs Client SDK"
+description: Understand the difference between Appwrite's Client and Server SDKs, when to use each one, and how to avoid common security mistakes in your app.
+date: 2026-03-26
+lastUpdated: 2026-06-29
+cover: /images/blog/appwrite-server-sdk-vs-client-sdk/cover.avif
+timeToRead: 5
+author: aditya-oberai
+category: products, tutorials
+featured: false
+unlisted: true
+faqs:
+  - question: "What is the difference between Appwrite's Client SDK and Server SDK?"
+    answer: "The Client SDK authenticates as a logged-in user using a session and is bound by the permissions you set on tables, buckets, and functions. The Server SDK authenticates with an API key, which can bypass row-level permissions within the scopes the key was created with. Client SDKs ship for browsers and mobile, while Server SDKs ship for backend languages and Appwrite Functions."
+  - question: "Which Appwrite SDK should I use in a mobile or web app?"
+    answer: "Use a Client SDK. Client SDKs are available for Web, Flutter, React Native, Apple, and Android, and they handle session management automatically through cookies in browsers or secure storage on mobile. Each request runs as the logged-in user, so they can only access resources that user is permitted to read or write."
+  - question: "Can I use an Appwrite API key in client-side code?"
+    answer: "No. API keys grant elevated access at the project level, so embedding one in browser JavaScript or a mobile app exposes that access to anyone who extracts the key. API keys belong on a server you control, ideally inside an Appwrite Function or a backend service that authenticates user requests separately."
+  - question: "Which languages have Appwrite Server SDKs?"
+    answer: "Appwrite ships Server SDKs for Node.js, Python, Dart, PHP, Ruby, .NET, Go, Swift, and Kotlin. They are initialized with an API key created in the Console and scoped to specific capabilities like databases.write or messaging.write, so each backend service only holds the permissions it actually needs."
+  - question: "Do I need both SDKs in the same project?"
+    answer: "Often yes. A typical setup uses a Client SDK in your frontend to authenticate users and access their own data, and a Server SDK in Appwrite Functions or a backend service for administrative work, cross-user operations, and scheduled jobs. Mixing the two intentionally is the standard pattern."
+---
+
+One of the most common points of confusion when starting with Appwrite is which SDK to use. Appwrite ships two distinct sets of [SDKs](/docs/sdks): one for client-side code running in browsers and mobile apps, and one for server-side code. They share a similar structure, but they authenticate differently and have different levels of access. Using the wrong one in the wrong context is a real security problem.
+
+This post breaks down how each SDK authenticates, what it can access, and which one belongs in each part of your architecture.
+
+# The core difference: sessions vs API keys
+
+The Client SDK authenticates on behalf of a user using a session. When a user logs in through your app, Appwrite creates a session for that user. All subsequent requests made with the Client SDK carry that session and are subject to the permissions you have set on your tables, buckets, and functions. The Client SDK can only do what the currently logged-in user is allowed to do.
+
+The Server SDK authenticates using an API key. API keys are created in the Appwrite Console and scoped to specific capabilities. A request made with a Server SDK and a valid API key can bypass the permissions system entirely, depending on the key's scope. This is intentional: server-side code often needs to perform operations across users, run scheduled jobs, or do administrative work that no individual user session should be able to authorize.
+
+This distinction matters a great deal. An API key embedded in a mobile app or browser JavaScript is a serious security risk because anyone who extracts it gains the access level of that key. API keys belong on the server, never in client code.
+
+# Client SDKs: for browsers and mobile
+
+The available Client SDKs are:
+
+- Web (JavaScript/TypeScript)
+- Flutter
+- React Native (beta)
+- Apple (Swift)
+- Android (Kotlin/Java)
+
+These SDKs are built around the `Account` service. Users sign up, log in, manage their sessions, and interact with resources they own. Typical client-side operations include:
+
+- Creating and managing user accounts
+- Reading and writing rows the user owns or has been granted access to
+- Uploading and downloading files from buckets with appropriate permissions
+- Subscribing to real-time events on resources the user can access
+
+A basic client-side login and data fetch in JavaScript looks like this:
+
+```js
+import { Client, Account, TablesDB, Query } from "appwrite";
+
+const client = new Client()
+  .setEndpoint("https://cloud.appwrite.io/v1")
+  .setProject("<PROJECT_ID>");
+
+const account = new Account(client);
+const tablesDB = new TablesDB(client);
+
+// Log in
+await account.createEmailPasswordSession({
+    email: "user@example.com",
+    password: "password"
+});
+
+// Read data, scoped to what this user can access
+const docs = await tablesDB.listRows({
+  databaseId: "<DATABASE_ID>",
+  tableId: "<TABLE_ID>",
+  queries: [Query.equal("userId", ["<CURRENT_USER_ID>"])],
+});
+```
+
+The session is maintained automatically (as a cookie in browsers, or in secure storage on mobile). There is nothing you need to pass manually after login.
+
+# Server SDKs: for backends and functions
+
+The available Server SDKs are: Node.js, Python, Dart, PHP, Ruby, .NET, Go, Swift, Kotlin
+
+Server SDKs are initialized with an API key rather than a user session. The key is created in the Appwrite Console under your project settings, and you assign it only the scopes it needs. For example, a function that sends emails only needs `messaging.write`, not `databases.write`.
+
+A Node.js server-side example:
+
+```js
+import { Client, TablesDB, Users, Query } from "node-appwrite";
+
+const client = new Client()
+  .setEndpoint("https://cloud.appwrite.io/v1")
+  .setProject("<PROJECT_ID>")
+  .setKey("<API_KEY>");
+
+const tablesDB = new TablesDB(client);
+const users = new Users(client);
+
+// List all users (not possible from the Client SDK)
+const allUsers = await users.list();
+
+// Write a row on behalf of the system
+await tablesDB.createRow({
+  databaseId: "<DATABASE_ID>",
+  tableId: "<TABLE_ID>",
+  rowId: "unique()",
+  data: { type: "system_event", payload: "job_completed" },
+});
+```
+
+This code has no user session. It operates at the API key level, which means it can access any resource within the key's scopes regardless of row permissions.
+
+## Inside Appwrite Functions
+
+Appwrite Functions run on the server, so they use the Server SDK. When a function is triggered (by an HTTP request, an event, or a schedule), Appwrite injects a context object that includes a pre-authenticated client with elevated privileges. You do not need to manage an API key manually in most cases:
+
+```js
+export default async ({ req, res, log, error }) => {
+  const client = new Client()
+    .setEndpoint(process.env.APPWRITE_FUNCTION_API_ENDPOINT)
+    .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
+    .setKey(req.headers["x-appwrite-key"]);
+
+  const tablesDB = new TablesDB(client);
+
+  // Perform elevated operations
+  const result = await tablesDB.listRows({
+    databaseId: "<DATABASE_ID>",
+    tableId: "<TABLE_ID>",
+  });
+
+  return res.json(result);
+};
+```
+
+Functions are the right place for any operation that requires elevated access but should not be exposed directly to users: processing payments, sending notifications to all users, syncing data with external services, or running periodic cleanup jobs.
+
+# Server SDKs with sessions for SSR
+
+Server-side rendering introduces a third authentication mode that does not fit cleanly into either category above. Frameworks like Next.js, SvelteKit, Nuxt, and Astro render pages on the server, which means you cannot use the Client SDK (it assumes a browser context). But you also cannot use an API key, because you want requests to respect the permissions of the specific user loading the page. Using an API key here would bypass the permissions system entirely, exposing every user's data to every server-rendered request.
+
+The solution is to use the Server SDK but authenticate it with the user's session token instead of an API key. Appwrite stores session tokens in a cookie named `a_session_<PROJECT_ID>`. Your server reads that cookie from the incoming request and passes it to the client using `setSession()`. The result is a server-side client that acts exactly as that user, with no elevated access.
+
+In practice, an SSR setup requires two separate clients:
+
+**Admin client:** initialized with an API key scoped to `sessions.write`. Used only to create and manage sessions (login, logout). This client bypasses rate limits, which matters when all requests originate from the same server IP.
+
+**Session client:** initialized with the user's session token from the request cookie. Used for all data fetching on behalf of the user. This client respects permissions the same way the browser Client SDK would.
+
+```js
+import { Client, Account } from "node-appwrite";
+
+// Admin client: used to create sessions (e.g. on login)
+const adminClient = new Client()
+  .setEndpoint("https://cloud.appwrite.io/v1")
+  .setProject("<PROJECT_ID>")
+  .setKey("<API_KEY>"); // sessions.write scope
+
+// Session client: used to fetch data as the current user
+const sessionClient = new Client()
+  .setEndpoint("https://cloud.appwrite.io/v1")
+  .setProject("<PROJECT_ID>");
+
+const session = req.cookies["a_session_<PROJECT_ID>"];
+if (session) {
+  sessionClient.setSession(session);
+}
+
+// Fetch data as the user; permissions are enforced
+const account = new Account(sessionClient);
+const user = await account.get();
+```
+
+A few important rules for this pattern:
+
+- **Never reuse the session client across requests.** Create a new client per request. Sharing a client between requests will mix up user sessions.
+- **Never set a session on the admin client.** Keep the two clients entirely separate.
+- **Set the cookie with `httpOnly`, `secure`, and `sameSite: strict`.** This prevents JavaScript from reading the session token and protects against CSRF.
+- **Use a custom domain for your Appwrite endpoint** if you want the session cookie to also work with client-side Appwrite calls on the same domain. See [custom domains](/docs/advanced/platform/custom-domains).
+
+When a user logs in through your server, create the session with the admin client and store the `session.secret` value in the cookie. On subsequent requests, read the cookie and pass it to a fresh session client. That client will behave identically to a browser-based Client SDK authenticated as that user.
+
+# Common patterns
+
+**Pattern 1: User-owned data.** The user creates and reads their own rows. Use the Client SDK. Set table permissions so users can only read and write their own rows using the `user(<ID>)` role.
+
+**Pattern 2: Admin operations.** A dashboard that lists all users, or a job that resets expired sessions. Use the Server SDK with an API key scoped to what you need.
+
+**Pattern 3: Triggered server logic.** A user submits a form, and you need to send a confirmation email and write a log entry with admin-level access. Use the Client SDK for the user-facing submission, trigger an Appwrite Function from the event, and use the Server SDK inside that function for the privileged steps.
+
+**Pattern 4: Scheduled jobs.** A cron-triggered function that archives old records. Server SDK only, no user session involved.
+
+# Security considerations
+
+A few rules that save you from common mistakes:
+
+- Never put an API key in a mobile app or browser-side JavaScript bundle. It will be extracted and abused.
+- Scope your API keys narrowly. If a key only needs to read from one table, do not give it `databases.write` or `users.read`.
+- Use the Client SDK for anything user-facing. The permissions system is your first line of defense for user data.
+- Prefer using the injected key inside Appwrite Functions over hardcoding API keys in function environment variables when possible.
+- The Client SDK cannot use the Realtime API when authenticated with an API key. Real-time subscriptions are session-based only.
+
+# Choosing the right SDK
+
+Both SDKs share the same `ID`, `Query`, `Permission`, and `Role` utility classes, so the programming model feels consistent. The key question is always: who is making this request, and what should they be allowed to do?
+
+If the request comes from a user interacting with your app, use the Client SDK and let the permissions system enforce access. If the request comes from your server, a background job, or an Appwrite Function, use the Server SDK with a properly scoped API key.
+
+Getting this right from the start avoids a whole class of access control bugs.
+
+- [Appwrite SDKs overview](/docs/sdks)
+- [API keys and scopes](/docs/advanced/platform/api-keys)
+- [SSR authentication with Appwrite](/docs/products/auth/server-side-rendering)
+- [Appwrite Functions](/docs/products/functions)
+- [Start building on Appwrite Cloud](https://cloud.appwrite.io)

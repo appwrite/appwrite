@@ -30,6 +30,7 @@ class AuthProvider extends Model
             ])
             ->addRule('secret', [
                 'type' => self::TYPE_STRING,
+                'format' => 'password',
                 'description' => 'OAuth 2.0 application secret. Might be JSON string if provider requires extra configuration. This property is write-only and always returned empty.',
                 'default' => '',
                 'example' => '',
@@ -37,6 +38,7 @@ class AuthProvider extends Model
             ->addRule('enabled', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Auth Provider is active and can be used to create session.',
+                'default' => false,
                 'example' => '',
             ])
         ;

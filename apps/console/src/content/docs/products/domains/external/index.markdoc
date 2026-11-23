@@ -1,0 +1,65 @@
+---
+layout: article
+title: Add external domain
+description: Add a domain registered with another registrar and delegate DNS to Appwrite without moving registration.
+---
+
+If you already registered a domain elsewhere, you can add it to Appwrite and delegate DNS without transferring registration. The Console shows an external registrar for these domains. Appwrite manages DNS once nameservers are verified.
+
+This guide walks you through adding the domain, updating nameservers, and restoring DNS records.
+
+# Add a domain {% #add-a-domain %}
+
+1. Open **Domains** in your organization.
+2. Click **Add domain**.
+3. Enter the domain name without a protocol (for example `example.com` or `www.example.com`).
+4. Click **Add domain** to create the resource.
+
+Appwrite creates the domain and pre-populates DNS records required for Appwrite network routing. Some of these records are **locked** and cannot be edited or deleted.
+
+# Point nameservers to Appwrite {% #point-nameservers %}
+
+At your DNS host or registrar, replace the domain's nameservers with:
+
+```text
+ns1.appwrite.zone
+ns2.appwrite.zone
+```
+
+This delegates DNS for the domain to Appwrite. Any existing DNS records at your previous host stop being authoritative once delegation propagates.
+
+{% info title="DNS propagation" %}
+Nameserver changes can take up to 48 hours to propagate globally. During propagation, verification may fail intermittently.
+{% /info %}
+
+# Verify {% #verify %}
+
+1. Return to the domain in the Appwrite Console.
+2. When nameservers are correct, status changes to **Verified** and nameservers show **Appwrite**.
+3. If verification fails, click **Verify** to retry after you confirm nameserver updates at your registrar.
+
+Until verification succeeds, you cannot rely on Appwrite-managed DNS for product connections that require a verified zone.
+
+# Recreate existing records {% #recreate-existing-records %}
+
+Delegating nameservers to Appwrite replaces your previous DNS configuration for that domain. Recreate records Appwrite does not add automatically:
+
+- **MX** and **TXT** for email (see [Configure email](/docs/products/domains/manage-dns#configure-email) in Manage DNS records)
+- **TXT** for domain verification with third-party services
+- **CNAME** or **A** records for non-Appwrite hosts
+
+Use the **Records** tab or [import a zone file](/docs/products/domains/manage-dns#import-and-export-a-zone-file) if you exported records from your previous DNS provider.
+
+# Apex vs subdomain {% #apex-vs-subdomain %}
+
+You can add apex domains (`example.com`) or subdomains (`app.example.com`). For apex domains used only with CNAME-based products (Sites, Functions) without full NS delegation, see [CNAME flattening](/docs/products/network/dns#using-cname-flattening) in the Network DNS docs. Organization **Domains** is intended for full-zone management via Appwrite nameservers.
+
+# Connect to products {% #connect-to-products %}
+
+After verification, [connect to products](/docs/products/domains/connect) for Sites, Functions, and API custom domains.
+
+# Delete a domain {% #delete-a-domain %}
+
+Removing a domain from Appwrite deletes its DNS zone in Appwrite. It does **not** cancel registration at your external registrar. See [Delete a domain](/docs/products/domains/delete) for single and bulk delete and registry implications.
+
+You can [change organization](/docs/products/domains/change-organization) from the **Settings** tab. See [Registration](/docs/products/domains/registration) for organization scope and plan limits.

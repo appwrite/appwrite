@@ -2,8 +2,10 @@
 
 namespace Appwrite\AvatarPhotos;
 
+use Utopia\Client\Client;
 use Utopia\Database\Document;
-use Utopia\Fetch\Client;
+use Utopia\Psr7\Method;
+use Utopia\Psr7\Request\Factory as RequestFactory;
 
 /**
  * Base class every avatar photo provider extends.
@@ -18,7 +20,7 @@ abstract class Photo
     /**
      * How long a provider may wait to open a connection to a remote service.
      */
-    protected const CONNECT_TIMEOUT = 2 * 1000; // 2 seconds
+    protected const CONNECT_TIMEOUT = 2; // seconds
 
     /**
      * How long a provider may wait for a complete remote response.
@@ -27,7 +29,7 @@ abstract class Photo
      * unreachable service must not be able to hold the request open while we
      * still have other providers — and a local fallback — left to try.
      */
-    protected const REQUEST_TIMEOUT = 5 * 1000; // 5 seconds
+    protected const REQUEST_TIMEOUT = 5; // seconds
 
     /**
      * Colours every generated avatar draws in.
@@ -76,16 +78,14 @@ abstract class Photo
      *
      * @return string|null Raw response body, or null when unavailable.
      */
-    protected function fetch(string $url): ?string
+    protected function fetch(Client $client, string $url): ?string
     {
-        $client = new Client();
-
         try {
             $response = $client
-                ->setAllowRedirects(true)
-                ->setConnectTimeout(static::CONNECT_TIMEOUT)
-                ->setTimeout(static::REQUEST_TIMEOUT)
-                ->fetch($url);
+                ->withFollowRedirects(maxHops: 5)
+                ->withConnectTimeout(static::CONNECT_TIMEOUT)
+                ->withTimeout(static::REQUEST_TIMEOUT)
+                ->sendRequest((new RequestFactory())->createRequest(Method::GET, $url));
         } catch (\Throwable) {
             return null;
         }
@@ -94,7 +94,7 @@ abstract class Photo
             return null;
         }
 
-        $body = $response->getBody();
+        $body = (string) $response->getBody();
 
         return $body === '' ? null : $body;
     }

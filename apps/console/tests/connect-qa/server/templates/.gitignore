@@ -1,0 +1,5 @@
+.gradle/
+build/
+.build/
+.swiftpm/
+.dart_tool/

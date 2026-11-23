@@ -6,9 +6,9 @@ use Appwrite\Utopia\Messaging\Messages\Console as ConsoleMessage;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Messaging\Adapter;
 use Utopia\Messaging\Message;
 use Utopia\Messaging\Response;
@@ -68,7 +68,7 @@ class Console extends Adapter
             $recipientHash = $recipient['recipientHash'] ?? \substr(\md5($recipientKey), 0, 16);
             $documentId = $messageId !== null
                 ? ($recipient['alertId'] ?? \substr($messageId, 0, 19) . '_' . $recipientHash)
-                : ID::unique();
+                : Id::unique();
 
             try {
                 $document = new Document([

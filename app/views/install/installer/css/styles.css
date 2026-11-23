@@ -1595,12 +1595,6 @@ body {
     transform: translateY(8px);
 }
 
-.tooltip-assistant {
-    width: 246px;
-    max-width: 246px;
-    text-align: left;
-}
-
 .tooltip-wrapper:hover .tooltip,
 .tooltip-wrapper:focus-within .tooltip,
 .tooltip-wrapper.is-open .tooltip {

@@ -3,6 +3,8 @@
 namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\Appwrite\Report;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\DeploymentHostname;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -39,7 +41,7 @@ class Get extends Action
                 group: null,
                 name: 'getAppwriteReport',
                 description: '/docs/references/migrations/migration-appwrite-report.md',
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -47,12 +49,14 @@ class Get extends Action
                     )
                 ]
             ))
-            ->param('resources', [], new ArrayList(new WhiteList(AppwriteSource::getSupportedResources())), 'List of resources to migrate', enum: new Enum(name: 'AppwriteMigrationResource'))
+            ->param('resources', [], new ArrayList(new WhiteList(AppwriteSource::getSupportedResources())), 'List of resources to migrate', example: '["user"]', enum: new Enum(name: 'AppwriteMigrationResource'))
             ->param('endpoint', '', new URL(), "Source's Appwrite Endpoint")
             ->param('projectID', '', new Text(512), "Source's Project ID")
             ->param('key', '', new Text(512), "Source's API Key")
             ->inject('response')
             ->inject('getDatabasesDB')
+            ->inject('publicHostname')
+            ->inject('deploymentHostname')
             ->callback($this->action(...));
     }
 
@@ -62,10 +66,22 @@ class Get extends Action
         string $projectID,
         string $key,
         Response $response,
-        callable $getDatabasesDB
+        callable $getDatabasesDB,
+        PublicHostname $publicHostname,
+        DeploymentHostname $deploymentHostname
     ): void {
+        $host = \parse_url($endpoint, PHP_URL_HOST) ?: '';
+        $deployment = $deploymentHostname->isValid($host);
+
+        if (!$deployment && !$publicHostname->isValid($host)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $publicHostname->getDescription());
+        }
+
         try {
             $appwrite = new AppwriteSource($projectID, $endpoint, $key, $getDatabasesDB);
+            if (!$deployment) {
+                $appwrite->setDestinations($publicHostname->getDestinations());
+            }
             $report = $appwrite->report($resources);
         } catch (\Throwable $e) {
             throw new Exception(

@@ -1,0 +1,1 @@
+Update an Appwrite push provider by its unique ID.

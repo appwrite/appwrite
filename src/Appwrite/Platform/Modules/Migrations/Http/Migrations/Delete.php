@@ -39,7 +39,7 @@ class Delete extends Action
                 group: null,
                 name: 'delete',
                 description: '/docs/references/migrations/delete-migration.md',
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_NOCONTENT,
@@ -48,7 +48,7 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('migrationId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Migration ID.', false, ['dbForProject'])
+            ->param('migrationId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Migration ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')

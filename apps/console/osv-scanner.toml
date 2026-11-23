@@ -1,0 +1,3 @@
+[[IgnoredVulns]]
+id = "GHSA-hp3w-g68c-fv3c"
+reason = "sprintf-js has no fixed release. It is reached only through argparse, which js-yaml 3 loads for its bin/js-yaml.js CLI; gray-matter uses js-yaml as a library and never runs that CLI."

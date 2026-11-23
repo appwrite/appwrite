@@ -1,0 +1,65 @@
+---
+layout: article
+title: Text Embeddings
+description: Learn how Appwrite meters and bills text embedding tokens, and what each plan includes per model.
+---
+
+Appwrite generates [text embeddings](/docs/products/databases/vectorsdb/embeddings) with built-in models, so you can turn text into vectors without running a separate embedding service. Embedding usage is metered in tokens, and each model is priced and counted separately.
+
+## How embedding usage is counted
+
+Every call to `createTextEmbeddings` sends one or more strings to a model. Appwrite counts the tokens in those strings and records them against the model that produced the embeddings.
+
+How it works:
+1. Generate embeddings through the Appwrite SDK or API.
+2. Appwrite tracks the token count per model, not per request.
+3. Token counts are aggregated per project and rolled up to your organization.
+4. Allowances are refreshed monthly on your billing cycle.
+
+Each model keeps its own counter. Embedding 2M tokens with `nomic-embed-text` and 2M tokens with `all-minilm` uses 2M against each model's allowance, not 4M against a shared pool.
+
+## Pricing
+
+Rates are per model, since models differ in cost to run.
+
+| Model | Dimension | Rate |
+| --- | --- | --- |
+| `nomic-embed-text` | 768 | $0.10 per 1M tokens |
+| `all-minilm` | 384 | $0.05 per 1M tokens |
+
+### Free plan
+- **Included**: 1,000,000 tokens per model per month.
+- **Overage**: Not available. `createTextEmbeddings` returns a `402` error once the cap is reached. Only embedding creation is blocked, and the rest of your project keeps working.
+
+### Pro and Scale plans
+- **Included**: 10,000,000 tokens per model per month on Pro and 100,000,000 tokens per model per month on Scale.
+- **Overage**: Billed at the model's rate, rounded up per started million above the allowance.
+
+### Enterprise plan
+- **Included**: Custom allowances.
+- **Overage**: Custom rates.
+
+## How overage is calculated
+
+The included allowance is a ceiling, not a floor. Usage inside it is covered by your plan price and adds nothing to your invoice, so 5M tokens against a 10M allowance bills $0 for embeddings.
+
+Above the allowance, Appwrite bills each started million at the model's rate:
+
+```
+overage = ceil((tokens - allowance) / 1,000,000) x rate
+```
+
+For example, a Pro organization that embeds 12M tokens with `nomic-embed-text` in one cycle is billed `ceil((12M - 10M) / 1M) x $0.10 = $0.20`. Each model is calculated independently against its own allowance and rate.
+
+Overage on paid plans counts toward your [budget cap](/docs/advanced/billing/payments), and embedding creation is never hard blocked on a paid plan.
+
+For detailed information about the different pricing options and features, please visit the [pricing page](/pricing).
+
+## Best practices
+
+To keep embedding costs predictable:
+1. **Pick the smallest model that works**: `all-minilm` costs half as much per token as `nomic-embed-text` and stores 384 values per vector instead of 768.
+2. **Embed once, store the vector**: reuse the stored `embeddings` field instead of regenerating it on every search.
+3. **Batch your calls**: pass several strings to one `createTextEmbeddings` call to cut request overhead.
+4. **Monitor usage**: track embedding tokens per model in the Appwrite Console.
+5. **Set a budget cap**: bound overage on Pro and Scale before it surprises you.

@@ -99,13 +99,14 @@ abstract class Action extends DatabasesAction
     }
 
     /**
-     * Get the exception to throw when the resource limit is exceeded.
+     * Get the exception to throw when the column limit of a single collection/table
+     * is exceeded, either its column count or the row width they add up to.
      */
-    protected function getLimitException(): string
+    protected function getColumnLimitException(): string
     {
         return $this->isCollectionsAPI()
-            ? Exception::COLLECTION_LIMIT_EXCEEDED
-            : Exception::TABLE_LIMIT_EXCEEDED;
+            ? Exception::ATTRIBUTE_LIMIT_EXCEEDED
+            : Exception::COLUMN_LIMIT_EXCEEDED;
     }
 
     /**
@@ -114,7 +115,7 @@ abstract class Action extends DatabasesAction
     protected function addRowBytesInfo(Document $document, Database $dbForProject): Document
     {
         $adapter = $dbForProject->getAdapter();
-        $document->setAttribute('bytesMax', $adapter->getDocumentSizeLimit());
+        $document->setAttribute('bytesMax', $adapter->limits()->documentSize);
         $document->setAttribute('bytesUsed', $adapter->getAttributeWidth($document));
         return $document;
     }

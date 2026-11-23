@@ -1,0 +1,44 @@
+services:
+  mailpit:
+    image: axllent/mailpit:v1.21
+    environment:
+      # A committed self-signed pair, so STARTTLS is exercised without the
+      # container needing a package manager or a network at start-up.
+      MP_SMTP_TLS_CERT: /certs/cert.pem
+      MP_SMTP_TLS_KEY: /certs/key.pem
+      MP_SMTP_AUTH: 'jane:secret'
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+      # Gives the tests a recipient the server genuinely refuses, so partial
+      # acceptance is exercised against real replies.
+      MP_SMTP_ALLOWED_RECIPIENTS: '@example\.test$$'
+    volumes:
+      - ./tests/fixtures/certs:/certs:ro
+    ports:
+      - '11026:1025'   # submission
+      - '18026:8025'   # read-back API
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '-', 'http://localhost:8025/readyz']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  # TLS from the first byte rather than an upgrade, and a recipient ceiling low
+  # enough to reach. Neither is reachable on the server above.
+  implicit:
+    image: axllent/mailpit:v1.21
+    environment:
+      MP_SMTP_TLS_CERT: /certs/cert.pem
+      MP_SMTP_TLS_KEY: /certs/key.pem
+      MP_SMTP_REQUIRE_TLS: 1
+      MP_SMTP_AUTH: 'jane:secret'
+      MP_SMTP_MAX_RECIPIENTS: 2
+    volumes:
+      - ./tests/fixtures/certs:/certs:ro
+    ports:
+      - '11027:1025'
+      - '18027:8025'
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '-', 'http://localhost:8025/readyz']
+      interval: 2s
+      timeout: 3s
+      retries: 30

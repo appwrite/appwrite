@@ -8,6 +8,8 @@ return [
         'invitation',
         'mfaChallenge',
         'sessionAlert',
-        'otpSession'
+        'otpSession',
+        'otpVerification',
+        'otpRecovery'
     ]
 ];

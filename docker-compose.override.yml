@@ -14,11 +14,13 @@ services:
       - ./.env:/usr/src/code/.env
       - ./phpunit.xml:/usr/src/code/phpunit.xml
       - ./tests:/usr/src/code/tests
+      - ./packages:/usr/src/code/packages
       - ./app:/usr/src/code/app
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
+      - appwrite-videos-tmp:/storage/videos-tmp:rw
     depends_on:
       - dns
     ports:
@@ -26,6 +28,13 @@ services:
     dns:
       - 127.0.0.11
       - 172.16.238.100
+    extra_hosts:
+      - rebinding.webapp.com:host-gateway
+      - private.appwrite.test:172.16.238.250
+    networks:
+      appwrite:
+        ipv4_address: 172.16.238.250
+      browser:
     entrypoint:
       - php
       - -e
@@ -48,8 +57,22 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
     ports:
       - 9502:80
+  appwrite-mqtt:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
+    image: appwrite-dev
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-worker:
     build:
       context: .
@@ -62,9 +85,14 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
+    extra_hosts:
+      - rebinding.webapp.com:host-gateway
+      - private.appwrite.test:172.16.238.250
     depends_on:
       - request-catcher-sms
       - request-catcher-webhook
+      - maildev
   appwrite-task-scheduler:
     build:
       context: .
@@ -77,6 +105,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-worker-webhooks:
     build:
       context: .
@@ -89,6 +118,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
     depends_on:
       - request-catcher-sms
       - request-catcher-webhook
@@ -104,6 +134,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-worker-databases:
     build:
       context: .
@@ -116,6 +147,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-worker-builds:
     build:
       context: .
@@ -128,6 +160,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-worker-jobs:
     build:
       context: .
@@ -140,6 +173,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-worker-screenshots:
     build:
       context: .
@@ -152,6 +186,20 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
+  appwrite-worker-videos:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
+    image: appwrite-dev
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-worker-certificates:
     build:
       context: .
@@ -164,6 +212,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-worker-executions:
     build:
       context: .
@@ -176,6 +225,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-worker-functions:
     build:
       context: .
@@ -188,6 +238,20 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
+  appwrite-worker-maintenance:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
+    image: appwrite-dev
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-worker-mails:
     build:
       context: .
@@ -200,6 +264,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
     depends_on:
       - maildev
   appwrite-worker-notifications:
@@ -214,6 +279,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
     depends_on:
       - maildev
   appwrite-worker-messaging:
@@ -228,6 +294,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-worker-migrations:
     build:
       context: .
@@ -240,7 +307,11 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
       - ./tests:/usr/src/code/tests
+    extra_hosts:
+      - rebinding.webapp.com:host-gateway
+      - private.appwrite.test:172.16.238.250
   appwrite-task-maintenance:
     build:
       context: .
@@ -253,6 +324,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-task-interval:
     build:
       context: .
@@ -265,6 +337,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-task-scheduler-functions:
     build:
       context: .
@@ -277,6 +350,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-task-scheduler-executions:
     build:
       context: .
@@ -289,6 +363,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-task-scheduler-messages:
     build:
       context: .
@@ -301,6 +376,46 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
+  appwrite-task-scheduler-maintenance:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
+    image: appwrite-dev
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
+  appwrite-task-scheduler-alerts:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
+    image: appwrite-dev
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
+  appwrite-task-stats-resources:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
+    image: appwrite-dev
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   dns:
     image: alpinelinux/unbound:latest@sha256:8d2611fe8fcbd8e26b6f88e2eb0c3b803368195d50cfa0c30fdfaa5087076709
     container_name: appwrite-dns
@@ -344,6 +459,20 @@ services:
     environment:
       - MAILDEV_INCOMING_USER=${_APP_SMTP_USERNAME}
       - MAILDEV_INCOMING_PASS=${_APP_SMTP_PASSWORD}
+  appwrite-browser:
+    networks:
+      - appwrite
+      - fixtures
+  webpage:
+    image: nginx:1.30-alpine@sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94
+    container_name: appwrite-webpage
+    networks:
+      fixtures:
+        ipv4_address: 203.0.0.1
+        aliases:
+          - screenshot.webapp.com
+    volumes:
+      - ./tests/resources/avatars/webpage:/usr/share/nginx/html:ro
   request-catcher-webhook:
     image: appwrite/requestcatcher:1.1.0
     container_name: appwrite-requestcatcher-webhook
@@ -368,6 +497,67 @@ services:
       - 9507:5000
     networks:
       - appwrite
+  # LDAP directory the Project suite signs in against (seeded by openldap-seed).
+  # Run dev/openldap/certs.sh first so it serves the certificates the TLS tests trust.
+  openldap:
+    profiles:
+      - openldap
+    image: osixia/openldap:1.5.0
+    container_name: appwrite-openldap
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    networks:
+      - appwrite
+    ports:
+      - 3389:389
+      - 3636:636
+    volumes:
+      - ./dev/openldap/certs:/certs:ro
+    environment:
+      - LDAP_ORGANISATION=Appwrite Test
+      - LDAP_DOMAIN=appwrite.test
+      - LDAP_ADMIN_PASSWORD=${LDAP_ADMIN_PASSWORD:-adminpassword}
+      - LDAP_TLS=true
+      - LDAP_TLS_VERIFY_CLIENT=never
+      - LDAP_SEED_INTERNAL_LDAP_TLS_CRT_FILE=/certs/ldap.crt
+      - LDAP_SEED_INTERNAL_LDAP_TLS_KEY_FILE=/certs/ldap.key
+      - LDAP_SEED_INTERNAL_LDAP_TLS_CA_CRT_FILE=/certs/ca.crt
+
+  # One-shot loader of dev/openldap/seed.ldif, on its own profile so that
+  # `up --wait` never waits on it: run it with `run --rm openldap-seed`.
+  openldap-seed:
+    profiles:
+      - openldap-seed
+    image: osixia/openldap:1.5.0
+    container_name: appwrite-openldap-seed
+    networks:
+      - appwrite
+    volumes:
+      - ./dev/openldap/seed.ldif:/seed.ldif:ro
+    entrypoint:
+      - sh
+      - -c
+      - |
+        # The image answers from a first-boot slapd and then restarts it, so an add can
+        # land while it is down. Retry until the seed's last entry reads back.
+        for attempt in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30; do
+          ldapadd -c -x -H ldap://openldap -D cn=admin,dc=appwrite,dc=test \
+            -w $${LDAP_ADMIN_PASSWORD} -f /seed.ldif >/dev/null 2>&1
+          if ldapsearch -x -H ldap://openldap -s base -b cn=appwrite-posix,ou=groups,dc=appwrite,dc=test \
+            -D cn=admin,dc=appwrite,dc=test -w $${LDAP_ADMIN_PASSWORD} >/dev/null 2>&1; then
+            echo "LDAP fixtures loaded."
+            exit 0
+          fi
+          sleep 2
+        done
+        echo "LDAP fixtures did not load." >&2
+        exit 1
+    environment:
+      - LDAP_ADMIN_PASSWORD=${LDAP_ADMIN_PASSWORD:-adminpassword}
+
   gitea:
     profiles:
       - gitea
@@ -459,7 +649,7 @@ services:
       - traefik.http.routers.appwrite_adminer_https.service=appwrite_adminer
       - traefik.http.routers.appwrite_adminer_https.tls=true
   redis-insight:
-    image: redis/redisinsight:latest
+    image: redis/redisinsight:3.8.0
     restart: unless-stopped
     networks:
       - appwrite
@@ -503,6 +693,12 @@ services:
       - --providers.docker.constraints=Label(`traefik.constraint-label-stack`,`appwrite`)
       - --entrypoints.appwrite_web.address=:80
       - --entrypoints.appwrite_websecure.address=:443
+      # This dev override replaces the base command wholesale, so the MQTT entrypoints
+      # must be repeated here or Traefik won't listen on :8883 (mqtts) and :8084 (wss)
+      # and the appwrite-mqtt broker is unreachable (the port publishes survive via
+      # ports concatenation, but have no entrypoint behind them without this).
+      - --entrypoints.appwrite_mqtt.address=:8883
+      - --entrypoints.appwrite_mqtt_ws.address=:8084
       - --log.level=DEBUG
       - --api.insecure=true
       - --accesslog=true
@@ -558,12 +754,14 @@ services:
     restart: unless-stopped
     networks:
       - appwrite
-  # S3-compatible storage for the s3 e2e group. Creates the bucket the
-  # _APP_STORAGE_S3_* variables point at once the server is up.
+  # S3-compatible storage for the s3 e2e group, served by Silo (pgsty/silo, mirrored to GHCR),
+  # the maintained fork of the MinIO server; the MINIO_* variables and mc
+  # carry over. Creates the bucket the _APP_STORAGE_S3_* variables point at
+  # once the server is up.
   minio:
     profiles:
       - s3
-    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    image: ghcr.io/appwrite/silo:RELEASE.2026-09-16T00-00-00Z@sha256:635197cb9f36d01bee221d34d1c7d7960f6a95c48b0b6c01d99cd13bdae51a46
     container_name: appwrite-minio
     restart: unless-stopped
     networks:
@@ -576,7 +774,7 @@ services:
       - sh
       - -c
       - |
-        minio server /data &
+        silo server /data &
         until mc alias set local http://localhost:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" >/dev/null 2>&1; do sleep 1; done
         mc mb -p "local/$$MINIO_BUCKET"
         wait
@@ -634,5 +832,12 @@ networks:
     ipam:
       config:
         - subnet: 172.16.238.0/24
+  # Public range so appwrite-browser treats the fixture like a real site
+  fixtures:
+    ipam:
+      config:
+        - subnet: 203.0.0.0/24
+          ip_range: 203.0.0.128/25
+          gateway: 203.0.0.254
 volumes:
   appwrite-gitea: null

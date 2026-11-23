@@ -1,13 +1,219 @@
 # Change Log
 
-## 21.4.0
+## 28.4.0
 
-* Added upsert() to DocumentChannel and RowChannel to support upsert operations on documents and rows.
-* Added Query.contains, Query.containsAny, and Query.containsAll for enhanced filtering capabilities.
+* Added: `Tracking.start()` sends `first_open` once per install and `app_updated` (`previousVersion`, `version`) on the first start after the app's version changes
+* Added: `Push.setTracking` sends `push_received` and `push_opened` with the message's `messageId`; `Tracking.pushReceived` and `Tracking.pushOpened` for other push providers
+* Added: `PushNotificationOpened.messageId`
+* Added: `Account.createDevice`, `getDevice`, `deleteDevice` and `updateDeviceSession`, and the `Device` model
+* Added: `Account.createLDAPSession`
+* Added: `Session.userName`
+* Added: `auto` output on `Storage.getFilePreview` and the avatar endpoints, serving avif or webp when the `Accept` header supports it
+* Added: `OAuthProvider.naver` and `OAuthProvider.vippsSandbox`
+* Updated: the Android plugin no longer declares `FOREGROUND_SERVICE` and `FOREGROUND_SERVICE_REMOTE_MESSAGING`; apps that call `push.setForeground(true)` declare them
+* Fixed: Android background push keeps waking up on phones that hold back expedited jobs
+* Updated: Android plugin builds with Kotlin 2.4.20
+* Updated: requests send `X-Appwrite-Response-Format: 2.7.2`
 
-## 21.3.0
+## 28.4.0-rc.1
 
-* Added memberships realtime channel helper
+* Added: `Tracking.start()` sends `first_open` once per install and `app_updated` (`previousVersion`, `version`) on the first start after the app's version changes
+* Added: `Push.setTracking` sends `push_received` and `push_opened` with the message's `messageId`; `Tracking.pushReceived` and `Tracking.pushOpened` for other push providers
+* Added: `PushNotificationOpened.messageId`
+* Added: `Account.createDevice`, `getDevice`, `deleteDevice` and `updateDeviceSession`, and the `Device` model
+* Added: `Session.userName`
+* Added: `auto` output on `Storage.getFilePreview` and the avatar endpoints, serving avif or webp when the `Accept` header supports it
+* Added: `OAuthProvider.naver` and `OAuthProvider.vippsSandbox`
+* Updated: Android plugin builds with Kotlin 2.4.20
+* Updated: requests send `X-Appwrite-Response-Format: 2.7.2`
+
+## 28.3.0
+
+* Added: optional `interactive` param on `Analytics.createEvent` to mark an event as telemetry that does not end a bounce
+* Updated: the tracker sends `app_backgrounded` and `app_foregrounded` with `interactive: false`
+* Added: `Client.setEnvironment` to act in a project environment; realtime connections carry it
+* Added: `OAuthProvider.vipps`
+* Fixed: Android background push reconnects inside the system's network windows instead of minutes later
+* Updated: requests send `X-Appwrite-Response-Format: 2.7.0`; the SDK targets Appwrite 2.7.x
+
+## 28.3.0-rc.1
+
+* Added: optional `interactive` param on `Analytics.createEvent` to mark an event as telemetry that does not end a bounce
+* Updated: the tracker sends `app_backgrounded` and `app_foregrounded` with `interactive: false`
+* Added: `Client.setEnvironment` to act in a project environment; realtime connections carry it
+* Added: `OAuthProvider.vipps`
+* Updated: requests send `X-Appwrite-Response-Format: 2.7.0`; the SDK targets Appwrite 2.7.x
+
+## 28.2.1
+
+* Fixed: web `Push` uses `package:web` instead of the deprecated `dart:html`
+* Updated: minimum `http` version raised to `1.1.1`
+
+## 28.2.0
+
+* Updated: requests send `X-Appwrite-Response-Format: 2.6.2`; the SDK targets Appwrite 2.6.x
+* Fixed: path parameters are percent-encoded as one segment; `.` and `..` throw `AppwriteException`
+* Fixed: chunked upload resume lookups percent-encode the file ID
+* Fixed: examples pass `null` for unset optional params instead of empty strings
+
+## 28.1.0
+
+* Added: `createQuery` on `databases`, `documentsDB` and `tablesDB` to send list queries in the request body
+* Added: `account.listMemberships`
+* Added: `bundleId` and `environment` on `account.createPushTarget` and `account.updatePushTarget` for APNs routing
+* Fixed: OAuth2 sign-in on Windows and Linux returns through a loopback callback and creates the session; a denied sign-in throws its error instead of opening the `failure` URL
+* Fixed: saving the OAuth2 session waits for client initialisation already in progress
+
+## 28.0.0
+
+* Breaking: requests send `X-Appwrite-Response-Format: 2.5.0`; responses follow the 2.5 shapes
+* Breaking: missing response fields are filled with their documented defaults
+* Breaking: `Client.chunkedUpload` takes a `responseType` parameter; custom `Client` implementations must add it
+* Breaking: requires Dart `>=3.10.0` and Flutter `>=3.38.1`
+* Breaking: the package is now a Flutter plugin with native Android push code
+* Breaking: `Client` adds `setPushEndpoint`, `setPushClientId` and `flatten`; custom `Client` implementations must add them
+* Added: `Apps` service to manage apps, installations, keys and secrets
+* Added: `Oauth2` service for the OAuth2 authorize, token, device and grant flows
+* Added: `Push` service with background delivery on Android
+* Added: `Topic` helper and MQTT exports
+* Added: Android push code ships under `io.appwrite.flutter`, so apps can also depend on `sdk-for-android`; set the notification icon with the `io.appwrite.flutter.push.notification_icon` meta-data
+* Added: `Query` aggregates (`count`, `countDistinct`, `sum`, `avg`, `min`, `max` and more), `groupBy`, `having`, `distinct`, joins, `relationship`, `covers`, `spatialEquals` and `page`
+* Added: `Query.builder()` to chain queries; `build()` returns the query list
+* Added: `ExecutionTrigger.email`
+* Fixed: required map fields missing from a response, such as `prefs`, default to an empty map
+* Fixed: OAuth2 models wrap a single `prompt` value in a list
+
+## 27.2.0
+
+* Added: `analytics.createEvent` in a new `Analytics` service to send tracking events
+* Added: `Tracking` helper for app lifecycle events and screen views, and `TrackingObserver` for automatic route tracking
+* Added: `avatars.updatePhoto` and `avatars.deletePhoto` to manage the user's custom profile photo, and the `Account` model
+* Added: `Webflow` to the `OAuthProvider` enum
+* Added: optional `state` on `account.createOAuth2Session` and `account.createOAuth2Token`, returned unchanged on the success and failure URLs
+* Added: optional `duration` on `account.createEmailPasswordSession` to set the session length
+* Added: optional `current` on `account.deleteSessions` to keep the current session signed in
+* Added: optional `membershipId` on `teams.createMembership`
+* Added: optional `total` on `account.listSessions`, the `locale` list methods and `listTransactions`
+
+## 27.1.0
+
+* Added: `account` passkey methods `listPasskeys`, `createPasskey`, `getPasskey`, `updatePasskey`, `deletePasskey` and `updatePasskeyVerification`
+* Added: `account.createPasskeyToken` and `account.updatePasskeyToken` for passkey sign-in
+* Added: `Passkey`, `PasskeyList`, `PasskeyChallenge` and `TokenSecret` models
+
+## 27.0.0
+
+* Breaking: removed `Account.listLogs` and the `Log`, `LogList` models
+* Breaking: removed `Client.setDevKey`
+* Breaking: SDK now targets Appwrite 2.3 (`X-Appwrite-Response-Format: 2.3.0`)
+* Added: `Account.createIdTokenSession` for native Apple and Google sign-in with `IdTokenProvider` enum
+* Added: `Account.createRecoveryOTP` and `Account.updateRecoveryOTP` for code-based password recovery
+* Added: `Account.createEmailVerificationOTP` and `Account.updateEmailVerificationOTP`
+* Added: `kakao` and `tiktok` values to `OAuthProvider`
+* Added: `passwordPwned` field on `User` and `providerIdToken` field on `Identity`
+* Fixed: empty-string required path parameters are rejected instead of sent to the API
+
+## 26.2.0
+
+* Added: `DocumentsDB` and `VectorsDB` services for document and vector database access
+* Added: `userId`, `emailHash` and `name` parameters to `Avatars.getPhoto()`
+* Added: `cloudflare` and `resend` values to `OAuthProvider` enum
+* Added: `auto` value to `ImageGravity` enum
+* Updated: `X-Appwrite-Response-Format` header to `2.0.0`
+
+## 26.1.0
+
+* Fixed: realtime policy-violation errors are now delivered to active subscription streams instead of thrown from the message handler
+
+## 26.0.0
+
+* Breaking: `Execution.functionId` replaced by `resourceId` and `resourceType`, now that executions cover both functions and sites
+* Added: `avatars.getPhoto` returning the user's best available profile photo
+* Added: `huggingface` OAuth provider
+* Added: `custom` authentication factor
+* Added: `ExecutionResourceType` enum and `resourceType` attribute on the `Execution` model
+* Fixed: OAuth2 failures now surface the error returned in the callback URL
+* Fixed: empty JSON error responses no longer throw `FormatException`
+* Updated: relaxed `device_info_plus` to `<14.0.0` and `package_info_plus` to `<11.0.0`
+* Updated: minimum Dart SDK is now 3.7.0 and minimum Flutter 3.29.0
+
+## 25.4.0
+
+* Added: `Organization` service for managing app installations
+* Added: app installation management methods to the `Teams` service
+* Added: account OAuth2 consent methods `listConsents`, `getConsent`, `deleteConsent`
+* Added: account consent token methods `listConsentTokens`, `getConsentToken`, `deleteConsentToken`
+* Added: `folder` parameter to `storage.createFile`, and `folder` and `key` to `File`
+* Fixed: Null optional parameters are no longer sent in request bodies
+* Fixed: Binary endpoints now authenticate with headers, not query parameters
+
+## 25.3.0
+
+* Added: `Client.setBearer()` method for OAuth access token authentication
+* Added: `Query.vectorDot`, `Query.vectorCosine`, `Query.vectorEuclidean` vector similarity query methods
+* Added: `appwrite` value to `OAuthProvider` enum
+* Added: `Locale` model fields: `city`, `timeZone`, `postalCode`, `latitude`, `longitude`, ISP and connection details
+* Updated: `Log` model docs now include `hidden` user type
+
+## 25.2.0
+
+* Added: Realtime connections now authenticate with the configured JWT.
+* Added: Forwarded `impersonateUserId` on `avatars` and `storage` file requests.
+
+## 25.1.0
+
+* Added: Email metadata fields to `User` (`emailCanonical`, `emailIsFree`, `emailIsDisposable`, `emailIsCorporate`, `emailIsCanonical`).
+* Added: `Membership.userAccessedAt` field.
+* Updated: Requests now send an explicit `accept` header matching each endpoint's response type.
+
+## 25.0.0
+
+* Breaking: `avatars.getScreenshot` `theme` parameter now uses the `BrowserTheme` enum
+* Breaking: Removed generic type parameters from `presences` service methods
+* Replaced: `BrowserTheme` enum
+* Updated: `Presence` model is now concrete and adds a `metadata` field
+
+## 24.1.1
+
+* Fixed: Removed `Advisor` service and `Insight`, `InsightCTA`, `InsightList`, `Report`, `ReportList` models (admin-only endpoints, not intended for client SDKs)
+* Added: `sizeActual` field to `File` model
+* Updated: Refreshed code formatting from the SDK generator
+
+## 24.1.0
+
+* Added: Realtime `presences` channel and `RealtimePresence` types for presence subscriptions
+* Added: `Advisor` and `Presences` services
+* Added: `Insight`, `Presence`, and `Report` models with list variants
+* Added: `fusionauth`, `keycloak`, and `kick` providers to `OAuthProvider` enum
+* Updated: `X-Appwrite-Response-Format` header to `1.9.5`
+
+## 24.0.0
+
+* Breaking: Added `unsubscribe()`, `update()`, and `close()` to Realtime subscriptions
+* Added: Added `userPhone` field to `Membership` model
+* Updated: Updated `X-Appwrite-Response-Format` header to `1.9.2`
+
+## 23.1.0
+
+* Added `x` OAuth provider to `OAuthProvider` enum
+* Added `userType` field to `Log` model
+* Added `getHeaders()` method to `Client`
+* Updated `X-Appwrite-Response-Format` header to `1.9.1`
+* Updated TTL description for list caching in Databases and TablesDB
+
+## 23.0.0
+
+* [BREAKING] Changed `$sequence` type from `int` to `String` for `Row` and `Document` models
+* Added impersonation support: `setImpersonateUserId()`, `setImpersonateUserEmail()`, `setImpersonateUserPhone()` on `Client`, `ClientBrowser`, and `ClientIO`
+* Added `impersonator` and `impersonatorUserId` optional fields to `User` model
+* Updated `Log` model field descriptions to clarify impersonation behavior for `userId`, `userEmail`, `userName`
+* Updated `X-Appwrite-Response-Format` header to `1.9.0`
+* Updated README badge to API version `1.9.x` and dependency example to `^23.0.0`
+
+## 22.0.0
+
+* Breaking: Channel API no longer defaults to '*'; explicit IDs required.
+* Updated: Docs and README reflect 21.4.1; TTL examples added.
 
 ## 21.1.0
 
@@ -362,7 +568,7 @@ https://github.com/appwrite/appwrite/blob/master/CHANGES.md
 - Support for Appwrite 0.10
 - Refactored for better cross platform support
 - Exception implements `toString()` to get proper error message for unhandled exceptions
-- Introduces new Realtime service, [more on official docs](link-to-realtime-docs)
+- Introduces new Realtime service, [more on official docs](https://appwrite.io/docs/apis/realtime)
 - Breaking Signature for `MultipartFile` has changed as now we are using `http` package. [Here is the new signature for MultipartFile](https://pub.dev/documentation/http/latest/http/MultipartFile-class.html)
 - Breaking Signature for `Response` has changed, now it only exposes the `data`.
 

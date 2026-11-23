@@ -4,7 +4,7 @@ namespace Tests\E2E\Services\Account;
 
 use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\System\System;
 
@@ -24,7 +24,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -49,6 +49,21 @@ trait AccountBase
         $this->assertIsBool($response['body']['emailIsCorporate']);
         $this->assertIsBool($response['body']['emailIsCanonical']);
 
+        // An explicit null for an optional param must fall back to its default, not 500.
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => Id::unique(),
+            'email' => uniqid() . 'user@localhost.test',
+            'password' => $password,
+            'name' => null,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertSame('', $response['body']['name']);
+
         /**
          * Test for FAILURE
          */
@@ -57,7 +72,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -70,7 +85,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => '',
             'password' => '',
         ]);
@@ -82,7 +97,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => '',
         ]);
@@ -94,7 +109,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => '',
             'password' => $password,
         ]);
@@ -107,7 +122,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'shortpass@appwrite.io',
             'password' => $shortPassword
         ]);
@@ -124,7 +139,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'longpass@appwrite.io',
             'password' => $longPassword,
         ]);
@@ -153,7 +168,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => uniqid() . 'objectparam@localhost.test',
             'password' => 'password',
             'name' => 'User Name',
@@ -176,7 +191,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $otpEmail
         ]);
 
@@ -201,6 +216,9 @@ trait AccountBase
 
         $this->assertNotEmpty($code);
         $this->assertStringContainsStringIgnoringCase('Use OTP ' . $code . ' to sign in to '. $this->getProject()['name'] . '. Expires in 15 minutes.', $lastEmail['text']);
+
+        // The code is bound to the requesting origin for mail clients and autofill
+        $this->assertEquals('"' . $code . '"; origin="http://localhost"', $lastEmail['headers']['otp-token'] ?? '');
 
         // Only Console project has branded logo in email.
         if ($isConsoleProject) {
@@ -257,7 +275,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $otpEmail,
             'phrase' => true
         ]);
@@ -283,7 +301,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'wrongemail'
         ]);
 
@@ -307,7 +325,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -325,7 +343,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -371,7 +389,7 @@ trait AccountBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-forwarded-for' => '191.0.113.195',
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -410,7 +428,7 @@ trait AccountBase
             'x-forwarded-for' => $abuseIp,
         ];
         $account = $this->client->call(Client::METHOD_POST, '/account', $baseHeaders, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => 'Abuse Reset Test',
@@ -463,5 +481,75 @@ trait AccountBase
         ]);
 
         $this->assertEquals($session['headers']['status-code'], 429);
+    }
+
+    /**
+     * Configure the mock OAuth2 provider on the project under test: the
+     * browser flow through the console endpoint, native sign-in through the
+     * mock route that stands in for the console form mock providers lack.
+     */
+    protected function updateMockProvider(bool $enabled, bool $nativeEnabled = true, array $clientIds = [], string $provider = 'mock'): void
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => $provider,
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => $enabled,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/mock/tests/general/oauth2/native', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'projectId' => $this->getProject()['$id'],
+            'provider' => $provider,
+            'enabled' => $nativeEnabled,
+            'clientIds' => $clientIds,
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
+    protected function createIdTokenSession(array $body, array $headers = []): array
+    {
+        return $this->client->call(Client::METHOD_POST, '/account/sessions/id-token', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $headers), $body);
+    }
+
+    /**
+     * Mint an ID token signed by the mock provider's test key. Claim and
+     * header overrides allow producing deliberately invalid tokens.
+     */
+    protected function mintIdToken(array $claims, array $header = []): string
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/mock/tests/general/oauth2/id-token', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'claims' => \json_encode(array_merge([
+                'iss' => 'https://localhost/v1/mock',
+                'aud' => '1',
+                'iat' => \time(),
+                'exp' => \time() + 3600,
+            ], $claims)),
+            'header' => empty($header) ? '' : \json_encode($header),
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        return $response['body']['token'];
     }
 }

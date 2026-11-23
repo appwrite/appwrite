@@ -28,10 +28,17 @@ class Gitlab extends OAuth2
     protected array $tokens = [];
 
     /**
+     * Existing GitLab applications must allow these scopes. openid and email
+     * are what /oauth/userinfo uses for the primary address. read_user remains
+     * for grants issued before those scopes existed.
+     * VCS installs override this with setScopes().
+     *
      * @var array
      */
     protected array $scopes = [
-        'read_user'
+        'read_user',
+        'openid',
+        'email',
     ];
 
     /**
@@ -40,6 +47,22 @@ class Gitlab extends OAuth2
     public function getName(): string
     {
         return 'gitlab';
+    }
+
+    /**
+     * Replaces every scope, including ones passed to the constructor.
+     *
+     * @param array<int, string> $scopes
+     */
+    public function setScopes(array $scopes): self
+    {
+        $this->scopes = [];
+
+        foreach ($scopes as $scope) {
+            $this->addScope($scope);
+        }
+
+        return $this;
     }
 
     /**
@@ -112,8 +135,8 @@ class Gitlab extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['id'])) {
-            return $user['id'];
+        if (isset($user['sub'])) {
+            return (string) $user['sub'];
         }
 
         return '';
@@ -132,9 +155,7 @@ class Gitlab extends OAuth2
     }
 
     /**
-     * Check if the OAuth email is verified
-     *
-     * @link https://docs.gitlab.com/ee/api/users.html#list-current-user-for-normal-users
+     * @link https://docs.gitlab.com/integration/openid_connect_provider/
      *
      * @param string $accessToken
      *
@@ -144,11 +165,7 @@ class Gitlab extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if ($user['confirmed_at'] ?? false) {
-            return true;
-        }
-
-        return false;
+        return ($user['email_verified'] ?? false) === true;
     }
 
     /**
@@ -160,7 +177,7 @@ class Gitlab extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        return $user['avatar_url'] ?? '';
+        return $user['picture'] ?? '';
     }
 
     /**
@@ -184,7 +201,7 @@ class Gitlab extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        return $user['username'] ?? '';
+        return $user['preferred_username'] ?? $user['nickname'] ?? '';
     }
 
     /**
@@ -234,12 +251,46 @@ class Gitlab extends OAuth2
      */
     protected function getUser(string $accessToken): array
     {
-        if (empty($this->user)) {
-            $user = $this->request('GET', $this->getEndpoint() . '/api/v4/user?access_token=' . \urlencode($accessToken));
-            $this->user = \json_decode($user, true);
+        if (!empty($this->user)) {
+            return $this->user;
+        }
+
+        try {
+            $user = $this->request(
+                'GET',
+                $this->getEndpoint() . '/oauth/userinfo',
+                ['Authorization: Bearer ' . $accessToken],
+            );
+            $this->user = \json_decode($user, true) ?? [];
+        } catch (\Throwable) {
+            // A grant from before the openid scope cannot call userinfo.
+            // The profile still identifies the user. It does not verify the email.
+            $this->user = $this->profile($accessToken);
         }
 
         return $this->user;
+    }
+
+    /**
+     * @param string $accessToken
+     *
+     * @return array
+     */
+    private function profile(string $accessToken): array
+    {
+        $response = $this->request('GET', $this->getEndpoint() . '/api/v4/user?' . \http_build_query([
+            'access_token' => $accessToken,
+        ]));
+        $profile = \json_decode($response, true) ?? [];
+
+        return [
+            'sub' => isset($profile['id']) ? (string) $profile['id'] : '',
+            'email' => $profile['email'] ?? '',
+            'email_verified' => false,
+            'name' => $profile['name'] ?? '',
+            'preferred_username' => $profile['username'] ?? '',
+            'picture' => $profile['avatar_url'] ?? '',
+        ];
     }
 
     /**

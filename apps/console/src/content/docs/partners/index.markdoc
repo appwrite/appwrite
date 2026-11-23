@@ -1,0 +1,58 @@
+---
+layout: article
+title: Partners
+description: Integrate Appwrite into your platform. Provision organizations and projects for your customers with OAuth connect and Partners keys.
+---
+
+Partner documentation is for teams building platforms on top of Appwrite: products that provision Appwrite backends for users, connect AI agents to their accounts, or orchestrate organizations and projects from a control plane.
+
+Developer documentation covers building apps inside a single Appwrite project. Partner documentation covers orchestrating Appwrite across organizations and projects from your own platform.
+
+# Use cases for platform builders {% #platform-use-cases %}
+
+- **Vibe coding and agentic platforms** that provision Appwrite projects, auth, and databases when users build with prompts or agents
+- **AI agents and MCP tools** that connect to a user's Appwrite account and manage resources during autonomous workflows
+- **Multi-tenant SaaS control planes** that isolate each customer in a dedicated Appwrite project or organization
+- **Embedded and white-label backends** that expose your own product UX while Appwrite handles provisioning, domains, and project lifecycle
+
+# Integration models {% #integration-models %}
+
+Appwrite supports two ways to integrate at the platform level:
+
+{% cards %}
+{% cards_item href="/docs/partners/oauth-connect" title="OAuth connect" %}
+Let users authorize your platform to access their Appwrite organizations and projects. Best when customers already have Appwrite accounts and want to link them to your product.
+{% /cards_item %}
+{% cards_item href="/docs/partners/org-api-keys" title="Partners keys" %}
+Authenticate Console APIs from your backend with a key bound to your own Appwrite organization, and provision projects for your customers.
+{% /cards_item %}
+{% /cards %}
+
+Many platforms combine both: OAuth connect for user-linked accounts and Partners keys for provisioning resources in your platform's Appwrite organization.
+
+# Partners APIs {% #partners-apis %}
+
+Partner integrations call these APIs from an Appwrite server SDK:
+
+{% cards %}
+{% cards_item href="/docs/partners/organizations" title="Organization" %}
+Read and update the organization, manage members, and provision projects with a Partners key.
+{% /cards_item %}
+{% cards_item href="/docs/partners/project" title="Project" %}
+Configure auth methods, platforms, API keys, SMTP, and policies for each customer's project.
+{% /cards_item %}
+{% cards_item href="/docs/partners/proxy" title="Proxy" %}
+Point custom domains at a customer's project API, functions, and sites with a project API key, then verify them over DNS.
+{% /cards_item %}
+{% cards_item href="/docs/partners/apps" title="Apps" %}
+Register OAuth apps, manage client credentials, and start authorization flows for integrations and marketplaces.
+{% /cards_item %}
+{% /cards %}
+
+# Getting started {% #getting-started %}
+
+Start with the quick start to choose an integration model, then follow the guides for your use case.
+
+{% arrow_link href="/docs/partners/quick-start" %}
+Quick start
+{% /arrow_link %}

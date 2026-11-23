@@ -1,0 +1,174 @@
+---
+layout: post
+title: Claude Sonnet 5.5 costs up to 30% less per task
+description: Claude Sonnet 5.5 costs up to 30% less per task and improves coding, agentic work, and everyday tasks at the same Sonnet 5 pricing.
+date: 2026-09-29
+timeToRead: 5
+author: aishwari
+category: news
+featured: false
+unlisted: true
+cover: /images/blog/claude-sonnet-55-is-30-faster-and-costs-up-to-30-less/cover.avif
+faqs:
+  - question: How much does Claude Sonnet 5.5 cost?
+    answer: Claude Sonnet 5.5 costs $2 per million input tokens and $10 per million
+      output tokens. Cache reads cost $0.20 per million tokens. Its per-token
+      pricing is the same as Sonnet 5, but Anthropic says it can cost up to 30%
+      less per task because it uses fewer tokens.
+  - question: Is Claude Sonnet 5.5 cheaper than Claude Sonnet 5?
+    answer: Sonnet 5.5 has the same per-token pricing as Sonnet 5, but Anthropic
+      reports that it typically uses fewer tokens to complete the same work,
+      reducing cost per task by up to 30%.
+  - question: Is Claude Sonnet 5.5 faster than Sonnet 5?
+    answer: Yes. Anthropic says Claude Sonnet 5.5 generates output more than 30%
+      faster than Sonnet 5, making it its fastest Sonnet model to date.
+  - question: What is the difference between Claude Sonnet 5.5 and Sonnet 5?
+    answer: Claude Sonnet 5.5 improves on Sonnet 5 in performance, collaboration,
+      cost efficiency, speed, and safety. It performs substantially better on
+      several coding and agentic benchmarks while keeping the same per-token
+      pricing.
+---
+Claude Sonnet 5.5 is the second model in Anthropic's Claude 5.5 family. Anthropic [announced Claude Sonnet 5.5](https://www.anthropic.com/claude-sonnet-5-5) on September 28, 2026, and says it generates output more than 30% faster than Claude Sonnet 5 while costing up to 30% less per task at the same per-token price. These figures come from Anthropic's own testing, and real-world speed improvements can vary by workload and usage.
+
+For teams running agents at volume, that matters more than any single benchmark. Fewer tokens and less time per task lower your bill and your latency together. Here is what shipped, how Claude Sonnet 5.5 compares with Sonnet 5 and Opus 5.5, and what it means if you build agentic apps on Appwrite.
+
+# What is Claude Sonnet 5.5?
+
+Claude Sonnet 5.5 is the second model in Anthropic's Claude 5.5 family and the successor to [Claude Sonnet 5](/blog/post/claude-sonnet-5-is-anthropics-most-agentic-sonnet-yet). It is a faster, lower-cost complement to [Claude Opus 5.5](/blog/post/claude-opus-55-reaches-fable-level-performance). Opus 5.5 is built for complex work that needs careful judgment. Sonnet 5.5 is strongest at well-scoped everyday tasks, fixing bugs, and creating polished documents, slides, and spreadsheets.
+
+Claude Haiku 5.5, built for high-volume and cost-sensitive applications, joins the Claude 5.5 family in the coming weeks. That leaves Opus 5.5 for complex, open-ended work, Sonnet 5.5 for well-scoped everyday tasks, and Haiku 5.5 for high-volume workloads where cost matters most.
+
+# What's new in Claude Sonnet 5.5 compared with Sonnet 5
+
+**Claude Sonnet 5.5 improves on Sonnet 5 in five areas: performance, collaboration, cost, speed, and safety.** None of these required a pricing change.
+
+* **Performance.** Sonnet 5.5 scores 70.6% on Terminal-Bench 4.0, an agentic coding evaluation, compared with Sonnet 5's 10.3%. It lands two points below Opus 5.5 on GDPval-AA, and it is the first Sonnet model to beat Pokémon Red working only from screenshots.
+* **Collaboration.** Like Opus 5.5, Sonnet 5.5 writes more clearly than the previous generation. Early testers described it as a better partner for collaboration than Sonnet 5.
+* **Cost.** Per-token pricing matches Sonnet 5, but Sonnet 5.5 typically needs far fewer tokens to do the same work. In Anthropic's testing it costs up to 30% less per task.
+* **Speed.** Output generation is more than 30% faster than Sonnet 5, making it Anthropic's fastest Sonnet model to date.
+* **Safety.** Sonnet 5.5 matches or improves on Sonnet 5 on most alignment measures, and it is the first Sonnet model to launch with cyber safeguards like those on Anthropic's most capable models.
+
+# Claude Sonnet 5.5 benchmarks against Sonnet 5, Opus 5.5, and GPT-6 Sol
+
+Claude Sonnet 5.5 improves on Sonnet 5 across every domain Anthropic reported, in some cases dramatically. On several evaluations, Sonnet 5.5 at max effort performs comparably to Opus 5.5.
+
+| Benchmark                                         | Sonnet 5.5                 | Sonnet 5 | Opus 5.5 | GPT-6 Sol    |
+| ------------------------------------------------- | -------------------------- | -------- | -------- | ------------ |
+| Agentic coding (Terminal-Bench 4.0)               | 70.6%                      | 10.3%    | 66.4%    | Not reported |
+| Agentic coding (FrontierCode 1.1 Main)            | 52.1% (xhigh), 46.2% (max) | 42.4%    | 54.4%    | 49.3%        |
+| Agentic coding (CursorBench 4.0)                  | 55.5%                      | 34.1%    | 57.8%    | Not reported |
+| Knowledge work (GDPval-AA v2.1)                   | 1844                       | 1449     | 1846     | 1487         |
+| Knowledge work (AA-Briefcase v1.1)                | 1811                       | 1359     | 1822     | 1483         |
+| Reasoning with tools (Humanity's Last Exam)       | 64.5%                      | 54.9%    | 67.7%    | Not reported |
+| Computer use (OSWorld 2.1, partial)               | 80.1%                      | 57.0%    | 81.8%    | Not reported |
+| Visual chart recognition (Chartography, no tools) | 61.6%                      | 15.6%    | 64.4%    | 53.6%        |
+
+*Source: Anthropic's [Claude Sonnet 5.5 announcement](https://www.anthropic.com/claude-sonnet-5-5). The full methodology is in the Sonnet 5.5 System Card. GPT-6 Sol results were not publicly reported for Terminal-Bench 4.0 or CursorBench 4.0. Sonnet 5.5 scores lower on FrontierCode at max effort than at xhigh because it more often ran Claude Code's code-review skill, which occasionally led to timeouts or out-of-scope edits that the benchmark penalizes.*
+
+Anthropic is clear that benchmark scores capture only one facet of a model. In its own testing and that of external testers, **Opus 5.5 remains clearly stronger at complex, open-ended work that requires sustained judgment.** Read the table as "Sonnet 5.5 closes most of the gap on scoped tasks," not "Sonnet 5.5 replaces Opus 5.5."
+
+# Claude Sonnet 5.5 cost per task at each effort level
+
+The more useful view is score against cost per task. As effort goes up, models work longer, which raises both the cost and, usually, the score.
+
+* **On several benchmarks, Sonnet 5.5 at low or medium effort beats Sonnet 5's best score for about a tenth of the cost per task.**
+* On [Terminal-Bench](https://www.tbench.ai/), which measures multi-step professional tasks in a command-line interface, Sonnet 5.5 at medium effort far exceeds Sonnet 5's best score for less than a tenth of the cost.
+* Sonnet 5.5 complements Opus 5.5 best at lower effort settings. At higher settings, it can perform comparably to Opus 5.5 at a similar cost.
+
+# Claude Sonnet 5.5 for coding and agentic development
+
+**Coding is where the jump from Sonnet 5 to Sonnet 5.5 is most noticeable.** At high effort on FrontierCode, Sonnet 5.5 scores 10 points higher than Sonnet 5 at the same setting, at about one fifteenth of the cost per task. On CursorBench, which tests models on tasks from real Cursor coding sessions, its best score is within about two points of Opus 5.5.
+
+Early testers pointed to two behaviors:
+
+* **Faster codebase understanding.** Testers noted how quickly Sonnet 5.5 builds a working picture of an unfamiliar codebase.
+* **Fewer, batched tool calls.** In head-to-head runs, Sonnet 5.5 batched tool calls together more often than Sonnet 5, which meant fewer steps and lower costs.
+
+Epic Games reported that Sonnet 5.5 cleared the quality bar they would expect from a higher-tier model, handling tens of thousands of lines of gameplay system architecture and multi-hour tasks with less prescriptive prompting. For agent loops, batched tool calls are the detail to watch: fewer steps per task means fewer round trips and less context to pay for.
+
+# Claude Sonnet 5.5 for knowledge work, documents, and design
+
+**Claude Sonnet 5.5 scores 1844 on GDPval-AA, nearly level with Opus 5.5 and about 400 points above Sonnet 5.** GDPval-AA, run by [Artificial Analysis](https://artificialanalysis.ai/), tests models on real-world tasks across 44 occupations and nine major industries. Sonnet 5.5 is also close to Opus 5.5 on computer use and chart recognition, and clearly outperforms Sonnet 5 and GPT-6 Sol on long-horizon knowledge work.
+
+Testers also highlighted improvements that are harder to measure:
+
+* **A more natural conversational partner** than Sonnet 5.
+* **A sharper eye for design,** adding polish to user interfaces.
+* **Template-aware slide decks** that follow a provided template and need minimal editing.
+
+In one internal test, Anthropic gave Sonnet 5.5 a public company's quarterly earnings materials, call transcripts, and a slide template, then asked for a 10-slide operating review. Two experts judged the first draft ready to send as is.
+
+Slack reported that, without changing any prompts, Sonnet 5.5 did better than Sonnet 5 on almost all of its offline Slackbot evals, in fewer steps and with about 14% fewer output tokens.
+
+# Claude Sonnet 5.5 pricing and speed
+
+**Claude Sonnet 5.5 costs $2 per million input tokens and $10 per million output tokens, the same as Sonnet 5.** Cache reads cost $0.20 per million tokens. The savings come from efficiency, not a lower rate card.
+
+| Price per 1M tokens | Claude Sonnet 5.5 | Claude Opus 5.5 |
+| ------------------- | ----------------- | --------------- |
+| Cache reads         | $0.20             | $0.20           |
+| Cache writes        | $2.50             | $5              |
+| Input tokens        | $2                | $4              |
+| Output tokens       | $10               | $20             |
+
+Sonnet 5.5 is half the price of Opus 5.5 on input, output, and cache writes, with identical cache read pricing.
+
+# Claude Sonnet 5.5 safety, alignment, and safeguards
+
+**Claude Sonnet 5.5 matches or improves on Sonnet 5 on most measures of alignment, misuse resistance, and honesty.** Anthropic's automated behavioral audit tests Claude across roughly 1,850 scenarios, and found no evidence that Sonnet 5.5 pursues goals that conflict with the user's intentions. Opus 5.5 still performs slightly better overall.
+
+On containment evaluations, Sonnet 5.5 is the least likely of any Anthropic model to probe the limits of its containers, which matters for agents with real tool access.
+
+Sonnet 5.5 also ships with three sets of safeguards:
+
+* **Cybersecurity.** Its cyber capabilities are a large improvement over Sonnet 5's, so it launches with safeguards similar to Opus 5.5's. Routine bug finding and fixing is unaffected, but higher-risk cybersecurity tasks visibly fall back to Sonnet 5. Cyberdefenders will soon be able to apply to the expanded Cyber Verification Program.
+* **Biology.** Sonnet 5.5 uses the same biology safeguards as Sonnet 5. Most research, education, and clinical work is unaffected, though some microbiology and virology requests may be flagged in error. Organizations can apply to the Life Sciences Verification Program.
+* **Distillation.** Sonnet 5.5 is the first Sonnet model to launch with safety classifiers that prevent reasoning extraction. It also expands preserved thinking, so Claude's thinking cannot be decoupled from the account that created it. Most developers will not notice this unless they move conversations between accounts.
+
+# How to migrate to Claude Sonnet 5.5
+
+**Claude Sonnet 5.5 is available now on all platforms, including Amazon Web Services, Google Cloud, and Microsoft Azure, with zero data retention available.** Developers can start on the Claude Platform with the model id `claude-sonnet-5-5`.
+
+Before switching production traffic, check these:
+
+1. **Update the model id** from `claude-sonnet-5` to `claude-sonnet-5-5`.
+2. **Check your thinking configuration.** If you run Sonnet with thinking off, switch to the new `between_tools` setting, which keeps up-front thinking off, before moving to Sonnet 5.5. Anthropic's migration guide covers the details.
+3. **Set effort explicitly** for each workload instead of relying on the platform default of high.
+4. **Re-run your own evals** at low and medium effort, where the biggest cost wins show up.
+
+# Should you use Claude Sonnet 5.5 or Opus 5.5?
+
+**Use Claude Sonnet 5.5 for well-scoped work and Opus 5.5 for open-ended work that needs sustained judgment.**
+
+## Use Claude Sonnet 5.5 when
+
+* The task is clearly defined, like a bug fix or a feature with a spec.
+* You need fast iteration and lower latency.
+* You run high-volume agent steps at low or medium effort.
+* You are producing documents, slides, or UI polish.
+
+## Use Claude Opus 5.5 when
+
+* The task is open-ended and requires careful judgment.
+* Quality matters more than turnaround time.
+* You run long, complex migrations or audits.
+* You need the strongest results on complex reasoning.
+
+The simplest pattern is to route by task: send routine agent steps to Sonnet 5.5 at medium effort, and escalate to Opus 5.5 only when a step genuinely needs it.
+
+# Build Claude Sonnet 5.5 agents with an Appwrite backend
+
+Sonnet 5.5's strengths are speed, low cost per task, and reliable work on scoped problems. That makes it a good fit for agents that ship real apps: generating features, fixing bugs, and iterating quickly. Those apps still need somewhere to authenticate users, store data, keep files, and run server-side logic.
+
+[Appwrite](/) is an open source backend that covers all of it in one project: [Auth](/docs/products/auth), [Databases](/docs/products/databases), [Storage](/docs/products/storage), [Functions](/docs/products/functions), [Messaging](/docs/products/messaging), and [Sites](/docs/products/sites) for hosting the frontend. The [Appwrite plugin for Claude Code](/blog/post/announcing-appwrite-claude-code-plugin) bundles the [Appwrite MCP servers](/docs/tooling/ai/mcp-servers) and SDK-specific [Appwrite Skills](/docs/tooling/ai/skills) into a single install, so your Sonnet 5.5 agent writes real SDK calls against a backend that already exists. The [Claude Code integration guide](/docs/tooling/ai/agents/claude-code) covers setup, and there is a full walkthrough on [adding a backend to apps built with Claude Code](/blog/post/backend-for-claude-code-apps).
+
+Sonnet 5.5's batched tool calls pair well with this setup. Fewer round trips per task means fewer repeated reads of MCP tool definitions and docs context, and $0.20 cache reads keep the repeated context cheap. [Create a free Appwrite project](https://cloud.appwrite.io), install the Claude Code plugin, and point `claude-sonnet-5-5` at it to go from generated code to a working backend in one session.
+
+# Resources
+
+* [Appwrite plugin for Claude Code](/blog/post/announcing-appwrite-claude-code-plugin)
+* [Claude Code integration guide](/docs/tooling/ai/agents/claude-code)
+* [Appwrite MCP server docs](/docs/tooling/ai/mcp-servers)
+* [Appwrite Skills docs](/docs/tooling/ai/skills)
+* [Create a free Appwrite project](https://cloud.appwrite.io/)
+* [Join the Appwrite Discord](https://appwrite.io/discord)

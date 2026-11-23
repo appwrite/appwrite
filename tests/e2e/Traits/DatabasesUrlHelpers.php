@@ -26,17 +26,11 @@ trait DatabasesUrlHelpers
     {
         $resource = $this->getSchemaResource();
         $base = "{$this->getContainerUrl($databaseId, $containerId)}/{$resource}";
-        // For relationship updates, the URL pattern is /attributes/{key}/relationship
-        // For other attribute updates, the URL pattern is /attributes/{type}/{key}
-        if ($type === 'relationship' && $key) {
-            $base .= "/{$key}/{$type}";
-        } else {
-            if ($type) {
-                $base .= "/{$type}";
-            }
-            if ($key) {
-                $base .= "/{$key}";
-            }
+        if ($type) {
+            $base .= "/{$type}";
+        }
+        if ($key) {
+            $base .= "/{$key}";
         }
         return $base;
     }

@@ -1,5 +1,318 @@
 # Change Log
 
+## 31.3.0
+
+* Added: `Account.createLDAPSession` for LDAP sign-in
+* Added: `Project.updateLDAP` and `Project.createLDAPTest` to configure and test a project's LDAP directory, the `ProjectLDAPEncryption` enum and `ldap*` fields on `Project`
+* Added: `Project.updateOAuth2Naver`, the `OAuth2Naver` model and `OAuthProvider.naver`
+* Added: `Project.deletePasswords` to force every user to reset their password
+* Added: `Sites.updateAnalytics` and `analyticsEnabled` and `analyticsPropertyId` on `Site`
+* Added: `reason` on `DomainPrice`, set when a domain was not priced for the requested registration type
+* Added: `ImageFormat.auto` on `Storage.getFilePreview` and the avatar endpoints, serving avif or webp when the `Accept` header supports it
+* Updated: requests send `X-Appwrite-Response-Format: 2.7.2`
+
+## 31.2.0
+
+* Updated: `project.listEnvironments`, `project.createEnvironment`, `project.getEnvironment`, `project.updateEnvironment` return `Environment` models instead of `Project`
+* Added: `account.createDevice`, `account.getDevice`, `account.deleteDevice` and `account.updateDeviceSession`, and the `Device` model
+* Added: `project.updateAccountDevicesPolicy`, `ProjectPolicyId.accountDevices` and the `PolicyAccountDevices` model
+* Added: `project.updateOAuth2Vipps`, `project.updateOAuth2VippsSandbox` and the `OAuth2Vipps` model
+* Added: `OAuthProvider.vipps` and `OAuthProvider.vippsSandbox`
+* Added: `proxy.updateFunctionRule`, `proxy.updateRedirectRule` and `proxy.updateSiteRule`
+* Added: optional `schedule` on `waf` rule create and update methods and on `WafRule*` models
+* Added: `project.getPrefs` and `project.updatePrefs` for project preferences
+* Added: `Client.setEnvironment` to act in a project environment
+* Added: `AppwriteMigrationResource.projectPreferences` to migrate project preferences
+* Added: `monitors.read`, `monitors.write`, `alerts.read`, `alerts.write`, `reviews.read` and `reviews.write` to `ProjectKeyScopes`
+* Added: `Organization.budgetNotify`, `budgetCritical` and `educationExpiresAt`
+* Added: `Project.environmentId`, `Session.userName` and `ActivityEvent.reason`
+* Added: `ProxyRule.expireAt` and `certificateStatus`
+* Updated: requests send response format `2.7.1`; README targets Appwrite 2.7.x
+
+## 31.1.0
+
+* Updated: requests send response format `2.6.2`
+* Updated: redirects are no longer followed; a 3xx response throws `AppwriteException` naming its `Location`
+* Fixed: a `.` or `..` path parameter throws `AppwriteException` before the request is sent
+* Added: `migrations` service with `list`, `get`, `retry`, `delete`, Appwrite, Firebase, NHost and Supabase migrations, and CSV and JSON imports and exports
+* Added: `AppwriteMigrationResource`, `FirebaseMigrationResource`, `NHostMigrationResource`, `SupabaseMigrationResource` and `OnDuplicate` enums
+* Added: `Migration`, `MigrationList` and `MigrationReport` models
+* Added: `project.updateDenyRealtimeGuestsPolicy`, `ProjectPolicyId.denyRealtimeGuests` and the `PolicyDenyRealtimeGuests` model
+* Added: `project.deleteSessions` to sign out every session in the project
+* Added: `deploymentRetention`, `deploymentRetentionMax` and `deploymentsRetentionCount` on `BillingPlan`
+* Added: `python315`, `deno29`, `go127` and `rust199` on `Runtime` and `BuildRuntime`
+* Fixed: path parameters and upload IDs are percent-encoded as one segment, so `/`, `?` and `#` stay in the value
+
+## 31.0.0
+
+* Breaking: model constructors require the new `description`; `BillingPlan` requires `functionsAllowCron`, `Bucket` requires `stripMetadata`, and the password dictionary and personal data policy models require `denyList`
+* Added: `createQuery` on `databases`, `documentsDB` and `tablesDB` to send list queries in the request body
+* Added: `account.listMemberships`
+* Added: optional `description` on create and update for databases, collections, tables, attributes, columns, indexes, buckets, functions, sites, variables, topics, webhooks and keys
+* Added: `total` on list methods in `activities`, `backups`, `domains`, `mongo`, `mysql` and `postgresql`
+* Added: `emails` on `messaging.createEmail` and `messaging.updateEmail`
+* Added: `denyList` on `project.updatePasswordDictionaryPolicy`, `updatePasswordPersonalDataPolicy` and their policy models
+* Added: `BillingPlan.functionsAllowCron`
+* Added: `stripMetadata` on `storage.createBucket`, `updateBucket` and the `Bucket` model
+
+## 30.0.0
+
+* Breaking: removed `account.listLogs` and `users.listLogs`
+* Breaking: removed `organization.createKey`, `getKey`, `listKeys`, `updateKey` and `deleteKey`, and `OrganizationKeyScopes`; use `organization.listProjectKeys`, `getProjectKey`, `updateProjectKey` and `deleteProjectKey` instead
+* Breaking: removed the `Log`, `LogList` and `DevKey` models
+* Breaking: removed `Project.devKeys` and the unsent `Block` fields
+* Breaking: `listSpecifications` returns each specification's prices and overage rates on the row itself. Removed the list-level `pricing` field and the `DedicatedDatabaseSpecificationPricing` model
+* Breaking: removed `Client.setDevKey`
+* Breaking: removed `BillingPlanGroup.starter`; use `BillingPlanGroup.free`
+* Breaking: requests send response format `2.5.0`
+* Breaking: `resource` on the `oauth2` authorize, PAR, device and token methods is now `List<String>`
+* Breaking: `BackupRestoration.options` is now a `Map<String, dynamic>`
+* Breaking: billing, backup and dedicated database fields the server can omit are now nullable
+* Breaking: `providerIdToken`, `fingerprints`, OAuth2 `prompt` and native fields are now non-nullable
+* Breaking: `Client.chunkedUpload` takes a `responseType` parameter and `Client` adds `flatten`; custom `Client` implementations must add both
+* Added: `Topic` helper to build MQTT topics for push messages
+* Added: `mongo`, `mysql` and `postgresql` `promoteRestoration`, `restoreMode`, `targetName` and `autoPromote` on `createRestoration`, and `DedicatedDatabaseRestoration.restoreMode`
+* Added: `proxy.createSMTPRule`, the `ProxyRuleProtocol` enum and `ProxyRule.protocol`
+* Added: `emailEnabled` on `functions.update` and `Func`, and `ExecutionTrigger.email`
+* Added: `Query` aggregates (`count`, `countDistinct`, `sum`, `avg`, `min`, `max` and more), `groupBy`, `having`, `distinct`, joins, `relationship`, `covers`, `spatialEquals` and `page`
+* Added: `Query.builder()` to chain queries; `build()` returns the query list
+* Updated: models fill documented defaults for fields missing from a response
+* Updated: empty required path parameters now throw `AppwriteException` before sending the request
+* Updated: examples import `models.dart` and use `models.` types
+* Fixed: required map fields missing from a response, such as `prefs`, default to an empty map
+* Fixed: OAuth2 models wrap a single `prompt` value in a list
+
+## 29.4.0
+
+* Added: `domains` service to manage domains, DNS records, email presets, prices, transfer status and zones
+* Added: `waf` service with bypass, challenge, deny, rate-limit and redirect rules
+* Added: `account.createEmailVerificationOTP`, `updateEmailVerificationOTP`, `createRecoveryOTP` and `updateRecoveryOTP`
+* Added: `account.createIdTokenSession` and `Identity.providerIdToken`
+* Added: `oauth2.introspect`
+* Added: project environments with `project.createEnvironment`, `getEnvironment`, `listEnvironments`, `updateEnvironment` and `deleteEnvironment`
+* Added: `organization.createEphemeralProjectKey`, `listProjectKeys`, `getProjectKey`, `updateProjectKey` and `deleteProjectKey`
+* Added: Kakao, TikTok and Webflow OAuth2 providers with `project.updateOAuth2Kakao`, `updateOAuth2TikTok` and `updateOAuth2Webflow`
+* Added: optional `prompt` on the Auth0, Discord, GitHub, Microsoft, Okta, Salesforce and Zoho OAuth2 settings, and native client IDs on Apple and Google
+* Added: `project.updatePasswordPwnedPolicy`, `project.updatePasswordRotationPolicy` and `User.passwordPwned`
+* Added: `messaging.createAppwriteProvider` and `messaging.updateAppwriteProvider`
+* Added: optional `replyToEmail` and `replyToName` on email messages, `channelId` on push messages, and `qos` and `expiry` on topics
+* Added: `avatars.updatePhoto` and `avatars.deletePhoto`
+* Added: optional `duration` on `account.createEmailPasswordSession`, `current` on `account.deleteSessions`, `membershipId` on `teams.createMembership` and `fingerprints` on Android platforms
+* Added: optional `total` on the locale, transaction, runtime, specification and framework lists
+* Added: `dart-3.13` and `flutter-3.47` runtimes, the `jaspr` framework, the `trigram` index type, `auto` image gravity, the `dedicatedDatabase` proxy rule resource type, OTP email templates and new key scopes
+* Added: optional fields on `BillingPlan`, `DedicatedDatabase`, `DedicatedDatabaseSpecification`, `Project` and `Topic`, and `free` and `start` in `BillingPlanGroup`
+
+## 29.3.1
+
+* Fixed: added `ProjectAuthMethodId.passkey`, so `project.updateAuthMethod` can enable passkeys
+* Fixed: added `ProjectPolicyId.passkey` and the `PolicyPasskey` model, so `getPolicy` and `listPolicies` return the passkey policy
+
+## 29.3.0
+
+* Added: `account` passkey methods `listPasskeys`, `createPasskey`, `getPasskey`, `updatePasskey`, `deletePasskey` and `updatePasskeyVerification`
+* Added: `account.createPasskeyToken` and `account.updatePasskeyToken` for passkey sign-in
+* Added: `users.listPasskeys`, `users.getPasskey`, `users.updatePasskey` and `users.deletePasskey`
+* Added: `project.updatePasskeyPolicy` to configure passkey sign-in
+* Added: `Passkey`, `PasskeyList`, `PasskeyChallenge` and `TokenSecret` models
+
+## 29.2.0
+
+* Added: optional `interval` parameter on `functions.create` and `functions.update` to run a function every N minutes
+* Added: `interval` on the `Function` model and `functionsIntervalMinimum` on the `BillingPlan` model
+
+## 29.1.0
+
+* Added: optional `state` parameter on `createOAuth2Token`, returned unchanged on the success and failure URLs
+
+## 29.0.0
+
+* Stable release of the dedicated database APIs: `mysql`, `postgresql`, `mongo`, `documentsDB`, and `vectorsDB` services, previously released as release candidates
+* Breaking: `tablesDB.cutoverMigration` is renamed to `tablesDB.createCutover`
+* Added: Cloudflare and Resend OAuth providers
+* Added: `usageAggregateOnlyMetrics` on the `BillingPlan` model
+* Fixed: `transactionId` is accepted again by `documentsDB` and `vectorsDB` `createDocument` and `createDocuments`
+* Updated: `X-Appwrite-Response-Format` is now `2.0.0`
+* Updated: `FrameworkAdapter.fallbackFile` is now optional
+
+## 29.0.0-rc.1
+
+* Breaking: `EmbeddingModel` no longer offers `embedding-gemma` or `bge-small`
+* Added: `documentsDB`, `vectorsDB`, `mysql`, `postgresql`, and `mongo` services, no longer hidden from server SDKs
+* Added: `DocumentsDBIndexType` and `VectorsDBIndexType` enums
+* Added: dedicated database models for branches, backups, restorations, poolers, PITR windows, extensions, and executions
+* Added: `PostgresExtension`, `VectorsdbCollection`, `AttributeObject`, and `AttributeVector` models
+* Added: `userId`, `emailHash`, and `name` parameters to `avatars.getPhoto`
+* Added: `error`, `containerStatus`, and `lifecycleState` on the `Database` model
+* Added: `changelogWatermark` on the `DatabaseMigration` model
+* Added: `total` on the `DedicatedDatabaseBranchList` model
+* Updated: `DedicatedDatabaseOperation.status` documents the new `queued` state
+
+## 28.0.0
+
+* Breaking: `Execution.functionId` replaced by `resourceId` and `resourceType`, now that executions cover both functions and sites
+* Added: `avatars.getPhoto` returning the user's best available profile photo
+* Added: `project.updateOAuth2HuggingFace` and the `OAuth2HuggingFace` model
+* Added: `huggingface` OAuth provider
+* Added: `ExecutionResourceType` enum and `resourceType` attribute on the `Execution` model
+* Fixed: empty JSON error responses no longer throw `FormatException`
+
+## 27.0.0
+
+* Breaking: removed `account.createJWT`; use `users.createJWT` instead. A leaked JWT could mint further JWTs, letting a credential outlive its own expiry — a session cannot duplicate itself to live forever either
+* Breaking: removed `project.createKey`. A leaked key could mint further hidden keys, making a compromise far harder to contain and revoke
+* Added: TablesDB migration methods `listMigrations`, `createMigration`, `getMigration`, `deleteMigration`, and `cutoverMigration`, plus the `DatabaseMigration` and `DatabaseMigrationList` models
+* Added: `users.getMFAChallenge` and the `MfaChallengeSecret` model
+* Added: `project.updateMFAFactorsPolicy` and the `PolicyMfaFactors` model
+* Added: `installationScopes` parameter to `project.updateOAuth2Server`
+* Added: `custom` authentication factor, `mfa-factors` project policy, and the `embeddings.write` key scope
+* Updated: dedicated database status, replicas, operation, and pricing models
+
+## 26.2.0
+
+* Added: `Embeddings` service with `createTextEmbeddings` and the `EmbeddingModel` enum
+* Added: `proxy.createInvalidation` with `ProxyInvalidation` model and `InvalidationType` enum
+* Added: `tablesdb.listOperations` with `DedicatedDatabaseOperation` models
+* Added: `apps.deleteInstallation` to revoke an app installation and its tokens
+* Added: `Client.setOrganization()` for organization-scoped requests
+* Added: `syncMode` parameter to `tablesdb.create` and `tablesdb.update`
+* Added: `folder` parameter to `storage.createFile`, and `folder` and `key` to `File`
+* Added: replication sync fields to `DatabaseStatus` and `DedicatedDatabaseReplicas`
+* Added: `node-26` to the `Runtime` and `BuildRuntime` enums
+* Added: `proxy.invalidations.write` to the `ProjectKeyScopes` enum
+* Fixed: Binary download endpoints now authenticate with headers, not query parameters
+* Fixed: `activities.listEvents` `queries` parameter now accepts a list of queries
+* Fixed: `project.updateSessionLimitPolicy` `total` parameter is no longer nullable
+* Fixed: `Organization` billing and program fields are nullable, matching the API
+* Fixed: `BillingPlan`, `BillingPlanAddon`, and `UsageBillingPlan` optional fields are nullable
+* Fixed: `DedicatedDatabaseMember.lagSeconds` is nullable when the lag is unknown
+
+## 26.1.0
+
+* Added: `Apps` service for managing OAuth2 applications, keys, and installations
+* Added: `OAuth2` service with authorize, grant, device authorization, and consent flows
+* Added: account OAuth2 consent methods `listConsents`, `getConsent`, `deleteConsent`, and consent token methods
+* Added: app installation management methods to `Organization` and `Teams` services
+* Added: `installationAccessTokenDuration` parameter to `project.updateOAuth2Server`
+* Added: `token` parameter to `sites.getDeploymentDownload`
+* Added: `oauth2.introspect` and organization installation key scopes
+
+## 26.0.0
+
+* Breaking: Removed `Health` service with its health models and enums
+* Breaking: Removed `Usage` service and `UsageEvent`, `UsageGauge` models
+* Breaking: Removed `Messaging` log methods `listMessageLogs`, `listProviderLogs`, `listSubscriberLogs`, `listTopicLogs`
+* Breaking: Removed OS, client, and device fields plus `countryCode`/`countryName` from `ActivityEvent` (`country` remains)
+* Breaking: Narrowed spatial attribute/column `xdefault` types to `List<double>`/`List<List>` in `Databases` and `TablesDB`
+* Added: `Organization` service `get`, `update`, `delete`, and membership management methods
+* Added: `Project.updateOAuth2Appwrite` and `updateDenyCorporateEmailPolicy` with `OAuth2Appwrite` and `PolicyDenyCorporateEmail` models
+* Added: `appwrite` OAuth provider to `OAuthProvider` and `ProjectOAuthProviderId` enums
+* Added: billing plan models (`BillingPlan`, `UsageBillingPlan`, `AdditionalResource`) and `BillingPlanGroup` enum
+* Added: `prompt` and `maxAge` parameters to `Project.updateOAuth2Oidc` with `ProjectOAuth2OidcPrompt` enum
+* Added: device authorization and default scope parameters to `Project.updateOAuth2Server`
+* Added: `token` parameter to `Functions.getDeploymentDownload`; `type` to `listSpecifications`
+* Added: `newSpecification` parameter to `Backups.createRestoration`; `specification` to `TablesDB.create`
+* Added: geolocation fields (`city`, `isp`, `latitude`, `longitude`, `timeZone`) to `Locale` model
+* Added: email classification fields (`emailCanonical`, `emailIsDisposable`, `emailIsFree`) to `User` model
+* Added: `userAccessedAt` to `Membership` model and membership privacy policy
+* Added: organization, dedicated database, stages, and OAuth2 key scopes; `Organization`, `Program` models; `DatabaseStatus` enum
+
+## 25.1.0
+
+* Added: `createSesProvider` and `updateSesProvider` to `messaging`
+* Added: `updateOAuth2Server` to `project` for OAuth2 server settings
+* Added: `updatePasswordStrengthPolicy` and `PolicyPasswordStrength` to `project`
+* Added: `getAuditsDB` health check to `health`
+* Added: `password-strength` to `ProjectPolicyId`
+* Added: `apps.read` and `apps.write` to `ProjectKeyScopes`
+
+
+## 25.0.0
+
+* Breaking: Removed `githubImagine` and `googleImagine` from `ProjectOAuthProviderId`
+* Breaking: Removed `deno-1.21`, `deno-1.24`, and `deno-1.35` from `Runtime` and `BuildRuntime`
+* Breaking: Dropped numeric suffixes from `StatusCode` redirect members
+* Added: `Organization` service for managing projects and API keys
+* Added: `PolicyDenyAliasedEmail`, `PolicyDenyDisposableEmail`, and `PolicyDenyFreeEmail` policy models
+* Added: `deny-aliased-email`, `deny-disposable-email`, and `deny-free-email` to `ProjectPolicyId`
+* Replaced: `BrowserTheme`, `HealthQueueName`, `OrganizationKeyScopes`, and `Region` enums
+* Added: `dart-3.12` and `flutter-3.44` runtimes
+* Added: `ProjectList` model and new attributes on `Function`, `Site`, and `UsageGauge`
+* Updated: `functions`, `sites`, `usage`, `health`, and `avatars` services
+* Updated: Renamed `updatePresence` to `update` in the `presences` service
+
+## 24.0.0
+
+* Breaking: Renamed `AuthMethod` enum to `ProjectAuthMethodId`
+* Breaking: Renamed `EmailTemplateType` to `ProjectEmailTemplateId` and `EmailTemplateLocale` to `ProjectEmailTemplateLocale`
+* Breaking: Renamed `ServiceId` to `ProjectServiceId`, `ProtocolId` to `ProjectProtocolId`, `Secure` to `ProjectSMTPSecure`, `ProjectPolicy` to `ProjectPolicyId`
+* Breaking: Replaced `Scopes` enum with `ProjectKeyScopes` for project key endpoints
+* Breaking: Removed `Project.updateDenyCanonicalEmailPolicy`; replaced with `updateDenyAliasedEmailPolicy`, `updateDenyDisposableEmailPolicy`, and `updateDenyFreeEmailPolicy`
+* Breaking: Removed `AuthProvider` model; use new `ProjectOAuthProviderId` enum instead
+* Added: `Project.get` method to fetch current project details
+* Added: `Advisor`, `Presences`, and `Usage` services
+* Added: `Insight`, `Presence`, `Report`, `UsageEvent`, and `UsageGauge` models with list variants
+* Added: `ProjectAuthMethod`, `ProjectProtocol`, and `ProjectService` models
+* Added: `ProjectOAuthProviderId` and `ProjectOAuth2GooglePrompt` enums
+* Updated: `Project`, `Database`, and `OAuth2Google` model schemas
+* Updated: `X-Appwrite-Response-Format` header to `1.9.5`
+
+## 23.1.0
+
+* Added: Introduced `bigint` create/update APIs for legacy Databases attributes
+* Added: Introduced `bigint` create/update APIs for `TablesDB` columns
+* Updated: Extended key-list query filters with `key`, `resourceType`, `resourceId`, and `secret`
+
+## 23.0.0
+
+* [BREAKING] Renamed Webhook model fields: `security` → `tls`, `httpUser` → `authUsername`, `httpPass` → `authPassword`, `signatureKey` → `secret`
+* [BREAKING] Renamed Webhook service parameters to match: `security` → `tls`, `httpUser` → `authUsername`, `httpPass` → `authPassword`
+* [BREAKING] Renamed `Webhooks.updateSignature()` to `Webhooks.updateSecret()` with new optional `secret` parameter
+* Added `Client.getHeaders()` method to retrieve request headers
+* Added `secret` parameter to Webhook create and update methods
+* Added `x` OAuth provider to `OAuthProvider` enum
+* Added `userType` field to `Log` model
+* Added `purge` parameter to `updateCollection` and `updateTable` for cache invalidation
+* Added Project service: platform CRUD, key CRUD, protocol/service status management
+* Added new models: `Key`, `KeyList`, `Project`, `DevKey`, `MockNumber`, `AuthProvider`, `PlatformAndroid`, `PlatformApple`, `PlatformLinux`, `PlatformList`, `PlatformWeb`, `PlatformWindows`, `BillingLimits`, `Block`
+* Added new enums: `PlatformType`, `ProtocolId`, `ServiceId`
+* Updated `BuildRuntime`, `Runtime` enums with `dart-3.11` and `flutter-3.41`
+* Updated `Scopes` enum with `keysRead`, `keysWrite`, `platformsRead`, `platformsWrite`
+* Updated `X-Appwrite-Response-Format` header to `1.9.1`
+* Updated TTL description for list caching in Databases and TablesDB
+
+## 22.0.0
+
+* [BREAKING] Changed `$sequence` type from `int` to `String` for `Row` and `Document` models
+* [BREAKING] Renamed `IndexType` enum: split into `DatabasesIndexType` (for Databases) and `TablesDBIndexType` (for TablesDB)
+* [BREAKING] Replaced `specification` parameter with `buildSpecification` and `runtimeSpecification` in `Functions.create()`, `Functions.update()`, `Sites.create()`, `Sites.update()`
+* Added new `Project` service with full CRUD for project-level environment variables
+* Added new `Webhooks` service with full CRUD for project webhooks (including `updateSignature`)
+* Added `Webhook` and `WebhookList` models
+* Added `Users.updateImpersonator()` method for enabling/disabling user impersonation
+* Added impersonation support: `setImpersonateUserId()`, `setImpersonateUserEmail()`, `setImpersonateUserPhone()` on `Client`
+* Added `impersonator` and `impersonatorUserId` optional fields to `User` model
+* Added `deploymentRetention` parameter to Functions and Sites create/update
+* Added `startCommand` parameter to Sites create/update
+* Added `Documentsdb`, `Vectorsdb` values to `BackupServices` and `DatabaseType` enums
+* Added `WebhooksRead`, `WebhooksWrite`, `ProjectRead`, `ProjectWrite` scopes
+* Removed `getQueueBillingProjectAggregation`, `getQueueBillingTeamAggregation`, `getQueuePriorityBuilds`, `getQueueRegionManager`, `getQueueThreats` from `Health` service
+* Updated `Log` model field descriptions to clarify impersonation behavior
+* Updated `X-Appwrite-Response-Format` header to `1.9.0`
+
+## 21.3.0
+
+* Added `ttl` parameter to listDocuments
+* Added `ttl` parameter to listRows
+* Added example for Health.getConsolePausing usage
+
+## 21.2.0
+
+* Added optional encrypt parameter to multiple attribute and column creation APIs (default: false) to support encryption at rest in database-related operations.
+* Documentation updates across Longtext/Mediumtext/Text/Varchar attributes and corresponding database columns to include the new encrypt option.
+* README updated to reflect compatibility with Appwrite server version 1.8.x.
+* Add support for the new `Backups` service
+* Repo cleanup: removed obsolete GitHub issue templates (Bug, Documentation, Feature) and related CI workflows (autoclose, format, publish, test) to streamline maintenance.
+
 ## 21.0.1
 
 * Fix doc examples with proper formatting
@@ -79,7 +392,6 @@
 > The TablesDB service is the new recommended way to work with databases.
 > Existing databases/collections/attributes/documents can be managed using the TablesDB service.
 > Existing Databases service will continue to work, but new features may only be added to the TablesDB service.
-  
 
 ## 16.2.0
 

@@ -1,0 +1,11 @@
+parameters:
+    level: max
+    scanFiles:
+        - stubs/Canvas.php
+    paths:
+        - src
+        - tests
+    excludePaths:
+        analyse:
+            - tests/resources
+            - vendor

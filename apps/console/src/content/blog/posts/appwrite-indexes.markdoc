@@ -1,0 +1,182 @@
+---
+layout: post
+title: "Appwrite Indexes: how to speed up your database queries"
+description: Learn what indexes are in Appwrite Databases, which types to use, when to create them, and when adding more indexes actually hurts performance.
+date: 2026-03-26
+lastUpdated: 2026-06-29
+cover: /images/blog/appwrite-indexes/cover.avif
+timeToRead: 5
+author: aditya-oberai
+category: products, tutorials
+featured: false
+unlisted: true
+faqs:
+  - question: "What is a database index in Appwrite?"
+    answer: "An index is a separate, sorted data structure that the database (MariaDB under the hood) maintains alongside your table. It stores the values of one or more columns with pointers back to the matching rows, so queries can jump directly to results instead of scanning the entire table. Indexes are essential for keeping queries fast as your data grows."
+  - question: "Which index types does Appwrite support?"
+    answer: "Appwrite supports four index types: key indexes for equality, range, and ordering queries; unique indexes which add a uniqueness constraint on top of a key index; fulltext indexes which are required for Query.search on text columns; and spatial indexes for geographic Point, Line, and Polygon columns used with geo queries."
+  - question: "Which columns should I index?"
+    answer: "Index columns you filter on with Query.equal, Query.greaterThan, Query.between, and similar operators, columns you sort on with Query.orderAsc or Query.orderDesc, columns that must be unique like emails or slugs, and text columns you run Query.search against. Spatial columns used in geo queries should have a spatial index."
+  - question: "Can adding too many indexes hurt performance?"
+    answer: "Yes. Every index has to be updated on inserts, updates, and deletes, so a table with many redundant indexes pays a write-time cost that scales with the index count. Add indexes for queries you actually run, drop ones you do not use, and prefer composite indexes over multiple single-column indexes when several columns are queried together."
+  - question: "How do I create an index in Appwrite?"
+    answer: "You can create indexes from the Console by opening the table and using the Indexes tab, or programmatically with the TablesDB API by calling createIndex with a key, type, columns array, and orders array. Indexes are built asynchronously and report a processing status until ready, which can take time on large tables."
+---
+
+If your Appwrite queries are slow, or getting slower as your data grows, the most likely fix is an index. Without indexes, every filtered or sorted query requires a full table scan: the database reads every row and checks whether it matches your conditions. That is fine for a table with 100 rows. It becomes a serious problem at 100,000.
+
+This post explains what indexes are, the types Appwrite supports, how to decide which columns to index, and the one rule most developers ignore until their write performance degrades.
+
+# What an index actually is
+
+Appwrite uses MariaDB under the hood, even though the API surface looks like a row store. Your tables are tables, your rows are rows, and your columns are columns. An index is a separate data structure that MariaDB maintains alongside the table. It stores the values of one or more columns in a sorted, searchable form, along with pointers back to the rows they belong to.
+
+When you run a query with `Query.equal('status', ['published'])`, the database can either:
+
+1. Read every row in the table and check the `status` column (full scan), or
+2. Look up `'published'` in a pre-built index on `status` and jump directly to the matching rows
+
+The second path is orders of magnitude faster for large tables. The index is the thing that makes option 2 possible.
+
+# Index types in Appwrite
+
+Appwrite exposes four index types when you create an index on a table.
+
+## Key index
+
+A key index is the standard index for equality and range queries. Use it for columns you filter with `Query.equal`, `Query.notEqual`, `Query.greaterThan`, `Query.lessThan`, `Query.between`, and similar operators. It is also the right index for columns you use in `Query.orderAsc` or `Query.orderDesc`.
+
+If you frequently query rows by `userId`, `status`, `createdAt`, or any column you filter or sort on, add a key index.
+
+## Unique index
+
+A unique index does everything a key index does, plus it enforces that no two rows can have the same value for that column. Use it when a column must be unique across all rows: usernames, email addresses, external IDs, slugs.
+
+Unique indexes are enforced at the database level, not just in your application code. That means even if two concurrent requests try to create rows with the same value, only one will succeed.
+
+## Fulltext index
+
+A fulltext index is required for [`Query.search`](/docs/products/databases/queries). It enables word-level text search across text columns. Without a fulltext index on the target column, `Query.search` returns an error.
+
+Fulltext indexes are suited for content columns like `title`, `body`, or `description`. They are not appropriate for short identifiers or numeric fields.
+
+## Spatial index
+
+A spatial index is required for geographic columns: Point, Line, and Polygon. It uses optimized data structures designed for geographic operations and is what makes geo queries like `Query.geoWithin`, `Query.geoIntersects`, and distance-based queries performant.
+
+Without a spatial index, geo queries will still run but will perform a full scan. If you are storing location data and plan to query it, a spatial index is strongly recommended.
+
+# Creating an index
+
+You can create indexes from the Appwrite Console or programmatically using the TablesDB API. In the Console, navigate to your database, open the table, and go to the Indexes tab. Select the index type, choose the column, and save.
+
+Using the Appwrite Node.js SDK:
+
+```js
+import { Client, TablesDB } from "node-appwrite";
+
+const client = new Client()
+  .setEndpoint("https://cloud.appwrite.io/v1")
+  .setProject("<PROJECT_ID>")
+  .setKey("<API_KEY>");
+
+const tablesDB = new TablesDB(client);
+
+await tablesDB.createIndex({
+  databaseId: "<DATABASE_ID>",
+  tableId: "<TABLE_ID>",
+  key: "status_index",    // Index ID
+  type: "key",             // Index type: "key", "unique", or "fulltext"
+  columns: ["status"],     // Columns to index
+  orders: ["ASC"],         // Sort order per column
+  lengths: [32],           // Prefix length for text columns
+});
+```
+
+For a unique index on `email`:
+
+```js
+await tablesDB.createIndex({
+  databaseId: "<DATABASE_ID>",
+  tableId: "<TABLE_ID>",
+  key: "email_unique",
+  type: "unique",
+  columns: ["email"],
+  orders: ["ASC"],
+  lengths: [255],
+});
+```
+
+Indexes are created asynchronously. After you call `createIndex`, the index will show as `processing` until it is ready. For large tables this can take some time.
+
+# Which columns to index
+
+A practical checklist:
+
+- Index every column you use in `Query.equal` or `Query.notEqual` on large tables
+- Index columns you pass to `Query.orderAsc` or `Query.orderDesc`
+- Index columns used in `Query.between`, `Query.greaterThan`, or `Query.lessThan`
+- Add a fulltext index on every column you use with `Query.search`
+- Add a unique index on columns that must be unique
+
+A real-world example: a blog posts table. You query by `status` (published, draft), sort by `createdAt`, and search by `title`. You would want:
+
+1. A key index on `status`
+2. A key index on `createdAt`
+3. A fulltext index on `title`
+
+That covers your three most common query patterns. If you also frequently filter by both `status` and `authorId` together, read the section on composite indexes below.
+
+## Composite indexes
+
+A composite index covers multiple columns at once. When your queries consistently filter on two columns together, a composite index is more efficient than two separate single-column indexes.
+
+```js
+await tablesDB.createIndex({
+  databaseId: "<DATABASE_ID>",
+  tableId: "<TABLE_ID>",
+  key: "status_author_index",
+  type: "key",
+  columns: ["status", "authorId"],
+  orders: ["ASC", "ASC"],
+  lengths: [32, 36],
+});
+```
+
+This index is useful when you run queries like:
+
+```js
+[Query.equal("status", ["published"]), Query.equal("authorId", ["<ID>"])]
+```
+
+The order of columns in a composite index matters. The index above is efficient for filtering on `status` alone, or on `status` plus `authorId` together. It is not efficient for filtering on `authorId` alone. Design composite indexes based on the most common query pattern.
+
+# When NOT to add an index
+
+Indexes are not free. Every index on a table adds overhead to every write operation. When you insert, update, or delete a row, MariaDB must update all indexes on that table. A table with 10 indexes on it will have noticeably slower writes than one with 2.
+
+Avoid indexing:
+
+- Columns with very low cardinality that you rarely query on. A boolean column with only two possible values rarely benefits from a key index unless the table is very large and one value is rare.
+- Columns you never filter or sort on. An index that no query ever uses just adds write overhead.
+- Every column by default. Only index based on actual query patterns.
+
+A good signal that you have over-indexed: your write throughput drops significantly as insert volume increases and your read patterns have not changed.
+
+# Indexes and the Query API together
+
+Indexes and the Query API work as a pair. The Query API expresses what data you want; indexes are what make retrieving that data fast. Adding `Query.orderDesc('createdAt')` without a key index on `createdAt` will work, but it forces a full scan followed by a sort in memory.
+
+Before putting a table into production, review every query pattern you will run on it and verify the needed indexes are in place. Adding indexes retroactively on large tables takes time and temporarily affects performance during the build phase.
+
+The [Appwrite Databases queries reference](/docs/products/databases/queries) lists every `Query` method and makes it clear which ones require or benefit from specific index types. Keep it open when designing your schema.
+
+# Build faster queries with the right indexes
+
+Indexes are one of the highest-leverage things you can do for database performance. A single well-placed index can turn a multi-second query into a millisecond one. The tradeoff is write overhead, so index deliberately based on real query patterns rather than speculatively on every column.
+
+Start with the columns you filter and sort on most often, add fulltext indexes for search, and use unique indexes to enforce data integrity at the database level.
+
+- [Appwrite Databases tables docs](/docs/products/databases/tables)
+- [Appwrite Databases queries docs](/docs/products/databases/queries)
+- [Start building on Appwrite Cloud](https://cloud.appwrite.io)

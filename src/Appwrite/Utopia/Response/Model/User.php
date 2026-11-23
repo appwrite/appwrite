@@ -37,10 +37,12 @@ class User extends Model
             ])
             ->addRule('password', [
                 'type' => self::TYPE_STRING,
+                'format' => 'password',
                 'description' => 'Hashed user password.',
                 'required' => false,
                 'default' => '',
                 'example' => '$argon2id$v=19$m=2048,t=4,p=3$aUZjLnliVWRINmFNTWMudg$5S+x+7uA31xFnrHFT47yFwcJeaP0w92L/4LdgrVRXxE',
+                'credential' => true,
             ])
             ->addRule('hash', [
                 'type' => self::TYPE_STRING,
@@ -48,6 +50,7 @@ class User extends Model
                 'required' => false,
                 'default' => '',
                 'example' => 'argon2',
+                'credential' => true,
             ])
             ->addRule('hashOptions', [
                 'type' => [
@@ -64,6 +67,7 @@ class User extends Model
                 'default' => [],
                 'example' => new \stdClass(),
                 'array' => false,
+                'credential' => true,
             ])
             ->addRule('registration', [
                 'type' => self::TYPE_DATETIME,
@@ -142,6 +146,13 @@ class User extends Model
                 'required' => false,
                 'default' => null,
                 'example' => true,
+            ])
+            ->addRule('passwordPwned', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the password was found in a known data breach the last time it was checked. Null when the password has never been checked.',
+                'required' => false,
+                'default' => null,
+                'example' => false,
             ])
             ->addRule('phoneVerification', [
                 'type' => self::TYPE_BOOLEAN,

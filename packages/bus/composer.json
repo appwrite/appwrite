@@ -1,0 +1,23 @@
+{
+    "name": "utopia-php/bus",
+    "description": "Synchronous in-process event bus with typed events and listeners",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Bus\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Bus\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": ">=8.5",
+        "utopia-php/span": "^4.2"
+    },
+    "scripts": {
+        "test": "phpunit --configuration phpunit.xml --testsuite unit"
+    }
+}

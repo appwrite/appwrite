@@ -24,10 +24,14 @@
         });
     };
 
+    // URL rejects a malformed address in brackets, but canonicalizes a valid one
+    // (2001:0db8::0:1 becomes 2001:db8::1), so only whether it parses is compared.
     const isValidIPv6 = (host) => {
+        if (!host.includes(':')) return false;
+        if (![...host].every((character) => '0123456789abcdefABCDEF:.'.includes(character))) return false;
         try {
-            const url = new URL(`http://[${host}]`);
-            return url.hostname.toLowerCase() === host.toLowerCase();
+            new URL(`http://[${host}]`);
+            return true;
         } catch (error) {
             return false;
         }
@@ -100,6 +104,27 @@
         return trimmed;
     };
 
+    // A published port as Docker takes it: 8080, or bound to one host interface
+    // (127.0.0.1:8080, [::1]:8080).
+    const isValidPublishedPort = (value) => {
+        const trimmed = (value || '').trim();
+        const separator = trimmed.lastIndexOf(':');
+        const port = trimmed.slice(separator + 1);
+        if (String(Number(port)) !== port || !isValidPort(port)) return false;
+        if (separator === -1) return true;
+
+        const host = trimmed.slice(0, separator);
+        if (host.startsWith('[') && host.endsWith(']')) {
+            return isValidIPv6(host.slice(1, -1));
+        }
+        return isValidIPv4(host);
+    };
+
+    const extractPort = (value) => {
+        const trimmed = (value || '').trim();
+        return trimmed.slice(trimmed.lastIndexOf(':') + 1);
+    };
+
     const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '0.0.0.0']);
 
     const isLocalHost = (host) => {
@@ -116,6 +141,8 @@
     window.InstallerStepsValidation = {
         isValidEmail,
         isValidPort,
+        isValidPublishedPort,
+        extractPort,
         isValidPassword,
         isValidHostnameInput,
         extractHostname,

@@ -12,9 +12,9 @@ use Tests\E2E\Scopes\SchemaPolling;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Services\Databases\Permissions\DatabasesPermissionsBase;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 final class TablesDBPermissionsGuestTest extends Scope
 {
@@ -31,7 +31,7 @@ final class TablesDBPermissionsGuestTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'InvalidDocumentDatabase',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -43,7 +43,7 @@ final class TablesDBPermissionsGuestTest extends Scope
             $this->getContainerUrl($databaseId),
             $this->getServerHeader(),
             [
-                $this->getContainerIdParam() => ID::unique(),
+                $this->getContainerIdParam() => Id::unique(),
                 'name' => 'Movies',
                 'permissions' => [
                     Permission::read(Role::any()),
@@ -60,7 +60,7 @@ final class TablesDBPermissionsGuestTest extends Scope
             $this->getContainerUrl($databaseId),
             $this->getServerHeader(),
             [
-                $this->getContainerIdParam() => ID::unique(),
+                $this->getContainerIdParam() => Id::unique(),
                 'name' => 'Movies',
                 'permissions' => [],
                 $this->getSecurityParam() => true,
@@ -128,7 +128,7 @@ final class TablesDBPermissionsGuestTest extends Scope
             $this->getRecordUrl($databaseId, $publicCollectionId),
             $this->getServerHeader(),
             [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => [
                     'title' => 'Lorem',
                 ],
@@ -140,7 +140,7 @@ final class TablesDBPermissionsGuestTest extends Scope
             $this->getRecordUrl($databaseId, $privateCollectionId),
             $this->getServerHeader(),
             [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => [
                     'title' => 'Lorem',
                 ],
@@ -195,7 +195,7 @@ final class TablesDBPermissionsGuestTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
             ],
             [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => [
                     'title' => 'Lorem',
                 ]
@@ -213,7 +213,7 @@ final class TablesDBPermissionsGuestTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
             ],
             [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => [
                     'title' => 'Lorem',
                 ],
@@ -228,7 +228,7 @@ final class TablesDBPermissionsGuestTest extends Scope
             $this->getRecordUrl($databaseId, $privateCollectionId),
             $this->getServerHeader(),
             [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => [
                     'title' => 'Lorem',
                 ],
@@ -305,7 +305,7 @@ final class TablesDBPermissionsGuestTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]),
             [
-                'databaseId' => ID::unique(),
+                'databaseId' => Id::unique(),
                 'name' => 'GuestPermissionsWrite',
             ]
         );
@@ -318,7 +318,7 @@ final class TablesDBPermissionsGuestTest extends Scope
             $this->getContainerUrl($databaseId),
             $this->getServerHeader(),
             [
-                $this->getContainerIdParam() => ID::unique(),
+                $this->getContainerIdParam() => Id::unique(),
                 'name' => 'Movies',
                 'permissions' => [
                     Permission::create(Role::any()),
@@ -352,7 +352,7 @@ final class TablesDBPermissionsGuestTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
             ],
             [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => [
                     'title' => 'Thor: Ragnarok',
                 ],

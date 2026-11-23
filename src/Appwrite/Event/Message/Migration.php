@@ -13,15 +13,17 @@ final class Migration extends Base
     ) {
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [
-            'project' => $this->project->getArrayCopy(),
+            'project' => ProjectContext::fromDocument($this->project)->toArray(),
             'migration' => $this->migration->getArrayCopy(),
             'platform' => $this->platform,
         ];
     }
 
+    #[\Override]
     public static function fromArray(array $data): static
     {
         return new self(

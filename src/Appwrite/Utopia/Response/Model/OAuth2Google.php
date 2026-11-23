@@ -25,17 +25,33 @@ class OAuth2Google extends OAuth2Base
         return 'GOCSPX-2k8gsR0000000000000000VNahJj';
     }
 
+    public function getPromptValues(): array
+    {
+        return ['none', 'consent', 'select_account'];
+    }
+
+    public function getPromptDefault(): array
+    {
+        return ['consent'];
+    }
+
     public function __construct()
     {
         parent::__construct();
 
-        $this->addRule('prompt', [
-            'type' => self::TYPE_ENUM,
-            'description' => 'Google OAuth2 prompt values.',
-            'default' => ['consent'],
-            'example' => ['consent'],
+        $this->addRule('nativeEnabled', [
+            'type' => self::TYPE_BOOLEAN,
+            'description' => 'Native Google sign-in is active and can be used to create sessions from an ID token. Independent of enabled, which only controls the browser-based flow.',
+            'default' => false,
+            'example' => false,
+        ]);
+
+        $this->addRule('nativeClientIds', [
+            'type' => self::TYPE_STRING,
+            'description' => 'Additional OAuth2 client IDs accepted as ID token audiences for native sign-in, next to the client ID.',
+            'default' => [],
+            'example' => ['YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com'],
             'array' => true,
-            'enum' => ['none', 'consent', 'select_account'],
         ]);
     }
 

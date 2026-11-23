@@ -1,0 +1,46 @@
+{
+    "name": "utopia-php/lock",
+    "description": "A simple lock library to coordinate access to shared resources across coroutines, processes and hosts",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Appwrite Team",
+            "email": "team@appwrite.io"
+        }
+    ],
+    "require": {
+        "php": ">=8.3"
+    },
+    "require-dev": {
+        "swoole/ide-helper": "*"
+    },
+    "suggest": {
+        "ext-swoole": "Required for the Mutex and Semaphore locks (>=6.0)",
+        "ext-redis": "Required for the Distributed lock",
+        "ext-pcntl": "Required to run the File lock tests"
+    },
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Lock\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Lock\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --testsuite unit",
+        "test:e2e": "phpunit --testsuite e2e"
+    },
+    "config": {
+        "platform": {
+            "php": "8.3"
+        },
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

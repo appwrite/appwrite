@@ -1,1 +1,1 @@
-Delete all sessions from the user account and remove any sessions cookies from the end client.
+Delete all sessions from the user account and remove any sessions cookies from the end client. Pass `current` as false to keep the session making the request and sign out of every other session.

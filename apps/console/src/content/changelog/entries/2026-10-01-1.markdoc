@@ -1,0 +1,30 @@
+---
+layout: changelog
+title: "Appwrite MCP server 1.0 is now stable"
+date: 2026-10-01
+description: "The Appwrite MCP server reaches 1.0 with more authentication and messaging actions, organization project-key management, and reliability fixes."
+tags: mcp
+---
+
+The [Appwrite MCP server](/docs/tooling/ai/mcp-servers/api) is now stable with version **1.0.0**. This release marks the existing server as stable, not a new workflow. Keep using your connected AI tools to discover Appwrite actions, work with your projects, and search the documentation.
+
+### More actions from your AI tools
+
+The updated API catalog lets your AI tools:
+
+- **Work with email OTP verification and recovery**: Request and confirm one-time codes for email verification and account recovery.
+- **Configure more OAuth providers**: Set up Cloudflare, Kakao, Resend, TikTok, and Webflow, alongside the existing providers.
+- **Manage project API keys through your organization**: Create, list, update, and delete project keys, including short-lived ephemeral keys. These organization administration actions are available through the remote OAuth connection, not local project API-key mode.
+- **Configure the Appwrite messaging provider**: Create and update the provider through MCP.
+
+### Fewer failed calls
+
+Project details, framework lists, database specification lists, and varchar column lookups now handle response shapes that previously caused parsing errors. Tools with no parameters also reject unexpected arguments before making an API call, so your AI tool gets a clear error instead of an SDK failure.
+
+The remote server is updated automatically. If you run MCP locally for a [self-hosted instance](/docs/advanced/self-hosting/mcp), update `mcp-server-appwrite` to version `1.0.0`.
+
+If your AI tool caches Appwrite tool names, refresh its tool discovery. The catalog now uses `tables_db_create_cutover` instead of `tables_db_cutover_migration` and no longer advertises removed dev-key, log-listing, or project-usage endpoints.
+
+{% arrow_link href="https://github.com/appwrite/mcp/releases/tag/v1.0.0" %}
+Read the release notes
+{% /arrow_link %}

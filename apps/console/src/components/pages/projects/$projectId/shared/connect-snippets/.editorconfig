@@ -1,0 +1,10 @@
+# Connect dialog snippets render in a fixed-width code panel (~4fr grid,
+# ~max-w-6xl, ~86 monospace chars at 12px Menlo). Capping lines at 80 leaves
+# headroom so the panel never scrolls horizontally, and spaces keep that
+# character count honest (a tab counts as 1 char but renders much wider).
+# Enforced in CI via `bun run lint:snippets`.
+root = true
+
+[*]
+indent_style = space
+max_line_length = 80

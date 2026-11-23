@@ -1,0 +1,57 @@
+---
+layout: article
+title: Allowlist trusted IP addresses
+description: Pair an Appwrite Firewall bypass rule with a deny rule so only trusted IP addresses reach a protected path.
+difficulty: beginner
+readtime: 5
+---
+
+An allowlist uses two rules. A **bypass** rule with a low priority number lets trusted traffic through. A **deny** rule with a higher priority number blocks all other traffic to the same path.
+
+The pair works because of [priority](/docs/products/firewall/priority). Appwrite evaluates rules with lower priority numbers first. A matching bypass rule stops evaluation, so the deny rule never runs for trusted traffic.
+
+# Create the bypass rule {% #create-the-bypass-rule %}
+
+{% only_dark %}
+![Create firewall rule wizard with a bypass rule for an IP range](/images/docs/firewall/dark/allowlist-ips.avif)
+{% /only_dark %}
+{% only_light %}
+![Create firewall rule wizard with a bypass rule for an IP range](/images/docs/firewall/allowlist-ips.avif)
+{% /only_light %}
+
+1. Open **Firewall** in your project.
+2. Click **Create rule**.
+3. Enter a **Rule name** (for example `Allow office IP addresses`).
+4. Keep **Resource type** set to **API**.
+5. Under conditions, set the attribute to **IP address**.
+6. Keep the operator set to **Equals**.
+7. Enter a single IP address (`203.0.113.10`) or a CIDR range (`198.51.100.0/24`).
+8. Under **Then**, choose **Bypass**.
+9. Set **Priority** to `10`.
+10. Click **Create rule**.
+
+The impact preview compares IP addresses as text, so a CIDR range shows zero matches. The rule still matches every address in the range.
+
+To protect one path only, add a second condition to the same rule. For example, add **Path** **Starts with** `/v1/users`. Both conditions must match for the bypass to apply.
+
+# Create the deny rule {% #create-the-deny-rule %}
+
+1. Click **Create rule** again.
+2. Enter a **Rule name** (for example `Deny all other traffic`).
+3. Keep **Resource type** set to **API**.
+4. Add the same path condition as the bypass rule, or use **Path** **Starts with** `/v1` for the whole API.
+5. Under **Then**, choose **Deny**.
+6. Set **Priority** to `100`.
+7. Review the impact preview, then click **Create rule**.
+
+The impact preview shows how much recent traffic the deny rule would match. If the count is higher than you expect, tighten the path condition.
+
+# Verify the rules {% #verify-the-rules %}
+
+1. Send a request from a trusted IP address with a client SDK or an API key. Confirm the request succeeds.
+2. Send a request from a different IP address. Confirm the client receives a `403` response.
+3. Open **Firewall** and confirm the **Denied** series rises in the traffic overview. Bypassed requests count under **Passed**.
+
+{% arrow_link href="/docs/products/firewall/priority" %}
+Priority
+{% /arrow_link %}

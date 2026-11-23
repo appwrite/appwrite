@@ -1,0 +1,105 @@
+---
+layout: article
+title: Grafana
+description: Connect Grafana to an Appwrite native PostgreSQL database as a data source and build dashboards. Create a read-only reporting role, configure the PostgreSQL data source with TLS, and provision it from YAML.
+---
+
+An Appwrite [native PostgreSQL database](/docs/products/databases/postgresql) exposes a standard managed PostgreSQL 18 or 17 engine, so [Grafana](https://grafana.com/) connects to it through the built-in **PostgreSQL data source** with no Appwrite-specific configuration. Point the data source at your database hostname, authenticate with a read-only reporting role, and query your tables to build dashboards and alerts.
+
+{% info title="Before you start" %}
+You'll need a native PostgreSQL database in a `ready` state and its credentials. In the Console, open the database and click **Credentials**. Use the **Details** tab for individual values, or copy a ready-made string from the **DSN**, **.env**, **Prisma**, **Drizzle**, or **psql** tab. You can also call `postgresql.get()` from the Appwrite API to read `hostname`, `connectionUser`, `connectionPassword`, and `connectionString`. The primary user is `admin`, and Appwrite generates the database name for each database.
+{% /info %}
+
+# Create a reporting role {% #reporting-role %}
+
+Dashboards should not connect as the primary `admin` user, which owns the database and can run schema changes. Create a PostgreSQL role for Grafana from the **Roles** tab of your database in the Console, then grant it the `SELECT` privileges your dashboards need from the SQL editor or `psql`.
+
+Use that role's name and password in the Grafana data source below. For more about retrieving credentials, rotating the primary password, and managing database roles, see [Connections](/docs/products/databases/postgresql/connections).
+
+# Choose a connection target {% #target %}
+
+Grafana holds its data source connections open for the lifetime of the process. Long-lived connections should use either the direct PostgreSQL port `5432` or a [connection pooler](/docs/products/databases/postgresql/connection-pooling) running in **session mode**.
+
+Do not point Grafana at the **transaction-mode** pooler. Transaction mode hands a backend connection back to the pool after every statement, which breaks the session assumptions Grafana relies on for connection reuse and prepared statements. For a typical dashboard workload the direct PostgreSQL port is the simplest choice. See the [pooler modes](/docs/products/databases/postgresql/connection-pooling#modes) page for the trade-offs.
+
+# Add the PostgreSQL data source {% #data-source %}
+
+In Grafana, open **Connections** > **Data sources** > **Add data source** and select **PostgreSQL**. Fill in the connection details using the values from your native PostgreSQL database:
+
+| Field | Value |
+| --- | --- |
+| **Host URL** | `db-<hash>.<region>.appwrite.center:5432` |
+| **Database name** | `<database>` |
+| **Username** | `grafana_ro` |
+| **Password** | the password for the reporting role |
+| **TLS/SSL Mode** | `require` |
+| **Version** | PostgreSQL 10+; Grafana auto-detects the server version on save when it can connect |
+
+Regions are `fra`, `nyc`, `sfo`, `sgp`, `syd`, and `tor`. The edge proxy terminates TLS for every native PostgreSQL database, so **TLS/SSL Mode** `require` works with no certificate upload.
+
+If you use Grafana Cloud and restrict database access with an IP allowlist, add the Grafana Cloud outbound IP ranges for your stack to the database allowlist. Grafana Cloud can reach the public Appwrite database hostname directly. Private connectivity features are only needed when the database is on a private network.
+
+Under **Connection limits**, keep the connection counts modest so Grafana doesn't exhaust the engine's connection budget. **Max open** caps total connections from this Grafana instance, **Max idle** caps pooled idle connections, and **Max lifetime** recycles connections after the given number of seconds. Select **Save & test** to verify connectivity.
+
+# Provision from YAML {% #provisioning %}
+
+Instead of configuring the data source by hand, you can [provision](https://grafana.com/docs/grafana/latest/administration/provisioning/) it declaratively. Drop a file into Grafana's `provisioning/datasources/` directory and read the password from an environment variable so it never lands in source control:
+
+```yaml
+apiVersion: 1
+
+datasources:
+  - name: Appwrite native PostgreSQL
+    type: postgres
+    url: db-<hash>.<region>.appwrite.center:5432
+    user: grafana_ro
+    jsonData:
+      database: <database>
+      sslmode: require
+      postgresVersion: 1500
+      maxOpenConns: 5
+      maxIdleConns: 2
+      maxIdleConnsAuto: true
+      connMaxLifetime: 14400
+    secureJsonData:
+      password: $GRAFANA_DB_PASSWORD
+    editable: false
+```
+
+`postgresVersion` takes Grafana's encoded version values (`1500` for PostgreSQL 15, currently the highest option), so pick the highest value available for a native PostgreSQL database. The `database` key lives under `jsonData` in current Grafana releases, and Grafana expands `$GRAFANA_DB_PASSWORD` from the process environment when it loads the provisioning file. See the [PostgreSQL data source](https://grafana.com/docs/grafana/latest/datasources/postgres/configure/) docs for every available field.
+
+# Build a panel {% #panel %}
+
+With the data source connected, create a dashboard and add a panel backed by it. Switch the query editor to code mode and write a read-only query against your tables. For example, to plot daily sign-ups from a `users` table over time:
+
+```text
+SELECT
+  date_trunc('day', created_at) AS time,
+  count(*) AS signups
+FROM users
+GROUP BY 1
+ORDER BY 1
+```
+
+Grafana maps the `time` column to the panel's time axis and `signups` to the value. Because the data source authenticates as a read-only reporting role, any query that attempts to write fails at the database, which keeps a misconfigured panel from mutating production data.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/postgresql" title="PostgreSQL databases" %}
+Overview of native PostgreSQL database engines, versions, and regions.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/connections" title="Connect" %}
+Retrieve credentials, rotate the password, and manage database roles.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/connection-pooling" title="Connection pooler" %}
+Pool modes and ports. Use the direct PostgreSQL port or session mode for Grafana.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/network-security" title="Network" %}
+TLS modes, certificate verification, and IP allowlists.
+{% /cards_item %}
+{% /cards %}
+
+{% arrow_link href="/docs/products/databases/postgresql/connections" %}
+Connect to a native PostgreSQL database
+{% /arrow_link %}

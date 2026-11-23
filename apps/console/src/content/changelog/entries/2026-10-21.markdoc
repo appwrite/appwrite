@@ -1,0 +1,18 @@
+---
+layout: changelog
+title: "Strip metadata from images uploaded to Storage"
+date: 2026-10-21
+cover: /images/changelog/2026-10-21.avif
+description: "Storage buckets can now remove location, device, and capture time metadata from uploaded images. Built by community contributor jaysomani."
+tags: storage, security
+---
+
+Photos can reveal where they were taken, which device took them, and when. Storage buckets can now remove that metadata from images as they are uploaded. Turn it on under your bucket's **Settings** > **Image metadata**, or set `stripMetadata` to `true` when you create or update a bucket. Stripping is off by default.
+
+Stripping works on JPEG, PNG, WebP, GIF, TIFF, HEIC, HEIF, and AVIF images. It keeps the color profile and orientation and doesn't re-encode the pixels, so a stripped image looks the same as the original. Images larger than 20MB are stored as uploaded, and the setting applies only to files uploaded after you turn it on. A bucket with stripping turned on can't be used through the [S3-compatible API](/docs/products/storage/s3).
+
+Image metadata stripping is live on Appwrite Cloud and ships to self-hosted Appwrite in the next release. Community contributor [jaysomani](https://github.com/jaysomani) built it in [#14351](https://github.com/appwrite/appwrite/pull/14351). Thank you!
+
+{% arrow_link href="/docs/products/storage/buckets#image-metadata" %}
+Learn more about image metadata
+{% /arrow_link %}

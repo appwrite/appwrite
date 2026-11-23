@@ -2,6 +2,7 @@
 
 namespace Appwrite\Filter;
 
+use Utopia\Validator\Domain as DomainValidator;
 use Utopia\Validator\Text;
 
 class BranchDomain implements Filter
@@ -17,6 +18,11 @@ class BranchDomain implements Filter
     public const HASH_SUFFIX_LENGTH = 7;
 
     /**
+     * Length of the hash identifying the resource and project
+     */
+    public const RESOURCE_HASH_LENGTH = 16;
+
+    /**
      * Pre-process branch name to a valid domain name.
      *
      * Input should be an array with:
@@ -24,6 +30,9 @@ class BranchDomain implements Filter
      * - 'resourceId' (string): The resource ID (site or function)
      * - 'projectId' (string): The project ID
      * - 'sitesDomain' (string): The base sites domain
+     * - 'legacy' (bool, optional): Use the shorter, unseparated resource hash of rules created before it was widened
+     *
+     * @throws \InvalidArgumentException When the result is not a valid hostname
      */
     public function apply(mixed $input): mixed
     {
@@ -31,10 +40,21 @@ class BranchDomain implements Filter
         $resourceId = $input['resourceId'] ?? '';
         $projectId = $input['projectId'] ?? '';
         $sitesDomain = $input['sitesDomain'] ?? '';
+        $legacy = $input['legacy'] ?? false;
 
         $branchPrefix = $this->generateBranchPrefix($branch);
-        $resourceProjectHash = substr(hash('sha256', $resourceId . $projectId), 0, self::HASH_SUFFIX_LENGTH);
+        $resourceProjectHash = $legacy
+            ? substr(hash('sha256', $resourceId . $projectId), 0, self::HASH_SUFFIX_LENGTH)
+            : substr(hash('sha256', $projectId . ':' . $resourceId), 0, self::RESOURCE_HASH_LENGTH);
         $domain = \strtolower("branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}");
+
+        // The branch name is user input. Before it was sanitized, a "/" in it was
+        // stored as part of the rule's domain, which no browser, edge or CDN can
+        // address. Refuse to return such a name so it never reaches a rule.
+        if (!(new DomainValidator())->isValid($domain)) {
+            throw new \InvalidArgumentException("Branch domain \"{$domain}\" is not a valid hostname.");
+        }
+
         return $domain;
     }
 

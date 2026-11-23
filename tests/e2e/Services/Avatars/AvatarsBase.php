@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Avatars;
 
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
+use Utopia\Database\Id;
 
 trait AvatarsBase
 {
@@ -13,6 +14,8 @@ trait AvatarsBase
      * the corner says an image was drawn — never which provider drew it.
      */
     private const PHOTO_SURFACE_COLOR = ['r' => 79, 'g' => 79, 'b' => 79];
+
+    private const string SCREENSHOT_URL = 'http://screenshot.webapp.com';
 
     public function testGetCreditCard(): array
     {
@@ -340,7 +343,7 @@ trait AvatarsBase
             'url' => 'http://unknown-address.test',
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/favicon', [
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -348,9 +351,47 @@ trait AvatarsBase
             'url' => 'http://localhost',
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         return [];
+    }
+
+    /**
+     * Every avatar that fetches a caller-supplied URL refuses targets that are
+     * not on the public internet, before any request leaves the server.
+     */
+    public function testGetRemoteURLNotPublic(): void
+    {
+        $paths = ['/avatars/image', '/avatars/favicon', '/avatars/screenshots'];
+        $urls = [
+            'http://localhost/',
+            'http://appwrite/v1/health/version',
+            'http://metadata.google.internal/computeMetadata/v1/',
+            'http://2130706433/',
+            'http://169.254.169.254/latest/meta-data/',
+            'http://10.0.0.5:8080/',
+            'http://192.168.1.1/',
+            'http://[::ffff:127.0.0.1]/',
+            'http://user:password@10.0.0.5/',
+            'file:///etc/passwd',
+            'gopher://10.0.0.5:6379/_INFO',
+        ];
+
+        /**
+         * Test for FAILURE
+         */
+        foreach ($paths as $path) {
+            foreach ($urls as $url) {
+                $response = $this->client->call(Client::METHOD_GET, $path, [
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], [
+                    'url' => $url,
+                ]);
+
+                $this->assertEquals(400, $response['headers']['status-code'], "{$path} should reject {$url}");
+                $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $response['body']['type'], "{$path} should reject {$url}");
+            }
+        }
     }
 
     public function testGetQR(): array
@@ -368,11 +409,10 @@ trait AvatarsBase
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($response['body']);
-        $this->assertSame(400, $image->getImageWidth());
-        $this->assertSame(400, $image->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $image = \getimagesizefromstring($response['body']);
+        $this->assertSame(400, $image[0]);
+        $this->assertSame(400, $image[1]);
+        $this->assertSame('image/png', $image['mime']);
         $this->assertSamePixels(__DIR__ . '/../../../resources/qr/qr-default.png', $response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
@@ -386,11 +426,10 @@ trait AvatarsBase
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($response['body']);
-        $this->assertSame(200, $image->getImageWidth());
-        $this->assertSame(200, $image->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $image = \getimagesizefromstring($response['body']);
+        $this->assertSame(200, $image[0]);
+        $this->assertSame(200, $image[1]);
+        $this->assertSame('image/png', $image['mime']);
         $this->assertSamePixels(__DIR__ . '/../../../resources/qr/qr-size-200.png', $response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
@@ -405,11 +444,10 @@ trait AvatarsBase
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($response['body']);
-        $this->assertSame(200, $image->getImageWidth());
-        $this->assertSame(200, $image->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $image = \getimagesizefromstring($response['body']);
+        $this->assertSame(200, $image[0]);
+        $this->assertSame(200, $image[1]);
+        $this->assertSame('image/png', $image['mime']);
         $this->assertSamePixels(__DIR__ . '/../../../resources/qr/qr-size-200-margin-10.png', $response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
@@ -421,11 +459,10 @@ trait AvatarsBase
             'download' => 1,
         ]);
 
-        $image = new \Imagick();
-        $image->readImageBlob($response['body']);
-        $this->assertSame(200, $image->getImageWidth());
-        $this->assertSame(200, $image->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $image = \getimagesizefromstring($response['body']);
+        $this->assertSame(200, $image[0]);
+        $this->assertSame(200, $image[1]);
+        $this->assertSame('image/png', $image['mime']);
         $this->assertSamePixels(__DIR__ . '/../../../resources/qr/qr-size-200-margin-10.png', $response['body']);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -537,6 +574,25 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
+    public function testGetInitialsHandle(): void
+    {
+        $signatures = [];
+
+        foreach (['@ItzNotABug', 'ItzNotABug'] as $name) {
+            $response = $this->client->call(Client::METHOD_GET, '/avatars/initials', [
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'name' => $name,
+                'width' => 100,
+                'height' => 100,
+            ]);
+
+            $signatures[] = $this->getImagePixels($response['body']);
+        }
+
+        $this->assertTrue($signatures[1] === $signatures[0], 'A handle rendered differently from its name.');
+    }
+
     public function testInitialImage()
     {
         $response = $this->client->call(Client::METHOD_GET, '/avatars/initials', [
@@ -551,13 +607,12 @@ trait AvatarsBase
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($response['body']);
-        $original = new \Imagick(__DIR__ . '/../../../resources/initials.png');
+        $image = \getimagesizefromstring($response['body']);
+        $original = \getimagesize(__DIR__ . '/../../../resources/initials.png');
 
-        $this->assertSame($image->getImageWidth(), $original->getImageWidth());
-        $this->assertSame($image->getImageHeight(), $original->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $this->assertSame($image[0], $original[0]);
+        $this->assertSame($image[1], $original[1]);
+        $this->assertSame('image/png', $image['mime']);
     }
 
     public function testSpecialCharsInitalImage()
@@ -574,13 +629,12 @@ trait AvatarsBase
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($response['body']);
-        $original = new \Imagick(__DIR__ . '/../../../resources/initials.png');
+        $image = \getimagesizefromstring($response['body']);
+        $original = \getimagesize(__DIR__ . '/../../../resources/initials.png');
 
-        $this->assertSame($image->getImageWidth(), $original->getImageWidth());
-        $this->assertSame($image->getImageHeight(), $original->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $this->assertSame($image[0], $original[0]);
+        $this->assertSame($image[1], $original[1]);
+        $this->assertSame('image/png', $image['mime']);
     }
 
     public function testGetScreenshot(): array
@@ -591,7 +645,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
         ]);
@@ -600,22 +654,21 @@ trait AvatarsBase
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($response['body']);
-        $this->assertSame(800, $image->getImageWidth());
-        $this->assertSame(600, $image->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $image = \getimagesizefromstring($response['body']);
+        $this->assertSame(800, $image[0]);
+        $this->assertSame(600, $image[1]);
+        $this->assertSame('image/png', $image['mime']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'userAgent' => str_repeat('a', 512),
             'headers' => [
-                'User-Agent' => 'Mozilla/5.0 (compatible; AppwriteBot/1.0)',
-                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language' => 'en-US,en;q=0.9',
             ],
         ]);
 
@@ -631,7 +684,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'headers' => 'invalid-headers-string',
@@ -642,7 +695,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'headers' => 123,
@@ -653,7 +706,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'headers' => true,
@@ -667,73 +720,56 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'headers' => ['value1', 'value2', 'value3'], // Indexed array
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        // Test with mixed array (some numeric keys) - Assoc validator allows this
-        // Mixed arrays are considered associative by the Assoc validator
+        // Mixed arrays pass the Assoc validator, but a numeric key is not an allowed header name
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
-            'headers' => ['User-Agent' => 'MyApp', 'value2', 'Accept' => 'text/html'], // Mixed array
+            'headers' => ['Accept-Language' => 'en-US', 'value2', 'Accept' => 'text/html'], // Mixed array
         ]);
-        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $response['body']['type']);
 
         // Test with empty array (should pass - empty associative array)
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'headers' => [], // Empty associative array should pass
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        // Test with valid headers object (should pass)
+        // Allowed header names are matched case-insensitively
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'headers' => [
-                'User-Agent' => 'MyApp/1.0',
-                'Accept' => 'text/html,application/xhtml+xml',
-                'Accept-Language' => 'en-US,en;q=0.9'
+                'accept' => 'text/html,application/xhtml+xml',
+                'ACCEPT-LANGUAGE' => 'fr-FR,fr;q=0.9',
             ],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-
-        // Test with headers containing special characters (should pass validation)
-        // Note: Authorization/Content-Type headers may cause the target site to respond differently,
-        // so the browser service may fail (404) even though parameter validation passes.
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
-            'width' => 800,
-            'height' => 600,
-            'headers' => [
-                'X-Custom-Header' => 'custom-value',
-                'Authorization' => 'Bearer token123',
-                'Content-Type' => 'application/json'
-            ],
-        ]);
-        $this->assertContains($response['headers']['status-code'], [200, 404]);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
 
         // Test with custom viewport width and height
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'viewportWidth' => 1920,
             'viewportHeight' => 1080,
             'width' => 800,
@@ -747,7 +783,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'viewportWidth' => 1,
             'viewportHeight' => 1,
             'width' => 800,
@@ -761,7 +797,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'viewportWidth' => 1920,
             'viewportHeight' => 1080,
             'width' => 800,
@@ -793,12 +829,59 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         /**
+         * Test for FAILURE - Headers outside the allowlist, including those that unlock cloud metadata services
+         */
+        $disallowed = [
+            'Metadata-Flavor' => 'Google',
+            'Metadata' => 'true',
+            'host' => 'metadata.google.internal',
+            'X-aws-ec2-metadata-token' => 'token',
+            'Authorization' => 'Bearer Oracle',
+            'Cookie' => 'session=abc',
+            'User-Agent' => 'MyApp/1.0',
+            'X-Forwarded-For' => '127.0.0.1',
+            'X-Custom-Header' => 'custom-value',
+            'Content-Type' => 'application/json',
+        ];
+        foreach ($disallowed as $name => $value) {
+            $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+                'headers' => [$name => $value],
+            ]);
+            $this->assertEquals(400, $response['headers']['status-code'], "Header '{$name}' should be rejected");
+            $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $response['body']['type']);
+        }
+
+        /**
+         * Test for FAILURE - Allowed header names with unsafe values
+         */
+        $invalidValues = [
+            'crlf' => ['Accept-Language' => "en-US\r\nMetadata-Flavor: Google"],
+            'newline' => ['Accept' => "text/html\nHost: metadata.google.internal"],
+            'empty' => ['Accept' => ''],
+            'too long' => ['Accept-Language' => \str_repeat('a', 513)],
+            'array' => ['Accept' => ['text/html', 'application/json']],
+        ];
+        foreach ($invalidValues as $case => $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+                'headers' => $headers,
+            ]);
+            $this->assertEquals(400, $response['headers']['status-code'], "Header value case '{$case}' should be rejected");
+            $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $response['body']['type']);
+        }
+
+        /**
          * Test for FAILURE - Invalid viewport parameters
          */
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'viewportWidth' => 0, // Too small
             'viewportHeight' => 720,
             'width' => 800,
@@ -809,7 +892,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'viewportWidth' => 2000, // Too large
             'viewportHeight' => 720,
             'width' => 800,
@@ -820,7 +903,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'viewportWidth' => 1280,
             'viewportHeight' => 0, // Too small
             'width' => 800,
@@ -831,7 +914,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'viewportWidth' => 1280,
             'viewportHeight' => 2000, // Too large
             'width' => 800,
@@ -845,7 +928,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => -1, // Invalid width (negative)
             'height' => 600,
         ]);
@@ -854,7 +937,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 3000, // Invalid height
         ]);
@@ -866,7 +949,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'sleep' => -1, // Negative sleep
@@ -876,7 +959,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'sleep' => 15, // Too large
@@ -889,7 +972,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'quality' => -2, // Too small
@@ -899,7 +982,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'quality' => 150, // Too large
@@ -912,7 +995,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'output' => 'invalid-format',
@@ -926,7 +1009,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'theme' => 'dark',
@@ -939,7 +1022,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'scale' => 2.0,
@@ -952,7 +1035,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'userAgent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -965,7 +1048,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'fullpage' => true,
@@ -978,7 +1061,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'locale' => 'en-US',
@@ -991,7 +1074,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'timezone' => 'America/New_York',
@@ -1004,7 +1087,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'latitude' => 40.7128,
@@ -1019,7 +1102,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'touch' => true,
@@ -1032,7 +1115,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'permissions' => [
@@ -1050,7 +1133,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 0,
             'height' => 0,
         ]);
@@ -1062,7 +1145,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'scale' => 1.5,
@@ -1129,7 +1212,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'userAgent' => str_repeat('A', 513), // Too long (max 512)
@@ -1140,7 +1223,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'fullpage' => 'invalid-boolean',
@@ -1151,7 +1234,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'locale' => 'en-US-very-long-locale-string',
@@ -1162,7 +1245,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'timezone' => 'Invalid/Timezone',
@@ -1173,7 +1256,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'latitude' => 91, // Too high (max 90)
@@ -1184,7 +1267,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'latitude' => -91, // Too low (min -90)
@@ -1195,7 +1278,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'longitude' => 181, // Too high (max 180)
@@ -1206,7 +1289,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'longitude' => -181, // Too low (min -180)
@@ -1217,7 +1300,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'accuracy' => 100001, // Too high (max 100000)
@@ -1228,7 +1311,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'accuracy' => -1, // Negative (min 0)
@@ -1239,7 +1322,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'touch' => 'invalid-boolean',
@@ -1250,7 +1333,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'permissions' => 'invalid-permissions-string',
@@ -1263,7 +1346,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'permissions' => ['geolocation', 'camera', 'microphone'], // This should pass as it's a valid array
@@ -1274,7 +1357,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'permissions' => [], // Empty array should pass
@@ -1285,7 +1368,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'permissions' => ['invalid-permission', 'another-invalid'],
@@ -1296,7 +1379,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'permissions' => ['geolocation', 'invalid-permission'],
@@ -1307,7 +1390,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'permissions' => ['geolocation', 'camera', 'microphone', 'notifications'],
@@ -1318,7 +1401,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com?x=' . time() . rand(1000, 9999),
+            'url' => self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
             'permissions' => ['geolocation', 'camera', 'microphone'],
@@ -1328,17 +1411,80 @@ trait AvatarsBase
         return [];
     }
 
+    public function testGetScreenshotAutoOutput(): void
+    {
+        $url = self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999);
+        $screenshot = fn (string $accept, string $output = 'auto') => $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'accept' => $accept,
+        ], [
+            'url' => $url,
+            'width' => 400,
+            'height' => 300,
+            'output' => $output,
+        ]);
+
+        /**
+         * Test for SUCCESS
+         */
+        $avif = $screenshot('image/avif,image/webp,image/apng,image/*,*/*;q=0.8');
+        $this->assertEquals(200, $avif['headers']['status-code']);
+        $this->assertEquals('image/avif', $avif['headers']['content-type']);
+        $this->assertEquals('Accept', $avif['headers']['vary']);
+        $image = \imagecreatefromstring($avif['body']);
+        $this->assertNotFalse($image);
+        $this->assertSame(400, \imagesx($image));
+        $this->assertSame(300, \imagesy($image));
+
+        $webp = $screenshot('image/webp,*/*');
+        $this->assertEquals(200, $webp['headers']['status-code']);
+        $this->assertEquals('image/webp', $webp['headers']['content-type']);
+        $this->assertEquals('Accept', $webp['headers']['vary']);
+
+        // AVIF refused with q=0 and only wildcards otherwise: screenshots fall back to png
+        $png = $screenshot('image/avif;q=0,image/*,*/*');
+        $this->assertEquals(200, $png['headers']['status-code']);
+        $this->assertEquals('image/png', $png['headers']['content-type']);
+        $this->assertEquals('Accept', $png['headers']['vary']);
+
+        // An explicit output ignores Accept, so the response does not vary by it
+        $explicit = $screenshot('image/avif', 'webp');
+        $this->assertEquals(200, $explicit['headers']['status-code']);
+        $this->assertEquals('image/webp', $explicit['headers']['content-type']);
+        $this->assertArrayNotHasKey('vary', $explicit['headers']);
+
+        // Cached entries are keyed by the negotiated format, never served across Accept headers
+        $this->assertEventually(function () use ($screenshot) {
+            $cached = $screenshot('image/avif,image/webp');
+            $this->assertSame('hit', $cached['headers']['x-appwrite-cache']);
+            $this->assertEquals('image/avif', $cached['headers']['content-type']);
+            $this->assertEquals('Accept', $cached['headers']['vary']);
+
+            $cached = $screenshot('*/*');
+            $this->assertSame('hit', $cached['headers']['x-appwrite-cache']);
+            $this->assertEquals('image/png', $cached['headers']['content-type']);
+            $this->assertEquals('Accept', $cached['headers']['vary']);
+
+            // An explicit output served from the cache still does not vary by Accept
+            $cached = $screenshot('image/avif', 'webp');
+            $this->assertSame('hit', $cached['headers']['x-appwrite-cache']);
+            $this->assertEquals('image/webp', $cached['headers']['content-type']);
+            $this->assertArrayNotHasKey('vary', $cached['headers']);
+        });
+
+        /**
+         * Test for FAILURE
+         */
+        $invalid = $screenshot('image/avif', 'automatic');
+        $this->assertEquals(400, $invalid['headers']['status-code']);
+    }
+
     public function testGetScreenshotComparison(): array
     {
-        /**
-         * Test screenshot comparison with stable domain (example.com)
-         * This test captures a screenshot of example.com and compares it
-         * against a reference image to ensure consistent rendering.
-         */
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://example.com',
+            'url' => self::SCREENSHOT_URL,
             'width' => 800,
             'height' => 600,
         ]);
@@ -1346,12 +1492,7 @@ trait AvatarsBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
-
-        // Compare with reference screenshot
-        $referencePath = \realpath(__DIR__ . '/../../../resources/avatars');
-        $referenceScreenshot = $referencePath . '/screenshot-example-com.png';
-        $this->assertFileExists($referenceScreenshot, 'Reference example.com screenshot not found');
-        $this->assertSamePixels($referenceScreenshot, $response['body']);
+        $this->assertSamePixels(__DIR__ . '/../../../resources/avatars/screenshot.png', $response['body']);
 
         return [];
     }
@@ -1686,9 +1827,8 @@ trait AvatarsBase
     }
 
     /**
-     * Assert the avatar is the built-in static fallback. When Imagick is
-     * missing entirely the endpoint serves the fallback as raw SVG source
-     * instead of a drawn PNG, so both encodings are accepted.
+     * Assert the avatar is the built-in static fallback, as a drawn PNG or
+     * as raw SVG source.
      */
     private function assertPhotoFallback(string $blob): void
     {
@@ -1716,16 +1856,16 @@ trait AvatarsBase
      */
     private function photoHasPersonMark(string $blob): bool
     {
-        $image = new \Imagick();
-        $image->readImageBlob($blob);
+        $image = \imagecreatefromstring($blob);
+        $this->assertNotFalse($image);
 
-        $x = (int) \round($image->getImageWidth() * 0.34);
-        $to = (int) \round($image->getImageHeight() * 0.73);
+        $x = (int) \round(\imagesx($image) * 0.34);
+        $to = (int) \round(\imagesy($image) * 0.73);
 
-        for ($y = (int) \round($image->getImageHeight() * 0.68); $y <= $to; $y++) {
-            $color = $image->getImagePixelColor($x, $y)->getColor();
+        for ($y = (int) \round(\imagesy($image) * 0.68); $y <= $to; $y++) {
+            $color = \imagecolorsforindex($image, (int) \imagecolorat($image, $x, $y));
 
-            if ($color['r'] > 200 && $color['g'] > 200 && $color['b'] > 200) {
+            if ($color['red'] > 200 && $color['green'] > 200 && $color['blue'] > 200) {
                 return true;
             }
         }
@@ -1742,9 +1882,8 @@ trait AvatarsBase
     {
         $this->assertNotEmpty($blob);
 
-        // The static fallback is SVG, which ImageMagick may refuse to open at
-        // all under its security policy. Name it here rather than letting
-        // readImageBlob() raise an opaque ImagickException — reaching the
+        // GD cannot decode SVG. Name a raw SVG fallback here rather than
+        // letting the decode below fail without saying why — reaching the
         // fallback when initials were expected is the failure worth reporting.
         $this->assertStringNotContainsString(
             '<svg',
@@ -1752,17 +1891,286 @@ trait AvatarsBase
             'Expected a rendered avatar but got the static SVG fallback — the provider chain fell through.'
         );
 
-        $image = new \Imagick();
-        $image->readImageBlob($blob);
+        $image = \imagecreatefromstring($blob);
+        $this->assertNotFalse($image);
 
-        foreach ([[2, 2], [$image->getImageWidth() - 3, 2]] as [$x, $y]) {
-            $color = $image->getImagePixelColor($x, $y)->getColor();
+        foreach ([[2, 2], [\imagesx($image) - 3, 2]] as [$x, $y]) {
+            $color = \imagecolorsforindex($image, (int) \imagecolorat($image, $x, $y));
 
             $this->assertSame(
                 $rgb,
-                ['r' => $color['r'], 'g' => $color['g'], 'b' => $color['b']],
+                ['r' => $color['red'], 'g' => $color['green'], 'b' => $color['blue']],
                 "Pixel at {$x},{$y} does not match the expected avatar background."
             );
         }
+    }
+
+    /**
+     * A user of its own, so a photo never leaks into tests that expect the default chain.
+     *
+     * @return array<string, string>
+     */
+    private function createPhotoUser(): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = \uniqid('photo-', true) . '@localhost.test';
+
+        $user = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => 'password',
+            'name' => 'User Name',
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        return [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+        ];
+    }
+
+    /**
+     * Random pixels don't compress, so the PNG size follows the dimensions.
+     */
+    private function createNoiseImage(int $width, int $height): string
+    {
+        $image = \imagecreatetruecolor($width, $height);
+        $this->assertNotFalse($image);
+
+        for ($y = 0; $y < $height; $y++) {
+            for ($x = 0; $x < $width; $x++) {
+                \imagesetpixel($image, $x, $y, \mt_rand(0, 0xFFFFFF));
+            }
+        }
+
+        \ob_start();
+        \imagepng($image);
+
+        return (string) \ob_get_clean();
+    }
+
+    /**
+     * @param 'png'|'jpeg'|'webp'|'gif' $format
+     */
+    private function createImage(string $color, string $format): string
+    {
+        $image = \imagecreatetruecolor(64, 64);
+        $this->assertNotFalse($image);
+        \imagefill($image, 0, 0, (int) \hexdec(\ltrim($color, '#')));
+
+        \ob_start();
+        match ($format) {
+            'png' => \imagepng($image),
+            'jpeg' => \imagejpeg($image, null, 100),
+            'webp' => \imagewebp($image, null, IMG_WEBP_LOSSLESS),
+            'gif' => \imagegif($image),
+        };
+
+        return (string) \ob_get_clean();
+    }
+
+    /**
+     * @param array<string, string> $headers
+     * @param array<string, string> $extra
+     * @return array<string, mixed>
+     */
+    private function uploadPhoto(array $headers, string $contents, string $filename, array $extra = []): array
+    {
+        return $this->client->call(Client::METHOD_PUT, '/avatars/photo', \array_merge($headers, [
+            'content-type' => 'multipart/form-data',
+        ], $extra), [
+            'file' => new \CURLFile('data://application/octet-stream;base64,' . \base64_encode($contents), 'application/octet-stream', $filename),
+        ]);
+    }
+
+    /**
+     * @param array<string, string> $headers
+     */
+    private function getPhoto(array $headers): string
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', $headers, [
+            'width' => 0,
+            'height' => 0,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        return $response['body'];
+    }
+
+    /**
+     * Tolerance is the largest difference allowed per colour channel, for lossy formats.
+     */
+    private function assertSamePhoto(string $expected, string $actual, int $tolerance = 0): void
+    {
+        $expectedImage = \imagecreatefromstring($expected);
+        $this->assertNotFalse($expectedImage);
+        $actualImage = \imagecreatefromstring($actual);
+        $this->assertNotFalse($actualImage);
+
+        $width = \imagesx($expectedImage);
+        $height = \imagesy($expectedImage);
+
+        $this->assertSame([$width, $height], [\imagesx($actualImage), \imagesy($actualImage)]);
+
+        foreach ([[0, 0], [$width - 1, $height - 1], [\intdiv($width, 2), \intdiv($height, 2)], [\intdiv($width, 3), \intdiv($height, 5)]] as [$x, $y]) {
+            $expectedColor = \imagecolorsforindex($expectedImage, (int) \imagecolorat($expectedImage, $x, $y));
+            $actualColor = \imagecolorsforindex($actualImage, (int) \imagecolorat($actualImage, $x, $y));
+
+            foreach (['red', 'green', 'blue'] as $channel) {
+                $this->assertLessThanOrEqual(
+                    $tolerance,
+                    \abs($expectedColor[$channel] - $actualColor[$channel]),
+                    "Pixel at {$x},{$y} differs from the uploaded photo."
+                );
+            }
+        }
+    }
+
+    public function testGetTeamPhoto(): void
+    {
+        $teamId = $this->createPhotoTeam();
+        $headers = $this->getTeamPhotoHeaders();
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/teams/' . $teamId . '/photo', $headers);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
+        $this->assertNotFalse(\imagecreatefromstring($response['body']));
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/teams/' . Id::unique() . '/photo', $headers);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+    }
+
+    public function testUpdateTeamPhoto(): void
+    {
+        $teamId = $this->createPhotoTeam();
+        $headers = $this->getTeamPhotoHeaders();
+        $logo = (string) \file_get_contents(__DIR__ . '/../../../resources/logo.png');
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->uploadTeamPhoto($teamId, $logo, 'logo.png');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($teamId, $response['body']['$id']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/teams/' . $teamId . '/photo', $headers, [
+            'width' => 0,
+            'height' => 0,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSame(\getimagesizefromstring($logo)[0], \getimagesizefromstring($response['body'])[0]);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->uploadTeamPhoto($teamId, 'not an image', 'photo.txt');
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->uploadTeamPhoto(Id::unique(), $logo, 'logo.png');
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+    }
+
+    public function testDeleteTeamPhoto(): void
+    {
+        $teamId = $this->createPhotoTeam();
+        $headers = $this->getTeamPhotoHeaders();
+        $logo = (string) \file_get_contents(__DIR__ . '/../../../resources/logo.png');
+
+        $initials = $this->client->call(Client::METHOD_GET, '/avatars/teams/' . $teamId . '/photo', $headers)['body'];
+
+        $response = $this->uploadTeamPhoto($teamId, $logo, 'logo.png');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $uploaded = $this->client->call(Client::METHOD_GET, '/avatars/teams/' . $teamId . '/photo', $headers)['body'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/avatars/teams/' . $teamId . '/photo', $headers);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/teams/' . $teamId . '/photo', $headers);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotSame($initials, $response['body']);
+        $this->assertNotSame($uploaded, $response['body']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/avatars/teams/' . Id::unique() . '/photo', $headers);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function getTeamPhotoHeaders(): array
+    {
+        return \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function uploadTeamPhoto(string $teamId, string $contents, string $filename): array
+    {
+        return $this->client->call(Client::METHOD_PUT, '/avatars/teams/' . $teamId . '/photo', \array_merge($this->getTeamPhotoHeaders(), [
+            'content-type' => 'multipart/form-data',
+        ]), [
+            'file' => new \CURLFile('data://application/octet-stream;base64,' . \base64_encode($contents), 'application/octet-stream', $filename),
+        ]);
+    }
+
+    /**
+     * Create a team to hold a photo, returning its ID.
+     */
+    private function createPhotoTeam(): string
+    {
+        $response = $this->createTeamFixture(\array_merge([
+            'content-type' => 'application/json',
+        ], $this->getTeamPhotoHeaders()), [
+            'teamId' => Id::unique(),
+            'name' => 'Photo Team',
+        ]);
+
+        $this->assertContains($response['headers']['status-code'], [200, 201]);
+
+        return $response['body']['$id'];
     }
 }

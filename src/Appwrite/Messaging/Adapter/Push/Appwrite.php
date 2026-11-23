@@ -1,0 +1,279 @@
+<?php
+
+namespace Appwrite\Messaging\Adapter\Push;
+
+use Appwrite\Messaging\Adapter\Mqtt;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\NotFound;
+use Utopia\Database\Id;
+use Utopia\Database\Operator;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Messaging\Adapter\Push as PushAdapter;
+use Utopia\Messaging\Messages\Push as PushMessage;
+use Utopia\Messaging\Priority;
+use Utopia\Messaging\Response;
+use Utopia\Mqtt\Packet;
+use Utopia\Telemetry\Adapter as Telemetry;
+
+class Appwrite extends PushAdapter
+{
+    protected const NAME = 'Appwrite';
+
+    // The reserved per-user topic namespace. A recipient target resolves to `users/<userId>`, an
+    // implicit topic auto-provisioned on first publish so per-user pushes need no pre-created topic.
+    private const USER_TOPIC_PREFIX = 'users';
+
+    /**
+     * @param Mqtt     $broker             the broker adapter used for internal pub/sub fan-out
+     * @param Database $dbForProject       the project database holding the topics and ledger
+     * @param string   $projectId          the project every topic and publish is scoped to
+     * @param string   $messageId          source campaign message id (client-side dedup key)
+     * @param ?string  $messageInternalId  source message internal id (correlation)
+     * @param int      $qos                delivery QoS for the fan-out envelope
+     */
+    public function __construct(
+        private readonly Mqtt $broker,
+        private readonly Database $dbForProject,
+        private readonly string $projectId,
+        private readonly string $messageId,
+        private readonly ?string $messageInternalId,
+        private readonly int $qos = Packet::QOS_1,
+        ?Telemetry $telemetry = null,
+    ) {
+        parent::__construct($telemetry);
+    }
+
+    public function getName(): string
+    {
+        return static::NAME;
+    }
+
+    public function getMaxMessagesPerRequest(): int
+    {
+        return 5000;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function process(PushMessage $message): array
+    {
+        $payload = $this->buildPayload($message);
+        $response = new Response($this->getType());
+
+        // A target is either a campaign topic id or a reserved users/<id> name. Both are the wire topic
+        // subscribers match on, so fan out under $to directly; the ledger keys by the same id, which for
+        // a reserved user topic is its md5, auto-provisioning the row on first use.
+        foreach ($message->getTo() as $to) {
+            try {
+                $id = $this->isUserTopic($to) ? $this->createUserTopic($to) : $to;
+
+                $sequence = $this->persist($id, $payload);
+                $this->broker->send(
+                    $this->projectId,
+                    [],
+                    [],
+                    [$to],
+                    [],
+                    ['payload' => $payload, 'qos' => $this->qos, 'sequence' => $sequence, 'publishedAt' => \microtime(true)],
+                );
+
+                $response->incrementDeliveredTo();
+                $response->addResult($to);
+            } catch (\Throwable $error) {
+                $this->broker->messagesFailed->add(1);
+                $response->addResult($to, $error->getMessage());
+            }
+        }
+
+        return $response->toArray();
+    }
+
+    /** Whether a target is a reserved per-user topic name (users/<userId>) rather than a topic id. */
+    private function isUserTopic(string $to): bool
+    {
+        return \str_starts_with($to, self::USER_TOPIC_PREFIX . '/');
+    }
+
+    /**
+     * Resolve a reserved users/<id> topic to [id, name], creating its topics row on first publish so
+     * per-user pushes need no pre-created topic. The id is a deterministic hash of the reserved name
+     * (as domain rules key on md5 of the domain): the primary key makes the row a singleton and needs
+     * no name index. A concurrent first publish that already created it throws Duplicate and is re-read.
+     * `qos` is left null (subscriber chosen), matching a normal topic.
+     *
+     * The id space is shared with developer-created topics, so the resolved row's name is verified to
+     * be the reserved one: a normal topic squatting the hash must never carry another user's pushes.
+     *
+     * @return string the topic id
+     */
+    private function createUserTopic(string $name): string
+    {
+        $id = Id::custom(\md5($name));
+        $authorization = $this->dbForProject->getAuthorization();
+
+        $topic = $authorization->skip(fn () => $this->dbForProject->getDocument('topics', $id));
+        if ($topic->isEmpty()) {
+            try {
+                $topic = $authorization->skip(fn () => $this->dbForProject->createDocument('topics', new Document([
+                    '$id' => $id,
+                    'name' => $name,
+                    'sequence' => 0,
+                ])));
+            } catch (Duplicate) {
+                // A concurrent first publish created it; re-read it to verify below.
+                $topic = $authorization->skip(fn () => $this->dbForProject->getDocument('topics', $id));
+            }
+        }
+
+        if ($topic->getAttribute('name') !== $name) {
+            throw new \RuntimeException("Reserved topic id for {$name} collides with an existing topic");
+        }
+
+        return $id;
+    }
+
+    /**
+     * Append the notification to the ledger and return its per-topic sequence. Idempotent
+     * on (messageId, topic instance): a retry after a transient publish failure reuses the
+     * existing row and sequence instead of incrementing the topic counter or inserting a duplicate.
+     *
+     * The lookup, increment and insert run in one transaction, opened by locking the topic row
+     * (getDocument FOR UPDATE). A concurrent attempt for the same message blocks on that
+     * lock, then re-reads the ledger row this transaction committed rather than racing a
+     * second increment — so the topic sequence can't advance without a matching row, and
+     * two attempts can't open a gap. The unique index on (messageId, topicInternalId) remains
+     * as a correctness backstop.
+     *
+     * Rows are bound to the locked topic's internal id, so a topic deleted and recreated under
+     * the same id never shares a ledger, or a deduplication key, with its predecessor. Rows
+     * written before that binding have a null topicInternalId, which the unique index treats
+     * as distinct, so they never block a publish.
+     */
+    private function persist(string $topic, string $payload): int
+    {
+        $start = \microtime(true);
+
+        try {
+            return $this->persistLedger($topic, $payload);
+        } finally {
+            $this->broker->ledgerDuration->record(\microtime(true) - $start);
+        }
+    }
+
+    private function persistLedger(string $topic, string $payload): int
+    {
+        $authorization = $this->dbForProject->getAuthorization();
+
+        return (int) $authorization->skip(
+            fn () => $this->dbForProject->withTransaction(function () use ($topic, $payload, $authorization): int {
+                $document = $this->dbForProject->getDocument('topics', $topic, forUpdate: true);
+                if ($document->isEmpty()) {
+                    throw new NotFound("Topic {$topic} does not exist");
+                }
+                $topicInternalId = (string) $document->getSequence();
+
+                $existing = $this->findLedger($authorization, $topicInternalId);
+                if (!$existing->isEmpty()) {
+                    return (int) $existing->getAttribute('sequence');
+                }
+
+                $sequence = (int) $this->dbForProject
+                    ->updateDocument('topics', $topic, new Document(['sequence' => Operator::increment(1)]))
+                    ->getAttribute('sequence');
+
+                $this->dbForProject->createDocument('pushLedger', new Document([
+                    '$id' => Id::unique(),
+                    'topic' => $topic,
+                    'topicInternalId' => $topicInternalId,
+                    'data' => $payload,
+                    'messageId' => $this->messageId,
+                    'messageInternalId' => $this->messageInternalId,
+                    'sequence' => $sequence,
+                ]));
+
+                return $sequence;
+            })
+        );
+    }
+
+    /** The existing ledger row for this campaign message on a topic instance, or an empty document. */
+    private function findLedger(Authorization $authorization, string $topicInternalId): Document
+    {
+        return $authorization->skip(
+            fn () => $this->dbForProject->findOne('pushLedger', [
+                Query::equal('messageId', [$this->messageId]),
+                Query::equal('topicInternalId', [$topicInternalId]),
+            ])
+        );
+    }
+
+    /**
+     * Build the notification envelope delivered to devices. Mirrors the shape
+     * FCM and APNS expose so SDK consumers render a consistent payload.
+     */
+    private function buildPayload(PushMessage $message): string
+    {
+        $envelope = [];
+
+        if ($this->messageId !== '') {
+            $envelope['messageId'] = $this->messageId;
+        }
+
+        if ($message->getTitle() !== null) {
+            $envelope['notification']['title'] = $message->getTitle();
+        }
+        if ($message->getBody() !== null) {
+            $envelope['notification']['body'] = $message->getBody();
+        }
+        if ($message->getImage() !== null) {
+            $envelope['notification']['image'] = $message->getImage();
+        }
+        if ($message->getIcon() !== null) {
+            $envelope['notification']['icon'] = $message->getIcon();
+        }
+        if ($message->getColor() !== null) {
+            $envelope['notification']['color'] = $message->getColor();
+        }
+        if ($message->getSound() !== null) {
+            $envelope['notification']['sound'] = $message->getSound();
+        }
+        if ($message->getTag() !== null) {
+            $envelope['notification']['tag'] = $message->getTag();
+        }
+        if ($message->getChannelId() !== null) {
+            $envelope['notification']['channelId'] = $message->getChannelId();
+        }
+        if ($message->getBadge() !== null) {
+            $envelope['notification']['badge'] = $message->getBadge();
+        }
+        if ($message->getAction() !== null) {
+            $envelope['notification']['action'] = $message->getAction();
+        }
+        if ($message->getContentAvailable() !== null) {
+            $envelope['notification']['contentAvailable'] = $message->getContentAvailable();
+        }
+        if ($message->getCritical() !== null) {
+            $envelope['notification']['critical'] = $message->getCritical();
+        }
+        if ($message->getData() !== null) {
+            $envelope['data'] = $message->getData();
+        }
+        if ($message->getPriority() instanceof Priority) {
+            $envelope['priority'] = match ($message->getPriority()) {
+                Priority::HIGH => 'high',
+                Priority::NORMAL => 'normal',
+            };
+        }
+
+        $json = json_encode($envelope, JSON_UNESCAPED_SLASHES);
+        if ($json === false) {
+            throw new \RuntimeException('Failed to encode push payload: ' . json_last_error_msg());
+        }
+
+        return $json;
+    }
+}

@@ -1,0 +1,492 @@
+# ---------------------------------------------------------------------------
+# Every Android QA app (React Native, Flutter, native Kotlin) is built with
+# this applicationId, so one flow drives all of them.
+appId: io.appwrite.connectqa
+name: Auth — home, sign in, sign up
+tags:
+  - auth
+  - android
+  - regression
+---
+
+# Section numbers match the web flow (tests/connect-qa/.maestro/auth.yaml)
+# one for one - keep them in step when either side changes.
+#
+# Adapted, same property asserted:
+#   * No URL bar, so `openLink <base>/` becomes `launchApp` - the snippet's
+#     route state resets to home on a cold start.
+#   * No CSS selectors, so fields are matched by placeholder text and buttons
+#     by `text` + `index` (index 1 is the submit, index 0 the heading).
+#   * Password masking: web uses `css: input[type='password']`; here the
+#     plaintext is asserted absent from the view hierarchy (4b, 6b), which
+#     only holds while the field is actually masked.
+#   * Native apps have no browser `required` / `type=email` validation (the
+#     snippet guards empty fields itself), but the WebView lanes (capacitor,
+#     tauri) do. 4b/6b therefore use a malformed email with a dotless domain
+#     (not@an): HTML5 validation lets it through everywhere, while Appwrite's
+#     stricter server-side validator rejects it inline in every lane.
+#   * `hideKeyboard` runs only on Android: its soft keyboard can cover the
+#     submit button. iOS Simulators keep the hardware keyboard attached, so
+#     no soft keyboard ever appears and the command errors out ("Couldn't
+#     hide the keyboard") instead of no-opping.
+#
+# Genuinely not equivalent - do not read these as covered:
+#   * Web 9a/9b (auth pages still reachable while signed in) has no analogue:
+#     the signed in home renders only a sign out button, and without a URL
+#     bar there is no way to reach the auth screens from it.
+#   * 11b is weaker than web's. Web corrects the password in place and
+#     asserts the error clears; the masked field has no stable selector once
+#     it holds a value, so this retries from a fresh screen instead. The
+#     "error clears on correction" behaviour is therefore untested here.
+
+# ===========================================================================
+# 0. Setup — clean install state, generate a unique test identity
+# ===========================================================================
+- launchApp:
+    clearState: true
+
+- evalScript: "${output.stamp = Date.now().toString(36) + Math.random().toString(36).slice(2, 4)}"
+- evalScript: "${output.email = 'qa' + output.stamp + '@example.com'}"
+- evalScript: "${output.name = 'QA ' + output.stamp}"
+# The QA project runs the strength policy from the bun/elysia snippet
+# (min 8 + uppercase + number + symbols), so the symbol here is required.
+- evalScript: "${output.password = 'Pa55w0rd!'}"
+# Only ever submitted to sign in, where the policy does not apply.
+- evalScript: "${output.wrongPassword = 'N0tRight1'}"
+- evalScript: "${output.shortPassword = 'abc'}"
+- evalScript: "${output.unknownEmail = 'no' + output.stamp + '@example.com'}"
+
+# ===========================================================================
+# 1. Home — signed out
+# ===========================================================================
+- runFlow:
+    label: "1. Home (signed out) shows the CTA and both auth links"
+    commands:
+      - extendedWaitUntil:
+          visible: "Sign in to get started."
+          timeout: 60000
+      - assertVisible: "Sign in"
+      - assertVisible: "Sign up"
+      - assertNotVisible: ".*Hello,.*"
+      - assertNotVisible: "Sign out"
+      - assertNotVisible: "Loading..."
+      - takeScreenshot: artifacts/01-home-signed-out
+
+# ===========================================================================
+# 2. Home — navigation actually works
+# ===========================================================================
+- runFlow:
+    label: "2a. Home -> Sign in navigates to the sign in screen"
+    commands:
+      - tapOn: "Sign in"
+      - assertVisible: ".*No account\\?.*"
+      - assertVisible: "Password"
+      - assertNotVisible: "Sign in to get started."
+
+- runFlow:
+    label: "2b. Home -> Sign up navigates to the sign up screen"
+    commands:
+      - launchApp
+      - assertVisible: "Sign in to get started."
+      - tapOn: "Sign up"
+      - assertVisible: ".*Already have an account\\?.*"
+      - assertVisible: "Name"
+
+# ===========================================================================
+# 3. Sign in screen — structure
+# ===========================================================================
+- runFlow:
+    label: "3. Sign in screen renders heading, email, password, submit and the sign up link"
+    commands:
+      - launchApp
+      - tapOn: "Sign in"
+      - assertVisible: "Sign in"
+      - assertVisible: "Email"
+      - assertVisible: "Password"
+      - assertVisible:
+          text: "Sign in"
+          index: 1 # the submit button, not the heading
+      - assertVisible: ".*No account\\?.*"
+      - assertVisible: "Sign up"
+      # No error is shown before the user has done anything
+      - assertNotVisible: ".*Invalid credentials.*"
+      # Sign in screen must not leak an authenticated state
+      - assertNotVisible: "Sign out"
+
+- runFlow:
+    label: "3b. Sign in -> Sign up cross link works"
+    commands:
+      - tapOn: "Sign up"
+      - assertVisible: ".*Already have an account\\?.*"
+
+# ===========================================================================
+# 4. Sign in — failure flows
+# ===========================================================================
+- runFlow:
+    label: "4a. Empty form submit is blocked by the snippet's own guard"
+    commands:
+      - launchApp
+      - tapOn: "Sign in"
+      - tapOn:
+          text: "Sign in"
+          index: 1
+      # Still on the sign in screen: nothing was submitted
+      - assertVisible: "Email"
+      - assertVisible: ".*No account\\?.*"
+      - assertNotVisible: "Sign in to get started."
+      - assertNotVisible: ".*Hello,.*"
+
+- runFlow:
+    label: "4b. Malformed email is rejected by Appwrite and surfaced inline"
+    commands:
+      - tapOn: "Email"
+      - inputText: "not@an"
+      - tapOn: "Password"
+      - inputText: ${output.password}
+      # The web flow proves the field is masked with `css: input[type=
+      # 'password']`, which has no native equivalent. Asserting the plaintext
+      # is not in the view hierarchy tests the same property directly: it only
+      # holds while secureTextEntry / obscureText / SecureField is in effect.
+      - assertNotVisible: ${output.password}
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - hideKeyboard
+      - tapOn:
+          text: "Sign in"
+          index: 1
+      - extendedWaitUntil:
+          visible: ".*([Ii]nvalid.*email|Sign in failed).*"
+          timeout: 15000
+      # Still on the sign in screen - nothing navigated away (web asserts the
+      # same pair after its browser-side validation blocks the submit).
+      - assertVisible: ".*No account\\?.*"
+      - assertNotVisible: "Sign in to get started."
+      - assertNotVisible: ".*Hello,.*"
+
+- runFlow:
+    label: "4c. Unknown account shows the Appwrite error inline and stays on the screen"
+    commands:
+      - launchApp
+      - tapOn: "Sign in"
+      - tapOn: "Email"
+      - inputText: ${output.unknownEmail}
+      - tapOn: "Password"
+      - inputText: ${output.password}
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - hideKeyboard
+      - tapOn:
+          text: "Sign in"
+          index: 1
+      - extendedWaitUntil:
+          visible: ".*(Invalid credentials|Sign in failed|user with the requested ID could not be found).*"
+          timeout: 15000
+      - assertVisible: ".*No account\\?.*"
+      - assertNotVisible: ".*Hello,.*"
+      - assertNotVisible: "Sign out"
+      - takeScreenshot: artifacts/04-sign-in-error
+
+# ===========================================================================
+# 5. Sign up screen — structure
+# ===========================================================================
+- runFlow:
+    label: "5. Sign up screen renders name, email, password, submit and the sign in link"
+    commands:
+      - launchApp
+      - tapOn: "Sign up"
+      - assertVisible: "Sign up"
+      - assertVisible: "Name" # optional field
+      - assertVisible: "Email"
+      - assertVisible: "Password"
+      - assertVisible:
+          text: "Sign up"
+          index: 1 # the submit button, not the heading
+      - assertVisible: ".*Already have an account\\?.*"
+      - assertVisible: "Sign in"
+      - assertNotVisible: "Sign out"
+
+- runFlow:
+    label: "5b. Sign up -> Sign in cross link works"
+    commands:
+      - tapOn: "Sign in"
+      - assertVisible: ".*No account\\?.*"
+
+# ===========================================================================
+# 6. Sign up — failure flows
+# ===========================================================================
+- runFlow:
+    label: "6a. Empty form submit is blocked (email + password are required)"
+    commands:
+      - launchApp
+      - tapOn: "Sign up"
+      - tapOn:
+          text: "Sign up"
+          index: 1
+      - assertVisible: ".*Already have an account\\?.*"
+      - assertNotVisible: "Sign in to get started."
+      - assertNotVisible: ".*Hello,.*"
+
+- runFlow:
+    label: "6b. Malformed email is rejected by Appwrite and surfaced inline"
+    commands:
+      - tapOn: "Name"
+      - inputText: ${output.name}
+      - tapOn: "Email"
+      - inputText: "not@an"
+      - tapOn: "Password"
+      - inputText: ${output.password}
+      # Same masking check as 4b, on the sign up screen's own field.
+      - assertNotVisible: ${output.password}
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - hideKeyboard
+      - tapOn:
+          text: "Sign up"
+          index: 1
+      - extendedWaitUntil:
+          visible: ".*([Ii]nvalid.*email|Sign up failed).*"
+          timeout: 15000
+      - assertVisible: ".*Already have an account\\?.*"
+      - assertNotVisible: "Sign in to get started."
+      - assertNotVisible: ".*Hello,.*"
+
+- runFlow:
+    label: "6c. Too short password is rejected by the backend and surfaced inline"
+    commands:
+      - launchApp
+      - tapOn: "Sign up"
+      - tapOn: "Name"
+      - inputText: ${output.name}
+      - tapOn: "Email"
+      - inputText: ${output.email}
+      - tapOn: "Password"
+      - inputText: ${output.shortPassword}
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - hideKeyboard
+      - tapOn:
+          text: "Sign up"
+          index: 1
+      # Appwrite: "Password must be between 8 and 256 characters long."
+      - extendedWaitUntil:
+          visible: ".*([Pp]assword must be|Invalid `password`|Sign up failed).*"
+          timeout: 15000
+      - assertVisible: ".*Already have an account\\?.*"
+      - assertNotVisible: ".*Hello,.*"
+      - takeScreenshot: artifacts/06-sign-up-error
+
+# ===========================================================================
+# 7. Sign up — happy flow (creates the account used by the rest of the run)
+# ===========================================================================
+- runFlow:
+    label: "7. Sign up succeeds, auto-creates a session and lands on the signed in home"
+    commands:
+      - launchApp
+      - tapOn: "Sign up"
+      - tapOn: "Name"
+      - inputText: ${output.name}
+      - tapOn: "Email"
+      - inputText: ${output.email}
+      - tapOn: "Password"
+      - inputText: ${output.password}
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - hideKeyboard
+      - tapOn:
+          text: "Sign up"
+          index: 1
+      - extendedWaitUntil:
+          visible: ".*Hello, ${output.name}.*"
+          timeout: 30000
+      - assertNotVisible: "Sign up"
+      - assertNotVisible: "Sign in to get started."
+      - takeScreenshot: artifacts/07-signed-up
+
+# ===========================================================================
+# 8. Home — signed in
+# ===========================================================================
+- runFlow:
+    label: "8a. Signed in home greets the user by name and offers sign out"
+    commands:
+      - assertVisible: ".*Hello, ${output.name}.*"
+      - assertVisible: "Sign out"
+      - assertNotVisible: "Sign in to get started."
+      - assertNotVisible: "Sign in"
+      - assertNotVisible: "Sign up"
+      - assertNotVisible: "Loading..."
+
+- runFlow:
+    label: "8b. The session survives a cold app restart (SDK session persistence)"
+    commands:
+      - stopApp
+      - launchApp
+      - extendedWaitUntil:
+          visible: ".*Hello, ${output.name}.*"
+          timeout: 30000
+      - assertVisible: "Sign out"
+
+# ===========================================================================
+# 10. Sign out
+#
+# (Web section 9 - the auth pages staying reachable while signed in - has no
+# equivalent here: the signed in home only renders a sign out button, so
+# there is no way to reach them without signing out first.)
+# ===========================================================================
+- runFlow:
+    label: "10a. Sign out swaps the home screen back to the signed out state"
+    commands:
+      - tapOn: "Sign out"
+      - extendedWaitUntil:
+          visible: "Sign in to get started."
+          timeout: 20000
+      - assertNotVisible: ".*Hello, ${output.name}.*"
+      - assertNotVisible: "Sign out"
+      - assertVisible: "Sign in"
+      - assertVisible: "Sign up"
+      - takeScreenshot: artifacts/10-signed-out
+
+- runFlow:
+    label: "10b. Sign out is durable — the session is gone after a restart, not just in memory"
+    commands:
+      - stopApp
+      - launchApp
+      - extendedWaitUntil:
+          visible: "Sign in to get started."
+          timeout: 30000
+      - assertNotVisible: ".*Hello,.*"
+      - assertNotVisible: "Sign out"
+
+# ===========================================================================
+# 11. Sign in — failure then recovery
+#
+# Web corrects the password in place; the masked field has no stable selector
+# once it holds a value, so the retry starts from a fresh screen instead.
+# ===========================================================================
+- runFlow:
+    label: "11a. Existing account + wrong password shows an inline error"
+    commands:
+      - tapOn: "Sign in"
+      - tapOn: "Email"
+      - inputText: ${output.email}
+      - tapOn: "Password"
+      - inputText: ${output.wrongPassword}
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - hideKeyboard
+      - tapOn:
+          text: "Sign in"
+          index: 1
+      - extendedWaitUntil:
+          visible: ".*(Invalid credentials|Sign in failed).*"
+          timeout: 15000
+      - assertNotVisible: ".*Hello,.*"
+
+- runFlow:
+    label: "11b. Retrying with the correct password signs in"
+    commands:
+      - launchApp
+      - tapOn: "Sign in"
+      - tapOn: "Email"
+      - inputText: ${output.email}
+      - tapOn: "Password"
+      - inputText: ${output.password}
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - hideKeyboard
+      - tapOn:
+          text: "Sign in"
+          index: 1
+      - extendedWaitUntil:
+          visible: ".*Hello, ${output.name}.*"
+          timeout: 30000
+      - assertNotVisible: ".*Invalid credentials.*"
+      - assertVisible: "Sign out"
+      - takeScreenshot: artifacts/11-signed-in
+
+# ===========================================================================
+# 12. Sign up — duplicate email (needs to be signed out first)
+# ===========================================================================
+- runFlow:
+    label: "12. Signing up again with an existing email is rejected"
+    commands:
+      - tapOn: "Sign out"
+      - extendedWaitUntil:
+          visible: "Sign in to get started."
+          timeout: 20000
+      - tapOn: "Sign up"
+      - tapOn: "Name"
+      - inputText: ${output.name}
+      - tapOn: "Email"
+      - inputText: ${output.email}
+      - tapOn: "Password"
+      - inputText: ${output.password}
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - hideKeyboard
+      - tapOn:
+          text: "Sign up"
+          index: 1
+      # Appwrite: "A user with the same id, email, or phone already exists..."
+      - extendedWaitUntil:
+          visible: ".*(already exists|Sign up failed).*"
+          timeout: 15000
+      - assertVisible: ".*Already have an account\\?.*"
+      - assertNotVisible: ".*Hello,.*"
+
+# ===========================================================================
+# 13. The name field is NOT required — Appwrite rejects `name: ""`, so the app
+#     has to omit it entirely. Creates a second throwaway user.
+# ===========================================================================
+- runFlow:
+    label: "13. Sign up without a name succeeds and renders an empty greeting"
+    commands:
+      - evalScript: "${output.namelessEmail = 'maestro-noname-' + output.stamp + '@example.com'}"
+      - launchApp
+      - tapOn: "Sign up"
+      - tapOn: "Email"
+      - inputText: ${output.namelessEmail}
+      - tapOn: "Password"
+      - inputText: ${output.password}
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - hideKeyboard
+      - tapOn:
+          text: "Sign up"
+          index: 1
+      - extendedWaitUntil:
+          visible: ".*Hello,.*"
+          timeout: 30000
+      - assertVisible: "Sign out"
+      - assertNotVisible: ".*(Invalid `name`|at least 1 chars).*"
+      - takeScreenshot: artifacts/13-empty-name
+
+# ===========================================================================
+# 14. Teardown — leave the app signed out and wiped for the next run
+# ===========================================================================
+- runFlow:
+    label: "14. Teardown: sign out and clear app state"
+    commands:
+      - tapOn: "Sign out"
+      - extendedWaitUntil:
+          visible: "Sign in to get started."
+          timeout: 20000
+      - stopApp
+      - clearState

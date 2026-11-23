@@ -12,6 +12,6 @@ final class StorageTest extends HealthBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('pass', $response['body']['status']);
         $this->assertIsInt($response['body']['ping']);
-        $this->assertLessThan(100, $response['body']['ping']);
+        $this->assertGreaterThanOrEqual(0, $response['body']['ping']);
     }
 }

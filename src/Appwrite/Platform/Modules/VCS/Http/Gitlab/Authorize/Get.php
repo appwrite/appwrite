@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\VCS\Http\Gitlab\Authorize;
 use Appwrite\Auth\OAuth2;
 use Appwrite\Auth\OAuth2\Gitlab as OAuth2Gitlab;
 use Appwrite\Platform\Modules\VCS\Http\Authorize\Base;
+use Utopia\Client\Client;
 use Utopia\System\System;
 
 class Get extends Base
@@ -24,10 +25,11 @@ class Get extends Base
         return 'GitLab';
     }
 
-    protected function createOAuth2(string $callback, array $state): OAuth2
+    protected function createOAuth2(Client $client, string $callback, array $state): OAuth2
     {
         // Auth\OAuth2\Gitlab reads the endpoint out of a JSON-encoded appSecret; no setEndpoint().
-        return new OAuth2Gitlab(
+        $oauth2 = new OAuth2Gitlab(
+            $client,
             System::getEnv('_APP_VCS_GITLAB_CLIENT_ID', ''),
             \json_encode([
                 'clientSecret' => System::getEnv('_APP_VCS_GITLAB_CLIENT_SECRET', ''),
@@ -35,11 +37,15 @@ class Get extends Base
             ]),
             $callback,
             $state,
-            // api is required for webhook/merge-request-note writes; no finer-grained scope covers both.
-            [
-                'read_user',
-                'api',
-            ]
         );
+
+        // The VCS app allows only read_user and api; replace the sign-in defaults.
+        // api is required for webhook/merge-request-note writes; no finer-grained scope covers both.
+        $oauth2->setScopes([
+            'read_user',
+            'api',
+        ]);
+
+        return $oauth2;
     }
 }

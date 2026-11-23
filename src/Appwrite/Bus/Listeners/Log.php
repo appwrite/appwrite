@@ -28,7 +28,7 @@ class Log extends Listener
     public function __construct()
     {
         $this
-            ->desc('Persists execution logs to database via queue')
+            ->desc('Persists execution logs to ClickHouse via queue')
             ->inject('publisherForExecutions')
             ->callback($this->handle(...));
     }

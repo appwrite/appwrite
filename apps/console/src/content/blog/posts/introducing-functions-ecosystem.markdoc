@@ -1,0 +1,167 @@
+---
+layout: post
+title: "Leveling up the Appwrite Functions ecosystem"
+description: The new Appwrite Functions ecosystem is now faster, smoother, better and more secure.
+date: 2024-08-21
+lastUpdated: 2026-06-29
+cover: /images/blog/init-day2/cover.avif
+timeToRead: 5
+author: luke-silver
+category: products, announcements
+featured: false
+faqs:
+  - question: "What is a cold start in Appwrite Functions?"
+    answer: "A cold start is the extra latency you see the first time a function runs (or after it has been idle), because the runtime has to provision a container and load your code. Subsequent invocations reuse the warm runtime, so they respond much faster."
+  - question: "What are dynamic API keys in Appwrite Functions?"
+    answer: "Dynamic API keys are short lived keys that Appwrite generates for each function execution and passes through the `x-appwrite-key` header. You no longer need to create, rotate, and store long lived API keys for server side function code. See [Appwrite Functions](/docs/products/functions)."
+  - question: "How do I schedule a function to run later?"
+    answer: "Pass a `scheduledAt` value (an ISO timestamp) when calling createExecution. Appwrite queues the execution and runs it at that time, which is convenient for invoice runs, reminders, and other time delayed work."
+  - question: "Can Appwrite Functions call other Appwrite services?"
+    answer: "Yes. Inside a function, you can construct a Server SDK client using the auto provided endpoint, project ID, and dynamic API key, then call any Appwrite service the function has permission to use."
+  - question: "Are old Appwrite Functions automatically faster after this release?"
+    answer: "Yes. Cold start improvements apply to all functions regardless of when they were created, with no code or configuration changes required."
+  - question: "When should I use Functions instead of my own backend?"
+    answer: "Functions are great when you want event driven logic, scheduled jobs, or an API endpoint without operating servers. Pick a dedicated backend when you need long lived processes, large dependency sets, or workloads that exceed function execution limits."
+---
+We're excited to bring you major improvements to Appwrite Functions, making them more versatile and powerful than ever before.
+
+With the new Functions, you can now stay within the Appwrite ecosystem. The fully integrated features reduce friction points, allowing you to focus on development while trusting that your Functions will run smoothly and automatically.
+
+Previously, Appwrite Functions faced limitations in handling file-based tasks and real-time operations due to slow synchronous execution and cumbersome API key management. With the introduction of easier Appwrite SDK integration within Functions, these constraints are lifted, opening doors to more use cases and more efficient workflows.
+
+# Faster Functions cold-starts
+
+We've significantly accelerated Functions cold-start times through infrastructure optimizations. This means you can expect faster response times for all your Functions, both new and existing.
+
+Cold starts occur when a Function is invoked for the first time or after a period of inactivity. This initial delay is caused by the system provisioning resources and loading the function's code.
+
+Now, all your Functions, regardless of when they were created, benefit from faster startup times without any additional effort on your part. There's no need to make any changes to your code or configuration – the improvement is automatic.
+
+# Dynamic API keys
+
+API key management is a time-consuming, error-prone task that can distract developers from building core features. Keeping track of multiple API keys across different environments (development, staging, production) can be overwhelming, but if compromised, they can lead to unauthorized access, data breaches, and financial loss. The stakes are high.
+
+To combat this, we've introduced automatically generated, short-lived API keys for each execution. They’re designed to simplify managing and updating your API keys, saving you time and reducing security risks.
+
+Here's how you can use them:
+
+```jsx
+import { Client, TablesDB } from 'node-appwrite';
+
+export default async ({ req, res }) => {
+    const client = new Client()
+        .setEndpoint(process.env.APPWRITE_FUNCTION_API_ENDPOINT)
+        .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
+        .setKey(req.headers['x-appwrite-key']);
+
+    const tablesDB = new TablesDB(client);
+
+    // Your function logic here
+
+    return res.empty();
+};
+```
+
+With this setup, you no longer need to manually create and manage API keys. The `APPWRITE_FUNCTION_API_ENDPOINT` and `APPWRITE_FUNCTION_PROJECT_ID` environment variables are automatically provided, and the API key is available in the request headers.
+
+# Delayed executions
+
+Now, you can schedule Functions to run at a specific time in the future, unlocking new opportunities for time-sensitive workflows.
+
+ Here's how to create a delayed execution:
+
+```jsx
+import { Functions, ExecutionMethod } from 'appwrite';
+
+const functions = new Functions(client);
+
+const invoiceDate = new Date();
+invoiceDate.setDate(invoiceDate.getDate() + 30);
+
+await functions.createExecution({
+    functionId: 'invoicesApi', // Function ID
+    body: '{"userId":"ngu9ife0efwed"}', // Body
+    async: true, // Async execution
+    xpath: '/v1/invoices/exports', // Path
+    method: ExecutionMethod.POST, // Method
+    headers: {}, // Headers
+    scheduledAt: invoiceDate.toISOString() // New scheduledAt attribute
+});
+```
+
+This feature is perfect for scheduling marketing emails, cleanup tasks, or precisely timed events.
+
+![Delayed-executions](/images/blog/init-day2/1.avif)
+
+# Binary executions
+
+We've long relied on JSON and XML for structured data exchange, but these formats fall short when it comes to handling files like images, audio, or video. With the introduction of binary executions, Appwrite Functions can now seamlessly process and transfer these file types.
+
+Functions can now handle binary data, both as input and output, which is particularly useful for file processing, AI interactions, and more.
+
+This allows you to work with formats like multipart form-data, Protocol Buffers, or raw binary data directly within your functions.
+
+Here’s how you can use them:
+
+```jsx
+import OpenAI from "openai";
+import fetch from "node-fetch";
+
+export default async ({ req, res, log, error }) => {
+  // Receiving binary data
+  const buffer = req.bodyBinary;
+
+	// Using binary data (create image variation)
+	const openai = new OpenAI();
+  const images = await openai.images.createVariation({
+	  model: "dall-e-2",
+	  image: buffer,
+	  n: 1,
+	  size: "1024x1024"
+	});
+	const image = await fetch(images.data[0].url);
+
+  // Sending binary data
+  return res.binary(await image.arrayBuffer());
+}
+```
+
+This allows for new use cases like sending files to AI services or generating files on the fly.
+
+# Execution and deployment filtering
+
+You can now filter Function executions and deployments based on various attributes, making it easier to monitor and debug your Functions:
+
+```jsx
+// Example of filtering executions (specific implementation may vary)
+const executions = await functions.listExecutions({
+    functionId: 'functionId',
+    queries: [
+        Query.equal('status', 'completed'),
+        Query.equal('requestMethod', 'POST'),
+        Query.equal('deploymentId', 'latest')
+    ]
+});
+```
+
+Of course, it’s also possible to filter executions from the Appwrite Console:
+
+![Execution-filters](/images/blog/init-day2/2.avif)
+
+You can now quickly find and analyze specific executions based on criteria like status, request method, or deployment ID.
+
+# Build anything
+
+With the new Functions ecosystem, you can now use Functions for a wider range of applications, from AI-powered image generation to scheduled tasks and beyond. We’re excited to see what developers will create with this expanded toolkit. Here are a few ideas to get you started:
+
+- Build AI-powered image generation services
+- Create scheduled data backup and cleanup routines
+- Implement sophisticated marketing automation workflows
+- Develop real-time data processing pipelines
+- And more…
+
+Check out these resources to start building with the new Functions ecosystem:
+
+- [Appwrite Functions documentation](https://appwrite.io/docs/products/functions)
+- [Join our Discord community](https://discord.gg/appwrite)
+- [Learn about Appwrite Init](https://www.appwrite.io/init)

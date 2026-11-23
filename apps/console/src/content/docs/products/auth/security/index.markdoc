@@ -1,0 +1,9 @@
+---
+layout: article
+title: Security
+description: Prioritize security in your applications with Appwrite. Learn about session limits, password policies, breached password detection, and other features that protect user data.
+---
+
+Appwrite provides many security features to keep both your Appwrite project and your user's information secure.
+
+{% partial file="auth-security.md" /%}

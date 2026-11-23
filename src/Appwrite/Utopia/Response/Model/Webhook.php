@@ -35,6 +35,12 @@ class Webhook extends Model
                 'default' => '',
                 'example' => 'My Webhook',
             ])
+            ->addRule('description', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Optional description for the webhook.',
+                'default' => '',
+                'example' => 'Notifies the billing service about new users.',
+            ])
             ->addRule('url', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Webhook URL endpoint.',
@@ -66,12 +72,13 @@ class Webhook extends Model
             ->addRule('authPassword', [
                 'type' => self::TYPE_STRING,
                 'format' => 'password',
-                'description' => 'HTTP basic authentication password.',
+                'description' => 'HTTP basic authentication password. Write-only: always returned empty.',
                 'default' => '',
                 'example' => 'webhook-password',
             ])
             ->addRule('secret', [
                 'type' => self::TYPE_STRING,
+                'format' => 'password',
                 'description' => 'Signature key which can be used to validate incoming webhook payloads. Only returned on creation and secret rotation.',
                 'default' => '',
                 'example' => 'ad3d581ca230e2b7059c545e5a',
@@ -104,7 +111,8 @@ class Webhook extends Model
         $document->setAttribute('authUsername', $document->getAttribute('httpUser'));
         $document->removeAttribute('httpUser');
 
-        $document->setAttribute('authPassword', $document->getAttribute('httpPass'));
+        // Write-only: a webhooks.read key must not recover the endpoint credential.
+        $document->setAttribute('authPassword', '');
         $document->removeAttribute('httpPass');
 
         $document->setAttribute('secret', $document->getAttribute('signatureKey'));

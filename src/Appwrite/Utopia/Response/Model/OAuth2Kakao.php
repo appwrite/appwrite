@@ -42,6 +42,11 @@ class OAuth2Kakao extends OAuth2Base
         return 'jLNVOK00000000000000000000yJebea';
     }
 
+    public function getPromptValues(): array
+    {
+        return ['none', 'login', 'create', 'select_account'];
+    }
+
     /**
      * @return string
      */

@@ -4,13 +4,22 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Platform\Workers;
 
+use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
+use Appwrite\Event\Realtime;
+use Appwrite\Event\Webhook;
 use Appwrite\Platform\Workers\Functions;
+use Executor\Executor;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Utopia\Bus\Bus;
+use Utopia\Cache\Cache;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\NotFound;
+use Utopia\Queue\Message;
 
 require_once __DIR__ . '/../../../../app/init.php';
 
@@ -161,6 +170,72 @@ final class FunctionsTest extends TestCase
         } finally {
             $this->assertSame([false, true], $updates);
         }
+    }
+
+    /**
+     * A schedule that fires between a project's deletion and the scheduler
+     * dropping it reaches the worker with a project that resolves to nothing.
+     * dbForProject then falls back to the platform database, which has no
+     * functions or deployments collection: in production every such run threw
+     * "Collection not found" and was dead-lettered.
+     */
+    #[DataProvider('deletedProjectRunProvider')]
+    public function testRunOfDeletedProjectIsAcknowledgedWithoutExecuting(string $type): void
+    {
+        $worker = $this->worker();
+
+        $dbForProject = $this->createStub(Database::class);
+        $dbForProject->method('getDocument')->willThrowException(new NotFound('Collection not found'));
+        $dbForProject->method('find')->willThrowException(new NotFound('Collection not found'));
+
+        $executor = $this->createMock(Executor::class);
+        $executor->expects($this->never())->method('createExecution');
+
+        $bus = $this->createMock(Bus::class);
+        $bus->expects($this->never())->method('dispatch');
+
+        $publisher = $this->createMock(FunctionPublisher::class);
+        $publisher->expects($this->never())->method('enqueue');
+
+        $payload = new FunctionMessage(
+            project: new Document(['$id' => 'deleted-project']),
+            function: new Document(['$id' => 'function-id', 'deploymentId' => 'deployment-id']),
+            execution: new Document(['$id' => 'execution-id']),
+            type: $type,
+            method: 'POST',
+            path: '/',
+        );
+
+        // Returning is what acknowledges the message; a throw would dead-letter it.
+        $worker->action(
+            project: new Document(),
+            message: new Message([
+                'pid' => 'pid',
+                'queue' => 'v1-functions',
+                'timestamp' => \time(),
+                'payload' => $payload->toArray(),
+            ]),
+            dbForProject: $dbForProject,
+            dbForPlatform: $this->createStub(Database::class),
+            queueForWebhooks: $this->createStub(Webhook::class),
+            publisherForFunctions: $publisher,
+            queueForRealtime: $this->createStub(Realtime::class),
+            queueForEvents: $this->createStub(Event::class),
+            bus: $bus,
+            executor: $executor,
+            getIsResourceBlocked: fn (): bool => false,
+            locks: fn (string $key, int $ttl, callable $callback): mixed => $callback(),
+            cache: $this->createStub(Cache::class),
+        );
+    }
+
+    /**
+     * @return \Iterator<string, array{string}>
+     */
+    public static function deletedProjectRunProvider(): \Iterator
+    {
+        yield 'schedule' => ['schedule'];
+        yield 'http' => ['http'];
     }
 
     /**

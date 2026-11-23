@@ -1,0 +1,256 @@
+import { expect, type Page } from '@playwright/test'
+import { env } from '../config/env'
+import { enableDatabaseFeatureFlags } from './feature-flags'
+import {
+  acceptCookieBannerIfPresent,
+  skipCommunitySupportWizardIfPresent,
+} from './cookie-banner'
+import { clickInPage } from './ui'
+import { deleteOrganizationProject } from './console-api'
+import {
+  registerCreatedE2eProject,
+  unregisterCreatedE2eProject,
+} from './e2e-project-registry'
+
+export const MYSQL_E2E_PROJECT_REGION = 'fra'
+export { DATABASE_SUITE_FIXTURE_TIMEOUT_MS } from './e2e-project-cleanup'
+
+export type CreatedProject = {
+  projectId: string
+  projectName: string
+}
+
+function uniqueSuffix(): string {
+  return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
+}
+
+/**
+ * Create a disposable project in E2E_ORG_ID (Frankfurt) for database e2e.
+ * Returns the new project id and display name.
+ *
+ * Reuse this project across a suite (tables, columns, indexes, tabs). Do not
+ * create a new project per test: dedicated compute keys take minutes to
+ * provision, and deleting a project forces the next one to wait again.
+ */
+export async function createE2eProject(
+  page: Page,
+  options?: { namePrefix?: string },
+): Promise<CreatedProject> {
+  const orgId = env.E2E_ORG_ID
+  if (!orgId) {
+    throw new Error('E2E_ORG_ID is required for database e2e suites')
+  }
+
+  await enableDatabaseFeatureFlags(page)
+
+  const projectName =
+    `${options?.namePrefix ?? 'e2e-db'}-${uniqueSuffix()}`.slice(0, 128)
+
+  await page.goto(`/organizations/${orgId}`, {
+    waitUntil: 'domcontentloaded',
+    timeout: 60_000,
+  })
+  await enableDatabaseFeatureFlags(page)
+  await acceptCookieBannerIfPresent(page)
+  await expect(page).toHaveURL(new RegExp(`/organizations/${orgId}`), {
+    timeout: 60_000,
+  })
+
+  // Prefer the primary create control; fall back to empty-state CTA.
+  const createTriggers = page.getByRole('button', { name: 'Create project' })
+  await expect(createTriggers.first()).toBeVisible({ timeout: 60_000 })
+  await skipCommunitySupportWizardIfPresent(page)
+  await clickInPage(createTriggers.first())
+
+  const dialog = page.getByRole('dialog')
+  const createHeading = dialog.getByRole('heading', { name: 'Create project' })
+  if (!(await createHeading.isVisible().catch(() => false))) {
+    await skipCommunitySupportWizardIfPresent(page)
+    await clickInPage(createTriggers.first())
+  }
+  await expect(createHeading).toBeVisible({
+    timeout: 30_000,
+  })
+
+  await dialog.locator('#name').fill(projectName)
+
+  // Region picker (cloud multi-region). Prefer Frankfurt for dedicated DB support.
+  const regionTrigger = dialog.getByRole('combobox').first()
+  if (await regionTrigger.isVisible().catch(() => false)) {
+    await regionTrigger.click()
+    const fraOption = page.getByRole('option', {
+      name: /Frankfurt|fra/i,
+    })
+    if (
+      await fraOption
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
+      await fraOption.first().click()
+    } else {
+      // Close list and keep whatever default was selected if FRA is unavailable.
+      await page.keyboard.press('Escape')
+    }
+  }
+
+  const createResponsePromise = page.waitForResponse(
+    (response) => {
+      try {
+        const url = new URL(response.url())
+        return (
+          response.request().method() === 'POST' &&
+          /\/(?:v1\/)?(?:organizations?|organization)\/.*projects/i.test(
+            url.pathname,
+          ) &&
+          response.ok()
+        )
+      } catch {
+        return false
+      }
+    },
+    { timeout: 90_000 },
+  )
+
+  await dialog.getByRole('button', { name: 'Create', exact: true }).click()
+
+  const createResponse = await createResponsePromise
+  const body = (await createResponse.json()) as { $id?: string }
+  const projectId = body.$id
+  if (!projectId) {
+    throw new Error(
+      `Project create response missing $id: ${JSON.stringify(body).slice(0, 500)}`,
+    )
+  }
+
+  const created: CreatedProject = { projectId, projectName }
+  // Register before waiting on navigation: if the URL never updates, teardown
+  // (and global cleanup) can still delete the project the API already created.
+  registerCreatedE2eProject(created)
+
+  await expect(page).toHaveURL(new RegExp(`/projects/${projectId}`), {
+    timeout: 90_000,
+  })
+
+  return created
+}
+
+async function deleteE2eProjectViaUi(
+  page: Page,
+  project: CreatedProject,
+): Promise<boolean> {
+  if (page.isClosed()) return false
+
+  await enableDatabaseFeatureFlags(page)
+
+  await page.goto(`/projects/${project.projectId}/settings`, {
+    waitUntil: 'domcontentloaded',
+    timeout: 60_000,
+  })
+  await acceptCookieBannerIfPresent(page)
+
+  const notFound = page.getByText(/not found|doesn't exist|does not exist/i)
+  if (
+    await notFound
+      .first()
+      .isVisible()
+      .catch(() => false)
+  ) {
+    return true
+  }
+
+  const deleteCard = page.locator('[data-card-id="delete-project"]')
+  if (!(await deleteCard.isVisible({ timeout: 10_000 }).catch(() => false))) {
+    return false
+  }
+
+  await deleteCard.getByRole('button', { name: 'Delete project' }).click()
+
+  const dialog = page.getByRole('dialog')
+  await expect(
+    dialog.getByRole('heading', { name: /Delete [Pp]roject/ }),
+  ).toBeVisible({ timeout: 15_000 })
+
+  await dialog.getByPlaceholder('Enter project name').fill(project.projectName)
+
+  const deleteResponsePromise = page.waitForResponse(
+    (response) => {
+      try {
+        const url = new URL(response.url())
+        const method = response.request().method()
+        return (
+          (method === 'DELETE' || method === 'POST') &&
+          url.pathname.includes(project.projectId) &&
+          response.status() < 500
+        )
+      } catch {
+        return false
+      }
+    },
+    { timeout: 120_000 },
+  )
+
+  await dialog.getByRole('button', { name: 'Delete', exact: true }).click()
+  const deleteResponse = await deleteResponsePromise.catch(() => null)
+  if (
+    deleteResponse &&
+    deleteResponse.status() >= 400 &&
+    deleteResponse.status() !== 404
+  ) {
+    return false
+  }
+
+  await page
+    .waitForURL(
+      (url) => !url.pathname.includes(`/projects/${project.projectId}`),
+      { timeout: 60_000 },
+    )
+    .catch(() => undefined)
+
+  return true
+}
+
+/**
+ * Permanently delete a disposable e2e project.
+ * Prefers the Console API (does not need a healthy page). Falls back to the
+ * settings danger zone when a page is still open. Safe if the project is gone.
+ */
+export async function deleteE2eProject(
+  page: Page | null | undefined,
+  project: CreatedProject,
+): Promise<void> {
+  if (!project.projectId) return
+
+  const organizationId = env.E2E_ORG_ID
+  if (organizationId) {
+    try {
+      await deleteOrganizationProject(organizationId, project.projectId)
+      unregisterCreatedE2eProject(project.projectId)
+      return
+    } catch (error) {
+      console.error(
+        `[e2e] API delete failed for ${project.projectId} (${project.projectName}):`,
+        error,
+      )
+    }
+  }
+
+  if (page && !page.isClosed()) {
+    try {
+      const deleted = await deleteE2eProjectViaUi(page, project)
+      if (deleted) {
+        unregisterCreatedE2eProject(project.projectId)
+        return
+      }
+    } catch (error) {
+      console.error(
+        `[e2e] UI delete failed for ${project.projectId} (${project.projectName}):`,
+        error,
+      )
+    }
+  }
+
+  console.error(
+    `[e2e] Project ${project.projectId} (${project.projectName}) was not deleted; global teardown will retry`,
+  )
+}

@@ -1,0 +1,223 @@
+---
+layout: article
+title: Sequelize
+description: Use Sequelize with an Appwrite native PostgreSQL database. Configure the postgres dialect, run migrations against the direct connection, and pool runtime traffic from serverless environments.
+---
+
+Appwrite's native PostgreSQL database is a standard PostgreSQL engine, so [Sequelize](https://sequelize.org/) works against it with no Appwrite-specific configuration. Point Sequelize's `postgres` dialect and the `pg` driver at the connection string from the [Connections](/docs/products/databases/postgresql/connections) page and use models, the query interface, and migrations as you would against any PostgreSQL server.
+
+{% info title="Before you start" %}
+You'll need a native PostgreSQL database in a `ready` state and its credentials. See [native PostgreSQL databases](/docs/products/databases/postgresql) to create one and [Connections](/docs/products/databases/postgresql/connections) to retrieve the connection string. The primary user is `admin`, and the database name is generated per database.
+{% /info %}
+
+{% info title="Sequelize 7" %}
+Sequelize 7 (`@sequelize/core` + `@sequelize/postgres`) is still alpha. These examples use Sequelize 6 (`sequelize` + `pg`), the current stable line. Appwrite connection URLs and ports are unchanged on v7. Stay on v6 unless you are deliberately adopting the alpha: v7 uses a different dialect API, and its CLI is not ready yet.
+{% /info %}
+
+# Set the connection string {% #connection-string %}
+
+In the Console, open your database and click **Credentials**. Copy the connection string from the **DSN** or **.env** tab, or fetch it with [`postgresql.get()`](/docs/products/databases/postgresql/connections#credentials). Put it in your environment, never commit it:
+
+```env
+DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>?sslmode=require"
+DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+```
+
+Use the pooled `DATABASE_URL` (port `6432`) for runtime traffic and `DIRECT_URL` (port `5432`) for Sequelize CLI migrations. The TLS parameter (`sslmode=require`) is part of the connection string Appwrite returns. Appwrite Cloud terminates TLS at the edge and forwards traffic to your database over the internal network. For full certificate verification (`verify-full`) or mTLS, see [Network security](/docs/products/databases/postgresql/network-security).
+
+# Install and configure Sequelize {% #driver %}
+
+Install Sequelize and the PostgreSQL driver:
+
+```bash
+npm install sequelize pg pg-hstore
+npm install -D sequelize-cli typescript @types/node
+```
+
+Create a Sequelize instance for runtime traffic. Prefer the URL form and set SSL with verification when you need to control TLS explicitly:
+
+```ts
+import { Sequelize, DataTypes } from 'sequelize';
+
+export const sequelize = new Sequelize(process.env.DATABASE_URL!, {
+  dialect: 'postgres',
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: true
+    }
+  },
+  logging: false,
+  pool: {
+    max: 10,
+    min: 0,
+    idle: 10000
+  }
+});
+
+export const User = sequelize.define(
+  'User',
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
+    },
+    email: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+      unique: true
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      field: 'created_at'
+    }
+  },
+  {
+    tableName: 'users',
+    updatedAt: false
+  }
+);
+```
+
+`ssl: { require: true, rejectUnauthorized: true }` validates the server certificate against Node's built-in CA store. You can also pass discrete `host`, `port`, `database`, `username`, and `password` options instead of a URL; keep `dialect: 'postgres'` and the same `dialectOptions.ssl` settings.
+
+# Run migrations {% #migrate %}
+
+Use Sequelize CLI migrations against the **direct** engine port (`5432`). DDL and migration metadata updates need a session-level connection, so do not point the CLI at the transaction-mode pooler.
+
+`sequelize-cli init` generates localhost defaults. Replace them with a concrete `.sequelizerc` and config that read `DIRECT_URL`.
+
+Create `.sequelizerc` at the project root:
+
+```js
+const path = require('path');
+
+module.exports = {
+  config: path.resolve('config', 'config.js'),
+  'models-path': path.resolve('models'),
+  'seeders-path': path.resolve('seeders'),
+  'migrations-path': path.resolve('migrations')
+};
+```
+
+Create `config/config.js` so every CLI environment uses `DIRECT_URL`:
+
+```js
+require('dotenv').config();
+
+const shared = {
+  url: process.env.DIRECT_URL,
+  dialect: 'postgres',
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: true
+    }
+  },
+  logging: false
+};
+
+module.exports = {
+  development: shared,
+  test: shared,
+  production: shared
+};
+```
+
+Then generate and apply migrations:
+
+```bash
+npx sequelize-cli migration:generate --name create-users
+npx sequelize-cli db:migrate
+```
+
+Example migration:
+
+```js
+'use strict';
+
+module.exports = {
+  async up(queryInterface, Sequelize) {
+    await queryInterface.createTable('users', {
+      id: {
+        type: Sequelize.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+      },
+      email: {
+        type: Sequelize.TEXT,
+        allowNull: false,
+        unique: true
+      },
+      created_at: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.fn('now')
+      }
+    });
+  },
+
+  async down(queryInterface) {
+    await queryInterface.dropTable('users');
+  }
+};
+```
+
+Prefer migrations over `sync({ alter: true })` in shared and production environments. The primary `admin` user owns the generated database and can run schema changes. Use narrower [database roles](/docs/products/databases/postgresql/connections#roles) for application traffic that does not need DDL privileges.
+
+# Query with Sequelize {% #query %}
+
+Once the schema is migrated, authenticate and use models:
+
+```ts
+import { sequelize, User } from './db';
+
+await sequelize.authenticate();
+
+const user = await User.create({ email: 'ada@example.com' });
+
+const recent = await User.findAll({
+  order: [['createdAt', 'DESC']],
+  limit: 10
+});
+```
+
+On long-running servers, create the Sequelize instance once at module scope and reuse it. On serverless, keep a single instance per module scope so warm invocations reuse the pool, and rely on the Appwrite pooler for runtime traffic. Call `sequelize.close()` on shutdown.
+
+# Pool connections from serverless {% #pooling %}
+
+Each running instance opens its own connections to the engine. On serverless and edge platforms (Vercel, Netlify, Cloudflare), short-lived instances can fan out into more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/postgresql/connection-pooling). The primary `DATABASE_URL` already uses the pooler port (`6432`) on the same hostname.
+
+The pooler defaults to **transaction mode** (PgBouncer-style multiplexing). That mode does not keep a backend connection across statements, so session-scoped prepared statements, advisory locks, `LISTEN`/`NOTIFY`, temporary tables, and `SET LOCAL` are unsafe. Keep Sequelize CLI migrations pointed at `DIRECT_URL`.
+
+Keep the Sequelize `pool.max` small on serverless. If your application depends on session-level features, switch the pooler to **session mode** or use the direct port. See the [pooler](/docs/products/databases/postgresql/connection-pooling#modes) page for the trade-offs.
+
+# Use a branch for previews and CI {% #branches %}
+
+[Branches](/docs/products/databases/postgresql/branches) are isolated copies of a database with their own hostname and connection string. They're ideal for running migrations against throwaway data in a pull-request preview or an integration-test job:
+
+1. Create a branch from the API and read its `connectionString`.
+2. Export it as `DIRECT_URL` (and the pooled variant as `DATABASE_URL`).
+3. Run `sequelize-cli db:migrate` and your test suite against the branch.
+4. Delete the branch when the job finishes.
+
+Because a branch starts from a storage snapshot, the schema and data match the source database at branch time, so migrations run against realistic data without touching production.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/postgresql/connections" title="Connections" %}
+Retrieve credentials, rotate the password, and create database roles.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/connection-pooling" title="Connection pooler" %}
+Pool modes, ports, and read/write splitting for serverless workloads.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/branches" title="Branches" %}
+Ephemeral database copies for preview environments and CI.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/network-security" title="Network security" %}
+TLS modes, certificate verification, mTLS, and IP allowlists.
+{% /cards_item %}
+{% /cards %}

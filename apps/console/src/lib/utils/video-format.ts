@@ -1,0 +1,236 @@
+/** Formatting helpers for Videos probe metadata. */
+
+/** Video durations are reported in milliseconds. */
+export function formatVideoDuration(ms: number | undefined | null): string {
+  if (!ms || ms <= 0 || !Number.isFinite(ms)) return '-'
+  const totalSeconds = Math.round(ms / 1000)
+  const hours = Math.floor(totalSeconds / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const seconds = totalSeconds % 60
+  const mm = String(minutes).padStart(hours > 0 ? 2 : 1, '0')
+  const ss = String(seconds).padStart(2, '0')
+  return hours > 0 ? `${hours}:${mm}:${ss}` : `${mm}:${ss}`
+}
+
+/** Format a playback position in seconds (player clock) as `m:ss.mmm`. */
+export function formatPlaybackTime(seconds: number | undefined | null): string {
+  if (seconds == null || !Number.isFinite(seconds) || seconds < 0) return '-'
+  const minutes = Math.floor(seconds / 60)
+  const rest = seconds - minutes * 60
+  return `${minutes}:${rest.toFixed(3).padStart(6, '0')}`
+}
+
+/** User-facing player clock without milliseconds (`m:ss` or `h:mm:ss`). */
+export function formatPlayerClock(seconds: number | undefined | null): string {
+  if (seconds == null || !Number.isFinite(seconds) || seconds < 0) {
+    return '0:00'
+  }
+  const total = Math.floor(seconds)
+  const hours = Math.floor(total / 3600)
+  const minutes = Math.floor((total % 3600) / 60)
+  const secs = total % 60
+  const ss = String(secs).padStart(2, '0')
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, '0')}:${ss}`
+  }
+  return `${minutes}:${ss}`
+}
+
+/** Probe and profile bitrates are in bits per second (probe) or kbps (profiles). */
+export function formatBitrate(
+  value: number | undefined | null,
+  unit: 'bps' | 'kbps' = 'bps',
+): string {
+  if (!value || value <= 0 || !Number.isFinite(value)) return '-'
+  const bps = unit === 'kbps' ? value * 1000 : value
+  if (bps >= 1_000_000) return `${(bps / 1_000_000).toFixed(2)} Mbps`
+  if (bps >= 1000) return `${Math.round(bps / 1000)} kbps`
+  return `${Math.round(bps)} bps`
+}
+
+/** Quality name and tier use the short edge, so portrait video gets the same labels. */
+export function formatQuality(width: number, height: number): string {
+  return `${Math.min(width, height)}p`
+}
+
+export function getQualityTier(width: number, height: number): string {
+  const edge = Math.min(width, height)
+  if (edge >= 2160) return '4K UHD'
+  if (edge >= 1440) return 'QHD'
+  if (edge >= 1080) return 'Full HD'
+  if (edge >= 720) return 'HD'
+  return 'SD'
+}
+
+export function formatResolution(
+  width: number | undefined | null,
+  height: number | undefined | null,
+): string {
+  if (!width || !height) return '-'
+  return `${width}×${height}`
+}
+
+const DEFAULT_VIEWPORT_ASPECT = { width: 16, height: 9 } as const
+
+function parseAspectRatioLabel(
+  value: string | undefined | null,
+): { width: number; height: number } | null {
+  if (!value?.trim()) return null
+  const match = value.trim().match(/^(\d+(?:\.\d+)?)\s*:\s*(\d+(?:\.\d+)?)$/)
+  if (!match) return null
+  const width = Number(match[1])
+  const height = Number(match[2])
+  if (
+    !Number.isFinite(width) ||
+    !Number.isFinite(height) ||
+    width <= 0 ||
+    height <= 0
+  ) {
+    return null
+  }
+  return { width, height }
+}
+
+/** Pixel dimensions for player layout (API metadata, then aspect ratio label). */
+export function resolveVideoViewportAspect(
+  width: number | undefined | null,
+  height: number | undefined | null,
+  aspectRatio?: string | null,
+): { width: number; height: number } {
+  if (width && height && width > 0 && height > 0) {
+    return { width, height }
+  }
+  return parseAspectRatioLabel(aspectRatio) ?? DEFAULT_VIEWPORT_ASPECT
+}
+
+/**
+ * Ratios within this much of each other count as the same picture shape.
+ * Renditions round their sizes (854x480 is not exactly 16:9), so a stricter
+ * match would resize the player on every quality switch.
+ */
+const SAME_SHAPE_TOLERANCE = 0.03
+
+/**
+ * The player frame's ratio. It starts from the video's metadata and keeps it
+ * once the stream loads, so the page does not jump; the decoded picture only
+ * wins when the metadata is missing or a different shape (a rotated phone
+ * video, say).
+ */
+export function resolvePlayerAspect(
+  video: {
+    width?: number | null
+    height?: number | null
+    aspectRatio?: string | null
+  },
+  media: { width: number; height: number } | null,
+): { width: number; height: number } {
+  const known =
+    (video.width && video.height && video.width > 0 && video.height > 0
+      ? { width: video.width, height: video.height }
+      : null) ?? parseAspectRatioLabel(video.aspectRatio)
+  if (!media) return known ?? DEFAULT_VIEWPORT_ASPECT
+  if (!known) return media
+  const knownRatio = known.width / known.height
+  const mediaRatio = media.width / media.height
+  return Math.abs(mediaRatio / knownRatio - 1) <= SAME_SHAPE_TOLERANCE
+    ? known
+    : media
+}
+
+/**
+ * The frame a stream decodes at, known before it loads. The encoder fits the
+ * picture inside each rendition's box and pads the rest with black, so a
+ * 2.39:1 video in 1920x1080 renditions plays as a 16:9 frame. Null when the
+ * ready renditions of `output` differ in shape, or there are none.
+ */
+export function renditionFrame(
+  renditions: ReadonlyArray<{
+    output: string
+    status: string
+    width: number
+    height: number
+  }>,
+  output: string,
+): { width: number; height: number } | null {
+  const ready = renditions.filter(
+    (rendition) =>
+      rendition.output === output &&
+      rendition.status === 'ready' &&
+      rendition.width > 0 &&
+      rendition.height > 0,
+  )
+  const first = ready[0]
+  if (!first) return null
+  const ratio = first.width / first.height
+  const sameShape = ready.every(
+    (rendition) =>
+      Math.abs(rendition.width / rendition.height / ratio - 1) <=
+      SAME_SHAPE_TOLERANCE,
+  )
+  return sameShape ? { width: first.width, height: first.height } : null
+}
+
+/** CSS `aspect-ratio` value for a video thumb (timeline frame size, then API metadata). */
+export function videoThumbAspectRatio(
+  video: {
+    width?: number | null
+    height?: number | null
+    aspectRatio?: string | null
+  },
+  cue?: { width: number; height: number } | null,
+): string {
+  if (cue && cue.width > 0 && cue.height > 0) {
+    return `${cue.width} / ${cue.height}`
+  }
+  const { width, height } = resolveVideoViewportAspect(
+    video.width,
+    video.height,
+    video.aspectRatio,
+  )
+  return `${width} / ${height}`
+}
+
+export type VideoPlayerViewportFit = 'height' | 'width'
+
+/**
+ * Inline styles so the player frame matches video aspect ratio up to `maxHeight`.
+ *
+ * - `height` (default): width shrinks for tall/narrow sources when height hits the cap.
+ * - `width`: use full container width when height at that width fits under `maxHeight`
+ *   (CSS aspect-ratio + max-height shrink width only when needed).
+ */
+export function getVideoPlayerViewportStyle(
+  aspect: { width: number; height: number },
+  maxHeight: string,
+  fit: VideoPlayerViewportFit = 'height',
+): {
+  aspectRatio: string
+  maxHeight: string
+  width: string
+} {
+  const { width, height } = aspect
+  return {
+    aspectRatio: `${width} / ${height}`,
+    maxHeight,
+    width:
+      fit === 'width'
+        ? '100%'
+        : `min(100%, calc(${maxHeight} * ${width} / ${height}))`,
+  }
+}
+
+/** Elapsed time between two ISO datetimes, e.g. `1m 12s`. */
+export function formatElapsed(
+  start: string | undefined | null,
+  end?: string | undefined | null,
+): string {
+  if (!start) return '-'
+  const startMs = Date.parse(start)
+  const endMs = end ? Date.parse(end) : Date.now()
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs)) return '-'
+  const seconds = Math.max(0, Math.round((endMs - startMs) / 1000))
+  if (seconds < 60) return `${seconds}s`
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ${seconds % 60}s`
+  return `${Math.floor(minutes / 60)}h ${minutes % 60}m`
+}

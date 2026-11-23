@@ -1,0 +1,44 @@
+name: Mirror Redirect
+
+# Called by packages/<name>/.github/workflows/mirror.yml on each mirror: a
+# pull request or issue opened there is closed with a pointer back here.
+
+on:
+  workflow_call:
+    inputs:
+      package:
+        required: true
+        type: string
+      path:
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  redirect:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Redirect pull request to appwrite/appwrite
+        if: github.event_name == 'pull_request_target'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACKAGE: ${{ inputs.package }}
+          PATH_IN_MONOREPO: ${{ inputs.path != '' && inputs.path || format('packages/{0}', inputs.package) }}
+          PR: ${{ github.event.pull_request.html_url }}
+        run: |
+          gh pr comment "$PR" --body "Thanks for contributing! This repository is a read-only mirror; development for this library happens in [\`$PATH_IN_MONOREPO\`](https://github.com/appwrite/appwrite/tree/main/$PATH_IN_MONOREPO) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Please open this pull request there instead."
+          gh pr close "$PR"
+
+      - name: Redirect issue to appwrite/appwrite
+        if: github.event_name == 'issues'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.html_url }}
+          PATH_IN_MONOREPO: ${{ inputs.path != '' && inputs.path || format('packages/{0}', inputs.package) }}
+        run: |
+          gh issue comment "$ISSUE" --body "Thanks for opening this! This repository is a read-only mirror; issue tracking for this library happens in [\`$PATH_IN_MONOREPO\`](https://github.com/appwrite/appwrite/tree/main/$PATH_IN_MONOREPO) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Please open this issue there instead."
+          gh issue close "$ISSUE"

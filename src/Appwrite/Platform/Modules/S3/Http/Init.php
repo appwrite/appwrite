@@ -55,12 +55,23 @@ class Init extends Action
             'Content-Range',
             'ETag',
             'Last-Modified',
-            'x-amz-server-side-encryption',
         ])));
         foreach ($corsHeaders as $name => $value) {
             $response
                 ->removeHeader($name)
                 ->addHeader($name, $value);
+        }
+
+        // S3 is not in the api/web/graphql groups, so the shared security-headers
+        // hook does not run. Apply the same baseline here; object GET adds CSP
+        // and Content-Disposition in Get.php. CORS stays the S3 expose list above.
+        $response
+            ->addHeader('Server', 'Appwrite')
+            ->addHeader('X-Content-Type-Options', 'nosniff');
+
+        if ($request->getProtocol() === 'https') {
+            $maxAge = 60 * 60 * 24 * 126; // 126 days
+            $response->addHeader('Strict-Transport-Security', "max-age={$maxAge}");
         }
 
         // The S3 actions set the event name and params themselves; project and
@@ -83,6 +94,22 @@ class Init extends Action
         $parts = explode('/', trim($uri, '/'));
         $service = count($parts) >= 2 ? $parts[1] : $parts[0];
 
+        $queryKeys = '';
+        $rawQuery = parse_url($uri, PHP_URL_QUERY);
+        if (is_string($rawQuery) && $rawQuery !== '') {
+            $queryKeySet = [];
+            foreach (explode('&', $rawQuery) as $pair) {
+                if ($pair === '') {
+                    continue;
+                }
+                $key = strtolower(urldecode(explode('=', $pair, 2)[0]));
+                if ($key !== '') {
+                    $queryKeySet[$key] = true;
+                }
+            }
+            $queryKeys = implode(',', array_keys($queryKeySet));
+        }
+
         $usage
                 ->setPath($uri)
                 ->setMethod($request->getMethod())
@@ -92,6 +119,10 @@ class Init extends Action
                 ->setIp($request->getIP())
                 ->setSdk(\strtolower($request->getHeaderLine('x-sdk-name', '')))
                 ->setSdkVersion($request->getHeaderLine('x-sdk-version', ''))
+                ->setProtocol(\strtolower($request->getProtocol()))
+                ->setAccept($request->getHeaderLine('accept', ''))
+                ->setAcceptLanguage($request->getHeaderLine('accept-language', ''))
+                ->setQueryKeys($queryKeys)
                 ->setRegion(System::getEnv('_APP_REGION', 'default'))
                 ->setService($service);
 

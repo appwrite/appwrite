@@ -1,0 +1,7 @@
+name,username,post_url,ticket_url,ticket_id,ticket_domain,post_date,within_7d_cutoff,matched_text,verified_at
+Ada Lovelace,ada_codes,https://x.com/ada_codes/status/1830000000000000001,https://appwrite.io/init/ticket/tkt_01J6ADA,tkt_01J6ADA,appwrite.io,2026-08-31T14:02:11Z,true,"Just grabbed my #Init ticket, see you on the stream",2026-09-03T08:15:00Z
+Grace Hopper,@gracehopper,https://www.linkedin.com/posts/gracehopper_init-activity-7200000000000000002,https://appwrite.io/init/ticket/tkt_01J6GRACE,tkt_01J6GRACE,appwrite.io,2026-09-01T09:30:45Z,true,"Appwrite Init week is here. My ticket: ""tkt_01J6GRACE""",2026-09-03T08:15:02Z
+Linus Torvalds,torvalds,https://bsky.app/profile/torvalds.bsky.social/post/3l4abcdefgh,https://appwrite.io/init/ticket/tkt_01J6LINUS,tkt_01J6LINUS,appwrite.io,2026-09-02T18:45:00Z,true,Claimed my Init ticket,2026-09-03T08:15:04Z
+,margaret_h,https://x.com/margaret_h/status/1830000000000000004,https://appwrite.io/init/ticket/tkt_01J6MARG,tkt_01J6MARG,appwrite.io,2026-09-02T21:12:09Z,true,Init ticket secured,2026-09-03T08:15:06Z
+Late Poster,late_poster,https://x.com/late_poster/status/1820000000000000005,https://appwrite.io/init/ticket/tkt_01J6LATE,tkt_01J6LATE,appwrite.io,2026-08-20T10:00:00Z,false,Init ticket from way back,2026-09-03T08:15:08Z
+Dennis Ritchie,dmr,https://mastodon.social/@dmr/113000000000000006,https://appwrite.io/init/ticket/tkt_01J6DMR,tkt_01J6DMR,appwrite.io,2026-09-03T07:59:59Z,TRUE,"Sharing my Init ticket for the grand prize draw",2026-09-03T08:15:10Z

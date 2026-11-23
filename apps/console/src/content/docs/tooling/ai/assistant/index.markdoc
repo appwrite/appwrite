@@ -1,0 +1,17 @@
+---
+layout: article
+title: Appwrite Agent
+description: Chat with the Appwrite Agent in the Console to inspect your project, explain issues, and take approved actions.
+---
+
+The Console **Appwrite Assistant** has been replaced by **Appwrite Agent**.
+
+Appwrite Agent is the AI chat built into Appwrite Cloud. It inspects your project context, answers how-to questions, clarifies ambiguous requests, and can run approved actions through Appwrite MCP.
+
+{% arrow_link href="/docs/products/agent" %}
+Appwrite Agent documentation
+{% /arrow_link %}
+
+{% info title="Redirect" %}
+Bookmarks to this page should use [Appwrite Agent](/docs/products/agent). Legacy `/docs/tooling/ai/assistant` URLs redirect there.
+{% /info %}

@@ -1,0 +1,167 @@
+---
+layout: article
+title: Amazon SES
+description: Send emails to your Appwrite users using Amazon SES and Appwrite Messaging.
+back: /docs/
+---
+Amazon SES lets you send customized email messages to your users.
+These emails can be sent immediately or scheduled.
+You can send emails for purposes like reminders, promotions, announcements, and even custom authentication flows.
+
+{% section #add-provider step=1 title="Add provider" %}
+
+To add Amazon SES as a provider, navigate to **Messaging** > **Providers** > {% icon icon="plus" size="m" /%} **Add provider**, then choose **Amazon SES** under Email.
+
+Give your provider a name and complete the configuration, then click **Create provider**.
+{% /section %}
+{% section #configure-provider step=2 title="Configure provider" %}
+
+In the configuration step, you will need credentials from the AWS console to connect your Appwrite project.
+
+You will need to provide the following information from your **AWS account**.
+
+{% table %}
+* Field name
+*
+---
+* Access key
+* An IAM access key ID with permission to send email through Amazon SES. Create access keys in the [IAM console](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html).
+---
+* Secret key
+* The secret access key that belongs to the access key ID.
+---
+* Region
+* The AWS region of your [verified SES identity](https://docs.aws.amazon.com/ses/latest/dg/verify-addresses-and-domains.html). Select the same region you use in the Amazon SES console.
+---
+* Sender email
+* The provider sends emails from this sender email. The address must be a verified email or belong to a verified domain in Amazon SES.
+---
+* Sender name
+* The sender name that appears in the emails sent from this provider.
+---
+* Reply-to email
+* The reply-to email that appears in the emails sent from this provider.
+---
+* Reply-to name
+* The reply-to name that appears in the emails sent from this provider.
+{% /table %}
+
+After adding the following details, click **Create provider** to save and enable the provider.
+{% /section %}
+
+{% section #test-provider step=3 title="Test provider" %}
+Before sending your first message,
+make sure you've configured [a topic](/docs/products/messaging/topics) and [a target](/docs/products/messaging/targets) to send messages to.
+
+To send a test message, navigate to **Messaging** > **Messages** > {% icon icon="plus" size="m" /%} **Create message** > **Email**.
+{% only_dark %}
+![Create email message](/images/docs/messaging/messages/dark/create-email-message.avif)
+{% /only_dark %}
+{% only_light %}
+![Create email message](/images/docs/messaging/messages/create-email-message.avif)
+{% /only_light %}
+
+Add your message and in the targets step, select one of your test targets. Set the schedule to **Now** and click **Send**.
+
+Verify that you can receive the message in your inbox. If not, check for logs in the Appwrite Console or in your provider's logs.
+
+You can also send email programmatically with an [Appwrite Server SDK](/docs/sdks#server). Follow the [Send email messages](/docs/products/messaging/send-email-messages) guide to send your first email message and test your provider.
+{% /section %}
+
+{% section #manage-provider step=4 title="Manage provider" %}
+{% tabs %}
+{% tabsitem #console title="Console" %}
+You can update or delete a provider in the Appwrite Console.
+
+Navigate to **Messaging** > **Providers** > click your provider.
+In the settings, you can update a provider's configuration or delete the provider.
+{% /tabsitem %}
+
+{% tabsitem #server-sdk title="Server SDK" %}
+To update or delete providers programmatically, use an [Appwrite Server SDK](/docs/sdks#server).
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client();
+const messaging = new sdk.Messaging(client);
+
+client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>')
+;
+
+const provider = await messaging.updateSesProvider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    enabled: false,
+    accessKey: '<ACCESS_KEY>',
+    secretKey: '<SECRET_KEY>',
+    region: 'us-east-1',
+    fromName: '<FROM_NAME>',
+    fromEmail: 'email@example.com',
+    replyToName: '<REPLY_TO_NAME>',
+    replyToEmail: '<REPLY_TO_EMAIL>'
+});
+```
+```python
+from appwrite.client import Client
+from appwrite.services.messaging import Messaging
+
+client = Client()
+
+(client
+  .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .set_project('<PROJECT_ID>')
+  .set_key('<YOUR_API_KEY>')
+)
+
+messaging = Messaging(client)
+
+result = messaging.update_ses_provider(
+    provider_id = '<PROVIDER_ID>',
+    name = '<NAME>',
+    enabled = False,
+    access_key = '<ACCESS_KEY>',
+    secret_key = '<SECRET_KEY>',
+    region = 'us-east-1',
+    from_name = '<FROM_NAME>',
+    from_email = 'email@example.com',
+    reply_to_name = '<REPLY_TO_NAME>',
+    reply_to_email = '<REPLY_TO_EMAIL>'
+)
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Messaging;
+
+$client = new Client();
+
+$client
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>')
+;
+
+$messaging = new Messaging($client);
+
+$result = $messaging->updateSesProvider(
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    enabled: false,
+    accessKey: '<ACCESS_KEY>',
+    secretKey: '<SECRET_KEY>',
+    region: 'us-east-1',
+    fromName: '<FROM_NAME>',
+    fromEmail: 'email@example.com',
+    replyToName: '<REPLY_TO_NAME>',
+    replyToEmail: '<REPLY_TO_EMAIL>'
+);
+```
+{% /multicode %}
+{% /tabsitem %}
+{% /tabs %}
+{% /section %}

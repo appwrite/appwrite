@@ -1,0 +1,55 @@
+---
+layout: article
+title: Rate limit authentication traffic
+description: Create an Appwrite Firewall rate limit rule that slows brute-force attempts on authentication paths.
+difficulty: beginner
+readtime: 5
+---
+
+A rate limit rule sets a request quota for matching traffic. Use it on authentication paths to slow brute-force attacks without blocking normal users.
+
+This guide limits session creation. Each client IP address can send `10` matching requests per `60` seconds. Requests over the quota receive a `429` response with a `Retry-After` header.
+
+You cannot change a rule's strategy after you create it. This guide uses **Fixed window**. Read [Rate limit strategies](/docs/products/firewall/actions#rate-limit-strategies) first if you want another.
+
+# Create the rate limit rule {% #create-the-rate-limit-rule %}
+
+{% only_dark %}
+![Create firewall rule wizard with rate limit settings](/images/docs/firewall/dark/rate-limit-auth.avif)
+{% /only_dark %}
+{% only_light %}
+![Create firewall rule wizard with rate limit settings](/images/docs/firewall/rate-limit-auth.avif)
+{% /only_light %}
+
+1. Open **Firewall** in your project.
+2. Click **Create rule**.
+3. Enter a **Rule name** (for example `Rate limit sign-in attempts`).
+4. Keep **Resource type** set to **API**.
+5. Under conditions, set **Path** **Starts with** `/v1/account/sessions`.
+6. Add a second condition: **Method** **Equals** `POST`.
+7. Under **Then**, choose **Rate limit**.
+8. Set **Request limit** to `10`.
+9. Keep **Interval (seconds)** at `60`.
+10. Keep **Strategy** at **Fixed window**.
+11. Keep **Limit by** set to **IP address**.
+12. Review the impact preview, then click **Create rule**.
+
+The path prefix on its own also covers listing and deleting sessions, so the **Method** condition keeps the quota on session creation. Without it, signing out counts against the same quota.
+
+# Choose the quota {% #choose-the-quota %}
+
+Size the quota against the traffic you see in the impact preview. A quota below normal client behavior creates false positives. A quota far above attack speed gives no protection.
+
+**Fixed window** resets the count at each interval boundary, so `Retry-After` tells a throttled client exactly how long to wait.
+
+Set **Limit by** to **User ID** to count per signed-in user instead of per IP address. Signed-out requests then skip the rule.
+
+# Verify the rule {% #verify-the-rule %}
+
+1. Send more than `10` matching requests in one minute with a client SDK or an API key.
+2. Confirm the requests over the quota receive a `429` response with a `Retry-After` header.
+3. Open **Firewall** and confirm the **Rate limited** series rises in the traffic overview.
+
+{% arrow_link href="/docs/products/firewall/actions" %}
+Actions
+{% /arrow_link %}

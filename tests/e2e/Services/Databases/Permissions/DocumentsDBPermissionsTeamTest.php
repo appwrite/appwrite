@@ -10,9 +10,9 @@ use Tests\E2E\Scopes\ApiDocumentsDB;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 final class DocumentsDBPermissionsTeamTest extends Scope
 {
@@ -59,7 +59,7 @@ final class DocumentsDBPermissionsTeamTest extends Scope
             $this->getContainerUrl($this->databaseId),
             $this->getServerHeader(),
             [
-                $this->getContainerIdParam() => ID::custom('collection1'),
+                $this->getContainerIdParam() => Id::custom('collection1'),
                 'name' => 'Collection 1',
                 'permissions' => [
                     Permission::read(Role::team($teams['team1']['$id'])),
@@ -78,7 +78,7 @@ final class DocumentsDBPermissionsTeamTest extends Scope
             $this->getContainerUrl($this->databaseId),
             $this->getServerHeader(),
             [
-                $this->getContainerIdParam() => ID::custom('collection2'),
+                $this->getContainerIdParam() => Id::custom('collection2'),
                 'name' => 'Collection 2',
                 'permissions' => [
                     Permission::read(Role::team($teams['team2']['$id'])),
@@ -151,7 +151,7 @@ final class DocumentsDBPermissionsTeamTest extends Scope
             $this->getRecordUrl($this->databaseId, $this->collections['collection1']),
             $this->getServerHeader(),
             [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => [
                     'title' => 'Lorem',
                 ],
@@ -164,7 +164,7 @@ final class DocumentsDBPermissionsTeamTest extends Scope
             $this->getRecordUrl($this->databaseId, $this->collections['collection2']),
             $this->getServerHeader(),
             [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => [
                     'title' => 'Ipsum',
                 ],
@@ -215,7 +215,7 @@ final class DocumentsDBPermissionsTeamTest extends Scope
                 'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $users[$user]['session'],
             ],
             [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => [
                     'title' => 'Ipsum',
                 ],

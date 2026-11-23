@@ -5,7 +5,7 @@ namespace Appwrite\Geo;
 use Appwrite\Locale\GeoRecord;
 use Swoole\Table;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Locale\Locale;
 
 class Geo

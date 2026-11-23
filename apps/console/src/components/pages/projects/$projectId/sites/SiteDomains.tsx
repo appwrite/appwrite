@@ -1,0 +1,379 @@
+import { useState, useMemo } from 'react'
+import { useParams } from '@tanstack/react-router'
+import {
+  FileText,
+  RefreshCw,
+  Trash2,
+  ExternalLink,
+  Globe} from 'lucide-react'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
+import { Button } from '@/components/ui/button'
+import { Pagination } from '@/components/global/shared/Pagination'
+import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { EmptyState } from '@/components/global/shared/EmptyState'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow} from '@/components/ui/table'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
+import {
+  getRuleStatusBadgeConfig,
+  isWaitingForDns,
+} from '@/lib/utils/status-badge'
+import {
+  canRetryRule,
+  canViewRuleLogs,
+  getApexDomain,
+} from '@/lib/utils/proxy-domains'
+import {
+  useSiteDomains,
+  useProject,
+  useOrganizationDomains} from '@/lib/react-query/hooks'
+import { DeleteDomainDialog } from '@/components/pages/projects/$projectId/settings/domains/DeleteDomain'
+import { ProxyRuleContextMenu } from '@/components/pages/projects/$projectId/settings/domains/ProxyRuleContextMenu'
+import { RuleStatusBadge } from '@/components/pages/projects/$projectId/settings/domains/RuleStatusBadge'
+import { CheckDomain } from '@/components/pages/projects/$projectId/settings/domains/CheckDomain'
+import { DomainRecordsDialog } from '@/components/pages/projects/$projectId/settings/domains/DomainRecords'
+import { ViewLogsDialog } from '@/components/pages/projects/$projectId/settings/domains/ViewLogs'
+import { VerifyDomain } from './_components/VerifyDomain'
+import { toast } from 'sonner'
+import type { Models } from '@appwrite.io/console'
+import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { useT } from '@/lib/i18n/translate'
+import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
+import { useVisitUrl } from '@/hooks/use-visit-url'
+
+export function SiteDomainsView() {
+  const t = useT()
+  const visitUrl = useVisitUrl()
+  const { projectId, siteId } = useParams({ strict: false })
+  const { project } = useProject(projectId)
+  const [currentPage, setCurrentPage] = useState(0)
+  const [pageSize, setPageSize] = useState(DOMAINS_DEFAULT_PAGE_SIZE)
+  const [verifyOpen, setVerifyOpen] = useState(false)
+  const [recordsOpen, setRecordsOpen] = useState(false)
+  const [viewLogsOpen, setViewLogsOpen] = useState(false)
+  const [deleteDomainOpen, setDeleteDomainOpen] = useState(false)
+  const [selectedRule, setSelectedRule] = useState<Models.ProxyRule | null>(
+    null,
+  )
+  const [viewLogsRule, setViewLogsRule] = useState<Models.ProxyRule | null>(
+    null,
+  )
+  const search = { search: '' } // TODO: Add search support if needed
+
+  const searchValue = search?.search || ''
+
+  const { rules, total, isLoading: domainsLoading } = useSiteDomains(
+    projectId,
+    siteId,
+    currentPage,
+    pageSize,
+    searchValue,
+  )
+
+  const { domains: orgDomains } = useOrganizationDomains(
+    project?.teamId,
+    0,
+    500,
+  )
+  const apexToOrgDomainId = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const d of orgDomains) {
+      if (d.domain) map.set(d.domain.toLowerCase(), d.$id)
+    }
+    return map
+  }, [orgDomains])
+
+  const handleRetry = (rule: Models.ProxyRule) => {
+    openDialogAfterOverlayCloses(() => {
+      setSelectedRule(rule)
+      setVerifyOpen(true)
+    })
+  }
+
+  const handleRecords = (rule: Models.ProxyRule) => {
+    openDialogAfterOverlayCloses(() => {
+      setSelectedRule(rule)
+      setRecordsOpen(true)
+    })
+  }
+
+  const handleViewLogs = (rule: Models.ProxyRule) => {
+    openDialogAfterOverlayCloses(() => {
+      setViewLogsRule(rule)
+      setViewLogsOpen(true)
+    })
+  }
+
+  const handleDelete = (rule: Models.ProxyRule) => {
+    openDialogAfterOverlayCloses(() => {
+      setSelectedRule(rule)
+      setDeleteDomainOpen(true)
+    })
+  }
+
+  const getOrganizationDomainId = (rule: Models.ProxyRule) => {
+    const apex = getApexDomain(rule.domain)
+    return apex ? apexToOrgDomainId.get(apex.toLowerCase()) : undefined
+  }
+
+  if (domainsLoading) {
+    return (
+      <div className="rounded-lg border border-border bg-card py-12 text-center">
+        <p className="text-[13px] text-muted-foreground">
+          {t('Loading domains...')}
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex-1">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6 pt-4 sm:pt-6">
+        {/* Domains Table */}
+        {rules.length > 0 ? (
+          <>
+            <div className="rounded-lg border border-border">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent border-b border-border">
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      {t('Domain')}
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      {t('Type')}
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      {t('Status')}
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      {t('Created')}
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[80px]"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {rules.map((rule) => {
+                    const ruleData = rule as Models.ProxyRule
+                    const statusConfig = getRuleStatusBadgeConfig(ruleData)
+
+                    return (
+                      <ProxyRuleContextMenu
+                        key={ruleData.$id}
+                        projectId={projectId!}
+                        rule={ruleData}
+                        onViewLogs={handleViewLogs}
+                        onRetry={handleRetry}
+                        onRecords={handleRecords}
+                        onDelete={handleDelete}
+                      >
+                      <TableRow
+                        className="cursor-pointer"
+                        // The row opens its DNS records; its links and buttons keep their own action.
+                        onClick={(event) => {
+                          if ((event.target as HTMLElement).closest('a, button')) return
+                          handleRecords(ruleData)
+                        }}
+                      >
+                        <TableCell className="px-4 py-3">
+                          <a
+                            href={visitUrl(ruleData.domain)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 font-mono text-[13px] link-neutral"
+                          >
+                            {ruleData.domain}
+                            <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
+                          </a>
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
+                          {ruleData.redirectUrl ? (
+                            <span>
+                              {t('Redirect to')} {ruleData.redirectUrl}
+                            </span>
+                          ) : ruleData.deploymentVcsProviderBranch ? (
+                            <span>
+                              {t('Deployed from')}{' '}
+                              {ruleData.deploymentVcsProviderBranch}
+                            </span>
+                          ) : (
+                            <span>{t('Active deployment')}</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <RuleStatusBadge rule={ruleData} />
+                            {statusConfig.variant !== 'success' &&
+                              canViewRuleLogs(ruleData) && (
+                                <Button
+                                  variant="link"
+                                  size="sm"
+                                  className="h-auto p-0 text-[13px]"
+                                  onClick={() => handleViewLogs(ruleData)}
+                                >
+                                  {t('View logs')}
+                                </Button>
+                              )}
+                            <CheckDomain
+                              projectId={projectId ?? ''}
+                              region={project?.region}
+                              rule={ruleData}
+                              organizationDomainId={getOrganizationDomainId(ruleData)}
+                            />
+                            {canRetryRule(ruleData) && !isWaitingForDns(ruleData) && (
+                              <Button
+                                variant="link"
+                                size="sm"
+                                className="h-auto p-0 text-[13px]"
+                                onClick={() => handleRetry(ruleData)}
+                              >
+                                {t('Retry')}
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          <DateTooltip date={ruleData.$createdAt} live />
+                        </TableCell>
+                        <TableCell
+                          className="px-4 py-3 text-end"
+                          // Its menu renders in a portal, whose clicks still bubble to the row.
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <div className="flex justify-end">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <RowActionsMenuTrigger />
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                {canViewRuleLogs(ruleData) && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleViewLogs(ruleData)}
+                                  >
+                                    <MenuItemContent icon={FileText}>
+                                      {t('Logs')}
+                                    </MenuItemContent>
+                                  </DropdownMenuItem>
+                                )}
+                                {canRetryRule(ruleData) && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleRetry(ruleData)}
+                                  >
+                                    <MenuItemContent icon={RefreshCw}>
+                                      {t('Retry')}
+                                    </MenuItemContent>
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem
+                                  onClick={() => handleRecords(ruleData)}
+                                >
+                                  <MenuItemContent icon={Globe}>
+                                    {t('Records')}
+                                  </MenuItemContent>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleDelete(ruleData)}
+                                >
+                                  <MenuItemContent icon={Trash2}>
+                                    {t('Delete')}
+                                  </MenuItemContent>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      </ProxyRuleContextMenu>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+
+            <Pagination
+              currentPage={currentPage + 1}
+              totalItems={total}
+              pageSize={pageSize}
+              pageSizeOptions={[10, 25, 50, 100]}
+              onPageChange={(page) => setCurrentPage(page - 1)}
+              onPageSizeChange={(size) => {
+                setPageSize(size)
+                setCurrentPage(0)
+              }}
+              itemLabel={t('domains')}
+            />
+          </>
+        ) : (
+          <EmptyState
+            title={searchValue ? undefined : t('No domains yet')}
+            description={
+              searchValue
+                ? undefined
+                : t(
+                    'Connect a custom domain to your site for a branded experience',
+                  )
+            }
+            isEmpty={!searchValue}
+            hasFilters={!!searchValue}
+            variant="centered"
+          />
+        )}
+      </div>
+
+      {selectedRule && (
+        <>
+          <VerifyDomain
+            open={verifyOpen}
+            onOpenChange={setVerifyOpen}
+            projectId={projectId ?? ''}
+            rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
+            region={project?.region}
+            organizationDomainId={getOrganizationDomainId(selectedRule)}
+            onVerifySuccess={() => {
+              setVerifyOpen(false)
+              setSelectedRule(null)
+            }}
+          />
+          <DomainRecordsDialog
+            open={recordsOpen}
+            onOpenChange={setRecordsOpen}
+            rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
+            region={project?.region}
+            resourceType="site"
+          />
+          <DeleteDomainDialog
+            open={deleteDomainOpen}
+            onOpenChange={setDeleteDomainOpen}
+            projectId={projectId ?? ''}
+            region={project?.region}
+            rule={selectedRule}
+            onDeleteSuccess={() => {
+              toast.success(t('Domain has been deleted'))
+              setDeleteDomainOpen(false)
+              setSelectedRule(null)
+            }}
+          />
+        </>
+      )}
+      {viewLogsRule && (
+        <ViewLogsDialog
+          open={viewLogsOpen}
+          onOpenChange={(open) => {
+            setViewLogsOpen(open)
+            if (!open) setViewLogsRule(null)
+          }}
+          rule={rules.find((r) => r.$id === viewLogsRule.$id) ?? viewLogsRule}
+        />
+      )}
+    </div>
+  )
+}

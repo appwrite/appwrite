@@ -2,7 +2,7 @@
 
 namespace Appwrite\SDK;
 
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 class Parameter
 {

@@ -1,0 +1,151 @@
+---
+layout: post
+title: "Appwrite Init 2026 recap: Everything we shipped"
+description: An Appwrite Init 2026 recap of all five days of launches, from Appwrite 2.0 and native PostgreSQL to VectorsDB, S3 support, Firewall, OAuth2, and Domains.
+date: 2026-09-15
+cover: /images/blog/appwrite-init-2026-recap/cover.avif
+timeToRead: 8
+author: aishwari
+category: init
+featured: false
+callToAction: true
+faqs:
+  - question: What is Appwrite Init?
+    answer: Init is Appwrite's launch week. Over five days the team ships a new product or feature every day, goes live to walk through it, and runs community sessions, AMAs, and giveaways on Discord alongside the launches.
+  - question: What did Appwrite ship during Init 2026?
+    answer: Appwrite 2.0 with a rebuilt Console and Appwrite Explorer on Day 1, native PostgreSQL on Day 2, VectorsDB, DocumentsDB, and native MySQL on Day 3, an S3-compatible Storage API on Day 4, and Appwrite Firewall, the Appwrite OAuth2 server, and Appwrite Domains on Day 5.
+  - question: What is Hyperloop B?
+    answer: Hyperloop B is the rebuilt engine underneath Appwrite 2.0. It changes how Appwrite handles concurrent traffic and allows the platform to serve up to 7x more requests than the previous architecture.
+  - question: Is PostgreSQL on Appwrite a real PostgreSQL database?
+    answer: Yes. Appwrite provisions and manages a PostgreSQL database inside your project, and you connect to it with the drivers, ORMs, and extensions you already use. Tools such as pgvector and PostGIS work as they normally do. See the [PostgreSQL documentation](/docs/products/databases/postgresql).
+  - question: Which database should I pick after Init 2026?
+    answer: Pick based on how you want to work with your data. Use native [PostgreSQL](/docs/products/databases/postgresql) or [MySQL](/docs/products/databases/mysql) when you want direct access to the database engine with SQL, ORMs, and existing database tooling. Choose Appwrite Databases when you want to stay within the Appwrite ecosystem and use Appwrite APIs, SDKs, permissions, and realtime. That includes TablesDB for structured relational data, [DocumentsDB](/docs/products/databases/documentsdb) for flexible JSON documents, and [VectorsDB](/docs/products/databases/vectorsdb) for embeddings and similarity search.
+  - question: Do I need to migrate anything to use the S3 API?
+    answer: No. Your existing buckets and files are addressable over both the native Storage API and the S3 API at the same time, so pointing an S3 client at Appwrite is a configuration change rather than a migration.
+---
+
+Init 2026 is officially a wrap.
+
+Over five days, we shared some of the biggest updates we have made to Appwrite yet. We introduced Appwrite 2.0 and a completely new Console, expanded Appwrite Databases with PostgreSQL, MySQL, VectorsDB, and DocumentsDB, brought S3 compatibility to Storage, and closed the week with new tools for traffic control, authentication, and domains.
+
+But Init has always been about more than product announcements. Throughout the week, we went live with the team, answered questions, hosted community events and AMAs, shared giveaways, and got to see your reactions as each launch went out.
+
+If you missed any part of the week, here is everything that happened during Init 2026.
+
+# Everything Appwrite shipped during Init 2026
+
+Five days, five sets of launches:
+
+- **Day 1:** [Appwrite 2.0](/blog/post/announcing-appwrite-2), a redesigned Console, [Appwrite Explorer](/blog/post/announcing-appwrite-explorer), [Appwrite Terminal](/blog/post/announcing-console-terminal), and the [Hyperloop B](/blog/post/hyperloop-b) engine.
+- **Day 2:** [native PostgreSQL databases](/blog/post/appwrite-now-speaks-postgresql) inside Appwrite projects.
+- **Day 3:** [VectorsDB](/blog/post/announcing-vectorsdb), [DocumentsDB](/blog/post/announcing-documentsdb), and [native MySQL](/blog/post/announcing-native-mysql-databases).
+- **Day 4:** an [S3-compatible API](/blog/post/announcing-s3-api) for Appwrite Storage.
+- **Day 5:** [Appwrite Firewall](/blog/post/announcing-appwrite-firewall), the [Appwrite OAuth2 server](/blog/post/announcing-oauth2-server), and [Appwrite Domains](/blog/post/announcing-appwrite-domains).
+
+Each day is covered in more detail below, along with the livestream that went with it.
+
+# Day 1: A new chapter for Appwrite
+
+We opened Init with one of our biggest releases yet: **Appwrite 2.0**.
+
+The release marks a new chapter for the platform, with changes to both the infrastructure underneath Appwrite and the experience developers use every day.
+
+One of the biggest changes is our completely redesigned [Appwrite Console](/blog/post/announcing-console-iv), bringing the website and Console into a more connected experience. We also introduced [Appwrite Explorer](/blog/post/announcing-appwrite-explorer), giving developers a built-in workspace for interacting with Appwrite APIs directly from the Console, alongside [Appwrite Terminal](/blog/post/announcing-console-terminal), which brings the Appwrite CLI directly into the Console.
+
+Behind the scenes, Appwrite 2.0 is powered by [Hyperloop B](/blog/post/hyperloop-b), our rebuilt engine designed to handle significantly more concurrent traffic. The new architecture allows Appwrite to handle up to **7x more requests**, giving the platform a stronger foundation for increasingly demanding workloads.
+
+If you self-host, the same release is available to you. We covered what changes for self-hosted setups in [Appwrite 2.0 for self-hosted deployments](/blog/post/appwrite-2-self-hosted).
+
+During our first livestream of the week, the team walked through the new experience and went deeper into what changed under the hood.
+
+{% youtube id="FaEmdOwzQMw" title="Appwrite Init 2026 Day 1: Appwrite 2.0" /%}
+
+# Day 2: Native PostgreSQL comes to Appwrite
+
+Day 2 was all about something developers have been asking us for: [native PostgreSQL databases on Appwrite](/blog/post/appwrite-now-speaks-postgresql).
+
+You can now provision and manage PostgreSQL directly inside an Appwrite project while continuing to use the PostgreSQL ecosystem you already know. Existing drivers, ORMs, extensions, and development workflows can continue working with your database without requiring a proprietary abstraction in between.
+
+That also means developers can use familiar PostgreSQL capabilities and extensions, including tools such as pgvector and PostGIS, while Appwrite takes care of the surrounding infrastructure.
+
+The goal is simple: give developers the convenience of managing their backend through Appwrite without asking them to give up the database tools and workflows they already rely on. For new self-hosted Appwrite installations, PostgreSQL is also now the default underlying database that Appwrite itself runs on, which we explained in [PostgreSQL by default in Appwrite 2.0](/blog/post/appwrite-2-0-postgres-by-default).
+
+If you work with an ORM, we published walkthroughs for both [Drizzle](/blog/post/drizzle-orm-appwrite-postgres) and [Prisma](/blog/post/prisma-orm-appwrite-postgres) against an Appwrite PostgreSQL database.
+
+We explored the new PostgreSQL experience with the team during our Day 2 livestream.
+
+{% youtube id="Rq4WNPvqWes" title="Appwrite Init 2026 Day 2: Native PostgreSQL" /%}
+
+# Day 3: More ways to work with data
+
+PostgreSQL was only the beginning of our database announcements.
+
+On Day 3, we introduced [VectorsDB](/blog/post/announcing-vectorsdb), [DocumentsDB](/blog/post/announcing-documentsdb), and [native MySQL databases](/blog/post/announcing-native-mysql-databases), giving developers more flexibility to choose the right database for different workloads.
+
+**VectorsDB** brings embeddings and similarity search directly into Appwrite, making it easier to build semantic search, recommendation systems, RAG applications, and other AI-powered experiences without introducing a separate vector database. We followed the launch with a [help center built on VectorsDB](/blog/post/build-a-help-center-with-appwrite-vectorsdb) and a rundown of [where VectorsDB fits](/blog/post/vectorsdb-use-cases).
+
+For applications that are better suited to flexible document-based data, **DocumentsDB** adds another way to store and work with information inside Appwrite.
+
+We also introduced **native MySQL**, allowing developers to provision MySQL databases through Appwrite while continuing to use the drivers, ORMs, and tooling already built around the MySQL ecosystem.
+
+Together, these launches give developers more freedom to choose how their application data is stored without having to move the rest of their stack elsewhere. If you are deciding between the new native databases and Appwrite Databases, [this breakdown](/blog/post/native-databases-vs-appwrite-databases) covers the trade-offs.
+
+We brought all three databases together during the Day 3 livestream to show how they work and where each one fits.
+
+{% youtube id="0UHYLAtWBMo" title="Appwrite Init 2026 Day 3: VectorsDB, DocumentsDB, and MySQL" /%}
+
+# Day 4: S3 support for Appwrite Storage
+
+After a few database-heavy days, we turned our attention to Storage.
+
+On Day 4, we introduced [S3-compatible API support for Appwrite Storage](/blog/post/announcing-s3-api).
+
+The S3 API has become a standard interface across a huge ecosystem of storage tools, SDKs, and workflows. With S3 compatibility in Appwrite, developers can bring many of those existing tools and workflows to Appwrite Storage without having to rebuild their integrations around a different API.
+
+This makes it easier to move existing storage workloads to Appwrite, connect third-party tooling, and keep using familiar S3-compatible workflows while managing files and buckets through Appwrite. Because buckets and files stay addressable over both APIs, adopting it is a configuration change rather than a migration.
+
+We demonstrated the new S3 support during the fourth Init livestream and showed how it fits into existing developer workflows.
+
+{% youtube id="N4bz33uSiko" title="Appwrite Init 2026 Day 4: S3 support for Appwrite Storage" /%}
+
+# Day 5: Firewall, OAuth2, and Domains
+
+We closed Init with three launches focused on the infrastructure around your application: [Appwrite Firewall](/blog/post/announcing-appwrite-firewall), the [Appwrite OAuth2 server](/blog/post/announcing-oauth2-server), and [Appwrite Domains](/blog/post/announcing-appwrite-domains).
+
+**Appwrite Firewall** gives developers project-level control over incoming traffic. Requests to APIs, Functions, and Sites can be denied, challenged, rate limited, redirected, or bypassed based on the rules you configure, with an impact preview available before changes are applied. We went deeper on how to combine those rules in [Firewall rate limit strategies](/blog/post/firewall-rate-limit-strategies).
+
+We also introduced the **Appwrite OAuth2 server**, which allows an Appwrite project to act as its own OAuth 2.1 and OpenID Connect provider. Other applications can offer Sign in with your product, request scoped access to your APIs, and authenticate through an experience you control. The [Sign in with Appwrite guide](/blog/post/sign-in-with-appwrite-guide) walks through setting that up end to end.
+
+Finally, **Appwrite Domains** brings another part of launching an application directly into Appwrite, allowing developers to find, register, and manage domains closer to the projects that use them.
+
+Our final livestream brought all three announcements together before we wrapped up five days of launches with the team and community.
+
+{% youtube id="LYq0qtyQmJk" title="Appwrite Init 2026 Day 5: Firewall, OAuth2, and Domains" /%}
+
+We also ended the week with our Init closing party and revealed the winner of our biggest giveaway, **12 months of Claude Max 20x**.
+
+# Closing out Init together
+
+After five days of launches, livestreams, AMAs, giveaways, and a lot of new Appwrite releases, we wrapped up Init 2026 the best way we could: together with the community.
+
+For our **Init Closing Party**, Appwrite team members and community members joined us on the Discord Stage to look back at the week, share their favourite announcements and moments, answer questions, and talk about what stood out most from Init.
+
+It was a chance to move away from the launch schedule for a bit and simply celebrate everything we had shipped together. After a week packed with announcements, seeing the community come together to discuss the releases, share feedback, and hang out with the team was the perfect way to close Init.
+
+# That's a wrap on Init 2026
+
+Five days later, Init 2026 has come to an end, but there is a lot more Appwrite to explore.
+
+This week brought some of our biggest updates yet, from Appwrite 2.0 and native PostgreSQL to new database options, S3 support, Firewall, OAuth2, and Domains. More importantly, we got to share every launch with the people building alongside us through livestreams, AMAs, Discord conversations, feedback, and plenty of community reactions along the way.
+
+We have already started building on those foundations with [Appwrite 2.1 for self-hosted deployments](/blog/post/appwrite-2-1-self-hosted), bringing the S3 API and AutoGravity to self-hosted instances alongside fixes and improvements across the platform. With the foundations introduced during Init now in place, we can keep iterating on and refining the self-hosted experience.
+
+A huge thank you to everyone who joined us during the week, shared an Init ticket, asked a question, tried something we launched, or simply tuned in to see what was next.
+
+We have shown you what's new. Now we cannot wait to see what you build with it.
+
+# Start building with everything from Init 2026
+
+The fastest way to try any of this is to open a project on [Appwrite Cloud](https://appwrite.io) and pick the piece that matches what you are building: a relational database, a vector store, storage your existing S3 tooling can already talk to, or an auth server your other apps can sign into.
+
+Catch up on everything from Init 2026 at [appwrite.io/init](https://appwrite.io/init).

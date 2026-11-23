@@ -1,0 +1,16 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+
+  App\:
+    resource: '../src/'
+
+  Appwrite\Client:
+    calls:
+      - setEndpoint: ['%env(APPWRITE_ENDPOINT)%']
+      - setProject: ['%env(APPWRITE_PROJECT_ID)%']
+      - setKey: ['%env(APPWRITE_API_KEY)%']
+
+  Appwrite\Services\Project:
+    arguments: ['@Appwrite\Client']

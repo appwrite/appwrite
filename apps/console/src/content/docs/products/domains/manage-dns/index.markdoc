@@ -1,0 +1,66 @@
+---
+layout: article
+title: Manage DNS records
+description: Create, update, import, and filter DNS records for organization domains in Appwrite.
+---
+
+You manage DNS records for verified organization domains from the domain **Records** tab. This guide covers day-to-day record operations, zone import, and email provider presets.
+
+For record types and locked entries, see [DNS records](/docs/products/domains/dns).
+
+# Open the records table {% #open-the-records-table %}
+
+1. Open **Organization** > **Domains**.
+2. Select a verified domain.
+3. Open the **DNS Records** tab.
+
+The table lists all records in the zone, including locked records Appwrite created for network routing. Use search filters to narrow by type, name, or value.
+
+# Create a record {% #create-a-record %}
+
+1. Click **Create record**.
+2. Select the record type (A, AAAA, CNAME, MX, TXT, and others supported on organization domains).
+3. Enter the name, value, TTL, and any type-specific fields (for example priority on MX and SRV records).
+4. Save the record.
+
+Locked records cannot be edited or deleted. Appwrite prevents conflicts with locked names when you save.
+
+# Update and delete records {% #update-and-delete-records %}
+
+Use the row actions menu on a record you created to update or delete it.
+
+To delete multiple records:
+
+1. Select the checkboxes on deletable (non-locked) rows.
+2. Open the bulk action bar and choose delete.
+3. Confirm the deletion.
+
+# Import and export a zone file {% #import-and-export-a-zone-file %}
+
+To migrate many records at once:
+
+1. On the **Records** tab, open **Import zone**.
+2. Paste or upload BIND-style zone file content.
+3. Confirm the import.
+
+Import replaces the editable portion of the zone according to the file. Locked records remain. Export the current zone from the same area for backup before large changes.
+
+{% info title="Validate before import" %}
+Review zone file contents carefully. Incorrect MX or TXT records can interrupt email or verification for production domains.
+{% /info %}
+
+# Configure email {% #configure-email %}
+
+Use **Add preset** on the **Records** tab to add MX (and SPF for iCloud) records for common email providers in one step.
+
+See [DNS presets](/docs/products/domains/presets) for supported providers, exact record values, and provider-specific follow-up steps.
+
+# Filters {% #filters %}
+
+The records table supports URL-backed filters (type, name, value, and more), similar to other Appwrite list views. Use filters to audit records before a migration or to confirm preset records were created.
+
+When filters return no rows, clear or adjust filters rather than assuming the zone is empty.
+
+# Connect to products {% #connect-to-products %}
+
+After DNS is configured, attach hostnames to [Sites](/docs/products/sites/domains), [Functions](/docs/products/functions/domains), or [API custom domains](/docs/advanced/platform/custom-domains). See [Connect to products](/docs/products/domains/connect).

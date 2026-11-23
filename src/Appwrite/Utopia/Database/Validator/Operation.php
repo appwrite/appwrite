@@ -2,7 +2,7 @@
 
 namespace Appwrite\Utopia\Database\Validator;
 
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 class Operation extends Validator
 {
@@ -160,8 +160,14 @@ class Operation extends Validator
             }
         }
 
-        // Bulk operation specific validations
         $action = $value['action'];
+
+        if ($action === 'delete' && !empty($value['data'])) {
+            $this->description = "Key 'data' must be empty for delete";
+            return false;
+        }
+
+        // Bulk operation specific validations
 
         // BulkUpdate and BulkDelete require queries
         if (\in_array($action, ['bulkUpdate', 'bulkDelete'])) {
