@@ -527,7 +527,7 @@ final class MigrationVersionsTest extends TestCase
             return $ids;
         };
 
-        foreach (['videosRenditions', 'videosCaptions', 'videosTimelines'] as $collectionId) {
+        foreach (['videosRenditions', 'videosRenditionsSegments', 'videosCaptions', 'videosTimelines'] as $collectionId) {
             $this->assertContains('size', $attributeIds($collectionId), "Expected \"{$collectionId}\" to store retained bytes");
         }
 
