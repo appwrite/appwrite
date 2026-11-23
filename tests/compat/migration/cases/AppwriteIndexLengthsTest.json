@@ -4194,7 +4194,7 @@
                 "$resource": "index",
                 "id": "idx_reference_channel",
                 "status": "error",
-                "message": "Index not found"
+                "message": "Column not found in table: reference"
               }
             ]
           ]
@@ -4209,22 +4209,19 @@
           "expect": [
             {
               "code": 0,
-              "message": "Index not found",
+              "message": "Column not found in table: reference",
               "resourceName": "index",
               "resourceGroup": "databases",
               "resourceId": "idx_reference_channel",
               "json": {
                 "code": 0,
-                "message": "Index not found",
+                "message": "Column not found in table: reference",
                 "resourceName": "index",
                 "resourceGroup": "databases",
                 "resourceId": "idx_reference_channel",
                 "trace": "<masked>"
               },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\NotFound",
-                "message": "Index not found"
-              }
+              "previous": null
             }
           ]
         },
@@ -4250,7 +4247,7 @@
               100,
               20
             ],
-            "getMessage": "Index not found",
+            "getMessage": "Column not found in table: reference",
             "getName": "index",
             "getOrders": [
               "ASC",
@@ -4300,37 +4297,7 @@
             ],
             "reason": "Timestamps of documents written during the case (now)"
           },
-          "expect": [
-            {
-              "key": "idx_reference_channel",
-              "description": "",
-              "status": "available",
-              "databaseInternalId": "1",
-              "databaseId": "shop",
-              "collectionInternalId": "1",
-              "collectionId": "orders",
-              "type": "key",
-              "attributes": [
-                "reference",
-                "channel"
-              ],
-              "lengths": [
-                50,
-                20
-              ],
-              "orders": [
-                "ASC",
-                "ASC"
-              ],
-              "$id": "1_1_idx_reference_channel",
-              "$createdAt": "<masked>",
-              "$updatedAt": "<masked>",
-              "$permissions": [],
-              "$sequence": "1",
-              "error": null,
-              "$collection": "indexes"
-            }
-          ]
+          "expect": []
         },
         {
           "op": "db.find",
@@ -4384,37 +4351,7 @@
             "$permissions": [],
             "$collection": "database_1",
             "attributes": [],
-            "indexes": [
-              {
-                "key": "idx_reference_channel",
-                "description": "",
-                "status": "available",
-                "databaseInternalId": "1",
-                "databaseId": "shop",
-                "collectionInternalId": "1",
-                "collectionId": "orders",
-                "type": "key",
-                "attributes": [
-                  "reference",
-                  "channel"
-                ],
-                "lengths": [
-                  50,
-                  20
-                ],
-                "orders": [
-                  "ASC",
-                  "ASC"
-                ],
-                "$id": "1_1_idx_reference_channel",
-                "$createdAt": "<masked>",
-                "$updatedAt": "<masked>",
-                "$permissions": [],
-                "$sequence": "1",
-                "error": null,
-                "$collection": "indexes"
-              }
-            ]
+            "indexes": []
           }
         }
       ]
