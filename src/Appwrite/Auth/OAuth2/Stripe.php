@@ -108,6 +108,14 @@ class Stripe extends OAuth2
     }
 
     /**
+     * A Stripe Connect grant authorizes a connected account, not a person:
+     * the token response names the account through `stripe_user_id`, and the
+     * account object read from it names a business. The account is therefore
+     * the identity, so within a project one Appwrite user can link a given
+     * Stripe account. Every administrator of the account who authorizes the
+     * Connect app gets the same ID, so it cannot sign anyone in (see
+     * isLinkOnly()).
+     *
      * @param string $accessToken
      *
      * @return string
@@ -117,6 +125,17 @@ class Stripe extends OAuth2
         $user = $this->getUser($accessToken);
 
         return $user['id'] ?? '';
+    }
+
+    /**
+     * The connected account ID is shared by every administrator of the
+     * account, so it can only attach to an account that is already signed in.
+     *
+     * @return bool
+     */
+    public function isLinkOnly(): bool
+    {
+        return true;
     }
 
     /**
