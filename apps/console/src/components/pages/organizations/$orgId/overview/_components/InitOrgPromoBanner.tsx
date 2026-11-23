@@ -1,8 +1,7 @@
 import { Link } from '@tanstack/react-router'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import type { ReactNode } from 'react'
 import { InitWordmark } from '@/components/pages/init/_components/InitWordmark'
-import { Init5CompactMark } from '@/components/pages/init/_components/init5/Init5FiveMark'
 import { Badge } from '@/components/ui/badge'
 import { getEnvProfileFeatures } from '@/lib/console-profiles'
 import { useDebugOverrides } from '@/lib/debug-overrides'
@@ -15,18 +14,6 @@ import { useT } from '@/lib/i18n/translate'
 
 /** Init 5 wears the hero's light trails; earlier weeks keep the plain mark. */
 const LIGHT_TRAIL_EVENT_IDS = new Set(['init-nov-2026'])
-
-function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false)
-  useEffect(() => {
-    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setReduced(media.matches)
-    const onChange = () => setReduced(media.matches)
-    media.addEventListener('change', onChange)
-    return () => media.removeEventListener('change', onChange)
-  }, [])
-  return reduced
-}
 
 const BADGE_VARIANT: Record<InitOrgPromoPhase, 'info' | 'success' | 'warning'> =
   {
@@ -71,7 +58,6 @@ function InitOrgPromoBannerLink({
 export function InitOrgPromoBanner() {
   const t = useT()
   const { mockInitCurrentDay, mockInitActiveEventId } = useDebugOverrides()
-  const reducedMotion = usePrefersReducedMotion()
   const content = useMemo(() => {
     if (!getEnvProfileFeatures().init) return null
     return getInitOrgPromoBannerContent({
@@ -89,6 +75,7 @@ export function InitOrgPromoBanner() {
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[length:18px_18px] opacity-60"
       />
+      {lightTrails ? <div aria-hidden className="init5-banner-sweep" /> : null}
       <InitOrgPromoBannerLink
         cta={content.cta}
         className="group/banner relative flex h-14 w-full cursor-pointer items-center justify-center gap-2 px-4 sm:gap-2.5 sm:px-6"
@@ -97,12 +84,6 @@ export function InitOrgPromoBanner() {
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-muted/0 transition-colors duration-300 ease-out group-hover/banner:bg-muted/30"
         />
-        {lightTrails ? (
-          <Init5CompactMark
-            animate={!reducedMotion}
-            className="end-4 opacity-80 sm:end-6 lg:end-[8%]"
-          />
-        ) : null}
         <InitWordmark
           lightTrails={lightTrails}
           className="relative z-10 shrink-0 text-[20px] text-foreground transition-colors duration-300 ease-out group-hover/banner:text-foreground sm:text-[22px]"

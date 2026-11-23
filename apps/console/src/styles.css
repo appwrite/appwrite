@@ -3630,6 +3630,77 @@ pre.prism-code .token-line > span {
 }
 
 /*
+ * Init 5 site banner: a comet of the hero's light runs along the bottom edge
+ * and lights the bar as it passes, then rests before the next pass. The
+ * wrapper moves by its own width (the banner's), so the comet starts just off
+ * the left edge and leaves past the right one.
+ */
+@keyframes init5-banner-sweep {
+  0% {
+    transform: translateX(0);
+  }
+  65%,
+  100% {
+    transform: translateX(140%);
+  }
+}
+
+.init5-banner-sweep {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  animation: init5-banner-sweep 7s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+}
+
+.init5-banner-sweep::before,
+.init5-banner-sweep::after {
+  content: '';
+  position: absolute;
+  right: 100%;
+  width: 40%;
+}
+
+/* The light the comet throws up into the bar, centered on its head. */
+.init5-banner-sweep::before {
+  inset-block: 0;
+  right: 80%;
+  background:
+    radial-gradient(
+      14px 5px at 50% 100%,
+      var(--network-globe-region),
+      color-mix(in oklch, var(--brand-cta) 60%, transparent) 50%,
+      transparent
+    ),
+    radial-gradient(
+      closest-side at 50% 100%,
+      color-mix(in oklch, var(--brand-cta) 38%, transparent),
+      color-mix(in oklch, var(--network-globe-edge) 14%, transparent) 55%,
+      transparent
+    );
+}
+
+/* The comet: violet tail, pink body, peach head. */
+.init5-banner-sweep::after {
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklch, var(--network-globe-edge) 70%, transparent) 45%,
+    var(--brand-cta) 85%,
+    var(--network-globe-region)
+  );
+  filter: drop-shadow(0 0 3px var(--brand-cta))
+    drop-shadow(0 0 8px color-mix(in oklch, var(--brand-cta) 60%, transparent));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .init5-banner-sweep {
+    display: none;
+  }
+}
+
+/*
  * Homepage Console section: the screenshot tilts up into place as it scrolls
  * in. Scroll-driven, so it runs on the compositor with no JS; browsers
  * without `animation-timeline` and reduced-motion users get the flat frame.
