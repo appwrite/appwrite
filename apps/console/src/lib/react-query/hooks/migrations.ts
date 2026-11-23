@@ -822,3 +822,59 @@ export function useCreateNHostMigration(
     },
   })
 }
+
+// ============================================================================
+// SUPABASE ACCOUNT CONNECTION
+// ============================================================================
+
+/**
+ * Projects of the Supabase account the console user connected. Fails with
+ * `user_identity_not_found` until an account is connected.
+ */
+export function useSupabaseProjects(
+  projectId: string | null | undefined,
+  region?: string,
+) {
+  return useQuery({
+    queryKey: ['migrations', 'supabase', 'projects', projectId, region],
+    queryFn: () =>
+      sdk.forProject(projectId!, region).migrations.listSupabaseProjects(),
+    enabled: !!projectId,
+    retry: false,
+    staleTime: DEFAULT_STALE_TIME,
+  })
+}
+
+export function useCreateSupabaseProjectCredentials(
+  projectId: string | null | undefined,
+  region?: string,
+) {
+  return useMutation({
+    mutationFn: async (projectRef: string) => {
+      if (!projectId) throw new Error('Project ID is required')
+      return await sdk
+        .forProject(projectId, region)
+        .migrations.createSupabaseProjectCredentials({ projectRef })
+    },
+  })
+}
+
+export function useDeleteSupabaseOAuth2(
+  projectId: string | null | undefined,
+  region?: string,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      if (!projectId) throw new Error('Project ID is required')
+      return await sdk
+        .forProject(projectId, region)
+        .migrations.deleteSupabaseOAuth2()
+    },
+    onSuccess: () => {
+      queryClient.removeQueries({
+        queryKey: ['migrations', 'supabase', 'projects', projectId],
+      })
+    },
+  })
+}
