@@ -25,6 +25,10 @@ import {
   type MarketplaceApp,
   type MarketplaceAppCategory,
 } from '@/lib/marketplace/types'
+import {
+  PROJECT_RAR_TYPE,
+  WILDCARD_IDENTIFIER,
+} from '@/lib/oauth2/authorization-details'
 import { DEFAULT_STALE_TIME } from './constants'
 import { nextCursorAfter } from './cursor'
 
@@ -1094,4 +1098,76 @@ export function useDeleteOrganizationAppKey(appId: string | null | undefined) {
       })
     },
   })
+}
+
+/** The organization's installation of one app, or null when it isn't installed. */
+export function useOrganizationAppInstallation(
+  organizationId: string | null | undefined,
+  appId: string | null | undefined,
+) {
+  const { data, isLoading } = useQuery({
+    queryKey: ['organization', organizationId, 'installations', 'app', appId],
+    queryFn: async () => {
+      const response = await sdk.forConsole.teams.listInstallations({
+        teamId: organizationId!,
+        queries: [Query.equal('appId', appId!), Query.limit(1)],
+        total: false,
+      })
+      return response.installations?.[0] ?? null
+    },
+    enabled: !!organizationId && !!appId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+  })
+
+  return { installation: data ?? null, isLoading }
+}
+
+/**
+ * Installations on the organization that can reach a project, either by id or
+ * through the `*` wildcard. Grants live in JSON authorization details the API
+ * can't filter on, so every page is read and filtered here.
+ */
+export function useProjectInstalledApps(
+  organizationId: string | null | undefined,
+  projectId: string | null | undefined,
+) {
+  const { data, isLoading } = useQuery({
+    queryKey: [
+      'organization',
+      organizationId,
+      'installations',
+      'project',
+      projectId,
+    ],
+    queryFn: async () => {
+      const installations: Models.AppInstallation[] = []
+      let cursor: string | undefined
+      do {
+        const page = await fetchOrganizationInstalledApps(
+          organizationId!,
+          cursor,
+        )
+        installations.push(...page.installations)
+        cursor = nextCursorAfter(
+          page.installations,
+          ORGANIZATION_APP_INSTALLATIONS_PAGE_SIZE,
+        )
+      } while (cursor)
+      return installations.filter((installation) =>
+        installation.authorizationDetails.some(
+          (detail) =>
+            detail.type === PROJECT_RAR_TYPE &&
+            Array.isArray(detail.identifiers) &&
+            (detail.identifiers.includes(projectId) ||
+              detail.identifiers.includes(WILDCARD_IDENTIFIER)),
+        ),
+      )
+    },
+    enabled: !!organizationId && !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+  })
+
+  return { installations: data ?? [], isLoading }
 }
