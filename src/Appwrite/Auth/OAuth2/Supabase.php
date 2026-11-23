@@ -8,15 +8,9 @@ use Appwrite\Auth\OAuth2;
 // https://supabase.com/docs/guides/integrations/build-a-supabase-oauth-integration
 // https://api.supabase.com/api/v1
 
-/**
- * Authorizes Appwrite against a user's Supabase account so a migration can read
- * their projects. Scopes are set on the Supabase OAuth app, not in the request.
- */
 class Supabase extends OAuth2
 {
     use PKCE;
-
-    private const string API = 'https://api.supabase.com';
 
     /**
      * Prefix of the temporary login roles created for migrations
@@ -34,6 +28,13 @@ class Supabase extends OAuth2
     protected array $tokens = [];
 
     /**
+     * Supabase sets the scopes on the OAuth app, not in the request
+     *
+     * @var array
+     */
+    protected array $scopes = [];
+
+    /**
      * @return string
      */
     public function getName(): string
@@ -46,7 +47,7 @@ class Supabase extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return self::API . '/v1/oauth/authorize?' . \http_build_query([
+        return 'https://api.supabase.com/v1/oauth/authorize?' . \http_build_query([
             'response_type' => 'code',
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
@@ -66,7 +67,7 @@ class Supabase extends OAuth2
         if (empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
                 'POST',
-                self::API . '/v1/oauth/token',
+                'https://api.supabase.com/v1/oauth/token',
                 $this->getTokenHeaders(),
                 \http_build_query([
                     'grant_type' => 'authorization_code',
@@ -89,7 +90,7 @@ class Supabase extends OAuth2
     {
         $this->tokens = \json_decode($this->request(
             'POST',
-            self::API . '/v1/oauth/token',
+            'https://api.supabase.com/v1/oauth/token',
             $this->getTokenHeaders(),
             \http_build_query([
                 'grant_type' => 'refresh_token',
@@ -102,23 +103,6 @@ class Supabase extends OAuth2
         }
 
         return $this->tokens;
-    }
-
-    /**
-     * Revoke the refresh token and every access token issued with it
-     */
-    public function revokeTokens(string $refreshToken): void
-    {
-        $this->request(
-            'POST',
-            self::API . '/v1/oauth/revoke',
-            ['Content-Type: application/json'],
-            (string) \json_encode([
-                'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
-                'refresh_token' => $refreshToken,
-            ])
-        );
     }
 
     /**
@@ -146,7 +130,7 @@ class Supabase extends OAuth2
     }
 
     /**
-     * The identity only authorizes migrations and never signs anyone in
+     * Supabase does not report whether the email address is verified
      *
      * @param string $accessToken
      *
@@ -170,11 +154,28 @@ class Supabase extends OAuth2
     }
 
     /**
+     * Revoke the refresh token and every access token issued with it
+     */
+    public function revokeTokens(string $refreshToken): void
+    {
+        $this->request(
+            'POST',
+            'https://api.supabase.com/v1/oauth/revoke',
+            ['Content-Type: application/json'],
+            (string) \json_encode([
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+                'refresh_token' => $refreshToken,
+            ])
+        );
+    }
+
+    /**
      * @return array<array<string, mixed>>
      */
     public function getProjects(string $accessToken): array
     {
-        return \json_decode($this->request('GET', self::API . '/v1/projects', $this->getHeaders($accessToken)), true) ?? [];
+        return \json_decode($this->request('GET', 'https://api.supabase.com/v1/projects', ['Authorization: Bearer ' . $accessToken]), true) ?? [];
     }
 
     /**
@@ -184,8 +185,8 @@ class Supabase extends OAuth2
     {
         $keys = \json_decode($this->request(
             'GET',
-            self::API . '/v1/projects/' . \rawurlencode($projectRef) . '/api-keys?reveal=true',
-            $this->getHeaders($accessToken)
+            'https://api.supabase.com/v1/projects/' . \rawurlencode($projectRef) . '/api-keys?reveal=true',
+            ['Authorization: Bearer ' . $accessToken]
         ), true) ?? [];
 
         foreach ($keys as $key) {
@@ -212,8 +213,8 @@ class Supabase extends OAuth2
     {
         $poolers = \json_decode($this->request(
             'GET',
-            self::API . '/v1/projects/' . \rawurlencode($projectRef) . '/config/database/pooler',
-            $this->getHeaders($accessToken)
+            'https://api.supabase.com/v1/projects/' . \rawurlencode($projectRef) . '/config/database/pooler',
+            ['Authorization: Bearer ' . $accessToken]
         ), true) ?? [];
 
         foreach ($poolers as $pooler) {
@@ -234,8 +235,8 @@ class Supabase extends OAuth2
     {
         return \json_decode($this->request(
             'POST',
-            self::API . '/v1/projects/' . \rawurlencode($projectRef) . '/database/query',
-            [...$this->getHeaders($accessToken), 'Content-Type: application/json'],
+            'https://api.supabase.com/v1/projects/' . \rawurlencode($projectRef) . '/database/query',
+            ['Authorization: Bearer ' . $accessToken, 'Content-Type: application/json'],
             (string) \json_encode(['query' => $sql])
         ), true) ?? [];
     }
@@ -248,18 +249,14 @@ class Supabase extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $this->user = \json_decode($this->request('GET', self::API . '/v1/profile', $this->getHeaders($accessToken)), true) ?? [];
+            $this->user = \json_decode($this->request(
+                'GET',
+                'https://api.supabase.com/v1/profile',
+                ['Authorization: Bearer ' . $accessToken]
+            ), true) ?? [];
         }
 
         return $this->user;
-    }
-
-    /**
-     * @return array<string>
-     */
-    private function getHeaders(string $accessToken): array
-    {
-        return ['Authorization: Bearer ' . $accessToken];
     }
 
     /**

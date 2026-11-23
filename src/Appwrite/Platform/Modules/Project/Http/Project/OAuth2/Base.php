@@ -392,6 +392,7 @@ abstract class Base extends Action
             'strava' => Strava\Update::class,
             'vk' => VK\Update::class,
             'netlify' => Netlify\Update::class,
+            'supabase' => Supabase\Update::class,
             'railway' => Railway\Update::class,
             'reddit' => Reddit\Update::class,
             'vercel' => Vercel\Update::class,
