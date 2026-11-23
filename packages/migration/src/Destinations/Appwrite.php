@@ -37,7 +37,6 @@ use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Limit as LimitException;
-use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Format;
 use Utopia\Database\Id;
@@ -1081,13 +1080,15 @@ class Appwrite extends Destination
         $attributeMetaId = $this->attributeIndexMetaId($database, $table, $resource->getKey());
         if ($this->onDuplicate !== OnDuplicate::Fail) {
             $existingAttr = $this->dbForProject->getDocument(self::META_ATTRIBUTES, $attributeMetaId);
-            $action = $this->onDuplicate->resolveSchemaAction(
+            // Meta document without a schema column (run killed between the two writes): rebuild it whatever the timestamps or spec say.
+            $orphaned = !$existingAttr->isEmpty() && !$this->schemaHoldsAttribute($dbForDatabases, $this->tableCollectionId($database, $table), $resource->getKey());
+            $action = $orphaned ? SchemaAction::Overwrite : $this->onDuplicate->resolveSchemaAction(
                 !$existingAttr->isEmpty(),
                 $updatedAt,
                 $existingAttr->getUpdatedAt(),
             );
             // Spec match → skip work. Create excluded; nothing on dest to match against.
-            if ($action !== SchemaAction::Create && $this->attributeSpecMatches($existingAttr, $resource, $type, $isRelationship)) {
+            if (!$orphaned && $action !== SchemaAction::Create && $this->attributeSpecMatches($existingAttr, $resource, $type, $isRelationship)) {
                 $action = SchemaAction::Skip;
             }
 
@@ -1097,7 +1098,7 @@ class Appwrite extends Destination
                     $resource->setStatus(Resource::STATUS_SKIPPED, 'Already exists on destination');
                     return false;
                 })(),
-                SchemaAction::Overwrite => ($isRelationship
+                SchemaAction::Overwrite => !$orphaned && ($isRelationship
                     ? $this->updateRelationshipInPlace($database, $table, $resource, $type, $updatedAt, $existingAttr, $dbForDatabases)
                     : $this->updateAttributeInPlace($database, $table, $resource, $type, $updatedAt, $existingAttr, $dbForDatabases))
                     ? true
@@ -1112,7 +1113,7 @@ class Appwrite extends Destination
             }
 
             if ($action === SchemaAction::Overwrite) {
-                $this->dropAttributeForRecreate($database, $table, $resource, $dbForDatabases, $existingAttr);
+                $this->dropAttributeForRecreate($database, $table, $resource, $dbForDatabases, $existingAttr, !$orphaned);
             }
         }
 
@@ -1466,13 +1467,17 @@ class Appwrite extends Destination
         // ceiling throws "Index limit reached" or "Invalid index" even though the net change is zero).
         if ($this->onDuplicate !== OnDuplicate::Fail) {
             $existingIdx = $this->dbForProject->getDocument(self::META_INDEXES, $indexMetaId);
-            $action = $this->onDuplicate->resolveSchemaAction(
+            $collectionId = $this->tableCollectionId($database, $table);
+            // Meta document without a schema index (run killed between the two writes, or the stuck-index bug
+            // fixed in appwrite/appwrite#15471): rebuild it whatever the timestamps or spec say.
+            $orphaned = !$existingIdx->isEmpty() && !$this->schemaHoldsIndex($dbForDatabases, $collectionId, $resource->getKey());
+            $action = $orphaned ? SchemaAction::Overwrite : $this->onDuplicate->resolveSchemaAction(
                 !$existingIdx->isEmpty(),
                 $updatedAt,
                 $existingIdx->getUpdatedAt(),
             );
             // Spec match → skip work. Create excluded; nothing on dest to match against.
-            if ($action !== SchemaAction::Create && $this->indexSpecMatches($existingIdx, $resource)) {
+            if (!$orphaned && $action !== SchemaAction::Create && $this->indexSpecMatches($existingIdx, $resource)) {
                 $action = SchemaAction::Skip;
             }
 
@@ -1490,7 +1495,9 @@ class Appwrite extends Destination
             }
 
             if ($action === SchemaAction::Overwrite) {
-                $this->dropFromSchema(fn () => $dbForDatabases->deleteIndex($this->tableCollectionId($database, $table), $resource->getKey()));
+                if (!$orphaned) {
+                    $dbForDatabases->deleteIndex($collectionId, $resource->getKey());
+                }
                 $this->dbForProject->deleteDocument(self::META_INDEXES, $indexMetaId);
                 $this->dbForProject->purgeCachedDocument($this->databaseCollectionId($database), $table->getId());
                 // Reload $table — in-memory copy still holds the dropped index, so IndexValidator below would over-count.
@@ -1748,15 +1755,16 @@ class Appwrite extends Destination
         Column|Attribute $resource,
         UtopiaDatabase $dbForDatabases,
         UtopiaDocument $existingAttr,
+        bool $inSchema,
     ): void {
         $collectionId = $this->tableCollectionId($database, $table);
         $attributeMetaId = $this->attributeIndexMetaId($database, $table, $resource->getKey());
         $isRelationship = $resource->getType() === Column::TYPE_RELATIONSHIP;
 
-        if ($isRelationship) {
-            $this->dropFromSchema(fn () => $dbForDatabases->deleteRelationship($collectionId, $resource->getKey()));
-        } else {
-            $this->dropFromSchema(fn () => $dbForDatabases->deleteAttribute($collectionId, $resource->getKey()));
+        if ($inSchema && $isRelationship) {
+            $dbForDatabases->deleteRelationship($collectionId, $resource->getKey());
+        } elseif ($inSchema) {
+            $dbForDatabases->deleteAttribute($collectionId, $resource->getKey());
         }
 
         $this->dbForProject->deleteDocument(self::META_ATTRIBUTES, $attributeMetaId);
@@ -2370,25 +2378,26 @@ class Appwrite extends Destination
         $this->dbForProject->purgeCachedDocument($this->databaseCollectionId($database), $table->getId());
     }
 
-    /**
-     * Drops a column or index from the destination schema, treating "the schema no longer
-     * holds it" as the end state the drop asked for rather than an error.
-     *
-     * The meta document and the schema are two non-atomic writes, so a run killed between
-     * them — or a destination carrying an orphan left by the stuck-index bug fixed in
-     * appwrite/appwrite#15471 — leaves a meta document whose schema counterpart is gone.
-     * `NotFound` there used to abort the import and strand the orphan for good, since the
-     * caller never reached the meta delete that would have let the recreate through. Unlike
-     * {@see self::bestEffort()} this narrows to `NotFound`, so a dependent index
-     * (`Dependency`) or a relationship dropped as a column still surfaces.
-     */
-    private function dropFromSchema(callable $drop): void
+    private function schemaHoldsAttribute(UtopiaDatabase $dbForDatabases, string $collectionId, string $key): bool
     {
-        try {
-            $drop();
-        } catch (NotFoundException) {
-            // Already absent from the schema; the caller still removes the meta document.
+        foreach ($dbForDatabases->findCollection($collectionId)?->attributes() ?? [] as $attribute) {
+            if ($attribute->key === $key) {
+                return true;
+            }
         }
+
+        return false;
+    }
+
+    private function schemaHoldsIndex(UtopiaDatabase $dbForDatabases, string $collectionId, string $key): bool
+    {
+        foreach ($dbForDatabases->findCollection($collectionId)?->indexes() ?? [] as $index) {
+            if ($index->key === $key) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** Swallows deletion errors — a prior run or relationship cascade may have already removed the target. */
