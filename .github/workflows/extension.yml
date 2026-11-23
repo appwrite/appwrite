@@ -100,10 +100,18 @@ jobs:
             status=$(curl --silent --output /dev/null --write-out '%{http_code}' \
               --retry 3 --retry-all-errors --max-time 30 \
               "https://hub.docker.com/v2/repositories/$IMAGE/tags/$build" || true)
-            if [ "$status" = "200" ]; then
-              echo "$IMAGE:$build is already published."
-              build=""
-            fi
+            # Only a confirmed miss publishes: any other answer could hide a tag that exists.
+            case "$status" in
+              404) ;;
+              200)
+                echo "$IMAGE:$build is already published."
+                build=""
+                ;;
+              *)
+                echo "::error::Docker Hub answered $status for $IMAGE:$build. Refusing to publish over a tag that may exist."
+                exit 1
+                ;;
+            esac
             tag=""
             if [ "$GITHUB_REF" = "refs/heads/main" ]; then
               tag=main
