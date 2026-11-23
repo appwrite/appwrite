@@ -38,7 +38,7 @@ fn base() -> &'static ClassEntry {
 }
 
 /// The class a static method was called on (`static`), or `Query` itself.
-fn called_scope() -> &'static ClassEntry {
+pub(super) fn called_scope() -> &'static ClassEntry {
     // SAFETY: inside a method call the engine's current frame is this method's, and for a
     // static call its `This` holds the called class (`zend_get_called_scope` reads the same).
     unsafe {

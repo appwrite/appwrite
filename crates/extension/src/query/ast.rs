@@ -992,6 +992,20 @@ fn written(serializer: ast::Serializer, value: &Zval, statement: bool) -> PhpRes
     sql.map(|sql| words(&sql)).map_err(raised)
 }
 
+/// The crate's statement as the package's nodes, for a builder's `toAst()`.
+pub(super) fn nodes(select: &ast::Select) -> PhpResult<Zval> {
+    let classes = classes()?;
+    Ok(Builder(&classes).select(select))
+}
+
+/// The package's `Statement\Select` as the crate's, for a builder's `fromAst()`.
+pub(super) fn read(statement: &Statement<'_>) -> PhpResult<ast::Select> {
+    let classes = classes()?;
+    let mut deepest = 0;
+    measure(&classes, statement.0, 0, &mut deepest).map_err(raised)?;
+    roomy(deepest, INLINE_LEVELS, || Reader(&classes).select(statement.0)).map_err(raised)
+}
+
 /// The methods every serializer class declares: a parent's method reads its own Rust type,
 /// so each class has its own.
 macro_rules! serializer_methods {

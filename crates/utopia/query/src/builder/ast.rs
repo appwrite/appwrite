@@ -90,23 +90,108 @@ fn column_string(reference: &Column) -> String {
     parts.join(".")
 }
 
-fn like_to_query(attribute: String, value: String, negated: bool) -> Query {
-    let starts = value.starts_with('%');
-    let ends = value.ends_with('%');
-    if starts && ends && value.len() > 2 {
-        let method = if negated { Method::NotContains } else { Method::Contains };
-        return Query::new(method, attribute, value::list(vec![value::string(&value[1..value.len() - 1])]), "");
+/// What `fromAst()` reads a statement with: the dialect's serializer, for what stays raw SQL, and
+/// the character its `LIKE` escapes with when a pattern names none.
+struct Reading {
+    serializer: Serializer,
+    /// PHP: `IMPLICIT_LIKE_ESCAPE`.
+    implicit: Option<u8>,
+}
+
+impl std::ops::Deref for Reading {
+    type Target = Serializer;
+
+    fn deref(&self) -> &Serializer {
+        &self.serializer
     }
-    if ends && !starts {
-        let prefix = &value[..value.len() - 1];
-        return if negated { Query::not_starts_with(attribute, prefix) } else { Query::starts_with(attribute, prefix) };
+}
+
+/// `value` with the escape character, `%` and `_` escaped, for a `LIKE` pattern.
+///
+/// PHP: `escapeLikeValue()`.
+fn escape_like(value: &str, escape: u8) -> String {
+    let escape = char::from(escape);
+    let mut out = String::with_capacity(value.len());
+    for character in value.chars() {
+        if character == escape || character == '%' || character == '_' {
+            out.push(escape);
+        }
+        out.push(character);
     }
-    if starts && !ends {
-        let suffix = &value[1..];
-        return if negated { Query::not_ends_with(attribute, suffix) } else { Query::ends_with(attribute, suffix) };
+    out
+}
+
+/// A `LIKE` pattern as whether it starts with a wildcard, the text it matches and whether it ends
+/// with one. `None` when it holds a wildcard anywhere else, ends in its escape, or matches nothing.
+///
+/// PHP: `decodeLikePattern()`.
+fn decode_like(pattern: &str, escape: Option<char>) -> Option<(bool, String, bool)> {
+    let characters: Vec<char> = pattern.chars().collect();
+    let leading = characters.first() == Some(&'%');
+    let mut value = String::new();
+    let mut trailing = false;
+    let mut index = usize::from(leading);
+    while index < characters.len() {
+        let character = characters[index];
+        if Some(character) == escape {
+            index += 1;
+            value.push(*characters.get(index)?);
+        } else if character == '%' && index == characters.len() - 1 {
+            trailing = true;
+        } else if character == '%' || character == '_' {
+            return None;
+        } else {
+            value.push(character);
+        }
+        index += 1;
     }
-    let keyword = if negated { " NOT LIKE ?" } else { " LIKE ?" };
-    Query::raw(format!("{attribute}{keyword}"), value::list(vec![value::string(value)]))
+    (!value.is_empty()).then_some((leading, value, trailing))
+}
+
+/// A `LIKE` as the query that writes it: `contains`, `startsWith` or `endsWith` when the pattern is
+/// one of theirs, raw SQL when it is not, and `None` when its escape is not a single character or
+/// is a wildcard.
+///
+/// PHP: `likeToQuery()`.
+fn like_to_query(
+    attribute: String,
+    pattern: &str,
+    escape: Option<&Expression>,
+    negated: bool,
+    reading: &Reading,
+) -> Result<Option<Query>> {
+    let character = match escape {
+        None => reading.implicit.map(char::from),
+        Some(Expression::Literal(Literal { value: Value::Str(text) })) if text.as_bytes().len() == 1 => {
+            Some(char::from(text.as_bytes()[0]))
+        }
+        Some(_) => return Ok(None),
+    };
+    if matches!(character, Some('%' | '_')) {
+        return Ok(None);
+    }
+    let Some((leading, value, trailing)) = decode_like(pattern, character).filter(|decoded| decoded.0 || decoded.2)
+    else {
+        let clause = match escape {
+            Some(escape) => format!(" ESCAPE {}", reading.serialize_expression(escape)?),
+            None => String::new(),
+        };
+        let keyword = if negated { " NOT LIKE ?" } else { " LIKE ?" };
+        return Ok(Some(Query::raw(
+            format!("{attribute}{keyword}{clause}"),
+            value::list(vec![value::string(pattern)]),
+        )));
+    };
+    Ok(Some(match (leading, trailing, negated) {
+        (true, true, _) => {
+            let method = if negated { Method::NotContains } else { Method::Contains };
+            Query::new(method, attribute, value::list(vec![value::string(value)]), "")
+        }
+        (_, true, true) => Query::not_starts_with(attribute, value),
+        (_, true, false) => Query::starts_with(attribute, value),
+        (_, false, true) => Query::not_ends_with(attribute, value),
+        (_, false, false) => Query::ends_with(attribute, value),
+    }))
 }
 
 impl<D: Dialect> Builder<D> {
@@ -134,7 +219,7 @@ impl<D: Dialect> Builder<D> {
         let order_by = self.ast_order_by();
         let limit = grouped.limit.map(|l| Literal { value: Value::Int(l) }.into());
         let offset = grouped.offset.map(|o| Literal { value: Value::Int(o) }.into());
-        let parser = Parser::new();
+        let parser = Parser::new().with_literal(D::LITERAL);
         let ctes = self
             .core
             .ctes
@@ -259,8 +344,8 @@ impl<D: Dialect> Builder<D> {
         let values = query.values();
         let at = |i: i64| values.get(&php_std::ArrayKey::Int(i)).filter(|v| !matches!(v, Value::Null));
         let compare = |op: &str| Binary::new(column(attribute), op, literal(at(0))).into();
-        let like =
-            |op: &str, text: String| Binary::new(column(attribute), op, Literal { value: value::string(text) }).into();
+        let like = |op: &str, text: String| self.like_to_ast(attribute, op, text).into();
+        let escaped = |value: Option<&Value>| escape_like(&scalar(value), D::LIKE_ESCAPE);
         Ok(match query.method() {
             Method::Equal => self.equal_to_ast(attribute, values, false),
             Method::NotEqual => self.equal_to_ast(attribute, values, true),
@@ -276,10 +361,10 @@ impl<D: Dialect> Builder<D> {
             Method::IsNotNull => Unary::new("IS NOT NULL", column(attribute), false).into(),
             Method::Contains | Method::ContainsAny => self.contains_to_ast(attribute, values, false),
             Method::NotContains => self.contains_to_ast(attribute, values, true),
-            Method::StartsWith => like("LIKE", format!("{}%", scalar(at(0)))),
-            Method::NotStartsWith => like("NOT LIKE", format!("{}%", scalar(at(0)))),
-            Method::EndsWith => like("LIKE", format!("%{}", scalar(at(0)))),
-            Method::NotEndsWith => like("NOT LIKE", format!("%{}", scalar(at(0)))),
+            Method::StartsWith => like("LIKE", format!("{}%", escaped(at(0)))),
+            Method::NotStartsWith => like("NOT LIKE", format!("{}%", escaped(at(0)))),
+            Method::EndsWith => like("LIKE", format!("%{}", escaped(at(0)))),
+            Method::NotEndsWith => like("NOT LIKE", format!("%{}", escaped(at(0)))),
             Method::And | Method::Or => {
                 let operator = if query.method() == Method::Or { "OR" } else { "AND" };
                 let parts = query.nested().map(|q| self.query_to_ast(q)).collect::<Result<Vec<_>>>()?;
@@ -317,10 +402,22 @@ impl<D: Dialect> Builder<D> {
         In::new(column(attribute), InList::Values(items), negated).into()
     }
 
+    /// `attribute LIKE pattern`, with the escape the dialect declares.
+    ///
+    /// PHP: `buildLikeAstExpression()`.
+    fn like_to_ast(&self, attribute: &str, operator: &str, pattern: String) -> Binary {
+        let like = Binary::new(column(attribute), operator, Literal { value: value::string(pattern) });
+        if D::DECLARES_LIKE_ESCAPE {
+            like.with_escape(Literal { value: value::string(char::from(D::LIKE_ESCAPE).to_string()) })
+        } else {
+            like
+        }
+    }
+
     fn contains_to_ast(&self, attribute: &str, values: &Array, negated: bool) -> Expression {
         let operator = if negated { "NOT LIKE" } else { "LIKE" };
         let pattern = |v: Option<&Value>| {
-            Binary::new(column(attribute), operator, Literal { value: value::string(format!("%{}%", scalar(v))) })
+            self.like_to_ast(attribute, operator, format!("%{}%", escape_like(&scalar(v), D::LIKE_ESCAPE)))
         };
         if values.len() == 1 {
             return pattern(Some(&first(values))).into();
@@ -366,7 +463,10 @@ impl<D: Dialect> Builder<D> {
     /// PHP: `Builder::fromAst()`.
     pub fn from_ast(select: &Select) -> Result<Self> {
         let mut builder = Self::new();
-        let serializer = serializer(D::ast_dialect());
+        let serializer = Reading {
+            serializer: serializer(D::ast_dialect()).with_literal(D::LITERAL),
+            implicit: D::IMPLICIT_LIKE_ESCAPE,
+        };
 
         if let Some(TableSource::Table(table)) = &select.from {
             builder.from(table.name.clone(), table.alias.clone().unwrap_or_default());
@@ -436,7 +536,7 @@ impl<D: Dialect> Builder<D> {
         Ok(builder)
     }
 
-    fn apply_ast_columns(&mut self, select: &Select, serializer: &Serializer) -> Result<()> {
+    fn apply_ast_columns(&mut self, select: &Select, serializer: &Reading) -> Result<()> {
         let mut columns = Vec::new();
         for expression in &select.columns {
             match expression {
@@ -517,7 +617,7 @@ impl<D: Dialect> Builder<D> {
         Ok(())
     }
 
-    fn apply_ast_joins(&mut self, select: &Select, serializer: &Serializer) -> Result<()> {
+    fn apply_ast_joins(&mut self, select: &Select, serializer: &Reading) -> Result<()> {
         for join in &select.joins {
             let TableSource::Table(table) = &join.table else { continue };
             let method = match join.kind.to_ascii_uppercase().as_str() {
@@ -549,7 +649,7 @@ fn func_attribute(func: &Func) -> String {
 }
 
 /// PHP: `Builder::astJoinConditionToQueries()`.
-fn join_condition_to_queries(condition: &Expression, serializer: &Serializer) -> Result<Vec<Query>> {
+fn join_condition_to_queries(condition: &Expression, serializer: &Reading) -> Result<Vec<Query>> {
     if let Expression::Binary(b) = condition {
         let operator = b.operator.to_ascii_uppercase();
         if operator == "AND" {
@@ -576,13 +676,13 @@ fn join_condition_to_queries(condition: &Expression, serializer: &Serializer) ->
     }
 }
 
-fn join_condition_to_query(condition: &Expression, serializer: &Serializer) -> Result<Query> {
+fn join_condition_to_query(condition: &Expression, serializer: &Reading) -> Result<Query> {
     let mut queries = join_condition_to_queries(condition, serializer)?;
     Ok(if queries.len() == 1 { queries.remove(0) } else { Query::and(queries) })
 }
 
 /// PHP: `Builder::astWhereToQueries()`.
-fn where_to_queries(expression: &Expression, serializer: &Serializer) -> Result<Vec<Query>> {
+fn where_to_queries(expression: &Expression, serializer: &Reading) -> Result<Vec<Query>> {
     if let Expression::Binary(b) = expression
         && b.operator.eq_ignore_ascii_case("AND")
     {
@@ -597,7 +697,7 @@ fn where_to_queries(expression: &Expression, serializer: &Serializer) -> Result<
 }
 
 /// PHP: `Builder::astExpressionToSingleQuery()`.
-fn expression_to_query(expression: &Expression, serializer: &Serializer) -> Result<Option<Query>> {
+fn expression_to_query(expression: &Expression, serializer: &Reading) -> Result<Option<Query>> {
     match expression {
         Expression::Binary(b) => {
             let operator = b.operator.to_ascii_uppercase();
@@ -607,12 +707,14 @@ fn expression_to_query(expression: &Expression, serializer: &Serializer) -> Resu
                 return Ok(Some(Query::and(queries)));
             }
             if operator == "OR" {
-                let parts: Vec<Query> =
-                    [expression_to_query(&b.left, serializer)?, expression_to_query(&b.right, serializer)?]
-                        .into_iter()
-                        .flatten()
-                        .collect();
-                return Ok((!parts.is_empty()).then(|| Query::or(parts)));
+                // A side with no query of its own is kept as raw SQL, not dropped.
+                let side = |side: &Expression| -> Result<Query> {
+                    match expression_to_query(side, serializer)? {
+                        Some(query) => Ok(query),
+                        None => Ok(Query::raw(serializer.serialize_expression(side)?, Array::default())),
+                    }
+                };
+                return Ok(Some(Query::or([side(&b.left)?, side(&b.right)?])));
             }
             if let (Expression::Column(left), Expression::Literal(Literal { value })) = (&*b.left, &*b.right) {
                 let attribute = column_string(left);
@@ -629,8 +731,12 @@ fn expression_to_query(expression: &Expression, serializer: &Serializer) -> Resu
                     ">=" => Some(Query::greater_than_equal(attribute, comparable(value))),
                     "<" => Some(Query::less_than(attribute, comparable(value))),
                     "<=" => Some(Query::less_than_equal(attribute, comparable(value))),
-                    "LIKE" => Some(like_to_query(attribute, value::to_php_string(value), false)),
-                    "NOT LIKE" => Some(like_to_query(attribute, value::to_php_string(value), true)),
+                    "LIKE" => {
+                        like_to_query(attribute, &value::to_php_string(value), b.escape.as_deref(), false, serializer)?
+                    }
+                    "NOT LIKE" => {
+                        like_to_query(attribute, &value::to_php_string(value), b.escape.as_deref(), true, serializer)?
+                    }
                     _ => None,
                 });
             }

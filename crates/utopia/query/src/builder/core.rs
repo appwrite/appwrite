@@ -220,6 +220,12 @@ pub trait Dialect: Clone + Default + Send + Sync + Sized + 'static {
     /// PHP: `DECLARES_LIKE_ESCAPE`.
     const DECLARES_LIKE_ESCAPE: bool = false;
 
+    /// The character `LIKE` escapes with when a pattern declares none; `None` when it escapes
+    /// nothing, as in SQLite.
+    ///
+    /// PHP: `IMPLICIT_LIKE_ESCAPE`.
+    const IMPLICIT_LIKE_ESCAPE: Option<u8> = Some(b'\\');
+
     /// How the dialect writes and reads a string literal.
     ///
     /// PHP: `$literal`.
