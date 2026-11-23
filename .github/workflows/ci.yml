@@ -1190,7 +1190,6 @@ jobs:
           --health-retries 15
     env:
       CARGO_TERM_COLOR: always
-      RUST_VERSION: '1.97'
       UTOPIA_CACHE_REDIS: redis://localhost:6379/6
     steps:
       - name: Checkout repository
@@ -1200,8 +1199,9 @@ jobs:
 
       - name: Install toolchain
         run: |
-          rustup toolchain install "${RUST_VERSION}" --profile minimal --component rustfmt,clippy
-          rustup default "${RUST_VERSION}"
+          # rust-toolchain.toml names the version.
+          rustup toolchain install
+          rustup component add rustfmt clippy
 
       - name: Format
         run: cargo fmt --all --check
@@ -1258,7 +1258,6 @@ jobs:
         mode: [dedicated, shared]
     env:
       COMPOSE_PROFILES: postgresql,rust
-      RUST_VERSION: '1.97'
       _APP_DB_ADAPTER: postgresql
       _APP_DB_HOST: postgresql
       _APP_DB_PORT: '5432'
@@ -1348,8 +1347,8 @@ jobs:
             echo "${HOME}/.cargo/bin" >> "${GITHUB_PATH}"
             export PATH="${HOME}/.cargo/bin:${PATH}"
           fi
-          rustup toolchain install "${RUST_VERSION}" --profile minimal
-          rustup default "${RUST_VERSION}"
+          # rust-toolchain.toml names the version.
+          rustup toolchain install
 
       - name: Install OpenSSL headers
         run: |
@@ -1447,7 +1446,6 @@ jobs:
           - shard: libraries
             libs: '!database !usage !php-std !agents !audit !messaging !vcs'
     env:
-      RUST_VERSION: '1.97'
       COMPOSE_PROFILES: postgresql
     steps:
       - name: Checkout repository
@@ -1471,8 +1469,8 @@ jobs:
             echo "${HOME}/.cargo/bin" >> "${GITHUB_PATH}"
             export PATH="${HOME}/.cargo/bin:${PATH}"
           fi
-          rustup toolchain install "${RUST_VERSION}" --profile minimal
-          rustup default "${RUST_VERSION}"
+          # rust-toolchain.toml names the version.
+          rustup toolchain install
 
       - name: Install OpenSSL headers
         run: |
