@@ -12,8 +12,7 @@
 //! A library that still has one registers its classes only when `_APP_EXTENSION_LIBRARIES` names
 //! its package (`if enabled("<package>")` in [`startup`] or [`get_module`]), so it can be canaried
 //! and switched back to PHP with a restart, not a deploy: `detector` (`Utopia\Detector\*`),
-//! `compression` (`Utopia\Compression\*`) and `query` (`Utopia\Query\*`, with `query-builders` for
-//! its builders).
+//! `compression` (`Utopia\Compression\*`) and `query` (`Utopia\Query\*`).
 //!
 //! The `utopia.libraries` php.ini setting, when set, replaces both: only the libraries it names
 //! register (see [`libraries`]).
@@ -129,11 +128,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
             .class::<query::schema::PostgreSqlSchema>()
             .class::<query::schema::SqliteSchema>()
             .class::<query::schema::ClickHouseSchema>()
-            .class::<query::schema::MongoDbSchema>();
-    }
-    // The builders are a batch of their own while they are being moved.
-    if enabled("query") && enabled("query-builders") {
-        module = module
+            .class::<query::schema::MongoDbSchema>()
             .interface::<query::builder::PhpInterfaceCompiler>()
             .class::<query::builder::Base>()
             .class::<query::builder::Sql>()
@@ -171,7 +166,7 @@ fn startup(_kind: i32, module: i32) -> i32 {
             auth::register()?;
         }
         if enabled("query") {
-            query::features::register(enabled("query-builders"))?;
+            query::features::register()?;
         }
         if enabled("detector") {
             detector::register()?;

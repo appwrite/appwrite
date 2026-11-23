@@ -1,5 +1,4 @@
-//! The query builders, registered only when `_APP_EXTENSION_LIBRARIES` also names
-//! `query-builders`: they are still being moved, and have only part of their methods.
+//! The query builders, registered with the rest of `query`.
 //!
 //! PHP code subclasses the builders and overrides their steps (`utopia-php/database` does),
 //! so every step is one of the crate's [`Step`]s. The crate asks [`Subclass`] before it runs

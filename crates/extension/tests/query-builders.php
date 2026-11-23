@@ -1,8 +1,7 @@
 <?php
 
-// Parity corpus for the query builders, which are still being moved: run it on the PHP classes and on the
-// extension's (_APP_EXTENSION_LIBRARIES=query,query-builders), and diff stdout. It only calls what the
-// extension has so far, and grows with it.
+// Parity corpus for the query builders: run it on the PHP classes and on the extension's
+// (_APP_EXTENSION_LIBRARIES=query), and diff stdout.
 
 require __DIR__ . '/../../../vendor/autoload.php';
 

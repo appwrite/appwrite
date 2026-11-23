@@ -269,20 +269,13 @@ fn names(methods: Methods) -> Vec<String> {
     methods().into_iter().map(|method| name(method).unwrap_or_default()).collect()
 }
 
-/// Whether the builders are on.
-static BUILDERS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-
-/// Registers the interfaces whose methods are all native, when the builders are on, and has [`finish`]
-/// run. Runs in MINIT, before the classes.
-pub fn register(builders: bool) -> ext_php_rs::error::Result<()> {
-    BUILDERS.store(builders, Ordering::Release);
+/// Registers the interfaces whose methods are all native, and has [`finish`] run. Runs in MINIT,
+/// before the classes.
+pub fn register() -> ext_php_rs::error::Result<()> {
     // SAFETY: MINIT runs on one thread, and the hook is PHP's to be chained like this.
     unsafe {
         PREVIOUS.store(zend_post_startup_cb.map_or(0, |previous| previous as usize), Ordering::Release);
         zend_post_startup_cb = Some(finish);
-    }
-    if !builders {
-        return Ok(());
     }
     let native: Vec<Vec<String>> = DIALECTS.iter().map(|dialect| names(dialect.methods)).collect();
     for (name, dialects, methods) in FEATURES {
@@ -461,9 +454,6 @@ unsafe extern "C" fn finish() -> i32 {
         }
     }
     super::value::prepare();
-    if !BUILDERS.load(Ordering::Acquire) {
-        return 0;
-    }
     let native: Vec<Vec<String>> = DIALECTS.iter().map(|dialect| names(dialect.methods)).collect();
     for (dialect, methods) in DIALECTS.iter().zip(&native) {
         fluent((dialect.class)(), methods);

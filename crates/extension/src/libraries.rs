@@ -30,7 +30,7 @@ const SETTING: &CStr = c"utopia.libraries";
 
 /// Every library, by the name of its package (`packages/<name>`), which is also the name
 /// `_APP_EXTENSION_LIBRARIES` takes.
-const NAMES: [&str; 12] = [
+const NAMES: [&str; 11] = [
     "dsn",
     "domains",
     "emails",
@@ -42,7 +42,6 @@ const NAMES: [&str; 12] = [
     "detector",
     "compression",
     "query",
-    "query-builders",
 ];
 
 /// Names the validators were switched on by, one group at a time, before they all became one
@@ -55,9 +54,8 @@ const ALIASES: [(&str, &str); 4] = [
 ];
 
 /// A library whose classes need another library's, and that library: `Email::__construct` builds
-/// a `Utopia\Domains\Domain`, so naming `emails` registers `domains` too. The query builders take
-/// and return the classes of `query`.
-const NEEDS: [(&str, &str); 2] = [("emails", "domains"), ("query-builders", "query")];
+/// a `Utopia\Domains\Domain`, so naming `emails` registers `domains` too.
+const NEEDS: [(&str, &str); 1] = [("emails", "domains")];
 
 /// The setting, so `ini_get()` and `php --ri utopia` show it. System-wide: it is read once, when
 /// PHP loads the module, so a later change could not take effect.

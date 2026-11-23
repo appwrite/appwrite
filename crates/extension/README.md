@@ -77,16 +77,15 @@ utopia.libraries = "validators,dsn,domains"
 | `emails`      | `Utopia\Emails\Email`, and `domains` with it                                     |
 | `image`       | `Utopia\Image\Canvas`, `Utopia\Image\Font`                                       |
 | `locale`      | `Utopia\Locale\Locale`                                                           |
-| `query`       | `Utopia\Query\*` but the builders                                                |
-| `query-builders` | `Utopia\Query\Builder\*`, and `query` with it                                |
+| `query`       | `Utopia\Query\*`                                                                 |
 | `user-agent`  | `Utopia\UserAgent\UserAgent`                                                     |
 | `validators`  | `Utopia\Validator\Validator` and every validator of `packages/validators`        |
 
 - **Unset or empty** (the default, and what Appwrite and Cloud use): every library above but
-  `detector`, `compression`, `query` and `query-builders` registers, and
-  `_APP_EXTENSION_LIBRARIES` switches those four on (see
+  `detector`, `compression` and `query` registers, and `_APP_EXTENSION_LIBRARIES` switches those
+  three on (see
   [Switching a class on](#switching-a-class-on)).
-- **Set:** only the libraries it names register, the switchable four included, and
+- **Set:** only the libraries it names register, the switchable three included, and
   `_APP_EXTENSION_LIBRARIES` is ignored. Names are the package names, the same ones
   `_APP_EXTENSION_LIBRARIES` takes, comma separated; spaces around them are ignored. The old
   `validators-scalar`, `validators-text`, `validators-network` and `validators-compose` each mean
@@ -111,9 +110,8 @@ of `packages/validators` and the password hashes of `packages/auth` are register
 `packages/user-agent/stubs/`, `packages/domains/stubs/`, `packages/emails/stubs/`,
 `packages/validators/stubs/` and `packages/auth/stubs/` for PHPStan, which runs without the
 extension. A library that still has a PHP implementation is registered only when
-`_APP_EXTENSION_LIBRARIES` names its package; today those are `detector`, `compression`, `query`
-and `query-builders`, which is on only with `query`. Otherwise Composer loads the package's PHP
-class as before:
+`_APP_EXTENSION_LIBRARIES` names its package; today those are `detector`, `compression` and
+`query`. Otherwise Composer loads the package's PHP class as before:
 
 ```sh
 _APP_EXTENSION_LIBRARIES=<package>,<package>   # those packages' classes from the extension
@@ -650,7 +648,7 @@ the schema.
 
 `Builder\MySQL`, `MariaDB`, `PostgreSQL`, `SQLite`, `ClickHouse` and `MongoDB`, with the abstract
 `Builder` and `Builder\SQL` above them, the `Compiler` interface and the 51 `Feature\*` interfaces.
-They are a batch of their own while they settle: `_APP_EXTENSION_LIBRARIES=query,query-builders`.
+They register with the rest of `query`.
 
 Every public and protected method PHP's builders have is native, with PHP's signature. The corpus
 compares each public one, and the interfaces each builder implements.

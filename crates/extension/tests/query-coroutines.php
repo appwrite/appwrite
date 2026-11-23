@@ -4,7 +4,7 @@
 // beforeBuild() callback and an afterBuild() callback each sleep, so another coroutine builds
 // before this one resumes. Each statement must be the one its own builder makes alone. run.sh
 // diffs the output of the PHP classes against the extension's
-// (_APP_EXTENSION_LIBRARIES=query,query-builders).
+// (_APP_EXTENSION_LIBRARIES=query).
 
 require __DIR__ . '/../../../vendor/autoload.php';
 
