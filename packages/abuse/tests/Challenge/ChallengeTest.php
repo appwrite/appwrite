@@ -42,7 +42,7 @@ final class ChallengeTest extends TestCase
         $riddle = $this->riddle();
         $riddle->withParams(self::CLIENT);
 
-        // The original stayed unbound, so its prompts carry no binding.
+        // The original stayed unbound, so its tokens carry no binding.
         $this->assertSame(Status::Valid, $riddle->verify($riddle->issue(), 'echo')->status);
     }
 

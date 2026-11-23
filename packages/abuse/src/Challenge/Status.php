@@ -20,7 +20,7 @@ enum Status: string
     /** The answer is wrong. */
     case Rejected = 'rejected';
 
-    /** The prompt was already answered: the submission is a replay. */
+    /** The token was already answered: the submission is a replay. */
     case Replay = 'replay';
 
     /** A store the challenge needs could not be reached, and the challenge requires it. */
