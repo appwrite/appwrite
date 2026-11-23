@@ -440,12 +440,12 @@ export function canShowOrgOAuthAppsSettings(
   return isCloudProfile() && canAccessOrgSettingsOAuthOrApiKeys(access)
 }
 
-/** Organization settings → Installed apps (marketplace apps installed on the org). */
+/** Organization settings → Installed apps (any member can read; owners manage). */
 export function canShowOrgInstalledAppsSettings(
-  access: ConsoleAccess,
+  _access: ConsoleAccess,
   _features: AccessCheckFeatures,
 ): boolean {
-  return isCloudProfile() && canAccessOrgSettingsOAuthOrApiKeys(access)
+  return isCloudProfile()
 }
 
 /** Organization settings → Org API keys (console profile + owners/developers). */
