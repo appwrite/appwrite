@@ -378,6 +378,15 @@ fn infer_type(value: Option<&Value>) -> &'static str {
 
 /// Rewrites the `?` placeholders (not `??`, `?|`, `?&`) to `{paramN:Type}`
 /// and attaches the named bindings, when named bindings are on.
+impl ClickHouse {
+    /// `statement` with its `?` placeholders named and typed, when named bindings are on.
+    ///
+    /// PHP: `applyNamedTypedBindings()`.
+    pub fn apply_named_typed_bindings(&self, statement: Statement) -> Statement {
+        apply_named_typed_bindings(self, statement)
+    }
+}
+
 fn apply_named_typed_bindings(b: &ClickHouse, statement: Statement) -> Statement {
     if !b.dialect.named_bindings || statement.bindings.is_empty() {
         return statement;

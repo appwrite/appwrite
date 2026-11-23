@@ -1048,3 +1048,56 @@ foreach ($dialects as $dialect) {
         }), $lists));
     }
 }
+
+// The rest of the protected helpers, called on their own. A build does not call a subclass's override of
+// these, so none is overridden here.
+$case = (new Builder\Case\Expression())->when('a', Builder\Case\Operator::GreaterThan, 5, 'big')->whenNull('a', 'none')->else('small')->alias('size');
+$called = [
+    'validateTable' => [[]], 'validateRows' => [['insert'], ['upsert']], 'validateAndGetColumns' => [[]],
+    'addBindings' => [[[1, 'a', null, 1.5]], [[]]],
+    'compileCase' => [[$case], [new Builder\Case\Expression()]],
+    'compileInsertBody' => [[]], 'compileAssignments' => [[]], 'compileVectorOrderExpression' => [[]],
+    'resolveJoinFilterPlacement' => [[Utopia\Query\Hook\Join\Placement::On, false], [Utopia\Query\Hook\Join\Placement::Where, false], [Utopia\Query\Hook\Join\Placement::On, true], [Utopia\Query\Hook\Join\Placement::Where, true]],
+    'createTokenizer' => [[]], 'createAstSerializer' => [[]],
+    'buildAfterJoinsClause' => [[new Builder\ParsedQuery()]],
+    'appendReturning' => [[new Builder\Statement('INSERT INTO t (a) VALUES (?)', [1])]],
+    'applyNamedTypedBindings' => [[new Builder\Statement('SELECT * FROM t WHERE a = ?', [1])]],
+    'resetReturning' => [[]], 'resetGroupByModifier' => [[]],
+    'getSpatialTypeFromWkt' => [['POINT(1 2)'], [' linestring(0 0, 1 1)'], ['POLYGON((0 0, 1 0, 1 1, 0 0))'], ['circle'], ['']],
+];
+foreach ($dialects as $dialect) {
+    eval("class Calls{$dialect} extends Utopia\\Query\\Builder\\{$dialect} { public function call(string \$name, array \$arguments): mixed { \$out = \$this->{\$name}(...\$arguments); return is_object(\$out) && ! \$out instanceof Utopia\\Query\\Builder\\Statement && ! \$out instanceof UnitEnum && ! \$out instanceof Utopia\\Query\\Builder\\Condition ? \$out::class : (\$out instanceof Utopia\\Query\\Builder\\Condition ? [\$out->expression, \$out->bindings] : \$out); } public function parts(string \$name): array { \$parts = ['SELECT 1']; \$this->{\$name}(\$parts); return \$parts; } }");
+    $class = 'Calls' . $dialect;
+    $starts = [
+        'empty' => fn () => new $class(),
+        'set' => fn () => (new $class())->from('t', 't')->into('t')->set(['id' => 1, 'a' => 'x'])->filter([Query::equal('c', [1]), Query::greaterThan('d', 2)])->sortAsc('a')->limit(5)->offset(2),
+    ];
+    foreach ($called as $helper => $lists) {
+        if (! method_exists($class, $helper)) {
+            continue;
+        }
+        $out = [];
+        foreach ($starts as $name => $start) {
+            // PHP reads the first row without looking, and warns when there is none.
+            if ($helper === 'validateAndGetColumns' && $name === 'empty') {
+                continue;
+            }
+            foreach ($lists as $arguments) {
+                $out[] = outcome(function () use ($start, $helper, $arguments) {
+                    $builder = $start();
+
+                    return [$builder->call($helper, $arguments), $builder->getBindings()];
+                });
+            }
+        }
+        emit($dialect . ' calls ' . $helper, $out);
+    }
+    foreach (['compileWhereClauses', 'compileOrderAndLimit'] as $helper) {
+        emit($dialect . ' calls ' . $helper, array_map(fn ($start) => outcome(function () use ($start, $helper) {
+            $builder = $start();
+
+            return [$builder->parts($helper), $builder->getBindings()];
+        }), array_values($starts)));
+    }
+    emit($dialect . ' clone method', outcome(fn () => (new ReflectionMethod($class, '__clone'))->isPublic()));
+}

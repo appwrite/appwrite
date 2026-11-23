@@ -79,6 +79,8 @@ impl<'a> FromZval<'a> for Slot {
 }
 
 const FORMATTED: &str = "Utopia\\Query\\Builder\\ClickHouse\\FormattedInsertStatement";
+const PLACEMENT: &str = "Utopia\\Query\\Hook\\Join\\Placement";
+const PARSED: &str = "Utopia\\Query\\Builder\\ParsedQuery";
 const CASE: &str = "Utopia\\Query\\Builder\\Case\\Expression";
 const BINDING: &str = "Utopia\\Query\\Builder\\Binding";
 const CONDITION: &str = "Utopia\\Query\\Builder\\Condition";
@@ -149,13 +151,43 @@ pub trait Text: Dialect {
     fn formatted(_builder: &mut Builder<Self>) -> Result<Option<FormattedInsertStatement>, Error> {
         Ok(None)
     }
+
+    /// The class `createTokenizer()` makes: the dialect's own, or the standard one.
+    const TOKENIZER: &'static str = "Utopia\\Query\\Tokenizer\\Tokenizer";
+
+    /// The class `createAstSerializer()` makes.
+    const SERIALIZER: &'static str = "Utopia\\Query\\AST\\Serializer";
+
+    /// ClickHouse's `applyNamedTypedBindings()`; the statement as it is elsewhere.
+    fn named(_builder: &Builder<Self>, statement: Statement) -> Statement {
+        statement
+    }
 }
 
-impl Text for MySqlDialect {}
-impl Text for MariaDbDialect {}
-impl Text for PostgreSqlDialect {}
-impl Text for SqliteDialect {}
+impl Text for MySqlDialect {
+    const TOKENIZER: &'static str = "Utopia\\Query\\Tokenizer\\MySQL";
+    const SERIALIZER: &'static str = "Utopia\\Query\\AST\\Serializer\\MySQL";
+}
+impl Text for MariaDbDialect {
+    const TOKENIZER: &'static str = "Utopia\\Query\\Tokenizer\\MariaDB";
+    const SERIALIZER: &'static str = "Utopia\\Query\\AST\\Serializer\\MariaDB";
+}
+impl Text for PostgreSqlDialect {
+    const TOKENIZER: &'static str = "Utopia\\Query\\Tokenizer\\PostgreSQL";
+    const SERIALIZER: &'static str = "Utopia\\Query\\AST\\Serializer\\PostgreSQL";
+}
+impl Text for SqliteDialect {
+    const TOKENIZER: &'static str = "Utopia\\Query\\Tokenizer\\SQLite";
+    const SERIALIZER: &'static str = "Utopia\\Query\\AST\\Serializer\\SQLite";
+}
 impl Text for ClickHouseDialect {
+    const TOKENIZER: &'static str = "Utopia\\Query\\Tokenizer\\ClickHouse";
+    const SERIALIZER: &'static str = "Utopia\\Query\\AST\\Serializer\\ClickHouse";
+
+    fn named(builder: &Builder<Self>, statement: Statement) -> Statement {
+        builder.apply_named_typed_bindings(statement)
+    }
+
     fn formatted(builder: &mut Builder<Self>) -> Result<Option<FormattedInsertStatement>, Error> {
         builder.formatted_insert()
     }
@@ -775,12 +807,39 @@ impl<D: Dialect + Text> State<D> {
             return Some(Ret::Bool(flag));
         }
         // `build()` returns a statement.
-        let Some(fields) = properties(&returned) else { return Some(Ret::None) };
+        Some(self.read(&returned).map_or(Ret::None, Ret::Statement))
+    }
+
+    /// The package's `Statement` as the crate's.
+    fn read(&self, statement: &Zval) -> Option<Statement> {
+        let fields = properties(statement)?;
         let query = property(fields, "query").and_then(Zval::zend_str).map(|query| self.text(query.as_bytes()));
         let bindings = property(fields, "bindings").and_then(Zval::array).into_iter().flat_map(ZendHashTable::values);
-        let mut statement = Statement::new(query.unwrap_or_default(), bindings.map(bound).collect());
-        statement.read_only = property(fields, "readOnly").and_then(Zval::bool).unwrap_or(false);
-        Some(Ret::Statement(statement))
+        let mut read = Statement::new(query.unwrap_or_default(), bindings.map(bound).collect());
+        read.read_only = property(fields, "readOnly").and_then(Zval::bool).unwrap_or(false);
+        Some(read)
+    }
+
+    /// Appends `clauses` to `$parts`, an array PHP passed by reference.
+    fn append(&self, parts: &mut Zval, clauses: &[String]) -> PhpResult<()> {
+        let inner = parts.reference_mut().map_or(std::ptr::null_mut(), std::ptr::from_mut);
+        // SAFETY: the reference PHP passed holds the array for the length of this call.
+        let parts = if inner.is_null() { parts } else { unsafe { &mut *inner } };
+        let mut held = parts.array().map(ZendHashTable::to_owned).unwrap_or_else(ZendHashTable::new);
+        for clause in clauses {
+            held.push(string(&bytes(D::JSON, clause))).map_err(PhpException::from)?;
+        }
+        parts.set_hashtable(held);
+        Ok(())
+    }
+
+    /// A list of strings as PHP's.
+    fn listed(&self, items: &[String]) -> PhpResult<Zval> {
+        if items.is_empty() {
+            return Ok(empty());
+        }
+        let items: Vec<Zval> = items.iter().map(|item| string(&bytes(D::JSON, item))).collect();
+        items.into_zval(false).map_err(PhpException::from)
     }
 }
 
@@ -1181,6 +1240,46 @@ impl<'a> FromZval<'a> for CaseArgument<'a> {
     fn from_zval(zval: &'a Zval) -> Option<Self> {
         let object = zval.object()?;
         class(CASE).is_ok_and(|class| object.instance_of(class)).then_some(CaseArgument(zval))
+    }
+}
+
+/// A `Statement` argument.
+pub struct StatementArgument<'a>(&'a Zval);
+
+impl<'a> FromZval<'a> for StatementArgument<'a> {
+    const TYPE: DataType = DataType::object(STATEMENT);
+
+    fn from_zval(zval: &'a Zval) -> Option<Self> {
+        let object = zval.object()?;
+        class(STATEMENT).is_ok_and(|class| object.instance_of(class)).then_some(StatementArgument(zval))
+    }
+}
+
+/// A `Hook\Join\Placement` argument: `On` or `Where`.
+pub struct PlacementArgument(hook::Placement);
+
+impl<'a> FromZval<'a> for PlacementArgument {
+    const TYPE: DataType = DataType::object(PLACEMENT);
+
+    fn from_zval(zval: &'a Zval) -> Option<Self> {
+        let object = zval.object().filter(|object| class(PLACEMENT).is_ok_and(|class| object.instance_of(class)))?;
+        match slots(object).first()?.str()? {
+            "On" => Some(PlacementArgument(hook::Placement::On)),
+            "Where" => Some(PlacementArgument(hook::Placement::Where)),
+            _ => None,
+        }
+    }
+}
+
+/// A `Builder\ParsedQuery` argument. The builder groups its own queries, as PHP's callers do.
+pub struct Grouped;
+
+impl<'a> FromZval<'a> for Grouped {
+    const TYPE: DataType = DataType::object(PARSED);
+
+    fn from_zval(zval: &'a Zval) -> Option<Self> {
+        let object = zval.object()?;
+        class(PARSED).is_ok_and(|class| object.instance_of(class)).then_some(Grouped)
     }
 }
 
@@ -4491,6 +4590,176 @@ macro_rules! builder_class {
             }
         }, $($rest,)*);
     };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, helpers, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            /// The helpers below run the builder's own. A build does not call a subclass's.
+            #[php(name = "validateTable", vis = "protected")]
+            pub fn validate_table(&self) -> PhpResult<()> {
+                self.0.with(|builder| builder.validate_table()).map_err(|error| raised(&error))
+            }
+
+            #[php(name = "validateRows", vis = "protected")]
+            pub fn validate_rows(&self, operation: PhpString<'_>) -> PhpResult<()> {
+                let operation = self.0.text(operation.bytes());
+                self.0.with(|builder| builder.validate_rows(&operation)).map_err(|error| raised(&error))
+            }
+
+            #[php(name = "validateAndGetColumns", vis = "protected")]
+            pub fn validate_and_get_columns(&self) -> PhpResult<Zval> {
+                let columns = self.0.with(|builder| builder.validate_and_get_columns()).map_err(|error| raised(&error))?;
+                let columns: Vec<Zval> = columns
+                    .iter()
+                    .map(|column| match column {
+                        Key::Int(index) => {
+                            let mut out = Zval::new();
+                            out.set_long(*index);
+                            out
+                        }
+                        Key::Str(name) => string(name.as_bytes()),
+                    })
+                    .collect();
+                if columns.is_empty() { Ok(empty()) } else { columns.into_zval(false).map_err(PhpException::from) }
+            }
+
+            #[php(name = "addBindings", vis = "protected")]
+            pub fn add_bindings(&self, bindings: Arr<'_>) -> PhpResult<()> {
+                let bindings: Vec<Value> = self.0.values(&bindings)?.values().cloned().collect();
+                self.0.with(|builder| builder.add_bindings(bindings));
+                Ok(())
+            }
+
+            #[php(name = "compileCase", vis = "protected")]
+            pub fn compile_case(&self, case: CaseArgument<'_>) -> PhpResult<Bytes> {
+                let case = self.0.case(&case)?;
+                let sql = self.0.with(|builder| builder.compile_case(&case)).map_err(|error| raised(&error))?;
+                Ok(Bytes(self.0.written(&sql)?.into_owned()))
+            }
+
+            #[php(name = "compileInsertBody", vis = "protected")]
+            pub fn compile_insert_body(&self) -> PhpResult<Zval> {
+                let (sql, bindings) = self.0.with(Builder::compile_insert_body).map_err(|error| raised(&error))?;
+                let bindings = bindings.iter().map(|binding| zval(<$dialect as Text>::JSON, binding)).collect::<PhpResult<Vec<_>>>()?;
+                let bindings = if bindings.is_empty() { empty() } else { bindings.into_zval(false).map_err(PhpException::from)? };
+                vec![string(&self.0.written(&sql)?), bindings].into_zval(false).map_err(PhpException::from)
+            }
+
+            #[php(name = "compileAssignments", vis = "protected")]
+            pub fn compile_assignments(&self) -> PhpResult<Zval> {
+                let assignments = self.0.with(Builder::compile_assignments).map_err(|error| raised(&error))?;
+                self.0.listed(&assignments)
+            }
+
+            /// `$parts` is taken by reference, and the clauses are appended to it.
+            #[php(name = "compileWhereClauses", vis = "protected", optional = grouped)]
+            pub fn compile_where_clauses(&self, parts: &mut Zval, grouped: Option<Grouped>) -> PhpResult<()> {
+                let _ = grouped;
+                let mut clauses = Vec::new();
+                self.0.with(|builder| builder.compile_where_clauses(&mut clauses, None)).map_err(|error| raised(&error))?;
+                self.0.append(parts, &clauses)
+            }
+
+            #[php(name = "compileOrderAndLimit", vis = "protected", optional = grouped)]
+            pub fn compile_order_and_limit(&self, parts: &mut Zval, grouped: Option<Grouped>) -> PhpResult<()> {
+                let _ = grouped;
+                let mut clauses = Vec::new();
+                self.0.with(|builder| builder.compile_order_and_limit(&mut clauses, None)).map_err(|error| raised(&error))?;
+                self.0.append(parts, &clauses)
+            }
+
+            #[php(name = "buildAfterJoinsClause", vis = "protected")]
+            pub fn build_after_joins_clause(&self, grouped: Grouped) -> PhpResult<Bytes> {
+                let _ = grouped;
+                let grouped = utopia_query::ParsedQuery::default();
+                let sql = self.0.with(|builder| <$dialect as Dialect>::build_after_joins_clause(builder, &grouped));
+                Ok(Bytes(self.0.written(&sql.map_err(|error| raised(&error))?)?.into_owned()))
+            }
+
+            #[php(name = "compileVectorOrderExpression", vis = "protected")]
+            pub fn compile_vector_order_expression(&self) -> PhpResult<Zval> {
+                let found = self.0.with(<$dialect as Dialect>::compile_vector_order_expression);
+                let Some(found) = found.map_err(|error| raised(&error))? else { return Ok(null()) };
+                let json = <$dialect as Text>::JSON;
+                let bindings = found.bindings.iter().map(|binding| zval(json, binding)).collect::<PhpResult<Vec<_>>>()?;
+                let bindings = if bindings.is_empty() { empty() } else { bindings.into_zval(false).map_err(PhpException::from)? };
+                let mut arguments = [string(&bytes(json, &found.expression)), bindings];
+                construct(class(CONDITION)?, &mut arguments)?.into_zval(false).map_err(PhpException::from)
+            }
+
+            #[php(name = "resolveJoinFilterPlacement", vis = "protected")]
+            pub fn resolve_join_filter_placement(&self, requested: PlacementArgument, isCrossJoin: Bool) -> PhpResult<Zval> {
+                let resolved = self.0.with(|builder| {
+                    <$dialect as Dialect>::resolve_join_filter_placement(builder, requested.0, isCrossJoin.0)
+                });
+                enum_case(PLACEMENT, if resolved == hook::Placement::On { "On" } else { "Where" })
+            }
+
+            #[php(name = "createTokenizer", vis = "protected")]
+            pub fn create_tokenizer(&self) -> PhpResult<Zval> {
+                construct(class(<$dialect as Text>::TOKENIZER)?, &mut [])?.into_zval(false).map_err(PhpException::from)
+            }
+
+            #[php(name = "createAstSerializer", vis = "protected")]
+            pub fn create_ast_serializer(&self) -> PhpResult<Zval> {
+                construct(class(<$dialect as Text>::SERIALIZER)?, &mut [])?.into_zval(false).map_err(PhpException::from)
+            }
+
+            /// `clone` copies the builder in its handler, so there is nothing left to do here.
+            pub fn __clone(&self) {}
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, helpers_returning, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(name = "appendReturning", vis = "protected")]
+            pub fn append_returning(&self, result: StatementArgument<'_>) -> PhpResult<Zval> {
+                let statement = self.0.read(result.0).unwrap_or_else(|| Statement::new(String::new(), Vec::new()));
+                let appended = self.0.with(|builder| builder.append_returning(statement));
+                self.0.statement_object(&appended.map_err(|error| raised(&error))?)
+            }
+
+            #[php(name = "resetReturning", vis = "protected")]
+            pub fn reset_returning(&self) {
+                self.0.with(Builder::reset_returning);
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, helpers_group_by, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(name = "resetGroupByModifier", vis = "protected")]
+            pub fn reset_group_by_modifier(&self) {
+                self.0.with(Builder::reset_group_by_modifier);
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, helpers_wkt, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            /// The column type a WKT string is: `point`, `linestring` or `polygon`.
+            #[php(name = "getSpatialTypeFromWkt", vis = "protected")]
+            pub fn get_spatial_type_from_wkt(&self, wkt: PhpString<'_>) -> PhpResult<Bytes> {
+                let upper = String::from_utf8_lossy(wkt.bytes()).trim().to_ascii_uppercase();
+                for (prefix, kind) in [("POINT", "point"), ("LINESTRING", "linestring"), ("POLYGON", "polygon")] {
+                    if upper.starts_with(prefix) {
+                        return Ok(Bytes(kind.as_bytes().to_vec()));
+                    }
+                }
+                Ok(Bytes(b"unknown".to_vec()))
+            }
+        }, $($rest,)*);
+    };
+    (@add $metas:tt $class:ident, $dialect:ty, {$($methods:tt)*}, helpers_named, $($rest:ident,)*) => {
+        builder_class!(@add $metas $class, $dialect, {
+            $($methods)*
+            #[php(name = "applyNamedTypedBindings", vis = "protected")]
+            pub fn apply_named_typed_bindings(&self, stmt: StatementArgument<'_>) -> PhpResult<Zval> {
+                let statement = self.0.read(stmt.0).unwrap_or_else(|| Statement::new(String::new(), Vec::new()));
+                let named = self.0.with(|builder| <$dialect as Text>::named(builder, statement));
+                self.0.statement_object(&named)
+            }
+        }, $($rest,)*);
+    };
     // FEATURES
     (@add [$(#[$meta:meta])*] $class:ident, $dialect:ty, {$($methods:tt)*},) => {
         $(#[$meta])*
@@ -5633,7 +5902,7 @@ builder_class!(
     #[php(extends(Sql))]
     MySqlBuilder,
     MySqlDialect,
-    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, mysql_family, explain_format, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, hints, conditional_aggregates, json_aggregates, json, search, not_search, spatial_filters, transactions, max_execution_time, lateral_joins, group_concat, case_expressions, ast, steps_all, steps_sql, steps_aggregates, steps_mysql]
+    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, mysql_family, explain_format, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, hints, conditional_aggregates, json_aggregates, json, search, not_search, spatial_filters, transactions, max_execution_time, lateral_joins, group_concat, case_expressions, ast, steps_all, steps_sql, steps_aggregates, steps_mysql, helpers, helpers_group_by, helpers_wkt]
 );
 builder_class!(
     /// `Utopia\Query\Builder\MariaDB`.
@@ -5642,7 +5911,7 @@ builder_class!(
     #[php(extends(MySqlBuilder))]
     MariaDbBuilder,
     MariaDbDialect,
-    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, returning, mysql_family, explain_format, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, hints, conditional_aggregates, json_aggregates, json, search, not_search, sequences, spatial_filters, transactions, max_execution_time, lateral_joins, group_concat, case_expressions, ast, steps_all, steps_sql, steps_aggregates, steps_mysql]
+    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, returning, mysql_family, explain_format, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, hints, conditional_aggregates, json_aggregates, json, search, not_search, sequences, spatial_filters, transactions, max_execution_time, lateral_joins, group_concat, case_expressions, ast, steps_all, steps_sql, steps_aggregates, steps_mysql, helpers, helpers_returning, helpers_group_by, helpers_wkt]
 );
 builder_class!(
     /// `Utopia\Query\Builder\PostgreSQL`.
@@ -5651,7 +5920,7 @@ builder_class!(
     #[php(extends(Sql))]
     PostgreSqlBuilder,
     PostgreSqlDialect,
-    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, returning, postgres_from, explain_postgres, cross_joins, full_outer_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, cube, conditional_aggregates, json_aggregates, json, search, not_search, tablesample, sequences, spatial_filters, transactions, postgres_more, lateral_joins, merge_using, vector_search, group_concat, case_expressions, ast, steps_all, steps_sql, steps_aggregates, steps_postgres]
+    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, returning, postgres_from, explain_postgres, cross_joins, full_outer_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, cube, conditional_aggregates, json_aggregates, json, search, not_search, tablesample, sequences, spatial_filters, transactions, postgres_more, lateral_joins, merge_using, vector_search, group_concat, case_expressions, ast, steps_all, steps_sql, steps_aggregates, steps_postgres, helpers, helpers_returning, helpers_group_by, helpers_wkt]
 );
 builder_class!(
     /// `Utopia\Query\Builder\SQLite`.
@@ -5660,7 +5929,7 @@ builder_class!(
     #[php(extends(Sql))]
     SqliteBuilder,
     SqliteDialect,
-    [sql, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, explain_plain, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, conditional_aggregates, json_aggregates, json, transactions, group_concat, case_expressions, ast, steps_all, steps_sql, steps_aggregates]
+    [sql, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, explain_plain, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, conditional_aggregates, json_aggregates, json, transactions, group_concat, case_expressions, ast, steps_all, steps_sql, steps_aggregates, helpers]
 );
 builder_class!(
     /// `Utopia\Query\Builder\ClickHouse`.
@@ -5669,7 +5938,7 @@ builder_class!(
     #[php(extends(Base))]
     ClickHouseBuilder,
     ClickHouseDialect,
-    [literal, raw_sql, explain_plain, cross_joins, full_outer_joins, statistical_clickhouse, bitwise, raw_sql_more, rollup, cube, totals, hints, conditional_aggregates, json_aggregates, tablesample, clickhouse_more, clickhouse_constants, asof_joins, quantiles, group_concat, case_expressions, bulk_insert, ast, steps_all, steps_aggregates]
+    [literal, raw_sql, explain_plain, cross_joins, full_outer_joins, statistical_clickhouse, bitwise, raw_sql_more, rollup, cube, totals, hints, conditional_aggregates, json_aggregates, tablesample, clickhouse_more, clickhouse_constants, asof_joins, quantiles, group_concat, case_expressions, bulk_insert, ast, steps_all, steps_aggregates, helpers, helpers_group_by, helpers_named]
 );
 builder_class!(
     /// `Utopia\Query\Builder\MongoDB`.
@@ -5678,5 +5947,5 @@ builder_class!(
     #[php(extends(Base))]
     MongoDbBuilder,
     MongoDbDialect,
-    [upsert, insert_or_ignore, explain_plain, search, tablesample, mongo_updates, mongo_stages, mongo_facet, mongo_more, ast, steps_all]
+    [upsert, insert_or_ignore, explain_plain, search, tablesample, mongo_updates, mongo_stages, mongo_facet, mongo_more, ast, steps_all, helpers]
 );

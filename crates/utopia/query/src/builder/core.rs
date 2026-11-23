@@ -476,7 +476,10 @@ impl<D: Dialect> Builder<D> {
         self.core.bindings.push(Binding::new(value, column.map(str::to_owned)));
     }
 
-    pub(crate) fn add_bindings(&mut self, values: impl IntoIterator<Item = Value>) {
+    /// Binds each of `values`.
+    ///
+    /// PHP: `addBindings()`.
+    pub fn add_bindings(&mut self, values: impl IntoIterator<Item = Value>) {
         for value in values {
             self.core.bindings.push(Binding::new(value, None));
         }
@@ -522,7 +525,24 @@ impl<D: Dialect> Builder<D> {
         self.quote(&resolved)
     }
 
-    pub(crate) fn validate_table(&self) -> Result<()> {
+    /// Forgets `WITH ROLLUP` / `WITH CUBE`.
+    ///
+    /// PHP: `resetGroupByModifier()`.
+    pub fn reset_group_by_modifier(&mut self) {
+        self.core.group_by_modifier = None;
+    }
+
+    /// Forgets the `RETURNING` columns.
+    ///
+    /// PHP: `resetReturning()`.
+    pub fn reset_returning(&mut self) {
+        self.core.returning.clear();
+    }
+
+    /// Refuses a builder with no table.
+    ///
+    /// PHP: `validateTable()`.
+    pub fn validate_table(&self) -> Result<()> {
         if self.core.tableless {
             return Ok(());
         }
@@ -532,7 +552,10 @@ impl<D: Dialect> Builder<D> {
         Ok(())
     }
 
-    pub(crate) fn validate_rows(&self, operation: &str) -> Result<()> {
+    /// Refuses `operation` on a builder with no rows, or with an empty one.
+    ///
+    /// PHP: `validateRows()`.
+    pub fn validate_rows(&self, operation: &str) -> Result<()> {
         if self.core.rows.is_empty() {
             return Err(Error::Validation(format!("No rows to {operation}. Call set() before {operation}().")));
         }
@@ -545,8 +568,13 @@ impl<D: Dialect> Builder<D> {
     }
 
     /// The columns of the rows: the first row's keys; every row must have the same set.
-    pub(crate) fn validate_and_get_columns(&self) -> Result<Vec<ArrayKey>> {
-        let columns: Vec<ArrayKey> = self.core.rows[0].keys().map(|k| k.to_owned()).collect();
+    pub fn validate_and_get_columns(&self) -> Result<Vec<ArrayKey>> {
+        // PHP reads `$this->rows[0]` whatever is there, which every caller has checked. Now that
+        // a subclass can call this on its own, no rows is an error, not a panic.
+        let Some(first) = self.core.rows.first() else {
+            return Err(Error::Validation("No rows to take columns from.".into()));
+        };
+        let columns: Vec<ArrayKey> = first.keys().map(|k| k.to_owned()).collect();
         if columns.iter().any(|c| matches!(c, ArrayKey::Str(s) if s.is_empty())) {
             return Err(Error::Validation("Column names must be non-empty strings.".into()));
         }
@@ -1025,7 +1053,7 @@ impl<D: Dialect> Builder<D> {
     // ----- writes ---------------------------------------------------------
 
     /// `INSERT INTO table (columns) VALUES (...), ...` and its bindings.
-    pub(crate) fn compile_insert_body(&mut self) -> Result<(String, Vec<Value>)> {
+    pub fn compile_insert_body(&mut self) -> Result<(String, Vec<Value>)> {
         self.validate_table()?;
         self.validate_rows("insert")?;
         let columns = self.validate_and_get_columns()?;
@@ -1056,7 +1084,10 @@ impl<D: Dialect> Builder<D> {
         Ok((format!("INSERT INTO {table} ({}) VALUES {}", wrapped.join(", "), rows.join(", ")), bindings))
     }
 
-    pub(crate) fn compile_assignments(&mut self) -> Result<Vec<String>> {
+    /// The `column = ?` assignments of an `UPDATE`, binding their values.
+    ///
+    /// PHP: `compileAssignments()`.
+    pub fn compile_assignments(&mut self) -> Result<Vec<String>> {
         let mut assignments = Vec::new();
         if let Some(row) = self.core.rows.first().cloned() {
             for (column, value) in row.iter() {
@@ -1078,11 +1109,7 @@ impl<D: Dialect> Builder<D> {
     }
 
     /// The `WHERE` of updates and deletes.
-    pub(crate) fn compile_where_clauses(
-        &mut self,
-        parts: &mut Vec<String>,
-        grouped: Option<&ParsedQuery>,
-    ) -> Result<()> {
+    pub fn compile_where_clauses(&mut self, parts: &mut Vec<String>, grouped: Option<&ParsedQuery>) -> Result<()> {
         let owned;
         let grouped = match grouped {
             Some(g) => g,
@@ -1134,11 +1161,7 @@ impl<D: Dialect> Builder<D> {
     }
 
     /// The `ORDER BY` and `LIMIT` of updates and deletes.
-    pub(crate) fn compile_order_and_limit(
-        &mut self,
-        parts: &mut Vec<String>,
-        grouped: Option<&ParsedQuery>,
-    ) -> Result<()> {
+    pub fn compile_order_and_limit(&mut self, parts: &mut Vec<String>, grouped: Option<&ParsedQuery>) -> Result<()> {
         let owned;
         let grouped = match grouped {
             Some(g) => g,
@@ -1374,7 +1397,7 @@ impl<D: Dialect> Builder<D> {
     }
 
     /// Appends ` RETURNING columns` (PostgreSQL, MariaDB).
-    pub(crate) fn append_returning(&mut self, result: Statement) -> Result<Statement> {
+    pub fn append_returning(&mut self, result: Statement) -> Result<Statement> {
         if self.core.returning.is_empty() {
             return Ok(result);
         }
@@ -1393,7 +1416,10 @@ impl<D: Dialect> Builder<D> {
 
     // ----- compile ----------------------------------------------------------
 
-    pub(crate) fn compile_case(&mut self, case: &CaseExpression) -> Result<String> {
+    /// The SQL of a `CASE` expression, binding its values.
+    ///
+    /// PHP: `compileCase()`.
+    pub fn compile_case(&mut self, case: &CaseExpression) -> Result<String> {
         if case.whens().is_empty() {
             return Err(Error::Validation("CASE expression requires at least one WHEN clause.".into()));
         }

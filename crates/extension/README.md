@@ -451,16 +451,15 @@ the schema.
 `Builder` and `Builder\SQL` above them, the `Compiler` interface and the 51 `Feature\*` interfaces.
 They are a batch of their own while they settle: `_APP_EXTENSION_LIBRARIES=query,query-builders`.
 
-Every public method is native, with PHP's signature. The corpus compares every one, and the
-interfaces each builder implements. Of the protected methods, the ones a build calls are native and
-overridable. About forty protected helpers are not, and are undefined methods to a subclass that
-calls one: MySQL has 180 of PHP's 222 public and protected methods, MariaDB 183 of 227, PostgreSQL
-203 of 249, SQLite 157 of 196, ClickHouse 163 of 196 and MongoDB 123 of 151.
+Every public and protected method PHP's builders have is native, with PHP's signature. The corpus
+compares each public one, and the interfaces each builder implements.
 
 What a subclass can rely on:
 
-- A protected `compile*()` method it overrides is the one the build calls, 26 of them so far,
-  `build()` included. `parent::compileFilter()` runs the native one.
+- A protected method it overrides is the one the build calls, in the order PHP calls them, for 55
+  of them: `build()`, the `compile*()` methods, the clause hooks (`buildTableClause()` and the
+  rest), the `LIKE` and comparison helpers, and the spatial, JSON, conflict and aggregate
+  expressions. `parent::compileFilter()` runs the native one.
 - `bindings`, `pendingQueries` and `resolvedAttributeCache` are protected properties it reads,
   assigns and changes in place (`$this->pendingQueries[] = $query`), as the package's own traits do.
   PHP is handed a copy the builder holds, and the next native call reads it back.
@@ -477,6 +476,17 @@ so the two cannot disagree.
 
 Known differences:
 
+- Twenty protected helpers can be called but not overridden: a build runs the builder's own. They
+  are `validateTable()`, `validateRows()`, `validateAndGetColumns()`, `addBindings()`,
+  `compileCase()`, `compileInsertBody()`, `compileAssignments()`, `compileWhereClauses()`,
+  `compileOrderAndLimit()`, `buildAfterJoinsClause()`, `compileVectorOrderExpression()`,
+  `resolveJoinFilterPlacement()`, `createTokenizer()`, `createAstSerializer()`,
+  `appendReturning()`, `resetReturning()`, `resetGroupByModifier()`, `getSpatialTypeFromWkt()`,
+  `applyNamedTypedBindings()` and `enclose()`.
+- `compileWhereClauses()`, `compileOrderAndLimit()` and `buildAfterJoinsClause()` group the
+  builder's own queries, whatever `ParsedQuery` they are handed.
+- `validateAndGetColumns()` with no rows is a `ValidationException`. PHP warns and then fails on
+  the missing row.
 - The other protected properties of PHP's builders (`table`, `unions`, `lockMode` and about fifty
   more) do not exist, so a subclass that composes one of the package's `Builder\Trait\*` traits
   works only when the trait touches nothing but `pendingQueries` and `bindings`.
@@ -486,7 +496,7 @@ Known differences:
 - `resolvedAttributeCache` has no order.
 - The classes declare a constructor and no `__clone()`. PHP's declare the reverse.
 
-Three things check them. `tests/query-builders.php` is a corpus like the others: 15,092 cases, the
+Three things check them. `tests/query-builders.php` is a corpus like the others: 15,715 cases, the
 same on PHP and on the extension. The package's own 5,828 tests pass on the native builders, but for
 two that read the PHP class's source and private state and are skipped there. utopia-php/database
 10.2.3 subclasses four of the builders, overrides 23 of their methods and serializes queries for its
@@ -495,7 +505,7 @@ cache keys. Its 13,217 unit tests give the same result on the native builders as
 A typical read (five queries, three columns) builds in 3.7 µs against PHP's 11 µs, and in 3.9 µs
 against 10.6 µs through utopia-php/database's MySQL builder. Its PostgreSQL builder overrides
 `compileFilter()` in PHP, and takes 6.1 µs against 11.1 µs. Measured on an M-series Mac without the
-JIT, before the last sixty methods moved.
+JIT, before the last hundred methods moved.
 
 ## Utopia\Validator\Validator
 
