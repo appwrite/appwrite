@@ -120,27 +120,40 @@ if (!$recaptcha->verify($_POST['g-recaptcha-response'], $_SERVER['REMOTE_ADDR'])
 
 ### Proof-of-work challenge
 
-`ProofOfWork` makes a client spend CPU before it gets through: you issue a signed token with a random nonce, the client finds a solution whose SHA-256 has enough leading zero bits, and you verify it. Each token can be redeemed once, tracked by a nonce store. A solved challenge earns a `Clearance` token so later requests skip it. Both tokens are bound to the client's coarse IP prefix and User-Agent hash.
+`ProofOfWork` makes a client spend CPU before it gets through. You issue a signed puzzle; the client finds a solution whose SHA-256 has enough leading zero bits; you verify it. Each puzzle can be redeemed once, tracked by a `Nonce` store. A passed challenge earns a `Clearance`, so later requests skip it. You choose what both are bound to, for example the client's coarse IP prefix and User-Agent hash from `Identity`.
 
 ```php
 <?php
 
 use Utopia\Abuse\Challenges\Clearance;
 use Utopia\Abuse\Challenges\Identity;
+use Utopia\Abuse\Challenges\Nonce\Redis as RedisNonce;
 use Utopia\Abuse\Challenges\ProofOfWork;
-use Utopia\Abuse\Challenges\ProofOfWork\Nonce\RedisPool;
+use Utopia\Abuse\Challenges\Token;
 
-$ipPrefix = Identity::ipPrefix($ip);
-$uaHash = Identity::uaHash($userAgent);
+$identity = new Identity();
+$binding = [
+    'ip' => $identity->ipPrefix($ip),
+    'ua' => $identity->userAgentHash($userAgent),
+];
 
-$challenge = new ProofOfWork('secret', new RedisPool($redisPool));
-$issued = $challenge->issue('project', $ipPrefix, $uaHash, ProofOfWork::bitsForLevel(3));
-// Send $issued['token'], $issued['nonce'] and $issued['difficulty'] to the client.
+// The nonce key pattern is filled from the puzzle's claims.
+$challenge = new ProofOfWork(
+    new Token('secret', 'my-app-challenge', 'challenge', ttl: 120),
+    new RedisNonce('pow:{project}', $redis),
+);
 
-$result = $challenge->verify($token, $solution, $ipPrefix, $uaHash);
+$puzzle = $challenge->issue(18, $binding, ['project' => 'p1']);
+// Send $puzzle->token, $puzzle->nonce and $puzzle->difficulty to the client.
+
+$result = $challenge->verify($token, $solution, $binding);
 if ($result->isValid()) {
-    $clearance = new Clearance('secret')->issue('project', '', $ipPrefix, $uaHash, $result->difficulty);
+    $clearance = new Clearance(new Token('secret', 'my-app-clearance', 'clearance', ttl: 1800));
+    $cookie = $clearance->issue($binding, $result->difficulty);
 }
+
+// Later requests:
+$cleared = $clearance->verify($cookie, $binding, difficulty: 18, maxAge: 1800);
 ```
 
 ## System Requirements
