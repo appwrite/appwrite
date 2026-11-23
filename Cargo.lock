@@ -2591,6 +2591,7 @@ dependencies = [
  "ext-php-rs",
  "php-std",
  "utopia-auth",
+ "utopia-detector",
  "utopia-domains",
  "utopia-dsn",
  "utopia-emails",

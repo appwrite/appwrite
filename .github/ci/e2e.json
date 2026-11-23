@@ -29,6 +29,7 @@
       "packages/image/",
       "packages/validators/",
       "packages/auth/",
+      "packages/detector/",
       "Dockerfile",
       ".dockerignore"
     ],

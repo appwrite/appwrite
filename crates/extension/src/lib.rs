@@ -10,11 +10,12 @@
 //!
 //! A library that still has one registers its classes only when `_APP_EXTENSION_LIBRARIES` names
 //! its package (`if enabled("<package>")` in [`startup`] or [`get_module`]), so it can be canaried
-//! and switched back to PHP with a restart, not a deploy. None does today.
+//! and switched back to PHP with a restart, not a deploy: `detector` (`Utopia\Detector\*`).
 
 mod auth;
 mod canvas;
 mod classes;
+mod detector;
 mod domains;
 mod dsn;
 mod emails;
@@ -29,9 +30,7 @@ use ext_php_rs::prelude::*;
 /// comma separated.
 const LIBRARIES: &str = "_APP_EXTENSION_LIBRARIES";
 
-/// Whether `_APP_EXTENSION_LIBRARIES` names `package`. Unused while no library is switchable; the
-/// next one to be canaried calls it.
-#[allow(dead_code)]
+/// Whether `_APP_EXTENSION_LIBRARIES` names `package`.
 fn enabled(package: &str) -> bool {
     std::env::var(LIBRARIES).is_ok_and(|list| list.split(',').any(|name| name.trim() == package))
 }
@@ -51,7 +50,8 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
 }
 
 /// Registers the classes built by hand rather than with `#[php_class]`: `Locale`, `UserAgent`, the
-/// validators and the password hashes. Runs in MINIT, before the `#[php_class]` classes are registered.
+/// validators, the password hashes and, when switched on, the detector. Runs in MINIT, before the
+/// `#[php_class]` classes are registered.
 fn startup(_kind: i32, _module: i32) -> i32 {
     ext_php_rs::internal::startup_guard(|| {
         locale::register()?;
@@ -63,6 +63,9 @@ fn startup(_kind: i32, _module: i32) -> i32 {
         validators::network::register()?;
         validators::compose::register()?;
         auth::register()?;
+        if enabled("detector") {
+            detector::register()?;
+        }
         Ok(())
     })
 }
