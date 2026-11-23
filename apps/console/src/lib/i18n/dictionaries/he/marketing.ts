@@ -1753,8 +1753,6 @@ export const heMarketingDictionary: Record<string, string> = {
     'כל השירותים, מהדקה הראשונה',
   'A Zero project is a normal Appwrite project on a capped plan. What your agent builds is what you keep, with nothing to migrate.':
     'פרויקט Zero הוא פרויקט Appwrite רגיל על תוכנית מוגבלת. מה שהסוכן שלכם בונה הוא מה שנשאר לכם, בלי שום מיגרציה.',
-  'After you claim it':
-    'אחרי תביעת הבעלות',
   'Three ways in':
     'שלוש דרכים להתחיל',
   'Nothing to install beyond Node.js. Writes appwrite.config.json and signs the CLI in with the project key, so npx appwrite push deploys straight into it.':
@@ -1795,8 +1793,8 @@ export const heMarketingDictionary: Record<string, string> = {
     'כל אחד. עד שתתבעו בעלות על הפרויקט, הדומיינים של האתרים והפונקציות שלו מציגים באנר Powered by Appwrite Zero עם הזמן שנותר וכפתור לתביעת בעלות. דומייני תצוגה מקדימה של פריסות נפתחים רק לכם: פתחו פעם אחת בדפדפן את קישור הבעלים של התצוגה המקדימה, או שלחו מסוכן את ה-accessToken בכותרת X-Appwrite-Zero-Token.',
   'What is limited before I claim it?':
     'מה מוגבל לפני תביעת הבעלות?',
-  'One project, 500 function executions and 20 deployments an hour, and no messaging. You cannot create other projects or organizations from it. Everything else follows the Free plan.':
-    'פרויקט אחד, 500 הרצות של פונקציות ו-20 פריסות בשעה, ובלי הודעות. אי אפשר ליצור ממנו פרויקטים או ארגונים נוספים. כל השאר לפי תוכנית Free.',
+  'One project, and 500 function executions and 20 deployments an hour. You cannot create other projects or organizations from it. Everything else follows the Free plan.':
+    'פרויקט אחד, ו-500 הרצות של פונקציות ו-20 פריסות בשעה. אי אפשר ליצור ממנו פרויקטים או ארגונים נוספים. כל השאר לפי תוכנית Free.',
   'Can my coding agent use it?':
     'סוכן הקוד שלי יכול להשתמש בזה?',
   'Yes, that is what it is for. An agent can run npx appwrite zero, call POST /v1/zero, or start the Appwrite MCP server without credentials. It gets the endpoint, the key and the claim link, and hands the claim link back to you.':

@@ -189,7 +189,7 @@ export const zeroServiceItems: ZeroService[] = [
   {
     id: 'messaging',
     detail: 'Email, SMS and push',
-    limit: 'After you claim it',
+    limit: 'Included',
   },
 ]
 
@@ -348,7 +348,7 @@ export const zeroFaqItems: MarketingFaqItem[] = [
   {
     question: 'What is limited before I claim it?',
     answer:
-      'One project, 500 function executions and 20 deployments an hour, and no messaging. You cannot create other projects or organizations from it. Everything else follows the Free plan.',
+      'One project, and 500 function executions and 20 deployments an hour. You cannot create other projects or organizations from it. Everything else follows the Free plan.',
   },
   {
     question: 'Can my coding agent use it?',

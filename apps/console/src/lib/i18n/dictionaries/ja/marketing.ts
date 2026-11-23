@@ -1597,8 +1597,6 @@ export const jaMarketingDictionary: Record<string, string> = {
     '0 分目から、すべてのサービス',
   'A Zero project is a normal Appwrite project on a capped plan. What your agent builds is what you keep, with nothing to migrate.':
     'Zero プロジェクトは、上限付きプランで動く通常の Appwrite プロジェクトです。エージェントが作ったものがそのまま残り、移行は必要ありません。',
-  'After you claim it':
-    '引き継ぎ後',
   'Three ways in':
     '3 つの始め方',
   'Nothing to install beyond Node.js. Writes appwrite.config.json and signs the CLI in with the project key, so npx appwrite push deploys straight into it.':
@@ -1639,8 +1637,8 @@ export const jaMarketingDictionary: Record<string, string> = {
     '誰でも開けます。プロジェクトを引き継ぐまで、サイトと Functions のドメインには残り時間と引き継ぎボタンを表示する Powered by Appwrite Zero のバナーが付きます。デプロイのプレビュードメインはあなただけが開けます。プレビューのオーナーリンクをブラウザで一度開くか、エージェントから accessToken を X-Appwrite-Zero-Token ヘッダーで送信してください。',
   'What is limited before I claim it?':
     '引き継ぐ前は何が制限されますか？',
-  'One project, 500 function executions and 20 deployments an hour, and no messaging. You cannot create other projects or organizations from it. Everything else follows the Free plan.':
-    'プロジェクトは 1 つ、Functions の実行は 1 時間あたり 500 回、デプロイは 20 回までで、メッセージングは使えません。ここから別のプロジェクトや組織は作成できません。それ以外は Free プランと同じです。',
+  'One project, and 500 function executions and 20 deployments an hour. You cannot create other projects or organizations from it. Everything else follows the Free plan.':
+    'プロジェクトは 1 つ、Functions の実行は 1 時間あたり 500 回、デプロイは 20 回までです。ここから別のプロジェクトや組織は作成できません。それ以外は Free プランと同じです。',
   'Can my coding agent use it?':
     'コーディングエージェントでも使えますか？',
   'Yes, that is what it is for. An agent can run npx appwrite zero, call POST /v1/zero, or start the Appwrite MCP server without credentials. It gets the endpoint, the key and the claim link, and hands the claim link back to you.':

@@ -15,7 +15,6 @@ export function ZeroServicesGrid() {
     <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {zeroServiceItems.map((service, index) => {
         const product = PRODUCT_REGISTRY[service.id]
-        const afterClaim = service.id === 'messaging'
         return (
           <li
             key={service.id}
@@ -38,10 +37,7 @@ export function ZeroServicesGrid() {
                   <h3 className="text-[14px] font-semibold text-foreground">
                     {t(product.name)}
                   </h3>
-                  <Badge
-                    variant={afterClaim ? 'outline' : 'secondary'}
-                    className="text-[10px]"
-                  >
+                  <Badge variant="secondary" className="text-[10px]">
                     {t(service.limit)}
                   </Badge>
                 </div>
