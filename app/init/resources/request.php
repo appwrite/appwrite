@@ -442,13 +442,13 @@ return function (Container $context): void {
 
     $context->set(
         'originValidator',
-        fn (array $allowedHostnames, array $allowedSchemes) => new Origin($allowedHostnames, $allowedSchemes),
+        fn (array $allowedHostnames, array $allowedSchemes) => new Origin($allowedHostnames, $allowedSchemes, System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled'),
         ['allowedHostnames', 'allowedSchemes']
     );
 
     $context->set(
         'redirectValidator',
-        fn (array $allowedHostnames, array $allowedSchemes) => new Redirect($allowedHostnames, $allowedSchemes),
+        fn (array $allowedHostnames, array $allowedSchemes) => new Redirect($allowedHostnames, $allowedSchemes, System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled'),
         ['allowedHostnames', 'allowedSchemes']
     );
 
