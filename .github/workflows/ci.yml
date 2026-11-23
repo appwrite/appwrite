@@ -1215,10 +1215,6 @@ jobs:
         run: |
           git fetch --depth=1 origin "${BENCHMARK_BEFORE_SHA}"
           git worktree add --detach /tmp/appwrite-benchmark-before "${BENCHMARK_BEFORE_SHA}"
-          # The build job already pushed this commit's image (same target and
-          # build args) when its own CI ran. Rebuilding it here took 12-13 of
-          # this job's 20 minutes and timed the job out; build only when the
-          # base commit has no image (its CI skipped the server build).
           BEFORE_IMAGE="${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${BENCHMARK_BEFORE_SHA}"
           if docker pull "$BEFORE_IMAGE"; then
             docker tag "$BEFORE_IMAGE" "$IMAGE:before"
