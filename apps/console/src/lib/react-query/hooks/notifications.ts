@@ -13,8 +13,8 @@ import {
 } from '@/lib/notifications/beep-prefs'
 import { DEFAULT_STALE_TIME, isClientQueryEnabled } from './constants'
 import {
+  changeAccountPrefs,
   syncConsoleAccountAfterMutation,
-  updateAccountPrefs,
   type ConsoleAccountCache,
 } from './auth'
 
@@ -189,17 +189,13 @@ export function useBeepPrefs(account: ConsoleAccountCache | undefined) {
     mutationKey: BEEP_PREFS_MUTATION_KEY,
     scope: { id: 'beep-prefs' },
     mutationFn: async (change: (current: BeepPrefs) => BeepPrefs) => {
-      const latest = (await sdk.forConsole.account.getPrefs()) as Record<
-        string,
-        unknown
-      >
-      const updated = await updateAccountPrefs(
-        mergeBeepPrefs(latest, change(readBeepPrefs(latest))),
+      const updated = await changeAccountPrefs(
+        (latest) => mergeBeepPrefs(latest, change(readBeepPrefs(latest))),
         'beep-push-settings',
         { force: true },
       )
       if (!updated) {
-        // `updateAccountPrefs` skips writes while impersonating.
+        // `changeAccountPrefs` skips writes while impersonating.
         throw new Error('Push settings were not saved.')
       }
       return updated

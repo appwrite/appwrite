@@ -133,6 +133,16 @@ type Writes = {
   alerts: string[]
   /** Changes the server's prefs, as Beep does from a phone. */
   fromPhone: (beep: Record<string, unknown>) => void
+  /**
+   * Holds the next Beep settings save until released: the first write after
+   * a prefs read, as the save reads the latest prefs first. Background writes
+   * from the account cache don't read, so they pass.
+   */
+  holdNextBeepWrite: () => () => void
+  /** Whether a held write is waiting at the server. */
+  held: boolean
+  /** Prefs reads that arrived while a write was held. */
+  readsWhileHeld: number
 }
 
 /** How the server answers acknowledging an alert. */
@@ -148,13 +158,25 @@ async function mockApi(
     ...ACCOUNT.prefs,
     ...(beep ? { beep } : {}),
   }
+  let hold: Promise<void> | null = null
+  let readSinceArmed = false
   const writes: Writes = {
     prefs: [],
     reads: [],
     acknowledgements: [],
     alerts: [],
+    held: false,
+    readsWhileHeld: 0,
     fromPhone: (next) => {
       serverPrefs = { ...serverPrefs, beep: next }
+    },
+    holdNextBeepWrite: () => {
+      readSinceArmed = false
+      let release!: () => void
+      hold = new Promise((resolve) => {
+        release = resolve
+      })
+      return release
     },
   }
   const notifications = NOTIFICATIONS.map((item) => ({ ...item }))
@@ -191,10 +213,20 @@ async function mockApi(
     }
     if (apiPath === '/account/prefs') {
       if (request.method() === 'PATCH') {
-        serverPrefs = request.postDataJSON().prefs
+        const prefs = request.postDataJSON().prefs
+        if (hold && readSinceArmed && 'beep' in prefs) {
+          const waiting = hold
+          hold = null
+          writes.held = true
+          await waiting
+          writes.held = false
+        }
+        serverPrefs = prefs
         writes.prefs.push(serverPrefs)
         return json(200, { ...ACCOUNT, prefs: serverPrefs })
       }
+      readSinceArmed = true
+      if (writes.held) writes.readsWhileHeld += 1
       return json(200, serverPrefs)
     }
     if (apiPath === '/notifications') {
@@ -372,9 +404,12 @@ test.describe('Notification center (mocked API)', () => {
     await expect(row.getByText('Pushes muted')).toBeVisible()
   })
 
-  test('keeps both of two quick push settings changes', async ({ page }) => {
+  test('keeps both of two overlapping push settings changes', async ({
+    page,
+  }) => {
     const writes = await mockApi(page)
     const popover = await openNotifications(page)
+    const release = writes.holdNextBeepWrite()
 
     const row = popover
       .locator('.group')
@@ -382,8 +417,24 @@ test.describe('Notification center (mocked API)', () => {
     await row.hover()
     await row.getByRole('button', { name: 'Notification actions' }).click()
     await page.getByRole('menuitem', { name: 'Mute project pushes' }).click()
+    // The mute is still saving when the snooze is asked for.
+    await expect.poll(() => writes.held).toBe(true)
+    // Unserialized, the snooze would read the prefs before the mute saves.
+    const earlyRead = page
+      .waitForRequest(
+        (request) =>
+          request.method() === 'GET' &&
+          new URL(request.url()).pathname.endsWith('/account/prefs'),
+        { timeout: 2_000 },
+      )
+      .catch(() => null)
     await popover.getByRole('button', { name: 'Snooze pushes' }).click()
     await page.getByRole('menuitem', { name: '1 hour' }).click()
+    await earlyRead
+    release()
+
+    // The snooze read the prefs only after the mute saved.
+    expect(writes.readsWhileHeld).toBe(0)
 
     await expect
       .poll(() => (lastBeep(writes)?.snoozes as Record<string, string>)?.['*'])
