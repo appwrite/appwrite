@@ -169,7 +169,7 @@ final class ConsoleTest extends TestCase
         $this->assertSame('team-1', $firing->getAttribute('teamId'));
         $this->assertSame(RESOURCE_TYPE_ALERTS, $firing->getAttribute('subjectType'));
         $this->assertSame('firing', $firing->getAttribute('status'));
-        $this->database->updateDocument('notifications', $firing->getId(), new Document(['read' => true]));
+        $this->authorization->skip(fn () => $this->database->updateDocument('notifications', $firing->getId(), new Document(['read' => true])));
 
         // Resolving updates the same notification and marks it unread.
         $this->assertSame(1, $send('msg-resolved', '[Resolved] Egress', 'resolved')['deliveredTo']);
@@ -180,7 +180,7 @@ final class ConsoleTest extends TestCase
         $this->assertFalse($resolved->getAttribute('read'));
 
         // A late firing does not reopen it, and a redelivery changes nothing.
-        $this->database->updateDocument('notifications', $resolved->getId(), new Document(['read' => true]));
+        $this->authorization->skip(fn () => $this->database->updateDocument('notifications', $resolved->getId(), new Document(['read' => true])));
         $this->assertSame(1, $send('msg-late', '[Firing] Egress', 'firing')['deliveredTo']);
         $this->assertSame(1, $send('msg-resolved', '[Resolved] Egress', 'resolved')['deliveredTo']);
         $this->assertSame('resolved', $stored()->getAttribute('status'));

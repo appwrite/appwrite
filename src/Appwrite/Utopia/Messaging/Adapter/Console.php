@@ -149,7 +149,8 @@ class Console extends Adapter
             return;
         }
 
-        $this->database->updateDocument('notifications', $documentId, new Document([
+        // The recipient may change the notification, so the platform updates it as itself.
+        $this->database->getAuthorization()->skip(fn () => $this->database->updateDocument('notifications', $documentId, new Document([
             'messageId' => $message->getMessageId(),
             'type' => $message->getType(),
             'teamId' => $message->getTeamId(),
@@ -157,7 +158,7 @@ class Console extends Adapter
             'body' => $message->getBody(),
             'status' => $message->getStatus(),
             'read' => false,
-        ]));
+        ])));
     }
 
     /**
