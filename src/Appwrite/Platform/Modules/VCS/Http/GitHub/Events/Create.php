@@ -577,7 +577,8 @@ class Create extends Action
         $subject = "{$commentKind} comment {$commentId} on pull request {$pullNumber} of repository '{$repositoryName}' by '{$author}' ({$authorType}, {$association})";
         // Every answer is a model run the project pays for: trusted humans and other apps may ask, never the reviewer itself.
         if (!$this->canTriggerFromComment($author, $authorType, $association, $slug)) {
-            // The reviewer's own comments arrive here too; only refused people are worth a line.
+            // Other apps may ask, so the only bot refused here is the reviewer itself, whose own
+            // comments arrive on every review. Everyone else refused gets a line.
             if ($authorType !== 'Bot') {
                 Console::info("Ignored {$subject}: the author is not an owner, member or collaborator");
             }
