@@ -96,24 +96,6 @@ pub(crate) fn sanitize(name: &str) -> String {
     out
 }
 
-/// The text of a single-quoted SQL literal: `\` doubled, `'` doubled.
-pub(crate) fn escape(s: &str) -> String {
-    let mut out = String::with_capacity(s.len() + 2);
-    for c in s.chars() {
-        match c {
-            '\\' => out.push_str("\\\\"),
-            '\'' => out.push_str("''"),
-            c => out.push(c),
-        }
-    }
-    out
-}
-
-/// `'text'` with [`escape`].
-pub(crate) fn literal(s: &str) -> String {
-    format!("'{}'", escape(s))
-}
-
 /// A float without exponent and trailing zeros:
 /// `rtrim(rtrim(sprintf('%F', $value), '0'), '.')`.
 pub(crate) fn fixed(value: f64) -> String {

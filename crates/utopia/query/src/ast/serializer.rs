@@ -1,5 +1,6 @@
 //! [`Serializer`]: a [`Select`] back to SQL.
 
+use crate::StringLiteral;
 use std::fmt::Write as _;
 
 use super::node::{
@@ -35,6 +36,7 @@ use crate::value::Value;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Serializer {
     quote: char,
+    literal: StringLiteral,
 }
 
 impl Default for Serializer {
@@ -75,7 +77,7 @@ impl Serializer {
     ///
     /// PHP: `new Serializer()`.
     pub const fn new() -> Self {
-        Serializer { quote: '`' }
+        Serializer { quote: '`', literal: StringLiteral::Backslash }
     }
 
     /// MySQL: identifiers in backticks.
@@ -96,28 +98,37 @@ impl Serializer {
     ///
     /// PHP: `new Serializer\ClickHouse()`.
     pub const fn clickhouse() -> Self {
-        Self::new()
+        Self::new().with_literal(StringLiteral::BackslashUtf8)
     }
 
     /// PostgreSQL: identifiers in double quotes.
     ///
     /// PHP: `new Serializer\PostgreSQL()`.
     pub const fn postgresql() -> Self {
-        Serializer { quote: '"' }
+        Serializer { quote: '"', literal: StringLiteral::Extended }
     }
 
     /// SQLite: identifiers in double quotes.
     ///
     /// PHP: `new Serializer\SQLite()`.
     pub const fn sqlite() -> Self {
-        Self::postgresql()
+        Self::postgresql().with_literal(StringLiteral::Standard)
+    }
+
+    /// The serializer writing string literals by `literal`'s rules.
+    ///
+    /// PHP: `new Serializer($literal)`.
+    #[must_use]
+    pub const fn with_literal(mut self, literal: StringLiteral) -> Self {
+        self.literal = literal;
+        self
     }
 
     /// A serializer quoting identifiers with `quote` (doubled inside them).
     ///
     /// PHP: a subclass overriding `quoteIdentifier()`.
     pub const fn with_quote(quote: char) -> Self {
-        Serializer { quote }
+        Serializer { quote, literal: StringLiteral::Backslash }
     }
 
     /// `statement` as SQL. Fails with [`Error::Query`] on a node no SQL
@@ -264,7 +275,7 @@ impl Serializer {
                 }
             }
             Expression::Column(c) => self.column(out, c),
-            Expression::Literal(l) => literal(out, l),
+            Expression::Literal(l) => literal(out, l, self.literal)?,
             Expression::Star(s) => self.star(out, s),
             Expression::Placeholder(p) => out.push_str(&p.value),
             Expression::Raw(r) => out.push_str(&r.sql),
@@ -335,6 +346,10 @@ impl Serializer {
         out.push_str(&binary.operator);
         out.push(' ');
         self.binary_child(out, &binary.right, right_level)?;
+        if let Some(escape) = &binary.escape {
+            out.push_str(" ESCAPE ");
+            self.binary_child(out, escape, right_level)?;
+        }
         if parens {
             out.push(')');
         }
@@ -545,8 +560,8 @@ impl Serializer {
 }
 
 /// A literal as SQL: `NULL`, `TRUE` / `FALSE`, a number as PHP prints it, or
-/// a quoted string with `\` doubled and `'` doubled.
-fn literal(out: &mut String, literal: &Literal) {
+/// a string quoted by the dialect's rules.
+fn literal(out: &mut String, literal: &Literal, rules: StringLiteral) -> Result<()> {
     match &literal.value {
         Value::Null => out.push_str("NULL"),
         Value::Bool(b) => out.push_str(if *b { "TRUE" } else { "FALSE" }),
@@ -559,15 +574,8 @@ fn literal(out: &mut String, literal: &Literal) {
                 Value::Str(s) => String::from_utf8_lossy(s.as_bytes()),
                 other => std::borrow::Cow::Owned(crate::value::to_php_string(other)),
             };
-            out.push('\'');
-            for c in text.chars() {
-                match c {
-                    '\\' => out.push_str("\\\\"),
-                    '\'' => out.push_str("''"),
-                    c => out.push(c),
-                }
-            }
-            out.push('\'');
+            out.push_str(&rules.quote(&text)?);
         }
     }
+    Ok(())
 }

@@ -969,7 +969,7 @@ $result = (new Builder())
 
 ### Debugging
 
-`toRawSql()` inlines bindings for inspection (not for execution). Strings are quoted for the dialect: MySQL, MariaDB and ClickHouse escape `\` as well as `'`; PostgreSQL and SQLite, which read `\` literally, double `'` only.
+`toRawSql()` inlines bindings for inspection (not for execution). Strings are quoted as the schema builder quotes them (see [String literals](#schema-builder)).
 
 ```php
 $sql = (new Builder())
@@ -1995,7 +1995,7 @@ use Utopia\Query\Schema\Table;
 // or: PostgreSQL, ClickHouse, SQLite, MongoDB
 ```
 
-> **String literals.** DDL takes no bound parameters, so comments, defaults, enum values and the schema builder's other string literals are inlined with `\` and `'` escaped, as are the AST serializer's. MySQL reads `\` as an escape, so this relies on a connection charset in which byte `0x5C` cannot occur inside a multibyte character, such as `utf8mb4` or `latin1`. Under GBK, BIG5, SJIS/CP932 or GB18030 it can: a character ending in `0x5C` absorbs the escaping backslash and the value closes its literal. Do not pass untrusted text into these literals over such a connection.
+> **String literals.** DDL takes no bound parameters, so comments, defaults, enum values and the schema builder's other string literals are inlined, as are the AST serializer's and `toRawSql()`'s, quoted for the dialect. All double `'`. MySQL and MariaDB also escape `\`; PostgreSQL uses the `E''` form, escaping `\`, when a value contains one, and a plain literal otherwise; SQLite never escapes `\`; ClickHouse escapes `\`. Under GBK, BIG5, SJIS/CP932 or GB18030 a byte of `0x80` or above can begin a character that absorbs the escaping backslash, so MySQL, MariaDB and PostgreSQL refuse a value with a backslash right after such a byte, throwing `ValidationException`. PostgreSQL and SQLite refuse a NUL byte. The MySQL and MariaDB literals assume the server's default `sql_mode`: under `NO_BACKSLASH_ESCAPES` a backslash is an ordinary character, so a comment or default `C:\x` is stored as `C:\\x`. Doubled quotes hold in both modes, so a value still cannot close its literal.
 
 ### Creating Tables
 
@@ -2707,7 +2707,7 @@ $tokens[0]->value;  // 'SELECT'
 
 `TokenType` covers `Keyword`, `Identifier`, `QuotedIdentifier`, `Integer`, `Float`, `String`, `Boolean`, `Null`, `Operator`, `LeftParen`, `RightParen`, `Comma`, `Semicolon`, `Dot`, `Star`, `Placeholder`, `NamedPlaceholder`, `NumberedPlaceholder`, `LineComment`, `BlockComment`, `Whitespace`, and `Eof`.
 
-Dialect subclasses handle dialect-specific quoting and operators — `Tokenizer\MySQL`, `Tokenizer\MariaDB`, `Tokenizer\PostgreSQL`, `Tokenizer\SQLite`, and `Tokenizer\ClickHouse`.
+Dialect subclasses handle dialect-specific quoting and operators — `Tokenizer\MySQL`, `Tokenizer\MariaDB`, `Tokenizer\PostgreSQL`, `Tokenizer\SQLite`, and `Tokenizer\ClickHouse`. Each reads string literals as its dialect does: MySQL, MariaDB and ClickHouse treat `\` as an escape, SQLite never does, and PostgreSQL only inside `E''` literals. A tokenizer or parser constructed with a `StringLiteral` case follows that case instead.
 
 ### Parsing to an AST
 
@@ -2722,6 +2722,8 @@ $ast->where;             // AST\Expression\Binary
 ```
 
 The node hierarchy is made of readonly value objects. Expressions implement the `AST\Expression` marker interface: `Literal`, `Raw`, `Star`, `Placeholder`, `Reference\Column`, `Call\Func`, and `Expression\{Aliased, Between, Binary, CaseWhen, Cast, Conditional, Exists, In, Subquery, Unary, Window}`. Structural nodes include `Reference\Table`, `JoinClause`, `OrderByItem`, `SubquerySource`, `Definition\Cte`, `Definition\Window`, and `Specification\Window`.
+
+`Parser` decodes string literals by the `StringLiteral` it is given (`StringLiteral::Backslash` by default), so pass the dialect's case, e.g. `new Parser(StringLiteral::Extended)` with `Tokenizer\PostgreSQL`, to read `E'a\\b'` as `a\b`.
 
 `Statement\Select` is immutable; use its `with()` helper to derive a modified copy.
 

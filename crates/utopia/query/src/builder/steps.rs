@@ -92,6 +92,10 @@ pub enum Step {
     CompileHavingCondition,
     /// `compileGroupByTimeBucket()`.
     CompileGroupByTimeBucket,
+    /// `compileLikePredicate()`.
+    CompileLikePredicate,
+    /// `likeEscape()`.
+    LikeEscape,
     /// `compileComparison()`.
     CompileComparison,
     /// `enclose()`.
@@ -168,13 +172,15 @@ pub enum Step {
     ResetGroupByModifier,
     /// `applyNamedTypedBindings()`.
     ApplyNamedTypedBindings,
+    /// `createTokenizer()`: asked to read a CTE's SQL with the tokenizer it returns.
+    CreateTokenizer,
     /// `createAstSerializer()`: not run as a step; `fromAst()` is handed what it returns.
     CreateAstSerializer,
 }
 
 impl Step {
     /// Every step, in the order of the enum.
-    pub const ALL: [Step; 74] = [
+    pub const ALL: [Step; 77] = [
         Step::CompileFilter,
         Step::CompileOrder,
         Step::CompileLimit,
@@ -210,6 +216,8 @@ impl Step {
         Step::ShouldEmitOffset,
         Step::CompileHavingCondition,
         Step::CompileGroupByTimeBucket,
+        Step::CompileLikePredicate,
+        Step::LikeEscape,
         Step::CompileComparison,
         Step::Enclose,
         Step::Quote,
@@ -248,6 +256,7 @@ impl Step {
         Step::ResetReturning,
         Step::ResetGroupByModifier,
         Step::ApplyNamedTypedBindings,
+        Step::CreateTokenizer,
         Step::CreateAstSerializer,
     ];
 
@@ -289,6 +298,8 @@ impl Step {
             Step::ShouldEmitOffset => "shouldEmitOffset",
             Step::CompileHavingCondition => "compileHavingCondition",
             Step::CompileGroupByTimeBucket => "compileGroupByTimeBucket",
+            Step::CompileLikePredicate => "compileLikePredicate",
+            Step::LikeEscape => "likeEscape",
             Step::CompileComparison => "compileComparison",
             Step::Enclose => "enclose",
             Step::Quote => "quote",
@@ -327,6 +338,7 @@ impl Step {
             Step::ResetReturning => "resetReturning",
             Step::ResetGroupByModifier => "resetGroupByModifier",
             Step::ApplyNamedTypedBindings => "applyNamedTypedBindings",
+            Step::CreateTokenizer => "createTokenizer",
             Step::CreateAstSerializer => "createAstSerializer",
         }
     }
@@ -521,6 +533,10 @@ impl<D: Dialect> Builder<D> {
             (Step::CompileGroupByTimeBucket, [Arg::Str(attribute), Arg::Str(interval)]) => {
                 D::compile_group_by_time_bucket(self, attribute, interval).map(Ret::Str)
             }
+            (Step::CompileLikePredicate, [Arg::Str(attribute), Arg::Bool(not)]) => {
+                self.base_like_predicate(attribute, *not).map(Ret::Str)
+            }
+            (Step::LikeEscape, []) => self.base_like_escape().map(Ret::Str),
             (
                 Step::CompileComparison,
                 [Arg::Str(attribute), Arg::Str(operator), Arg::Values(values), Arg::MaybeStr(column)],
@@ -564,6 +580,10 @@ impl<D: Dialect> Builder<D> {
                 self.core.group_by_modifier = None;
                 Ok(Ret::None)
             }
+            (Step::CreateTokenizer, [Arg::Str(sql)]) => crate::ast::Parser::new()
+                .with_literal(D::LITERAL)
+                .parse_sql(sql)
+                .map(|read| Ret::Select(Box::new(read))),
             (Step::Quote, [Arg::Str(identifier)]) => D::quote(self, identifier).map(Ret::Str),
             (Step::GetLikeKeyword, []) => Ok(Ret::Str(D::like_keyword(self).to_owned())),
             (Step::GetBindingValues, []) => Ok(Ret::Values(self.base_binding_values())),
@@ -571,7 +591,7 @@ impl<D: Dialect> Builder<D> {
                 crate::builder::sql::geometry_to_wkt(geometry).map(Ret::Str)
             }
             (Step::EscapeLikeValue, [Arg::Value(value)]) => {
-                let escaped = crate::builder::core::escape_like_value(value, b'\\');
+                let escaped = crate::builder::core::escape_like_value(value, D::LIKE_ESCAPE);
                 Ok(Ret::Str(escaped.iter().map(|&byte| char::from(byte)).collect()))
             }
             // A step only some dialects have.
