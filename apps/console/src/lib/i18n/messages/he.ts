@@ -434,7 +434,7 @@ export const heCatalog: EnCatalog = {
           zeroTagline: 'פרויקט אמיתי בשבילך או בשביל הסוכן שלך, בלי הרשמה.',
           domainsName: 'Domains',
           domainsTagline: 'חיפוש, רכישה, העברה וניהול דומיינים.',
-          analyticsTagline: 'אנליטיקה לאתרים ואפליקציות ללא עוגיות, כולל בוטים ו-AI.',
+          analyticsTagline: 'אנליטיקה ללא עוגיות, מובנית ב-Sites וב-Auth שלכם.',
           firewallName: 'חומת אש',
           firewallTagline: 'כללי פרויקט לחסימה, הגבלת קצב והפניית תעבורה.',
           advisorName: 'יועץ',

@@ -429,7 +429,7 @@ export const enCatalog = {
           zeroTagline: 'A real project for you or your agent, no signup.',
           domainsName: 'Domains',
           domainsTagline: 'Search, buy, transfer, and manage domains.',
-          analyticsTagline: 'Cookieless web and app analytics, bots and AI included.',
+          analyticsTagline: 'Cookieless analytics built into your Sites and Auth.',
           firewallName: 'Firewall',
           firewallTagline: 'Project rules to deny, rate limit, and redirect traffic.',
           advisorName: 'Advisor',
