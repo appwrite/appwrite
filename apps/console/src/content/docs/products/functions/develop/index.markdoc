@@ -1867,33 +1867,39 @@ In Node.js 18 and later, Bun, and Deno, `formData()` parses both URL-encoded and
 {% multicode %}
 ```server-nodejs
 export default async ({ req, res }) => {
-    if (req.method !== 'POST') {
+    const raw = req.raw;
+
+    if (raw.method !== 'POST') {
         return res.text('Send the form with POST', 405);
     }
 
-    const form = await req.raw.formData();
+    const form = await raw.formData();
 
     return res.text(`Hello, ${form.get('name')}!`);
 };
 ```
 ```bun
 export default async ({ req, res }) => {
-    if (req.method !== 'POST') {
+    const raw = req.raw;
+
+    if (raw.method !== 'POST') {
         return res.text('Send the form with POST', 405);
     }
 
-    const form = await req.raw.formData();
+    const form = await raw.formData();
 
     return res.text(`Hello, ${form.get('name')}!`);
 };
 ```
 ```deno
 export default async ({ req, res }: any) => {
-    if (req.method !== "POST") {
+    const raw = req.raw;
+
+    if (raw.method !== "POST") {
         return res.text("Send the form with POST", 405);
     }
 
-    const form = await req.raw.formData();
+    const form = await raw.formData();
 
     return res.text(`Hello, ${form.get("name")}!`);
 };
