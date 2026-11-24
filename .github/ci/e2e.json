@@ -33,6 +33,7 @@
       "packages/detector/",
       "packages/compression/",
       "packages/balancer/",
+      "composer.lock",
       "Dockerfile",
       ".dockerignore"
     ],

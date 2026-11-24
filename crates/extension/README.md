@@ -71,6 +71,7 @@ utopia.libraries = "validators,dsn,domains"
 |---------------|----------------------------------------------------------------------------------|
 | `auth`        | `Utopia\Auth\Hash`, `Utopia\Auth\Hashes\*`                                       |
 | `compression` | `Utopia\Compression\*`                                                           |
+| `database`    | `Utopia\Database\Id`, `Role`, `Permission`, `DateTime`                           |
 | `detector`    | `Utopia\Detector\*`                                                              |
 | `domains`     | `Utopia\Domains\Domain`                                                          |
 | `dsn`         | `Utopia\DSN\DSN`                                                                 |
@@ -111,7 +112,8 @@ of `packages/validators` and the password hashes of `packages/auth` are register
 `packages/validators/stubs/` and `packages/auth/stubs/` for PHPStan, which runs without the
 extension. A library that still has a PHP implementation is registered only when
 `_APP_EXTENSION_LIBRARIES` names its package; today those are `detector`, `compression`,
-`query` and `balancer`. Otherwise Composer loads the package's PHP class as before:
+`query`, `balancer` and `database` (four classes of `utopia-php/database`, from `vendor/`). Otherwise
+Composer loads the package's PHP class as before:
 
 ```sh
 _APP_EXTENSION_LIBRARIES=<package>,<package>   # those packages' classes from the extension
@@ -310,6 +312,61 @@ Known differences from the PHP classes:
   subclasses.
 - An exception thrown in a filter has no `array_filter()` or `getFilteredOptions()` frame in its
   trace, and an exception names the caller's file and line, since the classes have no PHP source.
+
+## Utopia\Database: Id, Role, Permission and DateTime
+
+Over `crates/utopia/database` (the modules without I/O: `id`, `role`, `permission`, `datetime` and
+`error`), registered when `_APP_EXTENSION_LIBRARIES` names `database`: `Utopia\Database\Id`,
+`Role`, `Permission` and `DateTime` of `utopia-php/database` 10.2 (in `vendor/`), so Composer never
+loads those four files. The rest of the package, `PermissionType` and `Utopia\Database\Exception`
+included, stays PHP. Off by default.
+
+Built by hand like the balancer, in `src/database.rs`: the same names, signatures, static methods,
+private promoted properties (`Role`'s `$role`, `$identifier` and `$dimension`, `Permission`'s
+`$role` and `$permission`), `Permission`'s private static `$aggregates` and `DateTime`'s protected
+static `$formatDb` and `$formatTz` and private constructor, so `==`, `clone`, `serialize()`,
+`var_dump()`, reflection and PHP subclasses behave as in PHP. `Role::parse()`,
+`Permission::parse()`, `Permission::aggregate()`, `Id::unique()` and `DateTime::setTimezone()`,
+`formatTz()` and `nowAfter()` are the crate's; a string that is not UTF-8 is read byte for byte.
+`aggregate()` takes `PermissionType` cases and throws the closure's `TypeError` for anything else,
+as PHP does. A `Role` subclass's getters, and a `\DateTime` subclass's `format()` and `add()`, are
+called as PHP calls them. Errors are PHP's: `\Exception` from `Role`, `Utopia\Database\Exception`
+(made with its constructor, so `$state` is set) from `Permission` and `DateTime`, wrapping PHP's own
+`DateMalformedStringException`.
+
+Where it is faster: `Permission::read(Role::any())` and the other types return an interned string
+for a role without identifier or dimension; a role object is read from its slots rather than
+through three getter calls and two new objects; `DateTime::format()` reads the `\DateTime`'s fields
+in place and writes the 23 bytes itself; `now()` formats the clock in UTC without a `\DateTime`.
+The crate's dates are UTC only: with another default timezone (`date_default_timezone_set()`), or
+`$formatDb` or `$formatTz` changed by a subclass, or for input the crate does not parse, the methods
+make the same `\DateTime`, `\DateTimeZone` and `\DateInterval` calls the PHP class makes.
+`addSeconds()` always does, to change the caller's `\DateTime` exactly as PHP's `add()` does.
+
+The package's own `IdTest`, `RoleTest`, `PermissionTest` and `DateTimeTest` run on the extension,
+and `tests/database.php` (6,779 cases) is identical on both: reflection of every class; `Id::custom()`
+and `Id::unique()` (length, hex, time order, uniqueness and spread of the padding, for 21 paddings
+and coercions); `Role::parse()` of 60 strings and every factory with 15 argument lists, `"0"`
+identifiers and dimensions, bytes that are not UTF-8; `Permission::parse()` of 56 strings and of
+3,000 seeded random ones, every type for 19 roles, `aggregate()` with `null`, `write` expansion,
+`$allowed` subsets, duplicates, keys, invalid strings, non-string elements and wrong `$allowed`;
+`var_dump()`, `serialize()`, `==`, `clone` and objects made without their constructor; PHP subclasses
+of `Role`, `Permission` and `\DateTime`; `DateTime`'s methods over 45 strings, 13 dates, 14 second
+counts in 3 timezones, three default timezones, and its formats changed. The differences below are
+asserted at its end. Nothing in Appwrite or Cloud subclasses these classes.
+
+Known differences from the PHP classes:
+
+- An exception names the caller's file and line, and its trace has no frame inside the package,
+  since the classes have no PHP source; a `TypeError` for an element of `aggregate()`'s
+  `$permissions` does not say `called in .../Permission.php on line 184`.
+- `Permission::$aggregates` is declared, but `aggregate()` expands `write` as it is declared, even
+  if code bound to the class's scope changed it.
+- `Id::unique()` waits for the microsecond to change as `uniqid()` does, but keeps its own last
+  value: an `Id::unique()` and a direct `uniqid()` in the same microsecond can share their first 13
+  characters (the padding still differs).
+- A closure cannot be bound to the scope of an internal class: `Closure::bind()` into one warns
+  and returns `null`, where PHP's classes allowed it.
 
 ## Utopia\DSN\DSN
 
