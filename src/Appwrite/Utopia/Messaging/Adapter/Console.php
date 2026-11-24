@@ -80,6 +80,7 @@ class Console extends Adapter
                     'channel' => self::TYPE,
                     'projectId' => $message->getProjectId(),
                     'projectInternalId' => $message->getProjectInternalId(),
+                    'teamId' => $message->getTeamId(),
                     'resourceType' => $resourceType,
                     'resourceId' => $resourceId,
                     'resourceInternalId' => $recipient['resourceInternalId'],
@@ -88,6 +89,8 @@ class Console extends Adapter
                     'parentResourceInternalId' => $recipient['parentResourceInternalId'],
                     'title' => $message->getTitle(),
                     'body' => $message->getBody(),
+                    'alertId' => $message->getAlertId(),
+                    'alertStatus' => $message->getAlertStatus(),
                 ]);
 
                 $this->database->createDocument('notifications', $document);

@@ -223,6 +223,8 @@
         "src/Appwrite/Schedule/Source/Alerts.php",
         "src/Appwrite/Platform/Tasks/ScheduleAlerts.php",
         "src/Appwrite/Platform/Workers/Notifications.php",
+        "src/Appwrite/Utopia/Messaging/",
+        "src/Appwrite/Utopia/Response/Model/Notification.php",
         "app/config/alerts.php",
         "app/config/locale/templates/email-alert.tpl"
       ]
@@ -492,6 +494,8 @@
         "src/Appwrite/Platform/Modules/Notifications/",
         "src/Appwrite/Platform/Modules/Messaging/",
         "src/Appwrite/Platform/Workers/Notifications.php",
+        "src/Appwrite/Utopia/Messaging/",
+        "src/Appwrite/Utopia/Response/Model/Notification.php",
         "src/Appwrite/Messaging/Adapter/Push/",
         "packages/messaging/",
         "packages/smtp/"

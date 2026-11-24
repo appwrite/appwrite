@@ -55,6 +55,9 @@ final class ConsoleTest extends TestCase
         $this->database->createAttribute('notifications', Attribute::boolean(key: 'read', default: false));
         $this->database->createAttribute('notifications', Attribute::datetime(key: 'firstSeen'));
         $this->database->createAttribute('notifications', Attribute::datetime(key: 'lastSeen'));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'teamId'));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'alertId', default: ''));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'alertStatus', size: 16, default: ''));
     }
 
     protected function tearDown(): void
@@ -128,6 +131,35 @@ final class ConsoleTest extends TestCase
         $this->assertFalse($stored->getAttribute('read'));
         $this->assertNull($stored->getAttribute('firstSeen'));
         $this->assertNull($stored->getAttribute('lastSeen'));
+        // Not about a monitor alert.
+        $this->assertNull($stored->getAttribute('teamId'));
+        $this->assertSame('', $stored->getAttribute('alertId'));
+        $this->assertSame('', $stored->getAttribute('alertStatus'));
+    }
+
+    public function testWritesTheAlertItIsAbout(): void
+    {
+        $message = new ConsoleMessage(
+            recipients: [$this->recipient('user-3', 'user-3')],
+            title: '[Firing] Egress',
+            body: 'Outbound bandwidth reached 2 GB.',
+            type: 'critical',
+            messageId: Id::custom('msg-alert'),
+            projectId: 'project-1',
+            projectInternalId: 'project-internal-1',
+            teamId: 'team-1',
+            alertId: 'alert-1',
+            alertStatus: 'firing',
+        );
+
+        $result = (new Console($this->database))->send($message);
+
+        $this->assertSame(1, $result['deliveredTo']);
+        $stored = $this->database->getDocument('notifications', $this->alertId('msg-alert', 'user-3', RESOURCE_TYPE_USERS, 'user-3'));
+        $this->assertSame('critical', $stored->getAttribute('type'));
+        $this->assertSame('team-1', $stored->getAttribute('teamId'));
+        $this->assertSame('alert-1', $stored->getAttribute('alertId'));
+        $this->assertSame('firing', $stored->getAttribute('alertStatus'));
     }
 
     public function testUserPermissionsScopedToRecipient(): void

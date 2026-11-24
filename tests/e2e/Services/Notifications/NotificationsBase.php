@@ -85,6 +85,11 @@ trait NotificationsBase
         $this->assertNotNull($found, 'Seeded alert not present in /notifications response.');
         $this->assertSame('console', $found['channel']);
         $this->assertStringContainsStringIgnoringCase('webhook', $found['title']);
+        // Only a monitor alert's notification names an alert and its organization.
+        $this->assertSame('info', $found['type']);
+        $this->assertSame('', $found['teamId']);
+        $this->assertSame('', $found['alertId']);
+        $this->assertSame('', $found['alertStatus']);
 
         // Cache the seeded alert id for downstream tests in the same process.
         self::$seededAlertId = $alertId;

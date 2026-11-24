@@ -324,6 +324,9 @@ $platformCollections = [
             Attribute::boolean(key: 'read', default: false),
             Attribute::datetime(key: 'firstSeen'),
             Attribute::datetime(key: 'lastSeen'),
+            // The monitor alert a console notification is about, and whether it was firing or resolved when sent; empty for other notifications
+            Attribute::string(key: 'alertId', default: ''),
+            Attribute::string(key: 'alertStatus', size: 16, default: ''),
         ],
         'indexes' => [
             Index::key(key: '_key_messageId', attributes: ['messageId'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),

@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Document;
 
 class Notification extends Model
 {
@@ -37,7 +38,7 @@ class Notification extends Model
             ])
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Notification type: info, warning, error.',
+                'description' => 'Notification type: info, warning, error. A monitor alert\'s notification takes its severity, which can also be critical.',
                 'default' => 'info',
                 'example' => 'info',
             ])
@@ -78,6 +79,24 @@ class Notification extends Model
                 'example' => '5e5bb8c16897e',
                 'required' => false,
             ])
+            ->addRule('teamId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Organization the notification pertains to. Empty when the notification is not about an organization.',
+                'default' => '',
+                'example' => '5e5bb8c16897e',
+            ])
+            ->addRule('alertId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Monitor alert the notification is about. Empty for any other notification.',
+                'default' => '',
+                'example' => '5e5bb8c16897e',
+            ])
+            ->addRule('alertStatus', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Whether the alert was firing or resolved when the notification was sent. Empty for any other notification.',
+                'default' => '',
+                'example' => 'firing',
+            ])
             ->addRule('title', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Notification title.',
@@ -112,6 +131,18 @@ class Notification extends Model
                 'required' => false,
             ])
         ;
+    }
+
+    /**
+     * Notifications stored before a notification could name its organization or alert have none.
+     */
+    public function filter(Document $document): Document
+    {
+        foreach (['teamId', 'alertId', 'alertStatus'] as $key) {
+            $document->setAttribute($key, (string) $document->getAttribute($key, ''));
+        }
+
+        return $document;
     }
 
     public function getName(): string

@@ -140,7 +140,7 @@ class V25 extends Migration
 
                 case 'notifications':
                     if ($collectionType === 'console') {
-                        $attributes = ['teamId', 'teamInternalId'];
+                        $attributes = ['teamId', 'teamInternalId', 'alertId', 'alertStatus'];
                         foreach ($attributes as $attribute) {
                             try {
                                 $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);

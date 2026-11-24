@@ -479,14 +479,22 @@ class Notifications extends Action
             $consoleRecipient['recipientHash'] = $recipientHash;
         }
 
+        // A monitor alert's push names the alert, so the console can open it and acknowledge it from
+        // the bell. Its severity is the notification's type, as the bell draws one icon per type.
+        $data = \array_map('strval', $payload['push']['data'] ?? []);
+        $alert = ($data['type'] ?? '') === 'alert' ? $data : [];
+
         $consoleMessage = new ConsoleMessage(
             recipients: [$consoleRecipient],
             title: $title,
             body: $body,
-            type: $payload['type'] ?? 'info',
+            type: ($alert['severity'] ?? '') !== '' ? $alert['severity'] : ($payload['type'] ?? 'info'),
             messageId: $messageId !== '' ? $messageId : null,
             projectId: $project->getId(),
             projectInternalId: $project->getSequence(),
+            teamId: ($alert['organizationId'] ?? '') !== '' ? $alert['organizationId'] : null,
+            alertId: $alert['alertId'] ?? '',
+            alertStatus: $alert['status'] ?? '',
         );
 
         $adapter = new ConsoleAdapter($dbForPlatform);

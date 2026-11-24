@@ -166,16 +166,13 @@ final class EvaluationCustomServerTest extends Scope
         // "Pause this monitor" opens the monitor, whose drawer pauses it.
         $this->assertStringContainsString('/projects/' . $this->getProject()['$id'] . '/usage/monitors?monitor=' . $monitorId, (string) $email['html']);
 
-        $bell = $this->client->call(Client::METHOD_GET, '/notifications', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-            'x-appwrite-project' => 'console',
-        ], [
-            'queries' => [Query::equal('projectId', [$this->getProject()['$id']])->toString()],
-        ]);
-        $this->assertSame(200, $bell['headers']['status-code']);
-        $this->assertNotEmpty(\array_filter(\array_column($bell['body']['notifications'], 'title'), fn (string $title) => \str_starts_with($title, '[Firing] ' . $name . ' · ')));
+        // The bell names the alert, so the console opens it and acknowledges it from there, and takes its severity as its type.
+        $notification = $this->bellNotification('[Firing] ' . $name . ' · ');
+        $this->assertSame($firing['alertId'], $notification['alertId']);
+        $this->assertSame('firing', $notification['alertStatus']);
+        $this->assertSame($this->teamId(), $notification['teamId']);
+        $this->assertSame($this->getProject()['$id'], $notification['projectId']);
+        $this->assertSame('critical', $notification['type']);
 
         // The phone gets a push that opens the alert and can mute the monitor.
         $push = $this->waitForPush($device['token'], 'alert:' . $firing['alertId'], 'firing');
@@ -274,6 +271,11 @@ final class EvaluationCustomServerTest extends Scope
             $this->assertSame(['firing' => 1, 'resolved' => 1], $this->teamNotifications($name));
         }, 60_000, 1_000);
         $this->assertCount(2, $this->pushes($device['token'], 'alert:' . $firing['alertId']));
+        // The resolved notification names the same alert, as resolved, so the console offers no acknowledging it.
+        $notification = $this->bellNotification('[Resolved] ' . $name . ' · ');
+        $this->assertSame($firing['alertId'], $notification['alertId']);
+        $this->assertSame('resolved', $notification['alertStatus']);
+        $this->assertSame($this->teamId(), $notification['teamId']);
     }
 
     public function testPushesReachEveryDeviceAsTheirOwnersPrefsSay(): void
@@ -2671,6 +2673,37 @@ final class EvaluationCustomServerTest extends Scope
      */
     private function teamNotifications(string $name): array
     {
+        $titles = \array_column($this->bell(), 'title');
+
+        return [
+            'firing' => \count(\array_filter($titles, fn (string $title) => \str_starts_with($title, '[Firing] ' . $name . ' · '))),
+            'resolved' => \count(\array_filter($titles, fn (string $title) => \str_starts_with($title, '[Resolved] ' . $name . ' · '))),
+        ];
+    }
+
+    /**
+     * The newest of the owner's console notifications for the project whose title starts with `$title`.
+     *
+     * @return array<string, mixed>
+     */
+    private function bellNotification(string $title): array
+    {
+        foreach ($this->bell() as $notification) {
+            if (\str_starts_with($notification['title'], $title)) {
+                return $notification;
+            }
+        }
+
+        $this->fail('No console notification titled ' . $title);
+    }
+
+    /**
+     * The organization owner's console notifications for the project, newest first.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function bell(): array
+    {
         $bell = $this->client->call(Client::METHOD_GET, '/notifications', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -2685,11 +2718,6 @@ final class EvaluationCustomServerTest extends Scope
         ]);
         $this->assertSame(200, $bell['headers']['status-code']);
 
-        $titles = \array_column($bell['body']['notifications'], 'title');
-
-        return [
-            'firing' => \count(\array_filter($titles, fn (string $title) => \str_starts_with($title, '[Firing] ' . $name . ' · '))),
-            'resolved' => \count(\array_filter($titles, fn (string $title) => \str_starts_with($title, '[Resolved] ' . $name . ' · '))),
-        ];
+        return $bell['body']['notifications'];
     }
 }

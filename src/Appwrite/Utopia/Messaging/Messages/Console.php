@@ -19,6 +19,9 @@ class Console implements Message
         protected ?string $messageId = null,
         protected ?string $projectId = null,
         protected ?string $projectInternalId = null,
+        protected ?string $teamId = null,
+        protected string $alertId = '',
+        protected string $alertStatus = '',
     ) {
     }
 
@@ -66,6 +69,30 @@ class Console implements Message
     public function getProjectInternalId(): ?string
     {
         return $this->projectInternalId;
+    }
+
+    /**
+     * The organization the notification is about.
+     */
+    public function getTeamId(): ?string
+    {
+        return $this->teamId;
+    }
+
+    /**
+     * The monitor alert the notification is about, or empty for any other notification.
+     */
+    public function getAlertId(): string
+    {
+        return $this->alertId;
+    }
+
+    /**
+     * Whether the alert was firing or resolved when the notification was sent.
+     */
+    public function getAlertStatus(): string
+    {
+        return $this->alertStatus;
     }
 
     public function setOrigin(?string $origin): self

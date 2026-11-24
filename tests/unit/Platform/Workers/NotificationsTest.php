@@ -210,6 +210,9 @@ final class NotificationsTest extends TestCase
         $this->database->createAttribute('notifications', Attribute::boolean(key: 'read', default: false));
         $this->database->createAttribute('notifications', Attribute::datetime(key: 'firstSeen'));
         $this->database->createAttribute('notifications', Attribute::datetime(key: 'lastSeen'));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'teamId'));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'alertId', default: ''));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'alertStatus', size: 16, default: ''));
 
         // Mirror the production `_key_recipient` UNIQUE composite index so the
         // duplicate-handling branch in persistAlert (catch DuplicateException ->
@@ -1150,6 +1153,44 @@ final class NotificationsTest extends TestCase
         $this->assertSame(0, $worker->persistAlertCalls, 'console channel must NOT trigger action-loop persistAlert');
     }
 
+    public function testConsoleChannelNamesTheMonitorAlertItsPushCarries(): void
+    {
+        $worker = new CountingPersistAlertNotifications();
+
+        $payload = [
+            'project' => ['$id' => 'project-x'],
+            'recipients' => [
+                $this->userRecipient('user-alert', NOTIFICATION_TYPE_CONSOLE, 'user-alert'),
+            ],
+            'subject' => '[Firing] Egress',
+            'preview' => 'Outbound bandwidth reached 2 GB.',
+            'deduplicationKey' => 'console-alert',
+            'push' => [
+                'title' => '[Critical] Egress on Production',
+                'data' => [
+                    'type' => 'alert',
+                    'severity' => 'critical',
+                    'status' => 'firing',
+                    'alertId' => 'alert-1',
+                    'monitorId' => 'monitor-1',
+                    'organizationId' => 'team-1',
+                    'projectId' => 'project-x',
+                    'url' => 'https://console.test/project-x/alerts?alert=alert-1',
+                    'unsubscribeToken' => 'token',
+                ],
+            ],
+        ];
+
+        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks, $this->publicHostname, $this->telemetry);
+
+        $rows = $this->database->find('notifications');
+        $this->assertCount(1, $rows);
+        $this->assertSame('critical', $rows[0]->getAttribute('type'), 'the alert\'s severity is the notification\'s type');
+        $this->assertSame('team-1', $rows[0]->getAttribute('teamId'));
+        $this->assertSame('alert-1', $rows[0]->getAttribute('alertId'));
+        $this->assertSame('firing', $rows[0]->getAttribute('alertStatus'));
+    }
+
     public function testConsoleChannelUsesPreviewBodyInsteadOfRenderedEmailHtml(): void
     {
         $worker = new CountingPersistAlertNotifications();
@@ -1172,6 +1213,10 @@ final class NotificationsTest extends TestCase
         $this->assertCount(1, $rows);
         $this->assertSame('Webhook orders paused', $rows[0]->getAttribute('title'));
         $this->assertSame('Plain alert for orders.', $rows[0]->getAttribute('body'));
+        // Not about a monitor alert.
+        $this->assertSame('info', $rows[0]->getAttribute('type'));
+        $this->assertSame('', $rows[0]->getAttribute('alertId'));
+        $this->assertSame('', $rows[0]->getAttribute('alertStatus'));
         $this->assertStringNotContainsString('<!DOCTYPE html>', $rows[0]->getAttribute('body'));
     }
 
