@@ -18,8 +18,11 @@ for library in $libraries; do
     [ -f "$tests/$library.php" ] || { echo "missing parity corpus $tests/$library.php" >&2; exit 1; }
     # packages/query/tests/E2E needs MySQL, PostgreSQL, ClickHouse and MongoDB servers.
     unit=; [ "$library" = query ] && unit='--exclude-filter \\E2E\\'
+    # database is utopia-php/database in vendor/: the unit tests of the classes the extension serves.
+    suite="packages/$library/tests"
+    [ "$library" = database ] && suite=$(printf 'vendor/utopia-php/database/tests/unit/%sTest.php ' Id Role Permission DateTime)
     # shellcheck disable=SC2086
-    _APP_EXTENSION_LIBRARIES=$library vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php $unit "packages/$library/tests"
+    _APP_EXTENSION_LIBRARIES=$library vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php $unit $suite
     _APP_EXTENSION_LIBRARIES= php "$tests/$library.php" > "$output/$library.php.jsonl"
     _APP_EXTENSION_LIBRARIES=$library php "$tests/$library.php" > "$output/$library.rust.jsonl"
     diff "$output/$library.php.jsonl" "$output/$library.rust.jsonl"
@@ -54,7 +57,7 @@ done
 # set, only the libraries it names, whatever _APP_EXTENSION_LIBRARIES says.
 echo "== utopia.libraries" >&2
 gate="$tests/libraries.php"
-every=dsn,domains,emails,image,locale,user-agent,validators,auth,detector,compression,query,balancer
+every=dsn,domains,emails,image,locale,user-agent,validators,auth,detector,compression,query,balancer,database
 _APP_EXTENSION_LIBRARIES= php "$gate" > "$output/libraries.unset"
 diff "$tests/libraries.expected" "$output/libraries.unset" ||
     { echo "the default classes changed: update tests/libraries.expected" >&2; exit 1; }
@@ -95,6 +98,9 @@ _APP_EXTENSION_LIBRARIES= php -d utopia.libraries=validators-scalar "$gate" \
 _APP_EXTENSION_LIBRARIES= php -d utopia.libraries=emails "$gate" \
     +'Utopia\Emails\Email' +'Utopia\Domains\Domain' -'Utopia\Validator\Validator' > /dev/null
 php -d utopia.libraries=emails -r 'new Utopia\Emails\Email("a@example.com");'
+_APP_EXTENSION_LIBRARIES= php -d utopia.libraries=database "$gate" \
+    +'Utopia\Database\Id' +'Utopia\Database\Role' +'Utopia\Database\Permission' +'Utopia\Database\DateTime' \
+    -'Utopia\Database\PermissionType' -'Utopia\Balancer\Balancer' -'Utopia\Validator\Validator' > /dev/null
 _APP_EXTENSION_LIBRARIES= php -d utopia.libraries=query "$gate" \
     +'Utopia\Query\NativeQuery' +'Utopia\Query\Builder\MySQL' -'Utopia\Validator\Validator' > /dev/null
 # An unknown name: a startup warning naming it, and the rest of the list still applies.

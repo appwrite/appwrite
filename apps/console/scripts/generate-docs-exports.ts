@@ -374,6 +374,7 @@ async function buildExportFiles(): Promise<ExportFile[]> {
       relativePath: 'for-agents.md',
       contents: buildForAgentsMarkdown(SITE_ORIGIN),
     },
+    // zero.md is served by its route behind the `zero` feature until Zero launches.
     {
       relativePath: 'pricing.md',
       contents: buildPricingMarkdown(SITE_ORIGIN),

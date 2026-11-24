@@ -4332,4 +4332,63 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'מוניטורי שימוש: {used} מתוך {limit} שהתוכנית שלך מאפשרת.',
   'Upgrade your plan to add more usage monitors.':
     'כדי להוסיף מוניטורי שימוש, יש לשדרג את התוכנית.',
+  // Analytics for signed-in users
+  'Signed-in users, ranked by visits': 'משתמשים מחוברים, לפי מספר הביקורים',
+  'View user': 'הצגת המשתמש',
+  'Could not load analytics': 'לא ניתן לטעון את האנליטיקה',
+  'No analytics yet': 'אין עדיין אנליטיקה',
+  "Add an analytics property and turn on User identification to see each signed-in user's pages and events here.":
+    'הוסיפו נכס אנליטיקה והפעילו זיהוי משתמשים כדי לראות כאן את הדפים והאירועים של כל משתמש מחובר.',
+  'Add analytics': 'הוספת אנליטיקה',
+  'Link {name} to their analytics': 'קישור {name} לנתוני האנליטיקה שלו',
+  "Turn on User identification in a property's settings to record the signed-in user on every event, so their pages, events and sessions show here.":
+    'הפעילו זיהוי משתמשים בהגדרות הנכס כדי לתעד את המשתמש המחובר בכל אירוע, כך שהדפים, האירועים והסשנים שלו יוצגו כאן.',
+  'Open property settings': 'פתיחת הגדרות הנכס',
+  'Last active': 'פעילות אחרונה',
+  Calls: 'קריאות',
+  'Active days': 'ימים פעילים',
+  'No events from this user in the last 30 days':
+    'אין אירועים מהמשתמש הזה ב-30 הימים האחרונים',
+  '30 days ago': 'לפני 30 יום',
+  'No custom events': 'אין אירועים מותאמים',
+  'No model calls': 'אין קריאות למודלים',
+  'No screens viewed': 'לא נצפו מסכים',
+  'No pages viewed': 'לא נצפו דפים',
+  'View in analytics': 'הצגה באנליטיקה',
+  'New installs and updates of your app': 'התקנות ועדכונים חדשים של האפליקציה',
+  'Add the latest tracking SDK to your app to count installs and updates.':
+    'הוסיפו את ה-SDK העדכני למעקב לאפליקציה כדי לספור התקנות ועדכונים.',
+  'Pushes received on devices, and how many were opened':
+    'התראות שהתקבלו במכשירים, וכמה מהן נפתחו',
+  'No push notifications tracked yet': 'עדיין לא נמדדו התראות פוש',
+  'Pushes sent with Messaging show their reach and opens here once the tracking SDK is in your app.':
+    'התראות שנשלחו דרך Messaging יציגו כאן את ההגעה והפתיחות שלהן כשה-SDK למעקב יהיה באפליקציה.',
+  'Open Messaging': 'פתיחת Messaging',
+  Received: 'התקבלו',
+  Opened: 'נפתחו',
+  'Open rate': 'שיעור פתיחה',
+  Rate: 'שיעור',
+  'No pushes with a message ID in this range':
+    'אין התראות עם מזהה הודעה בטווח הזה',
+  '{count} delivered': '{count} נמסרו',
+  'View message': 'הצגת ההודעה',
+  Views: 'צפיות',
+  'Last seen': 'נראה לאחרונה',
+  'Not in this period': 'לא בתקופה הזו',
+  'of {count}': 'מתוך {count}',
+  'Events per day, last 30 days': 'אירועים ליום, 30 הימים האחרונים',
+  Properties: 'נכסים',
+  'Where this user was active, last 30 days':
+    'היכן המשתמש היה פעיל, 30 הימים האחרונים',
+  'No activity': 'אין פעילות',
+  'No locations': 'אין מיקומים',
+  'No sources': 'אין מקורות',
+  'No browsers': 'אין דפדפנים',
+  'No operating systems': 'אין מערכות הפעלה',
+  'No devices': 'אין מכשירים',
+  'No OS versions': 'אין גרסאות מערכת הפעלה',
+  views: 'צפיות',
+  'signed in': 'מחוברים',
+  'Signed in now': 'מחוברים עכשיו',
+  'and {count} more': 'ועוד {count}',
 }

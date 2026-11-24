@@ -50,7 +50,7 @@ export type BreakdownDialogProps = {
   tabs: BreakdownTab[]
   initialTabId?: string
   /** Which measure ranks and sizes the rows. */
-  valueKey?: 'visitors' | 'events'
+  valueKey?: 'visitors' | 'events' | 'sessions'
   valueLabel?: string
   renderLeading?: (
     entry: Models.AnalyticsMetric,
@@ -69,6 +69,8 @@ export type BreakdownDialogProps = {
   rowFilter?: (entry: Models.AnalyticsMetric) => boolean
   /** External URL for a row (pages, hostnames): adds an open-in-new icon. */
   rowHref?: (value: string, tabId: string) => string | undefined
+  /** Hover hint for the row link (e.g. "View user"). */
+  rowHrefTitle?: string
 }
 
 /**
@@ -100,6 +102,7 @@ export function BreakdownDialog({
   renderBadge,
   rowFilter,
   rowHref,
+  rowHrefTitle,
 }: BreakdownDialogProps) {
   const t = useT()
   const [activeTab, setActiveTab] = useState(initialTabId ?? tabs[0]?.id ?? '')
@@ -236,7 +239,12 @@ export function BreakdownDialog({
           <span className="flex items-center gap-3">
             <span>{t('Share')}</span>
             <span className="min-w-[50px] text-end">
-              {valueLabel ?? (valueKey === 'events' ? t('Events') : t('Visitors'))}
+              {valueLabel ??
+                (valueKey === 'events'
+                  ? t('Events')
+                  : valueKey === 'sessions'
+                    ? t('Visits')
+                    : t('Visitors'))}
             </span>
           </span>
         </div>
@@ -313,6 +321,7 @@ export function BreakdownDialog({
                         ? undefined
                         : rowHref?.(entry.value, active.id)
                     }
+                    hrefTitle={rowHrefTitle && t(rowHrefTitle)}
                   />
                 )
                 return entry.value ? (

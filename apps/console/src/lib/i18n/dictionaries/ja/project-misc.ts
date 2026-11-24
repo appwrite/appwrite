@@ -4423,4 +4423,64 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '使用量モニター: プランの上限 {limit} 件中 {used} 件を使用中です。',
   'Upgrade your plan to add more usage monitors.':
     '使用量モニターを追加するには、プランをアップグレードしてください。',
+  // Analytics for signed-in users
+  'Signed-in users, ranked by visits': 'サインイン済みユーザー (訪問数順)',
+  'View user': 'ユーザーを表示',
+  'Could not load analytics': 'アナリティクスを読み込めませんでした',
+  'No analytics yet': 'アナリティクスはまだありません',
+  "Add an analytics property and turn on User identification to see each signed-in user's pages and events here.":
+    'アナリティクスプロパティを追加してユーザー識別を有効にすると、サインイン済みユーザーごとのページとイベントがここに表示されます。',
+  'Add analytics': 'アナリティクスを追加',
+  'Link {name} to their analytics': '{name} をアナリティクスにリンク',
+  "Turn on User identification in a property's settings to record the signed-in user on every event, so their pages, events and sessions show here.":
+    'プロパティの設定でユーザー識別を有効にすると、すべてのイベントにサインイン中のユーザーが記録され、そのページ、イベント、セッションがここに表示されます。',
+  'Open property settings': 'プロパティ設定を開く',
+  'Last active': '最終アクティブ',
+  Calls: '呼び出し',
+  'Active days': 'アクティブ日数',
+  'No events from this user in the last 30 days':
+    '過去 30 日間、このユーザーのイベントはありません',
+  '30 days ago': '30 日前',
+  'No custom events': 'カスタムイベントはありません',
+  'No model calls': 'モデル呼び出しはありません',
+  'No screens viewed': '表示された画面はありません',
+  'No pages viewed': '表示されたページはありません',
+  'View in analytics': 'アナリティクスで表示',
+  'New installs and updates of your app':
+    'アプリの新規インストールとアップデート',
+  'Add the latest tracking SDK to your app to count installs and updates.':
+    '最新のトラッキング SDK をアプリに追加すると、インストールとアップデートを計測できます。',
+  'Pushes received on devices, and how many were opened':
+    'デバイスで受信したプッシュ通知と開封数',
+  'No push notifications tracked yet': 'プッシュ通知はまだ計測されていません',
+  'Pushes sent with Messaging show their reach and opens here once the tracking SDK is in your app.':
+    'トラッキング SDK をアプリに追加すると、Messaging で送信したプッシュ通知の到達数と開封数がここに表示されます。',
+  'Open Messaging': 'Messaging を開く',
+  Received: '受信',
+  Opened: '開封',
+  'Open rate': '開封率',
+  Rate: '率',
+  'No pushes with a message ID in this range':
+    'この期間にメッセージ ID 付きのプッシュはありません',
+  '{count} delivered': '{count} 件配信',
+  'View message': 'メッセージを表示',
+  Views: '表示',
+  'Last seen': '最終確認',
+  'Not in this period': 'この期間はなし',
+  'of {count}': '/ {count}',
+  'Events per day, last 30 days': '1 日あたりのイベント (過去 30 日間)',
+  Properties: 'プロパティ',
+  'Where this user was active, last 30 days':
+    'このユーザーがアクティブだった場所 (過去 30 日間)',
+  'No activity': 'アクティビティなし',
+  'No locations': '場所はありません',
+  'No sources': 'ソースはありません',
+  'No browsers': 'ブラウザはありません',
+  'No operating systems': 'OS はありません',
+  'No devices': 'デバイスはありません',
+  'No OS versions': 'OS バージョンはありません',
+  views: '表示',
+  'signed in': '人がサインイン中',
+  'Signed in now': '現在サインイン中',
+  'and {count} more': 'ほか {count} 人',
 }

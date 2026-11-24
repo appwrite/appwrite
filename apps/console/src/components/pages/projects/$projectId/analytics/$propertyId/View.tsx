@@ -54,7 +54,8 @@ import {
   usePropertyTabs,
 } from '../_components/PropertyHeader'
 import { ExportMenu } from '../_components/ExportMenu'
-import { InstallsPushPanel } from '../_components/InstallsPushPanel'
+import { InstallsPanel } from '../_components/InstallsPanel'
+import { PushPanel } from '../_components/PushPanel'
 import type { AnalyticsChartMetric } from '../_components/AnalyticsOverview'
 import {
   BotsPanel,
@@ -125,6 +126,7 @@ type DimensionPanel =
   | 'eventProps'
   | 'models'
   | 'installs'
+  | 'push'
 
 const HUMANS_ONLY = trafficKindFilterEntry('human')
 const MOBILE_DEFAULT_FILTER_QUERY = mapToQueryParam(
@@ -152,6 +154,7 @@ const PANELS_BY_TYPE: Record<
   [AnalyticsPropertyType.Mobile]: new Set([
     'installs',
     'split',
+    'push',
     'pages',
     'locations',
     'technology',
@@ -211,7 +214,10 @@ export function View({
     [effectiveFilterQuery],
   )
   const filters = useMemo(() => analyticsFiltersFromMap(filterMap), [filterMap])
-  const filterColumns = useMemo(() => analyticsFilterColumns(filters), [filters])
+  const filterColumns = useMemo(
+    () => analyticsFilterColumns(filters),
+    [filters],
+  )
 
   const commitFilterMap = useCallback(
     (next: FilterMap) => {
@@ -540,7 +546,8 @@ export function View({
       panel !== 'users' &&
       panel !== 'eventProps' &&
       panel !== 'models' &&
-      panel !== 'installs',
+      panel !== 'installs' &&
+      panel !== 'push',
   ).length
 
   if (!property && !propertyLoading) {
@@ -710,16 +717,26 @@ export function View({
                 so switching tabs never shifts the grid. */}
               <div className="grid gap-4 lg:grid-cols-2">
                 {isMobile ? eventsPanel : null}
+                {/* App lifecycle and push engagement, side by side: two
+                  different stories from the mobile SDK's automatic events. */}
                 {panels.has('installs') ? (
-                  <div className="lg:col-span-2">
-                    <InstallsPushPanel
-                      projectId={projectId}
-                      propertyId={propertyId}
-                      range={range}
-                      interval={resolvedInterval}
-                      onOpenSetup={() => setInstallOpen(true)}
-                    />
-                  </div>
+                  <InstallsPanel
+                    projectId={projectId}
+                    propertyId={propertyId}
+                    range={range}
+                    interval={resolvedInterval}
+                    comparisonRange={comparisonRange ?? null}
+                    onOpenSetup={() => setInstallOpen(true)}
+                  />
+                ) : null}
+                {panels.has('push') ? (
+                  <PushPanel
+                    projectId={projectId}
+                    propertyId={propertyId}
+                    range={range}
+                    interval={resolvedInterval}
+                    comparisonRange={comparisonRange ?? null}
+                  />
                 ) : null}
                 {/* Channels, referrers and UTM campaigns in one card. */}
                 {panels.has('sources') ? (
