@@ -1,31 +1,42 @@
 import type { Init5ScenePalette } from './scene-types'
 
 /**
- * The Init 5 storm in the site banner: the hero's fog (the aurora in
- * `scenes/light-trails-scene.ts`, the same fog the Init films use) at both
- * ends of the bar, softened, with lightning striking inside it. A strike is not a drawn bolt: it
- * is light blooming in the cloud, a flash, a dimmer re-flash or two, then dark.
+ * The Init 5 storm for small surfaces: the hero's fog (the aurora in
+ * `scenes/light-trails-scene.ts`, the same fog the Init films use), softened,
+ * gathering along chosen edges with lightning striking inside it. A strike is
+ * not a drawn bolt: it is light blooming in the cloud, a flash, a dimmer
+ * re-flash or two, then dark.
  *
- * Plain WebGL with one full-bar pass, drawn at half resolution (the fog is
- * soft), so every page carrying the banner stays light.
+ * - `sides`: both ends of a bar (the site banner), the middle left clear.
+ * - `bottom`: rising from the bottom of a panel (the online list).
+ *
+ * Plain WebGL with one pass, drawn at half resolution (the fog is soft), so
+ * every page carrying one stays light.
  */
 
-export type InitBannerStorm = {
-  /** Banner size in CSS px. */
+export type InitStormEdges = 'sides' | 'bottom'
+
+export type InitStorm = {
+  /** Surface size in CSS px. */
   resize: (width: number, height: number) => void
   setPalette: (palette: Init5ScenePalette) => void
-  /** Run while the banner is on screen; pause when it scrolls away. */
+  /** Run while the surface is on screen; pause when it scrolls away. */
   setActive: (active: boolean) => void
   dispose: () => void
 }
 
 const MAX_BOLTS = 2
-/** Fog units per banner height: sets the size of the clouds and wisps. */
-const UNITS_PER_HEIGHT = 0.62
+/** CSS px per fog unit: the size of the clouds and wisps (the banner's grain). */
+const UNIT_PX = 90
 const FRAME_MS = 1000 / 30
-/** How far the fog reaches in from each end: a share of the bar, capped. */
-const SIDE_SHARE = 0.24
-const SIDE_MAX_PX = 360
+/**
+ * How far the fog reaches in from its edges (a share of the surface, capped)
+ * and how thick it is. A panel's fog stays lighter than the banner's.
+ */
+const EDGES = {
+  sides: { share: 0.24, max: 360, density: 1 },
+  bottom: { share: 0.26, max: 170, density: 0.7 },
+} as const
 
 const vertex = /* glsl */ `
 attribute vec2 position;
@@ -43,6 +54,7 @@ precision mediump float;
 uniform vec2 uResolution;
 uniform float uScale;
 uniform float uSide;
+uniform float uBottom;
 uniform float uTime;
 uniform float uIntensity;
 uniform vec3 uColorA;
@@ -95,10 +107,12 @@ void main() {
   color = mix(color, uColorC, smoothstep(0.55, 0.9, q.x) * 0.55);
   color = mix(color, uColorC, wisps * 0.3);
 
-  // The fog keeps to both ends of the bar and thins out toward the middle,
-  // leaving the copy clear. Its inner edge wavers with the cloud.
-  float edge = min(p.x, uResolution.x / uScale - p.x);
-  float waver = (fbm(vec2(p.y * 1.4 + 2.1, uTime * 0.03 + p.x * 0.1)) - 0.5) * uSide * 0.6;
+  // The fog keeps to its edges (both ends of a bar, or the bottom of a
+  // panel) and thins out away from them, leaving the copy clear. Its inner
+  // edge wavers with the cloud.
+  float edge = mix(min(p.x, uResolution.x / uScale - p.x), gl_FragCoord.y / uScale, uBottom);
+  vec2 along = mix(p.yx, p.xy, uBottom);
+  float waver = (fbm(vec2(along.x * 1.4 + 2.1, uTime * 0.03 + along.y * 0.1)) - 0.5) * uSide * 0.6;
   float sides = 1.0 - smoothstep(0.0, uSide, edge + waver);
   float a = density * sides * uIntensity;
 
@@ -163,10 +177,14 @@ function boltLight(bolt: Bolt, time: number) {
   return Math.min(1, value)
 }
 
-export function createInitBannerStorm(
+export function createInitStorm(
   canvas: HTMLCanvasElement,
-  options: { palette: Init5ScenePalette; reducedMotion: boolean },
-): InitBannerStorm | null {
+  options: {
+    palette: Init5ScenePalette
+    reducedMotion: boolean
+    edges: InitStormEdges
+  },
+): InitStorm | null {
   const gl = canvas.getContext('webgl', {
     alpha: true,
     premultipliedAlpha: true,
@@ -207,6 +225,7 @@ export function createInitBannerStorm(
     resolution: uniform('uResolution'),
     scale: uniform('uScale'),
     side: uniform('uSide'),
+    bottom: uniform('uBottom'),
     time: uniform('uTime'),
     intensity: uniform('uIntensity'),
     colorA: uniform('uColorA'),
@@ -246,16 +265,25 @@ export function createInitBannerStorm(
     gl.uniform3fv(u.boltColor, mixRgb(hot, violet, 0.3))
   }
 
-  const unitPx = () => height / UNITS_PER_HEIGHT
-  const sidePx = () => Math.min(width * SIDE_SHARE, SIDE_MAX_PX)
+  const reach = EDGES[options.edges]
+  const reachPx = () =>
+    Math.min(
+      (options.edges === 'sides' ? width : height) * reach.share,
+      reach.max,
+    )
 
-  /** Strikes land in the fog at either end, never over the copy. */
+  /** Strikes land in the fog by its edges, never over the copy. */
   const scheduleBolt = () => {
-    const units = width / unitPx()
-    const fromEdge = (Math.random() * sidePx() * 0.6) / unitPx()
+    const fromEdge = (Math.random() * reachPx() * 0.6) / UNIT_PX
+    const sides = options.edges === 'sides'
+    const units = width / UNIT_PX
     bolts.push({
-      x: Math.random() < 0.5 ? fromEdge : units - fromEdge,
-      y: (Math.random() - 0.5) * 0.4,
+      x: sides
+        ? Math.random() < 0.5
+          ? fromEdge
+          : units - fromEdge
+        : Math.random() * units,
+      y: sides ? (Math.random() - 0.5) * 0.4 : fromEdge - height / 2 / UNIT_PX,
       startedAt: time,
       strikes: strikeShape(),
     })
@@ -264,15 +292,16 @@ export function createInitBannerStorm(
   }
 
   const draw = () => {
-    const scale = unitPx() * ratio
+    const scale = UNIT_PX * ratio
     gl.viewport(0, 0, canvas.width, canvas.height)
     gl.clearColor(0, 0, 0, 0)
     gl.clear(gl.COLOR_BUFFER_BIT)
     gl.uniform2f(u.resolution, canvas.width, canvas.height)
     gl.uniform1f(u.scale, scale)
-    gl.uniform1f(u.side, sidePx() / unitPx())
+    gl.uniform1f(u.side, reachPx() / UNIT_PX)
+    gl.uniform1f(u.bottom, options.edges === 'bottom' ? 1 : 0)
     gl.uniform1f(u.time, time)
-    gl.uniform1f(u.intensity, palette.isDark ? 0.26 : 0.13)
+    gl.uniform1f(u.intensity, (palette.isDark ? 0.26 : 0.13) * reach.density)
     const strength = palette.isDark ? 0.6 : 0.26
     packed.fill(0)
     bolts.forEach((bolt, i) => {

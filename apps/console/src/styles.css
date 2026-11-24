@@ -3695,6 +3695,153 @@ pre.prism-code .token-line > span {
     drop-shadow(0 0 8px color-mix(in oklch, var(--brand-cta) 60%, transparent));
 }
 
+/*
+ * Init 5 online list. Everyone online wears a ring of the hero's light
+ * (peach -> pink -> violet); a person coming online arrives like a strike in
+ * the fog, a flash of light across their row and a flare on their ring, then
+ * a dimmer re-flash; and now and then a comet runs down the panel's edge.
+ */
+.init5-online-ring::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  padding: 1px;
+  background: conic-gradient(
+    from 200deg,
+    var(--network-globe-region),
+    var(--brand-cta),
+    var(--network-globe-edge),
+    var(--network-globe-region)
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+@keyframes init5-online-ring-strike {
+  0% {
+    filter: none;
+  }
+  6% {
+    filter: brightness(1.8)
+      drop-shadow(0 0 4px var(--brand-cta))
+      drop-shadow(0 0 10px var(--network-globe-edge));
+  }
+  14% {
+    filter: brightness(1.1) drop-shadow(0 0 2px var(--brand-cta));
+  }
+  22% {
+    filter: brightness(1.5) drop-shadow(0 0 6px var(--brand-cta));
+  }
+  100% {
+    filter: none;
+  }
+}
+
+.init5-online-ring--strike {
+  animation: init5-online-ring-strike 1.4s ease-out 1 both;
+}
+
+/* Flash, dim, a dimmer re-flash, then dark: the storm's strike. */
+@keyframes init5-online-strike {
+  0% {
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  12% {
+    opacity: 0.25;
+  }
+  20% {
+    opacity: 0.75;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.init5-online-strike {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    140px 44px at 18px 50%,
+    color-mix(in oklch, white 70%, var(--network-globe-edge)) 0%,
+    color-mix(in oklch, var(--brand-cta) 45%, transparent) 28%,
+    color-mix(in oklch, var(--network-globe-edge) 18%, transparent) 58%,
+    transparent 82%
+  );
+  opacity: 0;
+  animation: init5-online-strike 1.4s ease-out 1 both;
+}
+
+html:not(.dark) .init5-online-strike {
+  background: radial-gradient(
+    140px 44px at 18px 50%,
+    color-mix(in oklch, var(--brand-cta) 38%, transparent) 0%,
+    color-mix(in oklch, var(--network-globe-edge) 16%, transparent) 50%,
+    transparent 82%
+  );
+}
+
+/* A comet down the panel's edge, then a long rest before the next one. */
+@keyframes init5-online-edge {
+  0% {
+    transform: translateY(-100%);
+  }
+  22%,
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+.init5-online-edge {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  z-index: 2;
+  width: 1px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.init5-online-edge::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 140px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in oklch, var(--network-globe-edge) 70%, transparent) 45%,
+    var(--brand-cta) 85%,
+    var(--network-globe-region)
+  );
+  filter: drop-shadow(0 0 3px var(--brand-cta));
+  transform: translateY(-100%);
+  animation: init5-online-edge 11s cubic-bezier(0.45, 0, 0.25, 1) 2s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .init5-online-strike,
+  .init5-online-edge {
+    display: none;
+  }
+
+  .init5-online-ring--strike {
+    animation: none;
+  }
+}
+
 /* Init 5's card in "Browse Init events": comets of light run round the 5. */
 @keyframes init-browse-five-trail {
   from {

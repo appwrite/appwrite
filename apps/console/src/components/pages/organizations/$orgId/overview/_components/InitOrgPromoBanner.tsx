@@ -1,18 +1,13 @@
 import { Link } from '@tanstack/react-router'
-import { useEffect, useMemo, useRef } from 'react'
+import { useMemo } from 'react'
 import type { ReactNode } from 'react'
-import { useTheme } from 'next-themes'
 import { InitWordmark } from '@/components/pages/init/_components/InitWordmark'
+import { Init5Storm } from '@/components/pages/init/_components/init5/Init5Storm'
 import { Badge } from '@/components/ui/badge'
 import {
   INIT5_FIVE_GLYPH_PATH,
   INIT5_FIVE_GLYPH_VIEWBOX,
 } from '@/lib/init/init5-hero/five-glyph'
-import {
-  createInitBannerStorm,
-  type InitBannerStorm,
-} from '@/lib/init/init5-hero/banner-storm'
-import { isDarkChrome, readPalette } from '@/lib/init/init5-hero/palette'
 import { getEnvProfileFeatures } from '@/lib/console-profiles'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
@@ -21,7 +16,6 @@ import {
 } from '@/lib/init/org-promo-banner'
 import type { LaunchEventCta } from '@/lib/init/types'
 import { useT } from '@/lib/i18n/translate'
-import { cn } from '@/lib/utils'
 
 /** Init 5 wears the hero's light trails; earlier weeks keep the plain mark. */
 const LIGHT_TRAIL_EVENT_IDS = new Set(['init-nov-2026'])
@@ -66,70 +60,6 @@ function InitOrgPromoBannerLink({
   return <div className={className}>{children}</div>
 }
 
-/**
- * Init 5: the hero's storm at both ends of the bar, soft fog with lightning
- * flashing inside it.
- */
-function Init5BannerStorm() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const stormRef = useRef<InitBannerStorm | null>(null)
-  const { resolvedTheme } = useTheme()
-  const isDark = isDarkChrome(resolvedTheme)
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    const banner = canvas?.parentElement
-    if (!canvas || !banner) return
-    const reducedMotion = window.matchMedia(
-      '(prefers-reduced-motion: reduce)',
-    ).matches
-    const storm = createInitBannerStorm(canvas, {
-      palette: readPalette(banner, isDarkChrome(resolvedTheme)),
-      reducedMotion,
-    })
-    if (!storm) return
-    stormRef.current = storm
-
-    const layout = () => {
-      const box = banner.getBoundingClientRect()
-      storm.resize(box.width, box.height)
-    }
-    layout()
-    const resizeObserver = new ResizeObserver(layout)
-    resizeObserver.observe(banner)
-    const visibility = new IntersectionObserver(([entry]) =>
-      storm.setActive(Boolean(entry?.isIntersecting)),
-    )
-    visibility.observe(banner)
-
-    return () => {
-      resizeObserver.disconnect()
-      visibility.disconnect()
-      storm.dispose()
-      stormRef.current = null
-    }
-    // The storm is built once; theme changes repaint it below.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  useEffect(() => {
-    const banner = canvasRef.current?.parentElement
-    if (banner) stormRef.current?.setPalette(readPalette(banner, isDark))
-  }, [isDark, resolvedTheme])
-
-  return (
-    <canvas
-      ref={canvasRef}
-      aria-hidden
-      className={cn(
-        'pointer-events-none absolute inset-0 h-full w-full',
-        // Light adds to the dark bar, as in the hero.
-        isDark && 'mix-blend-screen',
-      )}
-    />
-  )
-}
-
 export function InitOrgPromoBanner() {
   const t = useT()
   const { mockInitCurrentDay, mockInitActiveEventId } = useDebugOverrides()
@@ -148,7 +78,7 @@ export function InitOrgPromoBanner() {
     <div className="relative w-full shrink-0 overflow-hidden border-b border-border bg-background">
       {lightTrails ? (
         <>
-          <Init5BannerStorm />
+          <Init5Storm edges="sides" />
           <div aria-hidden className="init5-banner-sweep" />
         </>
       ) : (
