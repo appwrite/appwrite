@@ -383,6 +383,7 @@ const TYPES: &[(&str, usize, Declared)] = &[
     ("multiply", 2, INT_OR_FLOAT),
     ("unsetFields", 1, Declared::Types(engine::MAY_BE_STRING)),
     ("createAstSerializer", 0, Declared::Class("Utopia\\Query\\AST\\Serializer", 0)),
+    ("createTokenizer", 0, Declared::Class("Utopia\\Query\\Tokenizer\\Tokenizer", 0)),
     ("compileInsertBody", 0, Declared::Types(engine::MAY_BE_ARRAY)),
     ("compileAssignments", 0, Declared::Types(engine::MAY_BE_ARRAY)),
     ("validateAndGetColumns", 0, Declared::Types(engine::MAY_BE_ARRAY)),

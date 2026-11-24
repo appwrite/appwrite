@@ -1,12 +1,13 @@
 import { useMemo } from 'react'
 import { useQueries } from '@tanstack/react-query'
-import { AnalyticsDimension } from '@appwrite.io/console'
+import { AnalyticsDimension, Query } from '@appwrite.io/console'
 import { useT } from '@/lib/i18n/translate'
 import { Button } from '@/components/ui/button'
 import { Smartphone } from 'lucide-react'
 import {
   analyticsEventMetricsQueryOptions,
   useAnalyticsBreakdown,
+  useAnalyticsEvents,
   type AnalyticsChartInterval,
   type AnalyticsRange,
 } from '@/lib/react-query/hooks'
@@ -32,6 +33,15 @@ const TILES = [
 ] as const
 
 const MESSAGE_ROWS = 5
+
+// Asked without the page's filters (mobile opens on humans only), which can
+// match none of these events even when the SDK sends them.
+const SDK_EVENTS_FILTERS = [
+  {
+    attribute: 'eventName',
+    query: Query.equal('eventName', TILES.map((tile) => tile.event)),
+  },
+] as const
 
 const PUSH_OPENED_FILTER = {
   attribute: 'eventName',
@@ -114,9 +124,20 @@ export function InstallsPushPanel({
 
   const loading = tiles.some((tile) => tile.loading)
   const seriesError = series.find((query) => query.isError)?.error
-  // A filter can match none of these events; only unfiltered zeros mean no SDK.
+  const sdkEvents = useAnalyticsEvents(
+    projectId,
+    filters.length > 0 ? propertyId : null,
+    range,
+    undefined,
+    SDK_EVENTS_FILTERS,
+  )
   const isEmpty =
-    filters.length === 0 && !loading && tiles.every((tile) => tile.total === 0)
+    !loading &&
+    tiles.every((tile) => tile.total === 0) &&
+    (filters.length === 0 ||
+      (!sdkEvents.isLoading &&
+        !sdkEvents.error &&
+        sdkEvents.events.length === 0))
 
   return (
     <div className="flex flex-col rounded-lg border border-border bg-card">

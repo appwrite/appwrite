@@ -5277,6 +5277,7 @@ dependencies = [
  "utopia-auth",
  "utopia-balancer",
  "utopia-compression",
+ "utopia-database",
  "utopia-detector",
  "utopia-domains",
  "utopia-dsn",

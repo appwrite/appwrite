@@ -146,6 +146,16 @@ impl Property {
     pub const fn new(name: &'static str) -> Self {
         Self { name, offset: AtomicU32::new(0) }
     }
+
+    /// The property's name.
+    pub fn name(&self) -> &'static str {
+        self.name
+    }
+
+    /// Records the offset of the property's slot, once declared.
+    pub fn set_offset(&self, offset: u32) {
+        self.offset.store(offset, Ordering::Release);
+    }
 }
 
 /// Declares `property` as a protected typed property of `class`, with `default`; `None`

@@ -357,6 +357,23 @@ trait TransfersBase
         $secret = $transfer['body']['secret'];
         $claimer = $this->getClaimer();
 
+        $key = $this->client->call(Client::METHOD_POST, '/organization/projects/' . $projectId . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], $this->getOwnerHeaders()), [
+            'keyId' => Id::unique(),
+            'name' => 'Previous Owner Key',
+            'scopes' => ['users.read'],
+        ]);
+        $this->assertSame(201, $key['headers']['status-code']);
+
+        $users = $this->client->call(Client::METHOD_GET, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $key['body']['secret'],
+        ]);
+        $this->assertSame(200, $users['headers']['status-code']);
+
         /**
          * Test for FAILURE
          */
@@ -400,6 +417,20 @@ trait TransfersBase
 
         $response = $this->callTransfers(Client::METHOD_GET, '/' . $other['body']['$id'], $claimer['headers'], ['secret' => $other['body']['secret']]);
         $this->assertSame(404, $response['headers']['status-code']);
+
+        // The previous owner's keys no longer reach the project
+        $users = $this->client->call(Client::METHOD_GET, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $key['body']['secret'],
+        ]);
+        $this->assertSame(401, $users['headers']['status-code']);
+
+        $keys = $this->client->call(Client::METHOD_GET, '/organization/projects/' . $projectId . '/keys', array_merge([
+            'x-appwrite-project' => 'console',
+        ], $claimer['headers']));
+        $this->assertSame(200, $keys['headers']['status-code']);
+        $this->assertSame(0, $keys['body']['total']);
 
         // The new owner can transfer the project onwards
         $response = $this->callTransfers(Client::METHOD_POST, '', $claimer['headers'], ['projectId' => $projectId]);

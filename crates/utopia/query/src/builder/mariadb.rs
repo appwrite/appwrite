@@ -68,6 +68,8 @@ impl MySqlFamily for MariaDbDialect {
 
 impl Dialect for MariaDbDialect {
     const CLASS: &'static str = "Utopia\\Query\\Builder\\MariaDB";
+    const LIKE_ESCAPE: u8 = b'!';
+    const DECLARES_LIKE_ESCAPE: bool = true;
 
     fn base_step(
         b: &mut Builder<Self>,
@@ -139,6 +141,10 @@ impl Dialect for MariaDbDialect {
     fn reset(b: &mut Builder<Self>) {
         mysql::reset(b);
         b.reset_returning();
+    }
+
+    fn ast_dialect() -> crate::builder::AstDialect {
+        crate::builder::AstDialect::MariaDb
     }
 }
 
