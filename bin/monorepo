@@ -968,8 +968,20 @@ switch ($command) {
             // scans the copy Composer installed, so it sees the PHPDoc types the extension's
             // runtime reflection lacks.
             // packages/query has one stub per class, in directories that follow its namespaces.
+            //
+            // Analysis runs against the root autoloader, so a sibling's classes are this
+            // checkout's whatever release Composer installed. When that release predates the
+            // sibling's stubs (utopia-php/query below 0.9 under utopia-php/database), the
+            // installed copy has none and the checkout's own are scanned.
+            $stubDirectories = glob("{$directory}/vendor/" . ORG . '/*/stubs', GLOB_ONLYDIR) ?: [];
+            foreach (glob("{$directory}/vendor/" . ORG . '/*', GLOB_ONLYDIR) ?: [] as $installed) {
+                $sibling = basename($installed);
+                if (!is_dir("{$installed}/stubs") && is_dir("packages/{$sibling}/stubs")) {
+                    $stubDirectories[] = "packages/{$sibling}/stubs";
+                }
+            }
             $stubs = [];
-            foreach (glob("{$directory}/vendor/" . ORG . '/*/stubs', GLOB_ONLYDIR) ?: [] as $stubDirectory) {
+            foreach ($stubDirectories as $stubDirectory) {
                 foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($stubDirectory, FilesystemIterator::SKIP_DOTS)) as $file) {
                     if ($file->getExtension() === 'php') {
                         $stubs[] = $file->getPathname();
