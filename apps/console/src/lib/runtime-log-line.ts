@@ -139,6 +139,16 @@ export function normalizeLevel(value: unknown): RuntimeLogLevel | null {
   return null
 }
 
+/** OpenTelemetry severity numbers: 1-8 trace/debug, 9-12 info, 13-16 warn, 17-24 error. */
+function otelSeverity(value: unknown): RuntimeLogLevel | null {
+  if (typeof value !== 'number' || !Number.isInteger(value)) return null
+  if (value < 1 || value > 24) return null
+  if (value >= 17) return 'error'
+  if (value >= 13) return 'warn'
+  if (value >= 9) return 'info'
+  return 'debug'
+}
+
 export function parseRuntimeLogLine(raw: string): RuntimeLogLine {
   const text = stripAnsi(raw)
   return parseJson(text) ?? parseLogfmt(text) ?? parseText(text)
@@ -166,10 +176,14 @@ function parseJson(text: string): RuntimeLogLine | null {
   if (!isRecord(value)) return null
 
   const levelKey = LEVEL_KEYS.find((key) => normalizeLevel(value[key]) !== null)
-  const level = levelKey ? normalizeLevel(value[levelKey]) : null
+  // OTel may send only a severity number, on its own 1-24 scale
+  const otel = levelKey ? null : otelSeverity(value.severityNumber)
+  const level = levelKey ? normalizeLevel(value[levelKey]) : otel
   // OTel puts the level name and number side by side; drop the number too
   const skip = new Set(levelKey ? [levelKey] : [])
-  if (levelKey && 'severityNumber' in value) skip.add('severityNumber')
+  if ((levelKey || otel) && 'severityNumber' in value) {
+    skip.add('severityNumber')
+  }
 
   const messageKey = MESSAGE_KEYS.find(
     (key) => typeof value[key] === 'string' && value[key] !== '',

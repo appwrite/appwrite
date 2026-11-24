@@ -57,6 +57,12 @@ describe('runtime log line', () => {
       expect(otel.message).toBe('retrying')
       expect(otel.fields).toEqual([])
 
+      const numberOnly = parseRuntimeLogLine(
+        '{"severityNumber":17,"body":"export failed","attempt":2}',
+      )
+      expect(numberOnly.level).toBe('error')
+      expect(numberOnly.fields).toEqual([{ key: 'attempt', value: '2' }])
+
       const serilog = parseRuntimeLogLine(
         '{"@t":"2026-11-23T13:55:15Z","@l":"Debug","@m":"cache miss"}',
       )
