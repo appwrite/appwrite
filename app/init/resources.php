@@ -27,6 +27,7 @@ use Appwrite\Event\Publisher\Video as VideoPublisher;
 use Appwrite\Execution\Store as ExecutionStore;
 use Appwrite\Exiftool\Client as ExiftoolClient;
 use Appwrite\Geo\Client as GeoClient;
+use Appwrite\Locking\Locks;
 use Appwrite\Logs\Adapter\ClickHouse as LogsClickHouse;
 use Appwrite\Logs\Logs;
 use Appwrite\Messaging\Adapter\Mqtt;
@@ -63,8 +64,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DNS\Lookup\Recursive;
 use Utopia\DSN\DSN;
-use Utopia\Lock\Distributed;
-use Utopia\Lock\Exception\Contention as LockContention;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
 use Utopia\Pools\Group;
@@ -442,35 +441,7 @@ $container->set('cache', function (Registry $register, Telemetry $telemetry) {
 
 $container->set('cacheControlForStorage', fn () => fn (StorageCacheControl $config): string => \sprintf('private, max-age=%d', $config->maxAge));
 
-$container->set('locks', fn (Group $pools) => function (string $key, int $ttl, callable $callback, float $timeout = 0.0) use ($pools): mixed {
-    $pool = $pools->get('lock');
-
-    try {
-        $connection = $pool->pop();
-    } catch (\Exception $error) {
-        if (\get_class($error) !== \Exception::class) {
-            throw $error;
-        }
-
-        throw new LockContention($error->getMessage(), previous: $error);
-    }
-
-    $failed = false;
-
-    try {
-        // The callback receives the lock so long-running holders can refresh
-        // the lease and verify it is still theirs before committing work.
-        $lock = new Distributed($connection->resource, $key, ttl: $ttl);
-
-        return $lock->withLock(fn () => $callback($lock), timeout: $timeout);
-    } catch (\Throwable $error) {
-        $failed = true;
-
-        throw $error;
-    } finally {
-        $pool->release($connection, $failed);
-    }
-}, ['pools']);
+$container->set('locks', fn (Group $pools) => Locks::using($pools), ['pools']);
 
 // The lease spans the callback; throwing from it makes the pool reconnect the socket.
 $container->set('timelimit', fn (Group $pools) => fn (string $key, int $limit, int $seconds, callable $callback): mixed => $pools->get('abuse')->use(

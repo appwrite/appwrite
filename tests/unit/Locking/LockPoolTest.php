@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Locking;
 
+use Appwrite\Locking\Locks;
 use PHPUnit\Framework\TestCase;
-use Utopia\DI\Container;
 use Utopia\Lock\Exception\Contention as LockContention;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Group;
@@ -76,19 +76,7 @@ final class LockPoolTest extends TestCase
 
     private function locks(Pool $pool): callable
     {
-        global $container;
-
-        /** @var array<string, callable> $factories */
-        $factories = (new \ReflectionProperty(Container::class, 'factories'))->getValue($container);
-
-        $locks = (new Container())
-            ->set('pools', fn (): Group => (new Group())->add($pool))
-            ->set('locks', $factories['locks'], ['pools'])
-            ->get('locks');
-
-        $this->assertIsCallable($locks);
-
-        return $locks;
+        return Locks::using((new Group())->add($pool));
     }
 }
 
