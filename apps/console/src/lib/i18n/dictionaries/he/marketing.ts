@@ -1747,6 +1747,7 @@ export const heMarketingDictionary: Record<string, string> = {
     'האתר נפרס',
   'Site link':
     'קישור לאתר',
+  'Build time left': 'זמן שנותר לבנייה',
   'An hour to build. A day to claim it':
     'שעה לבנות. יום לתבוע בעלות',
   'Every service, from minute zero':

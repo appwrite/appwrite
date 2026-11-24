@@ -1591,6 +1591,7 @@ export const jaMarketingDictionary: Record<string, string> = {
     'サイトをデプロイしました',
   'Site link':
     'サイトのリンク',
+  'Build time left': 'ビルドの残り時間',
   'An hour to build. A day to claim it':
     'ビルドに 1 時間。引き継ぎに 1 日',
   'Every service, from minute zero':
