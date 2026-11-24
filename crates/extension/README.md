@@ -77,13 +77,15 @@ utopia.libraries = "validators,dsn,domains"
 | `emails`      | `Utopia\Emails\Email`, and `domains` with it                                     |
 | `image`       | `Utopia\Image\Canvas`, `Utopia\Image\Font`                                       |
 | `locale`      | `Utopia\Locale\Locale`                                                           |
+| `query`       | `Utopia\Query\*`                                                                 |
 | `user-agent`  | `Utopia\UserAgent\UserAgent`                                                     |
 | `validators`  | `Utopia\Validator\Validator` and every validator of `packages/validators`        |
 
 - **Unset or empty** (the default, and what Appwrite and Cloud use): every library above but
-  `detector` and `compression` registers, and `_APP_EXTENSION_LIBRARIES` switches those two on (see
+  `detector`, `compression` and `query` registers, and `_APP_EXTENSION_LIBRARIES` switches those
+  three on (see
   [Switching a class on](#switching-a-class-on)).
-- **Set:** only the libraries it names register, `detector` and `compression` included, and
+- **Set:** only the libraries it names register, the switchable three included, and
   `_APP_EXTENSION_LIBRARIES` is ignored. Names are the package names, the same ones
   `_APP_EXTENSION_LIBRARIES` takes, comma separated; spaces around them are ignored. The old
   `validators-scalar`, `validators-text`, `validators-network` and `validators-compose` each mean
@@ -108,8 +110,8 @@ of `packages/validators` and the password hashes of `packages/auth` are register
 `packages/user-agent/stubs/`, `packages/domains/stubs/`, `packages/emails/stubs/`,
 `packages/validators/stubs/` and `packages/auth/stubs/` for PHPStan, which runs without the
 extension. A library that still has a PHP implementation is registered only when
-`_APP_EXTENSION_LIBRARIES` names its package; today those are `detector` and `compression`. Otherwise Composer loads
-the package's PHP class as before:
+`_APP_EXTENSION_LIBRARIES` names its package; today those are `detector`, `compression` and
+`query`. Otherwise Composer loads the package's PHP class as before:
 
 ```sh
 _APP_EXTENSION_LIBRARIES=<package>,<package>   # those packages' classes from the extension
@@ -369,6 +371,355 @@ same exception for a URL, and fills the same properties. `==`, `var_dump()`, `(a
 - The protected helpers `initializeProviders()`, `getProviderForDomain()` and `isDomainSupported()`
   and the protected static properties `$freeDomains`, `$disposableDomains` and `$providers` do not
   exist: a subclass cannot call or read them. Nothing in Appwrite or Cloud subclasses `Email`.
+
+## Utopia\Query: the classifiers, the tokenizers, Query, the AST and the schemas
+
+Over `crates/utopia/query` (`_APP_EXTENSION_LIBRARIES=query`). `packages/query` is about 300 classes,
+so it moves to the extension one part at a time, and `query` switches on whatever part is here. So
+far that is the statement classifiers a database proxy routes with: the `Classifier` interface,
+`Classifier\SQL` (abstract), `Classifier\MySQL`, `Classifier\PostgreSQL`, `Classifier\MongoDB` and
+the `Type` enum they return; the tokenizers; `Query`; the AST's parser and serializers; and the
+schemas, each below. Every other class of the package (`Method` and the other enums, the builders,
+the schema's blueprints, the AST's nodes and walker) is still its PHP source and works with these
+unchanged.
+
+The interface and the enum are registered too, not left in PHP: a class registered when the module
+starts cannot implement a userland interface, and returning the extension's own enum case costs no
+lookup. PHP code that implements `Classifier`, extends `Classifier\SQL` with its own `classify()`,
+or extends a concrete classifier and calls `parent::classify()` works as before.
+
+`crates/extension/tests/query.php` prints a corpus of results that must be identical on both
+implementations: every keyword the classifiers know, in three spellings and seven positions; SQL
+with comments, quoted and dollar-quoted text, `COPY` and CTEs, bytes that are not UTF-8 and inputs
+of 100 KB; seeded mutations of all of them; MySQL and PostgreSQL packets of every command and
+message type around those statements; MongoDB `OP_MSG` messages for every command name with and
+without `startTransaction`, with every BSON value type before it, truncated and with a byte
+changed; 3,000 random messages; the enum's cases, `from()` and `tryFrom()`; `instanceof`,
+reflection, `==` and `clone`; PHP classes that implement the interface or extend a classifier; and
+the scalar arguments PHP converts. `packages/query/tests` run on the extension too, without
+`tests/E2E`, which needs database servers. The corpus asserts one known difference:
+
+- `ReflectionClass::isFinal()` is `false` for `Type`; a PHP enum reports `true`. Extending it is
+  refused either way.
+
+### The tokenizers
+
+`Tokenizer\Tokenizer` and its dialects `MySQL`, `MariaDB`, `PostgreSQL`, `SQLite` and `ClickHouse`,
+which the AST parser and the builders' statement checks call. `Token` and `TokenType` stay PHP: a
+token is a value object, so `tokenize()` returns the package's own `Token`s, made by its constructor
+with the cases of its enum, and `filter()` returns the objects it was given. An unterminated string
+or identifier throws the package's `ValidationException`.
+
+The corpus adds, on all six dialects: every statement of the classifier corpus; numbers,
+placeholders, operators (PostgreSQL's multi-character ones, and near misses of them), strings and
+identifiers with every escape, comments in all three forms and `#` inside each kind of quote; seeded
+mutations of all of them; `filter()` of tokens it made, of tokens made by hand, of a keyed array and
+of nothing; the class hierarchy; subclasses that read the quote character or change `tokenize()`;
+and the scalar arguments PHP converts. It asserts two known differences:
+
+- A tokenizer holds nothing. PHP keeps the SQL it last read, its length and its position in
+  private properties, so a PHP tokenizer that has tokenized is not `==` a new one.
+- `getIdentifierQuoteChar()` exists and returns the dialect's quote, but `tokenize()` does not ask
+  it: a subclass that overrides it does not change the quote. Nothing in Appwrite or Cloud does.
+
+Five tests in `packages/query/tests/Tokenizer/MySQLTest.php` reached the private
+`replaceHashComments()` by reflection. They now read the rewritten SQL back from `tokenize()`,
+whose tokens cover every byte, so they run on both implementations.
+
+### Query
+
+`Utopia\Query\Query`, the value object every query is. The extension registers its methods and
+state as `Utopia\Query\NativeQuery`, and the package declares `Query` over it
+(`packages/query/src/extension.php` loads `packages/query/extension/Query.php` before the autoloader
+looks for `src/Query.php`). That one PHP class holds the two constants that are arrays,
+`LOGICAL_TYPES` and `GROUP_BY_TIME_BUCKET_INTERVALS`, which a class registered when the module
+starts cannot. `Utopia\Database\Query` reads the first.
+
+A query's values are PHP values (any value, nested queries among them), so the binding keeps them
+as PHP holds them and uses the crate only for what a method is (`utopia_query::Method`): a nested
+query stays the same object, `getValues()` returns the array that was stored, and changing a nested
+query through it changes the one the parent holds. `clone` copies nested queries. `Method`,
+`NullsPosition`, `CursorDirection`, `ParsedQuery` and the exceptions stay PHP; the binding returns
+their cases and constructs them. `json_decode()` is PHP's own, called from the binding, so
+`parse()` accepts and refuses exactly what it did. `toString()` writes the JSON itself when the
+query holds only nulls, booleans, integers, UTF-8 strings and queries like it, which takes half of
+PHP's time. Anything else (a float, an array, an object, a string that is not UTF-8, a subclass with
+its own `toArray()`) goes to PHP's `json_encode()` as before. `contains()` raises the deprecation
+`#[\Deprecated]` raised.
+
+Subclasses are what most of the binding is about. `Utopia\Database\Query`, `Utopia\Audit\Query`
+and `Utopia\Usage\UsageQuery` extend `Query`:
+
+- `new static` makes an object of the class a method was called on, directly when the class keeps
+  the extension's constructor and through its own when it has one, including through `parent::`.
+- Where `Query.php` calls a method through `static` (`parseQuery()` from `parse()` and for nested
+  queries, `isMethod()`, `on()`, `parse()` from `parseQueries()` and `fingerprint()`, `lessThan()`,
+  `greaterThan()` and `between()` from the date helpers, `limit()` and `offset()` from `page()`,
+  `validate()` for nested queries), a subclass's own runs, in the same order.
+  `Utopia\Database\Query::parseQuery()`, which decodes children given as JSON strings, depends on it.
+- Where `Query.php` calls `toArray()` or `shape()` on a query object (`toString()`, nested queries in
+  `toArray()`, `diff()`, `fingerprint()`), a subclass's own runs. `Utopia\Database\Query::toArray()`,
+  which writes a cursor document as its id, depends on it.
+- An override must be compatible with the method it overrides, and PHP checks that against what the
+  extension declares. Each array parameter is declared `array`. The cursor factories take
+  `array|object` and are declared `array`, the nearest type an extension method can declare that an
+  `array|object` override is compatible with; they accept an object all the same.
+- The seven protected properties are declared and getter-backed, so a subclass reads
+  `$this->method` and `var_dump()`, `==` and `(array)` see what they see in PHP.
+- `serialize()` writes what PHP's class writes, a property at a time, and `unserialize()` reads it,
+  so either reads what the other wrote. utopia-php/database hashes it for its cache keys. A subclass
+  keeps the properties it declares.
+
+The corpus adds: every method constructed on the class and on two subclasses, with and without
+values, nested queries and an alias; every factory with arguments it takes and sixty seeded
+argument lists from a pool of thirty values (strings, numbers, `NAN`, arrays, objects, enum cases,
+queries); 470 JSON documents through `parse()`, `parseQuery()`, `parseQueries()` and
+`fingerprint()` on the class and on subclasses, the 0.6 join layouts and malformed JSON among them;
+setters, `getValue()`, `clone`, identity of nested queries; `groupByType()`, `getByType()`,
+`getCursorQueries()`, `merge()`, `diff()`, `validate()` and `page()` over lists of every shape;
+`compile()` through a recording compiler; named arguments; what `var_dump()`, `==`, `(array)` and
+reflection show; a subclass that overrides every method reached through `static` and records the
+order they ran in; and `Utopia\Database\Query` itself, with a `Document` as a cursor and children
+given as JSON strings. It asserts these known differences:
+
+- `Query` has a parent class, `NativeQuery`. In PHP it has none.
+- More arguments than a method declares are an `ArgumentCountError`; PHP ignores the extras.
+- A call that both omits an argument and passes a wrong one raises `ArgumentCountError`, a subclass
+  of the `TypeError` PHP raises for it. The corpus compares the two as `TypeError`.
+- `isset()` on a protected property from outside the class is `true`. Reading it is refused.
+- A query that holds itself (`$query->setValues([$query])`) ends `toString()`, `toArray()`,
+  `shape()`, `fingerprint()` and `validate()` with the engine's `Error` for infinite recursion. PHP
+  builds arrays until memory runs out, which is fatal. `clone`, `groupByType()` and `getByType()`
+  end with that `Error` on both. The extension asks the engine's own stack limit before each level,
+  so the answer follows the stack it is on: the process's, a fiber's or a coroutine's.
+
+One difference the corpus does not assert: `groupByType()`, `getByType()`, `getCursorQueries()`,
+`merge()` and `validate()` read a listed query's method, attribute and values directly, where PHP
+calls its `getMethod()`, `getAttribute()` and `getValues()`. A subclass that overrides those getters
+is not consulted there. The three subclasses above do not override them.
+
+One test in `packages/query/tests/API/HelperTest.php` read the `#[\Deprecated]` attribute of
+`contains()` by reflection. It now asserts the deprecation the call raises, on both implementations.
+
+### The AST's parser and serializers
+
+`AST\Grammar`, `AST\Parser`, and `AST\Serializer` with its dialects `MySQL`, `MariaDB`,
+`PostgreSQL`, `SQLite` and `ClickHouse`. The builders are their only callers. The 25 node classes
+stay PHP. They are readonly data that PHP code builds, reads and matches with `instanceof`, and a
+native class would only make `new` slower. `AST\Walker` and the three visitors stay PHP as well,
+because a walk is nothing but calls into a PHP visitor.
+
+The parser returns the package's own node objects and the serializers read them. Both go through
+the nodes' property slots, not their constructors and not their property tables. The constructors
+only assign, and the two that check something (a function's name, a cast's type) check what the
+parser has already checked. The first use in a request verifies that each node class declares the
+properties the extension expects in the order it expects, and throws an `Error` naming the class
+if the package and the extension are out of step.
+
+PHP recurses on its own heap, so it parses and writes a tree as deep as its memory allows. Rust
+recurses on the native stack, which a Swoole coroutine keeps at 2 MB. Reading one level of a tree
+takes 3.1 KB of it in a release build. So the binding measures a tree first, and works on anything
+deeper than 32 levels on a stack allocated for that depth (`stacker`). Nothing that runs there
+calls PHP code. With this, the extension takes every tree PHP takes: the corpus goes to 20,000
+levels, and under a 512 KB or 128 KB fiber stack both implementations stop at the same input,
+where PHP's own engine overflows freeing the objects.
+
+The corpus adds: `Grammar` on names and types with every kind of whitespace and bytes that are not
+UTF-8; 209 statements, valid and not, parsed from two tokenizers and written by all six
+serializers, then parsed again from what was written; each of those statements cut short after
+every token, with every token dropped and every pair swapped, for the parser's errors; token
+arrays that are empty, keyed, gapped, unfiltered or hold other values, and tokens made by hand with
+values a tokenizer never produces; every node made by hand with values a parser never produces,
+every pair of 31 operators nested on either side, floats at four `precision` settings, wrong
+values in every array a node holds, and subclasses of nodes; trees 20,000 levels deep and chains
+8,000 terms long; subclasses of the parser and the serializers; and the PHP walker and visitors
+over parsed statements. It asserts two known differences:
+
+- `serialize()` writes the whole statement itself. PHP's calls `serializeExpression()` and
+  `quoteIdentifier()` on `$this`, so a subclass that overrides either changes the statement. Here
+  the overrides apply only when called directly. The package's dialects are the only subclasses in
+  Appwrite and Cloud.
+- A chain of more than 1,024 `NOT` or sign operators is refused with the package's
+  `ValidationException` (`Expression nesting too deep`). PHP parses it until its memory runs out.
+  A tree deeper than 100,000 levels is refused the same way, past the depth PHP itself survives.
+
+This PR also changes the PHP serializer, for both implementations. `crates/utopia/query` was
+ported from a `Serializer.php` that keeps the parentheses of an equal-precedence right operand,
+and the one on `main` drops them for every operator but `-`, `/` and `%`. So `a = (b = c)` was
+written as `a = b = c`, which reads back as `(a = b) = c`. `packages/query/src/AST/Serializer.php`
+is now the fixed version, with two tests in `tests/AST/SerializerTest.php` that fail on the old
+one.
+
+### The schemas
+
+`Schema` and `Schema\SQL` (both abstract), the dialects `Schema\MySQL`, `PostgreSQL`, `SQLite`,
+`ClickHouse` and `MongoDB`, and the 16 `Schema\Feature\*` interfaces they implement. The
+blueprints stay PHP: `Table`, `Column`, `ForeignKey`, `Index`, `CheckConstraint`, `RenameColumn`,
+their dialect classes and traits, the forwarders and the enums. They are what PHP code fills with
+fluent calls, and they validate as they are filled.
+
+`$schema->table($name)` returns the package's own `Table\<Dialect>`, holding the schema. When the
+table calls back (`compileCreate($this)`), the schema reads it through its property slots, which
+it finds by name once a request for each class, builds the crate's blueprint and compiles it. The
+statement it returns is the package's `Builder\Statement`, carrying the closure given to
+`setExecutor()`. A view's query is still a PHP builder: the schema calls its `build()`, passes the
+SQL to the crate and keeps the bindings as PHP built them.
+
+A statement takes 7% to 22% less time than PHP's on the Alpine image, and 16% to 28% less on
+macOS: a `CREATE TABLE` of 18 columns is 6.0 microseconds against PHP's 6.5 on Alpine. The margin is
+small because PHP compiles DDL by string concatenation, which it does well, and the extension has
+to read the blueprint out of PHP objects first. Three things got it under PHP's time, having started
+28% over it on Alpine:
+
+- The extension allocates with mimalloc. More than half of a `compileCreate()` was `malloc` and
+  `free`, and musl's are slow. This is the allocator of all the extension's Rust code. PHP's own
+  allocations stay with PHP's, and libheif and libwebp, which are C, keep libc's.
+- The crate writes a column's definition into one string, where it joined a list of parts.
+- A `Statement` is made by setting its properties, which is all its constructor does. Calling a PHP
+  constructor from Rust costs more than `new` does in PHP.
+
+Only DDL calls a schema, and the statement then takes the database milliseconds. What this part
+buys is that `crates/utopia/query`'s DDL is checked against PHP's, statement for statement, before
+anything written in Rust relies on it.
+
+SQL names and text are bytes to PHP, so they are widened going into the crate and narrowed coming
+out, as the AST's are. MongoDB's statements are JSON, so its strings must be UTF-8.
+
+The corpus adds, for all five dialects: 97 blueprints, one for each column factory, modifier,
+index, key, check, alteration, partitioning and engine option, compiled as `CREATE` and as
+`ALTER`; every column type at six sizes, added and modified, and as a `Column` made directly with
+ten sets of arguments; 37 default values at four `precision` settings; 31 names (qualified, empty,
+quoted, with every quote character, with bytes that are not UTF-8, with Unicode spaces) in each of
+35 places a blueprint or a statement holds one; tables with properties set past the fluent
+methods; a table made by each dialect compiled by every schema; every other public method with
+every name, both flags and arguments of every wrong type; `createIndex()` with 33 sets of options,
+foreign keys with every action, procedures, triggers at every timing and event, collations, types,
+sequences and comments; views over six builders with their bindings; the executor, on a schema, a
+clone and a statement; and the signatures, parents and interfaces of the classes. The database
+library's unit tests that create collections, attributes or indexes give the same results on both.
+The corpus asserts six known differences:
+
+- The classes have the public methods only. PHP's dialects are built from protected steps
+  (`quote()`, `compileColumnType()`, `compileColumnDefinition()` and others) that a subclass can
+  override or call, and the abstract `Schema` holds the shared ones. Here a schema compiles a
+  statement whole, so a subclass can override a public method but not a step, and a dialect written
+  in PHP has nothing in `Schema` to build on. Nothing in Appwrite, Cloud or the database library
+  subclasses a schema.
+- The `Feature` interfaces declare no methods. ext-php-rs checks a class's methods against its
+  interface's when PHP starts, and these classes return their statements untyped. Every class has
+  every method of the interfaces it implements, and `instanceof` answers as before.
+- A schema reads the whole blueprint before it compiles. PHP reads only what the statement uses.
+  They differ only on a blueprint holding what its fluent methods refuse, such as a half-made
+  `CheckConstraint`, which takes a subclass or reflection to make: PHP compiles an `ALTER` that does
+  not write the check, and the extension throws.
+- An index length must be a number. PHP writes whatever it is given between the parentheses.
+- A procedure parameter's direction must be a `ParameterDirection`. PHP reads `->value` off
+  anything, with a warning.
+- MongoDB refuses a string that is not UTF-8 when it reads it, with the `JsonException` that
+  `json_encode()` throws. PHP throws it only if the statement uses the string.
+
+The executor closure is held in Rust, where PHP's cycle collector does not look. A closure that
+reaches its own schema (`$schema->setExecutor(fn () => $schema)`) is freed at the end of the
+request, not before. The database library's executor is bound to the database, which does not keep
+the schema.
+### The builders
+
+`Builder\MySQL`, `MariaDB`, `PostgreSQL`, `SQLite`, `ClickHouse` and `MongoDB`, with the abstract
+`Builder` and `Builder\SQL` above them, the `Compiler` interface and the 51 `Feature\*` interfaces.
+They register with the rest of `query`.
+
+Every public and protected method PHP's builders have is native, with PHP's signature. The corpus
+compares each public one, and the interfaces each builder implements.
+
+What a subclass can rely on:
+
+- A protected method it overrides is the one the build calls, in the order PHP calls them: `build()`,
+  the `compile*()` methods, the clause hooks, the validators and every other helper, 74 in all,
+  `quote()` and `getBindingValues()` among them.
+  `parent::compileFilter()` runs the native one. An override is handed the package's own objects: a
+  `Query`, a `Case\Expression`, a `Statement`, a `ParsedQuery`, and `$parts` by reference. Nothing
+  is converted for a method no subclass overrides.
+- `createAstSerializer()` is among them: `fromAst()` writes what stays raw SQL with the serializer
+  a subclass returns.
+- `bindings`, `pendingQueries` and `resolvedAttributeCache` are protected properties it reads,
+  assigns and changes in place (`$this->pendingQueries[] = $query`), as the package's own traits do.
+  PHP is handed a copy the builder holds, and the next native call reads it back.
+- Its constructor need not call the parent's, which PHP's builders have none of.
+- It can override a public method with PHP's own types. Fluent methods return `static`,
+  `build()` returns `Statement`, `select()` takes `array|string`.
+- `static::fromAst()` returns a builder of the class it was called on.
+
+Four things happen after every extension has registered its classes, in PHP's post-startup hook,
+because `#[php_class]` cannot say them: fluent return types become `static`, unions and returned
+classes replace `mixed`, the builders implement their interfaces, and PHP creates a builder, or a
+`Query`, with its state already in it. An interface takes its signatures from the native methods,
+so the two cannot disagree.
+
+Known differences:
+
+- `compileWhereClauses()`, `compileOrderAndLimit()` and `buildAfterJoinsClause()`, called on their
+  own, group the builder's own queries, whatever `ParsedQuery` they are handed. An override is
+  handed the one PHP's `Query::groupByType()` makes of them.
+- `getSpatialTypeFromWkt()` and `quoteLiteral()` can be overridden to no effect, as in PHP, where no
+  builder calls them.
+- `validateAndGetColumns()` with no rows is a `ValidationException`. PHP warns and then fails on
+  the missing row.
+- The other protected properties of PHP's builders (`table`, `unions`, `lockMode` and about fifty
+  more) do not exist, so a subclass that composes one of the package's `Builder\Trait\*` traits
+  works only when the trait touches nothing but `pendingQueries` and `bindings`.
+- An override is handed a `Query` or a `JoinBuilder` built from the builder's own, not the object
+  the caller passed in.
+- A cursor row that is an object is read when `cursorAfter()` is called. PHP reads it when it builds.
+- `resolvedAttributeCache` has no order.
+- The classes declare a constructor and no `__clone()`. PHP's declare the reverse.
+
+Four things check them. `tests/query-builders.php` is a corpus like the others: 15,797 cases, the
+same on PHP and on the extension. The package's own 5,628 tests pass on the native builders, but for
+two that read the PHP class's source and private state and are skipped there. utopia-php/database
+10.2.3 subclasses four of the builders, overrides 23 of their methods and serializes queries for its
+cache keys. Its 13,217 unit tests fail the same nine on main's PHP package, on this one and on the
+native builders: the nine need a database server.
+`tests/query-coroutines.php` builds 720 statements in Swoole coroutines whose overrides and
+callbacks sleep in the middle of a build, so builds interleave on one thread. Each builder carries
+the PHP object that owns it for that reason: kept per thread, 476 of the 720 lost their overrides.
+
+Run by hand on 2026-11-23, on the Alpine image built for arm64, and not part of CI:
+
+- Appwrite's `Databases` and `TablesDB` E2E suites on the compose stack with the switch on in every
+  service, on PostgreSQL and on MariaDB: 3,949 tests on each, 865 skipped and three failed. The
+  three need the embedding service, and fail the same way with the switch off.
+- Both corpora and the coroutine test under valgrind, with PHP on the system allocator: no invalid
+  read, write or free in the builders, and the same warnings as the PHP classes give. The `query`
+  corpus reports 19 invalid accesses, all on the stack `stacker` grows for a deep AST, which
+  valgrind does not know is a stack.
+- 400,000 rounds of 25 builds, clones, callbacks, failures and serialization in one process, alone
+  and across eight coroutines: resident memory is flat from the first sample to the last.
+
+CI's E2E lanes leave the switch off, so they run the PHP classes.
+
+Microseconds per call, release build, OPcache on, no JIT, an M-series Mac, median of seven runs.
+A read is five queries and three columns. `Database\*` is utopia-php/database 10.2.3's subclass.
+
+| operation | PHP | Rust | Rust/PHP |
+|---|---:|---:|---:|
+| read, `Builder\MySQL` | 10.88 | 3.74 | 0.34 |
+| read, `Database\Builder\MySQL` | 10.76 | 3.82 | 0.36 |
+| read, `Builder\PostgreSQL` | 10.65 | 3.65 | 0.34 |
+| read, `Database\Builder\Postgres` | 11.25 | 6.31 | 0.56 |
+| read, `Database\Builder\SQLite` | 11.00 | 4.87 | 0.44 |
+| read, `Builder\ClickHouse` | 8.73 | 3.56 | 0.41 |
+| read, `Builder\MongoDB` | 6.65 | 4.46 | 0.67 |
+| join, aggregate, group, having | 9.55 | 2.91 | 0.30 |
+| update | 3.56 | 1.91 | 0.54 |
+| delete | 2.74 | 1.29 | 0.47 |
+| insert, one row | 2.14 | 1.49 | 0.70 |
+| insert, ten rows | 7.41 | 6.80 | 0.92 |
+| upsert | 2.21 | 1.73 | 0.78 |
+| a new builder, `from()`, `build()` | 1.89 | 0.90 | 0.48 |
+
+The database library's Postgres and SQLite builders override `compileFilter()` and its helpers in
+PHP, so each filter crosses into PHP and back. An insert is mostly its rows crossing from PHP: ten
+rows take almost as long as PHP's own.
 
 ## Utopia\Validator\Validator
 
