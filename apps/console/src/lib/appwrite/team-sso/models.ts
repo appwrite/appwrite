@@ -28,12 +28,12 @@ export type SSOProvider = {
   /** Roles people get when they join through the provider. */
   roles: string[]
   enabled: boolean
-  clientId: string
-  clientSecretSet: boolean
-  wellKnownURL: string
-  authorizationURL: string
-  tokenURL: string
-  userInfoURL: string
+  oidcClientId: string
+  oidcClientSecretSet: boolean
+  oidcWellKnownURL: string
+  oidcAuthorizationURL: string
+  oidcTokenURL: string
+  oidcUserInfoURL: string
 }
 
 export type SSOProviderList = {

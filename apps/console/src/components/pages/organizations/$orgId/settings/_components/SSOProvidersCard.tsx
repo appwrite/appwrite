@@ -147,11 +147,11 @@ export function SSOProvidersCard() {
         params: {
           name: provider.name,
           roles: provider.roles,
-          clientId: provider.clientId,
-          wellKnownURL: provider.wellKnownURL,
-          authorizationURL: provider.authorizationURL,
-          tokenURL: provider.tokenURL,
-          userInfoURL: provider.userInfoURL,
+          clientId: provider.oidcClientId,
+          wellKnownURL: provider.oidcWellKnownURL,
+          authorizationURL: provider.oidcAuthorizationURL,
+          tokenURL: provider.oidcTokenURL,
+          userInfoURL: provider.oidcUserInfoURL,
           enabled,
         },
       },
@@ -271,9 +271,9 @@ export function SSOProvidersCard() {
                     <div
                       dir="ltr"
                       className="w-fit max-w-full truncate font-mono text-[12px] text-muted-foreground"
-                      title={provider.clientId}
+                      title={provider.oidcClientId}
                     >
-                      {provider.clientId}
+                      {provider.oidcClientId}
                     </div>
                   </TableCell>
                   <TableCell className="hidden px-4 py-3 sm:table-cell">
@@ -460,20 +460,24 @@ function ProviderForm({
   const submitOnce = useSingleSubmit()
   const [name, setName] = useState(provider?.name ?? '')
   const [roles, setRoles] = useState<string[]>(provider?.roles ?? ['developer'])
-  const [clientId, setClientId] = useState(provider?.clientId ?? '')
+  const [clientId, setClientId] = useState(provider?.oidcClientId ?? '')
   const [clientSecret, setClientSecret] = useState('')
-  const [wellKnownURL, setWellKnownURL] = useState(provider?.wellKnownURL ?? '')
-  const [authorizationURL, setAuthorizationURL] = useState(
-    provider?.authorizationURL ?? '',
+  const [wellKnownURL, setWellKnownURL] = useState(
+    provider?.oidcWellKnownURL ?? '',
   )
-  const [tokenURL, setTokenURL] = useState(provider?.tokenURL ?? '')
-  const [userInfoURL, setUserInfoURL] = useState(provider?.userInfoURL ?? '')
+  const [authorizationURL, setAuthorizationURL] = useState(
+    provider?.oidcAuthorizationURL ?? '',
+  )
+  const [tokenURL, setTokenURL] = useState(provider?.oidcTokenURL ?? '')
+  const [userInfoURL, setUserInfoURL] = useState(
+    provider?.oidcUserInfoURL ?? '',
+  )
   const [enabled, setEnabled] = useState(provider?.enabled ?? true)
   const [advanced, setAdvanced] = useState(
     !!(
-      provider?.authorizationURL ||
-      provider?.tokenURL ||
-      provider?.userInfoURL
+      provider?.oidcAuthorizationURL ||
+      provider?.oidcTokenURL ||
+      provider?.oidcUserInfoURL
     ),
   )
 
@@ -724,7 +728,7 @@ function ProviderForm({
               value={clientSecret}
               autoComplete="new-password"
               placeholder={
-                provider?.clientSecretSet ? t('Unchanged') : undefined
+                provider?.oidcClientSecretSet ? t('Unchanged') : undefined
               }
               maxLength={512}
               onChange={(event) => setClientSecret(event.target.value)}

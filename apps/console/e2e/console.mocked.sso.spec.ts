@@ -160,12 +160,32 @@ type Provider = {
   name: string
   roles: string[]
   enabled: boolean
-  clientId: string
-  clientSecretSet: boolean
-  wellKnownURL: string
-  authorizationURL: string
-  tokenURL: string
-  userInfoURL: string
+  oidcClientId: string
+  oidcClientSecretSet: boolean
+  oidcWellKnownURL: string
+  oidcAuthorizationURL: string
+  oidcTokenURL: string
+  oidcUserInfoURL: string
+}
+
+/**
+ * A provider's settings as the API answers them: the routes are OIDC ones and
+ * take short names, the model serves every kind of provider and prefixes them.
+ * The secret is never answered.
+ */
+function answered(body: Record<string, unknown>): Record<string, unknown> {
+  const names: Record<string, string> = {
+    clientId: 'oidcClientId',
+    wellKnownURL: 'oidcWellKnownURL',
+    authorizationURL: 'oidcAuthorizationURL',
+    tokenURL: 'oidcTokenURL',
+    userInfoURL: 'oidcUserInfoURL',
+  }
+  const answer: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(body)) {
+    if (key !== 'clientSecret') answer[names[key] ?? key] = value
+  }
+  return answer
 }
 
 function provider(name: string, roles: string[], enabled = true): Provider {
@@ -178,12 +198,13 @@ function provider(name: string, roles: string[], enabled = true): Provider {
     name,
     roles,
     enabled,
-    clientId: `${name.toLowerCase()}-client`,
-    clientSecretSet: true,
-    wellKnownURL: 'https://idp.example.com/.well-known/openid-configuration',
-    authorizationURL: '',
-    tokenURL: '',
-    userInfoURL: '',
+    oidcClientId: `${name.toLowerCase()}-client`,
+    oidcClientSecretSet: true,
+    oidcWellKnownURL:
+      'https://idp.example.com/.well-known/openid-configuration',
+    oidcAuthorizationURL: '',
+    oidcTokenURL: '',
+    oidcUserInfoURL: '',
   }
 }
 
@@ -624,8 +645,7 @@ async function mockAppwriteApi(
     if (apiPath === `${sso}/providers/oidc` && method === 'POST') {
       const body = request.postDataJSON()
       mock.sent.providerCreates.push(body)
-      const created = { ...provider(body.name, body.roles), ...body }
-      delete created.clientSecret
+      const created = { ...provider(body.name, body.roles), ...answered(body) }
       mock.providers.push(created)
       return json(201, created)
     }
@@ -636,9 +656,7 @@ async function mockAppwriteApi(
       const body = request.postDataJSON()
       mock.sent.providerUpdates.push({ providerId: oidc[1], body })
       const index = mock.providers.findIndex((item) => item.$id === oidc[1])
-      const rest = { ...body }
-      delete rest.clientSecret
-      mock.providers[index] = { ...mock.providers[index], ...rest }
+      mock.providers[index] = { ...mock.providers[index], ...answered(body) }
       return json(200, mock.providers[index])
     }
     const oneProvider = apiPath.match(
