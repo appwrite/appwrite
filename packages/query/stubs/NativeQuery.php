@@ -5,10 +5,9 @@
 
 namespace Utopia\Query;
 
-use JsonException;
 use Utopia\Query\Builder\ParsedQuery;
 use Utopia\Query\Exception as QueryException;
-use Utopia\Query\Exception\ValidationException;
+
 /** @phpstan-consistent-constructor */
 class NativeQuery
 {

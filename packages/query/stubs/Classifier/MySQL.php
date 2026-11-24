@@ -5,8 +5,8 @@
 
 namespace Utopia\Query\Classifier;
 
-use Utopia\Query\Classifier;
 use Utopia\Query\Type;
+
 /**
  * MySQL Wire Protocol Parser
  *

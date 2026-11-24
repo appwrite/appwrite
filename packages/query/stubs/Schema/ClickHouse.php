@@ -8,22 +8,13 @@ namespace Utopia\Query\Schema;
 use Closure;
 use Utopia\Query\Builder;
 use Utopia\Query\Builder\Statement;
-use Utopia\Query\Exception\UnsupportedException;
-use Utopia\Query\Exception\ValidationException;
-use Utopia\Query\QuotesIdentifiers;
-use Utopia\Query\Schema;
-use Utopia\Query\Schema\ClickHouse\Engine;
-use Utopia\Query\Schema\Column;
 use Utopia\Query\Schema\Feature\ColumnComments;
 use Utopia\Query\Schema\Feature\Databases;
 use Utopia\Query\Schema\Feature\DropPartition;
 use Utopia\Query\Schema\Feature\MaterializedViews;
 use Utopia\Query\Schema\Feature\TableComments;
 use Utopia\Query\Schema\Feature\Views;
-use Utopia\Query\Schema\IndexType;
-use Utopia\Query\Schema\Order;
-use Utopia\Query\Schema\Table;
-use Utopia\Query\StringLiteral;
+
 class ClickHouse extends \Utopia\Query\Schema implements TableComments, ColumnComments, DropPartition, Views, Databases, MaterializedViews
 {
     /**

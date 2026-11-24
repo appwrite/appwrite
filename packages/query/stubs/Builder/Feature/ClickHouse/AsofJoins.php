@@ -6,6 +6,7 @@
 namespace Utopia\Query\Builder\Feature\ClickHouse;
 
 use Utopia\Query\Builder\ClickHouse\AsofOperator;
+
 interface AsofJoins
 {
     /**

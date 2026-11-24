@@ -5,7 +5,6 @@
 
 namespace Utopia\Query\Schema\Feature;
 
-use Utopia\Query\Schema\Table;
 interface Partitioning
 {
 }

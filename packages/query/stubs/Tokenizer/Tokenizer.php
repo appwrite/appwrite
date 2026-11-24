@@ -5,8 +5,8 @@
 
 namespace Utopia\Query\Tokenizer;
 
-use Utopia\Query\Exception\ValidationException;
 use Utopia\Query\StringLiteral;
+
 class Tokenizer
 {
     /**

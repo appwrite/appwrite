@@ -5,7 +5,7 @@
 
 namespace Utopia\Query;
 
-enum Type : string
+enum Type: string
 {
     case Read = 'read';
     case Write = 'write';

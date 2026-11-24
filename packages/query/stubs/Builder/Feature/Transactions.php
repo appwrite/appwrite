@@ -6,6 +6,7 @@
 namespace Utopia\Query\Builder\Feature;
 
 use Utopia\Query\Builder\Statement;
+
 interface Transactions
 {
     public function begin(): Statement;

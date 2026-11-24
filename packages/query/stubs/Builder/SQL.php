@@ -5,23 +5,16 @@
 
 namespace Utopia\Query\Builder;
 
-use Utopia\Query\Builder as BaseBuilder;
 use Utopia\Query\Builder\Case\Expression as CaseExpression;
-use Utopia\Query\Builder\ColumnPredicate;
-use Utopia\Query\Builder\Condition;
 use Utopia\Query\Builder\Feature\BitwiseAggregates;
 use Utopia\Query\Builder\Feature\CrossJoins;
 use Utopia\Query\Builder\Feature\Locking;
 use Utopia\Query\Builder\Feature\RawSql;
 use Utopia\Query\Builder\Feature\StatisticalAggregates;
 use Utopia\Query\Builder\Feature\Transactions;
-use Utopia\Query\Builder\LockMode;
-use Utopia\Query\Builder\Statement;
-use Utopia\Query\Exception\ValidationException;
 use Utopia\Query\Method;
 use Utopia\Query\Query;
-use Utopia\Query\QuotesIdentifiers;
-use Utopia\Query\Schema\ColumnType;
+
 abstract class SQL extends \Utopia\Query\Builder implements Locking, Transactions, StatisticalAggregates, BitwiseAggregates, RawSql, CrossJoins
 {
     abstract protected function quote(string $identifier): string;

@@ -5,37 +5,17 @@
 
 namespace Utopia\Query\Builder;
 
-use ArrayAccess;
 use Closure;
-use Utopia\Query\AST\Call\Func;
-use Utopia\Query\AST\Definition\Cte as CteDefinition;
 use Utopia\Query\AST\Expression;
-use Utopia\Query\AST\Expression\Aliased;
 use Utopia\Query\AST\Expression\Between;
-use Utopia\Query\AST\Expression\Binary;
 use Utopia\Query\AST\Expression\In;
-use Utopia\Query\AST\Expression\Unary;
-use Utopia\Query\AST\JoinClause as AstJoinClause;
-use Utopia\Query\AST\Literal;
-use Utopia\Query\AST\OrderByItem;
-use Utopia\Query\AST\Parser;
 use Utopia\Query\AST\Raw;
 use Utopia\Query\AST\Reference\Column;
 use Utopia\Query\AST\Reference\Table;
 use Utopia\Query\AST\Serializer;
-use Utopia\Query\AST\Star;
 use Utopia\Query\AST\Statement\Select;
-use Utopia\Query\Builder as BaseBuilder;
 use Utopia\Query\Builder;
-use Utopia\Query\Builder\Binding;
 use Utopia\Query\Builder\Case\Expression as CaseExpression;
-use Utopia\Query\Builder\Case\Kind as CaseKind;
-use Utopia\Query\Builder\Case\WhenClause;
-use Utopia\Query\Builder\ColumnPredicate;
-use Utopia\Query\Builder\Condition;
-use Utopia\Query\Builder\CteClause;
-use Utopia\Query\Builder\ExistsSubquery;
-use Utopia\Query\Builder\Feature;
 use Utopia\Query\Builder\Feature\FullTextSearch;
 use Utopia\Query\Builder\Feature\InsertOrIgnore;
 use Utopia\Query\Builder\Feature\MongoDB\ArrayPushModifiers;
@@ -45,34 +25,16 @@ use Utopia\Query\Builder\Feature\MongoDB\FieldUpdates;
 use Utopia\Query\Builder\Feature\MongoDB\PipelineStages;
 use Utopia\Query\Builder\Feature\TableSampling;
 use Utopia\Query\Builder\Feature\Upsert;
-use Utopia\Query\Builder\JoinBuilder;
-use Utopia\Query\Builder\JoinType;
-use Utopia\Query\Builder\LateralJoin;
-use Utopia\Query\Builder\LockMode;
 use Utopia\Query\Builder\MongoDB\Operation;
-use Utopia\Query\Builder\MongoDB\PipelineStage;
-use Utopia\Query\Builder\MongoDB\UpdateOperator;
-use Utopia\Query\Builder\ParsedQuery;
-use Utopia\Query\Builder\Statement;
-use Utopia\Query\Builder\SubSelect;
-use Utopia\Query\Builder\UnionClause;
-use Utopia\Query\Builder\UnionType;
-use Utopia\Query\Builder\WhereInSubquery;
-use Utopia\Query\Builder\WindowDefinition;
-use Utopia\Query\Builder\WindowFrame;
-use Utopia\Query\Builder\WindowSelect;
-use Utopia\Query\Exception\UnsupportedException;
-use Utopia\Query\Exception\ValidationException;
 use Utopia\Query\Hook;
 use Utopia\Query\Hook\Attribute;
 use Utopia\Query\Hook\Filter;
-use Utopia\Query\Hook\Join\Filter as JoinFilter;
 use Utopia\Query\Hook\Join\Placement;
 use Utopia\Query\Method;
 use Utopia\Query\NullsPosition;
 use Utopia\Query\Query;
 use Utopia\Query\Tokenizer\Tokenizer;
-use stdClass;
+
 class MongoDB extends \Utopia\Query\Builder implements Upsert, InsertOrIgnore, FullTextSearch, TableSampling, FieldUpdates, ArrayPushModifiers, ConditionalArrayUpdates, PipelineStages, AtlasSearch
 {
     /**

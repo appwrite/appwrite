@@ -6,6 +6,7 @@
 namespace Utopia\Query\Builder\Feature;
 
 use Utopia\Query\Builder\JoinType;
+
 interface Joins
 {
     public function join(string $table, string $left, string $right, string $operator = '=', string $alias = ''): static;

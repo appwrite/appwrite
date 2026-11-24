@@ -5,9 +5,6 @@
 
 namespace Utopia\Query\Schema\Feature;
 
-use Utopia\Query\Builder\Statement;
-use Utopia\Query\Schema\TriggerEvent;
-use Utopia\Query\Schema\TriggerTiming;
 interface Triggers
 {
 }

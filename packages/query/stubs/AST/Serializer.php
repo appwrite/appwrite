@@ -5,24 +5,9 @@
 
 namespace Utopia\Query\AST;
 
-use Utopia\Query\AST\Call\Func;
-use Utopia\Query\AST\Definition\Cte;
-use Utopia\Query\AST\Expression\Aliased;
-use Utopia\Query\AST\Expression\Between;
-use Utopia\Query\AST\Expression\Binary;
-use Utopia\Query\AST\Expression\Cast;
-use Utopia\Query\AST\Expression\Conditional;
-use Utopia\Query\AST\Expression\Exists;
-use Utopia\Query\AST\Expression\In;
-use Utopia\Query\AST\Expression\Subquery;
-use Utopia\Query\AST\Expression\Unary;
-use Utopia\Query\AST\Expression\Window;
-use Utopia\Query\AST\Reference\Column;
-use Utopia\Query\AST\Reference\Table;
-use Utopia\Query\AST\Specification\Window as WindowSpecification;
 use Utopia\Query\AST\Statement\Select;
-use Utopia\Query\Exception;
 use Utopia\Query\StringLiteral;
+
 class Serializer
 {
     public function serialize(Select $stmt): string

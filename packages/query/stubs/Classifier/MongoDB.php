@@ -7,6 +7,7 @@ namespace Utopia\Query\Classifier;
 
 use Utopia\Query\Classifier;
 use Utopia\Query\Type;
+
 /**
  * MongoDB Wire Protocol Parser
  *

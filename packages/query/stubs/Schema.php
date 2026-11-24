@@ -7,11 +7,9 @@ namespace Utopia\Query;
 
 use Closure;
 use Utopia\Query\Builder\Statement;
-use Utopia\Query\Exception\ValidationException;
 use Utopia\Query\Schema\Column;
-use Utopia\Query\Schema\IndexType;
-use Utopia\Query\Schema\Order;
 use Utopia\Query\Schema\Table;
+
 /**
  * DDL takes no bound parameters, so string literals (comments, defaults, enum
  * values) are inlined through the dialect's {@see StringLiteral}.

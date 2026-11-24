@@ -5,8 +5,6 @@
 
 namespace Utopia\Query\Schema\Feature;
 
-use Utopia\Query\Builder\Statement;
-use Utopia\Query\Schema\ParameterDirection;
 interface Procedures
 {
 }

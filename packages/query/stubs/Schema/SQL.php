@@ -5,9 +5,6 @@
 
 namespace Utopia\Query\Schema;
 
-use Utopia\Query\Exception\ValidationException;
-use Utopia\Query\QuotesIdentifiers;
-use Utopia\Query\Schema;
 abstract class SQL extends \Utopia\Query\Schema
 {
 }

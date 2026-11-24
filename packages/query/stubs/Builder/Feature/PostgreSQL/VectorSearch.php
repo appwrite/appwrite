@@ -6,6 +6,7 @@
 namespace Utopia\Query\Builder\Feature\PostgreSQL;
 
 use Utopia\Query\Builder\VectorMetric;
+
 interface VectorSearch
 {
     /**

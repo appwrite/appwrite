@@ -6,6 +6,7 @@
 namespace Utopia\Query\Builder\Feature;
 
 use Utopia\Query\Builder;
+
 interface Unions
 {
     public function union(Builder $other): static;

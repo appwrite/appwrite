@@ -7,6 +7,7 @@ namespace Utopia\Query\Builder\Feature\PostgreSQL;
 
 use Utopia\Query\Builder;
 use Utopia\Query\Builder\Statement;
+
 interface Merge
 {
     public function mergeInto(string $target): static;

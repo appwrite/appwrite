@@ -8,6 +8,7 @@ namespace Utopia\Query\Builder\Feature;
 use Closure;
 use Utopia\Query\Builder\Statement;
 use Utopia\Query\NullsPosition;
+
 interface Selects
 {
     public function from(string $table = '', string $alias = ''): static;

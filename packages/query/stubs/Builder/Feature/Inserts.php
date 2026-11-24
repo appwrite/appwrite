@@ -7,6 +7,7 @@ namespace Utopia\Query\Builder\Feature;
 
 use Utopia\Query\Builder;
 use Utopia\Query\Builder\Statement;
+
 interface Inserts
 {
     public function into(string $table): static;

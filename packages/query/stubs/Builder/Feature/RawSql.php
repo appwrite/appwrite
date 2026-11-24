@@ -6,6 +6,7 @@
 namespace Utopia\Query\Builder\Feature;
 
 use Utopia\Query\Builder\Case\Expression as CaseExpression;
+
 /**
  * Splicing raw SQL fragments and CASE expressions into a statement.
  *

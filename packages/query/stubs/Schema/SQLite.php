@@ -8,14 +8,8 @@ namespace Utopia\Query\Schema;
 use Closure;
 use Utopia\Query\Builder;
 use Utopia\Query\Builder\Statement;
-use Utopia\Query\Exception\UnsupportedException;
-use Utopia\Query\Exception\ValidationException;
-use Utopia\Query\Schema\Column;
 use Utopia\Query\Schema\Feature\Views;
-use Utopia\Query\Schema\IndexType;
-use Utopia\Query\Schema\Order;
-use Utopia\Query\Schema\Table;
-use Utopia\Query\StringLiteral;
+
 class SQLite extends \Utopia\Query\Schema\SQL implements Views
 {
     /**

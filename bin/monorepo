@@ -967,7 +967,16 @@ switch ($command) {
             // stubs/ (packages/validators/stubs/Validators.php). A package that depends on it
             // scans the copy Composer installed, so it sees the PHPDoc types the extension's
             // runtime reflection lacks.
-            $stubs = glob("{$directory}/vendor/" . ORG . '/*/stubs/*.php') ?: [];
+            // packages/query has one stub per class, in directories that follow its namespaces.
+            $stubs = [];
+            foreach (glob("{$directory}/vendor/" . ORG . '/*/stubs', GLOB_ONLYDIR) ?: [] as $stubDirectory) {
+                foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($stubDirectory, FilesystemIterator::SKIP_DOTS)) as $file) {
+                    if ($file->getExtension() === 'php') {
+                        $stubs[] = $file->getPathname();
+                    }
+                }
+            }
+            sort($stubs);
             if ($stubs !== []) {
                 $config = sys_get_temp_dir() . "/phpstan-{$package}-" . getmypid() . '.neon';
                 $lines = ['includes:', '    - ' . realpath("{$directory}/phpstan.neon"), 'parameters:', '    scanFiles:'];
