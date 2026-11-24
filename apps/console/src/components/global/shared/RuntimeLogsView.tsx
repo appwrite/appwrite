@@ -330,18 +330,18 @@ export function RuntimeLogsView({
 
   const emptyDescription = isProject
     ? t(
-        "Lines your functions, sites and databases write to stdout and stderr show up here. Runtime logs may not be collected in this project's region yet.",
+        "Lines your functions, sites and databases write to stdout and stderr show up here. Logs may not be collected in this project's region yet.",
       )
     : resourceType === 'functions'
       ? t(
-          "Lines your function writes to stdout and stderr show up here. Runtime logs may not be collected in this project's region yet.",
+          "Lines your function writes to stdout and stderr show up here. Logs may not be collected in this project's region yet.",
         )
       : resourceType === 'sites'
         ? t(
-            "Lines your site writes to stdout and stderr show up here. Runtime logs may not be collected in this project's region yet.",
+            "Lines your site writes to stdout and stderr show up here. Logs may not be collected in this project's region yet.",
           )
         : t(
-            "Lines your database writes show up here. Runtime logs may not be collected in this project's region yet.",
+            "Lines your database writes show up here. Logs may not be collected in this project's region yet.",
           )
 
   const loadOlder = hasNextPage ? (
@@ -363,7 +363,7 @@ export function RuntimeLogsView({
         icon={ScrollText}
         variant="centered"
         title={t('No deployment selected')}
-        description={t('Pick a deployment to see its runtime logs.')}
+        description={t('Pick a deployment to see its logs.')}
       />
     )
   } else if (isLoading) {
@@ -379,7 +379,7 @@ export function RuntimeLogsView({
       <EmptyState
         icon={AlertCircle}
         variant="centered"
-        title={t('Could not load runtime logs')}
+        title={t('Could not load logs')}
         description={getErrorMessage(error)}
         action={
           <Button variant="outline" size="sm" onClick={() => refetch()}>
@@ -404,7 +404,7 @@ export function RuntimeLogsView({
       <EmptyState
         icon={ScrollText}
         variant="centered"
-        title={t('No runtime logs')}
+        title={t('No logs')}
         description={emptyDescription}
       />
     )

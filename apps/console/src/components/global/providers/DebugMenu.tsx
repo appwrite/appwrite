@@ -1779,8 +1779,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Products' },
               ),
               createProfileFeatureFlagItem(
-                'Runtime logs',
-                'Show runtime logs for functions and sites (Runtime logs tabs and the deployment page Build / Runtime switch).',
+                'Logs',
+                'Show what functions, sites and databases write to stdout and stderr (Logs tabs, the project Logs page and the deployment page Build / Runtime switch).',
                 'runtimeLogs',
                 profileId,
                 features.runtimeLogs,

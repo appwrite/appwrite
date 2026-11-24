@@ -529,6 +529,12 @@ test.describe('runtime logs', () => {
     })
 
     await expectRuntimeLogs(page)
+
+    // Runtime output is the Logs tab; request logs move to Requests
+    await expect(
+      page.getByRole('tab', { name: 'Logs', exact: true }),
+    ).toHaveAttribute('aria-selected', 'true')
+    await expect(page.getByRole('tab', { name: 'Requests' })).toBeVisible()
   })
 
   test('a deployment page switches from build to runtime logs', async ({
@@ -616,7 +622,9 @@ test.describe('runtime logs', () => {
     await expect(page.getByRole('tab', { name: 'Executions' })).toBeVisible({
       timeout: 30_000,
     })
-    await expect(page.getByRole('tab', { name: 'Runtime logs' })).toHaveCount(0)
+    await expect(
+      page.getByRole('tab', { name: 'Logs', exact: true }),
+    ).toHaveCount(0)
     await expect(
       page.locator(`a[href$="/projects/${PROJECT.$id}/logs"]`),
     ).toHaveCount(0)
@@ -647,7 +655,9 @@ test.describe('runtime logs', () => {
     await expect(page.getByRole('tab', { name: 'Executions' })).toBeVisible({
       timeout: 30_000,
     })
-    await expect(page.getByRole('tab', { name: 'Runtime logs' })).toHaveCount(0)
+    await expect(
+      page.getByRole('tab', { name: 'Logs', exact: true }),
+    ).toHaveCount(0)
 
     // Self-hosted servers have no /v1/logs, so a direct link falls back too
     await page.goto(
