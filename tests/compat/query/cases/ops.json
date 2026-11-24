@@ -837,7 +837,7 @@
         ]
       },
       "expect": {
-        "query": "SELECT * FROM `t` WHERE `name` LIKE ?",
+        "query": "SELECT * FROM `t` WHERE `name` LIKE ? ESCAPE '\\'",
         "bindings": [
           "a\\_%"
         ]

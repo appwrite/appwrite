@@ -61,6 +61,25 @@ pub(in crate::platform) async fn auth(
         if key.expired {
             return Err(Error::new(ErrorType::ProjectKeyExpired));
         }
+        // Organization and account keys act through the Console API only, so they
+        // are refused before the key is touched or audited. Organization scopes name
+        // organization resources, and some share a name with a project scope
+        // (monitors.*, keys.*): on any other project they would reach that project's
+        // own routes in every project of the organization. Account keys would bring
+        // the console user's roles into the project's data plane, where they could
+        // collide with the project's own users and teams.
+        if key.kind == KeyType::Organization && !ctx.project.is_console() {
+            return Err(Error::with_message(
+                ErrorType::UserUnauthorized,
+                "Organization API keys can only be used with the console project.",
+            ));
+        }
+        if key.kind == KeyType::Account && !ctx.project.is_console() {
+            return Err(Error::with_message(
+                ErrorType::UserUnauthorized,
+                "Account API keys can only be used with the console project.",
+            ));
+        }
         role = key.role.clone();
         // Every key also holds `public`, which guests already have, so
         // endpoints open to anyone stay open to keys.
@@ -90,15 +109,6 @@ pub(in crate::platform) async fn auth(
                 KeyOwner::Team { id: key.team_id.clone(), sequence: team_sequence.to_owned() }
             };
             track_key_usage(ctx, owner, stored).await;
-        }
-        // Account keys act as the console user on the Console API only: on
-        // another project the console user's roles could collide with the
-        // project's own users and teams.
-        if key.kind == KeyType::Account && !ctx.project.is_console() {
-            return Err(Error::with_message(
-                ErrorType::UserUnauthorized,
-                "Account API keys can only be used with the console project.",
-            ));
         }
         // An organization key acts as the organization's owner.
         if key.kind == KeyType::Organization {

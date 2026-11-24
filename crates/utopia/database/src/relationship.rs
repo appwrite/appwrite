@@ -226,6 +226,16 @@ impl Relationship {
         }
     }
 
+    /// Whether the given side stores a column for the relationship (`hasColumn()`).
+    pub fn has_column(&self, side: RelationshipSide) -> bool {
+        match self.kind {
+            RelationshipType::OneToOne => side == RelationshipSide::Parent || self.two_way,
+            RelationshipType::OneToMany => side == RelationshipSide::Child,
+            RelationshipType::ManyToOne => side == RelationshipSide::Parent,
+            RelationshipType::ManyToMany => false,
+        }
+    }
+
     /// The relationship a stored document describes (`fromDocument()`).
     ///
     /// Fails as [`Relationship::from_array`] does.

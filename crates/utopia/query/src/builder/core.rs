@@ -919,14 +919,14 @@ impl<D: Dialect> Builder<D> {
 
     fn build_group_by_clause(&mut self, grouped: &ParsedQuery) -> Result<String> {
         const COLUMN: Param<'static> =
-            Param::method("Utopia\\Query\\Builder::resolveAndWrap", 1, "attribute", "Builder.php", 776);
+            Param::method("Utopia\\Query\\Builder::resolveAndWrap", 1, "attribute", "Builder.php", 788);
         let mut parts = Vec::new();
         for column in &grouped.group_by {
             parts.push(self.resolve_and_wrap(&COLUMN.string(column)?)?);
         }
         let function = time_bucket_function::<D>();
         for bucket in &grouped.time_buckets {
-            let interval = Param::method(function, 2, "interval", "Builder.php", 781).string(&bucket.interval)?;
+            let interval = Param::method(function, 2, "interval", "Builder.php", 793).string(&bucket.interval)?;
             parts.push(
                 self.step_string(Step::CompileGroupByTimeBucket, &[Arg::Str(&bucket.attribute), Arg::Str(&interval)])?,
             );
@@ -1749,7 +1749,7 @@ impl<D: Dialect> Builder<D> {
 
     /// PHP's `compileGroupBy()`.
     pub(crate) fn compile_group_by_query(&mut self, query: &Query) -> Result<String> {
-        let interval_param = Param::method(time_bucket_function::<D>(), 2, "interval", "Builder.php", 1448);
+        let interval_param = Param::method(time_bucket_function::<D>(), 2, "interval", "Builder.php", 1460);
         const COLUMN: Param =
             Param::closure("Utopia\\Query\\Builder::{closure:Utopia\\Query\\Builder::compileGroupBy():1454}", 1, "col");
         if query.method() == Method::GroupByTimeBucket {
@@ -1803,7 +1803,7 @@ impl<D: Dialect> Builder<D> {
 
     fn compile_on(&mut self, query: &Query) -> Result<String> {
         const COLUMN: Param =
-            Param::method("Utopia\\Query\\Builder::resolveAndWrap", 1, "attribute", "Builder.php", 1547);
+            Param::method("Utopia\\Query\\Builder::resolveAndWrap", 1, "attribute", "Builder.php", 1559);
         let (left, operator, right) = on_values(query);
         if is_empty_string(&left) || is_empty_string(&right) {
             return Err(Error::Validation("Join ON requires left and right columns".into()));
@@ -2064,7 +2064,7 @@ impl<D: Dialect> Builder<D> {
             1,
             "attribute",
             "Builder.php",
-            if not { 1906 } else { 1891 },
+            if not { 1924 } else { 1909 },
         );
         for attribute in query.values().values() {
             parts.push(format!("{} {suffix}", self.resolve_and_wrap(&param.string(attribute)?)?));

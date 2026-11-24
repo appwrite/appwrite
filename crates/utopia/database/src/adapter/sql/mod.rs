@@ -334,6 +334,10 @@ impl Adapter for Sql {
         Sql::attribute_width(self, collection)
     }
 
+    fn count_of_attributes(&self, collection: &Collection) -> Result<i64> {
+        Sql::count_of_attributes(self, collection)
+    }
+
     async fn create_attribute(&self, collection: &str, attribute: &Attribute) -> Result<bool> {
         Sql::create_attribute(self, collection, attribute).await
     }

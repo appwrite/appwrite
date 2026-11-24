@@ -25,7 +25,8 @@
   "waivers": {
     "Utopia\\Database\\PDO::*": "PHP runtime plumbing: a PDO wrapper that reconnects; the Rust adapters own their connections (reconnect behaviour is converted with Adapter::reconnect)",
     "Utopia\\Database\\Adapter\\SQL\\Plan::__construct": "Accessors subsumed by Rust types: the readonly value SQL::plan() builds for find(), count() and sum(), which no caller constructs; its effect is covered by their cases",
-    "Utopia\\Database\\PDOStatement::*": "PHP runtime plumbing: the PDOStatement wrapper of Utopia\\Database\\PDO"
+    "Utopia\\Database\\PDOStatement::*": "PHP runtime plumbing: the PDOStatement wrapper of Utopia\\Database\\PDO",
+    "Utopia\\Database\\Relationship::hasColumn": "Only RelationshipColumnEstimateTest calls it, which stubs PDO and is ported as a Rust test (crates/utopia/database/tests/relationship_column_estimate.rs); getAttributeWidth() and getCountOfAttributes() reach it in every case that creates a relationship"
   },
   "tests_waived": {},
   "quirks": [],

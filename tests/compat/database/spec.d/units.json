@@ -47,6 +47,7 @@
     "vendor/utopia-php/database/tests/unit/Adapter/ReadWritePoolWriteDecisionTest.php": "Every test uses PHPUnit test doubles (Pool)",
     "vendor/utopia-php/database/tests/unit/Adapter/RedisDatabaseRenameTest.php": "Every test uses PHPUnit test doubles (Redis)",
     "vendor/utopia-php/database/tests/unit/Adapter/RedisUniqueIndexTest.php": "Every test uses PHPUnit test doubles (Redis)",
+    "vendor/utopia-php/database/tests/unit/Adapter/RelationshipColumnEstimateTest.php": "Every test stubs PDO (a PHPUnit test double standing in for the connection); ported as crates/utopia/database/tests/relationship_column_estimate.rs",
     "vendor/utopia-php/database/tests/unit/Adapter/RowSumStatementTest.php": "Every test stubs PDO/PDOStatement (PHPUnit test doubles scripting the driver's replies); the range-checked row sums are ported as cases of RowCountTest and SumOverflowTest on SQLite, and as Rust tests (adapter/sql/aggregate.rs)",
     "vendor/utopia-php/database/tests/unit/Adapter/SQLChildSideRelationshipRenameTest.php": "Every test stubs PDO/PDOStatement (PHPUnit test doubles scripting the driver's replies)",
     "vendor/utopia-php/database/tests/unit/Adapter/SQLVarcharAttributeTest.php": "Every test stubs PDO/PDOStatement (PHPUnit test doubles scripting the driver's replies)",

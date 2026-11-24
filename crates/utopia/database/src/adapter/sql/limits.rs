@@ -9,10 +9,12 @@ use utopia_query::schema::ColumnType;
 
 use super::{Engine, Sql};
 use crate::adapter::{Adapter, Limits, MAX_DATETIME};
+use crate::attribute::Attribute;
 use crate::capability::{Capabilities, Capability};
 use crate::collection::Collection;
 use crate::database;
 use crate::error::{Error, Result};
+use crate::relationship::RelationshipSide;
 use crate::storage;
 use crate::validator::datetime::date;
 
@@ -653,6 +655,25 @@ impl Sql {
         }
     }
 
+    /// `collectionColumns()`: the attributes that store a column, which leaves out
+    /// the relationship sides that have none.
+    fn collection_columns(collection: &Collection) -> Result<Vec<&Attribute>> {
+        Ok(collection
+            .attributes()?
+            .iter()
+            .filter(|attribute| {
+                attribute.relationship.as_ref().is_none_or(|relationship| {
+                    relationship.has_column(attribute.side.unwrap_or(RelationshipSide::Parent))
+                })
+            })
+            .collect())
+    }
+
+    /// `getCountOfAttributes()`: the columns of a collection, the internal ones included.
+    pub(crate) fn count_of_attributes(&self, collection: &Collection) -> Result<i64> {
+        Ok(Self::collection_columns(collection)?.len() as i64 + self.limits().default_attributes)
+    }
+
     /// `getAttributeWidth()`: the most bytes a row of the collection takes,
     /// as MariaDB and MySQL count a row toward their row size limit.
     pub(crate) fn attribute_width(&self, collection: &Collection) -> Result<i64> {
@@ -660,7 +681,7 @@ impl Sql {
         // _updatedAt datetime(3) 7 each, _permissions mediumtext 20.
         let mut total: i64 = 1067;
         let varchar = self.limits().varchar;
-        for attribute in collection.attributes()? {
+        for attribute in Self::collection_columns(collection)? {
             let size = attribute.size.unwrap_or(0);
             if attribute.array {
                 total += 20;
