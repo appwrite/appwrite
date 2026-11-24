@@ -1,32 +1,29 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { sdk } from '@/lib/appwrite/sdk'
+import { AlertCircle } from 'lucide-react'
 import {
-  ADDON_KEY_SSO,
-  findActiveOrPendingAddon,
   hasUpgradeablePlanWithAddon,
   isAddonScheduledForRemoval,
 } from '@/lib/billing/addons'
-import { enableSSOAddon } from '@/lib/billing/enable-sso-addon'
-import { refetchOrganizationBillingQueries } from '@/lib/billing/refetch-organization-billing-queries'
-import { canShowProjectSettings } from '@/lib/console-access-checks'
 import {
-  projectAddonsQueryOptions,
-  useBillingPlans,
-  useOrganizationById,
-  useOrganizationPlan,
-  useOrganizationScopes,
-  useProject,
-  useProjectAddonPrice,
-} from '@/lib/react-query/hooks'
+  confirmAddonPayment,
+  refreshAddonQueries,
+} from '@/lib/billing/enable-addon'
+import { enableSSOAddon } from '@/lib/billing/enable-sso-addon'
+import { canShowProjectSettings } from '@/lib/console-access-checks'
+import { useBillingPlans, useOrganizationScopes } from '@/lib/react-query/hooks'
 import { navigateToUpgradeWizard } from '@/lib/open-upgrade-wizard'
-import { SSO_ADDON_DESCRIPTION, ssoAddonStatus } from '@/lib/sso-addon'
+import {
+  ORGANIZATION_SSO_ADDON_DESCRIPTION,
+  SSO_ADDON_DESCRIPTION,
+} from '@/lib/sso-addon'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { formatCurrency } from '@/components/pages/organizations/$orgId/billing/utils'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -34,87 +31,92 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 import { EnableSSOAddonDialog } from './EnableSSOAddonDialog'
 import { DisableSSOAddonDialog } from './DisableSSOAddonDialog'
+import {
+  toAddonTarget,
+  usePlansSellingAddon,
+  useSSOAddon,
+  type SSOAddonTarget,
+} from './use-sso-addon'
 
-/** The API refused to say: the caller may not read the project's add-ons. */
+/** The card on a page, for what points to it (`[data-card-id="sso-addon"]`). */
+export const SSO_ADDON_CARD_ID = 'sso-addon'
+
+/** The API refused to say: the caller may not read the add-ons. */
 function isPermissionError(error: unknown): boolean {
   const code = (error as { code?: number } | null)?.code
   return code === 401 || code === 403
 }
 
 type SSOAddonCardProps = {
-  projectId: string
+  target: SSOAddonTarget
   /**
-   * The page is an environment's settings. An environment has the add-on of
-   * its project, so the card only says whether it is on.
+   * An organization's add-on is off while its domains, identity providers or
+   * Require SSO remain: say that single sign-on is paused, and what still works.
    */
-  inEnvironment?: boolean
+  paused?: boolean
 }
 
 /**
- * The project's Single sign-on add-on. It lets the project's teams verify
- * domains, connect identity providers and turn on Require SSO through the
- * Teams API; signing in with single sign-on is for the Console only, so the
- * card says nothing about it. Built like the Premium Geo DB card, and behind
- * the single sign-on experiment with the rest of it.
+ * A Single sign-on add-on, built like the Premium Geo DB card and behind the
+ * single sign-on experiment with the rest of it.
+ *
+ * - A project's (`sso`) lets its teams verify domains, connect identity
+ *   providers and turn on Require SSO through the Teams API. Signing in with
+ *   single sign-on is for the Console only, so the card says nothing about it.
+ *   Inside an environment it shows the project's add-on and changes nothing.
+ * - An organization's (`ssoOrg`) is single sign-on into the Console for people
+ *   on its verified domains, set up on its Single sign-on page.
  */
-export function SSOAddonCard({
-  projectId,
-  inEnvironment = false,
-}: SSOAddonCardProps) {
+export function SSOAddonCard({ target, paused = false }: SSOAddonCardProps) {
   const t = useT()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { features } = useConsoleProfile()
   const shown = features.billing && features.sso
-  const { project } = useProject(projectId)
-  const orgId = project?.teamId
-  const { organization } = useOrganizationById(orgId)
-  const planQuery = useOrganizationPlan(shown ? orgId : null)
+  const inEnvironment = target.scope === 'project' && !!target.inEnvironment
+  const {
+    key,
+    orgId,
+    organization,
+    targetReady,
+    planQuery,
+    plan,
+    addonsQuery,
+    addon,
+    status,
+    addonPrice,
+  } = useSSOAddon(target, { enabled: shown, withPrice: !inEnvironment })
   const { plans } = useBillingPlans()
-  const { access } = useOrganizationScopes(orgId)
-  const addonsQuery = useQuery(
-    projectAddonsQueryOptions(shown ? projectId : null),
-  )
-  const { addonPrice } = useProjectAddonPrice(
-    shown && !inEnvironment ? projectId : null,
-    ADDON_KEY_SSO,
+  const sellers = usePlansSellingAddon(key)
+  // Project add-ons follow the project's roles, an organization's its owners
+  const { access } = useOrganizationScopes(
+    orgId,
+    undefined,
+    target.scope === 'organization' ? { projectId: null } : undefined,
   )
   const [showEnable, setShowEnable] = useState(false)
   const [showDisable, setShowDisable] = useState(false)
   const [reEnabling, setReEnabling] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
 
-  const plan = planQuery.plan
-  const addons = addonsQuery.data?.addons
-  const ssoAddon = useMemo(
-    () => findActiveOrPendingAddon(addons, ADDON_KEY_SSO),
-    [addons],
-  )
-  const status = ssoAddonStatus(plan, addons, ADDON_KEY_SSO)
-  const isScheduledForRemoval = isAddonScheduledForRemoval(ssoAddon)
+  const addonTarget = toAddonTarget(target)
+  const isScheduledForRemoval = isAddonScheduledForRemoval(addon)
   const canUpgrade =
-    status === 'unavailable' &&
-    hasUpgradeablePlanWithAddon(plan, plans, ADDON_KEY_SSO)
-  const canManage = canShowProjectSettings(access, features)
+    status === 'unavailable' && hasUpgradeablePlanWithAddon(plan, plans, key)
+  const canManage =
+    target.scope === 'project'
+      ? canShowProjectSettings(access, features)
+      : !features.orgRoles || access.isOwner
   const monthlyPriceLabel = addonPrice
     ? formatCurrency(addonPrice.monthlyPrice, addonPrice.currency)
     : null
 
   const loading =
-    !project || addonsQuery.isLoading || (!!orgId && planQuery.isLoading)
+    !targetReady || addonsQuery.isLoading || (!!orgId && planQuery.isLoading)
   const denied = isPermissionError(addonsQuery.error)
   const failed = !denied && (addonsQuery.isError || !!planQuery.error)
 
   if (!shown) return null
-
-  const refreshAddonQueries = () =>
-    Promise.all([
-      queryClient.refetchQueries({
-        queryKey: projectAddonsQueryOptions(projectId).queryKey,
-      }),
-      queryClient.refetchQueries({ queryKey: ['project', projectId] }),
-      ...(orgId ? [refetchOrganizationBillingQueries(queryClient, orgId)] : []),
-    ])
 
   const handleRetry = () => {
     void addonsQuery.refetch()
@@ -123,14 +125,11 @@ export function SSOAddonCard({
 
   // A payment waiting for 3-D Secure: check whether it went through
   const handleRefresh = async () => {
-    if (!ssoAddon) return
+    if (!addon) return
     setRefreshing(true)
     try {
-      await sdk.forConsole.projects.confirmAddonPayment({
-        projectId,
-        addonId: ssoAddon.$id,
-      })
-      await refreshAddonQueries()
+      await confirmAddonPayment(addonTarget, addon.$id)
+      await refreshAddonQueries(queryClient, addonTarget, key, orgId)
       toast.success(t('Single sign-on add-on has been enabled'))
     } catch (error) {
       const candidate = error as {
@@ -139,7 +138,7 @@ export function SSOAddonCard({
         message?: string
       }
       if (candidate?.type === 'addon_not_found' || candidate?.code === 404) {
-        await refreshAddonQueries()
+        await refreshAddonQueries(queryClient, addonTarget, key, orgId)
         toast.success(t('Single sign-on add-on has been enabled'))
         return
       }
@@ -171,7 +170,7 @@ export function SSOAddonCard({
         )
       }
       await enableSSOAddon({
-        target: { scope: 'project', projectId },
+        target: addonTarget,
         organizationId: organization.$id,
         paymentMethodId: organization.paymentMethodId,
         missingPaymentMethodMessage: t(
@@ -225,24 +224,29 @@ export function SSOAddonCard({
     )
   })()
 
+  const noPermission =
+    target.scope === 'project'
+      ? t("You don't have permission to manage this project's add-ons.")
+      : t("You don't have permission to manage this organization's add-ons.")
+
   const statusCopy = (() => {
     if (loading) return null
-    if (denied) {
-      return t("You don't have permission to manage this project's add-ons.")
-    }
+    if (denied) return noPermission
     if (failed) return t("Couldn't load the add-on's status.")
     if (inEnvironment) {
       return t(
         "This environment has the add-on of its project. Change it in the project's settings.",
       )
     }
-    if (!canManage) {
-      return t("You don't have permission to manage this project's add-ons.")
-    }
+    if (!canManage) return noPermission
     if (status === 'unavailable' && canUpgrade) {
-      return t(
-        'This add-on is not available on your current plan. Upgrade your plan to enable it.',
-      )
+      return sellers
+        ? t(
+            'This add-on is available on {plans}. Upgrade your plan to enable it.',
+          ).replace('{plans}', sellers)
+        : t(
+            'This add-on is not available on your current plan. Upgrade your plan to enable it.',
+          )
     }
     if (status === 'unavailable') {
       return t('This add-on is not available on your current plan.')
@@ -341,9 +345,14 @@ export function SSOAddonCard({
     )
   })()
 
+  const showPaused = paused && !loading && status !== 'active'
+
   return (
     <>
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div
+        data-card-id={SSO_ADDON_CARD_ID}
+        className="rounded-xl border border-border bg-card/50 overflow-hidden"
+      >
         <div className="px-6 py-4">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-[15px] font-semibold text-foreground">
@@ -357,21 +366,43 @@ export function SSOAddonCard({
 
         <div className="px-6 py-4">
           <p className="text-[13px] text-muted-foreground max-w-2xl">
-            {t(SSO_ADDON_DESCRIPTION)}
+            {target.scope === 'project'
+              ? t(SSO_ADDON_DESCRIPTION)
+              : t(ORGANIZATION_SSO_ADDON_DESCRIPTION)}
           </p>
         </div>
 
-        {statusCopy ? (
+        {statusCopy || showPaused ? (
           <>
             <div className="border-t border-border" />
-            <div className="px-6 py-4">
-              <p className="text-[13px] text-muted-foreground">{statusCopy}</p>
+            <div className="px-6 py-4 space-y-3">
+              {showPaused ? (
+                <Alert className="border-amber-500/30 bg-amber-500/5">
+                  <AlertCircle className="h-4 w-4 text-amber-500" />
+                  <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
+                    {t('Single sign-on is paused')}
+                  </AlertTitle>
+                  <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
+                    {t(
+                      'Until the add-on is active, nobody signs in through your identity providers and Require SSO has no effect. You can still delete domains and identity providers, and turn Require SSO off.',
+                    )}
+                  </AlertDescription>
+                </Alert>
+              ) : null}
+              {statusCopy ? (
+                <p className="text-[13px] text-muted-foreground">
+                  {statusCopy}
+                </p>
+              ) : null}
             </div>
           </>
         ) : null}
 
         {footerAction ? (
-          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-wrap items-center gap-3">
+          <div
+            data-sso-addon-actions
+            className="px-6 py-4 border-t border-border bg-muted/30 flex flex-wrap items-center gap-3"
+          >
             {footerAction}
             {status === 'active' &&
             !isScheduledForRemoval &&
@@ -388,15 +419,15 @@ export function SSOAddonCard({
         <EnableSSOAddonDialog
           open={showEnable}
           onOpenChange={setShowEnable}
-          projectId={projectId}
+          target={target}
         />
       ) : null}
-      {ssoAddon && !inEnvironment ? (
+      {addon && !inEnvironment ? (
         <DisableSSOAddonDialog
           open={showDisable}
           onOpenChange={setShowDisable}
-          projectId={projectId}
-          addonId={ssoAddon.$id}
+          target={target}
+          addonId={addon.$id}
         />
       ) : null}
     </>

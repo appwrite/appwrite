@@ -3371,6 +3371,16 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'תוסף ההתחברות היחידה (SSO) יוסר בסוף מחזור החיוב הנוכחי',
   'Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then the teams in this project can no longer verify domains, connect identity providers or turn on Require SSO through the Teams API.':
     'האם אתם בטוחים שברצונכם להשבית את תוסף ההתחברות היחידה (SSO)? הוא יישאר פעיל עד סוף מחזור החיוב הנוכחי ולא יחודש. אחר כך הצוותים בפרויקט לא יוכלו עוד לאמת דומיינים, לחבר ספקי זהויות או להפעיל חיוב SSO דרך Teams API.',
+  "With this add-on, people on your organization's verified domains sign in to the Console through its identity providers.":
+    'עם התוסף הזה, אנשים בדומיינים המאומתים של הארגון שלכם מתחברים לקונסולה דרך ספקי הזהויות שלו.',
+  'This add-on is available on {plans}. Upgrade your plan to enable it.':
+    'התוסף הזה זמין בתוכניות {plans}. שדרגו את התוכנית כדי להפעיל אותו.',
+  "You don't have permission to manage this organization's add-ons.":
+    'אין לכם הרשאה לנהל את התוספים של הארגון הזה.',
+  'Single sign-on add-on is already active for this organization':
+    'תוסף ההתחברות היחידה (SSO) כבר פעיל בארגון זה',
+  'Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then single sign-on for the organization stops, and people who can only sign in through your identity providers can no longer sign in.':
+    'האם אתם בטוחים שברצונכם להשבית את תוסף ההתחברות היחידה (SSO)? הוא יישאר פעיל עד סוף מחזור החיוב הנוכחי ולא יחודש. אחר כך ההתחברות היחידה (SSO) של הארגון תיפסק, ואנשים שיכולים להתחבר רק דרך ספקי הזהויות שלכם לא יוכלו עוד להתחבר.',
   'Payment could not be authorized. Please try enabling the addon again.':
     'לא ניתן היה לאשר את התשלום. נסו להפעיל את התוסף שוב.',
   'Add a payment method to your organization before enabling this addon.':

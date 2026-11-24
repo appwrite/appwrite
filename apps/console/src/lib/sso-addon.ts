@@ -44,6 +44,13 @@ export function ssoAddonStatus(
 export const SSO_ADDON_DESCRIPTION =
   'With this add-on, the teams in this project can verify domains, connect identity providers and turn on Require SSO through the Teams API.'
 
+/**
+ * What the organization's Single sign-on add-on unlocks, in its card and its
+ * dialog: single sign-on into the Console.
+ */
+export const ORGANIZATION_SSO_ADDON_DESCRIPTION =
+  "With this add-on, people on your organization's verified domains sign in to the Console through its identity providers."
+
 /** The API's answer to an organization's setup request without the add-on. */
 export const SSO_ADDON_REQUIRED_MESSAGE =
   "Single sign-on is part of the HIPAA BAA add-on. Enable it in the organization's settings."

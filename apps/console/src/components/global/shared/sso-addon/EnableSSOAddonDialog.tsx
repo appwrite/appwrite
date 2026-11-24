@@ -3,14 +3,11 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { ADDON_KEY_SSO } from '@/lib/billing/addons'
 import { enableSSOAddon } from '@/lib/billing/enable-sso-addon'
 import {
-  useOrganizationById,
-  useProject,
-  useProjectAddonPrice,
-} from '@/lib/react-query/hooks'
-import { SSO_ADDON_DESCRIPTION } from '@/lib/sso-addon'
+  ORGANIZATION_SSO_ADDON_DESCRIPTION,
+  SSO_ADDON_DESCRIPTION,
+} from '@/lib/sso-addon'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { formatCurrency } from '@/components/pages/organizations/$orgId/billing/utils'
 import { Button } from '@/components/ui/button'
@@ -22,26 +19,26 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { useT } from '@/lib/i18n/translate'
+import {
+  toAddonTarget,
+  useSSOAddon,
+  type SSOAddonTarget,
+} from './use-sso-addon'
 
 type EnableSSOAddonDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  projectId: string
+  target: SSOAddonTarget
 }
 
 export function EnableSSOAddonDialog({
   open,
   onOpenChange,
-  projectId,
+  target,
 }: EnableSSOAddonDialogProps) {
   const t = useT()
   const queryClient = useQueryClient()
-  const { project } = useProject(projectId)
-  const { organization } = useOrganizationById(project?.teamId)
-  const { addonPrice } = useProjectAddonPrice(
-    open ? projectId : null,
-    ADDON_KEY_SSO,
-  )
+  const { organization, addonPrice } = useSSOAddon(target, { enabled: open })
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -57,7 +54,7 @@ export function EnableSSOAddonDialog({
         )
       }
       const result = await enableSSOAddon({
-        target: { scope: 'project', projectId },
+        target: toAddonTarget(target),
         organizationId: organization.$id,
         paymentMethodId: organization.paymentMethodId,
         missingPaymentMethodMessage: t(
@@ -67,7 +64,9 @@ export function EnableSSOAddonDialog({
       })
       toast.success(
         result === 'already_active'
-          ? t('Single sign-on add-on is already active for this project')
+          ? target.scope === 'project'
+            ? t('Single sign-on add-on is already active for this project')
+            : t('Single sign-on add-on is already active for this organization')
           : t('Single sign-on add-on has been enabled'),
       )
       onOpenChange(false)
@@ -96,7 +95,9 @@ export function EnableSSOAddonDialog({
         <div className="border-t border-border" />
         <div className="px-6 py-4 space-y-4">
           <p className="text-[13px] text-muted-foreground">
-            {t(SSO_ADDON_DESCRIPTION)}
+            {target.scope === 'project'
+              ? t(SSO_ADDON_DESCRIPTION)
+              : t(ORGANIZATION_SSO_ADDON_DESCRIPTION)}
           </p>
           {addonPrice ? (
             <div className="rounded-lg border border-border p-4 space-y-3">

@@ -4,11 +4,7 @@ import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
-import { ADDON_KEY_SSO } from '@/lib/billing/addons'
-import {
-  projectAddonPriceQueryOptions,
-  projectAddonsQueryOptions,
-} from '@/lib/react-query/hooks'
+import { refreshAddonQueries } from '@/lib/billing/enable-addon'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { Button } from '@/components/ui/button'
 import {
@@ -19,18 +15,23 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { useT } from '@/lib/i18n/translate'
+import {
+  ssoAddonKey,
+  toAddonTarget,
+  type SSOAddonTarget,
+} from './use-sso-addon'
 
 type DisableSSOAddonDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  projectId: string
+  target: SSOAddonTarget
   addonId: string
 }
 
 export function DisableSSOAddonDialog({
   open,
   onOpenChange,
-  projectId,
+  target,
   addonId,
 }: DisableSSOAddonDialogProps) {
   const t = useT()
@@ -42,16 +43,22 @@ export function DisableSSOAddonDialog({
     setSubmitting(true)
     setError(null)
     try {
-      await sdk.forConsole.projects.deleteAddon({ projectId, addonId })
-      await Promise.all([
-        queryClient.refetchQueries({
-          queryKey: projectAddonsQueryOptions(projectId).queryKey,
-        }),
-        queryClient.refetchQueries({
-          queryKey: projectAddonPriceQueryOptions(projectId, ADDON_KEY_SSO)
-            .queryKey,
-        }),
-      ])
+      if (target.scope === 'project') {
+        await sdk.forConsole.projects.deleteAddon({
+          projectId: target.projectId,
+          addonId,
+        })
+      } else {
+        await sdk.forConsole.organizations.deleteAddon({
+          organizationId: target.organizationId,
+          addonId,
+        })
+      }
+      await refreshAddonQueries(
+        queryClient,
+        toAddonTarget(target),
+        ssoAddonKey(target),
+      )
       toast.success(
         t(
           'Single sign-on add-on will be removed at the end of your current billing cycle',
@@ -71,9 +78,13 @@ export function DisableSSOAddonDialog({
         <DialogHeader className="px-6 pt-6 pb-4 text-left">
           <DialogTitle>{t('Disable the Single sign-on add-on')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            {t(
-              'Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then the teams in this project can no longer verify domains, connect identity providers or turn on Require SSO through the Teams API.',
-            )}
+            {target.scope === 'project'
+              ? t(
+                  'Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then the teams in this project can no longer verify domains, connect identity providers or turn on Require SSO through the Teams API.',
+                )
+              : t(
+                  'Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then single sign-on for the organization stops, and people who can only sign in through your identity providers can no longer sign in.',
+                )}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />

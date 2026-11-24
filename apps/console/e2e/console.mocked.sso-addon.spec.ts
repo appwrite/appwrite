@@ -475,7 +475,7 @@ test.describe('the Single sign-on project add-on', () => {
     const card = ssoCard(page)
     await expect(card).toContainText('Unavailable')
     await expect(card).toContainText(
-      'This add-on is not available on your current plan. Upgrade your plan to enable it.',
+      'This add-on is available on Pro. Upgrade your plan to enable it.',
     )
     await expect(
       card.getByRole('button', { name: 'Upgrade plan' }),

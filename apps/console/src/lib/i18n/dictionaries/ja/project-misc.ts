@@ -3438,6 +3438,16 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'シングルサインオンアドオンは現在の請求サイクルの終了時に削除されます',
   'Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then the teams in this project can no longer verify domains, connect identity providers or turn on Require SSO through the Teams API.':
     'シングルサインオンアドオンを無効にしますか? 現在の請求サイクル終了まで有効のままで、更新されません。その後、このプロジェクトのチームは Teams API でドメインの検証、ID プロバイダーの接続、SSO の必須化を行えなくなります。',
+  "With this add-on, people on your organization's verified domains sign in to the Console through its identity providers.":
+    'このアドオンを使うと、組織の検証済みドメインのユーザーは組織の ID プロバイダー経由でコンソールにサインインします。',
+  'This add-on is available on {plans}. Upgrade your plan to enable it.':
+    'このアドオンは {plans} で利用できます。有効にするにはプランをアップグレードしてください。',
+  "You don't have permission to manage this organization's add-ons.":
+    'この組織のアドオンを管理する権限がありません。',
+  'Single sign-on add-on is already active for this organization':
+    'シングルサインオンアドオンはこの組織ですでに有効です',
+  'Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then single sign-on for the organization stops, and people who can only sign in through your identity providers can no longer sign in.':
+    'シングルサインオンアドオンを無効にしますか? 現在の請求サイクル終了まで有効のままで、更新されません。その後、組織のシングルサインオンは停止し、ID プロバイダー経由でしかサインインできないユーザーはサインインできなくなります。',
   'Payment could not be authorized. Please try enabling the addon again.':
     '支払いを承認できませんでした。アドオンの有効化を再試行してください。',
   'Add a payment method to your organization before enabling this addon.':
