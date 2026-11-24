@@ -1,10 +1,6 @@
-import { CheckCircle2, Captions, Play } from 'lucide-react'
+import { Play } from 'lucide-react'
 import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
-import {
-  productBentoContainer,
-  productBentoIdle,
-} from '@/components/pages/home/product-bento/MockSyntax'
-import { cn } from '@/lib/utils'
+import { CoverCard, CoverLine, InitDayCover } from './InitDayCover'
 
 const RENDITIONS = ['2160p', '1080p', '720p', '480p'] as const
 
@@ -13,86 +9,42 @@ export function VideosDayVisual() {
   const Icon = VIDEOS_PRODUCT_ICON
 
   return (
-    <div className="absolute inset-0 flex flex-col overflow-hidden">
-      <div
-        className={cn(
-          'mx-auto flex h-full min-h-0 w-full max-w-[22rem] flex-col',
-          productBentoContainer.shell,
-        )}
-      >
-        <div className={cn(productBentoContainer.header, 'px-3 py-2')}>
-          <div className="flex items-center gap-2">
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border bg-background">
-              <Icon
-                className={cn('size-3.5', productBentoIdle.brandIcon)}
-                aria-hidden
-              />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p
-                className={cn(
-                  'truncate font-mono text-[11px] font-medium sm:text-[12px]',
-                  productBentoIdle.text,
-                )}
-              >
-                launch-keynote.mp4
-              </p>
-              <p className="truncate text-[10px] text-muted-foreground">
-                Videos · 4K source
-              </p>
-            </div>
-            <span className="flex items-center gap-1 text-[9px] text-muted-foreground sm:text-[10px]">
-              <CheckCircle2
-                className={cn('size-3', productBentoIdle.emeraldIcon)}
-                aria-hidden
-              />
-              Ready
-            </span>
-          </div>
+    <InitDayCover headline="Video, built in" mockClassName="top-[13cqw]">
+      <CoverCard className="overflow-hidden p-[0.8em]">
+        <div className="mb-[0.7em] flex items-center gap-[0.6em]">
+          <Icon className="size-[1.3em] text-[var(--brand-cta)]" aria-hidden />
+          <span className="font-mono text-white">launch-keynote.mp4</span>
         </div>
-
-        <div className="min-h-0 flex-1 p-2.5">
-          <div className="relative flex h-full min-h-[96px] items-center justify-center overflow-hidden rounded-md border border-border bg-[#141416]">
-            {/* The frame: a dark stage lit in the hero's tones on hover. */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_80%_at_30%_40%,rgb(255_255_255/0.06),transparent_70%)]" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_90%_at_70%_60%,color-mix(in_srgb,var(--brand-cta)_28%,transparent),transparent_70%)] opacity-30 transition-opacity duration-300 group-hover:opacity-100" />
-            <span className="relative flex size-8 items-center justify-center rounded-full bg-white/90 text-black shadow-sm">
-              <Play className="ms-0.5 size-3.5 fill-current" aria-hidden />
+        <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-[0.6em] bg-[#121214]">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_90%_at_70%_70%,rgb(253_54_110/0.45),transparent_70%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_70%_at_20%_20%,rgb(124_103_254/0.35),transparent_70%)]" />
+          <span className="relative flex size-[3.2em] items-center justify-center rounded-full bg-white text-black">
+            <Play
+              className="ms-[0.15em] size-[1.3em] fill-current"
+              aria-hidden
+            />
+          </span>
+          <span className="absolute inset-x-0 bottom-[1.6em] text-center">
+            <span className="rounded-[0.3em] bg-black/70 px-[0.6em] py-[0.2em] text-[0.9em] text-white">
+              Five days, five launches.
             </span>
-            <p className="absolute inset-x-0 bottom-5 text-center text-[9px] font-medium text-white sm:text-[10px]">
-              <span className="rounded bg-black/60 px-1.5 py-0.5">
-                Five days, five launches.
-              </span>
-            </p>
-            <div className="absolute inset-x-2.5 bottom-2 h-0.5 overflow-hidden rounded-full bg-white/20">
-              <span className="block h-full w-2/5 rounded-full bg-white/60 transition-colors duration-300 group-hover:bg-[var(--brand-cta)]" />
-            </div>
-          </div>
+          </span>
+          <span className="absolute inset-x-[0.8em] bottom-[0.6em] h-[0.25em] overflow-hidden rounded-full bg-white/20">
+            <span className="block h-full w-2/5 rounded-full bg-[var(--brand-cta)]" />
+          </span>
         </div>
-
-        <div className="flex items-center gap-1.5 border-t border-border px-2.5 py-2">
-          {RENDITIONS.map((rendition, index) => (
+        <div className="mt-[0.7em] flex items-center gap-[0.4em]">
+          {RENDITIONS.map((rendition) => (
             <span
               key={rendition}
-              className={cn(
-                'rounded border border-border/70 px-1.5 py-0.5 font-mono text-[9px] tabular-nums transition-[border-color,color] duration-300 sm:text-[10px]',
-                productBentoIdle.text,
-                'group-hover:border-[color-mix(in_srgb,var(--brand-cta)_30%,var(--border))]',
-              )}
-              style={{ transitionDelay: `${index * 40}ms` }}
+              className="rounded-[0.35em] border border-white/12 px-[0.45em] py-[0.15em] font-mono text-[0.85em] text-white/80"
             >
               {rendition}
             </span>
           ))}
-          <span className="ms-auto flex items-center gap-1 text-[9px] text-muted-foreground sm:text-[10px]">
-            <Captions
-              className={cn('size-3', productBentoIdle.brandIcon)}
-              aria-hidden
-            />
-            HLS · Captions
-          </span>
+          <CoverLine className="ms-[0.4em] w-[4em]" />
         </div>
-      </div>
-    </div>
+      </CoverCard>
+    </InitDayCover>
   )
 }

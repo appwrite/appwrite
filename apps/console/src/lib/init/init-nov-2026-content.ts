@@ -25,7 +25,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     visual: {
       mockVisualId: 'analytics',
       imageAlt:
-        'Appwrite Analytics for example.com: visitors, pageviews, bounce rate, a week of traffic and top sources, with no cookies',
+        'Appwrite Analytics without cookies: visitors, pageviews and a week of traffic for example.com',
     },
     isLive: true,
     sessionCount: 1,
@@ -70,7 +70,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     visual: {
       mockVisualId: 'videos',
       imageAlt:
-        'Appwrite Videos: a 4K upload ready to stream, with captions and 2160p to 480p renditions over HLS',
+        'Video, built in: a launch keynote playing with a caption, in renditions from 2160p to 480p',
     },
     sessionCount: 1,
     headerNavCta: {
@@ -107,7 +107,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     visual: {
       mockVisualId: 'zero',
       imageAlt:
-        'Appwrite Zero: an agent builds a task tracker on a project made without an account, ready to claim',
+        'Build first, sign up later: an agent builds a task tracker on an Appwrite Zero project, ready to claim',
     },
     sessionCount: 1,
     resources: [
@@ -132,7 +132,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     visual: {
       mockVisualId: 'monitors-beep',
       imageAlt:
-        'A bandwidth monitor crossing its 80% threshold, and the alert arriving in Appwrite Beep on a phone',
+        'Alerts, on your phone: a bandwidth monitor alert arriving in Appwrite Beep among other project updates',
     },
     sessionCount: 1,
     resources: [
@@ -157,7 +157,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     visual: {
       mockVisualId: 'reviews',
       imageAlt:
-        'Appwrite Reviews on a pull request: a major bug finding posted beside the lines it is about',
+        'Every pull request, reviewed: an Appwrite Reviews finding posted beside the lines it is about',
     },
     sessionCount: 1,
     resources: [

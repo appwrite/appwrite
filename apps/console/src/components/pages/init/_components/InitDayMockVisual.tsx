@@ -26,6 +26,15 @@ const INIT_DAY_MOCK_VISUALS: Record<InitDayMockVisualId, ComponentType> = {
   reviews: ReviewsDayVisual,
 }
 
+/** Init 5's days are drawn as full-bleed blog-style covers, not framed mocks. */
+const COVER_VISUALS = new Set<InitDayMockVisualId>([
+  'analytics',
+  'videos',
+  'zero',
+  'monitors-beep',
+  'reviews',
+])
+
 export function InitDayMockVisual({
   mockVisualId,
   label,
@@ -36,6 +45,22 @@ export function InitDayMockVisual({
   className?: string
 }) {
   const Visual = INIT_DAY_MOCK_VISUALS[mockVisualId]
+
+  if (COVER_VISUALS.has(mockVisualId)) {
+    return (
+      <div
+        className={cn(
+          'group relative w-full overflow-hidden rounded-lg border border-border',
+          className,
+        )}
+        style={{ aspectRatio: '3 / 2' }}
+        role="img"
+        aria-label={label}
+      >
+        <Visual />
+      </div>
+    )
+  }
 
   return (
     <div
