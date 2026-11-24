@@ -2218,6 +2218,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_POOL_SIZE_VIDEOS',
+                'description' => 'Maximum number of pooled storage connections for video playback per API worker process.',
+                'introduction' => '',
+                'default' => '8',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_CONNECTIONS_DB_EXECUTIONS',
                 'description' => 'ClickHouse HTTP DSN used for execution storage. Defaults to _APP_CONNECTIONS_DB_USAGE.',
                 'introduction' => '',
