@@ -4001,6 +4001,15 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '誰かが対応中であることをチームに知らせます。モニターが回復するまでアラートは発生し続けます。',
   'Nobody has acknowledged this alert':
     'このアラートはまだ誰も確認していません',
+  Acknowledged: '確認済み',
+  'Alert acknowledged': 'アラートを確認済みにしました',
+  "Your team sees that you're on it. It keeps firing until its monitor recovers.":
+    'あなたが対応中であることがチームに表示されます。モニターが回復するまでアラートは発生し続けます。',
+  'This alert has already resolved': 'このアラートはすでに解決しています',
+  'Only a firing alert can be acknowledged.':
+    '確認済みにできるのは発生中のアラートだけです。',
+  "Your role can't change alerts. Ask an owner or a developer.":
+    'あなたのロールではアラートを変更できません。オーナーまたは開発者に依頼してください。',
   "You don't have permission to manage monitors.":
     'モニターを管理する権限がありません。',
   'between two alerts from this monitor.':

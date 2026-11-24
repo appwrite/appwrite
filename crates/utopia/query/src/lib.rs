@@ -66,6 +66,7 @@ pub mod classifier;
 mod enums;
 mod error;
 pub mod hook;
+mod literal;
 mod method;
 mod query;
 mod quote;
@@ -75,6 +76,7 @@ mod value;
 
 pub use enums::{CursorDirection, NullsPosition, OrderDirection, Type};
 pub use error::{Code, Error, Result};
+pub use literal::StringLiteral;
 pub use method::Method;
 pub use query::{Compiler, DEFAULT_ALIAS, GROUP_BY_TIME_BUCKET_INTERVALS, ParsedQuery, Query, QueryOrJson, TimeBucket};
 pub use quote::{quote, quote_literal};
