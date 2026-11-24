@@ -100,6 +100,38 @@ function measureLayout(container: HTMLElement): Init5SceneLayout | null {
   }
 }
 
+/** True when the pointer lands on the 5 (its glyph box, with a little slack). */
+function isOnFive(container: HTMLElement, clientX: number, clientY: number) {
+  const layout = measureLayout(container)
+  if (!layout) return false
+  const box = container.getBoundingClientRect()
+  const height = layout.height * box.height * 1.1
+  const width = height * FIVE_ASPECT
+  const cx = box.left + layout.cx * box.width
+  const cy = box.top + layout.cy * box.height
+  return (
+    Math.abs(clientX - cx) <= width / 2 && Math.abs(clientY - cy) <= height / 2
+  )
+}
+
+const STRIKE_SOUND_SRC = '/sounds/init/strike.mp3'
+let strikeSound: HTMLAudioElement | null = null
+
+/** The Init films' lightning strike: a crack on the click, then a thunder tail. */
+function playStrike() {
+  strikeSound ??= Object.assign(new Audio(STRIKE_SOUND_SRC), {
+    preload: 'auto',
+    volume: 0.7,
+  })
+  // A clone lets rapid clicks overlap instead of cutting the tail short.
+  const sound = strikeSound.paused
+    ? strikeSound
+    : (strikeSound.cloneNode() as HTMLAudioElement)
+  sound.volume = 0.7
+  sound.currentTime = 0
+  void sound.play().catch(() => {})
+}
+
 function isInteractiveTarget(target: EventTarget | null) {
   return (
     target instanceof Element &&
@@ -274,6 +306,7 @@ function Init5HeroScene({
       if (isInteractiveTarget(event.target)) return
       const point = toLocal(event)
       controllerRef.current?.pulse(point.x, point.y)
+      if (isOnFive(container, event.clientX, event.clientY)) playStrike()
     }
     const handleScroll = () => {
       const box = container.getBoundingClientRect()
