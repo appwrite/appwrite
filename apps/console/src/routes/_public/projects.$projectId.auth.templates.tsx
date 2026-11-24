@@ -1,21 +1,14 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { fetchEmailTemplate, fetchLocaleCodes } from '@/lib/react-query/hooks'
+import {
+  emailTemplateQueryOptions,
+  localeCodesQueryOptions,
+} from '@/lib/react-query/hooks'
 import { canAccessAuthSecuritySettings } from '@/lib/console-rbac-loader'
 import {
   ProjectEmailTemplateId,
   ProjectEmailTemplateLocale,
 } from '@appwrite.io/console'
 import { pageTitle } from '@/lib/utils/page-title'
-
-const EMAIL_TEMPLATE_TYPES = [
-  ProjectEmailTemplateId.Verification,
-  ProjectEmailTemplateId.MagicSession,
-  ProjectEmailTemplateId.OtpSession,
-  ProjectEmailTemplateId.Recovery,
-  ProjectEmailTemplateId.Invitation,
-  ProjectEmailTemplateId.MfaChallenge,
-  ProjectEmailTemplateId.SessionAlert,
-]
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/auth/templates',
@@ -42,28 +35,13 @@ export const Route = createFileRoute(
         })
       }
       await Promise.all([
-        queryClient.fetchQuery({
-          queryKey: ['localeCodes', 'console'],
-          queryFn: fetchLocaleCodes,
-          staleTime: 5 * 60 * 1000,
-        }),
-        Promise.allSettled(
-          EMAIL_TEMPLATE_TYPES.map((templateType) =>
-            queryClient.fetchQuery({
-              queryKey: [
-                'emailTemplate',
-                projectId,
-                templateType,
-                ProjectEmailTemplateLocale.En,
-              ],
-              queryFn: () =>
-                fetchEmailTemplate(
-                  projectId,
-                  templateType,
-                  ProjectEmailTemplateLocale.En,
-                ),
-              staleTime: 30 * 1000,
-            }),
+        queryClient.fetchQuery(localeCodesQueryOptions()),
+        // The editor opens on Verification. Templates warms the others after mount.
+        queryClient.prefetchQuery(
+          emailTemplateQueryOptions(
+            projectId,
+            ProjectEmailTemplateId.Verification,
+            ProjectEmailTemplateLocale.En,
           ),
         ),
       ])

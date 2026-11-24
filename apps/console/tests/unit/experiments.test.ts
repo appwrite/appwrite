@@ -3,12 +3,15 @@ import { isRedirect } from '@tanstack/react-router'
 import {
   CONSOLE_PROFILES,
   getDebugProfileFeatureOverrides,
-  setDebugProfileFeatureOverride,
 } from '@/lib/console-profiles'
-import { EXPERIMENTS, hasQualityLabel } from '@/lib/experiments'
+import {
+  EXPERIMENTS,
+  hasQualityLabel,
+  setExperimentEnabled,
+} from '@/lib/experiments'
 import { Route as IdentityServersRoute } from '@/routes/_public/projects.$projectId.settings.identity-servers'
-import { Route as AlertsRoute } from '@/routes/_public/projects.$projectId.usage.alerts'
-import { Route as MonitorsRoute } from '@/routes/_public/projects.$projectId.usage.monitors'
+import { Route as MonitorsRoute } from '@/routes/_public/projects.$projectId.monitors'
+import { Route as UsageAlertsRoute } from '@/routes/_public/projects.$projectId.usage.alerts'
 
 describe('hasQualityLabel', () => {
   test('matches only the quality label', () => {
@@ -22,41 +25,47 @@ describe('hasQualityLabel', () => {
 })
 
 describe('experiments catalog', () => {
-  test('lists Appwrite Analytics, project environments, Origin and identity servers', () => {
+  test('lists Appwrite Analytics, project environments, alerts and Videos', () => {
     expect(EXPERIMENTS.map((experiment) => experiment.flag)).toEqual([
       'analytics',
       'projectEnvironments',
-      'vcsOrigin',
-      'identityServers',
+      'alerts',
+      'videos',
     ])
     expect(EXPERIMENTS[0]?.name).toBe('Appwrite Analytics')
     expect(EXPERIMENTS[1]?.name).toBe('Project environments')
-    expect(EXPERIMENTS[2]?.name).toBe('Origin Git provider')
-    expect(EXPERIMENTS[3]?.name).toBe('Identity servers')
+    expect(EXPERIMENTS[2]?.name).toBe('Monitors and alerts')
+    expect(EXPERIMENTS[3]?.name).toBe('Appwrite Videos')
     for (const experiment of EXPERIMENTS) {
       expect(experiment.description.length).toBeGreaterThan(0)
     }
   })
 
-  test('Origin is off in every profile until the experiment turns it on', () => {
+  test('Origin is generally available: no feature flag and not in the previews menu', () => {
     for (const profile of Object.values(CONSOLE_PROFILES)) {
-      expect(profile.features.vcsOrigin).toBe(false)
+      expect(profile.features).not.toHaveProperty('vcsOrigin')
+    }
+    expect(
+      EXPERIMENTS.some(
+        (experiment) => (experiment.flag as string) === 'vcsOrigin',
+      ),
+    ).toBe(false)
+  })
+
+  test('Videos is off in every profile until the experiment turns it on', () => {
+    for (const profile of Object.values(CONSOLE_PROFILES)) {
+      expect(profile.features.videos).toBe(false)
     }
   })
 
-  test('usage alerts are off in every profile and only the debug menu turns them on', () => {
-    expect(
-      EXPERIMENTS.some(
-        (experiment) => experiment.flag === ('alerts' as string),
-      ),
-    ).toBe(false)
+  test('usage alerts are off in every profile until the experiment turns them on', () => {
     for (const profile of Object.values(CONSOLE_PROFILES)) {
       expect(profile.features.alerts).toBe(false)
     }
   })
 })
 
-describe('Origin flag rename', () => {
+describe('Origin flag removal', () => {
   const globals = globalThis as { window?: unknown; localStorage?: unknown }
   const originalWindow = globals.window
   const originalLocalStorage = globals.localStorage
@@ -66,18 +75,17 @@ describe('Origin flag rename', () => {
     globals.localStorage = originalLocalStorage
   })
 
-  test('an Origin override saved under extraVcsOAuth carries over to vcsOrigin', () => {
-    // Saved before the rename: the old key, and no vcsOrigin
-    const features: Record<string, unknown> = {
-      ...CONSOLE_PROFILES.cloud.features,
-    }
-    delete features.vcsOrigin
+  test('an Origin override saved in the browser is dropped, under either name', () => {
     const storage = new Map<string, string>([
       [
         'debug:consoleProfile',
         JSON.stringify({
           ...CONSOLE_PROFILES.cloud,
-          features: { ...features, extraVcsOAuth: true },
+          features: {
+            ...CONSOLE_PROFILES.cloud.features,
+            extraVcsOAuth: true,
+            vcsOrigin: false,
+          },
         }),
       ],
     ])
@@ -94,7 +102,7 @@ describe('Origin flag rename', () => {
     }
 
     const overrides = getDebugProfileFeatureOverrides()
-    expect(overrides.vcsOrigin).toBe(true)
+    expect('vcsOrigin' in overrides).toBe(false)
     expect('extraVcsOAuth' in overrides).toBe(false)
   })
 })
@@ -126,7 +134,9 @@ describe('usage alerts flag', () => {
 
   const params = { projectId: 'project' }
 
-  function enter(route: typeof AlertsRoute | typeof MonitorsRoute): unknown {
+  function enter(
+    route: typeof MonitorsRoute | typeof UsageAlertsRoute,
+  ): unknown {
     const beforeLoad = route.options.beforeLoad as unknown as (context: {
       params: typeof params
       search: Record<string, unknown>
@@ -139,86 +149,89 @@ describe('usage alerts flag', () => {
     }
   }
 
-  test('a deep link to alerts or monitors lands on usage while the flag is off', () => {
-    for (const route of [AlertsRoute, MonitorsRoute]) {
-      const thrown = enter(route)
-      expect(isRedirect(thrown)).toBe(true)
-      expect(
-        (thrown as { options: { to: string; params: unknown } }).options,
-      ).toMatchObject({ to: '/projects/$projectId/usage', params })
-    }
+  test('a deep link to monitors lands on the overview while the flag is off', () => {
+    const thrown = enter(MonitorsRoute)
+    expect(isRedirect(thrown)).toBe(true)
+    expect(
+      (thrown as { options: { to: string; params: unknown } }).options,
+    ).toMatchObject({ to: '/projects/$projectId/overview', params })
   })
 
-  test('the pages open once the debug menu turns the flag on', () => {
-    setDebugProfileFeatureOverride('alerts', true)
-    expect(enter(AlertsRoute)).toBeNull()
+  test('the pages open once the experiment turns the flag on', () => {
+    setExperimentEnabled('alerts', true)
     expect(enter(MonitorsRoute)).toBeNull()
 
-    setDebugProfileFeatureOverride('alerts', false)
+    setExperimentEnabled('alerts', false)
     expect(isRedirect(enter(MonitorsRoute))).toBe(true)
   })
 })
 
-describe('identity servers flag', () => {
-  const globals = globalThis as { window?: unknown; localStorage?: unknown }
-  const originalWindow = globals.window
-  const originalLocalStorage = globals.localStorage
-
-  beforeEach(() => {
-    const storage = new Map<string, string>()
-    const localStorage = {
-      getItem: (key: string) => storage.get(key) ?? null,
-      setItem: (key: string, value: string) => void storage.set(key, value),
-      removeItem: (key: string) => void storage.delete(key),
-    }
-    globals.localStorage = localStorage
-    globals.window = {
-      localStorage,
-      location: new URL('https://cloud.appwrite.io/console'),
-      dispatchEvent: () => true,
-    }
+test('an alert link from before the move opens the alert under monitors', () => {
+  const beforeLoad = UsageAlertsRoute.options
+    .beforeLoad as unknown as (context: {
+    params: { projectId: string }
+    search: Record<string, unknown>
+  }) => unknown
+  let thrown: unknown = null
+  try {
+    beforeLoad({ params: { projectId: 'project' }, search: { alert: 'alert' } })
+  } catch (error) {
+    thrown = error
+  }
+  expect(isRedirect(thrown)).toBe(true)
+  expect(
+    (thrown as { options: { to: string; search: unknown } }).options,
+  ).toMatchObject({
+    to: '/projects/$projectId/monitors/alerts',
+    search: { alert: 'alert' },
   })
+})
 
-  afterEach(() => {
-    globals.window = originalWindow
-    globals.localStorage = originalLocalStorage
-  })
-
+describe('identity servers', () => {
   const params = { projectId: 'project' }
 
-  function enter(): unknown {
+  function enter(pathname: string): unknown {
     const beforeLoad = IdentityServersRoute.options
-      .beforeLoad as unknown as (context: { params: typeof params }) => unknown
+      .beforeLoad as unknown as (context: {
+      location: { pathname: string }
+      params: typeof params
+    }) => unknown
     try {
-      beforeLoad({ params })
+      beforeLoad({ location: { pathname }, params })
       return null
     } catch (thrown) {
       return thrown
     }
   }
 
-  test('is a preview: off in every profile and listed in the previews menu', () => {
+  test('is generally available: no feature flag and not in the previews menu', () => {
     for (const profile of Object.values(CONSOLE_PROFILES)) {
-      expect(profile.features.identityServers).toBe(false)
+      expect(profile.features).not.toHaveProperty('identityServers')
     }
     expect(
-      EXPERIMENTS.some((experiment) => experiment.flag === 'identityServers'),
-    ).toBe(true)
+      EXPERIMENTS.some(
+        (experiment) => (experiment.flag as string) === 'identityServers',
+      ),
+    ).toBe(false)
   })
 
-  test('a deep link to identity servers lands on settings while the flag is off', () => {
-    const thrown = enter()
-    expect(isRedirect(thrown)).toBe(true)
-    expect(
-      (thrown as { options: { to: string; params: unknown } }).options,
-    ).toMatchObject({ to: '/projects/$projectId/settings', params })
+  test('the index opens LDAP, the only identity server so far', () => {
+    for (const pathname of [
+      '/projects/project/settings/identity-servers',
+      '/projects/project/settings/identity-servers/',
+    ]) {
+      const thrown = enter(pathname)
+      expect(isRedirect(thrown)).toBe(true)
+      expect(
+        (thrown as { options: { to: string; params: unknown } }).options,
+      ).toMatchObject({
+        to: '/projects/$projectId/settings/identity-servers/ldap',
+        params,
+      })
+    }
   })
 
-  test('the page opens once the preview is turned on', () => {
-    setDebugProfileFeatureOverride('identityServers', true)
-    expect(enter()).toBeNull()
-
-    setDebugProfileFeatureOverride('identityServers', false)
-    expect(isRedirect(enter())).toBe(true)
+  test('the LDAP page opens without a redirect', () => {
+    expect(enter('/projects/project/settings/identity-servers/ldap')).toBeNull()
   })
 })

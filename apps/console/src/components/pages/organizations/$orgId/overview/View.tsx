@@ -30,6 +30,7 @@ import {
   Settings,
   KeyRound,
   Handshake,
+  BellRing,
   Pin,
   PinOff} from '@/lib/icons'
 import { useSequentialShortcuts } from '@/hooks/use-keyboard-shortcuts'
@@ -165,7 +166,8 @@ import { ConsoleNoOrganizationsScreen } from '@/components/global/auth/ConsoleNo
 import { toast } from 'sonner'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
-import { InitialsAvatar, PhotoAvatar } from '@/components/global/shared/Avatar'
+import { PhotoAvatar, TeamAvatar } from '@/components/global/shared/Avatar'
+import { OrganizationPhoto } from './_components/OrganizationPhoto'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { isPaymentAuthentication } from '@/lib/billing/addons'
@@ -190,6 +192,7 @@ import { useOrganizationDomainsPlanLimit } from '../domains/_components/useOrgan
 import { View as MarketplaceView } from '../marketplace/View'
 import { View as OrgAppsView } from '../apps/View'
 import { Partners } from '../settings/Partners'
+import { Escalations } from '../settings/Escalations'
 import { EnterpriseSuccessManager } from '@/components/pages/projects/$projectId/shared/EnterpriseSuccessManager'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { PlanLimitWarning } from '@/components/pages/projects/$projectId/shared/PlanLimitWarning'
@@ -254,6 +257,7 @@ type OrgRoutePath =
   | '/organizations/$orgId/settings/compliance'
   | '/organizations/$orgId/settings/oauth-apps'
   | '/organizations/$orgId/settings/partners'
+  | '/organizations/$orgId/settings/escalations'
 import { analyticsAttrs, getOrgTabAnalyticsAction } from '@/lib/analytics-actions'
 
 /** Pro orgs with at least this many members see the Enterprise access line. */
@@ -271,6 +275,7 @@ function DomainsPlanLimitAlert({ orgId }: { orgId: string | undefined }) {
       limit={limit}
       planName={planName}
       resourceName="domains"
+      resourceNameSingular="domain"
       orgId={orgId}
       fullWidth={false}
     />
@@ -610,6 +615,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       if (subTab === 'compliance') return 'compliance'
       if (subTab === 'oauth-apps') return 'oauth-apps'
       if (subTab === 'partners') return 'partners'
+      if (subTab === 'escalations') return 'escalations'
       return 'overview'
     }
     return 'overview'
@@ -674,6 +680,16 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               to: '/organizations/$orgId/settings/partners',
               icon: Handshake,
               keywords: ['partners', 'api', 'keys', 'credentials', 'partners keys']},
+          ]
+        : []),
+      ...(features.alerts
+        ? [
+            {
+              id: 'escalations',
+              label: t('Escalations'),
+              to: '/organizations/$orgId/settings/escalations',
+              icon: BellRing,
+              keywords: ['escalation', 'alerts', 'on-call', 'monitors', 'notify']},
           ]
         : []),
     ]
@@ -787,7 +803,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       (settingsSubTab === 'compliance' && !features.compliance) ||
       (settingsSubTab === 'oauth-apps' &&
         !canShowOrgOAuthAppsSettings(access, features)) ||
-      (settingsSubTab === 'partners' && !features.orgApiKeys)
+      (settingsSubTab === 'partners' && !features.orgApiKeys) ||
+      (settingsSubTab === 'escalations' && !features.alerts)
     ) {
       navigate({
         to: '/organizations/$orgId/settings',
@@ -806,7 +823,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         (settingsSubTab === 'oauth-apps' &&
           canShowOrgOAuthAppsSettings(access, features)) ||
         (settingsSubTab === 'partners' &&
-          canShowOrgApiKeysSettings(access, features))
+          canShowOrgApiKeysSettings(access, features)) ||
+        settingsSubTab === 'escalations'
       if (!allowed) {
         const firstAllowed = getFirstAllowedOrgSettingsPath(
           access,
@@ -833,6 +851,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         'settings/compliance': '/organizations/$orgId/settings/compliance',
         'settings/oauth-apps': '/organizations/$orgId/settings/oauth-apps',
         'settings/partners': '/organizations/$orgId/settings/partners',
+        'settings/escalations':
+          '/organizations/$orgId/settings/escalations',
       } as const satisfies Record<string, OrgRoutePath>
 
       const route = tabRoutes[tab as keyof typeof tabRoutes]
@@ -2124,6 +2144,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       compliance: '/organizations/$orgId/settings/compliance',
       'oauth-apps': '/organizations/$orgId/settings/oauth-apps',
       partners: '/organizations/$orgId/settings/partners',
+      'escalations':
+        '/organizations/$orgId/settings/escalations',
     } as const satisfies Record<string, OrgRoutePath>
     const settingsSubRoute =
       activeTab === 'settings'
@@ -2259,7 +2281,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         {...analyticsAttrs('organization-switcher')}
                         className="group flex h-8 max-h-8 min-h-8 min-w-0 max-w-full cursor-pointer items-center gap-2 rounded-lg px-2 -ms-2 transition-colors hover:bg-accent"
                       >
-                        <InitialsAvatar name={selectedOrg.name} size="sm" />
+                        <TeamAvatar teamId={selectedOrg.$id} name={selectedOrg.name} size="sm" />
                         <h1 className="m-0 min-w-0 max-w-[10rem] truncate text-[13px] font-semibold leading-tight text-foreground sm:max-w-[14rem] md:max-w-[20rem] lg:max-w-[28rem]">
                           {selectedOrg.name}
                         </h1>
@@ -2304,7 +2326,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               selectedOrg.$id === org.$id && 'bg-accent',
                             )}
                           >
-                            <InitialsAvatar name={org.name} size="md" />
+                            <TeamAvatar teamId={org.$id} name={org.name} size="md" />
                             <div className="flex-1 min-w-0">
                               <p className="truncate text-[13px] font-medium text-foreground">
                                 {org.name}
@@ -2363,7 +2385,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   </Popover>
                 ) : (
                   <div className="flex h-8 max-h-8 min-h-8 min-w-0 max-w-full items-center gap-2 px-2 -ms-2">
-                    <InitialsAvatar name={selectedOrg.name} size="sm" />
+                    <TeamAvatar teamId={selectedOrg.$id} name={selectedOrg.name} size="sm" />
                     <h1 className="m-0 min-w-0 max-w-[10rem] truncate text-[13px] font-semibold leading-tight text-foreground sm:max-w-[14rem] md:max-w-[20rem] lg:max-w-[28rem]">
                       {selectedOrg.name}
                     </h1>
@@ -3494,6 +3516,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       <OrgAppsView />
                     ) : settingsSubTab === 'partners' ? (
                       <Partners />
+                    ) : settingsSubTab === 'escalations' ? (
+                      <Escalations />
                     ) : settingsSubTab === 'members' ? (
                       <>
                         {/* Error State */}
@@ -4085,6 +4109,22 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                   )} satisfies SettingsCardItem,
                               ]
                             : []),
+                          ...(selectedOrg
+                            ? [
+                                {
+                                  id: 'org-photo',
+                                  search: {
+                                    title: 'Organization photo',
+                                    keywords: ['avatar', 'logo', 'image']},
+                                  node: (
+                                    <OrganizationPhoto
+                                      teamId={selectedOrg.$id}
+                                      name={selectedOrg.name}
+                                      canUpdate={canInviteMembers}
+                                    />
+                                  )} satisfies SettingsCardItem,
+                              ]
+                            : []),
                           {
                             id: 'org-name',
                             search: {
@@ -4167,7 +4207,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
                                         {selectedOrg && (
                                           <div className="flex items-center gap-3 mt-4">
-                                            <InitialsAvatar
+                                            <TeamAvatar
+                                              teamId={selectedOrg.$id}
                                               name={selectedOrg.name}
                                               size="md"
                                             />
@@ -4282,7 +4323,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                               <div className="rounded-lg border border-border bg-muted/50 p-3 mb-4 mt-2">
                                                 {selectedOrg && (
                                                   <div className="flex items-center gap-3">
-                                                    <InitialsAvatar
+                                                    <TeamAvatar
+                                                      teamId={selectedOrg.$id}
                                                       name={selectedOrg.name}
                                                       size="sm"
                                                     />

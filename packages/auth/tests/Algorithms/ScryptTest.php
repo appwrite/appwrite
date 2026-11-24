@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Auth\Hashes\Scrypt;
 
-#[RequiresPhpExtension('scrypt')]
+#[RequiresPhpExtension('utopia')]
 final class ScryptTest extends TestCase
 {
     private Scrypt $scrypt;

@@ -495,6 +495,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_CERTIFICATES_PROVIDER',
+                'description' => 'Who issues TLS certificates for the main domain, custom domains, and function and site domains. By default, set to \'letsencrypt\', which issues them with Let\'s Encrypt over an HTTP-01 challenge. Set to \'external\' when a reverse proxy in front of Appwrite, such as Traefik, Caddy, Nginx Proxy Manager or Cloudflare, terminates TLS: a domain is then verified by its DNS records alone, and Appwrite never runs Certbot or sends certificate failure emails.',
+                'introduction' => '2.8.0',
+                'default' => 'letsencrypt',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_LOGGING_CONFIG',
                 'description' => 'This variable allows you to report server errors to Sentry. This value is empty by default, set a DSN value `sentry://PROJECT_ID:SENTRY_API_KEY@SENTRY_HOST/` to enable it. Sentry is the only supported provider; other DSN schemes are rejected at startup and disable reporting. The same DSN is used by the API, workers, CLI tasks and the realtime server. Errors are exported as spans, so every attribute added with `Span::add()` during the request or job is attached to the Sentry event.',
                 'introduction' => '0.12.0',
@@ -2117,6 +2126,42 @@ return [
                 'description' => 'Schedules deletion interval ( in seconds ) ',
                 'introduction' => '2.0.0',
                 'default' => '86400',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_RETENTION_RENDITION',
+                'description' => 'Maximum age (in seconds) of an in-flight video rendition (`pending`, `started`, or `ended`) or caption (`pending` or `started`) before maintenance parks it as `aborted`. The default value is 43200 seconds (12 hours).',
+                'introduction' => '2.4.0',
+                'default' => '43200',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VIDEOS_ENCODE_TIMEOUT',
+                'description' => 'The maximum number of seconds one ffmpeg run in the videos worker may take. Each encode gets a limit scaled to the source duration, codec and resolution, capped at this value; a source with unknown duration gets this value. Set it to 0 to disable the limit. When the limit is disabled, or set high enough that an hour of slack would pass 7 days, an S3 source is copied locally instead of read through a presigned URL, which cannot be signed for longer than 7 days and would otherwise expire mid-encode. The default value is 21600 seconds (6 hours).',
+                'introduction' => '2.6.0',
+                'default' => '21600',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VIDEOS_THREADS',
+                'description' => 'The number of ffmpeg worker threads used for each encode and package job in the videos worker. The default value is 4.',
+                'introduction' => '2.6.0',
+                'default' => '4',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VIDEOS_SPECIFICATION',
+                'description' => 'The billed ceiling for each rendition encode as executions.mbSeconds with service videos. Set it to the catalog slug that matches the videos worker CPU and memory limits in this environment, for example s-4vcpu-4gb. Encode size is the smaller of the container cgroup and this row, so unbounded workers do not bill the host. An unknown slug falls back to s-4vcpu-4gb. The default value is s-4vcpu-4gb.',
+                'introduction' => '2.7.0',
+                'default' => 's-4vcpu-4gb',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

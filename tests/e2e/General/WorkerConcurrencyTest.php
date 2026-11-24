@@ -163,7 +163,7 @@ final class WorkerConcurrencyTest extends TestCase
                     $adapter->stop();
                 },
                 [
-                    ['queue' => $queue, 'coroutines' => 1],
+                    ['queue' => $queue, 'coroutines' => 1, 'maxInFlight' => 1],
                 ],
             );
         });

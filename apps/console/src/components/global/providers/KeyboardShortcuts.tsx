@@ -234,7 +234,7 @@ export function KeyboardShortcutsProvider({
         })
       } else if (type === 'video') {
         navigate({
-          to: '/projects/$projectId/videos/',
+          to: '/projects/$projectId/videos',
           params: { projectId },
           search: { create: 'video' },
         })

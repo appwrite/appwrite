@@ -5,7 +5,7 @@
  * All Appwrite operations are handled client-side.
  */
 
-import { Account, Activities, Affiliates, Analytics, Apps, Avatars, Backups, Client, Console, Functions, Growth, ImageFormat, Locale, Manager, Messaging, Migrations, Oauth2, Project, Project as ProjectApi, Projects, Proxy, Realtime, Storage, Teams, Users, Vcs, Sites, Tokens, TablesDB, DocumentsDB, VectorsDB, Postgresql, Mysql, Mongo, Domains, Organization, Organizations, Presences, Usage, Webhooks, Notifications, Waf } from '@appwrite.io/console'
+import { Account, Activities, Affiliates, Analytics, Apps, Avatars, Backups, Client, Console, Functions, Growth, ImageFormat, Locale, Logs, Manager, Messaging, Migrations, Oauth2, Project, Project as ProjectApi, Projects, Proxy, Realtime, Storage, Teams, Users, Vcs, Sites, Tokens, TablesDB, DocumentsDB, VectorsDB, Postgresql, Mysql, Mongo, Domains, Organization, Organizations, Presences, Usage, Webhooks, Notifications, Waf, Videos } from '@appwrite.io/console'
 import { Agent } from '@/lib/appwrite/agent'
 import { Reviews } from '@/lib/appwrite/reviews'
 import { Zero } from '@/lib/appwrite/zero'
@@ -27,15 +27,11 @@ import {
   CONSOLE_IMPERSONATION_TARGET_KEY,
   clearConsoleImpersonationSession,
 } from '@/lib/console-impersonation'
-import {
-  ensureFingerprintServerTimeSynced,
-  resetFingerprintServerTimeCache,
-} from '@/lib/fingerprint'
+import { resetFingerprintCache } from '@/lib/fingerprint'
 import { getActiveLanguage } from '@/lib/i18n/active-language'
 import { subscribeToDebugOverrides } from '@/lib/debug-overrides'
 import { getActiveEnvironmentId } from '@/lib/active-environment'
 import { Alerts, Monitors } from '@/lib/appwrite/monitors'
-import { Videos } from '@/lib/appwrite/videos'
 
 /**
  * True when the endpoint host is a known multi-region Appwrite cloud host
@@ -321,14 +317,6 @@ if (typeof window !== 'undefined') {
   })
 }
 
-function scheduleConsoleFingerprintServerTimeSync(): Promise<void> {
-  if (typeof window === 'undefined') return Promise.resolve()
-  const ep = clientConsole.config.endpoint as string | undefined
-  const proj = clientConsole.config.project as string | undefined
-  if (!ep?.trim() || !proj?.trim()) return Promise.resolve()
-  return ensureFingerprintServerTimeSynced(ep, proj)
-}
-
 // When debug endpoint override changes, re-apply base endpoint to both clients
 if (typeof window !== 'undefined') {
   subscribeToDebugEndpointChange(() => {
@@ -337,11 +325,8 @@ if (typeof window !== 'undefined') {
     clientProject.setEndpoint(base)
     // Handles are kept per endpoint; the next call builds one for the new base
     projectSdks.clear()
-    resetFingerprintServerTimeCache()
-    void scheduleConsoleFingerprintServerTimeSync()
+    resetFingerprintCache()
   })
-
-  void scheduleConsoleFingerprintServerTimeSync()
 }
 
 // Realtime instances: one per client (console vs project).
@@ -565,6 +550,7 @@ const createProjectSdkRaw = (clientProject: Client) => ({
   mongo: new Mongo(clientProject),
   functions: new Functions(clientProject),
   locale: new Locale(clientProject),
+  logs: new Logs(clientProject),
   messaging: new Messaging(clientProject),
   project: new Project(clientProject),
   projectApi: new ProjectApi(clientProject),

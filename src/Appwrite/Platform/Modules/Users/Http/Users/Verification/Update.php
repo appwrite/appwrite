@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Users\Http\Users\Verification;
 
+use Appwrite\Bus\Events\EmailVerified;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -9,6 +10,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
@@ -54,10 +56,12 @@ class Update extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
+            ->inject('project')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, bool $emailVerification, Response $response, Database $dbForProject, Event $queueForEvents): void
+    public function action(string $userId, bool $emailVerification, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Bus $bus): void
     {
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -65,7 +69,13 @@ class Update extends Action
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
+        $wasVerified = $user->getAttribute('emailVerification', false);
+
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['emailVerification' => $emailVerification]));
+
+        if ($emailVerification && !$wasVerified) {
+            $bus->dispatch(new EmailVerified(user: $user->getArrayCopy(), project: $project->getArrayCopy()));
+        }
 
         $queueForEvents->setParam('userId', $user->getId());
 

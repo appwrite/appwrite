@@ -25,14 +25,17 @@ final class MemoryTest extends Base
         $this->assertSame('original', $cache->load('touch-version', 60));
     }
 
-    public function testConditionalFillsRejectTheSameEmptyInputsAsOrdinarySaves(): void
+    public function testConditionalFillsTreatEmptyInputsLikeOrdinarySaves(): void
     {
         $cache = new Cache(new Memory());
-        foreach ([['', 'value'], ['0', 'value'], ['key', ''], ['key', '0'], ['key', []]] as [$key, $data]) {
+        foreach ([['', 'value'], ['0', 'value'], ['key', ''], ['key', '0']] as [$key, $data]) {
             $lease = $cache->getLease($key);
             $this->assertFalse($cache->saveWithLease($key, $data, '', $lease));
             $this->assertFalse($cache->load($key, 60));
         }
+
+        $this->assertSame([], $cache->saveWithLease('key', [], '', $cache->getLease('key')));
+        $this->assertSame([], $cache->load('key', 60));
     }
 
     public function testGetSize(): void

@@ -46,8 +46,10 @@ const APP_LIMIT_SUBQUERY = 1000;
 const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 25;
 const APP_LIMIT_REVIEWS_PULL = 100; // Reviews of one pull request the review service reads back, newest first
 const APP_LIMIT_REVIEW_FINDINGS = 1000; // Findings of one pull request the review service reads back at once
+const APP_LIMIT_REVIEW_AUTHORS = 5000; // Completed reviews, newest first, the author performance of a project is computed from
 const APP_LIMIT_REVIEW_LEARNINGS = 100; // Learnings of a repository a review is given, oldest first
 const APP_LIMIT_REALTIME_CONNECTIONS = 32; // Maximum open realtime connections per project user on one worker
+const APP_LIMIT_REALTIME_MESSAGES = 32; // Maximum messages per minute on one realtime connection
 const APP_LIMIT_REALTIME_GUEST_CONNECTIONS = 128; // Maximum open realtime guest connections per IP, or IPv6 /64, per project on one worker
 const APP_LIMIT_MQTT_KEEP_ALIVE = 1200; // MQTT keep-alive in seconds for a client that disables it, and the longest an MQTT 5.0 client is granted
 
@@ -147,10 +149,13 @@ const APP_STORAGE_SITES = '/storage/sites';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_BUILDS = '/storage/builds';
 const APP_STORAGE_CACHE = '/storage/cache';
+const APP_STORAGE_VIDEOS = '/storage/videos'; // Durable transcoded output: renditions, captions, thumbnail timelines
+const APP_STORAGE_VIDEOS_TMP = '/storage/videos-tmp'; // Scratch: source download + ffmpeg workdir, wiped per job
 const APP_STORAGE_IMPORTS = '/storage/imports'; // Temporary storage for csv imports
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
 const APP_STORAGE_CONFIG = '/storage/config';
-const APP_STORAGE_PHOTOS = '_photos'; // User photos folder in each project's uploads; bucket IDs can't start with an underscore, so it never collides with a bucket's folder
+const APP_STORAGE_USER_PHOTOS = '_photos'; // User photos folder in each project's uploads; bucket IDs can't start with an underscore, so it never collides with a bucket's folder
+const APP_STORAGE_TEAM_PHOTOS = '_photos_teams'; // Kept apart from user photos because a team and a user can share an ID
 const APP_STORAGE_READ_BUFFER = 20 * (1000 * 1000); //20MB other names `APP_STORAGE_MEMORY_LIMIT`, `APP_STORAGE_MEMORY_BUFFER`, `APP_STORAGE_READ_LIMIT`, `APP_STORAGE_BUFFER_LIMIT`
 const APP_SOCIAL_TWITTER = 'https://twitter.com/appwrite';
 const APP_SOCIAL_TWITTER_HANDLE = 'appwrite';
@@ -310,6 +315,11 @@ const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
 const DELETE_TYPE_REALTIME = 'realtime';
 const DELETE_TYPE_BUCKETS = 'buckets';
+// Must equal the collection id: the DELETE_TYPE_DOCUMENT branch of the
+// deletes worker dispatches on $document->getCollection().
+const DELETE_TYPE_VIDEOS = 'videos';
+const DELETE_TYPE_VIDEOS_RENDITIONS = 'videosRenditions';
+const DELETE_TYPE_VIDEOS_CAPTIONS = 'videosCaptions';
 const DELETE_TYPE_FILES = 'files';
 const DELETE_TYPE_INSTALLATIONS = 'installations';
 const DELETE_TYPE_RULES = 'rules';
@@ -454,6 +464,7 @@ const METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_DURATION = 'embeddings.text.{embeddingM
 const METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS = 'embeddings.text.totalTokens';
 const METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_TOKENS = 'embeddings.text.{embeddingModel}.totalTokens';
 const METRIC_REVIEWS = 'reviews'; // Completed code reviews, the billed unit
+const METRIC_REVIEWS_STRENGTH = 'reviews.{strength}'; // Completed code reviews at one strength, billed at its rate
 const METRIC_REVIEWS_FAILED = 'reviews.failed';
 const METRIC_REVIEWS_CHATS = 'reviews.chats'; // Comments the review service answered
 const METRIC_REVIEWS_TOKENS_INPUT = 'reviews.tokens.input'; // Model tokens behind reviews and chat answers
@@ -481,6 +492,12 @@ const METRIC_BUILDS_COMPUTE  = 'builds.compute';
 const METRIC_BUILDS_COMPUTE_SUCCESS  = 'builds.compute.success';
 const METRIC_BUILDS_COMPUTE_FAILED  = 'builds.compute.failed';
 const METRIC_BUILDS_MB_SECONDS = 'builds.mbSeconds';
+const METRIC_VIDEOS = 'videos';
+const METRIC_VIDEOS_STORAGE = 'videos.storage';
+const METRIC_RENDITIONS = 'renditions';
+const METRIC_RENDITIONS_SUCCESS = 'renditions.success';
+const METRIC_RENDITIONS_FAILED = 'renditions.failed';
+const METRIC_RENDITIONS_COMPUTE = 'renditions.compute';
 const METRIC_EXECUTIONS  = 'executions';
 const METRIC_EXECUTIONS_COMPUTE  = 'executions.compute';
 const METRIC_EXECUTIONS_MB_SECONDS = 'executions.mbSeconds';
@@ -547,6 +564,7 @@ const METRIC_REALTIME_OUTBOUND = 'realtime.outbound';
 // MQTT push broker metrics (cumulative per-project counters, summed by StatsUsage)
 const METRIC_MQTT_CONNECTIONS = 'mqtt.connections';
 const METRIC_MQTT_MESSAGES_DELIVERED = 'mqtt.messages.delivered';
+const METRIC_MQTT_MESSAGES_ACKED = 'mqtt.messages.acked';
 
 // Resource types
 const RESOURCE_TYPE_PROJECTS = 'projects';
@@ -565,6 +583,7 @@ const RESOURCE_TYPE_TEAMS = 'teams';
 const RESOURCE_TYPE_EMBEDDINGS_TEXT = 'embeddingsText';
 const RESOURCE_TYPE_INSIGHTS = 'insights';
 const RESOURCE_TYPE_REPORTS = 'reports';
+const RESOURCE_TYPE_VIDEOS = 'videos';
 const RESOURCE_TYPE_REVIEWS = 'reviews';
 const RESOURCE_TYPE_MONITORS = 'monitors';
 
@@ -626,6 +645,7 @@ const SCHEDULE_RESOURCE_TYPE_EXECUTION = 'execution';
 const SCHEDULE_RESOURCE_TYPE_FUNCTION = 'function';
 const SCHEDULE_RESOURCE_TYPE_MESSAGE = 'message';
 const SCHEDULE_RESOURCE_TYPE_MONITOR = 'monitor';
+const SCHEDULE_RESOURCE_TYPE_ESCALATION = 'escalation';
 
 // Monitor types, the kind of check a monitor runs; see `types` in app/config/alerts.php
 const MONITOR_TYPE_USAGE = 'usage';

@@ -10,9 +10,25 @@ import {
   type Payload,
 } from '@appwrite.io/console'
 import type { Monitor, MonitorList, MonitorSeverity as Level } from './api'
+import type {
+  DnsTarget,
+  HttpTarget,
+  ProbeSettings,
+  SmtpTarget,
+  TcpTarget,
+} from './models'
 
 /** The severity as a plain string, so callers can pass `'critical'` as well as the enum. */
 type MonitorSeverity = `${Level}`
+
+/** Update parameters: every field but the ID is optional, and null leaves it as it is. */
+type Nullable<T> = { [K in keyof T]?: T[K] | null }
+
+type ProbeCreate<Target> = { monitorId: string } & ProbeSettings & Target
+
+type ProbeUpdate<Target> = { monitorId: string } & Nullable<
+  ProbeSettings & Target
+>
 
 export class Monitors {
   client: Client
@@ -97,6 +113,7 @@ export class Monitors {
    * @param {boolean} params.enabled - Set to false to create the monitor without evaluating it.
    * @param {string[]} params.notify - Organization roles whose confirmed members get an email and a console notification when the monitor fires and resolves. Each must be an organization role, such as `owner` or `developer`. Defaults to owners; pass an empty list to rely on the alert events alone.
    * @param {MonitorSeverity} params.severity - How urgent the monitor's alerts are: `info`, `warning`, `error` or `critical`. Critical alerts may be delivered with higher urgency by the notification channels that support it, such as a push that rings through silent mode.
+   * @param {string} params.escalationId - ID of an organization escalation that notifies its steps in turn until someone acknowledges the alert. `notify` is ignored while one is set.
    * @throws {AppwriteException}
    * @returns {Promise<Monitor>}
    */
@@ -109,6 +126,7 @@ export class Monitors {
     enabled?: boolean
     notify?: string[]
     severity?: MonitorSeverity
+    escalationId?: string
   }): Promise<Monitor>
   /**
    * Create a usage monitor. It reads a usage metric of the project, or of one of its databases or buckets, on a schedule, and opens an alert when all its rules hold. Each alert fires the `monitors.[monitorId].alerts.[alertId].firing` event when it opens and `.resolved` when usage recovers, for project webhooks, functions and realtime, and notifies the organization's owners by email and in the console.
@@ -146,6 +164,7 @@ export class Monitors {
           enabled?: boolean
           notify?: string[]
           severity?: MonitorSeverity
+          escalationId?: string
         }
       | string,
     ...rest: [
@@ -167,6 +186,7 @@ export class Monitors {
       enabled?: boolean
       notify?: string[]
       severity?: MonitorSeverity
+      escalationId?: string
     }
 
     if (
@@ -183,6 +203,7 @@ export class Monitors {
         enabled?: boolean
         notify?: string[]
         severity?: MonitorSeverity
+        escalationId?: string
       }
     } else {
       params = {
@@ -205,6 +226,7 @@ export class Monitors {
     const enabled = params.enabled
     const notify = params.notify
     const severity = params.severity
+    const escalationId = params.escalationId
 
     if (typeof monitorId === 'undefined') {
       throw new AppwriteException('Missing required parameter: "monitorId"')
@@ -241,6 +263,9 @@ export class Monitors {
     if (typeof severity !== 'undefined') {
       apiPayload['severity'] = severity
     }
+    if (typeof escalationId !== 'undefined') {
+      apiPayload['escalationId'] = escalationId
+    }
     const uri = new URL(this.client.config.endpoint + apiPath)
 
     const apiHeaders: { [header: string]: string } = {
@@ -265,6 +290,7 @@ export class Monitors {
    * @param {boolean | null} params.enabled - Whether the monitor is evaluated.
    * @param {string[] | null} params.notify - Organization roles whose confirmed members get an email and a console notification when the monitor fires and resolves. Each must be an organization role, such as `owner` or `developer`. Defaults to owners; pass an empty list to rely on the alert events alone.
    * @param {MonitorSeverity | null} params.severity - How urgent the monitor's alerts are: `info`, `warning`, `error` or `critical`. Omit to keep the current one.
+   * @param {string | null} params.escalationId - ID of an organization escalation, or an empty string to notify the `notify` roles instead.
    * @throws {AppwriteException}
    * @returns {Promise<Monitor>}
    */
@@ -277,6 +303,7 @@ export class Monitors {
     enabled?: boolean | null
     notify?: string[] | null
     severity?: MonitorSeverity | null
+    escalationId?: string | null
   }): Promise<Monitor>
   /**
    * Update a usage monitor by its unique ID. Only the parameters passed change; the monitor's state and its open alert are kept. Passing `rules` replaces all of them.
@@ -314,6 +341,7 @@ export class Monitors {
           enabled?: boolean | null
           notify?: string[] | null
           severity?: MonitorSeverity | null
+          escalationId?: string | null
         }
       | string,
     ...rest: [
@@ -335,6 +363,7 @@ export class Monitors {
       enabled?: boolean | null
       notify?: string[] | null
       severity?: MonitorSeverity | null
+      escalationId?: string | null
     }
 
     if (
@@ -351,6 +380,7 @@ export class Monitors {
         enabled?: boolean | null
         notify?: string[] | null
         severity?: MonitorSeverity | null
+        escalationId?: string | null
       }
     } else {
       params = {
@@ -373,6 +403,7 @@ export class Monitors {
     const enabled = params.enabled
     const notify = params.notify
     const severity = params.severity
+    const escalationId = params.escalationId
 
     if (typeof monitorId === 'undefined' || monitorId === '') {
       throw new AppwriteException('Missing required parameter: "monitorId"')
@@ -403,6 +434,9 @@ export class Monitors {
     if (typeof severity !== 'undefined') {
       apiPayload['severity'] = severity
     }
+    if (typeof escalationId !== 'undefined') {
+      apiPayload['escalationId'] = escalationId
+    }
     const uri = new URL(this.client.config.endpoint + apiPath)
 
     const apiHeaders: { [header: string]: string } = {
@@ -414,6 +448,143 @@ export class Monitors {
     const request = this.client.call('put', uri, apiHeaders, apiPayload)
 
     return request
+  }
+
+  /**
+   * Create an HTTP monitor. It requests a URL on its own interval, following redirects, and opens an alert when the request fails or answers with a status it does not expect, or when the certificate of an HTTPS URL is about to expire.
+   *
+   * @throws {AppwriteException}
+   * @returns {Promise<Monitor>}
+   */
+  createHttpMonitor(params: ProbeCreate<HttpTarget>): Promise<Monitor> {
+    return this.createProbe('/monitors/http', params)
+  }
+
+  /**
+   * Update an HTTP monitor by its unique ID. Only the parameters passed change.
+   *
+   * @throws {AppwriteException}
+   * @returns {Promise<Monitor>}
+   */
+  updateHttpMonitor(params: ProbeUpdate<HttpTarget>): Promise<Monitor> {
+    return this.updateProbe('/monitors/http/{monitorId}', params)
+  }
+
+  /**
+   * Create a DNS monitor. It queries a domain on its own interval and opens an alert when the name does not resolve, or when no answer has the expected value.
+   *
+   * @throws {AppwriteException}
+   * @returns {Promise<Monitor>}
+   */
+  createDnsMonitor(params: ProbeCreate<DnsTarget>): Promise<Monitor> {
+    return this.createProbe('/monitors/dns', params)
+  }
+
+  /**
+   * Update a DNS monitor by its unique ID. Only the parameters passed change.
+   *
+   * @throws {AppwriteException}
+   * @returns {Promise<Monitor>}
+   */
+  updateDnsMonitor(params: ProbeUpdate<DnsTarget>): Promise<Monitor> {
+    return this.updateProbe('/monitors/dns/{monitorId}', params)
+  }
+
+  /**
+   * Create a TCP monitor. It connects to a host and port on its own interval and opens an alert when the connection fails.
+   *
+   * @throws {AppwriteException}
+   * @returns {Promise<Monitor>}
+   */
+  createTcpMonitor(params: ProbeCreate<TcpTarget>): Promise<Monitor> {
+    return this.createProbe('/monitors/tcp', params)
+  }
+
+  /**
+   * Update a TCP monitor by its unique ID. Only the parameters passed change.
+   *
+   * @throws {AppwriteException}
+   * @returns {Promise<Monitor>}
+   */
+  updateTcpMonitor(params: ProbeUpdate<TcpTarget>): Promise<Monitor> {
+    return this.updateProbe('/monitors/tcp/{monitorId}', params)
+  }
+
+  /**
+   * Create an SMTP monitor. It opens a session with a mail server on its own interval and opens an alert when the server refuses it or the TLS handshake fails.
+   *
+   * @throws {AppwriteException}
+   * @returns {Promise<Monitor>}
+   */
+  createSmtpMonitor(params: ProbeCreate<SmtpTarget>): Promise<Monitor> {
+    return this.createProbe('/monitors/smtp', params)
+  }
+
+  /**
+   * Update an SMTP monitor by its unique ID. Only the parameters passed change.
+   *
+   * @throws {AppwriteException}
+   * @returns {Promise<Monitor>}
+   */
+  updateSmtpMonitor(params: ProbeUpdate<SmtpTarget>): Promise<Monitor> {
+    return this.updateProbe('/monitors/smtp/{monitorId}', params)
+  }
+
+  private createProbe(
+    apiPath: string,
+    params: { monitorId: string; name: string },
+  ): Promise<Monitor> {
+    if (typeof params.monitorId === 'undefined') {
+      throw new AppwriteException('Missing required parameter: "monitorId"')
+    }
+    if (typeof params.name === 'undefined') {
+      throw new AppwriteException('Missing required parameter: "name"')
+    }
+    return this.send('post', apiPath, params)
+  }
+
+  private updateProbe(
+    apiPath: string,
+    { monitorId, ...params }: { monitorId: string },
+  ): Promise<Monitor> {
+    if (typeof monitorId === 'undefined' || monitorId === '') {
+      throw new AppwriteException('Missing required parameter: "monitorId"')
+    }
+    return this.send(
+      'put',
+      apiPath.replace('{monitorId}', encodeURIComponent(monitorId)),
+      params,
+    )
+  }
+
+  private send(
+    method: 'post' | 'put',
+    apiPath: string,
+    params: object,
+  ): Promise<Monitor> {
+    const apiPayload: Payload = {}
+    for (const [key, value] of Object.entries(params)) {
+      if (typeof value !== 'undefined') {
+        apiPayload[key] = value
+      }
+    }
+    // The server's object params refuse an empty JSON object, so no headers go as an empty list.
+    if (
+      apiPayload.headers !== null &&
+      typeof apiPayload.headers === 'object' &&
+      Object.keys(apiPayload.headers).length === 0
+    ) {
+      apiPayload.headers = []
+    }
+    const uri = new URL(this.client.config.endpoint + apiPath)
+
+    const apiHeaders: { [header: string]: string } = {
+      'X-Appwrite-Project': this.client.config.project,
+      'content-type': 'application/json',
+      accept: 'application/json',
+    }
+
+    return this.client.call(method, uri, apiHeaders, apiPayload)
   }
 
   /**
@@ -475,19 +646,19 @@ export class Monitors {
    *
    * @param {string} params.monitorId - Monitor ID.
    * @throws {AppwriteException}
-   * @returns {Promise<{}>}
+   * @returns {Promise<object>}
    */
-  delete(params: { monitorId: string }): Promise<{}>
+  delete(params: { monitorId: string }): Promise<object>
   /**
    * Delete a monitor by its unique ID. It stops being evaluated; an alert it is firing is resolved and kept with the rest of its alert history.
    *
    * @param {string} monitorId - Monitor ID.
    * @throws {AppwriteException}
-   * @returns {Promise<{}>}
+   * @returns {Promise<object>}
    * @deprecated Use the object parameter style method for a better developer experience.
    */
-  delete(monitorId: string): Promise<{}>
-  delete(paramsOrFirst: { monitorId: string } | string): Promise<{}> {
+  delete(monitorId: string): Promise<object>
+  delete(paramsOrFirst: { monitorId: string } | string): Promise<object> {
     let params: { monitorId: string }
 
     if (

@@ -34,6 +34,7 @@ import {
   type BillingProjectResourceCategoryGroup,
   type DedicatedDbBillingSpecGroup,
 } from '@/lib/billing/project-breakdown-resources'
+import { getProjectBreakdownTotals } from '@/lib/billing/project-breakdown-totals'
 import {
   databaseSpecificationsQueryOptions,
   dedicatedDatabaseSourceFromEngine,
@@ -124,9 +125,11 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   const {
     displayedBreakdowns,
     totalProjects,
+    projectsSubtotal,
     organizationLines,
     organizationUsageCategories,
     organizationItems,
+    organizationAdjustments,
   } = useMemo(() => {
     const projectIds = [
       ...new Set([
@@ -134,13 +137,14 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
         ...lines.flatMap((item) => (item.projectId ? [item.projectId] : [])),
       ]),
     ]
-    const displayedBreakdowns = projectIds
+    const { projects, subtotal } = getProjectBreakdownTotals(projectIds, lines)
+    // Sorted before slicing so the cost order holds across client-side pages.
+    const displayedBreakdowns = projects
       .slice((displayedPage - 1) * pageLimit, displayedPage * pageLimit)
-      .map((projectId) => {
+      .map(({ projectId, items, total }) => {
         const project = aggregation?.breakdown.find(
           (project) => project.$id === projectId,
         )
-        const items = lines.filter((item) => item.projectId === projectId)
         return {
           projectId,
           projectName: project?.name || projectId,
@@ -151,7 +155,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
             plan,
             dedicatedDbBillingSpecLookup,
           ),
-          total: items.reduce((sum, item) => sum + item.amount, 0) / 100,
+          total,
         }
       })
     const organizationLines = lines.filter((item) => !item.projectId)
@@ -175,9 +179,14 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
     return {
       displayedBreakdowns,
       totalProjects: projectIds.length,
+      projectsSubtotal: subtotal,
       organizationLines,
       organizationUsageCategories,
-      organizationItems,
+      organizationItems: organizationItems.filter((item) => item.amount >= 0),
+      // Org-level credits and discounts render after the projects they offset.
+      organizationAdjustments: organizationItems.filter(
+        (item) => item.amount < 0,
+      ),
     }
   }, [aggregation, lines, plan, dedicatedDbBillingSpecLookup, displayedPage])
   const toggleProject = (id: string) =>
@@ -420,9 +429,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                           </span>
                           <span className="flex items-center gap-2">
                             <span className="font-medium text-foreground">
-                              {project.items.length
-                                ? formatCurrency(project.total, currency)
-                                : '-'}
+                              {formatCurrency(project.total, currency)}
                             </span>
                             {expandedProjects.has(project.projectId) ? (
                               <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
@@ -510,6 +517,19 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
               </div>
             )}
 
+            {organizationAdjustments.length > 0 && totalProjects > 0 && (
+              <div className="flex items-center justify-between border-t border-border pt-3 text-[13px]">
+                <span className="text-muted-foreground">
+                  {t('Projects subtotal')}
+                </span>
+                <span className="font-medium text-foreground">
+                  {formatCurrency(projectsSubtotal, currency)}
+                </span>
+              </div>
+            )}
+            {organizationAdjustments.map((item, index) => (
+              <RecordedLine key={index} item={item} currency={currency} />
+            ))}
             {creditsApplied > 0 && (
               <div className="flex items-center justify-between text-[13px]">
                 <span className="text-muted-foreground">

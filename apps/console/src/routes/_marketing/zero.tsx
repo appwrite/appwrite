@@ -1,5 +1,6 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { isProductReleased } from '@/lib/products/availability'
+import { getProductPageFeatures } from '@/lib/products/availability-ssr'
 import {
   MARKETING_PAGE_ROUTE_STATIC_DATA,
   marketingRouteLifetime,
@@ -17,7 +18,7 @@ export const Route = createFileRoute('/_marketing/zero')({
   ssr: true,
   // Hidden until launch: 404 while the `zero` feature is off.
   beforeLoad: () => {
-    if (!getActiveProfileFeatures().zero) throw notFound()
+    if (!isProductReleased('zero', getProductPageFeatures())) throw notFound()
   },
   head: () => {
     const seo = getMarketingRouteHead({

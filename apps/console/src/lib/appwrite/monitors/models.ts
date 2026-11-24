@@ -11,6 +11,7 @@ import type {
   AlertMetric as Metric,
   AlertStatus as Status,
   MonitorResourceType,
+  MonitorResult as Outcome,
   MonitorSeverity as Level,
   MonitorStatus as State,
   MonitorType as Kind,
@@ -30,16 +31,23 @@ export type MonitorSeverity = `${Level}`
 
 export type MonitorStatus = `${State}`
 
+/** Monitors that check a target on their own interval instead of reading usage. */
+export type ProbeType = Exclude<MonitorType, 'usage' | 'budget'>
+
+/** What a probe monitor's last check found; only `ok` passes. */
+export type MonitorResult = `${Outcome}`
+
 export type AlertStatus = `${Status}`
 
 export type Monitor = Omit<
   Api.Monitor,
-  'type' | 'resourceType' | 'status' | 'severity'
+  'type' | 'resourceType' | 'status' | 'severity' | 'result'
 > & {
   type: MonitorType
   resourceType: AlertResourceType
   status: MonitorStatus
   severity: MonitorSeverity
+  result?: MonitorResult | null
 }
 
 export type MonitorList = Omit<Api.MonitorList, 'monitors'> & {
@@ -48,14 +56,22 @@ export type MonitorList = Omit<Api.MonitorList, 'monitors'> & {
 
 export type Alert = Omit<
   Api.Alert,
-  'type' | 'resourceType' | 'status' | 'metric' | 'comparator' | 'severity'
+  | 'type'
+  | 'resourceType'
+  | 'status'
+  | 'metric'
+  | 'comparator'
+  | 'severity'
+  | 'result'
 > & {
   type: MonitorType
   resourceType: AlertResourceType
   status: AlertStatus
   severity: MonitorSeverity
-  metric: AlertMetric
-  comparator: AlertComparator
+  /** Null on a probe monitor's alert, which carries `result` instead. */
+  metric?: AlertMetric | null
+  comparator?: AlertComparator | null
+  result?: MonitorResult | null
 }
 
 export type AlertList = Omit<Api.AlertList, 'alerts'> & {
@@ -75,4 +91,104 @@ export type MonitorInput = {
   /** Critical pushes ring through silent and Do Not Disturb on devices that allow critical alerts. */
   severity?: MonitorSeverity
   enabled?: boolean
+  /** An organization escalation that replaces `notify`; empty notifies the roles. */
+  escalationId?: string
 }
+
+/** Who one escalation step notifies, after waiting `delay` seconds. */
+export type EscalationStep = {
+  /** After the alert fires for the first step, after the previous step for later ones. */
+  delay: number
+  /** Organization roles, such as `owner` or `developer`. */
+  roles: string[]
+  /** Organization members. */
+  userIds: string[]
+}
+
+/** An organization's escalation: steps notified in turn until someone acknowledges the alert. */
+export type Escalation = {
+  $id: string
+  $createdAt: string
+  $updatedAt: string
+  name: string
+  steps: EscalationStep[]
+  /** How many more times the steps run from the first, 0 to 9. */
+  repeat: number
+}
+
+export type EscalationList = {
+  total: number
+  escalations: Escalation[]
+}
+
+/** An escalation's writable fields. */
+export type EscalationInput = {
+  name: string
+  steps: EscalationStep[]
+  repeat: number
+}
+
+export type HttpMethod =
+  | 'GET'
+  | 'HEAD'
+  | 'POST'
+  | 'PUT'
+  | 'PATCH'
+  | 'DELETE'
+  | 'OPTIONS'
+
+export type DnsRecord = 'A' | 'AAAA' | 'CNAME' | 'MX' | 'TXT' | 'NS'
+
+/** Empty derives the mode from the port: 465 implicit, 587 STARTTLS, otherwise none. */
+export type SmtpTlsMode = 'none' | 'starttls' | 'implicit' | ''
+
+/** Fields every probe monitor takes besides its target. */
+export type ProbeSettings = {
+  name: string
+  /** Seconds between two checks. */
+  interval?: number
+  /** Seconds a check may take; no longer than `interval`. */
+  timeout?: number
+  cooldown?: number
+  notify?: string[]
+  /** An organization escalation that replaces `notify`; empty notifies the roles. */
+  escalationId?: string
+  severity?: MonitorSeverity
+  enabled?: boolean
+}
+
+export type HttpTarget = {
+  url: string
+  method?: HttpMethod
+  headers?: Record<string, string>
+  body?: string
+  /** Empty accepts any 2xx status. */
+  statusCodes?: number[]
+  /** 0 checks the certificate without warning before it expires. */
+  certificateDays?: number
+}
+
+export type DnsTarget = {
+  domain: string
+  record?: DnsRecord
+  /** An IP address with an optional port; empty for the server's resolver. */
+  resolver?: string
+  /** Empty accepts any answer. */
+  answer?: string
+}
+
+export type TcpTarget = { host: string; port: number }
+
+export type SmtpTarget = { host: string; port: number; tlsMode?: SmtpTlsMode }
+
+/** A probe monitor's type, with the writable fields its create method takes. */
+export type ProbeMonitorInput =
+  | { type: 'http'; params: ProbeSettings & HttpTarget }
+  | { type: 'dns'; params: ProbeSettings & DnsTarget }
+  | { type: 'tcp'; params: ProbeSettings & TcpTarget }
+  | { type: 'smtp'; params: ProbeSettings & SmtpTarget }
+
+/** Fields an update of any probe monitor can change; only the ones passed are sent. */
+export type ProbeMonitorChanges = Partial<
+  ProbeSettings & HttpTarget & DnsTarget & SmtpTarget
+>

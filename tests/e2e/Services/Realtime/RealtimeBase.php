@@ -225,6 +225,29 @@ trait RealtimeBase
         $client->close();
     }
 
+    public function testConnectionFailureInvalidChannels(): void
+    {
+        $projectId = $this->getProject()['$id'];
+
+        /**
+         * Test for FAILURE
+         */
+        $cases = [
+            'channels is not a valid array.' => ['project' => $projectId, 'channels' => 'documents'],
+            'channels must contain only strings.' => ['project' => $projectId, 'channels' => [['documents']]],
+        ];
+
+        foreach ($cases as $message => $query) {
+            $client = $this->getWebsocketWithCustomQuery($query);
+            $payload = \json_decode($client->receive(), true);
+
+            $this->assertSame('error', $payload['type']);
+            $this->assertSame(1008, $payload['data']['code']);
+            $this->assertSame($message, $payload['data']['message']);
+            $this->receiveUntilClosed($client);
+        }
+    }
+
     public function testConnectionFailureWrongRegion(): void
     {
         $projectId = $this->createIsolatedProjectForRegionTest();

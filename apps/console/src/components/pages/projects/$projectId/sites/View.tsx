@@ -733,6 +733,7 @@ export function View() {
                 planId: organizationPlan?.$id,
               })}
               resourceName={t('sites')}
+              resourceNameSingular="site"
               orgId={project?.teamId}
               fullWidth={false}
             />

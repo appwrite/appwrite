@@ -12,6 +12,7 @@ use Tests\Unit\Mqtt\Fakes\InterleavingDatabase;
 use Tests\Unit\Mqtt\Fakes\NullPubSub;
 use Tests\Unit\Mqtt\Fakes\RecordingAdapter;
 use Tests\Unit\Mqtt\Fakes\RecordingRedis;
+use Utopia\Abuse\Adapter\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
@@ -115,7 +116,7 @@ abstract class ReplayTestCase extends TestCase
         $container->set('authorizer', fn () => fn (array $identity): bool => true, []);
         $container->set('getPlan', fn () => fn (string $projectId): array => [], []);
         $redis = new RecordingRedis();
-        $container->set('getRedis', fn () => fn (): \Redis => $redis, []);
+        $container->set('timelimit', fn () => fn (string $key, int $limit, int $seconds, callable $callback): mixed => $callback(new TimeLimitRedis($key, $limit, $seconds, $redis)), []);
 
         $this->now = self::NOW;
         $this->cache = new FieldCache(fn (): int => $this->now);

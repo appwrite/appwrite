@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
-import { useParams, useSearch, useNavigate } from '@tanstack/react-router'
+import { useParams, useSearch } from '@tanstack/react-router'
 import {
   AlertCircle,
   Loader2,
@@ -9,6 +9,7 @@ import {
   ExternalLink,
   Globe,
   Mail,
+  Pencil,
 } from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
@@ -33,10 +34,13 @@ import {
 import {
   useFunctionDomains,
   useProject,
+  useProjectFunction,
   useOrganizationDomains,
 } from '@/lib/react-query/hooks'
 import { VerifyDomain } from './_components/VerifyDomain'
+import { DomainRecordsDialog } from '@/components/pages/projects/$projectId/settings/domains/DomainRecords'
 import { ViewLogsDialog } from '@/components/pages/projects/$projectId/settings/domains/ViewLogs'
+import { UpdateDomain } from '@/components/pages/projects/$projectId/settings/domains/UpdateDomain'
 import { DeleteDomainDialog } from '@/components/pages/projects/$projectId/settings/domains/DeleteDomain'
 import { ProxyRuleContextMenu } from '@/components/pages/projects/$projectId/settings/domains/ProxyRuleContextMenu'
 import { RuleStatusBadge } from '@/components/pages/projects/$projectId/settings/domains/RuleStatusBadge'
@@ -65,7 +69,6 @@ export function View() {
   const t = useT()
   const visitUrl = useVisitUrl()
   const { projectId, functionId } = useParams({ strict: false })
-  const navigate = useNavigate()
   const search = useSearch({ strict: false }) as {
     search?: string
     query?: string
@@ -74,9 +77,12 @@ export function View() {
   const [currentPage, setCurrentPage] = useState(0)
   const [pageSize, setPageSize] = useState(DOMAINS_DEFAULT_PAGE_SIZE)
   const [verifyOpen, setVerifyOpen] = useState(false)
+  const [recordsOpen, setRecordsOpen] = useState(false)
   const [smtpVerifyOpen, setSmtpVerifyOpen] = useState(false)
   const [viewLogsOpen, setViewLogsOpen] = useState(false)
   const [deleteDomainOpen, setDeleteDomainOpen] = useState(false)
+  const [updateRule, setUpdateRule] = useState<Models.ProxyRule | null>(null)
+  const { data: func } = useProjectFunction(projectId, functionId)
   const [selectedRule, setSelectedRule] = useState<Models.ProxyRule | null>(
     null,
   )
@@ -154,11 +160,22 @@ export function View() {
     })
   }
 
+  const handleRecords = (rule: Models.ProxyRule) => {
+    openDialogAfterOverlayCloses(() => {
+      setSelectedRule(rule)
+      setRecordsOpen(true)
+    })
+  }
+
   const handleViewLogs = (rule: Models.ProxyRule) => {
     openDialogAfterOverlayCloses(() => {
       setViewLogsRule(rule)
       setViewLogsOpen(true)
     })
+  }
+
+  const handleUpdate = (rule: Models.ProxyRule) => {
+    openDialogAfterOverlayCloses(() => setUpdateRule(rule))
   }
 
   const handleDelete = (rule: Models.ProxyRule) => {
@@ -257,13 +274,20 @@ export function View() {
                       key={rule.$id}
                       projectId={projectId!}
                       rule={rule}
-                      projectTeamId={project?.teamId}
-                      apexToOrgDomainId={apexToOrgDomainId}
                       onViewLogs={handleViewLogs}
                       onRetry={handleRetry}
+                      onUpdate={isSmtpRule(rule) ? undefined : setUpdateRule}
+                      onRecords={handleRecords}
                       onDelete={handleDelete}
                     >
-                      <TableRow>
+                      <TableRow
+                        className="cursor-pointer"
+                        // The row opens its DNS records; its links and buttons keep their own action.
+                        onClick={(event) => {
+                          if ((event.target as HTMLElement).closest('a, button')) return
+                          handleRecords(rule)
+                        }}
+                      >
                         <TableCell className="px-4 py-3">
                           {isEmail ? (
                             <span className="inline-flex items-center gap-1.5 font-mono text-[13px] font-medium">
@@ -336,9 +360,14 @@ export function View() {
                           <DateTooltip
                             date={rule.$createdAt}
                             className="text-[12px] text-muted-foreground"
+                            live
                           />
                         </TableCell>
-                        <TableCell className="px-4 py-3 text-end">
+                        <TableCell
+                          className="px-4 py-3 text-end"
+                          // Its menu renders in a portal, whose clicks still bubble to the row.
+                          onClick={(event) => event.stopPropagation()}
+                        >
                           <div className="flex justify-end">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
@@ -363,33 +392,17 @@ export function View() {
                                     </MenuItemContent>
                                   </DropdownMenuItem>
                                 )}
+                                {!isSmtpRule(rule) && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleUpdate(rule)}
+                                  >
+                                    <MenuItemContent icon={Pencil}>
+                                      {t('Update')}
+                                    </MenuItemContent>
+                                  </DropdownMenuItem>
+                                )}
                                 <DropdownMenuItem
-                                  onClick={() => {
-                                    const apex = getApexDomain(rule.domain)
-                                    const orgDomainId = apex
-                                      ? apexToOrgDomainId.get(
-                                          apex.toLowerCase(),
-                                        )
-                                      : undefined
-                                    if (project?.teamId && orgDomainId) {
-                                      navigate({
-                                        to: '/organizations/$orgId/domains/$domainId',
-                                        params: {
-                                          orgId: project.teamId,
-                                          domainId: orgDomainId,
-                                        },
-                                      })
-                                    }
-                                  }}
-                                  disabled={
-                                    !project?.teamId ||
-                                    !getApexDomain(rule.domain) ||
-                                    !apexToOrgDomainId.has(
-                                      getApexDomain(
-                                        rule.domain,
-                                      )?.toLowerCase() ?? '',
-                                    )
-                                  }
+                                  onClick={() => handleRecords(rule)}
                                 >
                                   <MenuItemContent icon={Globe}>
                                     {t('Records')}
@@ -455,6 +468,13 @@ export function View() {
             organizationDomainId={getOrganizationDomainId(selectedRule)}
             onVerifySuccess={() => setSelectedRule(null)}
           />
+          <DomainRecordsDialog
+            open={recordsOpen}
+            onOpenChange={setRecordsOpen}
+            rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
+            region={project?.region}
+            resourceType="function"
+          />
           <DeleteDomainDialog
             open={deleteDomainOpen}
             onOpenChange={setDeleteDomainOpen}
@@ -469,6 +489,22 @@ export function View() {
           />
         </>
       )}
+      {updateRule && (
+        <UpdateDomain
+          key={updateRule.$id}
+          open
+          onOpenChange={(open) => {
+            if (!open) setUpdateRule(null)
+          }}
+          projectId={projectId ?? ''}
+          region={project?.region}
+          rule={updateRule}
+          resourceType="function"
+          resourceId={functionId ?? ''}
+          installationId={func?.installationId}
+          providerRepositoryId={func?.providerRepositoryId}
+        />
+      )}
       {viewLogsRule && (
         <ViewLogsDialog
           open={viewLogsOpen}
@@ -477,8 +513,6 @@ export function View() {
             if (!open) setViewLogsRule(null)
           }}
           rule={rules.find((r) => r.$id === viewLogsRule.$id) ?? viewLogsRule}
-          onRefresh={() => void refetchDomains()}
-          isRefreshing={domainsFetching}
         />
       )}
     </>

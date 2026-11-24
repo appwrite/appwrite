@@ -1,11 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { pageTitle } from '@/lib/utils/page-title'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
-import {
-  countriesQueryOptions,
-  monitorsQueryOptions,
-  projectQueryOptions,
-} from '@/lib/react-query/hooks'
+import { countriesQueryOptions } from '@/lib/react-query/hooks'
 import { UsageLayout } from '@/components/pages/projects/$projectId/usage/Layout'
 
 export const Route = createFileRoute('/_public/projects/$projectId/usage')({
@@ -25,21 +21,13 @@ export const Route = createFileRoute('/_public/projects/$projectId/usage')({
       })
     }
   },
-  loader: async ({ params, context }) => {
+  loader: async ({ context }) => {
     if (typeof window === 'undefined') return
 
     const { queryClient } = context
     // Optional for country names/flags; never block the usage page.
     void queryClient
       .prefetchQuery(countriesQueryOptions())
-      .catch(() => undefined)
-    if (!getActiveProfileFeatures().alerts) return
-    // The sidebar flags firing monitors on the Alerts link; load them with the
-    // page so the badge does not pop in. Editions without monitors answer with
-    // an error, which leaves the badge off.
-    await queryClient.ensureQueryData(projectQueryOptions(params.projectId))
-    await queryClient
-      .ensureQueryData(monitorsQueryOptions(params.projectId))
       .catch(() => undefined)
   },
   component: UsageLayoutPage,

@@ -42,6 +42,7 @@ class Attributes extends Validator
         'subQueryPlatforms',
         'subQueryProjectVariables',
         'subQueryReportInsights',
+        'subQueryRuleRecords',
         'subQuerySessions',
         'subQueryTargets',
         'subQueryTokens',

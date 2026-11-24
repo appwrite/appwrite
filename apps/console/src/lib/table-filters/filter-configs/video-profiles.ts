@@ -1,6 +1,5 @@
 /**
- * Client-side filters for the project encoding profiles list (`listProfiles`
- * has no query params on the API).
+ * Client-side filters for the project encoding profiles list (API: `GET /project/profiles`).
  */
 
 import type { FilterColumn } from '../types'

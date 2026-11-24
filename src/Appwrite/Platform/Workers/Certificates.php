@@ -3,6 +3,8 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Bus\Events\RuleUpdated;
+use Appwrite\Certificates\External;
+use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Mail as MailMessage;
@@ -17,6 +19,7 @@ use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model\Rule;
+use Appwrite\Utopia\Response\Model\RuleRecord;
 use Exception;
 use Throwable;
 use Utopia\Bus\Bus;
@@ -191,7 +194,7 @@ class Certificates extends Action
 
         try {
             // Verify DNS records
-            $this->validateDomain($rule, $domain, $validationDomain);
+            $this->validateDomain($rule, $domain, $dbForPlatform, $validationDomain);
             // Reset logs and status for the rule
             $rule->setAttribute('logs', '');
             $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
@@ -200,7 +203,7 @@ class Certificates extends Action
         } catch (AppwriteException $err) {
             Console::warning('Domain verification failed: ' . $err->getMessage());
             $date = \date('H:i:s');
-            $logs = "\033[90m[{$date}] \033[31mDNS verification failed: \033[0m\n";
+            $logs = "\033[90m[{$date}] \033[31mDNS check failed: \033[0m\n";
             $logs .= \mb_strcut($err->getMessage(), 0, 500000); // Limit to 500kb
             $rule->setAttribute('logs', $logs);
         } finally {
@@ -346,7 +349,7 @@ class Certificates extends Action
             // already passed for this rule: a second run of the same check can
             // only agree, or fail on a transient and contradict that result.
             if (!$skipRenewCheck && !$skipDomainValidation) {
-                $this->validateDomain($rule, $domain, $validationDomain);
+                $this->validateDomain($rule, $domain, $dbForPlatform, $validationDomain);
             }
 
             $awaitingProvider = !$certificates->isInstantGeneration($domain->get(), $domainType);
@@ -441,7 +444,15 @@ class Certificates extends Action
             $logs .= $waiting && $e instanceof CertificateException && $e->isBlocked()
                 ? "\033[90m[{$date}] \033[33mSSL certificate is waiting on domain verification: \033[0m\n"
                 : "\033[90m[{$date}] \033[31mSSL certificate issuance failed: \033[0m\n";
-            $logs .= \rtrim(\mb_strcut($e->getMessage(), 0, 500000)) . "\n"; // Limit to 500kb
+            // A CDN provider's own failure is about Appwrite's account, not the domain, so the owner
+            // gets a generic line; the worker still reports the raw error
+            // TODO: ask the provider whether its errors are the owner's, instead of checking its class
+            $logs .= $e instanceof CertificateException
+                || ($e instanceof AppwriteException && $e->getType() === AppwriteException::RULE_VERIFICATION_FAILED)
+                || $certificates instanceof LetsEncrypt
+                || $certificates instanceof External
+                ? \rtrim(\mb_strcut($e->getMessage(), 0, 500000)) . "\n" // Limit to 500kb
+                : "We couldn't issue the certificate due to an issue on our side. We'll retry automatically.\n";
 
             // Update attributes on certificate document
             $certificate->setAttributes([
@@ -472,6 +483,16 @@ class Certificates extends Action
                 // about to expire is checked twice a day: one more email for that, not one per check.
                 if ($attempts <= self::MAX_GENERATION_ATTEMPTS + 1) {
                     $this->notifyError($domain->get(), $e->getMessage(), $attempts, $renewing, $certificate->getAttribute('expireDate'), $publisherForMails, $plan, $dbForPlatform->getDocument('projects', 'console'));
+                }
+
+                // The domain failed verification on its own configuration: its records do not point
+                // here, a CAA record blocks the certificate authority, or the name is not a valid
+                // public domain. The outcome is recorded above and maintenance retries it. A queue
+                // redelivery would only repeat it within minutes, count each run as another attempt,
+                // and email the owner again. Resolver errors keep their own type and still retry.
+                if ($e instanceof AppwriteException && $e->getType() === AppwriteException::RULE_VERIFICATION_FAILED) {
+                    Span::add('certificate.verification_failed', true);
+                    return;
                 }
 
                 throw $e;
@@ -591,6 +612,10 @@ class Certificates extends Action
             'renewAt' => $certificate->getAttribute('renewDate', ''),
             'expireAt' => $certificate->getAttribute('expireDate', ''),
             'certificateStatus' => $certificate->getAttribute('status', ''),
+            'records' => \array_map(
+                fn (Document|array $record) => (new RuleRecord())->payload($record instanceof Document ? $record : new Document($record)),
+                $rule->getAttribute('records', []),
+            ),
         ])));
 
         $queueForEvents
@@ -629,12 +654,13 @@ class Certificates extends Action
      *
      * @param Document $rule Rule to validate
      * @param Domain $domain Domain to validate
+     * @param Database $dbForPlatform Database the record checks are stored in
      * @param string|null $validationDomain Override for main domain check
      *
      * @return void
      * @throws Exception
      */
-    private function validateDomain(Document $rule, Domain $domain, ?string $validationDomain = null): void
+    private function validateDomain(Document $rule, Domain $domain, Database $dbForPlatform, ?string $validationDomain = null): void
     {
         $mainDomain = $validationDomain ?? $this->getMainDomain();
         $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
@@ -651,11 +677,10 @@ class Certificates extends Action
 
         try {
             $this->verifyRule($rule);
-        } catch (AppwriteException $err) {
-            $msg = $err->getMessage() . "\n";
-            $msg .= "Verify your DNS records are correctly configured and try again.\n";
-            $msg .= "If they're correct and it still fails, please retry after sometime. DNS records can take up to 48 hours to propagate.\n";
-            throw new AppwriteException($err->getType(), $msg);
+        } finally {
+            // The checks are stored whether or not the domain passed. The rule write that
+            // follows reads them back for the events.
+            $this->updateRecords($rule, $dbForPlatform);
         }
     }
 

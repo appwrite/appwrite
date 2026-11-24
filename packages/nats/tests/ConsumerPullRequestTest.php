@@ -10,6 +10,7 @@ use Utopia\NATS\Connection;
 use Utopia\NATS\ConnectionOptions;
 use Utopia\NATS\JetStream\Consumer;
 use Utopia\NATS\JetStream\ConsumerInfo;
+use Utopia\NATS\JetStream\JetStreamMessage;
 use Utopia\NATS\Tests\Support\FakeTransport;
 use Utopia\NATS\Tests\Support\LateReadTransport;
 
@@ -23,6 +24,51 @@ use Utopia\NATS\Tests\Support\LateReadTransport;
  */
 final class ConsumerPullRequestTest extends TestCase
 {
+    public function testFetchEachDeliversBeforeTheRestOfTheBatchArrives(): void
+    {
+        $fake = new FakeTransport();
+        $consumer = $this->consumer($this->connect($fake));
+        $sid = '';
+        $this->reply($fake, static function (string $id) use (&$sid): string {
+            $sid = $id;
+            return self::messageFrame($id, 'first');
+        });
+        $received = [];
+
+        $consumer->fetchEach(2, static function (JetStreamMessage $message) use ($fake, &$sid, &$received): void {
+            $received[] = $message->getData();
+            if ($message->getData() === 'first') {
+                // The server cannot send more until the caller processes the first.
+                $fake->pushInbound(self::messageFrame($sid, 'second'));
+            }
+        }, 0.02, true);
+
+        $this->assertSame(['first', 'second'], $received);
+        $this->assertStringContainsString("UNSUB {$sid}\r\n", $fake->written);
+    }
+
+    public function testFetchEachCleansUpAfterCallbackFailure(): void
+    {
+        $fake = new FakeTransport();
+        $consumer = $this->consumer($this->connect($fake));
+        $sid = '';
+        $this->reply($fake, static function (string $id) use (&$sid): string {
+            $sid = $id;
+            return self::messageFrame($id, 'first');
+        });
+        $failure = new \RuntimeException('callback failed');
+        $caught = null;
+
+        try {
+            $consumer->fetchEach(2, static fn (): never => throw $failure, 0.02, true);
+        } catch (\Throwable $error) {
+            $caught = $error;
+        }
+
+        $this->assertSame($failure, $caught);
+        $this->assertStringContainsString("UNSUB {$sid}\r\n", $fake->written);
+    }
+
     private function connect(FakeTransport $fake): Connection
     {
         return Connection::connect(new ConnectionOptions(
@@ -61,26 +107,35 @@ final class ConsumerPullRequestTest extends TestCase
     }
 
     /**
-     * The sid fetch() is about to give its inbox subscription.
+     * Queue the reply as the server would: once the inbox subscription fetch()
+     * opens is on the wire, addressed to its sid.
      *
-     * Inbound frames are routed by sid, and a reply has to be queued on the fake
-     * before the synchronous fetch() starts reading -- by which point the inbox
-     * subject it generated is not observable yet. The sid is, because it comes
-     * from a counter.
+     * @param \Closure(string $sid): string $frames
      */
-    private function pendingSid(Connection $conn): string
+    private function reply(FakeTransport $fake, \Closure $frames): void
     {
-        return (string) (new \ReflectionProperty(Connection::class, 'nextSid'))->getValue($conn);
+        $fake->onWrite = static function (string $wire, FakeTransport $fake) use ($frames): void {
+            foreach (explode("\r\n", $wire) as $line) {
+                $parts = explode(' ', $line);
+                if ($parts[0] === 'SUB' && str_starts_with($parts[1] ?? '', '_INBOX.')) {
+                    $fake->pushInbound($frames($parts[array_key_last($parts)]));
+                }
+            }
+        };
     }
 
-    /** Queue a status frame on the inbox fetch() is about to open. */
-    private function pushStatus(FakeTransport $fake, string $sid, string $status, string $replyTo = ''): void
+    private static function statusFrame(string $sid, string $status, string $replyTo = ''): string
     {
         $block = "NATS/1.0 {$status}\r\n\r\n";
         $length = \strlen($block);
         $reply = $replyTo === '' ? '' : " {$replyTo}";
 
-        $fake->pushInbound("HMSG _INBOX.scripted {$sid}{$reply} {$length} {$length}\r\n{$block}\r\n");
+        return "HMSG _INBOX.scripted {$sid}{$reply} {$length} {$length}\r\n{$block}\r\n";
+    }
+
+    private static function messageFrame(string $sid, string $payload): string
+    {
+        return "MSG _INBOX.scripted {$sid} " . \strlen($payload) . "\r\n{$payload}\r\n";
     }
 
     public function testNoWaitPullRequestCarriesNoExpiry(): void
@@ -143,7 +198,7 @@ final class ConsumerPullRequestTest extends TestCase
         $conn = $this->connect($fake);
         $consumer = $this->consumer($conn);
 
-        $this->pushStatus($fake, $this->pendingSid($conn), '503 No Responders');
+        $this->reply($fake, static fn (string $sid): string => self::statusFrame($sid, '503 No Responders'));
 
         $batch = $consumer->fetch(1, 0.02, true);
 
@@ -161,7 +216,7 @@ final class ConsumerPullRequestTest extends TestCase
         $conn = $this->connect($fake);
         $consumer = $this->consumer($conn);
 
-        $this->pushStatus($fake, $this->pendingSid($conn), '599 Something New');
+        $this->reply($fake, static fn (string $sid): string => self::statusFrame($sid, '599 Something New'));
 
         $batch = $consumer->fetch(1, 0.02, true);
 
@@ -174,7 +229,7 @@ final class ConsumerPullRequestTest extends TestCase
         $conn = $this->connect($fake);
         $consumer = $this->consumer($conn);
 
-        $this->pushStatus($fake, $this->pendingSid($conn), '404 No Messages');
+        $this->reply($fake, static fn (string $sid): string => self::statusFrame($sid, '404 No Messages'));
 
         $batch = $consumer->fetch(1, 0.02, true);
 
@@ -191,9 +246,8 @@ final class ConsumerPullRequestTest extends TestCase
         $conn = $this->connect($fake);
         $consumer = $this->consumer($conn);
 
-        $sid = $this->pendingSid($conn);
-        $this->pushStatus($fake, $sid, '100 FlowControl Request', '_FC.reply');
-        $fake->pushInbound("MSG _INBOX.scripted {$sid} 5\r\nhello\r\n");
+        $this->reply($fake, static fn (string $sid): string => self::statusFrame($sid, '100 FlowControl Request', '_FC.reply')
+            . self::messageFrame($sid, 'hello'));
 
         $batch = $consumer->fetch(1, 0.5, true);
 
@@ -222,10 +276,9 @@ final class ConsumerPullRequestTest extends TestCase
         ));
         $consumer = $this->consumer($conn);
 
-        $sid = $this->pendingSid($conn);
-        for ($i = 0; $i < 3; $i++) {
-            $fake->pushInbound("MSG _INBOX.scripted {$sid} 2\r\nm{$i}\r\n");
-        }
+        $this->reply($fake, static fn (string $sid): string => self::messageFrame($sid, 'm0')
+            . self::messageFrame($sid, 'm1')
+            . self::messageFrame($sid, 'm2'));
         $late->delayNextRead($delay);
 
         $batch = $consumer->fetch(3, 0.02, true);
@@ -252,10 +305,9 @@ final class ConsumerPullRequestTest extends TestCase
         $conn = $this->connect($fake);
         $consumer = $this->consumer($conn);
 
-        $sid = $this->pendingSid($conn);
-        $fake->pushInbound("MSG _INBOX.scripted {$sid} 2\r\nm0\r\n");
-        $fake->pushInbound("MSG _INBOX.scripted {$sid} 2\r\nm1\r\n");
-        $this->pushStatus($fake, $sid, '404 No Messages');
+        $this->reply($fake, static fn (string $sid): string => self::messageFrame($sid, 'm0')
+            . self::messageFrame($sid, 'm1')
+            . self::statusFrame($sid, '404 No Messages'));
 
         $started = microtime(true);
         $batch = $consumer->fetch(5, 2.0, true);
@@ -281,10 +333,9 @@ final class ConsumerPullRequestTest extends TestCase
         ));
         $consumer = $this->consumer($conn);
 
-        $sid = $this->pendingSid($conn);
-        for ($i = 0; $i < 3; $i++) {
-            $fake->pushInbound("MSG _INBOX.scripted {$sid} 2\r\nm{$i}\r\n");
-        }
+        $this->reply($fake, static fn (string $sid): string => self::messageFrame($sid, 'm0')
+            . self::messageFrame($sid, 'm1')
+            . self::messageFrame($sid, 'm2'));
         $late->arriveAfter(0.3);
 
         $batch = $consumer->fetch(3, 0.02, true);
@@ -308,7 +359,7 @@ final class ConsumerPullRequestTest extends TestCase
         ));
         $consumer = $this->consumer($conn);
 
-        $fake->pushInbound("MSG _INBOX.scripted {$this->pendingSid($conn)} 2\r\nm0\r\n");
+        $this->reply($fake, static fn (string $sid): string => self::messageFrame($sid, 'm0'));
         $late->arriveAfter(0.5);
 
         $started = microtime(true);
@@ -338,7 +389,7 @@ final class ConsumerPullRequestTest extends TestCase
         $conn = $this->connect($fake);
         $consumer = $this->consumer($conn);
 
-        $fake->pushInbound("MSG _INBOX.scripted {$this->pendingSid($conn)} 7\r\npayload\r\n");
+        $this->reply($fake, static fn (string $sid): string => self::messageFrame($sid, 'payload'));
 
         $batch = $consumer->fetch(1, 0.5, true);
 

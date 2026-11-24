@@ -1,10 +1,4 @@
-import {
-  Fingerprint,
-  FlaskConical,
-  GitBranch,
-  Layers,
-  type LucideIcon,
-} from 'lucide-react'
+import { FlaskConical, Gauge, Layers, type LucideIcon } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { Button } from '@/components/ui/button'
 import {
@@ -29,12 +23,13 @@ import {
 import { useT } from '@/lib/i18n/translate'
 import { useMarkExperimentsSeen } from '@/lib/react-query/hooks'
 import { parseExperimentsSeenAt, type UserPrefs } from '@/lib/user-prefs-keys'
+import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 
 const EXPERIMENT_ICONS = {
+  alerts: Gauge,
   analytics: ANALYTICS_PRODUCT_ICON,
   projectEnvironments: Layers,
-  vcsOrigin: GitBranch,
-  identityServers: Fingerprint,
+  videos: VIDEOS_PRODUCT_ICON,
 } as const satisfies Record<Experiment['flag'], LucideIcon>
 
 export function ExperimentsPopover() {

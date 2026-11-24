@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { getProfileFeaturesForCookieHeader } from '@/lib/console-profiles'
+import { isProductReleased } from '@/lib/products/availability'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
 import { respondWithPrebuiltOrRuntime } from '@/lib/seo/export-response'
 import { trackServerPageview } from '@/lib/server-analytics'
@@ -13,7 +14,10 @@ export const Route = createFileRoute('/zero.md')({
     handlers: {
       GET: async ({ request }) => {
         // Hidden until launch, like /zero.
-        if (!getActiveProfileFeatures().zero) {
+        const features = getProfileFeaturesForCookieHeader(
+          request.headers.get('cookie'),
+        )
+        if (!isProductReleased('zero', features)) {
           return new Response('Not found', { status: 404 })
         }
         trackServerPageview(request)

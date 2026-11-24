@@ -315,7 +315,9 @@ export function CreateGitDeploymentModal({
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
-        <div className="px-6 pb-4 pt-0 space-y-4">
+        {/* min-w-0: a grid item otherwise grows to its longest repository name
+            and spills out of the dialog */}
+        <div className="min-w-0 px-6 pb-4 pt-0 space-y-4">
           {showRepoPicker ? (
             <div>
               <Label className="text-[13px]">{t('Repository')}</Label>
@@ -404,7 +406,7 @@ export function CreateGitDeploymentModal({
                 providerRepositoryId={providerRepositoryId}
                 value={branch}
                 onChange={setBranch}
-                label={t('Production branch')}
+                label={t('Branch')}
                 placeholder={t('Select branch')}
                 suppressInstallationError={!!installationErrorKind}
               />

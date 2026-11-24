@@ -218,6 +218,10 @@ type BreakdownPanelProps = {
   rowHref?: (value: string, tabId: string) => string | undefined
   /** Which measure ranks and sizes the rows. */
   valueKey?: 'visitors' | 'events'
+  /** Mobile properties count users, not visitors. */
+  mobile?: boolean
+  /** Replaces the row's filter toggle (e.g. open the user's page). */
+  onRowClick?: (value: string) => void
 }
 
 /**
@@ -244,6 +248,8 @@ export function BreakdownPanel({
   emptyLabel,
   rowHref,
   valueKey = 'visitors',
+  mobile = false,
+  onRowClick,
 }: BreakdownPanelProps) {
   const t = useT()
   const tabIds = useMemo(() => tabs.map((tab) => tab.id), [tabs])
@@ -302,6 +308,7 @@ export function BreakdownPanel({
 
   // Rows with a filterable dimension and a real value become filter toggles.
   const filterRowProps = (value: string | null | undefined) => {
+    if (onRowClick && value) return { onClick: () => onRowClick(value) }
     if (!filterAttribute || !value) return {}
     const isActive = isFilterActive(filterAttribute, value)
     return {
@@ -351,6 +358,7 @@ export function BreakdownPanel({
           <CountryMap
             rows={rows}
             height={BREAKDOWN_BODY_FILL_HEIGHT_PX}
+            mobile={mobile}
             formatLabel={(code) => formatLabel?.(code, active.id) ?? code}
             onSelect={
               filterAttribute
@@ -416,12 +424,20 @@ export function BreakdownPanel({
           tabs={listTabs}
           initialTabId={dialogTabId}
           valueKey={valueKey}
+          valueLabel={
+            mobile && valueKey === 'visitors' ? t('Users') : undefined
+          }
           renderLeading={renderLeading}
           rowColor={rowColor}
           formatLabel={formatLabel}
           mono={mono}
           emptyLabel={emptyLabel}
           rowHref={rowHref}
+          onRowClick={
+            onRowClick
+              ? (entry) => entry.value && onRowClick(entry.value)
+              : undefined
+          }
         />
       ) : null}
     </div>

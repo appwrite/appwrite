@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Modules\Databases\Workers;
 use Appwrite\Alert\Monitors;
 use Appwrite\Event\Message\Database as DatabaseMessage;
 use Appwrite\Event\Realtime;
-use Exception;
 use Utopia\Database\Attribute;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -14,7 +13,9 @@ use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Restricted;
+use Utopia\Database\Exception\Schema;
 use Utopia\Database\Exception\Structure;
+use Utopia\Database\Exception\Unique;
 use Utopia\Database\Index as IndexObject;
 use Utopia\Database\Query;
 use Utopia\Database\Relationship;
@@ -24,6 +25,7 @@ use Utopia\Query\OrderDirection;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Query\Schema\IndexType;
 use Utopia\Queue\Message;
+use Utopia\Queue\PermanentFailure;
 use Utopia\Span\Span;
 
 class Databases extends Action
@@ -56,14 +58,14 @@ class Databases extends Action
      * @param Database $dbForProject
      * @param Realtime $queueForRealtime
      * @return void
-     * @throws \Exception
+     * @throws PermanentFailure
      */
     public function action(Message $message, Document $project, Database $dbForPlatform, Database $dbForProject, callable $getDatabasesDB, Realtime $queueForRealtime): void
     {
         $payload = $message->getPayload();
 
         if (empty($payload)) {
-            throw new Exception('Missing payload');
+            throw new PermanentFailure('Missing payload');
         }
 
         $databaseMessage = DatabaseMessage::fromArray($payload);
@@ -90,7 +92,7 @@ class Databases extends Action
         Span::add('type', $type);
 
         if ($database->isEmpty()) {
-            throw new Exception('Missing database');
+            throw new PermanentFailure('Missing database');
         }
 
         Span::add('database.id', $database->getId());
@@ -107,7 +109,7 @@ class Databases extends Action
             DATABASE_TYPE_DELETE_ATTRIBUTE => $this->deleteAttribute($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime),
             DATABASE_TYPE_CREATE_INDEX => $this->createIndex($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime),
             DATABASE_TYPE_DELETE_INDEX => $this->deleteIndex($database, $collection, $document, $project, $dbForPlatform, $dbForProject, $dbForDatabases, $queueForRealtime),
-            default => throw new Exception('No database operation for type: ' . \strval($type)),
+            default => throw new PermanentFailure('No database operation for type: ' . \strval($type)),
         };
     }
 
@@ -137,10 +139,10 @@ class Databases extends Action
         Realtime $queueForRealtime
     ): void {
         if ($collection->isEmpty()) {
-            throw new Exception('Missing collection/table');
+            throw new PermanentFailure('Missing collection/table');
         }
         if ($attribute->isEmpty()) {
-            throw new Exception('Missing attribute/column');
+            throw new PermanentFailure('Missing attribute/column');
         }
 
         $projectId = $project->getId();
@@ -191,7 +193,7 @@ class Databases extends Action
                 case ColumnType::Relationship->value:
                     $relatedCollection = $dbForProject->getDocument('database_' . $database->getSequence(), $options['relatedCollection']);
                     if ($relatedCollection->isEmpty()) {
-                        throw new DatabaseException('Collection/Table not found');
+                        throw new NotFound('Collection/Table not found');
                     }
 
                     $dbForDatabases->createRelationship('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), Relationship::fromArray([
@@ -246,6 +248,12 @@ class Databases extends Action
                 );
             }
 
+            if ($this->isRejection($e)) {
+                Span::add('database.attribute.rejected', $e->getMessage());
+
+                return;
+            }
+
             throw $e;
         } finally {
             if (! $relatedCollection->isEmpty()) {
@@ -278,10 +286,10 @@ class Databases extends Action
     private function deleteAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForPlatform, Database $dbForProject, Database $dbForDatabases, Realtime $queueForRealtime): void
     {
         if ($collection->isEmpty()) {
-            throw new Exception('Missing collection/table');
+            throw new PermanentFailure('Missing collection/table');
         }
         if ($attribute->isEmpty()) {
-            throw new Exception('Missing attribute/column');
+            throw new PermanentFailure('Missing attribute/column');
         }
 
         $projectId = $project->getId();
@@ -367,16 +375,20 @@ class Databases extends Action
 
             foreach ($indexes as $index) {
                 /** @var string[] $attributes */
-                $attributes = $index->getAttribute('attributes');
-                $lengths = $index->getAttribute('lengths');
-                $orders = $index->getAttribute('orders');
+                $attributes = $index->getAttribute('attributes', []);
+                $lengths = $index->getAttribute('lengths', []);
+                $orders = $index->getAttribute('orders', []);
 
-                $found = \array_search($key, $attributes);
+                $found = \array_search($key, $attributes, true);
 
                 if ($found !== false) {
-                    $attributes = \array_values(\array_diff($attributes, [$attributes[$found]]));
-                    $lengths = \array_values(\array_diff($lengths, isset($lengths[$found]) ? [$lengths[$found]] : []));
-                    $orders = \array_values(\array_diff($orders, isset($orders[$found]) ? [$orders[$found]] : []));
+                    // A length and an order belong to the attribute at their own position, so the removed
+                    // attribute takes the ones at its position with it. Pruning by value instead drops every
+                    // length and order equal to them, leaving the index covering more attributes than it has
+                    // lengths or orders.
+                    \array_splice($attributes, $found, 1);
+                    \array_splice($lengths, $found, 1);
+                    \array_splice($orders, $found, 1);
 
                     if (empty($attributes)) {
                         $dbForProject->deleteDocument('indexes', $index->getId());
@@ -442,10 +454,10 @@ class Databases extends Action
     private function createIndex(Document $database, Document $collection, Document $index, Document $project, Database $dbForPlatform, Database $dbForProject, Database $dbForDatabases, Realtime $queueForRealtime): void
     {
         if ($collection->isEmpty()) {
-            throw new Exception('Missing collection/table');
+            throw new PermanentFailure('Missing collection/table');
         }
         if ($index->isEmpty()) {
-            throw new Exception('Missing index');
+            throw new PermanentFailure('Missing index');
         }
 
         $projectId = $project->getId();
@@ -484,6 +496,12 @@ class Databases extends Action
                 $index->setAttribute('status', 'failed')
             );
 
+            if ($this->isRejection($e)) {
+                Span::add('database.index.rejected', $e->getMessage());
+
+                return;
+            }
+
             throw $e;
         } finally {
             $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collectionId);
@@ -511,22 +529,28 @@ class Databases extends Action
     private function deleteIndex(Document $database, Document $collection, Document $index, Document $project, Database $dbForPlatform, Database $dbForProject, Database $dbForDatabases, Realtime $queueForRealtime): void
     {
         if ($collection->isEmpty()) {
-            throw new Exception('Missing collection/table');
+            throw new PermanentFailure('Missing collection/table');
         }
         if ($index->isEmpty()) {
-            throw new Exception('Missing index');
+            throw new PermanentFailure('Missing index');
         }
 
         $projectId = $project->getId();
         $event = 'databases.[databaseId].collections.[collectionId].indexes.[indexId].delete';
         $key = $index->getAttribute('key');
-        $status = $index->getAttribute('status', '');
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         try {
-            if ($status !== 'failed') {
+            try {
                 $dbForDatabases->deleteIndex('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key);
+            } catch (NotFound $e) {
+                // An index the schema does not hold -- one that never finished creating, or one the schema
+                // lost while its document stayed behind -- is already in the state the delete asks for, so
+                // the document still goes. Recording it as stuck instead leaves the index undeletable: every
+                // retry takes this same path.
+                Span::add('database.index.not_found', $e->getMessage());
             }
+
             $dbForProject->deleteDocument('indexes', $index->getId());
             $index->setAttribute('status', 'deleted');
         } catch (NotFound $e) {
@@ -554,12 +578,21 @@ class Databases extends Action
     }
 
     /**
-     * @param Document $database
-     * @param Database $dbForProject
-     * @param Database $dbForDatabases
-     * @return void
-     * @throws Exception
+     * Whether the database refused the attribute or index the customer asked for, rather than
+     * failing to build it: a definition that breaks the schema rules (row width, column or index
+     * count, index length, relationship), a unique index over rows that already repeat, or a
+     * table, related table or column that no longer exists. The failed status and its error are
+     * the job's result, and the job is acknowledged: every redelivery would fail identically
+     * while holding one of the queue's ack-pending slots for its whole backoff.
+     *
+     * Any other Duplicate (the column or index already exists) still fails the job: it points
+     * at a build left half done, which is ours to look at, not the customer's.
      */
+    private function isRejection(\Throwable $e): bool
+    {
+        return $e instanceof Schema || $e instanceof Unique || $e instanceof NotFound;
+    }
+
     protected function deleteDatabase(Document $database, Database $dbForProject, Database $dbForDatabases): void
     {
         $this->deleteByGroup('database_' . $database->getSequence(), [], $dbForProject, function ($collection) use ($database, $dbForProject, $dbForDatabases) {
@@ -580,12 +613,12 @@ class Databases extends Action
      * @throws DatabaseException
      * @throws Restricted
      * @throws Structure
-     * @throws Exception
+     * @throws PermanentFailure
      */
     protected function deleteCollection(Document $database, Document $collection, Database $dbForProject, Database $dbForDatabases): void
     {
         if ($collection->isEmpty()) {
-            throw new Exception('Missing collection/table');
+            throw new PermanentFailure('Missing collection/table');
         }
 
         $collectionId = $collection->getId();
@@ -630,7 +663,6 @@ class Databases extends Action
      * @param Database $database
      * @param callable|null $callback
      * @return void
-     * @throws Exception
      */
     protected function deleteByGroup(string $collectionId, array $queries, Database $database, ?callable $callback = null): void
     {

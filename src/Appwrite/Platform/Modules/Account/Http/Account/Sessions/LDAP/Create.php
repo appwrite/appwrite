@@ -7,6 +7,7 @@ use Appwrite\Auth\AuthDevice;
 use Appwrite\Auth\LDAP\Client;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\Validator\Phone;
+use Appwrite\Bus\Events\EmailVerified;
 use Appwrite\Bus\Events\SessionCreated;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
@@ -153,7 +154,17 @@ class Create extends Base
         }
         $duration ??= $maxDuration;
 
-        $entry = (new Client($publicHostname, $ldap))->authenticate($username, $password);
+        try {
+            $entry = (new Client($publicHostname, $ldap))->authenticate($username, $password);
+        } catch (Exception $error) {
+            // Directory errors name hosts, DNs and attributes, which are for the project's
+            // admins (the LDAP test endpoint), not for whoever calls this public route.
+            if ($error->getType() !== Exception::USER_LDAP_DIRECTORY_ERROR) {
+                throw $error;
+            }
+
+            throw new Exception(Exception::USER_LDAP_DIRECTORY_ERROR, previous: $error);
+        }
 
         // A browser on an account switching device may already be signed in. Signing in adds
         // the directory's user to the device; the entry is never linked to whoever is signed in.
@@ -161,7 +172,11 @@ class Create extends Base
 
         // The directory is the project's own authority on who its users are, so the address
         // it returns is trusted the way a provider's attested email is for OAuth2.
-        [$newUser, $newTarget] = $this->resolveUser($user, SESSION_PROVIDER_LDAP, $entry['id'], $entry['email'], true, $entry['name'], $dbForProject, $project, $plan, $proofForPassword, $authorization, $mqtt, $queueForRealtime);
+        [$newUser, $newTarget] = $this->resolveUser($user, SESSION_PROVIDER_LDAP, $entry['id'], $entry['email'], true, $entry['name'], $dbForProject, $project, $plan, $proofForPassword, $authorization, $mqtt, $queueForRealtime, $bus);
+
+        // Every change to the address below is saved and read back onto the user, and a claim already
+        // dispatched EmailVerified, so the user in hand tells whether this sign-in verified the email
+        $wasVerified = $newUser === null && $user->getAttribute('emailVerification', false);
 
         $authorization->addRole(Role::user($user->getId())->toString());
         $authorization->addRole(Role::users()->toString());
@@ -261,6 +276,10 @@ class Create extends Base
             ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken'])
         ;
 
+        if (!$wasVerified && $user->getAttribute('emailVerification', false)) {
+            $bus->dispatch(new EmailVerified(user: $user->getArrayCopy(), project: $project->getArrayCopy()));
+        }
+
         $bus->dispatch(new SessionCreated(
             user: $user->getArrayCopy(),
             project: $project->getArrayCopy(),
@@ -293,8 +312,11 @@ class Create extends Base
 
         $emailFollowsDirectory = $entry['email'] === '' || $this->refreshEmail($user, $entry['email'], $dbForProject, $project, $plan, $authorization);
 
-        // A number the directory holds in another format cannot be messaged, so it is left alone
-        if ($entry['phone'] !== '' && $entry['phone'] !== $user->getAttribute('phone') && (new Phone())->isValid($entry['phone'])) {
+        // A number the directory holds in another format cannot be messaged, so it is left alone.
+        // A verified number that is a second factor stays too: this request has not passed MFA,
+        // and replacing it with an unverified one would drop the factor it is meant to prove.
+        $phoneIsFactor = $user->getAttribute('mfa', false) && $user->getAttribute('phoneVerification', false);
+        if ($entry['phone'] !== '' && $entry['phone'] !== $user->getAttribute('phone') && !$phoneIsFactor && (new Phone())->isValid($entry['phone'])) {
             $this->refreshPhone($user, $entry['phone'], $dbForProject, $authorization);
         }
 

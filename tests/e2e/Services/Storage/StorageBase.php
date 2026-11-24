@@ -1541,13 +1541,11 @@ trait StorageBase
         $this->assertEquals(204, $file['headers']['status-code']);
         $this->assertEmpty($file['body']);
 
-        $this->assertEventually(function () use ($data, $fileId) {
-            $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files/' . $fileId, array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()));
-            $this->assertEquals(404, $file['headers']['status-code']);
-        }, 10_000, 500);
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files/' . $fileId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(404, $file['headers']['status-code']);
 
         //upload again using the same ID
         $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
@@ -1565,25 +1563,34 @@ trait StorageBase
         $this->assertEquals(201, $file['headers']['status-code']);
         $this->assertNotEmpty($file['body']['$id']);
 
-        // The delete worker invalidates previews asynchronously.
-        $this->assertEventually(function () use ($bucketId, $fileId, $imageBefore) {
-            $file3 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()), [
-                'width' => 300,
-                'height' => 100,
-                'borderRadius' => '50',
-                'opacity' => '0.5',
-                'output' => 'png',
-                'rotation' => '45',
-            ]);
+        // Straight after the upload, before the deletes worker has purged the deleted file's
+        // entries: the preview must already be the new file's, rendered fresh and cached again.
+        $preview = fn (): array => $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'width' => 300,
+            'height' => 100,
+            'borderRadius' => '50',
+            'opacity' => '0.5',
+            'output' => 'png',
+            'rotation' => '45',
+        ]);
 
-            $this->assertEquals(200, $file3['headers']['status-code']);
-            $this->assertEquals('image/png', $file3['headers']['content-type']);
-            $this->assertNotEmpty($file3['body']);
+        $fresh = $preview();
+        $this->assertEquals(200, $fresh['headers']['status-code']);
+        $this->assertEquals('image/png', $fresh['headers']['content-type']);
+        $this->assertEquals('miss', $fresh['headers']['x-appwrite-cache']);
+        $imageAfter = $this->getImagePixels($fresh['body']);
+        $this->assertNotSame($imageBefore, $imageAfter, 'The preview is still the deleted file\'s.');
 
-            $this->assertFalse($imageBefore === $this->getImagePixels($file3['body']), 'The preview is still the deleted file\'s.');
+        // The deletes worker still purges every entry for this file ID when it runs, the new
+        // one included, so the new preview is cached again by the request after that.
+        $this->assertEventually(function () use ($preview, $imageAfter) {
+            $cached = $preview();
+            $this->assertEquals(200, $cached['headers']['status-code']);
+            $this->assertSame($imageAfter, $this->getImagePixels($cached['body']), 'The preview is still the deleted file\'s.');
+            $this->assertSame('hit', $cached['headers']['x-appwrite-cache'], 'The recreated file\'s preview was not cached.');
         }, 10_000, 500);
     }
 
@@ -1838,6 +1845,12 @@ trait StorageBase
             $cached = $this->client->call(Client::METHOD_GET, $path, $headers('image/webp'), $params);
             $this->assertSame('hit', $cached['headers']['x-appwrite-cache']);
             $this->assertEquals('image/webp', $cached['headers']['content-type']);
+
+            // An explicit output served from the cache does not vary by Accept
+            $cached = $this->client->call(Client::METHOD_GET, $path, $headers('image/avif'), array_merge($params, ['output' => 'webp']));
+            $this->assertSame('hit', $cached['headers']['x-appwrite-cache']);
+            $this->assertEquals('image/webp', $cached['headers']['content-type']);
+            $this->assertArrayNotHasKey('vary', $cached['headers']);
         });
 
         /**

@@ -424,6 +424,7 @@ export function View({ projectId, databaseId }: ViewProps) {
           limit={backupPoliciesLimit}
           planName={planName}
           resourceName="backup policies"
+          resourceNameSingular="backup policy"
           orgId={project?.teamId}
           fullWidth
         />

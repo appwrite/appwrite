@@ -20,6 +20,7 @@ use Appwrite\Locking\Lock;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Platform\Modules\Storage\Config\CacheControl;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
+use Appwrite\Platform\Modules\Videos\Base as VideosBase;
 use Appwrite\Reference\Renderer;
 use Appwrite\SDK\Method;
 use Appwrite\Usage\Context;
@@ -153,6 +154,19 @@ Http::init()
                 throw new Exception(Exception::PROJECT_KEY_EXPIRED);
             }
 
+            // Organization and account keys act through the Console API only, so refuse them before the key is touched or audited.
+            // Organization scopes name organization resources, and some share a name with a project scope (monitors.*, keys.*):
+            // on any other project they would reach that project's own routes in every project of the organization.
+            if ($apiKey->getType() === API_KEY_ORGANIZATION && $project->getId() !== 'console') {
+                throw new Exception(Exception::USER_UNAUTHORIZED, 'Organization API keys can only be used with the console project.');
+            }
+
+            // Account keys would inject the console user's roles (user:{id}, users, team:{orgId}) into that project's data plane,
+            // where caller-chosen console user and organization IDs can collide with the project's own users and teams.
+            if ($apiKey->getType() === API_KEY_ACCOUNT && $project->getId() !== 'console') {
+                throw new Exception(Exception::USER_UNAUTHORIZED, 'Account API keys can only be used with the console project.');
+            }
+
             // Set role and scopes from API key. Every key also holds 'public', which guests already have, so endpoints open to anyone stay open to keys.
             $role = $apiKey->getRole();
             $scopes = [...$apiKey->getScopes(), 'public'];
@@ -265,14 +279,6 @@ Http::init()
                 $authorization->addRole(Role::team($team->getId())->toString());
                 $authorization->addRole(Role::team($team->getId(), 'owner')->toString());
             } elseif ($apiKey->getType() === API_KEY_ACCOUNT) {
-                // Account keys act as the console user on the Console API only. On any other
-                // project they would inject the console user's roles (user:{id}, users,
-                // team:{orgId}) into that project's data plane, where caller-chosen console
-                // user and organization IDs can collide with the project's own users and teams.
-                if ($project->getId() !== 'console') {
-                    throw new Exception(Exception::USER_UNAUTHORIZED, 'Account API keys can only be used with the console project.');
-                }
-
                 $authorization->addRole(Role::user($user->getId())->toString());
                 $authorization->addRole(Role::users()->toString());
 
@@ -535,12 +541,17 @@ Http::init()
                 throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
             }
 
-            if (
-                array_key_exists($namespace, $project->getAttribute('services', []))
-                && ! $project->getAttribute('services', [])[$namespace]
-                && ! ($rolesSource->isPrivileged($authorization->getRoles()) || $rolesSource->isKey($authorization->getRoles()))
-            ) {
-                throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
+            // A route served under one SDK namespace can also belong to another service, such as team
+            // photos under avatars; its `services` label names the other switches it must respect.
+            $switches = $project->getAttribute('services', []);
+            foreach (\array_unique([$namespace, ...$route->getLabel('services', [])]) as $service) {
+                if (
+                    array_key_exists($service, $switches)
+                    && ! $switches[$service]
+                    && ! ($rolesSource->isPrivileged($authorization->getRoles()) || $rolesSource->isKey($authorization->getRoles()))
+                ) {
+                    throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
+                }
             }
         }
 
@@ -587,8 +598,9 @@ Http::init()
         }
     });
 
+// GraphQL routes are not in the api group, but declare limits of their own: one request carries a batch of operations
 Http::init()
-    ->groups(['api'])
+    ->groups(['api', 'graphql'])
     ->inject('route')
     ->inject('request')
     ->inject('response')
@@ -771,6 +783,16 @@ Http::init()
                 }
             }
 
+            $miss = static function () use ($response, $storageCacheOperationsCounter): void {
+                $storageCacheOperationsCounter->add(1, ['result' => 'miss']);
+                Span::add('storage.cache.hit', false);
+                $response
+                    ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+                    ->addHeader('Pragma', 'no-cache')
+                    ->addHeader('Expires', '0')
+                    ->addHeader('X-Appwrite-Cache', 'miss');
+            };
+
             if (! empty($data) && ! $cacheLog->isEmpty()) {
                 $cacheControl = \sprintf('private, max-age=%d', $timestamp);
                 $parts = explode('/', $cacheLog->getAttribute('resourceType', ''));
@@ -813,6 +835,19 @@ Http::init()
                     if ($file->isEmpty()) {
                         throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
                     }
+
+                    // Cached before this file existed: a deleted file with the same ID, whose
+                    // entries the deletes worker has not purged yet.
+                    if ($cacheLog->getCreatedAt() < $file->getCreatedAt()) {
+                        $authorization->skip(fn () => $dbForProject->deleteDocument('cache', $cacheLog->getId()));
+                        $cache->purge($key);
+                        $fallback?->purge($key);
+                        Span::add('storage.cache.superseded', true);
+                        $miss();
+
+                        return;
+                    }
+
                     Span::add('storage.bucket.id', $bucketId);
                     Span::add('storage.file.id', $fileId);
                     // Do not update transformedAt if it's a console user
@@ -841,6 +876,13 @@ Http::init()
                             negotiated: $negotiated,
                         ));
                     }
+                } elseif ($type === 'video') {
+                    // Thumbnail previews inherit access from the video document's
+                    // `$permissions` — re-check that before serving cached bytes.
+                    $videoId = $parts[1] ?? null;
+                    VideosBase::getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
+
+                    Span::add('video.id', $videoId);
                 }
 
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');
@@ -859,8 +901,23 @@ Http::init()
                     ->addHeader('Cache-Control', $cacheControl)
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'));
-                if ($negotiated) {
-                    $response->addHeader('Vary', 'Accept');
+
+                // The action that sets Vary never runs on a hit. Repeat the
+                // route's cache.vary headers so a private cache does not reuse
+                // negotiated bytes for a different Accept. Negotiated `auto`
+                // params vary on Accept even when the route lists no headers.
+                $vary = $route->getLabel('cache.vary', []);
+                if (! \is_array($vary)) {
+                    $vary = [];
+                }
+                if ($negotiated && ! \in_array('accept', \array_map('strtolower', $vary), true)) {
+                    $vary[] = 'accept';
+                }
+                if ($vary !== []) {
+                    $response->addHeader('Vary', \implode(', ', \array_map(
+                        static fn (string $header): string => \ucwords($header, '-'),
+                        $vary
+                    )));
                 }
                 $storageCacheOperationsCounter->add(1, ['result' => 'hit']);
                 if (! $isImageTransformation || ! $isDisabled) {
@@ -868,13 +925,7 @@ Http::init()
                     $response->send($data);
                 }
             } else {
-                $storageCacheOperationsCounter->add(1, ['result' => 'miss']);
-                Span::add('storage.cache.hit', false);
-                $response
-                    ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
-                    ->addHeader('Pragma', 'no-cache')
-                    ->addHeader('Expires', '0')
-                    ->addHeader('X-Appwrite-Cache', 'miss');
+                $miss();
             }
         }
     });

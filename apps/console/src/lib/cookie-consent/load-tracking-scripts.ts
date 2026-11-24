@@ -3,6 +3,7 @@ import {
   getPlausibleInitScript,
   getPlausibleScriptSrc,
 } from '@/lib/analytics'
+import { startAppwriteAnalytics } from '@/lib/appwrite-analytics'
 import { isCloudProfile } from '@/lib/console-profiles'
 
 let plausibleLoaded = false
@@ -29,6 +30,8 @@ function appendScript(
 /** Cookieless usage analytics. Safe to call before cookie consent. */
 export function loadPlausibleScript() {
   if (typeof window === 'undefined') return
+  // Before the guard so a failed SDK chunk load is retried on the next call.
+  if (isCloudProfile()) startAppwriteAnalytics()
   if (plausibleLoaded) return
   plausibleLoaded = true
 

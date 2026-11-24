@@ -41,8 +41,20 @@ export const FUNCTION_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
   },
   {
     sectionId: 'git',
-    title: 'Silent mode',
-    keywords: ['comments', 'commits', 'pull request', 'deployment'],
+    title: 'Git automation',
+    keywords: [
+      'silent mode',
+      'automation',
+      'deploy on push',
+      'production branch',
+      'summaries',
+      'comments',
+      'commit status',
+      'checks',
+      'commits',
+      'pull request',
+      'deployment',
+    ],
   },
   {
     sectionId: 'build',

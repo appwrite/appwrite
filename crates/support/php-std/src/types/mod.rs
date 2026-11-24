@@ -6,7 +6,7 @@
 //! integers distinct from floats. The codecs ([`crate::json`],
 //! [`crate::serialize`], [`crate::igbinary`]), type juggling and comparison
 //! ([`Value::loose_eq`], [`Value::cmp_php`]) and sorting ([`crate::sort`])
-//! work on it, and each is fuzzed against the engine (`bin/compat fuzz php-std`).
+//! work on it.
 //!
 //! | PHP | Rust |
 //! |---|---|

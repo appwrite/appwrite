@@ -5,6 +5,7 @@ import {
   isMarketingPrerenderPath,
 } from '@/lib/marketing/marketing-build-paths'
 import { UNLAUNCHED_MARKETING_PATHS } from '@/lib/marketing/marketing-page-paths'
+import { isProductReleased } from '@/lib/products/availability'
 import { getMarketingProductMenuCategories } from '@/lib/products/registry'
 import { getMarketingSitemapEntries } from '@/lib/sitemap/providers/marketing'
 
@@ -31,18 +32,14 @@ describe('marketing pages behind a launch flag', () => {
   })
 })
 
-describe('Zero in the Products menu', () => {
-  const productIds = (zero: boolean) =>
-    getMarketingProductMenuCategories({ agent: true, zero }).flatMap(
-      (category) => category.productIds,
-    )
-
-  test('is hidden while the flag is off', () => {
-    expect(productIds(false)).not.toContain('zero')
+describe('Zero release gate', () => {
+  test('hides Zero while the flag is off and shows it when on', () => {
+    expect(isProductReleased('zero', { videos: false, zero: false })).toBe(false)
+    expect(isProductReleased('zero', { videos: false, zero: true })).toBe(true)
   })
 
-  test('shows under Build when the flag is on', () => {
-    const build = getMarketingProductMenuCategories({ agent: true, zero: true }).find(
+  test('lists Zero under Build in the Products menu', () => {
+    const build = getMarketingProductMenuCategories({ agent: true }).find(
       (category) => category.id === 'build',
     )
     expect(build?.productIds).toContain('zero')

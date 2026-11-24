@@ -7,9 +7,10 @@ import type { SitemapChangeFreq, SitemapEntry } from '../types'
 
 const NON_HTML_MARKETING_PATHS = new Set(['/llms/txt', '/llms-full/txt'])
 
-/** Paid campaign landing pages are noindex, so they stay out of the sitemap. */
+/** Paid campaign landing pages, homepage variants and unlaunched pages are noindex, so they stay out of the sitemap. */
 const NOINDEX_MARKETING_PATHS = new Set<string>([
   ...SECRET_CAMPAIGN_PATHS,
+  '/home1',
   ...UNLAUNCHED_MARKETING_PATHS,
 ])
 

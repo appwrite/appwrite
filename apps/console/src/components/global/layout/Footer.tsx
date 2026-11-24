@@ -1,4 +1,4 @@
-import { ArrowUpRight, Settings2, ShieldCheck } from 'lucide-react'
+import { ArrowUpRight, ExternalLink, Settings2, ShieldCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   Accordion,
@@ -6,6 +6,11 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useIsLegacyTheme } from '@/hooks/use-is-legacy-theme'
 import { useOptionalCookieConsent } from '@/components/global/providers/CookieConsent'
@@ -64,6 +69,34 @@ type ExpandedFooterGroup = {
 type ConsoleFooterProps = {
   expanded?: boolean
 }
+
+type YoutubeChannel = {
+  name: string
+  handle: string
+  href: string
+  logo: string
+}
+
+const YOUTUBE_CHANNELS: readonly YoutubeChannel[] = [
+  {
+    name: 'Appwrite',
+    handle: '@appwrite',
+    href: 'https://www.youtube.com/@appwrite?sub_confirmation=1', // pragma: allowlist secret
+    logo: '/images/youtube/appwrite.webp',
+  },
+  {
+    name: 'Learn Postgres',
+    handle: '@LearnPostgres',
+    href: 'https://www.youtube.com/@LearnPostgres?sub_confirmation=1', // pragma: allowlist secret
+    logo: '/images/youtube/learn-postgres.webp',
+  },
+  {
+    name: 'Learn Auth',
+    handle: '@LearnAuth',
+    href: 'https://www.youtube.com/@LearnAuth?sub_confirmation=1', // pragma: allowlist secret
+    logo: '/images/youtube/learn-auth.webp',
+  },
+]
 
 function docsFooterLink(
   label: string,
@@ -137,9 +170,15 @@ function marketingProductFooterLink(
 function getExpandedFooterGroups(
   marketing: boolean,
   footerCopy: ReturnType<typeof useI18n>['catalog']['app']['footer'],
-  options: { agent: boolean; isCloud: boolean; analytics: boolean; zero: boolean },
+  options: {
+    agent: boolean
+    isCloud: boolean
+    analytics: boolean
+    videos: boolean
+    zero: boolean
+  },
 ): readonly ExpandedFooterGroup[] {
-  const { agent, isCloud, analytics, zero } = options
+  const { agent, isCloud, analytics, videos, zero } = options
   return [
   {
     title: footerCopy.groups.quickStarts,
@@ -360,6 +399,9 @@ function getExpandedFooterGroups(
             comparisonFooterLink(footerCopy.expanded.compare.vsPlausible, 'plausible', marketing),
           ]
         : []),
+      ...(videos
+        ? [comparisonFooterLink(footerCopy.expanded.compare.vsMux, 'mux', marketing)]
+        : []),
       blogFooterLink(footerCopy.expanded.compare.nextjsHosting, 'free-nextjs-hosting', marketing),
       blogFooterLink(footerCopy.expanded.compare.reactHosting, 'free-react-hosting', marketing),
       blogFooterLink(footerCopy.expanded.compare.vueHosting, 'free-vuejs-hosting', marketing),
@@ -435,7 +477,13 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
   const expandedFooterGroups = getExpandedFooterGroups(
     localMarketing,
     footerCopy,
-    { agent: features.agent, isCloud, analytics: features.analytics, zero: features.zero },
+    {
+      agent: features.agent,
+      isCloud,
+      analytics: features.analytics,
+      videos: features.videos,
+      zero: features.zero,
+    },
   )
 
   const resourceLinks = [
@@ -470,6 +518,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
       label: footerCopy.social.youtube,
       href: 'https://youtube.com/@appwrite', // pragma: allowlist secret
       icon: '/icons/youtube.svg',
+      channels: YOUTUBE_CHANNELS,
     },
     {
       label: footerCopy.social.linkedIn,
@@ -552,21 +601,75 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
           <div className={cn('h-4 w-px shrink-0 bg-border', footerShowSeparatorLg)} />
 
           <div className={cn('shrink-0 items-center gap-1', footerShowSocialIcons)}>
-            {socialLinks.map((social) => (
-              <a
-                key={social.label}
-                href={social.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                aria-label={social.label}
-              >
-                <span
-                  className="h-4 w-4 bg-current"
-                  style={getSocialIconMaskStyle(social.icon)}
-                />
-              </a>
-            ))}
+            {socialLinks.map((social) =>
+              social.channels ? (
+                <Popover key={social.label}>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground data-[state=open]:bg-accent data-[state=open]:text-foreground"
+                      aria-label={social.label}
+                    >
+                      <span
+                        className="h-4 w-4 bg-current"
+                        style={getSocialIconMaskStyle(social.icon)}
+                      />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent side="top" align="start" className="w-64 p-1">
+                    <p className="px-2 pb-1 pt-1.5 text-[12px] font-medium text-muted-foreground">
+                      {footerCopy.social.youtubeChannels}
+                    </p>
+                    <ul>
+                      {social.channels.map((channel) => (
+                        <li key={channel.href}>
+                          <a
+                            href={channel.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="link-unstyled flex items-center gap-2.5 rounded-sm px-2 py-1.5 transition-colors hover:bg-accent"
+                          >
+                            <img
+                              src={channel.logo}
+                              alt=""
+                              width={32}
+                              height={32}
+                              className="h-8 w-8 shrink-0 rounded-full"
+                            />
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-[13px] font-medium text-foreground">
+                                {channel.name}
+                              </span>
+                              <span className="block truncate text-[12px] text-muted-foreground">
+                                <bdi dir="ltr">{channel.handle}</bdi>
+                              </span>
+                            </span>
+                            <ExternalLink
+                              className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                              aria-hidden
+                            />
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <a
+                  key={social.label}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  aria-label={social.label}
+                >
+                  <span
+                    className="h-4 w-4 bg-current"
+                    style={getSocialIconMaskStyle(social.icon)}
+                  />
+                </a>
+              ),
+            )}
           </div>
         </div>
 

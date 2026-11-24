@@ -35,13 +35,16 @@ final class CheckedColumnRecordingDatabase extends UtopiaDatabase
     /** @var list<string> */
     public array $checkedCollections = [];
 
+    /**
+     * @param  list<UtopiaAttribute>  $pending
+     */
     #[Override]
-    public function checkAttribute(string $collection, UtopiaAttribute $attribute): bool
+    public function checkAttribute(string $collection, UtopiaAttribute $attribute, array $pending = []): bool
     {
         $this->checkedAttributes[] = $attribute;
         $this->checkedCollections[] = $collection;
 
-        return parent::checkAttribute($collection, $attribute);
+        return parent::checkAttribute($collection, $attribute, $pending);
     }
 }
 
