@@ -84,6 +84,11 @@ export interface RuntimeLogsViewProps {
   deploymentId?: string
   /** Rendered first in the toolbar, e.g. a deployment picker. */
   toolbarStart?: ReactNode
+  /**
+   * Side padding for the toolbar and the lines. The view itself has none, so
+   * the toolbar's bottom border runs edge to edge like other filter bars.
+   */
+  insetClassName?: string
   className?: string
 }
 
@@ -100,6 +105,7 @@ export function RuntimeLogsView({
   resourceId,
   deploymentId,
   toolbarStart,
+  insetClassName = 'px-4 sm:px-6',
   className,
 }: RuntimeLogsViewProps) {
   const t = useT()
@@ -439,7 +445,12 @@ export function RuntimeLogsView({
 
   return (
     <div className={cn('flex min-h-0 min-w-0 flex-1 flex-col', className)}>
-      <div className="flex flex-wrap items-center gap-2 border-b border-border py-3">
+      <div
+        className={cn(
+          'flex flex-wrap items-center gap-2 border-b border-border py-3',
+          insetClassName,
+        )}
+      >
         {toolbarStart}
         {isProject && (
           <Select
@@ -574,11 +585,18 @@ export function RuntimeLogsView({
         </Button>
       </div>
       {tailError && (
-        <p className="border-b border-border py-2 text-[12px] text-amber-600 dark:text-amber-400">
+        <p
+          className={cn(
+            'border-b border-border py-2 text-[12px] text-amber-600 dark:text-amber-400',
+            insetClassName,
+          )}
+        >
           {t('Live tail paused on an error and will retry:')} {tailError}
         </p>
       )}
-      <div className="min-h-0 flex-1 overflow-y-auto">{body}</div>
+      <div className={cn('min-h-0 flex-1 overflow-y-auto', insetClassName)}>
+        {body}
+      </div>
     </div>
   )
 }
