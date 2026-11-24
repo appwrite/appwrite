@@ -1,7 +1,10 @@
 FROM composer:2 AS composer
 
 # Distrust the compromised eMudhra chains before downloading dependencies.
-RUN apk add --no-cache 'ca-certificates>=20261020-r0' 'ca-certificates-bundle>=20261020-r0' && \
+# The image's packages are upgraded first: installing onto ones older than the repository can
+# fail when a package has since been split (python3-ndbm, out of python3, did).
+RUN apk upgrade --no-cache && \
+    apk add --no-cache 'ca-certificates>=20261020-r0' 'ca-certificates-bundle>=20261020-r0' && \
     update-ca-certificates
 
 ARG TESTING=false
