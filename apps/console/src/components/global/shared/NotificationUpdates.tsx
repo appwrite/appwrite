@@ -73,7 +73,8 @@ export function NotificationUpdates({
   // Read before marking seen, so the entries that were new stay marked.
   const [unseen] = useState(() => {
     const seen = getStoredChangelogSeenCount()
-    return seen === null ? 0 : Math.max(0, changelogCount - seen)
+    // Nothing stored reads as all unseen, as the changelog badge does.
+    return seen === null ? LATEST : Math.max(0, changelogCount - seen)
   })
   const entries = getAllChangelogEntries().slice(0, LATEST)
 

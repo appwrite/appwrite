@@ -1589,7 +1589,7 @@ export function useDeleteAccountPasskey() {
  */
 function diffAccountPrefs(
   previous: Record<string, unknown> | undefined,
-  next: Record<string, string | number | boolean>,
+  next: Record<string, unknown>,
 ): {
   added: Record<string, unknown>
   changed: Record<string, { from: unknown; to: unknown }>
