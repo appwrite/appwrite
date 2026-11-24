@@ -3595,7 +3595,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Image transformations",
     "description": "Optimize image storage and processing with Appwrite. Explore image resizing, transformations, and manipulation to deliver rich media experiences in your apps.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/storage/permissions",

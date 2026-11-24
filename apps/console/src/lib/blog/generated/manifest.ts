@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-automatic-image-format",
+    "href": "/blog/post/announcing-automatic-image-format",
+    "title": "Announcing automatic AVIF and WebP for image previews",
+    "description": "Set output to auto on Appwrite Storage previews and Avatars screenshots, and every browser gets AVIF, WebP, or the original format from the same image URL.",
+    "date": "2026-11-24",
+    "lastUpdated": "2026-11-24",
+    "timeToRead": 5,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-automatic-image-format/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "appwrite-is-moving-from-php-to-rust",
     "href": "/blog/post/appwrite-is-moving-from-php-to-rust",
     "title": "Appwrite is moving from PHP to Rust",
