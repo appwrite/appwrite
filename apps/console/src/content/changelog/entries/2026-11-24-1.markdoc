@@ -1,0 +1,20 @@
+---
+layout: changelog
+title: "Sign users in with Vercel, Linear, Reddit, LINE, and 10 more OAuth2 providers"
+date: 2026-11-24
+cover: /images/blog/announcing-14-new-oauth2-providers/cover.avif
+description: "Appwrite Auth adds 14 OAuth2 login providers: Atlassian, Instagram, LINE, Linear, Naver, Netlify, Patreon, Railway, Reddit, Roblox, Strava, Vercel, VK, and WorkOS."
+tags: auth, integrations, sdk
+---
+
+[OAuth2 login](/docs/products/auth/oauth2) in Appwrite Auth now supports 14 more providers: **Atlassian**, **Instagram**, **LINE**, **Linear**, **Naver**, **Netlify**, **Patreon**, **Railway**, **Reddit**, **Roblox**, **Strava**, **Vercel**, **VK**, and **WorkOS**. Enable them in your project under **Auth** > **Social providers**, then pass the matching `OAuthProvider` value to `createOAuth2Token`. Watch the casing on `OAuthProvider.Line`, `Vk`, and `Workos`.
+
+Appwrite handles PKCE for LINE, Linear, Railway, Roblox, Vercel, and VK, and every new provider shares the user's profile photo for [Avatars user photos](/docs/products/avatars/user-photos). Instagram, Reddit, Roblox, and Strava don't share an email address, so those users are created without one. The values are in `node-appwrite` 32.0.0 and the Python SDK 28.0.0. All 14 are live on Appwrite Cloud and ship in the next self-hosted release.
+
+{% arrow_link href="/blog/post/announcing-14-new-oauth2-providers" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/auth/oauth2" %}
+Set up OAuth2 login
+{% /arrow_link %}

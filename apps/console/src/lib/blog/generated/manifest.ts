@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-14-new-oauth2-providers",
+    "href": "/blog/post/announcing-14-new-oauth2-providers",
+    "title": "Announcing 14 new OAuth2 login providers in Appwrite Auth",
+    "description": "Appwrite Auth adds 14 OAuth2 login providers, from Vercel, Linear, and Atlassian to Reddit, Roblox, LINE, and Naver. See what each returns and how to add them.",
+    "date": "2026-11-24",
+    "lastUpdated": "2026-11-24",
+    "timeToRead": 9,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-14-new-oauth2-providers/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "appwrite-is-moving-from-php-to-rust",
     "href": "/blog/post/appwrite-is-moving-from-php-to-rust",
     "title": "Appwrite is moving from PHP to Rust",

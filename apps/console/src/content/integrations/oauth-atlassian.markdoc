@@ -1,0 +1,87 @@
+---
+layout: integration
+title: OAuth with Atlassian
+description: Let users sign in with their Atlassian account, the same account they use for Jira, Confluence, and the rest of Atlassian Cloud.
+date: 2026-11-24
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/oauth-atlassian/cover.avif
+category: auth
+product:
+    vendor: Atlassian
+    description: 'Atlassian makes Jira, Confluence, Trello, and Bitbucket, and gives every user one Atlassian account across its cloud products.'
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+images:
+    - /images/integrations/oauth-atlassian/cover.avif
+---
+
+Atlassian makes Jira, Confluence, Trello, and Bitbucket, and every person who uses them in the cloud signs in with one Atlassian account. If you're building a tool for software or project teams, such as a Jira companion app, a reporting dashboard, or an internal portal, Sign in with Atlassian lets those users start with the account they already use at work.
+
+# How does the integration work?
+
+Appwrite Auth has an Atlassian OAuth2 provider built on [OAuth 2.0 (3LO)](https://developer.atlassian.com/cloud/jira/platform/oauth-2-3lo-apps/), Atlassian's authorization code flow. When a user signs in, Atlassian asks them to grant your app access, then sends them back to Appwrite, which creates the user or signs in the existing one.
+
+Appwrite requests the `read:me` scope from the User Identity API and reads the user's profile from `https://api.atlassian.com/me`. It stores the user's name and email address, and their Atlassian `account_id` becomes the provider user ID on the user's [identity](/docs/products/auth/identities). The profile photo is stored on the identity too, so it also powers [user photos](/docs/products/avatars/user-photos) in Appwrite Avatars.
+
+Appwrite also requests `offline_access`, so Atlassian issues a refresh token and [`updateSession`](/docs/products/auth/oauth2#refresh-tokens) can renew the provider access token. The email address is marked as verified only when Atlassian reports `email_verified` as `true`.
+
+{% info title="Self-hosted availability" %}
+Sign in with Atlassian is live on Appwrite Cloud and ships in the next self-hosted Appwrite release.
+{% /info %}
+
+# How to implement
+
+To add Atlassian sign-in to your app, complete these steps.
+
+## Step 1: Copy the redirect URI from Appwrite
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already.
+
+In the Appwrite Console, open your project, go to **Auth** > **Social providers**, and open **Atlassian**. Copy the **Redirect URI** shown in the dialog. It includes the provider ID and your project ID:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/atlassian/<PROJECT_ID>
+```
+
+The URI starts with the API endpoint your app uses, so on self-hosted Appwrite it starts with your own domain. Always copy the exact value from the Console.
+
+## Step 2: Create an OAuth 2.0 integration in Atlassian
+
+1. Open the [Atlassian developer console](https://developer.atlassian.com/console/myapps/), select **Create**, and choose **OAuth 2.0 integration**.
+2. Name the app and choose a grant type. An account-level grant covers every site where your app is installed, and a resource-level grant only covers the sites the user selects on the consent screen.
+3. Select **Permissions** in the left menu, find **User Identity API**, and select **Add**. Select **Configure** to confirm that `read:me` is in its scopes.
+4. Select **Authorization** in the left menu, then **Configure** next to **OAuth 2.0 (3LO)**. Paste the redirect URI from step 1 into **Callback URL** and select **Save changes**.
+5. Select **Settings** in the left menu and copy the **Client ID** and **Secret**.
+
+Treat the secret like a password. If it's ever exposed, generate a new one in the developer console and update it in Appwrite.
+
+## Step 3: Enable the provider in Appwrite
+
+Back in **Auth** > **Social providers**, open **Atlassian**. Paste the Client ID into **Client ID** and the secret into **Client Secret**, turn the provider on, and select **Update**.
+
+## Step 4: Add Atlassian sign-in to your app
+
+Pass `OAuthProvider.Atlassian` as the provider when you start the OAuth2 flow. The value is in the Node.js server SDK from `node-appwrite` 32.0.0. Until your client SDK includes it, start the flow from your server with `createOAuth2Token` and exchange the returned `userId` and `secret` for a session, as described in [server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2). Add your app's domain as a platform in your Appwrite project so Appwrite accepts your `success` and `failure` URLs.
+
+## Step 5: Share the app
+
+A new OAuth 2.0 (3LO) integration is private, so only you can authorize it while you test. Before other people can sign in, select **Distribution** in the left menu of the developer console and turn on the toggle under **Enable sharing**. Users who authorize an integration Atlassian hasn't reviewed see a warning that it "has not yet been reviewed by Atlassian".
+
+# Things to know about Atlassian sign-in
+
+- **Refresh tokens rotate.** Each refresh returns a new refresh token and disables the one that was used. A refresh token expires after 90 days without use, and a password change invalidates it. Appwrite stores the new token every time `updateSession` runs.
+- **More Atlassian APIs need more scopes.** To call Jira or Confluence on the user's behalf, add those APIs under **Permissions** in the developer console and pass their scopes, such as `read:jira-work`, in the `scopes` parameter. Appwrite adds them to the defaults, and the session's `providerAccessToken` can then call those APIs.
+- **Unverified emails don't take over accounts.** If Atlassian doesn't report the email as verified and another user already has that address, Appwrite redirects to your failure URL instead of signing the user in. To connect Atlassian to that account, have the user sign in first and then start `createOAuth2Session` from the browser, which links Atlassian as a new [identity](/docs/products/auth/identities).
+- **Users re-consent when you add scopes.** If you add scopes to the integration later, users who already authorized it have to grant access again.
+
+# Read more about Atlassian and Appwrite Auth
+
+If you would like to learn more about Atlassian and Appwrite Auth, these resources are a good place to start:
+
+- [Atlassian OAuth 2.0 (3LO) apps](https://developer.atlassian.com/cloud/jira/platform/oauth-2-3lo-apps/)
+- [Announcing 14 new OAuth2 login providers in Appwrite Auth](/blog/post/announcing-14-new-oauth2-providers)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2)

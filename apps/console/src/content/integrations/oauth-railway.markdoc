@@ -1,0 +1,107 @@
+---
+layout: integration
+title: OAuth with Railway
+description: Let developers sign in with their Railway account and give your server access to the Railway workspaces and projects they choose to share.
+date: 2026-11-24
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/oauth-railway/cover.avif
+category: auth
+product:
+    vendor: Railway
+    description: 'Railway is a cloud platform for deploying apps, databases, and services from a repository or a container image.'
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+images:
+    - /images/integrations/oauth-railway/cover.avif
+---
+
+Railway is a cloud platform for deploying apps, databases, and services. [Login with Railway](https://docs.railway.com/integrations/oauth) lets people sign in to your app with the Railway account they already deploy with, which suits developer tools, dashboards, and deploy integrations built for Railway users.
+
+# How does the integration work?
+
+Appwrite Auth has a Railway OAuth2 provider built on Railway's OAuth 2.0 and OpenID Connect endpoints. When a user signs in, Railway shows a consent screen with the permissions your app requests and sends the user back to Appwrite, which creates the user or signs in the existing one.
+
+Appwrite requests the `openid`, `email`, `profile`, and `offline_access` scopes and uses PKCE. It stores the user's name, email address, and avatar. The avatar also powers [user photos](/docs/products/avatars/user-photos) in Appwrite Avatars. The user's Railway ID (`sub`) becomes the provider user ID on the user's [identity](/docs/products/auth/identities). The email address is marked as verified only when Railway reports `email_verified` as `true`.
+
+To let your server work with the user's Railway resources, add scopes such as `workspace:viewer` or `project:viewer` in the `scopes` parameter. Appwrite adds them to the defaults. Railway then asks the user which workspaces or projects to share, and the session's `providerAccessToken` works with the [Railway public API](https://docs.railway.com/integrations/api) for the resources they picked.
+
+{% info title="Self-hosted availability" %}
+Sign in with Railway is live on Appwrite Cloud and ships in the next self-hosted Appwrite release.
+{% /info %}
+
+# How to implement
+
+To add Railway sign-in to your app, complete these steps.
+
+## Step 1: Copy the redirect URI from Appwrite
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already.
+
+In the Appwrite Console, open your project, go to **Auth** > **Social providers**, and open **Railway**. Copy the **Redirect URI** shown in the drawer. It includes the provider ID and your project ID:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/railway/<PROJECT_ID>
+```
+
+On self-hosted Appwrite, the URI starts with your own domain. Always copy the exact value from the Console.
+
+## Step 2: Create a Railway OAuth app
+
+Only workspace admins can create OAuth apps in Railway. Open your workspace settings, go to **Developer**, and click **New OAuth App**. Enter a name that users will recognize on the consent screen, add the redirect URI you copied in step 1, and choose the **Web** app type.
+
+Railway generates a client secret after you create the app and shows it only once. Copy the **client ID** and **client secret**, and treat the secret like a password. Railway compares redirect URIs exactly, including the scheme, host, port, and path, so paste the URI as Appwrite shows it.
+
+## Step 3: Enable the provider in Appwrite
+
+Back in the **Railway** drawer in the Appwrite Console:
+
+1. Paste the client ID into **Client ID** and the client secret into **Client Secret**.
+2. Turn the provider on.
+3. Click **Update**.
+
+## Step 4: Add Railway sign-in to your app
+
+Add your app's domain as a web platform in your Appwrite project, so Appwrite accepts your `success` and `failure` URLs.
+
+`OAuthProvider.Railway` is available in the Node.js server SDK from `node-appwrite` 32.0.0. Start the sign-in on your server with `createOAuth2Token` and redirect the user to the URL it returns:
+
+```server-nodejs
+import { Client, Account, OAuthProvider } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const account = new Account(client);
+
+const redirectUrl = await account.createOAuth2Token({
+    provider: OAuthProvider.Railway,
+    success: 'https://example.com/oauth/success',
+    failure: 'https://example.com/oauth/failure',
+    state: state, // A random value you also store in a cookie
+});
+```
+
+When the user comes back to your `success` URL, check that its `state` matches the cookie, then exchange the `userId` and `secret` parameters for a session with `createSession`. [Server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2) walks through both endpoints. From a client app, call `createOAuth2Session` with `OAuthProvider.Railway` once your client SDK version includes it.
+
+# Things to know about Login with Railway
+
+- **Users see the consent screen on every sign-in.** Railway only issues a refresh token when the authorization request includes `prompt=consent`, so Appwrite always sends it. Returning users approve your app again each time they sign in.
+- **Refresh tokens rotate.** Railway access tokens expire after one hour. Appwrite stores the refresh token Railway returns, and [`updateSession`](/docs/products/auth/oauth2#refresh-tokens) uses it to renew the provider access token. Railway rotates refresh tokens, and Appwrite saves the newest one on every refresh.
+- **Users choose what to share.** With workspace or project scopes, the user picks the workspaces or projects your app can access on the consent screen. The scope sets the maximum access level, and Railway lowers it to the user's own role when that role is lower.
+- **Unverified emails don't take over accounts.** If Railway doesn't report the email as verified and another user already has that address, Appwrite redirects to your failure URL instead of signing the user in. To connect Railway to that account, have the user sign in first and then start `createOAuth2Session` from the browser, which links Railway as a new [identity](/docs/products/auth/identities).
+
+# Read more about Railway and Appwrite Auth
+
+If you would like to learn more about Railway and Appwrite Auth, these resources are a good place to start:
+
+- [Login with Railway](https://docs.railway.com/integrations/oauth)
+- [Announcing 14 new OAuth2 login providers in Appwrite Auth](/blog/post/announcing-14-new-oauth2-providers)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2)
+- [Manage linked accounts with Identities](/docs/products/auth/identities)
+- [Appwrite Account API reference](/docs/references/cloud/server-nodejs/account)

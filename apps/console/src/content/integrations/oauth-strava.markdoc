@@ -1,0 +1,110 @@
+---
+layout: integration
+title: OAuth with Strava
+description: Let athletes sign in with their Strava account in Appwrite Auth and give your server a token for their activities, routes, and profile.
+date: 2026-11-24
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/oauth-strava/cover.avif
+category: auth
+product:
+    vendor: Strava
+    description: 'Strava is a fitness app where athletes track and share runs, rides, and other activities.'
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+images:
+    - /images/integrations/oauth-strava/cover.avif
+---
+
+Strava is a fitness app where athletes track and share runs, rides, and other activities. [Strava's OAuth API](https://developers.strava.com/docs/authentication/) lets athletes sign in to your app with their Strava account, which suits training tools, coaching apps, and fitness dashboards that build on their activity data.
+
+# How does the integration work?
+
+Appwrite Auth has a Strava OAuth2 provider. When an athlete signs in, Strava asks them to authorize your app and sends them back to Appwrite, which creates the user or signs in the existing one.
+
+Appwrite requests Strava's `read` scope and stores the athlete's first and last name, along with their profile photo, which also powers [user photos](/docs/products/avatars/user-photos) in Appwrite Avatars. Athletes who haven't uploaded a photo get none in Appwrite, rather than Strava's placeholder. The athlete's Strava ID becomes the provider user ID on the user's [identity](/docs/products/auth/identities).
+
+Strava doesn't share an athlete's email address with apps, so Appwrite creates Strava users without an email address and recognizes them on later sign-ins by their Strava ID. If your app needs an email address, ask for it after sign-in and set it from your server with the [Users API](/docs/products/auth/users).
+
+To read activities with the session's `providerAccessToken`, add Strava scopes such as `activity:read` or `profile:read_all` in the `scopes` parameter. Appwrite adds them to `read`.
+
+{% info title="Self-hosted availability" %}
+Sign in with Strava is live on Appwrite Cloud and ships in the next self-hosted Appwrite release.
+{% /info %}
+
+# How to implement
+
+To add Strava sign-in to your app, complete these steps.
+
+## Step 1: Copy the redirect URI from Appwrite
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already.
+
+In the Appwrite Console, open your project, go to **Auth** > **Social providers**, and open **Strava**. Copy the **Redirect URI** shown in the drawer. It includes the provider ID and your project ID:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/strava/<PROJECT_ID>
+```
+
+On self-hosted Appwrite, the URI starts with your own domain. Always copy the exact value from the Console.
+
+## Step 2: Create a Strava API application
+
+Creating a Strava API application requires a Strava subscription. Sign in to Strava, go to [strava.com/settings/api](https://www.strava.com/settings/api), and create an app. Strava then shows the **My API Application** page with your **Client ID** and **Client Secret**. Copy both, and treat the secret like a password.
+
+Strava doesn't take full redirect URIs. Instead, set **Authorization Callback Domain** to the host of the redirect URI you copied in step 1, such as `<REGION>.cloud.appwrite.io` on Appwrite Cloud or your own Appwrite domain on self-hosted Appwrite. Strava accepts any redirect URI within that domain.
+
+## Step 3: Enable the provider in Appwrite
+
+Back in the **Strava** drawer in the Appwrite Console:
+
+1. Paste the client ID into **Client ID** and the client secret into **Client Secret**.
+2. Turn the provider on.
+3. Click **Update**.
+
+## Step 4: Add Strava sign-in to your app
+
+Add your app's domain as a web platform in your Appwrite project, so Appwrite accepts your `success` and `failure` URLs.
+
+`OAuthProvider.Strava` is available in the Node.js server SDK from `node-appwrite` 32.0.0. Start the sign-in on your server with `createOAuth2Token` and redirect the user to the URL it returns:
+
+```server-nodejs
+import { Client, Account, OAuthProvider } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const account = new Account(client);
+
+const redirectUrl = await account.createOAuth2Token({
+    provider: OAuthProvider.Strava,
+    success: 'https://example.com/oauth/success',
+    failure: 'https://example.com/oauth/failure',
+    state: state, // A random value you also store in a cookie
+});
+```
+
+When the user comes back to your `success` URL, check that its `state` matches the cookie, then exchange the `userId` and `secret` parameters for a session with `createSession`. [Server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2) walks through both endpoints. From a client app, call `createOAuth2Session` with `OAuthProvider.Strava` once your client SDK version includes it.
+
+# Things to know about Strava sign-in
+
+- **New apps start in single-player mode.** Only your own Strava account can authorize a new app. To let other athletes sign in, upgrade the app to an athlete capacity of 10 from your API settings dashboard. Beyond 10 athletes, Strava has to review the app first.
+- **Athletes can turn down scopes.** Strava's consent screen lets athletes opt out of individual scopes you request. Check which scopes they granted before you call the Strava API with the session's `providerAccessToken`.
+- **Access tokens expire after six hours.** Strava issues a new refresh token with every new access token, and Appwrite saves it each time [`updateSession`](/docs/products/auth/oauth2#refresh-tokens) renews the provider access token.
+- **Rate limits apply per app.** Strava limits API requests per application, both per 15 minutes and per day, so every user's calls count toward the same limits. See [Strava's rate limits](https://developers.strava.com/docs/rate-limits/).
+- **No email address.** Strava users have no email in Appwrite until you set one, so features that need an address, such as [email verification](/docs/products/auth/verify-user), don't work for them until then.
+
+# Read more about Strava and Appwrite Auth
+
+If you would like to learn more about Strava and Appwrite Auth, these resources are a good place to start:
+
+- [Strava authentication](https://developers.strava.com/docs/authentication/)
+- [Getting started with the Strava API](https://developers.strava.com/docs/getting-started/)
+- [Announcing 14 new OAuth2 login providers in Appwrite Auth](/blog/post/announcing-14-new-oauth2-providers)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2)
+- [Manage linked accounts with Identities](/docs/products/auth/identities)

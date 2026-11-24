@@ -1,0 +1,108 @@
+---
+layout: integration
+title: OAuth with Vercel
+description: Let developers sign in with their Vercel account in Appwrite Auth through Sign in with Vercel, with verified emails and refresh tokens.
+date: 2026-11-24
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/oauth-vercel/cover.avif
+category: auth
+product:
+    vendor: Vercel
+    description: 'Vercel is a cloud platform for building and deploying web apps, with Git-based deployments and preview URLs.'
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+images:
+    - /images/integrations/oauth-vercel/cover.avif
+---
+
+Vercel is a cloud platform for building and deploying web apps. [Sign in with Vercel](https://vercel.com/docs/sign-in-with-vercel) lets people sign in to your app with their Vercel account, which suits developer tools, integrations, and dashboards built for teams that deploy on Vercel.
+
+# How does the integration work?
+
+Appwrite Auth has a Vercel OAuth2 provider built on Vercel's OpenID Connect endpoints. When a user signs in, Vercel shows a consent page with the permissions your app requests and sends the user back to Appwrite, which creates the user or signs in the existing one.
+
+Appwrite requests the `openid`, `email`, `profile`, and `offline_access` scopes and uses PKCE. It stores the user's name, email address, and avatar. The avatar also powers [user photos](/docs/products/avatars/user-photos) in Appwrite Avatars. The user's Vercel ID (`sub`) becomes the provider user ID on the user's [identity](/docs/products/auth/identities). The email address is marked as verified only when Vercel reports `email_verified` as `true`.
+
+{% info title="Self-hosted availability" %}
+Sign in with Vercel is live on Appwrite Cloud and ships in the next self-hosted Appwrite release.
+{% /info %}
+
+# How to implement
+
+To add Vercel sign-in to your app, complete these steps.
+
+## Step 1: Copy the redirect URI from Appwrite
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already.
+
+In the Appwrite Console, open your project, go to **Auth** > **Social providers**, and open **Vercel**. Copy the **Redirect URI** shown in the drawer. It includes the provider ID and your project ID:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/vercel/<PROJECT_ID>
+```
+
+On self-hosted Appwrite, the URI starts with your own domain. Always copy the exact value from the Console.
+
+## Step 2: Create a Vercel app
+
+In Vercel, open your team's **Settings**, select **Apps**, and click **Create**. Give the app a name and a slug, and save it. Then, from the app's **Manage** page:
+
+1. Under **Authentication**, make sure `client_secret_post` is enabled. Appwrite sends the client ID and secret in the body of the token request.
+2. Click **Generate** to create a client secret. Copy it along with the app's client ID, which starts with `cl_`, and treat the secret like a password.
+3. Under **Authorization Callback URLs**, add the redirect URI you copied in step 1.
+4. Open **Permissions**, enable `openid`, `email`, `profile`, and `offline_access`, and click **Save**.
+
+## Step 3: Enable the provider in Appwrite
+
+Back in the **Vercel** drawer in the Appwrite Console:
+
+1. Paste the client ID into **Client ID** and the client secret into **Client Secret**.
+2. Turn the provider on.
+3. Click **Update**.
+
+## Step 4: Add Vercel sign-in to your app
+
+Add your app's domain as a web platform in your Appwrite project, so Appwrite accepts your `success` and `failure` URLs.
+
+`OAuthProvider.Vercel` is available in the Node.js server SDK from `node-appwrite` 32.0.0. Start the sign-in on your server with `createOAuth2Token` and redirect the user to the URL it returns:
+
+```server-nodejs
+import { Client, Account, OAuthProvider } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const account = new Account(client);
+
+const redirectUrl = await account.createOAuth2Token({
+    provider: OAuthProvider.Vercel,
+    success: 'https://example.com/oauth/success',
+    failure: 'https://example.com/oauth/failure',
+    state: state, // A random value you also store in a cookie
+});
+```
+
+When the user comes back to your `success` URL, check that its `state` matches the cookie, then exchange the `userId` and `secret` parameters for a session with `createSession`. [Server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2) walks through both endpoints. From a client app, call `createOAuth2Session` with `OAuthProvider.Vercel` once your client SDK version includes it.
+
+# Things to know about Sign in with Vercel
+
+- **Every scope Appwrite requests must be enabled on the app.** If `email` or `profile` isn't enabled under **Permissions**, Vercel rejects the sign-in with an `invalid_scope` error and Appwrite redirects to your failure URL. If `offline_access` isn't enabled, Vercel drops it and issues no refresh token.
+- **Refresh tokens rotate.** Vercel access tokens are valid for one hour and refresh tokens for 30 days. Each refresh token works once, and Appwrite saves the new one every time [`updateSession`](/docs/products/auth/oauth2#refresh-tokens) renews the provider access token.
+- **You can limit sign-in to your team.** By default, anyone with a Vercel account can sign in. To allow only members of the team that owns the app, open the app's **General** page and set **Sign-In Access** to **Members of the team**. Vercel then denies everyone else, and Appwrite redirects them to your failure URL.
+- **Unverified emails don't take over accounts.** If Vercel doesn't report the email as verified and another user already has that address, Appwrite redirects to your failure URL instead of signing the user in. To connect Vercel to that account, have the user sign in first and then start `createOAuth2Session` from the browser, which links Vercel as a new [identity](/docs/products/auth/identities).
+
+# Read more about Vercel and Appwrite Auth
+
+If you would like to learn more about Vercel and Appwrite Auth, these resources are a good place to start:
+
+- [Sign in with Vercel](https://vercel.com/docs/sign-in-with-vercel)
+- [Manage Sign in with Vercel from the dashboard](https://vercel.com/docs/sign-in-with-vercel/manage-from-dashboard)
+- [Announcing 14 new OAuth2 login providers in Appwrite Auth](/blog/post/announcing-14-new-oauth2-providers)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2)
+- [Manage linked accounts with Identities](/docs/products/auth/identities)
