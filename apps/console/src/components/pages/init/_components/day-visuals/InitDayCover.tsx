@@ -1,11 +1,10 @@
 import type { ReactNode } from 'react'
-import { AppwriteWordmark } from '@/components/global/shared/AppwriteWordmark'
 import { cn } from '@/lib/utils'
 
 /**
  * An Init 5 day picture drawn like the blog's covers: Appwrite's dark ground
- * with violet light from above and pink rising from below, the logo, a short
- * headline ending in the pink underscore, and a simplified product UI that
+ * with violet light from above and pink rising from below, a short headline
+ * ending in the pink underscore, and a simplified product UI that
  * runs off the edge. Dark in both themes, like the covers themselves; sizes
  * follow the frame, so it reads the same on a phone and on a wide card.
  */
@@ -29,7 +28,6 @@ export function InitDayCover({
         aria-hidden
         className="pointer-events-none absolute -bottom-[60%] start-[0%] h-[100%] w-[85%] rounded-full bg-[radial-gradient(closest-side,rgb(253_54_110/0.34),transparent)] transition-opacity duration-500 group-hover:opacity-100 [opacity:0.85]"
       />
-      <AppwriteWordmark className="absolute start-[5cqw] top-[5cqw] h-[3.2cqw]" />
       <p className="absolute start-[5cqw] top-1/2 w-[40cqw] -translate-y-1/2 font-aeonik-pro text-[6.6cqw] leading-[1.06] tracking-tight text-white">
         {headline}
         <span className="text-[var(--brand-cta)]">_</span>
