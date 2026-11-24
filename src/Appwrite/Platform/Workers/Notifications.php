@@ -509,10 +509,11 @@ class Notifications extends Action
         }
 
         // An alert acknowledged while its firing notice waited in the queue shows acknowledged. Read after writing, so an
-        // acknowledgement made meanwhile either finds the notification or is seen here.
+        // acknowledgement made meanwhile either finds the notification or is seen here. Only ever marks it acknowledged,
+        // as a stale read must not undo an acknowledgement made since.
         if (($alert['status'] ?? '') === Change::Firing->value) {
             $firing = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('monitorAlerts', $alert['alertId'] ?? ''));
-            if (!$firing->isEmpty()) {
+            if ($firing->getAttribute('acknowledgedAt') !== null) {
                 (new Acknowledgements($dbForPlatform))->updateNotifications($firing);
             }
         }
