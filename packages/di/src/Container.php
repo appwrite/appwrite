@@ -65,8 +65,12 @@ class Container implements ContainerInterface
      * Scoping an identifier registers this container's own copy of its factory, and of every
      * factory in the chain that depends on it directly or transitively. Parents keep their values.
      *
-     * @param string ...$ids Identifiers of dependencies registered on this container or an ancestor.
-     * @throws Exceptions\NotFoundException When no container in the chain registers an identifier.
+     * Only factories registered on a Container can be copied. The walk up the chain stops at the
+     * first parent that is any other PSR-11 container, since that container exposes values, not
+     * the factories that build them.
+     *
+     * @param string ...$ids Identifiers of dependencies registered on this container or a Container ancestor.
+     * @throws Exceptions\NotFoundException When no Container in the chain registers an identifier.
      */
     public function scope(string ...$ids): static
     {
@@ -79,7 +83,7 @@ class Container implements ContainerInterface
 
         foreach ($ids as $id) {
             if (! \array_key_exists($id, $definitions)) {
-                throw new Exceptions\NotFoundException("Dependency $id not found");
+                throw new Exceptions\NotFoundException("Dependency $id has no factory on this container or a Container ancestor to scope");
             }
         }
 

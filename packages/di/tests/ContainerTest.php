@@ -410,8 +410,31 @@ final class ContainerTest extends TestCase
         $container = new Container(new Container());
 
         $this->expectException(NotFoundExceptionInterface::class);
-        $this->expectExceptionMessage('Dependency missing not found');
+        $this->expectExceptionMessage('Dependency missing has no factory on this container or a Container ancestor to scope');
 
         $container->scope('missing');
+    }
+
+    public function testScopeCannotCopyAFactoryFromAnotherPsrContainer(): void
+    {
+        $psr = new class () implements \Psr\Container\ContainerInterface {
+            public function get(string $id): mixed
+            {
+                return 'value';
+            }
+
+            public function has(string $id): bool
+            {
+                return $id === 'foreign';
+            }
+        };
+
+        $child = new Container($psr);
+        $this->assertTrue($child->has('foreign'));
+
+        $this->expectException(NotFoundExceptionInterface::class);
+        $this->expectExceptionMessage('Dependency foreign has no factory on this container or a Container ancestor to scope');
+
+        $child->scope('foreign');
     }
 }
