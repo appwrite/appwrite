@@ -157,11 +157,10 @@ function BrowserVisual() {
  */
 function GitProviders({ projectId }: { projectId: string }) {
   const t = useT()
-  const { features } = useConsoleProfile()
   const { vcsProviders } = useConsoleVariables()
   const { project } = useProject(projectId)
   const { data: installations, isPending } = useVcsInstallations(projectId)
-  const providers = getVisibleVcsOAuthProviders(features, vcsProviders)
+  const providers = getVisibleVcsOAuthProviders(vcsProviders)
 
   if (providers.length === 0) return null
 

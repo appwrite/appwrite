@@ -1307,6 +1307,8 @@ class GitHub extends Git
             'pending' => ['in_progress', ''],
             'success' => ['completed', 'success'],
             'cancelled' => ['completed', 'cancelled'],
+            'neutral' => ['completed', 'neutral'],
+            'action_required' => ['completed', 'action_required'],
             default => ['completed', 'failure'],
         };
 

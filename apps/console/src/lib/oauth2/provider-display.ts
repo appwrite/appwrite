@@ -67,6 +67,7 @@ export const OAUTH2_NEW_BADGE_DAYS = 45
 export const OAUTH2_NEW_PROVIDER_LAUNCH_DATES: Partial<Record<string, string>> =
   {
     [OAuthProvider.Atlassian]: '2026-11-18',
+    [OAuthProvider.Bird]: '2026-11-19',
     [OAuthProvider.Cloudflare]: '2026-09-08',
     [OAuthProvider.Huggingface]: '2026-08-26',
     [OAuthProvider.Instagram]: '2026-11-18',
@@ -81,6 +82,7 @@ export const OAUTH2_NEW_PROVIDER_LAUNCH_DATES: Partial<Record<string, string>> =
     [OAuthProvider.Resend]: '2026-09-08',
     [OAuthProvider.Roblox]: '2026-11-18',
     [OAuthProvider.Strava]: '2026-11-18',
+    [OAuthProvider.Supabase]: '2026-11-23',
     [OAuthProvider.Tiktok]: '2026-09-08',
     [OAuthProvider.Vercel]: '2026-11-18',
     [OAuthProvider.Vipps]: '2026-11-04',

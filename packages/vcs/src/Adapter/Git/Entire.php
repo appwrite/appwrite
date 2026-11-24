@@ -121,6 +121,8 @@ class Entire extends Git
         'failure' => ['completed', 'failure'],
         'error' => ['completed', 'failure'],
         'cancelled' => ['completed', 'cancelled'],
+        'neutral' => ['completed', 'neutral'],
+        'action_required' => ['completed', 'action_required'],
     ];
 
     /**

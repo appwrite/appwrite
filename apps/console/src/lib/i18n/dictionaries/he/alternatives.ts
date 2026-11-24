@@ -1818,8 +1818,8 @@ export const heAlternativesDictionary: Record<string, string> = {
   'Yes. Package each rendition as HLS with MPEG-TS segments, DASH with fMP4 segments, or CMAF, which encodes fMP4 once and exposes both an HLS and a DASH master manifest. Mux delivers HLS and MP4 renditions.':
     'כן. ארזו כל גרסת קידוד כ-HLS עם סגמנטים של MPEG-TS, כ-DASH עם סגמנטים של fMP4, או כ-CMAF, שמקודד fMP4 פעם אחת וחושף גם מניפסט ראשי של HLS וגם של DASH. Mux מגישה HLS וגרסאות MP4.',
   'Can I control the encoding ladder?': 'האם אפשר לשלוט בסולם הקידוד?',
-  'Yes. Every project starts with a default ladder of encoding profiles. Add your own profile with a resolution, video and audio bitrate, and codec, and each video gets at most one rendition per profile and output.':
-    'כן. כל פרויקט מתחיל עם סולם ברירת מחדל של פרופילי קידוד. הוסיפו פרופיל משלכם עם רזולוציה, קצב סיביות לווידאו ולאודיו וקודק, ולכל סרטון תהיה לכל היותר גרסת קידוד אחת לכל צירוף של פרופיל ופלט.',
+  'Yes. Start from resolution presets or add your own profile with a resolution, video and audio bitrate, and codec. Each video gets at most one rendition per profile and output.':
+    'כן. התחילו מתבניות מוכנות של רזולוציה או הוסיפו פרופיל משלכם עם רזולוציה, קצב סיביות לווידאו ולאודיו וקודק. לכל סרטון תהיה לכל היותר גרסת קידוד אחת לכל צירוף של פרופיל ופלט.',
   'Which players work with Appwrite Videos?': 'אילו נגנים עובדים עם Appwrite Videos?',
   'Embed the built-in Appwrite player with an iframe, or use your own. The same master manifest works with hls.js, Shaka Player, and Video.js on the web, AVPlayer on Apple platforms, ExoPlayer on Android, and the usual Flutter and React Native players.':
     'הטמיעו את הנגן המובנה של Appwrite עם iframe, או השתמשו בנגן משלכם. אותו מניפסט ראשי עובד עם hls.js, Shaka Player ו-Video.js ב-Web, עם AVPlayer בפלטפורמות של Apple, עם ExoPlayer ב-Android ועם הנגנים המוכרים של Flutter ו-React Native.',
@@ -1836,8 +1836,8 @@ export const heAlternativesDictionary: Record<string, string> = {
   'Appwrite packages': 'Appwrite אורזת',
   'Mux delivers': 'Mux מגישה',
   'Profiles': 'פרופילים',
-  'Bitrates are an example. Every project starts with a default ladder, and each profile sets its own resolution, video and audio bitrate, and codec.':
-    'קצבי הסיביות הם דוגמה. כל פרויקט מתחיל עם סולם ברירת מחדל, וכל פרופיל קובע רזולוציה, קצב סיביות לווידאו ולאודיו וקודק משלו.',
+  'Bitrates are an example. Each profile sets its own resolution, video and audio bitrate, and codec.':
+    'קצבי הסיביות הם דוגמה. כל פרופיל קובע רזולוציה, קצב סיביות לווידאו ולאודיו וקודק משלו.',
   'Closest Mux request': 'הבקשה הקרובה ביותר ב-Mux',
   'Mux picks the renditions under that tier for you.': 'Mux בוחרת בשבילכם את גרסאות הקידוד מתחת למדרגה הזו.',
   'Mux delivers HLS only, so there is no DASH manifest to request. Mux picks the renditions under that tier for you.':
@@ -1848,8 +1848,8 @@ export const heAlternativesDictionary: Record<string, string> = {
     'התחילו מסולם ברירת המחדל, ואז הוסיפו פרופילים עם רזולוציה, קצבי סיביות וקודק משלכם.',
   'Upload WebVTT or SubRip, or use the tracks embedded in the source. Tag each one with a language.':
     'העלו WebVTT או SubRip, או השתמשו ברצועות שמוטמעות בקובץ המקור. תייגו כל אחת בשפה.',
-  'Sprite sheets with a WebVTT index show a frame while viewers scrub, and give every video a poster.':
-    'גיליונות ספרייט עם אינדקס WebVTT מציגים פריים בזמן שצופים גוללים, ונותנים לכל סרטון תמונת פוסטר.',
+  'Sprite sheets with a WebVTT index show a frame while viewers scrub.':
+    'גיליונות ספרייט עם אינדקס WebVTT מציגים פריים בזמן שצופים גוללים.',
   'Copy an iframe from the Console. Set a start time, choose captions, or lock a rendition.':
     'העתיקו iframe מהקונסולה. הגדירו זמן התחלה, בחרו כתוביות או נעלו גרסת קידוד.',
   'Watch a live experience score for any session, then drill into buffer, bitrate, and dropped frames.':

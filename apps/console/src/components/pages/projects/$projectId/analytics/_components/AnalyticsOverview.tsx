@@ -165,6 +165,21 @@ const METRICS_BY_TYPE: Record<
   [AnalyticsPropertyType.Agent]: ['events', 'visits', 'users', 'visitDuration'],
 }
 
+// Apps have users, sessions and screens rather than visitors, visits and pages.
+const MOBILE_TERMS: Partial<
+  Record<
+    AnalyticsChartMetric,
+    { label: string; info: AnalyticsMetricInfoKey }
+  >
+> = {
+  visitors: { label: 'Active users', info: 'activeUsers' },
+  visits: { label: 'Sessions', info: 'visits' },
+  pageviews: { label: 'Screen views', info: 'screenViews' },
+  users: { label: 'Signed-in users', info: 'users' },
+  viewsPerVisit: { label: 'Screens/session', info: 'screensPerSession' },
+  visitDuration: { label: 'Session length', info: 'visitDuration' },
+}
+
 /** Value of a series-backed metric for one bucket. */
 function bucketValue(
   metric: SeriesMetric,
@@ -221,6 +236,7 @@ function MetricTab({
   isActive,
   unavailable,
   hint,
+  detail,
   onClick,
 }: {
   label: string
@@ -239,6 +255,8 @@ function MetricTab({
   unavailable: boolean
   /** Shown on hover when the value can't be computed (e.g. filters). */
   hint?: string
+  /** Extra tooltip line, e.g. the signed-in share on Users. */
+  detail?: string
   /** Omitted for aggregate-only metrics: the tab shows a value, no plot. */
   onClick?: () => void
 }) {
@@ -257,7 +275,11 @@ function MetricTab({
   // the current figure too so the tooltip is a pair, not just the baseline.
   const currentLabel =
     exact ?? (value !== undefined && comparison ? format(value) : undefined)
-  const tooltip = hint ?? (currentLabel || comparison ? { exact: currentLabel, comparison } : undefined)
+  const tooltip =
+    hint ??
+    (currentLabel || comparison || detail
+      ? { exact: currentLabel, comparison, detail }
+      : undefined)
   const card = (
     <div
       // A div with button semantics, because the info hint inside it is
@@ -341,6 +363,17 @@ function MetricTab({
             {tooltip.comparison ? (
               <span className={tooltip.exact ? 'text-background/70' : undefined}>
                 {tooltip.comparison}
+              </span>
+            ) : null}
+            {tooltip.detail ? (
+              <span
+                className={
+                  tooltip.exact || tooltip.comparison
+                    ? 'text-background/70'
+                    : undefined
+                }
+              >
+                {tooltip.detail}
               </span>
             ) : null}
           </span>
@@ -481,6 +514,11 @@ export function AnalyticsOverview({
   const metrics = METRICS_BY_TYPE[type]
     .filter((key) => showUsers || key !== 'users')
     .map((key) => OVERVIEW_METRICS.find((metric) => metric.key === key)!)
+    .map((metric) =>
+      type === AnalyticsPropertyType.Mobile
+        ? { ...metric, ...MOBILE_TERMS[metric.key] }
+        : metric,
+    )
 
   // Aggregate metrics can't be read with some filters, so while one is
   // active the chart falls back to the first tab (the tab explains why).
@@ -697,6 +735,17 @@ export function AnalyticsOverview({
   )
   const yAxisTickFormatter = axisFormatter(activeMetric.axis, axisMax)
 
+  // Ingestion derives a signed-in visitor's ID from the user ID, so users per
+  // visitor approximates the signed-in share. Aggregate only: no filtered fallback.
+  const signedInShare =
+    showUsers && stats && !statsUnsupported && stats.visitors > 0
+      ? Math.min(100, ((stats.users ?? 0) / stats.visitors) * 100)
+      : undefined
+  const signedInDetail =
+    signedInShare === undefined
+      ? undefined
+      : `${formatPercent(signedInShare)} ${t('of visitors signed in')}`
+
   const activeSeriesLabel = t(activeMetric.label)
 
   // ── Metric tabs ──
@@ -775,6 +824,7 @@ export function AnalyticsOverview({
               isActive={activeMetric.key === tab.key}
               unavailable={tab.unavailable}
               hint={tab.hint}
+              detail={tab.key === 'users' ? signedInDetail : undefined}
               onClick={
                 tab.blockedByFilter ? undefined : () => onActiveSeriesChange(tab.key)
               }
@@ -794,6 +844,12 @@ export function AnalyticsOverview({
               />
               <span className="text-[12px] text-muted-foreground">
                 {activeSeriesLabel}
+                {activeMetric.key === 'users' && signedInDetail ? (
+                  <span className="text-muted-foreground/70">
+                    {' '}
+                    · {signedInDetail}
+                  </span>
+                ) : null}
               </span>
             </div>
             {showComparisonLine ? (

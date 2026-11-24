@@ -258,8 +258,8 @@ export function brandFontStack(): string {
 /**
  * The station displays: one backlit LCD per row with the product icon and
  * the (translated) product name centered together, in the neutral ink of
- * the framework installer's display. Rows follow `names`; the last is the
- * network gate.
+ * the framework installer's display. Rows follow `names`: the stations,
+ * the network gate, then the extensions.
  */
 export function createNameplateAtlas(
   icons: readonly string[],

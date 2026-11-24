@@ -64,7 +64,33 @@ impl<'a> From<&'a str> for PhpString<'a> {
 }
 
 impl StubLiteral for PhpString<'_> {
+    /// ext-php-rs asks for this on every call of a method with a default, not once, so the
+    /// usual default (plain text, most often empty) is written without escaping it.
     fn stub_literal(&self) -> String {
-        String::from_utf8_lossy(&self.0).as_ref().stub_literal()
+        match std::str::from_utf8(&self.0) {
+            Ok(plain) if !plain.contains(['\\', '\'']) => ["'", plain, "'"].concat(),
+            _ => String::from_utf8_lossy(&self.0).as_ref().stub_literal(),
+        }
+    }
+}
+
+/// A property value of any type, shared by refcount.
+pub struct Value(pub Zval);
+
+impl IntoZval for Value {
+    const TYPE: DataType = DataType::Mixed;
+    const NULLABLE: bool = true;
+
+    fn set_zval(self, zv: &mut Zval, _: bool) -> ext_php_rs::error::Result<()> {
+        *zv = self.0;
+        Ok(())
+    }
+}
+
+impl FromZval<'_> for Value {
+    const TYPE: DataType = DataType::Mixed;
+
+    fn from_zval(zval: &Zval) -> Option<Self> {
+        Some(Self(zval.shallow_clone()))
     }
 }

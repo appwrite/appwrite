@@ -131,6 +131,10 @@ type MockOptions = {
   mobileEvents?: boolean
   /** The project is at its plan's analytics property limit. */
   propertyLimitReached?: boolean
+  /** The plan's `analyticsProperties`; the mocked project holds one property. */
+  planPropertyLimit?: number
+  /** Holds the plan-limit count (the limit-1 property list) until it resolves. */
+  countGate?: Promise<void>
 }
 
 const MOBILE_EVENT_COUNTS: Record<string, number> = {
@@ -177,12 +181,43 @@ function listParam(url: URL, name: string): string[] {
     .map(([, value]) => value)
 }
 
+/** One identified user's last active bucket, hour-aligned like the API's. */
+const USER_LAST_SEEN = new Date(
+  Math.floor((Date.now() - 2 * 3_600_000) / 3_600_000) * 3_600_000,
+).toISOString()
+
+/** `user-a`'s own activity, answered whenever a request filters on it. */
+function userMetricsFor(url: URL, dimension: string | undefined) {
+  if (url.searchParams.get('interval')) {
+    return [
+      {
+        ...row(null, 1, { sessions: 2, pageviews: 5, events: 9 }),
+        date: new Date(Date.now() - 26 * 3_600_000).toISOString(),
+      },
+      {
+        ...row(null, 1, { sessions: 1, pageviews: 3, events: 4 }),
+        date: USER_LAST_SEEN,
+      },
+      { ...row(null, 0, { sessions: 0, pageviews: 0, events: 0 }), date: NOW },
+    ]
+  }
+  // Every row is one visitor, so only events tell them apart.
+  if (dimension === 'page')
+    return [row('/pricing', 1, { events: 7 }), row('/docs', 1, { events: 12 })]
+  if (dimension === 'eventName')
+    return [row('pageview', 1, { events: 8 }), row('signup', 1, { events: 2 })]
+  return []
+}
+
 function metricsFor(url: URL, options: MockOptions): Models.AnalyticsMetric[] {
   const dimension = listParam(url, 'dimensions')[0]
   const users = options.hasUsers ? 37 : 0
-  const eventName = listParam(url, 'queries')
-    .map((query) => JSON.parse(query))
-    .find((query) => query.attribute === 'eventName')?.values[0]
+  const queries = listParam(url, 'queries').map((query) => JSON.parse(query))
+  if (queries.some((query) => query.attribute === 'userId'))
+    return userMetricsFor(url, dimension)
+  const eventName = queries.find(
+    (query) => query.attribute === 'eventName',
+  )?.values[0]
   if (eventName in MOBILE_EVENT_COUNTS) {
     if (!options.mobileEvents) return []
     if (url.searchParams.get('interval'))
@@ -227,6 +262,7 @@ function metricsFor(url: URL, options: MockOptions): Models.AnalyticsMetric[] {
           ]
         : []
     if (propKey === 'tool') return []
+    if (propKey === 'appVersion') return [row('1.2.0', 50), row('1.1.0', 8)]
     if (options.agentProps) return [row('model', 3), row('plan', 2)]
     return [row('plan', 52), row('source', 9)]
   }
@@ -235,7 +271,25 @@ function metricsFor(url: URL, options: MockOptions): Models.AnalyticsMetric[] {
   }
   if (dimension === 'browserVersion')
     return [row('141.0', 70), row('140.0', 20)]
+  if (options.type === AnalyticsPropertyType.Mobile) {
+    if (dimension === 'hostname') return [row('ios', 84), row('android', 16)]
+    if (dimension === 'entryPage') return [row('/home', 30), row('', 10)]
+    if (dimension === 'trafficType')
+      return [row('human', 80), row('bot', 40)]
+  }
   return []
+}
+
+/** Whether a metrics request filtered on `attribute` equal to `value`. */
+function filtersOn(url: URL, attribute: string, value: string): boolean {
+  return listParam(url, 'queries')
+    .map((query) => JSON.parse(query))
+    .some(
+      (query) =>
+        query.method === 'equal' &&
+        query.attribute === attribute &&
+        query.values[0] === value,
+    )
 }
 
 /** Every `/v1` call, on any region host, is answered here; the app itself is served live. */
@@ -322,11 +376,18 @@ async function mockAppwriteApi(
       }
       return json(200, property(identifyUsers, options.type))
     }
-    if (apiPath === '/analytics/properties')
+    if (apiPath === '/analytics/properties') {
+      const isCount = listParam(url, 'queries').some((query) => {
+        const { method, values } = JSON.parse(query)
+        return method === 'limit' && values[0] === 1
+      })
+      // The route loader awaits the full list, so only the count waits.
+      if (isCount) await options.countGate
       return json(200, {
         total: 1,
         properties: [property(identifyUsers, options.type)],
       })
+    }
 
     if (apiPath === `/sites/${SITE_ID}/analytics`) {
       mock.siteAnalytics.push(request)
@@ -350,6 +411,14 @@ async function mockAppwriteApi(
       return json(200, { total: 0, frameworks: [] })
     if (apiPath === '/vcs/installations')
       return json(200, { total: 0, installations: [] })
+
+    if (apiPath === `/organizations/${ORGANIZATION.$id}/plan`) {
+      return json(200, {
+        $id: ORGANIZATION.billingPlan,
+        name: 'Free',
+        analyticsProperties: options.planPropertyLimit ?? 0,
+      })
+    }
 
     if (apiPath === '/account') return json(200, ACCOUNT)
     if (apiPath === '/account/prefs') {
@@ -510,6 +579,86 @@ test.describe('analytics property (mocked API)', () => {
     await attachScreenshot(page, 'property-prop-filter')
   })
 
+  test('shows the signed-in share of visitors', async ({ page }) => {
+    await mockAppwriteApi(page, { identifyUsers: true, hasUsers: true })
+    await openProperty(page)
+
+    const usersMetric = overviewMetrics(page).filter({
+      has: page.getByText('Users', { exact: true }),
+    })
+    await expect(usersMetric).toContainText('37', { timeout: 30_000 })
+    // 37 users over 120 visitors in the flat aggregate.
+    await usersMetric.hover()
+    await expect(page.getByRole('tooltip')).toContainText(
+      '30.8% of visitors signed in',
+    )
+    await usersMetric.click()
+    await expect(
+      page.getByText('· 30.8% of visitors signed in'),
+    ).toBeVisible()
+  })
+
+  test('opens a user from the Users card', async ({ page }) => {
+    const mock = await mockAppwriteApi(page, {
+      identifyUsers: true,
+      hasUsers: true,
+    })
+    await openProperty(page)
+
+    await card(page, 'Users')
+      .getByText('user-a')
+      .click({ timeout: 30_000 })
+    await expect(page).toHaveURL(
+      new RegExp(`/analytics/${PROPERTY_ID}/users/user-a$`),
+    )
+
+    const stats = page.locator('main')
+    await expect(stats.getByText('Visits', { exact: true })).toBeVisible()
+    for (const [label, value] of [
+      ['Visits', '3'],
+      ['Pageviews', '8'],
+      ['Events', '13'],
+    ]) {
+      await expect(
+        stats
+          .locator('div')
+          .filter({ has: page.getByText(label, { exact: true }) })
+          .filter({ hasText: new RegExp(`^${label}${value}$`) }),
+      ).toHaveCount(1)
+    }
+    await expect(stats.getByText('2 hours ago')).toBeVisible()
+
+    const pages = card(page, 'Pages')
+    await expect(pages.getByText(/^\/(docs|pricing)$/)).toHaveText([
+      '/docs',
+      '/pricing',
+    ])
+    const events = card(page, 'Custom events')
+    await expect(events.getByText('signup')).toBeVisible()
+    await expect(events.getByText('pageview')).toHaveCount(0)
+
+    // userId is events-only, so the flat aggregate is never asked for it.
+    const forUser = mock.metrics.filter((url) =>
+      listParam(url, 'queries').some((query) => query.includes('userId')),
+    )
+    expect(forUser.length).toBeGreaterThan(0)
+    expect(
+      forUser.some(
+        (url) =>
+          !url.searchParams.get('interval') &&
+          listParam(url, 'dimensions').length === 0,
+      ),
+    ).toBe(false)
+    await attachScreenshot(page, 'property-user')
+
+    // A value opens the property filtered by the user and that value.
+    await pages.getByText('/docs').click()
+    await expect(page).toHaveURL(new RegExp(`/analytics/${PROPERTY_ID}\\?`))
+    await expect(page.getByText('Filtered by')).toBeVisible()
+    await expect(page.locator('main')).toContainText('user-a')
+    await expect(page.locator('main')).toContainText('/docs')
+  })
+
   test('hides users when the property records none', async ({ page }) => {
     await mockAppwriteApi(page)
     await openProperty(page)
@@ -532,42 +681,135 @@ test.describe('analytics property (mocked API)', () => {
     })
   })
 
-  test('leaves bounce rate off a mobile property', async ({ page }) => {
+  test('uses app terms and leaves bounce rate off a mobile property', async ({
+    page,
+  }) => {
     await mockAppwriteApi(page, { type: AnalyticsPropertyType.Mobile })
     await openProperty(page)
 
     const metrics = overviewMetrics(page)
-    await expect(metrics.first()).toContainText('Unique visitors', {
+    await expect(metrics.first()).toContainText('Active users', {
       timeout: 30_000,
     })
     await expect(metrics).toHaveText([
-      /^Unique visitors/,
-      /^Visits/,
-      /^Pageviews/,
+      /^Active users/,
+      /^Sessions/,
+      /^Screen views/,
       /^Events/,
-      /^Views per visit/,
-      /^Visit duration/,
+      /^Screens\/session/,
+      /^Session length/,
       /^Engagement time/,
     ])
+    await expect(
+      page.locator('main').getByText('Mobile', { exact: true }).first(),
+    ).toBeVisible()
+    await expect(
+      card(page, 'Locations').getByText('Where your users are'),
+    ).toBeVisible()
+    await attachScreenshot(page, 'property-mobile-app-terms')
   })
 
-  test('drops browser tabs from a mobile Technology card', async ({ page }) => {
-    await mockAppwriteApi(page, { type: AnalyticsPropertyType.Mobile })
+  test('opens a mobile property on humans only', async ({ page }) => {
+    const mock = await mockAppwriteApi(page, {
+      type: AnalyticsPropertyType.Mobile,
+    })
+    await openProperty(page)
+
+    await expect(page.getByText(/^Humans\s*only$/)).toBeVisible({
+      timeout: 30_000,
+    })
+    await expect
+      .poll(() => mock.metrics.some((url) => filtersOn(url, 'trafficType', 'human')))
+      .toBe(true)
+
+    // Turning the default off is kept in the URL, so it survives a reload.
+    await page
+      .locator('button[aria-pressed="true"]')
+      .filter({ hasText: 'Humans' })
+      .click()
+    await expect(page.getByText(/^Humans\s*only$/)).toHaveCount(0)
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    await expect(card(page, 'Technology')).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByText(/^Humans\s*only$/)).toHaveCount(0)
+  })
+
+  test('opens a web property on all traffic', async ({ page }) => {
+    await mockAppwriteApi(page)
+    await openProperty(page)
+
+    await expect(card(page, 'Technology')).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByText(/^Humans\s*only$/)).toHaveCount(0)
+  })
+
+  test('shows platforms and versions on a mobile Technology card', async ({
+    page,
+  }) => {
+    const mock = await mockAppwriteApi(page, {
+      type: AnalyticsPropertyType.Mobile,
+    })
     await openProperty(page)
 
     const technology = card(page, 'Technology')
-    await expect(technology.getByText('What visitors are using')).toBeVisible({
+    await expect(technology.getByText('What your users are on')).toBeVisible({
       timeout: 30_000,
     })
+    // Apps send no user agent, so there are no browser tabs.
     await expect(technology.getByRole('tab')).toHaveText([
+      'Platforms',
       'Operating systems',
       'Devices',
       'Screen sizes',
-      'OS versions',
     ])
+    await expect(technology.getByText(/^(iOS|Android)$/)).toHaveText([
+      'iOS',
+      'Android',
+    ])
+    await technology.getByText('iOS', { exact: true }).click()
+    await expect
+      .poll(() => mock.metrics.some((url) => filtersOn(url, 'hostname', 'ios')))
+      .toBe(true)
+
+    await technology.getByRole('button', { name: /Versions/ }).click()
+    await expect(page.getByRole('menuitem')).toHaveText([
+      'OS versions',
+      'App versions',
+    ])
+    await page.getByRole('menuitem', { name: 'App versions' }).click()
+    await technology.getByText('1.2.0', { exact: true }).click()
+    await expect
+      .poll(() =>
+        mock.metrics.some((url) => filtersOn(url, 'props.appVersion', '1.2.0')),
+      )
+      .toBe(true)
+  })
+
+  test('names entry screens of sessions that never reported one', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, { type: AnalyticsPropertyType.Mobile })
+    await openProperty(page)
+
+    const screens = card(page, 'Screens')
+    await expect(screens).toBeVisible({ timeout: 30_000 })
+    await screens.getByRole('tab', { name: 'Entry screens' }).click()
+    await expect(screens.getByText('/home', { exact: true })).toBeVisible()
     await expect(
-      technology.getByRole('button', { name: /Versions/ }),
-    ).toHaveCount(0)
+      screens.getByText('No screen (resumed)', { exact: true }),
+    ).toBeVisible()
+  })
+
+  test('leads a mobile property with its custom events', async ({ page }) => {
+    await mockAppwriteApi(page, { type: AnalyticsPropertyType.Mobile })
+    await openProperty(page)
+
+    const events = card(page, 'Custom events')
+    const installs = card(page, 'Installs and push')
+    await expect(installs).toBeVisible({ timeout: 30_000 })
+    const [eventsBox, installsBox] = await Promise.all([
+      events.boundingBox(),
+      installs.boundingBox(),
+    ])
+    expect(eventsBox!.y).toBeLessThan(installsBox!.y)
   })
 
   test('counts installs and push opens on a mobile property', async ({
@@ -683,6 +925,68 @@ test.describe('analytics property (mocked API)', () => {
     )
   })
 
+  test('edits and deletes from a note popover without adding a note', async ({
+    page,
+  }) => {
+    const mock = await mockAppwriteApi(page)
+    await openProperty(page)
+
+    await page.getByRole('button', { name: 'Add note' }).click({
+      timeout: 30_000,
+    })
+    const dialog = page.getByRole('dialog')
+    await dialog.getByLabel('Note text').fill('Launched pricing page')
+    await dialog.getByRole('button', { name: 'Add', exact: true }).click()
+    await expect(page.getByText('Note added')).toBeVisible()
+    await expect(dialog).toHaveCount(0)
+
+    const popover = page.locator('[data-slot="popover-content"]')
+    await page.getByRole('button', { name: 'Show notes' }).click()
+    await popover.getByRole('button', { name: 'Edit note' }).click()
+    await expect(dialog).toHaveCount(1)
+    await expect(dialog).toContainText('Edit note')
+    await dialog.getByRole('button', { name: 'Cancel' }).click()
+    await expect(dialog).toHaveCount(0)
+
+    await page.getByRole('button', { name: 'Show notes' }).click()
+    await popover.getByRole('button', { name: 'Delete note' }).click()
+    await expect(dialog).toHaveCount(1)
+    await expect(dialog).toContainText('Delete note')
+    await dialog.getByRole('button', { name: 'Delete', exact: true }).click()
+    await expect(page.getByText('Note deleted')).toBeVisible()
+    expect(mock.annotations).toEqual([])
+    await expect(dialog).toHaveCount(0)
+  })
+
+  test('wraps a long unbroken note', async ({ page }) => {
+    await mockAppwriteApi(page)
+    await openProperty(page)
+
+    await page.getByRole('button', { name: 'Add note' }).click({
+      timeout: 30_000,
+    })
+    const dialog = page.getByRole('dialog')
+    await dialog.getByLabel('Note text').fill('a'.repeat(600))
+    await expect(dialog.getByText('512/512')).toBeVisible()
+    const viewport = page.viewportSize()!
+    const box = await dialog.boundingBox()
+    expect(box!.x + box!.width).toBeLessThanOrEqual(viewport.width)
+    await expect(
+      dialog.getByRole('button', { name: 'Add', exact: true }),
+    ).toBeInViewport({ ratio: 1 })
+    await dialog.getByRole('button', { name: 'Add', exact: true }).click()
+    await expect(page.getByText('Note added')).toBeVisible()
+
+    await page.getByRole('button', { name: 'Show notes' }).click()
+    const popover = page.locator('[data-slot="popover-content"]')
+    await expect(popover.getByText('a'.repeat(512))).toBeVisible()
+    const popoverBox = await popover.boundingBox()
+    const textBox = await popover.getByText('a'.repeat(512)).boundingBox()
+    expect(textBox!.x + textBox!.width).toBeLessThanOrEqual(
+      popoverBox!.x + popoverBox!.width,
+    )
+  })
+
   test('zooms on a drag without adding a note', async ({ page }) => {
     const mock = await mockAppwriteApi(page)
     await openProperty(page)
@@ -711,6 +1015,76 @@ test.describe('analytics property (mocked API)', () => {
     await expect(page.getByRole('dialog')).toHaveCount(0)
     await chart.click({ position: { x: box.width * 0.5, y: box.height / 2 } })
     await expect(page.getByRole('dialog')).toContainText('Add note')
+  })
+
+  test('blocks Create property at the plan limit', async ({ page }) => {
+    await mockAppwriteApi(page, { planPropertyLimit: 1 })
+    await page.goto(`/projects/${PROJECT_ID}/analytics`, {
+      waitUntil: 'domcontentloaded',
+    })
+
+    await expect(
+      page.getByText("You've reached the limit of 1 analytics property"),
+    ).toBeVisible({ timeout: 30_000 })
+    // A disabled header create renders as an aria-disabled span, not a link.
+    await expect(
+      page.locator('[aria-disabled]').filter({ hasText: 'Create property' }),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('link', { name: 'Create property' }),
+    ).toHaveCount(0)
+    await attachScreenshot(page, 'analytics-property-limit')
+  })
+
+  test('leaves Create property on below the plan limit', async ({ page }) => {
+    await mockAppwriteApi(page, { planPropertyLimit: 5 })
+    await page.goto(`/projects/${PROJECT_ID}/analytics`, {
+      waitUntil: 'domcontentloaded',
+    })
+
+    await expect(page.getByText('Acme site').first()).toBeVisible({
+      timeout: 30_000,
+    })
+    await expect(
+      page.getByRole('link', { name: 'Create property' }),
+    ).toBeVisible()
+    await expect(page.getByText("You've reached the limit of")).toHaveCount(0)
+  })
+
+  test('blocks the create form at the plan limit', async ({ page }) => {
+    await mockAppwriteApi(page, { planPropertyLimit: 1 })
+    await page.goto(`/projects/${PROJECT_ID}/analytics/add`, {
+      waitUntil: 'domcontentloaded',
+    })
+
+    await expect(page.getByTestId('analytics-property-plan-limit')).toHaveText(
+      'Your current plan includes up to 1 analytics property per project. Upgrade your plan to create another.',
+      { timeout: 30_000 },
+    )
+    await expect(
+      page.getByRole('button', { name: 'Create property' }),
+    ).toBeDisabled()
+  })
+
+  test('holds the create form until the plan limit is known', async ({
+    page,
+  }) => {
+    let releaseCount = () => {}
+    const countGate = new Promise<void>((resolve) => {
+      releaseCount = resolve
+    })
+    await mockAppwriteApi(page, { planPropertyLimit: 5, countGate })
+    await page.goto(`/projects/${PROJECT_ID}/analytics/add`, {
+      waitUntil: 'domcontentloaded',
+    })
+
+    const create = page.getByRole('button', { name: 'Create property' })
+    await expect(create).toBeDisabled({ timeout: 30_000 })
+    releaseCount()
+    await expect(create).toBeEnabled()
+    await expect(page.getByTestId('analytics-property-plan-limit')).toHaveCount(
+      0,
+    )
   })
 
   test('turns user identification on', async ({ page }) => {

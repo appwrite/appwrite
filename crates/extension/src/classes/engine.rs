@@ -17,7 +17,7 @@ use ext_php_rs::ffi::{
 };
 use ext_php_rs::flags::PropertyFlags;
 use ext_php_rs::types::{ZendHashTable, ZendObject, ZendStr, Zval};
-use ext_php_rs::zend::{ClassEntry, ExecuteData, ExecutorGlobals, ce};
+use ext_php_rs::zend::{ClassEntry, ExecuteData, ce};
 use utopia_validators::{Input, Number};
 
 /// `MAY_BE_BOOL`: `false` and `true`.
@@ -84,6 +84,23 @@ unsafe extern "C" {
     fn zend_verify_scalar_type_hint(type_mask: u32, arg: *mut zval, strict: bool, is_internal_arg: bool) -> bool;
     fn zend_verify_return_error(function: *const zend_function, value: *const zval);
     fn increment_function(op: *mut zval) -> i32;
+    fn zend_release_fcall_info_cache(fcc: *mut c_void);
+}
+
+/// The engine's executor globals (`EG`).
+#[inline]
+fn executor_globals() -> *mut ext_php_rs::ffi::zend_executor_globals {
+    // SAFETY: the engine's own globals, alive for the process.
+    unsafe { ext_php_rs::ffi::ext_php_rs_executor_globals() }
+}
+
+/// Whether an exception is pending (`EG(exception)`). ext-php-rs's
+/// `ExecutorGlobals::has_exception()` takes a read lock on the globals for it, two atomic
+/// operations and an `Arc` count on every call, which costs more than most methods here.
+#[inline]
+pub fn has_exception() -> bool {
+    // SAFETY: reading one pointer of the engine's globals, on the thread that runs PHP.
+    unsafe { !(*executor_globals()).exception.is_null() }
 }
 
 /// `ZEND_ACC_PROMOTED`: a property declared by a constructor parameter.
@@ -128,6 +145,16 @@ impl Property {
     pub const fn new(name: &'static str) -> Self {
         Self { name, offset: AtomicU32::new(0) }
     }
+
+    /// The property's name.
+    pub fn name(&self) -> &'static str {
+        self.name
+    }
+
+    /// Records the offset of the property's slot, once declared.
+    pub fn set_offset(&self, offset: u32) {
+        self.offset.store(offset, Ordering::Release);
+    }
 }
 
 /// Declares `property` as a protected typed property of `class`, with `default`; `None`
@@ -149,6 +176,22 @@ fn declare_as(class: &mut ClassEntry, property: &Property, mask: u32, default: O
     let flags = PropertyFlags::Protected.bits().try_into().expect("property flags fit an int");
     let flags = if promoted { flags | ACC_PROMOTED } else { flags };
     declare_typed(class, property, zend_type { ptr: std::ptr::null_mut(), type_mask: mask }, flags, default);
+}
+
+/// Declares `property` as a public untyped property of `class` with the default `null`
+/// (`public $name;` and `public $name = null;` alike).
+pub fn declare_public(class: &mut ClassEntry, property: &Property) {
+    let flags = PropertyFlags::Public.bits().try_into().expect("property flags fit an int");
+    declare_typed(class, property, zend_type { ptr: std::ptr::null_mut(), type_mask: 0 }, flags, None);
+}
+
+/// Declares the public untyped static property `name` of `class` with `default` (a value that
+/// is not reference counted).
+pub fn declare_public_static(class: &mut ClassEntry, name: &'static str, default: Zval) {
+    let flags: i32 =
+        (PropertyFlags::Public | PropertyFlags::Static).bits().try_into().expect("property flags fit an int");
+    let property = Property::new(name);
+    declare_typed(class, &property, zend_type { ptr: std::ptr::null_mut(), type_mask: 0 }, flags, Some(default));
 }
 
 /// What a property declared with [`declare_property`] is: its visibility and modifiers.
@@ -240,19 +283,109 @@ pub fn empty_array() -> Zval {
 /// On an object of exactly `scope` (not a subclass, which may redeclare the property with
 /// hooks) that is not lazy, an initialized property is read straight from its slot; the
 /// rest goes through the engine.
+///
+/// Always inlined, with the engine's way out of line: returned through memory, the
+/// `Option<Zval>` cost a store-forwarding stall on every read.
+#[inline(always)]
 pub fn get(scope: &ClassEntry, this: &mut ZendObject, property: &Property) -> Option<Zval> {
-    let offset = property.offset.load(Ordering::Acquire);
-    if offset != 0 && std::ptr::eq(this.ce, scope) && !this.is_lazy() {
-        // SAFETY: a declared property's slot lies `offset` bytes into an object of the class
-        // that declared it, and lives as long as the object.
-        let slot = unsafe { &*std::ptr::from_mut(this).cast::<u8>().add(offset as usize).cast::<Zval>() };
+    if let Some(slot) = own_slot(scope, this, property) {
         let value = slot.dereference();
         // `IS_UNDEF`: uninitialized, or unset, which the engine reports (or `__get` answers).
         if unsafe { value.u1.type_info } != 0 {
             return Some(value.shallow_clone());
         }
     }
+    get_through_engine(scope, this, property)
+}
+
+#[cold]
+#[inline(never)]
+fn get_through_engine(scope: &ClassEntry, this: &mut ZendObject, property: &Property) -> Option<Zval> {
     read(scope, this, property.name)
+}
+
+/// The slot of `property` in `this` when it may be read and written directly: an object of
+/// exactly `scope` (not a subclass, which may redeclare the property with hooks) that is not
+/// lazy, once the property is declared.
+#[inline(always)]
+fn own_slot<'a>(scope: &ClassEntry, this: &'a mut ZendObject, property: &Property) -> Option<&'a mut Zval> {
+    let offset = property.offset.load(Ordering::Acquire);
+    if offset != 0 && std::ptr::eq(this.ce, scope) && !this.is_lazy() {
+        // SAFETY: a declared property's slot lies `offset` bytes into an object of the class
+        // that declared it, and lives as long as the object.
+        return Some(unsafe { &mut *std::ptr::from_mut(this).cast::<u8>().add(offset as usize).cast::<Zval>() });
+    }
+    None
+}
+
+/// The slot of the private `property` in `this` (of its class or a subclass, which cannot hook it), if not lazy.
+#[inline(always)]
+pub fn private_slot<'a>(this: &'a mut ZendObject, property: &Property) -> Option<&'a mut Zval> {
+    let offset = property.offset.load(Ordering::Acquire);
+    if offset != 0 && !this.is_lazy() {
+        // SAFETY: the slot lies `offset` bytes into any object of the declaring class or a subclass.
+        return Some(unsafe { &mut *std::ptr::from_mut(this).cast::<u8>().add(offset as usize).cast::<Zval>() });
+    }
+    None
+}
+
+/// The slot of `property` in `this`, to read or write in place, when [`own_slot`] allows it (an
+/// object of exactly `scope`, not lazy): no copy of the value goes through memory, which a
+/// getter that only looks at it would then reload.
+#[inline(always)]
+pub fn property_slot<'a>(scope: &ClassEntry, this: &'a mut ZendObject, property: &Property) -> Option<&'a mut Zval> {
+    own_slot(scope, this, property)
+}
+
+/// `IS_PROP_UNINIT`: a typed property's slot that was never initialized (not one `unset()`).
+const PROP_UNINIT: u32 = 1;
+
+/// `$this->property = $value` for a property never initialized, straight into its slot when
+/// [`own_slot`] allows it (what the engine's write does for such a slot, readonly included,
+/// for a value already of the property's type); through the engine otherwise.
+#[inline]
+pub fn initialize(scope: &ClassEntry, this: &mut ZendObject, property: &Property, value: Zval) {
+    if let Some(slot) = own_slot(scope, this, property)
+        // SAFETY: reading the type and the property flag of a live slot.
+        && unsafe { slot.u1.type_info } == 0
+        && unsafe { slot.u2.extra } & PROP_UNINIT != 0
+    {
+        // An undefined slot owns nothing.
+        std::mem::forget(std::mem::replace(slot, value));
+        return;
+    }
+    write(scope, this, property.name, value);
+}
+
+/// `$this->property[] = ` ...: the array `property` holds, separated for writing as PHP
+/// separates it, when [`own_slot`] allows reaching it and it is an array (not a reference)
+/// with room for one more element; `None` when the engine's way must be taken.
+pub fn array_slot<'a>(
+    scope: &ClassEntry,
+    this: &'a mut ZendObject,
+    property: &Property,
+) -> Option<&'a mut ZendHashTable> {
+    let slot = own_slot(scope, this, property)?;
+    if !slot.is_array() {
+        return None;
+    }
+    // SAFETY: an array slot: its table is live; a shared or immutable one is replaced by a
+    // copy the slot owns (`SEPARATE_ARRAY`), then appended to in place.
+    unsafe {
+        let mut table = slot.value.arr;
+        if (*table).nNextFreeElement == i64::MAX {
+            return None;
+        }
+        if (*table.cast::<ZendHashTable>()).is_immutable() {
+            table = zend_array_dup(table);
+        } else if (*table).gc.refcount > 1 {
+            (*table).gc.refcount -= 1;
+            table = zend_array_dup(table);
+        }
+        slot.value.arr = table;
+        slot.u1.type_info = IS_ARRAY_EX;
+        table.cast::<ZendHashTable>().as_mut()
+    }
 }
 
 /// `$this->property = $value` from `scope`, for a value already of the property's type.
@@ -260,15 +393,14 @@ pub fn get(scope: &ClassEntry, this: &mut ZendObject, property: &Property) -> Op
 /// On an object of exactly `scope` that is not lazy, the value goes straight into the slot
 /// (the old one released); a subclass's object (which may redeclare the property with hooks)
 /// and a slot holding a reference go through the engine, with its type checks.
+#[inline]
 pub fn set(scope: &ClassEntry, this: &mut ZendObject, property: &Property, value: Zval) {
-    let offset = property.offset.load(Ordering::Acquire);
-    if offset != 0 && std::ptr::eq(this.ce, scope) && !this.is_lazy() {
-        // SAFETY: as in [`get`]; the slot owns its value, which the replaced one releases.
-        let slot = unsafe { &mut *std::ptr::from_mut(this).cast::<u8>().add(offset as usize).cast::<Zval>() };
-        if !slot.is_reference() {
-            drop(std::mem::replace(slot, value));
-            return;
-        }
+    if let Some(slot) = own_slot(scope, this, property)
+        && !slot.is_reference()
+    {
+        // The slot owns its value, which the replaced one releases.
+        drop(std::mem::replace(slot, value));
+        return;
     }
     write(scope, this, property.name, value);
 }
@@ -290,7 +422,7 @@ pub fn read(scope: &ClassEntry, this: &mut ZendObject, name: &str) -> Option<Zva
         );
         ptr.as_ref().map(Zval::shallow_clone)
     };
-    if ExecutorGlobals::has_exception() { None } else { value }
+    if has_exception() { None } else { value }
 }
 
 /// `$this->name = $value` from `scope`, with the property's type checks.
@@ -300,6 +432,7 @@ pub fn write(scope: &ClassEntry, this: &mut ZendObject, name: &str, mut value: Z
 }
 
 /// The value a validator checks, as the `utopia_validators` functions take it.
+#[inline(always)]
 pub fn input(value: &Zval) -> Input<'_> {
     let value = value.dereference();
     if let Some(b) = value.bool() {
@@ -319,11 +452,13 @@ pub fn input(value: &Zval) -> Input<'_> {
 
 /// An int or a float property as a number (0 for anything else, which a typed property
 /// cannot hold).
+#[inline]
 pub fn number(value: &Zval) -> Number {
     value.long().map(Number::Int).or_else(|| value.double().map(Number::Float)).unwrap_or(Number::Int(0))
 }
 
 /// PHP truthiness, for a method's result used as a condition.
+#[inline(always)]
 pub fn truthy(value: &Zval) -> bool {
     match input(value) {
         Input::Null => false,
@@ -336,6 +471,7 @@ pub fn truthy(value: &Zval) -> bool {
 }
 
 /// A PHP string of `bytes`.
+#[inline]
 pub fn string(bytes: &[u8]) -> Zval {
     let mut zval = Zval::new();
     zval.set_zend_string(ZendStr::new(bytes, false));
@@ -343,6 +479,7 @@ pub fn string(bytes: &[u8]) -> Zval {
 }
 
 /// The method's argument `i` (from 0), if it was passed.
+#[inline]
 pub fn arg(ex: &mut ExecuteData, i: usize) -> Option<&'static mut Zval> {
     // SAFETY: the engine sets `num_args` for the call, and the argument slot lives as long
     // as the call frame, which outlives the method's use of it.
@@ -351,6 +488,7 @@ pub fn arg(ex: &mut ExecuteData, i: usize) -> Option<&'static mut Zval> {
 }
 
 /// How many arguments the method was called with.
+#[inline]
 pub fn args_count(ex: &ExecuteData) -> usize {
     // SAFETY: the engine sets `num_args` for the call.
     unsafe { ex.This.u2.num_args as usize }
@@ -404,6 +542,7 @@ pub fn too_few(ex: &ExecuteData, function: &str, passed: usize, required: usize,
 
 /// A `bool` argument, coerced as a userland `bool` parameter is: `null` is a `TypeError`,
 /// anything else goes through the engine's coercion (strict or weak, as the caller declares).
+#[inline]
 pub fn bool_arg(ex: &ExecuteData, num: u32, arg: &mut Zval) -> Option<bool> {
     if let Some(b) = arg.bool() {
         return Some(b);
@@ -411,15 +550,16 @@ pub fn bool_arg(ex: &ExecuteData, num: u32, arg: &mut Zval) -> Option<bool> {
     let mut dest = false;
     // SAFETY: a live zval and a valid destination.
     if !arg.is_null() && unsafe { zend_parse_arg_bool_slow(arg, &raw mut dest, num) } {
-        return (!ExecutorGlobals::has_exception()).then_some(dest);
+        return (!has_exception()).then_some(dest);
     }
-    if !ExecutorGlobals::has_exception() {
+    if !has_exception() {
         type_error(ex, num, "bool", arg);
     }
     None
 }
 
 /// An `int` argument, coerced as a userland `int` parameter is.
+#[inline]
 pub fn long_arg(ex: &ExecuteData, num: u32, arg: &mut Zval) -> Option<i64> {
     long_arg_named(ex, num, arg, "int")
 }
@@ -433,15 +573,16 @@ pub fn long_arg_named(ex: &ExecuteData, num: u32, arg: &mut Zval, expected: &str
     let mut dest = 0;
     // SAFETY: a live zval and a valid destination.
     if !arg.is_null() && unsafe { zend_parse_arg_long_slow(arg, &raw mut dest, num) } {
-        return (!ExecutorGlobals::has_exception()).then_some(dest);
+        return (!has_exception()).then_some(dest);
     }
-    if !ExecutorGlobals::has_exception() {
+    if !has_exception() {
         type_error(ex, num, expected, arg);
     }
     None
 }
 
 /// An `int|float` argument, coerced as a userland `int|float` parameter is.
+#[inline]
 pub fn number_arg(ex: &ExecuteData, num: u32, arg: &mut Zval) -> Option<Zval> {
     if arg.is_long() || arg.is_double() {
         return Some(arg.shallow_clone());
@@ -449,12 +590,12 @@ pub fn number_arg(ex: &ExecuteData, num: u32, arg: &mut Zval) -> Option<Zval> {
     let mut dest: *mut zval = std::ptr::null_mut();
     // SAFETY: a live zval; on success the engine points `dest` at the coerced number.
     if !arg.is_null() && unsafe { zend_parse_arg_number_slow(arg, &raw mut dest, num) } {
-        if ExecutorGlobals::has_exception() {
+        if has_exception() {
             return None;
         }
         return unsafe { dest.cast::<Zval>().as_ref() }.map(Zval::shallow_clone);
     }
-    if !ExecutorGlobals::has_exception() {
+    if !has_exception() {
         type_error(ex, num, "int|float", arg);
     }
     None
@@ -462,6 +603,7 @@ pub fn number_arg(ex: &ExecuteData, num: u32, arg: &mut Zval) -> Option<Zval> {
 
 /// A `string` argument, coerced as a userland `string` parameter is (`Stringable` objects
 /// included, in weak mode).
+#[inline]
 pub fn str_arg(ex: &ExecuteData, num: u32, arg: &mut Zval) -> Option<Vec<u8>> {
     if let Some(s) = arg.zend_str() {
         return Some(s.as_bytes().to_vec());
@@ -469,12 +611,33 @@ pub fn str_arg(ex: &ExecuteData, num: u32, arg: &mut Zval) -> Option<Vec<u8>> {
     let mut dest: *mut zend_string = std::ptr::null_mut();
     // SAFETY: a live zval; on success the engine points `dest` at the string.
     if !arg.is_null() && unsafe { zend_parse_arg_str_slow(arg, &raw mut dest, num) } {
-        if ExecutorGlobals::has_exception() {
+        if has_exception() {
             return None;
         }
         return unsafe { dest.cast::<ZendStr>().as_ref() }.map(|s| s.as_bytes().to_vec());
     }
-    if !ExecutorGlobals::has_exception() {
+    if !has_exception() {
+        type_error(ex, num, "string", arg);
+    }
+    None
+}
+
+/// A `string` argument as a PHP string, shared by reference rather than copied: [`str_arg`]
+/// for a value a method keeps (a property).
+#[inline]
+pub fn str_zval_arg(ex: &ExecuteData, num: u32, arg: &mut Zval) -> Option<Zval> {
+    if arg.is_string() {
+        return Some(arg.shallow_clone());
+    }
+    let mut dest: *mut zend_string = std::ptr::null_mut();
+    // SAFETY: a live zval; on success the engine has converted it to the string in place.
+    if !arg.is_null() && unsafe { zend_parse_arg_str_slow(arg, &raw mut dest, num) } {
+        if has_exception() {
+            return None;
+        }
+        return Some(arg.dereference().shallow_clone());
+    }
+    if !has_exception() {
         type_error(ex, num, "string", arg);
     }
     None
@@ -506,24 +669,35 @@ pub fn to_string(value: &Zval) -> Option<Vec<u8>> {
     // releases.
     let converted = unsafe { zval_get_string_func(&raw mut copy) };
     let bytes = unsafe { ZBox::<ZendStr>::from_raw(converted.cast()) }.as_bytes().to_vec();
-    if ExecutorGlobals::has_exception() { None } else { Some(bytes) }
+    if has_exception() { None } else { Some(bytes) }
+}
+
+/// PHP `(string) $value` appended to `out`, as [`to_string`] converts it; a string is copied
+/// straight from its bytes.
+pub fn append_string(value: &Zval, out: &mut Vec<u8>) -> Option<()> {
+    let value = value.dereference();
+    if let Some(s) = value.zend_str() {
+        out.extend_from_slice(s.as_bytes());
+    } else if let Some(i) = value.long() {
+        append_decimal(i, out);
+    } else {
+        out.extend_from_slice(&to_string(value)?);
+    }
+    Some(())
 }
 
 /// PHP `implode(', ', $list)`: each element converted as [`to_string`] converts it.
-pub fn implode(list: &Zval) -> Option<Vec<u8>> {
-    let mut joined = Vec::new();
+/// Appended to `joined`.
+pub fn implode(list: &Zval, joined: &mut Vec<u8>) -> Option<()> {
     if let Some(array) = list.array() {
         for (i, value) in values(array).enumerate() {
             if i > 0 {
                 joined.extend_from_slice(b", ");
             }
-            match value.dereference().zend_str() {
-                Some(s) => joined.extend_from_slice(s.as_bytes()),
-                None => joined.extend_from_slice(&to_string(value)?),
-            }
+            append_string(value, joined)?;
         }
     }
-    Some(joined)
+    Some(())
 }
 
 /// `HASH_FLAG_PACKED`: the values sit in a plain zval array, without keys.
@@ -603,7 +777,7 @@ pub fn loose_equal(a: &Zval, b: &Zval) -> Option<bool> {
     let (mut a, mut b) = (a.shallow_clone(), b.shallow_clone());
     // SAFETY: two live zvals.
     let equal = unsafe { zend_compare(&raw mut a, &raw mut b) } == 0;
-    if ExecutorGlobals::has_exception() { None } else { Some(equal) }
+    if has_exception() { None } else { Some(equal) }
 }
 
 /// PHP `$needle == $item` for a string `$needle`: by bytes against a string item, unless
@@ -633,7 +807,12 @@ pub fn identical(a: &Zval, b: &Zval) -> bool {
 
 /// `IS_ARRAY`, `IS_STRING` and the `IS_PTR` type of a hash table entry holding a pointer.
 const IS_ARRAY: u32 = 7;
+/// `IS_ARRAY_EX`: an array that counts references and may be collected.
+pub const IS_ARRAY_EX: u32 = IS_ARRAY | (1 << 8) | (1 << 9);
+
 const IS_STRING: u32 = 6;
+/// `IS_STRING_EX`: a string that counts references.
+const IS_STRING_EX: u32 = IS_STRING | (1 << 8);
 const IS_PTR: u32 = 13;
 /// `GC_NOT_COLLECTABLE | GC_IMMUTABLE | GC_PERSISTENT`, an immutable array's flags.
 const IMMUTABLE_ARRAY: u32 = (1 << 4) | (1 << 6) | (1 << 7);
@@ -648,6 +827,132 @@ pub fn interned(bytes: &[u8]) -> Zval {
     }
     zval.u1.type_info = IS_STRING;
     zval
+}
+
+/// A string a method returns as PHP returns a string literal: interned in MINIT
+/// ([`Literal::intern`]), so returning it neither allocates nor counts references. Building
+/// a new PHP string for each call costs an allocation and a copy, and its release, which is
+/// more than the rest of a constant getter.
+pub struct Literal {
+    text: &'static str,
+    string: std::sync::atomic::AtomicPtr<zend_string>,
+}
+
+impl Literal {
+    pub const fn new(text: &'static str) -> Self {
+        Self { text, string: std::sync::atomic::AtomicPtr::new(std::ptr::null_mut()) }
+    }
+
+    /// Interns the string; called in MINIT, before any call.
+    pub fn intern(&self) {
+        if self.string.load(Ordering::Acquire).is_null() {
+            self.string.store(interned(self.text.as_bytes()).value_str(), Ordering::Release);
+        }
+    }
+
+    /// The string as a PHP value: the interned one, or a new one before [`Literal::intern`].
+    #[inline]
+    pub fn zval(&self) -> Zval {
+        let mut zval = Zval::new();
+        self.set(&mut zval);
+        zval
+    }
+
+    /// Writes the string into `zval` (which holds nothing that needs releasing, as a
+    /// method's return value before the method sets it).
+    #[inline(always)]
+    pub fn set(&self, zval: &mut Zval) {
+        let string = self.string.load(Ordering::Acquire);
+        if string.is_null() {
+            zval.set_zend_string(ZendStr::new(self.text.as_bytes(), false));
+            return;
+        }
+        zval.value.str_ = string;
+        // An interned string: `IS_STRING` without the refcounted flag.
+        zval.u1.type_info = IS_STRING;
+    }
+}
+
+/// Interns each of `literals` (MINIT).
+pub fn intern(literals: &[&Literal]) {
+    literals.iter().for_each(|literal| literal.intern());
+}
+
+/// A PHP string built by `build` in one allocation, written into `retval`: `build` appends to
+/// the first of two buffers (the second holds a part to build first, such as an `implode()`),
+/// which is then copied once into the string. What PHP's concatenation does with a rope;
+/// building a `Vec` (growing as it goes) and copying it costs two or more, each through the C
+/// allocator. The buffers are kept for the thread and reused, a build within a build (a
+/// wrapped validator's `getDescription()`) taking the next pair. Nothing is written when
+/// `build` gives up with an exception pending.
+#[inline]
+pub fn built(retval: &mut Zval, build: impl FnOnce(&mut Vec<u8>, &mut Vec<u8>) -> Option<()>) {
+    thread_local! {
+        static BUFFERS: std::cell::RefCell<Vec<(Vec<u8>, Vec<u8>)>> = const { std::cell::RefCell::new(Vec::new()) };
+    }
+    BUFFERS.with(|buffers| {
+        let (mut out, mut spare) = buffers.borrow_mut().pop().unwrap_or_default();
+        out.clear();
+        spare.clear();
+        if build(&mut out, &mut spare).is_some() {
+            retval.set_zend_string(ZendStr::new(&out[..], false));
+        }
+        // Buffers grown by a long string are not kept.
+        if out.capacity() <= 4096 && spare.capacity() <= 4096 {
+            buffers.borrow_mut().push((out, spare));
+        }
+    });
+}
+
+/// `GC_STRING`: a string's type info, which never holds cycles.
+const GC_STRING: u32 = IS_STRING | (1 << 4);
+
+/// `$prefix . implode(', ', $list) . $suffix` into `retval` in one allocation of the exact
+/// size, as PHP's concatenation makes it, when every item of the array `list` is a string
+/// (nothing to convert, so nothing PHP could observe); `false`, with nothing written,
+/// otherwise. Inlined, so the prefix and the suffix copy as constants.
+#[inline(always)]
+pub fn implode_between(retval: &mut Zval, prefix: &[u8], list: &Zval, suffix: &[u8]) -> bool {
+    let Some(array) = list.array() else { return false };
+    let mut length = prefix.len() + suffix.len();
+    for (i, value) in values(array).enumerate() {
+        let Some(item) = value.dereference().zend_str() else { return false };
+        length += item.len() + if i > 0 { 2 } else { 0 };
+    }
+    // `_ZSTR_STRUCT_SIZE`: the header, the bytes and the terminating NUL.
+    let header = std::mem::offset_of!(ext_php_rs::ffi::zend_string, val);
+    let Ok(layout) = std::alloc::Layout::from_size_align(header + length + 1, 8) else { return false };
+    let string = ext_php_rs::alloc::emalloc(layout).cast::<ext_php_rs::ffi::zend_string>();
+    if string.is_null() {
+        return false;
+    }
+    // SAFETY: a new allocation of the string's size, initialized as `zend_string_alloc()`
+    // initializes one, then filled with exactly `length` bytes and the NUL.
+    unsafe {
+        (*string).gc.refcount = 1;
+        (*string).gc.u.type_info = GC_STRING;
+        (*string).h = 0;
+        (*string).len = length;
+        let mut at = std::ptr::addr_of_mut!((*string).val).cast::<u8>();
+        let mut put = |bytes: &[u8]| {
+            if !bytes.is_empty() {
+                std::ptr::copy_nonoverlapping(bytes.as_ptr(), at, bytes.len());
+                at = at.add(bytes.len());
+            }
+        };
+        put(prefix);
+        for (i, value) in values(array).enumerate() {
+            if i > 0 {
+                put(b", ");
+            }
+            put(value.dereference().zend_str().map(ZendStr::as_bytes).unwrap_or_default());
+        }
+        put(suffix);
+        *at = 0;
+        retval.value.str_ = string;
+        retval.u1.type_info = IS_STRING_EX;
+    }
+    true
 }
 
 /// A persistent immutable list of strings (`['0', '1', ...]`), as a constant of an internal
@@ -689,6 +994,28 @@ pub fn string_map(items: &[(&str, &str)]) -> Zval {
         _zend_hash_init(ht, u32::try_from(items.len()).unwrap_or(8), std::ptr::null_mut(), true);
         for (key, item) in items {
             let mut value = interned(item.as_bytes());
+            zend_hash_str_add(ht, key.as_ptr().cast(), key.len(), &raw mut value);
+            std::mem::forget(value);
+        }
+        (*ht).gc.refcount = 2;
+        (*ht).gc.u.type_info = IS_ARRAY | IMMUTABLE_ARRAY;
+        let mut zval = Zval::new();
+        zval.value.arr = ht;
+        zval.u1.type_info = IS_ARRAY;
+        zval
+    }
+}
+
+/// A persistent immutable array of lists of strings keyed by strings (`['a' => ['x', 'y'],
+/// 'b' => []]`), as a constant of an internal class holds one: each list a [`string_list`],
+/// an empty one the engine's immutable [`empty_array`].
+pub fn string_list_map(items: &[(&str, &[&str])]) -> Zval {
+    // SAFETY: as [`string_map`]; the lists are persistent and immutable themselves.
+    unsafe {
+        let ht = ext_php_rs::ffi::__zend_malloc(std::mem::size_of::<HashTable>()).cast::<HashTable>();
+        _zend_hash_init(ht, u32::try_from(items.len()).unwrap_or(8), std::ptr::null_mut(), true);
+        for (key, list) in items {
+            let mut value = if list.is_empty() { empty_array() } else { string_list(list) };
             zend_hash_str_add(ht, key.as_ptr().cast(), key.len(), &raw mut value);
             std::mem::forget(value);
         }
@@ -807,7 +1134,7 @@ pub fn dimension(container: &Zval, key: &str) -> Option<Zval> {
     // SAFETY: live zvals; `BP_VAR_R` (0) copies the element (or `null`) into `result`, which
     // the returned `Zval` owns.
     unsafe { zend_fetch_dimension_const(&raw mut result, &raw mut container, &raw mut dim, 0) };
-    if ExecutorGlobals::has_exception() { None } else { Some(result) }
+    if has_exception() { None } else { Some(result) }
 }
 
 /// PHP `$container[$index]` read for an integer `index`, as [`dimension`] reads a key.
@@ -818,7 +1145,7 @@ pub fn dimension_index(container: &Zval, index: i64) -> Option<Zval> {
     dim.set_long(index);
     // SAFETY: as in [`dimension`].
     unsafe { zend_fetch_dimension_const(&raw mut result, &raw mut container, &raw mut dim, 0) };
-    if ExecutorGlobals::has_exception() { None } else { Some(result) }
+    if has_exception() { None } else { Some(result) }
 }
 
 /// PHP `$a + $b`: the engine's addition, with its coercions, warnings and `TypeError`s;
@@ -829,7 +1156,7 @@ pub fn add(a: &Zval, b: &Zval) -> Option<Zval> {
     // SAFETY: live zvals; the engine writes the sum into `result`, which the returned `Zval`
     // owns.
     unsafe { add_function(&raw mut result, &raw mut a, &raw mut b) };
-    if ExecutorGlobals::has_exception() { None } else { Some(result) }
+    if has_exception() { None } else { Some(result) }
 }
 
 /// Calls the PHP function `name` with `args` (at most three), as a function in a file without
@@ -839,7 +1166,7 @@ pub fn call(name: &str, args: &[&Zval]) -> Option<Zval> {
     // SAFETY: the engine's function table, whose functions live for the process (the
     // internal ones this calls) or the request.
     let function = unsafe {
-        zend_hash_str_find_ptr_lc(ExecutorGlobals::get().function_table, name.as_ptr().cast(), name.len())
+        zend_hash_str_find_ptr_lc((*executor_globals()).function_table, name.as_ptr().cast(), name.len())
             .cast::<zend_function>()
     };
     let mut params = [Zval::new(), Zval::new(), Zval::new()];
@@ -863,7 +1190,7 @@ pub fn call(name: &str, args: &[&Zval]) -> Option<Zval> {
                 std::ptr::null_mut(),
             )
         };
-        return if result < 0 || ExecutorGlobals::has_exception() { None } else { Some(retval) };
+        return if result < 0 || has_exception() { None } else { Some(retval) };
     }
     // SAFETY: a function of the table, called as `call_user_function()` would call it once
     // resolved; the arguments are live zvals laid out contiguously.
@@ -878,7 +1205,7 @@ pub fn call(name: &str, args: &[&Zval]) -> Option<Zval> {
             std::ptr::null_mut(),
         );
     }
-    if ExecutorGlobals::has_exception() { None } else { Some(retval) }
+    if has_exception() { None } else { Some(retval) }
 }
 
 /// Throws an `Error` with `message`, as the engine throws one.
@@ -935,7 +1262,7 @@ impl InternedValue for Zval {
 /// PHP `$object->name(...$args)` from the executing method's class: the object's own method
 /// (a subclass's override, `__call()`), its visibility checked against that class, and
 /// PHP's `Error` for a value that is not an object or a method that does not exist; `None`
-/// with an exception pending. At most two arguments.
+/// with an exception pending. At most four arguments.
 pub fn call_method(object: &Zval, method: &Callee, args: &[&Zval]) -> Option<Zval> {
     let object = object.dereference();
     let Some(target) = object.object() else {
@@ -955,12 +1282,12 @@ pub fn call_method(object: &Zval, method: &Callee, args: &[&Zval]) -> Option<Zva
         let get_method = (*(*target).handlers).get_method.expect("get_method");
         let function = get_method(&raw mut target, strings.name, &raw const key);
         if function.is_null() {
-            if !ExecutorGlobals::has_exception() {
+            if !has_exception() {
                 zend_undefined_method((*target).ce, strings.name);
             }
             return None;
         }
-        let mut params = [Zval::new(), Zval::new()];
+        let mut params = [Zval::new(), Zval::new(), Zval::new(), Zval::new()];
         for (param, arg) in params.iter_mut().zip(args) {
             *param = arg.dereference().shallow_clone();
         }
@@ -970,12 +1297,100 @@ pub fn call_method(object: &Zval, method: &Callee, args: &[&Zval]) -> Option<Zva
             target,
             (*target).ce,
             &raw mut retval,
-            u32::try_from(args.len().min(2)).unwrap_or(2),
+            u32::try_from(args.len().min(4)).unwrap_or(4),
             params.as_mut_ptr().cast(),
             std::ptr::null_mut(),
         );
-        if ExecutorGlobals::has_exception() { None } else { Some(retval) }
+        if has_exception() { None } else { Some(retval) }
     }
+}
+
+/// The method a [`Callee`] last resolved to on one class; reset at request shutdown.
+pub struct MethodCache {
+    class: std::sync::atomic::AtomicPtr<zend_class_entry>,
+    function: std::sync::atomic::AtomicPtr<zend_function>,
+}
+
+impl MethodCache {
+    pub const fn new() -> Self {
+        Self {
+            class: std::sync::atomic::AtomicPtr::new(std::ptr::null_mut()),
+            function: std::sync::atomic::AtomicPtr::new(std::ptr::null_mut()),
+        }
+    }
+
+    /// Forgets the method (request shutdown).
+    pub fn reset(&self) {
+        self.class.store(std::ptr::null_mut(), Ordering::Relaxed);
+        self.function.store(std::ptr::null_mut(), Ordering::Relaxed);
+    }
+}
+
+impl Default for MethodCache {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// `ZEND_ACC_CALL_VIA_TRAMPOLINE`: a `__call()` stand-in, freed after its call.
+const ACC_CALL_VIA_TRAMPOLINE: u32 = 1 << 18;
+
+/// [`call_method`] for a public by-value method, its lookup kept in `cache` per class.
+pub fn call_method_cached(object: &Zval, method: &Callee, cache: &MethodCache, args: &[Zval]) -> Option<Zval> {
+    let object = object.dereference();
+    let Some(target) = object.object() else {
+        let args: Vec<&Zval> = args.iter().collect();
+        return call_method(object, method, &args);
+    };
+    let target = std::ptr::from_ref(target).cast_mut().cast::<zend_object>();
+    // SAFETY: a live object and its class.
+    let class = unsafe { (*target).ce };
+    let mut function = std::ptr::null_mut();
+    if cache.class.load(Ordering::Relaxed) == class {
+        function = cache.function.load(Ordering::Relaxed);
+    }
+    if function.is_null() {
+        let strings = method.strings.get().expect("method names are interned in MINIT");
+        let mut key = Zval::new();
+        key.value.str_ = strings.key;
+        key.u1.type_info = IS_STRING;
+        let mut resolved = target;
+        // SAFETY: as in [`call_method`]; only a plain method of the class itself is cached.
+        unsafe {
+            let get_method = (*(*target).handlers).get_method.expect("get_method");
+            function = get_method(&raw mut resolved, strings.name, &raw const key);
+            if function.is_null() || resolved != target || (*function).common.fn_flags & ACC_CALL_VIA_TRAMPOLINE != 0 {
+                if !function.is_null() && (*function).common.fn_flags & ACC_CALL_VIA_TRAMPOLINE != 0 {
+                    zend_release_trampoline(function);
+                }
+                let args: Vec<&Zval> = args.iter().collect();
+                return call_method(object, method, &args);
+            }
+        }
+        cache.class.store(class, Ordering::Relaxed);
+        cache.function.store(function, Ordering::Relaxed);
+    }
+    let mut retval = Zval::new();
+    // SAFETY: as in [`call_method`]; by-value parameters leave `args` as they are.
+    unsafe {
+        ext_php_rs::ffi::zend_call_known_function(
+            function,
+            target,
+            class,
+            &raw mut retval,
+            u32::try_from(args.len()).unwrap_or(u32::MAX),
+            args.as_ptr().cast_mut().cast(),
+            std::ptr::null_mut(),
+        );
+    }
+    if has_exception() { None } else { Some(retval) }
+}
+
+/// Frees a `__call()` trampoline `get_method` made (`zend_free_trampoline`).
+unsafe fn zend_release_trampoline(function: *mut zend_function) {
+    let mut fcc = [function, std::ptr::null_mut(), std::ptr::null_mut(), std::ptr::null_mut(), std::ptr::null_mut()];
+    // SAFETY: a `zend_fcall_info_cache` holding only the trampoline, which the engine frees.
+    unsafe { zend_release_fcall_info_cache(fcc.as_mut_ptr().cast()) };
 }
 
 /// `ZEND_ACC_STRICT_TYPES`: a function from a file declaring `strict_types=1`.
@@ -1002,9 +1417,9 @@ pub fn scalar_arg(ex: &ExecuteData, num: u32, arg: &Zval, mask: u32, expected: &
     }
     // SAFETY: a live zval, which the engine coerces in place.
     if unsafe { zend_verify_scalar_type_hint(mask, &raw mut value, caller_strict(ex), false) } {
-        return (!ExecutorGlobals::has_exception()).then_some(value);
+        return (!has_exception()).then_some(value);
     }
-    if !ExecutorGlobals::has_exception() {
+    if !has_exception() {
         type_error(ex, num, expected, arg.dereference());
     }
     None
@@ -1027,7 +1442,7 @@ pub fn coerce_weak(value: &Zval, mask: u32) -> Option<Option<Zval>> {
     }
     // SAFETY: a live zval, which the engine coerces in place.
     let coerced = unsafe { zend_verify_scalar_type_hint(mask, &raw mut value, false, false) };
-    if ExecutorGlobals::has_exception() {
+    if has_exception() {
         return None;
     }
     Some(coerced.then_some(value))
@@ -1045,9 +1460,9 @@ pub fn verify_return(ex: &ExecuteData, value: Zval, mask: u32, strict: bool) -> 
     // SAFETY: a live zval, which the engine coerces in place; the function is the method's own.
     unsafe {
         if zend_verify_scalar_type_hint(mask, &raw mut value, strict, false) {
-            return (!ExecutorGlobals::has_exception()).then_some(value);
+            return (!has_exception()).then_some(value);
         }
-        if !ExecutorGlobals::has_exception() {
+        if !has_exception() {
             zend_verify_return_error(ex.func, &raw const value);
         }
     }
@@ -1068,7 +1483,7 @@ pub fn increment(value: &Zval) -> Option<Zval> {
     let mut value = value.dereference().shallow_clone();
     // SAFETY: a live zval, which the engine increments in place.
     unsafe { increment_function(&raw mut value) };
-    if ExecutorGlobals::has_exception() { None } else { Some(value) }
+    if has_exception() { None } else { Some(value) }
 }
 
 /// The values `foreach ($list as $key => $value)` visits from the executing method's class:
@@ -1131,7 +1546,7 @@ fn binary(op: unsafe extern "C" fn(*mut zval, *mut zval, *mut zval) -> i32, a: &
     // SAFETY: live zvals; the engine writes the result into `result`, which the returned `Zval`
     // owns.
     unsafe { op(&raw mut result, &raw mut a, &raw mut b) };
-    if ExecutorGlobals::has_exception() { None } else { Some(result) }
+    if has_exception() { None } else { Some(result) }
 }
 
 /// An array key as PHP stores it: a string holding a canonical decimal integer (`"7"`,
@@ -1194,6 +1609,63 @@ pub fn array_with(array: &Zval, key: &Key, mut value: Zval) -> Zval {
     }
 }
 
+/// An array key as a table holds it: an index, or a name.
+#[derive(Clone, Copy)]
+pub enum KeyRef<'a> {
+    Index(i64),
+    Name(&'a ZendStr),
+}
+
+/// `ht`'s keys and values in order, read straight from its slots (what `foreach ($ht as $key
+/// => $value)` visits), without copying either.
+pub fn keyed_values(ht: &ZendHashTable) -> impl Iterator<Item = (KeyRef<'_>, &Zval)> {
+    (0..ht.nNumUsed as usize).filter_map(move |i| {
+        // SAFETY: within the used slots; a packed table's keys are the slot indexes, a
+        // bucket's are its `key` string or, when that is null, its `h`.
+        unsafe {
+            let value = &*slot(ht, i);
+            if value.u1.type_info == 0 {
+                return None;
+            }
+            let key = if ht.u.flags & HASH_FLAG_PACKED != 0 {
+                KeyRef::Index(i as i64)
+            } else {
+                let bucket = &*ht.__bindgen_anon_1.arData.add(i);
+                match bucket.key.cast::<ZendStr>().as_ref() {
+                    Some(name) => KeyRef::Name(name),
+                    None => KeyRef::Index(bucket.h as i64),
+                }
+            };
+            Some((key, value))
+        }
+    })
+}
+
+/// Runs `run` on `$int` as PHP converts it to a string, written on the stack.
+pub fn with_decimal<T>(int: i64, run: impl FnOnce(&[u8]) -> T) -> T {
+    let mut digits = [0u8; 21];
+    let mut n = int.unsigned_abs();
+    let mut start = digits.len();
+    loop {
+        start -= 1;
+        digits[start] = b'0' + (n % 10) as u8;
+        n /= 10;
+        if n == 0 {
+            break;
+        }
+    }
+    if int < 0 {
+        start -= 1;
+        digits[start] = b'-';
+    }
+    run(&digits[start..])
+}
+
+/// Appends `$int` as PHP converts it to a string.
+pub fn append_decimal(int: i64, out: &mut Vec<u8>) {
+    with_decimal(int, |digits| out.extend_from_slice(digits));
+}
+
 /// `$array`'s keys and values in order (what `foreach ($array as $key => $value)` visits),
 /// the values' references resolved.
 pub fn entries(ht: &ZendHashTable) -> Vec<(Key, Zval)> {
@@ -1250,7 +1722,7 @@ pub fn call_own_method(this: &mut ZendObject, name: &str, args: &[&Zval]) -> Opt
             std::ptr::null_mut(),
         );
     }
-    if ExecutorGlobals::has_exception() { None } else { Some(retval) }
+    if has_exception() { None } else { Some(retval) }
 }
 
 /// PHP `$container[$dim]` read, for any key: the engine's fetch, with its warnings
@@ -1262,7 +1734,7 @@ pub fn dimension_of(container: &Zval, dim: &Zval) -> Option<Zval> {
     let mut dim = dim.dereference().shallow_clone();
     // SAFETY: as in [`dimension`].
     unsafe { zend_fetch_dimension_const(&raw mut result, &raw mut container, &raw mut dim, 0) };
-    if ExecutorGlobals::has_exception() { None } else { Some(result) }
+    if has_exception() { None } else { Some(result) }
 }
 
 /// Declares the private constant `name` of `class`, with `value` and type `mask`, as

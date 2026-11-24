@@ -122,7 +122,6 @@ export function DatabaseSpecificationCard({
         databaseId,
         dbKind,
         specification,
-        database.specification,
         database.name,
       ),
     onSuccess: async (result) => {

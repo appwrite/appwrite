@@ -72,12 +72,8 @@ import {
   hasTablesDatabaseMigrationCutover,
   parseTablesDatabaseMigrationIdFromError,
 } from '@/lib/databases/tables-database-migration'
-import {
-  isAppwriteHttpStatus,
-  isHttpNotFoundError,
-} from '@/lib/utils/error-formatting'
+import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
 import { translate } from '@/lib/i18n/translate'
-import { readDatabaseSpecification } from '@/lib/databases/database-compute'
 import { waitForDatabaseRealtimeEvent } from '@/lib/realtime/wait-for-database-realtime'
 import { normalizeDedicatedRealtimeEngine } from '@/lib/realtime/dedicated-database-cache'
 import { buildPostgresListSchemasSql } from '@/lib/postgres-sql'
@@ -1593,12 +1589,6 @@ export async function updateProjectDatabase(
   return await projectSdk.tablesDB.update(payload)
 }
 
-/**
- * Migrate a serverless TablesDB database onto a dedicated specification.
- * Only valid while the database is still serverless (`database_not_serverless`
- * if already dedicated). Dedicated tier changes use
- * `updateTablesDatabaseSpecification` instead.
- */
 export async function deleteTablesDatabaseMigration(
   projectId: string,
   databaseId: string,
@@ -1646,6 +1636,12 @@ async function startTablesDatabaseProductMigration(
   })
 }
 
+/**
+ * Migrate a serverless TablesDB database onto a dedicated specification.
+ * Only valid while the database is still serverless (`database_not_serverless`
+ * if already dedicated). Dedicated tier changes use
+ * `updateProductDatabaseSpecification` instead.
+ */
 export async function createTablesDatabaseMigration(
   projectId: string,
   databaseId: string,
@@ -1662,77 +1658,39 @@ export async function createTablesDatabaseMigration(
 
   await clearAbortableTablesDatabaseMigrations(projectId, databaseId)
 
-  const runProductMigration = async () => {
-    try {
-      return await startTablesDatabaseProductMigration(
-        projectSdk,
-        databaseId,
-        trimmed,
-      )
-    } catch (tablesMigrationError) {
-      const message =
-        tablesMigrationError instanceof Error
-          ? tablesMigrationError.message
-          : String(tablesMigrationError ?? '')
-      const alreadyExists =
-        message.toLowerCase().includes('migration record already exists') ||
-        message.toLowerCase().includes('already exists for this database')
-      if (alreadyExists) {
-        const migrationId =
-          parseTablesDatabaseMigrationIdFromError(tablesMigrationError)
-        if (migrationId) {
-          await deleteTablesDatabaseMigration(
-            projectId,
-            databaseId,
-            migrationId,
-          )
-        } else {
-          await clearAbortableTablesDatabaseMigrations(projectId, databaseId)
-        }
-        return startTablesDatabaseProductMigration(
-          projectSdk,
-          databaseId,
-          trimmed,
-        )
-      }
-      throw tablesMigrationError
-    }
-  }
-
   try {
-    return await runProductMigration()
-  } catch (tablesMigrationError) {
-    const routeMissing =
-      isAppwriteHttpStatus(tablesMigrationError, 404) ||
-      isHttpNotFoundError(tablesMigrationError)
-    if (!routeMissing) {
-      throw tablesMigrationError
-    }
-  }
+    return await startTablesDatabaseProductMigration(
+      projectSdk,
+      databaseId,
+      trimmed,
+    )
+  } catch (error) {
+    const message = (
+      error instanceof Error ? error.message : String(error ?? '')
+    ).toLowerCase()
+    const alreadyExists =
+      message.includes('migration record already exists') ||
+      message.includes('already exists for this database')
+    if (!alreadyExists) throw error
 
-  // Cloud may expose shared→dedicated for TablesDB-backed compute on the MySQL
-  // engine migration route before (or instead of) tablesDB /migrations.
-  return projectSdk.mysql.createMigration({
-    databaseId,
-    targetType: 'dedicated',
-    specification: trimmed,
-  })
+    const migrationId = parseTablesDatabaseMigrationIdFromError(error)
+    if (migrationId) {
+      await deleteTablesDatabaseMigration(projectId, databaseId, migrationId)
+    } else {
+      await clearAbortableTablesDatabaseMigrations(projectId, databaseId)
+    }
+    return startTablesDatabaseProductMigration(projectSdk, databaseId, trimmed)
+  }
 }
 
-/** True when TablesDB already runs on dedicated MySQL compute (not shared/serverless). */
+/** True when TablesDB itself reports a dedicated specification (not shared/serverless). */
 async function isTablesDatabaseOnDedicatedCompute(
   projectId: string,
   databaseId: string,
 ): Promise<boolean> {
-  const engineDb = await fetchDedicatedDatabaseById(projectId, databaseId, {
-    type: 'engine',
-    engine: 'mysql',
-  })
-  if (!engineDb?.$id) return false
-  const spec = readDatabaseSpecification(engineDb.specification)
-  if (!spec || isServerlessDatabaseSpecId(spec)) return false
-  const status = coerceTrimmedString(engineDb.status).toLowerCase()
-  return status !== 'deleted' && status !== 'failed'
+  const database = await sdk.forProject(projectId).tablesDB.get({ databaseId })
+  const specification = readProductDatabaseSpecification(database)
+  return !!specification && !isServerlessDatabaseSpecId(specification)
 }
 
 export function tablesDatabaseMigrationsQueryKey(
@@ -1853,7 +1811,6 @@ export async function updateProductDatabaseSpecification(
   databaseId: string,
   dbKind: DatabaseRouteKind,
   specification: string,
-  currentSpecification?: string | null,
   name?: string,
 ) {
   if (!projectId || !databaseId) {

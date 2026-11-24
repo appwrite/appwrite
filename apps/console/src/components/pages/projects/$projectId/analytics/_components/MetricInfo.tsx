@@ -16,6 +16,8 @@ import { useT } from '@/lib/i18n/translate'
 export const ANALYTICS_METRIC_INFO = {
   uniqueVisitors:
     'Distinct visitors in the selected range. Someone who returns several times is counted once.',
+  activeUsers:
+    'Distinct devices that used the app in the selected range. Someone who opens it several times is counted once.',
   eventVisitors:
     'Distinct visitors who triggered the plotted event. Someone who returns several times is counted once.',
   sessions:
@@ -24,9 +26,12 @@ export const ANALYTICS_METRIC_INFO = {
     'Every tracked event, pageviews and custom events alike, including repeats by the same visitor.',
   visits: 'Sessions with at least one event in the selected range.',
   pageviews: 'Pages viewed, including repeat views of the same page.',
+  screenViews: 'Screens viewed, including repeat views of the same screen.',
   users:
     'Distinct identified users. Only events that carry a user ID are counted; anonymous visitors are left out.',
   viewsPerVisit: 'Average pageviews per session (pageviews ÷ visits).',
+  screensPerSession:
+    'Average screen views per session (screen views ÷ sessions).',
   bounceRate:
     'Share of sessions with only a single event. Lower usually means visitors explore further.',
   visitDuration:

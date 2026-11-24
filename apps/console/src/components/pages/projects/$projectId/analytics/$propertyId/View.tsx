@@ -126,8 +126,15 @@ type DimensionPanel =
   | 'models'
   | 'installs'
 
+const HUMANS_ONLY = trafficKindFilterEntry('human')
+const MOBILE_DEFAULT_FILTER_QUERY = mapToQueryParam(
+  new Map([[HUMANS_ONLY.key, HUMANS_ONLY.query]]),
+)
+const NO_FILTERS_QUERY = encodeURIComponent('[]')
+
 // Overview, custom events, users and event properties apply to every type. Mobile
-// apps have no referrers or crawlers; agents only send their own events.
+// apps have no referrers or crawlers, but do have test devices; agents only
+// send their own events.
 const PANELS_BY_TYPE: Record<
   AnalyticsPropertyType,
   ReadonlySet<DimensionPanel>
@@ -144,6 +151,7 @@ const PANELS_BY_TYPE: Record<
   ]),
   [AnalyticsPropertyType.Mobile]: new Set([
     'installs',
+    'split',
     'pages',
     'locations',
     'technology',
@@ -185,12 +193,22 @@ export function View({
   )
   const [filtersOpen, setFiltersOpen] = useState(false)
 
+  const { property: propertyFromHook, isLoading: propertyLoading } =
+    useAnalyticsProperty(projectId, propertyId)
+  const property = propertyFromHook ?? initialData?.property
+  const resolvedType = propertyType(property)
+  const isMobile = resolvedType === AnalyticsPropertyType.Mobile
+
   // ── Filters ──
   // Same model as Usage: a FilterMap encoded in the URL. Clicking a row in
   // any card adds an `equal` filter; the popover edits the rest.
+  // Play tests every app upload on cloud devices, so apps open on humans only;
+  // an explicit empty list in the URL is the user turning that off.
+  const effectiveFilterQuery =
+    filterQuery ?? (isMobile ? MOBILE_DEFAULT_FILTER_QUERY : undefined)
   const filterMap = useMemo(
-    () => sanitizeAnalyticsFilterMap(queryParamToMap(filterQuery)),
-    [filterQuery],
+    () => sanitizeAnalyticsFilterMap(queryParamToMap(effectiveFilterQuery)),
+    [effectiveFilterQuery],
   )
   const filters = useMemo(() => analyticsFiltersFromMap(filterMap), [filterMap])
   const filterColumns = useMemo(() => analyticsFilterColumns(filters), [filters])
@@ -199,10 +217,14 @@ export function View({
     (next: FilterMap) => {
       const sanitized = sanitizeAnalyticsFilterMap(next)
       onFilterQueryChange?.(
-        sanitized.size > 0 ? mapToQueryParam(sanitized) : undefined,
+        sanitized.size > 0
+          ? mapToQueryParam(sanitized)
+          : isMobile
+            ? NO_FILTERS_QUERY
+            : undefined,
       )
     },
-    [onFilterQueryChange],
+    [onFilterQueryChange, isMobile],
   )
 
   const filtersContext = useMemo((): AnalyticsFiltersContextValue => {
@@ -274,11 +296,11 @@ export function View({
         next.delete(key)
         commitFilterMap(next)
       },
-      onClearAllFilters: () => onFilterQueryChange?.(undefined),
+      onClearAllFilters: () => commitFilterMap(new Map()),
       onApplySavedFilterQuery: (queryParam) =>
         commitFilterMap(queryParamToMap(queryParam)),
     }
-  }, [filterMap, filters, commitFilterMap, onFilterQueryChange])
+  }, [filterMap, filters, commitFilterMap])
   const [activeSeries, setActiveSeries] =
     useState<AnalyticsChartMetric>('visitors')
 
@@ -292,9 +314,6 @@ export function View({
   //
   // "All time" starts on the day the property was created. The loader resolves
   // a saved "All time" with the same date, so first-paint query keys match.
-  const { property: propertyFromHook, isLoading: propertyLoading } =
-    useAnalyticsProperty(projectId, propertyId)
-  const property = propertyFromHook ?? initialData?.property
   const propertyCreatedAt = property?.$createdAt
   const presetContext = useMemo(
     () => ({
@@ -347,7 +366,6 @@ export function View({
     { projectId, propertyId, range },
     filters,
   )
-  const resolvedType = propertyType(property)
   const panels = PANELS_BY_TYPE[resolvedType]
   const modelTabs = useModelTabs(
     { projectId, propertyId, range },
@@ -500,6 +518,22 @@ export function View({
     if (isDefaultRange) return initialData?.events?.events ?? []
     return []
   }, [eventsFromHook, isDefaultRange, initialData])
+
+  // Custom events close a web page, where the empty state carries the how-to
+  // CTA; an app's own events lead, ahead of its screen and lifecycle numbers.
+  const eventsPanel = (
+    <div className="lg:col-span-2">
+      <EventsPanel
+        projectId={projectId}
+        propertyId={propertyId}
+        range={range}
+        events={events}
+        isLoading={eventsLoading}
+        property={property}
+        onOpenSetup={() => setInstallOpen(true)}
+      />
+    </div>
+  )
 
   const breakdownCount = [...panels].filter(
     (panel) =>
@@ -675,6 +709,7 @@ export function View({
                 of its visible tab, and every card has a fixed body height
                 so switching tabs never shifts the grid. */}
               <div className="grid gap-4 lg:grid-cols-2">
+                {isMobile ? eventsPanel : null}
                 {panels.has('installs') ? (
                   <div className="lg:col-span-2">
                     <InstallsPushPanel
@@ -717,6 +752,7 @@ export function View({
                     projectId={projectId}
                     propertyId={propertyId}
                     range={range}
+                    type={resolvedType}
                   />
                 ) : null}
                 {panels.has('technology') ? (
@@ -774,20 +810,7 @@ export function View({
                     />
                   </div>
                 ) : null}
-                {/* Custom events close the page at full width: it's the card
-                  most specific to the product, and its empty state carries
-                  the how-to CTA. */}
-                <div className="lg:col-span-2">
-                  <EventsPanel
-                    projectId={projectId}
-                    propertyId={propertyId}
-                    range={range}
-                    events={events}
-                    isLoading={eventsLoading}
-                    property={property}
-                    onOpenSetup={() => setInstallOpen(true)}
-                  />
-                </div>
+                {isMobile ? null : eventsPanel}
               </div>
             </div>
           </div>

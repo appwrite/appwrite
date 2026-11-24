@@ -280,7 +280,14 @@ export function View() {
                       onRecords={handleRecords}
                       onDelete={handleDelete}
                     >
-                      <TableRow>
+                      <TableRow
+                        className="cursor-pointer"
+                        // The row opens its DNS records; its links and buttons keep their own action.
+                        onClick={(event) => {
+                          if ((event.target as HTMLElement).closest('a, button')) return
+                          handleRecords(rule)
+                        }}
+                      >
                         <TableCell className="px-4 py-3">
                           {isEmail ? (
                             <span className="inline-flex items-center gap-1.5 font-mono text-[13px] font-medium">
@@ -353,9 +360,14 @@ export function View() {
                           <DateTooltip
                             date={rule.$createdAt}
                             className="text-[12px] text-muted-foreground"
+                            live
                           />
                         </TableCell>
-                        <TableCell className="px-4 py-3 text-end">
+                        <TableCell
+                          className="px-4 py-3 text-end"
+                          // Its menu renders in a portal, whose clicks still bubble to the row.
+                          onClick={(event) => event.stopPropagation()}
+                        >
                           <div className="flex justify-end">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>

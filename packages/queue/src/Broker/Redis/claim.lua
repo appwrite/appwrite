@@ -1,20 +1,28 @@
--- KEYS: reservations, reservation, processing, total, processing counter, poison,
+-- KEYS: reservations, reservation, processing, total, processing counter, poison, ready,
 -- then triples of job, claim and owner keys. ARGV: lease, token, count, raw/pid pairs, poison bytes.
 local now = redis.call('TIME')
-local deadline = redis.call('ZSCORE', KEYS[1], KEYS[2])
-if not deadline or tonumber(deadline) <= tonumber(now[1]) then return redis.error_reply('Queue reservation expired') end
 local count = tonumber(ARGV[3])
 for i = 1, #KEYS do
-    local kind = i == 1 and 'zset' or ((i == 2 or i == 3 or i == 6) and 'list' or 'string')
+    local kind = i == 1 and 'zset' or ((i == 2 or i == 3 or i == 6 or i == 7) and 'list' or 'string')
     local actual = redis.call('TYPE', KEYS[i]).ok
     if actual ~= 'none' and actual ~= kind then return redis.error_reply('WRONGTYPE queue claim') end
+end
+local deadline = redis.call('ZSCORE', KEYS[1], KEYS[2])
+if not deadline or tonumber(deadline) <= tonumber(now[1]) then
+    while true do
+        local raw = redis.call('LPOP', KEYS[2])
+        if not raw then break end
+        redis.call('RPUSH', KEYS[7], raw)
+    end
+    redis.call('ZREM', KEYS[1], KEYS[2])
+    return -1
 end
 for i = 4, 5 do
     local value = redis.call('GET', KEYS[i])
     if value and not string.match(value, '^%-?%d+$') then return redis.error_reply('Invalid queue counter') end
 end
 for i = 1, count do
-    local job, claim, owner = KEYS[4 + 3*i], KEYS[5 + 3*i], KEYS[6 + 3*i]
+    local job, claim, owner = KEYS[5 + 3*i], KEYS[6 + 3*i], KEYS[7 + 3*i]
     redis.call('SET', job, ARGV[2 + 2*i])
     redis.call('SET', owner, ARGV[2])
     redis.call('SET', claim, ARGV[2], 'EX', ARGV[1])

@@ -183,6 +183,8 @@ export type BreakdownTab = {
   display?: 'list' | 'map'
   /** With the `props` dimension: rank this custom prop's values. */
   propKey?: string
+  /** Keep the row with no value, under this label, instead of dropping it. */
+  blankLabel?: string
 }
 
 type BreakdownPanelProps = {
@@ -218,6 +220,10 @@ type BreakdownPanelProps = {
   rowHref?: (value: string, tabId: string) => string | undefined
   /** Which measure ranks and sizes the rows. */
   valueKey?: 'visitors' | 'events'
+  /** Mobile properties count users, not visitors. */
+  mobile?: boolean
+  /** Replaces the row's filter toggle (e.g. open the user's page). */
+  onRowClick?: (value: string) => void
 }
 
 /**
@@ -244,6 +250,8 @@ export function BreakdownPanel({
   emptyLabel,
   rowHref,
   valueKey = 'visitors',
+  mobile = false,
+  onRowClick,
 }: BreakdownPanelProps) {
   const t = useT()
   const tabIds = useMemo(() => tabs.map((tab) => tab.id), [tabs])
@@ -275,7 +283,11 @@ export function BreakdownPanel({
   // Unknown rows (no referrer, unparseable agent, unknown location) are
   // dropped, and shares are computed among the known values.
   const { rows, columnTotal, max } = useMemo(() => {
-    const known = breakdown.filter((entry) => isKnownBreakdownValue(entry.value))
+    const known = breakdown.filter(
+      (entry) =>
+        isKnownBreakdownValue(entry.value) ||
+        (!!active.blankLabel && !entry.value?.trim()),
+    )
     const ranked =
       valueKey === 'visitors'
         ? known
@@ -285,7 +297,7 @@ export function BreakdownPanel({
       columnTotal: ranked.reduce((sum, entry) => sum + entry[valueKey], 0),
       max: ranked.reduce((m, entry) => Math.max(m, entry[valueKey]), 0),
     }
-  }, [breakdown, valueKey])
+  }, [breakdown, valueKey, active.blankLabel])
 
   const visible = rows.slice(0, BREAKDOWN_COLLAPSED_ROWS)
 
@@ -302,6 +314,7 @@ export function BreakdownPanel({
 
   // Rows with a filterable dimension and a real value become filter toggles.
   const filterRowProps = (value: string | null | undefined) => {
+    if (onRowClick && value) return { onClick: () => onRowClick(value) }
     if (!filterAttribute || !value) return {}
     const isActive = isFilterActive(filterAttribute, value)
     return {
@@ -351,6 +364,7 @@ export function BreakdownPanel({
           <CountryMap
             rows={rows}
             height={BREAKDOWN_BODY_FILL_HEIGHT_PX}
+            mobile={mobile}
             formatLabel={(code) => formatLabel?.(code, active.id) ?? code}
             onSelect={
               filterAttribute
@@ -365,40 +379,48 @@ export function BreakdownPanel({
           />
         ) : (
           <div className="space-y-0.5">
-            {visible.map((entry, index) => (
-              <AnalyticsValueMenu
-                key={`${entry.value}-${index}`}
-                dimension={active.dimension}
-                attribute={filterAttribute}
-                value={entry.value!}
-                label={formatLabel?.(entry.value!, active.id) ?? entry.value!}
-                href={rowHref?.(entry.value!, active.id)}
-              >
-              {/* Wrapper element: the menu trigger needs a DOM node to attach to. */}
-              <div>
-              <BreakdownRow
-                // Rows are known values only (see isKnownBreakdownValue).
-                label={formatLabel?.(entry.value!, active.id) ?? entry.value!}
-                value={entry[valueKey]}
-                share={
-                  columnTotal > 0 ? (entry[valueKey] / columnTotal) * 100 : 0
-                }
-                barPercent={max > 0 ? (entry[valueKey] / max) * 100 : 0}
-                leading={
-                  ranked ? (
-                    <RowRank index={index} />
-                  ) : (
-                    renderLeading?.(entry, index, active.id)
-                  )
-                }
-                color={rowColor?.(entry, index)}
-                mono={mono}
-                href={rowHref?.(entry.value!, active.id)}
-                {...filterRowProps(entry.value)}
-              />
-              </div>
-              </AnalyticsValueMenu>
-            ))}
+            {visible.map((entry, index) => {
+              // Only a tab's blank row (see `blankLabel`) has no value.
+              const label = entry.value
+                ? (formatLabel?.(entry.value, active.id) ?? entry.value)
+                : t(active.blankLabel!)
+              const row = (
+                <BreakdownRow
+                  label={label}
+                  value={entry[valueKey]}
+                  share={
+                    columnTotal > 0 ? (entry[valueKey] / columnTotal) * 100 : 0
+                  }
+                  barPercent={max > 0 ? (entry[valueKey] / max) * 100 : 0}
+                  leading={
+                    ranked ? (
+                      <RowRank index={index} />
+                    ) : (
+                      renderLeading?.(entry, index, active.id)
+                    )
+                  }
+                  color={rowColor?.(entry, index)}
+                  mono={mono && !!entry.value}
+                  href={entry.value ? rowHref?.(entry.value, active.id) : undefined}
+                  {...filterRowProps(entry.value)}
+                />
+              )
+              return entry.value ? (
+                <AnalyticsValueMenu
+                  key={`${entry.value}-${index}`}
+                  dimension={active.dimension}
+                  attribute={filterAttribute}
+                  value={entry.value}
+                  label={label}
+                  href={rowHref?.(entry.value, active.id)}
+                >
+                  {/* Wrapper element: the menu trigger needs a DOM node to attach to. */}
+                  <div>{row}</div>
+                </AnalyticsValueMenu>
+              ) : (
+                <div key={`blank-${index}`}>{row}</div>
+              )
+            })}
           </div>
         )}
       </BreakdownBody>
@@ -416,12 +438,20 @@ export function BreakdownPanel({
           tabs={listTabs}
           initialTabId={dialogTabId}
           valueKey={valueKey}
+          valueLabel={
+            mobile && valueKey === 'visitors' ? t('Users') : undefined
+          }
           renderLeading={renderLeading}
           rowColor={rowColor}
           formatLabel={formatLabel}
           mono={mono}
           emptyLabel={emptyLabel}
           rowHref={rowHref}
+          onRowClick={
+            onRowClick
+              ? (entry) => entry.value && onRowClick(entry.value)
+              : undefined
+          }
         />
       ) : null}
     </div>

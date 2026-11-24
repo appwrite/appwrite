@@ -278,8 +278,19 @@ abstract class Base extends Action
         'mxf', 'ogg', 'w64', 'wav', 'wv',
     ];
 
-    /** Protocols ffmpeg may open a source with: a local path or a presigned URL. */
+    /** Protocols ffmpeg may open a source with: a local path or a URL. */
     public const SOURCE_PROTOCOLS = ['file', 'http', 'https', 'tls', 'tcp'];
+
+    /**
+     * How ffmpeg asks a URL for a source: in ranges of 1 MiB over one
+     * connection. Left alone it asks for everything up to the end of the file,
+     * which the Storage download endpoint answers with its first 10 MiB. A
+     * range has to stay under Response::CHUNK_SIZE as well: the endpoint sends
+     * a longer one chunked, without a length, and ffmpeg takes the end of that
+     * for the end of the file. It stops there and still exits cleanly, leaving
+     * a rendition cut short.
+     */
+    public const SOURCE_OPTIONS = ['request_size' => 1024 * 1024, 'multiple_requests' => 1];
 
     /** Mime types accepted as a caption source. */
     public const CAPTION_MIME_TYPES = ['text/vtt', 'text/plain', 'application/x-subrip'];

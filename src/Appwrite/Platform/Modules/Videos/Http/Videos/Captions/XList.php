@@ -103,7 +103,7 @@ class XList extends Base
             $captionId = $cursor->getValue();
             $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('videosCaptions', $captionId));
 
-            if ($cursorDocument->isEmpty()) {
+            if ($cursorDocument->isEmpty() || $cursorDocument->getAttribute('videoInternalId') !== $video->getSequence()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Caption '{$captionId}' for the 'cursor' value not found.");
             }
 

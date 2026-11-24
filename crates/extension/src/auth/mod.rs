@@ -1,5 +1,6 @@
-//! `Utopia\Auth\Hash` and its hashes (`packages/auth/src/Hash.php` and `Hashes/*`) over
-//! [`utopia_auth`] and `php-std`, behind `_APP_EXTENSION_LIBRARIES=auth`.
+//! `Utopia\Auth\Hash` and its hashes over [`utopia_auth`] and `php-std`, always registered: the PHP
+//! classes they replaced (`Hash.php` and `Hashes/*` of `packages/auth`) were removed, and
+//! `packages/auth/stubs/Hash.php` keeps their signatures.
 //!
 //! Built by hand like the validators ([`crate::classes`]): no Rust object behind them and
 //! no constructor beyond PHP's, their state in real typed protected properties (`$options`,
