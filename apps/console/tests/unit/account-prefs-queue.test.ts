@@ -68,14 +68,22 @@ describe('queueAccountPrefsWrite', () => {
     expect(await next).toBe('saved')
   })
 
-  test('runs a queued write for the account that is still signed in', async () => {
+  test('a queued write checks its sign-in again after it awaits', async () => {
     signIn('accountA')
     const first = queueHeldWrite()
-    const second = queueAccountPrefsWrite(async () => 'saved')
+    const read = deferred()
+    const second = queueAccountPrefsWrite(async (isCurrent) => {
+      await read.promise
+      return isCurrent() ? 'saved' : undefined
+    })
 
     first.release()
     await first.done
-    expect(await second).toBe('saved')
+    // Signing out and back in while the write awaits.
+    clearConsoleAccountCache()
+    signIn('accountA')
+    read.resolve()
+    expect(await second).toBeUndefined()
   })
 
   test('drops a queued write when another account signs in', async () => {
@@ -94,7 +102,7 @@ describe('queueAccountPrefsWrite', () => {
     expect(ran).toBe(false)
   })
 
-  test('drops a queued write when the account signs out', async () => {
+  test('drops a queued write when the account signs out, even to sign back in', async () => {
     signIn('accountA')
     const first = queueHeldWrite()
     let ran = false
@@ -104,6 +112,7 @@ describe('queueAccountPrefsWrite', () => {
     })
 
     clearConsoleAccountCache()
+    signIn('accountA')
     first.release()
     await first.done
     expect(await second).toBeUndefined()

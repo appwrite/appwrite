@@ -1,4 +1,7 @@
-import { getConsoleAccountSync } from '@/lib/console-account-cache'
+import {
+  getConsoleAccountSession,
+  getConsoleAccountSync,
+} from '@/lib/console-account-cache'
 import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
 
 /**
@@ -10,24 +13,27 @@ import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
  */
 let writes: Promise<unknown> = Promise.resolve()
 
-/** The signed-in console account, as the Console has it cached. */
-function signedInAccountId(): string | undefined {
-  return getConsoleAccountSync(getConsoleAccountQueryRevision())?.$id
+/** The signed-in console account and its sign-in, as the Console has them cached. */
+function signedIn(): string {
+  const account = getConsoleAccountSync(getConsoleAccountQueryRevision())
+  return `${getConsoleAccountSession()}:${account?.$id ?? ''}`
 }
 
 /**
- * Queue a write for the account signed in now. A write runs only if the same
- * account is still signed in when its turn comes: one that account signed out
- * of, or that another account or an impersonated user took over, is dropped
- * and resolves to `undefined`, like a skipped write. So is a write queued with
- * no account known once one signs in, as it was built from no account's prefs.
+ * Queue a write for the sign-in active now. A write runs only if that sign-in
+ * is still active when its turn comes: one its account signed out of, even to
+ * sign back in, or that another account or an impersonated user took over, is
+ * dropped and resolves to `undefined`, like a skipped write. So is a write
+ * queued with no account known once one signs in, as it was built from no
+ * account's prefs. `write` gets `isCurrent` to check again after it awaits.
  */
 export function queueAccountPrefsWrite<T>(
-  write: () => Promise<T>,
+  write: (isCurrent: () => boolean) => Promise<T | undefined>,
 ): Promise<T | undefined> {
-  const accountId = signedInAccountId()
+  const session = signedIn()
+  const isCurrent = () => signedIn() === session
   const forAccount = () =>
-    signedInAccountId() === accountId ? write() : Promise.resolve(undefined)
+    isCurrent() ? write(isCurrent) : Promise.resolve(undefined)
   const run = writes.then(forAccount, forAccount)
   writes = run.catch(() => undefined)
   return run

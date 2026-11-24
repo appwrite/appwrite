@@ -1680,11 +1680,13 @@ export function changeAccountPrefs(
   options?: { force?: boolean },
 ): Promise<Models.User | undefined> {
   const caller = getAccountPrefsCallerStack()
-  return queueAccountPrefsWrite(async () => {
+  return queueAccountPrefsWrite(async (isCurrent) => {
     const latest = (await sdk.forConsole.account.getPrefs()) as Record<
       string,
       unknown
     >
+    // The sign-in may have changed while the read was pending.
+    if (!isCurrent()) return undefined
     return writeAccountPrefs(change(latest), reason, caller, options)
   })
 }
