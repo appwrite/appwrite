@@ -593,8 +593,9 @@ Http::init()
         }
     });
 
+// GraphQL routes are not in the api group, but declare limits of their own: one request carries a batch of operations
 Http::init()
-    ->groups(['api'])
+    ->groups(['api', 'graphql'])
     ->inject('route')
     ->inject('request')
     ->inject('response')
