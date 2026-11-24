@@ -154,6 +154,19 @@ Http::init()
                 throw new Exception(Exception::PROJECT_KEY_EXPIRED);
             }
 
+            // Organization and account keys act through the Console API only, so refuse them before the key is touched or audited.
+            // Organization scopes name organization resources, and some share a name with a project scope (monitors.*, keys.*):
+            // on any other project they would reach that project's own routes in every project of the organization.
+            if ($apiKey->getType() === API_KEY_ORGANIZATION && $project->getId() !== 'console') {
+                throw new Exception(Exception::USER_UNAUTHORIZED, 'Organization API keys can only be used with the console project.');
+            }
+
+            // Account keys would inject the console user's roles (user:{id}, users, team:{orgId}) into that project's data plane,
+            // where caller-chosen console user and organization IDs can collide with the project's own users and teams.
+            if ($apiKey->getType() === API_KEY_ACCOUNT && $project->getId() !== 'console') {
+                throw new Exception(Exception::USER_UNAUTHORIZED, 'Account API keys can only be used with the console project.');
+            }
+
             // Set role and scopes from API key. Every key also holds 'public', which guests already have, so endpoints open to anyone stay open to keys.
             $role = $apiKey->getRole();
             $scopes = [...$apiKey->getScopes(), 'public'];
@@ -266,14 +279,6 @@ Http::init()
                 $authorization->addRole(Role::team($team->getId())->toString());
                 $authorization->addRole(Role::team($team->getId(), 'owner')->toString());
             } elseif ($apiKey->getType() === API_KEY_ACCOUNT) {
-                // Account keys act as the console user on the Console API only. On any other
-                // project they would inject the console user's roles (user:{id}, users,
-                // team:{orgId}) into that project's data plane, where caller-chosen console
-                // user and organization IDs can collide with the project's own users and teams.
-                if ($project->getId() !== 'console') {
-                    throw new Exception(Exception::USER_UNAUTHORIZED, 'Account API keys can only be used with the console project.');
-                }
-
                 $authorization->addRole(Role::user($user->getId())->toString());
                 $authorization->addRole(Role::users()->toString());
 
