@@ -2662,5 +2662,8 @@
       "reason": "Rust does not print them; the values PHP continues with are reproduced, so results are the same."
     }
   ],
-  "bench": []
+  "bench": [],
+  "tasks_waived": {
+    "packages/query/extension/Query.php": "Not a task: the PHP side of the utopia extension's Utopia\\Query, loaded by src/extension.php in place of src/Query.php when the extension's query library is on. It only declares the array constants an extension class cannot, with the values src/Query.php gives them."
+  }
 }
