@@ -22,6 +22,7 @@ function getMarketingProductToolkit() {
   const categories = getMarketingProductMenuCategories({
     agent: features.agent,
     analytics: features.analytics,
+    zero: features.zero,
   })
   const byId = Object.fromEntries(categories.map((c) => [c.id, c.productIds])) as Record<
     'build' | 'deploy' | 'protect',

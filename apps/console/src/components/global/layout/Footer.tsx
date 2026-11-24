@@ -137,9 +137,9 @@ function marketingProductFooterLink(
 function getExpandedFooterGroups(
   marketing: boolean,
   footerCopy: ReturnType<typeof useI18n>['catalog']['app']['footer'],
-  options: { agent: boolean; isCloud: boolean; analytics: boolean },
+  options: { agent: boolean; isCloud: boolean; analytics: boolean; zero: boolean },
 ): readonly ExpandedFooterGroup[] {
-  const { agent, isCloud, analytics } = options
+  const { agent, isCloud, analytics, zero } = options
   return [
   {
     title: footerCopy.groups.quickStarts,
@@ -198,6 +198,9 @@ function getExpandedFooterGroups(
               isNew: isProductNavItemNew('agent'),
             } satisfies FooterLink,
           ]
+        : []),
+      ...(zero
+        ? [productFooterLink(footerCopy.expanded.products.zero, '/zero', marketing, 'zero')]
         : []),
       productFooterLink(footerCopy.expanded.products.hosting, '/products/sites', marketing, 'sites'),
       ...(marketing || isCloud
@@ -432,7 +435,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
   const expandedFooterGroups = getExpandedFooterGroups(
     localMarketing,
     footerCopy,
-    { agent: features.agent, isCloud, analytics: features.analytics },
+    { agent: features.agent, isCloud, analytics: features.analytics, zero: features.zero },
   )
 
   const resourceLinks = [

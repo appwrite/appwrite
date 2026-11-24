@@ -1,6 +1,5 @@
 import type { ComponentType } from 'react'
 import { Link } from '@tanstack/react-router'
-import { SquareTerminal } from 'lucide-react'
 import { MarketingFaqSection } from '@/components/pages/marketing/MarketingFaqSection'
 import { ProductFeatureSection } from '@/components/pages/products/ProductFeatureSection'
 import { ProductCtaSection } from '@/components/pages/products/_components/ProductCtaSection'
@@ -8,6 +7,7 @@ import { ProductHero } from '@/components/pages/products/_components/ProductHero
 import { ProductHeroIcon } from '@/components/pages/products/_components/ProductHeroIcon'
 import { ZeroAgentVisual } from '@/components/pages/zero/_components/ZeroAgentVisual'
 import { ZeroClaimVisual } from '@/components/pages/zero/_components/ZeroClaimVisual'
+import { ZeroHeroArt } from '@/components/pages/zero/_components/ZeroHeroArt'
 import {
   ZeroCommandBar,
   ZeroPromptButton,
@@ -25,6 +25,7 @@ import {
   zeroFeatures,
   zeroHero,
 } from '@/lib/zero/marketing-content'
+import { ZERO_PRODUCT_ICON } from '@/lib/zero/product-icon'
 
 const visuals: Record<string, ComponentType> = {
   agents: ZeroAgentVisual,
@@ -43,9 +44,10 @@ export function View() {
     >
       <ProductHero
         layout="centered"
-        badge={<ProductHeroIcon icon={SquareTerminal} name="Zero" />}
+        badge={<ProductHeroIcon icon={ZERO_PRODUCT_ICON} name="Zero" />}
         title={zeroHero.title}
         description={zeroHero.description}
+        art={ZeroHeroArt}
         stats={zeroHero.stats}
       >
         <ZeroCommandBar />
@@ -71,7 +73,7 @@ export function View() {
       <MarketingFaqSection items={zeroFaqItems} />
 
       <ProductCtaSection
-        icon={SquareTerminal}
+        icon={ZERO_PRODUCT_ICON}
         title={zeroCta.title}
         description={zeroCta.description}
       >

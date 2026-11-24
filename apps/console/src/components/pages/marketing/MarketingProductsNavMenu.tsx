@@ -57,6 +57,7 @@ type ProductNavigationItemsCopy = {
   realtimeTagline: string
   agentName: string
   agentTagline: string
+  zeroTagline: string
   domainsName: string
   domainsTagline: string
   analyticsTagline: string
@@ -90,8 +91,9 @@ function useVisibleMarketingProductNavCategories(): ProductNavCategory[] {
       getMarketingProductMenuCategories({
         agent: features.agent,
         analytics: features.analytics,
+        zero: features.zero,
       }),
-    [features.agent, features.analytics],
+    [features.agent, features.analytics, features.zero],
   )
 }
 
@@ -141,6 +143,7 @@ function getLocalizedProductNavItemTagline(
   if (navItemId === 'sites') return navigationItemsCopy.sitesTagline
   if (navItemId === 'realtime') return navigationItemsCopy.realtimeTagline
   if (navItemId === 'agent') return navigationItemsCopy.agentTagline
+  if (navItemId === 'zero') return navigationItemsCopy.zeroTagline
   if (navItemId === 'domains') return navigationItemsCopy.domainsTagline
   if (navItemId === 'analytics') return navigationItemsCopy.analyticsTagline
   if (navItemId === 'firewall') return navigationItemsCopy.firewallTagline
@@ -156,6 +159,10 @@ function getActiveNavItemId(pathname: string): ProductNavItemId | undefined {
 
   if (pathname === '/domains' || pathname.startsWith('/domains/')) {
     return 'domains'
+  }
+
+  if (pathname === '/zero') {
+    return 'zero'
   }
 
   let bestMatch: ProductNavItemId | undefined

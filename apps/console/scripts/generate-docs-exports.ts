@@ -39,7 +39,6 @@ import {
 } from '../src/lib/seo/llms'
 import type { LlmsContentMeta } from '../src/lib/seo/llms'
 import { buildForAgentsMarkdown } from '../src/lib/for-agents/content'
-import { buildZeroMarkdown } from '../src/lib/zero/markdown'
 import { buildPricingMarkdown } from '../src/lib/pricing/markdown'
 import { buildAuthMarkdown } from '../src/lib/seo/auth-markdown'
 import { MARKDOWN_TWIN_PAGES } from '../src/lib/seo/markdown-twins'
@@ -375,10 +374,7 @@ async function buildExportFiles(): Promise<ExportFile[]> {
       relativePath: 'for-agents.md',
       contents: buildForAgentsMarkdown(SITE_ORIGIN),
     },
-    {
-      relativePath: 'zero.md',
-      contents: buildZeroMarkdown(SITE_ORIGIN),
-    },
+    // zero.md is served by its route behind the `zero` feature until Zero launches.
     {
       relativePath: 'pricing.md',
       contents: buildPricingMarkdown(SITE_ORIGIN),

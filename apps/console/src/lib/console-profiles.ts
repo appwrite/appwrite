@@ -113,6 +113,12 @@ export type ConsoleProfileFeatures = {
   analyticsTrafficFilter: boolean
   /** Appwrite push messaging provider (create wizard and its QoS/expiry settings). */
   appwritePush: boolean
+  /**
+   * Appwrite Zero marketing page (`/zero`, `/zero.md`) and its Products menu and
+   * footer links. Off until launch: the page returns 404 while this is off.
+   * Enable from Debug → Feature flags, or with VITE_CONSOLE_ZERO on Cloud.
+   */
+  zero: boolean
 }
 
 /** Short labels for debug UI (profile comparison, etc.). */
@@ -158,6 +164,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   analytics: 'Analytics',
   analyticsTrafficFilter: 'Analytics humans/bots filter',
   appwritePush: 'Appwrite push',
+  zero: 'Zero',
 }
 
 export type ConsoleProfile = {
@@ -216,6 +223,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       analytics: false,
       analyticsTrafficFilter: false,
       appwritePush: true,
+      zero: false,
     },
   },
   'self-hosted': {
@@ -261,6 +269,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       analytics: false,
       analyticsTrafficFilter: false,
       appwritePush: true,
+      zero: false,
     },
   },
 }
@@ -542,6 +551,7 @@ function applyCloudOnlyFeatureGates(
       marketing: false,
       multiTenancy: false,
       projectEnvironments: false,
+      zero: false,
     }
   }
   return features
@@ -562,7 +572,8 @@ function parseEnvFeatureOverride(value: string): boolean | null {
  * VITE_CONSOLE_USER_VERIFICATION, VITE_CONSOLE_COOKIE_BANNER,
  * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_VCS_ORIGIN,
  * VITE_CONSOLE_DATABASE_PITR_RESTORE,
- * VITE_CONSOLE_PROJECT_ENVIRONMENTS, VITE_CONSOLE_BROWSER_ALERTS), applied on top
+ * VITE_CONSOLE_PROJECT_ENVIRONMENTS, VITE_CONSOLE_BROWSER_ALERTS,
+ * VITE_CONSOLE_ZERO), applied on top
  * of the canonical profile. A stored debug override still wins.
  */
 function applyEnvFeatureOverrides(
@@ -599,6 +610,11 @@ function applyEnvFeatureOverrides(
   )
   if (projectEnvironments !== null && profileId === 'cloud') {
     next = { ...next, projectEnvironments }
+  }
+  // Zero projects exist on Cloud only.
+  const zero = parseEnvFeatureOverride(config.zero)
+  if (zero !== null && profileId === 'cloud') {
+    next = { ...next, zero }
   }
   const browserAlerts = parseEnvFeatureOverride(config.browserAlerts)
   if (browserAlerts !== null) {
