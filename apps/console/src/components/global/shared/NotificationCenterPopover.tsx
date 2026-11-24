@@ -1,16 +1,17 @@
-import { lazy, Suspense, useMemo, useState } from 'react'
+import { lazy, Suspense, useMemo, useState, type ReactNode } from 'react'
 import type { Models } from '@appwrite.io/console'
 import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import {
-  AlertCircle,
-  AlertTriangle,
   ArrowLeft,
   Bell,
   BellOff,
   BellRing,
+  Check,
   CheckCheck,
+  ChevronDown,
   Circle,
+  CircleAlert,
   Clock,
   ExternalLink,
   Info,
@@ -18,6 +19,7 @@ import {
   MailOpen,
   MoreHorizontal,
   Settings,
+  TriangleAlert,
 } from 'lucide-react'
 import {
   Popover,
@@ -70,6 +72,9 @@ const NotificationUpdates = lazy(() =>
   })),
 )
 
+/** Menus and tooltips opened from inside the popover sit above it. */
+const ABOVE_POPOVER = 'z-[10060]'
+
 type Severity = 'error' | 'warning' | 'info'
 
 function severityOf(type: string): Severity {
@@ -80,16 +85,40 @@ function severityOf(type: string): Severity {
 }
 
 const SEVERITY_ICONS = {
-  error: AlertCircle,
-  warning: AlertTriangle,
+  error: CircleAlert,
+  warning: TriangleAlert,
   info: Info,
 } as const
 
-const SEVERITY_TONES: Record<Severity, string> = {
-  error: 'border-red-500/25 bg-red-500/10 text-red-600 dark:text-red-400',
-  warning:
-    'border-amber-500/25 bg-amber-500/10 text-amber-600 dark:text-amber-400',
-  info: 'border-border bg-background text-muted-foreground',
+const SEVERITY_GLYPHS: Record<Severity, string> = {
+  error: 'text-red-600 dark:text-red-400',
+  warning: 'text-amber-600 dark:text-amber-500',
+  info: 'text-muted-foreground',
+}
+
+/** A neutral tile with the icon in the notification's severity color. */
+export function NotificationIcon({
+  icon: Icon,
+  className,
+}: {
+  icon: typeof Info
+  className?: string
+}) {
+  return (
+    <div className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40">
+      <Icon className={cn('size-4', className)} aria-hidden />
+    </div>
+  )
+}
+
+/** The unread marker, on the row's start edge. */
+export function UnreadDot() {
+  return (
+    <span
+      className="absolute start-2 top-[1.125rem] size-1.5 rounded-full bg-primary"
+      aria-hidden
+    />
+  )
 }
 
 type Day = 'today' | 'yesterday' | 'earlier'
@@ -124,6 +153,44 @@ function groupByDay(notifications: Models.Notification[]) {
   return groups
 }
 
+function HeaderButton({
+  label,
+  disabled,
+  active,
+  onClick,
+  children,
+}: {
+  label: string
+  disabled?: boolean
+  active?: boolean
+  onClick?: () => void
+  children: ReactNode
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className={cn(
+            'h-8 w-8 text-muted-foreground hover:text-foreground',
+            active && 'text-foreground',
+          )}
+          disabled={disabled}
+          onClick={onClick}
+          aria-label={label}
+        >
+          {children}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent className={ABOVE_POPOVER}>
+        <p>{label}</p>
+      </TooltipContent>
+    </Tooltip>
+  )
+}
+
 function NotificationRow({
   notification,
   projectMuted,
@@ -140,62 +207,49 @@ function NotificationRow({
   const t = useT()
   const isUnread = !notification.read
   const severity = severityOf(notification.type)
-  const Icon = SEVERITY_ICONS[severity]
   const projectId = notification.projectId?.trim() ?? ''
   const canOpen = getNotificationNavigateTarget(notification) !== null
 
   return (
-    <div
-      className={cn(
-        'group relative flex gap-3 px-4 py-3 transition-colors hover:bg-accent/60',
-        isUnread && 'bg-muted/30',
-      )}
-    >
+    <div className="group relative flex gap-3 px-5 py-3 transition-colors hover:bg-accent/50">
       <button
         type="button"
         onClick={() => onOpen(notification)}
-        className="absolute inset-0 z-0"
+        className="absolute inset-0 z-0 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
         aria-label={notification.title}
       />
-      <div
-        className={cn(
-          'pointer-events-none relative mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border',
-          SEVERITY_TONES[severity],
-        )}
-      >
-        <Icon className="h-4 w-4" aria-hidden />
-        {isUnread ? (
-          <span
-            className="absolute -end-0.5 -top-0.5 size-2 rounded-full bg-primary ring-2 ring-popover"
-            aria-hidden
-          />
-        ) : null}
+      {isUnread ? <UnreadDot /> : null}
+      <div className="pointer-events-none relative">
+        <NotificationIcon
+          icon={SEVERITY_ICONS[severity]}
+          className={SEVERITY_GLYPHS[severity]}
+        />
       </div>
-      <div className="pointer-events-none relative min-w-0 flex-1 space-y-1 overflow-hidden">
+      <div className="pointer-events-none relative min-w-0 flex-1 overflow-hidden">
         <p
           className={cn(
-            'break-words pe-7 text-[13px] leading-snug text-foreground',
-            isUnread && 'font-semibold',
+            'break-words pe-7 text-[13px] leading-snug',
+            isUnread ? 'font-medium text-foreground' : 'text-foreground/80',
           )}
         >
           {notification.title}
         </p>
         {notification.body?.trim() ? (
-          <p className="line-clamp-2 break-words text-[12px] leading-relaxed text-muted-foreground">
+          <p className="mt-1 line-clamp-2 break-words text-[12px] leading-relaxed text-muted-foreground">
             {notification.body}
           </p>
         ) : null}
-        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+        <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <DateTooltip
             date={notification.$createdAt}
             live
             className="pointer-events-auto text-[11px] text-muted-foreground"
           />
           {projectMuted ? (
-            <span className="inline-flex items-center gap-1">
-              <BellOff className="size-3" aria-hidden />
-              {t('Project muted')}
-            </span>
+            <>
+              <span aria-hidden>·</span>
+              <span>{t('Pushes muted')}</span>
+            </>
           ) : null}
         </div>
       </div>
@@ -211,7 +265,7 @@ function NotificationRow({
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="z-[10060] w-56">
+        <DropdownMenuContent align="end" className={cn(ABOVE_POPOVER, 'w-56')}>
           {canOpen ? (
             <DropdownMenuItem onSelect={() => onOpen(notification)}>
               <MenuItemContent icon={ExternalLink}>{t('Open')}</MenuItemContent>
@@ -275,8 +329,8 @@ function SnoozeMenu({
               size="icon"
               disabled={disabled}
               className={cn(
-                'h-8 w-8 text-muted-foreground',
-                snoozedUntil && 'text-primary',
+                'h-8 w-8 text-muted-foreground hover:text-foreground',
+                snoozedUntil && 'text-foreground',
               )}
               aria-label={t('Snooze pushes')}
             >
@@ -284,12 +338,12 @@ function SnoozeMenu({
             </Button>
           </DropdownMenuTrigger>
         </TooltipTrigger>
-        <TooltipContent className="z-[10060]">
+        <TooltipContent className={ABOVE_POPOVER}>
           <p>{t('Snooze pushes')}</p>
         </TooltipContent>
       </Tooltip>
-      <DropdownMenuContent align="end" className="z-[10060] w-56">
-        <DropdownMenuLabel className="text-[12px] font-normal text-muted-foreground">
+      <DropdownMenuContent align="end" className={cn(ABOVE_POPOVER, 'w-60')}>
+        <DropdownMenuLabel className="text-[12px] font-normal leading-snug text-muted-foreground">
           {t('Pause mobile pushes from every organization')}
         </DropdownMenuLabel>
         {SNOOZE_DURATIONS.map((duration) => (
@@ -318,6 +372,65 @@ function SnoozeMenu({
 type Tab = 'inbox' | 'updates'
 type Filter = 'all' | 'unread'
 
+const FILTER_LABELS: Record<Filter, string> = {
+  all: 'All',
+  unread: 'Unread',
+}
+
+function FilterMenu({
+  filter,
+  onChange,
+}: {
+  filter: Filter
+  onChange: (filter: Filter) => void
+}) {
+  const t = useT()
+  return (
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="-me-2 mb-1.5 h-7 gap-1 px-2 text-[12px] font-medium text-muted-foreground hover:text-foreground"
+          aria-label={t('Filter notifications')}
+        >
+          {t(FILTER_LABELS[filter])}
+          <ChevronDown className="size-3.5" aria-hidden />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className={cn(ABOVE_POPOVER, 'w-40')}>
+        {(['all', 'unread'] as const).map((value) => (
+          <DropdownMenuItem
+            key={value}
+            role="menuitemradio"
+            aria-checked={filter === value}
+            onSelect={() => onChange(value)}
+          >
+            <span className="min-w-0 flex-1">{t(FILTER_LABELS[value])}</span>
+            {filter === value ? (
+              <Check className="size-4 text-foreground" aria-hidden />
+            ) : null}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+const TAB_LIST =
+  'h-auto gap-5 rounded-none bg-transparent p-0 dark:bg-transparent'
+const TAB_TRIGGER =
+  'h-auto flex-none gap-1.5 rounded-none border-0 border-b-2 border-transparent px-0 pb-2 pt-0 text-[13px] shadow-none data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none dark:data-[state=active]:border-foreground dark:data-[state=active]:bg-transparent'
+
+function Centered({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex items-center justify-center gap-2 px-5 py-12 text-[13px] text-muted-foreground">
+      {children}
+    </div>
+  )
+}
+
 export function NotificationCenterPopover() {
   const t = useT()
   const navigate = useNavigate()
@@ -326,7 +439,7 @@ export function NotificationCenterPopover() {
   const [tab, setTab] = useState<Tab>('inbox')
   const [filter, setFilter] = useState<Filter>('all')
   const [showSettings, setShowSettings] = useState(false)
-  const { notifications, unreadCount, isLoading, isFetching, refetch } =
+  const { notifications, unreadCount, isLoading, refetch } =
     useConsoleNotifications(true)
   const updateReadMutation = useUpdateConsoleNotificationRead()
   const markAllReadMutation = useMarkAllConsoleNotificationsRead()
@@ -384,9 +497,7 @@ export function NotificationCenterPopover() {
     beepPrefs.change((current) => withMutedProject(current, projectId, muted), {
       onSuccess: () =>
         toast.success(
-          muted
-            ? t('Project muted on your phone')
-            : t('Project unmuted on your phone'),
+          muted ? t('Project pushes muted') : t('Project pushes unmuted'),
           {
             description: muted
               ? t('Beep will not push its alerts. This inbox still shows them.')
@@ -456,7 +567,7 @@ export function NotificationCenterPopover() {
             </Button>
           </PopoverTrigger>
         </TooltipTrigger>
-        <TooltipContent className="z-[10060]">
+        <TooltipContent>
           <p>
             {snooze
               ? `${t('Pushes snoozed until')} ${formatUntil(snooze.until, t)}`
@@ -476,12 +587,12 @@ export function NotificationCenterPopover() {
       >
         {showSettings ? (
           <>
-            <div className="flex items-center gap-2 border-b border-border px-2 py-2.5">
+            <div className="flex items-center gap-1.5 border-b border-border px-2 py-2.5">
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-muted-foreground"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
                 onClick={() => setShowSettings(false)}
                 aria-label={t('Back to notifications')}
               >
@@ -501,34 +612,23 @@ export function NotificationCenterPopover() {
           </>
         ) : (
           <>
-            <div className="flex items-center justify-between gap-2 px-4 pb-2 pt-3">
+            <div className="flex items-center justify-between gap-2 px-5 pb-1 pt-3">
               <h3 className="text-[14px] font-semibold text-foreground">
                 {t('Notifications')}
               </h3>
-              <div className="flex items-center gap-0.5">
+              <div className="-me-2 flex items-center">
                 {unreadCount > 0 && tab === 'inbox' ? (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground"
-                        disabled={markAllReadMutation.isPending}
-                        onClick={() => void handleMarkAllRead()}
-                        aria-label={t('Mark all as read')}
-                      >
-                        {markAllReadMutation.isPending ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <CheckCheck className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent className="z-[10060]">
-                      <p>{t('Mark all as read')}</p>
-                    </TooltipContent>
-                  </Tooltip>
+                  <HeaderButton
+                    label={t('Mark all as read')}
+                    disabled={markAllReadMutation.isPending}
+                    onClick={() => void handleMarkAllRead()}
+                  >
+                    {markAllReadMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <CheckCheck className="h-4 w-4" />
+                    )}
+                  </HeaderButton>
                 ) : null}
                 <SnoozeMenu
                   snoozedUntil={snooze?.until ?? null}
@@ -536,77 +636,42 @@ export function NotificationCenterPopover() {
                   onSnooze={handleSnooze}
                   onResume={handleResume}
                 />
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground"
-                      onClick={() => setShowSettings(true)}
-                      aria-label={t('Notification settings')}
-                    >
-                      <Settings className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent className="z-[10060]">
-                    <p>{t('Notification settings')}</p>
-                  </TooltipContent>
-                </Tooltip>
+                <HeaderButton
+                  label={t('Notification settings')}
+                  onClick={() => setShowSettings(true)}
+                >
+                  <Settings className="h-4 w-4" />
+                </HeaderButton>
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-2 border-b border-border px-4 pb-2.5">
+            <div className="flex items-end justify-between gap-2 border-b border-border px-5 pt-1.5">
               <Tabs value={tab} onValueChange={(value) => setTab(value as Tab)}>
-                <TabsList className="h-8">
-                  <TabsTrigger
-                    value="inbox"
-                    className="h-6 gap-1.5 text-[12px]"
-                  >
+                <TabsList className={TAB_LIST}>
+                  <TabsTrigger value="inbox" className={TAB_TRIGGER}>
                     {t('Inbox')}
                     {unreadCount > 0 ? (
                       <span
-                        className="rounded-full bg-primary/10 px-1.5 text-[10px] font-semibold text-primary"
+                        className="rounded bg-muted px-1.5 text-[11px] font-medium tabular-nums text-muted-foreground"
                         dir="ltr"
                       >
                         {unreadCount}
                       </span>
                     ) : null}
                   </TabsTrigger>
-                  <TabsTrigger value="updates" className="h-6 text-[12px]">
+                  <TabsTrigger value="updates" className={TAB_TRIGGER}>
                     {t('Updates')}
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
               {tab === 'inbox' ? (
-                <div
-                  className="flex items-center gap-0.5 rounded-md bg-muted/50 p-0.5"
-                  role="radiogroup"
-                  aria-label={t('Filter notifications')}
-                >
-                  {(['all', 'unread'] as const).map((value) => (
-                    <button
-                      key={value}
-                      type="button"
-                      role="radio"
-                      aria-checked={filter === value}
-                      onClick={() => setFilter(value)}
-                      className={cn(
-                        'rounded px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground',
-                        filter === value &&
-                          'bg-background text-foreground shadow-sm',
-                      )}
-                    >
-                      {value === 'all' ? t('All') : t('Unread')}
-                    </button>
-                  ))}
-                </div>
+                <FilterMenu filter={filter} onChange={setFilter} />
               ) : null}
             </div>
 
             {snooze ? (
-              <div className="flex items-center gap-2 border-b border-border bg-muted/30 px-4 py-2 text-[12px] text-muted-foreground">
-                <BellOff className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              <div className="flex items-center gap-2 border-b border-border bg-muted/30 px-5 py-2 text-[12px] text-muted-foreground">
+                <BellOff className="size-3.5 shrink-0" aria-hidden />
                 <span className="min-w-0 flex-1">
                   {t('Pushes snoozed until')} {formatUntil(snooze.until, t)}
                 </span>
@@ -620,35 +685,28 @@ export function NotificationCenterPopover() {
               </div>
             ) : null}
 
-            <div className="max-h-[min(26rem,60dvh)] overflow-x-hidden overflow-y-auto overscroll-contain">
+            <div className="max-h-[min(28rem,60dvh)] overflow-x-hidden overflow-y-auto overscroll-contain">
               {tab === 'updates' ? (
                 <Suspense
                   fallback={
-                    <div className="flex items-center justify-center gap-2 px-4 py-10 text-[13px] text-muted-foreground">
+                    <Centered>
                       <Loader2 className="h-4 w-4 animate-spin" />
                       {t('Loading updates...')}
-                    </div>
+                    </Centered>
                   }
                 >
                   <NotificationUpdates onNavigate={() => setOpen(false)} />
                 </Suspense>
               ) : isLoading && notifications.length === 0 ? (
-                <div className="flex items-center justify-center gap-2 px-4 py-10 text-[13px] text-muted-foreground">
+                <Centered>
                   <Loader2 className="h-4 w-4 animate-spin" />
                   {t('Loading notifications...')}
-                </div>
+                </Centered>
               ) : visible.length === 0 ? (
-                <div className="px-4 py-10 text-center">
-                  <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-muted/40 text-muted-foreground">
-                    {filter === 'unread' && notifications.length > 0 ? (
-                      <CheckCheck className="h-4 w-4" />
-                    ) : (
-                      <Bell className="h-4 w-4" />
-                    )}
-                  </div>
+                <div className="px-6 py-12 text-center">
                   <p className="text-[13px] font-medium text-foreground">
                     {filter === 'unread' && notifications.length > 0
-                      ? t('You are all caught up')
+                      ? t('No unread notifications')
                       : t('No notifications yet')}
                   </p>
                   <p className="mt-1 text-[12px] text-muted-foreground">
@@ -660,10 +718,10 @@ export function NotificationCenterPopover() {
               ) : (
                 groups.map((group) => (
                   <section key={group.day}>
-                    <h4 className="sticky top-0 z-20 border-b border-border bg-popover/95 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground backdrop-blur">
+                    <h4 className="sticky top-0 z-20 bg-popover px-5 pb-1.5 pt-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                       {t(DAY_LABELS[group.day])}
                     </h4>
-                    <div className="divide-y divide-border">
+                    <div className="divide-y divide-border/70">
                       {group.items.map((notification) => (
                         <NotificationRow
                           key={notification.$id}
@@ -681,12 +739,6 @@ export function NotificationCenterPopover() {
                 ))
               )}
             </div>
-
-            {isFetching && notifications.length > 0 && tab === 'inbox' ? (
-              <div className="border-t border-border px-4 py-2 text-[11px] text-muted-foreground">
-                {t('Refreshing...')}
-              </div>
-            ) : null}
           </>
         )}
       </PopoverContent>

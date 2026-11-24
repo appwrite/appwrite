@@ -44,7 +44,7 @@ function Section({
   children: ReactNode
 }) {
   return (
-    <section className="border-b border-border px-4 py-3 last:border-b-0">
+    <section className="border-b border-border px-5 py-3 last:border-b-0">
       <h4 className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
         {title}
       </h4>
@@ -227,7 +227,7 @@ export function NotificationSettings({
         </Section>
       ) : null}
 
-      <div className="px-4 py-3">
+      <div className="px-5 py-3">
         <Link
           to="/account"
           className="text-[12px] font-medium text-foreground hover:underline"

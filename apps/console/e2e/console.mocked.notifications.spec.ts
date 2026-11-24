@@ -186,7 +186,7 @@ async function mockApi(
 
 /** The `beep` prefs of the latest write that carried them. */
 function lastBeep(writes: Writes): Record<string, unknown> | undefined {
-  const write = writes.prefs.findLast((prefs) => 'beep' in prefs)
+  const write = [...writes.prefs].reverse().find((prefs) => 'beep' in prefs)
   return write?.beep as Record<string, unknown> | undefined
 }
 
@@ -209,7 +209,8 @@ test.describe('Notification center (mocked API)', () => {
     ).toBeVisible()
     await expect(popover.getByText('Build failed for checkout')).toBeVisible()
 
-    await popover.getByRole('radio', { name: 'Unread' }).click()
+    await popover.getByRole('button', { name: 'Filter notifications' }).click()
+    await page.getByRole('menuitemradio', { name: 'Unread' }).click()
     await expect(popover.getByText('Build failed for checkout')).toBeHidden()
     await expect(popover.getByText('Bandwidth is over 80%')).toBeVisible()
   })
@@ -252,7 +253,7 @@ test.describe('Notification center (mocked API)', () => {
         snoozes: { orgphone0000000001: PHONE_SNOOZE },
       })
     expect(writes.prefs.at(-1)).toMatchObject({ 'console.example': 'kept' })
-    await expect(row.getByText('Project muted')).toBeVisible()
+    await expect(row.getByText('Pushes muted')).toBeVisible()
   })
 
   test('snoozes every organization and resumes', async ({ page }) => {
