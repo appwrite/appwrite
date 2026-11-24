@@ -85,15 +85,21 @@ class Notification extends Model
                 'default' => '',
                 'example' => '5e5bb8c16897e',
             ])
-            ->addRule('alertId', [
+            ->addRule('subjectType', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Monitor alert the notification is about. Empty for any other notification.',
+                'description' => 'Kind of thing the notification is about, such as alerts. Empty when it is about nothing that changes.',
+                'default' => '',
+                'example' => 'alerts',
+            ])
+            ->addRule('subjectId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'ID of the thing the notification is about. Each later change to it updates this notification. Empty when subjectType is empty.',
                 'default' => '',
                 'example' => '5e5bb8c16897e',
             ])
-            ->addRule('alertStatus', [
+            ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Whether the alert was firing or resolved when the notification was sent. Empty for any other notification.',
+                'description' => 'Where the subject stands: firing, acknowledged or resolved for an alert. Empty when subjectType is empty.',
                 'default' => '',
                 'example' => 'firing',
             ])
@@ -134,11 +140,11 @@ class Notification extends Model
     }
 
     /**
-     * Notifications stored before a notification could name its organization or alert have none.
+     * Notifications stored before a notification could name its organization or subject have none.
      */
     public function filter(Document $document): Document
     {
-        foreach (['teamId', 'alertId', 'alertStatus'] as $key) {
+        foreach (['teamId', 'subjectType', 'subjectId', 'status'] as $key) {
             $document->setAttribute($key, (string) $document->getAttribute($key, ''));
         }
 

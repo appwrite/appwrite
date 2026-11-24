@@ -479,8 +479,8 @@ class Notifications extends Action
             $consoleRecipient['recipientHash'] = $recipientHash;
         }
 
-        // A monitor alert's push names the alert, so the console can open it and acknowledge it from
-        // the bell. Its severity is the notification's type, as the bell draws one icon per type.
+        // A monitor alert's push names the alert, so the bell keeps one notification per alert that it
+        // can open and acknowledge. Its severity is the notification's type, as the bell draws one icon per type.
         $data = \array_map('strval', $payload['push']['data'] ?? []);
         $alert = ($data['type'] ?? '') === 'alert' ? $data : [];
 
@@ -493,8 +493,9 @@ class Notifications extends Action
             projectId: $project->getId(),
             projectInternalId: $project->getSequence(),
             teamId: ($alert['organizationId'] ?? '') !== '' ? $alert['organizationId'] : null,
-            alertId: $alert['alertId'] ?? '',
-            alertStatus: $alert['status'] ?? '',
+            subjectType: ($alert['alertId'] ?? '') !== '' ? RESOURCE_TYPE_ALERTS : '',
+            subjectId: $alert['alertId'] ?? '',
+            status: $alert['status'] ?? '',
         );
 
         $adapter = new ConsoleAdapter($dbForPlatform);

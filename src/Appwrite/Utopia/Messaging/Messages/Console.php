@@ -20,8 +20,9 @@ class Console implements Message
         protected ?string $projectId = null,
         protected ?string $projectInternalId = null,
         protected ?string $teamId = null,
-        protected string $alertId = '',
-        protected string $alertStatus = '',
+        protected string $subjectType = '',
+        protected string $subjectId = '',
+        protected string $status = '',
     ) {
     }
 
@@ -80,19 +81,27 @@ class Console implements Message
     }
 
     /**
-     * The monitor alert the notification is about, or empty for any other notification.
+     * The kind of thing the notification is about, such as `alerts`, or empty when it is about nothing that changes.
      */
-    public function getAlertId(): string
+    public function getSubjectType(): string
     {
-        return $this->alertId;
+        return $this->subjectType;
     }
 
     /**
-     * Whether the alert was firing or resolved when the notification was sent.
+     * The ID of the thing the notification is about. A recipient keeps one notification per subject.
      */
-    public function getAlertStatus(): string
+    public function getSubjectId(): string
     {
-        return $this->alertStatus;
+        return $this->subjectId;
+    }
+
+    /**
+     * Where the subject stands, such as `firing` or `resolved`.
+     */
+    public function getStatus(): string
+    {
+        return $this->status;
     }
 
     public function setOrigin(?string $origin): self

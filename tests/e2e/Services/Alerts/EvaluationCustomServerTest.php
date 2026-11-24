@@ -166,13 +166,18 @@ final class EvaluationCustomServerTest extends Scope
         // "Pause this monitor" opens the monitor, whose drawer pauses it.
         $this->assertStringContainsString('/projects/' . $this->getProject()['$id'] . '/usage/monitors?monitor=' . $monitorId, (string) $email['html']);
 
-        // The bell names the alert, so the console opens it and acknowledges it from there, and takes its severity as its type.
-        $notification = $this->bellNotification('[Firing] ' . $name . ' · ');
-        $this->assertSame($firing['alertId'], $notification['alertId']);
-        $this->assertSame('firing', $notification['alertStatus']);
+        // The bell keeps one notification about the alert, which the console opens and acknowledges, with the alert's severity as its type.
+        $bell = $this->bellNotifications($name);
+        $this->assertCount(1, $bell);
+        $notification = $bell[0];
+        $this->assertStringStartsWith('[Firing] ' . $name . ' · ', $notification['title']);
+        $this->assertSame('alerts', $notification['subjectType']);
+        $this->assertSame($firing['alertId'], $notification['subjectId']);
+        $this->assertSame('firing', $notification['status']);
         $this->assertSame($this->teamId(), $notification['teamId']);
         $this->assertSame($this->getProject()['$id'], $notification['projectId']);
         $this->assertSame('critical', $notification['type']);
+        $this->assertFalse($notification['read']);
 
         // The phone gets a push that opens the alert and can mute the monitor.
         $push = $this->waitForPush($device['token'], 'alert:' . $firing['alertId'], 'firing');
@@ -205,6 +210,8 @@ final class EvaluationCustomServerTest extends Scope
         $delivery = $this->waitForAcknowledgement($acknowledgements['path'], $firing['alertId'], 'acknowledged');
         $this->assertSame($this->getRoot()['$id'], $delivery['data']['acknowledgedBy']);
         $this->assertSame('firing', $delivery['data']['status']);
+        // Every member's bell shows it, so none offers acknowledging it again.
+        $this->assertSame('acknowledged', $this->bellNotifications($name)[0]['status']);
 
         // Acknowledging again keeps the first member on it and fires nothing new.
         $again = $this->updateAlert($firing['alertId'], true);
@@ -217,6 +224,7 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame('', $undone['acknowledgedBy']);
         $this->assertSame('', $undone['acknowledgedByName']);
         $this->waitForAcknowledgement($acknowledgements['path'], $firing['alertId'], 'unacknowledged');
+        $this->assertSame('firing', $this->bellNotifications($name)[0]['status']);
 
         // An API key acknowledges as nobody in particular.
         $byKey = $this->updateAlert($firing['alertId'], true);
@@ -271,11 +279,16 @@ final class EvaluationCustomServerTest extends Scope
             $this->assertSame(['firing' => 1, 'resolved' => 1], $this->teamNotifications($name));
         }, 60_000, 1_000);
         $this->assertCount(2, $this->pushes($device['token'], 'alert:' . $firing['alertId']));
-        // The resolved notification names the same alert, as resolved, so the console offers no acknowledging it.
-        $notification = $this->bellNotification('[Resolved] ' . $name . ' · ');
-        $this->assertSame($firing['alertId'], $notification['alertId']);
-        $this->assertSame('resolved', $notification['alertStatus']);
-        $this->assertSame($this->teamId(), $notification['teamId']);
+        // Resolving updates the same notification, unread again, so the console offers no acknowledging it.
+        $this->assertEventually(function () use ($name, $notification) {
+            $bell = $this->bellNotifications($name);
+            $this->assertCount(1, $bell);
+            $this->assertSame($notification['$id'], $bell[0]['$id']);
+            $this->assertStringStartsWith('[Resolved] ' . $name . ' · ', $bell[0]['title']);
+            $this->assertSame('resolved', $bell[0]['status']);
+            $this->assertSame($notification['subjectId'], $bell[0]['subjectId']);
+            $this->assertFalse($bell[0]['read']);
+        }, 60_000, 1_000);
     }
 
     public function testPushesReachEveryDeviceAsTheirOwnersPrefsSay(): void
@@ -439,7 +452,7 @@ final class EvaluationCustomServerTest extends Scope
 
         // ...while the owners hear nothing, by email or in the console.
         \sleep(10);
-        $this->assertSame(['firing' => 0, 'resolved' => 0], $this->teamNotifications($name));
+        $this->assertSame([], $this->bellNotifications($name));
         $emails = \json_decode((string) \file_get_contents('http://maildev:1080/email'), true) ?: [];
         $this->assertSame([], \array_values(\array_filter(
             \array_column($emails, 'subject'),
@@ -2666,35 +2679,30 @@ final class EvaluationCustomServerTest extends Scope
     }
 
     /**
-     * How many firing and resolved notifications of the monitor named `$name`
-     * the organization's owner has in the console.
+     * How many firing and resolved notices of the monitor named `$name` the
+     * organization's owner was sent, counted by email: the console keeps one
+     * notification per alert, which each notice updates.
      *
      * @return array{firing: int, resolved: int}
      */
     private function teamNotifications(string $name): array
     {
-        $titles = \array_column($this->bell(), 'title');
+        $subjects = $this->emailSubjects($this->getRoot()['email'], $name);
 
         return [
-            'firing' => \count(\array_filter($titles, fn (string $title) => \str_starts_with($title, '[Firing] ' . $name . ' · '))),
-            'resolved' => \count(\array_filter($titles, fn (string $title) => \str_starts_with($title, '[Resolved] ' . $name . ' · '))),
+            'firing' => \count(\array_filter($subjects, fn (string $subject) => \str_starts_with($subject, '[Firing] ' . $name . ' · '))),
+            'resolved' => \count(\array_filter($subjects, fn (string $subject) => \str_starts_with($subject, '[Resolved] ' . $name . ' · '))),
         ];
     }
 
     /**
-     * The newest of the owner's console notifications for the project whose title starts with `$title`.
+     * The owner's console notifications for the project about the monitor named `$name`.
      *
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
-    private function bellNotification(string $title): array
+    private function bellNotifications(string $name): array
     {
-        foreach ($this->bell() as $notification) {
-            if (\str_starts_with($notification['title'], $title)) {
-                return $notification;
-            }
-        }
-
-        $this->fail('No console notification titled ' . $title);
+        return \array_values(\array_filter($this->bell(), fn (array $notification) => \str_contains($notification['title'], ' ' . $name . ' · ')));
     }
 
     /**

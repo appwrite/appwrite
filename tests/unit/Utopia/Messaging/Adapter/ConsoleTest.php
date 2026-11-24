@@ -17,6 +17,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Id;
 use Utopia\Database\Permission;
+use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 
@@ -56,8 +57,9 @@ final class ConsoleTest extends TestCase
         $this->database->createAttribute('notifications', Attribute::datetime(key: 'firstSeen'));
         $this->database->createAttribute('notifications', Attribute::datetime(key: 'lastSeen'));
         $this->database->createAttribute('notifications', Attribute::string(key: 'teamId'));
-        $this->database->createAttribute('notifications', Attribute::string(key: 'alertId', default: ''));
-        $this->database->createAttribute('notifications', Attribute::string(key: 'alertStatus', size: 16, default: ''));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'subjectType', size: 64, default: ''));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'subjectId', default: ''));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'status', size: 16, default: ''));
     }
 
     protected function tearDown(): void
@@ -133,33 +135,56 @@ final class ConsoleTest extends TestCase
         $this->assertNull($stored->getAttribute('lastSeen'));
         // Not about a monitor alert.
         $this->assertNull($stored->getAttribute('teamId'));
-        $this->assertSame('', $stored->getAttribute('alertId'));
-        $this->assertSame('', $stored->getAttribute('alertStatus'));
+        $this->assertSame('', $stored->getAttribute('subjectType'));
+        $this->assertSame('', $stored->getAttribute('subjectId'));
+        $this->assertSame('', $stored->getAttribute('status'));
     }
 
-    public function testWritesTheAlertItIsAbout(): void
+    public function testKeepsOneNotificationPerAlert(): void
     {
-        $message = new ConsoleMessage(
+        $adapter = new Console($this->database);
+        $send = fn (string $messageId, string $title, string $status) => $adapter->send(new ConsoleMessage(
             recipients: [$this->recipient('user-3', 'user-3')],
-            title: '[Firing] Egress',
+            title: $title,
             body: 'Outbound bandwidth reached 2 GB.',
             type: 'critical',
-            messageId: Id::custom('msg-alert'),
+            messageId: Id::custom($messageId),
             projectId: 'project-1',
             projectInternalId: 'project-internal-1',
             teamId: 'team-1',
-            alertId: 'alert-1',
-            alertStatus: 'firing',
-        );
+            subjectType: RESOURCE_TYPE_ALERTS,
+            subjectId: 'alert-1',
+            status: $status,
+        ));
+        $stored = function (): Document {
+            $rows = $this->database->find('notifications', [Query::equal('subjectId', ['alert-1'])]);
+            $this->assertCount(1, $rows);
 
-        $result = (new Console($this->database))->send($message);
+            return $rows[0];
+        };
 
-        $this->assertSame(1, $result['deliveredTo']);
-        $stored = $this->database->getDocument('notifications', $this->alertId('msg-alert', 'user-3', RESOURCE_TYPE_USERS, 'user-3'));
-        $this->assertSame('critical', $stored->getAttribute('type'));
-        $this->assertSame('team-1', $stored->getAttribute('teamId'));
-        $this->assertSame('alert-1', $stored->getAttribute('alertId'));
-        $this->assertSame('firing', $stored->getAttribute('alertStatus'));
+        $this->assertSame(1, $send('msg-firing', '[Firing] Egress', 'firing')['deliveredTo']);
+        $firing = $stored();
+        $this->assertSame('critical', $firing->getAttribute('type'));
+        $this->assertSame('team-1', $firing->getAttribute('teamId'));
+        $this->assertSame(RESOURCE_TYPE_ALERTS, $firing->getAttribute('subjectType'));
+        $this->assertSame('firing', $firing->getAttribute('status'));
+        $this->database->updateDocument('notifications', $firing->getId(), new Document(['read' => true]));
+
+        // Resolving updates the same notification and marks it unread.
+        $this->assertSame(1, $send('msg-resolved', '[Resolved] Egress', 'resolved')['deliveredTo']);
+        $resolved = $stored();
+        $this->assertSame($firing->getId(), $resolved->getId());
+        $this->assertSame('[Resolved] Egress', $resolved->getAttribute('title'));
+        $this->assertSame('resolved', $resolved->getAttribute('status'));
+        $this->assertFalse($resolved->getAttribute('read'));
+
+        // A late firing does not reopen it, and a redelivery changes nothing.
+        $this->database->updateDocument('notifications', $resolved->getId(), new Document(['read' => true]));
+        $this->assertSame(1, $send('msg-late', '[Firing] Egress', 'firing')['deliveredTo']);
+        $this->assertSame(1, $send('msg-resolved', '[Resolved] Egress', 'resolved')['deliveredTo']);
+        $this->assertSame('resolved', $stored()->getAttribute('status'));
+        $this->assertTrue($stored()->getAttribute('read'));
     }
 
     public function testUserPermissionsScopedToRecipient(): void

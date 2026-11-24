@@ -6,6 +6,7 @@ use Appwrite\Extend\Exception;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 
 /**
  * Acknowledging a firing alert: one member says they have it, and everyone who
@@ -50,6 +51,15 @@ readonly class Acknowledgements
         ]);
 
         $alert = $this->dbForPlatform->getAuthorization()->skip(fn () => $this->dbForPlatform->updateDocument('monitorAlerts', $alert->getId(), $changes));
+
+        // Every member's console notification about the alert shows it, so none of them acknowledges it again.
+        $this->dbForPlatform->getAuthorization()->skip(fn () => $this->dbForPlatform->updateDocuments('notifications', new Document([
+            'status' => $acknowledged ? Change::Acknowledged->value : Change::Firing->value,
+        ]), [
+            Query::equal('subjectType', [RESOURCE_TYPE_ALERTS]),
+            Query::equal('subjectId', [$alert->getId()]),
+            Query::equal('status', [$acknowledged ? Change::Firing->value : Change::Acknowledged->value]),
+        ]));
         $escalations = new Escalations($this->dbForPlatform);
 
         return $acknowledged ? $escalations->stop($alert) : $escalations->resume($alert, new \DateTimeImmutable());

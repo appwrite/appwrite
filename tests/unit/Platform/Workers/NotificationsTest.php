@@ -211,8 +211,9 @@ final class NotificationsTest extends TestCase
         $this->database->createAttribute('notifications', Attribute::datetime(key: 'firstSeen'));
         $this->database->createAttribute('notifications', Attribute::datetime(key: 'lastSeen'));
         $this->database->createAttribute('notifications', Attribute::string(key: 'teamId'));
-        $this->database->createAttribute('notifications', Attribute::string(key: 'alertId', default: ''));
-        $this->database->createAttribute('notifications', Attribute::string(key: 'alertStatus', size: 16, default: ''));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'subjectType', size: 64, default: ''));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'subjectId', default: ''));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'status', size: 16, default: ''));
 
         // Mirror the production `_key_recipient` UNIQUE composite index so the
         // duplicate-handling branch in persistAlert (catch DuplicateException ->
@@ -1187,8 +1188,9 @@ final class NotificationsTest extends TestCase
         $this->assertCount(1, $rows);
         $this->assertSame('critical', $rows[0]->getAttribute('type'), 'the alert\'s severity is the notification\'s type');
         $this->assertSame('team-1', $rows[0]->getAttribute('teamId'));
-        $this->assertSame('alert-1', $rows[0]->getAttribute('alertId'));
-        $this->assertSame('firing', $rows[0]->getAttribute('alertStatus'));
+        $this->assertSame(RESOURCE_TYPE_ALERTS, $rows[0]->getAttribute('subjectType'));
+        $this->assertSame('alert-1', $rows[0]->getAttribute('subjectId'));
+        $this->assertSame('firing', $rows[0]->getAttribute('status'));
     }
 
     public function testConsoleChannelUsesPreviewBodyInsteadOfRenderedEmailHtml(): void
@@ -1215,8 +1217,9 @@ final class NotificationsTest extends TestCase
         $this->assertSame('Plain alert for orders.', $rows[0]->getAttribute('body'));
         // Not about a monitor alert.
         $this->assertSame('info', $rows[0]->getAttribute('type'));
-        $this->assertSame('', $rows[0]->getAttribute('alertId'));
-        $this->assertSame('', $rows[0]->getAttribute('alertStatus'));
+        $this->assertSame('', $rows[0]->getAttribute('subjectType'));
+        $this->assertSame('', $rows[0]->getAttribute('subjectId'));
+        $this->assertSame('', $rows[0]->getAttribute('status'));
         $this->assertStringNotContainsString('<!DOCTYPE html>', $rows[0]->getAttribute('body'));
     }
 

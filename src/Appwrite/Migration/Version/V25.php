@@ -140,7 +140,7 @@ class V25 extends Migration
 
                 case 'notifications':
                     if ($collectionType === 'console') {
-                        $attributes = ['teamId', 'teamInternalId', 'alertId', 'alertStatus'];
+                        $attributes = ['teamId', 'teamInternalId', 'subjectType', 'subjectId', 'status'];
                         foreach ($attributes as $attribute) {
                             try {
                                 $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
@@ -151,10 +151,12 @@ class V25 extends Migration
 
                         $this->dbForProject->purgeCachedCollection($id);
 
-                        try {
-                            $this->createIndexFromCollection($this->dbForProject, $id, '_key_team');
-                        } catch (Throwable $th) {
-                            Console::warning("Failed to create index \"_key_team\" from {$id}: {$th->getMessage()}");
+                        foreach (['_key_team', '_key_subject'] as $index) {
+                            try {
+                                $this->createIndexFromCollection($this->dbForProject, $id, $index);
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to create index \"{$index}\" from {$id}: {$th->getMessage()}");
+                            }
                         }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
