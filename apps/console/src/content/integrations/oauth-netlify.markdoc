@@ -2,7 +2,7 @@
 layout: integration
 title: OAuth with Netlify
 description: Let users sign in with their Netlify account and work with their sites and deploys through the Netlify API.
-date: 2026-11-24
+date: 2026-11-25
 featured: false
 isPartner: false
 isNew: true

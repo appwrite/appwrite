@@ -2,7 +2,7 @@
 layout: integration
 title: OAuth with Naver
 description: Let users in South Korea sign in with their Naver account, the account behind Korea's largest search engine and web portal.
-date: 2026-11-24
+date: 2026-11-25
 featured: false
 isPartner: false
 isNew: true

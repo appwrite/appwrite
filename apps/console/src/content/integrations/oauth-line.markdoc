@@ -2,7 +2,7 @@
 layout: integration
 title: OAuth with LINE
 description: Let users sign in with LINE, the messaging app most people use in Japan, Thailand, and Taiwan, through LINE Login in Appwrite Auth.
-date: 2026-11-24
+date: 2026-11-25
 featured: false
 isPartner: false
 isNew: true

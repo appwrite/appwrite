@@ -2,7 +2,7 @@
 layout: integration
 title: OAuth with VK
 description: Let users sign in with their VK ID account in Appwrite Auth, the sign-in that people in Russia already use across VK services.
-date: 2026-11-24
+date: 2026-11-25
 featured: false
 isPartner: false
 isNew: true

@@ -2,7 +2,7 @@
 layout: integration
 title: OAuth with WorkOS
 description: Sign users in through WorkOS AuthKit and land them in your app with an Appwrite session, including enterprise SSO configured in WorkOS.
-date: 2026-11-24
+date: 2026-11-25
 featured: false
 isPartner: false
 isNew: true

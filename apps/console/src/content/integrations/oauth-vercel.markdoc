@@ -2,7 +2,7 @@
 layout: integration
 title: OAuth with Vercel
 description: Let developers sign in with their Vercel account in Appwrite Auth through Sign in with Vercel, with verified emails and refresh tokens.
-date: 2026-11-24
+date: 2026-11-25
 featured: false
 isPartner: false
 isNew: true

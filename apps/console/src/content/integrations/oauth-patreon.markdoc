@@ -2,7 +2,7 @@
 layout: integration
 title: OAuth with Patreon
 description: Let creators and their members sign in with Patreon, and use the Patreon API to unlock content for paying members.
-date: 2026-11-24
+date: 2026-11-25
 featured: false
 isPartner: false
 isNew: true

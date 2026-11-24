@@ -2,7 +2,7 @@
 layout: integration
 title: OAuth with Linear
 description: Let users sign in with their Linear account and work with their issues and projects through the Linear API.
-date: 2026-11-24
+date: 2026-11-25
 featured: false
 isPartner: false
 isNew: true

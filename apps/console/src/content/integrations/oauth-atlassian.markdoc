@@ -2,7 +2,7 @@
 layout: integration
 title: OAuth with Atlassian
 description: Let users sign in with their Atlassian account, the same account they use for Jira, Confluence, and the rest of Atlassian Cloud.
-date: 2026-11-24
+date: 2026-11-25
 featured: false
 isPartner: false
 isNew: true

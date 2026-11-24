@@ -2,7 +2,7 @@
 layout: integration
 title: OAuth with Instagram
 description: Let creators and businesses sign in with their Instagram professional account through Instagram's business login in Appwrite Auth.
-date: 2026-11-24
+date: 2026-11-25
 featured: false
 isPartner: false
 isNew: true

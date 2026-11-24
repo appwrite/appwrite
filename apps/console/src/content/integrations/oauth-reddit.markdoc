@@ -2,7 +2,7 @@
 layout: integration
 title: OAuth with Reddit
 description: Let users sign in with their Reddit account in Appwrite Auth, with their username and avatar and a refresh token for Reddit API calls.
-date: 2026-11-24
+date: 2026-11-25
 featured: false
 isPartner: false
 isNew: true

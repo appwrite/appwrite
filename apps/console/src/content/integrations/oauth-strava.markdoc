@@ -2,7 +2,7 @@
 layout: integration
 title: OAuth with Strava
 description: Let athletes sign in with their Strava account in Appwrite Auth and give your server a token for their activities, routes, and profile.
-date: 2026-11-24
+date: 2026-11-25
 featured: false
 isPartner: false
 isNew: true

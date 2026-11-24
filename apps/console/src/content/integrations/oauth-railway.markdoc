@@ -2,7 +2,7 @@
 layout: integration
 title: OAuth with Railway
 description: Let developers sign in with their Railway account and give your server access to the Railway workspaces and projects they choose to share.
-date: 2026-11-24
+date: 2026-11-25
 featured: false
 isPartner: false
 isNew: true

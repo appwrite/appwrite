@@ -1,7 +1,7 @@
 ---
 layout: changelog
 title: "Sign users in with Vercel, Linear, Reddit, LINE, and 10 more OAuth2 providers"
-date: 2026-11-24
+date: 2026-11-25
 cover: /images/blog/announcing-14-new-oauth2-providers/cover.avif
 description: "Appwrite Auth adds 14 OAuth2 login providers: Atlassian, Instagram, LINE, Linear, Naver, Netlify, Patreon, Railway, Reddit, Roblox, Strava, Vercel, VK, and WorkOS."
 tags: auth, integrations, sdk
