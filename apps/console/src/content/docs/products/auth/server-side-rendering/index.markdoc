@@ -510,7 +510,32 @@ let result = account.create_anonymous_session().await?;
 
 Appwrite sessions record the device, IP address, and country of the client that created them. In SSR that client is your server, so without forwarding, every session shows your server's details instead of the end user's.
 
-To record the end user, set their user agent and IP address on the admin client that creates the session. Appwrite derives the country and other location details from the IP address.
+To record the end user, pass the request your server is handling to the admin client that creates the session.
+
+```js
+const adminClient = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>')                           // Your project ID
+    .setKey('<YOUR_API_KEY>')                             // Your secret API key
+    .setRequest(req);                                     // The request your server is handling
+```
+
+`setRequest` accepts the request or only its headers, so the same call works with any framework.
+
+| Where                 | Call                              |
+|-----------------------|-----------------------------------|
+| Appwrite Functions    | `.setRequest(req)`                |
+| Next.js               | `.setRequest(await headers())`    |
+| SvelteKit             | `.setRequest(event.request)`      |
+| Nuxt                  | `.setRequest(event)`              |
+| Astro                 | `.setRequest(Astro.request)`      |
+| Express               | `.setRequest(req)`                |
+
+It forwards the user agent from the `user-agent` header. Inside Appwrite [Sites](/docs/products/sites/develop#visitor-ip-address) and [Functions](/docs/products/functions/develop#headers) it also forwards the IP address from the `x-appwrite-client-ip` header, and Appwrite derives the country and other location details from it.
+
+## Setting the values yourself {% #forwarding-values %}
+
+On other hosts `setRequest` does not forward an IP address, because there the visitor could send `x-appwrite-client-ip` themselves. Pass the address your hosting platform reports to `setForwardedIP`. In SDKs without `setRequest`, set both values this way. A value set with these methods is used instead of the request's.
 
 {% multicode %}
 ```server-nodejs
@@ -538,11 +563,7 @@ Keep three things in mind:
 
 - **Use the admin client.** Appwrite only accepts forwarded values from a client with an API key. They have no effect on a session client.
 - **Create the client for each request.** A client shared between requests would record one user's details on another user's session.
-- **Use the IP address your hosting platform reports.** Read it from the header or API your platform sets for the visitor, such as `x-appwrite-client-ip` on Appwrite [Sites](/docs/products/sites/develop#visitor-ip-address) and [Functions](/docs/products/functions/develop#headers). Don't read it from a header the visitor can send themselves.
-
-{% info title="Appwrite Sites and Functions" %}
-Inside Appwrite Sites and Functions, the Node.js SDK forwards the visitor's user agent and IP address for you on every request made with an API key. Call the setters only when you want to forward different values.
-{% /info %}
+- **Use the IP address your hosting platform reports.** Read it from the header or API your platform sets for the visitor. Don't read it from a header the visitor can send themselves.
 
 # OAuth2 {% #oauth2 %}
 

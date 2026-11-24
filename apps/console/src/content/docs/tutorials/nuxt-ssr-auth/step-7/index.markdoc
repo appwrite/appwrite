@@ -30,7 +30,7 @@ import { OAuthProvider } from "node-appwrite";
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event);
-  const { account } = createAdminClient();
+  const { account } = createAdminClient(event);
   const endpoint = config.public.appwriteEndpoint;
 
   // A random value only this browser will hold, checked in the callback
@@ -78,7 +78,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Create the Appwrite client
-  const { account } = createAdminClient();
+  const { account } = createAdminClient(event);
 
   // Exchange the token userId and secret for a session
   const session = await account.createSession({

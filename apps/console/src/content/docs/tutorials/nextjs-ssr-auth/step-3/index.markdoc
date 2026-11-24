@@ -13,7 +13,7 @@ Create a function to build services you need in a file like `src/lib/server/appw
 // src/lib/server/appwrite.js
 "use server";
 import { Client, Account } from "node-appwrite";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 export async function createSessionClient() {
   const client = new Client()
@@ -38,7 +38,8 @@ export async function createAdminClient() {
   const client = new Client()
     .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT)
     .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT)
-    .setKey(process.env.NEXT_APPWRITE_KEY);
+    .setKey(process.env.NEXT_APPWRITE_KEY)
+    .setRequest(await headers());
 
   return {
     get account() {
@@ -93,5 +94,5 @@ For this tutorial you'll need an API key with the following scopes:
 {% /only_light %}
 
 {% info title="Record the end user on sessions" %}
-Sessions your server creates record your server's device and IP address unless you forward the end user's. Learn how in [forwarding the end user](/docs/products/auth/server-side-rendering#forwarding-user-agent).
+`setRequest(await headers())` passes the incoming request to the admin client, so the sessions it creates record the end user's device instead of your server's. Learn more about [forwarding the end user](/docs/products/auth/server-side-rendering#forwarding-user-agent).
 {% /info %}

@@ -858,7 +858,7 @@ These are provided alongside any custom headers sent to the function.
 
 Executions triggered by an email do not receive the `x-appwrite-execution-id`, `x-appwrite-client-ip`, `x-appwrite-country-code`, `x-appwrite-continent-code`, or `x-appwrite-continent-eu` headers.
 
-When your function signs users in with an API key, Appwrite records the caller's device and IP address on the session only if your function forwards them. The Node.js SDK does this for you inside Functions. Learn more about [forwarding the end user](/docs/products/auth/server-side-rendering#forwarding-user-agent).
+When your function signs users in with an API key, the session records your function's device and IP address unless you forward the caller's. Pass `req` to the client with `setRequest`. Learn more about [forwarding the end user](/docs/products/auth/server-side-rendering#forwarding-user-agent).
 
 ## Response {% #response %}
 Use the response object to send a response to the function caller. This could be a user, client app, or an integration.

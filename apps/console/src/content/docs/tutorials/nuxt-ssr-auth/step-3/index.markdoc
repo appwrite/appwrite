@@ -23,11 +23,12 @@ import { Client, Account } from "node-appwrite";
 
 export const SESSION_COOKIE = "my-custom-session";
 
-export function createAdminClient() {
+export function createAdminClient(event) {
   const client = new Client()
     .setEndpoint(process.env.PUBLIC_APPWRITE_ENDPOINT)
     .setProject(process.env.PUBLIC_APPWRITE_PROJECT)
-    .setKey(process.env.APPWRITE_KEY);
+    .setKey(process.env.APPWRITE_KEY)
+    .setRequest(event);
 
   return {
     get account() {
@@ -108,5 +109,5 @@ PUBLIC_APPWRITE_PROJECT=<PROJECT_ID>
 ```
 
 {% info title="Record the end user on sessions" %}
-Sessions your server creates record your server's device and IP address unless you forward the end user's. Learn how in [forwarding the end user](/docs/products/auth/server-side-rendering#forwarding-user-agent).
+`setRequest(event)` passes the incoming request to the admin client, so the sessions it creates record the end user's device instead of your server's. Learn more about [forwarding the end user](/docs/products/auth/server-side-rendering#forwarding-user-agent).
 {% /info %}

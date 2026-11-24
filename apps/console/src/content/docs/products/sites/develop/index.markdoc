@@ -287,7 +287,7 @@ const country = request.headers.get('x-appwrite-country-code');
 
 Don't read the visitor's IP from headers such as `CF-Connecting-IP` or `True-Client-IP`. Appwrite forwards them exactly as the visitor sent them, so anyone can forge them.
 
-When your site signs users in with an API key, Appwrite records the visitor's device and IP address on the session only if your server forwards them. The Node.js SDK does this for you inside Sites. Learn more about [forwarding the end user](/docs/products/auth/server-side-rendering#forwarding-user-agent).
+When your site signs users in with an API key, the session records your site's device and IP address unless you forward the visitor's. Pass the incoming request to the client with `setRequest`. Learn more about [forwarding the end user](/docs/products/auth/server-side-rendering#forwarding-user-agent).
 
 # Project dependencies
 

@@ -44,7 +44,7 @@ if (Astro.request.method === "POST") {
   const name = data.get("name");
 
   // Create the admin client
-  const { account } = createAdminClient();
+  const { account } = createAdminClient(Astro.request);
 
   // Create the email password session
   await account.create({

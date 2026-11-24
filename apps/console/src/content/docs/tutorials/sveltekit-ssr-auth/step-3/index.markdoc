@@ -25,11 +25,12 @@ import { PUBLIC_APPWRITE_ENDPOINT, PUBLIC_APPWRITE_PROJECT } from '$env/static/p
 
 export const SESSION_COOKIE = 'my-custom-session';
 
-export function createAdminClient() {
+export function createAdminClient(request) {
     const client = new Client()
         .setEndpoint(PUBLIC_APPWRITE_ENDPOINT)
         .setProject(PUBLIC_APPWRITE_PROJECT)
-        .setKey(APPWRITE_KEY); // Set the Appwrite API key!
+        .setKey(APPWRITE_KEY) // Set the Appwrite API key!
+        .setRequest(request); // The request being handled
 
     // Return the services we want to use.
     return {
@@ -98,5 +99,5 @@ For this tutorial you'll need an API key with the following scopes:
 {% /only_light %}
 
 {% info title="Record the end user on sessions" %}
-Sessions your server creates record your server's device and IP address unless you forward the end user's. Learn how in [forwarding the end user](/docs/products/auth/server-side-rendering#forwarding-user-agent).
+`setRequest(request)` passes the incoming request to the admin client, so the sessions it creates record the end user's device instead of your server's. Learn more about [forwarding the end user](/docs/products/auth/server-side-rendering#forwarding-user-agent).
 {% /info %}

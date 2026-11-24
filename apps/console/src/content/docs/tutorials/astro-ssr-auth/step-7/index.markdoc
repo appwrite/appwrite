@@ -28,9 +28,9 @@ import crypto from "node:crypto";
 import { createAdminClient } from "../server/appwrite";
 import { OAuthProvider } from "node-appwrite";
 
-export const POST = async ({ redirect, url, cookies }) => {
+export const POST = async ({ request, redirect, url, cookies }) => {
   // Create the Appwrite client
-  const { account } = createAdminClient();
+  const { account } = createAdminClient(request);
 
   // A random value only this browser will hold, checked in the callback
   const state = crypto.randomBytes(32).toString("hex");
@@ -67,7 +67,7 @@ import { OAuthProvider } from "node-appwrite";
 
 // ... existing POST handler
 
-export const GET = async ({ redirect, cookies, url }) => {
+export const GET = async ({ request, redirect, cookies, url }) => {
   // Get the user ID and secret from the URL
   const userId = url.searchParams.get("userId");
   const secret = url.searchParams.get("secret");
@@ -81,7 +81,7 @@ export const GET = async ({ redirect, cookies, url }) => {
   }
 
   // Create the Appwrite client
-  const { account } = createAdminClient();
+  const { account } = createAdminClient(request);
 
   // Exchange the token for a session
   const session = await account.createSession({

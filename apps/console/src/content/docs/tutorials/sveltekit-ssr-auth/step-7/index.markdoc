@@ -32,7 +32,7 @@ import { ID, OAuthProvider } from "node-appwrite";
 export const actions = {
   // ... existing email sign up action
   oauth: async (event) => {
-    const { account } = createAdminClient();
+    const { account } = createAdminClient(event.request);
 
     // A random value only this browser will hold, checked in the callback
     const state = crypto.randomBytes(32).toString("hex");
@@ -86,7 +86,7 @@ export async function GET(event) {
   }
 
   // Exchange the token `userId` and `secret` for a session
-  const { account } = createAdminClient();
+  const { account } = createAdminClient(event.request);
   const session = await account.createSession({
     userId,
     secret
