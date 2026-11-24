@@ -3,6 +3,7 @@ import type { Models } from '@appwrite.io/console'
 export type NotificationNavigateTarget = {
   to: string
   params: Record<string, string>
+  search?: Record<string, string>
 }
 
 function normalizeResourceType(value: string | undefined): string {
@@ -10,18 +11,45 @@ function normalizeResourceType(value: string | undefined): string {
 }
 
 /**
- * Best-effort deep link for a console notification. Returns null when the
- * notification has no project context or the resource type is unknown.
+ * Best-effort deep link for a console notification. A monitor alert opens the
+ * alert itself; a budget alert, which belongs to an organization and no
+ * project, opens the organization's billing. Returns null when the
+ * notification has no project context.
  */
 export function getNotificationNavigateTarget(
   notification: Models.Notification,
 ): NotificationNavigateTarget | null {
-  const projectId = notification.projectId?.trim()
+  const alertId =
+    notification.subjectType === 'alerts' ? notification.subjectId?.trim() : ''
+  const teamId = notification.teamId?.trim()
+  // Notifications about no project are filed under the console project.
+  const projectId =
+    notification.projectId?.trim() === 'console'
+      ? ''
+      : notification.projectId?.trim()
+
+  if (alertId && projectId) {
+    return {
+      to: '/projects/$projectId/monitors/alerts',
+      params: { projectId },
+      search: { alert: alertId },
+    }
+  }
+
+  if (alertId && teamId) {
+    return {
+      to: '/organizations/$orgId/settings/billing',
+      params: { orgId: teamId },
+    }
+  }
+
   if (!projectId) return null
 
   const resourceType = normalizeResourceType(notification.resourceType)
   const resourceId = notification.resourceId?.trim()
-  const parentResourceType = normalizeResourceType(notification.parentResourceType)
+  const parentResourceType = normalizeResourceType(
+    notification.parentResourceType,
+  )
   const parentResourceId = notification.parentResourceId?.trim()
 
   if (resourceType === 'deployments' && resourceId && parentResourceId) {

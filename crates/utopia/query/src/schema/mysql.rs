@@ -4,7 +4,7 @@ use super::column::{self, Column};
 use super::enums::{ColumnType, ParameterDirection, TriggerEvent, TriggerTiming};
 use super::feature;
 use super::table::{self, ForeignKey, Table};
-use super::{Schema, base, names};
+use super::{Schema, base};
 use crate::builder::{AnyBuilder, Executor, Statement};
 use crate::error::{Error, Result};
 
@@ -129,8 +129,8 @@ impl Schema for MySql {
             ColumnType::Json | ColumnType::Object => "JSON".into(),
             ColumnType::Binary => "BLOB".into(),
             ColumnType::Enum => {
-                let values: Vec<String> = c.enum_values.iter().map(|v| names::escape(v)).collect();
-                format!("ENUM('{}')", values.join("','"))
+                let values = c.enum_values.iter().map(|v| self.literal().quote(v)).collect::<Result<Vec<_>>>()?;
+                format!("ENUM({})", values.join(","))
             }
             ColumnType::Point => srid("POINT"),
             ColumnType::Linestring => srid("LINESTRING"),
@@ -214,7 +214,7 @@ impl feature::Triggers for MySql {
 
 impl feature::TableComments for MySql {
     fn comment_on_table(&self, table: &str, comment: &str) -> Result<Statement> {
-        base::plain(self, format!("ALTER TABLE {} COMMENT = {}", self.quote(table)?, names::literal(comment)))
+        base::plain(self, format!("ALTER TABLE {} COMMENT = {}", self.quote(table)?, self.literal().quote(comment)?))
     }
 }
 

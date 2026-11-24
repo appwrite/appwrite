@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "35f1947d28b8e94142445160836e85d3",
+    "content-hash": "26acd8ef01e59f229fb6a05a04bdee83",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4714,16 +4714,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "10.2.3",
+            "version": "10.2.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "a0f76c48db61c8430f716c6925e31df21acfd815"
+                "reference": "84bf247bdc008c891217102cec6875fd092fdeec"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/a0f76c48db61c8430f716c6925e31df21acfd815",
-                "reference": "a0f76c48db61c8430f716c6925e31df21acfd815",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/84bf247bdc008c891217102cec6875fd092fdeec",
+                "reference": "84bf247bdc008c891217102cec6875fd092fdeec",
                 "shasum": ""
             },
             "require": {
@@ -4781,10 +4781,10 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/10.2.3"
+                "source": "https://github.com/utopia-php/database/tree/10.2.5"
             },
-            "time": "2026-11-23T07:35:53+00:00",
-            "published-time": "2026-11-23T07:41:09+00:00"
+            "time": "2026-11-24T11:20:21+00:00",
+            "published-time": "2026-11-24T11:20:39+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8026,16 +8026,16 @@
         },
         {
             "name": "twig/twig",
-            "version": "v3.30.0",
+            "version": "v3.31.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "8c737079b726af72ff8ef3c595be9f6a810ea1ef"
+                "reference": "6f6ec372231b53d1d564567a78beb8844cafa132"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/8c737079b726af72ff8ef3c595be9f6a810ea1ef",
-                "reference": "8c737079b726af72ff8ef3c595be9f6a810ea1ef",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/6f6ec372231b53d1d564567a78beb8844cafa132",
+                "reference": "6f6ec372231b53d1d564567a78beb8844cafa132",
                 "shasum": ""
             },
             "require": {
@@ -8090,7 +8090,7 @@
             ],
             "support": {
                 "issues": "https://github.com/twigphp/Twig/issues",
-                "source": "https://github.com/twigphp/Twig/tree/v3.30.0"
+                "source": "https://github.com/twigphp/Twig/tree/v3.31.1"
             },
             "funding": [
                 {
@@ -8102,8 +8102,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-09-25T13:20:01+00:00",
-            "published-time": "2026-09-25T13:20:14+00:00"
+            "time": "2026-11-24T12:48:40+00:00",
+            "published-time": "2026-11-24T12:48:53+00:00"
         }
     ],
     "aliases": [],
