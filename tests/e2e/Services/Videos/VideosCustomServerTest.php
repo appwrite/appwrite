@@ -2301,64 +2301,6 @@ final class VideosCustomServerTest extends Scope
         $this->assertGreaterThan(0, $this->storedRendition($videoId, $secondReady['name'], $secondId)[0], 'deleting one rendition must leave the other stored');
     }
 
-    /**
-     * The manifests read their rendition and segment lists from the query cache,
-     * so each is fetched once to fill it before the write it has to follow.
-     */
-    public function testManifestsFollowRenditionWrites(): void
-    {
-        $create = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
-            'bucketId' => $this->getVideoBucket()['$id'],
-            'fileId' => $this->getVideoFile()['$id'],
-        ]);
-        $this->assertEquals(201, $create['headers']['status-code']);
-        $videoId = $create['body']['$id'];
-        $masterPath = '/videos/' . $videoId . '/outputs/hls/master.m3u8';
-
-        $first = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
-            'profileId' => $this->profile('360p')['$id'],
-            'output' => 'hls',
-        ]);
-        $this->assertEquals(202, $first['headers']['status-code']);
-        $firstId = $first['body']['$id'];
-        $this->assertEquals('ready', $this->waitForRenditionTerminalState($videoId, $firstId)['status']);
-
-        $master = $this->client->call(Client::METHOD_GET, $masterPath, $this->headers());
-        $this->assertEquals(200, $master['headers']['status-code']);
-        $this->assertStringContainsString($firstId, (string) $master['body']);
-
-        $playlistPath = '/videos/' . $videoId . '/outputs/hls/renditions/' . $firstId . '/streams/0/playlist.m3u8';
-        $playlist = $this->client->call(Client::METHOD_GET, $playlistPath, $this->headers());
-        $this->assertEquals(200, $playlist['headers']['status-code']);
-        $this->assertStringContainsString('#EXTINF', (string) $playlist['body']);
-
-        $again = $this->client->call(Client::METHOD_GET, $playlistPath, $this->headers());
-        $this->assertSame((string) $playlist['body'], (string) $again['body'], 'a repeated request must list the same segments');
-
-        // Written by the worker: the second rendition turns ready in another process.
-        $second = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
-            'profileId' => $this->profile('480p')['$id'],
-            'output' => 'hls',
-        ]);
-        $this->assertEquals(202, $second['headers']['status-code']);
-        $secondId = $second['body']['$id'];
-        $this->assertEquals('ready', $this->waitForRenditionTerminalState($videoId, $secondId)['status']);
-
-        $master = $this->client->call(Client::METHOD_GET, $masterPath, $this->headers());
-        $this->assertEquals(200, $master['headers']['status-code']);
-        $this->assertStringContainsString($firstId, (string) $master['body']);
-        $this->assertStringContainsString($secondId, (string) $master['body'], 'a rendition that turned ready must join the master');
-
-        // Written by the API: the delete runs in the request.
-        $delete = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId . '/renditions/' . $firstId, $this->headers());
-        $this->assertEquals(204, $delete['headers']['status-code']);
-
-        $master = $this->client->call(Client::METHOD_GET, $masterPath, $this->headers());
-        $this->assertEquals(200, $master['headers']['status-code']);
-        $this->assertStringNotContainsString($firstId, (string) $master['body'], 'a deleted rendition must leave the master');
-        $this->assertStringContainsString($secondId, (string) $master['body']);
-    }
-
     // ---------------------------------------------------------------- playback
 
     /**

@@ -7,7 +7,6 @@ use Appwrite\Platform\Modules\Videos\Base as VideosAction;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Appwrite\Video\Dash;
-use Appwrite\Video\QueryCache;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -45,7 +44,7 @@ abstract class Base extends VideosAction
         Document $video,
         string $output
     ): array {
-        $renditions = $authorization->skip(fn () => $this->cached($dbForProject)->find('videosRenditions', [
+        $renditions = $authorization->skip(fn () => $dbForProject->find('videosRenditions', [
             Query::equal('videoInternalId', [$video->getSequence()]),
             Query::equal('output', [$output]),
             Query::equal('status', [self::STATUS_READY]),
@@ -80,7 +79,7 @@ abstract class Base extends VideosAction
         Authorization $authorization,
         Document $video
     ): array {
-        return $authorization->skip(fn () => $this->cached($dbForProject)->find('videosCaptions', [
+        return $authorization->skip(fn () => $dbForProject->find('videosCaptions', [
             Query::equal('videoInternalId', [$video->getSequence()]),
             Query::equal('status', [self::STATUS_READY]),
             Query::limit(APP_LIMIT_SUBQUERY),
@@ -109,7 +108,7 @@ abstract class Base extends VideosAction
             return [];
         }
 
-        $segments = $authorization->skip(fn () => $this->cached($dbForProject)->find($collection, [
+        $segments = $authorization->skip(fn () => $dbForProject->find($collection, [
             ...$filters,
             Query::orderAsc('$sequence'),
             Query::limit($total),
@@ -120,23 +119,6 @@ abstract class Base extends VideosAction
         }
 
         return $segments;
-    }
-
-    /**
-     * The handle a manifest reads its lists through.
-     *
-     * Renditions, captions and their segments change only when one of them is
-     * written, yet a player asks for the same manifest over and over. Their
-     * lists come from the query cache, which the database retires on any write
-     * to those collections (see {@see QueryCache}).
-     */
-    private function cached(Database $dbForProject): Database
-    {
-        if (!$dbForProject->getQueryCache() instanceof QueryCache) {
-            $dbForProject->setQueryCache(new QueryCache($dbForProject->getCache()));
-        }
-
-        return $dbForProject;
     }
 
     /**
