@@ -37,6 +37,9 @@ readonly class Acknowledgements
         }
 
         if (($alert->getAttribute('acknowledgedAt') !== null) === $acknowledged) {
+            // A notification written after the alert was acknowledged catches up.
+            $this->updateNotifications($alert, $acknowledged);
+
             return $alert;
         }
 
@@ -52,7 +55,17 @@ readonly class Acknowledgements
 
         $alert = $this->dbForPlatform->getAuthorization()->skip(fn () => $this->dbForPlatform->updateDocument('monitorAlerts', $alert->getId(), $changes));
 
-        // Every member's console notification about the alert shows it, so none of them acknowledges it again.
+        $this->updateNotifications($alert, $acknowledged);
+        $escalations = new Escalations($this->dbForPlatform);
+
+        return $acknowledged ? $escalations->stop($alert) : $escalations->resume($alert, new \DateTimeImmutable());
+    }
+
+    /**
+     * Every member's console notification about the alert shows whether it is acknowledged, so none of them acknowledges it again.
+     */
+    private function updateNotifications(Document $alert, bool $acknowledged): void
+    {
         $this->dbForPlatform->getAuthorization()->skip(fn () => $this->dbForPlatform->updateDocuments('notifications', new Document([
             'status' => $acknowledged ? Change::Acknowledged->value : Change::Firing->value,
         ]), [
@@ -60,9 +73,6 @@ readonly class Acknowledgements
             Query::equal('subjectId', [$alert->getId()]),
             Query::equal('status', [$acknowledged ? Change::Firing->value : Change::Acknowledged->value]),
         ]));
-        $escalations = new Escalations($this->dbForPlatform);
-
-        return $acknowledged ? $escalations->stop($alert) : $escalations->resume($alert, new \DateTimeImmutable());
     }
 
     /**

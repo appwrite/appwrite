@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Alert\Change;
 use Appwrite\Alert\Unsubscribe;
 use Appwrite\Messaging\PushService;
 use Appwrite\Network\Validator\PublicHostname;
@@ -483,6 +484,11 @@ class Notifications extends Action
         // can open and acknowledge. Its severity is the notification's type, as the bell draws one icon per type.
         $data = \array_map('strval', $payload['push']['data'] ?? []);
         $alert = ($data['type'] ?? '') === 'alert' ? $data : [];
+        $status = $alert['status'] ?? '';
+        // An alert acknowledged while its firing notice waited in the queue is shown acknowledged.
+        if ($status === Change::Firing->value && $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('monitorAlerts', $alert['alertId'] ?? ''))->getAttribute('acknowledgedAt') !== null) {
+            $status = Change::Acknowledged->value;
+        }
 
         $consoleMessage = new ConsoleMessage(
             recipients: [$consoleRecipient],
@@ -495,7 +501,7 @@ class Notifications extends Action
             teamId: ($alert['organizationId'] ?? '') !== '' ? $alert['organizationId'] : null,
             subjectType: ($alert['alertId'] ?? '') !== '' ? RESOURCE_TYPE_ALERTS : '',
             subjectId: $alert['alertId'] ?? '',
-            status: $alert['status'] ?? '',
+            status: $status,
         );
 
         $adapter = new ConsoleAdapter($dbForPlatform);
