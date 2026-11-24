@@ -3585,6 +3585,7 @@ pre.prism-code .token-line > span {
     linear-gradient(#000 0 0) content-box exclude,
     linear-gradient(#000 0 0);
   animation: init5-trail-orbit var(--init5-trail-duration, 7s) linear infinite;
+  animation-delay: var(--init5-trail-delay, 0s);
 }
 
 /* Hairline border with the comet riding on it. */

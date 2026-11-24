@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 /**
  * The Init 5 storm behind a surface: soft fog along its `edges` with
  * lightning flashing inside it. Fills its nearest positioned parent and runs
- * only while that parent is on screen.
+ * only while it is on screen.
  */
 export function Init5Storm({
   edges,
@@ -41,22 +41,32 @@ export function Init5Storm({
     stormRef.current = storm
 
     const layout = () => {
-      const box = surface.getBoundingClientRect()
+      const box = canvas.getBoundingClientRect()
       storm.resize(box.width, box.height)
     }
     layout()
     const resizeObserver = new ResizeObserver(layout)
-    resizeObserver.observe(surface)
+    resizeObserver.observe(canvas)
     const visibility = new IntersectionObserver(([entry]) =>
       storm.setActive(Boolean(entry?.isIntersecting)),
     )
-    visibility.observe(surface)
+    visibility.observe(canvas)
 
     return () => {
       resizeObserver.disconnect()
       visibility.disconnect()
       storm.dispose()
       stormRef.current = null
+      // Free the context once the canvas has left the page, so storms that come
+      // and go never pile up live contexts. A development remount keeps the
+      // same canvas, and its context, attached.
+      queueMicrotask(() => {
+        if (canvas.isConnected) return
+        canvas
+          .getContext('webgl')
+          ?.getExtension('WEBGL_lose_context')
+          ?.loseContext()
+      })
     }
     // The storm is built once per edge layout; theme changes repaint it below.
     // eslint-disable-next-line react-hooks/exhaustive-deps

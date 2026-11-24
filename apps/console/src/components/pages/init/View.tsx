@@ -1,4 +1,11 @@
-import { useMemo, useState, useEffect, useRef } from 'react'
+import {
+  Fragment,
+  useMemo,
+  useState,
+  useEffect,
+  useRef,
+  type CSSProperties,
+} from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
@@ -55,6 +62,9 @@ import {
 
 import type { Models } from '@appwrite.io/console'
 import type { InitDisplayEvent } from '@/lib/init/types'
+
+/** Launch weeks whose day cards wear the hero's electric border. */
+const ELECTRIC_DAY_EVENT_IDS = new Set(['init-nov-2026'])
 
 function InitPageContent({
   baseEvent,
@@ -187,17 +197,15 @@ function InitPageContent({
 
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_360px]">
               <div className="space-y-6">
-                {event.days.map((day) =>
-                  isLaunchEventDayLocked(day) ? (
+                {event.days.map((day) => {
+                  const card = isLaunchEventDayLocked(day) ? (
                     <LockedDayDetailCard
-                      key={day.day}
                       day={day}
                       eventStartDate={event.startDate}
                       currentDay={event.currentDay}
                     />
                   ) : (
                     <DayDetailCard
-                      key={day.day}
                       event={event}
                       day={day}
                       scheduleItems={event.schedule.filter(
@@ -206,8 +214,27 @@ function InitPageContent({
                       currentDay={event.currentDay}
                       isRecapMode={event.isRecapMode}
                     />
-                  ),
-                )}
+                  )
+                  // Init 5's days wear the hero's electric border: a comet of
+                  // light circling each card, every card on its own beat.
+                  return ELECTRIC_DAY_EVENT_IDS.has(event.id) ? (
+                    <div
+                      key={day.day}
+                      className="init5-light-frame rounded-xl"
+                      style={
+                        {
+                          '--init5-trail-duration': `${8 + (day.day % 3)}s`,
+                          '--init5-trail-delay': `${-day.day * 2.3}s`,
+                        } as CSSProperties
+                      }
+                    >
+                      {card}
+                      <span aria-hidden className="init5-light-halo" />
+                    </div>
+                  ) : (
+                    <Fragment key={day.day}>{card}</Fragment>
+                  )
+                })}
                 <InitAmaCard
                   event={event}
                   items={event.schedule.filter(

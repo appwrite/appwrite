@@ -38,6 +38,11 @@ const EDGES = {
   bottom: { share: 0.26, max: 170, density: 0.7 },
 } as const
 
+const EDGE_MODES: Record<InitStormEdges, number> = {
+  sides: 0,
+  bottom: 1,
+}
+
 const vertex = /* glsl */ `
 attribute vec2 position;
 void main() {
@@ -54,7 +59,8 @@ precision mediump float;
 uniform vec2 uResolution;
 uniform float uScale;
 uniform float uSide;
-uniform float uBottom;
+/** 0 sides, 1 bottom. */
+uniform float uMode;
 uniform float uTime;
 uniform float uIntensity;
 uniform vec3 uColorA;
@@ -92,12 +98,26 @@ float fbm(vec2 p) {
 }
 
 void main() {
-  // Fog units, x from the left edge, y from the bar's middle (up).
+  // Fog units, x from the left edge, y from the surface's middle (up).
   vec2 p = (gl_FragCoord.xy - vec2(0.0, uResolution.y * 0.5)) / uScale;
+
+  // The fog keeps to its edges (both ends of a bar, or the bottom of a
+  // panel) and thins out away from them, leaving the copy clear. Its inner
+  // edge wavers with the cloud.
+  float edge = uMode < 0.5 ? min(p.x, uResolution.x / uScale - p.x) : gl_FragCoord.y / uScale;
+  vec2 along = uMode < 0.5 ? p.yx : p.xy;
+  float waver = (fbm(vec2(along.x * 1.4 + 2.1, uTime * 0.03 + along.y * 0.1)) - 0.5) * uSide * 0.6;
+  float sides = 1.0 - smoothstep(0.0, uSide, edge + waver);
+  // Most of the surface is clear: skip the fog work there.
+  if (sides < 0.003) {
+    gl_FragColor = vec4(0.0);
+    return;
+  }
+
   float t = uTime * 0.05;
   vec2 q = vec2(fbm(p * 1.05 + vec2(t, -t)), fbm(p * 1.05 + vec2(-t * 0.7, t * 1.3) + 5.2));
   float n = fbm(p * 1.5 + q * 1.9 + vec2(t * 0.5, 0.0));
-  // The hero's fog body and ridged filaments, softened for the bar: a
+  // The hero's fog body and ridged filaments, softened for small surfaces: a
   // gentler body and fainter, wider wisps.
   float body = smoothstep(0.3, 0.9, n);
   float r = fbm(p * 3.4 + q * 2.2 + vec2(-t * 0.8, t * 0.6) + 11.3);
@@ -106,20 +126,12 @@ void main() {
   vec3 color = mix(uColorB, uColorA, smoothstep(0.3, 0.72, n));
   color = mix(color, uColorC, smoothstep(0.55, 0.9, q.x) * 0.55);
   color = mix(color, uColorC, wisps * 0.3);
-
-  // The fog keeps to its edges (both ends of a bar, or the bottom of a
-  // panel) and thins out away from them, leaving the copy clear. Its inner
-  // edge wavers with the cloud.
-  float edge = mix(min(p.x, uResolution.x / uScale - p.x), gl_FragCoord.y / uScale, uBottom);
-  vec2 along = mix(p.yx, p.xy, uBottom);
-  float waver = (fbm(vec2(along.x * 1.4 + 2.1, uTime * 0.03 + along.y * 0.1)) - 0.5) * uSide * 0.6;
-  float sides = 1.0 - smoothstep(0.0, uSide, edge + waver);
   float a = density * sides * uIntensity;
 
   // Lightning: light blooms from the strike point and scatters through the
-  // fog, so the denser cloud lights up most and the thin gaps stay dark. The
-  // bar is thin, so each strike also lifts its whole end a little, the way a
-  // sky lights up. It stays in the fog, off the copy.
+  // fog, so the denser cloud lights up most and the thin gaps stay dark. Each
+  // strike also lifts the fog around it a little, the way a sky lights up. It
+  // stays in the fog, off the copy.
   float lit = 0.0;
   for (int i = 0; i < ${MAX_BOLTS}; i++) {
     vec2 bd = (p - uBolts[i].xy) * vec2(0.42, 1.0);
@@ -225,7 +237,7 @@ export function createInitStorm(
     resolution: uniform('uResolution'),
     scale: uniform('uScale'),
     side: uniform('uSide'),
-    bottom: uniform('uBottom'),
+    mode: uniform('uMode'),
     time: uniform('uTime'),
     intensity: uniform('uIntensity'),
     colorA: uniform('uColorA'),
@@ -299,7 +311,7 @@ export function createInitStorm(
     gl.uniform2f(u.resolution, canvas.width, canvas.height)
     gl.uniform1f(u.scale, scale)
     gl.uniform1f(u.side, reachPx() / UNIT_PX)
-    gl.uniform1f(u.bottom, options.edges === 'bottom' ? 1 : 0)
+    gl.uniform1f(u.mode, EDGE_MODES[options.edges])
     gl.uniform1f(u.time, time)
     gl.uniform1f(u.intensity, (palette.isDark ? 0.26 : 0.13) * reach.density)
     const strength = palette.isDark ? 0.6 : 0.26
