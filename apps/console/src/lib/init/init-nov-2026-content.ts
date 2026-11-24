@@ -315,13 +315,15 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
     sessionTitle: 'Appwrite Reviews launch, plus the finale',
     platform: 'youtube',
     href: INIT_YOUTUBE_CHANNEL_HREF,
-    title: 'Grand prize · details coming soon',
-    description: 'Full prize details will be announced before Init 5.',
+    title: 'The full Init 5 swag collection',
+    description:
+      'All eight pieces: hoodie, tee, cap, beanie, mug, sticker sheet, poster and desk mat.',
     eligibility: 'Share Init on social during the week to enter.',
     visual: {
-      imageAlt: 'Init 5 grand prize placeholder',
-      imageSrcLight: '/images/init/prize-grand-claude-max-light.jpg',
-      imageSrcDark: '/images/init/prize-grand-claude-max.jpg',
+      imageAlt:
+        'The full Init 5 swag collection: hoodie, tee, cap, beanie, mug, sticker sheet, poster and desk mat, in front of the Init 5 mark',
+      imageSrcLight: '/images/init/prize-grand-swag-init-5.jpg',
+      imageSrcDark: '/images/init/prize-grand-swag-init-5.jpg',
     },
   },
 }

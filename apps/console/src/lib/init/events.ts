@@ -245,7 +245,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     giveaway: {
       title: 'Init giveaways',
       description:
-        'Daily swag on days 1-4 and a grand prize on day 5. Details will be finalized before Init 5.',
+        'Daily swag on days 1-4, and the full Init 5 swag collection as the day 5 grand prize.',
       ctaLabel: 'View all prizes',
       ctaHref: `#${INIT_PRIZES_SECTION_ID}`,
       secondaryCtaLabel: 'Join on Discord',
