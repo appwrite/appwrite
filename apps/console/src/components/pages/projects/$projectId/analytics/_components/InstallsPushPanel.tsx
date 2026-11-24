@@ -7,6 +7,7 @@ import { Smartphone } from 'lucide-react'
 import {
   analyticsEventMetricsQueryOptions,
   useAnalyticsBreakdown,
+  useAnalyticsEvents,
   type AnalyticsChartInterval,
   type AnalyticsRange,
 } from '@/lib/react-query/hooks'
@@ -114,9 +115,21 @@ export function InstallsPushPanel({
 
   const loading = tiles.some((tile) => tile.loading)
   const seriesError = series.find((query) => query.isError)?.error
-  // A filter can match none of these events; only unfiltered zeros mean no SDK.
+  // A filter (mobile opens on humans only) can match none of these events, so
+  // filtered zeros are checked against the unfiltered ranking the loader fetched.
+  const { events: allEvents, isLoading: allEventsLoading } = useAnalyticsEvents(
+    projectId,
+    propertyId,
+    range,
+  )
   const isEmpty =
-    filters.length === 0 && !loading && tiles.every((tile) => tile.total === 0)
+    !loading &&
+    tiles.every((tile) => tile.total === 0) &&
+    (filters.length === 0 ||
+      (!allEventsLoading &&
+        !allEvents.some((event) =>
+          TILES.some((tile) => tile.event === event.value),
+        )))
 
   return (
     <div className="flex flex-col rounded-lg border border-border bg-card">

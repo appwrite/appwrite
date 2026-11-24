@@ -113,6 +113,8 @@ const SCREEN_TABS: BreakdownTab[] = [
     id: 'entry',
     label: 'Entry screens',
     dimension: AnalyticsDimension.EntryPage,
+    // A resume that never reports a screen still opens a session.
+    blankLabel: 'No screen (resumed)',
   },
   {
     id: 'exit',
@@ -254,10 +256,38 @@ const TECH_TABS: BreakdownTab[] = [
 ]
 
 // The Flutter tracker sends no user agent, so apps have no browser to break
-// down; OS versions is left alone, so it drops its one-entry Versions menu.
-const MOBILE_TECH_TABS = TECH_TABS.filter(
-  (tab) => tab.id !== 'browsers' && tab.id !== 'browser-versions',
-).map((tab) => ({ ...tab, group: undefined }))
+// down. The trackers report each app under `app://<platform>`, so the hostname
+// is the platform.
+const MOBILE_TECH_TABS: BreakdownTab[] = [
+  {
+    id: 'platforms',
+    label: 'Platforms',
+    dimension: AnalyticsDimension.Hostname,
+  },
+  ...TECH_TABS.filter(
+    (tab) => tab.id !== 'browsers' && tab.id !== 'browser-versions',
+  ),
+  {
+    id: 'app-versions',
+    label: 'App versions',
+    dimension: AnalyticsDimension.Props,
+    propKey: 'appVersion',
+    group: 'Versions',
+    emptyLabel: 'No events with an appVersion prop in this range',
+  },
+]
+
+const PLATFORM_LABELS: Record<string, string> = {
+  android: 'Android',
+  ios: 'iOS',
+  macos: 'macOS',
+  tvos: 'tvOS',
+  visionos: 'visionOS',
+  watchos: 'watchOS',
+  windows: 'Windows',
+  linux: 'Linux',
+  fuchsia: 'Fuchsia',
+}
 
 export function TechnologyPanel({
   type,
@@ -278,6 +308,9 @@ export function TechnologyPanel({
       mobile={mobile}
       renderLeading={(entry, _index, tabId) =>
         tabId === 'browsers' ? <BrowserIcon name={entry.value} /> : undefined
+      }
+      formatLabel={(value, tabId) =>
+        tabId === 'platforms' ? (PLATFORM_LABELS[value] ?? value) : value
       }
     />
   )

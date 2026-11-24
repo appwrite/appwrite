@@ -231,6 +231,7 @@ function metricsFor(url: URL, options: MockOptions): Models.AnalyticsMetric[] {
           ]
         : []
     if (propKey === 'tool') return []
+    if (propKey === 'appVersion') return [row('1.2.0', 50), row('1.1.0', 8)]
     if (options.agentProps) return [row('model', 3), row('plan', 2)]
     return [row('plan', 52), row('source', 9)]
   }
@@ -239,7 +240,25 @@ function metricsFor(url: URL, options: MockOptions): Models.AnalyticsMetric[] {
   }
   if (dimension === 'browserVersion')
     return [row('141.0', 70), row('140.0', 20)]
+  if (options.type === AnalyticsPropertyType.Mobile) {
+    if (dimension === 'hostname') return [row('ios', 84), row('android', 16)]
+    if (dimension === 'entryPage') return [row('/home', 30), row('', 10)]
+    if (dimension === 'trafficType')
+      return [row('human', 80), row('bot', 40)]
+  }
   return []
+}
+
+/** Whether a metrics request filtered on `attribute` equal to `value`. */
+function filtersOn(url: URL, attribute: string, value: string): boolean {
+  return listParam(url, 'queries')
+    .map((query) => JSON.parse(query))
+    .some(
+      (query) =>
+        query.method === 'equal' &&
+        query.attribute === attribute &&
+        query.values[0] === value,
+    )
 }
 
 /** Every `/v1` call, on any region host, is answered here; the app itself is served live. */
@@ -579,23 +598,107 @@ test.describe('analytics property (mocked API)', () => {
     await attachScreenshot(page, 'property-mobile-app-terms')
   })
 
-  test('drops browser tabs from a mobile Technology card', async ({ page }) => {
-    await mockAppwriteApi(page, { type: AnalyticsPropertyType.Mobile })
+  test('opens a mobile property on humans only', async ({ page }) => {
+    const mock = await mockAppwriteApi(page, {
+      type: AnalyticsPropertyType.Mobile,
+    })
+    await openProperty(page)
+
+    await expect(page.getByText(/^Humans\s*only$/)).toBeVisible({
+      timeout: 30_000,
+    })
+    await expect
+      .poll(() => mock.metrics.some((url) => filtersOn(url, 'trafficType', 'human')))
+      .toBe(true)
+
+    // Turning the default off is kept in the URL, so it survives a reload.
+    await page
+      .locator('button[aria-pressed="true"]')
+      .filter({ hasText: 'Humans' })
+      .click()
+    await expect(page.getByText(/^Humans\s*only$/)).toHaveCount(0)
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    await expect(card(page, 'Technology')).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByText(/^Humans\s*only$/)).toHaveCount(0)
+  })
+
+  test('opens a web property on all traffic', async ({ page }) => {
+    await mockAppwriteApi(page)
+    await openProperty(page)
+
+    await expect(card(page, 'Technology')).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByText(/^Humans\s*only$/)).toHaveCount(0)
+  })
+
+  test('shows platforms and versions on a mobile Technology card', async ({
+    page,
+  }) => {
+    const mock = await mockAppwriteApi(page, {
+      type: AnalyticsPropertyType.Mobile,
+    })
     await openProperty(page)
 
     const technology = card(page, 'Technology')
     await expect(technology.getByText('What your users are on')).toBeVisible({
       timeout: 30_000,
     })
+    // Apps send no user agent, so there are no browser tabs.
     await expect(technology.getByRole('tab')).toHaveText([
+      'Platforms',
       'Operating systems',
       'Devices',
       'Screen sizes',
-      'OS versions',
     ])
+    await expect(technology.getByText(/^(iOS|Android)$/)).toHaveText([
+      'iOS',
+      'Android',
+    ])
+    await technology.getByText('iOS', { exact: true }).click()
+    await expect
+      .poll(() => mock.metrics.some((url) => filtersOn(url, 'hostname', 'ios')))
+      .toBe(true)
+
+    await technology.getByRole('button', { name: /Versions/ }).click()
+    await expect(page.getByRole('menuitem')).toHaveText([
+      'OS versions',
+      'App versions',
+    ])
+    await page.getByRole('menuitem', { name: 'App versions' }).click()
+    await technology.getByText('1.2.0', { exact: true }).click()
+    await expect
+      .poll(() =>
+        mock.metrics.some((url) => filtersOn(url, 'props.appVersion', '1.2.0')),
+      )
+      .toBe(true)
+  })
+
+  test('names entry screens of sessions that never reported one', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, { type: AnalyticsPropertyType.Mobile })
+    await openProperty(page)
+
+    const screens = card(page, 'Screens')
+    await expect(screens).toBeVisible({ timeout: 30_000 })
+    await screens.getByRole('tab', { name: 'Entry screens' }).click()
+    await expect(screens.getByText('/home', { exact: true })).toBeVisible()
     await expect(
-      technology.getByRole('button', { name: /Versions/ }),
-    ).toHaveCount(0)
+      screens.getByText('No screen (resumed)', { exact: true }),
+    ).toBeVisible()
+  })
+
+  test('leads a mobile property with its custom events', async ({ page }) => {
+    await mockAppwriteApi(page, { type: AnalyticsPropertyType.Mobile })
+    await openProperty(page)
+
+    const events = card(page, 'Custom events')
+    const installs = card(page, 'Installs and push')
+    await expect(installs).toBeVisible({ timeout: 30_000 })
+    const [eventsBox, installsBox] = await Promise.all([
+      events.boundingBox(),
+      installs.boundingBox(),
+    ])
+    expect(eventsBox!.y).toBeLessThan(installsBox!.y)
   })
 
   test('counts installs and push opens on a mobile property', async ({
