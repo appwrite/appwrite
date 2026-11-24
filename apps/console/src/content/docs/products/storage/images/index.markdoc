@@ -266,7 +266,27 @@ Requests that don't name an image type get the default format:
 - The Flutter, Apple, Android, and React Native SDKs, and the server SDKs, download preview bytes with `Accept: image/*`. Pass an explicit format, such as `webp`, when you need a specific one.
 - A browser `fetch()` call sends `Accept: */*` unless you set the header yourself.
 
-`ImageFormat.Auto` is available in the Web SDK 29.3.0, React Native SDK 3.3.0, Flutter SDK 28.4.0, Apple SDK 21.3.0, Android SDK 31.3.0, and Node.js SDK 31.3.0, and in later versions.
+`ImageFormat.Auto` is available from these SDK versions:
+
+| SDK | First version |
+| --- | --- |
+| Web | 29.3.0 |
+| React Native | 3.3.0 |
+| Flutter | 28.4.0 |
+| Apple | 21.3.0 |
+| Android | 31.3.0 |
+| Unity | 0.13.0 |
+| Node.js | 31.3.0 |
+| Python | 27.3.0 |
+| PHP | 32.4.0 |
+| Ruby | 30.3.0 |
+| Dart | 31.3.0 |
+| .NET | 11.3.0 |
+| Kotlin | 24.3.0 |
+| Swift | 23.4.0 |
+| Rust | 0.24.0 |
+
+The Go SDK takes `output` as a string, so pass `"auto"` to `WithGetFilePreviewOutput`.
 
 ## Caching {% #automatic-output-format-caching %}
 

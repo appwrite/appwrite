@@ -1,14 +1,14 @@
 ---
 layout: changelog
 title: "Serve AVIF or WebP to each browser with output set to auto"
-date: 2026-11-24
+date: 2026-11-26
 cover: /images/blog/announcing-automatic-image-format/cover.avif
 tags: storage, performance, sdk
 ---
 
 [Storage file previews](/docs/products/storage/images#automatic-output-format) and [Avatars screenshots](/docs/products/avatars/screenshots#automatic-output-format) now accept `auto` as the `output` format. Appwrite reads the request's `Accept` header and returns AVIF if it lists `image/avif`, WebP if it lists `image/webp`, and otherwise the original format for previews or PNG for screenshots. One preview URL in an `<img>` or `srcset` now gives Chrome, Edge, and Firefox AVIF and Safari WebP, with no `<picture>` element.
 
-Only explicitly named types count, so SDKs that download bytes with `Accept: image/*` get the original format. Responses include `Vary: Accept` and `Cache-Control: private`, and Appwrite caches each format separately. Requests with an explicit `output` are unchanged. `ImageFormat.Auto` is available from the Web SDK 29.3.0 and the Node.js SDK 31.3.0. It's live on Appwrite Cloud and ships in the next self-hosted Appwrite release.
+Only explicitly named types count, so SDKs that download bytes with `Accept: image/*` get the original format. Responses include `Vary: Accept` and `Cache-Control: private`, and Appwrite caches each format separately. Requests with an explicit `output` are unchanged. `ImageFormat.Auto` is in every current Appwrite SDK, starting with the Web SDK 29.3.0 and the Node.js SDK 31.3.0. It's live on Appwrite Cloud and ships in the next self-hosted Appwrite release.
 
 {% arrow_link href="/blog/post/announcing-automatic-image-format" %}
 Read the announcement

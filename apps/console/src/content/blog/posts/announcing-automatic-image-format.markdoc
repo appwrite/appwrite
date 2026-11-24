@@ -2,7 +2,7 @@
 layout: post
 title: "Announcing automatic AVIF and WebP for image previews"
 description: Set output to auto on Appwrite Storage previews and Avatars screenshots, and every browser gets AVIF, WebP, or the original format from the same image URL.
-date: 2026-11-24
+date: 2026-11-26
 cover: /images/blog/announcing-automatic-image-format/cover.avif
 timeToRead: 5
 author: aditya-oberai
@@ -20,7 +20,7 @@ faqs:
   - question: "Does serving several formats of the same image cost more on Appwrite Cloud?"
     answer: "No. Image transformations are billed per [origin image](/docs/advanced/billing/image-transformations), not per variant, so AVIF, WebP, and the original format of the same file count as one origin image."
   - question: "Which Appwrite endpoints support output set to auto?"
-    answer: "Storage file previews (`storage.getFilePreview`) and Avatars screenshots (`avatars.getScreenshot`). Screenshots fall back to PNG instead of the original format. `ImageFormat.Auto` is in the Web SDK 29.3.0, React Native SDK 3.3.0, Flutter SDK 28.4.0, Apple SDK 21.3.0, Android SDK 31.3.0, Node.js SDK 31.3.0, and later versions."
+    answer: "Storage file previews (`storage.getFilePreview`) and Avatars screenshots (`avatars.getScreenshot`). Screenshots fall back to PNG instead of the original format. `ImageFormat.Auto` is in every current Appwrite SDK, starting with the Web SDK 29.3.0 and the Node.js SDK 31.3.0. The [docs](/docs/products/storage/images#automatic-output-format) list the first version for each SDK."
   - question: "Is output set to auto available on self-hosted Appwrite?"
     answer: "Automatic output format is live on Appwrite Cloud and ships in the next self-hosted Appwrite release."
 ---
@@ -157,7 +157,7 @@ Skip it when the client downloads bytes itself. The Flutter, Apple, Android, and
 
 # Getting started with automatic image formats in Appwrite Storage
 
-Automatic output format is live on [Appwrite Cloud](/sign-in) today and ships in the next self-hosted Appwrite release. `ImageFormat.Auto` is available from the Web SDK 29.3.0 and the Node.js SDK 31.3.0, and in the current Flutter, Apple, Android, and React Native SDKs. Change one parameter on your web previews, and your users' browsers take it from there.
+Automatic output format is live on [Appwrite Cloud](/sign-in) today and ships in the next self-hosted Appwrite release. `ImageFormat.Auto` is in every current Appwrite SDK, starting with the Web SDK 29.3.0 and the Node.js SDK 31.3.0. Change one parameter on your web previews, and your users' browsers take it from there.
 
 - [Automatic output format for previews](/docs/products/storage/images#automatic-output-format)
 - [Screenshots with automatic output format](/docs/products/avatars/screenshots#automatic-output-format)
