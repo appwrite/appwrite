@@ -229,7 +229,7 @@ export function runtimeLogsUsageQueryOptions(
       )
       return {
         interval,
-        total: usage.total,
+        total: usage.linesTotal,
         points: fillRuntimeLogVolume(usage.buckets, from, end, interval),
       }
     },
@@ -241,7 +241,7 @@ export function runtimeLogsUsageQueryOptions(
 
 interface RuntimeLogUsage {
   interval: string
-  total: number
+  linesTotal: number
   buckets: RuntimeLogUsageBucket[]
 }
 
@@ -267,7 +267,7 @@ async function getRuntimeLogUsage(
   })) as Partial<RuntimeLogUsage>
   return {
     interval: response.interval ?? interval,
-    total: response.total ?? 0,
+    linesTotal: response.linesTotal ?? 0,
     buckets: response.buckets ?? [],
   }
 }

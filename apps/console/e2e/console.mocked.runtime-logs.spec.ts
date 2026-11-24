@@ -346,7 +346,7 @@ async function mockAppwriteApi(page: Page) {
       }
       return json(200, {
         interval: url.searchParams.get('interval'),
-        total: rows.length,
+        linesTotal: rows.length,
         buckets: [...buckets]
           .sort(([a], [b]) => a - b)
           .map(([start, bucket]) => ({
