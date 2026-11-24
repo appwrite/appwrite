@@ -27,7 +27,7 @@ describe('Init org promo banner', () => {
     const banner = init5Banner(getInitMockDayBannerExpired())
     expect(banner?.eventId).toBe(INIT_5)
     expect(banner?.phase).toBe('before')
-    expect(banner?.message).toContain('a new reveal every day')
+    expect(banner?.message).toContain('biggest Init ever')
     expect(banner?.cta.to).toBe('/init')
   })
 

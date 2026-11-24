@@ -3,6 +3,10 @@ import { useMemo } from 'react'
 import type { ReactNode } from 'react'
 import { InitWordmark } from '@/components/pages/init/_components/InitWordmark'
 import { Badge } from '@/components/ui/badge'
+import {
+  INIT5_FIVE_GLYPH_PATH,
+  INIT5_FIVE_GLYPH_VIEWBOX,
+} from '@/lib/init/init5-hero/five-glyph'
 import { getEnvProfileFeatures } from '@/lib/console-profiles'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
@@ -88,6 +92,16 @@ export function InitOrgPromoBanner() {
           lightTrails={lightTrails}
           className="relative z-10 shrink-0 text-[20px] text-foreground transition-colors duration-300 ease-out group-hover/banner:text-foreground sm:text-[22px]"
         />
+        {lightTrails ? (
+          <svg
+            viewBox={INIT5_FIVE_GLYPH_VIEWBOX}
+            aria-label="5"
+            role="img"
+            className="relative z-10 -ms-0.5 h-[1.05em] w-auto shrink-0 text-[20px] text-foreground sm:text-[22px]"
+          >
+            <path fill="currentColor" d={INIT5_FIVE_GLYPH_PATH} />
+          </svg>
+        ) : null}
         <span
           aria-hidden
           className="relative z-10 hidden shrink-0 text-muted-foreground/40 sm:inline"
