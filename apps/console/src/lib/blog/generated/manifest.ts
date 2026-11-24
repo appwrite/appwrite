@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-domain-updates",
+    "href": "/blog/post/announcing-domain-updates",
+    "title": "Announcing domain updates for Appwrite Sites and Functions",
+    "description": "Update a custom domain on Appwrite Sites or Functions to serve another branch or redirect somewhere new, without touching its DNS records or its certificate.",
+    "date": "2026-11-24",
+    "lastUpdated": "2026-11-24",
+    "timeToRead": 5,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-domain-updates/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "appwrite-is-moving-from-php-to-rust",
     "href": "/blog/post/appwrite-is-moving-from-php-to-rust",
     "title": "Appwrite is moving from PHP to Rust",

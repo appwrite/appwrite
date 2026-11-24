@@ -15,7 +15,7 @@ Proxy rules belong to a project, not to an organization. Authenticate with the c
 | Scope | Operations |
 | ----- | ---------- |
 | `rules.read` | List rules, get a rule |
-| `rules.write` | Create a rule, verify a rule, delete a rule |
+| `rules.write` | Create a rule, update a rule, verify a rule, delete a rule |
 | `proxy.invalidations.write` | Invalidate cached responses |
 
 {% multicode %}
@@ -127,6 +127,55 @@ let redirect = proxy
         "customer.com",
         "https://www.customer.com",
         StatusCode::MovedPermanently,
+        "<SITE_ID>",
+        ProxyResourceType::Site,
+    )
+    .await?;
+```
+{% /multicode %}
+
+# Rule updates {% #rule-updates %}
+
+An update changes what a hostname serves and leaves its DNS record, verification status, and certificate alone, so a verified rule keeps serving over HTTPS without another verification. Each rule kind has its own update operation:
+
+| Operation | Updates | Parameters |
+| --------- | ------- | ---------- |
+| `updateSiteRule` | Site rules | `siteId`, `branch` |
+| `updateFunctionRule` | Function rules | `functionId`, `branch` |
+| `updateRedirectRule` | Redirect rules | `url`, `statusCode`, `resourceId`, `resourceType` |
+
+The domain itself can't change, and neither can the rule type. Calling the operation for another kind of rule, for example `updateFunctionRule` on a site rule, fails with `404 rule_not_found`. To turn a deployment rule into a redirect, delete the rule and create a new one.
+
+`siteId` and `functionId` can name a different site or function in the same project, which moves the hostname to it. Leave out `branch` to serve the resource's active deployment. Leaving it out also clears a branch set earlier. With `branch` set, the rule serves the newest ready deployment from that branch. If the branch has no ready deployment, the update fails with `404 deployment_not_found` and the rule keeps serving its current deployment.
+
+{% multicode %}
+```server-nodejs
+const siteRule = await proxy.updateSiteRule({
+    ruleId: '<RULE_ID>',
+    siteId: '<SITE_ID>',
+    branch: 'staging',
+});
+
+const redirect = await proxy.updateRedirectRule({
+    ruleId: '<RULE_ID>',
+    url: 'https://www.customer.com/pricing',
+    statusCode: '308',
+    resourceId: '<SITE_ID>',
+    resourceType: 'site',
+});
+```
+```server-rust
+use appwrite::enums::{ProxyResourceType, StatusCode};
+
+let site_rule = proxy
+    .update_site_rule("<RULE_ID>", "<SITE_ID>", Some("staging"))
+    .await?;
+
+let redirect = proxy
+    .update_redirect_rule(
+        "<RULE_ID>",
+        "https://www.customer.com/pricing",
+        StatusCode::PermanentRedirect,
         "<SITE_ID>",
         ProxyResourceType::Site,
     )
