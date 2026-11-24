@@ -1696,6 +1696,16 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'The TXT record was not found yet. DNS changes can take a few minutes to propagate.':
     'רשומת ה-TXT עדיין לא נמצאה. עדכון שינויי DNS עשוי להימשך כמה דקות.',
   Later: 'אחר כך',
+  'SAML is coming soon':
+    'SAML יגיע בקרוב',
+  'Get notified when SAML identity providers can be connected.':
+    'קבלו עדכון כשאפשר יהיה לחבר ספקי זהויות SAML.',
+  'Identity providers that sign people in with SAML 2.0, such as Okta or Microsoft Entra ID.':
+    'ספקי זהויות שמכניסים אנשים באמצעות SAML 2.0, כמו Okta או Microsoft Entra ID.',
+  "You'll be notified when SAML is available.":
+    'נודיע לכם כש-SAML יהיה זמין.',
+  "You'll no longer be notified about SAML.":
+    'לא נודיע לכם יותר על SAML.',
   'Organization photo': 'תמונת הארגון',
   'Shown next to your organization name across the Console.': 'מוצגת לצד שם הארגון שלך בכל הקונסולה.',
   'PNG, JPEG, or WebP up to 5MB.': 'PNG,\u200f JPEG או WebP עד 5MB.',

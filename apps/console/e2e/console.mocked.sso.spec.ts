@@ -733,6 +733,52 @@ test.describe('organization single sign-on', () => {
     await expect(page.getByText('No identity providers yet')).toBeVisible()
   })
 
+  test('offers SAML as coming soon and takes interest in it', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page)
+    await enableSso(page)
+    await openSso(page)
+
+    const savedPrefs = () =>
+      page.waitForRequest(
+        (request) =>
+          request.method() === 'PATCH' &&
+          new URL(request.url()).pathname === '/v1/account/prefs',
+      )
+
+    // SAML sits next to the OIDC providers, with nothing to set up yet
+    const saml = page.locator('div.rounded-xl', {
+      has: page.getByText('SAML is coming soon'),
+    })
+    await expect(
+      saml.getByRole('heading', { name: 'Identity providers' }),
+    ).toContainText('SAML')
+    await expect(saml.getByText('Coming soon', { exact: true })).toBeVisible()
+    await expect(saml.getByRole('button', { name: /add/i })).toHaveCount(0)
+
+    const notify = saml.getByRole('button', { name: 'Notify me' })
+    await expect(notify).toHaveAttribute('aria-pressed', 'false')
+    const added = savedPrefs()
+    await notify.click()
+    expect((await added).postDataJSON().prefs.featureNotifications).toBe(
+      'sso-saml',
+    )
+    await expect(
+      page.getByText("You'll be notified when SAML is available."),
+    ).toBeVisible()
+
+    // The same button reads the state back, and a second click takes it away
+    const registered = saml.getByRole('button', {
+      name: 'You will be notified',
+    })
+    await expect(registered).toHaveAttribute('aria-pressed', 'true')
+    const removed = savedPrefs()
+    await registered.click()
+    expect((await removed).postDataJSON().prefs.featureNotifications).toBe('')
+    await expect(saml.getByRole('button', { name: 'Notify me' })).toBeVisible()
+  })
+
   test('signs in through the only provider of a work email', async ({
     page,
   }) => {
