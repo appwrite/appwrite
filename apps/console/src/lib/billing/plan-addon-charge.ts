@@ -79,6 +79,13 @@ export function getPlanAddonPrice(
   return Number(price)
 }
 
+export function getPlanAddonCurrency(
+  plan: BillingPlan | null | undefined,
+  key: BillablePlanAddonKey,
+): string {
+  return getAddon(plan, key)?.currency || 'USD'
+}
+
 /**
  * Hard cap when addon purchases are not supported (0 = unlimited).
  */

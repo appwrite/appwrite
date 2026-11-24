@@ -31,6 +31,7 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { escalationSummary } from '@/lib/alerts/escalation'
 import { alertingLimits, countResponders } from '@/lib/alerts/plan-limits'
 import {
+  getPlanAddonCurrency,
   getPlanAddonIncludedCount,
   getPlanAddonPrice,
 } from '@/lib/billing/plan-addon-charge'
@@ -87,7 +88,13 @@ export function Escalations() {
             .replace('{used}', String(countResponders(escalations, members)))
             .replace('{included}', String(respondersIncluded))} ${t(
             'Each extra responder costs {price} per month.',
-          ).replace('{price}', formatCurrency(responderPrice))}`
+          ).replace(
+            '{price}',
+            formatCurrency(
+              responderPrice,
+              getPlanAddonCurrency(plan, 'responders'),
+            ),
+          )}`
         : null
 
   const openDialog = (escalation: Escalation | null) =>

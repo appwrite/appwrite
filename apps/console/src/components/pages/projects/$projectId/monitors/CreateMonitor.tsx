@@ -18,6 +18,7 @@ import {
 import { formatCurrency } from '@/components/pages/organizations/$orgId/billing/utils'
 import { alertingLimits } from '@/lib/alerts/plan-limits'
 import {
+  getPlanAddonCurrency,
   getPlanAddonIncludedCount,
   getPlanAddonPrice,
 } from '@/lib/billing/plan-addon-charge'
@@ -123,7 +124,10 @@ export function CreateMonitor({
               .replace('{used}', String(probeCount))
               .replace('{included}', String(probesIncluded))} ${t(
               'Each extra check costs {price} per month.',
-            ).replace('{price}', formatCurrency(probePrice))}`
+            ).replace(
+              '{price}',
+              formatCurrency(probePrice, getPlanAddonCurrency(plan, 'probes')),
+            )}`
           : null
 
   const error =
