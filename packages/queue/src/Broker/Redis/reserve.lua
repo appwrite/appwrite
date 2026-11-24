@@ -8,7 +8,7 @@ end
 local now = redis.call('TIME')
 local deadline = redis.call('ZSCORE', KEYS[2], KEYS[3])
 if ARGV[4] == '1' and (not deadline or tonumber(deadline) <= tonumber(now[1])) then
-    return redis.error_reply('Queue reservation expired')
+    return {}
 end
 local result = {}
 for i = 1, tonumber(ARGV[1]) do

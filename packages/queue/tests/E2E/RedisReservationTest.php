@@ -478,6 +478,36 @@ final class RedisReservationTest extends TestCase
         $this->assertSame([1, 2], array_map(fn (\Utopia\Queue\Message $m) => $m->getPayload()['n'], $messages));
     }
 
+    public function testSweptReservationBeforeTheContinuationRequeuesThePoppedPayload(): void
+    {
+        $receive = new class ('127.0.0.1', (int) (getenv('REDIS_PORT') ?: 16379)) extends Connection {
+            /** @var \Closure(string): void */
+            public \Closure $beforePop;
+
+            public function rightPopLeftPush(string $queue, string $destination, int $timeout): string|false
+            {
+                ($this->beforePop)($destination);
+                return parent::rightPopLeftPush($queue, $destination, $timeout);
+            }
+        };
+        $receive->beforePop = function (string $reservation): void {
+            $this->redis->zRem($this->key('reservations'), $reservation);
+            $this->broker->publish($this->queue, ['n' => 1]);
+        };
+        try {
+            new Broker($receive, $receive)->receive($this->queue, 1, 2);
+            self::fail('A swept reservation must not deliver');
+        } catch (\RuntimeException $e) {
+            $this->assertStringContainsString('requeued', $e->getMessage());
+        }
+        $this->assertSame(0, $this->redis->zCard($this->key('reservations')));
+        $this->assertSame([], $this->redis->keys($this->key('reservations') . '.*'));
+        $this->assertSame(1, $this->broker->getQueueSize($this->queue));
+        $message = $this->broker->receive($this->queue, 0)[0];
+        $this->assertSame(['n' => 1], $message->getPayload());
+        $this->broker->commit($this->queue, $message);
+    }
+
     private function key(string $kind): string
     {
         return $this->queue->namespace . '.' . $kind . '.' . $this->queue->name;
