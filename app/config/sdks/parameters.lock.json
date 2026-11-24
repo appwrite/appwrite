@@ -151,7 +151,8 @@
             "total"
         ],
         "account.listSessions": [
-            "total"
+            "total",
+            "queries"
         ],
         "account.updateEmail": [
             "email",
@@ -1174,7 +1175,8 @@
             "total"
         ],
         "account.listSessions": [
-            "total"
+            "total",
+            "queries"
         ],
         "account.updateEmail": [
             "email",
@@ -5137,7 +5139,8 @@
         ],
         "users.listSessions": [
             "userId",
-            "total"
+            "total",
+            "queries"
         ],
         "users.listTargets": [
             "userId",
@@ -5785,7 +5788,8 @@
             "total"
         ],
         "account.listSessions": [
-            "total"
+            "total",
+            "queries"
         ],
         "account.updateEmail": [
             "email",
@@ -9614,7 +9618,8 @@
         ],
         "users.listSessions": [
             "userId",
-            "total"
+            "total",
+            "queries"
         ],
         "users.listTargets": [
             "userId",
