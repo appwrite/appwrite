@@ -1,6 +1,7 @@
 import { SettingsCardsList } from '@/components/global/shared/settings-search/SettingsCardsList'
 import { EmailDomainsCard } from './_components/EmailDomainsCard'
 import { RequireSSOCard } from './_components/RequireSSOCard'
+import { SAMLProvidersCard } from './_components/SAMLProvidersCard'
 import { SSOProvidersCard } from './_components/SSOProvidersCard'
 
 export function SingleSignOn() {
@@ -41,6 +42,22 @@ export function SingleSignOn() {
             ],
           },
           node: <SSOProvidersCard />,
+        },
+        {
+          id: 'sso-saml',
+          search: {
+            title: 'SAML identity providers',
+            keywords: [
+              'sso',
+              'single sign-on',
+              'saml',
+              'identity provider',
+              'okta',
+              'entra',
+              'coming soon',
+            ],
+          },
+          node: <SAMLProvidersCard />,
         },
         {
           id: 'sso-required',

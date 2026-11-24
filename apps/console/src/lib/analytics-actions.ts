@@ -321,6 +321,7 @@ export const ANALYTICS_ACTIONS = {
   'create-email-domain': 'Create Email Domain Clicked',
   'create-sso-provider': 'Create SSO Provider Clicked',
   'require-sso': 'Require SSO Clicked',
+  'notify-sso-saml': 'Notify SSO SAML Clicked',
   'create-webhook': 'Create Webhook Clicked',
   'add-project-domain': 'Add Project Domain Clicked',
   'add-platform': 'Add Platform Clicked',
