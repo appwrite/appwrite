@@ -76,9 +76,10 @@ describe('getNotificationNavigateTarget', () => {
   })
 
   test('has nowhere to go without a project or an alert', () => {
-    // Notifications from servers that do not send the alert fields lack them.
+    // Notifications from servers that do not send the subject fields lack them.
     const older: Partial<Models.Notification> = notification({ projectId: '' })
-    delete older.alertId
+    delete older.subjectType
+    delete older.subjectId
     delete older.teamId
     expect(
       getNotificationNavigateTarget(older as Models.Notification),
