@@ -109,4 +109,19 @@ describe('queueAccountPrefsWrite', () => {
     expect(await second).toBeUndefined()
     expect(ran).toBe(false)
   })
+
+  test('drops a write queued with no account once an account signs in', async () => {
+    const first = queueHeldWrite()
+    let ran = false
+    const second = queueAccountPrefsWrite(async () => {
+      ran = true
+      return 'saved'
+    })
+
+    signIn('accountB')
+    first.release()
+    await first.done
+    expect(await second).toBeUndefined()
+    expect(ran).toBe(false)
+  })
 })

@@ -16,19 +16,18 @@ function signedInAccountId(): string | undefined {
 }
 
 /**
- * Queue a write for the account signed in now. A write still waiting when
- * that account signs out, or another account or an impersonated user takes
- * its place, is dropped and resolves to `undefined`, like a skipped write,
- * so it never lands on the wrong account.
+ * Queue a write for the account signed in now. A write runs only if the same
+ * account is still signed in when its turn comes: one that account signed out
+ * of, or that another account or an impersonated user took over, is dropped
+ * and resolves to `undefined`, like a skipped write. So is a write queued with
+ * no account known once one signs in, as it was built from no account's prefs.
  */
 export function queueAccountPrefsWrite<T>(
   write: () => Promise<T>,
 ): Promise<T | undefined> {
   const accountId = signedInAccountId()
   const forAccount = () =>
-    accountId !== undefined && signedInAccountId() !== accountId
-      ? Promise.resolve(undefined)
-      : write()
+    signedInAccountId() === accountId ? write() : Promise.resolve(undefined)
   const run = writes.then(forAccount, forAccount)
   writes = run.catch(() => undefined)
   return run
