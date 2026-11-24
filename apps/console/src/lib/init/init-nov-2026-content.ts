@@ -174,7 +174,10 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
   },
 ]
 
-/** Init 5 week schedule (Pacific Time, PST in November). */
+/**
+ * Init 5 week schedule (Pacific Time, PST in November): one YouTube launch
+ * stream each weekday, then a single Reddit AMA on Saturday.
+ */
 export const INIT_NOV_2026_SCHEDULE: LaunchEventScheduleItem[] = [
   {
     id: 'sched-nov5-analytics',
@@ -220,14 +223,6 @@ export const INIT_NOV_2026_SCHEDULE: LaunchEventScheduleItem[] = [
     startsAt: '2026-12-04T09:00:00-08:00',
     isLive: true,
     href: INIT_YOUTUBE_CHANNEL_HREF,
-  },
-  {
-    id: 'sched-nov5-discord-closing',
-    day: 6,
-    platform: 'discord',
-    title: 'Init community recap',
-    startsAt: '2026-12-05T09:00:00-08:00',
-    href: '/discord',
   },
   {
     id: 'sched-nov5-ama',

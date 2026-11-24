@@ -69,8 +69,6 @@ describe('init schedule titles', () => {
 
   test('keeps the titles of sessions after the launch week', () => {
     expect(titleOf(0, 'sched-nov5-ama')).toBe('Init 5 AMA')
-    expect(titleOf(3, 'sched-nov5-discord-closing')).toBe(
-      'Init community recap',
-    )
+    expect(titleOf(3, 'sched-nov5-ama')).toBe('Init 5 AMA')
   })
 })
