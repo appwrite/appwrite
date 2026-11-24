@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useQuery,
+} from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import {
   AlertCircle,
@@ -15,6 +19,7 @@ import {
 } from 'lucide-react'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { RuntimeLogRow } from '@/components/global/shared/RuntimeLogRow'
+import { RuntimeLogsVolumeChart } from '@/components/global/shared/RuntimeLogsVolumeChart'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -30,11 +35,13 @@ import {
   fetchRuntimeLogsSince,
   RUNTIME_LOGS_PAGE_LIMIT,
   runtimeLogsInfiniteQueryOptions,
+  runtimeLogsUsageQueryOptions,
   type RuntimeLogRange,
   type RuntimeLogResourceType,
   type RuntimeLogScope,
   type RuntimeLogStream,
   type RuntimeLogsFilter,
+  type RuntimeLogWindow,
 } from '@/lib/react-query/hooks'
 import { useLocalizedDateFormat } from '@/lib/i18n/use-localized-date-format'
 import {
@@ -114,6 +121,7 @@ export function RuntimeLogsView({
   const [kind, setKind] = useState<RuntimeLogResourceType | 'all'>('all')
   const [stream, setStream] = useState<RuntimeLogStream>('all')
   const [range, setRange] = useState<RuntimeLogRange>('1h')
+  const [zoom, setZoom] = useState<RuntimeLogWindow | undefined>()
   const [search, setSearch] = useState('')
   const [minLevel, setMinLevel] = useState<RuntimeLogLevel | 'all'>('all')
   const [showMetadata, setShowMetadata] = useState(false)
@@ -128,8 +136,9 @@ export function RuntimeLogsView({
       resourceType: isProject && kind !== 'all' ? kind : undefined,
       stream,
       range,
+      window: zoom,
     }),
-    [deploymentId, isProject, kind, stream, range],
+    [deploymentId, isProject, kind, stream, range, zoom],
   )
   const ready = canListRuntimeLogs(projectId, resourceType, resourceId, filter)
 
@@ -150,6 +159,18 @@ export function RuntimeLogsView({
       filter,
     ),
     placeholderData: keepPreviousData,
+  })
+
+  // Live tail follows the clock, so it polls the chart too
+  const usage = useQuery({
+    ...runtimeLogsUsageQueryOptions(
+      projectId,
+      resourceType,
+      resourceId,
+      filter,
+    ),
+    placeholderData: keepPreviousData,
+    refetchInterval: live ? TAIL_INTERVAL_MS * 6 : false,
   })
 
   const fetched = useMemo(
@@ -509,8 +530,12 @@ export function RuntimeLogsView({
           </SelectContent>
         </Select>
         <Select
-          value={range}
-          onValueChange={(value) => setRange(value as RuntimeLogRange)}
+          value={zoom ? 'custom' : range}
+          onValueChange={(value) => {
+            if (value === 'custom') return
+            setZoom(undefined)
+            setRange(value as RuntimeLogRange)
+          }}
         >
           <SelectTrigger
             className="h-9 w-[150px] text-[13px]"
@@ -524,6 +549,9 @@ export function RuntimeLogsView({
             <SelectItem value="6h">{t('Last 6 hours')}</SelectItem>
             <SelectItem value="24h">{t('Last 24 hours')}</SelectItem>
             <SelectItem value="retention">{t('All retained')}</SelectItem>
+            {zoom && (
+              <SelectItem value="custom">{t('Selected range')}</SelectItem>
+            )}
           </SelectContent>
         </Select>
         <div className="relative min-w-[180px] flex-1">
@@ -539,7 +567,11 @@ export function RuntimeLogsView({
           variant={live ? 'default' : 'outline'}
           size="sm"
           className="h-9"
-          onClick={() => setLive((value) => !value)}
+          onClick={() => {
+            // Live follows new lines, so it leaves a zoomed window
+            if (!live) setZoom(undefined)
+            setLive((value) => !value)
+          }}
           disabled={!ready}
           aria-pressed={live}
         >
@@ -565,7 +597,10 @@ export function RuntimeLogsView({
           variant="outline"
           size="sm"
           className="h-9 w-9 p-0"
-          onClick={() => refetch()}
+          onClick={() => {
+            void refetch()
+            void usage.refetch()
+          }}
           disabled={!ready || isFetching}
           aria-label={t('Refresh')}
           title={t('Refresh')}
@@ -593,6 +628,24 @@ export function RuntimeLogsView({
         >
           {t('Live tail paused on an error and will retry:')} {tailError}
         </p>
+      )}
+      {ready && !usage.error && (
+        <RuntimeLogsVolumeChart
+          points={usage.data?.points}
+          interval={usage.data?.interval}
+          total={usage.data?.total}
+          loading={usage.isLoading}
+          zoomed={!!zoom}
+          onZoom={(picked) => {
+            setLive(false)
+            setZoom({
+              from: picked.from!.toISOString(),
+              to: picked.to!.toISOString(),
+            })
+          }}
+          onResetZoom={() => setZoom(undefined)}
+          insetClassName={insetClassName}
+        />
       )}
       <div className={cn('min-h-0 flex-1 overflow-y-auto', insetClassName)}>
         {body}

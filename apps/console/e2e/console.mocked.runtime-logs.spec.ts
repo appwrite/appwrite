@@ -261,6 +261,15 @@ function equalValues(url: URL, attribute: string): string[] | undefined {
   return queryValues(url, 'equal', attribute)
 }
 
+/** Whether a row falls inside the request's timestamp bounds, when it names both. */
+function inWindow(url: URL, timestamp: string): boolean {
+  const from = queryValues(url, 'greaterThanEqual', 'timestamp')?.[0]
+  const to = queryValues(url, 'lessThanEqual', 'timestamp')?.[0]
+  if (!to) return true
+  const time = Date.parse(timestamp)
+  return (!from || time >= Date.parse(from)) && time <= Date.parse(to)
+}
+
 function corsHeaders(route: Route): Record<string, string> {
   return {
     'access-control-allow-origin': route.request().headers()['origin'] ?? '*',
@@ -311,6 +320,42 @@ async function mockAppwriteApi(page: Page) {
         body: JSON.stringify(body),
       })
 
+    if (apiPath === '/logs/usage') {
+      // Lines per bucket, counted from the same rows the list returns
+      const resourceType = url.searchParams.get('resourceType') ?? ''
+      const resourceId = url.searchParams.get('resourceId') ?? ''
+      const step =
+        { '1m': 60, '15m': 900, '1h': 3600, '1d': 86400 }[
+          url.searchParams.get('interval') ?? '1h'
+        ]! * 1000
+      const deploymentIds = equalValues(url, 'deploymentId')
+      const rows = (
+        resourceType ? logsFor(resourceType, resourceId) : projectLogs()
+      ).filter(
+        (row) =>
+          (!deploymentIds || deploymentIds.includes(row.deploymentId)) &&
+          inWindow(url, row.timestamp),
+      )
+      const buckets = new Map<number, { total: number; stderr: number }>()
+      for (const row of rows) {
+        const start = Math.floor(Date.parse(row.timestamp) / step) * step
+        const bucket = buckets.get(start) ?? { total: 0, stderr: 0 }
+        bucket.total++
+        if (row.stream === 'stderr') bucket.stderr++
+        buckets.set(start, bucket)
+      }
+      return json(200, {
+        interval: url.searchParams.get('interval'),
+        total: rows.length,
+        buckets: [...buckets]
+          .sort(([a], [b]) => a - b)
+          .map(([start, bucket]) => ({
+            date: new Date(start).toISOString(),
+            ...bucket,
+          })),
+      })
+    }
+
     if (apiPath === '/logs') {
       const resourceType = url.searchParams.get('resourceType') ?? ''
       const resourceId = url.searchParams.get('resourceId') ?? ''
@@ -347,7 +392,8 @@ async function mockAppwriteApi(page: Page) {
       const logs = logsFor(resourceType, resourceId).filter(
         (row) =>
           deploymentIds.includes(row.deploymentId) &&
-          (!streams || streams.includes(row.stream)),
+          (!streams || streams.includes(row.stream)) &&
+          inWindow(url, row.timestamp),
       )
       return json(200, { total: 0, logs })
     }
@@ -518,6 +564,47 @@ test.describe('runtime logs', () => {
       .click()
     await expect(info).toContainText('stdout')
     await expect(info).toContainText('tor')
+  })
+
+  test('the volume chart counts lines and zooms into a dragged window', async ({
+    page,
+  }) => {
+    await enableRuntimeLogs(page)
+    await mockAppwriteApi(page)
+
+    await page.goto(
+      `/projects/${PROJECT.$id}/functions/${FUNCTION.$id}/runtime-logs`,
+      { waitUntil: 'domcontentloaded' },
+    )
+
+    const chart = page.getByRole('region', { name: 'Log volume' })
+    // Six lines from the active deployment in the last hour
+    await expect(chart).toContainText('6 lines', { timeout: 30_000 })
+    await expect(page.getByRole('log')).toContainText(STDOUT)
+
+    // Drag across the first part of the hour, long before any line
+    const surface = chart.locator('.recharts-wrapper')
+    const box = (await surface.boundingBox())!
+    const y = box.y + box.height / 2
+    await page.mouse.move(box.x + box.width * 0.15, y)
+    await page.mouse.down()
+    await page.mouse.move(box.x + box.width * 0.3, y, { steps: 8 })
+    await page.mouse.up()
+
+    await expect(
+      page.getByRole('combobox', { name: 'Time range' }),
+    ).toContainText('Selected range')
+    await expect(chart).toContainText('0 lines')
+    await expect(page.getByText('No logs', { exact: true })).toBeVisible()
+
+    await chart.getByRole('button', { name: 'Reset zoom' }).click()
+    await expect(
+      page.getByRole('combobox', { name: 'Time range' }),
+    ).toContainText('Last hour')
+    await expect(page.getByRole('log')).toContainText(STDOUT)
+    await expect(chart.getByRole('button', { name: 'Reset zoom' })).toHaveCount(
+      0,
+    )
   })
 
   test('a site lists its active deployment runtime logs', async ({ page }) => {

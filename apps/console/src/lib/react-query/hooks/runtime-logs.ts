@@ -4,9 +4,14 @@
  * reads every resource in the project.
  */
 
-import { infiniteQueryOptions } from '@tanstack/react-query'
+import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query'
 import { Query, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import {
+  fillRuntimeLogVolume,
+  runtimeLogUsageInterval,
+  type RuntimeLogUsageBucket,
+} from '@/lib/runtime-log-usage'
 import { nextCursorAfter } from './cursor'
 
 export type RuntimeLogResourceType = 'functions' | 'sites' | 'databases'
@@ -36,6 +41,14 @@ export interface RuntimeLogsFilter {
   resourceType?: RuntimeLogResourceType
   stream: RuntimeLogStream
   range: RuntimeLogRange
+  /** A window picked on the volume chart; replaces `range` while set. */
+  window?: RuntimeLogWindow
+}
+
+/** ISO timestamps, both inclusive. */
+export interface RuntimeLogWindow {
+  from: string
+  to: string
 }
 
 function filterQueries(
@@ -56,15 +69,28 @@ function filterQueries(
   return queries
 }
 
-function rangeQuery(range: RuntimeLogRange): string[] {
-  const window = RUNTIME_LOG_RANGES[range]
-  if (window === null) return []
-  return [
-    Query.greaterThanEqual(
-      'timestamp',
-      new Date(Date.now() - window).toISOString(),
-    ),
-  ]
+/** The filter's time bounds, resolved against the clock now. */
+function timeBounds(filter: RuntimeLogsFilter): {
+  from: Date | null
+  to: Date | null
+} {
+  if (filter.window) {
+    return {
+      from: new Date(filter.window.from),
+      to: new Date(filter.window.to),
+    }
+  }
+  const span = RUNTIME_LOG_RANGES[filter.range]
+  return { from: span === null ? null : new Date(Date.now() - span), to: null }
+}
+
+function rangeQuery(filter: RuntimeLogsFilter): string[] {
+  const { from, to } = timeBounds(filter)
+  const queries: string[] = []
+  if (from)
+    queries.push(Query.greaterThanEqual('timestamp', from.toISOString()))
+  if (to) queries.push(Query.lessThanEqual('timestamp', to.toISOString()))
+  return queries
 }
 
 /** True when the filter names everything the API needs to answer. */
@@ -126,7 +152,7 @@ export function runtimeLogsInfiniteQueryOptions(
     queryFn: async ({ pageParam }) => {
       const queries = [
         ...filterQueries(resourceType, filter),
-        ...rangeQuery(filter.range),
+        ...rangeQuery(filter),
         Query.orderDesc('timestamp'),
         Query.limit(RUNTIME_LOGS_PAGE_LIMIT),
       ]
@@ -165,4 +191,83 @@ export async function fetchRuntimeLogsSince(
     Query.orderAsc('timestamp'),
     Query.limit(RUNTIME_LOGS_PAGE_LIMIT),
   ])
+}
+
+/**
+ * Lines per time bucket for the volume chart, with one bar per bucket from the
+ * start of the filter's window to its end (now, for a look-back range).
+ */
+export function runtimeLogsUsageQueryOptions(
+  projectId: string | null | undefined,
+  resourceType: RuntimeLogScope,
+  resourceId: string | null | undefined,
+  filter: RuntimeLogsFilter,
+) {
+  return queryOptions({
+    queryKey: [
+      'runtime-logs-usage',
+      projectId,
+      resourceType,
+      resourceId,
+      filter,
+    ],
+    queryFn: async () => {
+      const { from, to } = timeBounds(filter)
+      const end = to ?? new Date()
+      const span = from ? end.getTime() - from.getTime() : null
+      const interval = runtimeLogUsageInterval(span)
+      const queries = [
+        ...filterQueries(resourceType, filter),
+        ...rangeQuery(filter),
+      ]
+      const usage = await getRuntimeLogUsage(
+        projectId!,
+        resourceType,
+        resourceId,
+        queries,
+        interval,
+      )
+      return {
+        interval,
+        total: usage.total,
+        points: fillRuntimeLogVolume(usage.buckets, from, end, interval),
+      }
+    },
+    enabled: canListRuntimeLogs(projectId, resourceType, resourceId, filter),
+    retry: false,
+    refetchOnWindowFocus: false,
+  })
+}
+
+interface RuntimeLogUsage {
+  interval: string
+  total: number
+  buckets: RuntimeLogUsageBucket[]
+}
+
+/** The pinned Console SDK has no `logs.getUsage()` yet, so call the route directly. */
+async function getRuntimeLogUsage(
+  projectId: string,
+  resourceType: RuntimeLogScope,
+  resourceId: string | null | undefined,
+  queries: string[],
+  interval: string,
+): Promise<RuntimeLogUsage> {
+  const client = sdk.forProject(projectId).client
+  const uri = new URL(client.config.endpoint + '/logs/usage')
+  if (resourceType !== null) {
+    uri.searchParams.set('resourceType', resourceType)
+    uri.searchParams.set('resourceId', resourceId!)
+  }
+  for (const query of queries) uri.searchParams.append('queries[]', query)
+  uri.searchParams.set('interval', interval)
+  const response = (await client.call('get', uri, {
+    'X-Appwrite-Project': client.config.project,
+    'content-type': 'application/json',
+  })) as Partial<RuntimeLogUsage>
+  return {
+    interval: response.interval ?? interval,
+    total: response.total ?? 0,
+    buckets: response.buckets ?? [],
+  }
 }
