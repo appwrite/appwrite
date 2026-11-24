@@ -345,13 +345,13 @@ make the same `\DateTime`, `\DateTimeZone` and `\DateInterval` calls the PHP cla
 
 The package's own `IdTest`, `RoleTest`, `PermissionTest` and `DateTimeTest` run on the extension,
 and `tests/database.php` (6,779 cases) is identical on both: reflection of every class; `Id::custom()`
-and `Id::unique()` (length, hex, time order, uniqueness and spread of the padding, for 21 paddings
-and coercions); `Role::parse()` of 60 strings and every factory with 15 argument lists, `"0"`
-identifiers and dimensions, bytes that are not UTF-8; `Permission::parse()` of 56 strings and of
+and `Id::unique()` (length, hex, time order, uniqueness and spread of the padding, for 14 paddings
+and 7 coercions); `Role::parse()` of 59 strings and every factory with 15 argument lists, `"0"`
+identifiers and dimensions, bytes that are not UTF-8; `Permission::parse()` of 54 strings and of
 3,000 seeded random ones, every type for 19 roles, `aggregate()` with `null`, `write` expansion,
 `$allowed` subsets, duplicates, keys, invalid strings, non-string elements and wrong `$allowed`;
 `var_dump()`, `serialize()`, `==`, `clone` and objects made without their constructor; PHP subclasses
-of `Role`, `Permission` and `\DateTime`; `DateTime`'s methods over 45 strings, 13 dates, 14 second
+of `Role`, `Permission` and `\DateTime`; `DateTime`'s methods over 40 strings, 13 dates, 14 second
 counts in 3 timezones, three default timezones, and its formats changed. The differences below are
 asserted at its end. Nothing in Appwrite or Cloud subclasses these classes.
 
