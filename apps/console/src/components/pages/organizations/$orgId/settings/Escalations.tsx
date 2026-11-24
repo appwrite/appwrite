@@ -5,6 +5,8 @@ import { Loader2, Pencil, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import { formatCurrency } from '@/components/pages/organizations/$orgId/billing/utils'
+import { PlanAllowance } from '@/components/pages/projects/$projectId/monitors/_components/PlanAllowance'
 import { roleLabel } from '@/components/pages/projects/$projectId/monitors/RuleFields'
 import { Button } from '@/components/ui/button'
 import {
@@ -27,6 +29,12 @@ import {
 } from '@/components/ui/tooltip'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { escalationSummary } from '@/lib/alerts/escalation'
+import { alertingLimits, countResponders } from '@/lib/alerts/plan-limits'
+import {
+  getPlanAddonCurrency,
+  getPlanAddonIncludedCount,
+  getPlanAddonPrice,
+} from '@/lib/billing/plan-addon-charge'
 import type { Escalation } from '@/lib/appwrite/monitors'
 import { canWriteMonitors } from '@/lib/console-access-checks'
 import { useT } from '@/lib/i18n/translate'
@@ -34,6 +42,7 @@ import {
   useDeleteEscalation,
   useEscalationMembers,
   useEscalations,
+  useOrganizationPlan,
   useOrganizationScopes,
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -52,13 +61,41 @@ export function Escalations() {
   const { access } = useOrganizationScopes(orgId)
   const canWrite = canWriteMonitors(access, features)
   const { escalations, isLoading, error, refetch } = useEscalations(orgId)
-  const { memberName } = useEscalationMembers(orgId)
+  const { members, memberName } = useEscalationMembers(orgId)
+  const { plan } = useOrganizationPlan(orgId)
   const deleteMutation = useDeleteEscalation(orgId)
   const [editing, setEditing] = useState<Escalation | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [toDelete, setToDelete] = useState<Escalation | null>(null)
 
   if (!orgId) return null
+
+  const escalationLimit = alertingLimits(plan).escalations
+  const atLimit =
+    !isLoading &&
+    escalationLimit !== null &&
+    escalations.length >= escalationLimit
+  const respondersIncluded = getPlanAddonIncludedCount(plan, 'responders')
+  const responderPrice = getPlanAddonPrice(plan, 'responders')
+  const allowance = isLoading
+    ? null
+    : atLimit
+      ? t('Escalations: {used} of {limit} allowed on your plan.')
+          .replace('{used}', String(escalations.length))
+          .replace('{limit}', String(escalationLimit))
+      : responderPrice > 0 && respondersIncluded !== null
+        ? `${t('On-call responders: {used} of {included} included.')
+            .replace('{used}', String(countResponders(escalations, members)))
+            .replace('{included}', String(respondersIncluded))} ${t(
+            'Each extra responder costs {price} per month.',
+          ).replace(
+            '{price}',
+            formatCurrency(
+              responderPrice,
+              getPlanAddonCurrency(plan, 'responders'),
+            ),
+          )}`
+        : null
 
   const openDialog = (escalation: Escalation | null) =>
     openDialogAfterOverlayCloses(() => {
@@ -75,8 +112,7 @@ export function Escalations() {
       },
       onError: (err: Error) =>
         toast.error(
-          err instanceof AppwriteException &&
-            err.type === 'escalation_in_use'
+          err instanceof AppwriteException && err.type === 'escalation_in_use'
             ? t(
                 'Monitors use this escalation. Move them to another escalation or to roles first.',
               )
@@ -91,7 +127,7 @@ export function Escalations() {
       size="sm"
       className="h-8"
       onClick={() => openDialog(null)}
-      disabled={!canWrite}
+      disabled={!canWrite || atLimit}
     >
       <Plus className="me-1.5 h-3.5 w-3.5" />
       {t('Create escalation')}
@@ -111,7 +147,7 @@ export function Escalations() {
             )}
           </p>
         </div>
-        {canWrite ? (
+        {canWrite && !atLimit ? (
           createButton
         ) : (
           <Tooltip>
@@ -119,11 +155,22 @@ export function Escalations() {
               <span className="inline-flex">{createButton}</span>
             </TooltipTrigger>
             <TooltipContent>
-              {t("You don't have permission to manage monitors.")}
+              {canWrite
+                ? t('Upgrade your plan to create more escalations.')
+                : t("You don't have permission to manage monitors.")}
             </TooltipContent>
           </Tooltip>
         )}
       </div>
+      {allowance && (
+        <div className="px-6 pb-4">
+          <PlanAllowance
+            message={allowance}
+            organizationId={orgId}
+            upgrade={atLimit}
+          />
+        </div>
+      )}
       <div className="border-t border-border">
         {isLoading ? (
           <div className="flex justify-center px-6 py-8">

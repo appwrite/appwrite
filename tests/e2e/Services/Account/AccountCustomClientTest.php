@@ -6789,6 +6789,56 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals('CH', $response['body']['clientCode']);
         $this->assertEquals('Chrome', $response['body']['clientName']);
 
+        // Forwarded IP with API Key
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['id'] . '/tokens', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'expire' => 60
+        ]);
+
+        $userId = $response['body']['userId'];
+        $secret = $response['body']['secret'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+            'x-forwarded-ip' => '191.0.113.195'
+        ], [
+            'userId' => $userId,
+            'secret' => $secret
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals('191.0.113.195', $response['body']['ip']);
+
+        // Forwarded IP without API Key
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['id'] . '/tokens', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'expire' => 60
+        ]);
+
+        $userId = $response['body']['userId'];
+        $secret = $response['body']['secret'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-forwarded-ip' => '191.0.113.195'
+        ], [
+            'userId' => $userId,
+            'secret' => $secret
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotFalse(\filter_var($response['body']['ip'], FILTER_VALIDATE_IP));
+        $this->assertNotEquals('191.0.113.195', $response['body']['ip']);
+
         /**
          * Test for FAILURE
          */
