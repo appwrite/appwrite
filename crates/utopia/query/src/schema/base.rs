@@ -154,14 +154,14 @@ pub(crate) fn alter<S: Schema>(schema: &S, table: &Table<S>) -> Result<Statement
 /// numbers as PHP prints them, anything else a quoted string.
 ///
 /// PHP: `Schema::compileDefaultValue()`.
-pub(crate) fn default_value(value: &Value) -> String {
-    match value {
+pub(crate) fn default_value<S: Schema>(schema: &S, value: &Value) -> Result<String> {
+    Ok(match value {
         Value::Null => "NULL".into(),
         Value::Bool(b) => if *b { "1" } else { "0" }.into(),
         Value::Int(i) => i.to_string(),
         Value::Float(f) => php_std::number::to_string(*f),
-        other => names::literal(&crate::value::to_php_string(other)),
-    }
+        other => return schema.literal().quote(&crate::value::to_php_string(other)),
+    })
 }
 
 /// Adds the parts of a definition to `out`, a space before each.
@@ -180,12 +180,13 @@ pub(crate) fn column_start<S: Schema>(schema: &S, column: &Column<S>) -> Result<
 }
 
 /// `DEFAULT ...`, the raw default first.
-pub(crate) fn add_default<S>(out: &mut String, column: &Column<S>) {
+pub(crate) fn add_default<S: Schema>(schema: &S, out: &mut String, column: &Column<S>) -> Result<()> {
     if let Some(raw) = &column.def.default_raw {
         add(out, &["DEFAULT ", raw]);
     } else if let Some(value) = &column.def.default {
-        add(out, &["DEFAULT ", &default_value(value)]);
+        add(out, &["DEFAULT ", &default_value(schema, value)?]);
     }
+    Ok(())
 }
 
 /// PHP: `Schema::compileColumnDefinition()`.
@@ -209,13 +210,13 @@ pub(crate) fn column_definition<S: Schema>(schema: &S, column: &Column<S>) -> Re
     }
     add(&mut out, &[if c.nullable { "NULL" } else { "NOT NULL" }]);
     if !generated {
-        add_default(&mut out, column);
+        add_default(schema, &mut out, column)?;
     }
     if let Some(check) = &c.check {
         add(&mut out, &["CHECK (", check, ")"]);
     }
     if let Some(text) = &c.comment {
-        add(&mut out, &["COMMENT ", &names::literal(text)]);
+        add(&mut out, &["COMMENT ", &schema.literal().quote(text)?]);
     }
     Ok(out)
 }
