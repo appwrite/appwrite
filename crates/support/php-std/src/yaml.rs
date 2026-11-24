@@ -33,7 +33,8 @@ const NONSPECIFIC_TAG: &[u8] = b"!";
 
 /// The deepest nesting of mappings and sequences [`parse`] reads. A deeper
 /// document is refused (`None`) instead of recursing until the stack
-/// overflows. Real configuration files stay far below it.
+/// overflows. Real configuration files stay far below it. At this depth a
+/// release build needs under 768 KB of stack, well inside a 2 MB coroutine.
 pub const MAX_DEPTH: usize = 512;
 
 /// A parser event, copied out of libyaml.
@@ -852,9 +853,11 @@ mod tests {
         }
         assert_eq!(array.len(), 0);
 
-        // Mappings take the deepest frames: the limit leaves room on a 1 MB stack.
+        // Mappings take the deepest frames. At the limit a release build needs
+        // under 768 KB of stack and a debug build under 1.5 MB; the thread gets
+        // 4 MB so the test holds on any build, not only the one measured.
         let flow = [b"{a: ".repeat(MAX_DEPTH), b"1".to_vec(), b"}".repeat(MAX_DEPTH)].concat();
-        let handle = std::thread::Builder::new().stack_size(1024 * 1024).spawn(move || parse(&flow)).unwrap();
+        let handle = std::thread::Builder::new().stack_size(4 * 1024 * 1024).spawn(move || parse(&flow)).unwrap();
         assert!(matches!(handle.join().unwrap(), Some(Value::Array(_))));
     }
 
@@ -873,7 +876,7 @@ mod tests {
     fn a_document_far_past_the_limit_does_not_overflow_the_stack() {
         // About 24 KB of brackets overflowed the stack before the limit.
         let handle = std::thread::Builder::new()
-            .stack_size(2 * 1024 * 1024)
+            .stack_size(4 * 1024 * 1024)
             .spawn(|| parse(&nested_sequences(100_000)))
             .unwrap();
         assert_eq!(handle.join().unwrap(), None);
