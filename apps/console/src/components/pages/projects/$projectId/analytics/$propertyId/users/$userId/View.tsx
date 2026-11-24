@@ -235,7 +235,6 @@ export function View({ projectId, propertyId, userId }: ViewProps) {
               />
             </div>
           }
-          showFilters
           beforeRefreshButtons={
             <DateRangePicker
               dateRange={dateRange}
