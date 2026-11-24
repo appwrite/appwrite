@@ -1,16 +1,11 @@
-import {
-  BarChart3,
-  BellRing,
-  GitPullRequest,
-  Sparkles,
-  Video,
-} from 'lucide-react'
+import { BarChart3, BellRing, GitPullRequest, Video } from 'lucide-react'
 import type {
   LaunchEventDay,
   LaunchEventPrizes,
   LaunchEventScheduleItem,
 } from './types'
 import { INIT_YOUTUBE_CHANNEL_HREF } from './links'
+import { ZERO_PRODUCT_ICON } from '@/lib/zero/product-icon'
 
 export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
   {
@@ -103,7 +98,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     description: 'A working Appwrite project, no signup needed.',
     longDescription:
       'Appwrite Zero hands you a ready-to-use Appwrite project without an account, so you or your agent can start building right away and claim the project when you want to keep it.',
-    icon: Sparkles,
+    icon: ZERO_PRODUCT_ICON,
     visual: {
       mockVisualId: 'zero',
       imageAlt:

@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import type { InitEventTicketConfig } from '@/lib/init/ticket-types'
+import type { ProductIcon } from '@/lib/products/types'
 
 export type LaunchEventStatus = 'upcoming' | 'active' | 'past'
 
@@ -46,7 +47,8 @@ export interface LaunchEventDay {
   title: string
   description: string
   longDescription: string
-  icon: LucideIcon
+  /** The product's own icon where it has one (Zero's slashed zero), else Lucide. */
+  icon: ProductIcon
   visual?: LaunchEventDayVisual
   isLive?: boolean
   sessionCount: number
