@@ -1099,12 +1099,6 @@ parameters:
 			path: tests/E2E/RedisReservationTest.php
 
 		-
-			message: '#^Parameter \#1 \$status of function pcntl_wifsignaled expects int, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/E2E/RedisReservationTest.php
-
-		-
 			message: '#^Parameter \#2 \$message of method Utopia\\Queue\\Broker\\Redis\:\:reject\(\) expects Utopia\\Queue\\Message, Utopia\\Queue\\Message\|null given\.$#'
 			identifier: argument.type
 			count: 1
