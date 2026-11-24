@@ -3694,8 +3694,206 @@ pre.prism-code .token-line > span {
     drop-shadow(0 0 8px color-mix(in oklch, var(--brand-cta) 60%, transparent));
 }
 
+/* Init 5's card in "Browse Init events": comets of light run round the 5. */
+@keyframes init-browse-five-trail {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.init-browse-five-trail {
+  fill: none;
+  stroke: color-mix(in oklch, var(--network-globe-region) 60%, white);
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 12 88;
+  filter: drop-shadow(0 0 1.5px var(--brand-cta))
+    drop-shadow(0 0 4px color-mix(in oklch, var(--brand-cta) 70%, transparent));
+  animation: init-browse-five-trail 6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .init-browse-five-trail {
+    display: none;
+  }
+}
+
+/*
+ * Init 5 site banner fog: soft clouds of the hero's pink, violet and peach
+ * drift through the bar, and a bolt flickers in them at each end now and
+ * then, lighting the cloud around it. The copy in the middle stays clear.
+ */
+.init5-banner-fog {
+  --init5-fog-strength: 1;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+html:not(.dark) .init5-banner-fog {
+  --init5-fog-strength: 0.7;
+}
+
+@keyframes init5-banner-fog-drift {
+  0% {
+    transform: translate3d(-6%, 0, 0) scale(1);
+  }
+  100% {
+    transform: translate3d(6%, 4%, 0) scale(1.15);
+  }
+}
+
+.init5-banner-fog-blob {
+  position: absolute;
+  top: -120%;
+  height: 340%;
+  border-radius: 9999px;
+  filter: blur(14px);
+  opacity: var(--init5-fog-strength);
+  animation: init5-banner-fog-drift 16s ease-in-out infinite alternate;
+}
+
+.init5-banner-fog-blob--pink {
+  left: -6%;
+  width: 34%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklch, var(--brand-cta) 26%, transparent),
+    transparent
+  );
+}
+
+.init5-banner-fog-blob--violet {
+  left: 20%;
+  width: 30%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklch, var(--network-globe-edge) 20%, transparent),
+    transparent
+  );
+  animation-duration: 21s;
+  animation-direction: alternate-reverse;
+}
+
+.init5-banner-fog-blob--peach {
+  left: 52%;
+  width: 28%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklch, var(--network-globe-region) 16%, transparent),
+    transparent
+  );
+  animation-duration: 19s;
+}
+
+.init5-banner-fog-blob--right {
+  right: -6%;
+  width: 34%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklch, var(--brand-cta) 18%, transparent),
+    color-mix(in oklch, var(--network-globe-edge) 12%, transparent) 55%,
+    transparent
+  );
+  animation-duration: 23s;
+  animation-direction: alternate-reverse;
+}
+
+/* Dark most of the cycle, then a soft double flicker. */
+@keyframes init5-banner-strike {
+  0%,
+  70% {
+    opacity: 0;
+  }
+  71% {
+    opacity: 0.85;
+  }
+  72.5% {
+    opacity: 0.25;
+  }
+  74% {
+    opacity: 0.7;
+  }
+  80%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.init5-banner-strike {
+  position: absolute;
+  inset-block: 0;
+  width: 26px;
+  opacity: 0;
+  animation: init5-banner-strike 9s linear infinite;
+}
+
+.init5-banner-strike--left {
+  left: 9%;
+}
+
+.init5-banner-strike--right {
+  right: 11%;
+  transform: scaleX(-1);
+  animation-duration: 13s;
+  animation-delay: -4s;
+}
+
+.init5-banner-strike svg {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: none;
+  stroke: color-mix(in oklch, var(--network-globe-region) 55%, white);
+  stroke-width: 1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 2px var(--brand-cta))
+    drop-shadow(
+      0 0 6px color-mix(in oklch, var(--network-globe-edge) 70%, transparent)
+    );
+}
+
+html:not(.dark) .init5-banner-strike svg {
+  stroke: var(--brand-cta);
+}
+
+.init5-banner-strike svg path {
+  vector-effect: non-scaling-stroke;
+}
+
+/* The cloud the bolt lights up. */
+.init5-banner-strike-glow {
+  position: absolute;
+  inset: -60% -260%;
+  border-radius: 9999px;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklch, var(--brand-cta) 34%, transparent),
+    color-mix(in oklch, var(--network-globe-edge) 16%, transparent) 55%,
+    transparent
+  );
+  filter: blur(8px);
+  opacity: var(--init5-fog-strength);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .init5-banner-sweep {
+    display: none;
+  }
+
+  .init5-banner-fog-blob {
+    animation: none;
+  }
+
+  .init5-banner-strike {
     display: none;
   }
 }

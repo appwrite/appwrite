@@ -59,6 +59,36 @@ function InitOrgPromoBannerLink({
   return <div className={className}>{children}</div>
 }
 
+/** Branched bolt in a 40x56 box; the banner stretches it to its height. */
+const BOLT_PATH =
+  'M23 0 L17 13 L24 17 L14 31 L21 34 L12 56 M17 13 L9 21 M21 34 L30 44'
+
+/**
+ * Init 5: the hero's fog drifts through the bar and soft lightning flickers
+ * in it now and then, away from the copy in the middle.
+ */
+function Init5BannerFog() {
+  return (
+    <div aria-hidden className="init5-banner-fog">
+      <span className="init5-banner-fog-blob init5-banner-fog-blob--pink" />
+      <span className="init5-banner-fog-blob init5-banner-fog-blob--violet" />
+      <span className="init5-banner-fog-blob init5-banner-fog-blob--peach" />
+      <span className="init5-banner-fog-blob init5-banner-fog-blob--right" />
+      {(['left', 'right'] as const).map((side) => (
+        <span
+          key={side}
+          className={`init5-banner-strike init5-banner-strike--${side}`}
+        >
+          <span className="init5-banner-strike-glow" />
+          <svg viewBox="0 0 40 56" preserveAspectRatio="none">
+            <path d={BOLT_PATH} />
+          </svg>
+        </span>
+      ))}
+    </div>
+  )
+}
+
 export function InitOrgPromoBanner() {
   const t = useT()
   const { mockInitCurrentDay, mockInitActiveEventId } = useDebugOverrides()
@@ -75,11 +105,17 @@ export function InitOrgPromoBanner() {
 
   return (
     <div className="relative w-full shrink-0 overflow-hidden border-b border-border bg-background">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[length:18px_18px] opacity-60"
-      />
-      {lightTrails ? <div aria-hidden className="init5-banner-sweep" /> : null}
+      {lightTrails ? (
+        <>
+          <Init5BannerFog />
+          <div aria-hidden className="init5-banner-sweep" />
+        </>
+      ) : (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[length:18px_18px] opacity-60"
+        />
+      )}
       <InitOrgPromoBannerLink
         cta={content.cta}
         className="group/banner relative flex h-14 w-full cursor-pointer items-center justify-center gap-2 px-4 sm:gap-2.5 sm:px-6"
