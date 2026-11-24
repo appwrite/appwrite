@@ -2162,7 +2162,7 @@ export function DeploymentDetailView({
                 resourceId={resourceId}
                 deploymentId={apiDeploymentId}
                 toolbarStart={logsSourceToggle}
-                className="ps-6 pe-4 sm:pe-5"
+                insetClassName="ps-6 pe-4 sm:pe-5"
               />
             ) : (
               <>

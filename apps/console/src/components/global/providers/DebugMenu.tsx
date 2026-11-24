@@ -1769,6 +1769,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Products' },
               ),
               createProfileFeatureFlagItem(
+                'Zero',
+                'Show the Appwrite Zero page (/zero, /zero.md) and its Products menu and footer links. Off until launch.',
+                'zero',
+                profileId,
+                features.zero,
+                { category: 'Products' },
+              ),
+              createProfileFeatureFlagItem(
                 'Usage alerts',
                 'Show usage monitors and alerts (Usage sidebar pages, quick actions, budget monitors in billing, alert webhook events).',
                 'alerts',
@@ -1793,8 +1801,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Products' },
               ),
               createProfileFeatureFlagItem(
-                'Runtime logs',
-                'Show runtime logs for functions and sites (Runtime logs tabs and the deployment page Build / Runtime switch).',
+                'Logs',
+                'Show what functions, sites and databases write to stdout and stderr (Logs tabs, the project Logs page and the deployment page Build / Runtime switch).',
                 'runtimeLogs',
                 profileId,
                 features.runtimeLogs,
@@ -2128,6 +2136,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     profileId,
     features.videos,
     features.analytics,
+    features.zero,
     features.alerts,
     features.reviews,
     features.appwritePush,

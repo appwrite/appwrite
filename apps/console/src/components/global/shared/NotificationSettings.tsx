@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useBrowserAlertSettings } from '@/lib/browser-alerts/use-browser-alert-settings'
 import {
   snoozeOf,
@@ -13,6 +14,7 @@ import {
 import { useOrganizations } from '@/lib/react-query/hooks/organizations'
 import { useProject } from '@/lib/react-query/hooks/projects'
 import { useT, type Translator } from '@/lib/i18n/translate'
+import { BEEP_ICON_SRC, BeepStoreLinks } from './BeepPromotion'
 
 /** `3:45 PM` today, `tomorrow 9:00 AM` after midnight. */
 export function formatUntil(
@@ -121,6 +123,7 @@ export function NotificationSettings({
   onChange: Change
 }) {
   const t = useT()
+  const { isCloud } = useConsoleProfile()
   const browser = useBrowserAlertSettings()
   const { organizations } = useOrganizations()
   const onError = () => toast.error(t('Could not update push settings'))
@@ -155,6 +158,21 @@ export function NotificationSettings({
           'Pushes go to the Beep app on every phone you are signed in on. Emails and this inbox are unaffected.',
         )}
       >
+        {isCloud ? (
+          <div className="flex items-center gap-3 py-2">
+            <img
+              src={BEEP_ICON_SRC}
+              alt=""
+              width={24}
+              height={24}
+              className="size-6 shrink-0 rounded-md ring-1 ring-black/5 dark:ring-white/10"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] text-foreground">Appwrite Beep</p>
+              <BeepStoreLinks className="flex items-center gap-1.5 text-[11px] font-medium" />
+            </div>
+          </div>
+        ) : null}
         <Row
           title={t('Resolved alerts')}
           subtitle={t('Get a push when an alert stops firing')}
