@@ -114,3 +114,6 @@ For this tutorial you'll need an API key with the following scopes:
 ![Server integrations](/images/docs/quick-starts/integrate-server.avif)
 {% /only_light %}
 
+{% info title="Record the end user on sessions" %}
+Sessions your server creates record your server's device and IP address unless you forward the end user's. Learn how in [forwarding the end user](/docs/products/auth/server-side-rendering#forwarding-user-agent).
+{% /info %}

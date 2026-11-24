@@ -106,3 +106,7 @@ APPWRITE_KEY=<YOUR_API_KEY>
 PUBLIC_APPWRITE_ENDPOINT=https://<REGION>.cloud.appwrite.io/v1
 PUBLIC_APPWRITE_PROJECT=<PROJECT_ID>
 ```
+
+{% info title="Record the end user on sessions" %}
+Sessions your server creates record your server's device and IP address unless you forward the end user's. Learn how in [forwarding the end user](/docs/products/auth/server-side-rendering#forwarding-user-agent).
+{% /info %}
