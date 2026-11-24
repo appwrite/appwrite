@@ -447,6 +447,8 @@ class Response extends SwooleResponse
 
     protected bool $hideCredentials = false;
 
+    protected ?\Closure $beforeFile = null;
+
     /**
      * @var array<string, Model>
      */
@@ -714,7 +716,18 @@ class Response extends SwooleResponse
             'payload' => $body
         ];
 
+        if ($this->beforeFile !== null) {
+            ($this->beforeFile)();
+        }
+
         $this->send($body);
+    }
+
+    public function beforeFile(?callable $callback): static
+    {
+        $this->beforeFile = $callback === null ? null : $callback(...);
+
+        return $this;
     }
 
     /**

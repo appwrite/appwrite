@@ -690,7 +690,8 @@ Http::init()
     ->inject('responseCache')
     ->inject('impersonatorUser')
     ->inject('targetUser')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage, callable $responseCache, Document $impersonatorUser, User $targetUser) {
+    ->inject('params')
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage, callable $responseCache, Document $impersonatorUser, User $targetUser, array $params) {
 
         $response->setUser($targetUser);
         $response->setImpersonatorUser($impersonatorUser);
@@ -765,6 +766,41 @@ Http::init()
             $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
             [$cache, $fallback] = $responseCache($key);
             Span::add('storage.cache.device', $fallback !== null);
+
+            $response->beforeFile(function () use ($route, $params, $request, $response, $project, $user, $dbForProject, $authorization, $key): void {
+                $data = $response->getPayload();
+                $statusCode = $response->getStatusCode();
+                if (empty($data['payload']) || $statusCode < 200 || $statusCode >= 300) {
+                    return;
+                }
+
+                $requestParams = [];
+                foreach ($route->getParams() as $paramKey => $param) {
+                    $requestParams[$paramKey] = $params[$paramKey] ?? $request->getParam($paramKey, $param['default']);
+                }
+
+                $resourcePattern = $route->getLabel('cache.resource', null);
+                $resourceTypePattern = $route->getLabel('cache.resourceType', null);
+
+                $renderer = new Renderer(new Document([
+                    'user' => (array) $user,
+                    'project' => $project,
+                    'request' => $requestParams,
+                    'response' => $data,
+                ]));
+
+                try {
+                    $authorization->skip(fn () => $dbForProject->createDocument('cache', new Document([
+                        '$id' => $key,
+                        'resource' => empty($resourcePattern) ? null : $renderer->render($resourcePattern),
+                        'resourceType' => empty($resourceTypePattern) ? null : $renderer->render($resourceTypePattern),
+                        'mimeType' => $response->getContentType(),
+                        'accessedAt' => DateTime::now(),
+                        'signature' => \md5($data['payload']),
+                    ])));
+                } catch (DuplicateException) {
+                }
+            });
             $timestamp = 60 * 60 * 24 * 180; // Temporarily increase the TTL to 180 day to ensure files in the cache are still fetched.
             $data = $cache->load($key, $timestamp);
 
@@ -1177,15 +1213,12 @@ Http::shutdown()
 Http::shutdown()
     ->groups(['api'])
     ->inject('route')
-    ->inject('params')
     ->inject('request')
     ->inject('response')
-    ->inject('project')
-    ->inject('user')
     ->inject('dbForProject')
     ->inject('authorization')
     ->inject('responseCache')
-    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization, callable $responseCache) {
+    ->action(function (Route $route, Request $request, Response $response, Database $dbForProject, Authorization $authorization, callable $responseCache) {
         if (! $route->getLabel('cache', false)) {
             return;
         }
@@ -1202,40 +1235,8 @@ Http::shutdown()
         $now = DateTime::now();
         $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
 
-        // First request for this resource: record it and persist the payload.
         if ($cacheLog->isEmpty()) {
-            // Resolve resource labels lazily — only needed when creating the entry.
-            $requestParams = [];
-            foreach ($route->getParams() as $paramKey => $param) {
-                $requestParams[$paramKey] = $params[$paramKey] ?? $request->getParam($paramKey, $param['default']);
-            }
-
-            $resourcePattern = $route->getLabel('cache.resource', null);
-            $resourceTypePattern = $route->getLabel('cache.resourceType', null);
-
-            $renderer = new Renderer(new Document([
-                'user' => (array) $user,
-                'project' => $project,
-                'request' => $requestParams,
-                'response' => $data,
-            ]));
-
-            try {
-                $authorization->skip(fn () => $dbForProject->createDocument('cache', new Document([
-                    '$id' => $key,
-                    'resource' => empty($resourcePattern) ? null : $renderer->render($resourcePattern),
-                    'resourceType' => empty($resourceTypePattern) ? null : $renderer->render($resourceTypePattern),
-                    'mimeType' => $response->getContentType(),
-                    'accessedAt' => $now,
-                    'signature' => $signature,
-                ])));
-                $cache->save($key, $data['payload']);
-
-                return;
-            } catch (DuplicateException) {
-                // Race condition: another concurrent request already created the entry.
-                $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
-            }
+            return;
         }
 
         // Existing entry: refresh the access time once per APP_CACHE_UPDATE window
