@@ -14,7 +14,7 @@ function Tasks() {
   return (
     <div className="grid min-w-0 gap-6">
       <TabProgress title="Tasks done" progress={progress.tasks(BOARD)}>
-        What is being worked on, what waits, what comes next and what is done, kept up to date as work moves (apps/crates/content/tasks.json). Last changed{' '}
+        What is being worked on, what waits, what comes next and what is done, kept up to date as work moves (apps/utopia/docs/content/tasks.json). Last changed{' '}
         <Time date={BOARD.updated} />.
       </TabProgress>
       <div className="grid min-w-0 gap-x-6 gap-y-8 md:grid-cols-2 xl:grid-cols-4">

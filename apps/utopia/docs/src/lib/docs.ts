@@ -1,4 +1,4 @@
-// The JSON `bin/compat crates` writes to apps/crates/data (see
+// The JSON `bin/compat crates` writes to apps/utopia/docs/data (see
 // crates/tools/compat/src/runner/crates.rs), loaded as Vite modules.
 
 /** `retired`: not converted, by design (crates/CONVERSION.md §8); older data has no such library. */

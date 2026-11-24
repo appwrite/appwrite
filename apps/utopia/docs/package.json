@@ -1,9 +1,9 @@
 {
-  "name": "crates",
+  "name": "docs",
   "private": true,
   "type": "module",
   "scripts": {
-    "generate": "cd ../.. && bin/compat crates",
+    "generate": "cd ../../.. && bin/compat crates",
     "dev": "vite dev",
     "build": "bun scripts/og.tsx && vite build && bun scripts/link-css.ts",
     "start": "vite preview",

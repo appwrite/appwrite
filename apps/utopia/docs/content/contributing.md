@@ -132,11 +132,11 @@ Run it on dedicated hardware before and after every performance change, and atta
 
 ## Work on this site
 
-This site lives in `apps/crates`, a TanStack Start app. Nothing on it is written by hand except this guide and the changelog: every page is generated from the crates themselves into `apps/crates/data`, which is not committed. Generate the data, then start the app:
+This site lives in `apps/utopia/docs`, a TanStack Start app. Nothing on it is written by hand except this guide and the changelog: every page is generated from the crates themselves into `apps/utopia/docs/data`, which is not committed. Generate the data, then start the app:
 
 ```bash
 bin/compat crates
-cd apps/crates
+cd apps/utopia/docs
 bun install
 bun run dev
 ```
@@ -152,13 +152,13 @@ To change what a page says, change its source, not the app:
 | Modules and items | the module and item doc comments |
 | Examples | Rust code blocks in doc comments, run as doctests |
 | Category | `[package.metadata.utopia]` in the crate's `Cargo.toml`, titles in `crates/categories.json` |
-| Changelog | one Markdown file per entry in `apps/crates/content/changelog/`, with `title`, `date`, an optional `tag` and comma-separated `packages` in its frontmatter |
-| This page | `apps/crates/content/contributing.md`, one section per `## ` heading |
+| Changelog | one Markdown file per entry in `apps/utopia/docs/content/changelog/`, with `title`, `date`, an optional `tag` and comma-separated `packages` in its frontmatter |
+| This page | `apps/utopia/docs/content/contributing.md`, one section per `## ` heading |
 
-The [site's README](https://github.com/appwrite/appwrite/blob/main/apps/crates/README.md) maps every page to its source. Before you open a pull request that touches the app, type-check and build it:
+The [site's README](https://github.com/appwrite/appwrite/blob/main/apps/utopia/docs/README.md) maps every page to its source. Before you open a pull request that touches the app, type-check and build it:
 
 ```bash
-cd apps/crates
+cd apps/utopia/docs
 bun run check
 bun run build
 ```
@@ -167,7 +167,7 @@ bun run build
 
 ## Track the move from PHP
 
-The Migration dashboard is generated like the rest of the site, from the results committed in the repository: compat cases, `bench.json`, `build.json`, E2E runs and Appwrite benchmarks, each written by its `--write` command above. Two of its tabs are written by hand, in `apps/crates/content`:
+The Migration dashboard is generated like the rest of the site, from the results committed in the repository: compat cases, `bench.json`, `build.json`, E2E runs and Appwrite benchmarks, each written by its `--write` command above. Two of its tabs are written by hand, in `apps/utopia/docs/content`:
 
 - `tasks.json` is the task board. Each task has an `id`, a `title`, an `area`, a `status` (`todo`, `progress`, `blocked` or `done`), an `updated` time and a `note` saying where it stands. Update it whenever a task changes status, along with the file's own `updated` time.
 - `facts.json` is the project in numbers, with its summary, sections of facts, timeline and lessons. Update it with each milestone, with figures you have measured or counted, never estimates.

@@ -1,5 +1,5 @@
 // The Appwrite API's migration from PHP to Rust, as `bin/compat appwrite`
-// writes it to apps/crates/data/appwrite.json (see
+// writes it to apps/utopia/docs/data/appwrite.json (see
 // crates/tools/compat/src/runner/appwrite/mod.rs).
 
 /** A service as a whole: every route served by Rust, some, or none. */
