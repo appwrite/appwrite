@@ -131,6 +131,35 @@ const STDOUT = 'Listening on port 3000'
 const STDERR = 'TypeError: Cannot read properties of undefined'
 const OTHER_DEPLOYMENT = 'Served by the older deployment'
 
+/** Structured lines: pino JSON, a nested error, and logfmt. */
+const JSON_INFO = JSON.stringify({
+  level: 30,
+  time: 1732370115000,
+  msg: 'request completed',
+  method: 'POST',
+  path: '/checkout',
+  status: 200,
+  durationMs: 42,
+})
+const JSON_WARN = JSON.stringify({
+  level: 'warn',
+  msg: 'slow query',
+  table: 'orders',
+  durationMs: 812,
+})
+const JSON_ERROR = JSON.stringify({
+  level: 'error',
+  msg: 'payment failed',
+  orderId: 'ord_8f2k',
+  err: {
+    type: 'CardError',
+    message: 'Your card was declined.',
+    stack:
+      'CardError: Your card was declined.\n    at charge (/usr/local/server/src/payments.js:41:11)',
+  },
+})
+const LOGFMT_DEBUG = 'level=debug msg="cache miss" key=cart:42 ttl=300'
+
 /** One clock for every fixture row, so live-tail rows land after the listed ones. */
 const BASE = Date.now()
 
@@ -177,6 +206,10 @@ function log(
 function logsFor(resourceType: string, resourceId: string) {
   return [
     log('log1', resourceType, resourceId, ACTIVE, 'stderr', STDERR, 5),
+    log('json1', resourceType, resourceId, ACTIVE, 'stdout', JSON_INFO, 6),
+    log('json2', resourceType, resourceId, ACTIVE, 'stdout', LOGFMT_DEBUG, 7),
+    log('json3', resourceType, resourceId, ACTIVE, 'stdout', JSON_WARN, 8),
+    log('json4', resourceType, resourceId, ACTIVE, 'stderr', JSON_ERROR, 9),
     log('log2', resourceType, resourceId, ACTIVE, 'stdout', STDOUT, 10),
     log(
       'log3',
@@ -196,7 +229,9 @@ const DATABASE_LINE = 'checkpoint complete'
 
 function projectLogs() {
   return [
+    log('plog0', 'functions', FUNCTION.$id, ACTIVE, 'stdout', JSON_INFO, 3),
     log('plog1', 'functions', FUNCTION.$id, ACTIVE, 'stdout', FUNCTION_LINE, 5),
+    log('plog4', 'sites', SITE.$id, ACTIVE, 'stdout', JSON_WARN, 8),
     log('plog2', 'sites', SITE.$id, ACTIVE, 'stderr', SITE_LINE, 10),
     log('plog3', 'databases', 'compute1', '', 'stdout', DATABASE_LINE, 15),
   ]
@@ -436,6 +471,55 @@ test.describe('runtime logs', () => {
     await expect(page).toHaveURL(new RegExp(`deploymentId=${OLDER}`))
   })
 
+  test('structured lines show level, message and fields', async ({ page }) => {
+    await enableRuntimeLogs(page)
+    await mockAppwriteApi(page)
+
+    await page.goto(
+      `/projects/${PROJECT.$id}/functions/${FUNCTION.$id}/runtime-logs`,
+      { waitUntil: 'domcontentloaded' },
+    )
+    const logs = page.getByRole('log')
+    await expect(logs).toContainText('request completed', { timeout: 30_000 })
+
+    // Message first, then fields; no raw JSON and no metadata columns
+    const info = logs.getByRole('button', { name: /request completed/ })
+    await expect(info).toContainText('INFO')
+    await expect(info).toContainText('path=/checkout')
+    await expect(info).not.toContainText('"msg"')
+    await expect(info).not.toContainText('stdout')
+    await expect(
+      logs.getByRole('button', { name: /cache miss/ }),
+    ).toContainText('key=cart:42')
+
+    // Expanding shows every field, nested ones by path, and the metadata
+    const error = logs.getByRole('button', { name: /payment failed/ })
+    await error.click()
+    await expect(error).toHaveAttribute('aria-expanded', 'true')
+    await expect(logs).toContainText('err.stack')
+    await expect(logs).toContainText('at charge (')
+    await expect(logs).toContainText(ACTIVE)
+
+    // The level filter narrows the loaded lines
+    await page.getByRole('combobox', { name: 'Level' }).click()
+    await page.getByRole('option', { name: 'Warnings and up' }).click()
+    await expect(logs).toContainText('slow query')
+    await expect(logs).toContainText('payment failed')
+    await expect(logs).toContainText(STDERR)
+    await expect(logs).not.toContainText('request completed')
+    await expect(logs).not.toContainText('cache miss')
+    await expect(logs).not.toContainText(STDOUT)
+
+    // Time, stream and region as columns on request
+    await page.getByRole('combobox', { name: 'Level' }).click()
+    await page.getByRole('option', { name: 'All levels' }).click()
+    await page
+      .getByRole('button', { name: 'Show time, stream and region' })
+      .click()
+    await expect(info).toContainText('stdout')
+    await expect(info).toContainText('tor')
+  })
+
   test('a site lists its active deployment runtime logs', async ({ page }) => {
     await enableRuntimeLogs(page)
     await mockAppwriteApi(page)
@@ -511,7 +595,10 @@ test.describe('runtime logs', () => {
     await expect(logs).toContainText(FUNCTION_LINE)
 
     // A row links to its resource's own runtime logs, on that deployment
-    await logs.getByRole('link', { name: `function/${FUNCTION.$id}` }).click()
+    await logs
+      .getByRole('link', { name: `function/${FUNCTION.$id}` })
+      .first()
+      .click()
     await expect(page).toHaveURL(
       new RegExp(
         `/functions/${FUNCTION.$id}/runtime-logs\\?deploymentId=${ACTIVE}`,
