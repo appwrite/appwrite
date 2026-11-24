@@ -366,10 +366,12 @@ export function createInitTicketVideoCompositor({
   const dotSpacing =
     INIT_TICKET_VIDEO_DOT_SPACING_CSS_PX * (width / INIT_TICKET_MAX_WIDTH_PX)
   const dotColor = withAlpha(borderColor, 1)
+  // Init 5 trades the dotted backdrop for the fog; older events keep their dots.
+  const showDots = !fogPalette
   const dotsCanvas = document.createElement('canvas')
-  dotsCanvas.width = width
-  dotsCanvas.height = height
-  const dotsCtx = dotsCanvas.getContext('2d', { alpha: true })
+  dotsCanvas.width = showDots ? width : 0
+  dotsCanvas.height = showDots ? height : 0
+  const dotsCtx = showDots ? dotsCanvas.getContext('2d', { alpha: true }) : null
   if (dotsCtx) {
     dotsCtx.clearRect(0, 0, width, height)
     drawDotPattern(dotsCtx, width, height, dotColor, dotSpacing)
@@ -410,7 +412,7 @@ export function createInitTicketVideoCompositor({
 
     if (dotsCtx) {
       ctx.drawImage(dotsCanvas, 0, 0)
-    } else {
+    } else if (showDots) {
       drawDotPattern(ctx, width, height, dotColor, dotSpacing)
     }
 
