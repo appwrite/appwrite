@@ -1,9 +1,10 @@
 /**
  * Hand-written client for the Cloud single sign-on endpoints on Teams
  * (`teams.*SSODomain`, `teams.*SSOProvider`, `account.listSSOProviders`) and
- * for the project's Single sign-on add-on (`projects.createSSOAddon`): they
- * have not shipped in a Console SDK release yet. Delete this folder once the
- * Console SDK carries them.
+ * for enabling the Single sign-on add-ons of a project
+ * (`projects.createSSOAddon`) and of an organization
+ * (`organizations.createSSOAddon`): they have not shipped in a Console SDK
+ * release yet. Delete this folder once the Console SDK carries them.
  */
 
 import type { Client, Models } from '@appwrite.io/console'
@@ -105,17 +106,35 @@ export class TeamSSO {
   }
 
   /**
-   * Enable the Single sign-on add-on for a project, for single sign-on in its
-   * teams. Like `projects.createPremiumGeoDBAddon`, it resolves with the add-on,
-   * or with a payment to authenticate and confirm first. Takes the parameters
-   * of the SDK's `projects.createSSOAddon`, to be swapped for it.
+   * Enable the project's Single sign-on add-on (`sso`), for single sign-on in
+   * its teams. Like `projects.createPremiumGeoDBAddon`, it resolves with the
+   * add-on, or with a payment to authenticate and confirm first. Takes the
+   * parameters of the SDK's `projects.createSSOAddon`, to be swapped for it.
    */
-  createSSOAddon({
+  createProjectSSOAddon({
     projectId,
   }: {
     projectId: string
   }): Promise<Models.Addon | Models.PaymentAuthentication> {
     return this.call('post', `/projects/${this.id(projectId)}/addons/sso`)
+  }
+
+  /**
+   * Enable the organization's Single sign-on add-on (`ssoOrg`), for single
+   * sign-on into the Console. Like `organizations.createBaaAddon`, it resolves
+   * with the add-on, or with a payment to authenticate and confirm first.
+   * Takes the parameters of the SDK's `organizations.createSSOAddon`, to be
+   * swapped for it.
+   */
+  createOrganizationSSOAddon({
+    organizationId,
+  }: {
+    organizationId: string
+  }): Promise<Models.Addon | Models.PaymentAuthentication> {
+    return this.call(
+      'post',
+      `/organizations/${this.id(organizationId)}/addons/sso`,
+    )
   }
 
   /** Redirect URI to register at the identity provider: the single sign-on callback. */

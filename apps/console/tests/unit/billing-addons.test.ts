@@ -28,6 +28,15 @@ describe('planSupportsAddon', () => {
     ).toBe(false)
   })
 
+  test("reads the organization's Single sign-on add-on apart from the project's", () => {
+    const orgOnly = plan('tier-2', 2, { sso: false, ssoOrg: true })
+    expect(planSupportsAddon(orgOnly, 'ssoOrg')).toBe(true)
+    expect(planSupportsAddon(orgOnly, 'sso')).toBe(false)
+    expect(planSupportsAddon(plan('tier-1', 1, { sso: true }), 'ssoOrg')).toBe(
+      false,
+    )
+  })
+
   test('counts a plan without the key, or without a plan, as not selling it', () => {
     // An API from before the Single sign-on add-on leaves `sso` out
     expect(

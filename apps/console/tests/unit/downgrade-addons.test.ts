@@ -249,6 +249,28 @@ describe('getUnsupportedAddonRemovals', () => {
       }),
     ).toEqual([])
   })
+
+  test("turns off the organization's Single sign-on add-on where the target plan does not sell it", () => {
+    const organizationAddons = [
+      addon({ $id: 'a-sso-org', key: 'ssoOrg' }),
+      addon({ $id: 'a-baa', key: 'baa' }),
+    ]
+
+    expect(
+      getUnsupportedAddonRemovals(snapshot({ organizationAddons }), {
+        supportedAddons: { ...freePlan.supportedAddons, baa: true },
+      }),
+    ).toEqual([
+      {
+        key: 'ssoOrg',
+        label: 'Single sign-on',
+        scope: 'organization',
+        resourceId: 'org-1',
+        addonId: 'a-sso-org',
+      },
+    ])
+    expect(isDisableableDowngradeAddon('ssoOrg')).toBe(true)
+  })
 })
 
 describe('isDisableableDowngradeAddon', () => {

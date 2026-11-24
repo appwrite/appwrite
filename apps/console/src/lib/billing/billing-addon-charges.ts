@@ -7,6 +7,7 @@ export const BILLING_ADDON_NAME_FALLBACK: Record<string, string> = {
   addon_premiumGeoDB: 'Premium Geo DB',
   addon_premiumGeoDBOrg: 'Premium Geo DB',
   addon_sso: 'Single sign-on',
+  addon_ssoOrg: 'Single sign-on',
 }
 
 export const BILLING_DEDICATED_DB_COMPUTE_CREDIT_RESOURCE_ID =

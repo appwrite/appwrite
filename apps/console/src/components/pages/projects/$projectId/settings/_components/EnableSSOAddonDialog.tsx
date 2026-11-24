@@ -57,7 +57,7 @@ export function EnableSSOAddonDialog({
         )
       }
       const result = await enableSSOAddon({
-        projectId,
+        target: { scope: 'project', projectId },
         organizationId: organization.$id,
         paymentMethodId: organization.paymentMethodId,
         missingPaymentMethodMessage: t(
