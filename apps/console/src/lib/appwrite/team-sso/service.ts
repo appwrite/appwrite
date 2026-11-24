@@ -118,9 +118,9 @@ export class TeamSSO {
     return this.call('post', `/projects/${this.id(projectId)}/addons/sso`)
   }
 
-  /** Redirect URI to register at the identity provider: CE's OAuth2 callback for `sso`. */
+  /** Redirect URI to register at the identity provider: the single sign-on callback. */
   redirectURL(): string {
-    return `${this.client.config.endpoint}/account/sessions/oauth2/callback/sso/${this.client.config.project}`
+    return `${this.client.config.endpoint}/account/sessions/sso/callback`
   }
 
   /**

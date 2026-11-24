@@ -894,9 +894,9 @@ test.describe('organization single sign-on', () => {
 
     await page.getByRole('button', { name: 'Add identity provider' }).click()
     const add = page.getByRole('dialog', { name: 'Add identity provider' })
-    // The redirect URL to register at the provider: CE's OAuth2 callback for `sso`
+    // The redirect URL to register at the provider: the single sign-on callback
     await expect(add.getByLabel('Redirect URL')).toHaveValue(
-      /\/account\/sessions\/oauth2\/callback\/sso\/console$/,
+      /\/account\/sessions\/sso\/callback$/,
     )
     await add.getByLabel('Name').fill('Okta')
     await add.getByRole('button', { name: 'Add role' }).click()
