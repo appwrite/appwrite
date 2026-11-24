@@ -646,4 +646,12 @@ export const jaSitesDictionary: Record<string, string> = {
   'Production domains only. Preview deployments are not tracked.':
     '本番ドメインのみが対象です。プレビューデプロイは計測されません。',
   'Failed to enable analytics': 'アナリティクスを有効化できませんでした',
+
+  // Preview domain settings card (sites and functions)
+  'Preview domain': 'プレビュードメイン',
+  'Deployment and branch previews get a generated URL on a shared Appwrite domain.':
+    'デプロイとブランチのプレビューには、共有の Appwrite ドメイン上で自動生成された URL が割り当てられます。',
+  'Current preview domain:': '現在のプレビュードメイン:',
+  'Serve previews from a domain you own so every preview link matches your brand. Custom preview domains are available on Enterprise plans.':
+    '所有するドメインからプレビューを配信すると、すべてのプレビューリンクをブランドに合わせられます。カスタムプレビュードメインは Enterprise プランで利用できます。',
 }

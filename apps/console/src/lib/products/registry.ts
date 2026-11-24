@@ -12,6 +12,7 @@ import {
   Users,
   Zap,
 } from 'lucide-react'
+import { ZERO_PRODUCT_ICON } from '@/lib/zero/product-icon'
 import { PostgresElephantIcon } from '@/components/pages/projects/$projectId/databases/_components/database-mascot-icons'
 import type {
   ProductId,
@@ -156,6 +157,7 @@ export const PRODUCT_NAV_ITEM_IDS = [
   'videos',
   'realtime',
   'agent',
+  'zero',
   'sites',
   'domains',
   'analytics',
@@ -235,6 +237,14 @@ export const PRODUCT_NAV_REGISTRY: Record<ProductNavItemId, ProductNavItem> = {
     href: '/docs/products/agent',
     icon: BotMessageSquare,
     tagline: 'Chat to inspect your project and take approved actions.',
+  },
+  zero: {
+    id: 'zero',
+    name: 'Zero',
+    group: 'build',
+    href: '/zero',
+    icon: ZERO_PRODUCT_ICON,
+    tagline: 'A real project for you or your agent, no signup.',
   },
   sites: {
     id: 'sites',
