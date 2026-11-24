@@ -52,7 +52,7 @@ describe('Init org promo banner', () => {
     expect(banner?.cta.label).toBe('View recap')
   })
 
-  test('matches /init and stays upcoming before the dates arrive', () => {
-    expect(init5Banner(6)?.phase).toBe('before')
+  test('shows the recap when "after the event" is picked before the dates', () => {
+    expect(init5Banner(6)?.phase).toBe('after')
   })
 })

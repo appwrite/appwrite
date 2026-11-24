@@ -1,7 +1,10 @@
 import { parseDateOnly } from './dates'
 import { getLaunchEventDerivedStatus, LAUNCH_EVENTS } from './events'
 import { INIT_EVENT_CATALOG } from './init-event-catalog'
-import { getInitMockDayAfter, INIT_MOCK_DAY_BEFORE } from './mock-current-day'
+import {
+  getInitMockCurrentDayDefault,
+  INIT_MOCK_DAY_BEFORE,
+} from './mock-current-day'
 import type { LaunchEvent, LaunchEventStatus } from './types'
 
 export type InitBrowsableEvent = {
@@ -55,7 +58,9 @@ export function listBrowsableInitEvents(
 
 /**
  * When browsing an upcoming event, avoid recap mode from the global default
- * current day (post Init 4). Show the before-event state instead.
+ * current day (post Init 4). Show the before-event state instead. Only the
+ * untouched default is mapped: a day picked in the debug menu, "after the
+ * event" included, is shown as picked.
  */
 export function resolveInitBrowseDisplayCurrentDay(
   event: LaunchEvent,
@@ -66,7 +71,7 @@ export function resolveInitBrowseDisplayCurrentDay(
   if (maxDay === 0) return currentDay
 
   const status = getLaunchEventDerivedStatus(event, now)
-  if (status === 'upcoming' && currentDay >= getInitMockDayAfter(maxDay)) {
+  if (status === 'upcoming' && currentDay === getInitMockCurrentDayDefault()) {
     return INIT_MOCK_DAY_BEFORE
   }
 
