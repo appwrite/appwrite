@@ -1,72 +1,87 @@
-import { BellRing, ShieldAlert, Sparkles, type LucideIcon } from 'lucide-react'
+import { BellRing } from 'lucide-react'
 import { CoverCard, InitDayCover } from './InitDayCover'
 
-/** Project updates arriving in Beep: one monitor alert among them. */
-const PUSHES: {
-  icon: LucideIcon
-  title: string
-  detail: string
-  alert?: boolean
-}[] = [
-  {
-    icon: BellRing,
-    title: 'Monitor triggered',
-    detail: 'Bandwidth at 84%',
-    alert: true,
-  },
-  {
-    icon: ShieldAlert,
-    title: 'SSL certificate failed',
-    detail: 'api.example.com',
-  },
-  { icon: Sparkles, title: 'New in Appwrite', detail: 'Init 5, day 4' },
-]
+/** Bandwidth over a day, crossing the monitor's threshold near the end. */
+const USAGE = [22, 26, 24, 31, 36, 34, 45, 52, 61, 70, 84]
+const THRESHOLD = 80
 
-/** Init 5 day 4: a monitor fires and Beep puts it on your phone among other project updates. */
+function usagePath(width: number, height: number) {
+  return USAGE.map((value, index) => {
+    const x = (index / (USAGE.length - 1)) * width
+    const y = height - (value / 100) * height
+    return `${index === 0 ? 'M' : 'L'}${x.toFixed(1)} ${y.toFixed(1)}`
+  }).join(' ')
+}
+
+/**
+ * Init 5 day 4: Monitors first, a bandwidth monitor firing as usage crosses
+ * its threshold; Beep second, the alert arriving on your phone as a push.
+ */
 export function MonitorsBeepDayVisual() {
+  const thresholdY = 60 - (THRESHOLD / 100) * 60
+  const lastY = 60 - (USAGE[USAGE.length - 1]! / 100) * 60
+
   return (
     <InitDayCover
-      headline="Alerts, on your phone"
-      mockClassName="start-[57cqw] top-[9cqw] w-[44cqw]"
+      headline="Know when your project needs you"
+      mockClassName="start-[47cqw] top-[9cqw] w-[51cqw]"
     >
-      {/* Beep: the phone, running off the bottom like the covers' phones. */}
-      <CoverCard className="relative w-full rounded-[2.6em] p-[0.7em] pb-[6em]">
-        <span
-          className="mx-auto mb-[0.9em] block h-[1.2em] w-[6em] rounded-full bg-black/70"
-          aria-hidden
-        />
-        <p className="mb-[0.6em] px-[0.3em] font-semibold text-white">Beep</p>
-        <ul className="space-y-[0.5em]">
-          {PUSHES.map((push) => {
-            const PushIcon = push.icon
-            return (
-              <li
-                key={push.title}
-                className={
-                  push.alert
-                    ? 'rounded-[0.9em] border border-[var(--brand-cta)] bg-[rgb(253_54_110/0.12)] px-[0.7em] py-[0.5em]'
-                    : 'rounded-[0.9em] border border-white/8 bg-white/5 px-[0.7em] py-[0.5em]'
-                }
-              >
-                <p className="flex items-center gap-[0.4em] font-medium text-white">
-                  <PushIcon
-                    className={
-                      push.alert
-                        ? 'size-[1em] shrink-0 text-[var(--brand-cta)]'
-                        : 'size-[1em] shrink-0 text-white/60'
-                    }
-                    aria-hidden
-                  />
-                  <span className="truncate">{push.title}</span>
-                </p>
-                <p className="truncate ps-[1.4em] text-[0.85em] text-white/55">
-                  {push.detail}
-                </p>
-              </li>
-            )
-          })}
-        </ul>
+      <CoverCard className="overflow-hidden">
+        <div className="flex items-center gap-[0.6em] border-b border-white/8 px-[0.9em] py-[0.8em]">
+          <BellRing
+            className="size-[1.2em] shrink-0 text-[var(--brand-cta)]"
+            aria-hidden
+          />
+          <span className="font-medium text-white">Bandwidth</span>
+          <span className="ms-auto rounded-[0.35em] border border-[var(--brand-cta)] bg-[rgb(253_54_110/0.14)] px-[0.5em] py-[0.1em] text-[0.85em] text-white">
+            Triggered
+          </span>
+        </div>
+        <div className="px-[0.9em] pb-[4.5em] pt-[0.7em]">
+          <p className="flex items-baseline justify-between text-[0.85em] text-white/55">
+            <span>Alert at {THRESHOLD}% of the plan</span>
+            <span className="text-[1.25em] font-semibold tabular-nums text-white">
+              84%
+            </span>
+          </p>
+          <svg
+            viewBox="0 0 160 60"
+            preserveAspectRatio="none"
+            className="mt-[0.5em] block h-[6.5em] w-full overflow-visible"
+            aria-hidden
+          >
+            <line
+              x1="0"
+              x2="160"
+              y1={thresholdY}
+              y2={thresholdY}
+              stroke="var(--brand-cta)"
+              strokeDasharray="4 4"
+              vectorEffect="non-scaling-stroke"
+            />
+            <path
+              d={usagePath(160, 60)}
+              fill="none"
+              stroke="white"
+              strokeWidth={1.8}
+              vectorEffect="non-scaling-stroke"
+            />
+            <circle cx="160" cy={lastY} r="3.5" fill="var(--brand-cta)" />
+          </svg>
+        </div>
       </CoverCard>
+
+      {/* Beep, second: the alert landing on a phone as a push. */}
+      <div className="absolute -start-[5em] top-[13.6em] w-[14em] rounded-[1.1em] border border-white/12 bg-[#2c2c30]/95 px-[0.8em] py-[0.6em] shadow-[0_2cqw_5cqw_rgb(0_0_0/0.45)] backdrop-blur">
+        <p className="flex items-center gap-[0.4em] text-[0.75em] uppercase tracking-wider text-white/50">
+          <span className="flex size-[1.3em] items-center justify-center rounded-[0.35em] bg-[var(--brand-cta)]">
+            <BellRing className="size-[0.85em] text-white" aria-hidden />
+          </span>
+          Beep · now
+        </p>
+        <p className="mt-[0.3em] font-medium text-white">Monitor triggered</p>
+        <p className="text-[0.85em] text-white/60">Bandwidth at 84% · my-app</p>
+      </div>
     </InitDayCover>
   )
 }

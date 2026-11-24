@@ -127,7 +127,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     visual: {
       mockVisualId: 'monitors-beep',
       imageAlt:
-        'Alerts, on your phone: a bandwidth monitor alert arriving in Appwrite Beep among other project updates',
+        'Know when your project needs you: a bandwidth monitor triggered as usage crosses its threshold, and the alert arriving as a push from Appwrite Beep',
     },
     sessionCount: 1,
     resources: [
@@ -145,14 +145,14 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     dateLabel: 'DECEMBER 4',
     weekdayLabel: 'FRIDAY, DECEMBER 4',
     title: 'Introducing Appwrite Reviews',
-    description: 'Code review on every pull request.',
+    description: 'Code review for your Sites, Functions and repositories.',
     longDescription:
-      'Appwrite Reviews reviews the pull requests in your connected GitHub repositories and posts its findings on the pull request. We close the week with the grand prize draw.',
+      'Appwrite Reviews reviews every pull request on your connected Sites and Functions, or on any repository you have on a Git provider Appwrite supports, and posts its findings on the pull request. We close the week with the grand prize draw.',
     icon: GitPullRequest,
     visual: {
       mockVisualId: 'reviews',
       imageAlt:
-        'Every pull request, reviewed: an Appwrite Reviews finding posted beside the lines it is about',
+        'Every pull request, reviewed: Appwrite Reviews on Sites, Functions and repositories on GitHub, GitLab, Bitbucket or Gitea, with a finding posted beside the lines it is about',
     },
     sessionCount: 1,
     resources: [
