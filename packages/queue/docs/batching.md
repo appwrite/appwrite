@@ -21,7 +21,7 @@ Research: [canonical clients and Redis-list implementations](prior-art.md).
 Retain existing queue keys and codecs rather than requiring a coordinated ID/payload migration across producers. This needs a recoverable reservation phase:
 
 1. A bounded Lua operation moves available raw payloads into a reservation list and registers its deadline atomically.
-2. On an empty queue, register the reservation before a blocking move. Its deadline is the blocking timeout plus a short claim grace (10 seconds), not the processing lease, so a process killed immediately after the move leaves discoverable work that expires in seconds.
+2. On an empty queue, the blocking move transfers a payload into a shared incoming list for that queue. Every receive drains incoming before ready, so the next receiver can pick up the payload even if the blocked worker dies. Moving a batch into a private reservation and registering its 10-second claim grace happen in the same script.
 3. Decode in PHP. A second bounded script establishes job records, ownership tokens, processing entries, counters, and poison entries, then removes the reservation. If the reservation has already expired or been recovered, the script instead returns whatever the reservation still holds to the ready queue and delivers nothing, so a late claim can neither duplicate nor strand a payload.
 4. Maintenance discovers expired reservations and passes their keys explicitly into recovery. Recovery rechecks deadlines atomically; this works with Dragonfly's declared-key requirement and prevents a stale candidate list from recovering a renewed reservation.
 

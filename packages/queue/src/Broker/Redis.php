@@ -110,18 +110,14 @@ class Redis implements Synchronous, Consumer
                 "{$queue->namespace}.processing.{$queue->name}",
                 "{$queue->namespace}.stats.{$queue->name}.total",
                 "{$queue->namespace}.stats.{$queue->name}.processing"];
-            $count = min(self::REAP_LIMIT, max(1, $n));
-            $batch = $this->script($this->receive, 'reserve', $keys, [$count, self::RESERVATION_GRACE, max(0, $timeout), 0]);
+            $incoming = "{$queue->namespace}.incoming.{$queue->name}";
+            $keys[] = $incoming;
+            $args = [min(self::REAP_LIMIT, max(1, $n)), self::RESERVATION_GRACE];
+            $batch = $this->script($this->receive, 'reserve', $keys, $args);
             if ($batch === [] && $timeout > 0) {
-                // The script registered this reservation before blocking. A crash
-                // after the move is recoverable even before PHP sees the reply.
-                $raw = $this->receive->rightPopLeftPush($key, $reservation, $timeout);
-                if (\is_string($raw)) {
-                    $batch = [$raw];
-                    if ($count > 1) {
-                        $batch = [...$batch, ...$this->script($this->receive, 'reserve', $keys, [$count - 1, self::RESERVATION_GRACE, 0, 1])];
-                    }
-                }
+                // Any receiver can drain this queue-scoped list after a lost pop reply.
+                $this->receive->rightPopLeftPush($key, $incoming, $timeout);
+                $batch = $this->script($this->receive, 'reserve', $keys, $args);
             }
 
             if ($this->reconnectAttempt > 0) {
