@@ -840,6 +840,9 @@ mod tests {
         assert!(numeric(b"1e3").is_none());
     }
 
+    /// The stack a coroutine gets, which reading up to [`MAX_DEPTH`] must fit.
+    const STACK_BUDGET: usize = 2 * 1024 * 1024;
+
     fn nested_sequences(depth: usize) -> Vec<u8> {
         [vec![b'['; depth], vec![b']'; depth]].concat()
     }
@@ -853,11 +856,11 @@ mod tests {
         }
         assert_eq!(array.len(), 0);
 
-        // Mappings take the deepest frames. At the limit a release build needs
-        // under 768 KB of stack and a debug build under 1.5 MB; the thread gets
-        // 4 MB so the test holds on any build, not only the one measured.
+        // Mappings take the deepest frames. The limit has to fit the 2 MB a
+        // coroutine gets: a release build needs under 768 KB at this depth and
+        // a debug build, which the tests run, under 1.5 MB.
         let flow = [b"{a: ".repeat(MAX_DEPTH), b"1".to_vec(), b"}".repeat(MAX_DEPTH)].concat();
-        let handle = std::thread::Builder::new().stack_size(4 * 1024 * 1024).spawn(move || parse(&flow)).unwrap();
+        let handle = std::thread::Builder::new().stack_size(STACK_BUDGET).spawn(move || parse(&flow)).unwrap();
         assert!(matches!(handle.join().unwrap(), Some(Value::Array(_))));
     }
 
@@ -875,10 +878,8 @@ mod tests {
     #[test]
     fn a_document_far_past_the_limit_does_not_overflow_the_stack() {
         // About 24 KB of brackets overflowed the stack before the limit.
-        let handle = std::thread::Builder::new()
-            .stack_size(4 * 1024 * 1024)
-            .spawn(|| parse(&nested_sequences(100_000)))
-            .unwrap();
+        let handle =
+            std::thread::Builder::new().stack_size(STACK_BUDGET).spawn(|| parse(&nested_sequences(100_000))).unwrap();
         assert_eq!(handle.join().unwrap(), None);
     }
 }
