@@ -38,7 +38,7 @@ readonly class Acknowledgements
 
         if (($alert->getAttribute('acknowledgedAt') !== null) === $acknowledged) {
             // A notification written after the alert was acknowledged catches up.
-            $this->updateNotifications($alert, $acknowledged);
+            $this->updateNotifications($alert);
 
             return $alert;
         }
@@ -55,7 +55,7 @@ readonly class Acknowledgements
 
         $alert = $this->dbForPlatform->getAuthorization()->skip(fn () => $this->dbForPlatform->updateDocument('monitorAlerts', $alert->getId(), $changes));
 
-        $this->updateNotifications($alert, $acknowledged);
+        $this->updateNotifications($alert);
         $escalations = new Escalations($this->dbForPlatform);
 
         return $acknowledged ? $escalations->stop($alert) : $escalations->resume($alert, new \DateTimeImmutable());
@@ -63,9 +63,12 @@ readonly class Acknowledgements
 
     /**
      * Every member's console notification about the alert shows whether it is acknowledged, so none of them acknowledges it again.
+     * The alert is written before its notifications here, and a notification before its alert is read in the Notifications
+     * worker, so one of the two always sees the other.
      */
-    private function updateNotifications(Document $alert, bool $acknowledged): void
+    public function updateNotifications(Document $alert): void
     {
+        $acknowledged = $alert->getAttribute('acknowledgedAt') !== null;
         $this->dbForPlatform->getAuthorization()->skip(fn () => $this->dbForPlatform->updateDocuments('notifications', new Document([
             'status' => $acknowledged ? Change::Acknowledged->value : Change::Firing->value,
         ]), [

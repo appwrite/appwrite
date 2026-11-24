@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Alert\Acknowledgements;
 use Appwrite\Alert\Change;
 use Appwrite\Alert\Unsubscribe;
 use Appwrite\Messaging\PushService;
@@ -484,11 +485,6 @@ class Notifications extends Action
         // can open and acknowledge. Its severity is the notification's type, as the bell draws one icon per type.
         $data = \array_map('strval', $payload['push']['data'] ?? []);
         $alert = ($data['type'] ?? '') === 'alert' ? $data : [];
-        $status = $alert['status'] ?? '';
-        // An alert acknowledged while its firing notice waited in the queue is shown acknowledged.
-        if ($status === Change::Firing->value && $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('monitorAlerts', $alert['alertId'] ?? ''))->getAttribute('acknowledgedAt') !== null) {
-            $status = Change::Acknowledged->value;
-        }
 
         $consoleMessage = new ConsoleMessage(
             recipients: [$consoleRecipient],
@@ -501,7 +497,7 @@ class Notifications extends Action
             teamId: ($alert['organizationId'] ?? '') !== '' ? $alert['organizationId'] : null,
             subjectType: ($alert['alertId'] ?? '') !== '' ? RESOURCE_TYPE_ALERTS : '',
             subjectId: $alert['alertId'] ?? '',
-            status: $status,
+            status: $alert['status'] ?? '',
         );
 
         $adapter = new ConsoleAdapter($dbForPlatform);
@@ -510,6 +506,15 @@ class Notifications extends Action
         if (($result['deliveredTo'] ?? 0) === 0) {
             $error = $result['results'][0]['error'] ?? 'unknown error';
             throw new Exception('Console alert delivery failed: ' . $error);
+        }
+
+        // An alert acknowledged while its firing notice waited in the queue shows acknowledged. Read after writing, so an
+        // acknowledgement made meanwhile either finds the notification or is seen here.
+        if (($alert['status'] ?? '') === Change::Firing->value) {
+            $firing = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('monitorAlerts', $alert['alertId'] ?? ''));
+            if (!$firing->isEmpty()) {
+                (new Acknowledgements($dbForPlatform))->updateNotifications($firing);
+            }
         }
 
         return $alertId;
