@@ -425,6 +425,8 @@ pub(crate) fn json_path<D: Dialect>(b: &mut Builder<D>, attribute: &str, values:
 
 impl Dialect for MySqlDialect {
     const CLASS: &'static str = "Utopia\\Query\\Builder\\MySQL";
+    const LIKE_ESCAPE: u8 = b'!';
+    const DECLARES_LIKE_ESCAPE: bool = true;
 
     fn base_step(
         b: &mut Builder<Self>,
@@ -488,6 +490,10 @@ impl Dialect for MySqlDialect {
 
     fn reset(b: &mut Builder<Self>) {
         reset(b)
+    }
+
+    fn ast_dialect() -> crate::builder::AstDialect {
+        crate::builder::AstDialect::MySql
     }
 }
 
@@ -620,8 +626,12 @@ pub(crate) mod json_sets {
         b.core.json_sets.set(
             column,
             Condition::new(
-                format!("JSON_REMOVE({wrapped}, JSON_UNQUOTE(JSON_SEARCH({wrapped}, 'one', ?)))"),
-                vec![value],
+                // The value is a LIKE pattern to JSON_SEARCH, and a value that is not there removes nothing.
+                format!(
+                    "COALESCE(JSON_REMOVE({wrapped}, JSON_UNQUOTE(JSON_SEARCH({wrapped}, 'one', ?, {}))), {wrapped})",
+                    D::LITERAL.quote(&char::from(D::LIKE_ESCAPE).to_string())?
+                ),
+                vec![crate::value::string(crate::builder::core::escape_like_value(&value, D::LIKE_ESCAPE))],
             ),
         );
         Ok(())

@@ -12,15 +12,19 @@
 //! A library that still has one registers its classes only when `_APP_EXTENSION_LIBRARIES` names
 //! its package (`if enabled("<package>")` in [`startup`] or [`get_module`]), so it can be canaried
 //! and switched back to PHP with a restart, not a deploy: `detector` (`Utopia\Detector\*`),
-//! `compression` (`Utopia\Compression\*`) and `query` (`Utopia\Query\*`).
+//! `compression` (`Utopia\Compression\*`), `query` (`Utopia\Query\*`),
+//! `balancer` (`Utopia\Balancer\*`) and `database` (`Utopia\Database\Id`, `Role`, `Permission`
+//! and `DateTime`).
 //!
 //! The `utopia.libraries` php.ini setting, when set, replaces both: only the libraries it names
 //! register (see [`libraries`]).
 
 mod auth;
+mod balancer;
 mod canvas;
 mod classes;
 mod compression;
+mod database;
 mod detector;
 mod domains;
 mod dsn;
@@ -143,8 +147,10 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
 }
 
 /// Registers the classes built by hand rather than with `#[php_class]`: `Locale`, `UserAgent`, the
-/// validators, the password hashes and, when switched on, the detector. Runs in MINIT, before the
-/// `#[php_class]` classes are registered. Also registers `utopia.libraries`.
+/// validators, the password hashes and, when switched on, the detector, compression, balancer and
+/// database.
+/// Runs in MINIT, before the `#[php_class]` classes are registered. Also registers
+/// `utopia.libraries`.
 fn startup(_kind: i32, module: i32) -> i32 {
     ext_php_rs::internal::startup_guard(|| {
         libraries::startup(module);
@@ -174,6 +180,12 @@ fn startup(_kind: i32, module: i32) -> i32 {
         if enabled("compression") {
             compression::register()?;
         }
+        if enabled("balancer") {
+            balancer::register()?;
+        }
+        if enabled("database") {
+            database::register()?;
+        }
         Ok(())
     })
 }
@@ -185,5 +197,7 @@ extern "C" fn request_shutdown(kind: i32, module: i32) -> i32 {
     query::ast::request_shutdown();
     query::schema::request_shutdown();
     query::builder::request_shutdown();
+    balancer::request_shutdown();
+    database::request_shutdown();
     locale::request_shutdown(kind, module)
 }

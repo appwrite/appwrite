@@ -84,6 +84,7 @@ unsafe extern "C" {
     fn zend_verify_scalar_type_hint(type_mask: u32, arg: *mut zval, strict: bool, is_internal_arg: bool) -> bool;
     fn zend_verify_return_error(function: *const zend_function, value: *const zval);
     fn increment_function(op: *mut zval) -> i32;
+    fn zend_release_fcall_info_cache(fcc: *mut c_void);
 }
 
 /// The engine's executor globals (`EG`).
@@ -143,6 +144,16 @@ impl Property {
     /// The property `name`, not declared yet.
     pub const fn new(name: &'static str) -> Self {
         Self { name, offset: AtomicU32::new(0) }
+    }
+
+    /// The property's name.
+    pub fn name(&self) -> &'static str {
+        self.name
+    }
+
+    /// Records the offset of the property's slot, once declared.
+    pub fn set_offset(&self, offset: u32) {
+        self.offset.store(offset, Ordering::Release);
     }
 }
 
@@ -302,6 +313,17 @@ fn own_slot<'a>(scope: &ClassEntry, this: &'a mut ZendObject, property: &Propert
     if offset != 0 && std::ptr::eq(this.ce, scope) && !this.is_lazy() {
         // SAFETY: a declared property's slot lies `offset` bytes into an object of the class
         // that declared it, and lives as long as the object.
+        return Some(unsafe { &mut *std::ptr::from_mut(this).cast::<u8>().add(offset as usize).cast::<Zval>() });
+    }
+    None
+}
+
+/// The slot of the private `property` in `this` (of its class or a subclass, which cannot hook it), if not lazy.
+#[inline(always)]
+pub fn private_slot<'a>(this: &'a mut ZendObject, property: &Property) -> Option<&'a mut Zval> {
+    let offset = property.offset.load(Ordering::Acquire);
+    if offset != 0 && !this.is_lazy() {
+        // SAFETY: the slot lies `offset` bytes into any object of the declaring class or a subclass.
         return Some(unsafe { &mut *std::ptr::from_mut(this).cast::<u8>().add(offset as usize).cast::<Zval>() });
     }
     None
@@ -1240,7 +1262,7 @@ impl InternedValue for Zval {
 /// PHP `$object->name(...$args)` from the executing method's class: the object's own method
 /// (a subclass's override, `__call()`), its visibility checked against that class, and
 /// PHP's `Error` for a value that is not an object or a method that does not exist; `None`
-/// with an exception pending. At most two arguments.
+/// with an exception pending. At most four arguments.
 pub fn call_method(object: &Zval, method: &Callee, args: &[&Zval]) -> Option<Zval> {
     let object = object.dereference();
     let Some(target) = object.object() else {
@@ -1265,7 +1287,7 @@ pub fn call_method(object: &Zval, method: &Callee, args: &[&Zval]) -> Option<Zva
             }
             return None;
         }
-        let mut params = [Zval::new(), Zval::new()];
+        let mut params = [Zval::new(), Zval::new(), Zval::new(), Zval::new()];
         for (param, arg) in params.iter_mut().zip(args) {
             *param = arg.dereference().shallow_clone();
         }
@@ -1275,12 +1297,100 @@ pub fn call_method(object: &Zval, method: &Callee, args: &[&Zval]) -> Option<Zva
             target,
             (*target).ce,
             &raw mut retval,
-            u32::try_from(args.len().min(2)).unwrap_or(2),
+            u32::try_from(args.len().min(4)).unwrap_or(4),
             params.as_mut_ptr().cast(),
             std::ptr::null_mut(),
         );
         if has_exception() { None } else { Some(retval) }
     }
+}
+
+/// The method a [`Callee`] last resolved to on one class; reset at request shutdown.
+pub struct MethodCache {
+    class: std::sync::atomic::AtomicPtr<zend_class_entry>,
+    function: std::sync::atomic::AtomicPtr<zend_function>,
+}
+
+impl MethodCache {
+    pub const fn new() -> Self {
+        Self {
+            class: std::sync::atomic::AtomicPtr::new(std::ptr::null_mut()),
+            function: std::sync::atomic::AtomicPtr::new(std::ptr::null_mut()),
+        }
+    }
+
+    /// Forgets the method (request shutdown).
+    pub fn reset(&self) {
+        self.class.store(std::ptr::null_mut(), Ordering::Relaxed);
+        self.function.store(std::ptr::null_mut(), Ordering::Relaxed);
+    }
+}
+
+impl Default for MethodCache {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// `ZEND_ACC_CALL_VIA_TRAMPOLINE`: a `__call()` stand-in, freed after its call.
+const ACC_CALL_VIA_TRAMPOLINE: u32 = 1 << 18;
+
+/// [`call_method`] for a public by-value method, its lookup kept in `cache` per class.
+pub fn call_method_cached(object: &Zval, method: &Callee, cache: &MethodCache, args: &[Zval]) -> Option<Zval> {
+    let object = object.dereference();
+    let Some(target) = object.object() else {
+        let args: Vec<&Zval> = args.iter().collect();
+        return call_method(object, method, &args);
+    };
+    let target = std::ptr::from_ref(target).cast_mut().cast::<zend_object>();
+    // SAFETY: a live object and its class.
+    let class = unsafe { (*target).ce };
+    let mut function = std::ptr::null_mut();
+    if cache.class.load(Ordering::Relaxed) == class {
+        function = cache.function.load(Ordering::Relaxed);
+    }
+    if function.is_null() {
+        let strings = method.strings.get().expect("method names are interned in MINIT");
+        let mut key = Zval::new();
+        key.value.str_ = strings.key;
+        key.u1.type_info = IS_STRING;
+        let mut resolved = target;
+        // SAFETY: as in [`call_method`]; only a plain method of the class itself is cached.
+        unsafe {
+            let get_method = (*(*target).handlers).get_method.expect("get_method");
+            function = get_method(&raw mut resolved, strings.name, &raw const key);
+            if function.is_null() || resolved != target || (*function).common.fn_flags & ACC_CALL_VIA_TRAMPOLINE != 0 {
+                if !function.is_null() && (*function).common.fn_flags & ACC_CALL_VIA_TRAMPOLINE != 0 {
+                    zend_release_trampoline(function);
+                }
+                let args: Vec<&Zval> = args.iter().collect();
+                return call_method(object, method, &args);
+            }
+        }
+        cache.class.store(class, Ordering::Relaxed);
+        cache.function.store(function, Ordering::Relaxed);
+    }
+    let mut retval = Zval::new();
+    // SAFETY: as in [`call_method`]; by-value parameters leave `args` as they are.
+    unsafe {
+        ext_php_rs::ffi::zend_call_known_function(
+            function,
+            target,
+            class,
+            &raw mut retval,
+            u32::try_from(args.len()).unwrap_or(u32::MAX),
+            args.as_ptr().cast_mut().cast(),
+            std::ptr::null_mut(),
+        );
+    }
+    if has_exception() { None } else { Some(retval) }
+}
+
+/// Frees a `__call()` trampoline `get_method` made (`zend_free_trampoline`).
+unsafe fn zend_release_trampoline(function: *mut zend_function) {
+    let mut fcc = [function, std::ptr::null_mut(), std::ptr::null_mut(), std::ptr::null_mut(), std::ptr::null_mut()];
+    // SAFETY: a `zend_fcall_info_cache` holding only the trampoline, which the engine frees.
+    unsafe { zend_release_fcall_info_cache(fcc.as_mut_ptr().cast()) };
 }
 
 /// `ZEND_ACC_STRICT_TYPES`: a function from a file declaring `strict_types=1`.

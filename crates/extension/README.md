@@ -71,6 +71,7 @@ utopia.libraries = "validators,dsn,domains"
 |---------------|----------------------------------------------------------------------------------|
 | `auth`        | `Utopia\Auth\Hash`, `Utopia\Auth\Hashes\*`                                       |
 | `compression` | `Utopia\Compression\*`                                                           |
+| `database`    | `Utopia\Database\Id`, `Role`, `Permission`, `DateTime`                           |
 | `detector`    | `Utopia\Detector\*`                                                              |
 | `domains`     | `Utopia\Domains\Domain`                                                          |
 | `dsn`         | `Utopia\DSN\DSN`                                                                 |
@@ -110,8 +111,9 @@ of `packages/validators` and the password hashes of `packages/auth` are register
 `packages/user-agent/stubs/`, `packages/domains/stubs/`, `packages/emails/stubs/`,
 `packages/validators/stubs/` and `packages/auth/stubs/` for PHPStan, which runs without the
 extension. A library that still has a PHP implementation is registered only when
-`_APP_EXTENSION_LIBRARIES` names its package; today those are `detector`, `compression` and
-`query`. Otherwise Composer loads the package's PHP class as before:
+`_APP_EXTENSION_LIBRARIES` names its package; today those are `detector`, `compression`,
+`query`, `balancer` and `database` (four classes of `utopia-php/database`, from `vendor/`). Otherwise
+Composer loads the package's PHP class as before:
 
 ```sh
 _APP_EXTENSION_LIBRARIES=<package>,<package>   # those packages' classes from the extension
@@ -253,6 +255,118 @@ Known differences from the PHP classes:
 
 Once every region runs it, PECL `brotli`, `zstd`, `lz4` and `snappy` can leave `appwrite/base`: the
 classes need none of them, and only the corpus's PHP side does.
+
+## Utopia\Balancer
+
+Over `crates/utopia/balancer`, registered when `_APP_EXTENSION_LIBRARIES` names `balancer`: every
+class of `packages/balancer` (`Option`, the abstract `Algorithm`, `First`, `Last`, `Random`,
+`RoundRobin`, `Balancer` and `Group`), so none of the package's PHP classes loads. Off by default.
+
+Built by hand like the detector, in `src/balancer.rs`: the same names, inheritance, signatures and
+typed properties (`Option`'s private `$state`, `Balancer`'s `$algo`, `$filters` and `$options`,
+`RoundRobin`'s `$index`, `Group`'s protected `$balancers`, `$runHistogram` and promoted `$name`), so
+`instanceof`, `clone`, `==`, `serialize()`, `var_dump()` and PHP subclasses behave as in PHP;
+`packages/cdn`'s `CdnOption` extends `Option`. An option's state holds any PHP value and gives it
+back as it is: objects and closures by handle, references written through as PHP writes them
+(typed ones checked), numeric keys stored as PHP stores them, and an uninitialized `$state` read,
+written and unset as PHP's `??`, `[]=` and `unset()` treat it.
+
+`run()` and `getFilteredOptions()` call the filters as `getFilteredOptions()` calls
+`array_filter()`: each filter over the options the ones before it kept, as many times and in the
+same order, resolved from `Balancer`'s scope (so `self::`, `static::` and private method callables
+resolve as in PHP), on the options and filters the run started with. A native algorithm then
+picks with the crate's `First`, `Last` or `RoundRobin`; `Random` draws from PHP's own engine
+(`array_rand()`'s draw), so `mt_srand()` replays PHP's picks exactly. A PHP algorithm, a subclass's
+override of `run()` or `getFilteredOptions()`, `Group`'s balancers and its telemetry adapter
+(`createHistogram()` with the same arguments, `record()` with the duration and `['name' => ...]`)
+are called as PHP calls them. The crate's filters ran option by option; they now run filter by
+filter, as PHP's do. Its `Group` is not in this repository yet (it records to `utopia-telemetry`,
+which is not either), so the extension's `Group` is its own.
+
+Where it is faster: a run without filters on a native algorithm calls no PHP code, and picks
+straight from the options list with nothing copied but the option returned; a run with filters
+makes the same calls as `array_filter()` and builds one list where PHP built two. `Group` looks up
+its telemetry classes and `createHistogram()` once per request.
+
+`packages/balancer/tests` run on the extension (and `packages/cdn/tests` pass on it), and
+`tests/balancer.php` (885 cases) is identical on both: reflection of every class; 34 keys against
+7 states for every `Option` method, argument coercion in weak and strict mode, references and
+typed references in state, destructor order, uninitialized options; every algorithm over 14 kinds
+of arrays (empty, keyed, sparse, holes, references, non-options), `Random` under 6 seeds and the
+legacy engine, its distribution and its sharing of `mt_rand()`'s engine, `RoundRobin` from 9 start
+indexes and at `PHP_INT_MAX`; 26 kinds of filters (closures, strings, arrays, invokables,
+`__call()`, first-class callables, return values of every type, by-reference and typed
+parameters) under three algorithms, invalid callables, filter order and count, filters that
+throw, add options or filters mid-run, or change state; PHP algorithms and subclasses of the
+algorithms, `Balancer` and `Group`; properties replaced through reflection; Appwrite's avatar
+provider loop and Cloud's CDN purge filter; `Group`'s fallbacks and telemetry. The differences
+below are asserted at its end. Nothing in Appwrite or Cloud subclasses a balancer class but
+`packages/cdn`'s `CdnOption` (an `Option`).
+
+Known differences from the PHP classes:
+
+- A closure cannot be bound to the scope of an internal class: `Closure::bind()` into one warns
+  and returns `null`, where PHP's classes allowed it.
+- An internal class, or a PHP class extending one, cannot be made lazy:
+  `ReflectionClass::newLazyGhost()` and `newLazyProxy()` throw for `Option`, `Balancer` and their
+  subclasses.
+- An exception thrown in a filter has no `array_filter()` or `getFilteredOptions()` frame in its
+  trace, and an exception names the caller's file and line, since the classes have no PHP source.
+
+## Utopia\Database: Id, Role, Permission and DateTime
+
+Over `crates/utopia/database` (the modules without I/O: `id`, `role`, `permission`, `datetime` and
+`error`), registered when `_APP_EXTENSION_LIBRARIES` names `database`: `Utopia\Database\Id`,
+`Role`, `Permission` and `DateTime` of `utopia-php/database` 10.2 (in `vendor/`), so Composer never
+loads those four files. The rest of the package, `PermissionType` and `Utopia\Database\Exception`
+included, stays PHP. Off by default.
+
+Built by hand like the balancer, in `src/database.rs`: the same names, signatures, static methods,
+private promoted properties (`Role`'s `$role`, `$identifier` and `$dimension`, `Permission`'s
+`$role` and `$permission`), `Permission`'s private static `$aggregates` and `DateTime`'s protected
+static `$formatDb` and `$formatTz` and private constructor, so `==`, `clone`, `serialize()`,
+`var_dump()`, reflection and PHP subclasses behave as in PHP. `Role::parse()`,
+`Permission::parse()`, `Permission::aggregate()`, `Id::unique()` and `DateTime::setTimezone()`,
+`formatTz()` and `nowAfter()` are the crate's; a string that is not UTF-8 is read byte for byte.
+`aggregate()` takes `PermissionType` cases and throws the closure's `TypeError` for anything else,
+as PHP does. A `Role` subclass's getters, and a `\DateTime` subclass's `format()` and `add()`, are
+called as PHP calls them. Errors are PHP's: `\Exception` from `Role`, `Utopia\Database\Exception`
+(made with its constructor, so `$state` is set) from `Permission` and `DateTime`, wrapping PHP's own
+`DateMalformedStringException`.
+
+Where it is faster: `Permission::read(Role::any())` and the other types return an interned string
+for a role without identifier or dimension; a role object is read from its slots rather than
+through three getter calls and two new objects; `DateTime::format()` reads the `\DateTime`'s fields
+in place and writes the 23 bytes itself; `now()` formats the clock in UTC without a `\DateTime`.
+The crate's dates are UTC only: with another default timezone (`date_default_timezone_set()`), or
+`$formatDb` or `$formatTz` changed by a subclass, or for input the crate does not parse, the methods
+make the same `\DateTime`, `\DateTimeZone` and `\DateInterval` calls the PHP class makes.
+`addSeconds()` always does, to change the caller's `\DateTime` exactly as PHP's `add()` does.
+
+The package's own `IdTest`, `RoleTest`, `PermissionTest` and `DateTimeTest` run on the extension,
+and `tests/database.php` (6,779 cases) is identical on both: reflection of every class; `Id::custom()`
+and `Id::unique()` (length, hex, time order, uniqueness and spread of the padding, for 14 paddings
+and 7 coercions); `Role::parse()` of 59 strings and every factory with 15 argument lists, `"0"`
+identifiers and dimensions, bytes that are not UTF-8; `Permission::parse()` of 54 strings and of
+3,000 seeded random ones, every type for 19 roles, `aggregate()` with `null`, `write` expansion,
+`$allowed` subsets, duplicates, keys, invalid strings, non-string elements and wrong `$allowed`;
+`var_dump()`, `serialize()`, `==`, `clone` and objects made without their constructor; PHP subclasses
+of `Role`, `Permission` and `\DateTime`; `DateTime`'s methods over 40 strings, 13 dates, 14 second
+counts in 3 timezones, three default timezones, and its formats changed. The differences below are
+asserted at its end. Nothing in Appwrite or Cloud subclasses these classes.
+
+Known differences from the PHP classes:
+
+- An exception names the caller's file and line, and its trace has no frame inside the package,
+  since the classes have no PHP source; a `TypeError` for an element of `aggregate()`'s
+  `$permissions` does not say `called in .../Permission.php on line 184`.
+- `Permission::$aggregates` is declared, but `aggregate()` expands `write` as it is declared, even
+  if code bound to the class's scope changed it.
+- `Id::unique()` waits for the microsecond to change as `uniqid()` does, but keeps its own last
+  value: an `Id::unique()` and a direct `uniqid()` in the same microsecond can share their first 13
+  characters (the padding still differs).
+- A closure cannot be bound to the scope of an internal class: `Closure::bind()` into one warns
+  and returns `null`, where PHP's classes allowed it.
 
 ## Utopia\DSN\DSN
 
@@ -550,6 +664,28 @@ written as `a = b = c`, which reads back as `(a = b) = c`. `packages/query/src/A
 is now the fixed version, with two tests in `tests/AST/SerializerTest.php` that fail on the old
 one.
 
+### String literals
+
+`Utopia\Query\StringLiteral` is a PHP enum and stays one. The tokenizers, the parser, the
+serializers and the schemas each take a case of it (or their dialect's default), and the crate has
+the same four rules as `utopia_query::StringLiteral`: `quote()` for what the serializers and the
+DDL write, `unquote()` for what the parser reads. A backslash escapes or not, PostgreSQL's
+`E'...'` is its own token, a NUL or a backslash after a byte of 0x80 or above is refused where
+the dialect refuses it, and `LIKE` keeps its `ESCAPE` clause through `Binary::$escape`.
+
+The parser reads escapes in bytes, as PHP does. The extension hands it text with a character
+for each byte, so it asks the crate's parser for `widened()` text: `E'\u00e9'` is then the two
+bytes of `é`, each its own character, and comes back out as those two bytes.
+
+The corpus runs 1,903 cases of this on both: 29 literals through six tokenizers and the parser
+under each of the four rules, 18 strings through six serializers under each rule and through the
+DDL of five dialects, `LIKE ... ESCAPE` read and written, and statements with input after them.
+One known difference: the rules given to a tokenizer, a serializer or a schema are a protected
+property `$literal` in PHP, which a subclass can read. The extension keeps them in Rust.
+
+The crate's builders do not have these rules yet. They are not in the extension, so nothing
+here reaches them, and they are to be brought level when the builders move.
+
 ### The schemas
 
 `Schema` and `Schema\SQL` (both abstract), the dialects `Schema\MySQL`, `PostgreSQL`, `SQLite`,
@@ -634,13 +770,13 @@ compares each public one, and the interfaces each builder implements.
 What a subclass can rely on:
 
 - A protected method it overrides is the one the build calls, in the order PHP calls them: `build()`,
-  the `compile*()` methods, the clause hooks, the validators and every other helper, 74 in all,
+  the `compile*()` methods, the clause hooks, the validators and every other helper, 77 in all,
   `quote()` and `getBindingValues()` among them.
   `parent::compileFilter()` runs the native one. An override is handed the package's own objects: a
   `Query`, a `Case\Expression`, a `Statement`, a `ParsedQuery`, and `$parts` by reference. Nothing
   is converted for a method no subclass overrides.
-- `createAstSerializer()` is among them: `fromAst()` writes what stays raw SQL with the serializer
-  a subclass returns.
+- `createTokenizer()` and `createAstSerializer()` are among them: `toAst()` reads a CTE with the
+  tokenizer a subclass returns, and `fromAst()` writes what stays raw SQL with its serializer.
 - `bindings`, `pendingQueries` and `resolvedAttributeCache` are protected properties it reads,
   assigns and changes in place (`$this->pendingQueries[] = $query`), as the package's own traits do.
   PHP is handed a copy the builder holds, and the next native call reads it back.
@@ -673,12 +809,11 @@ Known differences:
 - `resolvedAttributeCache` has no order.
 - The classes declare a constructor and no `__clone()`. PHP's declare the reverse.
 
-Four things check them. `tests/query-builders.php` is a corpus like the others: 15,797 cases, the
-same on PHP and on the extension. The package's own 5,628 tests pass on the native builders, but for
+Four things check them. `tests/query-builders.php` is a corpus like the others: 15,827 cases, the
+same on PHP and on the extension. The package's own 5,828 tests pass on the native builders, but for
 two that read the PHP class's source and private state and are skipped there. utopia-php/database
 10.2.3 subclasses four of the builders, overrides 23 of their methods and serializes queries for its
-cache keys. Its 13,217 unit tests fail the same nine on main's PHP package, on this one and on the
-native builders: the nine need a database server.
+cache keys. Its 13,217 unit tests give the same result on the native builders as on PHP.
 `tests/query-coroutines.php` builds 720 statements in Swoole coroutines whose overrides and
 callbacks sleep in the middle of a build, so builds interleave on one thread. Each builder carries
 the PHP object that owns it for that reason: kept per thread, 476 of the 720 lost their overrides.

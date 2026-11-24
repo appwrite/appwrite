@@ -23,7 +23,9 @@ publish = false
 [workspace.dependencies]
 php-std = { path = "crates/support/php-std" }
 utopia-auth = { path = "crates/utopia/auth" }
+utopia-balancer = { path = "crates/utopia/balancer" }
 utopia-compression = { path = "crates/utopia/compression" }
+utopia-database = { path = "crates/utopia/database" }
 utopia-detector = { path = "crates/utopia/detector" }
 utopia-domains = { path = "crates/utopia/domains" }
 utopia-emails = { path = "crates/utopia/emails" }
@@ -51,6 +53,7 @@ cc = "1"
 foldhash = "0.2"
 getrandom = "0.3"
 gost94 = "0.10"
+hex = "0.4"
 hashbrown = { version = "0.17", default-features = false }
 icu_normalizer = { version = "2.3", default-features = false, features = ["compiled_data"] }
 icu_properties = { version = "2.3", default-features = false, features = ["compiled_data"] }

@@ -11,6 +11,7 @@ export const SALES_SOURCES = [
   'specs',
   'replicas',
   'compliance',
+  'preview-domains',
   'support',
   'support-ticket',
   'plan-picker',

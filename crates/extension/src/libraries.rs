@@ -30,7 +30,7 @@ const SETTING: &CStr = c"utopia.libraries";
 
 /// Every library, by the name of its package (`packages/<name>`), which is also the name
 /// `_APP_EXTENSION_LIBRARIES` takes.
-const NAMES: [&str; 11] = [
+const NAMES: [&str; 13] = [
     "dsn",
     "domains",
     "emails",
@@ -42,6 +42,8 @@ const NAMES: [&str; 11] = [
     "detector",
     "compression",
     "query",
+    "balancer",
+    "database",
 ];
 
 /// Names the validators were switched on by, one group at a time, before they all became one

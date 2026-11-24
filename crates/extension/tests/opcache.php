@@ -1010,6 +1010,67 @@ if (class_exists(\Utopia\Compression\Algorithms\Zstd::class)) {
     {
     }
 }
+if (class_exists(\Utopia\Balancer\Option::class)) {
+    class ExtendsUtopiaBalancerOption extends \Utopia\Balancer\Option
+    {
+    }
+}
+if (class_exists(\Utopia\Balancer\Algorithm::class)) {
+    abstract class ExtendsUtopiaBalancerAlgorithm extends \Utopia\Balancer\Algorithm
+    {
+    }
+}
+if (class_exists(\Utopia\Balancer\Algorithm\First::class)) {
+    class ExtendsUtopiaBalancerAlgorithmFirst extends \Utopia\Balancer\Algorithm\First
+    {
+    }
+}
+if (class_exists(\Utopia\Balancer\Algorithm\Last::class)) {
+    class ExtendsUtopiaBalancerAlgorithmLast extends \Utopia\Balancer\Algorithm\Last
+    {
+    }
+}
+if (class_exists(\Utopia\Balancer\Algorithm\Random::class)) {
+    class ExtendsUtopiaBalancerAlgorithmRandom extends \Utopia\Balancer\Algorithm\Random
+    {
+    }
+}
+if (class_exists(\Utopia\Balancer\Algorithm\RoundRobin::class)) {
+    class ExtendsUtopiaBalancerAlgorithmRoundRobin extends \Utopia\Balancer\Algorithm\RoundRobin
+    {
+    }
+}
+if (class_exists(\Utopia\Balancer\Balancer::class)) {
+    class ExtendsUtopiaBalancerBalancer extends \Utopia\Balancer\Balancer
+    {
+    }
+}
+if (class_exists(\Utopia\Balancer\Group::class)) {
+    class ExtendsUtopiaBalancerGroup extends \Utopia\Balancer\Group
+    {
+    }
+}
+
+if (class_exists(\Utopia\Database\Id::class)) {
+    class ExtendsUtopiaDatabaseId extends \Utopia\Database\Id
+    {
+    }
+}
+if (class_exists(\Utopia\Database\Role::class)) {
+    class ExtendsUtopiaDatabaseRole extends \Utopia\Database\Role
+    {
+    }
+}
+if (class_exists(\Utopia\Database\Permission::class)) {
+    class ExtendsUtopiaDatabasePermission extends \Utopia\Database\Permission
+    {
+    }
+}
+if (class_exists(\Utopia\Database\DateTime::class)) {
+    class ExtendsUtopiaDatabaseDateTime extends \Utopia\Database\DateTime
+    {
+    }
+}
 
 $extended = [];
 foreach ((new ReflectionExtension('utopia'))->getClassNames() as $name) {
