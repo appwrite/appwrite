@@ -153,6 +153,7 @@ async function mockApi(
   page: Page,
   beep?: Record<string, unknown>,
   acknowledging: Acknowledging = 'ok',
+  targets: Models.Target[] = [],
 ): Promise<Writes> {
   let serverPrefs: Record<string, unknown> = {
     ...ACCOUNT.prefs,
@@ -209,7 +210,7 @@ async function mockApi(
       return route.fulfill({ status: 204, headers })
     }
     if (apiPath === '/account') {
-      return json(200, { ...ACCOUNT, prefs: serverPrefs })
+      return json(200, { ...ACCOUNT, prefs: serverPrefs, targets })
     }
     if (apiPath === '/account/prefs') {
       if (request.method() === 'PATCH') {
@@ -223,7 +224,7 @@ async function mockApi(
         }
         serverPrefs = prefs
         writes.prefs.push(serverPrefs)
-        return json(200, { ...ACCOUNT, prefs: serverPrefs })
+        return json(200, { ...ACCOUNT, prefs: serverPrefs, targets })
       }
       readSinceArmed = true
       if (writes.held) writes.readsWhileHeld += 1
@@ -336,6 +337,18 @@ async function openRowMenu(popover: Locator, title: string) {
   await row.hover()
   await row.getByRole('button', { name: 'Notification actions' }).click()
   return row
+}
+
+/** The popover's box once its opening animation has finished. */
+async function settledBox(locator: Locator) {
+  await locator.evaluate((element) =>
+    Promise.all(
+      element
+        .getAnimations({ subtree: true })
+        .map((animation) => animation.finished),
+    ),
+  )
+  return locator.boundingBox()
 }
 
 async function openNotifications(page: Page) {
@@ -582,5 +595,68 @@ test.describe('Notification center (mocked API)', () => {
         "Your role can't change alerts. Ask an owner or a developer.",
       ),
     ).toBeVisible()
+  })
+  test('keeps its size and header in place when switching tabs', async ({
+    page,
+  }) => {
+    await mockApi(page)
+    const popover = await openNotifications(page)
+    const settings = popover.getByRole('button', {
+      name: 'Notification settings',
+    })
+
+    const inbox = await settledBox(popover)
+    const inboxSettings = await settings.boundingBox()
+
+    await popover.getByRole('tab', { name: 'Updates' }).click()
+    await expect(popover.getByText('View full changelog')).toBeVisible()
+    expect(await settledBox(popover)).toEqual(inbox)
+    expect(await settings.boundingBox()).toEqual(inboxSettings)
+
+    await settings.click()
+    await expect(popover.getByText('Mobile pushes')).toBeVisible()
+    expect(await settledBox(popover)).toEqual(inbox)
+  })
+
+  test('promotes Beep until dismissed', async ({ page }) => {
+    const writes = await mockApi(page)
+    const popover = await openNotifications(page)
+
+    await expect(popover.getByText('Get alerts on your phone')).toBeVisible()
+    await expect(
+      popover.getByRole('link', { name: 'App Store' }),
+    ).toHaveAttribute('href', 'https://apps.apple.com/app/id6831213827')
+    await expect(
+      popover.getByRole('link', { name: 'Google Play' }),
+    ).toHaveAttribute(
+      'href',
+      'https://play.google.com/store/apps/details?id=io.appwrite.beep',
+    )
+
+    await popover.getByRole('button', { name: 'Dismiss' }).click()
+    await expect(popover.getByText('Get alerts on your phone')).toBeHidden()
+    await expect
+      .poll(() => writes.prefs.at(-1)?.['console.dismissedBanners'])
+      .toContain('beep-promo-2026-11')
+  })
+
+  test('does not promote Beep to an account that gets its pushes', async ({
+    page,
+  }) => {
+    await mockApi(page, undefined, 'ok', [
+      {
+        $id: 'beeptarget00000001',
+        $createdAt: daysAgo(2),
+        $updatedAt: daysAgo(2),
+        name: 'iPhone',
+        userId: ACCOUNT.$id,
+        providerType: 'push',
+        identifier: 'apns-token',
+        expired: false,
+      } as Models.Target,
+    ])
+    const popover = await openNotifications(page)
+
+    await expect(popover.getByText('Get alerts on your phone')).toBeHidden()
   })
 })
