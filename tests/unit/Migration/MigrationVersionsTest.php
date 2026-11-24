@@ -112,10 +112,12 @@ final class MigrationVersionsTest extends TestCase
             '_key_recipient',
             '_key_project',
             '_key_team',
+            '_key_subject',
             '_key_project_resource',
             '_key_project_parent_resource',
         ], \array_keys($indexes));
         $this->assertSame(['projectId', 'projectInternalId'], $indexes['_key_project']);
+        $this->assertSame(['subjectType', 'subjectId'], $indexes['_key_subject']);
         $this->assertSame(['projectId', 'projectInternalId', 'resourceType', 'resourceId', 'resourceInternalId'], $indexes['_key_project_resource']);
         $this->assertSame(['projectId', 'projectInternalId', 'parentResourceType', 'parentResourceId', 'parentResourceInternalId'], $indexes['_key_project_parent_resource']);
     }
