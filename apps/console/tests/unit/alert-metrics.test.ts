@@ -15,8 +15,8 @@ import {
 import {
   alertingLimits,
   countResponders,
-  countUsageMonitors,
   defaultProbeInterval,
+  monitorCaps,
 } from '@/lib/alerts/plan-limits'
 import {
   fillBuckets,
@@ -682,19 +682,25 @@ describe('alerting plan limits', () => {
     expect(alertingLimits(scale).escalationSteps).toBeNull()
   })
 
-  test('counts only usage monitors against the per-project cap', () => {
-    // Synthetic checks have their own organization cap, so three usage
-    // monitors fill a Free project while an HTTP check can still be added.
-    expect(
-      countUsageMonitors([
-        { type: 'usage' },
-        { type: 'usage' },
-        { type: 'usage' },
-        { type: 'http' },
-        { type: 'dns' },
-      ]),
-    ).toBe(3)
-    expect(countUsageMonitors([{ type: 'tcp' }, { type: 'smtp' }])).toBe(0)
+  test('caps usage monitors and synthetic checks separately', () => {
+    const free = {
+      monitors: 3,
+      probes: 1,
+    } as unknown as Parameters<typeof monitorCaps>[0]
+    // Three usage monitors fill a Free project, yet a synthetic check can
+    // still be added, so creating a monitor stays open.
+    expect(monitorCaps(free, 3, 0)).toEqual({
+      usageLimit: 3,
+      usageAtLimit: true,
+      probeLimit: 1,
+      probesAtLimit: false,
+      allAtLimit: false,
+    })
+    expect(monitorCaps(free, 3, 1).allAtLimit).toBe(true)
+    expect(monitorCaps(free, 2, 1).usageAtLimit).toBe(false)
+    // A count not loaded yet never closes creating.
+    expect(monitorCaps(free, undefined, undefined).allAtLimit).toBe(false)
+    expect(monitorCaps(undefined, 500, 500).allAtLimit).toBe(false)
   })
 
   test('starts new checks on a minute, or the plan minimum when longer', () => {

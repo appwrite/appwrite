@@ -16,8 +16,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { formatCurrency } from '@/components/pages/organizations/$orgId/billing/utils'
-import { alertingLimits, countUsageMonitors } from '@/lib/alerts/plan-limits'
-import { getBillingPlanResourceLimit } from '@/lib/billing/project-breakdown-resources'
+import { monitorCaps } from '@/lib/alerts/plan-limits'
 import {
   getPlanAddonCurrency,
   getPlanAddonIncludedCount,
@@ -25,8 +24,8 @@ import {
 } from '@/lib/billing/plan-addon-charge'
 import {
   organizationProbeCountQueryOptions,
+  usageMonitorCountQueryOptions,
   useCreateMonitor,
-  useMonitors,
   useOrganizationPlan,
   useProject,
 } from '@/lib/react-query/hooks'
@@ -74,11 +73,21 @@ export function CreateMonitor({
   const navigate = useNavigate()
   const { project } = useProject(projectId)
   const createMutation = useCreateMonitor(projectId)
-  const { monitors } = useMonitors(projectId)
-  const { plan } = useOrganizationPlan(project?.teamId)
-  const usageLimit = getBillingPlanResourceLimit(plan, 'monitors') ?? 0
-  const usageCount = countUsageMonitors(monitors)
-  const usageAtLimit = usageLimit > 0 && usageCount >= usageLimit
+  const organizationId = project?.teamId
+  const { plan } = useOrganizationPlan(organizationId)
+  const { data: usageCount } = useQuery({
+    ...usageMonitorCountQueryOptions(projectId),
+    enabled: open,
+  })
+  const { data: probeCount } = useQuery({
+    ...organizationProbeCountQueryOptions(organizationId),
+    enabled: open && isCloud && !!organizationId,
+  })
+  const { usageLimit, usageAtLimit, probeLimit, probesAtLimit } = monitorCaps(
+    plan,
+    usageCount,
+    probeCount,
+  )
   const [type, setType] = useState<'usage' | ProbeType>(initialType)
   const [form, setForm] = useState<RuleForm>(emptyRuleForm)
   const [probe, setProbe] = useState<ProbeForm>(() => emptyProbeForm('http'))
@@ -115,16 +124,8 @@ export function CreateMonitor({
     }
   }
 
-  const organizationId = project?.teamId
-  const { data: probeCount } = useQuery({
-    ...organizationProbeCountQueryOptions(organizationId),
-    enabled: open && isCloud && type !== 'usage' && !!organizationId,
-  })
-  const probeLimit = alertingLimits(plan).probes
   const probesIncluded = getPlanAddonIncludedCount(plan, 'probes')
   const probePrice = getPlanAddonPrice(plan, 'probes')
-  const probesAtLimit =
-    probeLimit !== null && probeCount !== undefined && probeCount >= probeLimit
   const allowance =
     type === 'usage'
       ? usageAtLimit

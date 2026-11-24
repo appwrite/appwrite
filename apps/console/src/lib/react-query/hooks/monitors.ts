@@ -51,6 +51,24 @@ export async function fetchMonitors(projectId: string) {
   }
 }
 
+/** How many usage monitors the project holds, which its plan's `monitors` cap counts. */
+export function usageMonitorCountQueryOptions(
+  projectId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['monitors', 'project', projectId, 'usage-count'],
+    queryFn: async () => {
+      const response = await sdk.forProject(projectId!).monitors.list({
+        queries: [Query.equal('type', ['usage']), Query.limit(1)],
+      })
+      return response.total ?? 0
+    },
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+  })
+}
+
 export async function fetchMonitor(
   projectId: string,
   monitorId: string,

@@ -8,13 +8,12 @@ import {
   dedicatedDatabasesQueryOptions,
   monitorsQueryOptions,
   organizationProbeCountQueryOptions,
-  useMonitors,
+  usageMonitorCountQueryOptions,
   useOrganizationPlan,
   useOrganizationScopes,
   useProject,
 } from '@/lib/react-query/hooks'
-import { alertingLimits, countUsageMonitors } from '@/lib/alerts/plan-limits'
-import { getBillingPlanResourceLimit } from '@/lib/billing/project-breakdown-resources'
+import { monitorCaps } from '@/lib/alerts/plan-limits'
 import { Monitors } from '@/components/pages/projects/$projectId/monitors/Monitors'
 import type { RuleForm } from '@/components/pages/projects/$projectId/monitors/RuleFields'
 import { canWriteMonitors } from '@/lib/console-access-checks'
@@ -83,19 +82,14 @@ function MonitorsPage() {
   // checks against the organization's `probes` cap; 0 or missing is no cap.
   // Creating stays open while either type can still be added.
   const { plan } = useOrganizationPlan(project?.teamId)
-  const { monitors } = useMonitors(projectId)
+  const { data: usageCount } = useQuery(
+    usageMonitorCountQueryOptions(projectId),
+  )
   const { data: probeCount } = useQuery({
     ...organizationProbeCountQueryOptions(project?.teamId),
     enabled: features.billing && !!project?.teamId,
   })
-  const monitorsLimit = getBillingPlanResourceLimit(plan, 'monitors') ?? 0
-  const probeLimit = alertingLimits(plan).probes
-  const isAtPlanLimit =
-    monitorsLimit > 0 &&
-    countUsageMonitors(monitors) >= monitorsLimit &&
-    probeLimit !== null &&
-    probeCount !== undefined &&
-    probeCount >= probeLimit
+  const isAtPlanLimit = monitorCaps(plan, usageCount, probeCount).allAtLimit
 
   const prefill = useMemo((): Partial<RuleForm> | undefined => {
     if (!search.metric || !(search.metric in METRICS)) return undefined

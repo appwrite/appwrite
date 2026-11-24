@@ -1,5 +1,6 @@
 import type { Models } from '@appwrite.io/console'
 import type { EscalationStep } from '@/lib/appwrite/monitors'
+import { getBillingPlanResourceLimit } from '@/lib/billing/project-breakdown-resources'
 
 /**
  * Alerting fields of a billing plan. Console SDK releases that predate them
@@ -44,9 +45,39 @@ export function alertingLimits(
   }
 }
 
-/** Usage monitors, the only type the plan's per-project `monitors` cap counts; synthetic checks have their own organization cap. */
-export function countUsageMonitors(monitors: { type: string }[]): number {
-  return monitors.filter((monitor) => monitor.type === 'usage').length
+export type MonitorCaps = {
+  /** Usage monitors a project may hold; 0 when uncapped. */
+  usageLimit: number
+  usageAtLimit: boolean
+  probeLimit: number | null
+  probesAtLimit: boolean
+  /** Neither type can be added, so creating a monitor is closed. */
+  allAtLimit: boolean
+}
+
+/**
+ * Which monitor types the plan still lets a project add. The per-project
+ * `monitors` cap counts usage monitors only; synthetic checks count against the
+ * organization's `probes` cap. A count not loaded yet is not a reached cap.
+ */
+export function monitorCaps(
+  plan: Models.BillingPlan | null | undefined,
+  usageMonitors: number | undefined,
+  probes: number | undefined,
+): MonitorCaps {
+  const usageLimit = getBillingPlanResourceLimit(plan, 'monitors') ?? 0
+  const probeLimit = alertingLimits(plan).probes
+  const usageAtLimit =
+    usageLimit > 0 && usageMonitors !== undefined && usageMonitors >= usageLimit
+  const probesAtLimit =
+    probeLimit !== null && probes !== undefined && probes >= probeLimit
+  return {
+    usageLimit,
+    usageAtLimit,
+    probeLimit,
+    probesAtLimit,
+    allAtLimit: usageAtLimit && probesAtLimit,
+  }
 }
 
 /** The interval a new synthetic check starts on: a minute, or the plan's minimum when longer, as the API defaults it. */
