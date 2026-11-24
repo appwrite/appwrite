@@ -62,7 +62,7 @@ abstract class Base extends Action
 
     /**
      * The route an OAuth2 provider sends the person back to. A flow that lands on
-     * a route of its own overrides it.
+     * a route of its own overrides it, in the actions that route runs.
      */
     protected function getOAuth2CallbackPath(string $provider, Document $project): string
     {
@@ -73,7 +73,8 @@ abstract class Base extends Action
      * What is known about the OAuth2 provider $provider: the `class` that talks to
      * it and its `name`, as the `oAuthProviders` config lists them. Empty for a
      * provider the config does not list. A flow whose provider is not in that
-     * config overrides it.
+     * config overrides it and brings routes of its own: the stock routes accept
+     * only the providers the config lists.
      *
      * @return array<string, mixed>
      */
