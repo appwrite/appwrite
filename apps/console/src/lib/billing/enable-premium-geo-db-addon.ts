@@ -2,12 +2,12 @@ import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { ADDON_KEY_PREMIUM_GEO_DB } from '@/lib/billing/addons'
 import {
-  enableProjectAddon,
+  enableAddon,
+  type EnableAddonResult,
   type EnableProjectAddonParams,
-  type EnableProjectAddonResult,
-} from '@/lib/billing/enable-project-addon'
+} from '@/lib/billing/enable-addon'
 
-export type EnablePremiumGeoDbAddonResult = EnableProjectAddonResult
+export type EnablePremiumGeoDbAddonResult = EnableAddonResult
 
 /**
  * Enables the project-scoped Premium Geo DB addon (payment + confirm when required).
@@ -15,10 +15,12 @@ export type EnablePremiumGeoDbAddonResult = EnableProjectAddonResult
 export async function enablePremiumGeoDbAddon(
   params: EnableProjectAddonParams,
 ): Promise<EnablePremiumGeoDbAddonResult> {
-  return enableProjectAddon({
-    ...params,
+  const { projectId, ...rest } = params
+  return enableAddon({
+    ...rest,
+    target: { scope: 'project', projectId },
     addonKey: ADDON_KEY_PREMIUM_GEO_DB,
-    create: async (projectId) =>
+    create: async () =>
       (await sdk.forConsole.projects.createPremiumGeoDBAddon({
         projectId,
       })) as Models.Addon | Models.PaymentAuthentication,
