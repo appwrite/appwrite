@@ -36,6 +36,7 @@ export interface RuntimeConfig {
   databasePitrRestore: string
   /** Override for the project environments switcher ('' = profile default, off). */
   projectEnvironments: string
+  zero: string
   /** Override for backend-powered usage statistics ('' = Console variables). */
   usageStats: string
   /**
@@ -134,6 +135,7 @@ export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
     screenshotMode: read('VITE_CONSOLE_SCREENSHOT_MODE'),
     databasePitrRestore: read('VITE_CONSOLE_DATABASE_PITR_RESTORE'),
     projectEnvironments: read('VITE_CONSOLE_PROJECT_ENVIRONMENTS'),
+    zero: read('VITE_CONSOLE_ZERO'),
     usageStats: read('VITE_CONSOLE_USAGE_STATS'),
     preLaunch: read('VITE_CONSOLE_PRE_LAUNCH'),
   }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Network\Validators;
 
 use Appwrite\Network\Validator\Origin;
+use Appwrite\Network\Validator\Redirect;
 use PHPUnit\Framework\TestCase;
 
 final class OriginTest extends TestCase
@@ -239,5 +240,46 @@ final class OriginTest extends TestCase
         $this->assertFalse($validator->isValid("https://appwrite.io\t.other.example"));
         $this->assertFalse($validator->isValid("https://appwrite.io\n.other.example"));
         $this->assertFalse($validator->isValid("https://appwrite.io\r.other.example"));
+    }
+
+    public function testRequireHttps(): void
+    {
+        $validator = new Origin(
+            allowedHostnames: ['appwrite.io', 'localhost'],
+            allowedSchemes: ['exp'],
+            requireHttps: true,
+        );
+
+        $this->assertTrue($validator->isValid('https://appwrite.io'));
+        $this->assertTrue($validator->isValid('https://appwrite.io:8443/callback'));
+        $this->assertTrue($validator->isValid('http://localhost:3000/callback'));
+        $this->assertTrue($validator->isValid('http://127.0.0.1:3000'));
+        $this->assertTrue($validator->isValid('http://[::1]:3000'));
+        $this->assertTrue($validator->isValid('exp://index'));
+
+        $this->assertFalse($validator->isValid('http://appwrite.io'));
+        $this->assertFalse($validator->isValid('http://appwrite.io/callback?next=1'));
+        $this->assertStringContainsString('https://appwrite.io', $validator->getDescription());
+
+        // The description of a later origin isn't left over from a refused http one
+        $this->assertFalse($validator->isValid('https://example.com'));
+        $this->assertStringNotContainsString('only accepts https', $validator->getDescription());
+
+        // Loopback is exempt from the https rule, not from the allow list
+        $validator = new Origin(
+            allowedHostnames: ['appwrite.io'],
+            allowedSchemes: [],
+            requireHttps: true,
+        );
+        $this->assertFalse($validator->isValid('http://localhost:3000'));
+
+        $redirect = new Redirect(
+            allowedHostnames: ['appwrite.io'],
+            allowedSchemes: [],
+            requireHttps: true,
+        );
+        $this->assertTrue($redirect->isValid('https://appwrite.io/success'));
+        $this->assertFalse($redirect->isValid('http://appwrite.io/success'));
+        $this->assertStringContainsString('only redirects to https', $redirect->getDescription());
     }
 }
