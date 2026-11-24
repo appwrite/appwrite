@@ -1024,16 +1024,24 @@ return function (Container $context): void {
         return $requestTimestamp;
     }, ['request']);
 
-    $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization, string $projectIdFromPath) {
+    /**
+     * The organization the request acts on, from the matched route. A GraphQL field
+     * runs its own route in a child scope and rebuilds this, and everything built from
+     * it, there (see Appwrite\GraphQL\Resolvers), so it must not depend on resources
+     * that stay fixed for the outer request.
+     */
+    $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization) {
         $teamInternalId = '';
         if ($project->getId() !== 'console') {
             $teamInternalId = $project->getAttribute('teamInternalId', '');
         } else {
-            $route = $utopia->match($request)?->route;
+            $match = $utopia->match($request);
+            $route = $match?->route;
             $path = ! empty($route) ? $route->getPath() : $request->getURI();
             $orgHeader = $request->getHeaderLine('x-appwrite-organization', '');
             if (str_starts_with($path, '/v1/projects/:projectId')) {
-                $p = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectIdFromPath));
+                $projectId = (string) ($match->params['projectId'] ?? '');
+                $p = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
                 $teamInternalId = $p->getAttribute('teamInternalId', '');
             } elseif ($path === '/v1/projects') {
                 $teamId = $request->getParam('teamId', '');
@@ -1065,7 +1073,7 @@ return function (Container $context): void {
         });
 
         return $team;
-    }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization', 'projectIdFromPath']);
+    }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization']);
 
     $context->set('previewHostname', function (Request $request, ?Key $apiKey) {
         $host = $request->getQuery('appwrite-hostname', $request->getHeaderLine('x-appwrite-hostname', '')) ?? '';
