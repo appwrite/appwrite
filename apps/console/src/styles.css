@@ -3559,14 +3559,27 @@ pre.prism-code .token-line > span {
   }
 }
 
-.init5-light-frame {
+.init5-light-frame,
+.init5-globe-orbit {
   /* Stops only: the angle must resolve on the element that animates it. */
   --init5-trail-stops:
     transparent 0deg 228deg,
     color-mix(in oklch, var(--network-globe-edge) 70%, transparent) 290deg,
     var(--brand-cta) 336deg, var(--network-globe-region) 354deg,
     transparent 360deg;
+}
+
+.init5-light-frame {
   position: relative;
+}
+
+/* The same comet orbiting the Init 5 community globe's outline. */
+.init5-globe-orbit {
+  --init5-trail-duration: 12s;
+  --init5-trail-glow: 0.9;
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
 }
 
 .init5-light-frame::before,

@@ -63,8 +63,8 @@ import {
 import type { Models } from '@appwrite.io/console'
 import type { InitDisplayEvent } from '@/lib/init/types'
 
-/** Launch weeks whose day cards wear the hero's electric border. */
-const ELECTRIC_DAY_EVENT_IDS = new Set(['init-nov-2026'])
+/** Launch weeks that wear the hero's light: day card borders, the globe. */
+const ELECTRIC_EVENT_IDS = new Set(['init-nov-2026'])
 
 function InitPageContent({
   baseEvent,
@@ -217,7 +217,7 @@ function InitPageContent({
                   )
                   // Init 5's days wear the hero's electric border: a comet of
                   // light circling each card, every card on its own beat.
-                  return ELECTRIC_DAY_EVENT_IDS.has(event.id) ? (
+                  return ELECTRIC_EVENT_IDS.has(event.id) ? (
                     <div
                       key={day.day}
                       className="init5-light-frame rounded-xl"
@@ -260,6 +260,7 @@ function InitPageContent({
 
           {event.presenceEnabled && !event.isRecapMode ? (
             <InitGlobalCommunitySection
+              electric={ELECTRIC_EVENT_IDS.has(event.id)}
               countries={communityGlobe.countries}
               developerCount={communityGlobe.developerCount}
               developerCountCapped={communityGlobe.developerCountCapped}
