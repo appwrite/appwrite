@@ -1316,9 +1316,10 @@ test.describe('organization single sign-on settings', () => {
     const addDomain = page.getByRole('dialog', { name: 'Add domain' })
     await addDomain.getByLabel('Domain').fill('acme.dev')
     await addDomain.getByLabel('Domain').press('Enter')
+    // The dialog may be gone by the second press: do not wait for it to come back
     await addDomain
       .getByLabel('Domain')
-      .press('Enter')
+      .press('Enter', { timeout: 1_000 })
       .catch(() => {})
     await expect.poll(() => mock.sent.creates).toEqual([{ domain: 'acme.dev' }])
   })
