@@ -276,6 +276,29 @@ class Request extends UtopiaRequest
     }
 
     /**
+     * Get Client IP
+     *
+     * Method for getting the IP of the end user the request is made for. Preferring forwarded IP for privileged users; otherwise returns getIP().
+     * Use it for what is recorded about the user, such as sessions and tokens. Rate limits and network rules stay on getIP(), which a caller cannot choose.
+     *
+     * @return string
+     */
+    public function getClientIP(): string
+    {
+        $forwardedIP = \trim($this->getHeaderLine('x-forwarded-ip'));
+        if (\filter_var($forwardedIP, FILTER_VALIDATE_IP) !== false) {
+            $roles = $this->authorization?->getRoles() ?? [];
+            $isAppUser = $this->user?->isKey($roles) ?? false;
+
+            if ($isAppUser) {
+                return $forwardedIP;
+            }
+        }
+
+        return $this->getIP();
+    }
+
+    /**
      * Index of the chunk this range starts in, for chunks of the given size. 0 without a valid range.
      */
     public function getContentRangeChunk(int $size): int
