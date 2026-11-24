@@ -1,0 +1,13 @@
+<?php
+
+// Registered by the utopia PHP extension (crates/extension in appwrite/appwrite). This file only
+// declares the class for static analysis and editors; it is never loaded.
+
+namespace Utopia\Query\Schema\Feature;
+
+use Utopia\Query\Builder\Statement;
+use Utopia\Query\Schema\TriggerEvent;
+use Utopia\Query\Schema\TriggerTiming;
+interface Triggers
+{
+}

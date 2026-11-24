@@ -87,7 +87,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     if stable("emails") {
         module = module.class::<emails::Email>();
     }
-    if enabled("query") {
+    if stable("query") {
         module = module
             .enumeration::<query::classifier::Type>()
             .interface::<query::classifier::PhpInterfaceClassifier>()
@@ -171,7 +171,7 @@ fn startup(_kind: i32, module: i32) -> i32 {
         if stable("auth") {
             auth::register()?;
         }
-        if enabled("query") {
+        if stable("query") {
             query::features::register()?;
         }
         if enabled("detector") {
