@@ -46,7 +46,7 @@ export function RequireSSOCard() {
   const { providers, isSuccess: providersLoaded } =
     useOrganizationSSOProviders(orgId)
   const update = useRequireOrganizationSSO(orgId)
-  // Turning it on needs the HIPAA BAA add-on; turning it off works without it.
+  // Turning it on needs the Single sign-on add-on; turning it off works without it.
   const gate = useSSOAddonGate(orgId)
   const onAddonError = useSSOAddonErrorHandler(orgId)
   const [confirming, setConfirming] = useState(false)
@@ -62,7 +62,7 @@ export function RequireSSOCard() {
   // way for them to get in. Until both lists are in (or when one failed to
   // load), nothing is claimed either way: the server still checks.
   const hint = gate.locked
-    ? t('Enable the HIPAA BAA add-on to require single sign-on.')
+    ? t('Enable the Single sign-on add-on to require single sign-on.')
     : !(domainsLoaded && providersLoaded)
       ? null
       : !hasVerifiedDomain
@@ -154,7 +154,7 @@ export function RequireSSOCard() {
                   : paused
                     ? gate.locked
                       ? t(
-                          'Paused - enable the HIPAA BAA add-on to require single sign-on again.',
+                          'Paused - enable the Single sign-on add-on to require single sign-on again.',
                         )
                       : hasVerifiedDomain
                         ? t(

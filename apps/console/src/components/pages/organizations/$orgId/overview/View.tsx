@@ -1871,8 +1871,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     () => getVerifiedEmailDomains(emailDomains),
     [emailDomains],
   )
-  // Single sign-on is part of the HIPAA BAA add-on: its settings tab says so
-  // while the add-on is not active.
+  // Single sign-on needs the organization's Single sign-on add-on: its
+  // settings tab says so while the add-on is not active.
   const ssoNeedsAddon = useSSOAddonGate(
     orgId,
     canShowOrgSsoSettings(access, features),
@@ -3550,7 +3550,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       item.id === 'sso' && ssoNeedsAddon
                         ? {
                             ...item,
-                            // Set up with the HIPAA BAA add-on
+                            // Set up with the Single sign-on add-on
                             endAdornment: (
                               <Badge
                                 variant="processing"

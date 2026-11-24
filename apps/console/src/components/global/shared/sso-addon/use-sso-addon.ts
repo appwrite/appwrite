@@ -31,6 +31,9 @@ export type SSOAddonTarget =
   | { scope: 'project'; projectId: string; inEnvironment?: boolean }
   | { scope: 'organization'; organizationId: string }
 
+/** The card on a page, for what points to it (`[data-card-id="sso-addon"]`). */
+export const SSO_ADDON_CARD_ID = 'sso-addon'
+
 export function ssoAddonKey(target: SSOAddonTarget): SupportedAddonKey {
   return target.scope === 'project' ? ADDON_KEY_SSO : ADDON_KEY_SSO_ORG
 }

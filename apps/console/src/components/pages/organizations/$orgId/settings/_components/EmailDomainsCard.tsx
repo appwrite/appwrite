@@ -65,7 +65,7 @@ export function EmailDomainsCard() {
   } = useOrganizationEmailDomains(orgId)
   const { data: organization } = useQuery(organizationQueryOptions(orgId))
   const remove = useDeleteOrganizationEmailDomain(orgId)
-  // Setup needs the HIPAA BAA add-on; deleting works without it.
+  // Setup needs the Single sign-on add-on; deleting works without it.
   const gate = useSSOAddonGate(orgId)
 
   const required =

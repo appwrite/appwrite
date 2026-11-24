@@ -6,9 +6,9 @@ import {
 } from '@/lib/billing/addons'
 
 /**
- * Single sign-on is sold as an add-on: for an organization it is part of the
- * HIPAA BAA add-on (`baa`), for the teams in a project it is the Single sign-on
- * add-on (`sso`).
+ * Single sign-on is sold as an add-on: an organization's own Single sign-on
+ * add-on (`ssoOrg`), for single sign-on into the Console, and a project's
+ * (`sso`), for the teams in the project.
  *
  * - `active`: the add-on is on (`status` active, `currentValue` 1), single
  *   sign-on can be set up. One scheduled for removal (`nextValue` 0) stays on
@@ -53,7 +53,7 @@ export const ORGANIZATION_SSO_ADDON_DESCRIPTION =
 
 /** The API's answer to an organization's setup request without the add-on. */
 export const SSO_ADDON_REQUIRED_MESSAGE =
-  "Single sign-on is part of the HIPAA BAA add-on. Enable it in the organization's settings."
+  "Single sign-on for an organization needs the Single sign-on add-on. Enable it in the organization's settings."
 
 export function isSSOAddonError(error: unknown): boolean {
   return (

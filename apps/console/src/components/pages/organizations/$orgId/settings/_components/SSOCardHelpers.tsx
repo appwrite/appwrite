@@ -1,11 +1,10 @@
 import { useCallback, useRef, type ReactNode } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link, useNavigate } from '@tanstack/react-router'
-import { AlertCircle, AlertTriangle } from 'lucide-react'
+import { useNavigate } from '@tanstack/react-router'
+import { AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 import { EmptyState } from '@/components/global/shared/EmptyState'
-import { formatCurrency } from '@/components/pages/organizations/$orgId/billing/utils'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { SSO_ADDON_CARD_ID } from '@/components/global/shared/sso-addon/use-sso-addon'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -14,19 +13,11 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { analyticsAttrs } from '@/lib/analytics-actions'
-import {
-  ADDON_KEY_BAA,
-  planSupportsAddon,
-  type SupportedAddonKey,
-} from '@/lib/billing/addons'
-import { useI18n } from '@/lib/i18n'
+import { ADDON_KEY_SSO_ORG } from '@/lib/billing/addons'
 import { useT } from '@/lib/i18n/translate'
 import {
   organizationAddonsQueryOptions,
   organizationPlanQueryOptions,
-  useBillingPlans,
-  useOrganizationAddonPrice,
   useOrganizationPlan,
 } from '@/lib/react-query/hooks'
 import {
@@ -35,7 +26,6 @@ import {
   ssoAddonStatus,
   type SSOAddonStatus,
 } from '@/lib/sso-addon'
-import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 
 /**
  * Error text on the single sign-on screens. In the default dark theme
@@ -169,9 +159,9 @@ export function useSingleSubmit() {
 }
 
 /**
- * Whether the organization can set up single sign-on: it is part of the HIPAA
- * BAA add-on, so it needs that add-on active. `locked` only once the plan and
- * the add-ons are known: setup is never refused on a guess. `enabled: false`
+ * Whether the organization can set up single sign-on: it needs its Single
+ * sign-on add-on (`ssoOrg`) active. `locked` only once the plan and the
+ * add-ons are known: setup is never refused on a guess. `enabled: false`
  * leaves the add-ons unread, for a page that may not show single sign-on.
  */
 export function useSSOAddonGate(orgId: string, enabled = true) {
@@ -182,32 +172,31 @@ export function useSSOAddonGate(orgId: string, enabled = true) {
   )
   const known = isFetched && !!plan && addons.isSuccess
   const status: SSOAddonStatus | null = known
-    ? ssoAddonStatus(plan, addons.data?.addons, ADDON_KEY_BAA)
+    ? ssoAddonStatus(plan, addons.data?.addons, ADDON_KEY_SSO_ORG)
     : null
-  return {
-    known,
-    status,
-    locked: known && status !== 'active',
-    planName: resolveOrganizationPlanDisplayLabel({
-      planName: plan?.name ?? null,
-      planId: plan?.$id,
-    }),
-  }
-}
-
-/** Where the organization's HIPAA BAA add-on is enabled, and its payment confirmed. */
-function complianceRoute(orgId: string) {
-  return {
-    to: '/organizations/$orgId/settings/compliance',
-    params: { orgId },
-  } as const
+  return { known, status, locked: known && status !== 'active' }
 }
 
 /**
- * A setup request the API refused because the HIPAA BAA add-on is not active
- * (it ended while the page was open): say so with the way to it, and reload the
- * plan and the add-ons so the page shows its locked state. Returns whether it
- * was that refusal.
+ * Bring the Single sign-on add-on's card on this page into view, and focus
+ * what it offers (enable, refresh a payment, upgrade).
+ */
+function showAddonCard() {
+  const card = document.querySelector<HTMLElement>(
+    `[data-card-id="${SSO_ADDON_CARD_ID}"]`,
+  )
+  if (!card) return
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  card
+    .querySelector<HTMLElement>('[data-sso-addon-actions] button')
+    ?.focus({ preventScroll: true })
+}
+
+/**
+ * A setup request the API refused because the organization's Single sign-on
+ * add-on is not active (it ended while the page was open): say so with the
+ * way to it, and reload the plan and the add-ons so the page shows its
+ * locked state. Returns whether it was that refusal.
  */
 export function useSSOAddonErrorHandler(orgId: string) {
   const t = useT()
@@ -218,7 +207,7 @@ export function useSSOAddonErrorHandler(orgId: string) {
   return useCallback(
     (error: unknown): boolean => {
       if (!isSSOAddonError(error)) return false
-      // On a plan without the add-on, the upgrade; else the add-on itself.
+      // On a plan without the add-on, the upgrade; else its card on this page.
       const action = !features.billing
         ? undefined
         : status === 'unavailable'
@@ -226,12 +215,7 @@ export function useSSOAddonErrorHandler(orgId: string) {
               label: t('Upgrade'),
               onClick: () => navigate({ to: '/upgrade', search: { orgId } }),
             }
-          : features.compliance
-            ? {
-                label: t('View add-on'),
-                onClick: () => navigate(complianceRoute(orgId)),
-              }
-            : undefined
+          : { label: t('View add-on'), onClick: showAddonCard }
       toast.error(t(SSO_ADDON_REQUIRED_MESSAGE), { action })
       void queryClient.invalidateQueries({
         queryKey: organizationPlanQueryOptions(orgId).queryKey,
@@ -264,139 +248,9 @@ export function SSOLockedTooltip({
           </span>
         </TooltipTrigger>
         <TooltipContent className="max-w-xs text-xs">
-          {t('Single sign-on is part of the HIPAA BAA add-on')}
+          {t('Needs the Single sign-on add-on')}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
-  )
-}
-
-/** The plans that sell `addon`, cheapest first, as one list in `language`. */
-function usePlansSellingAddon(addon: SupportedAddonKey): string | null {
-  const { language } = useI18n()
-  const { plans } = useBillingPlans()
-  const names = Object.values(plans)
-    .filter((plan) => planSupportsAddon(plan, addon))
-    .sort((a, b) => a.order - b.order)
-    .map((plan) => plan.name)
-    .filter((name, index, all) => !!name && all.indexOf(name) === index)
-  if (names.length === 0) return null
-  return new Intl.ListFormat(language, { type: 'conjunction' }).format(names)
-}
-
-const NOTICE_ACTION_CLASS =
-  'h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400'
-
-/**
- * Single sign-on without an active HIPAA BAA add-on, in the form project
- * environments use. Without `paused` nothing is set up yet, and the notice
- * stands for the page: what the add-on costs and how to get it. With `paused`
- * the organization kept domains, identity providers or Require SSO, listed
- * below it to delete and turn off.
- *
- * - `available`: the plan sells the add-on; `onEnable` opens its dialog.
- * - `pending`: its payment awaits confirmation, on the Compliance page.
- * - `unavailable`: the plan does not sell it; the upgrade.
- */
-export function SSOAddonNotice({
-  orgId,
-  status,
-  planName,
-  paused,
-  onEnable,
-}: {
-  orgId: string
-  status: Exclude<SSOAddonStatus, 'active'>
-  planName: string
-  paused: boolean
-  onEnable: () => void
-}) {
-  const t = useT()
-  const { features } = useConsoleProfile()
-  const { addonPrice } = useOrganizationAddonPrice(
-    status === 'available' && !paused ? orgId : null,
-    ADDON_KEY_BAA,
-  )
-  const sellers = usePlansSellingAddon(ADDON_KEY_BAA)
-
-  const title = paused
-    ? t('Single sign-on is paused')
-    : t('Single sign-on is part of the HIPAA BAA add-on')
-
-  const description = paused
-    ? [
-        status === 'available'
-          ? t('The HIPAA BAA add-on is not active.')
-          : status === 'pending'
-            ? t(
-                'The payment for the HIPAA BAA add-on is awaiting confirmation.',
-              )
-            : t(
-                'Your plan ({plan}) does not include the HIPAA BAA add-on.',
-              ).replace('{plan}', planName),
-        t(
-          'Until the add-on is active, nobody signs in through your identity providers and Require SSO has no effect. You can still delete domains and identity providers, and turn Require SSO off.',
-        ),
-      ].join(' ')
-    : status === 'available'
-      ? addonPrice
-        ? t(
-            'The add-on costs {price}/month, prorated for your current billing cycle. Enable it to verify your domains and connect identity providers, so people on your domains sign in with SSO.',
-          ).replace(
-            '{price}',
-            formatCurrency(addonPrice.monthlyPrice, addonPrice.currency),
-          )
-        : t(
-            'Enable the add-on to verify your domains and connect identity providers, so people on your domains sign in with SSO.',
-          )
-      : status === 'pending'
-        ? t(
-            'The payment for the add-on is awaiting confirmation. Single sign-on can be set up once it is confirmed.',
-          )
-        : sellers
-          ? t(
-              'The add-on is available on {plans}. Upgrade to verify your domains and connect identity providers, so people on your domains sign in with SSO.',
-            ).replace('{plans}', sellers)
-          : t(
-              'Your plan ({plan}) does not include the add-on. Upgrade to verify your domains and connect identity providers, so people on your domains sign in with SSO.',
-            ).replace('{plan}', planName)
-
-  const action = !features.billing ? null : status === 'available' ? (
-    <Button size="sm" className={NOTICE_ACTION_CLASS} onClick={onEnable}>
-      {t('Enable add-on')}
-    </Button>
-  ) : status === 'pending' ? (
-    features.compliance ? (
-      <Button asChild size="sm" className={NOTICE_ACTION_CLASS}>
-        <Link {...complianceRoute(orgId)}>{t('View add-on')}</Link>
-      </Button>
-    ) : null
-  ) : (
-    <Button asChild size="sm" className={NOTICE_ACTION_CLASS}>
-      <Link
-        to="/upgrade"
-        search={{ orgId }}
-        {...analyticsAttrs('upgrade-clicked')}
-      >
-        {t('Upgrade')}
-      </Link>
-    </Button>
-  )
-
-  return (
-    <Alert className="border-amber-500/30 bg-amber-500/5">
-      <AlertCircle className="h-4 w-4 text-amber-500" />
-      <div className="flex flex-1 items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-            {title}
-          </AlertTitle>
-          <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
-            {description}
-          </AlertDescription>
-        </div>
-        {orgId ? action : null}
-      </div>
-    </Alert>
   )
 }

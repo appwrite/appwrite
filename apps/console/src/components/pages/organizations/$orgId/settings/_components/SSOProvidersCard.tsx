@@ -79,7 +79,7 @@ export function SSOProvidersCard() {
   const { data: organization } = useQuery(organizationQueryOptions(orgId))
   const save = useSaveOrganizationSSOProvider(orgId)
   const remove = useDeleteOrganizationSSOProvider(orgId)
-  // Adding, updating and turning providers on or off need the HIPAA BAA
+  // Adding, updating and turning providers on or off need the Single sign-on
   // add-on; deleting works without it.
   const gate = useSSOAddonGate(orgId)
   const onAddonError = useSSOAddonErrorHandler(orgId)

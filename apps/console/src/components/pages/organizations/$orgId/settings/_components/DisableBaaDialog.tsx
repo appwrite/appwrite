@@ -18,7 +18,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 
 type DisableBaaDialogProps = {
@@ -36,7 +35,6 @@ export function DisableBaaDialog({
 }: DisableBaaDialogProps) {
   const t = useT()
   const queryClient = useQueryClient()
-  const { features } = useConsoleProfile()
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -81,9 +79,6 @@ export function DisableBaaDialog({
             {t(
               'Are you sure you want to disable the BAA addon? The addon will remain active until the end of your current billing cycle and will not be renewed.',
             )}
-            {features.sso
-              ? ` ${t('Single sign-on for the organization stops when the add-on ends.')}`
-              : null}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />

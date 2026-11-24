@@ -57,8 +57,9 @@ const PERSONAL = {
 } satisfies Partial<Models.Organization<Models.Preferences>>
 
 /**
- * Single sign-on is part of the HIPAA BAA add-on (`baa`), which Pro and Scale
- * sell: their `supportedAddons` say so, as for every add-on.
+ * Single sign-on for an organization needs its Single sign-on add-on
+ * (`ssoOrg`), which Pro and Scale sell: their `supportedAddons` say so, as for
+ * every add-on.
  */
 const PRO_PLAN = {
   $id: 'tier-1',
@@ -69,6 +70,7 @@ const PRO_PLAN = {
     premiumGeoDB: true,
     premiumGeoDBOrg: true,
     sso: true,
+    ssoOrg: true,
   },
   addons: { seats: { supported: true } },
 }
@@ -81,6 +83,7 @@ const FREE_PLAN = {
     premiumGeoDB: false,
     premiumGeoDBOrg: false,
     sso: false,
+    ssoOrg: false,
   },
   addons: { seats: { supported: false } },
 }
@@ -91,10 +94,10 @@ const SCALE_PLAN = {
   order: 2,
 }
 
-/** The HIPAA BAA add-on's price, as the API answers it */
-const BAA_PRICE = {
-  addonKey: 'baa',
-  name: 'HIPAA BAA',
+/** The organization's Single sign-on add-on's price, as the API answers it */
+const ADDON_PRICE = {
+  addonKey: 'ssoOrg',
+  name: 'Single sign-on',
   monthlyPrice: 350,
   proratedAmount: 140,
   remainingDays: 12,
@@ -103,19 +106,21 @@ const BAA_PRICE = {
   billingCycleEnd: '2026-11-30T00:00:00.000+00:00',
 }
 
-/** The organization's HIPAA BAA add-on with `status`, or none */
-function baaAddon(status: 'active' | 'pending') {
+type AddonState = 'active' | 'scheduled' | 'pending' | 'off'
+
+/** An organization add-on: `scheduled` is active, removed when the cycle ends */
+function orgAddon(key: string, state: Exclude<AddonState, 'off'>) {
   return {
-    $id: 'addon-baa',
+    $id: `addon-${key}`,
     $createdAt: NOW,
     $updatedAt: NOW,
     $permissions: [],
-    key: 'baa',
+    key,
     resourceType: 'organization',
     resourceId: ORGANIZATION.$id,
-    status,
+    status: state === 'pending' ? 'pending' : 'active',
     currentValue: 1,
-    nextValue: null,
+    nextValue: state === 'scheduled' ? 0 : null,
   }
 }
 
@@ -233,13 +238,17 @@ interface Mock {
   refuseWithoutSSO: boolean
   /** TXT values the "DNS" holds that are not the expected one, by domain */
   wrongValues: Map<string, string>
-  /** The organization's billing plan (Pro, which sells the HIPAA BAA add-on, by default) */
+  /** The organization's billing plan (Pro, which sells the add-on, by default) */
   plan: Record<string, unknown>
-  /** The organization's HIPAA BAA add-on (active by default), or `off` */
-  baa: 'active' | 'pending' | 'off'
+  /** The organization's Single sign-on add-on, `ssoOrg` (active by default) */
+  addon: AddonState
+  /** The organization also has an active HIPAA BAA add-on, unrelated to SSO */
+  baa: boolean
+  /** The organization's add-on list answers 500 */
+  addonsFail: boolean
   /**
    * The API refuses single sign-on setup with `sso_addon_required`, and the
-   * HIPAA BAA add-on turns off, as when it ended while the page was open
+   * add-on turns off, as when it ended while the page was open
    */
   addonRefuses: boolean
   /** The domain and provider lists answer 500 */
@@ -274,8 +283,12 @@ interface Mock {
     prefs: Array<Record<string, unknown>>
     /** Setup requests refused without the add-on */
     addonRefusals: number
-    /** HIPAA BAA add-ons enabled */
-    baaCreates: number
+    /** POST /organizations/:id/addons/sso */
+    addonCreates: number
+    /** DELETE /organizations/:id/addons/:addonId */
+    addonDeletes: string[]
+    /** POST /organizations/:id/addons/:addonId/confirmations */
+    addonConfirmations: string[]
   }
 }
 
@@ -300,7 +313,9 @@ async function mockAppwriteApi(
       | 'ssoRequired'
       | 'refuseWithoutSSO'
       | 'plan'
+      | 'addon'
       | 'baa'
+      | 'addonsFail'
       | 'addonRefuses'
       | 'listsFail'
       | 'signedIn'
@@ -320,7 +335,9 @@ async function mockAppwriteApi(
     refuseWithoutSSO: options.refuseWithoutSSO ?? false,
     wrongValues: new Map(),
     plan: options.plan ?? PRO_PLAN,
-    baa: options.baa ?? 'active',
+    addon: options.addon ?? 'active',
+    baa: options.baa ?? false,
+    addonsFail: options.addonsFail ?? false,
     addonRefuses: options.addonRefuses ?? false,
     listsFail: options.listsFail ?? false,
     signedIn: options.signedIn ?? true,
@@ -340,7 +357,9 @@ async function mockAppwriteApi(
       signInURLs: [],
       prefs: [],
       addonRefusals: 0,
-      baaCreates: 0,
+      addonCreates: 0,
+      addonDeletes: [],
+      addonConfirmations: [],
     },
   }
   const localOrigin = new URL(String(test.info().project.use.baseURL)).origin
@@ -470,17 +489,44 @@ async function mockAppwriteApi(
       return json(200, { total: plans.length, plans })
     }
 
-    // The HIPAA BAA add-on, which single sign-on is part of
+    // The organization's Single sign-on add-on
     const addons = `/organizations/${ORGANIZATION.$id}/addons`
     if (apiPath === addons && method === 'GET') {
-      const listed = mock.baa === 'off' ? [] : [baaAddon(mock.baa)]
+      if (mock.addonsFail) {
+        return json(500, {
+          message: 'Server Error',
+          code: 500,
+          type: 'general_server_error',
+          version: '1.0',
+        })
+      }
+      const listed = [
+        ...(mock.addon === 'off' ? [] : [orgAddon('ssoOrg', mock.addon)]),
+        ...(mock.baa ? [orgAddon('baa', 'active')] : []),
+      ]
       return json(200, { total: listed.length, addons: listed })
     }
-    if (apiPath === `${addons}/baa/price`) return json(200, BAA_PRICE)
-    if (apiPath === `${addons}/baa` && method === 'POST') {
-      mock.sent.baaCreates += 1
-      mock.baa = 'active'
-      return json(201, baaAddon('active'))
+    if (apiPath === `${addons}/ssoOrg/price`) return json(200, ADDON_PRICE)
+    if (apiPath === `${addons}/sso` && method === 'POST') {
+      mock.sent.addonCreates += 1
+      // Scheduled for removal: enabling it again keeps it
+      const reEnabled = mock.addon === 'scheduled'
+      mock.addon = 'active'
+      return json(reEnabled ? 200 : 201, orgAddon('ssoOrg', 'active'))
+    }
+    const confirmation = apiPath.match(
+      /^\/organizations\/[^/]+\/addons\/([^/]+)\/confirmations$/,
+    )
+    if (confirmation && method === 'POST') {
+      mock.sent.addonConfirmations.push(confirmation[1])
+      mock.addon = 'active'
+      return json(200, orgAddon('ssoOrg', 'active'))
+    }
+    const oneAddon = apiPath.match(/^\/organizations\/[^/]+\/addons\/([^/]+)$/)
+    if (oneAddon && method === 'DELETE') {
+      mock.sent.addonDeletes.push(oneAddon[1])
+      if (mock.addon === 'active') mock.addon = 'scheduled'
+      return route.fulfill({ status: 204, headers })
     }
 
     // Setup without an active add-on refuses; listing, deleting and turning
@@ -494,12 +540,13 @@ async function mockAppwriteApi(
         (method === 'PATCH' &&
           apiPath.endsWith('/sso/required') &&
           request.postDataJSON()?.required === true))
-    if (setup && (mock.addonRefuses || mock.baa !== 'active')) {
+    const addonOn = mock.addon === 'active' || mock.addon === 'scheduled'
+    if (setup && (mock.addonRefuses || !addonOn)) {
       mock.sent.addonRefusals += 1
-      mock.baa = 'off'
+      mock.addon = 'off'
       return json(403, {
         message:
-          "Single sign-on is part of the HIPAA BAA add-on. Enable it in the organization's settings.",
+          "Single sign-on for an organization needs the Single sign-on add-on. Enable it in the organization's settings.",
         code: 403,
         type: 'sso_addon_required',
         version: '1.0',
@@ -1495,21 +1542,25 @@ test.describe('organization single sign-on settings', () => {
   })
 })
 
-test.describe('single sign-on and the HIPAA BAA add-on', () => {
+/** The organization's Single sign-on add-on card, at the top of the page */
+const addonCard = (page: Page) => page.locator('[data-card-id="sso-addon"]')
+
+test.describe("single sign-on and the organization's add-on", () => {
   test('offers the add-on with its price, and enables it in place', async ({
     page,
   }) => {
-    const mock = await mockAppwriteApi(page, { baa: 'off', domains: [] })
+    const mock = await mockAppwriteApi(page, { addon: 'off', domains: [] })
     await enableSso(page)
     await page.goto(SSO, { waitUntil: 'domcontentloaded' })
 
-    const notice = page
-      .getByRole('alert')
-      .filter({ hasText: 'Single sign-on is part of the HIPAA BAA add-on' })
-    await expect(notice).toBeVisible({ timeout: 45_000 })
+    const card = addonCard(page)
+    await expect(card).toContainText('Not enabled', { timeout: 45_000 })
+    await expect(card).toContainText(
+      "With this add-on, people on your organization's verified domains sign in to the Console through its identity providers.",
+    )
     // The price is the add-on's, as the API answers it
-    await expect(notice).toContainText(
-      'The add-on costs $350.00/month, prorated for your current billing cycle. Enable it to verify your domains and connect identity providers, so people on your domains sign in with SSO.',
+    await expect(card).toContainText(
+      '$350.00/month, prorated for the current billing cycle.',
     )
     // Only the add-on: no empty cards, nothing to set up
     await expect(page.getByRole('heading', { name: 'Domains' })).toHaveCount(0)
@@ -1518,18 +1569,22 @@ test.describe('single sign-on and the HIPAA BAA add-on', () => {
     )
     // The settings tab stays, marked as needing an add-on
     await expect(settingsNav(page)).toContainText('Add-on')
+    // Single sign-on has nothing to do with the HIPAA BAA add-on
+    await expect(card).not.toContainText(/HIPAA|BAA/)
 
-    // Enabled here, with the BAA's own dialog
-    await notice.getByRole('button', { name: 'Enable add-on' }).click()
-    const dialog = page.getByRole('dialog', { name: 'HIPAA BAA' })
-    await expect(dialog).toContainText('Due today (prorated)')
-    await dialog.getByRole('button', { name: 'Accept & Enable' }).click()
-    await expect.poll(() => mock.sent.baaCreates).toBe(1)
+    await card.getByRole('button', { name: 'Enable add-on' }).click()
+    const dialog = page.getByRole('dialog', {
+      name: 'Enable the Single sign-on add-on',
+    })
+    await expect(dialog).toContainText('$350.00 / month')
+    await expect(dialog).toContainText('$140.00')
+    await dialog.getByRole('button', { name: 'Enable', exact: true }).click()
+    await expect.poll(() => mock.sent.addonCreates).toBe(1)
     await expect(dialog).toHaveCount(0)
 
-    // With the add-on on, the page sets single sign-on up
+    // With the add-on on, the page sets single sign-on up below it
+    await expect(card).toContainText('Active')
     await expect(page.getByRole('button', { name: 'Add domain' })).toBeEnabled()
-    await expect(notice).toHaveCount(0)
     await expect(settingsNav(page)).not.toContainText('Add-on')
   })
 
@@ -1538,31 +1593,25 @@ test.describe('single sign-on and the HIPAA BAA add-on', () => {
   }) => {
     const mock = await mockAppwriteApi(page, {
       plan: FREE_PLAN,
-      baa: 'off',
+      addon: 'off',
       domains: [],
     })
     await enableSso(page)
     await page.goto(SSO, { waitUntil: 'domcontentloaded' })
 
-    const notice = page
-      .getByRole('alert')
-      .filter({ hasText: 'Single sign-on is part of the HIPAA BAA add-on' })
-    await expect(notice).toBeVisible({ timeout: 45_000 })
+    const card = addonCard(page)
+    await expect(card).toContainText('Unavailable', { timeout: 45_000 })
     // The plans that sell it, as the plans say
-    await expect(notice).toContainText(
-      'The add-on is available on Pro and Scale. Upgrade to verify your domains and connect identity providers, so people on your domains sign in with SSO.',
-    )
-    await expect(notice.getByRole('link', { name: 'Upgrade' })).toHaveAttribute(
-      'href',
-      /\/upgrade\?orgId=acme/,
+    await expect(card).toContainText(
+      'This add-on is available on Pro and Scale. Upgrade your plan to enable it.',
     )
     await expect(
-      notice.getByRole('button', { name: 'Enable add-on' }),
+      card.getByRole('button', { name: 'Upgrade plan' }),
+    ).toBeVisible()
+    await expect(
+      card.getByRole('button', { name: 'Enable add-on' }),
     ).toHaveCount(0)
     await expect(page.getByRole('heading', { name: 'Domains' })).toHaveCount(0)
-    await expect(
-      page.getByRole('button', { name: 'Add identity provider' }),
-    ).toHaveCount(0)
     await expect(settingsNav(page)).toContainText('Add-on')
 
     // Everyone still sees the way in
@@ -1573,34 +1622,68 @@ test.describe('single sign-on and the HIPAA BAA add-on', () => {
     ).toBeVisible({ timeout: 45_000 })
   })
 
-  test("waits for the add-on's payment, and points to where it is confirmed", async ({
+  test("waits for the add-on's payment, and checks it on the page", async ({
     page,
   }) => {
-    await mockAppwriteApi(page, { baa: 'pending', domains: [] })
+    const mock = await mockAppwriteApi(page, { addon: 'pending', domains: [] })
     await enableSso(page)
     await page.goto(SSO, { waitUntil: 'domcontentloaded' })
 
-    const notice = page
-      .getByRole('alert')
-      .filter({ hasText: 'Single sign-on is part of the HIPAA BAA add-on' })
-    await expect(notice).toBeVisible({ timeout: 45_000 })
-    await expect(notice).toContainText(
-      'The payment for the add-on is awaiting confirmation. Single sign-on can be set up once it is confirmed.',
-    )
-    await expect(
-      notice.getByRole('link', { name: 'View add-on' }),
-    ).toHaveAttribute('href', /\/organizations\/acme\/settings\/compliance$/)
+    const card = addonCard(page)
+    await expect(card).toContainText('Payment pending', { timeout: 45_000 })
+    await expect(card).toContainText('A payment is awaiting confirmation.')
     await expect(page.getByRole('button', { name: 'Add domain' })).toHaveCount(
       0,
     )
     await expect(settingsNav(page)).toContainText('Add-on')
+
+    await card.getByRole('button', { name: 'Refresh' }).click()
+    await expect
+      .poll(() => mock.sent.addonConfirmations)
+      .toEqual(['addon-ssoOrg'])
+    await expect(card).toContainText('Active')
+    await expect(page.getByRole('button', { name: 'Add domain' })).toBeEnabled()
+  })
+
+  test('keeps single sign-on to the end of the cycle once disabled, and keeps the add-on', async ({
+    page,
+  }) => {
+    const mock = await mockAppwriteApi(page)
+    await enableSso(page)
+    await openSso(page)
+
+    const card = addonCard(page)
+    await expect(card).toContainText('Active')
+    await expect(card).toContainText('$350.00/month')
+    await card.getByRole('button', { name: 'Disable' }).click()
+    const dialog = page.getByRole('dialog', {
+      name: 'Disable the Single sign-on add-on',
+    })
+    await expect(dialog).toContainText(
+      'Then single sign-on for the organization stops, and people who can only sign in through your identity providers can no longer sign in.',
+    )
+    await dialog.getByRole('button', { name: 'Disable add-on' }).click()
+    await expect.poll(() => mock.sent.addonDeletes).toEqual(['addon-ssoOrg'])
+
+    // Still active until the cycle ends: setup keeps working
+    await expect(card).toContainText('Scheduled for removal')
+    await expect(card).toContainText(
+      'The add-on will be removed at the end of your current billing cycle.',
+    )
+    await expect(page.getByRole('button', { name: 'Add domain' })).toBeEnabled()
+    await expect(settingsNav(page)).not.toContainText('Add-on')
+
+    await card.getByRole('button', { name: 'Keep add-on' }).click()
+    await expect.poll(() => mock.sent.addonCreates).toBe(1)
+    await expect(card).toContainText('Active')
+    await expect(card).not.toContainText('Scheduled for removal')
   })
 
   test('keeps what an organization set up when its add-on ended, to delete and turn off', async ({
     page,
   }) => {
     const mock = await mockAppwriteApi(page, {
-      baa: 'off',
+      addon: 'off',
       ssoRequired: true,
       domains: [
         domain('acme.com', 'verified'),
@@ -1611,14 +1694,13 @@ test.describe('single sign-on and the HIPAA BAA add-on', () => {
     await enableSso(page)
     await openSso(page)
 
-    const notice = page
-      .getByRole('alert')
-      .filter({ hasText: 'Single sign-on is paused' })
-    await expect(notice).toContainText(
-      'The HIPAA BAA add-on is not active. Until the add-on is active, nobody signs in through your identity providers and Require SSO has no effect. You can still delete domains and identity providers, and turn Require SSO off.',
+    const card = addonCard(page)
+    await expect(card).toContainText('Single sign-on is paused')
+    await expect(card).toContainText(
+      'Until the add-on is active, nobody signs in through your identity providers and Require SSO has no effect. You can still delete domains and identity providers, and turn Require SSO off.',
     )
     await expect(
-      notice.getByRole('button', { name: 'Enable add-on' }),
+      card.getByRole('button', { name: 'Enable add-on' }),
     ).toBeVisible()
     // Setup is off: add, verify, update, enable
     await expect(
@@ -1645,7 +1727,7 @@ test.describe('single sign-on and the HIPAA BAA add-on', () => {
     await expect(page.getByText('Paused', { exact: true })).toBeVisible()
     await expect(
       page.getByText(
-        'Paused - enable the HIPAA BAA add-on to require single sign-on again.',
+        'Paused - enable the Single sign-on add-on to require single sign-on again.',
       ),
     ).toBeVisible()
     await required.click()
@@ -1672,40 +1754,67 @@ test.describe('single sign-on and the HIPAA BAA add-on', () => {
   }) => {
     await mockAppwriteApi(page, {
       plan: FREE_PLAN,
-      baa: 'off',
+      addon: 'off',
       providers: [provider('Okta', ['developer'])],
     })
     await enableSso(page)
     await openSso(page)
 
-    const notice = page
-      .getByRole('alert')
-      .filter({ hasText: 'Single sign-on is paused' })
-    await expect(notice).toContainText(
-      'Your plan (Free) does not include the HIPAA BAA add-on. Until the add-on is active',
-    )
-    await expect(notice.getByRole('link', { name: 'Upgrade' })).toBeVisible()
+    const card = addonCard(page)
+    await expect(card).toContainText('Single sign-on is paused')
+    await expect(card).toContainText('Unavailable')
+    await expect(
+      card.getByRole('button', { name: 'Upgrade plan' }),
+    ).toBeVisible()
     await expect(
       page.getByRole('button', { name: 'Add domain' }),
     ).toBeDisabled()
   })
 
-  test('sets single sign-on up with the add-on, with no notice', async ({
+  test('does not take the HIPAA BAA add-on for single sign-on', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, { addon: 'off', baa: true, domains: [] })
+    await enableSso(page)
+    await page.goto(SSO, { waitUntil: 'domcontentloaded' })
+
+    await expect(addonCard(page)).toContainText('Not enabled', {
+      timeout: 45_000,
+    })
+    await expect(page.getByRole('heading', { name: 'Domains' })).toHaveCount(0)
+    await expect(settingsNav(page)).toContainText('Add-on')
+  })
+
+  test('sets single sign-on up with the add-on, with nothing paused', async ({
     page,
   }) => {
     await mockAppwriteApi(page)
     await enableSso(page)
     await openSso(page)
 
+    await expect(addonCard(page)).toContainText('Active')
     await expect(page.getByRole('button', { name: 'Add domain' })).toBeEnabled()
     await expect(
       page.getByRole('button', { name: 'Add identity provider' }),
     ).toBeEnabled()
     await expect(page.getByText('Single sign-on is paused')).toHaveCount(0)
-    await expect(
-      page.getByText('Single sign-on is part of the HIPAA BAA add-on'),
-    ).toHaveCount(0)
     await expect(settingsNav(page)).not.toContainText('Add-on')
+  })
+
+  test("leaves setup to the server when the add-ons can't be read", async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, { addonsFail: true })
+    await enableSso(page)
+    await openSso(page)
+
+    await expect(addonCard(page)).toContainText(
+      "Couldn't load the add-on's status.",
+    )
+    await expect(
+      addonCard(page).getByRole('button', { name: 'Try again' }),
+    ).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Add domain' })).toBeEnabled()
   })
 
   test('explains a refusal without the add-on with the way to it, then locks setup', async ({
@@ -1722,18 +1831,21 @@ test.describe('single sign-on and the HIPAA BAA add-on', () => {
 
     const toast = page.locator('[data-sonner-toast]', {
       hasText:
-        "Single sign-on is part of the HIPAA BAA add-on. Enable it in the organization's settings.",
+        "Single sign-on for an organization needs the Single sign-on add-on. Enable it in the organization's settings.",
     })
     await expect(toast).toBeVisible({ timeout: 45_000 })
-    await expect(
-      toast.getByRole('button', { name: 'View add-on' }),
-    ).toBeVisible()
     expect(mock.sent.addonRefusals).toBe(1)
     // The add-ons are read again: the page shows it is paused
     await expect(page.getByText('Single sign-on is paused')).toBeVisible()
     await expect(
       page.getByRole('button', { name: 'Add domain' }),
     ).toBeDisabled()
+    // The toast leads to the add-on on this page, not elsewhere
+    await toast.getByRole('button', { name: 'View add-on' }).click()
+    await expect(page).toHaveURL(/\/settings\/sso/)
+    await expect(
+      addonCard(page).getByRole('button', { name: 'Enable add-on' }),
+    ).toBeFocused()
   })
 })
 

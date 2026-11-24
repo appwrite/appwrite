@@ -1,7 +1,7 @@
-import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from '@tanstack/react-router'
 import { SettingsCardsList } from '@/components/global/shared/settings-search/SettingsCardsList'
+import { SSOAddonCard } from '@/components/global/shared/sso-addon/SSOAddonCard'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   organizationQueryOptions,
@@ -9,20 +9,18 @@ import {
   useOrganizationSSOProviders,
 } from '@/lib/react-query/hooks'
 import { EmailDomainsCard } from './_components/EmailDomainsCard'
-import { EnableBaaDialog } from './_components/EnableBaaDialog'
 import { RequireSSOCard } from './_components/RequireSSOCard'
 import { SAMLProvidersCard } from './_components/SAMLProvidersCard'
-import { SSOAddonNotice, useSSOAddonGate } from './_components/SSOCardHelpers'
+import { useSSOAddonGate } from './_components/SSOCardHelpers'
 import { SSOProvidersCard } from './_components/SSOProvidersCard'
 
 export function SingleSignOn() {
   const { orgId = '' } = useParams({ strict: false })
-  // Single sign-on is part of the HIPAA BAA add-on. Without it active the page
-  // offers the add-on, or the upgrade on a plan without it; what the
-  // organization kept from when it was active stays listed, to delete.
+  // Single sign-on for the organization needs its Single sign-on add-on. The
+  // add-on's card leads the page; without the add-on active, what the
+  // organization kept from when it was stays listed below, to delete.
   const gate = useSSOAddonGate(orgId)
   const { features } = useConsoleProfile()
-  const [enablingAddon, setEnablingAddon] = useState(false)
   const { domains, isSuccess: domainsLoaded } =
     useOrganizationEmailDomains(orgId)
   const { providers, isSuccess: providersLoaded } =
@@ -37,10 +35,25 @@ export function SingleSignOn() {
     domains.length === 0 &&
     providers.length === 0 &&
     !required
+  // Unknown (not read yet, or no billing) is not locked: the server decides.
+  const showSetup = !gate.locked || !nothingSetUp
 
-  const cards = (
+  return (
     <SettingsCardsList
       cards={[
+        {
+          id: 'sso-addon',
+          search: {
+            title: 'Single sign-on',
+            keywords: ['sso', 'single sign-on', 'add-on', 'addon', 'billing'],
+          },
+          node: (
+            <SSOAddonCard
+              target={{ scope: 'organization', organizationId: orgId }}
+              paused={gate.locked && !nothingSetUp}
+            />
+          ),
+        },
         {
           id: 'sso-domains',
           search: {
@@ -104,42 +117,9 @@ export function SingleSignOn() {
           },
           node: <RequireSSOCard />,
         },
-      ]}
-    />
-  )
-
-  // Unknown (not read yet, or no billing) is not locked: the server decides.
-  const notice =
-    gate.status && gate.status !== 'active' ? (
-      <SSOAddonNotice
-        orgId={orgId}
-        status={gate.status}
-        planName={gate.planName}
-        paused={!nothingSetUp}
-        onEnable={() => setEnablingAddon(true)}
-      />
-    ) : null
-
-  return (
-    <>
-      {!notice ? (
-        cards
-      ) : nothingSetUp ? (
-        notice
-      ) : (
-        <div className="space-y-6">
-          {notice}
-          {cards}
-        </div>
+      ].filter((card) =>
+        card.id === 'sso-addon' ? features.billing : showSetup,
       )}
-      {/* Here rather than in the notice, which is gone once the add-on is on */}
-      {features.billing ? (
-        <EnableBaaDialog
-          open={enablingAddon}
-          onOpenChange={setEnablingAddon}
-          organizationId={orgId}
-        />
-      ) : null}
-    </>
+    />
   )
 }

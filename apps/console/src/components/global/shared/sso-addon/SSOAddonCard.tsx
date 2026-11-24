@@ -32,14 +32,12 @@ import { useT } from '@/lib/i18n/translate'
 import { EnableSSOAddonDialog } from './EnableSSOAddonDialog'
 import { DisableSSOAddonDialog } from './DisableSSOAddonDialog'
 import {
+  SSO_ADDON_CARD_ID,
   toAddonTarget,
   usePlansSellingAddon,
   useSSOAddon,
   type SSOAddonTarget,
 } from './use-sso-addon'
-
-/** The card on a page, for what points to it (`[data-card-id="sso-addon"]`). */
-export const SSO_ADDON_CARD_ID = 'sso-addon'
 
 /** The API refused to say: the caller may not read the add-ons. */
 function isPermissionError(error: unknown): boolean {

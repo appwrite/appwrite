@@ -49,7 +49,7 @@ export function VerifyEmailDomain({
   const later = useRef<HTMLButtonElement>(null)
   const [error, setError] = useState<string | null>(null)
   const verify = useVerifyOrganizationEmailDomain(organizationId)
-  // Checking the record needs the HIPAA BAA add-on.
+  // Checking the record needs the Single sign-on add-on.
   const gate = useSSOAddonGate(organizationId)
   const onAddonError = useSSOAddonErrorHandler(organizationId)
 
