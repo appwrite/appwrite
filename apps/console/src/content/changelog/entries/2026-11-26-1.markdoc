@@ -1,0 +1,19 @@
+---
+layout: changelog
+title: "Send email and SMS through Bird with Appwrite Messaging"
+date: 2026-11-26
+cover: /images/blog/announcing-bird-messaging-providers/cover.avif
+tags: messaging, auth, console, integrations
+---
+
+Appwrite Messaging has two new providers for [Bird](https://bird.com). The [Bird email provider](/docs/products/messaging/bird-email) sends through Bird's HTTP email API, and the [Bird SMS provider](/docs/products/messaging/bird-sms) sends from a number or sender ID your Bird workspace owns. Both take a Bird API key, and Appwrite reads the region from its `bk_<region>_` prefix.
+
+On Appwrite Cloud, click **Connect with Bird** on either provider and Appwrite creates a key with only `emails:write` or `sms:write`, then fills in the provider for you. The project **Settings** > **SMTP** tab has a Bird tile too, which sets up [custom SMTP](/docs/products/auth/message-templates#smtp-one-click-setup) through Bird's regional relay. The providers ship in the next self-hosted release.
+
+{% arrow_link href="/blog/post/announcing-bird-messaging-providers" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/messaging/bird-email" %}
+Set up the Bird email provider
+{% /arrow_link %}

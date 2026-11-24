@@ -1400,7 +1400,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Message templates",
     "description": "Communicate using your brand and voice by customizing email and SMS message templates, localized to your user's language.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 6
   },
   {
     "slug": "products/auth/mfa",
@@ -3134,6 +3134,20 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Deliver push notifications from Appwrite to apps built with the Web, Flutter, React Native, Android, and Apple SDKs, without Firebase or device tokens.",
     "layout": "article",
     "readingTimeMinutes": 18
+  },
+  {
+    "slug": "products/messaging/bird-email",
+    "title": "Bird email",
+    "description": "Send emails to your Appwrite users through Bird's email API and Appwrite Messaging.",
+    "layout": "article",
+    "readingTimeMinutes": 5
+  },
+  {
+    "slug": "products/messaging/bird-sms",
+    "title": "Bird SMS",
+    "description": "Send SMS messages to your Appwrite users using Bird and Appwrite Messaging.",
+    "layout": "article",
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/messaging/fcm",

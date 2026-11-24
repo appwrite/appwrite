@@ -2051,6 +2051,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/messaging/fcm',
           },
           {
+            label: 'Email with Bird',
+            href: '/docs/products/messaging/bird-email',
+          },
+          {
             label: 'Email with Mailgun',
             href: '/docs/products/messaging/mailgun',
           },
@@ -2069,6 +2073,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'SMS with Twilio',
             href: '/docs/products/messaging/twilio',
+          },
+          {
+            label: 'SMS with Bird',
+            href: '/docs/products/messaging/bird-sms',
           },
           {
             label: 'SMS with MSG91',

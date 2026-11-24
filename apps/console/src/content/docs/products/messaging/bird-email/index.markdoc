@@ -1,0 +1,664 @@
+---
+layout: article
+title: Bird email
+description: Send emails to your Appwrite users through Bird's email API and Appwrite Messaging.
+back: /docs/
+---
+[Bird](https://bird.com) lets you send customized email messages to your users.
+These emails can be sent immediately or scheduled.
+You can send emails for purposes like reminders, promotions, announcements, and even custom authentication flows.
+
+The Bird email provider sends through Bird's HTTP email API with a Bird API key, so it doesn't need SMTP settings. To send SMS through Bird too, add a [Bird SMS](/docs/products/messaging/bird-sms) provider next to it.
+
+{% section #add-provider step=1 title="Add provider" %}
+
+To add Bird as an email provider, navigate to **Messaging** > **Providers** > {% icon icon="plus" size="m" /%} **Add provider**.
+{% only_dark %}
+![Add a Bird provider](/images/docs/messaging/providers/bird/dark/add-bird.avif)
+{% /only_dark %}
+{% only_light %}
+![Add a Bird provider](/images/docs/messaging/providers/bird/add-bird.avif)
+{% /only_light %}
+
+Bird is listed under both **Email** and **SMS**. Choose **Bird** under **Email** to open the **Configure Bird** step.
+{% /section %}
+{% section #configure-provider step=2 title="Configure provider" %}
+
+In the **Configure Bird** step, you need a Bird API key and a sender on a verified domain. On Appwrite Cloud, you can let Appwrite create the API key for you with one-click setup, or fill in the fields by hand.
+
+{% only_dark %}
+![Configure Bird email provider](/images/docs/messaging/providers/bird/dark/configure-bird-email.avif)
+{% /only_dark %}
+{% only_light %}
+![Configure Bird email provider](/images/docs/messaging/providers/bird/configure-bird-email.avif)
+{% /only_light %}
+
+## One-click setup {% #one-click-setup %}
+
+On Appwrite Cloud, the **Configure Bird** step opens with a **One-click setup** card above the form.
+
+1. Click **Connect with Bird** and authorize Appwrite in Bird. You are returned to this step with your Bird workspace connected.
+1. Select a verified **Domain**. Domains that Bird hasn't verified yet are listed but can't be selected. If none are verified, click **Manage domains**, verify one in Bird, and click **Check again**.
+1. Click **Generate API key**.
+1. Review the fields and click **Create provider**.
+
+{% only_dark %}
+![One-click setup card with a verified Bird domain selected](/images/docs/messaging/providers/bird/dark/one-click-bird-email.avif)
+{% /only_dark %}
+{% only_light %}
+![One-click setup card with a verified Bird domain selected](/images/docs/messaging/providers/bird/one-click-bird-email.avif)
+{% /only_light %}
+
+Appwrite creates an API key in your Bird workspace named `Appwrite SMTP: <project name>` with only the `emails:write` scope, and fills it into the **API key** field. Bird keys aren't tied to a domain, so the domain you pick sets the sender address. Appwrite also fills any empty fields: the **Sender email** becomes `noreply@<domain>` unless the one you typed is already on that domain, the **Sender name** defaults to your project name, and the provider **Name** defaults to `One-click Bird sender`.
+
+If you leave the wizard without creating the provider, Appwrite revokes the key it generated so it doesn't stay unused in your Bird workspace. Clicking **Generate API key** again replaces the key in the form and revokes the previous one.
+
+The Bird connection lives on your Console account and is shared with the [Bird SMS provider](/docs/products/messaging/bird-sms#one-click-setup) and the [one-click SMTP setup](/docs/products/auth/message-templates#smtp-one-click-setup) in project settings. Connecting once covers all three.
+
+## Configure manually {% #configure-manually %}
+
+You will need to provide the following information from your **Bird dashboard**.
+
+{% table %}
+* Field name
+*
+---
+* Name
+* A name for the provider in Appwrite.
+---
+* API key
+* Head to **Platform tools** > **API keys** and create a key with the `emails` scope at the `write` level. Bird keys start with `bk_` and your region, for example `bk_eu1_`, and Appwrite uses that prefix to send to the right regional API. See [Bird's authentication guide](https://bird.com/docs/guides/authentication).
+---
+* Sender email
+* The provider sends emails from this address. It must be on a domain verified under **Email** > **Domains** in Bird. See [Bird's sending domains guide](https://bird.com/docs/guides/email/sending-domains).
+---
+* Sender name
+* The sender name that appears in the emails sent from this provider.
+{% /table %}
+
+After adding the details, click **Create provider**. The provider is enabled once it has both an API key and a sender email. To set a reply-to name and email, open the provider from **Messaging** > **Providers** after it's created, or pass `replyToName` and `replyToEmail` through the API.
+
+## How Bird email delivery works {% #delivery %}
+
+- **One message per recipient.** Each recipient in **To** gets a message of their own, with any CC and BCC addresses copied on each. Appwrite sends several recipients to Bird in batches of up to 100.
+- **Transactional category.** Messages are sent with Bird's `transactional` category, so Bird delivers them as written, without adding an unsubscribe link.
+- **Size limit.** A message can be at most 20 MB, counting its body and its attachments after base64 encoding, which makes about 15 MB of attachments. Larger messages fail without reaching Bird.
+- **Per-recipient errors.** If Bird refuses a recipient in a batch, Appwrite retries that batch one message at a time, so only the refused recipient fails. Bird refuses placeholder domains such as `example.com` and `test.com`, so use real addresses or [Bird's sandbox addresses](https://bird.com/docs/guides/email/testing-sandbox), such as `delivered@messagebird.dev`, for test targets.
+{% /section %}
+
+{% section #test-provider step=3 title="Test provider" %}
+Before sending your first message,
+make sure you've configured [a topic](/docs/products/messaging/topics) and [a target](/docs/products/messaging/targets) to send messages to.
+{% tabs %}
+{% tabsitem #console title="Console" %}
+To send a test message, navigate to **Messaging** > **Messages** > {% icon icon="plus" size="m" /%} **Create message** > **Email**.
+{% only_dark %}
+![Create email message](/images/docs/messaging/messages/dark/create-email-message.avif)
+{% /only_dark %}
+{% only_light %}
+![Create email message](/images/docs/messaging/messages/create-email-message.avif)
+{% /only_light %}
+
+Add your message and in the targets step, select one of your test targets. Set the schedule to **Now** and click **Send**.
+
+Verify that you can receive the message in your inbox. If not, check for logs in the Appwrite Console or in your provider's logs.
+{% /tabsitem %}
+
+{% tabsitem #server-sdk title="Server SDK" %}
+To send a message programmatically, use an [Appwrite Server SDK](/docs/sdks#server).
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+// Init SDK
+const client = new sdk.Client();
+
+const messaging = new sdk.Messaging(client);
+
+client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>') // Your project ID
+    .setKey('<API_KEY>') // Your secret API key
+;
+
+const message = await messaging.createEmail({
+  messageId: '<MESSAGE_ID>',
+  subject: '<SUBJECT>',
+  content: '<CONTENT>'
+});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+// Init SDK
+let client = new sdk.Client();
+
+let messaging = new sdk.Messaging(client);
+
+client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>') // Your project ID
+    .setKey('<API_KEY>') // Your secret API key
+;
+
+const message = await messaging.createEmail({
+  messageId: '<MESSAGE_ID>',
+  subject: '<SUBJECT>',
+  content: '<CONTENT>'
+});
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Messaging;
+
+$client = new Client();
+
+$client
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<PROJECT_ID>') // Your project ID
+    ->setKey('<API_KEY>') // Your secret API key
+;
+
+$messaging = new Messaging($client);
+
+$result = $messaging->createEmail('<MESSAGE_ID>', '<SUBJECT>', '<CONTENT>');
+```
+```python
+from appwrite.client import Client
+
+client = Client()
+
+(client
+  .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+  .set_project('<PROJECT_ID>') # Your project ID
+  .set_key('<API_KEY>') # Your secret API key
+)
+
+messaging = Messaging(client)
+
+result = messaging.create_email(
+    message_id='<MESSAGE_ID>',
+    subject='<SUBJECT>',
+    content='<CONTENT>'
+)
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<PROJECT_ID>') # Your project ID
+    .set_key('<API_KEY>') # Your secret API key
+
+messaging = Messaging.new(client)
+
+response = messaging.create_email(message_id: '<MESSAGE_ID>', subject: '<SUBJECT>', content: '<CONTENT>')
+
+puts response.inspect
+```
+```csharp
+using Appwrite;
+using Appwrite.Services;
+using Appwrite.Models;
+
+var client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<PROJECT_ID>") // Your project ID
+    .SetKey("<API_KEY>"); // Your secret API key
+
+var messaging = new Messaging(client);
+
+Message result = await messaging.CreateEmail(
+    messageId: "<MESSAGE_ID>",
+    subject: "<SUBJECT>",
+    content: "<CONTENT>");
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart';
+import 'package:dart_appwrite/models.dart';
+
+void main() async { // Init SDK
+  Client client = Client();
+  Messaging messaging = Messaging(client);
+
+  client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>') // Your project ID
+    .setKey('<API_KEY>') // Your secret API key
+  ;
+
+  Future result = await messaging.createEmail(
+    messageId:'<MESSAGE_ID>' ,
+    subject:'<SUBJECT>' ,
+    content:'<CONTENT>' ,
+  );
+
+  result
+    .then((response) {
+      print(response);
+    }).catchError((error) {
+      print(error.response);
+  });
+}
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.coroutines.CoroutineCallback
+import io.appwrite.services.Messaging
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>") // Your project ID
+    .setKey("<API_KEY>") // Your secret API key
+
+val messaging = Messaging(client)
+
+val response = messaging.createEmail(
+    messageId = "<MESSAGE_ID>",
+    subject = "<SUBJECT>",
+    content = "<CONTENT>",
+)
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Messaging;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>") // Your project ID
+    .setKey("<API_KEY>"); // Your secret API key
+
+Messaging messaging = new Messaging(client);
+
+messaging.createEmail(
+    "<MESSAGE_ID>",
+    "<SUBJECT>",
+    "<CONTENT>",
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>") // Your project ID
+    .setKey("<API_KEY>") // Your secret API key
+
+let messaging = Messaging(client)
+
+let message = try await messaging.createEmail(
+    messageId: "<MESSAGE_ID>",
+    subject: "<SUBJECT>",
+    content: "<CONTENT>"
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::messaging::Messaging;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<API_KEY>");
+
+    let messaging = Messaging::new(&client);
+
+    let message = messaging.create_email(
+        "<MESSAGE_ID>",                              // messageId
+        "<SUBJECT>",                                 // subject
+        "<CONTENT>",                                 // content
+        None,                                        // topics (optional)
+        None,                                        // users (optional)
+        None,                                        // targets (optional)
+        None,                                        // cc (optional)
+        None,                                        // bcc (optional)
+        None,                                        // attachments (optional)
+        None,                                        // draft (optional)
+        None,                                        // html (optional)
+        None,                                        // scheduledAt (optional)
+    ).await?;
+
+    println!("{:?}", message);
+    Ok(())
+}
+```
+{% /multicode %}
+{% /tabsitem %}
+{% /tabs %}
+
+You can follow the [Send email messages](/docs/products/messaging/send-email-messages) guide to send your first email message and test your provider.
+{% /section %}
+
+{% section #manage-provider step=4 title="Manage provider" %}
+{% tabs %}
+{% tabsitem #console title="Console" %}
+You can update or delete a provider in the Appwrite Console.
+
+Navigate to **Messaging** > **Providers** > click your provider.
+In the settings, you can update a provider's configuration or delete the provider.
+{% /tabsitem %}
+
+{% tabsitem #server-sdk title="Server SDK" %}
+To update or delete providers programmatically, use an [Appwrite Server SDK](/docs/sdks#server).
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+// Init SDK
+const client = new sdk.Client();
+
+const messaging = new sdk.Messaging(client);
+
+client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>')        // Your secret API key
+;
+
+const provider = await messaging.updateBirdEmailProvider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    enabled: false,
+    apiKey: '<BIRD_API_KEY>',
+    fromName: '<FROM_NAME>',
+    fromEmail: 'email@example.com',
+    replyToName: '<REPLY_TO_NAME>',
+    replyToEmail: '<REPLY_TO_EMAIL>'
+});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+// Init SDK
+let client = new sdk.Client();
+
+let messaging = new sdk.Messaging(client);
+
+client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>')        // Your secret API key
+;
+
+const provider = await messaging.updateBirdEmailProvider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    enabled: false,
+    apiKey: '<BIRD_API_KEY>',
+    fromName: '<FROM_NAME>',
+    fromEmail: 'email@example.com',
+    replyToName: '<REPLY_TO_NAME>',
+    replyToEmail: '<REPLY_TO_EMAIL>'
+});
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Messaging;
+
+$client = new Client();
+
+$client
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>')        // Your secret API key
+;
+
+$messaging = new Messaging($client);
+
+$result = $messaging->updateBirdEmailProvider(
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',                   // optional
+    apiKey: '<BIRD_API_KEY>',         // optional
+    enabled: false,                   // optional
+    fromName: '<FROM_NAME>',          // optional
+    fromEmail: 'email@example.com',   // optional
+    replyToName: '<REPLY_TO_NAME>',   // optional
+    replyToEmail: '<REPLY_TO_EMAIL>'  // optional
+);
+```
+```python
+from appwrite.client import Client
+from appwrite.services.messaging import Messaging
+
+client = Client()
+
+(client
+  .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+  .set_project('<PROJECT_ID>')     # Your project ID
+  .set_key('<YOUR_API_KEY>')            # Your secret API key
+)
+
+messaging = Messaging(client)
+
+result = messaging.update_bird_email_provider(
+    provider_id = '<PROVIDER_ID>',
+    name = '<NAME>',                    # optional
+    api_key = '<BIRD_API_KEY>',         # optional
+    enabled = False,                    # optional
+    from_name = '<FROM_NAME>',          # optional
+    from_email = 'email@example.com',   # optional
+    reply_to_name = '<REPLY_TO_NAME>',  # optional
+    reply_to_email = '<REPLY_TO_EMAIL>' # optional
+)
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<PROJECT_ID>')  # Your project ID
+    .set_key('<YOUR_API_KEY>')         # Your secret API key
+
+messaging = Messaging.new(client)
+
+response = messaging.update_bird_email_provider(
+    provider_id: '<PROVIDER_ID>',
+    name: '<NAME>',                    # optional
+    api_key: '<BIRD_API_KEY>',         # optional
+    enabled: false,                    # optional
+    from_name: '<FROM_NAME>',          # optional
+    from_email: 'email@example.com',   # optional
+    reply_to_name: '<REPLY_TO_NAME>',  # optional
+    reply_to_email: '<REPLY_TO_EMAIL>' # optional
+)
+
+puts response.inspect
+```
+```csharp
+using Appwrite;
+using Appwrite.Services;
+using Appwrite.Models;
+
+var client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<PROJECT_ID>")   // Your project ID
+    .SetKey("<YOUR_API_KEY>");         // Your secret API key
+
+var messaging = new Messaging(client);
+
+Provider result = await messaging.UpdateBirdEmailProvider(
+    providerId: "<PROVIDER_ID>",
+    name: "<NAME>",                    // optional
+    apiKey: "<BIRD_API_KEY>",          // optional
+    enabled: false,                    // optional
+    fromName: "<FROM_NAME>",           // optional
+    fromEmail: "email@example.com",    // optional
+    replyToName: "<REPLY_TO_NAME>",    // optional
+    replyToEmail: "<REPLY_TO_EMAIL>"); // optional
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart';
+import 'package:dart_appwrite/models.dart';
+
+void main() {                         // Init SDK
+  Client client = Client();
+  Messaging messaging = Messaging(client);
+
+  client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>')  // Your project ID
+    .setKey('<YOUR_API_KEY>')         // Your secret API key
+  ;
+
+  Future result = messaging.updateBirdEmailProvider(
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',                   // optional
+    apiKey: '<BIRD_API_KEY>',         // optional
+    enabled: false,                   // optional
+    fromName: '<FROM_NAME>',          // optional
+    fromEmail: 'email@example.com',   // optional
+    replyToName: '<REPLY_TO_NAME>',   // optional
+    replyToEmail: '<REPLY_TO_EMAIL>', // optional
+  );
+
+  result
+    .then((response) {
+      print(response);
+    }).catchError((error) {
+      print(error.response);
+  });
+}
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.services.Messaging
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val messaging = Messaging(client)
+
+val provider = messaging.updateBirdEmailProvider(
+    providerId = "<PROVIDER_ID>",
+    name = "<NAME>",                     // optional
+    apiKey = "<BIRD_API_KEY>",           // optional
+    enabled = false,                     // optional
+    fromName = "<FROM_NAME>",            // optional
+    fromEmail = "email@example.com",     // optional
+    replyToName = "<REPLY_TO_NAME>",     // optional
+    replyToEmail = "<REPLY_TO_EMAIL>",   // optional
+)
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Messaging;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>");       // Your secret API key
+
+Messaging messaging = new Messaging(client);
+
+messaging.updateBirdEmailProvider(
+    "<PROVIDER_ID>",                 // providerId
+    "<NAME>",                        // name (optional)
+    false,                           // enabled (optional)
+    "<BIRD_API_KEY>",                // apiKey (optional)
+    "<FROM_NAME>",                   // fromName (optional)
+    "email@example.com",             // fromEmail (optional)
+    "<REPLY_TO_NAME>",               // replyToName (optional)
+    "<REPLY_TO_EMAIL>",              // replyToEmail (optional)
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>")        // Your secret API key
+
+let messaging = Messaging(client)
+
+let provider = try await messaging.updateBirdEmailProvider(
+  providerId: "<PROVIDER_ID>",
+  name: "<NAME>",                    // optional
+  apiKey: "<BIRD_API_KEY>",          // optional
+  enabled: false,                    // optional
+  fromName: "<FROM_NAME>",           // optional
+  fromEmail: "email@example.com",    // optional
+  replyToName: "<REPLY_TO_NAME>",    // optional
+  replyToEmail: "<REPLY_TO_EMAIL>"   // optional
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::messaging::Messaging;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let messaging = Messaging::new(&client);
+
+    let provider = messaging.update_bird_email_provider(
+        "<PROVIDER_ID>",                             // providerId
+        Some("<NAME>"),                              // name (optional)
+        Some(false),                                 // enabled (optional)
+        Some("<BIRD_API_KEY>"),                      // apiKey (optional)
+        Some("<FROM_NAME>"),                         // fromName (optional)
+        Some("email@example.com"),                   // fromEmail (optional)
+        Some("<REPLY_TO_NAME>"),                     // replyToName (optional)
+        Some("<REPLY_TO_EMAIL>"),                    // replyToEmail (optional)
+    ).await?;
+
+    println!("{:?}", provider);
+    Ok(())
+}
+```
+```http
+PATCH /v1/messaging/providers/bird-email/<PROVIDER_ID> HTTP/1.1
+Content-Type: application/json
+X-Appwrite-Project: <PROJECT_ID>
+X-Appwrite-Key: <API_KEY>
+
+{
+  "name": "<NAME>",
+  "enabled": false,
+  "apiKey": "<BIRD_API_KEY>",
+  "fromName": "<FROM_NAME>",
+  "fromEmail": "email@example.com",
+  "replyToName": "<REPLY_TO_NAME>",
+  "replyToEmail": "<REPLY_TO_EMAIL>"
+}
+```
+{% /multicode %}
+{% /tabsitem %}
+{% /tabs %}
+{% /section %}
