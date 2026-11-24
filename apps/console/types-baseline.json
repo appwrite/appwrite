@@ -1145,7 +1145,6 @@
     "TS2339: Property 'pricing' does not exist on type 'DedicatedDatabaseSpecificationList'.": 1,
     "TS2339: Property 'status' does not exist on type 'Database & { enabled: boolean; createdAt: string; updatedAt: string; hasBackupPolicy: boolean; backupPolicy: Record<string, unknown> | null; backupPolicyCount: number; databaseType: DatabaseType; }'.": 2,
     "TS2724: '\"node_modules/@appwrite.io/console/types/models\".Models' has no exported member named 'DedicatedDatabaseSpecificationPricing'. Did you mean 'DedicatedDatabaseSpecification'?": 1,
-    "TS6133: 'currentSpecification' is declared but its value is never read.": 1,
     "TS6133: 'useEffect' is declared but its value is never read.": 1
   },
   "src/lib/react-query/hooks/functions.ts": {
