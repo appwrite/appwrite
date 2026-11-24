@@ -568,14 +568,27 @@ class Create extends Action
         }
 
         $slug = System::getEnv('_APP_VCS_GITHUB_APP_NAME', '');
+        $author = $parsedPayload['commentAuthor'] ?? '';
+        $authorType = $parsedPayload['commentAuthorType'] ?? '';
+        $association = $parsedPayload['commentAuthorAssociation'] ?? '';
+        $repositoryName = ($parsedPayload['owner'] ?? '') . '/' . ($parsedPayload['repositoryName'] ?? '');
+        $installationId = $parsedPayload['installationId'] ?? '';
+        // Each comment that is not answered says why: a dropped reply otherwise leaves no trace.
+        $subject = "{$commentKind} comment {$commentId} on pull request {$pullNumber} of repository '{$repositoryName}' by '{$author}' ({$authorType}, {$association})";
         // Every answer is a model run the project pays for: trusted humans and other apps may ask, never the reviewer itself.
-        if (!$this->canTriggerFromComment($parsedPayload['commentAuthor'] ?? '', $parsedPayload['commentAuthorType'] ?? '', $parsedPayload['commentAuthorAssociation'] ?? '', $slug)) {
+        if (!$this->canTriggerFromComment($author, $authorType, $association, $slug)) {
+            // Other apps may ask, so the only bot refused here is the reviewer itself, whose own
+            // comments arrive on every review. Everyone else refused gets a line.
+            if ($authorType !== 'Bot') {
+                Console::info("Ignored {$subject}: the author is not an owner, member or collaborator");
+            }
             return;
         }
 
         $providerRepositoryId = $parsedPayload['repositoryId'] ?? '';
-        $repositories = $this->findRepositories($providerRepositoryId, $parsedPayload['installationId'] ?? '', [Query::equal('resourceType', [RESOURCE_TYPE_REVIEWS])], $dbForPlatform, $authorization, null);
+        $repositories = $this->findRepositories($providerRepositoryId, $installationId, [Query::equal('resourceType', [RESOURCE_TYPE_REVIEWS])], $dbForPlatform, $authorization, null);
         if (empty($repositories)) {
+            Console::info("Ignored {$subject}: no project reviews the repository through installation '{$installationId}'");
             return;
         }
 
@@ -585,7 +598,11 @@ class Create extends Action
         foreach ($repositories as $repository) {
             try {
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $repository->getAttribute('projectId', '')));
-                if ($project->isEmpty() || !$this->isProjectInCurrentRegion($project)) {
+                if ($project->isEmpty()) {
+                    Console::info("Ignored {$subject} for repository '{$repository->getId()}': its project is missing");
+                    continue;
+                }
+                if (!$this->isProjectInCurrentRegion($project)) {
                     continue;
                 }
 
@@ -621,7 +638,7 @@ class Create extends Action
                 try {
                     $this->beforeQueueReview($project, $repository, $dbForPlatform, $authorization);
                 } catch (Exception $error) {
-                    Console::warning("Skipped comment for repository '{$repository->getId()}': " . $error->getMessage());
+                    Console::warning("Skipped {$subject} for repository '{$repository->getId()}': " . $error->getMessage());
                     continue;
                 }
 
@@ -637,6 +654,7 @@ class Create extends Action
                         'author' => $parsedPayload['commentAuthor'] ?? '',
                     ])));
                 } catch (DuplicateException) {
+                    Console::info("Ignored {$subject} for repository '{$repository->getId()}': it is already queued");
                     continue;
                 }
 
@@ -663,6 +681,8 @@ class Create extends Action
                     if ($queued === false) {
                         throw new \Exception('The broker rejected the chat message.');
                     }
+
+                    Console::info("Queued {$subject} for repository '{$repository->getId()}'");
                 } catch (\Throwable $error) {
                     // Released, so a redelivery of the comment can queue it again.
                     $authorization->skip(fn () => $dbForProject->deleteDocument('reviewChats', $chat->getId()));
@@ -670,7 +690,7 @@ class Create extends Action
                     throw $error;
                 }
             } catch (\Throwable $error) {
-                Console::warning("Failed to queue comment for repository '{$repository->getId()}': " . $error->getMessage());
+                Console::warning("Failed to queue {$subject} for repository '{$repository->getId()}': " . $error->getMessage());
             }
         }
     }
