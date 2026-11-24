@@ -1204,6 +1204,18 @@ final class NotificationsTest extends TestCase
         $rows = $this->database->find('notifications', [Query::equal('subjectId', ['alert-2'])]);
         $this->assertCount(1, $rows);
         $this->assertSame('acknowledged', $rows[0]->getAttribute('status'));
+
+        // A notice that read the alert before a member acknowledged it does not set the notification back to firing.
+        $this->database->createDocument('monitorAlerts', new Document(['$id' => 'alert-3', 'acknowledgedAt' => null]));
+        $payload['push']['data']['alertId'] = 'alert-3';
+        $payload['deduplicationKey'] = 'console-alert-stale-first';
+        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks, $this->publicHostname, $this->telemetry);
+        $acknowledged = $this->database->find('notifications', [Query::equal('subjectId', ['alert-3'])])[0];
+        $this->database->updateDocument('notifications', $acknowledged->getId(), new Document(['status' => 'acknowledged']));
+        $payload['deduplicationKey'] = 'console-alert-stale-second';
+        $worker->action($this->buildMessage($payload), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks, $this->publicHostname, $this->telemetry);
+
+        $this->assertSame('acknowledged', $this->database->getDocument('notifications', $acknowledged->getId())->getAttribute('status'));
     }
 
     public function testConsoleChannelUsesPreviewBodyInsteadOfRenderedEmailHtml(): void
