@@ -1,6 +1,6 @@
 # Only the final stage runs on the target platform, so arm64 cross-builds
 # from an amd64 runner without emulating Bun.
-FROM --platform=$BUILDPLATFORM oven/bun:1.4 AS base
+FROM --platform=$BUILDPLATFORM oven/bun:1.4@sha256:3aa040e5445efa09d75bb428a64ba50db13e2b3ac9b6b0c7f145615f62b2ee18 AS base
 
 WORKDIR /app
 COPY package.json package.json
@@ -43,7 +43,7 @@ ARG TARGETARCH
 RUN bun install --frozen-lockfile --production --os=linux \
     --cpu="$([ "${TARGETARCH}" = amd64 ] && echo x64 || echo "${TARGETARCH}")"
 
-FROM oven/bun:1.4 AS final
+FROM oven/bun:1.4@sha256:3aa040e5445efa09d75bb428a64ba50db13e2b3ac9b6b0c7f145615f62b2ee18 AS final
 
 WORKDIR /app
 
