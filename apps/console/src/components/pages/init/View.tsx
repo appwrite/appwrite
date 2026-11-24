@@ -215,9 +215,11 @@ function InitPageContent({
                       isRecapMode={event.isRecapMode}
                     />
                   )
-                  // Init 5's days wear the hero's electric border: a comet of
-                  // light circling each card, every card on its own beat.
-                  return ELECTRIC_EVENT_IDS.has(event.id) ? (
+                  // Init 5's revealed days wear the hero's electric border: a
+                  // comet of light circling each card, every card on its own
+                  // beat. Days still locked keep the plain border.
+                  return ELECTRIC_EVENT_IDS.has(event.id) &&
+                    !isLaunchEventDayLocked(day) ? (
                     <div
                       key={day.day}
                       className="init5-light-frame rounded-xl"
