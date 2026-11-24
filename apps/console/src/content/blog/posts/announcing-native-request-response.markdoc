@@ -19,17 +19,19 @@ faqs:
     answer: "No. The Python runtime accepts an aiohttp `web.Response` with an in-memory body, and returning a `web.StreamResponse` or `web.FileResponse` fails the execution. Use `context.res.sendStream()` to stream from Python. Native responses do stream in Node.js, Bun, Deno, and Dart."
   - question: "Do I have to change my existing functions?"
     answer: "No. `context.req` and the `context.res` methods work exactly as before. One function can also mix both, for example by reading a form from `context.req.raw` and answering with `context.res.json()`."
-  - question: "Does Appwrite have a Hono integration?"
-    answer: "No integration is needed. Hono's `app.fetch()` takes a `Request` and returns a `Response`, so a function that exports `async ({ req }) => app.fetch(req.raw)` runs a Hono app. Any other framework that exposes its app as a function from `Request` to `Response` works the same way."
+  - question: "Can I run Hono in an Appwrite Function?"
+    answer: "Yes. Hono's `app.fetch()` takes a `Request` and returns a `Response`, so a function that exports `async ({ req }) => app.fetch(req.raw)` runs a Hono app. Any other framework that exposes its app as a function from `Request` to `Response` works the same way."
   - question: "How do I use log() and the Appwrite API key inside Hono routes?"
     answer: "Appwrite headers such as `x-appwrite-key` and `x-appwrite-user-id` are on the request, so a route reads them with `c.req.header()`. To log, pass the function context to Hono with `app.fetch(req.raw, context)` and call `c.env.log()` inside a route."
 ---
 
 Every Appwrite Functions runtime runs your code inside a web server, and each of those servers has its own request and response types. The JavaScript runtimes use the Fetch API's [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) and [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response), the same classes behind `Bun.serve()`, `Deno.serve()`, Cloudflare Workers, and frameworks such as Hono. Python runs on [aiohttp](https://docs.aiohttp.org), Dart on [shelf](https://pub.dev/packages/shelf), Go on `net/http`, and .NET on ASP.NET Core.
 
-Until now, your function never saw those objects. `context.req` held a parsed copy of the request, and you built the answer with `context.res.text()` or `context.res.json()`. That works for a single endpoint, but code written for the server's own types needed an adapter before it could run in a function. Even reading a multipart form in Node.js meant wrapping `req.bodyBinary` in a temporary `Response` just to call `formData()` on it.
+Until now, your function never saw those objects. `context.req` held a parsed copy of the request, and you built the answer with `context.res.text()` or `context.res.json()`. That works for a single endpoint, but code written for the server's own types had to be converted to `context.req` and `context.res` before it could run in a function. Even reading a multipart form in Node.js meant wrapping `req.bodyBinary` in a temporary `Response` just to call `formData()` on it.
 
 Today, we are announcing **native request and response support in Appwrite Functions**. Every runtime now passes its web server's request to your function as `context.req.raw`. In Node.js 18 and later, Bun, Deno, Python, and Dart, your function can also return a native response instead of calling a `context.res` method.
+
+This matters for two reasons. Functions now work as a compatibility layer for the frameworks and libraries already built on these types, so code that takes a `Request` or returns a `Response` runs in a function as written. It also makes functions easier for AI agents to write. Agents already know the Fetch API, aiohttp, and shelf, so they can build an Appwrite Function with the request and response types they've seen many times before, instead of first learning the details of the `context` object.
 
 # What native request and response give you
 
@@ -37,21 +39,23 @@ Today, we are announcing **native request and response support in Appwrite Funct
 - **Standard body parsers in JavaScript.** `formData()`, `json()`, `text()`, `arrayBuffer()`, and `blob()` all work on `context.req.raw`, including for multipart uploads.
 - **Native responses in five runtimes.** Return a Fetch API `Response` in Node.js, Bun, or Deno, an aiohttp `web.Response` in Python, or a shelf `Response` in Dart, and Appwrite sends it to the client as written.
 - **Responses built by other libraries.** If a JavaScript library returns a `Response`, your function can return it as is. A `ReadableStream` body is streamed to the client, the same way as [`res.sendStream()`](/blog/post/announcing-streaming-responses).
-- **Frameworks built on the Fetch API.** A framework whose app takes a `Request` and returns a `Response`, such as Hono, now runs in a function without an adapter.
+- **Compatibility with Fetch API frameworks.** A framework whose app takes a `Request` and returns a `Response`, such as Hono, runs in a function when you pass it `context.req.raw`.
 - **Nothing to migrate.** `context.req` and `context.res` work as before, and a function can use both.
 
 # Use Request and Response in Node.js, Bun, and Deno
 
-This function reads a form from `context.req.raw` and answers with a `Response`. It uses only the classes built into the runtime, with no Appwrite helpers.
+This function takes the `Request` from `context.req.raw` and answers with a `Response`. Everything after the first line uses only the Fetch API built into the runtime, with no Appwrite helpers.
 
 {% multicode %}
 ```server-nodejs
 export default async ({ req }) => {
-    if (req.method !== 'POST') {
+    const request = req.raw;
+
+    if (request.method !== 'POST') {
         return new Response('Send the form with POST', { status: 405 });
     }
 
-    const form = await req.raw.formData();
+    const form = await request.formData();
     const name = form.get('name');
 
     return new Response(`Hello, ${name}!`, {
@@ -61,11 +65,13 @@ export default async ({ req }) => {
 ```
 ```bun
 export default async ({ req }) => {
-    if (req.method !== 'POST') {
+    const request = req.raw;
+
+    if (request.method !== 'POST') {
         return new Response('Send the form with POST', { status: 405 });
     }
 
-    const form = await req.raw.formData();
+    const form = await request.formData();
     const name = form.get('name');
 
     return new Response(`Hello, ${name}!`, {
@@ -75,11 +81,13 @@ export default async ({ req }) => {
 ```
 ```deno
 export default async ({ req }: any) => {
-    if (req.method !== "POST") {
+    const request: Request = req.raw;
+
+    if (request.method !== "POST") {
         return new Response("Send the form with POST", { status: 405 });
     }
 
-    const form = await req.raw.formData();
+    const form = await request.formData();
     const name = form.get("name");
 
     return new Response(`Hello, ${name}!`, {
@@ -115,7 +123,7 @@ const form = await new Response(req.bodyBinary, {
 
 # Return the Response a library builds
 
-Some libraries finish their work by building a `Response`. The [Vercel AI SDK](https://ai-sdk.dev) is one. In the [streaming announcement](/blog/post/announcing-streaming-responses), we passed its text stream to `res.sendStream()`. Now the function can return the SDK's own response:
+Some libraries finish their work by building a `Response`. The [Vercel AI SDK](https://ai-sdk.dev) is one. In the [streaming announcement](/blog/post/announcing-streaming-responses), we passed its text stream to `res.sendStream()`. Now the function can read the prompt from `context.req.raw` and return the SDK's own response:
 
 {% multicode %}
 ```server-nodejs
@@ -123,9 +131,11 @@ import { streamText } from 'ai';
 import { openai } from '@ai-sdk/openai';
 
 export default async ({ req }) => {
+    const { prompt } = await req.raw.json();
+
     const result = streamText({
         model: openai('gpt-5-mini'),
-        prompt: req.bodyJson.prompt
+        prompt
     });
 
     return result.toTextStreamResponse();
@@ -136,9 +146,11 @@ import { streamText } from 'ai';
 import { openai } from '@ai-sdk/openai';
 
 export default async ({ req }) => {
+    const { prompt } = await req.raw.json();
+
     const result = streamText({
         model: openai('gpt-5-mini'),
-        prompt: req.bodyJson.prompt
+        prompt
     });
 
     return result.toTextStreamResponse();
@@ -149,9 +161,11 @@ import { streamText } from "npm:ai";
 import { openai } from "npm:@ai-sdk/openai";
 
 export default async ({ req }: any) => {
+    const { prompt } = await req.raw.json();
+
     const result = streamText({
         model: openai("gpt-5-mini"),
-        prompt: req.bodyJson.prompt
+        prompt
     });
 
     return result.toTextStreamResponse();
@@ -163,7 +177,7 @@ Its body is a `ReadableStream`, so the reply reaches the browser as the model wr
 
 # Run Fetch API frameworks such as Hono
 
-Appwrite doesn't ship an integration for any particular framework, and it doesn't need one. A framework built on the Fetch API exposes your app as a single function that takes a `Request` and returns a `Response`. That's the same shape `Bun.serve()` and `Deno.serve()` call. Until now, running one of these frameworks in a function meant writing an adapter that turned `context.req` into a `Request` and copied the `Response` back into a `context.res` call. Now you pass `context.req.raw` in and return what comes out:
+Native request and response also make Functions compatible with many web frameworks. A framework built on the Fetch API exposes your app as a single function that takes a `Request` and returns a `Response`. That's the same shape `Bun.serve()` and `Deno.serve()` call. Until now, running one of these frameworks in a function meant converting `context.req` into a `Request` yourself and copying the `Response` back into a `context.res` call. Now you pass `context.req.raw` in and return what comes out:
 
 {% tabs %}
 {% tabsitem #framework-after title="After" %}
@@ -194,7 +208,7 @@ export default async ({ req, res }) => {
 {% /tabsitem %}
 {% /tabs %}
 
-[Hono](https://hono.dev) is one of these frameworks. Its `app.fetch()` method is that single function, so the whole integration is the last line of this function:
+[Hono](https://hono.dev) is one of these frameworks. Its `app.fetch()` method is that single function, so the last line of this function is all it takes to run a Hono app:
 
 {% multicode %}
 ```server-nodejs

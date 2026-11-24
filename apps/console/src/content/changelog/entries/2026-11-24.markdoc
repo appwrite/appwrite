@@ -6,7 +6,7 @@ cover: /images/blog/announcing-native-request-response/cover.avif
 tags: functions
 ---
 
-Every function runtime now passes its web server's request to your code as [`context.req.raw`](/docs/products/functions/develop#native-request). It's a Fetch API `Request` in Node.js 18 and later, Bun, and Deno, an aiohttp `web.Request` in Python, a shelf `Request` in Dart, and the server's own request type in every other runtime. Node.js 18 and later, Bun, Deno, Python, and Dart functions can also [return a native response](/docs/products/functions/develop#native-response) instead of calling a `context.res` method.
+Function runtimes now pass their web server's request to your code as [`context.req.raw`](/docs/products/functions/develop#native-request). It's a Fetch API `Request` in Node.js 18 and later, Bun, and Deno, an aiohttp `web.Request` in Python, a shelf `Request` in Dart, and the server's own request type in every other runtime. Node.js 18 and later, Bun, Deno, Python, and Dart functions can also [return a native response](/docs/products/functions/develop#native-response) instead of calling a `context.res` method. The deprecated `node-14.5`, `node-16.0`, `dart-2.15`, and `swift-5.5` runtimes support neither.
 
 ```js
 export default async ({ req }) => {
@@ -16,7 +16,7 @@ export default async ({ req }) => {
 };
 ```
 
-Frameworks built on the Fetch API, such as Hono, also run in a JavaScript function without an adapter. `context.req` and the `context.res` methods work as before.
+Frameworks built on the Fetch API, such as Hono, run in a JavaScript function too: pass `req.raw` to the app and return the response it gives back. Existing functions keep working without changes.
 
 {% arrow_link href="/blog/post/announcing-native-request-response" %}
 Read the announcement
