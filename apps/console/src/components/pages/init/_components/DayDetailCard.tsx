@@ -19,8 +19,10 @@ import { useInitHref } from '@/lib/init/use-init-href'
 import { parseBlogPagePath, parseDocsPagePath } from '@/lib/marketing/urls'
 import { cn } from '@/lib/utils'
 
-const CARD_SHELL =
-  'rounded-xl border border-border bg-card/50 overflow-hidden'
+const CARD_SHELL = 'rounded-xl border border-border bg-card/50 overflow-hidden'
+
+/** Every link in a day card opens in a new tab, so the Init page stays open. */
+const NEW_TAB = { target: '_blank', rel: 'noopener noreferrer' } as const
 
 function VideoThumbnail({
   label,
@@ -55,7 +57,7 @@ function VideoThumbnail({
     return (
       <a
         href={resolved.href}
-        {...(resolved.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+        {...NEW_TAB}
         className="group block transition-opacity hover:opacity-90"
       >
         {inner}
@@ -136,7 +138,7 @@ function DayPrimaryLink({
 
   if (isBlogLink) {
     return (
-      <BlogPageAnchor href={href} className={className}>
+      <BlogPageAnchor href={href} className={className} {...NEW_TAB}>
         {children}
       </BlogPageAnchor>
     )
@@ -144,20 +146,14 @@ function DayPrimaryLink({
 
   if (isDocsLink) {
     return (
-      <DocsRouteLink href={href} className={className}>
+      <DocsRouteLink href={href} className={className} {...NEW_TAB}>
         {children}
       </DocsRouteLink>
     )
   }
 
   return (
-    <a
-      href={resolved.href}
-      {...(resolved.external
-        ? { target: '_blank', rel: 'noopener noreferrer' }
-        : {})}
-      className={className}
-    >
+    <a href={resolved.href} {...NEW_TAB} className={className}>
       {children}
     </a>
   )
@@ -214,21 +210,23 @@ function DayResourceRow({ resource }: { resource: LaunchEventDayResource }) {
   return (
     <li>
       {isBlogLink ? (
-        <BlogPageAnchor href={resource.href} className={rowClassName}>
+        <BlogPageAnchor
+          href={resource.href}
+          className={rowClassName}
+          {...NEW_TAB}
+        >
           {rowContent}
         </BlogPageAnchor>
       ) : isDocsLink ? (
-        <DocsRouteLink href={resource.href} className={rowClassName}>
+        <DocsRouteLink
+          href={resource.href}
+          className={rowClassName}
+          {...NEW_TAB}
+        >
           {rowContent}
         </DocsRouteLink>
       ) : (
-        <a
-          href={resolved.href}
-          {...(resolved.external
-            ? { target: '_blank', rel: 'noopener noreferrer' }
-            : {})}
-          className={rowClassName}
-        >
+        <a href={resolved.href} {...NEW_TAB} className={rowClassName}>
           {rowContent}
         </a>
       )}
@@ -271,7 +269,9 @@ export function DayDetailCard({
     <article
       id={getInitDayCardId(day.day)}
       className={cn(CARD_SHELL, 'scroll-mt-28')}
-      onMouseEnter={() => setTransientActivity(buildInitDayPreviewActivity(day, currentDay))}
+      onMouseEnter={() =>
+        setTransientActivity(buildInitDayPreviewActivity(day, currentDay))
+      }
       onMouseLeave={() => setTransientActivity(null)}
     >
       <header className="grid grid-cols-[1fr_auto_1fr] items-center border-b border-border px-6 py-3">
@@ -329,6 +329,7 @@ export function DayDetailCard({
               item={item}
               isRecapMode={isRecapMode}
               inlineWhenWide
+              newTab
             />
           ))}
           {otherResources.map((resource) => (
