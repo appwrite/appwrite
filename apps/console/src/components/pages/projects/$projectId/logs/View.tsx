@@ -13,8 +13,12 @@ export function View() {
       <div className="sticky top-0 z-20 shrink-0 bg-background">
         <ServiceHeader title={t('Logs')} />
       </div>
-      <div className="flex min-h-0 flex-1 flex-col px-4 md:px-6">
-        <RuntimeLogsView projectId={projectId} resourceType={null} />
+      <div className="flex min-h-0 flex-1 flex-col">
+        <RuntimeLogsView
+          projectId={projectId}
+          resourceType={null}
+          insetClassName="px-4 md:px-6"
+        />
       </div>
     </div>
   )

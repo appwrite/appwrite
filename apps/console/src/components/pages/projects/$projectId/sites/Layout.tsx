@@ -338,7 +338,8 @@ function SiteLayoutContent() {
       },
       {
         id: 'logs',
-        label: t('Logs'),
+        // Runtime output takes the Logs name once it ships
+        label: showRuntimeLogsTab ? t('Requests') : t('Logs'),
         to: '/projects/$projectId/sites/$siteId/logs',
         params: { projectId: projectId!, siteId: siteId! },
       },
@@ -346,7 +347,7 @@ function SiteLayoutContent() {
         ? [
             {
               id: 'runtime-logs' as const,
-              label: t('Runtime logs'),
+              label: t('Logs'),
               to: '/projects/$projectId/sites/$siteId/runtime-logs',
               params: { projectId: projectId!, siteId: siteId! },
             },

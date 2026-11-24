@@ -120,6 +120,27 @@ function row(
   }
 }
 
+const MESSAGING_MESSAGE = {
+  $id: 'msg-sale',
+  $createdAt: NOW,
+  $updatedAt: NOW,
+  providerType: 'push',
+  topics: [],
+  users: [],
+  targets: [],
+  deliveredTotal: 2400,
+  data: { title: 'Black Friday sale', body: '30% off today' },
+  status: 'sent',
+}
+
+/** `user-a` is a project user; `user-b` was sent by a server and has none. */
+const PROJECT_USER = {
+  ...ACCOUNT,
+  $id: 'user-a',
+  name: 'Jane Cooper',
+  email: 'jane@acme.example',
+} satisfies Partial<Models.User<Models.Preferences>>
+
 type MockOptions = {
   identifyUsers?: boolean
   /** User IDs present in the data (sent by a server with an API key). */
@@ -213,11 +234,11 @@ function metricsFor(url: URL, options: MockOptions): Models.AnalyticsMetric[] {
   const dimension = listParam(url, 'dimensions')[0]
   const users = options.hasUsers ? 37 : 0
   const queries = listParam(url, 'queries').map((query) => JSON.parse(query))
+  // A property with no identified traffic has nothing for any one user.
   if (queries.some((query) => query.attribute === 'userId'))
-    return userMetricsFor(url, dimension)
-  const eventName = queries.find(
-    (query) => query.attribute === 'eventName',
-  )?.values[0]
+    return options.hasUsers ? userMetricsFor(url, dimension) : []
+  const eventName = queries.find((query) => query.attribute === 'eventName')
+    ?.values[0]
   if (eventName in MOBILE_EVENT_COUNTS) {
     if (!options.mobileEvents) return []
     if (url.searchParams.get('interval'))
@@ -225,6 +246,11 @@ function metricsFor(url: URL, options: MockOptions): Models.AnalyticsMetric[] {
         { ...row(null, 1), date: NOW, events: MOBILE_EVENT_COUNTS[eventName] },
       ]
     // Ranked by visitors, as the API does; opens disagree with that order.
+    if (eventName === 'push_received')
+      return [
+        row('msg-launch', 9, { events: 900 }),
+        row('msg-sale', 5, { events: 2000 }),
+      ]
     return [
       row('msg-launch', 9, { events: 90 }),
       row('msg-sale', 5, { events: 500 }),
@@ -274,8 +300,7 @@ function metricsFor(url: URL, options: MockOptions): Models.AnalyticsMetric[] {
   if (options.type === AnalyticsPropertyType.Mobile) {
     if (dimension === 'hostname') return [row('ios', 84), row('android', 16)]
     if (dimension === 'entryPage') return [row('/home', 30), row('', 10)]
-    if (dimension === 'trafficType')
-      return [row('human', 80), row('bot', 40)]
+    if (dimension === 'trafficType') return [row('human', 80), row('bot', 40)]
   }
   return []
 }
@@ -420,6 +445,36 @@ async function mockAppwriteApi(
       })
     }
 
+    // `msg-sale` was sent with Messaging; `msg-launch` by another sender.
+    if (apiPath === '/messaging/messages') {
+      const ids = listParam(url, 'queries')
+        .map((query) => JSON.parse(query))
+        .find((query) => query.attribute === '$id')?.values as
+        | string[]
+        | undefined
+      const messages = ids?.includes('msg-sale') ? [MESSAGING_MESSAGE] : []
+      return json(200, { total: messages.length, messages })
+    }
+    if (apiPath === '/users') {
+      const ids = listParam(url, 'queries')
+        .map((query) => JSON.parse(query))
+        .find((query) => query.attribute === '$id')?.values as
+        | string[]
+        | undefined
+      const users = ids?.includes(PROJECT_USER.$id) ? [PROJECT_USER] : []
+      return json(200, { total: users.length, users })
+    }
+    if (apiPath === `/users/${PROJECT_USER.$id}`) return json(200, PROJECT_USER)
+    if (apiPath === `/users/${PROJECT_USER.$id}/mfa/factors`)
+      return json(200, {
+        totp: false,
+        phone: false,
+        email: false,
+        recoveryCode: false,
+      })
+    if (apiPath === `/users/${PROJECT_USER.$id}/sessions`)
+      return json(200, { total: 0, sessions: [] })
+
     if (apiPath === '/account') return json(200, ACCOUNT)
     if (apiPath === '/account/prefs') {
       return request.method() === 'PATCH'
@@ -480,6 +535,11 @@ async function openProperty(page: Page, path = '') {
   })
 }
 
+/** The active filter chips row, under the overview controls. */
+function filterChips(page: Page) {
+  return page.getByText('Filtered by', { exact: true }).locator('xpath=..')
+}
+
 /** Card headings with an info hint read as "<title> More info". */
 function cardHeading(page: Page, title: string) {
   return page.getByRole('heading', {
@@ -528,9 +588,15 @@ test.describe('analytics property (mocked API)', () => {
       .filter({ has: page.getByText('Users', { exact: true }) })
     await expect(usersMetric).toContainText('37')
 
+    // Project users read as people and link to Auth; other IDs stay IDs.
     const users = card(page, 'Users')
-    await expect(users.getByText('user-a')).toBeVisible()
-    await expect(users.getByRole('link')).toHaveCount(0)
+    await expect(users.getByText('Jane Cooper')).toBeVisible()
+    await expect(users.getByText('user-b')).toBeVisible()
+    await expect(users.getByRole('link')).toHaveCount(1)
+    await expect(users.getByRole('link')).toHaveAttribute(
+      'href',
+      `/projects/${PROJECT_ID}/auth/users/user-a`,
+    )
 
     const props = card(page, 'Event properties')
     await expect(props.getByRole('tab', { name: 'plan' })).toBeVisible()
@@ -593,9 +659,7 @@ test.describe('analytics property (mocked API)', () => {
       '30.8% of visitors signed in',
     )
     await usersMetric.click()
-    await expect(
-      page.getByText('· 30.8% of visitors signed in'),
-    ).toBeVisible()
+    await expect(page.getByText('· 30.8% of visitors signed in')).toBeVisible()
   })
 
   test('opens a user from the Users card', async ({ page }) => {
@@ -606,7 +670,7 @@ test.describe('analytics property (mocked API)', () => {
     await openProperty(page)
 
     await card(page, 'Users')
-      .getByText('user-a')
+      .getByText('Jane Cooper')
       .click({ timeout: 30_000 })
     await expect(page).toHaveURL(
       new RegExp(`/analytics/${PROPERTY_ID}/users/user-a$`),
@@ -655,7 +719,7 @@ test.describe('analytics property (mocked API)', () => {
     await pages.getByText('/docs').click()
     await expect(page).toHaveURL(new RegExp(`/analytics/${PROPERTY_ID}\\?`))
     await expect(page.getByText('Filtered by')).toBeVisible()
-    await expect(page.locator('main')).toContainText('user-a')
+    await expect(page.locator('main')).toContainText('Jane Cooper')
     await expect(page.locator('main')).toContainText('/docs')
   })
 
@@ -676,9 +740,59 @@ test.describe('analytics property (mocked API)', () => {
     await mockAppwriteApi(page, { hasUsers: true })
     await openProperty(page)
 
-    await expect(card(page, 'Users').getByText('user-a')).toBeVisible({
+    await expect(card(page, 'Users').getByText('Jane Cooper')).toBeVisible({
       timeout: 30_000,
     })
+  })
+
+  test('lists signed-in users in the live popover', async ({ page }) => {
+    await mockAppwriteApi(page, { identifyUsers: true, hasUsers: true })
+    await openProperty(page)
+
+    const pill = page.getByRole('button', { name: 'Visitors online now' })
+    await expect(pill).toContainText('120', { timeout: 30_000 })
+    await pill.click()
+
+    const popover = page.getByRole('dialog')
+    await expect(popover.getByText('37 signed in')).toBeVisible()
+    await expect(popover.getByText('Signed in now')).toBeVisible()
+    await expect(
+      popover.getByRole('link', { name: 'Jane Cooper' }),
+    ).toHaveAttribute('href', `/projects/${PROJECT_ID}/auth/users/user-a`)
+    // An ID with no project user is listed, without a link.
+    await expect(popover.getByText('user-b')).toBeVisible()
+    await expect(popover.getByRole('link', { name: 'user-b' })).toHaveCount(0)
+    await expect(popover.getByText('and 35 more')).toBeVisible()
+    await attachScreenshot(page, 'live-signed-in')
+  })
+
+  test('filters by a user and names them on the chip', async ({ page }) => {
+    const mock = await mockAppwriteApi(page, {
+      identifyUsers: true,
+      hasUsers: true,
+    })
+    await openProperty(page)
+
+    // A row opens the user's page; filtering is in the row's menu.
+    const users = card(page, 'Users')
+    await users
+      .getByText('Jane Cooper')
+      .click({ button: 'right', timeout: 30_000 })
+    await page.getByRole('menuitem', { name: 'Filter by this value' }).click()
+
+    const chips = filterChips(page)
+    await expect(chips.getByText('Jane Cooper')).toBeVisible()
+    await expect(chips.getByText('user-a')).toHaveCount(0)
+    await expect
+      .poll(() =>
+        mock.metrics.some((url) =>
+          listParam(url, 'queries').some(
+            (query) => query.includes('userId') && query.includes('user-a'),
+          ),
+        ),
+      )
+      .toBe(true)
+    await attachScreenshot(page, 'property-user-filter')
   })
 
   test('uses app terms and leaves bounce rate off a mobile property', async ({
@@ -719,7 +833,9 @@ test.describe('analytics property (mocked API)', () => {
       timeout: 30_000,
     })
     await expect
-      .poll(() => mock.metrics.some((url) => filtersOn(url, 'trafficType', 'human')))
+      .poll(() =>
+        mock.metrics.some((url) => filtersOn(url, 'trafficType', 'human')),
+      )
       .toBe(true)
 
     // Turning the default off is kept in the URL, so it survives a reload.
@@ -803,7 +919,7 @@ test.describe('analytics property (mocked API)', () => {
     await openProperty(page)
 
     const events = card(page, 'Custom events')
-    const installs = card(page, 'Installs and push')
+    const installs = card(page, 'Installs')
     await expect(installs).toBeVisible({ timeout: 30_000 })
     const [eventsBox, installsBox] = await Promise.all([
       events.boundingBox(),
@@ -812,7 +928,7 @@ test.describe('analytics property (mocked API)', () => {
     expect(eventsBox!.y).toBeLessThan(installsBox!.y)
   })
 
-  test('counts installs and push opens on a mobile property', async ({
+  test('splits installs from push notifications on a mobile property', async ({
     page,
   }) => {
     await mockAppwriteApi(page, {
@@ -821,15 +937,29 @@ test.describe('analytics property (mocked API)', () => {
     })
     await openProperty(page)
 
-    const installs = card(page, 'Installs and push')
+    const installs = card(page, 'Installs')
     await expect(installs).toContainText('1.2K', { timeout: 30_000 })
-    for (const label of ['Installs', 'Updates', 'Push received', 'Push opened'])
-      await expect(installs.getByText(label, { exact: true })).toBeVisible()
-    await expect(installs.getByText(/^msg-(launch|sale)$/)).toHaveText([
-      'msg-sale',
-      'msg-launch',
-    ])
-    await installs.scrollIntoViewIfNeeded()
+    await expect(installs).toContainText('300')
+    await expect(installs).not.toContainText('Push')
+
+    // Received, opened and the rate between them.
+    const push = card(page, 'Push notifications')
+    await expect(push).toContainText('5.0K')
+    await expect(push).toContainText('640')
+    await expect(push).toContainText('12.8%')
+    // Ranked by opens; Messaging messages read as their title and link to it.
+    const sale = push.getByRole('link', { name: /Black Friday sale/ })
+    await expect(sale).toHaveAttribute(
+      'href',
+      `/projects/${PROJECT_ID}/messaging/msg-sale`,
+    )
+    await expect(sale).toContainText('2.4K delivered')
+    await expect(sale).toContainText('25.0%')
+    await expect(push.getByText('msg-launch')).toBeVisible()
+    await expect(push.getByText(/^(Black Friday sale|msg-launch)$/)).toHaveText(
+      ['Black Friday sale', 'msg-launch'],
+    )
+    await push.scrollIntoViewIfNeeded()
     await attachScreenshot(page, 'property-mobile-installs-push')
   })
 
@@ -839,12 +969,19 @@ test.describe('analytics property (mocked API)', () => {
     await mockAppwriteApi(page, { type: AnalyticsPropertyType.Mobile })
     await openProperty(page)
 
-    const installs = card(page, 'Installs and push')
+    const installs = card(page, 'Installs')
     await expect(installs.getByText('No installs tracked yet')).toBeVisible({
       timeout: 30_000,
     })
     await expect(
       installs.getByRole('button', { name: 'Add the tracking SDK' }),
+    ).toBeVisible()
+    const push = card(page, 'Push notifications')
+    await expect(
+      push.getByText('No push notifications tracked yet'),
+    ).toBeVisible()
+    await expect(
+      push.getByRole('link', { name: 'Open Messaging' }),
     ).toBeVisible()
   })
 
@@ -1157,5 +1294,109 @@ test.describe('analytics property (mocked API)', () => {
     await expect(siteCard).toContainText('Disabled - no tracker is added.')
     expect(mock.siteAnalytics).toHaveLength(1)
     await attachScreenshot(page, 'site-settings-analytics-limit')
+  })
+})
+
+test.describe('auth user analytics (mocked API)', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await useProfile(page)
+  })
+
+  async function openUserAnalytics(page: Page) {
+    await page.goto(
+      `/projects/${PROJECT_ID}/auth/users/${PROJECT_USER.$id}/analytics`,
+      { waitUntil: 'domcontentloaded' },
+    )
+  }
+
+  test("summarises the user's activity and details each property", async ({
+    page,
+  }) => {
+    const mock = await mockAppwriteApi(page, {
+      identifyUsers: true,
+      hasUsers: true,
+    })
+    await openUserAnalytics(page)
+
+    // Top-level numbers, in the tiles Functions and Sites open with.
+    const tile = (label: string) =>
+      page
+        .locator('div.grid > div')
+        .filter({ has: page.getByText(label, { exact: true }) })
+        .first()
+    await expect(tile('Events')).toContainText('13', { timeout: 30_000 })
+    await expect(tile('Visits')).toContainText('3')
+    await expect(tile('Pageviews')).toContainText('8')
+    await expect(tile('Active days')).toContainText('of 30')
+    // The mock's last event is two hours ago.
+    await expect(tile('Last seen')).toContainText(/Today|Yesterday/)
+
+    await expect(page.getByRole('heading', { name: 'Activity' })).toBeVisible()
+
+    // One row per property, linking to the user's page in that property.
+    const row = page.getByRole('row').filter({ hasText: 'Acme site' })
+    await expect(row).toContainText('13')
+    // Every row is two lines: the type, then where it runs.
+    await expect(row).toContainText('Web · acme.example')
+    await expect(
+      row.getByRole('link', { name: 'View in analytics: Acme site' }),
+    ).toHaveAttribute(
+      'href',
+      `/projects/${PROJECT_ID}/analytics/${PROPERTY_ID}/users/user-a`,
+    )
+
+    // The most recently active property opens in place: custom events only,
+    // pages by views.
+    const toggle = row.getByRole('button', { name: /Acme site/ })
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    const detail = page.locator(`#user-analytics-${PROPERTY_ID}`)
+    await expect(detail.getByText('signup')).toBeVisible()
+    await expect(detail.getByText('pageview', { exact: true })).toHaveCount(0)
+    const pages = detail.getByText(/^\/(docs|pricing)$/)
+    await expect(pages.first()).toHaveText('/docs')
+    // Pages count pageviews, not every event on the page.
+    expect(
+      mock.metrics.some(
+        (url) =>
+          listParam(url, 'dimensions')[0] === 'page' &&
+          listParam(url, 'queries').some((query) =>
+            query.includes('pageview'),
+          ) &&
+          listParam(url, 'queries').some((query) => query.includes('user-a')),
+      ),
+    ).toBe(true)
+    await attachScreenshot(page, 'auth-user-analytics')
+
+    // Closes and reopens in place.
+    await toggle.click()
+    await expect(detail).toHaveCount(0)
+    await toggle.click()
+    await expect(detail.getByText('signup')).toBeVisible()
+
+    await row
+      .getByRole('link', { name: 'View in analytics: Acme site' })
+      .click()
+    await expect(page).toHaveURL(
+      new RegExp(`/analytics/${PROPERTY_ID}/users/user-a$`),
+    )
+  })
+
+  test('explains user identification when no property records users', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page)
+    await openUserAnalytics(page)
+
+    await expect(
+      page.getByText('Link Jane Cooper to their analytics'),
+    ).toBeVisible({ timeout: 30_000 })
+    await expect(
+      page.getByRole('link', { name: 'Open property settings' }),
+    ).toHaveAttribute(
+      'href',
+      `/projects/${PROJECT_ID}/analytics/${PROPERTY_ID}/settings`,
+    )
+    await attachScreenshot(page, 'auth-user-analytics-off')
   })
 })
