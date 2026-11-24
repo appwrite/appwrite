@@ -4420,6 +4420,24 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'No screens viewed': '表示された画面はありません',
   'No pages viewed': '表示されたページはありません',
   'View in analytics': 'アナリティクスで表示',
+  'New installs and updates of your app':
+    'アプリの新規インストールとアップデート',
+  'Add the latest tracking SDK to your app to count installs and updates.':
+    '最新のトラッキング SDK をアプリに追加すると、インストールとアップデートを計測できます。',
+  'Pushes received on devices, and how many were opened':
+    'デバイスで受信したプッシュ通知と開封数',
+  'No push notifications tracked yet': 'プッシュ通知はまだ計測されていません',
+  'Pushes sent with Messaging show their reach and opens here once the tracking SDK is in your app.':
+    'トラッキング SDK をアプリに追加すると、Messaging で送信したプッシュ通知の到達数と開封数がここに表示されます。',
+  'Open Messaging': 'Messaging を開く',
+  Received: '受信',
+  Opened: '開封',
+  'Open rate': '開封率',
+  Rate: '率',
+  'No pushes with a message ID in this range':
+    'この期間にメッセージ ID 付きのプッシュはありません',
+  '{count} delivered': '{count} 件配信',
+  'View message': 'メッセージを表示',
   Views: '表示',
   'Last seen': '最終確認',
   'Not in this period': 'この期間はなし',

@@ -120,6 +120,19 @@ function row(
   }
 }
 
+const MESSAGING_MESSAGE = {
+  $id: 'msg-sale',
+  $createdAt: NOW,
+  $updatedAt: NOW,
+  providerType: 'push',
+  topics: [],
+  users: [],
+  targets: [],
+  deliveredTotal: 2400,
+  data: { title: 'Black Friday sale', body: '30% off today' },
+  status: 'sent',
+}
+
 /** `user-a` is a project user; `user-b` was sent by a server and has none. */
 const PROJECT_USER = {
   ...ACCOUNT,
@@ -233,6 +246,11 @@ function metricsFor(url: URL, options: MockOptions): Models.AnalyticsMetric[] {
         { ...row(null, 1), date: NOW, events: MOBILE_EVENT_COUNTS[eventName] },
       ]
     // Ranked by visitors, as the API does; opens disagree with that order.
+    if (eventName === 'push_received')
+      return [
+        row('msg-launch', 9, { events: 900 }),
+        row('msg-sale', 5, { events: 2000 }),
+      ]
     return [
       row('msg-launch', 9, { events: 90 }),
       row('msg-sale', 5, { events: 500 }),
@@ -427,6 +445,16 @@ async function mockAppwriteApi(
       })
     }
 
+    // `msg-sale` was sent with Messaging; `msg-launch` by another sender.
+    if (apiPath === '/messaging/messages') {
+      const ids = listParam(url, 'queries')
+        .map((query) => JSON.parse(query))
+        .find((query) => query.attribute === '$id')?.values as
+        | string[]
+        | undefined
+      const messages = ids?.includes('msg-sale') ? [MESSAGING_MESSAGE] : []
+      return json(200, { total: messages.length, messages })
+    }
     if (apiPath === '/users') {
       const ids = listParam(url, 'queries')
         .map((query) => JSON.parse(query))
@@ -891,7 +919,7 @@ test.describe('analytics property (mocked API)', () => {
     await openProperty(page)
 
     const events = card(page, 'Custom events')
-    const installs = card(page, 'Installs and push')
+    const installs = card(page, 'Installs')
     await expect(installs).toBeVisible({ timeout: 30_000 })
     const [eventsBox, installsBox] = await Promise.all([
       events.boundingBox(),
@@ -900,7 +928,7 @@ test.describe('analytics property (mocked API)', () => {
     expect(eventsBox!.y).toBeLessThan(installsBox!.y)
   })
 
-  test('counts installs and push opens on a mobile property', async ({
+  test('splits installs from push notifications on a mobile property', async ({
     page,
   }) => {
     await mockAppwriteApi(page, {
@@ -909,15 +937,29 @@ test.describe('analytics property (mocked API)', () => {
     })
     await openProperty(page)
 
-    const installs = card(page, 'Installs and push')
+    const installs = card(page, 'Installs')
     await expect(installs).toContainText('1.2K', { timeout: 30_000 })
-    for (const label of ['Installs', 'Updates', 'Push received', 'Push opened'])
-      await expect(installs.getByText(label, { exact: true })).toBeVisible()
-    await expect(installs.getByText(/^msg-(launch|sale)$/)).toHaveText([
-      'msg-sale',
-      'msg-launch',
-    ])
-    await installs.scrollIntoViewIfNeeded()
+    await expect(installs).toContainText('300')
+    await expect(installs).not.toContainText('Push')
+
+    // Received, opened and the rate between them.
+    const push = card(page, 'Push notifications')
+    await expect(push).toContainText('5.0K')
+    await expect(push).toContainText('640')
+    await expect(push).toContainText('12.8%')
+    // Ranked by opens; Messaging messages read as their title and link to it.
+    const sale = push.getByRole('link', { name: /Black Friday sale/ })
+    await expect(sale).toHaveAttribute(
+      'href',
+      `/projects/${PROJECT_ID}/messaging/msg-sale`,
+    )
+    await expect(sale).toContainText('2.4K delivered')
+    await expect(sale).toContainText('25.0%')
+    await expect(push.getByText('msg-launch')).toBeVisible()
+    await expect(push.getByText(/^(Black Friday sale|msg-launch)$/)).toHaveText(
+      ['Black Friday sale', 'msg-launch'],
+    )
+    await push.scrollIntoViewIfNeeded()
     await attachScreenshot(page, 'property-mobile-installs-push')
   })
 
@@ -927,12 +969,19 @@ test.describe('analytics property (mocked API)', () => {
     await mockAppwriteApi(page, { type: AnalyticsPropertyType.Mobile })
     await openProperty(page)
 
-    const installs = card(page, 'Installs and push')
+    const installs = card(page, 'Installs')
     await expect(installs.getByText('No installs tracked yet')).toBeVisible({
       timeout: 30_000,
     })
     await expect(
       installs.getByRole('button', { name: 'Add the tracking SDK' }),
+    ).toBeVisible()
+    const push = card(page, 'Push notifications')
+    await expect(
+      push.getByText('No push notifications tracked yet'),
+    ).toBeVisible()
+    await expect(
+      push.getByRole('link', { name: 'Open Messaging' }),
     ).toBeVisible()
   })
 

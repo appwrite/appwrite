@@ -4329,6 +4329,23 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'No screens viewed': 'לא נצפו מסכים',
   'No pages viewed': 'לא נצפו דפים',
   'View in analytics': 'הצגה באנליטיקה',
+  'New installs and updates of your app': 'התקנות ועדכונים חדשים של האפליקציה',
+  'Add the latest tracking SDK to your app to count installs and updates.':
+    'הוסיפו את ה-SDK העדכני למעקב לאפליקציה כדי לספור התקנות ועדכונים.',
+  'Pushes received on devices, and how many were opened':
+    'התראות שהתקבלו במכשירים, וכמה מהן נפתחו',
+  'No push notifications tracked yet': 'עדיין לא נמדדו התראות פוש',
+  'Pushes sent with Messaging show their reach and opens here once the tracking SDK is in your app.':
+    'התראות שנשלחו דרך Messaging יציגו כאן את ההגעה והפתיחות שלהן כשה-SDK למעקב יהיה באפליקציה.',
+  'Open Messaging': 'פתיחת Messaging',
+  Received: 'התקבלו',
+  Opened: 'נפתחו',
+  'Open rate': 'שיעור פתיחה',
+  Rate: 'שיעור',
+  'No pushes with a message ID in this range':
+    'אין התראות עם מזהה הודעה בטווח הזה',
+  '{count} delivered': '{count} נמסרו',
+  'View message': 'הצגת ההודעה',
   Views: 'צפיות',
   'Last seen': 'נראה לאחרונה',
   'Not in this period': 'לא בתקופה הזו',
