@@ -385,7 +385,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   Searching: '検索中',
   'Select database': 'データベースを選択',
   'Select a bucket to browse files': 'ファイルを閲覧するバケットを選択',
-  'This file type is not supported.': 'このファイル形式はサポートされていません。',
+  'This file type is not supported.':
+    'このファイル形式はサポートされていません。',
   'Select a timezone': 'タイムゾーンを選択',
   'Select a service to build': 'ビルドするサービスを選択',
   'Select all': 'すべて選択',
@@ -1398,6 +1399,12 @@ export const jaSharedUiDictionary: Record<string, string> = {
     'Init 5 開催中。今日の発表とローンチ配信をお見逃しなく。',
   'Init 5 is a wrap. Explore every launch and rewatch the streams.':
     'Init 5 は終了しました。すべてのローンチを確認し、配信をもう一度ご覧ください。',
+  'Introducing Appwrite Analytics': 'Appwrite Analytics のご紹介',
+  'Introducing Appwrite Videos': 'Appwrite Videos のご紹介',
+  'Introducing Appwrite Zero': 'Appwrite Zero のご紹介',
+  'Introducing Appwrite Monitors & Appwrite Beep':
+    'Appwrite Monitors と Appwrite Beep のご紹介',
+  'Introducing Appwrite Reviews': 'Appwrite Reviews のご紹介',
   'Ask us anything': '何でも聞いてください',
   'Bring your questions about every Init 5 launch. The team answers live on r/appwrite.':
     'Init 5 のすべてのローンチについて質問をお寄せください。チームが r/appwrite でライブで回答します。',

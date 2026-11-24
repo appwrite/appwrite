@@ -316,7 +316,7 @@ export function createInitTicketVideoFog({
     for (const blob of BLOBS) {
       const angle = TAU * (blob.cycles * progress + blob.phase)
       const cx = (blob.x + Math.cos(angle) * blob.drift) * width
-      const cy = (blob.y + Math.sin(angle * 1.3) * blob.drift) * height
+      const cy = (blob.y + Math.sin(angle * 2) * blob.drift) * height
       const radius = blob.radius * width * (1 + 0.08 * Math.sin(angle * 2))
       const breathe = 0.75 + 0.25 * Math.sin(angle + blob.phase * TAU)
       const color = colors[blob.color]

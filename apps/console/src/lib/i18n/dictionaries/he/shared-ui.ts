@@ -1435,6 +1435,12 @@ export const heSharedUiDictionary: Record<string, string> = {
     'Init 5 באוויר. אל תפספסו את החשיפה של היום ואת שידור ההשקה.',
   'Init 5 is a wrap. Explore every launch and rewatch the streams.':
     'Init 5 הסתיים. גלו כל השקה וצפו שוב בשידורים.',
+  'Introducing Appwrite Analytics': 'מציגים את Appwrite Analytics',
+  'Introducing Appwrite Videos': 'מציגים את Appwrite Videos',
+  'Introducing Appwrite Zero': 'מציגים את Appwrite Zero',
+  'Introducing Appwrite Monitors & Appwrite Beep':
+    'מציגים את Appwrite Monitors ואת Appwrite Beep',
+  'Introducing Appwrite Reviews': 'מציגים את Appwrite Reviews',
   'Ask us anything': 'שאלו אותנו הכול',
   'Bring your questions about every Init 5 launch. The team answers live on r/appwrite.':
     'הביאו את השאלות שלכם על כל השקה של Init 5. הצוות עונה בשידור חי ב-r/appwrite.',
