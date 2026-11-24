@@ -4395,5 +4395,28 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'analytics property': 'アナリティクスプロパティ',
   'per project.': '(プロジェクトごと)。',
   'to create another.': 'して、さらに作成してください。',
-  'to enable analytics on this site.': 'して、このサイトでアナリティクスを有効にしてください。',
+  'to enable analytics on this site.':
+    'して、このサイトでアナリティクスを有効にしてください。',
+  'Your plan checks at most every {interval}.':
+    'ご利用のプランでは、チェック間隔は最短で{interval}です。',
+  'Synthetic checks: {used} of {limit} allowed on your plan.':
+    'Synthetic チェック: プランの上限 {limit} 件中 {used} 件を使用中です。',
+  'Synthetic checks: {used} of {included} included.':
+    'Synthetic チェック: プランに含まれる {included} 件中 {used} 件を使用中です。',
+  'Each extra check costs {price} per month.':
+    '追加のチェックは 1 件あたり月額 {price} です。',
+  'Upgrade your plan to add more synthetic checks.':
+    'Synthetic チェックを追加するには、プランをアップグレードしてください。',
+  'Escalations: {used} of {limit} allowed on your plan.':
+    'エスカレーション: プランの上限 {limit} 件中 {used} 件を使用中です。',
+  'On-call responders: {used} of {included} included.':
+    'オンコール対応者: プランに含まれる {included} 人中 {used} 人です。',
+  'Each extra responder costs {price} per month.':
+    '追加の対応者は 1 人あたり月額 {price} です。',
+  'Upgrade your plan to create more escalations.':
+    'エスカレーションをさらに作成するには、プランをアップグレードしてください。',
+  'Your plan allows up to {count} steps per escalation.':
+    'ご利用のプランでは、1 つのエスカレーションに設定できるステップは {count} 個までです。',
+  'Upgrade your plan to repeat escalations.':
+    'エスカレーションを繰り返すには、プランをアップグレードしてください。',
 }

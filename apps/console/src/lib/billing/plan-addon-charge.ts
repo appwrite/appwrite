@@ -1,6 +1,10 @@
 import type { Models } from '@appwrite.io/console'
 
-export type BillablePlanAddonKey = 'projects' | 'seats'
+export type BillablePlanAddonKey =
+  | 'projects'
+  | 'seats'
+  | 'probes'
+  | 'responders'
 
 type BillingPlan = Models.BillingPlan
 
@@ -8,7 +12,13 @@ function getAddon(
   plan: BillingPlan | null | undefined,
   key: BillablePlanAddonKey,
 ) {
-  return plan?.addons?.[key]
+  // Console SDK releases before the `probes` and `responders` addons do not type them.
+  const addons = plan?.addons as
+    | Partial<
+        Record<BillablePlanAddonKey, Models.BillingPlanAddonDetails | null>
+      >
+    | undefined
+  return addons?.[key]
 }
 
 /**

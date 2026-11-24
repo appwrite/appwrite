@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
   Dialog,
@@ -14,12 +15,24 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { useCreateMonitor, useProject } from '@/lib/react-query/hooks'
+import { formatCurrency } from '@/components/pages/organizations/$orgId/billing/utils'
+import { alertingLimits } from '@/lib/alerts/plan-limits'
+import {
+  getPlanAddonIncludedCount,
+  getPlanAddonPrice,
+} from '@/lib/billing/plan-addon-charge'
+import {
+  organizationProbeCountQueryOptions,
+  useCreateMonitor,
+  useOrganizationPlan,
+  useProject,
+} from '@/lib/react-query/hooks'
 import { getErrorMessage, isPlanLimitError } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { PROBE_TYPES } from '@/lib/alerts/probes'
 import type { ProbeType } from '@/lib/appwrite/monitors'
+import { PlanAllowance } from './_components/PlanAllowance'
 import {
   MonitorTypePicker,
   ProbeFields,
@@ -87,8 +100,38 @@ export function CreateMonitor({
     }
   }
 
+  const organizationId = project?.teamId
+  const { plan } = useOrganizationPlan(organizationId)
+  const { data: probeCount } = useQuery({
+    ...organizationProbeCountQueryOptions(organizationId),
+    enabled: open && isCloud && type !== 'usage' && !!organizationId,
+  })
+  const probeLimit = alertingLimits(plan).probes
+  const probesIncluded = getPlanAddonIncludedCount(plan, 'probes')
+  const probePrice = getPlanAddonPrice(plan, 'probes')
+  const probesAtLimit =
+    probeLimit !== null && probeCount !== undefined && probeCount >= probeLimit
+  const probeAllowance =
+    type === 'usage' || probeCount === undefined
+      ? null
+      : probesAtLimit
+        ? t('Synthetic checks: {used} of {limit} allowed on your plan.')
+            .replace('{used}', String(probeCount))
+            .replace('{limit}', String(probeLimit))
+        : probePrice > 0 && probesIncluded !== null
+          ? `${t('Synthetic checks: {used} of {included} included.')
+              .replace('{used}', String(probeCount))
+              .replace('{included}', String(probesIncluded))} ${t(
+              'Each extra check costs {price} per month.',
+            ).replace('{price}', formatCurrency(probePrice))}`
+          : null
+
   const error =
-    type === 'usage' ? ruleFormError(form, t) : probeFormError(probe, t)
+    type === 'usage'
+      ? ruleFormError(form, t)
+      : probesAtLimit
+        ? t('Upgrade your plan to add more synthetic checks.')
+        : probeFormError(probe, t)
   const isPending = createMutation.isPending
 
   const handleOpenChange = (next: boolean) => {
@@ -153,6 +196,13 @@ export function CreateMonitor({
                   value={type}
                   onChange={handleTypeChange}
                   disabled={isPending}
+                />
+              )}
+              {probeAllowance && organizationId && (
+                <PlanAllowance
+                  message={probeAllowance}
+                  organizationId={organizationId}
+                  upgrade={probesAtLimit}
                 />
               )}
               {type === 'usage' ? (
