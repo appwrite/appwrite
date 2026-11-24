@@ -324,12 +324,17 @@ $platformCollections = [
             Attribute::boolean(key: 'read', default: false),
             Attribute::datetime(key: 'firstSeen'),
             Attribute::datetime(key: 'lastSeen'),
+            // What a console notification is about, such as an alert, and where it stands; empty for a notification about nothing that changes
+            Attribute::string(key: 'subjectType', size: 64, default: ''),
+            Attribute::string(key: 'subjectId', default: ''),
+            Attribute::string(key: 'status', size: 16, default: ''),
         ],
         'indexes' => [
             Index::key(key: '_key_messageId', attributes: ['messageId'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),
             Index::unique(key: '_key_recipient', attributes: ['messageId', 'channel', 'recipientHash'], lengths: [Database::LENGTH_KEY, 64, 64], orders: [OrderDirection::Asc, OrderDirection::Asc, OrderDirection::Asc]),
             Index::key(key: '_key_project', attributes: ['projectId', 'projectInternalId'], lengths: [Database::LENGTH_KEY, 0], orders: [OrderDirection::Asc, OrderDirection::Asc]),
             Index::key(key: '_key_team', attributes: ['teamId', 'teamInternalId']),
+            Index::key(key: '_key_subject', attributes: ['subjectType', 'subjectId'], lengths: [64, Database::LENGTH_KEY], orders: [OrderDirection::Asc, OrderDirection::Asc]),
             Index::key(key: '_key_project_resource', attributes: ['projectId', 'projectInternalId', 'resourceType', 'resourceId', 'resourceInternalId'], lengths: [Database::LENGTH_KEY, 0, 64, Database::LENGTH_KEY, 0], orders: [OrderDirection::Asc, OrderDirection::Asc, OrderDirection::Asc, OrderDirection::Asc, OrderDirection::Asc]),
             Index::key(key: '_key_project_parent_resource', attributes: ['projectId', 'projectInternalId', 'parentResourceType', 'parentResourceId', 'parentResourceInternalId'], lengths: [Database::LENGTH_KEY, 0, 64, Database::LENGTH_KEY, 0], orders: [OrderDirection::Asc, OrderDirection::Asc, OrderDirection::Asc, OrderDirection::Asc, OrderDirection::Asc]),
         ],

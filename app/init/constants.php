@@ -586,6 +586,7 @@ const RESOURCE_TYPE_REPORTS = 'reports';
 const RESOURCE_TYPE_VIDEOS = 'videos';
 const RESOURCE_TYPE_REVIEWS = 'reviews';
 const RESOURCE_TYPE_MONITORS = 'monitors';
+const RESOURCE_TYPE_ALERTS = 'alerts';
 
 // Insight types — engine-specific so the CTA action can reference the right public API.
 const ADVISOR_INSIGHT_TYPES = [
