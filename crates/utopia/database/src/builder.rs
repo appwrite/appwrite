@@ -290,8 +290,8 @@ impl SqlBuilder {
     }
 
     /// The bindings of the last statement built (`getBindings()`).
-    pub fn bindings(&self) -> Vec<utopia_query::Value> {
-        each_builder!(self, b => b.bindings())
+    pub fn bindings(&mut self) -> Vec<utopia_query::Value> {
+        each_builder!(&mut *self, b => b.bindings())
     }
 
     /// The queries added so far.

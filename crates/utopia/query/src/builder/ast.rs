@@ -90,6 +90,25 @@ fn column_string(reference: &Column) -> String {
     parts.join(".")
 }
 
+/// What writes the SQL `fromAst()` keeps raw: the dialect's [`Serializer`], or the one a
+/// subclass's `createAstSerializer()` returns.
+pub trait AstWriter {
+    /// A statement as SQL.
+    fn serialize(&self, statement: &Select) -> Result<String>;
+    /// An expression as SQL.
+    fn serialize_expression(&self, expression: &Expression) -> Result<String>;
+}
+
+impl AstWriter for Serializer {
+    fn serialize(&self, statement: &Select) -> Result<String> {
+        Serializer::serialize(self, statement)
+    }
+
+    fn serialize_expression(&self, expression: &Expression) -> Result<String> {
+        Serializer::serialize_expression(self, expression)
+    }
+}
+
 fn like_to_query(attribute: String, value: String, negated: bool) -> Query {
     let starts = value.starts_with('%');
     let ends = value.ends_with('%');
@@ -135,19 +154,11 @@ impl<D: Dialect> Builder<D> {
         let limit = grouped.limit.map(|l| Literal { value: Value::Int(l) }.into());
         let offset = grouped.offset.map(|o| Literal { value: Value::Int(o) }.into());
         let parser = Parser::new();
-        let ctes = self
-            .core
-            .ctes
-            .iter()
-            .map(|cte| {
-                Ok(Cte {
-                    name: cte.name.clone(),
-                    query: parser.parse_sql(&cte.query)?,
-                    columns: cte.columns.clone(),
-                    recursive: cte.recursive,
-                })
-            })
-            .collect::<Result<_>>()?;
+        let mut ctes = Vec::with_capacity(self.core.ctes.len());
+        for cte in self.core.ctes.clone() {
+            let query = parser.parse_sql(&cte.query)?;
+            ctes.push(Cte { name: cte.name, query, columns: cte.columns, recursive: cte.recursive });
+        }
 
         Ok(Select {
             columns,
@@ -365,16 +376,22 @@ impl<D: Dialect> Builder<D> {
     ///
     /// PHP: `Builder::fromAst()`.
     pub fn from_ast(select: &Select) -> Result<Self> {
+        Self::from_ast_with(select, &serializer(D::ast_dialect()))
+    }
+
+    /// [`Self::from_ast`], writing what stays raw SQL with `writer`.
+    ///
+    /// PHP: `fromAst()` in a subclass that overrides `createAstSerializer()`.
+    pub fn from_ast_with(select: &Select, writer: &dyn AstWriter) -> Result<Self> {
         let mut builder = Self::new();
-        let serializer = serializer(D::ast_dialect());
 
         if let Some(TableSource::Table(table)) = &select.from {
             builder.from(table.name.clone(), table.alias.clone().unwrap_or_default());
         }
-        builder.apply_ast_columns(select, &serializer)?;
-        builder.apply_ast_joins(select, &serializer)?;
+        builder.apply_ast_columns(select, writer)?;
+        builder.apply_ast_joins(select, writer)?;
         if let Some(condition) = &select.where_clause {
-            let queries = where_to_queries(condition, &serializer)?;
+            let queries = where_to_queries(condition, writer)?;
             builder.core.pending.extend(queries);
         }
         let group_by: Vec<String> = select
@@ -389,7 +406,7 @@ impl<D: Dialect> Builder<D> {
             builder.group_by(group_by);
         }
         if let Some(having) = &select.having {
-            let queries = where_to_queries(having, &serializer)?;
+            let queries = where_to_queries(having, writer)?;
             if !queries.is_empty() {
                 builder.having(queries);
             }
@@ -405,7 +422,7 @@ impl<D: Dialect> Builder<D> {
                 }
                 other => {
                     let direction = if item.direction == OrderDirection::Desc { " DESC" } else { " ASC" };
-                    let sql = serializer.serialize_expression(other)?;
+                    let sql = writer.serialize_expression(other)?;
                     builder.core.raw_orders.push(Condition::new(sql + direction, Vec::new()));
                 }
             }
@@ -421,7 +438,7 @@ impl<D: Dialect> Builder<D> {
             builder.offset(to_int(value));
         }
         for cte in &select.ctes {
-            let sql = serializer.serialize(&cte.query)?;
+            let sql = writer.serialize(&cte.query)?;
             builder.core.ctes.push(CteClause::new(
                 cte.name.clone(),
                 sql,
@@ -436,7 +453,7 @@ impl<D: Dialect> Builder<D> {
         Ok(builder)
     }
 
-    fn apply_ast_columns(&mut self, select: &Select, serializer: &Serializer) -> Result<()> {
+    fn apply_ast_columns(&mut self, select: &Select, serializer: &dyn AstWriter) -> Result<()> {
         let mut columns = Vec::new();
         for expression in &select.columns {
             match expression {
@@ -517,7 +534,7 @@ impl<D: Dialect> Builder<D> {
         Ok(())
     }
 
-    fn apply_ast_joins(&mut self, select: &Select, serializer: &Serializer) -> Result<()> {
+    fn apply_ast_joins(&mut self, select: &Select, serializer: &dyn AstWriter) -> Result<()> {
         for join in &select.joins {
             let TableSource::Table(table) = &join.table else { continue };
             let method = match join.kind.to_ascii_uppercase().as_str() {
@@ -549,7 +566,7 @@ fn func_attribute(func: &Func) -> String {
 }
 
 /// PHP: `Builder::astJoinConditionToQueries()`.
-fn join_condition_to_queries(condition: &Expression, serializer: &Serializer) -> Result<Vec<Query>> {
+fn join_condition_to_queries(condition: &Expression, serializer: &dyn AstWriter) -> Result<Vec<Query>> {
     if let Expression::Binary(b) = condition {
         let operator = b.operator.to_ascii_uppercase();
         if operator == "AND" {
@@ -576,13 +593,13 @@ fn join_condition_to_queries(condition: &Expression, serializer: &Serializer) ->
     }
 }
 
-fn join_condition_to_query(condition: &Expression, serializer: &Serializer) -> Result<Query> {
+fn join_condition_to_query(condition: &Expression, serializer: &dyn AstWriter) -> Result<Query> {
     let mut queries = join_condition_to_queries(condition, serializer)?;
     Ok(if queries.len() == 1 { queries.remove(0) } else { Query::and(queries) })
 }
 
 /// PHP: `Builder::astWhereToQueries()`.
-fn where_to_queries(expression: &Expression, serializer: &Serializer) -> Result<Vec<Query>> {
+fn where_to_queries(expression: &Expression, serializer: &dyn AstWriter) -> Result<Vec<Query>> {
     if let Expression::Binary(b) = expression
         && b.operator.eq_ignore_ascii_case("AND")
     {
@@ -597,7 +614,7 @@ fn where_to_queries(expression: &Expression, serializer: &Serializer) -> Result<
 }
 
 /// PHP: `Builder::astExpressionToSingleQuery()`.
-fn expression_to_query(expression: &Expression, serializer: &Serializer) -> Result<Option<Query>> {
+fn expression_to_query(expression: &Expression, serializer: &dyn AstWriter) -> Result<Option<Query>> {
     match expression {
         Expression::Binary(b) => {
             let operator = b.operator.to_ascii_uppercase();

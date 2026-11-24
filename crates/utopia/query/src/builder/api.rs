@@ -9,6 +9,7 @@ use crate::builder::core::{
     AfterBuild, Builder, Dialect, ExistsSubquery, ExplainOptions, LateralJoin, SubSelect, WhereInSubquery,
 };
 use crate::builder::join::JoinBuilder;
+use crate::builder::steps::{Arg, Step};
 use crate::builder::types::{
     CteClause, Executor, JoinType, Statement, UnionClause, UnionType, WindowDefinition, WindowFrame, WindowSelect,
 };
@@ -274,6 +275,14 @@ impl<D: Dialect> Builder<D> {
         &mut self,
         callback: impl Fn(Statement) -> Result<Statement> + Send + Sync + 'static,
     ) -> &mut Self {
+        self.after_build_owned(move |_, statement| callback(statement))
+    }
+
+    /// As [`Self::after_build`], with the [owner](Self::set_owner) of the builder that built.
+    pub fn after_build_owned(
+        &mut self,
+        callback: impl Fn(usize, Statement) -> Result<Statement> + Send + Sync + 'static,
+    ) -> &mut Self {
         let callback: AfterBuild = Arc::new(callback);
         self.core.after_build.push(callback);
         self
@@ -315,36 +324,74 @@ impl<D: Dialect> Builder<D> {
     ///
     /// PHP: `toRawSql()`.
     pub fn to_raw_sql(&mut self) -> Result<String> {
-        let result = self.build()?;
-        let mut sql = result.query.into_bytes();
+        self.raw_sql(false)
+    }
+
+    /// As [`Builder::to_raw_sql`], for a builder whose text holds a character for each
+    /// byte, as the PHP extension passes a string that is not UTF-8: the bytes of a
+    /// string binding are written the same way.
+    pub fn to_raw_sql_widened(&mut self) -> Result<String> {
+        self.raw_sql(true)
+    }
+
+    fn raw_sql(&mut self, widened: bool) -> Result<String> {
+        let result = self.built()?;
+        let mut sql = result.query;
         let mut offset = 0;
         for binding in &result.bindings {
-            let literal: Vec<u8> = match binding {
-                Value::Str(s) => D::quote_string(s.as_bytes()),
-                Value::Int(_) | Value::Float(_) => crate::value::to_php_string(binding).into_bytes(),
-                Value::Bool(b) => {
-                    if *b {
-                        b"1".to_vec()
-                    } else {
-                        b"0".to_vec()
-                    }
-                }
-                _ => b"NULL".to_vec(),
+            let literal = match binding {
+                Value::Str(s) if widened => D::quote_string(s.as_bytes()).iter().map(|&b| char::from(b)).collect(),
+                Value::Str(s) => String::from_utf8_lossy(&D::quote_string(s.as_bytes())).into_owned(),
+                Value::Int(_) | Value::Float(_) => crate::value::to_php_string(binding),
+                Value::Bool(b) => if *b { "1" } else { "0" }.to_owned(),
+                _ => "NULL".to_owned(),
             };
-            if let Some(pos) =
-                sql.get(offset..).and_then(|rest| rest.iter().position(|&b| b == b'?')).map(|p| p + offset)
-            {
-                sql.splice(pos..pos + 1, literal.iter().copied());
+            if let Some(pos) = sql.get(offset..).and_then(|rest| rest.find('?')).map(|p| p + offset) {
+                sql.replace_range(pos..=pos, &literal);
                 offset = pos + literal.len();
             }
         }
-        Ok(String::from_utf8_lossy(&sql).into_owned())
+        Ok(sql)
+    }
+
+    /// The bindings so far, each with the column it was bound against.
+    ///
+    /// PHP: the protected `$bindings`.
+    pub fn binding_list(&self) -> &[crate::builder::Binding] {
+        &self.core.bindings
+    }
+
+    /// Replaces the bindings.
+    pub fn set_binding_list(&mut self, bindings: Vec<crate::builder::Binding>) -> &mut Self {
+        self.core.bindings = bindings;
+        self
+    }
+
+    /// Replaces the queries to compile.
+    ///
+    /// PHP: the protected `$pendingQueries`.
+    pub fn set_pending(&mut self, queries: Vec<Query>) -> &mut Self {
+        self.core.pending = queries;
+        self
+    }
+
+    /// The attributes resolved so far, and what each resolved to.
+    ///
+    /// PHP: the protected `$resolvedAttributeCache`.
+    pub fn resolved_attributes(&self) -> impl Iterator<Item = (&str, &str)> {
+        self.core.resolved.iter().map(|(attribute, resolved)| (attribute.as_str(), resolved.as_str()))
+    }
+
+    /// Replaces the resolved attributes.
+    pub fn set_resolved_attributes(&mut self, resolved: impl IntoIterator<Item = (String, String)>) -> &mut Self {
+        self.core.resolved = resolved.into_iter().collect();
+        self
     }
 
     /// The bindings of the last statement built.
     ///
     /// PHP: `getBindings()`.
-    pub fn bindings(&self) -> Vec<Value> {
+    pub fn bindings(&mut self) -> Vec<Value> {
         self.binding_values()
     }
 
@@ -814,39 +861,39 @@ impl<D: Dialect> Builder<D> {
 
 impl<D: Dialect> Compiler for Builder<D> {
     fn compile_filter(&mut self, query: &Query) -> Result<String> {
-        D::compile_filter(self, query)
+        self.step_string(Step::CompileFilter, &[Arg::Query(query)])
     }
 
     fn compile_order(&mut self, query: &Query) -> Result<String> {
-        self.compile_order_query(query)
+        self.step_string(Step::CompileOrder, &[Arg::Query(query)])
     }
 
     fn compile_limit(&mut self, query: &Query) -> Result<String> {
-        Ok(self.compile_limit_query(query))
+        self.step_string(Step::CompileLimit, &[Arg::Query(query)])
     }
 
     fn compile_offset(&mut self, query: &Query) -> Result<String> {
-        Ok(self.compile_offset_query(query))
+        self.step_string(Step::CompileOffset, &[Arg::Query(query)])
     }
 
     fn compile_select(&mut self, query: &Query) -> Result<String> {
-        self.compile_select_query(query)
+        self.step_string(Step::CompileSelect, &[Arg::Query(query)])
     }
 
     fn compile_cursor(&mut self, query: &Query) -> Result<String> {
-        self.compile_cursor_query(query)
+        self.step_string(Step::CompileCursor, &[Arg::Query(query)])
     }
 
     fn compile_aggregate(&mut self, query: &Query) -> Result<String> {
-        self.compile_aggregate_query(query)
+        self.step_string(Step::CompileAggregate, &[Arg::Query(query)])
     }
 
     fn compile_group_by(&mut self, query: &Query) -> Result<String> {
-        self.compile_group_by_query(query)
+        self.step_string(Step::CompileGroupBy, &[Arg::Query(query)])
     }
 
     fn compile_join(&mut self, query: &Query) -> Result<String> {
-        self.compile_join_query(query)
+        self.step_string(Step::CompileJoin, &[Arg::Query(query)])
     }
 }
 

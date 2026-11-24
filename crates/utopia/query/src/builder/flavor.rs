@@ -31,6 +31,7 @@ use std::sync::Arc;
 use php_std::pcre::{StrOrArray, preg_replace};
 
 use crate::builder::core::{Builder, Dialect};
+use crate::builder::steps::{Arg, Step};
 use crate::builder::types::{Condition, Statement};
 use crate::error::{Error, Result};
 use crate::hook::Hook;
@@ -246,7 +247,7 @@ impl<D: Dialect> Builder<D> {
         self.core.resolved.clear();
         let mut expressions = Vec::with_capacity(filters.len());
         for filter in filters {
-            expressions.push(D::compile_filter(self, filter)?);
+            expressions.push(self.step_string(Step::CompileFilter, &[Arg::Query(filter)])?);
         }
         Ok(Condition::new(expressions.join(" AND "), self.binding_values()))
     }
@@ -441,7 +442,13 @@ impl<D: Dialect> Builder<D> {
         if !self.core.flavor.contains_all_patterns {
             return None;
         }
-        let like = D::like_keyword(self);
+        let like = match self.like_keyword() {
+            Ok(like) => like,
+            Err(error) => {
+                self.core.deferred.get_or_insert(error);
+                return None;
+            }
+        };
         let mut parts = Vec::with_capacity(values.len());
         for value in values.values() {
             self.add_binding(value.clone(), column);
@@ -581,7 +588,7 @@ impl Builder<crate::builder::PostgreSqlDialect> {
             _ => Array::new(),
         };
         let filter = crate::builder::SpatialDistanceFilter::from_tuple(&tuple)?;
-        let wkt = crate::builder::sql::wkt_of(&filter.geometry)?;
+        let wkt = crate::builder::sql::wkt_of(self, &filter.geometry)?;
         let geometry = format!("ST_GeomFromText(?, {srid})");
         if !filter.meters {
             self.add_binding(wkt.clone(), None);

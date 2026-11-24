@@ -876,7 +876,7 @@ impl Builder<MongoDbDialect> {
         self
     }
 
-    fn statement_of(&self, operation: Array, read_only: bool) -> Result<Statement> {
+    fn statement_of(&mut self, operation: Array, read_only: bool) -> Result<Statement> {
         Ok(Statement::with_parts(
             encode(operation)?,
             self.binding_values(),
@@ -900,7 +900,7 @@ impl Builder<MongoDbDialect> {
         let mut result =
             if self.needs_aggregation(&grouped) { self.build_aggregate(&grouped)? } else { self.build_find(&grouped)? };
         for callback in self.core.after_build.clone() {
-            result = callback(result)?;
+            result = callback(self.core.owner, result)?;
         }
         Ok(result)
     }
@@ -1091,7 +1091,7 @@ impl Builder<MongoDbDialect> {
         self.aggregate_statement(pipeline)
     }
 
-    fn aggregate_statement(&self, pipeline: Array) -> Result<Statement> {
+    fn aggregate_statement(&mut self, pipeline: Array) -> Result<Statement> {
         let mut operation = doc([
             ("collection", value::string(&self.core.table)),
             ("operation", value::string(Operation::Aggregate.as_str())),

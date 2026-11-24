@@ -255,6 +255,10 @@ class CorrectnessRegressionTest extends TestCase
 
     public function testResetClearsAliasQualificationState(): void
     {
+        if (new \ReflectionClass(Builder::class)->isInternal()) {
+            $this->markTestSkipped('Reads the private state and the source of the PHP class, which the utopia extension replaces.');
+        }
+
         // prepareAliasQualification() sets $qualify and $aggregationAliases
         // on each build(). reset() must clear both so the builder is in a
         // clean state between builds — the values are per-build transient
@@ -373,6 +377,10 @@ class CorrectnessRegressionTest extends TestCase
      */
     public function testUnsupportedJoinMethodMatchThrows(): void
     {
+        if (new \ReflectionClass(Builder::class)->isInternal()) {
+            $this->markTestSkipped('Reads the private state and the source of the PHP class, which the utopia extension replaces.');
+        }
+
         $reflection = new \ReflectionMethod(Builder::class, 'buildJoinsClause');
         $source = $this->readMethodSource($reflection);
 

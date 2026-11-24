@@ -69,6 +69,21 @@ impl MySqlFamily for MariaDbDialect {
 impl Dialect for MariaDbDialect {
     const CLASS: &'static str = "Utopia\\Query\\Builder\\MariaDB";
 
+    fn base_step(
+        b: &mut Builder<Self>,
+        step: crate::builder::Step,
+        arguments: &[crate::builder::Arg<'_>],
+    ) -> Option<Result<crate::builder::Ret>> {
+        sql::sql_base_step(b, step, arguments)
+            .or_else(|| crate::builder::feature::aggregates_base_step::<Self>(step, arguments))
+            .or_else(|| match (step, arguments) {
+                (crate::builder::Step::GeomFromText, [crate::builder::Arg::Int(Some(srid))]) => {
+                    Some(Ok(crate::builder::Ret::Str(Self::geom_from_text(*srid))))
+                }
+                _ => None,
+            })
+    }
+
     fn compile_random(_b: &Builder<Self>) -> String {
         "RAND()".into()
     }
@@ -123,11 +138,7 @@ impl Dialect for MariaDbDialect {
 
     fn reset(b: &mut Builder<Self>) {
         mysql::reset(b);
-        b.core.returning.clear();
-    }
-
-    fn ast_dialect() -> crate::builder::AstDialect {
-        crate::builder::AstDialect::MariaDb
+        b.reset_returning();
     }
 }
 
@@ -144,7 +155,7 @@ impl SqlDialect for MariaDbDialect {
         if matches!(method, DistanceLessThan | DistanceGreaterThan | DistanceEqual | DistanceNotEqual) {
             let filter = sql::distance_filter(query.values(), "Builder/MariaDB.php", 83)?;
             if filter.meters && !query.attribute_type().is_empty() {
-                let wkt = crate::value::to_php_string(&wkt_of(&filter.geometry)?);
+                let wkt = crate::value::to_php_string(&wkt_of(b, &filter.geometry)?);
                 let wkt_type = match wkt.find('(') {
                     Some(position) => {
                         wkt[..position].trim_matches([' ', '\t', '\n', '\r', '\0', '\x0B']).to_ascii_lowercase()
@@ -170,7 +181,8 @@ impl SqlDialect for MariaDbDialect {
     ) -> Result<String> {
         let filter = sql::distance_filter(values, "Builder/MariaDB.php", 111)?;
         let operator = distance_operator(method);
-        b.add_binding(wkt_of(&filter.geometry)?, None);
+        let wkt = wkt_of(b, &filter.geometry)?;
+        b.add_binding(wkt, None);
         b.add_binding(Value::Float(filter.distance), None);
         if filter.meters {
             return Ok(format!("ST_DISTANCE_SPHERE({attribute}, ST_GeomFromText(?, 4326)) {operator} ?"));
@@ -194,7 +206,16 @@ impl SqlDialect for MariaDbDialect {
         values: &Array,
         not: bool,
     ) -> Result<String> {
-        mysql::spatial_predicate(b, "ST_Contains", attribute, values, not)
+        // Through the step, so a subclass's compileSpatialPredicate() writes this one too.
+        b.step_string(
+            crate::builder::Step::CompileSpatialPredicate,
+            &[
+                crate::builder::Arg::Str("ST_Contains"),
+                crate::builder::Arg::Str(attribute),
+                crate::builder::Arg::Values(values),
+                crate::builder::Arg::Bool(not),
+            ],
+        )
     }
 
     fn compile_json_contains_expression(
@@ -317,7 +338,7 @@ impl InsertOrIgnore for MariaDbDialect {
 }
 
 impl Sequences for MariaDbDialect {
-    fn sequence_expression(b: &Builder<Self>, next: bool, sequence: &str) -> Result<String> {
+    fn sequence_expression(b: &mut Builder<Self>, next: bool, sequence: &str) -> Result<String> {
         Ok(format!("{}({})", if next { "NEXTVAL" } else { "LASTVAL" }, b.quote(sequence)?))
     }
 }

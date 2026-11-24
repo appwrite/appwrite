@@ -11,6 +11,7 @@ use crate::builder::feature::{
     Upsert, UpsertSelect,
 };
 use crate::builder::sql::{self, SqlDialect, distance_operator, wkt_of};
+use crate::builder::steps::{Arg, Step};
 use crate::builder::types::{Condition, Statement};
 use crate::error::{Error, Result};
 use crate::method::Method;
@@ -275,7 +276,7 @@ fn update_join<D: MySqlFamily>(b: &mut Builder<D>) -> Result<Statement> {
     }
     let mut sql = format!(
         "UPDATE {} JOIN {join} ON {} = {}",
-        b.quote(&b.core.table)?,
+        b.quote(&b.core.table.clone())?,
         b.resolve_and_wrap(&left)?,
         b.resolve_and_wrap(&right)?
     );
@@ -300,7 +301,7 @@ pub(crate) fn delete<D: MySqlFamily>(b: &mut Builder<D>) -> Result<Statement> {
     let sql = format!(
         "DELETE {} FROM {} AS {} JOIN {} ON {} = {}",
         b.quote(&alias)?,
-        b.quote(&b.core.table)?,
+        b.quote(&b.core.table.clone())?,
         b.quote(&alias)?,
         b.quote(&table)?,
         b.resolve_and_wrap(&left)?,
@@ -327,13 +328,13 @@ pub(crate) fn insert_or_ignore<D: Dialect>(b: &mut Builder<D>) -> Result<Stateme
 pub(crate) fn insert_default_values<D: Dialect>(b: &mut Builder<D>) -> Result<Statement> {
     b.core.bindings.clear();
     b.validate_table()?;
-    let sql = format!("INSERT INTO {} () VALUES ()", b.quote(&b.core.table)?);
+    let sql = format!("INSERT INTO {} () VALUES ()", b.quote(&b.core.table.clone())?);
     Ok(b.statement(sql))
 }
 
 /// `EXPLAIN [ANALYZE] [FORMAT=...]`.
 pub(crate) fn explain<D: Dialect>(b: &mut Builder<D>, analyze: bool, options: &ExplainOptions) -> Result<Statement> {
-    let result = D::build(b)?;
+    let result = b.built()?;
     let mut prefix = "EXPLAIN".to_owned();
     if analyze {
         prefix.push_str(" ANALYZE");
@@ -355,7 +356,7 @@ pub(crate) fn explain<D: Dialect>(b: &mut Builder<D>, analyze: bool, options: &E
 pub(crate) fn reset<D: MySqlFamily>(b: &mut Builder<D>) {
     b.core.hints.clear();
     b.core.json_sets.clear();
-    b.core.group_by_modifier = None;
+    b.reset_group_by_modifier();
     *D::mysql_mut(b) = MySqlState::default();
 }
 
@@ -367,17 +368,18 @@ pub(crate) fn spatial_distance<D: MySqlFamily>(
     values: &Array,
 ) -> Result<String> {
     let filter = sql::distance_filter(values, "Builder/MySQL.php", 484)?;
-    let wkt = wkt_of(&filter.geometry)?;
+    let wkt = wkt_of(b, &filter.geometry)?;
     let operator = distance_operator(method);
     b.add_binding(wkt, None);
     b.add_binding(Value::Float(filter.distance), None);
     if filter.meters {
         return Ok(format!(
             "ST_Distance(ST_SRID({attribute}, 4326), {}, 'metre') {operator} ?",
-            D::geom_from_text(4326)
+            b.step_string(Step::GeomFromText, &[Arg::Int(Some(4326))])?
         ));
     }
-    Ok(format!("ST_Distance(ST_SRID({attribute}, 0), {}) {operator} ?", D::geom_from_text(0)))
+    let geometry = b.step_string(Step::GeomFromText, &[Arg::Int(Some(0))])?;
+    Ok(format!("ST_Distance(ST_SRID({attribute}, 0), {geometry}) {operator} ?"))
 }
 
 /// `function(attribute, ST_GeomFromText(?, 4326, ...))`, negated with `NOT`.
@@ -388,9 +390,10 @@ pub(crate) fn spatial_predicate<D: MySqlFamily>(
     values: &Array,
     not: bool,
 ) -> Result<String> {
-    let wkt = sql::predicate_wkt(values, MYSQL_CLASS, "Builder/MySQL.php", 513)?;
+    let wkt = sql::predicate_wkt(b, values, MYSQL_CLASS, "Builder/MySQL.php", 513)?;
     b.add_binding(value::string(wkt), None);
-    let expression = format!("{function}({attribute}, {})", D::geom_from_text(4326));
+    let geometry = b.step_string(Step::GeomFromText, &[Arg::Int(Some(4326))])?;
+    let expression = format!("{function}({attribute}, {geometry})");
     Ok(if not { format!("NOT {expression}") } else { expression })
 }
 
@@ -422,6 +425,21 @@ pub(crate) fn json_path<D: Dialect>(b: &mut Builder<D>, attribute: &str, values:
 
 impl Dialect for MySqlDialect {
     const CLASS: &'static str = "Utopia\\Query\\Builder\\MySQL";
+
+    fn base_step(
+        b: &mut Builder<Self>,
+        step: crate::builder::Step,
+        arguments: &[crate::builder::Arg<'_>],
+    ) -> Option<Result<crate::builder::Ret>> {
+        sql::sql_base_step(b, step, arguments)
+            .or_else(|| crate::builder::feature::aggregates_base_step::<Self>(step, arguments))
+            .or_else(|| match (step, arguments) {
+                (crate::builder::Step::GeomFromText, [crate::builder::Arg::Int(Some(srid))]) => {
+                    Some(Ok(crate::builder::Ret::Str(Self::geom_from_text(*srid))))
+                }
+                _ => None,
+            })
+    }
 
     fn compile_random(_b: &Builder<Self>) -> String {
         "RAND()".into()
@@ -471,10 +489,6 @@ impl Dialect for MySqlDialect {
     fn reset(b: &mut Builder<Self>) {
         reset(b)
     }
-
-    fn ast_dialect() -> crate::builder::AstDialect {
-        crate::builder::AstDialect::MySql
-    }
 }
 
 impl SqlDialect for MySqlDialect {
@@ -510,7 +524,16 @@ impl SqlDialect for MySqlDialect {
         values: &Array,
         not: bool,
     ) -> Result<String> {
-        spatial_predicate(b, "ST_Contains", attribute, values, not)
+        // Through the step, so a subclass's compileSpatialPredicate() writes this one too.
+        b.step_string(
+            crate::builder::Step::CompileSpatialPredicate,
+            &[
+                crate::builder::Arg::Str("ST_Contains"),
+                crate::builder::Arg::Str(attribute),
+                crate::builder::Arg::Values(values),
+                crate::builder::Arg::Bool(not),
+            ],
+        )
     }
 
     fn compile_json_contains_expression(
@@ -541,8 +564,15 @@ impl SqlDialect for MySqlDialect {
 
 /// The SQL of a conflict clause for a SQL dialect.
 pub(crate) fn conflict_clause<D: SqlDialect>(b: &mut Builder<D>) -> Result<String> {
-    let header = D::compile_conflict_header(b)?;
-    b.compile_conflict_clause(&header, D::compile_conflict_assignment)
+    b.step_string(Step::CompileConflictClause, &[])
+}
+
+/// The builder's own `compileConflictClause()`.
+pub(crate) fn base_conflict_clause<D: SqlDialect>(b: &mut Builder<D>) -> Result<String> {
+    b.compile_conflict_clause(
+        |b| b.step_string(Step::CompileConflictHeader, &[]),
+        |b, wrapped| b.step_string(Step::CompileConflictAssignment, &[Arg::Str(wrapped)]),
+    )
 }
 
 /// MySQL's JSON column updates, shared with MariaDB.

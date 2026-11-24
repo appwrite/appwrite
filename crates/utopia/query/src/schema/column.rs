@@ -262,6 +262,12 @@ impl<S> Column<S> {
         &self.def
     }
 
+    /// What the column is, to set directly: nothing here is validated, as
+    /// nothing is when PHP sets a column's properties.
+    pub fn definition_mut(&mut self) -> &mut ColumnDefinition {
+        &mut self.def
+    }
+
     /// The name.
     ///
     /// PHP: `$column->name`.

@@ -305,6 +305,12 @@ impl<S> Table<S> {
         &self.def
     }
 
+    /// Everything the blueprint holds, to set directly: nothing here is
+    /// validated, as nothing is when PHP sets a table's properties.
+    pub fn definition_mut(&mut self) -> &mut TableDefinition<S> {
+        &mut self.def
+    }
+
     /// The table name.
     ///
     /// PHP: `$table->name`.

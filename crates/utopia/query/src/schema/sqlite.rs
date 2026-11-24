@@ -134,24 +134,16 @@ impl Schema for Sqlite {
         if !c.auto_increment || !c.primary {
             return base::column_definition(self, column);
         }
-        let mut parts = vec![
-            self.quote_literal(&c.name)?,
-            self.compile_column_type(column)?,
-            "PRIMARY KEY".to_owned(),
-            self.compile_auto_increment().to_owned(),
-        ];
+        let mut out = base::column_start(self, column)?;
+        base::add(&mut out, &["PRIMARY KEY ", self.compile_auto_increment()]);
         if !c.nullable {
-            parts.push("NOT NULL".into());
+            base::add(&mut out, &["NOT NULL"]);
         }
-        if let Some(raw) = &c.default_raw {
-            parts.push(format!("DEFAULT {raw}"));
-        } else if let Some(value) = &c.default {
-            parts.push(format!("DEFAULT {}", base::default_value(value)));
-        }
+        base::add_default(&mut out, column);
         if let Some(check) = &c.check {
-            parts.push(format!("CHECK ({check})"));
+            base::add(&mut out, &["CHECK (", check, ")"]);
         }
-        Ok(parts.join(" "))
+        Ok(out)
     }
 
     /// Without the trailing `PRIMARY KEY (...)` clause when a column carries
