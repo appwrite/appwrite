@@ -151,17 +151,19 @@ export function BreakdownDialog({
     // Same rule as the cards: unknown rows are dropped before ranking.
     const breakdown = (data?.breakdown ?? []).filter(
       (entry) =>
-        isKnownBreakdownValue(entry.value) && (!rowFilter || rowFilter(entry)),
+        (isKnownBreakdownValue(entry.value) ||
+          (!!active.blankLabel && !entry.value?.trim())) &&
+        (!rowFilter || rowFilter(entry)),
     )
     return valueKey === 'visitors'
       ? breakdown
       : [...breakdown].sort((a, b) => (b[valueKey] ?? 0) - (a[valueKey] ?? 0))
-  }, [data, valueKey, rowFilter])
+  }, [data, valueKey, rowFilter, active.blankLabel])
 
   const labelFor = (entry: Models.AnalyticsMetric) =>
     entry.value
       ? (formatLabel?.(entry.value, active.id) ?? entry.value)
-      : t('Unknown')
+      : t(active.blankLabel ?? 'Unknown')
 
   const { filtered, columnTotal, max } = useMemo(() => {
     const total = rows.reduce((sum, entry) => sum + (entry[valueKey] ?? 0), 0)
