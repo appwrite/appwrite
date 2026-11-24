@@ -263,6 +263,13 @@ Http::init()
 
             // Apply permission
             if ($apiKey->getType() === API_KEY_ORGANIZATION) {
+                // Organization keys act on the organization through the Console API only. Their scopes name
+                // organization resources, and some share a name with a project scope (monitors.*, keys.*): on
+                // any other project they would reach that project's own routes in every project of the organization.
+                if ($project->getId() !== 'console') {
+                    throw new Exception(Exception::USER_UNAUTHORIZED, 'Organization API keys can only be used with the console project.');
+                }
+
                 $authorization->addRole(Role::team($team->getId())->toString());
                 $authorization->addRole(Role::team($team->getId(), 'owner')->toString());
             } elseif ($apiKey->getType() === API_KEY_ACCOUNT) {
