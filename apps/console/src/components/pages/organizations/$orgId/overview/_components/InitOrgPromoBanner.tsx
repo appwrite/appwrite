@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { useEffect, useMemo, useRef } from 'react'
-import type { ReactNode, RefObject } from 'react'
+import type { ReactNode } from 'react'
 import { useTheme } from 'next-themes'
 import { InitWordmark } from '@/components/pages/init/_components/InitWordmark'
 import { Badge } from '@/components/ui/badge'
@@ -67,14 +67,10 @@ function InitOrgPromoBannerLink({
 }
 
 /**
- * Init 5: the hero's storm along the bar, fog drifting in banks around the
- * init_5 mark with lightning flashing inside it.
+ * Init 5: the hero's storm at both ends of the bar, soft fog with lightning
+ * flashing inside it.
  */
-function Init5BannerStorm({
-  markRef,
-}: {
-  markRef: RefObject<SVGSVGElement | null>
-}) {
+function Init5BannerStorm() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const stormRef = useRef<InitBannerStorm | null>(null)
   const { resolvedTheme } = useTheme()
@@ -97,11 +93,6 @@ function Init5BannerStorm({
     const layout = () => {
       const box = banner.getBoundingClientRect()
       storm.resize(box.width, box.height)
-      const mark = markRef.current?.getBoundingClientRect()
-      storm.setMark(
-        mark ? mark.left + mark.width / 2 - box.left : box.width / 2,
-        mark ? mark.top + mark.height / 2 - box.top : box.height / 2,
-      )
     }
     layout()
     const resizeObserver = new ResizeObserver(layout)
@@ -119,7 +110,7 @@ function Init5BannerStorm({
     }
     // The storm is built once; theme changes repaint it below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [markRef])
+  }, [])
 
   useEffect(() => {
     const banner = canvasRef.current?.parentElement
@@ -142,7 +133,6 @@ function Init5BannerStorm({
 export function InitOrgPromoBanner() {
   const t = useT()
   const { mockInitCurrentDay, mockInitActiveEventId } = useDebugOverrides()
-  const fiveRef = useRef<SVGSVGElement>(null)
   const content = useMemo(() => {
     if (!getEnvProfileFeatures().init) return null
     return getInitOrgPromoBannerContent({
@@ -158,7 +148,7 @@ export function InitOrgPromoBanner() {
     <div className="relative w-full shrink-0 overflow-hidden border-b border-border bg-background">
       {lightTrails ? (
         <>
-          <Init5BannerStorm markRef={fiveRef} />
+          <Init5BannerStorm />
           <div aria-hidden className="init5-banner-sweep" />
         </>
       ) : (
@@ -181,7 +171,6 @@ export function InitOrgPromoBanner() {
         />
         {lightTrails ? (
           <svg
-            ref={fiveRef}
             viewBox={INIT5_FIVE_GLYPH_VIEWBOX}
             aria-label="5"
             role="img"

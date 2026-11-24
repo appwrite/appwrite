@@ -2,8 +2,8 @@ import type { Init5ScenePalette } from './scene-types'
 
 /**
  * The Init 5 storm in the site banner: the hero's fog (the aurora in
- * `scenes/light-trails-scene.ts`, the same fog the Init films use) laid along
- * the bar, with lightning striking inside it. A strike is not a drawn bolt: it
+ * `scenes/light-trails-scene.ts`, the same fog the Init films use) at both
+ * ends of the bar, softened, with lightning striking inside it. A strike is not a drawn bolt: it
  * is light blooming in the cloud, a flash, a dimmer re-flash or two, then dark.
  *
  * Plain WebGL with one full-bar pass, drawn at half resolution (the fog is
@@ -13,8 +13,6 @@ import type { Init5ScenePalette } from './scene-types'
 export type InitBannerStorm = {
   /** Banner size in CSS px. */
   resize: (width: number, height: number) => void
-  /** Where the init_5 mark sits, in CSS px from the banner's top-left. */
-  setMark: (x: number, y: number) => void
   setPalette: (palette: Init5ScenePalette) => void
   /** Run while the banner is on screen; pause when it scrolls away. */
   setActive: (active: boolean) => void
@@ -25,6 +23,9 @@ const MAX_BOLTS = 2
 /** Fog units per banner height: sets the size of the clouds and wisps. */
 const UNITS_PER_HEIGHT = 0.62
 const FRAME_MS = 1000 / 30
+/** How far the fog reaches in from each end: a share of the bar, capped. */
+const SIDE_SHARE = 0.24
+const SIDE_MAX_PX = 360
 
 const vertex = /* glsl */ `
 attribute vec2 position;
@@ -41,7 +42,7 @@ precision mediump float;
 #endif
 uniform vec2 uResolution;
 uniform float uScale;
-uniform vec2 uMark;
+uniform float uSide;
 uniform float uTime;
 uniform float uIntensity;
 uniform vec3 uColorA;
@@ -84,33 +85,34 @@ void main() {
   float t = uTime * 0.05;
   vec2 q = vec2(fbm(p * 1.05 + vec2(t, -t)), fbm(p * 1.05 + vec2(-t * 0.7, t * 1.3) + 5.2));
   float n = fbm(p * 1.5 + q * 1.9 + vec2(t * 0.5, 0.0));
-  // The hero's fog body plus fine ridged filaments: crisp wisps, not a blur.
-  float body = smoothstep(0.34, 0.8, n);
+  // The hero's fog body and ridged filaments, softened for the bar: a
+  // gentler body and fainter, wider wisps.
+  float body = smoothstep(0.3, 0.9, n);
   float r = fbm(p * 3.4 + q * 2.2 + vec2(-t * 0.8, t * 0.6) + 11.3);
-  float wisps = pow(1.0 - abs(r * 2.0 - 1.0), 7.0) * smoothstep(0.2, 0.7, n);
-  float density = body * 0.8 + wisps * 0.75;
+  float wisps = pow(1.0 - abs(r * 2.0 - 1.0), 4.0) * smoothstep(0.2, 0.75, n);
+  float density = body * 0.85 + wisps * 0.4;
   vec3 color = mix(uColorB, uColorA, smoothstep(0.3, 0.72, n));
   color = mix(color, uColorC, smoothstep(0.55, 0.9, q.x) * 0.55);
   color = mix(color, uColorC, wisps * 0.3);
 
-  // Along the bar the fog gathers in banks that drift by, with gaps between,
-  // and thickest around the init_5 mark (the hero's fog is the 5's halo).
-  float banks = smoothstep(0.18, 0.82, fbm(vec2(p.x * 0.24 + p.y * 0.5 - uTime * 0.012, p.y * 1.2 + 3.7)));
-  vec2 dm = (p - uMark) * vec2(0.5, 1.0);
-  float halo = exp(-dot(dm, dm) * 1.6);
-  float mask = min(1.0, banks * 0.8 + halo * 0.45);
-  float a = density * mask * uIntensity;
+  // The fog keeps to both ends of the bar and thins out toward the middle,
+  // leaving the copy clear. Its inner edge wavers with the cloud.
+  float edge = min(p.x, uResolution.x / uScale - p.x);
+  float waver = (fbm(vec2(p.y * 1.4 + 2.1, uTime * 0.03 + p.x * 0.1)) - 0.5) * uSide * 0.6;
+  float sides = 1.0 - smoothstep(0.0, uSide, edge + waver);
+  float a = density * sides * uIntensity;
 
   // Lightning: light blooms from the strike point and scatters through the
   // fog, so the denser cloud lights up most and the thin gaps stay dark. The
-  // bar is thin, so each strike also lifts the whole bank a little, the way
-  // a sky lights up.
+  // bar is thin, so each strike also lifts its whole end a little, the way a
+  // sky lights up. It stays in the fog, off the copy.
   float lit = 0.0;
   for (int i = 0; i < ${MAX_BOLTS}; i++) {
     vec2 bd = (p - uBolts[i].xy) * vec2(0.42, 1.0);
     float reach = exp(-dot(bd, bd) * 0.9);
-    lit += uBolts[i].z * (reach + 0.1 * banks) * (0.15 + density * 1.25);
+    lit += uBolts[i].z * (reach + 0.1) * (0.15 + density * 1.25);
   }
+  lit *= sides;
   gl_FragColor = vec4(color * a + uBoltColor * lit, a + lit * 0.5);
 }
 `
@@ -204,7 +206,7 @@ export function createInitBannerStorm(
   const u = {
     resolution: uniform('uResolution'),
     scale: uniform('uScale'),
-    mark: uniform('uMark'),
+    side: uniform('uSide'),
     time: uniform('uTime'),
     intensity: uniform('uIntensity'),
     colorA: uniform('uColorA'),
@@ -218,8 +220,6 @@ export function createInitBannerStorm(
   let width = 1
   let height = 1
   let ratio = 1
-  let markX = 0
-  let markY = 0
   let active = false
   let disposed = false
   let rafId = 0
@@ -246,10 +246,15 @@ export function createInitBannerStorm(
     gl.uniform3fv(u.boltColor, mixRgb(hot, violet, 0.3))
   }
 
+  const unitPx = () => height / UNITS_PER_HEIGHT
+  const sidePx = () => Math.min(width * SIDE_SHARE, SIDE_MAX_PX)
+
+  /** Strikes land in the fog at either end, never over the copy. */
   const scheduleBolt = () => {
-    const units = width / (height / UNITS_PER_HEIGHT)
+    const units = width / unitPx()
+    const fromEdge = (Math.random() * sidePx() * 0.6) / unitPx()
     bolts.push({
-      x: Math.random() * units,
+      x: Math.random() < 0.5 ? fromEdge : units - fromEdge,
       y: (Math.random() - 0.5) * 0.4,
       startedAt: time,
       strikes: strikeShape(),
@@ -259,20 +264,16 @@ export function createInitBannerStorm(
   }
 
   const draw = () => {
-    const scale = (height / UNITS_PER_HEIGHT) * ratio
+    const scale = unitPx() * ratio
     gl.viewport(0, 0, canvas.width, canvas.height)
     gl.clearColor(0, 0, 0, 0)
     gl.clear(gl.COLOR_BUFFER_BIT)
     gl.uniform2f(u.resolution, canvas.width, canvas.height)
     gl.uniform1f(u.scale, scale)
-    gl.uniform2f(
-      u.mark,
-      (markX * ratio) / scale,
-      ((height / 2 - markY) * ratio) / scale,
-    )
+    gl.uniform1f(u.side, sidePx() / unitPx())
     gl.uniform1f(u.time, time)
-    gl.uniform1f(u.intensity, palette.isDark ? 0.3 : 0.16)
-    const strength = palette.isDark ? 0.7 : 0.3
+    gl.uniform1f(u.intensity, palette.isDark ? 0.26 : 0.13)
+    const strength = palette.isDark ? 0.6 : 0.26
     packed.fill(0)
     bolts.forEach((bolt, i) => {
       packed.set([bolt.x, bolt.y, boltLight(bolt, time) * strength], i * 3)
@@ -301,11 +302,6 @@ export function createInitBannerStorm(
       ratio = Math.min(window.devicePixelRatio || 1, 2) * 0.5
       canvas.width = Math.max(1, Math.round(width * ratio))
       canvas.height = Math.max(1, Math.round(height * ratio))
-      draw()
-    },
-    setMark: (x, y) => {
-      markX = x
-      markY = y
       draw()
     },
     setPalette: (next) => {
