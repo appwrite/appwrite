@@ -1,11 +1,12 @@
 /**
  * Hand-written client for the Cloud single sign-on endpoints on Teams
- * (`teams.*SSODomain`, `teams.*SSOProvider`, `account.listSSOProviders`): they
+ * (`teams.*SSODomain`, `teams.*SSOProvider`, `account.listSSOProviders`) and
+ * for the project's Single sign-on add-on (`projects.createSSOAddon`): they
  * have not shipped in a Console SDK release yet. Delete this folder once the
  * Console SDK carries them.
  */
 
-import type { Client } from '@appwrite.io/console'
+import type { Client, Models } from '@appwrite.io/console'
 
 import type {
   OidcProviderParams,
@@ -101,6 +102,20 @@ export class TeamSSO {
   /** The providers someone can sign in through, from the email they typed. */
   listSignInProviders(email: string): Promise<SSOSignInProviderList> {
     return this.call('get', '/account/sessions/sso/providers', { email })
+  }
+
+  /**
+   * Enable the Single sign-on add-on for a project, for single sign-on in its
+   * teams. Like `projects.createPremiumGeoDBAddon`, it resolves with the add-on,
+   * or with a payment to authenticate and confirm first. Takes the parameters
+   * of the SDK's `projects.createSSOAddon`, to be swapped for it.
+   */
+  createSSOAddon({
+    projectId,
+  }: {
+    projectId: string
+  }): Promise<Models.Addon | Models.PaymentAuthentication> {
+    return this.call('post', `/projects/${this.id(projectId)}/addons/sso`)
   }
 
   /** Redirect URI to register at the identity provider: CE's OAuth2 callback for `sso`. */

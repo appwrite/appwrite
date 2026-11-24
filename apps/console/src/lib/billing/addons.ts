@@ -3,8 +3,30 @@ import { sdk } from '@/lib/appwrite/sdk'
 
 export const ADDON_KEY_PREMIUM_GEO_DB = 'premiumGeoDB'
 export const ADDON_KEY_BAA = 'baa'
+/** Single sign-on for the teams in a project, a project add-on. */
+export const ADDON_KEY_SSO = 'sso'
 
-export type SupportedAddonKey = keyof Models.BillingPlanSupportedAddons
+/**
+ * The add-ons a plan's `supportedAddons` names. The pinned Console SDK does not
+ * know `sso` yet.
+ */
+export type SupportedAddonKey =
+  | keyof Models.BillingPlanSupportedAddons
+  | typeof ADDON_KEY_SSO
+
+/** Whether `plan` sells the add-on `key`, as its `supportedAddons` says. */
+export function planSupportsAddon(
+  plan: unknown,
+  key: SupportedAddonKey,
+): boolean {
+  const supported = (plan as { supportedAddons?: unknown } | null | undefined)
+    ?.supportedAddons
+  return (
+    !!supported &&
+    typeof supported === 'object' &&
+    (supported as Record<string, unknown>)[key] === true
+  )
+}
 
 export function isPaymentAuthentication(
   result: unknown,
@@ -41,7 +63,7 @@ export function hasUpgradeablePlanWithAddon(
 ): boolean {
   if (!currentPlan) return false
   for (const plan of Object.values(plans)) {
-    if (plan.order > currentPlan.order && plan.supportedAddons?.[addonKey]) {
+    if (plan.order > currentPlan.order && planSupportsAddon(plan, addonKey)) {
       return true
     }
   }

@@ -213,6 +213,42 @@ describe('getUnsupportedAddonRemovals', () => {
       ['a-geo-org', 'organization'],
     ])
   })
+
+  test('turns off the Single sign-on project add-on where the target plan does not sell it', () => {
+    const projects = [
+      {
+        projectId: 'p-1',
+        projectName: 'Alpha',
+        addons: [
+          addon({
+            $id: 'a-sso',
+            key: 'sso',
+            resourceType: 'project',
+            resourceId: 'p-1',
+          }),
+        ],
+      },
+    ]
+
+    // A plan from an API without the add-on does not name it, so does not sell it
+    expect(
+      getUnsupportedAddonRemovals(snapshot({ projects }), freePlan),
+    ).toEqual([
+      {
+        key: 'sso',
+        label: 'Single sign-on',
+        scope: 'project',
+        resourceId: 'p-1',
+        addonId: 'a-sso',
+        projectName: 'Alpha',
+      },
+    ])
+    expect(
+      getUnsupportedAddonRemovals(snapshot({ projects }), {
+        supportedAddons: { ...freePlan.supportedAddons, sso: true },
+      }),
+    ).toEqual([])
+  })
 })
 
 describe('isDisableableDowngradeAddon', () => {

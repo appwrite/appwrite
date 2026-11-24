@@ -45,6 +45,7 @@ const DOWNGRADE_ADDON_KEYS: SupportedAddonKey[] = [
   'baa',
   'premiumGeoDB',
   'premiumGeoDBOrg',
+  'sso',
 ]
 
 export function isDisableableDowngradeAddon(key: string): boolean {
