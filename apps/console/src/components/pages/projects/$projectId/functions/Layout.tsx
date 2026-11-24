@@ -271,7 +271,7 @@ function FunctionLayoutContent() {
         ? [
             {
               id: 'runtime-logs' as const,
-              label: t('Runtime logs'),
+              label: t('Logs'),
               to: '/projects/$projectId/functions/$functionId/runtime-logs',
               params: {
                 projectId: projectId as string,

@@ -35,7 +35,7 @@ export function View() {
   }
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col px-4 sm:px-6">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <RuntimeLogsView
         projectId={projectId}
         resourceType="functions"
