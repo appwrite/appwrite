@@ -463,6 +463,25 @@ final class StorageCustomServerTest extends Scope
         $this->assertEventually(fn () => $this->assertSame([], $this->getCacheKeys($filesystem)), 300_000, 1000);
     }
 
+    #[Group('responseCacheOutage')]
+    public function testFilePreviewCachePurgeCoversAPreviewDeletedRightAfterItsResponse(): void
+    {
+        $this->skipUnlessCacheDeviceDown();
+
+        [$headers, $filesystem] = $this->getCacheFixture();
+        $path = $this->createPreviewFile($headers);
+
+        foreach (\range(20, 31) as $width) {
+            $preview = $this->client->call(Client::METHOD_GET, $path, $headers, ['width' => $width, 'output' => 'png']);
+            $this->assertSame(200, $preview['headers']['status-code']);
+        }
+
+        $delete = $this->client->call(Client::METHOD_DELETE, \dirname($path), $headers);
+        $this->assertSame(204, $delete['headers']['status-code']);
+
+        $this->assertEventually(fn () => $this->assertSame([], $this->getCacheKeys($filesystem)), 300_000, 1000);
+    }
+
     private function skipUnlessCacheDeviceDown(): void
     {
         $handle = \curl_init(System::getEnv('_APP_STORAGE_S3_ENDPOINT', ''));
