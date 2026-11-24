@@ -721,7 +721,7 @@ class Get extends Base
                 'secret' => $proofForTokenOAuth2->hash($secret), // One way hash encryption to protect DB leak
                 'expire' => $expire,
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
-                'ip' => $request->getIP(),
+                'ip' => $request->getClientIP(),
             ]);
 
             // If the `token` param is not set, we persist the session in a cookie
@@ -729,7 +729,7 @@ class Get extends Base
             $detector = new Detector($request->getUserAgent('UNKNOWN'));
             $secret = $proofForToken->generate();
 
-            $geoRecord = $geo->get($request->getIP());
+            $geoRecord = $geo->get($request->getClientIP());
             $session = new Document(array_merge([
                 '$id' => Id::unique(),
                 '$permissions' => [
@@ -749,7 +749,7 @@ class Get extends Base
                 'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry),
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
-                'ip' => $request->getIP(),
+                'ip' => $request->getClientIP(),
                 'factors' => [TYPE::EMAIL, 'oauth2'], // include a special oauth2 factor to bypass MFA checks
                 'countryCode' => \strtolower($geoRecord->getCountryCode()),
                 'continentCode' => $geoRecord->getContinentCode() === '--' ? null : $geoRecord->getContinentCode(),

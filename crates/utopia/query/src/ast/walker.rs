@@ -198,6 +198,9 @@ impl Walker {
             Expression::Binary(b) => {
                 self.boxed(&mut b.left, v)?;
                 self.boxed(&mut b.right, v)?;
+                if let Some(escape) = &mut b.escape {
+                    self.boxed(escape, v)?;
+                }
             }
             Expression::Unary(u) => self.boxed(&mut u.operand, v)?,
             Expression::Func(f) => {

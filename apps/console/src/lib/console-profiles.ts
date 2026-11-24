@@ -108,6 +108,12 @@ export type ConsoleProfileFeatures = {
   appwritePush: boolean
   /** Runtime logs: the project Logs page, the Runtime logs tabs on functions and sites, and the deployment page Build / Runtime switch. Cloud only: served by `/v1/logs`. */
   runtimeLogs: boolean
+  /**
+   * Appwrite Zero marketing page (`/zero`, `/zero.md`) and its Products menu and
+   * footer links. Off until launch: the page returns 404 while this is off.
+   * Enable from Debug → Feature flags; at launch, default it on.
+   */
+  zero: boolean
 }
 
 /** Short labels for debug UI (profile comparison, etc.). */
@@ -152,6 +158,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   analytics: 'Analytics',
   appwritePush: 'Appwrite push',
   runtimeLogs: 'Runtime logs',
+  zero: 'Zero',
 }
 
 export type ConsoleProfile = {
@@ -210,6 +217,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       appwritePush: true,
       // Off until launch; enable from Debug → Feature flags.
       runtimeLogs: false,
+      zero: false,
     },
   },
   'self-hosted': {
@@ -254,6 +262,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       analytics: false,
       appwritePush: true,
       runtimeLogs: false,
+      zero: false,
     },
   },
 }
@@ -534,6 +543,7 @@ function applyCloudOnlyFeatureGates(
       multiTenancy: false,
       projectEnvironments: false,
       sso: false,
+      zero: false,
     }
   }
   return features

@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useQuery,
+} from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import {
   AlertCircle,
   Download,
+  ListCollapse,
   Loader2,
   Pause,
   Play,
@@ -14,7 +18,8 @@ import {
   Search,
 } from 'lucide-react'
 import { EmptyState } from '@/components/global/shared/EmptyState'
-import { stripAnsiForClipboard } from '@/components/global/shared/BuildLogsView'
+import { RuntimeLogRow } from '@/components/global/shared/RuntimeLogRow'
+import { RuntimeLogsVolumeChart } from '@/components/global/shared/RuntimeLogsVolumeChart'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -30,13 +35,21 @@ import {
   fetchRuntimeLogsSince,
   RUNTIME_LOGS_PAGE_LIMIT,
   runtimeLogsInfiniteQueryOptions,
+  runtimeLogsUsageQueryOptions,
   type RuntimeLogRange,
   type RuntimeLogResourceType,
   type RuntimeLogScope,
   type RuntimeLogStream,
   type RuntimeLogsFilter,
+  type RuntimeLogWindow,
 } from '@/lib/react-query/hooks'
 import { useLocalizedDateFormat } from '@/lib/i18n/use-localized-date-format'
+import {
+  isAtLeast,
+  parseRuntimeLogLine,
+  stripAnsi,
+  type RuntimeLogLevel,
+} from '@/lib/runtime-log-line'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
@@ -50,6 +63,25 @@ const TAIL_MAX_LINES = 1000
 /** Full pages one live tail poll may read before waiting for the next poll. */
 const TAIL_MAX_PAGES_PER_TICK = 5
 
+/** Remembers, per browser, whether rows show time, stream and region as columns. */
+const METADATA_STORAGE_KEY = 'runtimeLogs:metadata'
+
+function readShowMetadata(): boolean {
+  try {
+    return window.localStorage.getItem(METADATA_STORAGE_KEY) === 'true'
+  } catch {
+    return false
+  }
+}
+
+function writeShowMetadata(value: boolean) {
+  try {
+    window.localStorage.setItem(METADATA_STORAGE_KEY, String(value))
+  } catch {
+    // Private windows and blocked storage just don't remember the choice
+  }
+}
+
 export interface RuntimeLogsViewProps {
   projectId: string | null | undefined
   /** `null` lists every resource in the project, with a column naming each. */
@@ -59,13 +91,20 @@ export interface RuntimeLogsViewProps {
   deploymentId?: string
   /** Rendered first in the toolbar, e.g. a deployment picker. */
   toolbarStart?: ReactNode
+  /**
+   * Side padding for the toolbar and the lines. The view itself has none, so
+   * the toolbar's bottom border runs edge to edge like other filter bars.
+   */
+  insetClassName?: string
   className?: string
 }
 
 /**
  * Runtime logs for one resource, or for the whole project: what it wrote to
  * stdout and stderr, newest first, with stream and time filters, cursor paging
- * and live tail.
+ * and live tail. JSON and logfmt lines show their level and message first,
+ * with their fields beside them; rows expand to show every field and the
+ * line's time, stream, region and deployment.
  */
 export function RuntimeLogsView({
   projectId,
@@ -73,6 +112,7 @@ export function RuntimeLogsView({
   resourceId,
   deploymentId,
   toolbarStart,
+  insetClassName = 'px-4 sm:px-6',
   className,
 }: RuntimeLogsViewProps) {
   const t = useT()
@@ -81,7 +121,11 @@ export function RuntimeLogsView({
   const [kind, setKind] = useState<RuntimeLogResourceType | 'all'>('all')
   const [stream, setStream] = useState<RuntimeLogStream>('all')
   const [range, setRange] = useState<RuntimeLogRange>('1h')
+  const [zoom, setZoom] = useState<RuntimeLogWindow | undefined>()
   const [search, setSearch] = useState('')
+  const [minLevel, setMinLevel] = useState<RuntimeLogLevel | 'all'>('all')
+  const [showMetadata, setShowMetadata] = useState(false)
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set())
   const [live, setLive] = useState(false)
   const [tail, setTail] = useState<Models.RuntimeLog[]>([])
   const [tailError, setTailError] = useState<string | null>(null)
@@ -92,8 +136,9 @@ export function RuntimeLogsView({
       resourceType: isProject && kind !== 'all' ? kind : undefined,
       stream,
       range,
+      window: zoom,
     }),
-    [deploymentId, isProject, kind, stream, range],
+    [deploymentId, isProject, kind, stream, range, zoom],
   )
   const ready = canListRuntimeLogs(projectId, resourceType, resourceId, filter)
 
@@ -114,6 +159,18 @@ export function RuntimeLogsView({
       filter,
     ),
     placeholderData: keepPreviousData,
+  })
+
+  // Live tail follows the clock, so it polls the chart too
+  const usage = useQuery({
+    ...runtimeLogsUsageQueryOptions(
+      projectId,
+      resourceType,
+      resourceId,
+      filter,
+    ),
+    placeholderData: keepPreviousData,
+    refetchInterval: live ? TAIL_INTERVAL_MS * 6 : false,
   })
 
   const fetched = useMemo(
@@ -208,18 +265,70 @@ export function RuntimeLogsView({
     }
   }, [live, ready, projectId, resourceType, resourceId, filter])
 
+  // Read after mount, so the server render and first client render agree
+  useEffect(() => {
+    setShowMetadata(readShowMetadata())
+  }, [])
+
+  const toggleMetadata = () => {
+    setShowMetadata((value) => {
+      writeShowMetadata(!value)
+      return !value
+    })
+  }
+
+  const toggleExpanded = useCallback((id: string) => {
+    setExpanded((current) => {
+      const next = new Set(current)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
+
+  // Parsed once per line, not on every render or keystroke
+  const parsedCache = useRef(new Map<string, ParsedLog>())
+  const parsed = useMemo(() => {
+    const cache = parsedCache.current
+    const next = new Map<string, ParsedLog>()
+    const rows = logs.map((log) => {
+      const hit = cache.get(log.$id)
+      const row = hit && hit.log === log ? hit : parseLog(log)
+      next.set(log.$id, row)
+      return row
+    })
+    parsedCache.current = next
+    return rows
+  }, [logs])
+
   const needle = search.trim().toLowerCase()
   const visible = useMemo(
     () =>
-      needle
-        ? logs.filter((log) => log.message.toLowerCase().includes(needle))
-        : logs,
-    [logs, needle],
+      parsed.filter(
+        (row) =>
+          (minLevel === 'all' || isAtLeast(row.level, minLevel)) &&
+          (!needle || row.plain.toLowerCase().includes(needle)),
+      ),
+    [parsed, needle, minLevel],
   )
+  const filtering = needle !== '' || minLevel !== 'all'
 
-  const formatTimestamp = useCallback(
+  const formatTime = useCallback(
     (timestamp: string) =>
       formatDateTime(new Date(timestamp), {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        fractionalSecondDigits: 3,
+        hour12: false,
+      }),
+    [formatDateTime],
+  )
+
+  const formatFullTimestamp = useCallback(
+    (timestamp: string) =>
+      formatDateTime(new Date(timestamp), {
+        year: 'numeric',
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
@@ -234,8 +343,8 @@ export function RuntimeLogsView({
   const handleDownload = () => {
     const text = visible
       .map(
-        (log) =>
-          `${log.timestamp} ${log.region} ${log.stream}${isProject ? ` ${log.resourceType}/${log.resourceId}` : ''} ${stripAnsiForClipboard(log.message)}`,
+        ({ log, plain }) =>
+          `${log.timestamp} ${log.region} ${log.stream}${isProject ? ` ${log.resourceType}/${log.resourceId}` : ''} ${plain}`,
       )
       .join('\n')
     const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' }))
@@ -248,18 +357,18 @@ export function RuntimeLogsView({
 
   const emptyDescription = isProject
     ? t(
-        "Lines your functions, sites and databases write to stdout and stderr show up here. Runtime logs may not be collected in this project's region yet.",
+        "Lines your functions, sites and databases write to stdout and stderr show up here. Logs may not be collected in this project's region yet.",
       )
     : resourceType === 'functions'
       ? t(
-          "Lines your function writes to stdout and stderr show up here. Runtime logs may not be collected in this project's region yet.",
+          "Lines your function writes to stdout and stderr show up here. Logs may not be collected in this project's region yet.",
         )
       : resourceType === 'sites'
         ? t(
-            "Lines your site writes to stdout and stderr show up here. Runtime logs may not be collected in this project's region yet.",
+            "Lines your site writes to stdout and stderr show up here. Logs may not be collected in this project's region yet.",
           )
         : t(
-            "Lines your database writes show up here. Runtime logs may not be collected in this project's region yet.",
+            "Lines your database writes show up here. Logs may not be collected in this project's region yet.",
           )
 
   const loadOlder = hasNextPage ? (
@@ -281,7 +390,7 @@ export function RuntimeLogsView({
         icon={ScrollText}
         variant="centered"
         title={t('No deployment selected')}
-        description={t('Pick a deployment to see its runtime logs.')}
+        description={t('Pick a deployment to see its logs.')}
       />
     )
   } else if (isLoading) {
@@ -297,7 +406,7 @@ export function RuntimeLogsView({
       <EmptyState
         icon={AlertCircle}
         variant="centered"
-        title={t('Could not load runtime logs')}
+        title={t('Could not load logs')}
         description={getErrorMessage(error)}
         action={
           <Button variant="outline" size="sm" onClick={() => refetch()}>
@@ -307,14 +416,14 @@ export function RuntimeLogsView({
       />
     )
   } else if (visible.length === 0) {
-    body = needle ? (
+    body = filtering ? (
       <EmptyState
         icon={Search}
         variant="centered"
         hasFilters
         title={t('No matching lines')}
         description={t(
-          'Only the lines loaded so far are searched. Load older lines or widen the time range to search further back.',
+          'Only the lines loaded so far are searched and filtered. Load older lines or widen the time range to search further back.',
         )}
         action={loadOlder}
       />
@@ -322,55 +431,31 @@ export function RuntimeLogsView({
       <EmptyState
         icon={ScrollText}
         variant="centered"
-        title={t('No runtime logs')}
+        title={t('No logs')}
         description={emptyDescription}
       />
     )
   } else {
     body = (
-      <div role="log" aria-live={live ? 'polite' : 'off'} className="py-2">
-        {visible.map((log) => (
-          <div
+      <div
+        role="log"
+        aria-live={live ? 'polite' : 'off'}
+        className="space-y-px py-2"
+      >
+        {visible.map(({ log, line, level, plain }) => (
+          <RuntimeLogRow
             key={log.$id}
-            className={cn(
-              'grid items-baseline gap-x-3 rounded px-2 py-0.5 font-mono text-[12px] leading-5 hover:bg-muted/50',
-              isProject
-                ? 'grid-cols-[auto_auto_auto_auto_1fr]'
-                : 'grid-cols-[auto_auto_auto_1fr]',
-            )}
-          >
-            <time
-              dateTime={log.timestamp}
-              title={log.timestamp}
-              className="whitespace-nowrap text-muted-foreground tabular-nums"
-            >
-              {formatTimestamp(log.timestamp)}
-            </time>
-            <span
-              className={cn(
-                'w-12 uppercase',
-                log.stream === 'stderr'
-                  ? 'text-red-600 dark:text-red-400'
-                  : 'text-muted-foreground',
-              )}
-            >
-              {log.stream}
-            </span>
-            <span className="w-8 uppercase text-muted-foreground">
-              {log.region}
-            </span>
-            {isProject && projectId && (
-              <ResourceCell projectId={projectId} log={log} />
-            )}
-            <span
-              className={cn(
-                'min-w-0 whitespace-pre-wrap break-words',
-                log.stream === 'stderr' && 'text-red-700 dark:text-red-300',
-              )}
-            >
-              {stripAnsiForClipboard(log.message)}
-            </span>
-          </div>
+            log={log}
+            line={line}
+            level={level}
+            plain={plain}
+            projectId={isProject && projectId ? projectId : undefined}
+            expanded={expanded.has(log.$id)}
+            onToggle={toggleExpanded}
+            showMetadata={showMetadata}
+            formatTime={formatTime}
+            formatDateTime={formatFullTimestamp}
+          />
         ))}
         {loadOlder && (
           <div className="flex justify-center py-3">{loadOlder}</div>
@@ -381,7 +466,12 @@ export function RuntimeLogsView({
 
   return (
     <div className={cn('flex min-h-0 min-w-0 flex-1 flex-col', className)}>
-      <div className="flex flex-wrap items-center gap-2 border-b border-border py-3">
+      <div
+        className={cn(
+          'flex flex-wrap items-center gap-2 border-b border-border py-3',
+          insetClassName,
+        )}
+      >
         {toolbarStart}
         {isProject && (
           <Select
@@ -421,8 +511,31 @@ export function RuntimeLogsView({
           </SelectContent>
         </Select>
         <Select
-          value={range}
-          onValueChange={(value) => setRange(value as RuntimeLogRange)}
+          value={minLevel}
+          onValueChange={(value) =>
+            setMinLevel(value as RuntimeLogLevel | 'all')
+          }
+        >
+          <SelectTrigger
+            className="h-9 w-[170px] text-[13px]"
+            aria-label={t('Level')}
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('All levels')}</SelectItem>
+            <SelectItem value="error">{t('Errors')}</SelectItem>
+            <SelectItem value="warn">{t('Warnings and up')}</SelectItem>
+            <SelectItem value="info">{t('Info and up')}</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select
+          value={zoom ? 'custom' : range}
+          onValueChange={(value) => {
+            if (value === 'custom') return
+            setZoom(undefined)
+            setRange(value as RuntimeLogRange)
+          }}
         >
           <SelectTrigger
             className="h-9 w-[150px] text-[13px]"
@@ -436,6 +549,9 @@ export function RuntimeLogsView({
             <SelectItem value="6h">{t('Last 6 hours')}</SelectItem>
             <SelectItem value="24h">{t('Last 24 hours')}</SelectItem>
             <SelectItem value="retention">{t('All retained')}</SelectItem>
+            {zoom && (
+              <SelectItem value="custom">{t('Selected range')}</SelectItem>
+            )}
           </SelectContent>
         </Select>
         <div className="relative min-w-[180px] flex-1">
@@ -451,7 +567,11 @@ export function RuntimeLogsView({
           variant={live ? 'default' : 'outline'}
           size="sm"
           className="h-9"
-          onClick={() => setLive((value) => !value)}
+          onClick={() => {
+            // Live follows new lines, so it leaves a zoomed window
+            if (!live) setZoom(undefined)
+            setLive((value) => !value)
+          }}
           disabled={!ready}
           aria-pressed={live}
         >
@@ -463,10 +583,24 @@ export function RuntimeLogsView({
           {live ? t('Pause') : t('Live')}
         </Button>
         <Button
+          variant={showMetadata ? 'secondary' : 'outline'}
+          size="sm"
+          className="h-9 w-9 p-0"
+          onClick={toggleMetadata}
+          aria-pressed={showMetadata}
+          aria-label={t('Show time, stream and region')}
+          title={t('Show time, stream and region')}
+        >
+          <ListCollapse className="h-4 w-4" />
+        </Button>
+        <Button
           variant="outline"
           size="sm"
           className="h-9 w-9 p-0"
-          onClick={() => refetch()}
+          onClick={() => {
+            void refetch()
+            void usage.refetch()
+          }}
           disabled={!ready || isFetching}
           aria-label={t('Refresh')}
           title={t('Refresh')}
@@ -486,65 +620,54 @@ export function RuntimeLogsView({
         </Button>
       </div>
       {tailError && (
-        <p className="border-b border-border py-2 text-[12px] text-amber-600 dark:text-amber-400">
+        <p
+          className={cn(
+            'border-b border-border py-2 text-[12px] text-amber-600 dark:text-amber-400',
+            insetClassName,
+          )}
+        >
           {t('Live tail paused on an error and will retry:')} {tailError}
         </p>
       )}
-      <div className="min-h-0 flex-1 overflow-y-auto">{body}</div>
+      {ready && !usage.error && (
+        <RuntimeLogsVolumeChart
+          points={usage.data?.points}
+          interval={usage.data?.interval}
+          total={usage.data?.total}
+          loading={usage.isLoading}
+          zoomed={!!zoom}
+          onZoom={(picked) => {
+            setLive(false)
+            setZoom({
+              from: picked.from!.toISOString(),
+              to: picked.to!.toISOString(),
+            })
+          }}
+          onResetZoom={() => setZoom(undefined)}
+          insetClassName={insetClassName}
+        />
+      )}
+      <div className={cn('min-h-0 flex-1 overflow-y-auto', insetClassName)}>
+        {body}
+      </div>
     </div>
   )
 }
 
-const RESOURCE_LABELS: Record<string, string> = {
-  functions: 'function',
-  sites: 'site',
-  databases: 'database',
+interface ParsedLog {
+  log: Models.RuntimeLog
+  line: ReturnType<typeof parseRuntimeLogLine>
+  /** The line's own level; otherwise stderr reads as an error, stdout as info. */
+  level: RuntimeLogLevel
+  plain: string
 }
 
-/** Names the resource behind a project-wide row, linking to its own logs. */
-function ResourceCell({
-  projectId,
-  log,
-}: {
-  projectId: string
-  log: Models.RuntimeLog
-}) {
-  const label = `${RESOURCE_LABELS[log.resourceType] ?? log.resourceType}/${log.resourceId}`
-  const className =
-    'max-w-[220px] truncate text-muted-foreground hover:text-foreground hover:underline'
-  const search = log.deploymentId ? { deploymentId: log.deploymentId } : {}
-  if (log.resourceType === 'functions') {
-    return (
-      <Link
-        to="/projects/$projectId/functions/$functionId/runtime-logs"
-        params={{ projectId, functionId: log.resourceId }}
-        search={search}
-        title={label}
-        className={className}
-      >
-        {label}
-      </Link>
-    )
+function parseLog(log: Models.RuntimeLog): ParsedLog {
+  const line = parseRuntimeLogLine(log.message)
+  return {
+    log,
+    line,
+    level: line.level ?? (log.stream === 'stderr' ? 'error' : 'info'),
+    plain: stripAnsi(log.message),
   }
-  if (log.resourceType === 'sites') {
-    return (
-      <Link
-        to="/projects/$projectId/sites/$siteId/runtime-logs"
-        params={{ projectId, siteId: log.resourceId }}
-        search={search}
-        title={label}
-        className={className}
-      >
-        {label}
-      </Link>
-    )
-  }
-  return (
-    <span
-      title={label}
-      className="max-w-[220px] truncate text-muted-foreground"
-    >
-      {label}
-    </span>
-  )
 }

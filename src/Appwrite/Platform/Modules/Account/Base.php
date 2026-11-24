@@ -123,7 +123,7 @@ abstract class Base extends Action
             }
         }
 
-        $geoRecord = $geo->get($request->getIP());
+        $geoRecord = $geo->get($request->getClientIP());
         $session = new Document(array_merge(
             [
                 '$id' => Id::unique(),
@@ -135,7 +135,7 @@ abstract class Base extends Action
                 'provider' => $provider,
                 'secret' => $proofForToken->hash($sessionSecret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
-                'ip' => $request->getIP(),
+                'ip' => $request->getClientIP(),
                 'factors' => [$factor],
                 'countryCode' => \strtolower($geoRecord->getCountryCode()),
                 'continentCode' => $geoRecord->getContinentCode() === '--' ? null : $geoRecord->getContinentCode(),

@@ -23,7 +23,18 @@ import {
 import { BREAKDOWN_DIALOG_MAX_ROWS } from './BreakdownDialog'
 import { useAnalyticsFilters } from './analytics-filters-context'
 import type { AnalyticsFilter } from '@/lib/analytics/analytics-filters'
-import { BrowserIcon, ChannelIcon, CountryFlag, SourceFavicon } from './BreakdownRow'
+import {
+  analyticsUserHref,
+  analyticsUserLabel,
+  useAnalyticsUserDirectory,
+} from '@/lib/analytics/user-directory'
+import {
+  AnalyticsUserAvatar,
+  BrowserIcon,
+  ChannelIcon,
+  CountryFlag,
+  SourceFavicon,
+} from './BreakdownRow'
 
 // Bars stay neutral (the BreakdownRow default), like Usage's breakdowns:
 // rows are told apart by their icon and label, not a colour per rank.
@@ -114,6 +125,8 @@ const SCREEN_TABS: BreakdownTab[] = [
     id: 'entry',
     label: 'Entry screens',
     dimension: AnalyticsDimension.EntryPage,
+    // A resume that never reports a screen still opens a session.
+    blankLabel: 'No screen (resumed)',
   },
   {
     id: 'exit',
@@ -255,10 +268,38 @@ const TECH_TABS: BreakdownTab[] = [
 ]
 
 // The Flutter tracker sends no user agent, so apps have no browser to break
-// down; OS versions is left alone, so it drops its one-entry Versions menu.
-const MOBILE_TECH_TABS = TECH_TABS.filter(
-  (tab) => tab.id !== 'browsers' && tab.id !== 'browser-versions',
-).map((tab) => ({ ...tab, group: undefined }))
+// down. The trackers report each app under `app://<platform>`, so the hostname
+// is the platform.
+const MOBILE_TECH_TABS: BreakdownTab[] = [
+  {
+    id: 'platforms',
+    label: 'Platforms',
+    dimension: AnalyticsDimension.Hostname,
+  },
+  ...TECH_TABS.filter(
+    (tab) => tab.id !== 'browsers' && tab.id !== 'browser-versions',
+  ),
+  {
+    id: 'app-versions',
+    label: 'App versions',
+    dimension: AnalyticsDimension.Props,
+    propKey: 'appVersion',
+    group: 'Versions',
+    emptyLabel: 'No events with an appVersion prop in this range',
+  },
+]
+
+const PLATFORM_LABELS: Record<string, string> = {
+  android: 'Android',
+  ios: 'iOS',
+  macos: 'macOS',
+  tvos: 'tvOS',
+  visionos: 'visionOS',
+  watchos: 'watchOS',
+  windows: 'Windows',
+  linux: 'Linux',
+  fuchsia: 'Fuchsia',
+}
 
 export function TechnologyPanel({
   type,
@@ -279,6 +320,9 @@ export function TechnologyPanel({
       mobile={mobile}
       renderLeading={(entry, _index, tabId) =>
         tabId === 'browsers' ? <BrowserIcon name={entry.value} /> : undefined
+      }
+      formatLabel={(value, tabId) =>
+        tabId === 'platforms' ? (PLATFORM_LABELS[value] ?? value) : value
       }
     />
   )
@@ -350,17 +394,37 @@ export function useShowUsersPanel(
   return !!property?.identifyUsers || (data?.breakdown.length ?? 0) > 0
 }
 
+/**
+ * Identified users as people: photo and name (or email). A row opens the
+ * user's analytics in this property; project users also link to Auth. IDs
+ * with no project user (sent by a server with an API key) stay IDs and get no
+ * Auth link.
+ */
 export function UsersPanel(props: PanelProps) {
   const navigate = useNavigate()
-  // Opens the user's analytics, not Auth: an ID sent with an API key may not be a project user.
+  const lookup = useAnalyticsUserDirectory(props.projectId)
   return (
     <BreakdownPanel
       {...props}
       title="Users"
-      description="Identified users, ranked by visitors"
+      description="Signed-in users, ranked by visits"
       info="users"
       tabs={USER_TABS}
-      mono
+      // A signed-in user's visitor ID is keyed by user and day, so their
+      // visitor count is days seen, not people. Visits is the useful measure.
+      valueKey="sessions"
+      formatLabel={(value) => analyticsUserLabel(value, lookup(value))}
+      renderLeading={(entry) => (
+        <AnalyticsUserAvatar
+          projectId={props.projectId}
+          userId={entry.value!}
+          user={lookup(entry.value)}
+        />
+      )}
+      rowHref={(value) =>
+        lookup(value) ? analyticsUserHref(props.projectId, value) : undefined
+      }
+      rowHrefTitle="View user"
       emptyLabel="No identified users in this range"
       onRowClick={(userId) =>
         navigate({

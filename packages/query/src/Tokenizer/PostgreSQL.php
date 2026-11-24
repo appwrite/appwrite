@@ -2,8 +2,15 @@
 
 namespace Utopia\Query\Tokenizer;
 
+use Utopia\Query\StringLiteral;
+
 class PostgreSQL extends Tokenizer
 {
+    public function __construct(StringLiteral $literal = StringLiteral::Extended)
+    {
+        parent::__construct($literal);
+    }
+
     protected function getIdentifierQuoteChar(): string
     {
         return '"';

@@ -2174,6 +2174,98 @@ class HollowBuilder extends Utopia\Query\Builder\MySQL
 }
 emit('view of a hollow statement', outcome(fn () => (new Utopia\Query\Schema\MySQL())->createView('v', new HollowBuilder())));
 
+// --- String literals -----------------------------------------------------------------------
+
+// Each dialect writes and reads a string literal by its own rules, and takes another's when given one.
+$rules = Utopia\Query\StringLiteral::cases();
+$texts = [
+    '', 'plain', "it's", 'back\\slash', '\\', 'a\\', "nul\0byte", "é\\", "\xff\\", "\xe9\\x", "a\\\xff", "\x80", 'tab\\tnl\\n',
+    "\\'", "''", '%_\\%\\_', '日本\\語', "line\nbreak",
+];
+$literals = [
+    "''", "'a'", "'it''s'", "'a\\'b'", "'a\\\\b'", "'\\n\\t\\r\\b\\0\\Z\\a\\f\\v\\%\\_\\q'", "'\\x41\\x4\\xg\\xff'", "'\\101\\7\\400\\8'",
+    "'\\u00e9\\u12\\U0001F600\\U0000d800\\uD800'", "'\\U00110000'", "E'a\\nb'", "e'\\x41'", "E'\\u00e9'", "E'\\0'", "E'\\101'", "E''", "E'it''s'",
+    "'\xff'", "'\xff\\n'", "E'\xe9\\xe9\\u00e9'", "'a\\", "'a'b'", "'", "E'", "E'\\'", "'nul\0'", "'\\0'", 'E', "'a' 'b'",
+];
+foreach ($rules as $rule) {
+    $classes = [Tokenizer\Tokenizer::class, Tokenizer\MySQL::class, Tokenizer\MariaDB::class, Tokenizer\PostgreSQL::class, Tokenizer\SQLite::class, Tokenizer\ClickHouse::class];
+    foreach ($classes as $class) {
+        $read = [];
+        foreach ($literals as $literal) {
+            $read[] = outcome(fn () => (new $class($rule))->tokenize('SELECT ' . $literal . ' # c' . "\n" . ', `a`, "b" -- d'));
+        }
+        emit('literal tokens ' . $rule->name . ' ' . $class, $read);
+    }
+    $parsed = [];
+    foreach ($literals as $literal) {
+        foreach ([Tokenizer\Tokenizer::class, Tokenizer\PostgreSQL::class] as $class) {
+            $parsed[] = outcome(fn () => (new AST\Parser($rule))->parse(Tokenizer\Tokenizer::filter((new $class($rule))->tokenize('SELECT ' . $literal))));
+        }
+    }
+    emit('literal parsed ' . $rule->name, $parsed);
+    $written = [];
+    foreach ([AST\Serializer::class, AST\Serializer\MySQL::class, AST\Serializer\MariaDB::class, AST\Serializer\PostgreSQL::class, AST\Serializer\SQLite::class, AST\Serializer\ClickHouse::class] as $class) {
+        foreach ($texts as $text) {
+            $written[] = outcome(fn () => (new $class($rule))->serializeExpression(new AST\Literal($text)));
+        }
+    }
+    emit('literal written ' . $rule->name, $written);
+}
+// The defaults of each class, and a literal read back from what was written.
+$defaults = [];
+foreach ([[Tokenizer\Tokenizer::class, AST\Serializer::class], [Tokenizer\MySQL::class, AST\Serializer\MySQL::class], [Tokenizer\PostgreSQL::class, AST\Serializer\PostgreSQL::class], [Tokenizer\SQLite::class, AST\Serializer\SQLite::class], [Tokenizer\ClickHouse::class, AST\Serializer\ClickHouse::class]] as [$tokenizer, $serializer]) {
+    foreach ($texts as $text) {
+        $defaults[] = outcome(fn () => (new $serializer())->serializeExpression(new AST\Literal($text)));
+        $defaults[] = outcome(fn () => (new $tokenizer())->tokenize("SELECT 'a\\'b', E'c\\'d', e'f'"));
+    }
+}
+emit('literal defaults', $defaults);
+
+// LIKE keeps its ESCAPE clause, and nothing may follow a statement but one semicolon.
+$likes = [];
+foreach ([
+    "SELECT a LIKE 'x!%' ESCAPE '!'", "SELECT a NOT LIKE b ESCAPE c", "SELECT a ILIKE 'x' escape '\\\\' AND b", "SELECT a NOT ILIKE 'x' ESCAPE '!' OR b LIKE 'y'",
+    "SELECT a LIKE 'x' ESCAPE", "SELECT a LIKE 'x' ESCAPE '!' ESCAPE '?'", 'SELECT escape FROM t', 'SELECT a = b ESCAPE c', 'SELECT 1;', 'SELECT 1;;', 'SELECT 1; SELECT 2',
+    'SELECT 1 2', 'SELECT 1 FROM t )', 'SELECT a FROM t WHERE x LIKE y ESCAPE z ORDER BY a;',
+] as $sql) {
+    foreach ([[new Tokenizer\Tokenizer(), new AST\Parser(), new AST\Serializer()], [new Tokenizer\PostgreSQL(), new AST\Parser(Utopia\Query\StringLiteral::Extended), new AST\Serializer\PostgreSQL()]] as [$tokenizer, $reader, $writer]) {
+        $likes[] = outcome(fn () => $reader->parse(Tokenizer\Tokenizer::filter($tokenizer->tokenize($sql))));
+        $likes[] = outcome(fn () => $writer->serialize($reader->parse(Tokenizer\Tokenizer::filter($tokenizer->tokenize($sql)))));
+    }
+}
+$likes[] = outcome(fn () => (new AST\Serializer())->serializeExpression(new AST\Expression\Binary(new AST\Reference\Column('a'), 'LIKE', new AST\Literal('x'), new AST\Expression\Binary(new AST\Literal('!'), 'OR', new AST\Literal('?')))));
+emit('like escape and trailing input', $likes);
+
+// DDL inlines its strings through the same rules.
+$inlined = [];
+foreach ($schemas as $dialect => $schema) {
+    foreach ($texts as $text) {
+        $inlined[] = outcome(function () use ($schema, $text) {
+            $table = $schema->table('t');
+            $table->string('a')->default($text)->comment($text);
+            $table->enum('e', [$text, 'b']);
+
+            return $table->create();
+        });
+        if ($schema instanceof Schema\Feature\TableComments) {
+            $inlined[] = outcome(fn () => $schema->commentOnTable('t', $text));
+        }
+        if ($schema instanceof Schema\Feature\ColumnComments) {
+            $inlined[] = outcome(fn () => $schema->commentOnColumn('t', 'c', $text));
+        }
+        if ($schema instanceof Schema\Feature\DropPartition) {
+            $inlined[] = outcome(fn () => $schema->dropPartition('t', $text));
+        }
+        if ($schema instanceof Schema\PostgreSQL) {
+            $inlined[] = outcome(fn () => $schema->createType('m', [$text, 'b']));
+            $inlined[] = outcome(fn () => $schema->nextVal($text));
+            $inlined[] = outcome(fn () => $schema->createCollation('c', ['a' => $text, 'b' => 1, 'c' => null]));
+            $inlined[] = outcome(fn () => $schema->createCollation('c', ['bad key' => $text, 'c' => []]));
+        }
+    }
+}
+emit('literal in DDL', $inlined);
+
 // --- The classes themselves ----------------------------------------------------------------
 
 emit('cases', array_map(fn (Type $type): array => [$type->name, $type->value], Type::cases()));
@@ -2379,6 +2471,14 @@ if ($requested) {
         }
     }
 }
+// The rules a tokenizer, a serializer and a schema were given are a protected property in PHP. The extension
+// keeps them in Rust, so a subclass cannot read `$this->literal`.
+$held = [property_exists(Tokenizer\Tokenizer::class, 'literal'), property_exists(AST\Serializer::class, 'literal'), property_exists(Schema::class, 'literal')];
+if ($held !== [! $requested, ! $requested, ! $requested]) {
+    fwrite(STDERR, 'The literal property is ' . json_encode($held) . ': the known difference changed' . PHP_EOL);
+    exit(1);
+}
+
 // serialize() and unserialize(): the text is what PHP's own class writes, so one reads what the other wrote.
 // utopia-php/database hashes it for its cache keys. A subclass keeps the properties it declares.
 class SerializedQuery extends Query

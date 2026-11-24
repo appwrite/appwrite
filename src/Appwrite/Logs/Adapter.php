@@ -36,4 +36,13 @@ abstract class Adapter
 
     /** @param array<Query> $queries */
     abstract public function count(string $projectId, array $queries, int $max): int;
+
+    /**
+     * Count matching lines per time bucket, oldest first. Buckets without lines are left out.
+     *
+     * @param array<Query> $queries Filters only; order, limit and cursor queries are ignored
+     * @param int $interval Bucket width in seconds
+     * @return list<array{time: string, total: int, stderr: int}>
+     */
+    abstract public function histogram(string $projectId, array $queries, int $interval): array;
 }

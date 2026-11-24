@@ -31,6 +31,7 @@ import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SetupDotmdRouteImport } from './routes/setup[.]md'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TransferRouteImport } from './routes/transfer'
+import { Route as ZeroDotmdRouteImport } from './routes/zero[.]md'
 import { Route as ApiA2aRouteImport } from './routes/_api/a2a'
 import { Route as ApiAskRouteImport } from './routes/_api/ask'
 import { Route as ApiChangelogDotjsonRouteImport } from './routes/_api/changelog[.]json'
@@ -65,6 +66,7 @@ import { Route as MarketingPricingRouteImport } from './routes/_marketing/pricin
 import { Route as MarketingPrivacyRouteImport } from './routes/_marketing/privacy'
 import { Route as MarketingStartupsRouteImport } from './routes/_marketing/startups'
 import { Route as MarketingTermsRouteImport } from './routes/_marketing/terms'
+import { Route as MarketingZeroRouteImport } from './routes/_marketing/zero'
 import { Route as ProtectedExampleProtectedRouteRouteImport } from './routes/_protected/example-protected-route'
 import { Route as PublicAccountRouteImport } from './routes/_public/account'
 import { Route as PublicAgentRouteImport } from './routes/_public/agent'
@@ -396,6 +398,7 @@ import { Route as PublicProjectsProjectIdAnalyticsPropertyIdUsersUserIdRouteImpo
 import { Route as PublicProjectsProjectIdAuthTeamsTeamIdActivityRouteImport } from './routes/_public/projects.$projectId.auth.teams.$teamId.activity'
 import { Route as PublicProjectsProjectIdAuthTeamsTeamIdMembersRouteImport } from './routes/_public/projects.$projectId.auth.teams.$teamId.members'
 import { Route as PublicProjectsProjectIdAuthUsersUserIdActivityRouteImport } from './routes/_public/projects.$projectId.auth.users.$userId.activity'
+import { Route as PublicProjectsProjectIdAuthUsersUserIdAnalyticsRouteImport } from './routes/_public/projects.$projectId.auth.users.$userId.analytics'
 import { Route as PublicProjectsProjectIdAuthUsersUserIdIdentitiesRouteImport } from './routes/_public/projects.$projectId.auth.users.$userId.identities'
 import { Route as PublicProjectsProjectIdAuthUsersUserIdMembershipsRouteImport } from './routes/_public/projects.$projectId.auth.users.$userId.memberships'
 import { Route as PublicProjectsProjectIdAuthUsersUserIdSessionsRouteImport } from './routes/_public/projects.$projectId.auth.users.$userId.sessions'
@@ -634,6 +637,11 @@ const TransferRoute = TransferRouteImport.update({
   path: '/transfer',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ZeroDotmdRoute = ZeroDotmdRouteImport.update({
+  id: '/zero.md',
+  path: '/zero.md',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiA2aRoute = ApiA2aRouteImport.update({
   id: '/_api/a2a',
   path: '/a2a',
@@ -803,6 +811,11 @@ const MarketingStartupsRoute = MarketingStartupsRouteImport.update({
 const MarketingTermsRoute = MarketingTermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingZeroRoute = MarketingZeroRouteImport.update({
+  id: '/zero',
+  path: '/zero',
   getParentRoute: () => MarketingRoute,
 } as any)
 const ProtectedExampleProtectedRouteRoute =
@@ -2711,6 +2724,12 @@ const PublicProjectsProjectIdAuthUsersUserIdActivityRoute =
     path: '/activity',
     getParentRoute: () => PublicProjectsProjectIdAuthUsersUserIdRoute,
   } as any)
+const PublicProjectsProjectIdAuthUsersUserIdAnalyticsRoute =
+  PublicProjectsProjectIdAuthUsersUserIdAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => PublicProjectsProjectIdAuthUsersUserIdRoute,
+  } as any)
 const PublicProjectsProjectIdAuthUsersUserIdIdentitiesRoute =
   PublicProjectsProjectIdAuthUsersUserIdIdentitiesRouteImport.update({
     id: '/identities',
@@ -3749,6 +3768,7 @@ export interface FileRoutesByFullPath {
   '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/transfer': typeof TransferRoute
+  '/zero.md': typeof ZeroDotmdRoute
   '/a2a': typeof ApiA2aRoute
   '/ask': typeof ApiAskRoute
   '/changelog.json': typeof ApiChangelogDotjsonRoute
@@ -3782,6 +3802,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof MarketingPrivacyRoute
   '/startups': typeof MarketingStartupsRoute
   '/terms': typeof MarketingTermsRoute
+  '/zero': typeof MarketingZeroRoute
   '/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/account': typeof PublicAccountRouteWithChildren
   '/agent': typeof PublicAgentRouteWithChildren
@@ -4113,6 +4134,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/auth/teams/$teamId/activity': typeof PublicProjectsProjectIdAuthTeamsTeamIdActivityRoute
   '/projects/$projectId/auth/teams/$teamId/members': typeof PublicProjectsProjectIdAuthTeamsTeamIdMembersRoute
   '/projects/$projectId/auth/users/$userId/activity': typeof PublicProjectsProjectIdAuthUsersUserIdActivityRoute
+  '/projects/$projectId/auth/users/$userId/analytics': typeof PublicProjectsProjectIdAuthUsersUserIdAnalyticsRoute
   '/projects/$projectId/auth/users/$userId/identities': typeof PublicProjectsProjectIdAuthUsersUserIdIdentitiesRoute
   '/projects/$projectId/auth/users/$userId/memberships': typeof PublicProjectsProjectIdAuthUsersUserIdMembershipsRoute
   '/projects/$projectId/auth/users/$userId/sessions': typeof PublicProjectsProjectIdAuthUsersUserIdSessionsRoute
@@ -4263,6 +4285,7 @@ export interface FileRoutesByTo {
   '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/transfer': typeof TransferRoute
+  '/zero.md': typeof ZeroDotmdRoute
   '/a2a': typeof ApiA2aRoute
   '/ask': typeof ApiAskRoute
   '/changelog.json': typeof ApiChangelogDotjsonRoute
@@ -4296,6 +4319,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof MarketingPrivacyRoute
   '/startups': typeof MarketingStartupsRoute
   '/terms': typeof MarketingTermsRoute
+  '/zero': typeof MarketingZeroRoute
   '/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/app': typeof PublicAppRoute
   '/assistant': typeof PublicAssistantRoute
@@ -4579,6 +4603,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/auth/teams/$teamId/activity': typeof PublicProjectsProjectIdAuthTeamsTeamIdActivityRoute
   '/projects/$projectId/auth/teams/$teamId/members': typeof PublicProjectsProjectIdAuthTeamsTeamIdMembersRoute
   '/projects/$projectId/auth/users/$userId/activity': typeof PublicProjectsProjectIdAuthUsersUserIdActivityRoute
+  '/projects/$projectId/auth/users/$userId/analytics': typeof PublicProjectsProjectIdAuthUsersUserIdAnalyticsRoute
   '/projects/$projectId/auth/users/$userId/identities': typeof PublicProjectsProjectIdAuthUsersUserIdIdentitiesRoute
   '/projects/$projectId/auth/users/$userId/memberships': typeof PublicProjectsProjectIdAuthUsersUserIdMembershipsRoute
   '/projects/$projectId/auth/users/$userId/sessions': typeof PublicProjectsProjectIdAuthUsersUserIdSessionsRoute
@@ -4729,6 +4754,7 @@ export interface FileRoutesById {
   '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/transfer': typeof TransferRoute
+  '/zero.md': typeof ZeroDotmdRoute
   '/_api/a2a': typeof ApiA2aRoute
   '/_api/ask': typeof ApiAskRoute
   '/_api/changelog.json': typeof ApiChangelogDotjsonRoute
@@ -4762,6 +4788,7 @@ export interface FileRoutesById {
   '/_marketing/privacy': typeof MarketingPrivacyRoute
   '/_marketing/startups': typeof MarketingStartupsRoute
   '/_marketing/terms': typeof MarketingTermsRoute
+  '/_marketing/zero': typeof MarketingZeroRoute
   '/_protected/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/_public/account': typeof PublicAccountRouteWithChildren
   '/_public/agent': typeof PublicAgentRouteWithChildren
@@ -5094,6 +5121,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/auth/teams/$teamId/activity': typeof PublicProjectsProjectIdAuthTeamsTeamIdActivityRoute
   '/_public/projects/$projectId/auth/teams/$teamId/members': typeof PublicProjectsProjectIdAuthTeamsTeamIdMembersRoute
   '/_public/projects/$projectId/auth/users/$userId/activity': typeof PublicProjectsProjectIdAuthUsersUserIdActivityRoute
+  '/_public/projects/$projectId/auth/users/$userId/analytics': typeof PublicProjectsProjectIdAuthUsersUserIdAnalyticsRoute
   '/_public/projects/$projectId/auth/users/$userId/identities': typeof PublicProjectsProjectIdAuthUsersUserIdIdentitiesRoute
   '/_public/projects/$projectId/auth/users/$userId/memberships': typeof PublicProjectsProjectIdAuthUsersUserIdMembershipsRoute
   '/_public/projects/$projectId/auth/users/$userId/sessions': typeof PublicProjectsProjectIdAuthUsersUserIdSessionsRoute
@@ -5248,6 +5276,7 @@ export interface FileRouteTypes {
     | '/setup.md'
     | '/sitemap.xml'
     | '/transfer'
+    | '/zero.md'
     | '/a2a'
     | '/ask'
     | '/changelog.json'
@@ -5281,6 +5310,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/startups'
     | '/terms'
+    | '/zero'
     | '/example-protected-route'
     | '/account'
     | '/agent'
@@ -5612,6 +5642,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/auth/teams/$teamId/activity'
     | '/projects/$projectId/auth/teams/$teamId/members'
     | '/projects/$projectId/auth/users/$userId/activity'
+    | '/projects/$projectId/auth/users/$userId/analytics'
     | '/projects/$projectId/auth/users/$userId/identities'
     | '/projects/$projectId/auth/users/$userId/memberships'
     | '/projects/$projectId/auth/users/$userId/sessions'
@@ -5762,6 +5793,7 @@ export interface FileRouteTypes {
     | '/setup.md'
     | '/sitemap.xml'
     | '/transfer'
+    | '/zero.md'
     | '/a2a'
     | '/ask'
     | '/changelog.json'
@@ -5795,6 +5827,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/startups'
     | '/terms'
+    | '/zero'
     | '/example-protected-route'
     | '/app'
     | '/assistant'
@@ -6078,6 +6111,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/auth/teams/$teamId/activity'
     | '/projects/$projectId/auth/teams/$teamId/members'
     | '/projects/$projectId/auth/users/$userId/activity'
+    | '/projects/$projectId/auth/users/$userId/analytics'
     | '/projects/$projectId/auth/users/$userId/identities'
     | '/projects/$projectId/auth/users/$userId/memberships'
     | '/projects/$projectId/auth/users/$userId/sessions'
@@ -6227,6 +6261,7 @@ export interface FileRouteTypes {
     | '/setup.md'
     | '/sitemap.xml'
     | '/transfer'
+    | '/zero.md'
     | '/_api/a2a'
     | '/_api/ask'
     | '/_api/changelog.json'
@@ -6260,6 +6295,7 @@ export interface FileRouteTypes {
     | '/_marketing/privacy'
     | '/_marketing/startups'
     | '/_marketing/terms'
+    | '/_marketing/zero'
     | '/_protected/example-protected-route'
     | '/_public/account'
     | '/_public/agent'
@@ -6592,6 +6628,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/auth/teams/$teamId/activity'
     | '/_public/projects/$projectId/auth/teams/$teamId/members'
     | '/_public/projects/$projectId/auth/users/$userId/activity'
+    | '/_public/projects/$projectId/auth/users/$userId/analytics'
     | '/_public/projects/$projectId/auth/users/$userId/identities'
     | '/_public/projects/$projectId/auth/users/$userId/memberships'
     | '/_public/projects/$projectId/auth/users/$userId/sessions'
@@ -6748,6 +6785,7 @@ export interface RootRouteChildren {
   SetupDotmdRoute: typeof SetupDotmdRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TransferRoute: typeof TransferRoute
+  ZeroDotmdRoute: typeof ZeroDotmdRoute
   ApiA2aRoute: typeof ApiA2aRoute
   ApiAskRoute: typeof ApiAskRoute
   ApiChangelogDotjsonRoute: typeof ApiChangelogDotjsonRoute
@@ -6940,6 +6978,13 @@ declare module '@tanstack/react-router' {
       path: '/transfer'
       fullPath: '/transfer'
       preLoaderRoute: typeof TransferRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/zero.md': {
+      id: '/zero.md'
+      path: '/zero.md'
+      fullPath: '/zero.md'
+      preLoaderRoute: typeof ZeroDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_api/a2a': {
@@ -7178,6 +7223,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof MarketingTermsRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/zero': {
+      id: '/_marketing/zero'
+      path: '/zero'
+      fullPath: '/zero'
+      preLoaderRoute: typeof MarketingZeroRouteImport
       parentRoute: typeof MarketingRoute
     }
     '/_protected/example-protected-route': {
@@ -9497,6 +9549,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdAuthUsersUserIdActivityRouteImport
       parentRoute: typeof PublicProjectsProjectIdAuthUsersUserIdRoute
     }
+    '/_public/projects/$projectId/auth/users/$userId/analytics': {
+      id: '/_public/projects/$projectId/auth/users/$userId/analytics'
+      path: '/analytics'
+      fullPath: '/projects/$projectId/auth/users/$userId/analytics'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthUsersUserIdAnalyticsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthUsersUserIdRoute
+    }
     '/_public/projects/$projectId/auth/users/$userId/identities': {
       id: '/_public/projects/$projectId/auth/users/$userId/identities'
       path: '/identities'
@@ -10479,6 +10538,7 @@ interface MarketingRouteChildren {
   MarketingPrivacyRoute: typeof MarketingPrivacyRoute
   MarketingStartupsRoute: typeof MarketingStartupsRoute
   MarketingTermsRoute: typeof MarketingTermsRoute
+  MarketingZeroRoute: typeof MarketingZeroRoute
   MarketingIndexRoute: typeof MarketingIndexRoute
   MarketingAlternativeToCompetitorRoute: typeof MarketingAlternativeToCompetitorRoute
   MarketingBlogPageRoute: typeof MarketingBlogPageRoute
@@ -10518,6 +10578,7 @@ const MarketingRouteChildren: MarketingRouteChildren = {
   MarketingPrivacyRoute: MarketingPrivacyRoute,
   MarketingStartupsRoute: MarketingStartupsRoute,
   MarketingTermsRoute: MarketingTermsRoute,
+  MarketingZeroRoute: MarketingZeroRoute,
   MarketingIndexRoute: MarketingIndexRoute,
   MarketingAlternativeToCompetitorRoute: MarketingAlternativeToCompetitorRoute,
   MarketingBlogPageRoute: MarketingBlogPageRoute,
@@ -11039,6 +11100,7 @@ const PublicProjectsProjectIdAuthTeamsRouteWithChildren =
 
 interface PublicProjectsProjectIdAuthUsersUserIdRouteChildren {
   PublicProjectsProjectIdAuthUsersUserIdActivityRoute: typeof PublicProjectsProjectIdAuthUsersUserIdActivityRoute
+  PublicProjectsProjectIdAuthUsersUserIdAnalyticsRoute: typeof PublicProjectsProjectIdAuthUsersUserIdAnalyticsRoute
   PublicProjectsProjectIdAuthUsersUserIdIdentitiesRoute: typeof PublicProjectsProjectIdAuthUsersUserIdIdentitiesRoute
   PublicProjectsProjectIdAuthUsersUserIdMembershipsRoute: typeof PublicProjectsProjectIdAuthUsersUserIdMembershipsRoute
   PublicProjectsProjectIdAuthUsersUserIdSessionsRoute: typeof PublicProjectsProjectIdAuthUsersUserIdSessionsRoute
@@ -11049,6 +11111,8 @@ const PublicProjectsProjectIdAuthUsersUserIdRouteChildren: PublicProjectsProject
   {
     PublicProjectsProjectIdAuthUsersUserIdActivityRoute:
       PublicProjectsProjectIdAuthUsersUserIdActivityRoute,
+    PublicProjectsProjectIdAuthUsersUserIdAnalyticsRoute:
+      PublicProjectsProjectIdAuthUsersUserIdAnalyticsRoute,
     PublicProjectsProjectIdAuthUsersUserIdIdentitiesRoute:
       PublicProjectsProjectIdAuthUsersUserIdIdentitiesRoute,
     PublicProjectsProjectIdAuthUsersUserIdMembershipsRoute:
@@ -12600,6 +12664,7 @@ const rootRouteChildren: RootRouteChildren = {
   SetupDotmdRoute: SetupDotmdRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TransferRoute: TransferRoute,
+  ZeroDotmdRoute: ZeroDotmdRoute,
   ApiA2aRoute: ApiA2aRoute,
   ApiAskRoute: ApiAskRoute,
   ApiChangelogDotjsonRoute: ApiChangelogDotjsonRoute,
