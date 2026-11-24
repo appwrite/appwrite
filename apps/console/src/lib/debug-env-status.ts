@@ -127,11 +127,6 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
     description: 'Override the project environments switcher (Cloud only)',
   },
   {
-    key: 'VITE_CONSOLE_ZERO',
-    group: 'Runtime',
-    description: 'Override the Appwrite Zero page and its menu links (Cloud only)',
-  },
-  {
     key: 'VITE_CONSOLE_PRE_LAUNCH',
     group: 'Runtime',
     description: 'Pre-launch lock (only /init; unset = off)',
@@ -286,7 +281,6 @@ function readRuntimePresence(): Record<string, boolean> {
     VITE_CONSOLE_SCREENSHOT_MODE: isNonEmpty(config.screenshotMode),
     VITE_CONSOLE_DATABASE_PITR_RESTORE: isNonEmpty(config.databasePitrRestore),
     VITE_CONSOLE_PROJECT_ENVIRONMENTS: isNonEmpty(config.projectEnvironments),
-    VITE_CONSOLE_ZERO: isNonEmpty(config.zero),
     VITE_CONSOLE_PRE_LAUNCH: isNonEmpty(config.preLaunch),
   }
 }

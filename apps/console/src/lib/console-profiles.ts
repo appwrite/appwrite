@@ -104,7 +104,7 @@ export type ConsoleProfileFeatures = {
   /**
    * Appwrite Zero marketing page (`/zero`, `/zero.md`) and its Products menu and
    * footer links. Off until launch: the page returns 404 while this is off.
-   * Enable from Debug → Feature flags, or with VITE_CONSOLE_ZERO on Cloud.
+   * Enable from Debug → Feature flags; at launch, default it on.
    */
   zero: boolean
 }
@@ -552,8 +552,7 @@ function parseEnvFeatureOverride(value: string): boolean | null {
  * Per-feature overrides from runtime env vars (e.g.
  * VITE_CONSOLE_USER_VERIFICATION, VITE_CONSOLE_COOKIE_BANNER,
  * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_DATABASE_PITR_RESTORE,
- * VITE_CONSOLE_PROJECT_ENVIRONMENTS, VITE_CONSOLE_BROWSER_ALERTS,
- * VITE_CONSOLE_ZERO), applied on top
+ * VITE_CONSOLE_PROJECT_ENVIRONMENTS, VITE_CONSOLE_BROWSER_ALERTS), applied on top
  * of the canonical profile. A stored debug override still wins.
  */
 function applyEnvFeatureOverrides(
@@ -586,11 +585,6 @@ function applyEnvFeatureOverrides(
   )
   if (projectEnvironments !== null && profileId === 'cloud') {
     next = { ...next, projectEnvironments }
-  }
-  // Zero projects exist on Cloud only.
-  const zero = parseEnvFeatureOverride(config.zero)
-  if (zero !== null && profileId === 'cloud') {
-    next = { ...next, zero }
   }
   const browserAlerts = parseEnvFeatureOverride(config.browserAlerts)
   if (browserAlerts !== null) {
