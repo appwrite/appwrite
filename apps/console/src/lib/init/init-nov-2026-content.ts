@@ -254,11 +254,12 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
       sessionTitle: 'Appwrite Analytics launch stream',
       platform: 'youtube',
       href: INIT_YOUTUBE_CHANNEL_HREF,
-      prizeDescription: 'Appwrite hoodie and cap',
+      prizeDescription: 'Init 5 hoodie and cap',
+      // Init has no light theme: both themes show the image on its own dark ground.
       visual: {
-        imageAlt: 'Day 1 giveaway including an Appwrite hoodie and cap',
-        imageSrcLight: '/images/init/prize-day-1-swag-light.jpg',
-        imageSrcDark: '/images/init/prize-day-1-swag.jpg',
+        imageAlt: 'Day 1 giveaway: the Init 5 hoodie and the init_ cap',
+        imageSrcLight: '/images/init/prize-day-1-swag-init-5.jpg',
+        imageSrcDark: '/images/init/prize-day-1-swag-init-5.jpg',
       },
     },
     {
@@ -268,11 +269,12 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
       sessionTitle: 'Appwrite Videos launch stream',
       platform: 'youtube',
       href: INIT_YOUTUBE_CHANNEL_HREF,
-      prizeDescription: 'Light Appwriter keyboard',
+      prizeDescription: 'Light Appwriter keyboard and desk mat',
       visual: {
-        imageAlt: 'Day 2 giveaway including a light Appwriter keyboard',
-        imageSrcLight: '/images/init/prize-day-2-swag-light.jpg',
-        imageSrcDark: '/images/init/prize-day-2-swag.jpg',
+        imageAlt:
+          'Day 2 giveaway: a light Appwriter keyboard on the Init 5 desk mat',
+        imageSrcLight: '/images/init/prize-day-2-swag-init-5.jpg',
+        imageSrcDark: '/images/init/prize-day-2-swag-init-5.jpg',
       },
     },
     {
@@ -282,11 +284,12 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
       sessionTitle: 'Appwrite Zero launch stream',
       platform: 'youtube',
       href: INIT_YOUTUBE_CHANNEL_HREF,
-      prizeDescription: 'Dark Appwriter keyboard',
+      prizeDescription: 'Dark Appwriter keyboard, mug and stickers',
       visual: {
-        imageAlt: 'Day 3 giveaway including a dark Appwriter keyboard',
-        imageSrcLight: '/images/init/prize-day-3-swag-light.jpg',
-        imageSrcDark: '/images/init/prize-day-3-swag.jpg',
+        imageAlt:
+          'Day 3 giveaway: a dark Appwriter keyboard, the Init 5 mug and the Init 5 sticker sheet',
+        imageSrcLight: '/images/init/prize-day-3-swag-init-5.jpg',
+        imageSrcDark: '/images/init/prize-day-3-swag-init-5.jpg',
       },
     },
     {
@@ -296,12 +299,12 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
       sessionTitle: 'Appwrite Monitors & Appwrite Beep launch stream',
       platform: 'youtube',
       href: INIT_YOUTUBE_CHANNEL_HREF,
-      prizeDescription: 'RUNTIME bottle and Appwrite tee',
+      prizeDescription: 'Init 5 tee, beanie and poster',
       visual: {
         imageAlt:
-          'Day 4 giveaway including a RUNTIME water bottle and Appwrite tee',
-        imageSrcLight: '/images/init/prize-day-4-swag-light.jpg',
-        imageSrcDark: '/images/init/prize-day-4-swag.jpg',
+          'Day 4 giveaway: the Init 5 Five Days tee, the init_ beanie and the Init 5 poster',
+        imageSrcLight: '/images/init/prize-day-4-swag-init-5.jpg',
+        imageSrcDark: '/images/init/prize-day-4-swag-init-5.jpg',
       },
     },
   ],

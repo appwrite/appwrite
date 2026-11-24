@@ -250,10 +250,11 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
       ctaHref: `#${INIT_PRIZES_SECTION_ID}`,
       secondaryCtaLabel: 'Join on Discord',
       secondaryCtaHref: '/discord',
-      imageSrcLight: '/images/init/giveaway-swag-promo-light.jpg',
-      imageSrcDark: '/images/init/giveaway-swag-promo.jpg',
+      // Init has no light theme: both themes show the image on its own dark ground.
+      imageSrcLight: '/images/init/giveaway-swag-promo-init-5.jpg',
+      imageSrcDark: '/images/init/giveaway-swag-promo-init-5.jpg',
       imageAlt:
-        'Appwrite swag including a hoodie, cap, water bottle, tee, and Appwriter keyboards',
+        'Init 5 swag including a hoodie, tee, cap, beanie and mug, in front of the Init 5 mark',
     },
     prizes: INIT_NOV_2026_PRIZES,
     releaseAvailability: {
