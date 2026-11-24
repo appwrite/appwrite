@@ -5,11 +5,13 @@ namespace Appwrite\Database;
 use Appwrite\Utopia\Database\Documents\Project;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Hook\UniqueId;
+use Appwrite\Video\QueryCache as VideoQueryCache;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter;
 use Utopia\Database\Adapter\Feature\Schemaless;
 use Utopia\Database\Adapter\Pool as DatabasePool;
+use Utopia\Database\Cache\Invalidator;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Hook\Permissions;
@@ -70,6 +72,11 @@ class Factory implements Provisioner
 
         $this->configureDocumentTypes($database);
         $this->configureOptions($database, $timeout, $maxQueryValues, $metadata);
+
+        // Every project database retires the lists streaming manifests cache, whoever writes
+        // them: the API, the videos worker or the deletes worker. A handle without this
+        // would leave a deleted rendition in the manifest until the cached list expires.
+        $database->addHook(new Invalidator(new VideoQueryCache($this->cache)));
 
         return $this->applyHooks($this->configureProject($database, $project, $dsn));
     }
