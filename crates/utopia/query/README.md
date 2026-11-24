@@ -104,30 +104,6 @@ cargo clippy -p utopia-query --all-targets -- -D warnings
 cargo fmt --all --check
 ```
 
-### Compare with PHP
-
-Replay the results PHP recorded for every case against Rust, without PHP:
-
-```bash
-COMPAT_LIB=query cargo test -p compat
-```
-
-Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):
-
-```bash
-bin/compat run query
-bin/compat fuzz query
-bin/compat check query
-```
-
-### Benchmark
-
-```bash
-bin/compat bench query
-```
-
-This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`tests/compat/query/bench.json`](https://github.com/appwrite/appwrite/blob/main/tests/compat/query/bench.json). Run it on a quiet machine, one library at a time.
-
 ## License
 
 BSD-3-Clause. See [LICENSE](LICENSE).

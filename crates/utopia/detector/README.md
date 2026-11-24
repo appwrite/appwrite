@@ -1,5 +1,8 @@
 # Utopia Detector
 
+> [!IMPORTANT]
+> This repository is a read-only mirror of [`crates/utopia/detector`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/detector) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
 Detects a project's packager, runtime, framework and rendering from its file names, languages and manifests.
@@ -10,7 +13,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 
 ```toml
 [dependencies]
-utopia-detector = { git = "https://github.com/appwrite/appwrite" }
+utopia-detector = { git = "https://github.com/utopia-rs/detector" }
 ```
 
 Before a project can be built, something has to work out what it is: which package manager it uses, which runtime runs it, which framework builds it, and whether the build is served by a server or as files. Each of these is a detector: add the options it may choose from and the inputs you have (file names, languages, a manifest), then call `detect`. This guide covers the common tasks.
@@ -115,30 +118,6 @@ cargo test -p utopia-detector
 cargo clippy -p utopia-detector --all-targets -- -D warnings
 cargo fmt --all --check
 ```
-
-### Compare with PHP
-
-Replay the results PHP recorded for every case against Rust, without PHP:
-
-```bash
-COMPAT_LIB=detector cargo test -p compat
-```
-
-Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):
-
-```bash
-bin/compat run detector
-bin/compat fuzz detector
-bin/compat check detector
-```
-
-### Benchmark
-
-```bash
-bin/compat bench detector
-```
-
-This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`tests/compat/detector/bench.json`](https://github.com/appwrite/appwrite/blob/main/tests/compat/detector/bench.json). Run it on a quiet machine, one library at a time.
 
 ## License
 

@@ -1,5 +1,8 @@
 # Utopia Locale
 
+> [!IMPORTANT]
+> This repository is a read-only mirror of [`crates/utopia/locale`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/locale) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
 Translations: languages, default and fallback locales, and placeholders.
@@ -10,7 +13,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 
 ```toml
 [dependencies]
-utopia-locale = { git = "https://github.com/appwrite/appwrite" }
+utopia-locale = { git = "https://github.com/utopia-rs/locale" }
 ```
 
 Utopia Locale keeps an application's translations. You register each language as a set of keys and texts, pick a default language, and look up texts by key, with placeholders and a fallback language for keys that are not translated yet. In Rust the registered languages live in a `Languages` value that you load once and share; each request creates a cheap `Locale` that borrows it. This guide covers the common tasks.
@@ -180,10 +183,6 @@ cargo test -p utopia-locale
 cargo clippy -p utopia-locale --all-targets -- -D warnings
 cargo fmt --all --check
 ```
-
-### Compare with PHP
-
-The utopia PHP extension serves this crate as `Utopia\Locale\Locale`, which no longer has a PHP implementation.
 
 ## License
 

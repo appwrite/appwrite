@@ -1,5 +1,8 @@
 # Utopia DSN
 
+> [!IMPORTANT]
+> This repository is a read-only mirror of [`crates/utopia/dsn`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/dsn) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
 Data source names (connection strings), parsed into scheme, credentials, host, port, path and options.
@@ -10,7 +13,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 
 ```toml
 [dependencies]
-utopia-dsn = { git = "https://github.com/appwrite/appwrite" }
+utopia-dsn = { git = "https://github.com/utopia-rs/dsn" }
 ```
 
 A DSN (data source name) puts everything needed to reach a service in one string: `scheme://user:password@host:port/path?query`. Applications read them from configuration so a database, cache or provider can change without code changes. This guide covers the common tasks.
@@ -117,10 +120,6 @@ cargo test -p utopia-dsn
 cargo clippy -p utopia-dsn --all-targets -- -D warnings
 cargo fmt --all --check
 ```
-
-### Compare with PHP
-
-The utopia PHP extension serves this crate as `Utopia\DSN\DSN`, which no longer has a PHP implementation.
 
 ## License
 

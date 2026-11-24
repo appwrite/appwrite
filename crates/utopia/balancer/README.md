@@ -1,5 +1,8 @@
 # Utopia Balancer
 
+> [!IMPORTANT]
+> This repository is a read-only mirror of [`crates/utopia/balancer`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/balancer) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
 Choosing between endpoints: options with state, filters, and the First, Last, Random and RoundRobin algorithms.
@@ -10,7 +13,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 
 ```toml
 [dependencies]
-utopia-balancer = { git = "https://github.com/appwrite/appwrite" }
+utopia-balancer = { git = "https://github.com/utopia-rs/balancer" }
 ```
 
 A balancer picks one endpoint out of many: a worker for the next job, a region for the next request. You give it options, filters that rule out the options that cannot serve right now, and an algorithm that chooses among the rest. Options can be any type; `Candidate` is a ready-made one holding named values such as a hostname or a CPU load. This guide covers the common tasks.
@@ -107,30 +110,6 @@ cargo test -p utopia-balancer
 cargo clippy -p utopia-balancer --all-targets -- -D warnings
 cargo fmt --all --check
 ```
-
-### Compare with PHP
-
-Replay the results PHP recorded for every case against Rust, without PHP:
-
-```bash
-COMPAT_LIB=balancer cargo test -p compat
-```
-
-Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):
-
-```bash
-bin/compat run balancer
-bin/compat fuzz balancer
-bin/compat check balancer
-```
-
-### Benchmark
-
-```bash
-bin/compat bench balancer
-```
-
-This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`tests/compat/balancer/bench.json`](https://github.com/appwrite/appwrite/blob/main/tests/compat/balancer/bench.json). Run it on a quiet machine, one library at a time.
 
 ## License
 

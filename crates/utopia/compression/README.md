@@ -1,5 +1,8 @@
 # Utopia Compression
 
+> [!IMPORTANT]
+> This repository is a read-only mirror of [`crates/utopia/compression`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/compression) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
 Compression algorithms (Brotli, Deflate, GZIP, LZ4, Snappy, XZ, Zstd) and Accept-Encoding negotiation, byte for byte as PHP's extensions.
@@ -10,7 +13,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 
 ```toml
 [dependencies]
-utopia-compression = { git = "https://github.com/appwrite/appwrite" }
+utopia-compression = { git = "https://github.com/utopia-rs/compression" }
 ```
 
 This library compresses and decompresses data with seven algorithms behind one `Algorithm` trait: Brotli, Deflate, Gzip, LZ4, Snappy, XZ and Zstd. It also picks the algorithm to answer an HTTP request with, from the client's `Accept-Encoding` header. The output matches what PHP's extensions write, so either runtime reads what the other wrote. This guide covers the common tasks.
@@ -125,30 +128,6 @@ cargo test -p utopia-compression
 cargo clippy -p utopia-compression --all-targets -- -D warnings
 cargo fmt --all --check
 ```
-
-### Compare with PHP
-
-Replay the results PHP recorded for every case against Rust, without PHP:
-
-```bash
-COMPAT_LIB=compression cargo test -p compat
-```
-
-Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):
-
-```bash
-bin/compat run compression
-bin/compat fuzz compression
-bin/compat check compression
-```
-
-### Benchmark
-
-```bash
-bin/compat bench compression
-```
-
-This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`tests/compat/compression/bench.json`](https://github.com/appwrite/appwrite/blob/main/tests/compat/compression/bench.json). Run it on a quiet machine, one library at a time.
 
 ## License
 

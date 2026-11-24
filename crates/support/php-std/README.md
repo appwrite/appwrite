@@ -1,5 +1,8 @@
 # PHP standard library
 
+> [!IMPORTANT]
+> This repository is a read-only mirror of [`crates/support/php-std`](https://github.com/appwrite/appwrite/tree/main/crates/support/php-std) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
 PHP engine semantics (the value model, juggling and comparison, string, number, JSON, serialize, igbinary, sorting, filter and URL functions) for crates that must behave exactly like PHP.
@@ -10,7 +13,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 
 ```toml
 [dependencies]
-php-std = { git = "https://github.com/appwrite/appwrite" }
+php-std = { git = "https://github.com/utopia-rs/php-std" }
 ```
 
 php-std reproduces PHP built-in functions and value semantics in Rust, byte for byte. When you port PHP code, call the php-std twin of each built-in instead of writing your own approximation, and the Rust code gives the same answer as PHP, edge cases included. Strings are bytes (`&[u8]`), because PHP strings are bytes. This guide covers the common tasks.
