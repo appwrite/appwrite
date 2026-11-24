@@ -28,9 +28,14 @@ $hash = $password->hash('user-password');
 $isValid = $password->verify('user-password', $hash);
 ```
 
+`Utopia\Auth\Hash` and the password hashes (`Utopia\Auth\Hashes\*`) come from the `utopia` PHP
+extension (`ext-utopia`, built from `crates/extension` in appwrite/appwrite); this package holds
+their signatures for static analysis (`stubs/Hash.php`) and the proofs, tokens, issuers, verifiers
+and passkeys, which stay PHP. 0.12.x is the last release with the hashes in PHP.
+
 ## System requirements
 
-Utopia Auth requires PHP 8.3 or later. We recommend using the latest PHP version whenever possible.
+Utopia Auth requires PHP 8.3 or later and the `utopia` extension. We recommend using the latest PHP version whenever possible.
 
 ## Features
 
@@ -52,7 +57,8 @@ Utopia Auth requires PHP 8.3 or later. We recommend using the latest PHP version
 
 ## Tests
 
-The tests need the `hash`, `openssl`, `scrypt` and `sodium` extensions:
+The tests need the `hash`, `openssl`, `sodium` and `utopia` extensions; without `utopia`, the
+hash and proof tests are skipped:
 
 ```bash
 composer install

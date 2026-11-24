@@ -220,6 +220,8 @@ type BreakdownPanelProps = {
   valueKey?: 'visitors' | 'events'
   /** Mobile properties count users, not visitors. */
   mobile?: boolean
+  /** Replaces the row's filter toggle (e.g. open the user's page). */
+  onRowClick?: (value: string) => void
 }
 
 /**
@@ -247,6 +249,7 @@ export function BreakdownPanel({
   rowHref,
   valueKey = 'visitors',
   mobile = false,
+  onRowClick,
 }: BreakdownPanelProps) {
   const t = useT()
   const tabIds = useMemo(() => tabs.map((tab) => tab.id), [tabs])
@@ -305,6 +308,7 @@ export function BreakdownPanel({
 
   // Rows with a filterable dimension and a real value become filter toggles.
   const filterRowProps = (value: string | null | undefined) => {
+    if (onRowClick && value) return { onClick: () => onRowClick(value) }
     if (!filterAttribute || !value) return {}
     const isActive = isFilterActive(filterAttribute, value)
     return {
@@ -429,6 +433,11 @@ export function BreakdownPanel({
           mono={mono}
           emptyLabel={emptyLabel}
           rowHref={rowHref}
+          onRowClick={
+            onRowClick
+              ? (entry) => entry.value && onRowClick(entry.value)
+              : undefined
+          }
         />
       ) : null}
     </div>

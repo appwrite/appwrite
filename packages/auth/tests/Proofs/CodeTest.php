@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Utopia\Auth\Tests\Proofs;
 
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Auth\Proofs\Code;
 
+#[RequiresPhpExtension('utopia')]
 final class CodeTest extends TestCase
 {
     private Code $code;

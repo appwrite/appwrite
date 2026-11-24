@@ -31,6 +31,7 @@ import {
   KeyRound,
   Handshake,
   LockKeyhole,
+  BellRing,
   Pin,
   PinOff} from '@/lib/icons'
 import { useSequentialShortcuts } from '@/hooks/use-keyboard-shortcuts'
@@ -198,6 +199,7 @@ import { View as MarketplaceView } from '../marketplace/View'
 import { View as OrgAppsView } from '../apps/View'
 import { Partners } from '../settings/Partners'
 import { SingleSignOn } from '../settings/SingleSignOn'
+import { Escalations } from '../settings/Escalations'
 import { EnterpriseSuccessManager } from '@/components/pages/projects/$projectId/shared/EnterpriseSuccessManager'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { PlanLimitWarning } from '@/components/pages/projects/$projectId/shared/PlanLimitWarning'
@@ -270,6 +272,7 @@ type OrgRoutePath =
   | '/organizations/$orgId/settings/oauth-apps'
   | '/organizations/$orgId/settings/partners'
   | '/organizations/$orgId/settings/sso'
+  | '/organizations/$orgId/settings/escalations'
 import { analyticsAttrs, getOrgTabAnalyticsAction } from '@/lib/analytics-actions'
 
 /** Pro orgs with at least this many members see the Enterprise access line. */
@@ -643,6 +646,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       if (subTab === 'oauth-apps') return 'oauth-apps'
       if (subTab === 'partners') return 'partners'
       if (subTab === 'sso') return 'sso'
+      if (subTab === 'escalations') return 'escalations'
       return 'overview'
     }
     return 'overview'
@@ -717,6 +721,16 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               to: '/organizations/$orgId/settings/sso',
               icon: LockKeyhole,
               keywords: ['sso', 'single sign-on', 'domains', 'identity providers']},
+          ]
+        : []),
+      ...(features.alerts
+        ? [
+            {
+              id: 'escalations',
+              label: t('Escalations'),
+              to: '/organizations/$orgId/settings/escalations',
+              icon: BellRing,
+              keywords: ['escalation', 'alerts', 'on-call', 'monitors', 'notify']},
           ]
         : []),
     ]
@@ -835,7 +849,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       (settingsSubTab === 'oauth-apps' &&
         !canShowOrgOAuthAppsSettings(access, features)) ||
       (settingsSubTab === 'partners' && !features.orgApiKeys) ||
-      (settingsSubTab === 'sso' && !showSso)
+      (settingsSubTab === 'sso' && !showSso) ||
+      (settingsSubTab === 'escalations' && !features.alerts)
     ) {
       navigate({
         to: '/organizations/$orgId/settings',
@@ -855,7 +870,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           canShowOrgOAuthAppsSettings(access, features)) ||
         (settingsSubTab === 'partners' &&
           canShowOrgApiKeysSettings(access, features)) ||
-        (settingsSubTab === 'sso' && showSso)
+        (settingsSubTab === 'sso' && showSso) ||
+        settingsSubTab === 'escalations'
       if (!allowed) {
         const firstAllowed = getFirstAllowedOrgSettingsPath(
           access,
@@ -883,6 +899,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         'settings/oauth-apps': '/organizations/$orgId/settings/oauth-apps',
         'settings/partners': '/organizations/$orgId/settings/partners',
         'settings/sso': '/organizations/$orgId/settings/sso',
+        'settings/escalations':
+          '/organizations/$orgId/settings/escalations',
       } as const satisfies Record<string, OrgRoutePath>
 
       const route = tabRoutes[tab as keyof typeof tabRoutes]
@@ -2195,6 +2213,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       'oauth-apps': '/organizations/$orgId/settings/oauth-apps',
       partners: '/organizations/$orgId/settings/partners',
       sso: '/organizations/$orgId/settings/sso',
+      'escalations':
+        '/organizations/$orgId/settings/escalations',
     } as const satisfies Record<string, OrgRoutePath>
     const settingsSubRoute =
       activeTab === 'settings'
@@ -3586,6 +3606,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       <Partners />
                     ) : settingsSubTab === 'sso' ? (
                       <SingleSignOn />
+                    ) : settingsSubTab === 'escalations' ? (
+                      <Escalations />
                     ) : settingsSubTab === 'members' ? (
                       <>
                         {/* Error State */}

@@ -3047,7 +3047,8 @@
             "cooldown",
             "enabled",
             "notify",
-            "severity"
+            "severity",
+            "escalationId"
         ],
         "monitors.delete": [
             "monitorId"
@@ -3067,7 +3068,8 @@
             "cooldown",
             "enabled",
             "notify",
-            "severity"
+            "severity",
+            "escalationId"
         ],
         "notifications.list": [
             "queries",
@@ -3081,6 +3083,12 @@
             "projectId",
             "scopes",
             "duration"
+        ],
+        "organization.createEscalation": [
+            "escalationId",
+            "name",
+            "steps",
+            "repeat"
         ],
         "organization.createProject": [
             "projectId",
@@ -3100,6 +3108,9 @@
             "recipientId",
             "expire"
         ],
+        "organization.deleteEscalation": [
+            "escalationId"
+        ],
         "organization.deleteProject": [
             "projectId"
         ],
@@ -3109,6 +3120,9 @@
         ],
         "organization.deleteProjectTransfer": [
             "transferId"
+        ],
+        "organization.getEscalation": [
+            "escalationId"
         ],
         "organization.getProject": [
             "projectId"
@@ -3120,6 +3134,10 @@
         "organization.getProjectTransfer": [
             "transferId",
             "secret"
+        ],
+        "organization.listEscalations": [
+            "queries",
+            "total"
         ],
         "organization.listProjectKeys": [
             "projectId",
@@ -3135,6 +3153,12 @@
             "queries",
             "search",
             "total"
+        ],
+        "organization.updateEscalation": [
+            "escalationId",
+            "name",
+            "steps",
+            "repeat"
         ],
         "organization.updateProject": [
             "projectId",
@@ -3688,6 +3712,11 @@
         "project.updateOAuth2Stripe": [
             "clientId",
             "apiSecretKey",
+            "enabled"
+        ],
+        "project.updateOAuth2Supabase": [
+            "clientId",
+            "clientSecret",
             "enabled"
         ],
         "project.updateOAuth2TikTok": [
@@ -5201,6 +5230,9 @@
             "success",
             "failure"
         ],
+        "vcs.createInstallation": [
+            "installationId"
+        ],
         "vcs.createOriginInstallation": [
             "success",
             "failure"
@@ -5236,7 +5268,8 @@
         "vcs.listInstallations": [
             "queries",
             "search",
-            "total"
+            "total",
+            "shared"
         ],
         "vcs.listNamespaces": [
             "installationId",
@@ -7595,7 +7628,8 @@
             "cooldown",
             "enabled",
             "notify",
-            "severity"
+            "severity",
+            "escalationId"
         ],
         "monitors.delete": [
             "monitorId"
@@ -7615,7 +7649,8 @@
             "cooldown",
             "enabled",
             "notify",
-            "severity"
+            "severity",
+            "escalationId"
         ],
         "organization.createEphemeralProjectKey": [
             "projectId",
@@ -8194,6 +8229,11 @@
         "project.updateOAuth2Stripe": [
             "clientId",
             "apiSecretKey",
+            "enabled"
+        ],
+        "project.updateOAuth2Supabase": [
+            "clientId",
+            "clientSecret",
             "enabled"
         ],
         "project.updateOAuth2TikTok": [
