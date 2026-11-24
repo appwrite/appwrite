@@ -313,16 +313,7 @@ export function BreakdownDialog({
                     }
                   />
                 )
-                return onRowClick && entry.value ? (
-                  <button
-                    key={`${entry.value}-${index}`}
-                    type="button"
-                    className="block w-full cursor-pointer text-start"
-                    onClick={() => onRowClick(entry, active.id)}
-                  >
-                    {row}
-                  </button>
-                ) : entry.value ? (
+                return entry.value ? (
                   <AnalyticsValueMenu
                     key={`${entry.value}-${index}`}
                     dimension={active.dimension}
@@ -331,7 +322,17 @@ export function BreakdownDialog({
                     label={labelFor(entry)}
                     href={rowHref?.(entry.value, active.id)}
                   >
-                    <div>{row}</div>
+                    {onRowClick ? (
+                      <button
+                        type="button"
+                        className="block w-full cursor-pointer text-start"
+                        onClick={() => onRowClick(entry, active.id)}
+                      >
+                        {row}
+                      </button>
+                    ) : (
+                      <div>{row}</div>
+                    )}
                   </AnalyticsValueMenu>
                 ) : (
                   <div key={`${entry.value}-${index}`}>{row}</div>

@@ -1,5 +1,6 @@
 import { AnalyticsDimension, AnalyticsPropertyType } from '@appwrite.io/console'
 import { useMemo } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { useQueries, useQuery } from '@tanstack/react-query'
 import {
   analyticsBreakdownQueryOptions,
@@ -350,7 +351,8 @@ export function useShowUsersPanel(
 }
 
 export function UsersPanel(props: PanelProps) {
-  // No link to the user: an ID sent with an API key may not be a project user.
+  const navigate = useNavigate()
+  // Opens the user's analytics, not Auth: an ID sent with an API key may not be a project user.
   return (
     <BreakdownPanel
       {...props}
@@ -360,6 +362,16 @@ export function UsersPanel(props: PanelProps) {
       tabs={USER_TABS}
       mono
       emptyLabel="No identified users in this range"
+      onRowClick={(userId) =>
+        navigate({
+          to: '/projects/$projectId/analytics/$propertyId/users/$userId',
+          params: {
+            projectId: props.projectId,
+            propertyId: props.propertyId,
+            userId,
+          },
+        })
+      }
     />
   )
 }
