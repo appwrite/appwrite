@@ -1808,6 +1808,16 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Paused - upgrade to Pro to require single sign-on again.':
     '一時停止中 - シングルサインオンを再び必須にするには、Pro にアップグレードしてください。',
   Later: '後で',
+  'SAML is coming soon':
+    'SAML は近日公開です',
+  'Get notified when SAML identity providers can be connected.':
+    'SAML の ID プロバイダーを接続できるようになったらお知らせします。',
+  'Identity providers that sign people in with SAML 2.0, such as Okta or Microsoft Entra ID.':
+    'Okta や Microsoft Entra ID など、SAML 2.0 でサインインする ID プロバイダーです。',
+  "You'll be notified when SAML is available.":
+    'SAML が利用可能になったらお知らせします。',
+  "You'll no longer be notified about SAML.":
+    'SAML については今後通知しません。',
   'Organization photo': '組織の写真',
   'Shown next to your organization name across the Console.':
     'コンソール全体で組織名の横に表示されます。',

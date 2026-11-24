@@ -8,6 +8,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { EmailDomainsCard } from './_components/EmailDomainsCard'
 import { RequireSSOCard } from './_components/RequireSSOCard'
+import { SAMLProvidersCard } from './_components/SAMLProvidersCard'
 import { SSOPlanNotice, useSSOPlanGate } from './_components/SSOCardHelpers'
 import { SSOProvidersCard } from './_components/SSOProvidersCard'
 
@@ -65,6 +66,22 @@ export function SingleSignOn() {
             ],
           },
           node: <SSOProvidersCard />,
+        },
+        {
+          id: 'sso-saml',
+          search: {
+            title: 'SAML identity providers',
+            keywords: [
+              'sso',
+              'single sign-on',
+              'saml',
+              'identity provider',
+              'okta',
+              'entra',
+              'coming soon',
+            ],
+          },
+          node: <SAMLProvidersCard />,
         },
         {
           id: 'sso-required',

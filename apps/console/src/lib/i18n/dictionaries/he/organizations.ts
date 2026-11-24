@@ -1784,6 +1784,16 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Paused - upgrade to Pro to require single sign-on again.':
     'מושהה - שדרגו ל-Pro כדי לחייב שוב התחברות יחידה (SSO).',
   Later: 'אחר כך',
+  'SAML is coming soon':
+    'SAML יגיע בקרוב',
+  'Get notified when SAML identity providers can be connected.':
+    'קבלו עדכון כשאפשר יהיה לחבר ספקי זהויות SAML.',
+  'Identity providers that sign people in with SAML 2.0, such as Okta or Microsoft Entra ID.':
+    'ספקי זהויות שמכניסים אנשים באמצעות SAML 2.0, כמו Okta או Microsoft Entra ID.',
+  "You'll be notified when SAML is available.":
+    'נודיע לכם כש-SAML יהיה זמין.',
+  "You'll no longer be notified about SAML.":
+    'לא נודיע לכם יותר על SAML.',
   'Organization photo': 'תמונת הארגון',
   'Shown next to your organization name across the Console.':
     'מוצגת לצד שם הארגון שלך בכל הקונסולה.',
