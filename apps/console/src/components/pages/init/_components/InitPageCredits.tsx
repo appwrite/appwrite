@@ -31,31 +31,19 @@ export function InitPageCredits({
           </DocsRouteLink>
         </p>
       ) : null}
-      <p className={CREDIT_LINE_CLASS}>
-        {showGlobeCredit ? (
-          <>
-            Community globe by{' '}
-            <a
-              href={ACETERNITY_GLOBE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={CREDIT_LINK_CLASS}
-            >
-              Aceternity UI
-            </a>
-            <span className="text-muted-foreground"> · </span>
-          </>
-        ) : null}
-        Jool animation by{' '}
-        <a
-          href="https://animejs.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={CREDIT_LINK_CLASS}
-        >
-          Anime.js
-        </a>
-      </p>
+      {showGlobeCredit ? (
+        <p className={CREDIT_LINE_CLASS}>
+          Community globe by{' '}
+          <a
+            href={ACETERNITY_GLOBE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={CREDIT_LINK_CLASS}
+          >
+            Aceternity UI
+          </a>
+        </p>
+      ) : null}
     </div>
   )
 }
