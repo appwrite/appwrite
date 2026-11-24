@@ -95,17 +95,15 @@ final class BaseTest extends TestCase
     }
 
     /**
-     * @return array<string, array{string, string, string, string}>
+     * @return \Iterator<string, array{string, string, string, string}>
      */
-    public static function callbacks(): array
+    public static function callbacks(): \Iterator
     {
-        return [
-            'https on its default port' => ['enabled', 'cloud.example.com', '443', 'https://cloud.example.com'],
-            'https, the host names no port' => ['enabled', 'cloud.example.com', '', 'https://cloud.example.com'],
-            'https on another port' => ['enabled', 'localhost', '8443', 'https://localhost:8443'],
-            'http on its default port' => ['disabled', 'localhost', '80', 'http://localhost'],
-            'http on another port' => ['disabled', 'localhost', '9501', 'http://localhost:9501'],
-        ];
+        yield 'https on its default port' => ['enabled', 'cloud.example.com', '443', 'https://cloud.example.com'];
+        yield 'https, the host names no port' => ['enabled', 'cloud.example.com', '', 'https://cloud.example.com'];
+        yield 'https on another port' => ['enabled', 'localhost', '8443', 'https://localhost:8443'];
+        yield 'http on its default port' => ['disabled', 'localhost', '80', 'http://localhost'];
+        yield 'http on another port' => ['disabled', 'localhost', '9501', 'http://localhost:9501'];
     }
 
     #[DataProvider('callbacks')]
