@@ -97,9 +97,9 @@ class StockFlow extends CreateOAuth2Session
 final class OwnFlow extends StockFlow
 {
     #[\Override]
-    protected function getOAuth2Callback(string $provider, Document $project, Request $request): string
+    protected function getOAuth2CallbackPath(string $provider, Document $project): string
     {
-        return 'https://cloud.example.com/v1/own/callback';
+        return '/v1/own/callback';
     }
 
     #[\Override]
@@ -111,8 +111,8 @@ final class OwnFlow extends StockFlow
 
 /**
  * The start and the end of an OAuth2 flow read the callback URL and the provider's
- * class from two methods, so a flow that has its own route, or a provider that is
- * not in the `oAuthProviders` config, changes them in one place.
+ * class from the account base action, so a flow that has its own route, or a
+ * provider that is not in the `oAuthProviders` config, changes them in one place.
  */
 #[AllowMockObjectsWithoutExpectations]
 final class OAuth2FlowTest extends TestCase

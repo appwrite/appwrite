@@ -42,10 +42,10 @@ use Utopia\System\System;
 abstract class Base extends Action
 {
     /**
-     * Where an OAuth2 provider sends the person back once they signed in there.
-     * The start of a flow and its end must hand the provider the same URL, or it
-     * refuses the token exchange, so both read it from here. A flow that lands on
-     * a route of its own overrides it.
+     * Where an OAuth2 provider sends the person back once they signed in there:
+     * getOAuth2CallbackPath() on the host the request came to. The start of a flow
+     * and its end must hand the provider the same URL, or it refuses the token
+     * exchange, so both read it from here.
      */
     protected function getOAuth2Callback(string $provider, Document $project, Request $request): string
     {
@@ -57,7 +57,16 @@ abstract class Base extends Action
             $callbackBase .= ':' . $port;
         }
 
-        return $callbackBase . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
+        return $callbackBase . $this->getOAuth2CallbackPath($provider, $project);
+    }
+
+    /**
+     * The route an OAuth2 provider sends the person back to. A flow that lands on
+     * a route of its own overrides it.
+     */
+    protected function getOAuth2CallbackPath(string $provider, Document $project): string
+    {
+        return '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
     }
 
     /**
