@@ -12,6 +12,10 @@
 //! PHP: anchors are PHP references. An alias of a node that is still being
 //! built (a recursive structure) has no value here: it is refused as an
 //! unknown alias.
+//!
+//! Nesting deeper than [`MAX_DEPTH`] refuses the document, as the other
+//! codecs in this crate do. ext-yaml has no limit, and walking an unbounded
+//! document recurses until the stack overflows, which aborts the process.
 
 use std::collections::HashMap;
 use std::mem::MaybeUninit;
@@ -26,6 +30,11 @@ const FLOAT_TAG: &[u8] = b"tag:yaml.org,2002:float";
 const TIMESTAMP_TAG: &[u8] = b"tag:yaml.org,2002:timestamp";
 const MERGE_TAG: &[u8] = b"tag:yaml.org,2002:merge";
 const NONSPECIFIC_TAG: &[u8] = b"!";
+
+/// The deepest nesting of mappings and sequences [`parse`] reads. A deeper
+/// document is refused (`None`) instead of recursing until the stack
+/// overflows. Real configuration files stay far below it.
+pub const MAX_DEPTH: usize = 512;
 
 /// A parser event, copied out of libyaml.
 #[derive(Debug, Clone, PartialEq)]
@@ -183,6 +192,12 @@ struct State<'a> {
     /// The last event read; `None` after an error.
     event: Option<Event>,
     aliases: HashMap<Vec<u8>, Value>,
+    /// Mappings and sequences currently open.
+    depth: usize,
+    /// Set when a node would nest deeper than [`MAX_DEPTH`]. A mapping
+    /// returns what it has so far when a value fails, so the refusal is
+    /// recorded here and checked once the document is read.
+    too_deep: bool,
 }
 
 impl State<'_> {
@@ -200,8 +215,8 @@ impl State<'_> {
         match self.event.clone()? {
             Event::DocumentEnd | Event::MappingEnd | Event::SequenceEnd | Event::StreamEnd => None,
             Event::DocumentStart => self.document(),
-            Event::MappingStart(anchor) => self.mapping(anchor),
-            Event::SequenceStart(anchor) => self.sequence(anchor),
+            Event::MappingStart(anchor) => self.nested(|state| state.mapping(anchor)),
+            Event::SequenceStart(anchor) => self.nested(|state| state.sequence(anchor)),
             Event::Scalar(scalar) => {
                 let value = eval_scalar(&scalar);
                 if let Some(anchor) = scalar.anchor {
@@ -218,9 +233,27 @@ impl State<'_> {
         }
     }
 
+    /// Reads a mapping or sequence one level deeper, or refuses it past
+    /// [`MAX_DEPTH`].
+    fn nested(&mut self, read: impl FnOnce(&mut Self) -> Option<Node>) -> Option<Node> {
+        if self.depth >= MAX_DEPTH {
+            self.too_deep = true;
+            return None;
+        }
+        self.depth += 1;
+        let node = read(self);
+        self.depth -= 1;
+        node
+    }
+
     fn document(&mut self) -> Option<Node> {
         self.aliases.clear();
+        self.depth = 0;
+        self.too_deep = false;
         let node = self.element();
+        if self.too_deep {
+            return None;
+        }
         // The end of the document must follow; an error reading it is
         // ignored, as ext-yaml does.
         if self.next() && self.event != Some(Event::DocumentEnd) {
@@ -316,7 +349,8 @@ fn merge(target: &mut Array, source: &Array) {
 
 /// `yaml_parse($input)`: the first document of `input` as a PHP value, or
 /// `None` where PHP returns `false` (and warns): a malformed document or an
-/// unknown alias. An input without a document is `null`.
+/// unknown alias, or nesting deeper than [`MAX_DEPTH`]. An input without a
+/// document is `null`.
 ///
 /// PHP: `yaml_parse($input)` with `yaml.decode_timestamp`, `decode_binary`
 /// and `decode_php` off (their defaults). Only the first document is read:
@@ -339,7 +373,7 @@ fn merge(target: &mut Array, source: &Array) {
 /// ```
 pub fn parse(input: &[u8]) -> Option<Value> {
     let parser = Parser::new(input)?;
-    let mut state = State { parser, event: None, aliases: HashMap::new() };
+    let mut state = State { parser, event: None, aliases: HashMap::new(), depth: 0, too_deep: false };
     loop {
         if !state.next() {
             return None;
@@ -803,5 +837,45 @@ mod tests {
         assert_eq!(int("08"), None);
         assert!(matches!(numeric(b"190:20:30.15"), Some(Number::Float(f)) if (f - 685230.15).abs() < 1e-9));
         assert!(numeric(b"1e3").is_none());
+    }
+
+    fn nested_sequences(depth: usize) -> Vec<u8> {
+        [vec![b'['; depth], vec![b']'; depth]].concat()
+    }
+
+    #[test]
+    fn nesting_up_to_the_limit_is_read() {
+        let Some(Value::Array(mut array)) = parse(&nested_sequences(MAX_DEPTH)) else { panic!() };
+        for _ in 1..MAX_DEPTH {
+            let Some(Value::Array(inner)) = array.get(&ArrayKey::Int(0)).cloned() else { panic!() };
+            array = inner;
+        }
+        assert_eq!(array.len(), 0);
+
+        // Mappings take the deepest frames: the limit leaves room on a 1 MB stack.
+        let flow = [b"{a: ".repeat(MAX_DEPTH), b"1".to_vec(), b"}".repeat(MAX_DEPTH)].concat();
+        let handle = std::thread::Builder::new().stack_size(1024 * 1024).spawn(move || parse(&flow)).unwrap();
+        assert!(matches!(handle.join().unwrap(), Some(Value::Array(_))));
+    }
+
+    #[test]
+    fn nesting_past_the_limit_is_refused() {
+        assert_eq!(parse(&nested_sequences(MAX_DEPTH + 1)), None);
+        let mappings = [b"a: ".repeat(MAX_DEPTH + 1), b"1".to_vec()].concat();
+        assert_eq!(parse(&mappings), None);
+        // A failure inside a mapping value used to come back as the part
+        // read so far: the refusal covers the whole document.
+        let flow = [b"{a: ".repeat(MAX_DEPTH + 1), b"1".to_vec(), b"}".repeat(MAX_DEPTH + 1)].concat();
+        assert_eq!(parse(&flow), None);
+    }
+
+    #[test]
+    fn a_document_far_past_the_limit_does_not_overflow_the_stack() {
+        // About 24 KB of brackets overflowed the stack before the limit.
+        let handle = std::thread::Builder::new()
+            .stack_size(2 * 1024 * 1024)
+            .spawn(|| parse(&nested_sequences(100_000)))
+            .unwrap();
+        assert_eq!(handle.join().unwrap(), None);
     }
 }
