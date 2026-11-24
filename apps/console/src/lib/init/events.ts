@@ -211,6 +211,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     endDate: '2026-12-04',
     // 'active' lets the status follow the dates: upcoming, then live, then past.
     status: 'active',
+    presenceEnabled: true,
     tickets: INIT_NOV_2026_TICKET_CONFIG,
     primaryCta: {
       label: 'Claim your ticket',
