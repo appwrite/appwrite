@@ -181,12 +181,43 @@ function listParam(url: URL, name: string): string[] {
     .map(([, value]) => value)
 }
 
+/** One identified user's last active bucket, hour-aligned like the API's. */
+const USER_LAST_SEEN = new Date(
+  Math.floor((Date.now() - 2 * 3_600_000) / 3_600_000) * 3_600_000,
+).toISOString()
+
+/** `user-a`'s own activity, answered whenever a request filters on it. */
+function userMetricsFor(url: URL, dimension: string | undefined) {
+  if (url.searchParams.get('interval')) {
+    return [
+      {
+        ...row(null, 1, { sessions: 2, pageviews: 5, events: 9 }),
+        date: new Date(Date.now() - 26 * 3_600_000).toISOString(),
+      },
+      {
+        ...row(null, 1, { sessions: 1, pageviews: 3, events: 4 }),
+        date: USER_LAST_SEEN,
+      },
+      { ...row(null, 0, { sessions: 0, pageviews: 0, events: 0 }), date: NOW },
+    ]
+  }
+  // Every row is one visitor, so only events tell them apart.
+  if (dimension === 'page')
+    return [row('/pricing', 1, { events: 7 }), row('/docs', 1, { events: 12 })]
+  if (dimension === 'eventName')
+    return [row('pageview', 1, { events: 8 }), row('signup', 1, { events: 2 })]
+  return []
+}
+
 function metricsFor(url: URL, options: MockOptions): Models.AnalyticsMetric[] {
   const dimension = listParam(url, 'dimensions')[0]
   const users = options.hasUsers ? 37 : 0
-  const eventName = listParam(url, 'queries')
-    .map((query) => JSON.parse(query))
-    .find((query) => query.attribute === 'eventName')?.values[0]
+  const queries = listParam(url, 'queries').map((query) => JSON.parse(query))
+  if (queries.some((query) => query.attribute === 'userId'))
+    return userMetricsFor(url, dimension)
+  const eventName = queries.find(
+    (query) => query.attribute === 'eventName',
+  )?.values[0]
   if (eventName in MOBILE_EVENT_COUNTS) {
     if (!options.mobileEvents) return []
     if (url.searchParams.get('interval'))
@@ -527,6 +558,86 @@ test.describe('analytics property (mocked API)', () => {
         ),
     ).toBe(false)
     await attachScreenshot(page, 'property-prop-filter')
+  })
+
+  test('shows the signed-in share of visitors', async ({ page }) => {
+    await mockAppwriteApi(page, { identifyUsers: true, hasUsers: true })
+    await openProperty(page)
+
+    const usersMetric = overviewMetrics(page).filter({
+      has: page.getByText('Users', { exact: true }),
+    })
+    await expect(usersMetric).toContainText('37', { timeout: 30_000 })
+    // 37 users over 120 visitors in the flat aggregate.
+    await usersMetric.hover()
+    await expect(page.getByRole('tooltip')).toContainText(
+      '30.8% of visitors signed in',
+    )
+    await usersMetric.click()
+    await expect(
+      page.getByText('· 30.8% of visitors signed in'),
+    ).toBeVisible()
+  })
+
+  test('opens a user from the Users card', async ({ page }) => {
+    const mock = await mockAppwriteApi(page, {
+      identifyUsers: true,
+      hasUsers: true,
+    })
+    await openProperty(page)
+
+    await card(page, 'Users')
+      .getByText('user-a')
+      .click({ timeout: 30_000 })
+    await expect(page).toHaveURL(
+      new RegExp(`/analytics/${PROPERTY_ID}/users/user-a$`),
+    )
+
+    const stats = page.locator('main')
+    await expect(stats.getByText('Visits', { exact: true })).toBeVisible()
+    for (const [label, value] of [
+      ['Visits', '3'],
+      ['Pageviews', '8'],
+      ['Events', '13'],
+    ]) {
+      await expect(
+        stats
+          .locator('div')
+          .filter({ has: page.getByText(label, { exact: true }) })
+          .filter({ hasText: new RegExp(`^${label}${value}$`) }),
+      ).toHaveCount(1)
+    }
+    await expect(stats.getByText('2 hours ago')).toBeVisible()
+
+    const pages = card(page, 'Pages')
+    await expect(pages.getByText(/^\/(docs|pricing)$/)).toHaveText([
+      '/docs',
+      '/pricing',
+    ])
+    const events = card(page, 'Custom events')
+    await expect(events.getByText('signup')).toBeVisible()
+    await expect(events.getByText('pageview')).toHaveCount(0)
+
+    // userId is events-only, so the flat aggregate is never asked for it.
+    const forUser = mock.metrics.filter((url) =>
+      listParam(url, 'queries').some((query) => query.includes('userId')),
+    )
+    expect(forUser.length).toBeGreaterThan(0)
+    expect(
+      forUser.some(
+        (url) =>
+          !url.searchParams.get('interval') &&
+          listParam(url, 'dimensions').length === 0,
+      ),
+    ).toBe(false)
+    await attachScreenshot(page, 'property-user')
+
+    // A value opens the property filtered by the user and that value.
+    await pages.getByText('/docs').click()
+    await expect(page).toHaveURL(new RegExp(`/analytics/${PROPERTY_ID}\\?`))
+    await expect(page.getByText('Filtered by')).toBeVisible()
+    await expect(page.locator('main')).toContainText('user-a')
+    await expect(page.locator('main')).toContainText('/docs')
   })
 
   test('hides users when the property records none', async ({ page }) => {
