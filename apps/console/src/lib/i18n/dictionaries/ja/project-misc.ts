@@ -834,9 +834,11 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Unique users active in the last': '直近でアクティブだったユニークユーザー:',
   'Could not load live users': 'ライブユーザーを読み込めませんでした',
   'Active screens': 'アクティブな画面',
-  'No one is using the app right now.': '現在アプリを使用しているユーザーはいません。',
+  'No one is using the app right now.':
+    '現在アプリを使用しているユーザーはいません。',
   'Users by country': '国別ユーザー',
-  'Visitors and app users, pages and screens, sources, locations, and bots, plus any custom events you track.': '訪問者とアプリユーザー、ページと画面、参照元、地域、ボット、そしてトラッキングしているカスタムイベント。',
+  'Visitors and app users, pages and screens, sources, locations, and bots, plus any custom events you track.':
+    '訪問者とアプリユーザー、ページと画面、参照元、地域、ボット、そしてトラッキングしているカスタムイベント。',
   'What visitors are browsing with': '訪問者の利用環境',
   'What your users are on': 'ユーザーの利用環境',
   'Active users': 'アクティブユーザー',
@@ -4145,16 +4147,20 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'パスワードを送信する前に、ディレクトリの証明書を検証します。',
   'The CA or self-signed certificate to trust. Leave empty to use the system trust store.':
     '信頼する CA 証明書または自己署名証明書。空にするとシステムの信頼ストアを使用します。',
-  'How long to wait for each answer, from 1 to 30.': '各応答を待つ時間。1 から 30 まで。',
+  'How long to wait for each answer, from 1 to 30.':
+    '各応答を待つ時間。1 から 30 まで。',
   'Service account for the search, or empty for anonymous.':
     '検索に使うサービスアカウント。空にすると匿名で検索します。',
   'Never shown again. Re-enter it when the connection changes.':
     '再表示されません。接続を変更する際は再入力してください。',
-  'Enter the bind password again to save.': '保存するにはバインドパスワードを再入力してください。',
+  'Enter the bind password again to save.':
+    '保存するにはバインドパスワードを再入力してください。',
   'Only its members can sign in. Leave empty to allow everyone.':
     'このグループのメンバーだけがサインインできます。空にするとすべてのユーザーを許可します。',
-  'An ID that never changes, such as entryUUID.': '変更されない ID。entryUUID など。',
-  'Attribute holding the display name, usually cn.': '表示名を保持する属性。通常は cn。',
+  'An ID that never changes, such as entryUUID.':
+    '変更されない ID。entryUUID など。',
+  'Attribute holding the display name, usually cn.':
+    '表示名を保持する属性。通常は cn。',
   'Attribute holding an E.164 phone number. Optional.':
     'E.164 形式の電話番号を保持する属性。任意。',
   'Using Active Directory?': 'Active Directory を使用していますか?',
@@ -4317,6 +4323,68 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Notes mark releases, campaigns or incidents on the chart for everyone in the project.':
     'メモはリリース、キャンペーン、障害などをグラフ上に記録し、プロジェクトの全員に表示されます。',
   'Launched the new pricing page': '新しい料金ページを公開',
-  'The note is removed from the chart for everyone.': 'このメモは全員のグラフから削除されます。',
+  'The note is removed from the chart for everyone.':
+    'このメモは全員のグラフから削除されます。',
   'Former member': '元メンバー',
+  Escalations: 'エスカレーション',
+  Escalation: 'エスカレーション',
+  Escalating: 'エスカレーション中',
+  'Notify roles once': 'ロールに 1 回通知',
+  'Select an escalation.': 'エスカレーションを選択してください。',
+  'Each step of the escalation is notified in turn until someone acknowledges the alert.':
+    '誰かがアラートを確認するまで、エスカレーションの各ステップに順番に通知します。',
+  'Create an escalation': 'エスカレーションを作成',
+  'Manage escalations': 'エスカレーションを管理',
+  'Could not load escalations.': 'エスカレーションを読み込めませんでした。',
+  'Your organization has no escalations yet.':
+    'この組織にはまだエスカレーションがありません。',
+  'Select an escalation': 'エスカレーションを選択',
+  'repeats {count}×': '{count} 回繰り返し',
+  'Acknowledging stops the escalation. It keeps firing until its monitor recovers.':
+    '確認するとエスカレーションが止まります。アラートはモニターが回復するまで発生し続けます。',
+  'No step notified yet': 'まだ通知されたステップはありません',
+  'Step {step} of {total}': 'ステップ {step}/{total}',
+  Notified: '通知済み',
+  'Step {step}': 'ステップ {step}',
+  'round {round}': '{round} 巡目',
+  'Stopped, acknowledged': '停止済み（確認済み）',
+  'Stopped, resolved': '停止済み（解決済み）',
+  'All steps notified': 'すべてのステップに通知済み',
+  'Escalation has been deleted': 'エスカレーションを削除しました',
+  'Monitors use this escalation. Move them to another escalation or to roles first.':
+    'モニターがこのエスカレーションを使用しています。先に別のエスカレーションまたはロールに切り替えてください。',
+  'Failed to delete escalation': 'エスカレーションを削除できませんでした',
+  'Notify your team step by step until someone acknowledges the alert. Pick an escalation on any monitor.':
+    '誰かがアラートを確認するまで、チームに段階的に通知します。エスカレーションは任意のモニターで選択できます。',
+  'No escalations yet.': 'エスカレーションはまだありません。',
+  'Delete escalation': 'エスカレーションを削除',
+  'Add members': 'メンバーを追加',
+  'Enter a name.': '名前を入力してください。',
+  'Each step needs a role or a member.':
+    '各ステップにはロールまたはメンバーが必要です。',
+  'Escalation has been updated': 'エスカレーションを更新しました',
+  'Escalation has been created': 'エスカレーションを作成しました',
+  'Failed to update escalation': 'エスカレーションを更新できませんでした',
+  'Failed to create escalation': 'エスカレーションを作成できませんでした',
+  'Edit escalation': 'エスカレーションを編集',
+  'Create escalation': 'エスカレーションを作成',
+  'Steps are notified in turn until someone acknowledges the alert.':
+    '誰かがアラートを確認するまで、ステップに順番に通知します。',
+  'On-call': 'オンコール',
+  'Remove step {step}': 'ステップ {step} を削除',
+  'Seconds to wait': '待機する秒数',
+  'seconds after the alert fires': '秒後（アラート発生から）',
+  'seconds after the previous step': '秒後（前のステップから）',
+  'Add step': 'ステップを追加',
+  Once: '1 回',
+  '{count} times': '{count} 回',
+  "Starts again from the first step, a monitor's cooldown after the last one.":
+    '最後のステップからモニターのクールダウン後に、最初のステップから再開します。',
+  now: '今すぐ',
+  'after {delay}': '{delay} 後',
+  'analytics properties': 'アナリティクスプロパティ',
+  'analytics property': 'アナリティクスプロパティ',
+  'per project.': '(プロジェクトごと)。',
+  'to create another.': 'して、さらに作成してください。',
+  'to enable analytics on this site.': 'して、このサイトでアナリティクスを有効にしてください。',
 }

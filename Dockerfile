@@ -1,8 +1,4 @@
-FROM composer:2 AS composer
-
-# Distrust the compromised eMudhra chains before downloading dependencies.
-RUN apk add --no-cache 'ca-certificates>=20261020-r0' 'ca-certificates-bundle>=20261020-r0' && \
-    update-ca-certificates
+FROM composer:2.11.2@sha256:50ea4d33fdcde1adb0f045547295faa1548b33872e5f789dae5b02ce2fb5de93 AS composer
 
 ARG TESTING=false
 ENV TESTING=$TESTING
@@ -16,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:2.4.2@sha256:e406c68a646c5341bae22243f4fce780a940b0aed0605fb465ecd2395462b4d5 AS ffmpeg
+FROM appwrite/base:2.5.2@sha256:d86e74364197be819b4051ec987b9b36d3b1331c67f857535afc7ea8ffb49516 AS ffmpeg
 
 # Same pin as utopia-php/video (docs/design.md, Dockerfile ARG FFMPEG_VERSION).
 # Alpine's apk ffmpeg is an older line and is not what the library CI tests against.
@@ -51,23 +47,28 @@ RUN apk add --no-cache \
     && rm -rf /tmp/ffmpeg
 
 # The utopia extension, built against the base image's own PHP headers and
-# libheif so the ABI matches. Alpine's Rust is older than the workspace needs.
-FROM appwrite/base:2.4.2@sha256:e406c68a646c5341bae22243f4fce780a940b0aed0605fb465ecd2395462b4d5 AS extension-build
-
-RUN apk add --no-cache rustup clang-dev libheif-dev build-base && \
-    rustup-init -y --profile minimal --default-toolchain 1.97.1
+# libheif so the ABI matches. The recipe is crates/extension/build.sh.
+FROM appwrite/base:2.5.2@sha256:d86e74364197be819b4051ec987b9b36d3b1331c67f857535afc7ea8ffb49516 AS extension-build
 
 WORKDIR /usr/local/src
 
-COPY Cargo.toml Cargo.lock rustfmt.toml ./
+COPY Cargo.toml Cargo.lock rustfmt.toml rust-toolchain.toml ./
 COPY .cargo ./.cargo
 COPY crates ./crates
 
-RUN . "$HOME/.cargo/env" && \
-    cargo build --release --locked -p utopia-extension && \
-    strip target/release/libutopia.so
+# Stamped into phpversion('utopia') by the published image; empty here keeps the crate version.
+ARG UTOPIA_EXTENSION_VERSION=""
 
-FROM appwrite/base:2.4.2@sha256:e406c68a646c5341bae22243f4fce780a940b0aed0605fb465ecd2395462b4d5 AS base
+RUN crates/extension/build.sh
+
+# The extension on its own, published as appwrite/utopia-extension so PHP services outside this
+# image (Edge, DNS) can load the same build: COPY --from=appwrite/utopia-extension:<version>
+# /utopia.so. See crates/extension/README.md.
+FROM scratch AS extension
+
+COPY --from=extension-build /usr/local/src/target/release/libutopia.so /utopia.so
+
+FROM appwrite/base:2.5.2@sha256:d86e74364197be819b4051ec987b9b36d3b1331c67f857535afc7ea8ffb49516 AS base
 
 LABEL maintainer="team@appwrite.io"
 
@@ -212,7 +213,7 @@ EXPOSE 80
 
 CMD [ "php", "app/http.php" ]
 
-FROM appwrite/base:2.4.2-xdebug@sha256:4145a1b8bbc2762df5d246709821330972d43176ffa7f9a0e9b19bfbda5c19c9 AS xdebug
+FROM appwrite/base:2.5.2-xdebug@sha256:1792fc129f1fdf4322b4b68b91e5512d6c6ef7c7d863d52e0e1324b1a7374cc3 AS xdebug
 
 FROM base AS development
 

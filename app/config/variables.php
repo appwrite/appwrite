@@ -2158,6 +2158,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_VIDEOS_SPECIFICATION',
+                'description' => 'The billed ceiling for each rendition encode as executions.mbSeconds with service videos. Set it to the catalog slug that matches the videos worker CPU and memory limits in this environment, for example s-4vcpu-4gb. Encode size is the smaller of the container cgroup and this row, so unbounded workers do not bill the host. An unknown slug falls back to s-4vcpu-4gb. The default value is s-4vcpu-4gb.',
+                'introduction' => '2.7.0',
+                'default' => 's-4vcpu-4gb',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_MAINTENANCE_RETENTION_ALERTS',
                 'description' => 'How long a resolved alert is kept, in seconds. A firing alert is always kept. The default value is 7776000 seconds (90 days).',
                 'introduction' => '2.7.0',

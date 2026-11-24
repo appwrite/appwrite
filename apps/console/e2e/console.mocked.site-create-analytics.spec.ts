@@ -118,7 +118,12 @@ function corsHeaders(route: Route): Record<string, string> {
  * Every `/v1` call, on any region host, is answered here; the app itself is
  * served live. Records the site create, analytics update and domain requests.
  */
-async function mockAppwriteApi(page: Page, analyticsStatus = 200) {
+async function mockAppwriteApi(
+  page: Page,
+  analyticsStatus = 200,
+  planPropertyLimit = 0,
+  countGate?: Promise<void>,
+) {
   const calls = {
     creates: [] as Request[],
     analytics: [] as Request[],
@@ -157,6 +162,18 @@ async function mockAppwriteApi(page: Page, analyticsStatus = 200) {
             type: 'analytics_property_limit_exceeded',
             version: '1.0',
           })
+    }
+    // The project already holds one property.
+    if (apiPath === '/analytics/properties') {
+      await countGate
+      return json(200, { total: 1, properties: [] })
+    }
+    if (apiPath === `/organizations/${ORGANIZATION.$id}/plan`) {
+      return json(200, {
+        $id: ORGANIZATION.billingPlan,
+        name: 'Free',
+        analyticsProperties: planPropertyLimit,
+      })
     }
     if (apiPath === `/sites/templates/${TEMPLATE_KEY}`)
       return json(200, template())
@@ -294,6 +311,44 @@ test.describe('site create analytics toggle (mocked API)', () => {
     await expect.poll(() => calls.domains.length).toBe(1)
     expect(calls.creates).toHaveLength(1)
     expect(calls.analytics).toHaveLength(0)
+  })
+
+  test('is off and locked at the plan property limit', async ({ page }) => {
+    const calls = await mockAppwriteApi(page, 200, 1)
+    await openTemplate(page)
+
+    await expect(analyticsSwitch(page)).not.toBeChecked()
+    await expect(analyticsSwitch(page)).toBeDisabled()
+    await expect(
+      page.getByText(
+        'Your current plan includes up to 1 analytics property per project.',
+      ),
+    ).toBeVisible()
+
+    await page.getByRole('button', { name: 'Deploy', exact: true }).click()
+    await expect.poll(() => calls.domains.length).toBe(1)
+    expect(calls.creates).toHaveLength(1)
+    expect(calls.analytics).toHaveLength(0)
+  })
+
+  test('waits for the plan limit before analytics can be sent', async ({
+    page,
+  }) => {
+    let releaseCount = () => {}
+    const countGate = new Promise<void>((resolve) => {
+      releaseCount = resolve
+    })
+    const calls = await mockAppwriteApi(page, 200, 5, countGate)
+    await openTemplate(page)
+
+    await expect(analyticsSwitch(page)).toBeDisabled()
+    await expect(analyticsSwitch(page)).not.toBeChecked()
+    releaseCount()
+    await expect(analyticsSwitch(page)).toBeEnabled()
+    await expect(analyticsSwitch(page)).toBeChecked()
+
+    await page.getByRole('button', { name: 'Deploy', exact: true }).click()
+    await expect.poll(() => calls.analytics.length).toBe(1)
   })
 
   test('still creates the site when enabling analytics is refused', async ({

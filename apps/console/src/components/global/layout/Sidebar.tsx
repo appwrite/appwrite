@@ -34,6 +34,7 @@ import {
 import { useDebugMode } from '@/components/global/providers/DebugMode'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { isCloudProfile } from '@/lib/console-profiles'
 import {
   analyticsAttrs,
   getSidebarNavAnalyticsAction,
@@ -350,7 +351,18 @@ export function ConsoleSidebar({
 
   const visibleCategories = useMemo(() => {
     const { navCategories: categories } = getNavItems(projectId, sidebarCopy)
+    // Logs leaves "Soon" once runtime logs are on. Cloud only: self-hosted
+    // doesn't serve `/v1/logs`.
+    const logsReady = isCloudProfile() && features.runtimeLogs
     return categories
+      .map((cat) => ({
+        ...cat,
+        items: cat.items.map((item) =>
+          item.id === 'logs' && logsReady
+            ? { ...item, comingSoon: false }
+            : item,
+        ),
+      }))
       .map((cat) => ({
         ...cat,
         items: (isDebugModeOpen

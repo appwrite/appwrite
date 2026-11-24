@@ -23,11 +23,14 @@ publish = false
 [workspace.dependencies]
 php-std = { path = "crates/support/php-std" }
 utopia-auth = { path = "crates/utopia/auth" }
+utopia-compression = { path = "crates/utopia/compression" }
+utopia-detector = { path = "crates/utopia/detector" }
 utopia-domains = { path = "crates/utopia/domains" }
 utopia-emails = { path = "crates/utopia/emails" }
 utopia-dsn = { path = "crates/utopia/dsn" }
 utopia-image = { path = "crates/utopia/image", default-features = false }
 utopia-locale = { path = "crates/utopia/locale" }
+utopia-query = { path = "crates/utopia/query" }
 utopia-user-agent = { path = "crates/utopia/user-agent" }
 utopia-validators = { path = "crates/utopia/validators" }
 
@@ -41,6 +44,8 @@ argon2 = { version = "0.5", features = ["std"] }
 # reference, fills them one after the other).
 blake2 = "0.10"
 blowfish = { version = "0.9", features = ["bcrypt"] }
+# C brotli 1.2.1, built from source and linked statically: the library PHP's ext-brotli links.
+brotlic-sys = "0.2.5"
 bytes = "1"
 cc = "1"
 foldhash = "0.2"
@@ -65,6 +70,8 @@ sha2 = "0.10"
 aes = "0.8"
 zeroize = "1"
 sha3 = "0.10"
+# A stack sized for the work (the extension's Utopia\\Query AST: a tree as deep as PHP takes).
+stacker = "0.1"
 unsafe-libyaml = "0.2"
 whirlpool = "0.10"
 xxhash-rust = { version = "0.8", features = ["xxh3"] }
@@ -80,10 +87,21 @@ image-webp = "0.2"
 # tables, neither of which the `image` crate's encoder has. Pure Rust.
 jpeg-encoder = "0.7"
 kamadak-exif = "0.6"
+# The system zlib (no `static`): the library PHP itself links, so Deflate and GZIP write its bytes.
+libz-sys = { version = "1", default-features = false, features = ["libc"] }
 # libheif (a system library): AVIF and HEIC decoding, HEIC encoding. utopia-image's `libheif` feature.
 libheif-rs = { version = "3", default-features = false, features = ["v1_17"] }
+# LZ4 1.10.0, built from source and linked statically, as PHP's ext-lz4 links it.
+lz4-sys = "1.11.1"
+lzma-rust2 = { version = "0.22", default-features = false, features = ["std", "encoder", "xz"] }
+# The extension's allocator: musl's, on the Alpine image, is slow. `local_dynamic_tls` is what a
+# library PHP loads with dlopen needs there.
+mimalloc = { version = "0.1.52", default-features = false, features = ["local_dynamic_tls"] }
 png = "0.18"
 thiserror = "2"
+# libzstd 1.5.7, built from source and linked statically, as PHP's ext-zstd links it. No
+# `zstdmt`: multithreaded compression would start threads in a process that forks.
+zstd-safe = { version = "8", default-features = false, features = ["std"] }
 # libwebp, built from source and linked statically: lossy WebP. utopia-image's `libwebp` feature.
 webp = { version = "0.3", default-features = false }
 
