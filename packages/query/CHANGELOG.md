@@ -2,7 +2,7 @@
 
 All notable changes to `utopia-php/query` are documented in this file.
 
-## 0.7.3
+## 0.8.0
 
 ### Changed
 

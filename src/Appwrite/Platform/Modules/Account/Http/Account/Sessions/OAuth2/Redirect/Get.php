@@ -140,27 +140,19 @@ class Get extends Base
         Bus $bus,
     ): void {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $port = $request->getPort();
-        $callbackBase = $protocol . '://' . $request->getHostname();
-        // An empty port means the host named none, so the scheme's default applies
-        if ($port !== '' && $port !== ($protocol === 'https' ? '443' : '80')) {
-            $callbackBase .= ':' . $port;
-        }
-
-        $callback = $callbackBase . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
+        $callback = $this->getOAuth2Callback($provider, $project, $request);
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
         $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
         $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
         $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
 
-        $oAuthProviders = Config::getParam('oAuthProviders') ?? [];
-        $className = $oAuthProviders[$provider]['class'] ?? null;
+        $definition = $this->getOAuth2Provider($provider);
+        $className = $definition['class'] ?? null;
         if ($className === null || !\class_exists($className)) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
-        $providers = Config::getParam('oAuthProviders') ?? [];
-        $providerName = $providers[$provider]['name'] ?? '';
+        $providerName = $definition['name'] ?? '';
 
         /** @var OAuth2 $oauth2 */
         $oauth2 = new $className($clientForOAuth2, $appId, $appSecret, $callback);

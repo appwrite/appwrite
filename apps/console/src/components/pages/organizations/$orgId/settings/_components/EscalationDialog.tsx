@@ -43,12 +43,14 @@ import {
   MAX_DELAY,
   MAX_REPEAT,
 } from '@/lib/alerts/escalation'
+import { alertingLimits } from '@/lib/alerts/plan-limits'
 import type { Escalation, EscalationInput } from '@/lib/appwrite/monitors'
 import { useT } from '@/lib/i18n/translate'
 import { useModalAwarePopover } from '@/lib/layout/modal-portal-host'
 import {
   useCreateEscalation,
   useEscalationMembers,
+  useOrganizationPlan,
   useUpdateEscalation,
 } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
@@ -224,6 +226,16 @@ export function EscalationDialog({
   const updateMutation = useUpdateEscalation(organizationId)
   const isPending = createMutation.isPending || updateMutation.isPending
   const [form, setForm] = useState<EscalationForm>(emptyForm)
+  const { plan } = useOrganizationPlan(organizationId)
+  const limits = alertingLimits(plan)
+  const stepLimit = limits.escalationSteps
+  const repeatLimit = Math.min(
+    MAX_REPEAT,
+    limits.escalationRepeat ?? MAX_REPEAT,
+  )
+  // A repeat saved before a downgrade stays selectable, so an unrelated edit keeps it.
+  const repeatOptions = Math.max(repeatLimit, escalation?.repeat ?? 0)
+  const atStepLimit = stepLimit !== null && form.steps.length >= stepLimit
 
   useEffect(() => {
     if (open) setForm(escalation ? formFromEscalation(escalation) : emptyForm())
@@ -248,9 +260,16 @@ export function EscalationDialog({
           (step) => step.roles.length === 0 && step.userIds.length === 0,
         )
       ? t('Each step needs a role or a member.')
-      : escalation && Object.keys(changes).length === 0
-        ? t('No changes to save.')
-        : undefined
+      : stepLimit !== null &&
+          form.steps.length > stepLimit &&
+          'steps' in changes
+        ? t('Your plan allows up to {count} steps per escalation.').replace(
+            '{count}',
+            String(stepLimit),
+          )
+        : escalation && Object.keys(changes).length === 0
+          ? t('No changes to save.')
+          : undefined
 
   const updateStep = (index: number, next: Partial<StepForm>) =>
     setForm((current) => ({
@@ -448,25 +467,34 @@ export function EscalationDialog({
                   </li>
                 ))}
               </ol>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="mt-3 h-8 text-[12px]"
-                onClick={() =>
-                  setForm((current) => ({
-                    ...current,
-                    steps: [
-                      ...current.steps,
-                      { seconds: 900, roles: [], userIds: [] },
-                    ],
-                  }))
-                }
-                disabled={isPending}
-              >
-                <Plus className="me-1.5 h-3.5 w-3.5" />
-                {t('Add step')}
-              </Button>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-[12px]"
+                  onClick={() =>
+                    setForm((current) => ({
+                      ...current,
+                      steps: [
+                        ...current.steps,
+                        { seconds: 900, roles: [], userIds: [] },
+                      ],
+                    }))
+                  }
+                  disabled={isPending || atStepLimit}
+                >
+                  <Plus className="me-1.5 h-3.5 w-3.5" />
+                  {t('Add step')}
+                </Button>
+                {atStepLimit && (
+                  <span className="text-[12px] text-muted-foreground">
+                    {t(
+                      'Your plan allows up to {count} steps per escalation.',
+                    ).replace('{count}', String(stepLimit))}
+                  </span>
+                )}
+              </div>
             </section>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -487,8 +515,14 @@ export function EscalationDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.from({ length: MAX_REPEAT + 1 }, (_, count) => (
-                    <SelectItem key={count} value={String(count)}>
+                  {Array.from({ length: repeatOptions + 1 }, (_, count) => (
+                    <SelectItem
+                      key={count}
+                      value={String(count)}
+                      disabled={
+                        count > repeatLimit && count !== escalation?.repeat
+                      }
+                    >
                       {count === 0
                         ? t('Never')
                         : count === 1
@@ -502,9 +536,11 @@ export function EscalationDialog({
                 </SelectContent>
               </Select>
               <span className="text-[12px] text-muted-foreground">
-                {t(
-                  "Starts again from the first step, a monitor's cooldown after the last one.",
-                )}
+                {repeatLimit === 0
+                  ? t('Upgrade your plan to repeat escalations.')
+                  : t(
+                      "Starts again from the first step, a monitor's cooldown after the last one.",
+                    )}
               </span>
             </div>
           </div>

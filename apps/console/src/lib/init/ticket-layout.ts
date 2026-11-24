@@ -3,6 +3,15 @@ export const INIT_TICKET_BG_SRC_LIGHT = '/images/init/ticket-bg-light.avif'
 export const INIT_TICKET_BG_SRC_DARK = '/images/init/ticket-bg-dark.avif'
 export const INIT_TICKET_BG_SRC_GOLD = '/images/init/ticket-bg-gold.avif'
 export const INIT_TICKET_BG_SRC_SILVER = '/images/init/ticket-bg-silver.avif'
+/** Init 5 frames: the hero's light-trail 5 on the stub, same geometry as above. */
+export const INIT_5_TICKET_BG_SRC_LIGHT =
+  '/images/init/ticket-bg-light-init-5.avif'
+export const INIT_5_TICKET_BG_SRC_DARK =
+  '/images/init/ticket-bg-dark-init-5.avif'
+export const INIT_5_TICKET_BG_SRC_GOLD =
+  '/images/init/ticket-bg-gold-init-5.avif'
+export const INIT_5_TICKET_BG_SRC_SILVER =
+  '/images/init/ticket-bg-silver-init-5.avif'
 
 export const INIT_TICKET_IMAGE_WIDTH = 1024
 export const INIT_TICKET_IMAGE_HEIGHT = 682
@@ -44,6 +53,17 @@ export const INIT_TICKET_CONTENT_INSET = {
   right: 12.5,
   bottom: 21.5,
   left: 12.5,
+} as const
+
+/**
+ * The card's visible edge inside the frame image (percent of the image box),
+ * measured from the art's alpha. Same for every tier and edition.
+ */
+export const INIT_TICKET_CARD_INSET = {
+  top: 18,
+  right: 7.7,
+  bottom: 18.2,
+  left: 7.7,
 } as const
 
 /** Vertical perforation line - main body vs stub (percent of image width). */
