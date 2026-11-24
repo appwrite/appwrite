@@ -2271,7 +2271,9 @@ final class AccountCustomClientTest extends Scope
             'secret' => $verification,
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        // An unknown user answers like a wrong secret, so the route doesn't reveal which accounts exist
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertSame('user_invalid_token', $response['body']['type']);
 
         $response = $this->client->call(Client::METHOD_PUT, '/account/verification', array_merge([
             'origin' => 'http://localhost',
@@ -2803,7 +2805,9 @@ final class AccountCustomClientTest extends Scope
             'password' => $newPassword,
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        // An unknown user answers like a wrong secret, so the route doesn't reveal which accounts exist
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertSame('user_invalid_token', $response['body']['type']);
 
         $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
             'origin' => 'http://localhost',
@@ -10766,7 +10770,9 @@ final class AccountCustomClientTest extends Scope
             'secret' => $otp,
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        // An unknown user answers like a wrong secret, so the route doesn't reveal which accounts exist
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertSame('user_invalid_token', $response['body']['type']);
 
         /**
          * Test for FAILURE - OTP is single use
@@ -11026,7 +11032,9 @@ final class AccountCustomClientTest extends Scope
             'password' => 'new-password-otp',
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        // An unknown user answers like a wrong secret, so the route doesn't reveal which accounts exist
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertSame('user_invalid_token', $response['body']['type']);
     }
 
     public function testCreateIdTokenSessionGoogleShapedClaims(): void
