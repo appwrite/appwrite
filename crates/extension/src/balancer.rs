@@ -619,7 +619,7 @@ unsafe fn frozen_array(ht: *mut HashTable) -> Zval {
 
 /// Runs a body that calls no PHP code, a panic thrown as PHP's `Error`.
 #[inline(always)]
-fn guard(body: impl FnOnce()) {
+pub(crate) fn guard(body: impl FnOnce()) {
     if let Err(payload) = std::panic::catch_unwind(AssertUnwindSafe(body)) {
         panicked(payload.as_ref());
     }
@@ -639,7 +639,7 @@ fn panicked(payload: &(dyn std::any::Any + Send)) {
 }
 
 /// Runs a body that calls PHP code under `zend_try` (`run_handler` without its thread-local bookkeeping).
-fn guard_engine<F: FnOnce()>(body: F) {
+pub(crate) fn guard_engine<F: FnOnce()>(body: F) {
     struct Frame<F> {
         body: std::mem::ManuallyDrop<F>,
         panic: Option<Box<dyn std::any::Any + Send>>,
