@@ -1,7 +1,7 @@
 ---
 layout: changelog
 title: "Change what a custom domain serves without adding it again"
-date: 2026-11-24
+date: 2026-11-27
 cover: /images/blog/announcing-domain-updates/cover.avif
 tags: sites, functions, domains, console, api
 ---

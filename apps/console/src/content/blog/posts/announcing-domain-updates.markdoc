@@ -2,7 +2,7 @@
 layout: post
 title: "Announcing domain updates for Appwrite Sites and Functions"
 description: Update a custom domain on Appwrite Sites or Functions to serve another branch or redirect somewhere new, without touching its DNS records or its certificate.
-date: 2026-11-24
+date: 2026-11-27
 cover: /images/blog/announcing-domain-updates/cover.avif
 timeToRead: 5
 author: aditya-oberai

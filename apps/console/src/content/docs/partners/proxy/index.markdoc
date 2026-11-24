@@ -140,9 +140,9 @@ An update changes what a hostname serves and leaves its DNS record, verification
 
 | Operation | Updates | Parameters |
 | --------- | ------- | ---------- |
-| `updateSiteRule` | Site rules | `siteId`, `branch` |
-| `updateFunctionRule` | Function rules | `functionId`, `branch` |
-| `updateRedirectRule` | Redirect rules | `url`, `statusCode`, `resourceId`, `resourceType` |
+| `updateSiteRule` | Site rules | `ruleId`, `siteId`, `branch` |
+| `updateFunctionRule` | Function rules | `ruleId`, `functionId`, `branch` |
+| `updateRedirectRule` | Redirect rules | `ruleId`, `url`, `statusCode`, `resourceId`, `resourceType` |
 
 The domain itself can't change, and neither can the rule type. Calling the operation for another kind of rule, for example `updateFunctionRule` on a site rule, fails with `404 rule_not_found`. To turn a deployment rule into a redirect, delete the rule and create a new one.
 
