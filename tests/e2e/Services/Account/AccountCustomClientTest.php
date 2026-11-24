@@ -6935,7 +6935,9 @@ final class AccountCustomClientTest extends Scope
             'secret' => $secret,
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        // An unknown user answers like a wrong secret, so the route doesn't reveal which accounts exist
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertSame('user_invalid_token', $response['body']['type']);
 
         $response = $this->client->call(Client::METHOD_PUT, '/account/verification/phone', array_merge([
             'origin' => 'http://localhost',
