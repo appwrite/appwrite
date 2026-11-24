@@ -1,22 +1,28 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from '@tanstack/react-router'
 import { SettingsCardsList } from '@/components/global/shared/settings-search/SettingsCardsList'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   organizationQueryOptions,
   useOrganizationEmailDomains,
   useOrganizationSSOProviders,
 } from '@/lib/react-query/hooks'
 import { EmailDomainsCard } from './_components/EmailDomainsCard'
+import { EnableBaaDialog } from './_components/EnableBaaDialog'
 import { RequireSSOCard } from './_components/RequireSSOCard'
 import { SAMLProvidersCard } from './_components/SAMLProvidersCard'
-import { SSOPlanNotice, useSSOPlanGate } from './_components/SSOCardHelpers'
+import { SSOAddonNotice, useSSOAddonGate } from './_components/SSOCardHelpers'
 import { SSOProvidersCard } from './_components/SSOProvidersCard'
 
 export function SingleSignOn() {
   const { orgId = '' } = useParams({ strict: false })
-  // Single sign-on is set up on Pro and above. On another plan the page offers
-  // the upgrade; what the organization kept from Pro stays listed, to delete.
-  const gate = useSSOPlanGate(orgId)
+  // Single sign-on is part of the HIPAA BAA add-on. Without it active the page
+  // offers the add-on, or the upgrade on a plan without it; what the
+  // organization kept from when it was active stays listed, to delete.
+  const gate = useSSOAddonGate(orgId)
+  const { features } = useConsoleProfile()
+  const [enablingAddon, setEnablingAddon] = useState(false)
   const { domains, isSuccess: domainsLoaded } =
     useOrganizationEmailDomains(orgId)
   const { providers, isSuccess: providersLoaded } =
@@ -102,16 +108,38 @@ export function SingleSignOn() {
     />
   )
 
-  if (!gate.locked) return cards
-  if (nothingSetUp) {
-    return (
-      <SSOPlanNotice orgId={orgId} planName={gate.planName} variant="upgrade" />
-    )
-  }
+  // Unknown (not read yet, or no billing) is not locked: the server decides.
+  const notice =
+    gate.status && gate.status !== 'active' ? (
+      <SSOAddonNotice
+        orgId={orgId}
+        status={gate.status}
+        planName={gate.planName}
+        paused={!nothingSetUp}
+        onEnable={() => setEnablingAddon(true)}
+      />
+    ) : null
+
   return (
-    <div className="space-y-6">
-      <SSOPlanNotice orgId={orgId} planName={gate.planName} variant="paused" />
-      {cards}
-    </div>
+    <>
+      {!notice ? (
+        cards
+      ) : nothingSetUp ? (
+        notice
+      ) : (
+        <div className="space-y-6">
+          {notice}
+          {cards}
+        </div>
+      )}
+      {/* Here rather than in the notice, which is gone once the add-on is on */}
+      {features.billing ? (
+        <EnableBaaDialog
+          open={enablingAddon}
+          onOpenChange={setEnablingAddon}
+          organizationId={orgId}
+        />
+      ) : null}
+    </>
   )
 }

@@ -23,7 +23,7 @@ import {
 import {
   SSO_ERROR_TEXT,
   useSingleSubmit,
-  useSSOPlanErrorHandler,
+  useSSOAddonErrorHandler,
 } from './SSOCardHelpers'
 import { getEmailDomainRecord } from './VerifyEmailDomain'
 
@@ -47,7 +47,7 @@ export function CreateEmailDomain({
   // Another organization holds the domain: the TXT record takes it over.
   const [claimDomain, setClaimDomain] = useState<string | null>(null)
   const create = useCreateOrganizationEmailDomain(organizationId)
-  const onPlanError = useSSOPlanErrorHandler(organizationId)
+  const onAddonError = useSSOAddonErrorHandler(organizationId)
   const submitOnce = useSingleSubmit()
 
   const domainError = domainFieldError(domain, touched, t)
@@ -79,7 +79,7 @@ export function CreateEmailDomain({
             onCreated(rule)
           },
           onError: (failure: Error) => {
-            if (onPlanError(failure)) {
+            if (onAddonError(failure)) {
               close(false)
               return
             }

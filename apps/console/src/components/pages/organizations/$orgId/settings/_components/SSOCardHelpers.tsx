@@ -1,9 +1,10 @@
 import { useCallback, useRef, type ReactNode } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { AlertCircle, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { formatCurrency } from '@/components/pages/organizations/$orgId/billing/utils'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
@@ -12,18 +13,28 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { analyticsAttrs } from '@/lib/analytics-actions'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import {
+  ADDON_KEY_BAA,
+  planSupportsAddon,
+  type SupportedAddonKey,
+} from '@/lib/billing/addons'
+import { useI18n } from '@/lib/i18n'
 import { useT } from '@/lib/i18n/translate'
 import {
+  organizationAddonsQueryOptions,
   organizationPlanQueryOptions,
+  useBillingPlans,
+  useOrganizationAddonPrice,
   useOrganizationPlan,
 } from '@/lib/react-query/hooks'
 import {
-  isSSOPlanError,
-  planSupportsSSO,
-  SSO_PLAN_REQUIRED_MESSAGE,
-} from '@/lib/sso-plan'
+  isSSOAddonError,
+  SSO_ADDON_REQUIRED_MESSAGE,
+  ssoAddonStatus,
+  type SSOAddonStatus,
+} from '@/lib/sso-addon'
 import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 
 /**
@@ -158,17 +169,25 @@ export function useSingleSubmit() {
 }
 
 /**
- * Whether the organization's plan includes single sign-on (Pro and above).
- * `locked` only once the plan is known: setup is never refused on a guess.
+ * Whether the organization can set up single sign-on: it is part of the HIPAA
+ * BAA add-on, so it needs that add-on active. `locked` only once the plan and
+ * the add-ons are known: setup is never refused on a guess. `enabled: false`
+ * leaves the add-ons unread, for a page that may not show single sign-on.
  */
-export function useSSOPlanGate(orgId: string) {
+export function useSSOAddonGate(orgId: string, enabled = true) {
+  const { features } = useConsoleProfile()
   const { plan, isFetched } = useOrganizationPlan(orgId)
-  const known = isFetched && !!plan
-  const supported = planSupportsSSO(plan)
+  const addons = useQuery(
+    organizationAddonsQueryOptions(enabled && features.billing ? orgId : null),
+  )
+  const known = isFetched && !!plan && addons.isSuccess
+  const status: SSOAddonStatus | null = known
+    ? ssoAddonStatus(plan, addons.data?.addons, ADDON_KEY_BAA)
+    : null
   return {
     known,
-    supported,
-    locked: known && !supported,
+    status,
+    locked: known && status !== 'active',
     planName: resolveOrganizationPlanDisplayLabel({
       planName: plan?.name ?? null,
       planId: plan?.$id,
@@ -176,38 +195,58 @@ export function useSSOPlanGate(orgId: string) {
   }
 }
 
+/** Where the organization's HIPAA BAA add-on is enabled, and its payment confirmed. */
+function complianceRoute(orgId: string) {
+  return {
+    to: '/organizations/$orgId/settings/compliance',
+    params: { orgId },
+  } as const
+}
+
 /**
- * A setup request the API refused because the plan no longer includes single
- * sign-on (it changed while the page was open): say so with the upgrade, and
- * reload the plan so the page shows its locked state. Returns whether it was
- * that refusal.
+ * A setup request the API refused because the HIPAA BAA add-on is not active
+ * (it ended while the page was open): say so with the way to it, and reload the
+ * plan and the add-ons so the page shows its locked state. Returns whether it
+ * was that refusal.
  */
-export function useSSOPlanErrorHandler(orgId: string) {
+export function useSSOAddonErrorHandler(orgId: string) {
   const t = useT()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { features } = useConsoleProfile()
+  const { status } = useSSOAddonGate(orgId)
   return useCallback(
     (error: unknown): boolean => {
-      if (!isSSOPlanError(error)) return false
-      toast.error(t(SSO_PLAN_REQUIRED_MESSAGE), {
-        action: getActiveProfileFeatures().billing
+      if (!isSSOAddonError(error)) return false
+      // On a plan without the add-on, the upgrade; else the add-on itself.
+      const action = !features.billing
+        ? undefined
+        : status === 'unavailable'
           ? {
               label: t('Upgrade'),
               onClick: () => navigate({ to: '/upgrade', search: { orgId } }),
             }
-          : undefined,
-      })
+          : features.compliance
+            ? {
+                label: t('View add-on'),
+                onClick: () => navigate(complianceRoute(orgId)),
+              }
+            : undefined
+      toast.error(t(SSO_ADDON_REQUIRED_MESSAGE), { action })
       void queryClient.invalidateQueries({
         queryKey: organizationPlanQueryOptions(orgId).queryKey,
       })
+      void queryClient.invalidateQueries({
+        queryKey: organizationAddonsQueryOptions(orgId).queryKey,
+      })
       return true
     },
-    [navigate, orgId, queryClient, t],
+    [features, navigate, orgId, queryClient, status, t],
   )
 }
 
-/** A setup control the plan does not allow: disabled, with the reason. */
-export function PlanLockedTooltip({
+/** A setup control the add-on does not allow yet: disabled, with the reason. */
+export function SSOLockedTooltip({
   locked,
   children,
 }: {
@@ -225,65 +264,138 @@ export function PlanLockedTooltip({
           </span>
         </TooltipTrigger>
         <TooltipContent className="max-w-xs text-xs">
-          {t('Single sign-on is available on Pro')}
+          {t('Single sign-on is part of the HIPAA BAA add-on')}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
   )
 }
 
+/** The plans that sell `addon`, cheapest first, as one list in `language`. */
+function usePlansSellingAddon(addon: SupportedAddonKey): string | null {
+  const { language } = useI18n()
+  const { plans } = useBillingPlans()
+  const names = Object.values(plans)
+    .filter((plan) => planSupportsAddon(plan, addon))
+    .sort((a, b) => a.order - b.order)
+    .map((plan) => plan.name)
+    .filter((name, index, all) => !!name && all.indexOf(name) === index)
+  if (names.length === 0) return null
+  return new Intl.ListFormat(language, { type: 'conjunction' }).format(names)
+}
+
+const NOTICE_ACTION_CLASS =
+  'h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400'
+
 /**
- * Single sign-on on a plan without it, in the form project environments use:
- * `upgrade` when nothing is set up yet, `paused` when the organization kept its
- * domains or identity providers from Pro.
+ * Single sign-on without an active HIPAA BAA add-on, in the form project
+ * environments use. Without `paused` nothing is set up yet, and the notice
+ * stands for the page: what the add-on costs and how to get it. With `paused`
+ * the organization kept domains, identity providers or Require SSO, listed
+ * below it to delete and turn off.
+ *
+ * - `available`: the plan sells the add-on; `onEnable` opens its dialog.
+ * - `pending`: its payment awaits confirmation, on the Compliance page.
+ * - `unavailable`: the plan does not sell it; the upgrade.
  */
-export function SSOPlanNotice({
+export function SSOAddonNotice({
   orgId,
+  status,
   planName,
-  variant,
+  paused,
+  onEnable,
 }: {
   orgId: string
+  status: Exclude<SSOAddonStatus, 'active'>
   planName: string
-  variant: 'upgrade' | 'paused'
+  paused: boolean
+  onEnable: () => void
 }) {
   const t = useT()
-  const canUpgrade = !!orgId && getActiveProfileFeatures().billing
+  const { features } = useConsoleProfile()
+  const { addonPrice } = useOrganizationAddonPrice(
+    status === 'available' && !paused ? orgId : null,
+    ADDON_KEY_BAA,
+  )
+  const sellers = usePlansSellingAddon(ADDON_KEY_BAA)
+
+  const title = paused
+    ? t('Single sign-on is paused')
+    : t('Single sign-on is part of the HIPAA BAA add-on')
+
+  const description = paused
+    ? [
+        status === 'available'
+          ? t('The HIPAA BAA add-on is not active.')
+          : status === 'pending'
+            ? t(
+                'The payment for the HIPAA BAA add-on is awaiting confirmation.',
+              )
+            : t(
+                'Your plan ({plan}) does not include the HIPAA BAA add-on.',
+              ).replace('{plan}', planName),
+        t(
+          'Until the add-on is active, nobody signs in through your identity providers and Require SSO has no effect. You can still delete domains and identity providers, and turn Require SSO off.',
+        ),
+      ].join(' ')
+    : status === 'available'
+      ? addonPrice
+        ? t(
+            'The add-on costs {price}/month, prorated for your current billing cycle. Enable it to verify your domains and connect identity providers, so people on your domains sign in with SSO.',
+          ).replace(
+            '{price}',
+            formatCurrency(addonPrice.monthlyPrice, addonPrice.currency),
+          )
+        : t(
+            'Enable the add-on to verify your domains and connect identity providers, so people on your domains sign in with SSO.',
+          )
+      : status === 'pending'
+        ? t(
+            'The payment for the add-on is awaiting confirmation. Single sign-on can be set up once it is confirmed.',
+          )
+        : sellers
+          ? t(
+              'The add-on is available on {plans}. Upgrade to verify your domains and connect identity providers, so people on your domains sign in with SSO.',
+            ).replace('{plans}', sellers)
+          : t(
+              'Your plan ({plan}) does not include the add-on. Upgrade to verify your domains and connect identity providers, so people on your domains sign in with SSO.',
+            ).replace('{plan}', planName)
+
+  const action = !features.billing ? null : status === 'available' ? (
+    <Button size="sm" className={NOTICE_ACTION_CLASS} onClick={onEnable}>
+      {t('Enable add-on')}
+    </Button>
+  ) : status === 'pending' ? (
+    features.compliance ? (
+      <Button asChild size="sm" className={NOTICE_ACTION_CLASS}>
+        <Link {...complianceRoute(orgId)}>{t('View add-on')}</Link>
+      </Button>
+    ) : null
+  ) : (
+    <Button asChild size="sm" className={NOTICE_ACTION_CLASS}>
+      <Link
+        to="/upgrade"
+        search={{ orgId }}
+        {...analyticsAttrs('upgrade-clicked')}
+      >
+        {t('Upgrade')}
+      </Link>
+    </Button>
+  )
+
   return (
     <Alert className="border-amber-500/30 bg-amber-500/5">
       <AlertCircle className="h-4 w-4 text-amber-500" />
       <div className="flex flex-1 items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-            {variant === 'upgrade'
-              ? t('Single sign-on is available on Pro')
-              : t('Single sign-on is paused')}
+            {title}
           </AlertTitle>
           <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
-            {(variant === 'upgrade'
-              ? t(
-                  'Your plan ({plan}) does not include single sign-on. Upgrade to verify your domains and connect identity providers, so people on your domains sign in with SSO.',
-                )
-              : t(
-                  'Your plan ({plan}) does not include single sign-on, so nobody signs in through your identity providers and Require SSO has no effect until the organization is back on Pro. You can still delete domains and identity providers, and turn Require SSO off.',
-                )
-            ).replace('{plan}', planName)}
+            {description}
           </AlertDescription>
         </div>
-        {canUpgrade ? (
-          <Button
-            asChild
-            size="sm"
-            className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
-          >
-            <Link
-              to="/upgrade"
-              search={{ orgId }}
-              {...analyticsAttrs('upgrade-clicked')}
-            >
-              {t('Upgrade')}
-            </Link>
-          </Button>
-        ) : null}
+        {orgId ? action : null}
       </div>
     </Alert>
   )

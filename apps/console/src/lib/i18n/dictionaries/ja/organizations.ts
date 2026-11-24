@@ -1794,19 +1794,38 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Verify your domains and connect identity providers so people sign in with single sign-on.':
     'ドメインを検証して ID プロバイダーを接続すると、ユーザーがシングルサインオンでサインインできます。',
   'Failed to delete identity provider': 'ID プロバイダーの削除に失敗しました',
-  'Single sign-on is available on Pro':
-    'シングルサインオンは Pro で利用できます',
+  'Single sign-on is part of the HIPAA BAA add-on':
+    'シングルサインオンは HIPAA BAA アドオンに含まれています',
+  "Single sign-on is part of the HIPAA BAA add-on. Enable it in the organization's settings.":
+    'シングルサインオンは HIPAA BAA アドオンに含まれています。組織の設定で有効にしてください。',
+  'View add-on': 'アドオンを表示',
+  'Enable add-on': 'アドオンを有効にする',
+  'The HIPAA BAA add-on is not active.': 'HIPAA BAA アドオンが有効になっていません。',
+  'The payment for the HIPAA BAA add-on is awaiting confirmation.':
+    'HIPAA BAA アドオンの支払いは確認待ちです。',
+  'Your plan ({plan}) does not include the HIPAA BAA add-on.':
+    'ご利用のプラン ({plan}) には HIPAA BAA アドオンが含まれていません。',
+  'Until the add-on is active, nobody signs in through your identity providers and Require SSO has no effect. You can still delete domains and identity providers, and turn Require SSO off.':
+    'アドオンが有効になるまで、ID プロバイダー経由でサインインするユーザーはおらず、SSO の必須化も適用されません。ドメインと ID プロバイダーの削除、および SSO の必須化をオフにすることは引き続き可能です。',
+  'The add-on costs {price}/month, prorated for your current billing cycle. Enable it to verify your domains and connect identity providers, so people on your domains sign in with SSO.':
+    'このアドオンは {price}/月で、現在の請求サイクルに按分されます。有効にすると、ドメインを検証して ID プロバイダーを接続し、ドメインのユーザーが SSO でサインインできるようになります。',
+  'Enable the add-on to verify your domains and connect identity providers, so people on your domains sign in with SSO.':
+    'アドオンを有効にすると、ドメインを検証して ID プロバイダーを接続し、ドメインのユーザーが SSO でサインインできるようになります。',
+  'The payment for the add-on is awaiting confirmation. Single sign-on can be set up once it is confirmed.':
+    'アドオンの支払いは確認待ちです。確認されると、シングルサインオンを設定できるようになります。',
+  'The add-on is available on {plans}. Upgrade to verify your domains and connect identity providers, so people on your domains sign in with SSO.':
+    'このアドオンは {plans} で利用できます。アップグレードすると、ドメインを検証して ID プロバイダーを接続し、ドメインのユーザーが SSO でサインインできるようになります。',
+  'Your plan ({plan}) does not include the add-on. Upgrade to verify your domains and connect identity providers, so people on your domains sign in with SSO.':
+    'ご利用のプラン ({plan}) にはこのアドオンが含まれていません。アップグレードすると、ドメインを検証して ID プロバイダーを接続し、ドメインのユーザーが SSO でサインインできるようになります。',
+  'Enable the HIPAA BAA add-on to require single sign-on.':
+    'シングルサインオンを必須にするには、HIPAA BAA アドオンを有効にしてください。',
+  'Paused - enable the HIPAA BAA add-on to require single sign-on again.':
+    '一時停止中 - シングルサインオンを再び必須にするには、HIPAA BAA アドオンを有効にしてください。',
+  'The add-on includes single sign-on for the organization.':
+    'このアドオンには組織のシングルサインオンが含まれます。',
+  'Single sign-on for the organization stops when the add-on ends.':
+    'アドオンが終了すると、組織のシングルサインオンは停止します。',
   'Single sign-on is paused': 'シングルサインオンは一時停止中です',
-  'Your plan ({plan}) does not include single sign-on. Upgrade to verify your domains and connect identity providers, so people on your domains sign in with SSO.':
-    'ご利用のプラン ({plan}) にはシングルサインオンが含まれていません。アップグレードすると、ドメインを検証して ID プロバイダーを接続し、ドメインのユーザーが SSO でサインインできるようになります。',
-  'Your plan ({plan}) does not include single sign-on, so nobody signs in through your identity providers and Require SSO has no effect until the organization is back on Pro. You can still delete domains and identity providers, and turn Require SSO off.':
-    'ご利用のプラン ({plan}) にはシングルサインオンが含まれていないため、組織が Pro に戻るまで、ID プロバイダー経由でサインインするユーザーはおらず、SSO の必須化も適用されません。ドメインと ID プロバイダーの削除、および SSO の必須化をオフにすることは引き続き可能です。',
-  'Single sign-on requires a Pro plan or higher.':
-    'シングルサインオンには Pro 以上のプランが必要です。',
-  'Upgrade to Pro to require single sign-on.':
-    'シングルサインオンを必須にするには、Pro にアップグレードしてください。',
-  'Paused - upgrade to Pro to require single sign-on again.':
-    '一時停止中 - シングルサインオンを再び必須にするには、Pro にアップグレードしてください。',
   Later: '後で',
   'SAML is coming soon':
     'SAML は近日公開です',

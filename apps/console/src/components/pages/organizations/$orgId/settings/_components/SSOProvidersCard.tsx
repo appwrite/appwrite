@@ -53,12 +53,12 @@ import { EmailDomainRoles, emailDomainRoleLabel } from './EmailDomainRoles'
 import {
   focusOnOpen,
   SSO_ERROR_TEXT,
-  PlanLockedTooltip,
+  SSOLockedTooltip,
   SSOListLoadError,
   useDialogFocusReturn,
   useSingleSubmit,
-  useSSOPlanErrorHandler,
-  useSSOPlanGate,
+  useSSOAddonErrorHandler,
+  useSSOAddonGate,
 } from './SSOCardHelpers'
 
 const HEAD =
@@ -79,10 +79,10 @@ export function SSOProvidersCard() {
   const { data: organization } = useQuery(organizationQueryOptions(orgId))
   const save = useSaveOrganizationSSOProvider(orgId)
   const remove = useDeleteOrganizationSSOProvider(orgId)
-  // Adding, updating and turning providers on or off need a plan with single
-  // sign-on; deleting works on any plan.
-  const gate = useSSOPlanGate(orgId)
-  const onPlanError = useSSOPlanErrorHandler(orgId)
+  // Adding, updating and turning providers on or off need the HIPAA BAA
+  // add-on; deleting works without it.
+  const gate = useSSOAddonGate(orgId)
+  const onAddonError = useSSOAddonErrorHandler(orgId)
 
   const hasVerifiedDomain = domains.some(
     (domain) => domain.status === 'verified',
@@ -167,7 +167,7 @@ export function SSOProvidersCard() {
                 : t('Identity provider disabled'),
           ),
         onError: (failure: Error) => {
-          if (onPlanError(failure)) return
+          if (onAddonError(failure)) return
           toast.error(
             getErrorMessage(failure) || t('Failed to update identity provider'),
           )
@@ -286,7 +286,7 @@ export function SSOProvidersCard() {
                     </div>
                   </TableCell>
                   <TableCell className="px-4 py-3">
-                    <PlanLockedTooltip locked={gate.locked}>
+                    <SSOLockedTooltip locked={gate.locked}>
                       <Switch
                         checked={provider.enabled}
                         onCheckedChange={(enabled) => toggle(provider, enabled)}
@@ -295,7 +295,7 @@ export function SSOProvidersCard() {
                         disabled={gate.locked}
                         className="aria-disabled:cursor-wait aria-disabled:opacity-50"
                       />
-                    </PlanLockedTooltip>
+                    </SSOLockedTooltip>
                   </TableCell>
                   <TableCell className="px-4 py-3 text-right">
                     <DropdownMenu>
@@ -344,7 +344,7 @@ export function SSOProvidersCard() {
           </Table>
         )}
         <div className="border-t border-border bg-muted/30 px-6 py-4">
-          <PlanLockedTooltip locked={gate.locked}>
+          <SSOLockedTooltip locked={gate.locked}>
             <Button
               ref={addButton}
               size="sm"
@@ -355,7 +355,7 @@ export function SSOProvidersCard() {
             >
               {t('Add identity provider')}
             </Button>
-          </PlanLockedTooltip>
+          </SSOLockedTooltip>
         </div>
       </div>
 
@@ -456,7 +456,7 @@ function ProviderForm({
 }) {
   const t = useT()
   const save = useSaveOrganizationSSOProvider(organizationId)
-  const onPlanError = useSSOPlanErrorHandler(organizationId)
+  const onAddonError = useSSOAddonErrorHandler(organizationId)
   const submitOnce = useSingleSubmit()
   const [name, setName] = useState(provider?.name ?? '')
   const [roles, setRoles] = useState<string[]>(provider?.roles ?? ['developer'])
@@ -556,7 +556,7 @@ function ProviderForm({
             onDone()
           },
           onError: (failure: Error) => {
-            if (onPlanError(failure)) {
+            if (onAddonError(failure)) {
               onDone()
               return
             }

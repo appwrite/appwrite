@@ -46,8 +46,8 @@ import {
   SSOListLoadError,
   useDialogFocusReturn,
   useSingleSubmit,
-  PlanLockedTooltip,
-  useSSOPlanGate,
+  SSOLockedTooltip,
+  useSSOAddonGate,
 } from './SSOCardHelpers'
 import { VerifyEmailDomain } from './VerifyEmailDomain'
 
@@ -65,8 +65,8 @@ export function EmailDomainsCard() {
   } = useOrganizationEmailDomains(orgId)
   const { data: organization } = useQuery(organizationQueryOptions(orgId))
   const remove = useDeleteOrganizationEmailDomain(orgId)
-  // Setup needs a plan with single sign-on; deleting works on any plan.
-  const gate = useSSOPlanGate(orgId)
+  // Setup needs the HIPAA BAA add-on; deleting works without it.
+  const gate = useSSOAddonGate(orgId)
 
   const required =
     (organization as { ssoRequired?: boolean } | null | undefined)
@@ -198,7 +198,7 @@ export function EmailDomainsCard() {
                     <TableCell className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-2">
                         {!verified ? (
-                          <PlanLockedTooltip locked={gate.locked}>
+                          <SSOLockedTooltip locked={gate.locked}>
                             <Button
                               ref={rowRef(rowVerifyButtons.current, rule.$id)}
                               variant="outline"
@@ -213,7 +213,7 @@ export function EmailDomainsCard() {
                             >
                               {t('Verify')}
                             </Button>
-                          </PlanLockedTooltip>
+                          </SSOLockedTooltip>
                         ) : null}
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -251,7 +251,7 @@ export function EmailDomainsCard() {
           </Table>
         )}
         <div className="border-t border-border bg-muted/30 px-6 py-4">
-          <PlanLockedTooltip locked={gate.locked}>
+          <SSOLockedTooltip locked={gate.locked}>
             <Button
               ref={addButton}
               size="sm"
@@ -265,7 +265,7 @@ export function EmailDomainsCard() {
             >
               {t('Add domain')}
             </Button>
-          </PlanLockedTooltip>
+          </SSOLockedTooltip>
         </div>
       </div>
 

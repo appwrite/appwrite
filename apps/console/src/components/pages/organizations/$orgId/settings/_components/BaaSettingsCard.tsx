@@ -341,6 +341,12 @@ export function BaaSettingsCard({ organizationId }: BaaSettingsCardProps) {
               'A BAA is required under HIPAA when Appwrite handles Protected Health Information (PHI) for your organization. Enable it if you process, store, or transmit health data for US patients.',
             )}
           </p>
+          {/* Single sign-on is part of this add-on (an experiment until it ships) */}
+          {features.sso ? (
+            <p className="text-[13px] text-muted-foreground max-w-2xl">
+              {t('The add-on includes single sign-on for the organization.')}
+            </p>
+          ) : null}
           {statusCopy ? (
             <p className="text-[13px] text-muted-foreground">{statusCopy}</p>
           ) : null}

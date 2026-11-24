@@ -28,8 +28,8 @@ import {
   focusOnOpen,
   useDialogFocusReturn,
   useSingleSubmit,
-  useSSOPlanErrorHandler,
-  useSSOPlanGate,
+  useSSOAddonErrorHandler,
+  useSSOAddonGate,
 } from './SSOCardHelpers'
 
 /**
@@ -46,9 +46,9 @@ export function RequireSSOCard() {
   const { providers, isSuccess: providersLoaded } =
     useOrganizationSSOProviders(orgId)
   const update = useRequireOrganizationSSO(orgId)
-  // Turning it on needs a plan with single sign-on; turning it off works on any.
-  const gate = useSSOPlanGate(orgId)
-  const onPlanError = useSSOPlanErrorHandler(orgId)
+  // Turning it on needs the HIPAA BAA add-on; turning it off works without it.
+  const gate = useSSOAddonGate(orgId)
+  const onAddonError = useSSOAddonErrorHandler(orgId)
   const [confirming, setConfirming] = useState(false)
 
   const required =
@@ -62,7 +62,7 @@ export function RequireSSOCard() {
   // way for them to get in. Until both lists are in (or when one failed to
   // load), nothing is claimed either way: the server still checks.
   const hint = gate.locked
-    ? t('Upgrade to Pro to require single sign-on.')
+    ? t('Enable the HIPAA BAA add-on to require single sign-on.')
     : !(domainsLoaded && providersLoaded)
       ? null
       : !hasVerifiedDomain
@@ -96,7 +96,7 @@ export function RequireSSOCard() {
               : t('Single sign-on is no longer required'),
           ),
         onError: (failure: Error) => {
-          if (onPlanError(failure)) return
+          if (onAddonError(failure)) return
           toast.error(
             getErrorMessage(failure) || t('Failed to update single sign-on'),
           )
@@ -154,7 +154,7 @@ export function RequireSSOCard() {
                   : paused
                     ? gate.locked
                       ? t(
-                          'Paused - upgrade to Pro to require single sign-on again.',
+                          'Paused - enable the HIPAA BAA add-on to require single sign-on again.',
                         )
                       : hasVerifiedDomain
                         ? t(

@@ -1771,18 +1771,38 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Verify your domains and connect identity providers so people sign in with single sign-on.':
     'אמתו את הדומיינים שלכם וחברו ספקי זהויות כדי שאנשים יתחברו בהתחברות יחידה (SSO).',
   'Failed to delete identity provider': 'מחיקת ספק הזהויות נכשלה',
-  'Single sign-on is available on Pro': 'התחברות יחידה (SSO) זמינה בתוכנית Pro',
+  'Single sign-on is part of the HIPAA BAA add-on':
+    'התחברות יחידה (SSO) היא חלק מתוסף HIPAA BAA',
+  "Single sign-on is part of the HIPAA BAA add-on. Enable it in the organization's settings.":
+    'התחברות יחידה (SSO) היא חלק מתוסף HIPAA BAA. הפעילו אותו בהגדרות הארגון.',
+  'View add-on': 'הצגת התוסף',
+  'Enable add-on': 'הפעלת התוסף',
+  'The HIPAA BAA add-on is not active.': 'תוסף HIPAA BAA אינו פעיל.',
+  'The payment for the HIPAA BAA add-on is awaiting confirmation.':
+    'התשלום עבור תוסף HIPAA BAA ממתין לאישור.',
+  'Your plan ({plan}) does not include the HIPAA BAA add-on.':
+    'התוכנית שלכם ({plan}) לא כוללת את תוסף HIPAA BAA.',
+  'Until the add-on is active, nobody signs in through your identity providers and Require SSO has no effect. You can still delete domains and identity providers, and turn Require SSO off.':
+    'עד שהתוסף יהיה פעיל, אף אחד לא מתחבר דרך ספקי הזהויות שלכם וחיוב SSO לא חל. עדיין אפשר למחוק דומיינים וספקי זהויות, ולכבות את חיוב ה-SSO.',
+  'The add-on costs {price}/month, prorated for your current billing cycle. Enable it to verify your domains and connect identity providers, so people on your domains sign in with SSO.':
+    'התוסף עולה {price}/חודש, בחיוב יחסי למחזור החיוב הנוכחי. הפעילו אותו כדי לאמת את הדומיינים שלכם ולחבר ספקי זהויות, כך שאנשים בדומיינים שלכם יתחברו עם SSO.',
+  'Enable the add-on to verify your domains and connect identity providers, so people on your domains sign in with SSO.':
+    'הפעילו את התוסף כדי לאמת את הדומיינים שלכם ולחבר ספקי זהויות, כך שאנשים בדומיינים שלכם יתחברו עם SSO.',
+  'The payment for the add-on is awaiting confirmation. Single sign-on can be set up once it is confirmed.':
+    'התשלום עבור התוסף ממתין לאישור. אפשר יהיה להגדיר התחברות יחידה (SSO) אחרי שיאושר.',
+  'The add-on is available on {plans}. Upgrade to verify your domains and connect identity providers, so people on your domains sign in with SSO.':
+    'התוסף זמין בתוכניות {plans}. שדרגו כדי לאמת את הדומיינים שלכם ולחבר ספקי זהויות, כך שאנשים בדומיינים שלכם יתחברו עם SSO.',
+  'Your plan ({plan}) does not include the add-on. Upgrade to verify your domains and connect identity providers, so people on your domains sign in with SSO.':
+    'התוכנית שלכם ({plan}) לא כוללת את התוסף. שדרגו כדי לאמת את הדומיינים שלכם ולחבר ספקי זהויות, כך שאנשים בדומיינים שלכם יתחברו עם SSO.',
+  'Enable the HIPAA BAA add-on to require single sign-on.':
+    'הפעילו את תוסף HIPAA BAA כדי לחייב התחברות יחידה (SSO).',
+  'Paused - enable the HIPAA BAA add-on to require single sign-on again.':
+    'מושהה - הפעילו את תוסף HIPAA BAA כדי לחייב שוב התחברות יחידה (SSO).',
+  'The add-on includes single sign-on for the organization.':
+    'התוסף כולל התחברות יחידה (SSO) עבור הארגון.',
+  'Single sign-on for the organization stops when the add-on ends.':
+    'ההתחברות היחידה (SSO) של הארגון תיפסק כשהתוסף יסתיים.',
   'Single sign-on is paused': 'ההתחברות היחידה (SSO) מושהית',
-  'Your plan ({plan}) does not include single sign-on. Upgrade to verify your domains and connect identity providers, so people on your domains sign in with SSO.':
-    'התוכנית שלכם ({plan}) לא כוללת התחברות יחידה (SSO). שדרגו כדי לאמת את הדומיינים שלכם ולחבר ספקי זהויות, כך שאנשים בדומיינים שלכם יתחברו עם SSO.',
-  'Your plan ({plan}) does not include single sign-on, so nobody signs in through your identity providers and Require SSO has no effect until the organization is back on Pro. You can still delete domains and identity providers, and turn Require SSO off.':
-    'התוכנית שלכם ({plan}) לא כוללת התחברות יחידה (SSO), ולכן אף אחד לא מתחבר דרך ספקי הזהויות שלכם וחיוב SSO לא חל עד שהארגון יחזור לתוכנית Pro. עדיין אפשר למחוק דומיינים וספקי זהויות, ולכבות את חיוב ה-SSO.',
-  'Single sign-on requires a Pro plan or higher.':
-    'התחברות יחידה (SSO) דורשת תוכנית Pro ומעלה.',
-  'Upgrade to Pro to require single sign-on.':
-    'שדרגו ל-Pro כדי לחייב התחברות יחידה (SSO).',
-  'Paused - upgrade to Pro to require single sign-on again.':
-    'מושהה - שדרגו ל-Pro כדי לחייב שוב התחברות יחידה (SSO).',
   Later: 'אחר כך',
   'SAML is coming soon':
     'SAML יגיע בקרוב',

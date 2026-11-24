@@ -90,7 +90,6 @@ import {
   resolveFallbackOrganizationIdFromList,
 } from '@/lib/organization-overview-prefetch'
 import { USER_PREFS_KEY_ORGANIZATION } from '@/lib/user-prefs-keys'
-import { planSupportsSSO } from '@/lib/sso-plan'
 import { isSSORequiredError, redirectToRequiredSSO } from '@/lib/sso-required'
 import {
   canSeeProjects,
@@ -199,6 +198,7 @@ import { View as MarketplaceView } from '../marketplace/View'
 import { View as OrgAppsView } from '../apps/View'
 import { Partners } from '../settings/Partners'
 import { SingleSignOn } from '../settings/SingleSignOn'
+import { useSSOAddonGate } from '../settings/_components/SSOCardHelpers'
 import { Escalations } from '../settings/Escalations'
 import { EnterpriseSuccessManager } from '@/components/pages/projects/$projectId/shared/EnterpriseSuccessManager'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -1871,9 +1871,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     () => getVerifiedEmailDomains(emailDomains),
     [emailDomains],
   )
-  // Single sign-on is set up on Pro and above: its settings tab says so.
-  const ssoNotOnPlan =
-    !!organizationPlan && !planSupportsSSO(organizationPlan)
+  // Single sign-on is part of the HIPAA BAA add-on: its settings tab says so
+  // while the add-on is not active.
+  const ssoNeedsAddon = useSSOAddonGate(
+    orgId,
+    canShowOrgSsoSettings(access, features),
+  ).locked
   // A member on a verified domain joins again through an enabled provider:
   // removing them here does not keep them out.
   const { providers: ssoProviders } = useOrganizationSSOProviders(
@@ -3544,16 +3547,16 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 {activeTab === 'settings' && (
                   <SettingsLayoutShell
                     navItems={orgSettingsNavItems.map((item) =>
-                      item.id === 'sso' && ssoNotOnPlan
+                      item.id === 'sso' && ssoNeedsAddon
                         ? {
                             ...item,
-                            // Set up on Pro and above, as project environments
+                            // Set up with the HIPAA BAA add-on
                             endAdornment: (
                               <Badge
                                 variant="processing"
                                 className="px-1.5 py-0 text-[10px]"
                               >
-                                {t('Pro')}
+                                {t('Add-on')}
                               </Badge>
                             ),
                           }
