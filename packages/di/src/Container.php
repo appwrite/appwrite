@@ -94,6 +94,7 @@ class Container implements ContainerInterface
                 if (isset($scoped[$id])) {
                     continue;
                 }
+
                 foreach ($dependencies as $dependency) {
                     if (isset($scoped[$dependency])) {
                         $scoped[$id] = true;
