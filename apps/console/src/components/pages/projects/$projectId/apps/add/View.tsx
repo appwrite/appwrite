@@ -53,6 +53,7 @@ import {
   defaultVariantForKind,
   isValidHostname,
   isValidKeyForVariant,
+  variantKeyIsAppName,
   variantNeedsHostname,
   variantNeedsKey,
   getWebStarterRepoName,
@@ -384,9 +385,11 @@ APPWRITE_ENDPOINT="${endpoint}"`
     const nextKeyError =
       variantNeedsKey(resolvedVariant) &&
       !isValidKeyForVariant(resolvedVariant, key)
-        ? resolvedVariant.includes('apple')
-          ? t('Enter a valid bundle ID (e.g. com.example.app)')
-          : t('Enter a valid package name (e.g. com.example.app)')
+        ? variantKeyIsAppName(resolvedVariant)
+          ? t('Enter a valid application name (e.g. MyApp)')
+          : resolvedVariant.includes('apple')
+            ? t('Enter a valid bundle ID (e.g. com.example.app)')
+            : t('Enter a valid package name (e.g. com.example.app)')
         : null
 
     setNameError(nextNameError)
@@ -781,7 +784,9 @@ APPWRITE_ENDPOINT="${endpoint}"`
                   >
                     {resolvedVariant.includes('apple')
                       ? t('Bundle ID')
-                      : t('Package name')}
+                      : variantKeyIsAppName(resolvedVariant)
+                        ? t('Application name')
+                        : t('Package name')}
                   </FieldLabelWithInfo>
                   <Input
                     id="add-app-key"
@@ -790,7 +795,11 @@ APPWRITE_ENDPOINT="${endpoint}"`
                       setKey(e.target.value)
                       if (keyError) setKeyError(null)
                     }}
-                    placeholder="com.example.app"
+                    placeholder={
+                      variantKeyIsAppName(resolvedVariant)
+                        ? 'MyApp'
+                        : 'com.example.app'
+                    }
                     autoComplete="off"
                     aria-invalid={keyError ? true : undefined}
                   />

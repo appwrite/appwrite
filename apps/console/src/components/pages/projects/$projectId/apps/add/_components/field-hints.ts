@@ -5,6 +5,8 @@
  * `createFlutter.svelte`, `createReactNative.svelte`).
  */
 
+import { variantKeyIsAppName } from '@/lib/add-app-wizard/platform-map'
+
 const HOSTNAME_HINT =
   'The hostname your app uses to call the Appwrite APIs in production or development. No protocol or port number - use localhost during local development.'
 
@@ -28,7 +30,7 @@ export function getHostnameTooltip(_variant: string): string {
 }
 
 export function getKeyTooltip(variant: string): string {
-  if (variant === 'flutter-linux' || variant === 'flutter-windows') {
+  if (variantKeyIsAppName(variant)) {
     return APP_NAME_HINT
   }
   if (
