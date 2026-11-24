@@ -18,6 +18,8 @@ class Redis implements Synchronous, Consumer
     /** Heartbeat lifetime; handlers refresh it every third of this interval. */
     private const int CLAIM_TTL = 90;
 
+    private const int RESERVATION_GRACE = 10;
+
     /** Lock expiry schedules the next fleet sweep; never release it early. */
     private const int REAP_INTERVAL = 60;
 
@@ -109,7 +111,7 @@ class Redis implements Synchronous, Consumer
                 "{$queue->namespace}.stats.{$queue->name}.total",
                 "{$queue->namespace}.stats.{$queue->name}.processing"];
             $count = min(self::REAP_LIMIT, max(1, $n));
-            $batch = $this->script($this->receive, 'reserve', $keys, [$count, self::CLAIM_TTL, max(0, $timeout), 0]);
+            $batch = $this->script($this->receive, 'reserve', $keys, [$count, self::RESERVATION_GRACE, max(0, $timeout), 0]);
             if ($batch === [] && $timeout > 0) {
                 // The script registered this reservation before blocking. A crash
                 // after the move is recoverable even before PHP sees the reply.
@@ -117,7 +119,7 @@ class Redis implements Synchronous, Consumer
                 if (\is_string($raw)) {
                     $batch = [$raw];
                     if ($count > 1) {
-                        $batch = [...$batch, ...$this->script($this->receive, 'reserve', $keys, [$count - 1, self::CLAIM_TTL, 0, 1])];
+                        $batch = [...$batch, ...$this->script($this->receive, 'reserve', $keys, [$count - 1, self::RESERVATION_GRACE, 0, 1])];
                     }
                 }
             }
@@ -163,7 +165,8 @@ class Redis implements Synchronous, Consumer
             "{$queue->namespace}.processing.{$queue->name}",
             "{$queue->namespace}.stats.{$queue->name}.total",
             "{$queue->namespace}.stats.{$queue->name}.processing",
-            "{$queue->namespace}.poison.{$queue->name}"];
+            "{$queue->namespace}.poison.{$queue->name}",
+            "{$queue->namespace}.queue.{$queue->name}"];
         $messages = $args = $poison = [];
         foreach ($batch as $raw) {
             $size = \is_string($raw) ? \strlen($raw) : 0;
@@ -188,7 +191,9 @@ class Redis implements Synchronous, Consumer
             $args[] = $raw;
             $args[] = $pid;
         }
-        $this->script($this->receive, 'claim', $keys, [self::CLAIM_TTL, $token, \count($messages), ...$args, ...$poison]);
+        if ($this->script($this->receive, 'claim', $keys, [self::CLAIM_TTL, $token, \count($messages), ...$args, ...$poison]) === -1) {
+            throw new \RuntimeException('Queue reservation expired before it was claimed; its messages were requeued');
+        }
         return $messages;
     }
 

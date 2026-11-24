@@ -401,6 +401,83 @@ final class RedisReservationTest extends TestCase
         $this->assertSame('1', $this->redis->get($this->key('stats') . '.success'));
     }
 
+    public function testKilledBlockingReceiverReservationExpiresWithinGrace(): void
+    {
+        if (!\function_exists('pcntl_fork')) {
+            self::markTestSkipped('Requires pcntl');
+        }
+        $pid = pcntl_fork();
+        if ($pid === 0) {
+            $receive = new class ('127.0.0.1', (int) (getenv('REDIS_PORT') ?: 16379)) extends Connection {
+                public function rightPopLeftPush(string $queue, string $destination, int $timeout): string|false
+                {
+                    $raw = parent::rightPopLeftPush($queue, $destination, $timeout);
+                    posix_kill((int) getmypid(), SIGKILL);
+                    return $raw;
+                }
+            };
+            new Broker($receive, $receive)->receive($this->queue, 3, 8);
+            exit(1);
+        }
+        $started = time();
+        usleep(100_000);
+        $this->broker->publish($this->queue, ['orphaned' => true]);
+        pcntl_waitpid($pid, $status);
+        $this->assertTrue(\is_int($status) && pcntl_wifsignaled($status));
+        $reservations = $this->redis->zRange($this->key('reservations'), 0, -1);
+        $this->assertCount(1, $reservations);
+        $reservation = $reservations[0];
+        $this->assertIsString($reservation);
+        $this->assertSame(1, $this->redis->lLen($reservation));
+        $deadline = $this->redis->zScore($this->key('reservations'), $reservation);
+        $this->assertIsFloat($deadline);
+        $this->assertLessThanOrEqual($started + 1 + 3 + 10, $deadline);
+    }
+
+    /** @return array<string, array{string}> */
+    public static function lateClaims(): array
+    {
+        return ['expired' => ['expired'], 'already recovered' => ['unregistered']];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('lateClaims')]
+    public function testLateClaimRequeuesInsteadOfDelivering(string $state): void
+    {
+        $this->broker->publish($this->queue, ['n' => 1]);
+        $this->broker->publish($this->queue, ['n' => 2]);
+        $receive = new class ('127.0.0.1', (int) (getenv('REDIS_PORT') ?: 16379)) extends Connection {
+            /** @var \Closure(string): void */
+            public \Closure $beforeClaim;
+
+            public function execute(string $script, array $keys, array $args): mixed
+            {
+                if (str_starts_with($script, '-- KEYS: reservations, reservation,')) {
+                    ($this->beforeClaim)($keys[1]);
+                }
+                return parent::execute($script, $keys, $args);
+            }
+        };
+        $receive->beforeClaim = function (string $reservation) use ($state): void {
+            if ($state === 'expired') {
+                $this->redis->zAdd($this->key('reservations'), 0, $reservation);
+            } else {
+                $this->redis->zRem($this->key('reservations'), $reservation);
+            }
+        };
+        try {
+            new Broker($receive, $receive)->receive($this->queue, 0, 2);
+            self::fail('A late claim must not deliver');
+        } catch (\RuntimeException $e) {
+            $this->assertStringContainsString('requeued', $e->getMessage());
+        }
+        $this->assertSame(0, $this->redis->zCard($this->key('reservations')));
+        $this->assertSame(0, $this->redis->lLen($this->key('processing')));
+        $this->assertSame([], $this->redis->keys($this->key('reservations') . '.*'));
+        $this->assertSame(2, $this->broker->getQueueSize($this->queue));
+        $messages = $this->broker->receive($this->queue, 0, 2);
+        $this->assertSame([1, 2], array_map(fn (\Utopia\Queue\Message $m) => $m->getPayload()['n'], $messages));
+    }
+
     private function key(string $kind): string
     {
         return $this->queue->namespace . '.' . $kind . '.' . $this->queue->name;
