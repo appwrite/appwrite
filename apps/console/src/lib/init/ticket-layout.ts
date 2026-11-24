@@ -55,6 +55,17 @@ export const INIT_TICKET_CONTENT_INSET = {
   left: 12.5,
 } as const
 
+/**
+ * The card's visible edge inside the frame image (percent of the image box),
+ * measured from the art's alpha. Same for every tier and edition.
+ */
+export const INIT_TICKET_CARD_INSET = {
+  top: 18,
+  right: 7.7,
+  bottom: 18.2,
+  left: 7.7,
+} as const
+
 /** Vertical perforation line - main body vs stub (percent of image width). */
 export const INIT_TICKET_STUB_SPLIT = 57
 
