@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\Http\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Http\Adapter\FPM\Response;
 
@@ -159,6 +160,51 @@ final class FPMResponseTest extends TestCase
         }
 
         $this->assertFalse($response->hasHeader('Content-Length'));
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function provideStreamingTextTypes(): array
+    {
+        return [
+            'HLS playlist' => ['application/x-mpegurl'],
+            'HLS playlist, registered type' => ['application/vnd.apple.mpegurl'],
+            'DASH manifest' => ['application/dash+xml'],
+            'WebVTT' => ['text/vtt'],
+        ];
+    }
+
+    #[DataProvider('provideStreamingTextTypes')]
+    public function testStreamingTextIsCompressed(string $contentType): void
+    {
+        $body = \str_repeat("#EXTINF:4.000000,\nsegments/0001?project=demo\n", 100);
+        $response = new Response();
+        $response->setAcceptEncoding('gzip')->setContentType($contentType);
+        ob_start();
+        try {
+            @$response->send($body);
+            $sent = (string) ob_get_contents();
+        } finally {
+            ob_end_clean();
+        }
+
+        $this->assertTrue($response->hasHeader('Content-Encoding'));
+        $this->assertSame($body, \gzdecode($sent));
+    }
+
+    public function testVideoSegmentsAreNotCompressed(): void
+    {
+        $response = new Response();
+        $response->setAcceptEncoding('gzip')->setContentType('video/mp2t');
+        ob_start();
+        try {
+            @$response->send(\str_repeat('x', 4096));
+        } finally {
+            ob_end_clean();
+        }
+
+        $this->assertFalse($response->hasHeader('Content-Encoding'));
     }
 
     public function testFailedStreamWriteReturnsFalse(): void

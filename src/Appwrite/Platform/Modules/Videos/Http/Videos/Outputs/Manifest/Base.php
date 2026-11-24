@@ -27,6 +27,9 @@ use Utopia\Database\Validator\Authorization;
  */
 abstract class Base extends VideosAction
 {
+    /** Highest bits per second a variant may declare and still be listed first. */
+    private const START_BANDWIDTH = 2_000_000;
+
     /**
      * Ready renditions for this video and output, or throws when there are none.
      *
@@ -291,7 +294,7 @@ abstract class Base extends VideosAction
         $manifest = $this->renderView('hls-master', [
             'audios' => $audios,
             'captions' => $captionEntries,
-            'renditions' => $streams,
+            'renditions' => $this->order($streams),
         ]);
 
         $this->sendManifest($response, $manifest, 'application/x-mpegurl');
@@ -487,8 +490,10 @@ abstract class Base extends VideosAction
             throw new Exception(Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND);
         }
 
-        $baseUri = $this->baseUri($video, $output)
-            . '/renditions/' . $rendition->getId() . '/segments/';
+        // Relative to this playlist, which sits at
+        // `renditions/{id}/streams/{n}/playlist.m3u8`. Every line would otherwise
+        // repeat the whole path, and a long video has thousands of lines.
+        $baseUri = '../../segments/';
 
         $map = null;
         $entries = [];
@@ -512,6 +517,31 @@ abstract class Base extends VideosAction
         ]);
 
         $this->sendManifest($response, $manifest, 'application/x-mpegurl');
+    }
+
+    /**
+     * Variants in the order the master lists them.
+     *
+     * Players open on the first variant and only then measure the connection,
+     * so the first one decides how many bytes stand before the first frame.
+     * That is the best variant a mobile connection can carry, or the lowest
+     * when none is that light. The rest follow from lowest to highest.
+     *
+     * @param list<array<string, mixed>> $streams
+     * @return list<array<string, mixed>>
+     */
+    private function order(array $streams): array
+    {
+        \usort($streams, fn (array $a, array $b) => $a['bandwidth'] <=> $b['bandwidth']);
+
+        $start = 0;
+        foreach ($streams as $index => $stream) {
+            if ($stream['bandwidth'] <= self::START_BANDWIDTH) {
+                $start = $index;
+            }
+        }
+
+        return [...\array_splice($streams, $start, 1), ...$streams];
     }
 
     /**

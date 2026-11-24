@@ -221,7 +221,7 @@ final class VideosCustomClientTest extends Scope
 
         $segmentId = $this->playlistToken(
             (string) $manifest['body'],
-            '/segments/',
+            'segments/',
             '?',
             'HLS caption playlist did not reference a segment'
         );
