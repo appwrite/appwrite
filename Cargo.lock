@@ -5275,6 +5275,7 @@ dependencies = [
  "php-std",
  "stacker",
  "utopia-auth",
+ "utopia-balancer",
  "utopia-compression",
  "utopia-detector",
  "utopia-domains",

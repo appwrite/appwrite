@@ -105,7 +105,16 @@ impl<T, A: Algorithm<T>> Balancer<T, A> {
     ///
     /// PHP: `getFilteredOptions()`.
     pub fn filtered(&self) -> Vec<&T> {
-        self.options.iter().filter(|o| self.filters.iter().all(|f| f(o))).collect()
+        self.passing().into_iter().map(|i| &self.options[i]).collect()
+    }
+
+    /// Positions every filter accepts, filter by filter as PHP's `array_filter()` runs them.
+    fn passing(&self) -> Vec<usize> {
+        let mut positions: Vec<usize> = (0..self.options.len()).collect();
+        for filter in &self.filters {
+            positions.retain(|&i| filter(&self.options[i]));
+        }
+        positions
     }
 
     /// The position in [`Balancer::options`] of the option the algorithm
@@ -114,8 +123,7 @@ impl<T, A: Algorithm<T>> Balancer<T, A> {
     ///
     /// PHP: `run()`, as a position.
     pub fn pick(&mut self) -> Result<Option<usize>, Error> {
-        let positions: Vec<usize> =
-            (0..self.options.len()).filter(|&i| self.filters.iter().all(|f| f(&self.options[i]))).collect();
+        let positions = self.passing();
         if positions.is_empty() {
             return Ok(None);
         }
@@ -148,5 +156,32 @@ impl<T, A: Algorithm<T>> std::fmt::Debug for Balancer<T, A> {
             .field("options", &self.options.len())
             .field("filters", &self.filters.len())
             .finish()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::{Arc, Mutex};
+
+    use crate::{Balancer, First};
+
+    #[test]
+    fn filters_run_one_after_another_as_in_php() {
+        let calls = Arc::new(Mutex::new(Vec::new()));
+        let mut balancer = Balancer::new(First);
+        balancer.add_option(1).add_option(2).add_option(3);
+        let seen = Arc::clone(&calls);
+        balancer.add_filter(move |o: &i32| {
+            seen.lock().unwrap().push(("odd", *o));
+            o % 2 == 1
+        });
+        let seen = Arc::clone(&calls);
+        balancer.add_filter(move |o: &i32| {
+            seen.lock().unwrap().push(("big", *o));
+            *o > 1
+        });
+
+        assert_eq!(balancer.filtered(), [&3]);
+        assert_eq!(*calls.lock().unwrap(), [("odd", 1), ("odd", 2), ("odd", 3), ("big", 1), ("big", 3)]);
     }
 }

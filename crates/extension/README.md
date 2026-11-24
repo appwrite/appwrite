@@ -110,8 +110,8 @@ of `packages/validators` and the password hashes of `packages/auth` are register
 `packages/user-agent/stubs/`, `packages/domains/stubs/`, `packages/emails/stubs/`,
 `packages/validators/stubs/` and `packages/auth/stubs/` for PHPStan, which runs without the
 extension. A library that still has a PHP implementation is registered only when
-`_APP_EXTENSION_LIBRARIES` names its package; today those are `detector`, `compression` and
-`query`. Otherwise Composer loads the package's PHP class as before:
+`_APP_EXTENSION_LIBRARIES` names its package; today those are `detector`, `compression`,
+`query` and `balancer`. Otherwise Composer loads the package's PHP class as before:
 
 ```sh
 _APP_EXTENSION_LIBRARIES=<package>,<package>   # those packages' classes from the extension
@@ -253,6 +253,63 @@ Known differences from the PHP classes:
 
 Once every region runs it, PECL `brotli`, `zstd`, `lz4` and `snappy` can leave `appwrite/base`: the
 classes need none of them, and only the corpus's PHP side does.
+
+## Utopia\Balancer
+
+Over `crates/utopia/balancer`, registered when `_APP_EXTENSION_LIBRARIES` names `balancer`: every
+class of `packages/balancer` (`Option`, the abstract `Algorithm`, `First`, `Last`, `Random`,
+`RoundRobin`, `Balancer` and `Group`), so none of the package's PHP classes loads. Off by default.
+
+Built by hand like the detector, in `src/balancer.rs`: the same names, inheritance, signatures and
+typed properties (`Option`'s private `$state`, `Balancer`'s `$algo`, `$filters` and `$options`,
+`RoundRobin`'s `$index`, `Group`'s protected `$balancers`, `$runHistogram` and promoted `$name`), so
+`instanceof`, `clone`, `==`, `serialize()`, `var_dump()` and PHP subclasses behave as in PHP;
+`packages/cdn`'s `CdnOption` extends `Option`. An option's state holds any PHP value and gives it
+back as it is: objects and closures by handle, references written through as PHP writes them
+(typed ones checked), numeric keys stored as PHP stores them, and an uninitialized `$state` read,
+written and unset as PHP's `??`, `[]=` and `unset()` treat it.
+
+`run()` and `getFilteredOptions()` call the filters as `getFilteredOptions()` calls
+`array_filter()`: each filter over the options the ones before it kept, as many times and in the
+same order, resolved from `Balancer`'s scope (so `self::`, `static::` and private method callables
+resolve as in PHP), on the options and filters the run started with. A native algorithm then
+picks with the crate's `First`, `Last` or `RoundRobin`; `Random` draws from PHP's own engine
+(`array_rand()`'s draw), so `mt_srand()` replays PHP's picks exactly. A PHP algorithm, a subclass's
+override of `run()` or `getFilteredOptions()`, `Group`'s balancers and its telemetry adapter
+(`createHistogram()` with the same arguments, `record()` with the duration and `['name' => ...]`)
+are called as PHP calls them. The crate's filters ran option by option; they now run filter by
+filter, as PHP's do. Its `Group` is not in this repository yet (it records to `utopia-telemetry`,
+which is not either), so the extension's `Group` is its own.
+
+Where it is faster: a run without filters on a native algorithm calls no PHP code, and picks
+straight from the options list with nothing copied but the option returned; a run with filters
+makes the same calls as `array_filter()` and builds one list where PHP built two. `Group` looks up
+its telemetry classes and `createHistogram()` once per request.
+
+`packages/balancer/tests` run on the extension (and `packages/cdn/tests` pass on it), and
+`tests/balancer.php` (885 cases) is identical on both: reflection of every class; 34 keys against
+7 states for every `Option` method, argument coercion in weak and strict mode, references and
+typed references in state, destructor order, uninitialized options; every algorithm over 14 kinds
+of arrays (empty, keyed, sparse, holes, references, non-options), `Random` under 6 seeds and the
+legacy engine, its distribution and its sharing of `mt_rand()`'s engine, `RoundRobin` from 9 start
+indexes and at `PHP_INT_MAX`; 26 kinds of filters (closures, strings, arrays, invokables,
+`__call()`, first-class callables, return values of every type, by-reference and typed
+parameters) under three algorithms, invalid callables, filter order and count, filters that
+throw, add options or filters mid-run, or change state; PHP algorithms and subclasses of the
+algorithms, `Balancer` and `Group`; properties replaced through reflection; Appwrite's avatar
+provider loop and Cloud's CDN purge filter; `Group`'s fallbacks and telemetry. The differences
+below are asserted at its end. Nothing in Appwrite or Cloud subclasses a balancer class but
+`packages/cdn`'s `CdnOption` (an `Option`).
+
+Known differences from the PHP classes:
+
+- A closure cannot be bound to the scope of an internal class: `Closure::bind()` into one warns
+  and returns `null`, where PHP's classes allowed it.
+- An internal class, or a PHP class extending one, cannot be made lazy:
+  `ReflectionClass::newLazyGhost()` and `newLazyProxy()` throw for `Option`, `Balancer` and their
+  subclasses.
+- An exception thrown in a filter has no `array_filter()` or `getFilteredOptions()` frame in its
+  trace, and an exception names the caller's file and line, since the classes have no PHP source.
 
 ## Utopia\DSN\DSN
 

@@ -32,6 +32,7 @@
       "packages/auth/",
       "packages/detector/",
       "packages/compression/",
+      "packages/balancer/",
       "Dockerfile",
       ".dockerignore"
     ],

@@ -54,7 +54,7 @@ done
 # set, only the libraries it names, whatever _APP_EXTENSION_LIBRARIES says.
 echo "== utopia.libraries" >&2
 gate="$tests/libraries.php"
-every=dsn,domains,emails,image,locale,user-agent,validators,auth,detector,compression,query
+every=dsn,domains,emails,image,locale,user-agent,validators,auth,detector,compression,query,balancer
 _APP_EXTENSION_LIBRARIES= php "$gate" > "$output/libraries.unset"
 diff "$tests/libraries.expected" "$output/libraries.unset" ||
     { echo "the default classes changed: update tests/libraries.expected" >&2; exit 1; }
@@ -69,11 +69,11 @@ _APP_EXTENSION_LIBRARIES=$all php -d utopia.libraries=validators,dsn,user-agent 
     +'Utopia\Validator\Validator' +'Utopia\Validator\Text' +'Utopia\Validator\Domain' +'Utopia\Validator\AnyOf' \
     +'Utopia\DSN\DSN' +'Utopia\UserAgent\UserAgent' -'Utopia\Domains\Domain' -'Utopia\Emails\Email' \
     -'Utopia\Auth\Hash' -'Utopia\Auth\Hashes\Argon2' -'Utopia\Image\Canvas' -'Utopia\Image\Font' \
-    -'Utopia\Locale\Locale' -'Utopia\Detector\Detector' -'Utopia\Compression\Compression' > /dev/null
+    -'Utopia\Locale\Locale' -'Utopia\Detector\Detector' -'Utopia\Compression\Compression' -'Utopia\Balancer\Balancer' > /dev/null
 _APP_EXTENSION_LIBRARIES=$all php -d utopia.libraries=validators,dsn,domains "$gate" \
     +'Utopia\Validator\Text' +'Utopia\DSN\DSN' +'Utopia\Domains\Domain' -'Utopia\Emails\Email' \
     -'Utopia\UserAgent\UserAgent' -'Utopia\Auth\Hashes\Argon2' -'Utopia\Image\Canvas' -'Utopia\Locale\Locale' \
-    -'Utopia\Detector\Detector' -'Utopia\Compression\Compression' > /dev/null
+    -'Utopia\Detector\Detector' -'Utopia\Compression\Compression' -'Utopia\Balancer\Option' > /dev/null
 # The same from a scanned .ini file, as a service's utopia.ini sets it.
 mkdir "$output/conf.d"
 printf 'utopia.libraries = "validators, dsn, domains"\n' > "$output/conf.d/zz-libraries.ini"
@@ -86,7 +86,10 @@ php -d utopia.libraries=validators,dsn,user-agent --ri utopia | grep -q '^utopia
 _APP_EXTENSION_LIBRARIES= php -d utopia.libraries=detector "$gate" \
     +'Utopia\Detector\Detector' -'Utopia\Compression\Compression' -'Utopia\Validator\Validator' > /dev/null
 _APP_EXTENSION_LIBRARIES= php -d utopia.libraries=compression "$gate" \
-    +'Utopia\Compression\Compression' -'Utopia\Detector\Detector' > /dev/null
+    +'Utopia\Compression\Compression' -'Utopia\Detector\Detector' -'Utopia\Balancer\Balancer' > /dev/null
+_APP_EXTENSION_LIBRARIES= php -d utopia.libraries=balancer "$gate" \
+    +'Utopia\Balancer\Balancer' +'Utopia\Balancer\Option' +'Utopia\Balancer\Algorithm\RoundRobin' +'Utopia\Balancer\Group' \
+    -'Utopia\Compression\Compression' -'Utopia\Validator\Validator' > /dev/null
 _APP_EXTENSION_LIBRARIES= php -d utopia.libraries=validators-scalar "$gate" \
     +'Utopia\Validator\Integer' +'Utopia\Validator\Text' +'Utopia\Validator\URL' +'Utopia\Validator\AnyOf' > /dev/null
 _APP_EXTENSION_LIBRARIES= php -d utopia.libraries=emails "$gate" \
