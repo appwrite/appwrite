@@ -1686,7 +1686,7 @@ impl<D: Dialect> Builder<D> {
     /// PHP's `compileSelect()`.
     pub(crate) fn compile_select_query(&mut self, query: &Query) -> Result<String> {
         const COLUMN: Param =
-            Param::closure("Utopia\\Query\\Builder::{closure:Utopia\\Query\\Builder::compileSelect():1362}", 1, "col");
+            Param::closure("Utopia\\Query\\Builder::{closure:Utopia\\Query\\Builder::compileSelect():1374}", 1, "col");
         let mut columns = Vec::with_capacity(query.values().len());
         for column in query.values().values() {
             columns.push(self.resolve_and_wrap(&COLUMN.string(column)?)?);
@@ -1751,7 +1751,7 @@ impl<D: Dialect> Builder<D> {
     pub(crate) fn compile_group_by_query(&mut self, query: &Query) -> Result<String> {
         let interval_param = Param::method(time_bucket_function::<D>(), 2, "interval", "Builder.php", 1460);
         const COLUMN: Param =
-            Param::closure("Utopia\\Query\\Builder::{closure:Utopia\\Query\\Builder::compileGroupBy():1454}", 1, "col");
+            Param::closure("Utopia\\Query\\Builder::{closure:Utopia\\Query\\Builder::compileGroupBy():1466}", 1, "col");
         if query.method() == Method::GroupByTimeBucket {
             let interval = match query.value() {
                 None | Some(Value::Null) => value::string(""),

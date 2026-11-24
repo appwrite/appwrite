@@ -2451,7 +2451,8 @@
                           "table": "o",
                           "schema": null
                         }
-                      }
+                      },
+                      "escape": null
                     }
                   }
                 }
@@ -2477,7 +2478,8 @@
                   "props": {
                     "value": "active"
                   }
-                }
+                },
+                "escape": null
               }
             },
             "groupBy": [

@@ -4050,7 +4050,8 @@
                   "props": {
                     "value": 1
                   }
-                }
+                },
+                "escape": null
               }
             },
             "groupBy": [],
@@ -4099,7 +4100,8 @@
               "props": {
                 "value": 7
               }
-            }
+            },
+            "escape": null
           }
         },
         {
@@ -4166,7 +4168,8 @@
                       "props": {
                         "value": 1
                       }
-                    }
+                    },
+                    "escape": null
                   }
                 },
                 "operator": "AND",
@@ -4190,9 +4193,11 @@
                       "props": {
                         "value": 7
                       }
-                    }
+                    },
+                    "escape": null
                   }
-                }
+                },
+                "escape": null
               }
             },
             "groupBy": [],
@@ -6092,9 +6097,11 @@
                       "props": {
                         "value": 7
                       }
-                    }
+                    },
+                    "escape": null
                   }
-                }
+                },
+                "escape": null
               }
             },
             "groupBy": [],
@@ -6604,7 +6611,8 @@
                   "props": {
                     "value": 1
                   }
-                }
+                },
+                "escape": null
               }
             },
             "groupBy": [],
@@ -6677,7 +6685,8 @@
                       "props": {
                         "value": 1
                       }
-                    }
+                    },
+                    "escape": null
                   }
                 },
                 "operator": "AND",
@@ -6687,7 +6696,8 @@
                   "props": {
                     "sql": "tenant = 7 OR tenant IS NULL"
                   }
-                }
+                },
+                "escape": null
               }
             },
             "groupBy": [],

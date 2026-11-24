@@ -1673,7 +1673,7 @@ pub async fn redirect(ctx: &mut Context) -> Result<Response> {
         document.put("secret", Value::from(base::token_hash(&secret)?.as_str()));
         document.put("expire", datetime::value(&expire));
         document.put("userAgent", Value::from(ctx.user_agent("UNKNOWN").as_str()));
-        document.put("ip", Value::from(ctx.ip.as_str()));
+        document.put("ip", Value::from(ctx.client_ip().as_str()));
         document.set("$permissions", base::owner_permissions(&user.id))?;
         let created = db.create_document("tokens", document).await?;
         ctx.events.event = Some("users.[userId].tokens.[tokenId].create".to_owned());

@@ -680,7 +680,7 @@ pub async fn update_token(ctx: &mut Context) -> Result<Response> {
     token.put("secret", Value::from(base::token_hash(&secret)?.as_str()));
     token.put("expire", datetime::value(&datetime::add_seconds(datetime::now(), TOKEN_DURATION)));
     token.put("userAgent", Value::from(ctx.user_agent("UNKNOWN").as_str()));
-    token.put("ip", Value::from(ctx.ip.as_str()));
+    token.put("ip", Value::from(ctx.client_ip().as_str()));
     let token = Token::from(&db.authorization().skip(db.create_document("tokens", token)).await?);
     db.purge_cached_document("users", &user.id).await?;
     Ok(ctx.created(&TokenModel {

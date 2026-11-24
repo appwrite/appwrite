@@ -367,7 +367,7 @@ pub(crate) fn spatial_distance<D: MySqlFamily>(
     attribute: &str,
     values: &Array,
 ) -> Result<String> {
-    let filter = sql::distance_filter(values, "Builder/MySQL.php", 484)?;
+    let filter = sql::distance_filter(values, "Builder/MySQL.php", 505)?;
     let wkt = wkt_of(b, &filter.geometry)?;
     let operator = distance_operator(method);
     b.add_binding(wkt, None);
@@ -390,7 +390,7 @@ pub(crate) fn spatial_predicate<D: MySqlFamily>(
     values: &Array,
     not: bool,
 ) -> Result<String> {
-    let wkt = sql::predicate_wkt(b, values, MYSQL_CLASS, "Builder/MySQL.php", 513)?;
+    let wkt = sql::predicate_wkt(b, values, MYSQL_CLASS, "Builder/MySQL.php", 534)?;
     b.add_binding(value::string(wkt), None);
     let geometry = b.step_string(Step::GeomFromText, &[Arg::Int(Some(4326))])?;
     let expression = format!("{function}({attribute}, {geometry})");

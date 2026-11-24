@@ -106,7 +106,7 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
         let duration = ctx.project.auth_int("duration", SESSION_DURATION);
         expire = datetime::add_seconds(datetime::now(), duration);
         session_secret = utopia_auth::proofs::Token::default().token();
-        let country = ctx.state.geo.country_code(&ctx.ip).await.to_lowercase();
+        let country = ctx.state.geo.country_code(&ctx.client_ip()).await.to_lowercase();
         let mut document = Document::default();
         document.put("$id", Value::from(unique_id().as_str()));
         document.put(
@@ -123,7 +123,7 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
         document.put("providerUid", text(target.email.as_deref()));
         document.put("secret", Value::from(token_hash(&session_secret)?.as_str()));
         document.put("userAgent", Value::from(user_agent.as_str()));
-        document.put("ip", Value::from(ctx.ip.as_str()));
+        document.put("ip", Value::from(ctx.client_ip().as_str()));
         document.put("countryCode", Value::from(country.as_str()));
         document.put("expire", datetime::value(&expire));
         document.put("osCode", Value::from(detected.os_code.as_str()));

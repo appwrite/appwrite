@@ -182,7 +182,7 @@ fn token_document(
     token.put("secret", Value::from(hash));
     token.put("expire", datetime::value(expire));
     token.put("userAgent", Value::from(ctx.user_agent("UNKNOWN").as_str()));
-    token.put("ip", Value::from(ctx.ip.as_str()));
+    token.put("ip", Value::from(ctx.client_ip().as_str()));
     token.set("$permissions", base::owner_permissions(&user.id))?;
     Ok(token)
 }

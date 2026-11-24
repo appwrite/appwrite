@@ -508,6 +508,22 @@ impl Context {
         self.request.header("user-agent").map(str::to_owned).unwrap_or_else(|| default.to_owned())
     }
 
+    /// The IP of the end user the request is made for (`getClientIP()`):
+    /// `X-Forwarded-IP` when an API key sends a valid address, else the
+    /// caller's own IP. Use it for what is recorded about the user (sessions,
+    /// tokens); rate limits and network rules stay on [`Context::ip`].
+    pub fn client_ip(&self) -> String {
+        if self.is_key()
+            && let Some(forwarded) = self.request.header("x-forwarded-ip")
+        {
+            let forwarded = forwarded.trim_matches([' ', '\t', '\n', '\r', '\0', '\x0B']);
+            if forwarded.parse::<std::net::IpAddr>().is_ok() {
+                return forwarded.to_owned();
+            }
+        }
+        self.ip.clone()
+    }
+
     /// Localised text.
     pub fn text(&self, key: &str, default: Option<&str>) -> String {
         self.state.translations.text(&self.locale, key, default)

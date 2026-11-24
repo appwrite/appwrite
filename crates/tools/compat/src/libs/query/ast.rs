@@ -108,11 +108,13 @@ pub(crate) fn construct(class: &str, a: &mut Args) -> Option<Outcome> {
                 expression(a, 2, "high")?,
                 a.bool_or(3, "negated", false)?,
             ))),
-            "AST\\Expression\\Binary" => Ret::obj(Expression::from(Binary::new(
-                expression(a, 0, "left")?,
-                a.str(1, "operator")?,
-                expression(a, 2, "right")?,
-            ))),
+            "AST\\Expression\\Binary" => {
+                let binary = Binary::new(expression(a, 0, "left")?, a.str(1, "operator")?, expression(a, 2, "right")?);
+                Ret::obj(Expression::from(match opt_expression(a, 3, "escape")? {
+                    Some(escape) => binary.with_escape(escape),
+                    None => binary,
+                }))
+            }
             "AST\\Expression\\CaseWhen" => {
                 Ret::obj(Expression::from(CaseWhen::new(expression(a, 0, "condition")?, expression(a, 1, "result")?)))
             }
@@ -358,9 +360,12 @@ impl Object for Expression {
                 ("high", expr_ret(&x.high)),
                 ("negated", Ret::bool(x.negated)),
             ],
-            Expression::Binary(x) => {
-                vec![("left", expr_ret(&x.left)), ("operator", Ret::str(&x.operator)), ("right", expr_ret(&x.right))]
-            }
+            Expression::Binary(x) => vec![
+                ("left", expr_ret(&x.left)),
+                ("operator", Ret::str(&x.operator)),
+                ("right", expr_ret(&x.right)),
+                ("escape", opt_expr_ret(x.escape.as_deref())),
+            ],
             Expression::CaseWhen(x) => vec![("condition", expr_ret(&x.condition)), ("result", expr_ret(&x.result))],
             Expression::Cast(x) => vec![("expression", expr_ret(&x.expression)), ("type", Ret::str(&x.data_type))],
             Expression::Conditional(x) => vec![

@@ -330,7 +330,7 @@ pub fn new_token(
     token.put("secret", Value::from(secret_hash(secret)?.as_str()));
     token.put("expire", expire.clone());
     token.put("userAgent", Value::from(ctx.user_agent("UNKNOWN").as_str()));
-    token.put("ip", Value::from(ctx.ip.as_str()));
+    token.put("ip", Value::from(ctx.client_ip().as_str()));
     Ok(token)
 }
 

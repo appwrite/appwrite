@@ -1898,7 +1898,8 @@
                   "props": {
                     "value": 1
                   }
-                }
+                },
+                "escape": null
               }
             },
             "groupBy": [],
@@ -2554,7 +2555,8 @@
                       "props": {
                         "value": 18
                       }
-                    }
+                    },
+                    "escape": null
                   }
                 },
                 "operator": "AND",
@@ -2578,9 +2580,11 @@
                       "props": {
                         "value": "active"
                       }
-                    }
+                    },
+                    "escape": null
                   }
-                }
+                },
+                "escape": null
               }
             },
             "groupBy": [],
@@ -3464,7 +3468,8 @@
                           "props": {
                             "value": 1
                           }
-                        }
+                        },
+                        "escape": null
                       }
                     },
                     "operator": "OR",
@@ -3488,9 +3493,11 @@
                           "props": {
                             "value": 2
                           }
-                        }
+                        },
+                        "escape": null
                       }
-                    }
+                    },
+                    "escape": null
                   }
                 },
                 "operator": "AND",
@@ -3514,9 +3521,11 @@
                       "props": {
                         "value": 3
                       }
-                    }
+                    },
+                    "escape": null
                   }
-                }
+                },
+                "escape": null
               }
             },
             "groupBy": [],
@@ -5932,7 +5941,8 @@
                   "props": {
                     "value": "A%"
                   }
-                }
+                },
+                "escape": null
               }
             },
             "groupBy": [],
@@ -7626,7 +7636,8 @@
                           "table": "orders",
                           "schema": null
                         }
-                      }
+                      },
+                      "escape": null
                     }
                   }
                 }
@@ -8368,7 +8379,8 @@
                           "table": "orders",
                           "schema": null
                         }
-                      }
+                      },
+                      "escape": null
                     }
                   }
                 }
@@ -10881,7 +10893,8 @@
                   "props": {
                     "value": 5
                   }
-                }
+                },
+                "escape": null
               }
             },
             "orderBy": [],
@@ -13033,7 +13046,8 @@
                               "props": {
                                 "value": 0
                               }
-                            }
+                            },
+                            "escape": null
                           }
                         },
                         "result": {
@@ -15755,7 +15769,8 @@
                             "table": "users",
                             "schema": null
                           }
-                        }
+                        },
+                        "escape": null
                       }
                     },
                     "groupBy": [],
@@ -18250,7 +18265,8 @@
                             "props": {
                               "value": "active"
                             }
-                          }
+                          },
+                          "escape": null
                         }
                       },
                       "groupBy": [],
@@ -19636,7 +19652,8 @@
                       "table": null,
                       "schema": null
                     }
-                  }
+                  },
+                  "escape": null
                 }
               }
             ],
@@ -20476,7 +20493,8 @@
                           "props": {
                             "value": "?"
                           }
-                        }
+                        },
+                        "escape": null
                       }
                     },
                     "operator": "AND",
@@ -20500,9 +20518,11 @@
                           "props": {
                             "value": ":name"
                           }
-                        }
+                        },
+                        "escape": null
                       }
-                    }
+                    },
+                    "escape": null
                   }
                 },
                 "operator": "AND",
@@ -20526,9 +20546,11 @@
                       "props": {
                         "value": "$1"
                       }
-                    }
+                    },
+                    "escape": null
                   }
-                }
+                },
+                "escape": null
               }
             },
             "groupBy": [],
@@ -21012,7 +21034,8 @@
                   "props": {
                     "value": "O'Brien"
                   }
-                }
+                },
+                "escape": null
               }
             },
             "groupBy": [],
@@ -21310,7 +21333,8 @@
               "props": {
                 "value": true
               }
-            }
+            },
+            "escape": null
           }
         },
         {
@@ -21386,7 +21410,8 @@
               "props": {
                 "value": 5
               }
-            }
+            },
+            "escape": null
           }
         },
         {
@@ -21495,7 +21520,8 @@
                   "props": {
                     "value": true
                   }
-                }
+                },
+                "escape": null
               }
             },
             "groupBy": [
@@ -21539,7 +21565,8 @@
                   "props": {
                     "value": 5
                   }
-                }
+                },
+                "escape": null
               }
             },
             "orderBy": [
@@ -24079,7 +24106,8 @@
                           "table": "o",
                           "schema": null
                         }
-                      }
+                      },
+                      "escape": null
                     }
                   }
                 }
@@ -24109,7 +24137,8 @@
                       "props": {
                         "value": 1
                       }
-                    }
+                    },
+                    "escape": null
                   }
                 },
                 "operator": "AND",
@@ -24129,7 +24158,8 @@
                     },
                     "prefix": false
                   }
-                }
+                },
+                "escape": null
               }
             },
             "groupBy": [
@@ -24174,7 +24204,8 @@
                   "props": {
                     "value": 5
                   }
-                }
+                },
+                "escape": null
               }
             },
             "orderBy": [
@@ -25653,7 +25684,8 @@
                             "table": "users",
                             "schema": null
                           }
-                        }
+                        },
+                        "escape": null
                       }
                     },
                     "groupBy": [],
@@ -26814,7 +26846,8 @@
                       "props": {
                         "value": 1
                       }
-                    }
+                    },
+                    "escape": null
                   }
                 },
                 "prefix": true
@@ -27188,7 +27221,8 @@
                 "table": null,
                 "schema": null
               }
-            }
+            },
+            "escape": null
           }
         },
         {
@@ -27227,9 +27261,11 @@
                     "table": null,
                     "schema": null
                   }
-                }
+                },
+                "escape": null
               }
-            }
+            },
+            "escape": null
           }
         },
         "`a` - (`b` - `c`)"
@@ -27344,7 +27380,8 @@
                 "table": null,
                 "schema": null
               }
-            }
+            },
+            "escape": null
           }
         },
         {
@@ -27382,7 +27419,8 @@
                     "table": null,
                     "schema": null
                   }
-                }
+                },
+                "escape": null
               }
             },
             "operator": "-",
@@ -27394,7 +27432,8 @@
                 "table": null,
                 "schema": null
               }
-            }
+            },
+            "escape": null
           }
         },
         "`a` - `b` - `c`"
@@ -27518,7 +27557,8 @@
                 "table": null,
                 "schema": null
               }
-            }
+            },
+            "escape": null
           }
         },
         {
@@ -27557,9 +27597,11 @@
                     "table": null,
                     "schema": null
                   }
-                }
+                },
+                "escape": null
               }
-            }
+            },
+            "escape": null
           }
         },
         "`a` / (`b` / `c`)"
@@ -27683,7 +27725,8 @@
                 "table": null,
                 "schema": null
               }
-            }
+            },
+            "escape": null
           }
         },
         {
@@ -27722,9 +27765,11 @@
                     "table": null,
                     "schema": null
                   }
-                }
+                },
+                "escape": null
               }
-            }
+            },
+            "escape": null
           }
         },
         "`a` % (`b` % `c`)"
@@ -31755,9 +31800,11 @@
                           "table": null,
                           "schema": null
                         }
-                      }
+                      },
+                      "escape": null
                     }
-                  }
+                  },
+                  "escape": null
                 }
               }
             ],
@@ -32296,7 +32343,8 @@
                           "table": null,
                           "schema": null
                         }
-                      }
+                      },
+                      "escape": null
                     }
                   },
                   "operator": "*",
@@ -32308,7 +32356,8 @@
                       "table": null,
                       "schema": null
                     }
-                  }
+                  },
+                  "escape": null
                 }
               }
             ],
@@ -32976,7 +33025,8 @@
                       "props": {
                         "value": true
                       }
-                    }
+                    },
+                    "escape": null
                   }
                 },
                 "operator": "AND",
@@ -33000,9 +33050,11 @@
                       "props": {
                         "value": false
                       }
-                    }
+                    },
+                    "escape": null
                   }
-                }
+                },
+                "escape": null
               }
             },
             "groupBy": [],
@@ -33883,7 +33935,8 @@
                     "props": {
                       "value": 2
                     }
-                  }
+                  },
+                  "escape": null
                 }
               }
             ],
@@ -35031,7 +35084,8 @@
                           "table": "orders",
                           "schema": null
                         }
-                      }
+                      },
+                      "escape": null
                     }
                   }
                 }
@@ -35072,7 +35126,8 @@
                           "table": "items",
                           "schema": null
                         }
-                      }
+                      },
+                      "escape": null
                     }
                   }
                 }
@@ -35948,7 +36003,8 @@
                           "props": {
                             "value": 100
                           }
-                        }
+                        },
+                        "escape": null
                       }
                     },
                     "groupBy": [],
@@ -36789,7 +36845,8 @@
                           "props": {
                             "value": 1
                           }
-                        }
+                        },
+                        "escape": null
                       }
                     },
                     "operator": "AND",
@@ -36813,9 +36870,11 @@
                           "props": {
                             "value": 2
                           }
-                        }
+                        },
+                        "escape": null
                       }
-                    }
+                    },
+                    "escape": null
                   }
                 },
                 "operator": "OR",
@@ -36839,9 +36898,11 @@
                       "props": {
                         "value": 3
                       }
-                    }
+                    },
+                    "escape": null
                   }
-                }
+                },
+                "escape": null
               }
             },
             "groupBy": [],

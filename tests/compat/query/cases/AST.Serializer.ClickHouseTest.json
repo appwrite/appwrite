@@ -1482,7 +1482,8 @@
                   "props": {
                     "value": "click"
                   }
-                }
+                },
+                "escape": null
               }
             },
             "groupBy": [

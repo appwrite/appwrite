@@ -490,7 +490,7 @@ pub async fn new_session(
 ) -> Result<Document> {
     let user_agent = ctx.user_agent("UNKNOWN");
     let detected = appwrite_core::detector::detect(&user_agent);
-    let geo = ctx.state.geo.get(&ctx.ip).await;
+    let geo = ctx.state.geo.get(&ctx.client_ip()).await;
     let string = |s: &Option<String>| text(s.as_deref());
     let float = |f: Option<f64>| f.map(Value::Float).unwrap_or(Value::Null);
     let mut session = Document::default();
@@ -504,7 +504,7 @@ pub async fn new_session(
     session.put("provider", Value::from(provider));
     session.put("secret", Value::from(token_hash(secret)?.as_str()));
     session.put("userAgent", Value::from(user_agent.as_str()));
-    session.put("ip", Value::from(ctx.ip.as_str()));
+    session.put("ip", Value::from(ctx.client_ip().as_str()));
     session.put("factors", documents::strings(&factors.iter().map(|f| (*f).to_owned()).collect::<Vec<_>>()));
     session.put("countryCode", Value::from(geo.country_code.to_lowercase().as_str()));
     session.put(

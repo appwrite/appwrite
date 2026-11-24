@@ -36,7 +36,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     let detected = appwrite_core::detector::detect(&user_agent);
     let duration = ctx.project.auth_int("duration", 31_536_000);
     let expire = datetime::add_seconds(datetime::now(), duration);
-    let country = ctx.state.geo.country_code(&ctx.ip).await.to_lowercase();
+    let country = ctx.state.geo.country_code(&ctx.client_ip()).await.to_lowercase();
     let mut session = Document::default();
     session.put("$id", DbValue::from(appwrite_core::database::unique_id().as_str()));
     session.put("userId", DbValue::from(user.id.as_str()));
@@ -45,7 +45,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     session.put("secret", DbValue::from(base::token_hash(&secret)?.as_str()));
     session.put("userAgent", DbValue::from(user_agent.as_str()));
     session.put("factors", documents::strings(&["server".to_owned()]));
-    session.put("ip", DbValue::from(ctx.ip.as_str()));
+    session.put("ip", DbValue::from(ctx.client_ip().as_str()));
     session.put("countryCode", DbValue::from(country.as_str()));
     session.put("expire", datetime::value(&expire));
     session.put("osCode", DbValue::from(detected.os_code.as_str()));
@@ -172,7 +172,7 @@ pub async fn token(ctx: &mut Context) -> Result<Response> {
     token.put("secret", DbValue::from(base::token_hash(&secret)?.as_str()));
     token.put("expire", datetime::value(&expire_at));
     token.put("userAgent", DbValue::from(ctx.user_agent("UNKNOWN").as_str()));
-    token.put("ip", DbValue::from(ctx.ip.as_str()));
+    token.put("ip", DbValue::from(ctx.client_ip().as_str()));
     let db = ctx.db()?;
     let token = Token::from(&db.create_document("tokens", token).await?);
     db.purge_cached_document("users", &user.id).await?;
