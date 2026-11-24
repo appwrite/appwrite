@@ -256,6 +256,26 @@ test.describe('Notification center (mocked API)', () => {
     await expect(row.getByText('Pushes muted')).toBeVisible()
   })
 
+  test('keeps both of two quick push settings changes', async ({ page }) => {
+    const writes = await mockApi(page)
+    const popover = await openNotifications(page)
+
+    const row = popover
+      .locator('.group')
+      .filter({ hasText: 'Bandwidth is over 80%' })
+    await row.hover()
+    await row.getByRole('button', { name: 'Notification actions' }).click()
+    await page.getByRole('menuitem', { name: 'Mute project pushes' }).click()
+    await popover.getByRole('button', { name: 'Snooze pushes' }).click()
+    await page.getByRole('menuitem', { name: '1 hour' }).click()
+
+    await expect
+      .poll(() => (lastBeep(writes)?.snoozes as Record<string, string>)?.['*'])
+      .toBeTruthy()
+    expect(lastBeep(writes)).toMatchObject({ mutedProjectIds: [PROJECT_ID] })
+    await expect(row.getByText('Pushes muted')).toBeVisible()
+  })
+
   test('snoozes every organization and resumes', async ({ page }) => {
     const writes = await mockApi(page)
     const popover = await openNotifications(page)

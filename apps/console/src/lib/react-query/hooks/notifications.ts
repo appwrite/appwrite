@@ -140,10 +140,13 @@ export function useMarkAllConsoleNotificationsRead() {
   })
 }
 
+const BEEP_PREFS_MUTATION_KEY = ['account', 'prefs', 'beep'] as const
+
 /**
  * Push settings shared with Beep, read from the account and changed against
- * the server's latest copy: Beep may have changed them on a phone since the
- * account was loaded, and `updatePrefs` replaces every key at once.
+ * the server's latest prefs: Beep may have changed them on a phone, or
+ * another tab may have changed other keys, since this tab loaded the account.
+ * Changes run one at a time, so each one reads what the last one saved.
  */
 export function useBeepPrefs(account: ConsoleAccountCache | undefined) {
   const queryClient = useQueryClient()
@@ -152,17 +155,23 @@ export function useBeepPrefs(account: ConsoleAccountCache | undefined) {
   )
 
   const mutation = useMutation({
+    mutationKey: BEEP_PREFS_MUTATION_KEY,
+    scope: { id: 'beep-prefs' },
     mutationFn: async (change: (current: BeepPrefs) => BeepPrefs) => {
       const latest = (await sdk.forConsole.account.getPrefs()) as Record<
         string,
         unknown
       >
-      const cached = (account?.prefs ?? {}) as Record<string, unknown>
-      return await updateAccountPrefs(
-        mergeBeepPrefs(cached, change(readBeepPrefs(latest))),
+      const updated = await updateAccountPrefs(
+        mergeBeepPrefs(latest, change(readBeepPrefs(latest))),
         'beep-push-settings',
         { force: true },
       )
+      if (!updated) {
+        // `updateAccountPrefs` skips writes while impersonating.
+        throw new Error('Push settings were not saved.')
+      }
+      return updated
     },
     onMutate: (change) => {
       queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(
@@ -180,6 +189,13 @@ export function useBeepPrefs(account: ConsoleAccountCache | undefined) {
       )
     },
     onSuccess: (updatedAccount) => {
+      // A queued change would be undone on screen until it saves, so the
+      // last change in the queue syncs the account.
+      if (
+        queryClient.isMutating({ mutationKey: BEEP_PREFS_MUTATION_KEY }) > 1
+      ) {
+        return
+      }
       syncConsoleAccountAfterMutation(queryClient, {
         apiResult: updatedAccount,
       })
