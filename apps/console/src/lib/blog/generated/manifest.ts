@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-github-installation-reuse",
+    "href": "/blog/post/announcing-github-installation-reuse",
+    "title": "Announcing GitHub installation reuse for new projects",
+    "description": "New Appwrite projects now reuse the GitHub organizations your other projects already connected, so you can deploy without installing the GitHub App again.",
+    "date": "2026-11-28",
+    "lastUpdated": "2026-11-28",
+    "timeToRead": 5,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-github-installation-reuse/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "appwrite-is-moving-from-php-to-rust",
     "href": "/blog/post/appwrite-is-moving-from-php-to-rust",
     "title": "Appwrite is moving from PHP to Rust",

@@ -1,0 +1,93 @@
+---
+layout: post
+title: "Announcing GitHub installation reuse for new projects"
+description: New Appwrite projects now reuse the GitHub organizations your other projects already connected, so you can deploy without installing the GitHub App again.
+date: 2026-11-28
+cover: /images/blog/announcing-github-installation-reuse/cover.avif
+timeToRead: 5
+author: aditya-oberai
+category: announcements
+featured: false
+faqs:
+  - question: "How do I connect GitHub to a new Appwrite project?"
+    answer: "Open **Sites** > **Create site** or **Functions** > **Create function** in the new project. If another project in the same organization already connected a GitHub organization, the repository picker shows it with its repositories, and you can pick one right away. Otherwise, connect GitHub from the picker and install the Appwrite GitHub App. See [Deploy from Git](/docs/products/sites/deploy-from-git#reuse-github-organization)."
+  - question: "Does reusing a GitHub installation change which repositories my other projects can access?"
+    answer: "No. Appwrite links the existing installation to the new project without changing it on GitHub. Repository access belongs to the installation, so every project linked to it sees the same repositories. To use another repository, add it to the installation's repository access on GitHub. Adding a repository doesn't remove access for the projects already using the installation."
+  - question: "Why isn't my personal GitHub account reused in a new project?"
+    answer: "A GitHub App installed on a personal GitHub account belongs to that one account, so Appwrite doesn't share it with other projects. Connect your personal account again from the new project. Only installations on GitHub organizations are reused."
+  - question: "Can Appwrite reuse a GitLab, Gitea, or Bitbucket connection across projects?"
+    answer: "No. Those providers need the original project's OAuth tokens for every request, and copying a refresh token that rotates would revoke the original connection. Connect them in each project as before."
+  - question: "What happens if I disconnect a reused GitHub organization from one project?"
+    answer: "Only that project's link is removed. Sites and functions in that project lose their repository connection, but the GitHub App stays installed, and other projects keep deploying from it. Disconnect from **Settings** > **Git configuration** in the project."
+  - question: "Is GitHub installation reuse available on self-hosted Appwrite?"
+    answer: "It's available on Appwrite Cloud today and ships in the next self-hosted Appwrite release. On a self-hosted instance, it works with the GitHub App you configured for that instance."
+---
+
+Every Appwrite project connects to GitHub on its own. If your GitHub organization already had the Appwrite GitHub App installed for one project, connecting a second project sent you back through GitHub's install flow. Because the app was already installed, GitHub opened the installation's settings page instead, and its **Save** button stayed disabled until you changed the repository selection.
+
+The common workaround was to switch the repository access between **All repositories** and **Only select repositories** to enable **Save**. That selection belongs to the installation, not the project, so the switch changed it for every project using the installation and could cut other projects off from repositories they deploy from.
+
+Today, we are announcing **GitHub installation reuse**: new projects pick up the GitHub organizations that your other Appwrite projects already connected.
+
+# What GitHub installation reuse gives you
+
+- **No trip to GitHub.** In a project with no Git connection, the Console links the GitHub organizations that the organization's other projects connected. You don't install the GitHub App again.
+- **A repository picker that's ready.** The organization is selected and its repositories are listed, so you can pick one and keep going.
+- **Repository access that stays put.** Linking doesn't touch the installation on GitHub, so its repository selection stays exactly as it was for every other project.
+- **Every Git screen in the Console.** It works when you create a site or function, connect a repository in a site's or function's settings, or open the project's Git configuration.
+- **Access you already have.** Appwrite only links installations from projects you can access. Members scoped to a single project don't see the others' installations.
+- **Nothing new to learn.** There's no new button or dialog. The Console shows the organizations as if the project had connected them itself.
+
+# Deploy a new project from GitHub without reinstalling the app
+
+Say your organization already has a project that deploys from the `acme-labs` GitHub organization, and you create a second project for a new app:
+
+1. Open the new project and go to **Sites** > **Create site**, or **Functions** > **Create function**.
+2. Under **Import repository** (**Connect Git repository** for functions), the account picker already shows `acme-labs`, with its repositories listed.
+3. Pick the repository and continue with the framework and build settings.
+
+![The Import repository section of Create site in the Appwrite Console, with a GitHub account already selected and its repositories listed](/images/blog/announcing-github-installation-reuse/repository-picker.avif)
+
+Behind the scenes, the Console checks whether the project has any Git connections. When it has none, it asks Appwrite for the GitHub organization installations of the organization's other projects that you can access, links each one to the new project, and loads the list again. The new project gets its own link to the same GitHub installation, with the installation ID and organization name copied over.
+
+From there, the project works like any other connected project. Pushes trigger deployments, pull requests get [preview deployments](/docs/products/sites/previews) for sites, and [Git automation](/docs/products/sites/deploy-from-git#git-automation) settings apply per site or function.
+
+# How reused GitHub installations behave
+
+## Repository access is shared
+
+GitHub keeps repository access on the installation. Every Appwrite project linked to an installation sees the same repositories. To deploy a repository the installation can't see yet, add it to the installation's repository access in your GitHub organization's settings. Adding a repository doesn't remove access for the projects already using the installation.
+
+## Each project has its own link
+
+Every project gets its own record of the installation. Disconnecting the organization in one project's **Settings** > **Git configuration** removes only that project's link. Sites and functions in that project lose their repository connection, but the GitHub App stays installed, and your other projects keep deploying.
+
+## Reuse runs once, for empty projects
+
+The Console reuses installations only while a project has no Git connections. If you connected your personal GitHub account to a project first, the Console shows that connection and doesn't add the organization's installations. Add more from **Settings** > **Git configuration** with **Add installation**.
+
+# What GitHub installation reuse doesn't cover
+
+- **Personal GitHub accounts.** A GitHub App installed on your own GitHub account belongs to that account, so Appwrite doesn't share it with other projects. Connect it again in each project.
+- **GitLab, Gitea, and Bitbucket.** These providers need the original project's OAuth tokens for every request, and copying a refresh token that rotates would revoke the original connection. They connect per project, as before.
+- **Projects you can't access.** If your role covers only some projects in the organization, Appwrite only reuses installations from those projects.
+
+# When GitHub installation reuse helps most
+
+Reuse pays off whenever one GitHub organization feeds several Appwrite projects:
+
+- **A project per environment.** Separate projects for staging and production can deploy from the same organization without a second install.
+- **Agencies and studios.** A project per client app, all deploying from the studio's GitHub organization, now starts with its repositories ready.
+- **New apps and prototypes.** Spinning up a project to try an idea no longer starts with GitHub's installation settings.
+- **Teammates creating projects.** A teammate doesn't need permission to install apps on the GitHub organization to start a project from its repositories, as long as they can access a project that already connected it.
+
+GitHub installation reuse is available on Appwrite Cloud today, and ships in the next self-hosted Appwrite release.
+
+# Getting started with GitHub deployments in Appwrite
+
+Create a project in an organization that already deploys from GitHub, open **Create site** or **Create function**, and pick a repository. The docs cover how reuse works and what to expect from Git deployments:
+
+- [Deploy Sites from Git](/docs/products/sites/deploy-from-git#reuse-github-organization)
+- [Deploy Functions from Git](/docs/products/functions/deploy-from-git#reuse-github-organization)
+- [Sites quick start](/docs/products/sites/quick-start)
+- [Sign up for Appwrite Cloud](/sign-in)

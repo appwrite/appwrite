@@ -18,6 +18,7 @@ This offers simple versioning and collaboration that will easily fit into the re
 You can only use Git deployment for Appwrite Functions connected to Git. 
 [Create a new function with Git](/docs/products/functions/functions#create-function) or 
 connect your existing function to a Git repository in your function's **Settings** > **Version control (Git)**.
+If another project in your organization already connected a GitHub organization, a new project [reuses it](#reuse-github-organization) without installing the GitHub App again.
 
 {% only_dark %}
 ![Git repository](/images/docs/functions/dark/git-repo.avif)
@@ -46,6 +47,15 @@ This means, the new deployment will not handle any incoming requests until it is
 # Git configuration
 If you need to update your Git configuration, navigate to **Functions** > your function >
 **Settings** > **Version control (Git)**.
+
+## GitHub organizations from other projects {% #reuse-github-organization %}
+
+A new project doesn't need its own installation of the Appwrite GitHub App when another project in the same organization already connected a GitHub organization. The first time you open a Git screen in a project with no Git connections, such as **Create function** or a function's **Settings** > **Version control (Git)**, the Console links every GitHub organization that the organization's other projects connected, from projects you can access. The repository picker then shows those organizations and their repositories, without a trip to GitHub.
+
+- **Repository access is shared.** Linking doesn't change the installation on GitHub, and every project linked to an installation sees the same repositories. To deploy a repository the installation can't see yet, add it to the installation's repository access in your GitHub organization's settings. Adding a repository doesn't remove access for the projects already using the installation.
+- **Each project has its own link.** Disconnecting the organization in a project's **Settings** > **Git configuration** removes only that project's link. The GitHub App stays installed, and your other projects keep deploying.
+- **Only projects with no Git connections reuse installations.** Once a project has a Git connection, add more from **Settings** > **Git configuration** with **Add installation**.
+- **Only GitHub organizations are reused.** A GitHub App installed on a personal GitHub account belongs to that account, and GitLab, Gitea, and Bitbucket need the original project's OAuth tokens for every request, so connect those in each project.
 
 ## Git automation {% #git-automation %}
 
