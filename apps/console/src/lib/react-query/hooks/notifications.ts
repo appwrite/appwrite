@@ -141,6 +141,32 @@ export function useMarkAllConsoleNotificationsRead() {
 }
 
 /**
+ * Acknowledges the firing alert a notification is about, as Beep does from a
+ * push. Alerts live in their project, so each call names it; that project's
+ * alert feed refetches with the acknowledgement.
+ */
+export function useAcknowledgeAlert() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      projectId,
+      alertId,
+    }: {
+      projectId: string
+      alertId: string
+    }) =>
+      await sdk
+        .forProject(projectId)
+        .alerts.update({ alertId, acknowledged: true }),
+    onSuccess: (_alert, { projectId }) =>
+      queryClient.invalidateQueries({
+        queryKey: ['alerts', 'project', projectId],
+      }),
+  })
+}
+
+/**
  * Push settings shared with Beep, read from the account and changed against
  * the server's latest copy: Beep may have changed them on a phone since the
  * account was loaded, and `updatePrefs` replaces every key at once.

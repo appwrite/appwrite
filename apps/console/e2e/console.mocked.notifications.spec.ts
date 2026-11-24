@@ -1,4 +1,4 @@
-import type { Page, Route } from '@playwright/test'
+import type { Locator, Page, Route } from '@playwright/test'
 import type { Models } from '@appwrite.io/console'
 import { expect, test } from './fixtures'
 
@@ -8,6 +8,8 @@ const hoursAgo = (hours: number) =>
 const daysAgo = (days: number) => hoursAgo(days * 24)
 
 const PROJECT_ID = 'notificationsproj001'
+const ORGANIZATION_ID = 'orgacme00000000001'
+const ALERT_ID = 'alertfiring000000001'
 const PHONE_SNOOZE = new Date(NOW.getTime() + 3 * 3_600_000).toISOString()
 
 const ACCOUNT: Models.User<Models.Preferences> = {
@@ -44,6 +46,9 @@ function notification(
     parentResourceType: 'projects',
     parentResourceId: PROJECT_ID,
     projectId: PROJECT_ID,
+    teamId: '',
+    alertId: '',
+    alertStatus: '',
     title: '',
     body: '',
     read: false,
@@ -51,11 +56,48 @@ function notification(
   }
 }
 
+const ALERT: Models.Alert = {
+  $id: ALERT_ID,
+  $createdAt: hoursAgo(1),
+  $updatedAt: hoursAgo(1),
+  monitorId: 'monitorbandwidth0001',
+  name: 'Bandwidth over 80%',
+  status: 'firing',
+  resolvedAt: null,
+  acknowledgedAt: null,
+  acknowledgedBy: '',
+  acknowledgedByName: '',
+  rules: [],
+  severity: 'warning',
+  critical: false,
+  metric: 'network.outbound',
+  comparator: 'greaterThan',
+  threshold: 80_000_000_000,
+  value: 84_000_000_000,
+  peak: 84_000_000_000,
+  type: 'usage',
+  resourceType: 'project',
+  resourceId: '',
+  notifications: 1,
+} as unknown as Models.Alert
+
 const NOTIFICATIONS = [
   notification('alertwarning00000001', {
     type: 'warning',
     title: 'Bandwidth is over 80% on Production',
     body: 'Usage reached 84 GB of the 100 GB monitor threshold.',
+    teamId: ORGANIZATION_ID,
+    alertId: ALERT_ID,
+    alertStatus: 'firing',
+  }),
+  notification('alertresolved0000001', {
+    type: 'warning',
+    title: 'Executions are back under 1,000 on Production',
+    $createdAt: hoursAgo(2),
+    read: true,
+    teamId: ORGANIZATION_ID,
+    alertId: 'alertexecutions00001',
+    alertStatus: 'resolved',
   }),
   notification('buildfailed000000001', {
     type: 'error',
@@ -79,14 +121,25 @@ function corsHeaders(route: Route) {
 type Writes = {
   prefs: Record<string, unknown>[]
   reads: { id: string; read: boolean }[]
+  acknowledgements: {
+    projectId: string | undefined
+    alertId: string
+    acknowledged: boolean
+  }[]
+  /** Alerts fetched one at a time, as a deep link opens one. */
+  alerts: string[]
   /** Changes the server's prefs, as Beep does from a phone. */
   fromPhone: (beep: Record<string, unknown>) => void
 }
+
+/** How the server answers acknowledging an alert. */
+type Acknowledging = 'ok' | 'resolved' | 'forbidden'
 
 /** A signed-in user with two organizations and an inbox. */
 async function mockApi(
   page: Page,
   beep?: Record<string, unknown>,
+  acknowledging: Acknowledging = 'ok',
 ): Promise<Writes> {
   let serverPrefs: Record<string, unknown> = {
     ...ACCOUNT.prefs,
@@ -95,6 +148,8 @@ async function mockApi(
   const writes: Writes = {
     prefs: [],
     reads: [],
+    acknowledgements: [],
+    alerts: [],
     fromPhone: (next) => {
       serverPrefs = { ...serverPrefs, beep: next }
     },
@@ -104,7 +159,10 @@ async function mockApi(
   await page.addInitScript(() => {
     window.localStorage.setItem(
       'debug:consoleProfile',
-      JSON.stringify({ id: 'cloud', features: { notifications: true } }),
+      JSON.stringify({
+        id: 'cloud',
+        features: { notifications: true, alerts: true },
+      }),
     )
   })
 
@@ -147,6 +205,46 @@ async function mockApi(
       if (item) item.read = read
       return json(200, item)
     }
+    if (apiPath === '/alerts') {
+      return json(200, { total: 1, alerts: [ALERT] })
+    }
+    const alertId = apiPath.match(/^\/alerts\/([^/]+)$/)?.[1]
+    if (alertId && request.method() === 'GET') {
+      writes.alerts.push(alertId)
+      return json(200, { ...ALERT, $id: alertId })
+    }
+    if (alertId && request.method() === 'PATCH') {
+      writes.acknowledgements.push({
+        projectId: request.headers()['x-appwrite-project'],
+        alertId,
+        acknowledged: request.postDataJSON().acknowledged as boolean,
+      })
+      if (acknowledging === 'resolved') {
+        return json(400, {
+          code: 400,
+          type: 'alert_resolved',
+          message:
+            'The alert has resolved. Only a firing alert can be acknowledged.',
+          version: '1.0',
+        })
+      }
+      if (acknowledging === 'forbidden') {
+        return json(401, {
+          code: 401,
+          type: 'general_unauthorized_scope',
+          message:
+            'user@example.com (role: analyst) missing scopes (["alerts.write"])',
+          version: '1.0',
+        })
+      }
+      return json(200, {
+        ...ALERT,
+        $id: alertId,
+        acknowledgedAt: NOW.toISOString(),
+        acknowledgedBy: ACCOUNT.$id,
+        acknowledgedByName: ACCOUNT.name,
+      })
+    }
     if (apiPath === '/organizations' || apiPath === '/teams') {
       return json(200, {
         total: 2,
@@ -188,6 +286,13 @@ async function mockApi(
 function lastBeep(writes: Writes): Record<string, unknown> | undefined {
   const write = [...writes.prefs].reverse().find((prefs) => 'beep' in prefs)
   return write?.beep as Record<string, unknown> | undefined
+}
+
+async function openRowMenu(popover: Locator, title: string) {
+  const row = popover.locator('.group').filter({ hasText: title })
+  await row.hover()
+  await row.getByRole('button', { name: 'Notification actions' }).click()
+  return row
 }
 
 async function openNotifications(page: Page) {
@@ -301,5 +406,99 @@ test.describe('Notification center (mocked API)', () => {
         resolved: false,
         snoozes: { orgphone0000000001: PHONE_SNOOZE },
       })
+  })
+
+  test('opens the alert a notification is about', async ({ page }) => {
+    const writes = await mockApi(page)
+    const popover = await openNotifications(page)
+
+    await popover
+      .getByRole('button', { name: 'Bandwidth is over 80% on Production' })
+      .click()
+
+    await expect(page).toHaveURL(
+      new RegExp(`/projects/${PROJECT_ID}/monitors/alerts`),
+    )
+    await expect.poll(() => writes.alerts).toContain(ALERT_ID)
+    await expect(
+      page.getByRole('dialog').getByText(ALERT.name).first(),
+    ).toBeVisible()
+    expect(writes.reads).toEqual([{ id: 'alertwarning00000001', read: true }])
+  })
+
+  test('acknowledges a firing alert from its menu', async ({ page }) => {
+    const writes = await mockApi(page)
+    const popover = await openNotifications(page)
+
+    // A resolved alert has nothing to acknowledge.
+    await openRowMenu(popover, 'Executions are back under 1,000')
+    await expect(page.getByRole('menuitem', { name: 'Open' })).toBeVisible()
+    await expect(
+      page.getByRole('menuitem', { name: 'Acknowledge' }),
+    ).toBeHidden()
+    await page.keyboard.press('Escape')
+
+    const row = await openRowMenu(popover, 'Bandwidth is over 80%')
+    await page.getByRole('menuitem', { name: 'Acknowledge' }).click()
+
+    await expect
+      .poll(() => writes.acknowledgements)
+      .toEqual([
+        { projectId: PROJECT_ID, alertId: ALERT_ID, acknowledged: true },
+      ])
+    await expect(page.getByText('Alert acknowledged')).toBeVisible()
+    await expect(row.getByText('Acknowledged', { exact: true })).toBeVisible()
+    // Acknowledging is seeing it, so the notification is read.
+    await expect
+      .poll(() => writes.reads)
+      .toEqual([{ id: 'alertwarning00000001', read: true }])
+
+    await openRowMenu(popover, 'Bandwidth is over 80%')
+    await expect(page.getByRole('menuitem', { name: 'Open' })).toBeVisible()
+    await expect(
+      page.getByRole('menuitem', { name: 'Acknowledge' }),
+    ).toBeHidden()
+  })
+
+  test('says why an alert that resolved cannot be acknowledged', async ({
+    page,
+  }) => {
+    const writes = await mockApi(page, undefined, 'resolved')
+    const popover = await openNotifications(page)
+
+    await openRowMenu(popover, 'Bandwidth is over 80%')
+    await page.getByRole('menuitem', { name: 'Acknowledge' }).click()
+
+    await expect(
+      page.getByText('This alert has already resolved'),
+    ).toBeVisible()
+    await expect(
+      page.getByText('Only a firing alert can be acknowledged.'),
+    ).toBeVisible()
+    expect(writes.acknowledgements).toHaveLength(1)
+    expect(writes.reads).toEqual([])
+
+    await openRowMenu(popover, 'Bandwidth is over 80%')
+    await expect(page.getByRole('menuitem', { name: 'Open' })).toBeVisible()
+    await expect(
+      page.getByRole('menuitem', { name: 'Acknowledge' }),
+    ).toBeHidden()
+  })
+
+  test("says when the member's role cannot acknowledge", async ({ page }) => {
+    await mockApi(page, undefined, 'forbidden')
+    const popover = await openNotifications(page)
+
+    await openRowMenu(popover, 'Bandwidth is over 80%')
+    await page.getByRole('menuitem', { name: 'Acknowledge' }).click()
+
+    await expect(
+      page.getByText('Failed to acknowledge the alert'),
+    ).toBeVisible()
+    await expect(
+      page.getByText(
+        "Your role can't change alerts. Ask an owner or a developer.",
+      ),
+    ).toBeVisible()
   })
 })

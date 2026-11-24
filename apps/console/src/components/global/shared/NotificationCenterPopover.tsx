@@ -20,6 +20,7 @@ import {
   MoreHorizontal,
   Settings,
   TriangleAlert,
+  UserCheck,
 } from 'lucide-react'
 import {
   Popover,
@@ -45,6 +46,10 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { cn } from '@/lib/utils'
+import {
+  getAppwriteErrorInfo,
+  getErrorMessage,
+} from '@/lib/utils/error-formatting'
 import { getNotificationNavigateTarget } from '@/lib/notifications/notification-links'
 import {
   EVERY_ORGANIZATION,
@@ -55,6 +60,7 @@ import {
   withSnooze,
 } from '@/lib/notifications/beep-prefs'
 import {
+  useAcknowledgeAlert,
   useBeepPrefs,
   useConsoleNotifications,
   useMarkAllConsoleNotificationsRead,
@@ -191,24 +197,38 @@ function HeaderButton({
   )
 }
 
+/** What became of an alert since its notification was sent. */
+type AlertState = 'acknowledged' | 'resolved'
+
 function NotificationRow({
   notification,
   projectMuted,
+  alertState,
   onOpen,
   onToggleRead,
   onToggleMuteProject,
+  onAcknowledge,
 }: {
   notification: Models.Notification
   projectMuted: boolean
+  alertState: AlertState | undefined
   onOpen: (notification: Models.Notification) => void
   onToggleRead: (notification: Models.Notification) => void
   onToggleMuteProject: (projectId: string, muted: boolean) => void
+  onAcknowledge: (notification: Models.Notification) => void
 }) {
   const t = useT()
   const isUnread = !notification.read
   const severity = severityOf(notification.type)
   const projectId = notification.projectId?.trim() ?? ''
   const canOpen = getNotificationNavigateTarget(notification) !== null
+  // A firing alert of a project; an organization's budget alert has no project to acknowledge it in.
+  const canAcknowledge =
+    !!notification.alertId &&
+    notification.alertStatus === 'firing' &&
+    !!projectId &&
+    projectId !== 'console' &&
+    alertState === undefined
 
   return (
     <div className="group relative flex gap-3 px-5 py-3 transition-colors hover:bg-accent/50">
@@ -245,6 +265,12 @@ function NotificationRow({
             live
             className="pointer-events-auto text-[11px] text-muted-foreground"
           />
+          {alertState === 'acknowledged' ? (
+            <>
+              <span aria-hidden>·</span>
+              <span>{t('Acknowledged')}</span>
+            </>
+          ) : null}
           {projectMuted ? (
             <>
               <span aria-hidden>·</span>
@@ -269,6 +295,13 @@ function NotificationRow({
           {canOpen ? (
             <DropdownMenuItem onSelect={() => onOpen(notification)}>
               <MenuItemContent icon={ExternalLink}>{t('Open')}</MenuItemContent>
+            </DropdownMenuItem>
+          ) : null}
+          {canAcknowledge ? (
+            <DropdownMenuItem onSelect={() => onAcknowledge(notification)}>
+              <MenuItemContent icon={UserCheck}>
+                {t('Acknowledge')}
+              </MenuItemContent>
             </DropdownMenuItem>
           ) : null}
           <DropdownMenuItem onSelect={() => onToggleRead(notification)}>
@@ -443,6 +476,11 @@ export function NotificationCenterPopover() {
     useConsoleNotifications(true)
   const updateReadMutation = useUpdateConsoleNotificationRead()
   const markAllReadMutation = useMarkAllConsoleNotificationsRead()
+  const acknowledgeMutation = useAcknowledgeAlert()
+  // Alerts acknowledged or found resolved here, which offer no acknowledging again.
+  const [changedAlerts, setChangedAlerts] = useState<
+    Record<string, AlertState>
+  >({})
   const beepPrefs = useBeepPrefs(account as ConsoleAccountCache | undefined)
   const snooze = snoozeOf(beepPrefs.beep, null)
 
@@ -454,6 +492,15 @@ export function NotificationCenterPopover() {
     [filter, notifications],
   )
   const groups = useMemo(() => groupByDay(visible), [visible])
+  const alertStates = useMemo(() => {
+    const states: Record<string, AlertState> = {}
+    for (const item of notifications) {
+      if (item.alertId && item.alertStatus === 'resolved') {
+        states[item.alertId] = 'resolved'
+      }
+    }
+    return { ...states, ...changedAlerts }
+  }, [notifications, changedAlerts])
 
   const handleOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen)
@@ -482,8 +529,54 @@ export function NotificationCenterPopover() {
       void navigate({
         to: target.to as never,
         params: target.params as never,
+        ...(target.search ? { search: target.search as never } : {}),
       })
     }
+  }
+
+  const handleAcknowledge = (notification: Models.Notification) => {
+    const alertId = notification.alertId
+    const changeAlert = (state: AlertState) =>
+      setChangedAlerts((current) => ({ ...current, [alertId]: state }))
+
+    acknowledgeMutation.mutate(
+      { projectId: notification.projectId ?? '', alertId },
+      {
+        onSuccess: () => {
+          changeAlert('acknowledged')
+          if (!notification.read) {
+            updateReadMutation.mutate({
+              notificationId: notification.$id,
+              read: true,
+            })
+          }
+          toast.success(t('Alert acknowledged'), {
+            description: t(
+              "Your team sees that you're on it. It keeps firing until its monitor recovers.",
+            ),
+          })
+        },
+        onError: (error) => {
+          const { type, code } = getAppwriteErrorInfo(error)
+          if (type === 'alert_resolved') {
+            changeAlert('resolved')
+            toast.error(t('This alert has already resolved'), {
+              description: t('Only a firing alert can be acknowledged.'),
+            })
+          } else if (code === 401) {
+            toast.error(t('Failed to acknowledge the alert'), {
+              description: t(
+                "Your role can't change alerts. Ask an owner or a developer.",
+              ),
+            })
+          } else {
+            toast.error(
+              getErrorMessage(error, t('Failed to acknowledge the alert')),
+            )
+          }
+        },
+      },
+    )
   }
 
   const handleToggleRead = (notification: Models.Notification) => {
@@ -729,9 +822,15 @@ export function NotificationCenterPopover() {
                           projectMuted={beepPrefs.beep.mutedProjectIds.includes(
                             notification.projectId ?? '',
                           )}
+                          alertState={
+                            notification.alertId
+                              ? alertStates[notification.alertId]
+                              : undefined
+                          }
                           onOpen={handleNotificationOpen}
                           onToggleRead={handleToggleRead}
                           onToggleMuteProject={handleToggleMuteProject}
+                          onAcknowledge={handleAcknowledge}
                         />
                       ))}
                     </div>
