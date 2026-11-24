@@ -15,6 +15,7 @@ import {
 import {
   alertingLimits,
   countResponders,
+  countUsageMonitors,
   defaultProbeInterval,
 } from '@/lib/alerts/plan-limits'
 import {
@@ -679,6 +680,21 @@ describe('alerting plan limits', () => {
     } as unknown as Parameters<typeof alertingLimits>[0]
     expect(alertingLimits(scale).probes).toBeNull()
     expect(alertingLimits(scale).escalationSteps).toBeNull()
+  })
+
+  test('counts only usage monitors against the per-project cap', () => {
+    // Synthetic checks have their own organization cap, so three usage
+    // monitors fill a Free project while an HTTP check can still be added.
+    expect(
+      countUsageMonitors([
+        { type: 'usage' },
+        { type: 'usage' },
+        { type: 'usage' },
+        { type: 'http' },
+        { type: 'dns' },
+      ]),
+    ).toBe(3)
+    expect(countUsageMonitors([{ type: 'tcp' }, { type: 'smtp' }])).toBe(0)
   })
 
   test('starts new checks on a minute, or the plan minimum when longer', () => {

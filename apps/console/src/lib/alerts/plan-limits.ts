@@ -44,6 +44,11 @@ export function alertingLimits(
   }
 }
 
+/** Usage monitors, the only type the plan's per-project `monitors` cap counts; synthetic checks have their own organization cap. */
+export function countUsageMonitors(monitors: { type: string }[]): number {
+  return monitors.filter((monitor) => monitor.type === 'usage').length
+}
+
 /** The interval a new synthetic check starts on: a minute, or the plan's minimum when longer, as the API defaults it. */
 export function defaultProbeInterval(minimum: number): number {
   return Math.max(60, minimum)

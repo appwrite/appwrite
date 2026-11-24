@@ -16,7 +16,8 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { formatCurrency } from '@/components/pages/organizations/$orgId/billing/utils'
-import { alertingLimits } from '@/lib/alerts/plan-limits'
+import { alertingLimits, countUsageMonitors } from '@/lib/alerts/plan-limits'
+import { getBillingPlanResourceLimit } from '@/lib/billing/project-breakdown-resources'
 import {
   getPlanAddonCurrency,
   getPlanAddonIncludedCount,
@@ -25,6 +26,7 @@ import {
 import {
   organizationProbeCountQueryOptions,
   useCreateMonitor,
+  useMonitors,
   useOrganizationPlan,
   useProject,
 } from '@/lib/react-query/hooks'
@@ -72,15 +74,27 @@ export function CreateMonitor({
   const navigate = useNavigate()
   const { project } = useProject(projectId)
   const createMutation = useCreateMonitor(projectId)
+  const { monitors } = useMonitors(projectId)
+  const { plan } = useOrganizationPlan(project?.teamId)
+  const usageLimit = getBillingPlanResourceLimit(plan, 'monitors') ?? 0
+  const usageCount = countUsageMonitors(monitors)
+  const usageAtLimit = usageLimit > 0 && usageCount >= usageLimit
   const [type, setType] = useState<'usage' | ProbeType>(initialType)
   const [form, setForm] = useState<RuleForm>(emptyRuleForm)
   const [probe, setProbe] = useState<ProbeForm>(() => emptyProbeForm('http'))
 
   useEffect(() => {
     if (!open) return
-    setType(initialType)
+    // With no usage monitor left on the plan, a blank form starts on a synthetic check.
+    const start =
+      initialType === 'usage' && usageAtLimit && !initial && isCloud
+        ? 'http'
+        : initialType
+    setType(start)
     setForm({ ...emptyRuleForm(), ...initial })
-    setProbe(emptyProbeForm(initialType === 'usage' ? 'http' : initialType))
+    setProbe(emptyProbeForm(start === 'usage' ? 'http' : start))
+    // Only when the form opens; the cap may load later without resetting typed fields.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initial, initialType])
 
   const handleTypeChange = (next: 'usage' | ProbeType) => {
@@ -102,7 +116,6 @@ export function CreateMonitor({
   }
 
   const organizationId = project?.teamId
-  const { plan } = useOrganizationPlan(organizationId)
   const { data: probeCount } = useQuery({
     ...organizationProbeCountQueryOptions(organizationId),
     enabled: open && isCloud && type !== 'usage' && !!organizationId,
@@ -112,27 +125,38 @@ export function CreateMonitor({
   const probePrice = getPlanAddonPrice(plan, 'probes')
   const probesAtLimit =
     probeLimit !== null && probeCount !== undefined && probeCount >= probeLimit
-  const probeAllowance =
-    type === 'usage' || probeCount === undefined
-      ? null
-      : probesAtLimit
-        ? t('Synthetic checks: {used} of {limit} allowed on your plan.')
-            .replace('{used}', String(probeCount))
-            .replace('{limit}', String(probeLimit))
-        : probePrice > 0 && probesIncluded !== null
-          ? `${t('Synthetic checks: {used} of {included} included.')
+  const allowance =
+    type === 'usage'
+      ? usageAtLimit
+        ? t('Usage monitors: {used} of {limit} allowed on your plan.')
+            .replace('{used}', String(usageCount))
+            .replace('{limit}', String(usageLimit))
+        : null
+      : probeCount === undefined
+        ? null
+        : probesAtLimit
+          ? t('Synthetic checks: {used} of {limit} allowed on your plan.')
               .replace('{used}', String(probeCount))
-              .replace('{included}', String(probesIncluded))} ${t(
-              'Each extra check costs {price} per month.',
-            ).replace(
-              '{price}',
-              formatCurrency(probePrice, getPlanAddonCurrency(plan, 'probes')),
-            )}`
-          : null
+              .replace('{limit}', String(probeLimit))
+          : probePrice > 0 && probesIncluded !== null
+            ? `${t('Synthetic checks: {used} of {included} included.')
+                .replace('{used}', String(probeCount))
+                .replace('{included}', String(probesIncluded))} ${t(
+                'Each extra check costs {price} per month.',
+              ).replace(
+                '{price}',
+                formatCurrency(
+                  probePrice,
+                  getPlanAddonCurrency(plan, 'probes'),
+                ),
+              )}`
+            : null
 
   const error =
     type === 'usage'
-      ? ruleFormError(form, t)
+      ? usageAtLimit
+        ? t('Upgrade your plan to add more usage monitors.')
+        : ruleFormError(form, t)
       : probesAtLimit
         ? t('Upgrade your plan to add more synthetic checks.')
         : probeFormError(probe, t)
@@ -202,11 +226,11 @@ export function CreateMonitor({
                   disabled={isPending}
                 />
               )}
-              {probeAllowance && organizationId && (
+              {allowance && organizationId && (
                 <PlanAllowance
-                  message={probeAllowance}
+                  message={allowance}
                   organizationId={organizationId}
-                  upgrade={probesAtLimit}
+                  upgrade={type === 'usage' ? usageAtLimit : probesAtLimit}
                 />
               )}
               {type === 'usage' ? (

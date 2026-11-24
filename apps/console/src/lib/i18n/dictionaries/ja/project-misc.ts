@@ -4419,4 +4419,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'ご利用のプランでは、1 つのエスカレーションに設定できるステップは {count} 個までです。',
   'Upgrade your plan to repeat escalations.':
     'エスカレーションを繰り返すには、プランをアップグレードしてください。',
+  'Usage monitors: {used} of {limit} allowed on your plan.':
+    '使用量モニター: プランの上限 {limit} 件中 {used} 件を使用中です。',
+  'Upgrade your plan to add more usage monitors.':
+    '使用量モニターを追加するには、プランをアップグレードしてください。',
 }

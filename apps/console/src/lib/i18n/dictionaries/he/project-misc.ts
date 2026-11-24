@@ -4328,4 +4328,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'התוכנית שלך מאפשרת עד {count} שלבים בכל הסלמה.',
   'Upgrade your plan to repeat escalations.':
     'כדי לחזור על הסלמות, יש לשדרג את התוכנית.',
+  'Usage monitors: {used} of {limit} allowed on your plan.':
+    'מוניטורי שימוש: {used} מתוך {limit} שהתוכנית שלך מאפשרת.',
+  'Upgrade your plan to add more usage monitors.':
+    'כדי להוסיף מוניטורי שימוש, יש לשדרג את התוכנית.',
 }
