@@ -4,6 +4,11 @@ import { ProductBentoSoftLights } from '@/components/pages/home/HomeSoftLights'
 import { DatabasesProductVisual } from '@/components/pages/home/product-bento/DatabasesProductVisual'
 import { FirewallProductVisual } from '@/components/pages/home/product-bento/FirewallProductVisual'
 import { Appwrite2DayVisual } from './day-visuals/Appwrite2DayVisual'
+import { AnalyticsDayVisual } from './day-visuals/AnalyticsDayVisual'
+import { MonitorsBeepDayVisual } from './day-visuals/MonitorsBeepDayVisual'
+import { ReviewsDayVisual } from './day-visuals/ReviewsDayVisual'
+import { VideosDayVisual } from './day-visuals/VideosDayVisual'
+import { ZeroDayVisual } from './day-visuals/ZeroDayVisual'
 import { PostgresDayVisual } from './day-visuals/PostgresDayVisual'
 import { S3StorageDayVisual } from './day-visuals/S3StorageDayVisual'
 import { cn } from '@/lib/utils'
@@ -14,6 +19,11 @@ const INIT_DAY_MOCK_VISUALS: Record<InitDayMockVisualId, ComponentType> = {
   databases: DatabasesProductVisual,
   's3-storage': S3StorageDayVisual,
   firewall: FirewallProductVisual,
+  analytics: AnalyticsDayVisual,
+  videos: VideosDayVisual,
+  zero: ZeroDayVisual,
+  'monitors-beep': MonitorsBeepDayVisual,
+  reviews: ReviewsDayVisual,
 }
 
 export function InitDayMockVisual({

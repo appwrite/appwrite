@@ -27,6 +27,11 @@ export type InitDayMockVisualId =
   | 'databases'
   | 's3-storage'
   | 'firewall'
+  | 'analytics'
+  | 'videos'
+  | 'zero'
+  | 'monitors-beep'
+  | 'reviews'
 
 export interface LaunchEventDayVisual {
   mockVisualId: InitDayMockVisualId

@@ -23,8 +23,9 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
       'See who visits your websites and apps, track pageviews and custom events without cookies, and find out where visitors come from, right next to the rest of your project.',
     icon: BarChart3,
     visual: {
-      mockVisualId: 'appwrite-2',
-      imageAlt: 'Appwrite Analytics placeholder mock',
+      mockVisualId: 'analytics',
+      imageAlt:
+        'Appwrite Analytics for example.com: visitors, pageviews, bounce rate, a week of traffic and top sources, with no cookies',
     },
     isLive: true,
     sessionCount: 1,
@@ -67,8 +68,9 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
       'Appwrite Videos brings upload, transcoding, streaming, and captions into the platform, so you can ship video without stitching together separate services.',
     icon: Video,
     visual: {
-      mockVisualId: 'appwrite-2',
-      imageAlt: 'Appwrite Videos placeholder mock',
+      mockVisualId: 'videos',
+      imageAlt:
+        'Appwrite Videos: a 4K upload ready to stream, with captions and 2160p to 480p renditions over HLS',
     },
     sessionCount: 1,
     headerNavCta: {
@@ -103,8 +105,9 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
       'Appwrite Zero hands you a ready-to-use Appwrite project without an account, so you or your agent can start building right away and claim the project when you want to keep it.',
     icon: Sparkles,
     visual: {
-      mockVisualId: 'appwrite-2',
-      imageAlt: 'Appwrite Zero placeholder mock',
+      mockVisualId: 'zero',
+      imageAlt:
+        'Appwrite Zero: an agent builds a task tracker on a project made without an account, ready to claim',
     },
     sessionCount: 1,
     resources: [
@@ -127,8 +130,9 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
       'Appwrite Monitors alert you when project usage crosses a threshold, and Appwrite Beep, our mobile app, puts those alerts on your phone.',
     icon: BellRing,
     visual: {
-      mockVisualId: 'firewall',
-      imageAlt: 'Appwrite Monitors & Appwrite Beep placeholder mock',
+      mockVisualId: 'monitors-beep',
+      imageAlt:
+        'A bandwidth monitor crossing its 80% threshold, and the alert arriving in Appwrite Beep on a phone',
     },
     sessionCount: 1,
     resources: [
@@ -151,8 +155,9 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
       'Appwrite Reviews reviews the pull requests in your connected GitHub repositories and posts its findings on the pull request. We close the week with the grand prize draw.',
     icon: GitPullRequest,
     visual: {
-      mockVisualId: 'appwrite-2',
-      imageAlt: 'Appwrite Reviews placeholder mock',
+      mockVisualId: 'reviews',
+      imageAlt:
+        'Appwrite Reviews on a pull request: a major bug finding posted beside the lines it is about',
     },
     sessionCount: 1,
     resources: [
