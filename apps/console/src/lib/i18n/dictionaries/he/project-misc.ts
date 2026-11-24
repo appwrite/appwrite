@@ -4346,6 +4346,32 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'per project.': 'לכל פרויקט.',
   'to create another.': 'כדי ליצור נכס נוסף.',
   'to enable analytics on this site.': 'כדי להפעיל אנליטיקה באתר הזה.',
+  'Your plan checks at most every {interval}.':
+    'בתוכנית שלך הבדיקות רצות לכל היותר פעם ב-{interval}.',
+  'Synthetic checks: {used} of {limit} allowed on your plan.':
+    'בדיקות סינתטיות: {used} מתוך {limit} שהתוכנית שלך מאפשרת.',
+  'Synthetic checks: {used} of {included} included.':
+    'בדיקות סינתטיות: {used} מתוך {included} כלולות בתוכנית.',
+  'Each extra check costs {price} per month.':
+    'כל בדיקה נוספת עולה {price} לחודש.',
+  'Upgrade your plan to add more synthetic checks.':
+    'כדי להוסיף בדיקות סינתטיות, יש לשדרג את התוכנית.',
+  'Escalations: {used} of {limit} allowed on your plan.':
+    'הסלמות: {used} מתוך {limit} שהתוכנית שלך מאפשרת.',
+  'On-call responders: {used} of {included} included.':
+    'כוננים: {used} מתוך {included} כלולים בתוכנית.',
+  'Each extra responder costs {price} per month.':
+    'כל כונן נוסף עולה {price} לחודש.',
+  'Upgrade your plan to create more escalations.':
+    'כדי ליצור הסלמות נוספות, יש לשדרג את התוכנית.',
+  'Your plan allows up to {count} steps per escalation.':
+    'התוכנית שלך מאפשרת עד {count} שלבים בכל הסלמה.',
+  'Upgrade your plan to repeat escalations.':
+    'כדי לחזור על הסלמות, יש לשדרג את התוכנית.',
+  'Usage monitors: {used} of {limit} allowed on your plan.':
+    'מוניטורי שימוש: {used} מתוך {limit} שהתוכנית שלך מאפשרת.',
+  'Upgrade your plan to add more usage monitors.':
+    'כדי להוסיף מוניטורי שימוש, יש לשדרג את התוכנית.',
   // Analytics for signed-in users
   'Signed-in users, ranked by visits': 'משתמשים מחוברים, לפי מספר הביקורים',
   'View user': 'הצגת המשתמש',

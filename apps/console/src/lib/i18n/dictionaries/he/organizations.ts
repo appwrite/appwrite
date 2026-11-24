@@ -1807,4 +1807,10 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Remove organization photo': 'הסרת תמונת הארגון',
   'The photo is replaced with a placeholder. You can upload a new photo at any time.':
     'התמונה תוחלף בתמונת ברירת מחדל. אפשר להעלות תמונה חדשה בכל עת.',
+  'Synthetic checks': 'בדיקות סינתטיות',
+  Escalations: 'הסלמות',
+  '{current} in use, the selected plan allows {limit}. Delete {excess} to continue.':
+    '{current} בשימוש, והתוכנית שנבחרה מאפשרת {limit}. יש למחוק {excess} כדי להמשיך.',
+  'Additional synthetic checks': 'בדיקות סינתטיות נוספות',
+  'Additional on-call responders': 'כוננים נוספים',
 }

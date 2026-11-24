@@ -37,9 +37,52 @@ use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Emails\Email;
 use Utopia\Locale\Locale;
+use Utopia\System\System;
 
 abstract class Base extends Action
 {
+    /**
+     * Where an OAuth2 provider sends the person back once they signed in there:
+     * getOAuth2CallbackPath() on the host the request came to. The start of a flow
+     * and its end must hand the provider the same URL, or it refuses the token
+     * exchange, so both read it from here.
+     */
+    protected function getOAuth2Callback(string $provider, Document $project, Request $request): string
+    {
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $port = $request->getPort();
+        $callbackBase = $protocol . '://' . $request->getHostname();
+        // An empty port means the host named none, so the scheme's default applies
+        if ($port !== '' && $port !== ($protocol === 'https' ? '443' : '80')) {
+            $callbackBase .= ':' . $port;
+        }
+
+        return $callbackBase . $this->getOAuth2CallbackPath($provider, $project);
+    }
+
+    /**
+     * The route an OAuth2 provider sends the person back to. A flow that lands on
+     * a route of its own overrides it, in the actions that route runs.
+     */
+    protected function getOAuth2CallbackPath(string $provider, Document $project): string
+    {
+        return '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
+    }
+
+    /**
+     * What is known about the OAuth2 provider $provider: the `class` that talks to
+     * it and its `name`, as the `oAuthProviders` config lists them. Empty for a
+     * provider the config does not list. A flow whose provider is not in that
+     * config overrides it and brings routes of its own: the stock routes accept
+     * only the providers the config lists.
+     *
+     * @return array<string, mixed>
+     */
+    protected function getOAuth2Provider(string $provider): array
+    {
+        return Config::getParam('oAuthProviders', [])[$provider] ?? [];
+    }
+
     protected const OAUTH_DEFAULT_SUCCESS = '/auth/oauth2/success';
     protected const OAUTH_DEFAULT_FAILURE = '/auth/oauth2/failure';
 
