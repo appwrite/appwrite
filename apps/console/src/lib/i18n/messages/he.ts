@@ -158,6 +158,7 @@ export const heCatalog: EnCatalog = {
           storage: 'אחסון',
           functions: 'פונקציות',
           messaging: 'הודעות',
+          videos: 'סרטונים',
           realtime: 'Realtime',
           agent: 'Agent',
           zero: 'Zero',
