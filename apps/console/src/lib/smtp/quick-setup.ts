@@ -1,8 +1,8 @@
 /**
  * Provider-agnostic pieces of the SMTP quick setup.
  *
- * Every email provider we can set up in one click (Resend today, Mailgun and
- * SendGrid next) follows the same shape: authorize through a console OAuth2
+ * Every email provider we can set up in one click (Resend and Bird today,
+ * Mailgun next) follows the same shape: authorize through a console OAuth2
  * provider, list the sending domains, mint a sending-only credential, then
  * write it into the project's custom SMTP settings. This module holds the
  * parts of that flow that do not depend on which provider is used.
@@ -36,10 +36,15 @@ export function isProviderTokenExpired(
 export const QUICK_SETUP_STATUS_PARAM = 'smtpSetup'
 /** Query param carrying which provider was authorized. */
 export const QUICK_SETUP_PROVIDER_PARAM = 'smtpProvider'
+/**
+ * Query param naming what the authorization was for, when one provider serves
+ * several setups on a page (the messaging wizard's Bird email and Bird SMS).
+ */
+export const QUICK_SETUP_TARGET_PARAM = 'smtpTarget'
 
 export type QuickSetupReturn =
-  | { status: 'connected'; providerId: string }
-  | { status: 'failed'; providerId: string; message?: string }
+  | { status: 'connected'; providerId: string; target?: string }
+  | { status: 'failed'; providerId: string; target?: string; message?: string }
 
 function asNonEmptyString(value: unknown): string | undefined {
   if (typeof value === 'string') return value.trim() || undefined
@@ -81,9 +86,13 @@ export function buildQuickSetupOAuthUrls(
   /** Absolute URL of the page to come back to. */
   returnUrl: string,
   providerId: string,
+  target?: string,
 ): { success: string; failure: string } {
   const separator = returnUrl.includes('?') ? '&' : '?'
-  const provider = `${QUICK_SETUP_PROVIDER_PARAM}=${encodeURIComponent(providerId)}`
+  let provider = `${QUICK_SETUP_PROVIDER_PARAM}=${encodeURIComponent(providerId)}`
+  if (target) {
+    provider += `&${QUICK_SETUP_TARGET_PARAM}=${encodeURIComponent(target)}`
+  }
   return {
     success: `${returnUrl}${separator}${QUICK_SETUP_STATUS_PARAM}=connected&${provider}`,
     failure: `${returnUrl}${separator}${QUICK_SETUP_STATUS_PARAM}=failed&${provider}`,
@@ -101,13 +110,17 @@ export function parseQuickSetupReturn(
   const params = search as Record<string, unknown>
   const status = params[QUICK_SETUP_STATUS_PARAM]
   const providerId = asNonEmptyString(params[QUICK_SETUP_PROVIDER_PARAM])
+  const target = asNonEmptyString(params[QUICK_SETUP_TARGET_PARAM])
 
   if (!providerId) return null
-  if (status === 'connected') return { status: 'connected', providerId }
+  if (status === 'connected') {
+    return { status: 'connected', providerId, ...(target ? { target } : {}) }
+  }
   if (status === 'failed') {
     return {
       status: 'failed',
       providerId,
+      ...(target ? { target } : {}),
       message: parseOAuthErrorMessage(params.error),
     }
   }
@@ -122,6 +135,7 @@ export function stripQuickSetupReturn(prev: unknown): Record<string, unknown> {
       : {}
   delete next[QUICK_SETUP_STATUS_PARAM]
   delete next[QUICK_SETUP_PROVIDER_PARAM]
+  delete next[QUICK_SETUP_TARGET_PARAM]
   delete next.error
   // Appwrite's token flow also appends a one-time login token that the quick
   // setup never uses. Drop it so it does not linger in the address bar, the
@@ -137,13 +151,15 @@ export function stripQuickSetupReturn(prev: unknown): Record<string, unknown> {
 
 /**
  * A sending domain, normalized across providers. Each adapter maps its own
- * shape onto this (Resend `status: 'verified'`, Mailgun `state: 'active'`,
- * SendGrid `valid: true`).
+ * shape onto this (Resend `status: 'verified'`, Bird
+ * `capabilities.sending.status`, Mailgun `state: 'active'`).
  */
 export interface QuickSetupDomain {
   id: string
   name: string
   verified: boolean
+  /** Provider region hosting the domain, where the relay is regional (Bird `eu1`). */
+  region?: string
 }
 
 /** Verified domains first, then alphabetical, so the default pick is usable. */
@@ -204,8 +220,12 @@ export function providerInterestFeatureId(providerId: string): string {
 export interface MintedCredentialTracker<
   T extends { id: string; secret: string },
 > {
-  /** Start tracking a fresh credential; the previous unused one is revoked. */
-  track(credential: T): void
+  /**
+   * Start tracking a fresh credential; the previous unused one is revoked.
+   * A credential that arrives after {@link release} has no flow left to use
+   * it, so it is revoked straight away and `false` tells the caller to drop it.
+   */
+  track(credential: T): boolean
   /**
    * A save that stores `secret` on success is in flight. The matching
    * credential is off limits until it settles: on success it is in use for
@@ -245,9 +265,14 @@ export function createMintedCredentialTracker<
   }
   return {
     track(credential) {
+      if (released) {
+        revokeQuietly(credential)
+        return false
+      }
       const previous = minted
       minted = credential
       if (previous) revokeQuietly(previous)
+      return true
     },
     settle(secret, save) {
       if (!minted || minted.secret !== secret) return
@@ -281,8 +306,8 @@ export function createMintedCredentialTracker<
 export function buildCredentialName(
   projectName: string,
   maxLength: number,
+  prefix = 'Appwrite SMTP',
 ): string {
-  const prefix = 'Appwrite SMTP'
   const trimmed = projectName.trim()
   const name = trimmed ? `${prefix}: ${trimmed}` : prefix
   if (name.length <= maxLength) return name

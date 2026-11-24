@@ -25,12 +25,14 @@ use OpenRuntimes\Orchestrator\Callback\JobExit;
 use OpenRuntimes\Orchestrator\Callback\JobLog;
 use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
 use OpenRuntimes\Orchestrator\Enum\ErrorCode;
+use Swoole\Coroutine\Channel;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Cache;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Action;
 use Utopia\Psr7\Stream;
 use Utopia\Queue\Message;
@@ -48,7 +50,10 @@ use Utopia\System\System;
  * Callbacks arrive concurrently and out of order (one log line each), so
  * processing for a deployment is serialized under a per-deployment lock — that
  * keeps its buildLogs a clean, monotonic append while letting different
- * deployments build in parallel. Callbacks are at-least-once, so events are
+ * deployments build in parallel. Log callbacks waiting in one process for the
+ * same deployment are appended together by whichever of them takes the lock,
+ * so a burst of build output costs one write per process rather than one per
+ * line batch. Callbacks are at-least-once, so events are
  * de-duplicated inside the lock. Logs and their dedupe marker are written before
  * the log transaction commits; state callbacks are marked after application.
  *
@@ -87,6 +92,25 @@ class Jobs extends Action
         'Download failed with status 403' => 'Access to the repository was denied. Check that it is still accessible to your Git installation.',
         'Download failed with status 404' => 'The repository, branch or commit could not be found. Check that it still exists.',
     ];
+
+    /**
+     * Log callbacks of this process not yet appended, keyed by deployment lock,
+     * in arrival order. The action instance is shared by every coroutine of the
+     * worker, so the one holding the lock appends the others' lines with its own.
+     *
+     * @var array<string, array<int, array{id: string, chunk: string}>>
+     */
+    private array $logs = [];
+
+    private int $entries = 0;
+
+    /**
+     * One coroutine per deployment per process contends for the lock; the rest
+     * wait here, usually to find their lines already appended.
+     *
+     * @var array<string, Channel>
+     */
+    private array $gates = [];
 
     private static function userMessage(Document $deployment, JobArtifact $artifact): ?string
     {
@@ -161,6 +185,11 @@ class Jobs extends Action
         }
 
         $callback = CallbackEvent::tryFrom($event->event);
+        if ($callback === CallbackEvent::Log) {
+            $this->log($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $vcsFactory, $cache, $locks, $platform, $deploymentId);
+            return;
+        }
+
         $outputAvailable = null;
         if ($callback === CallbackEvent::Complete && $deviceForBuilds->getType() !== DeviceType::Local) {
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -197,7 +226,6 @@ class Jobs extends Action
             }
 
             $deployment = match ($callback) {
-                CallbackEvent::Log => $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, JobLog::fromArray($event->data), $vcsFactory, $platform, $cache, $event->id),
                 CallbackEvent::Artifact => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $artifact, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $bus),
                 CallbackEvent::Exit => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, JobExit::fromArray($event->data), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 CallbackEvent::Complete => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $bus),
@@ -222,14 +250,7 @@ class Jobs extends Action
             }
 
             // Console realtime on every callback (log stream + status).
-            $queueForRealtime
-                ->setSubscribers(['console'])
-                ->setProject($project)
-                ->setEvent(self::event($deployment))
-                ->setParam(self::resourceParam($deployment), $deployment->getAttribute('resourceId'))
-                ->setParam('deploymentId', $deploymentId)
-                ->setPayload($deployment->getArrayCopy())
-                ->trigger();
+            $this->broadcast($queueForRealtime, $project, $deployment, $deploymentId);
 
             // On a real terminal outcome (not a concurrently-canceled build),
             // notify webhooks + event-triggered functions of the deployment
@@ -252,7 +273,7 @@ class Jobs extends Action
                 $failure = new PermanentFailure("Build artifact '{$artifact->artifactId}' failed: " . ($artifact->error->message ?? 'no error reported'), 500);
             }
 
-            if ($event->id !== '' && $callback !== CallbackEvent::Log && $cache->save($key, true) === false) {
+            if ($event->id !== '' && $cache->save($key, true) === false) {
                 throw new \RuntimeException('Failed to record processed build callback.');
             }
         }, self::LOCK_TIMEOUT);
@@ -264,16 +285,137 @@ class Jobs extends Action
         // Deleted mid-build: the deletes worker has already cleared the build
         // directory, so output written after it is removed here. Outside the
         // callback's dedupe, so a redelivery after a failed cleanup tries again.
-        if (CallbackEvent::tryFrom($event->event) !== CallbackEvent::Log
-            && $dbForProject->getDocument('deployments', $deploymentId)->isEmpty()
+        if ($dbForProject->getDocument('deployments', $deploymentId)->isEmpty()
             && !Deployments::deleteBuildDirectory($deviceForBuilds, $deploymentId)) {
             throw new \RuntimeException("Failed to delete the build directory of deleted deployment {$deploymentId}");
         }
     }
 
-    protected function onLog(Database $dbForProject, Database $dbForPlatform, Document $project, Document $deployment, JobLog $log, VcsFactory $vcsFactory, array $platform, Cache $cache, string $eventId): Document
+    /**
+     * Apply a log callback together with every other one this process holds for
+     * the deployment.
+     *
+     * A build streams its output as many small callbacks, and appending each under
+     * the deployment lock on its own rewrites the whole buildLogs once per callback.
+     * A burst of them then queues on the lock faster than it drains, and those
+     * left waiting past LOCK_TIMEOUT fail with Contention. Instead, each callback
+     * leaves its lines here and queues on a per-process gate, so only one
+     * coroutine per process contends for the lock. The one that holds it appends
+     * everything pending in one write; the rest pass the gate and find their lines
+     * already applied, without touching the lock.
+     *
+     * A callback that gives up waiting takes its lines back, since the queue
+     * redelivers it. If a holder had already taken them, the event's dedupe
+     * marker keeps the redelivery from appending them twice.
+     */
+    private function log(
+        JobsMessage $event,
+        Document $project,
+        Database $dbForProject,
+        Database $dbForPlatform,
+        Realtime $queueForRealtime,
+        VcsFactory $vcsFactory,
+        Cache $cache,
+        callable $locks,
+        array $platform,
+        string $deploymentId,
+    ): void {
+        $key = Deployments::lock($project->getSequence(), $deploymentId);
+        $entry = ++$this->entries;
+        $this->logs[$key][$entry] = [
+            'id' => $event->id,
+            'chunk' => \implode("\n", JobLog::fromArray($event->data)->lines),
+        ];
+
+        $gate = $this->gates[$key] ??= new Channel(1);
+
+        try {
+            // The coroutine ahead may wait LOCK_TIMEOUT for the lock and then hold
+            // it for the write; its batch most likely carries these lines too.
+            if ($gate->push(true, self::LOCK_TIMEOUT + self::LOCK_TTL) === false) {
+                throw new Contention("Timed out waiting for earlier log callbacks: {$key}");
+            }
+
+            try {
+                if (!$this->pending($key, $entry)) {
+                    return; // appended along with another callback's lines
+                }
+
+                $locks($key, self::LOCK_TTL, function () use ($key, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $vcsFactory, $cache, $platform, $deploymentId): void {
+                    $pending = $this->logs[$key] ?? [];
+
+                    $chunks = [];
+                    $events = [];
+                    foreach ($pending as $log) {
+                        if ($log['id'] !== '') {
+                            if (isset($events[$log['id']]) || $cache->load('jobs-event-' . $project->getSequence() . '-' . $log['id'], self::DEDUPE_TTL) !== false) {
+                                continue; // already processed
+                            }
+                            $events[$log['id']] = true;
+                        }
+                        if ($log['chunk'] !== '') {
+                            $chunks[] = $log['chunk'];
+                        }
+                    }
+
+                    if ($chunks !== [] || $events !== []) {
+                        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+                        if (!$deployment->isEmpty() && $deployment->getAttribute('status') !== 'canceled') {
+                            $deployment = $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, \implode("\n", $chunks), \array_keys($events), $vcsFactory, $platform, $cache);
+                            $this->broadcast($queueForRealtime, $project, $deployment, $deploymentId);
+                        }
+                    }
+
+                    foreach (\array_keys($pending) as $applied) {
+                        unset($this->logs[$key][$applied]);
+                    }
+                }, self::LOCK_TIMEOUT);
+            } finally {
+                $gate->pop();
+            }
+        } finally {
+            unset($this->logs[$key][$entry]);
+            if (empty($this->logs[$key])) {
+                unset($this->logs[$key]);
+            }
+            if ($gate->isEmpty() && $gate->stats()['producer_num'] === 0 && ($this->gates[$key] ?? null) === $gate) {
+                unset($this->gates[$key]);
+            }
+        }
+    }
+
+    /**
+     * Whether a log callback's lines still wait to be appended. Another coroutine
+     * holding the lock removes them once it has, while this one waits at the gate.
+     */
+    private function pending(string $key, int $entry): bool
     {
-        $chunk = \implode("\n", $log->lines);
+        return isset($this->logs[$key][$entry]);
+    }
+
+    /**
+     * Console realtime for the deployment: its log stream and status.
+     */
+    private function broadcast(Realtime $queueForRealtime, Document $project, Document $deployment, string $deploymentId): void
+    {
+        $queueForRealtime
+            ->setSubscribers(['console'])
+            ->setProject($project)
+            ->setEvent(self::event($deployment))
+            ->setParam(self::resourceParam($deployment), $deployment->getAttribute('resourceId'))
+            ->setParam('deploymentId', $deploymentId)
+            ->setPayload($deployment->getArrayCopy())
+            ->trigger();
+    }
+
+    /**
+     * Append the lines of one or more log callbacks, already joined, and mark
+     * each of their events processed in the same transaction.
+     *
+     * @param list<string> $events ids of the callbacks the chunk holds
+     */
+    protected function onLog(Database $dbForProject, Database $dbForPlatform, Document $project, Document $deployment, string $chunk, array $events, VcsFactory $vcsFactory, array $platform, Cache $cache): Document
+    {
         $update = [];
         if ($chunk !== '') {
             $update['buildLogs'] = $this->truncate($deployment->getAttribute('buildLogs', '') . $chunk . "\n");
@@ -284,20 +426,35 @@ class Jobs extends Action
             }
         }
 
-        $deployment = $dbForProject->withTransaction(function () use ($dbForProject, $project, $deployment, $update, $cache, $eventId): Document {
-            if ($update !== []) {
-                $dbForProject->updateDocuments('deployments', new Document($update), [
-                    Query::equal('$id', [$deployment->getId()]),
-                    Query::notEqual('status', 'canceled'),
-                ]);
-                $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
+        $marked = [];
+        try {
+            $deployment = $dbForProject->withTransaction(function () use ($dbForProject, $project, $deployment, $update, $cache, $events, &$marked): Document {
+                $marked = [];
+                if ($update !== []) {
+                    $dbForProject->updateDocuments('deployments', new Document($update), [
+                        Query::equal('$id', [$deployment->getId()]),
+                        Query::notEqual('status', 'canceled'),
+                    ]);
+                    $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
+                }
+                // A refused marker rolls back the append. Realtime runs after commit.
+                foreach ($events as $id) {
+                    $marker = 'jobs-event-' . $project->getSequence() . '-' . $id;
+                    if ($cache->save($marker, true) === false) {
+                        throw new \RuntimeException('Failed to record build log callback.');
+                    }
+                    $marked[] = $marker;
+                }
+                return $deployment;
+            });
+        } catch (\Throwable $error) {
+            // The markers are outside the transaction. Take back the ones this
+            // batch wrote, or the rolled-back lines would be skipped on redelivery.
+            foreach ($marked as $marker) {
+                $cache->purge($marker);
             }
-            // A refused marker rolls back the append. Realtime runs after commit.
-            if ($eventId !== '' && $cache->save('jobs-event-' . $project->getSequence() . '-' . $eventId, true) === false) {
-                throw new \RuntimeException('Failed to record build log callback.');
-            }
-            return $deployment;
-        });
+            throw $error;
+        }
 
         if (($update['status'] ?? '') === 'building' && $deployment->getAttribute('status') === 'building') {
             GitAction::report('processing', $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
