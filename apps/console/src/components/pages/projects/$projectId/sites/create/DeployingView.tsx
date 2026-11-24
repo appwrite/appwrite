@@ -682,7 +682,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                 {isZero && (
                   <p className="max-w-64 text-center text-[12px] text-muted-foreground">
                     {t(
-                      'Until the project is claimed, the site only opens on a device that has opened its owner link. Use Visit on that device first.',
+                      'Until the project is claimed, the site opens on any device under a Powered by Appwrite Zero banner.',
                     )}
                   </p>
                 )}

@@ -1051,6 +1051,27 @@ if (class_exists(\Utopia\Balancer\Group::class)) {
     }
 }
 
+if (class_exists(\Utopia\Database\Id::class)) {
+    class ExtendsUtopiaDatabaseId extends \Utopia\Database\Id
+    {
+    }
+}
+if (class_exists(\Utopia\Database\Role::class)) {
+    class ExtendsUtopiaDatabaseRole extends \Utopia\Database\Role
+    {
+    }
+}
+if (class_exists(\Utopia\Database\Permission::class)) {
+    class ExtendsUtopiaDatabasePermission extends \Utopia\Database\Permission
+    {
+    }
+}
+if (class_exists(\Utopia\Database\DateTime::class)) {
+    class ExtendsUtopiaDatabaseDateTime extends \Utopia\Database\DateTime
+    {
+    }
+}
+
 $extended = [];
 foreach ((new ReflectionExtension('utopia'))->getClassNames() as $name) {
     $class = new ReflectionClass($name);
