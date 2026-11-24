@@ -47,8 +47,9 @@ function notification(
     parentResourceId: PROJECT_ID,
     projectId: PROJECT_ID,
     teamId: '',
-    alertId: '',
-    alertStatus: '',
+    subjectType: '',
+    subjectId: '',
+    status: '',
     title: '',
     body: '',
     read: false,
@@ -87,8 +88,9 @@ const NOTIFICATIONS = [
     title: 'Bandwidth is over 80% on Production',
     body: 'Usage reached 84 GB of the 100 GB monitor threshold.',
     teamId: ORGANIZATION_ID,
-    alertId: ALERT_ID,
-    alertStatus: 'firing',
+    subjectType: 'alerts',
+    subjectId: ALERT_ID,
+    status: 'firing',
   }),
   notification('alertresolved0000001', {
     type: 'warning',
@@ -96,8 +98,9 @@ const NOTIFICATIONS = [
     $createdAt: hoursAgo(2),
     read: true,
     teamId: ORGANIZATION_ID,
-    alertId: 'alertexecutions00001',
-    alertStatus: 'resolved',
+    subjectType: 'alerts',
+    subjectId: 'alertexecutions00001',
+    status: 'resolved',
   }),
   notification('buildfailed000000001', {
     type: 'error',
@@ -219,7 +222,14 @@ async function mockApi(
         alertId,
         acknowledged: request.postDataJSON().acknowledged as boolean,
       })
+      // The server moves every member's notification about the alert along with it.
+      const setStatus = (status: string) => {
+        for (const item of notifications) {
+          if (item.subjectId === alertId) item.status = status
+        }
+      }
       if (acknowledging === 'resolved') {
+        setStatus('resolved')
         return json(400, {
           code: 400,
           type: 'alert_resolved',
@@ -237,6 +247,7 @@ async function mockApi(
           version: '1.0',
         })
       }
+      setStatus('acknowledged')
       return json(200, {
         ...ALERT,
         $id: alertId,

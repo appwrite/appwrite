@@ -19,7 +19,8 @@ function normalizeResourceType(value: string | undefined): string {
 export function getNotificationNavigateTarget(
   notification: Models.Notification,
 ): NotificationNavigateTarget | null {
-  const alertId = notification.alertId?.trim()
+  const alertId =
+    notification.subjectType === 'alerts' ? notification.subjectId?.trim() : ''
   const teamId = notification.teamId?.trim()
   // Notifications about no project are filed under the console project.
   const projectId =

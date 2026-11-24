@@ -197,13 +197,9 @@ function HeaderButton({
   )
 }
 
-/** What became of an alert since its notification was sent. */
-type AlertState = 'acknowledged' | 'resolved'
-
 function NotificationRow({
   notification,
   projectMuted,
-  alertState,
   onOpen,
   onToggleRead,
   onToggleMuteProject,
@@ -211,7 +207,6 @@ function NotificationRow({
 }: {
   notification: Models.Notification
   projectMuted: boolean
-  alertState: AlertState | undefined
   onOpen: (notification: Models.Notification) => void
   onToggleRead: (notification: Models.Notification) => void
   onToggleMuteProject: (projectId: string, muted: boolean) => void
@@ -222,13 +217,14 @@ function NotificationRow({
   const severity = severityOf(notification.type)
   const projectId = notification.projectId?.trim() ?? ''
   const canOpen = getNotificationNavigateTarget(notification) !== null
+  const isAlert =
+    notification.subjectType === 'alerts' && !!notification.subjectId
   // A firing alert of a project; an organization's budget alert has no project to acknowledge it in.
   const canAcknowledge =
-    !!notification.alertId &&
-    notification.alertStatus === 'firing' &&
+    isAlert &&
+    notification.status === 'firing' &&
     !!projectId &&
-    projectId !== 'console' &&
-    alertState === undefined
+    projectId !== 'console'
 
   return (
     <div className="group relative flex gap-3 px-5 py-3 transition-colors hover:bg-accent/50">
@@ -265,7 +261,7 @@ function NotificationRow({
             live
             className="pointer-events-auto text-[11px] text-muted-foreground"
           />
-          {alertState === 'acknowledged' ? (
+          {isAlert && notification.status === 'acknowledged' ? (
             <>
               <span aria-hidden>·</span>
               <span>{t('Acknowledged')}</span>
@@ -477,10 +473,6 @@ export function NotificationCenterPopover() {
   const updateReadMutation = useUpdateConsoleNotificationRead()
   const markAllReadMutation = useMarkAllConsoleNotificationsRead()
   const acknowledgeMutation = useAcknowledgeAlert()
-  // Alerts acknowledged or found resolved here, which offer no acknowledging again.
-  const [changedAlerts, setChangedAlerts] = useState<
-    Record<string, AlertState>
-  >({})
   const beepPrefs = useBeepPrefs(account as ConsoleAccountCache | undefined)
   const snooze = snoozeOf(beepPrefs.beep, null)
 
@@ -492,15 +484,6 @@ export function NotificationCenterPopover() {
     [filter, notifications],
   )
   const groups = useMemo(() => groupByDay(visible), [visible])
-  const alertStates = useMemo(() => {
-    const states: Record<string, AlertState> = {}
-    for (const item of notifications) {
-      if (item.alertId && item.alertStatus === 'resolved') {
-        states[item.alertId] = 'resolved'
-      }
-    }
-    return { ...states, ...changedAlerts }
-  }, [notifications, changedAlerts])
 
   const handleOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen)
@@ -535,15 +518,13 @@ export function NotificationCenterPopover() {
   }
 
   const handleAcknowledge = (notification: Models.Notification) => {
-    const alertId = notification.alertId
-    const changeAlert = (state: AlertState) =>
-      setChangedAlerts((current) => ({ ...current, [alertId]: state }))
-
     acknowledgeMutation.mutate(
-      { projectId: notification.projectId ?? '', alertId },
+      {
+        projectId: notification.projectId ?? '',
+        alertId: notification.subjectId,
+      },
       {
         onSuccess: () => {
-          changeAlert('acknowledged')
           if (!notification.read) {
             updateReadMutation.mutate({
               notificationId: notification.$id,
@@ -559,7 +540,6 @@ export function NotificationCenterPopover() {
         onError: (error) => {
           const { type, code } = getAppwriteErrorInfo(error)
           if (type === 'alert_resolved') {
-            changeAlert('resolved')
             toast.error(t('This alert has already resolved'), {
               description: t('Only a firing alert can be acknowledged.'),
             })
@@ -822,11 +802,6 @@ export function NotificationCenterPopover() {
                           projectMuted={beepPrefs.beep.mutedProjectIds.includes(
                             notification.projectId ?? '',
                           )}
-                          alertState={
-                            notification.alertId
-                              ? alertStates[notification.alertId]
-                              : undefined
-                          }
                           onOpen={handleNotificationOpen}
                           onToggleRead={handleToggleRead}
                           onToggleMuteProject={handleToggleMuteProject}

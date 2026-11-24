@@ -145,7 +145,8 @@ const BEEP_PREFS_MUTATION_KEY = ['account', 'prefs', 'beep'] as const
 /**
  * Acknowledges the firing alert a notification is about, as Beep does from a
  * push. Alerts live in their project, so each call names it; that project's
- * alert feed refetches with the acknowledgement.
+ * alert feed refetches with the acknowledgement, and the inbox with the
+ * notification's new status, which the server keeps for every member.
  */
 export function useAcknowledgeAlert() {
   const queryClient = useQueryClient()
@@ -164,6 +165,10 @@ export function useAcknowledgeAlert() {
     onSuccess: (_alert, { projectId }) =>
       queryClient.invalidateQueries({
         queryKey: ['alerts', 'project', projectId],
+      }),
+    onSettled: () =>
+      queryClient.invalidateQueries({
+        queryKey: consoleNotificationsQueryKey,
       }),
   })
 }
