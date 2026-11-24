@@ -36,6 +36,14 @@ export function ssoAddonStatus(
   return planSupportsAddon(plan, key) ? 'available' : 'unavailable'
 }
 
+/**
+ * What the project's Single sign-on add-on unlocks, in its card and its dialog.
+ * Signing in through single sign-on is for the Console only: the add-on lets a
+ * project's teams set it up, and the copy claims nothing more.
+ */
+export const SSO_ADDON_DESCRIPTION =
+  'With this add-on, the teams in this project can verify domains, connect identity providers and turn on Require SSO through the Teams API.'
+
 /** The API's answer to an organization's setup request without the add-on. */
 export const SSO_ADDON_REQUIRED_MESSAGE =
   "Single sign-on is part of the HIPAA BAA add-on. Enable it in the organization's settings."

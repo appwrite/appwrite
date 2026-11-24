@@ -3341,6 +3341,36 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'תוסף Premium Geo DB יוסר בסוף מחזור החיוב הנוכחי',
   'Unable to verify Premium Geo DB addon status. Please retry.':
     'לא ניתן לאמת את סטטוס תוסף Premium Geo DB. נסו שוב.',
+  'With this add-on, the teams in this project can verify domains, connect identity providers and turn on Require SSO through the Teams API.':
+    'עם התוסף הזה, הצוותים בפרויקט יכולים לאמת דומיינים, לחבר ספקי זהויות ולהפעיל חיוב SSO דרך Teams API.',
+  '{price}/month, prorated for the current billing cycle.':
+    '{price}/חודש, בחיוב יחסי למחזור החיוב הנוכחי.',
+  'Billed monthly, prorated for the current billing cycle.':
+    'חיוב חודשי, יחסי למחזור החיוב הנוכחי.',
+  'This add-on is not available on your current plan. Upgrade your plan to enable it.':
+    'התוסף הזה אינו זמין בתוכנית הנוכחית שלכם. שדרגו את התוכנית כדי להפעיל אותו.',
+  'This add-on is not available on your current plan.':
+    'התוסף הזה אינו זמין בתוכנית הנוכחית שלכם.',
+  'The add-on will be removed at the end of your current billing cycle.':
+    'התוסף יוסר בסוף מחזור החיוב הנוכחי שלכם.',
+  "This environment has the add-on of its project. Change it in the project's settings.":
+    'לסביבה הזו יש את התוסף של הפרויקט שלה. שנו אותו בהגדרות הפרויקט.',
+  "You don't have permission to manage this project's add-ons.":
+    'אין לכם הרשאה לנהל את התוספים של הפרויקט הזה.',
+  "Couldn't load the add-on's status.": 'לא הצלחנו לטעון את סטטוס התוסף.',
+  'Keep add-on': 'שמירת התוסף',
+  'Disable add-on': 'השבתת התוסף',
+  'Enable the Single sign-on add-on': 'הפעלת תוסף ההתחברות היחידה (SSO)',
+  'Disable the Single sign-on add-on': 'השבתת תוסף ההתחברות היחידה (SSO)',
+  'Single sign-on add-on has been enabled': 'תוסף ההתחברות היחידה (SSO) הופעל',
+  'Single sign-on add-on has been re-enabled':
+    'תוסף ההתחברות היחידה (SSO) הופעל מחדש',
+  'Single sign-on add-on is already active for this project':
+    'תוסף ההתחברות היחידה (SSO) כבר פעיל בפרויקט זה',
+  'Single sign-on add-on will be removed at the end of your current billing cycle':
+    'תוסף ההתחברות היחידה (SSO) יוסר בסוף מחזור החיוב הנוכחי',
+  'Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then the teams in this project can no longer verify domains, connect identity providers or turn on Require SSO through the Teams API.':
+    'האם אתם בטוחים שברצונכם להשבית את תוסף ההתחברות היחידה (SSO)? הוא יישאר פעיל עד סוף מחזור החיוב הנוכחי ולא יחודש. אחר כך הצוותים בפרויקט לא יוכלו עוד לאמת דומיינים, לחבר ספקי זהויות או להפעיל חיוב SSO דרך Teams API.',
   'Payment could not be authorized. Please try enabling the addon again.':
     'לא ניתן היה לאשר את התשלום. נסו להפעיל את התוסף שוב.',
   'Add a payment method to your organization before enabling this addon.':

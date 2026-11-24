@@ -3409,6 +3409,35 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'Premium Geo DB アドオンは現在の請求サイクル終了時に削除されます',
   'Unable to verify Premium Geo DB addon status. Please retry.':
     'Premium Geo DB アドオンの状態を確認できませんでした。再試行してください。',
+  'With this add-on, the teams in this project can verify domains, connect identity providers and turn on Require SSO through the Teams API.':
+    'このアドオンを使うと、このプロジェクトのチームは Teams API でドメインの検証、ID プロバイダーの接続、SSO の必須化を行えます。',
+  '{price}/month, prorated for the current billing cycle.':
+    '{price}/月、現在の請求サイクルに按分されます。',
+  'Billed monthly, prorated for the current billing cycle.':
+    '月額で請求され、現在の請求サイクルに按分されます。',
+  'This add-on is not available on your current plan. Upgrade your plan to enable it.':
+    'このアドオンは現在のプランでは利用できません。有効にするにはプランをアップグレードしてください。',
+  'This add-on is not available on your current plan.':
+    'このアドオンは現在のプランでは利用できません。',
+  'The add-on will be removed at the end of your current billing cycle.':
+    'このアドオンは現在の請求サイクルの終了時に削除されます。',
+  "This environment has the add-on of its project. Change it in the project's settings.":
+    'この環境ではプロジェクトのアドオンが使われます。変更はプロジェクトの設定で行ってください。',
+  "You don't have permission to manage this project's add-ons.":
+    'このプロジェクトのアドオンを管理する権限がありません。',
+  "Couldn't load the add-on's status.": 'アドオンの状態を読み込めませんでした。',
+  'Keep add-on': 'アドオンを維持',
+  'Disable add-on': 'アドオンを無効にする',
+  'Enable the Single sign-on add-on': 'シングルサインオンアドオンを有効にする',
+  'Disable the Single sign-on add-on': 'シングルサインオンアドオンを無効にする',
+  'Single sign-on add-on has been enabled': 'シングルサインオンアドオンが有効になりました',
+  'Single sign-on add-on has been re-enabled': 'シングルサインオンアドオンが再度有効になりました',
+  'Single sign-on add-on is already active for this project':
+    'シングルサインオンアドオンはこのプロジェクトですでに有効です',
+  'Single sign-on add-on will be removed at the end of your current billing cycle':
+    'シングルサインオンアドオンは現在の請求サイクルの終了時に削除されます',
+  'Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then the teams in this project can no longer verify domains, connect identity providers or turn on Require SSO through the Teams API.':
+    'シングルサインオンアドオンを無効にしますか? 現在の請求サイクル終了まで有効のままで、更新されません。その後、このプロジェクトのチームは Teams API でドメインの検証、ID プロバイダーの接続、SSO の必須化を行えなくなります。',
   'Payment could not be authorized. Please try enabling the addon again.':
     '支払いを承認できませんでした。アドオンの有効化を再試行してください。',
   'Add a payment method to your organization before enabling this addon.':
