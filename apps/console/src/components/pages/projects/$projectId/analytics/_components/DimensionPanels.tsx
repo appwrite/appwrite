@@ -24,6 +24,7 @@ import { BREAKDOWN_DIALOG_MAX_ROWS } from './BreakdownDialog'
 import { useAnalyticsFilters } from './analytics-filters-context'
 import type { AnalyticsFilter } from '@/lib/analytics/analytics-filters'
 import {
+  analyticsUserHref,
   analyticsUserLabel,
   useAnalyticsUserDirectory,
 } from '@/lib/analytics/user-directory'
@@ -393,11 +394,6 @@ export function useShowUsersPanel(
   return !!property?.identifyUsers || (data?.breakdown.length ?? 0) > 0
 }
 
-/** The user's page in Auth. */
-export function analyticsUserHref(projectId: string, userId: string): string {
-  return `/projects/${encodeURIComponent(projectId)}/auth/users/${encodeURIComponent(userId)}`
-}
-
 /**
  * Identified users as people: photo and name (or email). A row opens the
  * user's analytics in this property; project users also link to Auth. IDs
@@ -411,9 +407,12 @@ export function UsersPanel(props: PanelProps) {
     <BreakdownPanel
       {...props}
       title="Users"
-      description="Signed-in users, ranked by visitors"
+      description="Signed-in users, ranked by visits"
       info="users"
       tabs={USER_TABS}
+      // A signed-in user's visitor ID is keyed by user and day, so their
+      // visitor count is days seen, not people. Visits is the useful measure.
+      valueKey="sessions"
       formatLabel={(value) => analyticsUserLabel(value, lookup(value))}
       renderLeading={(entry) => (
         <AnalyticsUserAvatar

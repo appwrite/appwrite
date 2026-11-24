@@ -50,7 +50,7 @@ export type BreakdownDialogProps = {
   tabs: BreakdownTab[]
   initialTabId?: string
   /** Which measure ranks and sizes the rows. */
-  valueKey?: 'visitors' | 'events'
+  valueKey?: 'visitors' | 'events' | 'sessions'
   valueLabel?: string
   renderLeading?: (
     entry: Models.AnalyticsMetric,
@@ -239,7 +239,12 @@ export function BreakdownDialog({
           <span className="flex items-center gap-3">
             <span>{t('Share')}</span>
             <span className="min-w-[50px] text-end">
-              {valueLabel ?? (valueKey === 'events' ? t('Events') : t('Visitors'))}
+              {valueLabel ??
+                (valueKey === 'events'
+                  ? t('Events')
+                  : valueKey === 'sessions'
+                    ? t('Visits')
+                    : t('Visitors'))}
             </span>
           </span>
         </div>

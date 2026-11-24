@@ -138,6 +138,11 @@ export function useAnalyticsUserDirectory(
   )
 }
 
+/** The user's page in Auth. */
+export function analyticsUserHref(projectId: string, userId: string): string {
+  return `/projects/${encodeURIComponent(projectId)}/auth/users/${encodeURIComponent(userId)}`
+}
+
 /** Name, then email, then phone; the ID for anyone without them. */
 export function analyticsUserLabel(
   userId: string,

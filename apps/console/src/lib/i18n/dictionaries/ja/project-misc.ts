@@ -4398,7 +4398,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'to enable analytics on this site.':
     'して、このサイトでアナリティクスを有効にしてください。',
   // Analytics for signed-in users
-  'Signed-in users, ranked by visitors': 'サインイン済みユーザー (訪問者数順)',
+  'Signed-in users, ranked by visits': 'サインイン済みユーザー (訪問数順)',
   'View user': 'ユーザーを表示',
   'Could not load analytics': 'アナリティクスを読み込めませんでした',
   'No analytics yet': 'アナリティクスはまだありません',
@@ -4420,4 +4420,23 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'No screens viewed': '表示された画面はありません',
   'No pages viewed': '表示されたページはありません',
   'View in analytics': 'アナリティクスで表示',
+  Views: '表示',
+  'Last seen': '最終確認',
+  'Not in this period': 'この期間はなし',
+  'of {count}': '/ {count}',
+  'Events per day, last 30 days': '1 日あたりのイベント (過去 30 日間)',
+  Properties: 'プロパティ',
+  'Where this user was active, last 30 days':
+    'このユーザーがアクティブだった場所 (過去 30 日間)',
+  'No activity': 'アクティビティなし',
+  'No locations': '場所はありません',
+  'No sources': 'ソースはありません',
+  'No browsers': 'ブラウザはありません',
+  'No operating systems': 'OS はありません',
+  'No devices': 'デバイスはありません',
+  'No OS versions': 'OS バージョンはありません',
+  views: '表示',
+  'signed in': '人がサインイン中',
+  'Signed in now': '現在サインイン中',
+  'and {count} more': 'ほか {count} 人',
 }

@@ -224,9 +224,8 @@ function metricsFor(url: URL, options: MockOptions): Models.AnalyticsMetric[] {
   // A property with no identified traffic has nothing for any one user.
   if (queries.some((query) => query.attribute === 'userId'))
     return options.hasUsers ? userMetricsFor(url, dimension) : []
-  const eventName = queries.find(
-    (query) => query.attribute === 'eventName',
-  )?.values[0]
+  const eventName = queries.find((query) => query.attribute === 'eventName')
+    ?.values[0]
   if (eventName in MOBILE_EVENT_COUNTS) {
     if (!options.mobileEvents) return []
     if (url.searchParams.get('interval'))
@@ -283,8 +282,7 @@ function metricsFor(url: URL, options: MockOptions): Models.AnalyticsMetric[] {
   if (options.type === AnalyticsPropertyType.Mobile) {
     if (dimension === 'hostname') return [row('ios', 84), row('android', 16)]
     if (dimension === 'entryPage') return [row('/home', 30), row('', 10)]
-    if (dimension === 'trafficType')
-      return [row('human', 80), row('bot', 40)]
+    if (dimension === 'trafficType') return [row('human', 80), row('bot', 40)]
   }
   return []
 }
@@ -633,9 +631,7 @@ test.describe('analytics property (mocked API)', () => {
       '30.8% of visitors signed in',
     )
     await usersMetric.click()
-    await expect(
-      page.getByText('· 30.8% of visitors signed in'),
-    ).toBeVisible()
+    await expect(page.getByText('· 30.8% of visitors signed in')).toBeVisible()
   })
 
   test('opens a user from the Users card', async ({ page }) => {
@@ -721,6 +717,27 @@ test.describe('analytics property (mocked API)', () => {
     })
   })
 
+  test('lists signed-in users in the live popover', async ({ page }) => {
+    await mockAppwriteApi(page, { identifyUsers: true, hasUsers: true })
+    await openProperty(page)
+
+    const pill = page.getByRole('button', { name: 'Visitors online now' })
+    await expect(pill).toContainText('120', { timeout: 30_000 })
+    await pill.click()
+
+    const popover = page.getByRole('dialog')
+    await expect(popover.getByText('37 signed in')).toBeVisible()
+    await expect(popover.getByText('Signed in now')).toBeVisible()
+    await expect(
+      popover.getByRole('link', { name: 'Jane Cooper' }),
+    ).toHaveAttribute('href', `/projects/${PROJECT_ID}/auth/users/user-a`)
+    // An ID with no project user is listed, without a link.
+    await expect(popover.getByText('user-b')).toBeVisible()
+    await expect(popover.getByRole('link', { name: 'user-b' })).toHaveCount(0)
+    await expect(popover.getByText('and 35 more')).toBeVisible()
+    await attachScreenshot(page, 'live-signed-in')
+  })
+
   test('filters by a user and names them on the chip', async ({ page }) => {
     const mock = await mockAppwriteApi(page, {
       identifyUsers: true,
@@ -788,7 +805,9 @@ test.describe('analytics property (mocked API)', () => {
       timeout: 30_000,
     })
     await expect
-      .poll(() => mock.metrics.some((url) => filtersOn(url, 'trafficType', 'human')))
+      .poll(() =>
+        mock.metrics.some((url) => filtersOn(url, 'trafficType', 'human')),
+      )
       .toBe(true)
 
     // Turning the default off is kept in the URL, so it survives a reload.
@@ -1242,36 +1261,76 @@ test.describe('auth user analytics (mocked API)', () => {
     )
   }
 
-  test("shows the user's events, pages and a filtered link", async ({
+  test("summarises the user's activity and details each property", async ({
     page,
   }) => {
-    await mockAppwriteApi(page, { identifyUsers: true, hasUsers: true })
+    const mock = await mockAppwriteApi(page, {
+      identifyUsers: true,
+      hasUsers: true,
+    })
     await openUserAnalytics(page)
 
-    const propertyCard = page
-      .locator('div.rounded-xl')
-      .filter({ has: page.getByRole('heading', { name: 'Acme site' }) })
-    await expect(propertyCard.getByText('13', { exact: true })).toBeVisible({
-      timeout: 30_000,
-    })
-    await expect(propertyCard.getByText('Last active')).toBeVisible()
+    // Top-level numbers, in the tiles Functions and Sites open with.
+    const tile = (label: string) =>
+      page
+        .locator('div.grid > div')
+        .filter({ has: page.getByText(label, { exact: true }) })
+        .first()
+    await expect(tile('Events')).toContainText('13', { timeout: 30_000 })
+    await expect(tile('Visits')).toContainText('3')
+    await expect(tile('Pageviews')).toContainText('8')
+    await expect(tile('Active days')).toContainText('of 30')
+    // The mock's last event is two hours ago.
+    await expect(tile('Last seen')).toContainText(/Today|Yesterday/)
 
-    // Custom events only, ranked by this user's events.
-    await expect(propertyCard.getByText('signup')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Activity' })).toBeVisible()
+
+    // One row per property, linking to the user's page in that property.
+    const row = page.getByRole('row').filter({ hasText: 'Acme site' })
+    await expect(row).toContainText('13')
+    // Every row is two lines: the type, then where it runs.
+    await expect(row).toContainText('Web · acme.example')
     await expect(
-      propertyCard.getByText('pageview', { exact: true }),
-    ).toHaveCount(0)
-    const pages = propertyCard.getByText(/^\/(docs|pricing)$/)
+      row.getByRole('link', { name: 'View in analytics: Acme site' }),
+    ).toHaveAttribute(
+      'href',
+      `/projects/${PROJECT_ID}/analytics/${PROPERTY_ID}/users/user-a`,
+    )
+
+    // The most recently active property opens in place: custom events only,
+    // pages by views.
+    const toggle = row.getByRole('button', { name: /Acme site/ })
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    const detail = page.locator(`#user-analytics-${PROPERTY_ID}`)
+    await expect(detail.getByText('signup')).toBeVisible()
+    await expect(detail.getByText('pageview', { exact: true })).toHaveCount(0)
+    const pages = detail.getByText(/^\/(docs|pricing)$/)
     await expect(pages.first()).toHaveText('/docs')
+    // Pages count pageviews, not every event on the page.
+    expect(
+      mock.metrics.some(
+        (url) =>
+          listParam(url, 'dimensions')[0] === 'page' &&
+          listParam(url, 'queries').some((query) =>
+            query.includes('pageview'),
+          ) &&
+          listParam(url, 'queries').some((query) => query.includes('user-a')),
+      ),
+    ).toBe(true)
     await attachScreenshot(page, 'auth-user-analytics')
 
-    await propertyCard.getByRole('link', { name: 'View in analytics' }).click()
+    // Closes and reopens in place.
+    await toggle.click()
+    await expect(detail).toHaveCount(0)
+    await toggle.click()
+    await expect(detail.getByText('signup')).toBeVisible()
+
+    await row
+      .getByRole('link', { name: 'View in analytics: Acme site' })
+      .click()
     await expect(page).toHaveURL(
-      new RegExp(`/analytics/${PROPERTY_ID}\\?query=.*user-a`),
+      new RegExp(`/analytics/${PROPERTY_ID}/users/user-a$`),
     )
-    await expect(filterChips(page).getByText('Jane Cooper')).toBeVisible({
-      timeout: 30_000,
-    })
   })
 
   test('explains user identification when no property records users', async ({
