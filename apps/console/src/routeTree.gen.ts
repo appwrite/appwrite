@@ -212,6 +212,7 @@ import { Route as PublicProjectsProjectIdExplorerRouteImport } from './routes/_p
 import { Route as PublicProjectsProjectIdFirewallRouteImport } from './routes/_public/projects.$projectId.firewall'
 import { Route as PublicProjectsProjectIdFunctionsRouteImport } from './routes/_public/projects.$projectId.functions'
 import { Route as PublicProjectsProjectIdImagineRouteImport } from './routes/_public/projects.$projectId.imagine'
+import { Route as PublicProjectsProjectIdLogsRouteImport } from './routes/_public/projects.$projectId.logs'
 import { Route as PublicProjectsProjectIdMessagingRouteImport } from './routes/_public/projects.$projectId.messaging'
 import { Route as PublicProjectsProjectIdMonitorsRouteImport } from './routes/_public/projects.$projectId.monitors'
 import { Route as PublicProjectsProjectIdOnboardingRouteImport } from './routes/_public/projects.$projectId.onboarding'
@@ -1602,6 +1603,12 @@ const PublicProjectsProjectIdImagineRoute =
   PublicProjectsProjectIdImagineRouteImport.update({
     id: '/imagine',
     path: '/imagine',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
+const PublicProjectsProjectIdLogsRoute =
+  PublicProjectsProjectIdLogsRouteImport.update({
+    id: '/logs',
+    path: '/logs',
     getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
 const PublicProjectsProjectIdMessagingRoute =
@@ -3898,6 +3905,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/firewall': typeof PublicProjectsProjectIdFirewallRouteWithChildren
   '/projects/$projectId/functions': typeof PublicProjectsProjectIdFunctionsRouteWithChildren
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
+  '/projects/$projectId/logs': typeof PublicProjectsProjectIdLogsRoute
   '/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingRouteWithChildren
   '/projects/$projectId/monitors': typeof PublicProjectsProjectIdMonitorsRouteWithChildren
   '/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
@@ -4394,6 +4402,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRouteWithChildren
   '/projects/$projectId/explorer': typeof PublicProjectsProjectIdExplorerRoute
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
+  '/projects/$projectId/logs': typeof PublicProjectsProjectIdLogsRoute
   '/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
   '/projects/$projectId/overview': typeof PublicProjectsProjectIdOverviewRoute
   '/projects/$projectId/playground': typeof PublicProjectsProjectIdPlaygroundRoute
@@ -4871,6 +4880,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/firewall': typeof PublicProjectsProjectIdFirewallRouteWithChildren
   '/_public/projects/$projectId/functions': typeof PublicProjectsProjectIdFunctionsRouteWithChildren
   '/_public/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
+  '/_public/projects/$projectId/logs': typeof PublicProjectsProjectIdLogsRoute
   '/_public/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingRouteWithChildren
   '/_public/projects/$projectId/monitors': typeof PublicProjectsProjectIdMonitorsRouteWithChildren
   '/_public/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
@@ -5385,6 +5395,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/firewall'
     | '/projects/$projectId/functions'
     | '/projects/$projectId/imagine'
+    | '/projects/$projectId/logs'
     | '/projects/$projectId/messaging'
     | '/projects/$projectId/monitors'
     | '/projects/$projectId/onboarding'
@@ -5881,6 +5892,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/apps'
     | '/projects/$projectId/explorer'
     | '/projects/$projectId/imagine'
+    | '/projects/$projectId/logs'
     | '/projects/$projectId/onboarding'
     | '/projects/$projectId/overview'
     | '/projects/$projectId/playground'
@@ -6357,6 +6369,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/firewall'
     | '/_public/projects/$projectId/functions'
     | '/_public/projects/$projectId/imagine'
+    | '/_public/projects/$projectId/logs'
     | '/_public/projects/$projectId/messaging'
     | '/_public/projects/$projectId/monitors'
     | '/_public/projects/$projectId/onboarding'
@@ -8156,6 +8169,13 @@ declare module '@tanstack/react-router' {
       path: '/imagine'
       fullPath: '/projects/$projectId/imagine'
       preLoaderRoute: typeof PublicProjectsProjectIdImagineRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
+    '/_public/projects/$projectId/logs': {
+      id: '/_public/projects/$projectId/logs'
+      path: '/logs'
+      fullPath: '/projects/$projectId/logs'
+      preLoaderRoute: typeof PublicProjectsProjectIdLogsRouteImport
       parentRoute: typeof PublicProjectsProjectIdRoute
     }
     '/_public/projects/$projectId/messaging': {
@@ -12250,6 +12270,7 @@ interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdFirewallRoute: typeof PublicProjectsProjectIdFirewallRouteWithChildren
   PublicProjectsProjectIdFunctionsRoute: typeof PublicProjectsProjectIdFunctionsRouteWithChildren
   PublicProjectsProjectIdImagineRoute: typeof PublicProjectsProjectIdImagineRoute
+  PublicProjectsProjectIdLogsRoute: typeof PublicProjectsProjectIdLogsRoute
   PublicProjectsProjectIdMessagingRoute: typeof PublicProjectsProjectIdMessagingRouteWithChildren
   PublicProjectsProjectIdMonitorsRoute: typeof PublicProjectsProjectIdMonitorsRouteWithChildren
   PublicProjectsProjectIdOnboardingRoute: typeof PublicProjectsProjectIdOnboardingRoute
@@ -12289,6 +12310,7 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
     PublicProjectsProjectIdFunctionsRoute:
       PublicProjectsProjectIdFunctionsRouteWithChildren,
     PublicProjectsProjectIdImagineRoute: PublicProjectsProjectIdImagineRoute,
+    PublicProjectsProjectIdLogsRoute: PublicProjectsProjectIdLogsRoute,
     PublicProjectsProjectIdMessagingRoute:
       PublicProjectsProjectIdMessagingRouteWithChildren,
     PublicProjectsProjectIdMonitorsRoute:

@@ -479,6 +479,14 @@ async fn store_codes(ctx: &mut Context, user: &User, codes: &[String]) -> Result
 /// `POST /v1/account/mfa/recovery-codes`.
 pub async fn create_recovery_codes(ctx: &mut Context) -> Result<Response> {
     let user = caller(ctx)?;
+    // Recovery codes outlive sessions and password resets, so once MFA is in
+    // force, issuing them needs the same recent challenge as listing or
+    // regenerating them. Before that, they are the first step of setting up
+    // MFA and there is no second factor to challenge. A request without a
+    // session (an account key) has nothing that could have completed one.
+    if user.minimum_factors() > 1 && !ctx.session.as_ref().is_some_and(|s| s.challenge_recent()) {
+        return Err(Error::new(ErrorType::UserChallengeRequired));
+    }
     if !user.mfa_recovery_codes.is_empty() {
         return Err(Error::new(ErrorType::UserRecoveryCodesAlreadyExists));
     }

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
 import {
   AlertCircle,
@@ -31,6 +32,7 @@ import {
   runtimeLogsInfiniteQueryOptions,
   type RuntimeLogRange,
   type RuntimeLogResourceType,
+  type RuntimeLogScope,
   type RuntimeLogStream,
   type RuntimeLogsFilter,
 } from '@/lib/react-query/hooks'
@@ -50,8 +52,9 @@ const TAIL_MAX_PAGES_PER_TICK = 5
 
 export interface RuntimeLogsViewProps {
   projectId: string | null | undefined
-  resourceType: RuntimeLogResourceType
-  resourceId: string | null | undefined
+  /** `null` lists every resource in the project, with a column naming each. */
+  resourceType: RuntimeLogScope
+  resourceId?: string | null
   /** Required for functions and sites. Without one the view asks for it. */
   deploymentId?: string
   /** Rendered first in the toolbar, e.g. a deployment picker. */
@@ -60,8 +63,9 @@ export interface RuntimeLogsViewProps {
 }
 
 /**
- * Runtime logs for one resource: what it wrote to stdout and stderr, newest
- * first, with stream and time filters, cursor paging and live tail.
+ * Runtime logs for one resource, or for the whole project: what it wrote to
+ * stdout and stderr, newest first, with stream and time filters, cursor paging
+ * and live tail.
  */
 export function RuntimeLogsView({
   projectId,
@@ -73,6 +77,8 @@ export function RuntimeLogsView({
 }: RuntimeLogsViewProps) {
   const t = useT()
   const { formatDateTime } = useLocalizedDateFormat()
+  const isProject = resourceType === null
+  const [kind, setKind] = useState<RuntimeLogResourceType | 'all'>('all')
   const [stream, setStream] = useState<RuntimeLogStream>('all')
   const [range, setRange] = useState<RuntimeLogRange>('1h')
   const [search, setSearch] = useState('')
@@ -81,8 +87,13 @@ export function RuntimeLogsView({
   const [tailError, setTailError] = useState<string | null>(null)
 
   const filter: RuntimeLogsFilter = useMemo(
-    () => ({ deploymentId, stream, range }),
-    [deploymentId, stream, range],
+    () => ({
+      deploymentId,
+      resourceType: isProject && kind !== 'all' ? kind : undefined,
+      stream,
+      range,
+    }),
+    [deploymentId, isProject, kind, stream, range],
   )
   const ready = canListRuntimeLogs(projectId, resourceType, resourceId, filter)
 
@@ -140,7 +151,7 @@ export function RuntimeLogsView({
   }, [logs])
 
   useEffect(() => {
-    if (!live || !ready || !projectId || !resourceId) return
+    if (!live || !ready || !projectId) return
     const startedAt = new Date().toISOString()
     let cancelled = false
     let inFlight = false
@@ -224,19 +235,22 @@ export function RuntimeLogsView({
     const text = visible
       .map(
         (log) =>
-          `${log.timestamp} ${log.region} ${log.stream} ${stripAnsiForClipboard(log.message)}`,
+          `${log.timestamp} ${log.region} ${log.stream}${isProject ? ` ${log.resourceType}/${log.resourceId}` : ''} ${stripAnsiForClipboard(log.message)}`,
       )
       .join('\n')
     const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' }))
     const link = document.createElement('a')
     link.href = url
-    link.download = `runtime-logs-${resourceId}${deploymentId ? `-${deploymentId}` : ''}.log`
+    link.download = `runtime-logs-${isProject ? projectId : resourceId}${deploymentId ? `-${deploymentId}` : ''}.log`
     link.click()
     URL.revokeObjectURL(url)
   }
 
-  const emptyDescription =
-    resourceType === 'functions'
+  const emptyDescription = isProject
+    ? t(
+        "Lines your functions, sites and databases write to stdout and stderr show up here. Runtime logs may not be collected in this project's region yet.",
+      )
+    : resourceType === 'functions'
       ? t(
           "Lines your function writes to stdout and stderr show up here. Runtime logs may not be collected in this project's region yet.",
         )
@@ -318,7 +332,12 @@ export function RuntimeLogsView({
         {visible.map((log) => (
           <div
             key={log.$id}
-            className="grid grid-cols-[auto_auto_auto_1fr] items-baseline gap-x-3 rounded px-2 py-0.5 font-mono text-[12px] leading-5 hover:bg-muted/50"
+            className={cn(
+              'grid items-baseline gap-x-3 rounded px-2 py-0.5 font-mono text-[12px] leading-5 hover:bg-muted/50',
+              isProject
+                ? 'grid-cols-[auto_auto_auto_auto_1fr]'
+                : 'grid-cols-[auto_auto_auto_1fr]',
+            )}
           >
             <time
               dateTime={log.timestamp}
@@ -340,6 +359,9 @@ export function RuntimeLogsView({
             <span className="w-8 uppercase text-muted-foreground">
               {log.region}
             </span>
+            {isProject && projectId && (
+              <ResourceCell projectId={projectId} log={log} />
+            )}
             <span
               className={cn(
                 'min-w-0 whitespace-pre-wrap break-words',
@@ -361,6 +383,27 @@ export function RuntimeLogsView({
     <div className={cn('flex min-h-0 min-w-0 flex-1 flex-col', className)}>
       <div className="flex flex-wrap items-center gap-2 border-b border-border py-3">
         {toolbarStart}
+        {isProject && (
+          <Select
+            value={kind}
+            onValueChange={(value) =>
+              setKind(value as RuntimeLogResourceType | 'all')
+            }
+          >
+            <SelectTrigger
+              className="h-9 w-[150px] text-[13px]"
+              aria-label={t('Resource')}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('All resources')}</SelectItem>
+              <SelectItem value="functions">{t('Functions')}</SelectItem>
+              <SelectItem value="sites">{t('Sites')}</SelectItem>
+              <SelectItem value="databases">{t('Databases')}</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
         <Select
           value={stream}
           onValueChange={(value) => setStream(value as RuntimeLogStream)}
@@ -449,5 +492,59 @@ export function RuntimeLogsView({
       )}
       <div className="min-h-0 flex-1 overflow-y-auto">{body}</div>
     </div>
+  )
+}
+
+const RESOURCE_LABELS: Record<string, string> = {
+  functions: 'function',
+  sites: 'site',
+  databases: 'database',
+}
+
+/** Names the resource behind a project-wide row, linking to its own logs. */
+function ResourceCell({
+  projectId,
+  log,
+}: {
+  projectId: string
+  log: Models.RuntimeLog
+}) {
+  const label = `${RESOURCE_LABELS[log.resourceType] ?? log.resourceType}/${log.resourceId}`
+  const className =
+    'max-w-[220px] truncate text-muted-foreground hover:text-foreground hover:underline'
+  const search = log.deploymentId ? { deploymentId: log.deploymentId } : {}
+  if (log.resourceType === 'functions') {
+    return (
+      <Link
+        to="/projects/$projectId/functions/$functionId/runtime-logs"
+        params={{ projectId, functionId: log.resourceId }}
+        search={search}
+        title={label}
+        className={className}
+      >
+        {label}
+      </Link>
+    )
+  }
+  if (log.resourceType === 'sites') {
+    return (
+      <Link
+        to="/projects/$projectId/sites/$siteId/runtime-logs"
+        params={{ projectId, siteId: log.resourceId }}
+        search={search}
+        title={label}
+        className={className}
+      >
+        {label}
+      </Link>
+    )
+  }
+  return (
+    <span
+      title={label}
+      className="max-w-[220px] truncate text-muted-foreground"
+    >
+      {label}
+    </span>
   )
 }

@@ -292,6 +292,17 @@ impl From<&Document> for Session {
     }
 }
 
+/// `MFA_RECENT_DURATION`: an MFA challenge stays recent this long.
+pub const MFA_RECENT: i64 = 1800;
+
+impl Session {
+    /// `User::sessionChallengeRecent()`: an MFA challenge completed on this
+    /// session within `MFA_RECENT_DURATION`.
+    pub fn challenge_recent(&self) -> bool {
+        self.mfa_updated_at.is_some_and(|at| datetime::add_seconds(at, MFA_RECENT) >= datetime::now())
+    }
+}
+
 /// A token.
 #[derive(Debug, Clone, Default)]
 pub struct Token {

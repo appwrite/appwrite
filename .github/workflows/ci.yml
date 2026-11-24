@@ -178,7 +178,7 @@ jobs:
 
           - name: Cache PHPStan result cache
             if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-            uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+            uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
             with:
               path: .phpstan-cache
               key: phpstan-${{ github.workspace }}-${{ github.sha }}
@@ -441,7 +441,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends clang libclang-dev libheif-dev pkg-config
 
       - name: Cache Cargo
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/.cargo/registry
@@ -1585,14 +1585,19 @@ jobs:
         run: |
           git fetch --depth=1 origin "${BENCHMARK_BEFORE_SHA}"
           git worktree add --detach /tmp/appwrite-benchmark-before "${BENCHMARK_BEFORE_SHA}"
-          docker build \
-            --cache-from "$IMAGE:after" \
-            --target development \
-            --build-arg DEBUG=false \
-            --build-arg TESTING=true \
-            --build-arg VERSION=dev \
-            --tag "$IMAGE:before" \
-            /tmp/appwrite-benchmark-before
+          BEFORE_IMAGE="${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${BENCHMARK_BEFORE_SHA}"
+          if docker pull "$BEFORE_IMAGE"; then
+            docker tag "$BEFORE_IMAGE" "$IMAGE:before"
+          else
+            docker build \
+              --cache-from "$IMAGE:after" \
+              --target development \
+              --build-arg DEBUG=false \
+              --build-arg TESTING=true \
+              --build-arg VERSION=dev \
+              --tag "$IMAGE:before" \
+              /tmp/appwrite-benchmark-before
+          fi
 
       - name: Start before Appwrite
         id: benchmark_before_start
