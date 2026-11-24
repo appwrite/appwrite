@@ -109,11 +109,14 @@ pub(in crate::platform) async fn context(ctx: &mut Context) -> Result<()> {
         Some(php_std::Value::Str(s)) if !s.as_bytes().is_empty() && s.as_bytes() != b"0" => Some(s.as_bytes().to_vec()),
         _ => None,
     };
-    let (Some(data), false) = (data, log.is_empty()) else {
+    let miss = |ctx: &mut Context| {
         ctx.response_headers.push(("cache-control", "no-cache, no-store, must-revalidate".to_owned()));
         ctx.response_headers.push(("pragma", "no-cache".to_owned()));
         ctx.response_headers.push(("expires", "0".to_owned()));
         ctx.response_headers.push(("x-appwrite-cache", "miss".to_owned()));
+    };
+    let (Some(data), false) = (data, log.is_empty()) else {
+        miss(ctx);
         return Ok(());
     };
 
@@ -151,6 +154,14 @@ pub(in crate::platform) async fn context(ctx: &mut Context) -> Result<()> {
         }
         if file.is_empty() {
             return Err(Error::new(ErrorType::StorageFileNotFound));
+        }
+        // Cached before this file existed: a deleted file with the same ID, whose
+        // entries the deletes worker has not purged yet.
+        if log.created_at().unwrap_or("") < file.created_at().unwrap_or("") {
+            authorization.skip(db.delete_document("cache", log.id())).await?;
+            cache.purge(&key, "").await.map_err(|e| Error::with_message(ErrorType::GeneralUnknown, e.to_string()))?;
+            miss(ctx);
+            return Ok(());
         }
         // A console user's view does not count as a transformation.
         if !privileged {
