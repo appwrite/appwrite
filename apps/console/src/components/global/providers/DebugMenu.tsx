@@ -1755,6 +1755,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Products' },
               ),
               createProfileFeatureFlagItem(
+                'Zero',
+                'Show the Appwrite Zero page (/zero, /zero.md) and its Products menu and footer links. Off until launch.',
+                'zero',
+                profileId,
+                features.zero,
+                { category: 'Products' },
+              ),
+              createProfileFeatureFlagItem(
                 'Usage alerts',
                 'Show usage monitors and alerts (Usage sidebar pages, quick actions, budget monitors in billing, alert webhook events).',
                 'alerts',
@@ -2114,6 +2122,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     profileId,
     features.videos,
     features.analytics,
+    features.zero,
     features.alerts,
     features.reviews,
     features.appwritePush,
