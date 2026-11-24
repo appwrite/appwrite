@@ -1,0 +1,17 @@
+---
+layout: changelog
+title: "Connect GitHub to new projects without reinstalling the app"
+date: 2026-11-28
+cover: /images/blog/announcing-github-installation-reuse/cover.avif
+tags: sites, functions, console, integrations
+---
+
+New projects now reuse the GitHub organizations that other projects in your Appwrite organization already connected. When a project has no Git connection, the Console links those GitHub App installations and opens the repository picker with the organization selected. You don't go back through GitHub's install flow, and the installation's repository access on GitHub stays as it was.
+
+Appwrite only reuses GitHub organization installations from projects you can access. Personal GitHub accounts, GitLab, Gitea, and Bitbucket still connect per project, and disconnecting a reused organization from one project leaves it connected everywhere else. See [Deploy from Git](/docs/products/sites/deploy-from-git#reuse-github-organization) for the details.
+
+GitHub installation reuse is available on Appwrite Cloud, and comes to self-hosted Appwrite in the next release.
+
+{% arrow_link href="/blog/post/announcing-github-installation-reuse" %}
+Read the announcement
+{% /arrow_link %}
