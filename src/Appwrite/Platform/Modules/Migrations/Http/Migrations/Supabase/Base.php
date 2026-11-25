@@ -57,4 +57,36 @@ abstract class Base extends Action
 
         return $identity;
     }
+
+    /**
+     * The identity's access token, refreshed first when it has expired
+     */
+    protected function getAccessToken(OAuth2Supabase $oauth2, Database $dbForPlatform, Document $identity): string
+    {
+        $expiry = $identity->getAttribute('providerAccessTokenExpiry');
+
+        if (!empty($expiry) && new \DateTime($expiry) > new \DateTime()) {
+            return $identity->getAttribute('providerAccessToken', '');
+        }
+
+        try {
+            $oauth2->refreshTokens($identity->getAttribute('providerRefreshToken', ''));
+        } catch (\Throwable) {
+            throw new Exception(Exception::USER_IDENTITY_NOT_FOUND, 'Your Supabase authorization has expired. Connect your Supabase account again.');
+        }
+
+        $accessToken = $oauth2->getAccessToken('');
+
+        if ($accessToken === '') {
+            throw new Exception(Exception::USER_IDENTITY_NOT_FOUND, 'Your Supabase authorization has expired. Connect your Supabase account again.');
+        }
+
+        $dbForPlatform->updateDocument('identities', $identity->getId(), new Document([
+            'providerAccessToken' => $accessToken,
+            'providerRefreshToken' => $oauth2->getRefreshToken(''),
+            'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), $oauth2->getAccessTokenExpiry('')),
+        ]));
+
+        return $accessToken;
+    }
 }
