@@ -1,11 +1,14 @@
 <?php
+
 // The DSN getters, whose handlers are written by hand (src/classes/retarget.rs): through
 // PHP subclasses, with extra arguments, on an object built without its constructor, and
 // shared many times over. The output must match dsn-getters.expected.
 
 use Utopia\DSN\DSN;
 
-class Sub extends DSN {}
+class Sub extends DSN
+{
+}
 class Over extends DSN
 {
     public function getHost(): string
