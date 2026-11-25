@@ -11,7 +11,7 @@ use crate::adapter::{Args, Fault, OpResult, Outcome, Session};
 use crate::bench::Bench;
 
 /// Operations this adapter implements (must match `spec.json`).
-pub const OPS: &[&str] = &["di.new", "di.set", "di.get", "di.has", "di.script"];
+pub const OPS: &[&str] = &["di.new", "di.set", "di.get", "di.has", "di.scope", "di.script"];
 
 /// Ids of the containers a script works on, in dependency order.
 const IDS: &[&str] = &["a", "b", "c", "d", "e"];
@@ -161,6 +161,13 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         }
         "di.get" => get(&*container(session, "container")?, a.str("id")?),
         "di.has" => Outcome::ok(container(session, "container")?.has(a.str("id")?)),
+        "di.scope" => {
+            let ids: Vec<&str> = a.array("ids")?.iter().filter_map(Value::as_str).collect();
+            match container(session, "container")?.scope(&ids) {
+                Ok(_) => Outcome::ok(true),
+                Err(e) => err(e),
+            }
+        }
         "di.script" => {
             let root = Arc::new(Container::new());
             let child = Arc::new(Container::with_parent(root.clone()));
@@ -198,6 +205,10 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                     }
                     "get" => get(target, id).to_json(),
                     "has" => Value::Bool(target.has(id)),
+                    "scope" => match target.scope(&[id]) {
+                        Ok(_) => Value::Bool(true),
+                        Err(e) => err(e).to_json(),
+                    },
                     other => return Err(Fault::new(format!("unknown call {other}"))),
                 });
             }

@@ -85,6 +85,46 @@ var_dump($request->has('config')); // bool(true)
 var_dump($app->has('user'));       // bool(false)
 ```
 
+## Rebuild derived dependencies in a child
+
+A value the parent already resolved was built from the parent's dependencies. When a child overrides one of them, `scope` rebuilds the values derived from it in the child: it registers the child's own copy of each named factory, and of every factory in the chain that depends on one of them, directly or transitively. The parent keeps its values.
+
+```
+use std::sync::Arc;
+use utopia_di::Container;
+
+let app = Arc::new(Container::new());
+app.set("route", &[], |_| Ok("/v1/graphql"));
+app.set("team", &["route"], |deps| Ok(format!("team for {}", deps.get::<&str>(0)?)));
+assert_eq!(*app.get::<String>("team")?, "team for /v1/graphql");
+
+let field = Container::with_parent(app.clone());
+field.set("route", &[], |_| Ok("/v1/organization/projects"));
+assert_eq!(*field.get::<String>("team")?, "team for /v1/graphql");
+
+field.scope(&["team"])?;
+assert_eq!(*field.get::<String>("team")?, "team for /v1/organization/projects");
+assert_eq!(*app.get::<String>("team")?, "team for /v1/graphql");
+# Ok::<(), utopia_di::Error>(())
+```
+
+```php
+use Utopia\DI\Container;
+
+$app = new Container();
+$app->set('route', fn (): string => '/v1/graphql');
+$app->set('team', fn (string $route): string => "team for {$route}", ['route']);
+echo $app->get('team'), "\n"; // team for /v1/graphql
+
+$field = new Container($app);
+$field->set('route', fn (): string => '/v1/organization/projects');
+echo $field->get('team'), "\n"; // team for /v1/graphql
+
+$field->scope('team');
+echo $field->get('team'), "\n"; // team for /v1/organization/projects
+echo $app->get('team'), "\n";   // team for /v1/graphql
+```
+
 ## Handle a missing dependency
 
 Resolving an id that no container defines fails with `Error::NotFound`.

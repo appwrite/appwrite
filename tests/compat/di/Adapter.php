@@ -60,6 +60,11 @@ final class Adapter implements Base, Benchmarks
             },
             'di.get' => fn (array $a, Session $s) => self::container($a['container'], $s)->get($a['id']),
             'di.has' => fn (array $a, Session $s) => self::container($a['container'], $s)->has($a['id']),
+            'di.scope' => function (array $a, Session $s) {
+                $container = self::container($a['container'], $s);
+
+                return $container->scope(...$a['ids']) === $container;
+            },
             'di.script' => function (array $a, Session $s) {
                 // Containers 0 (root), 1 (child of 0), 2 (child of 1), 3 (child of 0).
                 $root = new Container();
@@ -73,6 +78,7 @@ final class Adapter implements Base, Benchmarks
                             'set' => $container->set($call['id'], self::factory(['kind' => 'trace'], $call['id']), self::dependencies($call)) === $container,
                             'get' => $container->get($call['id']),
                             'has' => $container->has($call['id']),
+                            'scope' => $container->scope($call['id']) === $container,
                             default => throw new Fault("unknown call {$call['op']}"),
                         };
                     } catch (Fault $fault) {

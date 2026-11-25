@@ -17,6 +17,7 @@
 //! | `set($id, $factory, $dependencies)` | [`Container::set`] (the factory takes [`Dependencies`]) |
 //! | `get($id)` | [`Container::get`] (typed), [`Container::get_any`] |
 //! | `has($id)` | [`Container::has`] |
+//! | `scope(...$ids)` | [`Container::scope`] |
 //! | `Exceptions\NotFoundException` | [`Error::NotFound`] |
 //! | `Exceptions\ContainerException` | [`Error::Container`] |
 //!
@@ -62,7 +63,7 @@ pub struct GettingStarted;
 /// A resolved dependency, shared by everything that resolves it.
 pub type Instance = Arc<dyn Any + Send + Sync>;
 
-type Factory = Box<dyn Fn(&Dependencies<'_>) -> Result<Instance, Error> + Send + Sync>;
+type Factory = Arc<dyn Fn(&Dependencies<'_>) -> Result<Instance, Error> + Send + Sync>;
 
 /// Why a dependency could not be resolved.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
@@ -91,6 +92,13 @@ pub enum Error {
     /// ```
     #[error("Dependency {0} not found")]
     NotFound(String),
+    /// [`Container::scope`] named an id no container in the chain has a
+    /// factory for.
+    ///
+    /// PHP: `Utopia\DI\Exceptions\NotFoundException` too, with the message
+    /// `scope()` throws.
+    #[error("Dependency {0} has no factory on this container or a Container ancestor to scope")]
+    Unscoped(String),
     /// A factory failed to build its dependency.
     ///
     /// PHP: `Utopia\DI\Exceptions\ContainerException` (a PSR-11
@@ -132,7 +140,7 @@ impl Error {
     /// ```
     pub fn php_class(&self) -> &'static str {
         match self {
-            Error::NotFound(_) => "Utopia\\DI\\Exceptions\\NotFoundException",
+            Error::NotFound(_) | Error::Unscoped(_) => "Utopia\\DI\\Exceptions\\NotFoundException",
             Error::Container(_) => "Utopia\\DI\\Exceptions\\ContainerException",
             Error::Type { .. } => "TypeError",
             Error::Arguments { .. } => "ArgumentCountError",
@@ -203,10 +211,13 @@ impl Dependencies<'_> {
     }
 }
 
+/// A factory and the ids it depends on, as [`Container::scope`] copies them.
+type Definition = (Factory, Arc<[Box<str>]>);
+
 /// A registered factory and the instance it built, once built.
 struct Entry {
     factory: Factory,
-    dependencies: Box<[Box<str>]>,
+    dependencies: Arc<[Box<str>]>,
     instance: OnceLock<Instance>,
 }
 
@@ -333,7 +344,7 @@ impl Container {
         T: Any + Send + Sync,
         F: Fn(&Dependencies<'_>) -> Result<T, Error> + Send + Sync + 'static,
     {
-        let factory: Factory = Box::new(move |deps| factory(deps).map(|v| Arc::new(v) as Instance));
+        let factory: Factory = Arc::new(move |deps| factory(deps).map(|v| Arc::new(v) as Instance));
         let entry = Entry {
             factory,
             dependencies: dependencies.iter().map(|d| Box::from(*d)).collect(),
@@ -341,6 +352,97 @@ impl Container {
         };
         self.entries.write().unwrap_or_else(|e| e.into_inner()).insert(Box::from(id), Arc::new(entry));
         self
+    }
+
+    /// Rebuilds `ids`, and everything built from them, in this container's own
+    /// scope.
+    ///
+    /// A child that does not define an id reuses what its parent built, from
+    /// the parent's dependencies. Once the child overrides one of those, the
+    /// values derived from it must be rebuilt in the child too. Scoping an id
+    /// registers this container's own copy of its factory (the nearest
+    /// container in the chain that has one), and of every factory in the chain
+    /// that depends on it, directly or transitively. Parents keep their values.
+    ///
+    /// Fails with [`Error::Unscoped`], before scoping anything, when no
+    /// container in the chain has a factory for one of `ids`.
+    ///
+    /// PHP: `scope(string ...$ids)`. PHP's walk stops at the first parent that
+    /// is another PSR-11 container; a Rust parent is always a [`Container`].
+    ///
+    /// ```
+    /// use std::sync::Arc;
+    /// use utopia_di::Container;
+    ///
+    /// let parent = Arc::new(Container::new());
+    /// parent.set("route", &[], |_| Ok("/v1/graphql"));
+    /// parent.set("team", &["route"], |deps| Ok(format!("team for {}", deps.get::<&str>(0)?)));
+    /// assert_eq!(*parent.get::<String>("team")?, "team for /v1/graphql");
+    ///
+    /// let child = Container::with_parent(parent.clone());
+    /// child.set("route", &[], |_| Ok("/v1/organization/projects"));
+    /// assert_eq!(*child.get::<String>("team")?, "team for /v1/graphql");
+    ///
+    /// child.scope(&["team"])?;
+    /// assert_eq!(*child.get::<String>("team")?, "team for /v1/organization/projects");
+    /// assert_eq!(*parent.get::<String>("team")?, "team for /v1/graphql");
+    /// # Ok::<(), utopia_di::Error>(())
+    /// ```
+    ///
+    /// ```php
+    /// use Utopia\DI\Container;
+    ///
+    /// $parent = new Container();
+    /// $parent->set('route', fn (): string => '/v1/graphql');
+    /// $parent->set('team', fn (string $route): string => "team for $route", ['route']);
+    /// echo $parent->get('team'), "\n"; // team for /v1/graphql
+    ///
+    /// $child = new Container($parent);
+    /// $child->set('route', fn (): string => '/v1/organization/projects');
+    /// echo $child->get('team'), "\n"; // team for /v1/graphql
+    ///
+    /// $child->scope('team');
+    /// echo $child->get('team'), "\n";  // team for /v1/organization/projects
+    /// echo $parent->get('team'), "\n"; // team for /v1/graphql
+    /// ```
+    pub fn scope(&self, ids: &[&str]) -> Result<&Self, Error> {
+        // The nearest definition of every id in the chain.
+        let mut definitions: HashMap<Box<str>, Definition, foldhash::fast::RandomState> = HashMap::default();
+        let mut container = Some(self);
+        while let Some(current) = container {
+            for (id, entry) in current.entries.read().unwrap_or_else(|e| e.into_inner()).iter() {
+                definitions.entry(id.clone()).or_insert_with(|| (entry.factory.clone(), entry.dependencies.clone()));
+            }
+            container = current.parent.as_deref();
+        }
+
+        if let Some(id) = ids.iter().find(|id| !definitions.contains_key(**id)) {
+            return Err(Error::Unscoped((*id).to_owned()));
+        }
+
+        let mut scoped: std::collections::HashSet<&str, foldhash::fast::RandomState> = ids.iter().copied().collect();
+        loop {
+            let added: Vec<&str> = definitions
+                .iter()
+                .filter(|(id, (_, dependencies))| {
+                    !scoped.contains(&***id) && dependencies.iter().any(|d| scoped.contains(&**d))
+                })
+                .map(|(id, _)| &**id)
+                .collect();
+            if added.is_empty() {
+                break;
+            }
+            scoped.extend(added);
+        }
+
+        let mut entries = self.entries.write().unwrap_or_else(|e| e.into_inner());
+        for id in scoped {
+            let (factory, dependencies) = &definitions[id];
+            let entry =
+                Entry { factory: factory.clone(), dependencies: dependencies.clone(), instance: OnceLock::new() };
+            entries.insert(Box::from(id), Arc::new(entry));
+        }
+        Ok(self)
     }
 
     /// The dependency `id` as a `T`, built on first use and shared after.
@@ -456,5 +558,100 @@ mod tests {
         let c = Container::new();
         c.set("x", &[], |d| d.get::<i32>(0).copied());
         assert_eq!(c.get_any("x").unwrap_err().php_class(), "ArgumentCountError");
+    }
+    fn text(d: &Dependencies<'_>, i: usize) -> Result<String, Error> {
+        let v = d.any(i)?;
+        v.downcast_ref::<String>()
+            .cloned()
+            .or_else(|| v.downcast_ref::<&str>().map(|s| (*s).to_owned()))
+            .ok_or(Error::Type { id: format!("#{i}"), expected: "string" })
+    }
+
+    // Ports ContainerTest::testScopeRebuildsAParentDependencyFromTheChildsOverride.
+    #[test]
+    fn scope_rebuilds_a_parent_dependency_from_the_childs_override() {
+        let parent = Arc::new(Container::new());
+        parent.set("route", &[], |_| Ok("/v1/graphql"));
+        parent.set("team", &["route"], |d| Ok(format!("team for {}", text(d, 0)?)));
+        assert_eq!(*parent.get::<String>("team").unwrap(), "team for /v1/graphql");
+
+        let child = Container::with_parent(parent.clone());
+        child.set("route", &[], |_| Ok("/v1/organization/projects"));
+        assert_eq!(*child.get::<String>("team").unwrap(), "team for /v1/graphql");
+
+        child.scope(&["team"]).unwrap();
+        assert_eq!(*child.get::<String>("team").unwrap(), "team for /v1/organization/projects");
+        assert_eq!(*parent.get::<String>("team").unwrap(), "team for /v1/graphql");
+    }
+
+    // Ports ContainerTest::testScopeFindsTheFactoryOnAnyAncestor.
+    #[test]
+    fn scope_finds_the_factory_on_any_ancestor() {
+        let root = Arc::new(Container::new());
+        root.set("route", &[], |_| Ok("root"));
+        root.set("team", &["route"], |d| Ok(format!("team for {}", text(d, 0)?)));
+
+        let grandchild = Container::with_parent(Arc::new(Container::with_parent(root)));
+        grandchild.set("route", &[], |_| Ok("field"));
+        grandchild.scope(&["team"]).unwrap();
+        assert_eq!(*grandchild.get::<String>("team").unwrap(), "team for field");
+    }
+
+    // Ports ContainerTest::testScopeRebuildsWhatIsBuiltFromAScopedDependency.
+    #[test]
+    fn scope_rebuilds_what_is_built_from_a_scoped_dependency() {
+        let parent = Arc::new(Container::new());
+        parent.set("route", &[], |_| Ok("outer"));
+        parent.set("team", &["route"], |d| Ok(format!("team for {}", text(d, 0)?)));
+        parent.set("key", &["team"], |d| Ok(format!("key for {}", text(d, 0)?)));
+        parent.set("plan", &["key"], |d| Ok(format!("plan for {}", text(d, 0)?)));
+        parent.set("user", &[], |_| Ok("user"));
+
+        assert_eq!(*parent.get::<String>("plan").unwrap(), "plan for key for team for outer");
+        let user = parent.get_any("user").unwrap();
+
+        let child = Container::with_parent(parent.clone());
+        child.set("route", &[], |_| Ok("field"));
+        child.scope(&["team"]).unwrap();
+
+        assert_eq!(*child.get::<String>("key").unwrap(), "key for team for field");
+        assert_eq!(*child.get::<String>("plan").unwrap(), "plan for key for team for field");
+        assert!(Arc::ptr_eq(&user, &child.get_any("user").unwrap()));
+        assert_eq!(*parent.get::<String>("plan").unwrap(), "plan for key for team for outer");
+    }
+
+    // Ports ContainerTest::testScopeRebuildsALocalDependency.
+    #[test]
+    fn scope_rebuilds_a_local_dependency() {
+        let calls = Arc::new(AtomicUsize::new(0));
+        let container = Container::new();
+        let counter = calls.clone();
+        container.set("counter", &[], move |_| Ok(counter.fetch_add(1, Ordering::SeqCst) + 1));
+        assert_eq!(*container.get::<usize>("counter").unwrap(), 1);
+        container.scope(&["counter"]).unwrap();
+        assert_eq!(*container.get::<usize>("counter").unwrap(), 2);
+    }
+
+    // Ports ContainerTest::testScopeThrowsForUnknownDependency.
+    #[test]
+    fn scope_fails_for_an_unknown_dependency() {
+        let container = Container::with_parent(Arc::new(Container::new()));
+        let error = container.scope(&["missing"]).unwrap_err();
+        assert_eq!(error.php_class(), "Utopia\\DI\\Exceptions\\NotFoundException");
+        assert_eq!(
+            error.to_string(),
+            "Dependency missing has no factory on this container or a Container ancestor to scope"
+        );
+    }
+
+    #[test]
+    fn scope_checks_every_id_before_scoping_any() {
+        let calls = Arc::new(AtomicUsize::new(0));
+        let container = Container::new();
+        let counter = calls.clone();
+        container.set("counter", &[], move |_| Ok(counter.fetch_add(1, Ordering::SeqCst) + 1));
+        assert_eq!(*container.get::<usize>("counter").unwrap(), 1);
+        assert!(container.scope(&["counter", "missing"]).is_err());
+        assert_eq!(*container.get::<usize>("counter").unwrap(), 1);
     }
 }

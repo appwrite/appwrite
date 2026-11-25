@@ -1836,6 +1836,510 @@
           "expect": "{1}|two"
         }
       ]
+    },
+    {
+      "name": "testScopeRebuildsAParentDependencyFromTheChildsOverride",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "p"
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "route",
+            "factory": {
+              "kind": "value",
+              "value": "/v1/graphql"
+            },
+            "dependencies": []
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "team",
+            "factory": {
+              "kind": "format",
+              "template": "team for {0}"
+            },
+            "dependencies": [
+              "route"
+            ]
+          }
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "team"
+          }
+        },
+        {
+          "op": "di.new",
+          "bind": "c",
+          "args": {
+            "parent": {
+              "$ref": "p"
+            }
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "route",
+            "factory": {
+              "kind": "value",
+              "value": "/v1/organization/projects"
+            },
+            "dependencies": []
+          }
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "team"
+          }
+        },
+        {
+          "op": "di.scope",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "ids": [
+              "team"
+            ]
+          }
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "team"
+          }
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "team"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testScopeFindsTheFactoryOnAnyAncestor",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "r"
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "r"
+            },
+            "id": "route",
+            "factory": {
+              "kind": "value",
+              "value": "root"
+            },
+            "dependencies": []
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "r"
+            },
+            "id": "team",
+            "factory": {
+              "kind": "format",
+              "template": "team for {0}"
+            },
+            "dependencies": [
+              "route"
+            ]
+          }
+        },
+        {
+          "op": "di.new",
+          "bind": "m",
+          "args": {
+            "parent": {
+              "$ref": "r"
+            }
+          }
+        },
+        {
+          "op": "di.new",
+          "bind": "g",
+          "args": {
+            "parent": {
+              "$ref": "m"
+            }
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "g"
+            },
+            "id": "route",
+            "factory": {
+              "kind": "value",
+              "value": "field"
+            },
+            "dependencies": []
+          }
+        },
+        {
+          "op": "di.scope",
+          "args": {
+            "container": {
+              "$ref": "g"
+            },
+            "ids": [
+              "team"
+            ]
+          }
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "g"
+            },
+            "id": "team"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testScopeRebuildsWhatIsBuiltFromAScopedDependency",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "p"
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "route",
+            "factory": {
+              "kind": "value",
+              "value": "outer"
+            },
+            "dependencies": []
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "team",
+            "factory": {
+              "kind": "format",
+              "template": "team for {0}"
+            },
+            "dependencies": [
+              "route"
+            ]
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "key",
+            "factory": {
+              "kind": "format",
+              "template": "key for {0}"
+            },
+            "dependencies": [
+              "team"
+            ]
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "plan",
+            "factory": {
+              "kind": "format",
+              "template": "plan for {0}"
+            },
+            "dependencies": [
+              "key"
+            ]
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "user",
+            "factory": {
+              "kind": "counter"
+            },
+            "dependencies": []
+          }
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "plan"
+          }
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "user"
+          }
+        },
+        {
+          "op": "di.new",
+          "bind": "c",
+          "args": {
+            "parent": {
+              "$ref": "p"
+            }
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "route",
+            "factory": {
+              "kind": "value",
+              "value": "field"
+            },
+            "dependencies": []
+          }
+        },
+        {
+          "op": "di.scope",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "ids": [
+              "team"
+            ]
+          }
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "key"
+          }
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "plan"
+          }
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "user"
+          }
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "plan"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testScopeRebuildsALocalDependency",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "c"
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "counter",
+            "factory": {
+              "kind": "counter"
+            },
+            "dependencies": []
+          }
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "counter"
+          }
+        },
+        {
+          "op": "di.scope",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "ids": [
+              "counter"
+            ]
+          }
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "counter"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testScopeThrowsForUnknownDependency",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "p"
+        },
+        {
+          "op": "di.new",
+          "bind": "c",
+          "args": {
+            "parent": {
+              "$ref": "p"
+            }
+          }
+        },
+        {
+          "op": "di.scope",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "ids": [
+              "missing"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "scope checks every id before scoping any",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "c"
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "counter",
+            "factory": {
+              "kind": "counter"
+            },
+            "dependencies": []
+          }
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "counter"
+          }
+        },
+        {
+          "op": "di.scope",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "ids": [
+              "counter",
+              "missing"
+            ]
+          }
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "counter"
+          }
+        }
+      ]
     }
   ]
 }

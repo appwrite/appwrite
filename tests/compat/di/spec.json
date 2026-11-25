@@ -40,13 +40,20 @@
         "Utopia\\DI\\Container::has"
       ]
     },
+    "di.scope": {
+      "doc": "$container->scope(...ids) === $container",
+      "covers": [
+        "Utopia\\DI\\Container::scope"
+      ]
+    },
     "di.script": {
-      "doc": "replays calls on four containers (0 root, 1 child of 0, 2 child of 1, 3 child of 0): {op: set|get|has, container, id, dependencies?}. Ids are a..e; a set's dependencies are offsets after its id in that order (`missing` past e), so they never form a cycle, and its factory returns `id#runs(dependencies)`. Returns each call's result ({\"$error\"} for a failure)",
+      "doc": "replays calls on four containers (0 root, 1 child of 0, 2 child of 1, 3 child of 0): {op: set|get|has|scope, container, id, dependencies?}. Ids are a..e; a set's dependencies are offsets after its id in that order (`missing` past e), so they never form a cycle, and its factory returns `id#runs(dependencies)`. Returns each call's result ({\"$error\"} for a failure)",
       "covers": [
         "Utopia\\DI\\Container::__construct",
         "Utopia\\DI\\Container::set",
         "Utopia\\DI\\Container::get",
-        "Utopia\\DI\\Container::has"
+        "Utopia\\DI\\Container::has",
+        "Utopia\\DI\\Container::scope"
       ],
       "fuzz": [
         {
@@ -81,7 +88,8 @@
             "set",
             "get",
             "get",
-            "has"
+            "has",
+            "scope"
           ]
         },
         "container": {
@@ -115,5 +123,11 @@
   "waivers": {},
   "tests_waived": {},
   "quirks": [],
-  "deviations": []
+  "deviations": [
+    {
+      "symbol": "Utopia\\DI\\Container::scope",
+      "php": "The walk up the chain stops at the first parent that is another PSR-11 container (ContainerTest::testScopeCannotCopyAFactoryFromAnotherPsrContainer): scoping an id only that container has throws NotFoundException.",
+      "reason": "A utopia_di::Container's parent is always a Container (with_parent takes Arc<Container>), so a foreign PSR-11 parent is unrepresentable; every other scope behaviour is covered."
+    }
+  ]
 }
