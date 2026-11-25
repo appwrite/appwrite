@@ -83,11 +83,9 @@ export function CreateMonitor({
     ...organizationProbeCountQueryOptions(organizationId),
     enabled: open && isCloud && !!organizationId,
   })
-  const { usageLimit, usageAtLimit, probeLimit, probesAtLimit } = monitorCaps(
-    plan,
-    usageCount,
-    probeCount,
-  )
+  const { usageLimit, usageAtLimit, probeLimit, probesAtLimit, probesAllowed } =
+    monitorCaps(plan, usageCount, probeCount)
+  const probesLocked = isCloud && !probesAllowed
   const [type, setType] = useState<'usage' | ProbeType>(initialType)
   const [form, setForm] = useState<RuleForm>(emptyRuleForm)
   const [probe, setProbe] = useState<ProbeForm>(() => emptyProbeForm('http'))
@@ -95,8 +93,9 @@ export function CreateMonitor({
   useEffect(() => {
     if (!open) return
     // With no usage monitor left on the plan, a blank form starts on a synthetic check.
-    const start =
-      initialType === 'usage' && usageAtLimit && !initial && isCloud
+    const start = probesLocked
+      ? 'usage'
+      : initialType === 'usage' && usageAtLimit && !initial && isCloud
         ? 'http'
         : initialType
     setType(start)
@@ -105,6 +104,11 @@ export function CreateMonitor({
     // Only when the form opens; the cap may load later without resetting typed fields.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initial, initialType])
+
+  useEffect(() => {
+    // A plan that loads after the form opened can still take synthetic checks away.
+    if (probesLocked && type !== 'usage') setType('usage')
+  }, [probesLocked, type])
 
   const handleTypeChange = (next: 'usage' | ProbeType) => {
     setType(next)
@@ -225,6 +229,16 @@ export function CreateMonitor({
                   value={type}
                   onChange={handleTypeChange}
                   disabled={isPending}
+                  probesLocked={probesLocked}
+                />
+              )}
+              {probesLocked && organizationId && (
+                <PlanAllowance
+                  message={t(
+                    'HTTP, DNS, TCP and SMTP monitors are available on paid plans.',
+                  )}
+                  organizationId={organizationId}
+                  upgrade
                 />
               )}
               {allowance && organizationId && (

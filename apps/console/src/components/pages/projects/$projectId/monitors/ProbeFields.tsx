@@ -3,6 +3,7 @@ import * as RadioGroupPrimitive from '@radix-ui/react-radio-group'
 import {
   Gauge,
   Globe,
+  Lock,
   Mail,
   Plug,
   Signpost,
@@ -262,10 +263,13 @@ export function MonitorTypePicker({
   value,
   onChange,
   disabled,
+  probesLocked = false,
 }: {
   value: 'usage' | ProbeType
   onChange: (type: 'usage' | ProbeType) => void
   disabled?: boolean
+  /** The plan offers no synthetic checks, so only usage can be picked. */
+  probesLocked?: boolean
 }) {
   const t = useT()
   return (
@@ -277,21 +281,26 @@ export function MonitorTypePicker({
       orientation="horizontal"
       className="flex flex-wrap gap-2"
     >
-      {MONITOR_TYPES.map(({ value: type, label, icon: Icon }) => (
-        <RadioGroupPrimitive.Item
-          key={type}
-          value={type}
-          className={cn(
-            'inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60',
-            value === type
-              ? 'border-foreground font-medium text-foreground ring-1 ring-inset ring-foreground'
-              : 'border-border text-muted-foreground hover:bg-accent/40',
-          )}
-        >
-          <Icon aria-hidden className="h-3.5 w-3.5" />
-          {t(label)}
-        </RadioGroupPrimitive.Item>
-      ))}
+      {MONITOR_TYPES.map(({ value: type, label, icon: Icon }) => {
+        const locked = probesLocked && type !== 'usage'
+        return (
+          <RadioGroupPrimitive.Item
+            key={type}
+            value={type}
+            disabled={locked}
+            className={cn(
+              'inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60',
+              value === type
+                ? 'border-foreground font-medium text-foreground ring-1 ring-inset ring-foreground'
+                : 'border-border text-muted-foreground hover:bg-accent/40',
+            )}
+          >
+            <Icon aria-hidden className="h-3.5 w-3.5" />
+            {t(label)}
+            {locked && <Lock aria-hidden className="h-3 w-3" />}
+          </RadioGroupPrimitive.Item>
+        )
+      })}
     </RadioGroupPrimitive.Root>
   )
 }
