@@ -666,6 +666,71 @@ final class SchedulerTest extends TestCase
         $this->assertCount(1, $scheduler->tick());
     }
 
+    public function testTheLoopRidesOutAFailingStore(): void
+    {
+        $clock = new TestClock(new \DateTimeImmutable('2026-01-01 00:00:30.000000'));
+        // A predecessor covered everything up to now, then went away.
+        $memory = new MemoryStore();
+        $memory->swap(null, new Claim('predecessor', 0.0, (float) $clock->now()->format('U.u')));
+        $store = new FlakyStore(failures: 3, store: $memory);
+        $errors = [];
+        $scheduler = new Scheduler(
+            source: new SnapshotSource(
+                snapshot: fn (): array => [new Row('minutely', '1')],
+                make: fn (Row $row): Entry => new Entry(new Cron('* * * * *')),
+            ),
+            store: $store,
+            tickSeconds: 60,
+            clock: $clock,
+            onError: function (\Throwable $error) use (&$errors): void {
+                $errors[] = $error->getMessage();
+            },
+        );
+
+        $delivered = [];
+        $scheduler->run(function (array $occurrences) use (&$delivered, $scheduler): void {
+            foreach ($occurrences as $occurrence) {
+                $delivered[] = $occurrence->due->format('H:i');
+            }
+            if (\count($delivered) === 4) {
+                $scheduler->stop();
+            }
+        });
+
+        $this->assertSame(array_fill(0, 3, 'read error on connection'), $errors, 'each failure is reported, none stops the loop');
+        $this->assertSame(['00:01', '00:02', '00:03', '00:04'], $delivered, 'the outage is caught up, not skipped');
+    }
+
+    public function testACommitTheStoreDropsIsReDelivered(): void
+    {
+        $clock = new TestClock(new \DateTimeImmutable('2026-01-01 00:00:30.000000'));
+        $store = new FlakyStore();
+        $errors = 0;
+        $scheduler = new Scheduler(
+            source: new SnapshotSource(
+                snapshot: fn (): array => [new Row('minutely', '1')],
+                make: fn (Row $row): Entry => new Entry(new Cron('* * * * *')),
+            ),
+            store: $store,
+            tickSeconds: 60,
+            clock: $clock,
+            onError: function () use (&$errors): void {
+                ++$errors;
+            },
+        );
+        $scheduler->reconcile();
+        $scheduler->tick();
+        $scheduler->commit();
+
+        $clock->advance(60.0);
+        $this->assertCount(1, $scheduler->tick());
+        $store->failures = 1;
+        $this->assertFalse($scheduler->commit());
+        $this->assertSame(1, $errors);
+
+        $this->assertCount(1, $scheduler->tick(), 'the uncommitted window comes round again');
+    }
+
     public function testRejectsNonPositiveInterval(): void
     {
         $this->expectException(\InvalidArgumentException::class);

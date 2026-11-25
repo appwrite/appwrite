@@ -48,7 +48,7 @@ class ScheduleAlerts extends Action
             fn (array $schedules): array => $this->intervals($schedules, $dbForPlatform),
         );
 
-        // A Redis failure ends the loop that holds the connection; the pool drops it.
+        // The scheduler rides out Redis failures through onError; the client reconnects on its next command.
         $pools->get('lock')->use(function (\Redis $redis) use ($source, $telemetry, $publisherForAlerts, $dbForPlatform): void {
             $scheduler = new Scheduler(
                 source: $source,
@@ -56,7 +56,7 @@ class ScheduleAlerts extends Action
                 syncSeconds: \min(30, $this->interval()),
                 telemetry: $telemetry,
                 onError: function (\Throwable $error): void {
-                    Span::init('schedule.alerts.reconcile');
+                    Span::init('schedule.alerts.error');
                     Span::current()?->finish(error: $error);
                 },
             );

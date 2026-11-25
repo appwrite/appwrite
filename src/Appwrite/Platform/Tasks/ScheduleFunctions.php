@@ -46,14 +46,14 @@ class ScheduleFunctions extends Action
             fn (array $schedule): int => $this->spreadWindow($schedule, $dbForPlatform),
         );
 
-        // A Redis failure ends the loop that holds the connection; the pool drops it.
+        // The scheduler rides out Redis failures through onError; the client reconnects on its next command.
         $pools->get('lock')->use(function (\Redis $redis) use ($source, $telemetry, $publisherForFunctions, $dbForPlatform): void {
             $scheduler = new Scheduler(
                 source: $source,
                 store: new ClaimStore($redis, self::getName() . ':' . System::getEnv('_APP_REGION', 'default')),
                 telemetry: $telemetry,
                 onError: function (\Throwable $error, ?Row $row = null): void {
-                    Span::init('schedule.functions.reconcile');
+                    Span::init('schedule.functions.error');
                     if ($row?->data instanceof Document) {
                         Span::add('project.id', (string) $row->data->getAttribute('projectId'));
                         Span::add('resource.id', (string) $row->data->getAttribute('resourceId'));
