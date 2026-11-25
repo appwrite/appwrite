@@ -572,7 +572,7 @@ jobs:
           # The extension and the crates it is built from; the rest of the
           # workspace (the Rust API, compat) is checked by the Rust job.
           docker run --rm --volume "$PWD:/usr/local/src" --env CARGO_TARGET_DIR=/tmp/target \
-            --env CRATES="-p utopia-extension -p php-std -p utopia-dsn -p utopia-image -p utopia-locale -p utopia-user-agent" \
+            --env CRATES="-p utopia-extension -p utopia-php-std -p utopia-dsn -p utopia-image -p utopia-locale -p utopia-user-agent" \
             --env RUSTDOCFLAGS="-C target-feature=-crt-static" utopia-extension-build sh -c '
             . "$HOME/.cargo/env" &&
             rustup component add clippy rustfmt &&
