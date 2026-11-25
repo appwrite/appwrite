@@ -27,11 +27,16 @@ readonly class Pool implements Synchronous, Consumer, Bounded
         return $this->delegate($this->publisher, __FUNCTION__, \func_get_args());
     }
 
-    public function retry(Queue $queue, ?int $limit = null, ?int $maxAttempts = null, ?int $newerThan = null): void
+    public function retry(Queue $queue, ?int $limit = null, ?int $newerThan = null): void
     {
         $this->delegate($this->publisher, __FUNCTION__, \func_get_args());
     }
 
+    public function purge(Queue $queue, ?int $olderThan = null, ?int $limit = null): int
+    {
+        return $this->delegate($this->publisher, __FUNCTION__, \func_get_args());
+    }
+    
     /**
      * {@see Redis::reap()} — requires the pooled publisher to be a broker that
      * implements it.

@@ -192,7 +192,7 @@ final class BackgroundTest extends TestCase
                 return true;
             }
 
-            public function retry(Queue $queue, ?int $limit = null): void
+            public function retry(Queue $queue, ?int $limit = null, ?int $newerThan = null): void
             {
             }
 
@@ -207,6 +207,11 @@ final class BackgroundTest extends TestCase
             }
 
             public function getFailedCount(Queue $queue): int
+            {
+                return 0;
+            }
+
+            public function purge(Queue $queue, ?int $olderThan = null, ?int $limit = null): int
             {
                 return 0;
             }
@@ -283,7 +288,7 @@ final class BackgroundTest extends TestCase
                 return true;
             }
 
-            public function retry(Queue $queue, ?int $limit = null): void
+            public function retry(Queue $queue, ?int $limit = null, ?int $newerThan = null): void
             {
             }
 
@@ -298,6 +303,11 @@ final class BackgroundTest extends TestCase
             }
 
             public function getFailedCount(Queue $queue): int
+            {
+                return 0;
+            }
+
+            public function purge(Queue $queue, ?int $olderThan = null, ?int $limit = null): int
             {
                 return 0;
             }
@@ -388,7 +398,7 @@ final class BackgroundTest extends TestCase
                 return true;
             }
 
-            public function retry(Queue $queue, ?int $limit = null): void
+            public function retry(Queue $queue, ?int $limit = null, ?int $newerThan = null): void
             {
             }
 
@@ -403,6 +413,11 @@ final class BackgroundTest extends TestCase
             }
 
             public function getFailedCount(Queue $queue): int
+            {
+                return 0;
+            }
+
+            public function purge(Queue $queue, ?int $olderThan = null, ?int $limit = null): int
             {
                 return 0;
             }
@@ -437,7 +452,7 @@ final class BackgroundTest extends TestCase
                 return true;
             }
 
-            public function retry(Queue $queue, ?int $limit = null): void
+            public function retry(Queue $queue, ?int $limit = null, ?int $newerThan = null): void
             {
             }
 
@@ -452,6 +467,11 @@ final class BackgroundTest extends TestCase
             }
 
             public function getFailedCount(Queue $queue): int
+            {
+                return 0;
+            }
+
+            public function purge(Queue $queue, ?int $olderThan = null, ?int $limit = null): int
             {
                 return 0;
             }

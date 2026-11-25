@@ -473,7 +473,7 @@ final class ServerTelemetryPublisherConsumer extends ServerTelemetryConsumer imp
         return true;
     }
 
-    public function retry(Queue $queue, ?int $limit = null): void
+    public function retry(Queue $queue, ?int $limit = null, ?int $newerThan = null): void
     {
     }
 
@@ -495,6 +495,11 @@ final class ServerTelemetryPublisherConsumer extends ServerTelemetryConsumer imp
     {
         return array_shift($this->failedQueueSizes) ?? 0;
     }
+
+    public function purge(Queue $queue, ?int $olderThan = null, ?int $limit = null): int
+    {
+        return 0;
+    }
 }
 
 final class ServerTelemetryFailingPublisherConsumer extends ServerTelemetryConsumer implements Synchronous
@@ -509,7 +514,7 @@ final class ServerTelemetryFailingPublisherConsumer extends ServerTelemetryConsu
         return true;
     }
 
-    public function retry(Queue $queue, ?int $limit = null): void
+    public function retry(Queue $queue, ?int $limit = null, ?int $newerThan = null): void
     {
     }
 
@@ -526,5 +531,10 @@ final class ServerTelemetryFailingPublisherConsumer extends ServerTelemetryConsu
     public function getFailedCount(Queue $queue): int
     {
         throw new \RuntimeException('Queue size unavailable.');
+    }
+
+    public function purge(Queue $queue, ?int $olderThan = null, ?int $limit = null): int
+    {
+        return 0;
     }
 }

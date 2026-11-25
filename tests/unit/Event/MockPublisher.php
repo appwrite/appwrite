@@ -32,9 +32,14 @@ class MockPublisher implements Publisher
         return $this->events[$queue] ?? null;
     }
 
-    public function retry(Queue $queue, ?int $limit = null): void
+    public function retry(Queue $queue, ?int $limit = null, ?int $newerThan = null): void
     {
         // TODO: Implement retry() method.
+    }
+
+    public function purge(Queue $queue, ?int $olderThan = null, ?int $limit = null): int
+    {
+        return 0;
     }
 
     public function getQueueSize(Queue $queue, bool $failedJobs = false): int

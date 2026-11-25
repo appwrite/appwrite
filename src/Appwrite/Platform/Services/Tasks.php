@@ -8,6 +8,7 @@ use Appwrite\Platform\Tasks\Install;
 use Appwrite\Platform\Tasks\Interval;
 use Appwrite\Platform\Tasks\Maintenance;
 use Appwrite\Platform\Tasks\Migrate;
+use Appwrite\Platform\Tasks\QueuePurge;
 use Appwrite\Platform\Tasks\QueueRetry;
 use Appwrite\Platform\Tasks\Schedule;
 use Appwrite\Platform\Tasks\ScheduleAlerts;
@@ -37,6 +38,7 @@ class Tasks extends Service
             ->addAction('interval', Interval::class)
             ->addAction('maintenance', Maintenance::class)
             ->addAction('migrate', Migrate::class)
+            ->addAction('queue-purge', QueuePurge::class)
             ->addAction('queue-retry', QueueRetry::class)
             ->addAction('sdks', SDKs::class)
             ->addAction('ssl', SSL::class)
