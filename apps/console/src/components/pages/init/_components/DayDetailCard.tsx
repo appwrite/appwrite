@@ -14,12 +14,8 @@ import { Badge } from '@/components/ui/badge'
 import { InitDayCardHeaderNav } from './InitDayCardHeaderNav'
 import { InitScheduleRow } from './InitScheduleRow'
 import { ArrowUpRight, BookOpen, FileText, Package, Play } from 'lucide-react'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { useQueryClient } from '@tanstack/react-query'
+import { InitFilmDialog, prefetchInitFilms } from './init5/InitFilmDialog'
 import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useInitHref } from '@/lib/init/use-init-href'
@@ -166,24 +162,9 @@ function DayPrimaryLink({
   )
 }
 
-/** The Appwrite player, as the console's public `/player` page, in a frame. */
-function DayFilmPlayer({ film }: { film: LaunchEventDayFilm }) {
-  const src = `/player/${encodeURIComponent(film.videoId)}?project=${encodeURIComponent(film.projectId)}`
-  return (
-    <iframe
-      key={film.videoId}
-      src={src}
-      title={film.label}
-      allow="autoplay; fullscreen; picture-in-picture"
-      allowFullScreen
-      className="aspect-video w-full rounded-lg border-0 bg-black"
-    />
-  )
-}
-
 /**
  * The day's cover as a play button: the launch film opens in the Appwrite
- * player. A day with several films (Monitors and Beep) switches between them.
+ * player. Pointing at the cover warms the player and the film's playlist.
  */
 function DayFilmCover({
   day,
@@ -195,17 +176,16 @@ function DayFilmCover({
   children: ReactNode
 }) {
   const [open, setOpen] = useState(false)
-  const [active, setActive] = useState(0)
-  const film = films[active] ?? films[0]!
+  const queryClient = useQueryClient()
+  const prefetch = () => prefetchInitFilms(queryClient, films)
 
   return (
     <>
       <button
         type="button"
-        onClick={() => {
-          setActive(0)
-          setOpen(true)
-        }}
+        onClick={() => setOpen(true)}
+        onPointerEnter={prefetch}
+        onFocus={prefetch}
         className="group/film relative block w-full cursor-pointer rounded-lg text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         aria-label={`Play the ${films.map((entry) => entry.label).join(' and ')} launch film`}
       >
@@ -218,40 +198,12 @@ function DayFilmCover({
           Watch the launch
         </span>
       </button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="w-[min(92vw,960px)] max-w-none gap-3 p-3 sm:max-w-none sm:p-4">
-          <DialogTitle className="pe-8 text-[15px]">{day.title}</DialogTitle>
-          <DialogDescription className="sr-only">
-            The launch film, played with the Appwrite player.
-          </DialogDescription>
-          {films.length > 1 ? (
-            <div
-              className="flex gap-1.5"
-              role="tablist"
-              aria-label="Launch films"
-            >
-              {films.map((entry, index) => (
-                <button
-                  key={entry.videoId}
-                  type="button"
-                  role="tab"
-                  aria-selected={index === active}
-                  onClick={() => setActive(index)}
-                  className={cn(
-                    'rounded-md border px-2.5 py-1 text-[12px] font-medium transition-colors',
-                    index === active
-                      ? 'border-[var(--brand-cta)] bg-[color-mix(in_srgb,var(--brand-cta)_12%,transparent)] text-foreground'
-                      : 'border-border text-muted-foreground hover:text-foreground',
-                  )}
-                >
-                  {entry.label}
-                </button>
-              ))}
-            </div>
-          ) : null}
-          <DayFilmPlayer film={film} />
-        </DialogContent>
-      </Dialog>
+      <InitFilmDialog
+        title={day.title}
+        films={films}
+        open={open}
+        onOpenChange={setOpen}
+      />
     </>
   )
 }

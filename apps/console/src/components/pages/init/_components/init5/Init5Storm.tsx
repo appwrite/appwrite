@@ -15,15 +15,18 @@ import { cn } from '@/lib/utils'
  */
 export function Init5Storm({
   edges,
+  dark = false,
   className,
 }: {
   edges: InitStormEdges
+  /** Always the dark storm, for a surface that is dark in either theme. */
+  dark?: boolean
   className?: string
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const stormRef = useRef<InitStorm | null>(null)
   const { resolvedTheme } = useTheme()
-  const isDark = isDarkChrome(resolvedTheme)
+  const isDark = dark || isDarkChrome(resolvedTheme)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -33,7 +36,7 @@ export function Init5Storm({
       '(prefers-reduced-motion: reduce)',
     ).matches
     const storm = createInitStorm(canvas, {
-      palette: readPalette(surface, isDarkChrome(resolvedTheme)),
+      palette: readPalette(surface, isDark),
       reducedMotion,
       edges,
     })

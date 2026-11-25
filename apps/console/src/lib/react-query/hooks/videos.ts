@@ -431,18 +431,26 @@ export async function fetchPublicHlsPlayback(
   return publicHlsPlayback(videoId, await response.text())
 }
 
-export function usePublicHlsPlayback(
+export function publicHlsPlaybackQueryOptions(
   projectId: string | null | undefined,
   videoId: string | null | undefined,
-  enabled: boolean,
 ) {
-  return useQuery({
+  return queryOptions({
     queryKey: videoKeys.publicPlayback(projectId, videoId),
     queryFn: () => fetchPublicHlsPlayback(projectId!, videoId!),
-    enabled: enabled && !!projectId && !!videoId,
+    enabled: !!projectId && !!videoId,
     retry: false,
     staleTime: DEFAULT_STALE_TIME,
   })
+}
+
+export function usePublicHlsPlayback(
+  projectId: string | null | undefined,
+  videoId: string | null | undefined,
+  enabled = true,
+) {
+  const options = publicHlsPlaybackQueryOptions(projectId, videoId)
+  return useQuery({ ...options, enabled: enabled && options.enabled })
 }
 
 export function videoCaptionsQueryOptions(

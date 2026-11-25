@@ -72,6 +72,8 @@ export interface VideoStreamPlayerProps {
   layout?: 'console' | 'embed'
   /** Seek once when the stream is ready (`?start=` on the embed URL). */
   initialStartSeconds?: number
+  /** Start playing once the stream can play, for a viewer who asked to watch. */
+  autoPlay?: boolean
 }
 
 /** Height of the docked player strip. */
@@ -100,6 +102,7 @@ export function VideoStreamPlayer({
   variant = 'default',
   layout = 'console',
   initialStartSeconds,
+  autoPlay = false,
 }: VideoStreamPlayerProps) {
   const t = useT()
   const videoRef = useRef<HTMLVideoElement | null>(null)
@@ -938,6 +941,7 @@ export function VideoStreamPlayer({
                 )}
                 style={videoSubtitleStyle}
                 playsInline
+                autoPlay={autoPlay}
                 aria-label={video.name}
                 onClick={() => {
                   const el = videoRef.current
@@ -1047,6 +1051,7 @@ export function VideoStreamPlayer({
                   )}
                   style={videoSubtitleStyle}
                   playsInline
+                  autoPlay={autoPlay}
                   aria-label={video.name}
                   onClick={() => {
                     const el = videoRef.current
