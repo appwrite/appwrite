@@ -43,7 +43,10 @@ function HomeInitDayCard({
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             {t('Day')} {day.day} · {t(day.dateLabel)}
           </p>
-          <Lock className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+          <Lock
+            className="size-3.5 shrink-0 text-muted-foreground"
+            aria-hidden
+          />
         </div>
         <p className="mt-3 text-[13px] font-medium text-muted-foreground">
           {t('Coming soon')}
@@ -100,21 +103,27 @@ function HomeInitDayCard({
 
 export function InitSection() {
   const t = useT()
-  const { mockInitCurrentDay } = useDebugOverrides()
+  const { mockInitCurrentDay, mockInitActiveEventId } = useDebugOverrides()
 
   const visible = useMemo(
-    () => isInitEventDuring({ currentDay: mockInitCurrentDay }),
-    [mockInitCurrentDay],
+    () =>
+      isInitEventDuring({
+        currentDay: mockInitCurrentDay,
+        activeEventId: mockInitActiveEventId,
+      }),
+    [mockInitCurrentDay, mockInitActiveEventId],
   )
 
   const event = useMemo(() => {
     if (!visible) return null
 
-    const active = getActiveLaunchEvent()
+    const active = getActiveLaunchEvent(new Date(), {
+      activeEventId: mockInitActiveEventId,
+    })
     if (!active) return null
 
     return applyInitEventVisibility(active, { currentDay: mockInitCurrentDay })
-  }, [visible, mockInitCurrentDay])
+  }, [visible, mockInitActiveEventId, mockInitCurrentDay])
 
   if (!visible || !event) return null
 
@@ -146,7 +155,9 @@ export function InitSection() {
             ·
           </span>
           <p className="min-w-0 flex-1 truncate text-[13px] text-muted-foreground max-[419px]:sr-only">
-            {t('Launch week is live. Follow daily drops, live sessions, and giveaways.')}
+            {t(
+              'Launch week is live. Follow daily drops, live sessions, and giveaways.',
+            )}
           </p>
           <Button
             variant="brandCta"

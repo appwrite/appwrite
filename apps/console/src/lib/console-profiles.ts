@@ -61,6 +61,8 @@ export type ConsoleProfileFeatures = {
   nativeDbsMongo: boolean
   /** An experiment, off by default; the quality team turns it on from the header Previews menu. Videos product (transcoding, renditions, subtitles, HLS/DASH playback) via the `videos` SDK service. */
   videos: boolean
+  /** An experiment, off by default; the quality team turns it on from the header Previews menu. A project without a Git installation reuses the GitHub organization installations of the organization's other projects. */
+  gitInstallationReuse: boolean
   /**
    * Internal only, switched on from the debug menu. Review product (AI code
    * review of GitHub pull requests) via the `reviews` service. Even when on, it
@@ -104,7 +106,7 @@ export type ConsoleProfileFeatures = {
   /**
    * Appwrite Zero marketing page (`/zero`, `/zero.md`) and its Products menu and
    * footer links. Off until launch: the page returns 404 while this is off.
-   * Enable from Debug → Feature flags, or with VITE_CONSOLE_ZERO on Cloud.
+   * Enable from Debug → Feature flags; at launch, default it on.
    */
   zero: boolean
 }
@@ -138,6 +140,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   databaseSpecifications: 'Database specifications',
   nativeDbsMongo: 'Native DBs: MongoDB',
   videos: 'Videos',
+  gitInstallationReuse: 'Git installation reuse',
   reviews: 'Review',
   projectEnvironments: 'Project environments',
   alerts: 'Alerts',
@@ -194,6 +197,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       databaseSpecifications: true,
       nativeDbsMongo: false,
       videos: false,
+      gitInstallationReuse: false,
       reviews: false,
       projectEnvironments: false,
       alerts: false,
@@ -240,6 +244,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       databaseSpecifications: false,
       nativeDbsMongo: false,
       videos: false,
+      gitInstallationReuse: false,
       reviews: false,
       projectEnvironments: false,
       alerts: false,
@@ -552,8 +557,7 @@ function parseEnvFeatureOverride(value: string): boolean | null {
  * Per-feature overrides from runtime env vars (e.g.
  * VITE_CONSOLE_USER_VERIFICATION, VITE_CONSOLE_COOKIE_BANNER,
  * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_DATABASE_PITR_RESTORE,
- * VITE_CONSOLE_PROJECT_ENVIRONMENTS, VITE_CONSOLE_BROWSER_ALERTS,
- * VITE_CONSOLE_ZERO), applied on top
+ * VITE_CONSOLE_PROJECT_ENVIRONMENTS, VITE_CONSOLE_BROWSER_ALERTS), applied on top
  * of the canonical profile. A stored debug override still wins.
  */
 function applyEnvFeatureOverrides(
@@ -586,11 +590,6 @@ function applyEnvFeatureOverrides(
   )
   if (projectEnvironments !== null && profileId === 'cloud') {
     next = { ...next, projectEnvironments }
-  }
-  // Zero projects exist on Cloud only.
-  const zero = parseEnvFeatureOverride(config.zero)
-  if (zero !== null && profileId === 'cloud') {
-    next = { ...next, zero }
   }
   const browserAlerts = parseEnvFeatureOverride(config.browserAlerts)
   if (browserAlerts !== null) {

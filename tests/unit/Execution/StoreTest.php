@@ -443,6 +443,29 @@ final class StoreTest extends TestCase
         }
     }
 
+    public function testInsertBufferWritesThroughAsyncInsert(): void
+    {
+        $client = new CapturingClient();
+        $store = new Store(
+            dsn: 'http://appwrite:secret@clickhouse:8123/appwrite',
+            client: $client,
+            insertBuffer: 1500,
+        );
+
+        $store->upsert('project', new Document(['$id' => 'first', 'resourceType' => 'functions', 'status' => 'waiting']));
+        $store->delete('project', new Document(['$id' => 'first', 'resourceType' => 'functions']));
+
+        $this->assertCount(2, $client->requests);
+        foreach ($client->requests as $request) {
+            \parse_str($request->getUri()->getQuery(), $parameters);
+            $this->assertSame('1', $parameters['async_insert'] ?? null);
+            // The write must not return before its rows are stored.
+            $this->assertSame('1', $parameters['wait_for_async_insert'] ?? null);
+            $this->assertSame('0', $parameters['async_insert_use_adaptive_busy_timeout'] ?? null);
+            $this->assertSame('1500', $parameters['async_insert_busy_timeout_max_ms'] ?? null);
+        }
+    }
+
     public function testWriteFailuresPropagate(): void
     {
         $store = $this->store(new FailingClient());

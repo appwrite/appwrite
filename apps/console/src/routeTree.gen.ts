@@ -243,6 +243,7 @@ import { Route as PublicOrganizationsOrgIdSettingsBillingRouteImport } from './r
 import { Route as PublicOrganizationsOrgIdSettingsComplianceRouteImport } from './routes/_public/organizations.$orgId.settings.compliance'
 import { Route as PublicOrganizationsOrgIdSettingsDangerZoneRouteImport } from './routes/_public/organizations.$orgId.settings.danger-zone'
 import { Route as PublicOrganizationsOrgIdSettingsEscalationsRouteImport } from './routes/_public/organizations.$orgId.settings.escalations'
+import { Route as PublicOrganizationsOrgIdSettingsInstallationsRouteImport } from './routes/_public/organizations.$orgId.settings.installations'
 import { Route as PublicOrganizationsOrgIdSettingsMembersRouteImport } from './routes/_public/organizations.$orgId.settings.members'
 import { Route as PublicOrganizationsOrgIdSettingsOauthAppsRouteImport } from './routes/_public/organizations.$orgId.settings.oauth-apps'
 import { Route as PublicOrganizationsOrgIdSettingsPartnersRouteImport } from './routes/_public/organizations.$orgId.settings.partners'
@@ -263,6 +264,8 @@ import { Route as PublicProjectsProjectIdDatabasesCreateRouteImport } from './ro
 import { Route as PublicProjectsProjectIdEnvironmentsCreateRouteImport } from './routes/_public/projects.$projectId.environments.create'
 import { Route as PublicProjectsProjectIdFirewallIndexRouteImport } from './routes/_public/projects.$projectId.firewall.index'
 import { Route as PublicProjectsProjectIdFirewallCreateRouteImport } from './routes/_public/projects.$projectId.firewall.create'
+import { Route as PublicProjectsProjectIdFirewallFunctionsRouteImport } from './routes/_public/projects.$projectId.firewall.functions'
+import { Route as PublicProjectsProjectIdFirewallSitesRouteImport } from './routes/_public/projects.$projectId.firewall.sites'
 import { Route as PublicProjectsProjectIdFunctionsIndexRouteImport } from './routes/_public/projects.$projectId.functions.index'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdRouteImport } from './routes/_public/projects.$projectId.functions.$functionId'
 import { Route as PublicProjectsProjectIdFunctionsCreateRouteImport } from './routes/_public/projects.$projectId.functions.create'
@@ -1793,6 +1796,12 @@ const PublicOrganizationsOrgIdSettingsEscalationsRoute =
     path: '/escalations',
     getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
   } as any)
+const PublicOrganizationsOrgIdSettingsInstallationsRoute =
+  PublicOrganizationsOrgIdSettingsInstallationsRouteImport.update({
+    id: '/installations',
+    path: '/installations',
+    getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
+  } as any)
 const PublicOrganizationsOrgIdSettingsMembersRoute =
   PublicOrganizationsOrgIdSettingsMembersRouteImport.update({
     id: '/members',
@@ -1911,6 +1920,18 @@ const PublicProjectsProjectIdFirewallCreateRoute =
   PublicProjectsProjectIdFirewallCreateRouteImport.update({
     id: '/create',
     path: '/create',
+    getParentRoute: () => PublicProjectsProjectIdFirewallRoute,
+  } as any)
+const PublicProjectsProjectIdFirewallFunctionsRoute =
+  PublicProjectsProjectIdFirewallFunctionsRouteImport.update({
+    id: '/functions',
+    path: '/functions',
+    getParentRoute: () => PublicProjectsProjectIdFirewallRoute,
+  } as any)
+const PublicProjectsProjectIdFirewallSitesRoute =
+  PublicProjectsProjectIdFirewallSitesRouteImport.update({
+    id: '/sites',
+    path: '/sites',
     getParentRoute: () => PublicProjectsProjectIdFirewallRoute,
   } as any)
 const PublicProjectsProjectIdFunctionsIndexRoute =
@@ -3962,6 +3983,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/settings/compliance': typeof PublicOrganizationsOrgIdSettingsComplianceRoute
   '/organizations/$orgId/settings/danger-zone': typeof PublicOrganizationsOrgIdSettingsDangerZoneRoute
   '/organizations/$orgId/settings/escalations': typeof PublicOrganizationsOrgIdSettingsEscalationsRoute
+  '/organizations/$orgId/settings/installations': typeof PublicOrganizationsOrgIdSettingsInstallationsRoute
   '/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/organizations/$orgId/settings/partners': typeof PublicOrganizationsOrgIdSettingsPartnersRoute
@@ -3979,6 +4001,8 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/create': typeof PublicProjectsProjectIdDatabasesCreateRoute
   '/projects/$projectId/environments/create': typeof PublicProjectsProjectIdEnvironmentsCreateRoute
   '/projects/$projectId/firewall/create': typeof PublicProjectsProjectIdFirewallCreateRoute
+  '/projects/$projectId/firewall/functions': typeof PublicProjectsProjectIdFirewallFunctionsRoute
+  '/projects/$projectId/firewall/sites': typeof PublicProjectsProjectIdFirewallSitesRoute
   '/projects/$projectId/functions/$functionId': typeof PublicProjectsProjectIdFunctionsFunctionIdRouteWithChildren
   '/projects/$projectId/functions/create': typeof PublicProjectsProjectIdFunctionsCreateRouteWithChildren
   '/projects/$projectId/functions/editor': typeof PublicProjectsProjectIdFunctionsEditorRoute
@@ -4450,6 +4474,7 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/settings/compliance': typeof PublicOrganizationsOrgIdSettingsComplianceRoute
   '/organizations/$orgId/settings/danger-zone': typeof PublicOrganizationsOrgIdSettingsDangerZoneRoute
   '/organizations/$orgId/settings/escalations': typeof PublicOrganizationsOrgIdSettingsEscalationsRoute
+  '/organizations/$orgId/settings/installations': typeof PublicOrganizationsOrgIdSettingsInstallationsRoute
   '/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/organizations/$orgId/settings/partners': typeof PublicOrganizationsOrgIdSettingsPartnersRoute
@@ -4466,6 +4491,8 @@ export interface FileRoutesByTo {
   '/projects/$projectId/databases/create': typeof PublicProjectsProjectIdDatabasesCreateRoute
   '/projects/$projectId/environments/create': typeof PublicProjectsProjectIdEnvironmentsCreateRoute
   '/projects/$projectId/firewall/create': typeof PublicProjectsProjectIdFirewallCreateRoute
+  '/projects/$projectId/firewall/functions': typeof PublicProjectsProjectIdFirewallFunctionsRoute
+  '/projects/$projectId/firewall/sites': typeof PublicProjectsProjectIdFirewallSitesRoute
   '/projects/$projectId/functions/editor': typeof PublicProjectsProjectIdFunctionsEditorRoute
   '/projects/$projectId/functions/templates': typeof PublicProjectsProjectIdFunctionsTemplatesRoute
   '/projects/$projectId/monitors/alerts': typeof PublicProjectsProjectIdMonitorsAlertsRoute
@@ -4945,6 +4972,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/settings/compliance': typeof PublicOrganizationsOrgIdSettingsComplianceRoute
   '/_public/organizations/$orgId/settings/danger-zone': typeof PublicOrganizationsOrgIdSettingsDangerZoneRoute
   '/_public/organizations/$orgId/settings/escalations': typeof PublicOrganizationsOrgIdSettingsEscalationsRoute
+  '/_public/organizations/$orgId/settings/installations': typeof PublicOrganizationsOrgIdSettingsInstallationsRoute
   '/_public/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/_public/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/_public/organizations/$orgId/settings/partners': typeof PublicOrganizationsOrgIdSettingsPartnersRoute
@@ -4962,6 +4990,8 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/databases/create': typeof PublicProjectsProjectIdDatabasesCreateRoute
   '/_public/projects/$projectId/environments/create': typeof PublicProjectsProjectIdEnvironmentsCreateRoute
   '/_public/projects/$projectId/firewall/create': typeof PublicProjectsProjectIdFirewallCreateRoute
+  '/_public/projects/$projectId/firewall/functions': typeof PublicProjectsProjectIdFirewallFunctionsRoute
+  '/_public/projects/$projectId/firewall/sites': typeof PublicProjectsProjectIdFirewallSitesRoute
   '/_public/projects/$projectId/functions/$functionId': typeof PublicProjectsProjectIdFunctionsFunctionIdRouteWithChildren
   '/_public/projects/$projectId/functions/create': typeof PublicProjectsProjectIdFunctionsCreateRouteWithChildren
   '/_public/projects/$projectId/functions/editor': typeof PublicProjectsProjectIdFunctionsEditorRoute
@@ -5464,6 +5494,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/settings/compliance'
     | '/organizations/$orgId/settings/danger-zone'
     | '/organizations/$orgId/settings/escalations'
+    | '/organizations/$orgId/settings/installations'
     | '/organizations/$orgId/settings/members'
     | '/organizations/$orgId/settings/oauth-apps'
     | '/organizations/$orgId/settings/partners'
@@ -5481,6 +5512,8 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/create'
     | '/projects/$projectId/environments/create'
     | '/projects/$projectId/firewall/create'
+    | '/projects/$projectId/firewall/functions'
+    | '/projects/$projectId/firewall/sites'
     | '/projects/$projectId/functions/$functionId'
     | '/projects/$projectId/functions/create'
     | '/projects/$projectId/functions/editor'
@@ -5952,6 +5985,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/settings/compliance'
     | '/organizations/$orgId/settings/danger-zone'
     | '/organizations/$orgId/settings/escalations'
+    | '/organizations/$orgId/settings/installations'
     | '/organizations/$orgId/settings/members'
     | '/organizations/$orgId/settings/oauth-apps'
     | '/organizations/$orgId/settings/partners'
@@ -5968,6 +6002,8 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/create'
     | '/projects/$projectId/environments/create'
     | '/projects/$projectId/firewall/create'
+    | '/projects/$projectId/firewall/functions'
+    | '/projects/$projectId/firewall/sites'
     | '/projects/$projectId/functions/editor'
     | '/projects/$projectId/functions/templates'
     | '/projects/$projectId/monitors/alerts'
@@ -6446,6 +6482,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/settings/compliance'
     | '/_public/organizations/$orgId/settings/danger-zone'
     | '/_public/organizations/$orgId/settings/escalations'
+    | '/_public/organizations/$orgId/settings/installations'
     | '/_public/organizations/$orgId/settings/members'
     | '/_public/organizations/$orgId/settings/oauth-apps'
     | '/_public/organizations/$orgId/settings/partners'
@@ -6463,6 +6500,8 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/databases/create'
     | '/_public/projects/$projectId/environments/create'
     | '/_public/projects/$projectId/firewall/create'
+    | '/_public/projects/$projectId/firewall/functions'
+    | '/_public/projects/$projectId/firewall/sites'
     | '/_public/projects/$projectId/functions/$functionId'
     | '/_public/projects/$projectId/functions/create'
     | '/_public/projects/$projectId/functions/editor'
@@ -8439,6 +8478,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsEscalationsRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
     }
+    '/_public/organizations/$orgId/settings/installations': {
+      id: '/_public/organizations/$orgId/settings/installations'
+      path: '/installations'
+      fullPath: '/organizations/$orgId/settings/installations'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsInstallationsRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
+    }
     '/_public/organizations/$orgId/settings/members': {
       id: '/_public/organizations/$orgId/settings/members'
       path: '/members'
@@ -8577,6 +8623,20 @@ declare module '@tanstack/react-router' {
       path: '/create'
       fullPath: '/projects/$projectId/firewall/create'
       preLoaderRoute: typeof PublicProjectsProjectIdFirewallCreateRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFirewallRoute
+    }
+    '/_public/projects/$projectId/firewall/functions': {
+      id: '/_public/projects/$projectId/firewall/functions'
+      path: '/functions'
+      fullPath: '/projects/$projectId/firewall/functions'
+      preLoaderRoute: typeof PublicProjectsProjectIdFirewallFunctionsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFirewallRoute
+    }
+    '/_public/projects/$projectId/firewall/sites': {
+      id: '/_public/projects/$projectId/firewall/sites'
+      path: '/sites'
+      fullPath: '/projects/$projectId/firewall/sites'
+      preLoaderRoute: typeof PublicProjectsProjectIdFirewallSitesRouteImport
       parentRoute: typeof PublicProjectsProjectIdFirewallRoute
     }
     '/_public/projects/$projectId/functions/': {
@@ -10854,6 +10914,7 @@ interface PublicOrganizationsOrgIdSettingsRouteChildren {
   PublicOrganizationsOrgIdSettingsComplianceRoute: typeof PublicOrganizationsOrgIdSettingsComplianceRoute
   PublicOrganizationsOrgIdSettingsDangerZoneRoute: typeof PublicOrganizationsOrgIdSettingsDangerZoneRoute
   PublicOrganizationsOrgIdSettingsEscalationsRoute: typeof PublicOrganizationsOrgIdSettingsEscalationsRoute
+  PublicOrganizationsOrgIdSettingsInstallationsRoute: typeof PublicOrganizationsOrgIdSettingsInstallationsRoute
   PublicOrganizationsOrgIdSettingsMembersRoute: typeof PublicOrganizationsOrgIdSettingsMembersRoute
   PublicOrganizationsOrgIdSettingsOauthAppsRoute: typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   PublicOrganizationsOrgIdSettingsPartnersRoute: typeof PublicOrganizationsOrgIdSettingsPartnersRoute
@@ -10869,6 +10930,8 @@ const PublicOrganizationsOrgIdSettingsRouteChildren: PublicOrganizationsOrgIdSet
       PublicOrganizationsOrgIdSettingsDangerZoneRoute,
     PublicOrganizationsOrgIdSettingsEscalationsRoute:
       PublicOrganizationsOrgIdSettingsEscalationsRoute,
+    PublicOrganizationsOrgIdSettingsInstallationsRoute:
+      PublicOrganizationsOrgIdSettingsInstallationsRoute,
     PublicOrganizationsOrgIdSettingsMembersRoute:
       PublicOrganizationsOrgIdSettingsMembersRoute,
     PublicOrganizationsOrgIdSettingsOauthAppsRoute:
@@ -11578,6 +11641,8 @@ const PublicProjectsProjectIdDatabasesRouteWithChildren =
 
 interface PublicProjectsProjectIdFirewallRouteChildren {
   PublicProjectsProjectIdFirewallCreateRoute: typeof PublicProjectsProjectIdFirewallCreateRoute
+  PublicProjectsProjectIdFirewallFunctionsRoute: typeof PublicProjectsProjectIdFirewallFunctionsRoute
+  PublicProjectsProjectIdFirewallSitesRoute: typeof PublicProjectsProjectIdFirewallSitesRoute
   PublicProjectsProjectIdFirewallIndexRoute: typeof PublicProjectsProjectIdFirewallIndexRoute
 }
 
@@ -11585,6 +11650,10 @@ const PublicProjectsProjectIdFirewallRouteChildren: PublicProjectsProjectIdFirew
   {
     PublicProjectsProjectIdFirewallCreateRoute:
       PublicProjectsProjectIdFirewallCreateRoute,
+    PublicProjectsProjectIdFirewallFunctionsRoute:
+      PublicProjectsProjectIdFirewallFunctionsRoute,
+    PublicProjectsProjectIdFirewallSitesRoute:
+      PublicProjectsProjectIdFirewallSitesRoute,
     PublicProjectsProjectIdFirewallIndexRoute:
       PublicProjectsProjectIdFirewallIndexRoute,
   }

@@ -1827,7 +1827,19 @@ export async function updateProductDatabaseSpecification(
       databaseId,
     )
     if (!onDedicated) {
-      return createTablesDatabaseMigration(projectId, databaseId, trimmed)
+      try {
+        return await createTablesDatabaseMigration(
+          projectId,
+          databaseId,
+          trimmed,
+        )
+      } catch (error) {
+        // The read can miss the dedicated backing (no specification on the
+        // response); the server knows, so resize instead of migrating.
+        if ((error as { type?: string })?.type !== 'database_not_serverless') {
+          throw error
+        }
+      }
     }
   }
 

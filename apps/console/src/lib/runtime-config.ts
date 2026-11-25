@@ -48,7 +48,6 @@ const EMPTY_CONFIG: RuntimeConfig = {
   screenshotMode: '',
   databasePitrRestore: '',
   projectEnvironments: '',
-  zero: '',
   usageStats: '',
   preLaunch: '',
 }

@@ -440,6 +440,14 @@ export function canShowOrgOAuthAppsSettings(
   return isCloudProfile() && canAccessOrgSettingsOAuthOrApiKeys(access)
 }
 
+/** Organization settings → Installed apps (any member can read; owners manage). */
+export function canShowOrgInstalledAppsSettings(
+  _access: ConsoleAccess,
+  _features: AccessCheckFeatures,
+): boolean {
+  return isCloudProfile()
+}
+
 /** Organization settings → Org API keys (console profile + owners/developers). */
 export function canShowOrgApiKeysSettings(
   access: ConsoleAccess,
@@ -524,6 +532,8 @@ export function getFirstAllowedOrgSettingsPath(
     return `${basePath}/compliance`
   if (canShowOrgOAuthAppsSettings(access, features))
     return `${basePath}/oauth-apps`
+  if (canShowOrgInstalledAppsSettings(access, features))
+    return `${basePath}/installations`
   if (canShowOrgApiKeysSettings(access, features)) return `${basePath}/partners`
   return basePath
 }

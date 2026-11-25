@@ -130,6 +130,31 @@ describe('updateProductDatabaseSpecification', () => {
     },
   )
 
+  test('resizes through tablesDB.update when migration reports the database is dedicated', async () => {
+    const calls = mockSdk({
+      createMigration: () => {
+        throw new AppwriteException(
+          'This database is already attached to a dedicated compute and is not serverless.',
+          400,
+          'database_not_serverless',
+        )
+      },
+    })
+
+    await updateProductDatabaseSpecification(
+      PROJECT_ID,
+      DATABASE_ID,
+      'tablesdb',
+      TARGET_SPECIFICATION,
+    )
+
+    expect(calls.at(-1)).toEqual({
+      service: 'tablesDB',
+      method: 'update',
+      params: { databaseId: DATABASE_ID, specification: TARGET_SPECIFICATION },
+    })
+  })
+
   test('surfaces a migration 404 instead of retrying on the mysql engine', async () => {
     const calls = mockSdk({
       specification: 'shared',

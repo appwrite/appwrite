@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
-import { InitialsAvatar, PhotoAvatar } from '@/components/global/shared/Avatar'
+import { PhotoAvatar, TeamAvatar } from '@/components/global/shared/Avatar'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import {
@@ -213,7 +213,12 @@ export function MembershipUpdateDrawer({
                         params={{ projectId, teamId: membership.teamId }}
                         className="flex items-center gap-3 rounded-xl border border-border bg-card/50 px-4 py-3 transition-colors hover:bg-muted/50"
                       >
-                        <InitialsAvatar name={membership.teamName} size="md" />
+                        <TeamAvatar
+                          teamId={membership.teamId}
+                          projectId={projectId}
+                          name={membership.teamName}
+                          size="md"
+                        />
                         <div className="flex-1 min-w-0">
                           <p className="text-[13px] font-medium text-foreground truncate">
                             {membership.teamName || t('Team')}
@@ -301,7 +306,10 @@ export function MembershipUpdateDrawer({
                     )}
                     <p className="text-[12px] text-muted-foreground">
                       {t('Roles are used to manage access permissions.')}{' '}
-                      <DocsRouteLink className="link-neutral" href="/docs/advanced/platform/permissions">
+                      <DocsRouteLink
+                        className="link-neutral"
+                        href="/docs/advanced/platform/permissions"
+                      >
                         {t('Learn more about permissions')}
                       </DocsRouteLink>
                     </p>

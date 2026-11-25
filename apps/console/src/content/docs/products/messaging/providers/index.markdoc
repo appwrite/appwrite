@@ -23,6 +23,9 @@ Send push notifications to Android, Apple, or Web app with Firebase Cloud Messag
 # Email {% #email %}
 Deliver customized emails to users to send reminders, updates, promotions, and custom authentication logic.
 {% cards %}
+{% cards_item href="/docs/products/messaging/bird-email" title="Bird" icon="web-icon-bird" %}
+Deliver custom email messages to users using Bird.
+{% /cards_item %}
 {% cards_item href="/docs/products/messaging/mailgun" title="Mailgun" icon="web-icon-mailgun" %}
 Deliver custom email messages to users using Mailgun.
 {% /cards_item %}
@@ -44,6 +47,9 @@ Send customized SMS messages to users by phone to send reminders, updates, promo
 {% cards %}
 {% cards_item href="/docs/products/messaging/twilio" title="Twilio" icon="icon-twilio" %}
 Deliver custom SMS messages to users using Twilio.
+{% /cards_item %}
+{% cards_item href="/docs/products/messaging/bird-sms" title="Bird" icon="web-icon-bird" %}
+Deliver custom SMS messages to users using Bird.
 {% /cards_item %}
 {% cards_item href="/docs/products/messaging/msg91" title="MSG91" icon="icon-msg91" %}
 Deliver custom SMS messages to users using MSG91.

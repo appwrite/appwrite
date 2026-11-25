@@ -7,7 +7,8 @@ You can send custom SMS messages to your app's users using Appwrite Messaging an
 This guide takes you through the implementation path of adding SMS messaging to your app.
 
 # Add a provider {% #add-a-provider %}
-Appwrite supports [Twilio](/docs/products/messaging/twilio/),
+Appwrite supports [Bird](/docs/products/messaging/bird-sms/),
+[Twilio](/docs/products/messaging/twilio/),
 [MSG91](/docs/products/messaging/msg91/),
 [Telesign](/docs/products/messaging/telesign/),
 [Textmagic](/docs/products/messaging/textmagic/),
@@ -21,6 +22,7 @@ as SMS providers. You must configure one of them as a provider.
 {% /only_light %}
 To add a new provider navigate to **Messaging** > **Providers** > {% icon icon="plus" size="m" /%} **Add provider** > **SMS**
 and follow the wizard. You can find more details about configuring in the provider guides for
+[Bird](/docs/products/messaging/bird-sms/),
 [Twilio](/docs/products/messaging/twilio/),
 [MSG91](/docs/products/messaging/msg91/),
 [Telesign](/docs/products/messaging/telesign/),
