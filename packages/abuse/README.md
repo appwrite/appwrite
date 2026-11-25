@@ -154,6 +154,25 @@ if (!$clearance->withParams($client)->verify($cookie, difficulty: 18, maxAge: 18
 
 Proof-of-work tokens last 120 seconds and clearances 30 minutes unless you pass a `ttl`. Tokens verify only with exactly the same params. A nonce store outage rejects the solution (`Status::Unavailable`) unless you pass `acceptWhenNoncesUnavailable: true`. To bind to a network rather than an exact IP, use `Identity`: `new Identity()->ipPrefix($ip)` gives the /24 (IPv4) or /48 (IPv6) the address belongs to, and `userAgentHash()` hashes the User-Agent.
 
+**Password.** `Password` asks for a password you set, e.g. on a firewall rule. It keeps only a hash, checked with `utopia-php/auth`'s password proof, so it accepts the hashes Appwrite stores for user passwords (Argon2), as well as Bcrypt and PHPass. For Scrypt, SHA or MD5, pass a proof set to that hash: `new Password('secret', $hash, new PasswordProof()->setHash(new Scrypt()))`. It does not limit guesses: rate-limit verify per client yourself, e.g. with a `TimeLimit` adapter.
+
+```php
+<?php
+
+use Utopia\Abuse\Challenge\Password;
+use Utopia\Auth\Proofs\Password as PasswordProof;
+
+$hash = new PasswordProof()->hash('open sesame');   // store this, not the password
+
+$password = new Password('secret', $hash);
+
+$token  = $password->withParams($client)->issue();                // render a form carrying $token->value
+$result = $password->withParams($client)->verify($value, $guess);  // Valid or Rejected
+
+// Tie the clearance to this version of the password, so changing it ends every clearance
+$pass = $clearance->withParams([...$client, 'version' => $password->version()])->issue();
+```
+
 **Adding a kind.** Extend `Challenge`, sign the claims your kind needs with `sign()`, and read them back with `claimsFrom()`, which already rejects invalid tokens and mismatched params:
 
 ```php
