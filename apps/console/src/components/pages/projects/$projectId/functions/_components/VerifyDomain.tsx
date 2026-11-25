@@ -16,6 +16,7 @@ import {
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import { useT } from '@/lib/i18n/translate'
+import { canRetryRule } from '@/lib/utils/proxy-domains'
 
 interface VerifyDomainProps {
   open: boolean
@@ -93,22 +94,35 @@ export function VerifyDomain({
             verificationError={verificationError}
           />
         </div>
+        {/* The rule updates live: once DNS passes, there is nothing to verify. */}
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={verifyMutation.isPending}
-          >
-            {t('Cancel')}
-          </Button>
-          <Button
-            type="button"
-            onClick={handleVerify}
-            disabled={verifyMutation.isPending}
-          >
-            {t('Verify')}
-          </Button>
+          {canRetryRule(rule) ? (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={verifyMutation.isPending}
+              >
+                {t('Cancel')}
+              </Button>
+              <Button
+                type="button"
+                onClick={handleVerify}
+                disabled={verifyMutation.isPending}
+              >
+                {t('Verify')}
+              </Button>
+            </>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
+              {t('Close')}
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>

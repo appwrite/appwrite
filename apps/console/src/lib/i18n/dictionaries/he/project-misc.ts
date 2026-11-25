@@ -1062,13 +1062,11 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Tracking disabled': 'המעקב הושבת',
   'Browser versions': 'גרסאות דפדפן',
   'OS versions': 'גרסאות מערכת הפעלה',
-  'Versions': 'גרסאות',
+  Versions: 'גרסאות',
   'Browser version': 'גרסת דפדפן',
   'OS version': 'גרסת מערכת הפעלה',
-  'Identified users, ranked by visitors':
-    'משתמשים מזוהים, לפי מספר המבקרים',
-  'No identified users in this range':
-    'אין משתמשים מזוהים בטווח הזה',
+  'Identified users, ranked by visitors': 'משתמשים מזוהים, לפי מספר המבקרים',
+  'No identified users in this range': 'אין משתמשים מזוהים בטווח הזה',
   'Event properties': 'מאפייני אירועים',
   'Models and tools': 'מודלים וכלים',
   'Calls by model and by tool': 'קריאות לפי מודל ולפי כלי',
@@ -1185,8 +1183,23 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Screens: 'מסכים',
   'Most viewed screens': 'המסכים הנצפים ביותר',
   'Where visitors are browsing from': 'מהיכן המבקרים גולשים',
+  'Where your users are': 'איפה המשתמשים שלך נמצאים',
+  'Users online now': 'משתמשים מחוברים עכשיו',
+  'user online': 'משתמש מחובר',
+  'users online': 'משתמשים מחוברים',
+  'Unique users active in the last': 'משתמשים ייחודיים שהיו פעילים ב-',
+  'Could not load live users': 'לא ניתן לטעון משתמשים בזמן אמת',
+  'Active screens': 'מסכים פעילים',
+  'No one is using the app right now.': 'אף אחד לא משתמש באפליקציה כרגע.',
+  'Users by country': 'משתמשים לפי מדינה',
+  'Visitors and app users, pages and screens, sources, locations, and bots, plus any custom events you track.':
+    'מבקרים ומשתמשי אפליקציה, דפים ומסכים, מקורות, מיקומים ובוטים, וגם כל אירוע מותאם שאתם עוקבים אחריו.',
   'What visitors are browsing with': 'באיזה כלים המבקרים גולשים',
-  'What visitors are using': 'במה המבקרים משתמשים',
+  'What your users are on': 'במה המשתמשים שלך משתמשים',
+  'Active users': 'משתמשים פעילים',
+  'Screen views': 'צפיות במסכים',
+  'Signed-in users': 'משתמשים מחוברים',
+  'Screens/session': 'מסכים לסשן',
   'Human visitors versus bots': 'מבקרים אנושיים מול בוטים',
   'AI agents and crawlers': 'סוכני AI וסורקים',
   Agents: 'סוכנים',
@@ -2690,7 +2703,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Shared with all Functions and Sites in this project.':
     'משותפים לכל הפונקציות והאתרים בפרויקט הזה.',
   'Showing first': 'מוצגות',
-  Since: 'מכיוון ש-',
   'Some PostgreSQL features are not migrated. OAuth users and functions are not migrated automatically.':
     'חלק מהיכולות של PostgreSQL אינן מועברות. משתמשי OAuth ופונקציות אינם מועברים אוטומטית.',
   'Some entities failed to migrate. Check status counts above.':
@@ -2742,7 +2754,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'כאשר במהלך הייבוא נמצאת שורה עם מזהה קיים.',
   'When enabled, all emails will be sent through your configured SMTP server.':
     'כאשר האפשרות מופעלת, כל האימיילים יישלחו דרך שרת ה-SMTP שהגדרתם.',
-  'an A or AAAA record': 'רשומת A או AAAA',
   'and all its databases, functions, and files? This action cannot be undone.':
     'ואת כל מסדי הנתונים, הפונקציות והקבצים שלו? לא ניתן לבטל פעולה זו.',
   characters: 'תווים',
@@ -2759,14 +2770,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'have been enabled.': 'הופעלו.',
   here: 'כאן',
   installations: 'התקנות',
-  // pragma: allowlist secret
-  "instead. If you're using Cloudflare or another CDN, make sure the proxy is disabled (set to DNS only) for this record, since Appwrite serves your domain through its own CDN.":
-    'במקום זאת. אם אתם משתמשים ב-Cloudflare או ב-CDN אחר, ודאו שהפרוקסי מושבת (מוגדר כ-DNS only) עבור הרשומה הזו, כי Appwrite מגיש את הדומיין שלכם דרך ה-CDN שלו.', // pragma: allowlist secret
-  "is an apex domain, CNAME record is only supported by certain providers. If yours doesn't, please verify using":
-    'הוא דומיין שורש (apex), ורשומת CNAME נתמכת רק אצל ספקים מסוימים. אם הספק שלכם לא תומך בכך, אמתו באמצעות',
   item: 'פריט',
   'key for the API key.': 'בתור מפתח ה-API.',
-  nameservers: 'שרתי שמות',
   'protocol has been disabled': 'הושבת',
   'protocol has been enabled': 'הופעל',
   recipient: 'נמען',
@@ -3036,6 +3041,26 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'שליחת אימייל טרנזקציוני דרך Mailgun.',
   'Send transactional email through Resend.':
     'שליחת אימייל טרנזקציוני דרך Resend.',
+  'Send SMS through Bird.': 'שליחת SMS דרך Bird.',
+  'A Bird API key with the sms:write scope.':
+    'מפתח API של Bird עם ההרשאה sms:write.',
+  'A sender your Bird workspace owns: a number with its country code, or an alphanumeric sender ID.':
+    'שולח שבבעלות סביבת העבודה שלכם ב-Bird: מספר עם קידומת המדינה, או מזהה שולח אלפאנומרי.',
+  'One-click Bird SMS': 'SMS של Bird בקליק אחד',
+  'Let Appwrite create the API key and fill in one of your senders.':
+    'תנו ל-Appwrite ליצור את מפתח ה-API ולמלא את אחד מהשולחים שלכם.',
+  'Loading senders…': 'טוען שולחים…',
+  'Add a sender, then check again.': 'הוסיפו שולח, ואז בדקו שוב.',
+  'Manage senders': 'ניהול שולחים',
+  'Failed to load senders from the SMS provider':
+    'טעינת השולחים מספק ה-SMS נכשלה',
+  'Failed to create the API key with the SMS provider':
+    'יצירת מפתח ה-API מול ספק ה-SMS נכשלה',
+  'Send email through Bird.': 'שליחת אימייל דרך Bird.',
+  'A Bird API key with the emails:write scope.':
+    'מפתח API של Bird עם ההרשאה emails:write.',
+  'Bird API keys start with bk_ and their region, for example bk_eu1_.':
+    'מפתחות API של Bird מתחילים ב-bk_ ובאזור שלהם, לדוגמה bk_eu1_.',
   'Send transactional email through SendGrid.':
     'שליחת אימייל טרנזקציוני דרך SendGrid.',
   Sender: 'שולח',
@@ -3137,16 +3162,16 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'אין לכם הרשאה ליצור מיגרציות.',
   "You don't have permission to create webhooks.":
     'אין לכם הרשאה ליצור webhooks.',
-  // SMTP quick setup (universal card: Resend today, Mailgun and SendGrid next)
+  // SMTP quick setup (universal card: Resend and Bird today, Mailgun next)
   'Connect an email provider and Appwrite fills in your SMTP settings automatically.':
     'חברו ספק אימייל ו-Appwrite תמלא עבורכם את הגדרות ה-SMTP באופן אוטומטי.',
   'Set up': 'הגדרה',
   'Creates a sending-only API key for a verified domain.':
     'יוצר מפתח API לשליחה בלבד עבור דומיין מאומת.',
+  'Creates an API key that can only send email.':
+    'יוצר מפתח API שיכול לשלוח אימייל בלבד.',
   'Creates a domain sending key for a verified domain.':
     'יוצר מפתח שליחה לדומיין עבור דומיין מאומת.',
-  'Creates a restricted API key with mail send access.':
-    'יוצר מפתח API מוגבל עם הרשאת שליחת אימייל.',
   'Failed to connect the email provider': 'החיבור לספק האימייל נכשל',
   'The provider was authorized for a different Appwrite account. Try again while signed in to this account.':
     'ההרשאה לספק ניתנה לחשבון Appwrite אחר. נסו שוב כשאתם מחוברים לחשבון הזה.',
@@ -3160,6 +3185,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Check again': 'בדיקה חוזרת',
   'The credential is restricted to this domain and can only send email.':
     'פרטי הגישה מוגבלים לדומיין הזה ומאפשרים שליחת אימייל בלבד.',
+  'The credential can only send email. It is not tied to a domain, so pick the one your sender address uses.':
+    'פרטי הגישה מאפשרים שליחת אימייל בלבד. הם אינם קשורים לדומיין מסוים, לכן בחרו את הדומיין של כתובת השולח.',
   'Must use the selected domain.': 'חייב להשתמש בדומיין שנבחר.',
   'Enter a sender name.': 'הזינו שם שולח.',
   'Enter a sender email on the selected domain.':
@@ -3173,6 +3200,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'תנו ל-Appwrite ליצור את מפתח ה-API עבור דומיין מאומת ולמלא את השדות האלה.',
   'Generate API key': 'יצירת מפתח API',
   'One-click Resend sender': 'שולח Resend בקליק אחד',
+  'One-click Bird sender': 'שולח Bird בקליק אחד',
   'Creating the sending credential…': 'יוצר את פרטי הגישה לשליחה…',
   'Failed to create the API key with the email provider':
     'יצירת מפתח ה-API מול ספק האימייל נכשלה',
@@ -3189,19 +3217,19 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Sending domain': 'דומיין שליחה',
   Sender: 'שולח',
   'Disconnect Resend': 'ניתוק Resend',
+  'Disconnect Bird': 'ניתוק Bird',
   'Disconnect Mailgun': 'ניתוק Mailgun',
-  'Disconnect SendGrid': 'ניתוק SendGrid',
   'Provider actions': 'פעולות ספק',
   'Set up SMTP with Resend': 'הגדרת SMTP עם Resend',
+  'Set up SMTP with Bird': 'הגדרת SMTP עם Bird',
   'Set up SMTP with Mailgun': 'הגדרת SMTP עם Mailgun',
-  'Set up SMTP with SendGrid': 'הגדרת SMTP עם SendGrid',
   'Creating credential and saving SMTP settings…':
     'יוצר פרטי גישה ושומר את הגדרות ה-SMTP…',
   'Custom SMTP is enabled and your project now sends emails through this provider.':
     'SMTP מותאם אישית הופעל והפרויקט שלכם שולח כעת אימיילים דרך הספק הזה.',
   'Connect with Resend': 'התחברות עם Resend',
+  'Connect with Bird': 'התחברות עם Bird',
   'Connect with Mailgun': 'התחברות עם Mailgun',
-  'Connect with SendGrid': 'התחברות עם SendGrid',
   'Appwrite will no longer be able to create sending credentials for this provider. Credentials already saved in your SMTP settings keep working.':
     'Appwrite לא תוכל עוד ליצור פרטי גישה לשליחה עבור הספק הזה. פרטי גישה ששמורים כבר בהגדרות ה-SMTP שלכם ימשיכו לפעול.',
   'Provider disconnected': 'הספק נותק',
@@ -3400,6 +3428,26 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'environments per project.': 'סביבות לכל פרויקט.',
   'Delete an environment to create another.':
     'מחקו סביבה כדי ליצור סביבה אחרת.',
+  // Environments for a plan without them: examples in the switcher and the upgrade they open
+  'Add an environment': 'הוספת סביבה',
+  'Test before you release': 'בדקו לפני השחרור',
+  'Share work in progress': 'שתפו עבודה בתהליך',
+  'Break things freely': 'שברו דברים בלי חשש',
+  'Try changes before your users do': 'נסו שינויים לפני המשתמשים שלכם',
+  'An environment is a separate copy of your project, with its own resources and users.':
+    'סביבה היא עותק נפרד של הפרויקט שלכם, עם משאבים ומשתמשים משלה.',
+  '{plan} includes up to {limit} environments per project.':
+    'תוכנית {plan} כוללת עד {limit} סביבות לכל פרויקט.',
+  'Start from a copy of production': 'התחילו מעותק של פרודקשן',
+  'Copy databases, functions and settings. Bringing data is optional.':
+    'העתיקו מסדי נתונים, פונקציות והגדרות. העתקת הנתונים היא אופציונלית.',
+  'Keep production untouched': 'השאירו את פרודקשן ללא שינוי',
+  'Each environment has its own data, files and users.':
+    'לכל סביבה יש נתונים, קבצים ומשתמשים משלה.',
+  'Switch with one line': 'מעבר בשורת קוד אחת',
+  'Same project ID and endpoint. Set the environment ID in your SDK.':
+    'אותו מזהה פרויקט ואותה נקודת קצה. הגדירו את מזהה הסביבה ב-SDK שלכם.',
+  'Upgrade to {plan}': 'שדרוג ל-{plan}',
   // Settings of an environment: its name, its ID, and deleting it
   'Environment name has been updated': 'שם הסביבה עודכן',
   'Failed to update environment name': 'עדכון שם הסביבה נכשל',
@@ -3875,6 +3923,15 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Let your team know someone is on it. It keeps firing until its monitor recovers.':
     'כך הצוות יודע שמישהו מטפל בזה. ההתראה תמשיך לפעול עד שהמוניטור יחזור לשגרה.',
   'Nobody has acknowledged this alert': 'אף אחד עדיין לא אישר טיפול בהתראה הזו',
+  Acknowledged: 'בטיפול',
+  'Alert acknowledged': 'אישרתם טיפול בהתראה',
+  "Your team sees that you're on it. It keeps firing until its monitor recovers.":
+    'הצוות רואה שאתם מטפלים בזה. ההתראה תמשיך לפעול עד שהמוניטור יחזור לשגרה.',
+  'This alert has already resolved': 'ההתראה הזו כבר נסגרה',
+  'Only a firing alert can be acknowledged.':
+    'אפשר לאשר טיפול רק בהתראה פעילה.',
+  "Your role can't change alerts. Ask an owner or a developer.":
+    'התפקיד שלכם לא מאפשר לשנות התראות. פנו לבעלים או למפתח.',
   "You don't have permission to manage monitors.":
     'אין לכם הרשאה לנהל מוניטורים.',
   'between two alerts from this monitor.': 'בין שתי התראות מהמוניטור הזה.',
@@ -3883,6 +3940,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'נשלחו {count} התראות, אחת לכל תקופת המתנה',
   'Its alerts stay in the history.': 'ההתראות שלו נשארות בהיסטוריה.',
   'Send alerts to a webhook': 'שליחת התראות ל-Webhook',
+  'Deploy an alert function': 'פריסת פונקציית התראות',
   Owners: 'בעלים',
   Editors: 'עורכים',
   Analysts: 'אנליסטים',
@@ -4189,4 +4247,149 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'The note is removed from the chart for everyone.':
     'ההערה תוסר מהגרף עבור כולם.',
   'Former member': 'חבר לשעבר',
+  Notes: 'הערות',
+  Escalations: 'הסלמות',
+  Escalation: 'הסלמה',
+  Escalating: 'בהסלמה',
+  'Notify roles once': 'להודיע לתפקידים פעם אחת',
+  'Select an escalation.': 'יש לבחור הסלמה.',
+  'Each step of the escalation is notified in turn until someone acknowledges the alert.':
+    'כל שלב בהסלמה מקבל התראה בתורו, עד שמישהו מאשר את ההתראה.',
+  'Create an escalation': 'יצירת הסלמה',
+  'Manage escalations': 'ניהול הסלמה',
+  'Could not load escalations.': 'לא ניתן היה לטעון את ההסלמה.',
+  'Your organization has no escalations yet.': 'לארגון שלך עדיין אין הסלמה.',
+  'Select an escalation': 'בחירת הסלמה',
+  'repeats {count}×': 'חוזרת {count}×',
+  'Acknowledging stops the escalation. It keeps firing until its monitor recovers.':
+    'אישור עוצר את ההסלמה. ההתראה ממשיכה לפעול עד שהמוניטור מתאושש.',
+  'No step notified yet': 'עדיין לא נשלחה התראה לאף שלב',
+  'Step {step} of {total}': 'שלב {step} מתוך {total}',
+  Notified: 'נשלח',
+  'Step {step}': 'שלב {step}',
+  'round {round}': 'סבב {round}',
+  'Stopped, acknowledged': 'נעצרה, אושרה',
+  'Stopped, resolved': 'נעצרה, נפתרה',
+  'All steps notified': 'כל השלבים קיבלו התראה',
+  'Escalation has been deleted': 'ההסלמה נמחקה',
+  'Monitors use this escalation. Move them to another escalation or to roles first.':
+    'מוניטורים משתמשים בהסלמה הזו. יש להעביר אותם קודם להסלמה אחרת או לתפקידים.',
+  'Failed to delete escalation': 'מחיקת ההסלמה נכשלה',
+  'Notify your team step by step until someone acknowledges the alert. Pick an escalation on any monitor.':
+    'להודיע לצוות שלב אחר שלב עד שמישהו מאשר את ההתראה. ניתן לבחור הסלמה בכל מוניטור.',
+  'No escalations yet.': 'עדיין אין הסלמה.',
+  'Delete escalation': 'מחיקת הסלמה',
+  'Add members': 'הוספת חברים',
+  'Enter a name.': 'יש להזין שם.',
+  'Each step needs a role or a member.': 'כל שלב צריך תפקיד או חבר.',
+  'Escalation has been updated': 'ההסלמה עודכנה',
+  'Escalation has been created': 'ההסלמה נוצרה',
+  'Failed to update escalation': 'עדכון ההסלמה נכשל',
+  'Failed to create escalation': 'יצירת ההסלמה נכשלה',
+  'Edit escalation': 'עריכת הסלמה',
+  'Create escalation': 'יצירת הסלמה',
+  'Steps are notified in turn until someone acknowledges the alert.':
+    'השלבים מקבלים התראה בתורם, עד שמישהו מאשר את ההתראה.',
+  'On-call': 'תורנות',
+  'Remove step {step}': 'הסרת שלב {step}',
+  'Seconds to wait': 'שניות המתנה',
+  'seconds after the alert fires': 'שניות אחרי שההתראה מופעלת',
+  'seconds after the previous step': 'שניות אחרי השלב הקודם',
+  'Add step': 'הוספת שלב',
+  Once: 'פעם אחת',
+  '{count} times': '{count} פעמים',
+  "Starts again from the first step, a monitor's cooldown after the last one.":
+    'מתחילה שוב מהשלב הראשון, פרק הצינון של המוניטור אחרי השלב האחרון.',
+  now: 'עכשיו',
+  'after {delay}': 'אחרי {delay}',
+  'analytics properties': 'נכסי אנליטיקה',
+  'analytics property': 'נכס אנליטיקה',
+  'per project.': 'לכל פרויקט.',
+  'to create another.': 'כדי ליצור נכס נוסף.',
+  'to enable analytics on this site.': 'כדי להפעיל אנליטיקה באתר הזה.',
+  'Your plan checks at most every {interval}.':
+    'בתוכנית שלך הבדיקות רצות לכל היותר פעם ב-{interval}.',
+  'Synthetic checks: {used} of {limit} allowed on your plan.':
+    'בדיקות סינתטיות: {used} מתוך {limit} שהתוכנית שלך מאפשרת.',
+  'Synthetic checks: {used} of {included} included.':
+    'בדיקות סינתטיות: {used} מתוך {included} כלולות בתוכנית.',
+  'Each extra check costs {price} per month.':
+    'כל בדיקה נוספת עולה {price} לחודש.',
+  'Upgrade your plan to add more synthetic checks.':
+    'כדי להוסיף בדיקות סינתטיות, יש לשדרג את התוכנית.',
+  'Escalations: {used} of {limit} allowed on your plan.':
+    'הסלמות: {used} מתוך {limit} שהתוכנית שלך מאפשרת.',
+  'On-call responders: {used} of {included} included.':
+    'כוננים: {used} מתוך {included} כלולים בתוכנית.',
+  'Each extra responder costs {price} per month.':
+    'כל כונן נוסף עולה {price} לחודש.',
+  'Upgrade your plan to create more escalations.':
+    'כדי ליצור הסלמות נוספות, יש לשדרג את התוכנית.',
+  'Your plan allows up to {count} steps per escalation.':
+    'התוכנית שלך מאפשרת עד {count} שלבים בכל הסלמה.',
+  'Upgrade your plan to repeat escalations.':
+    'כדי לחזור על הסלמות, יש לשדרג את התוכנית.',
+  'Usage monitors: {used} of {limit} allowed on your plan.':
+    'מוניטורי שימוש: {used} מתוך {limit} שהתוכנית שלך מאפשרת.',
+  'Upgrade your plan to add more usage monitors.':
+    'כדי להוסיף מוניטורי שימוש, יש לשדרג את התוכנית.',
+  // Analytics for signed-in users
+  'Signed-in users, ranked by visits': 'משתמשים מחוברים, לפי מספר הביקורים',
+  'View user': 'הצגת המשתמש',
+  'Could not load analytics': 'לא ניתן לטעון את האנליטיקה',
+  'No analytics yet': 'אין עדיין אנליטיקה',
+  "Add an analytics property and turn on User identification to see each signed-in user's pages and events here.":
+    'הוסיפו נכס אנליטיקה והפעילו זיהוי משתמשים כדי לראות כאן את הדפים והאירועים של כל משתמש מחובר.',
+  'Add analytics': 'הוספת אנליטיקה',
+  'Link {name} to their analytics': 'קישור {name} לנתוני האנליטיקה שלו',
+  "Turn on User identification in a property's settings to record the signed-in user on every event, so their pages, events and sessions show here.":
+    'הפעילו זיהוי משתמשים בהגדרות הנכס כדי לתעד את המשתמש המחובר בכל אירוע, כך שהדפים, האירועים והסשנים שלו יוצגו כאן.',
+  'Open property settings': 'פתיחת הגדרות הנכס',
+  'Last active': 'פעילות אחרונה',
+  Calls: 'קריאות',
+  'Active days': 'ימים פעילים',
+  'No events from this user in the last 30 days':
+    'אין אירועים מהמשתמש הזה ב-30 הימים האחרונים',
+  '30 days ago': 'לפני 30 יום',
+  'No custom events': 'אין אירועים מותאמים',
+  'No model calls': 'אין קריאות למודלים',
+  'No screens viewed': 'לא נצפו מסכים',
+  'No pages viewed': 'לא נצפו דפים',
+  'View in analytics': 'הצגה באנליטיקה',
+  'New installs and updates of your app': 'התקנות ועדכונים חדשים של האפליקציה',
+  'Add the latest tracking SDK to your app to count installs and updates.':
+    'הוסיפו את ה-SDK העדכני למעקב לאפליקציה כדי לספור התקנות ועדכונים.',
+  'Pushes received on devices, and how many were opened':
+    'התראות שהתקבלו במכשירים, וכמה מהן נפתחו',
+  'No push notifications tracked yet': 'עדיין לא נמדדו התראות פוש',
+  'Pushes sent with Messaging show their reach and opens here once the tracking SDK is in your app.':
+    'התראות שנשלחו דרך Messaging יציגו כאן את ההגעה והפתיחות שלהן כשה-SDK למעקב יהיה באפליקציה.',
+  'Open Messaging': 'פתיחת Messaging',
+  Received: 'התקבלו',
+  Opened: 'נפתחו',
+  'Open rate': 'שיעור פתיחה',
+  Rate: 'שיעור',
+  'No pushes with a message ID in this range':
+    'אין התראות עם מזהה הודעה בטווח הזה',
+  '{count} delivered': '{count} נמסרו',
+  'View message': 'הצגת ההודעה',
+  Views: 'צפיות',
+  'Last seen': 'נראה לאחרונה',
+  'Not in this period': 'לא בתקופה הזו',
+  'of {count}': 'מתוך {count}',
+  'Events per day, last 30 days': 'אירועים ליום, 30 הימים האחרונים',
+  Properties: 'נכסים',
+  'Where this user was active, last 30 days':
+    'היכן המשתמש היה פעיל, 30 הימים האחרונים',
+  'No activity': 'אין פעילות',
+  'No locations': 'אין מיקומים',
+  'No sources': 'אין מקורות',
+  'No browsers': 'אין דפדפנים',
+  'No operating systems': 'אין מערכות הפעלה',
+  'No devices': 'אין מכשירים',
+  'No OS versions': 'אין גרסאות מערכת הפעלה',
+  views: 'צפיות',
+  'signed in': 'מחוברים',
+  'Signed in now': 'מחוברים עכשיו',
+  'and {count} more': 'ועוד {count}',
 }

@@ -9,6 +9,7 @@ import { POSTGRES_FEATURE_VISUALS } from '@/components/pages/products/features/p
 import { REALTIME_FEATURE_VISUALS } from '@/components/pages/products/features/realtime'
 import { SITES_FEATURE_VISUALS } from '@/components/pages/products/features/sites'
 import { STORAGE_FEATURE_VISUALS } from '@/components/pages/products/features/storage'
+import { VIDEOS_FEATURE_VISUALS } from '@/components/pages/products/features/videos'
 import type { ProductId } from '@/lib/products/types'
 
 const PRODUCT_FEATURE_VISUALS: Partial<
@@ -24,6 +25,7 @@ const PRODUCT_FEATURE_VISUALS: Partial<
   realtime: REALTIME_FEATURE_VISUALS,
   sites: SITES_FEATURE_VISUALS,
   storage: STORAGE_FEATURE_VISUALS,
+  videos: VIDEOS_FEATURE_VISUALS,
 }
 
 export function getProductFeatureVisual(

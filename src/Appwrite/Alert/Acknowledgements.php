@@ -6,11 +6,14 @@ use Appwrite\Extend\Exception;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 
 /**
  * Acknowledging a firing alert: one member says they have it, and everyone who
- * can read the alert sees who and when. It changes nothing else; the monitor
- * keeps being evaluated and the alert resolves as before, keeping who handled it.
+ * can read the alert sees who and when. Its escalation stops, and goes on from
+ * the next step if the acknowledgement is undone. Nothing else changes; the
+ * monitor keeps being evaluated and the alert resolves as before, keeping who
+ * handled it.
  */
 readonly class Acknowledgements
 {
@@ -34,6 +37,9 @@ readonly class Acknowledgements
         }
 
         if (($alert->getAttribute('acknowledgedAt') !== null) === $acknowledged) {
+            // A notification written after the alert was acknowledged catches up.
+            $this->updateNotifications($alert);
+
             return $alert;
         }
 
@@ -47,7 +53,29 @@ readonly class Acknowledgements
             'acknowledgedByName' => '',
         ]);
 
-        return $this->dbForPlatform->getAuthorization()->skip(fn () => $this->dbForPlatform->updateDocument('monitorAlerts', $alert->getId(), $changes));
+        $alert = $this->dbForPlatform->getAuthorization()->skip(fn () => $this->dbForPlatform->updateDocument('monitorAlerts', $alert->getId(), $changes));
+
+        $this->updateNotifications($alert);
+        $escalations = new Escalations($this->dbForPlatform);
+
+        return $acknowledged ? $escalations->stop($alert) : $escalations->resume($alert, new \DateTimeImmutable());
+    }
+
+    /**
+     * Every member's console notification about the alert shows whether it is acknowledged, so none of them acknowledges it again.
+     * The alert is written before its notifications here, and a notification before its alert is read in the Notifications
+     * worker, so one of the two always sees the other.
+     */
+    public function updateNotifications(Document $alert): void
+    {
+        $acknowledged = $alert->getAttribute('acknowledgedAt') !== null;
+        $this->dbForPlatform->getAuthorization()->skip(fn () => $this->dbForPlatform->updateDocuments('notifications', new Document([
+            'status' => $acknowledged ? Change::Acknowledged->value : Change::Firing->value,
+        ]), [
+            Query::equal('subjectType', [RESOURCE_TYPE_ALERTS]),
+            Query::equal('subjectId', [$alert->getId()]),
+            Query::equal('status', [$acknowledged ? Change::Firing->value : Change::Acknowledged->value]),
+        ]));
     }
 
     /**

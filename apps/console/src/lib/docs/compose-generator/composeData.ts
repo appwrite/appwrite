@@ -146,6 +146,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_POOL_SIZE_USAGE
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
+      - _APP_EXECUTIONS_INSERT_BUFFER
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
@@ -524,6 +525,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_POOL_SIZE_USAGE
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
+      - _APP_EXECUTIONS_INSERT_BUFFER
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
@@ -539,6 +541,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_OPENSSL_KEY_OLDEST
       - _APP_EMAIL_SECURITY
       - _APP_EMAIL_CERTIFICATES
+      - _APP_CERTIFICATES_PROVIDER
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -678,6 +681,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_POOL_SIZE_USAGE
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
+      - _APP_EXECUTIONS_INSERT_BUFFER
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
@@ -756,6 +760,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_POOL_SIZE_USAGE
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
+      - _APP_EXECUTIONS_INSERT_BUFFER
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
@@ -925,6 +930,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_POOL_SIZE_USAGE
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
+      - _APP_EXECUTIONS_INSERT_BUFFER
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
@@ -1094,6 +1100,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_POOL_SIZE_USAGE
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
+      - _APP_EXECUTIONS_INSERT_BUFFER
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
@@ -1248,6 +1255,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_POOL_SIZE_USAGE
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
+      - _APP_EXECUTIONS_INSERT_BUFFER
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
@@ -1311,6 +1319,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_POOL_SIZE_USAGE
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
+      - _APP_EXECUTIONS_INSERT_BUFFER
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
@@ -1374,6 +1383,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_POOL_SIZE_USAGE
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
+      - _APP_EXECUTIONS_INSERT_BUFFER
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
@@ -1533,6 +1543,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_CONNECTIONS_DB_USAGE
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
+      - _APP_EXECUTIONS_INSERT_BUFFER
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
@@ -1580,6 +1591,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_EXECUTOR_HOST
       - _APP_DATABASE_SHARED_TABLES
       - _APP_EMAIL_CERTIFICATES
+      - _APP_CERTIFICATES_PROVIDER
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE`,
   },
@@ -1925,6 +1937,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_DOMAIN_FUNCTIONS
       - _APP_DOMAIN_SITES
       - _APP_EMAIL_CERTIFICATES
+      - _APP_CERTIFICATES_PROVIDER
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -1962,6 +1975,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_CONNECTIONS_DB_USAGE
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
+      - _APP_EXECUTIONS_INSERT_BUFFER
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
@@ -2820,7 +2834,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
   {
     name: 'appwrite-embedding',
     block: `  appwrite-embedding:
-    image: appwrite/embedding:0.3.1
+    image: appwrite/embedding:0.4.0
     profiles:
       - embedding
     environment:

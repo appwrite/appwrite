@@ -109,7 +109,7 @@ class Delete extends Base
         ));
 
         if ($deleted === 0) {
-            $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '86400');
+            $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '43200');
             $cutoff = DateTime::addSeconds(new \DateTime(), -1 * $retention);
             $deleted = $authorization->skip(fn () => $dbForProject->deleteDocuments(
                 'videosCaptions',

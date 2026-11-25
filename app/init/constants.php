@@ -46,8 +46,10 @@ const APP_LIMIT_SUBQUERY = 1000;
 const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 25;
 const APP_LIMIT_REVIEWS_PULL = 100; // Reviews of one pull request the review service reads back, newest first
 const APP_LIMIT_REVIEW_FINDINGS = 1000; // Findings of one pull request the review service reads back at once
+const APP_LIMIT_REVIEW_AUTHORS = 5000; // Completed reviews, newest first, the author performance of a project is computed from
 const APP_LIMIT_REVIEW_LEARNINGS = 100; // Learnings of a repository a review is given, oldest first
 const APP_LIMIT_REALTIME_CONNECTIONS = 32; // Maximum open realtime connections per project user on one worker
+const APP_LIMIT_REALTIME_MESSAGES = 32; // Maximum messages per minute on one realtime connection
 const APP_LIMIT_REALTIME_GUEST_CONNECTIONS = 128; // Maximum open realtime guest connections per IP, or IPv6 /64, per project on one worker
 const APP_LIMIT_MQTT_KEEP_ALIVE = 1200; // MQTT keep-alive in seconds for a client that disables it, and the longest an MQTT 5.0 client is granted
 
@@ -152,7 +154,8 @@ const APP_STORAGE_VIDEOS_TMP = '/storage/videos-tmp'; // Scratch: source downloa
 const APP_STORAGE_IMPORTS = '/storage/imports'; // Temporary storage for csv imports
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
 const APP_STORAGE_CONFIG = '/storage/config';
-const APP_STORAGE_PHOTOS = '_photos'; // User photos folder in each project's uploads; bucket IDs can't start with an underscore, so it never collides with a bucket's folder
+const APP_STORAGE_USER_PHOTOS = '_photos'; // User photos folder in each project's uploads; bucket IDs can't start with an underscore, so it never collides with a bucket's folder
+const APP_STORAGE_TEAM_PHOTOS = '_photos_teams'; // Kept apart from user photos because a team and a user can share an ID
 const APP_STORAGE_READ_BUFFER = 20 * (1000 * 1000); //20MB other names `APP_STORAGE_MEMORY_LIMIT`, `APP_STORAGE_MEMORY_BUFFER`, `APP_STORAGE_READ_LIMIT`, `APP_STORAGE_BUFFER_LIMIT`
 const APP_SOCIAL_TWITTER = 'https://twitter.com/appwrite';
 const APP_SOCIAL_TWITTER_HANDLE = 'appwrite';
@@ -583,6 +586,7 @@ const RESOURCE_TYPE_REPORTS = 'reports';
 const RESOURCE_TYPE_VIDEOS = 'videos';
 const RESOURCE_TYPE_REVIEWS = 'reviews';
 const RESOURCE_TYPE_MONITORS = 'monitors';
+const RESOURCE_TYPE_ALERTS = 'alerts';
 
 // Insight types — engine-specific so the CTA action can reference the right public API.
 const ADVISOR_INSIGHT_TYPES = [
@@ -642,6 +646,7 @@ const SCHEDULE_RESOURCE_TYPE_EXECUTION = 'execution';
 const SCHEDULE_RESOURCE_TYPE_FUNCTION = 'function';
 const SCHEDULE_RESOURCE_TYPE_MESSAGE = 'message';
 const SCHEDULE_RESOURCE_TYPE_MONITOR = 'monitor';
+const SCHEDULE_RESOURCE_TYPE_ESCALATION = 'escalation';
 
 // Monitor types, the kind of check a monitor runs; see `types` in app/config/alerts.php
 const MONITOR_TYPE_USAGE = 'usage';

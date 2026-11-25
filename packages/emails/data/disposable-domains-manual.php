@@ -34,4 +34,6 @@ return [
     'pointnexus.org',
     'rainsase.com',
     'roomsranked.com',
+    'euploading.com',
+    'marchslurp.com',
 ];

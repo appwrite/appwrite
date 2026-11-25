@@ -10,7 +10,12 @@ import {
 export const QUALITY_ACCOUNT_LABEL = 'quality'
 
 export type Experiment = {
-  flag: 'analytics' | 'projectEnvironments' | 'vcsOrigin'
+  flag:
+    | 'alerts'
+    | 'analytics'
+    | 'gitInstallationReuse'
+    | 'projectEnvironments'
+    | 'videos'
   name: string
   description: string
   /** Day the experiment reached the popover, as `YYYY-MM-DD`. */
@@ -35,10 +40,22 @@ export const EXPERIMENTS: readonly Experiment[] = [
     introducedAt: '2026-10-29',
   },
   {
-    flag: 'vcsOrigin',
-    name: 'Origin Git provider',
-    description: 'Deploy from Cursor Origin repositories.',
-    introducedAt: '2026-11-13',
+    flag: 'alerts',
+    name: 'Monitors and alerts',
+    description: 'Get alerted when project usage crosses a threshold.',
+    introducedAt: '2026-11-19',
+  },
+  {
+    flag: 'videos',
+    name: 'Appwrite Videos',
+    description: 'Transcode, stream, and caption videos.',
+    introducedAt: '2026-11-19',
+  },
+  {
+    flag: 'gitInstallationReuse',
+    name: 'Git installation reuse',
+    description: 'Reuse GitHub organizations connected in your other projects.',
+    introducedAt: '2026-11-25',
   },
 ]
 

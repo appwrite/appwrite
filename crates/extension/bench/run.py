@@ -1,16 +1,19 @@
 """Runs a benchmark script on the PHP class and on the utopia extension, alternating, and
 prints the median of each operation side by side.
 
-    python3 crates/extension/bench/run.py <script.php> <repository root> <utopia.so> <rounds>
+    python3 crates/extension/bench/run.py <script.php> <repository root> <utopia.so> <rounds> [extension ...]
+
+Each further argument names a shared extension both sides load, as `-n` loads none.
 
 The script prints one JSON object of operation -> nanoseconds; _APP_EXTENSION_LIBRARIES,
-set to the script's name (`dsn.php` -> `dsn`; a batch, `validators-scalar.php`, with its
-package's switch too), switches which implementation it gets.
+set to the script's name (`<name>.php` -> `<name>`), switches which implementation it gets.
 """
 import json, os, statistics, subprocess, sys
 script, root, lib, rounds = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4])
 # OPcache is built into PHP 8.5; older PHP has it as a shared extension that -n leaves out.
 flags = ["-n", "-d", "opcache.enable_cli=1", "-d", "memory_limit=1G"]
+for extension in sys.argv[5:]:
+    flags += ["-d", f"extension={extension}"]
 probe = 'echo function_exists("opcache_get_status") ? 1 : 0;'
 if subprocess.run(["php", *flags, "-r", probe], capture_output=True, text=True).stdout.strip() != "1":
     flags[1:1] = ["-d", "zend_extension=opcache"]
@@ -18,9 +21,6 @@ active = 'echo (opcache_get_status(false)["opcache_enabled"] ?? false) ? 1 : 0;'
 if subprocess.run(["php", *flags, "-r", active], capture_output=True, text=True).stdout.strip() != "1":
     sys.exit("OPcache is not enabled for the CLI; the numbers would not match production")
 library = os.path.splitext(os.path.basename(script))[0]
-# A batch of a package's classes (`validators-scalar`) runs with the package's switch too.
-if not os.path.isdir(os.path.join(root, "packages", library)):
-    library = library.rsplit("-", 1)[0] + "," + library
 results = {"php": [], "rust": []}
 for _ in range(rounds):
     for impl in ("php", "rust"):

@@ -15,6 +15,7 @@ use Utopia\Auth\Hashes\ScryptModified;
 use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Password;
 
+#[RequiresPhpExtension('utopia')]
 final class PasswordTest extends TestCase
 {
     private Password $password;
@@ -141,7 +142,6 @@ final class PasswordTest extends TestCase
         $this->password->getHashByName('non-existent-hash');
     }
 
-    #[RequiresPhpExtension('scrypt')]
     public function testAllHashesWork(): void
     {
         $proof = $this->password->generate();

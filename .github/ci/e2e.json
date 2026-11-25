@@ -26,7 +26,14 @@
       "Cargo.lock",
       ".cargo/",
       "rustfmt.toml",
+      "rust-toolchain.toml",
       "packages/image/",
+      "packages/validators/",
+      "packages/auth/",
+      "packages/detector/",
+      "packages/compression/",
+      "packages/balancer/",
+      "composer.lock",
       "Dockerfile",
       ".dockerignore"
     ],
@@ -36,6 +43,7 @@
       "Cargo.lock",
       ".cargo/",
       "rustfmt.toml",
+      "rust-toolchain.toml",
       ".github/",
       "docs/",
       "tests/unit/",
@@ -217,6 +225,8 @@
         "src/Appwrite/Schedule/Source/Alerts.php",
         "src/Appwrite/Platform/Tasks/ScheduleAlerts.php",
         "src/Appwrite/Platform/Workers/Notifications.php",
+        "src/Appwrite/Utopia/Messaging/",
+        "src/Appwrite/Utopia/Response/Model/Notification.php",
         "app/config/alerts.php",
         "app/config/locale/templates/email-alert.tpl"
       ]
@@ -376,6 +386,8 @@
       "paths": [
         "src/Appwrite/Platform/Modules/Videos/",
         "src/Appwrite/Video/",
+        "src/Appwrite/Storage/",
+        "src/Appwrite/Platform/Modules/Storage/Http/Buckets/Files/Download/",
         "src/Appwrite/Event/Publisher/Video.php",
         "src/Appwrite/Event/Message/Video",
         "src/Appwrite/Platform/Modules/Project/Http/Project/Videos/Profiles/",
@@ -484,6 +496,8 @@
         "src/Appwrite/Platform/Modules/Notifications/",
         "src/Appwrite/Platform/Modules/Messaging/",
         "src/Appwrite/Platform/Workers/Notifications.php",
+        "src/Appwrite/Utopia/Messaging/",
+        "src/Appwrite/Utopia/Response/Model/Notification.php",
         "src/Appwrite/Messaging/Adapter/Push/",
         "packages/messaging/",
         "packages/smtp/"
@@ -566,7 +580,7 @@
       "storage_antivirus": "disabled",
       "compose_profiles": "",
       "wait": "",
-      "services": ["Account", "Videos"]
+      "services": ["Account", "Realtime", "Videos"]
     },
     {
       "label": "Screenshots",

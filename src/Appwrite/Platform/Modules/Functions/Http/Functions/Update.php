@@ -222,7 +222,6 @@ class Update extends Base
         $logging ??= $function->getAttribute('logging', true);
         $entrypoint ??= $function->getAttribute('entrypoint', '');
         $commands ??= $function->getAttribute('commands', '');
-        $providerSilentMode ??= $function->getAttribute('providerSilentMode', false);
         $deploymentRetention ??= $function->getAttribute('deploymentRetention', 0);
         $description ??= $function->getAttribute('description', '');
         $buildSpecification ??= $function->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT);
@@ -232,6 +231,9 @@ class Update extends Base
         $repositoryInternalId = $function->getAttribute('repositoryInternalId', '');
 
         $isConnected = !empty($function->getAttribute('providerRepositoryId', ''));
+
+        // Disconnecting turns silent mode on, so a new connection starts without it
+        $providerSilentMode ??= !$isConnected && !empty($providerRepositoryId) ? false : $function->getAttribute('providerSilentMode', false);
 
         if (!empty($installationId) && $installation->getAttribute('projectId') !== $project->getId()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
@@ -332,12 +334,16 @@ class Update extends Base
             $live = false;
         }
 
-        // Enforce Cold Start if spec limits change.
+        // Enforce Cold Start if spec limits or logging change. The executor
+        // builds a runtime for its logging mode: only a logged runtime mounts
+        // the logs volume, and an unlogged one can run in a user namespace.
         if (!empty($function->getAttribute('deploymentId'))) {
             $specsChanged = false;
             if ($function->getAttribute('runtimeSpecification', '') !== $runtimeSpecification) {
                 $specsChanged = true;
             } elseif ($function->getAttribute('buildSpecification', '') !== $buildSpecification) {
+                $specsChanged = true;
+            } elseif ($function->getAttribute('logging', true) !== $logging) {
                 $specsChanged = true;
             }
 

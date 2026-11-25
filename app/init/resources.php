@@ -27,6 +27,9 @@ use Appwrite\Event\Publisher\Video as VideoPublisher;
 use Appwrite\Execution\Store as ExecutionStore;
 use Appwrite\Exiftool\Client as ExiftoolClient;
 use Appwrite\Geo\Client as GeoClient;
+use Appwrite\Locking\Locks;
+use Appwrite\Logs\Adapter\ClickHouse as LogsClickHouse;
+use Appwrite\Logs\Logs;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Messaging\Provider as MessagingProvider;
 use Appwrite\Messaging\PushService;
@@ -61,7 +64,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DNS\Lookup\Recursive;
 use Utopia\DSN\DSN;
-use Utopia\Lock\Distributed;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
 use Utopia\Pools\Group;
@@ -106,7 +108,8 @@ $container->set('executor', fn () => new Executor(), []);
 // container's _APP_ALLOWED_INTERNAL_ADDRESSES lists (empty by default; the dev stack lists its
 // own network). A malformed range throws rather than being skipped. Shared per process: without
 // connection reuse every request opens its own handle, and each with*() returns a copy.
-// cURL counts decoded bytes against the size cap and aborts the transfer once it is passed.
+// The size cap applies to the decoded body too: the adapter aborts the transfer once the decoded
+// bytes pass it, so a small compressed response cannot expand past it in memory.
 $container->set('clientForOAuth2', fn () => new Client(new CurlAdapter(options: [
     \CURLOPT_MAXFILESIZE_LARGE => APP_STORAGE_READ_BUFFER,
 ]), new PublicInternet(
@@ -335,7 +338,37 @@ $container->set('executionStore', function (): ExecutionStore {
         dsn: $connection,
         client: $client,
         retention: (int) System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600),
+        insertBuffer: max(0, (int) System::getEnv('_APP_EXECUTIONS_INSERT_BUFFER', 0)),
     );
+}, []);
+
+$container->set('logs', function () {
+    $client = new HttpClientPool(new Connections(
+        new SwoolePoolAdapter(),
+        'logs',
+        max(1, (int) System::getEnv('_APP_POOL_SIZE_EXECUTIONS', 2)),
+        fn () => new Client((new SwooleClientAdapter())->withConnectionReuse()),
+        timeout: 3.0,
+    ));
+
+    $defaultConnection = 'http://appwrite:'
+        . rawurlencode(System::getEnv('_APP_USAGE_PASS', 'appwrite'))
+        . '@clickhouse:8123/appwrite';
+    $connection = System::getEnv(
+        '_APP_CONNECTIONS_DB_EXECUTIONS',
+        System::getEnv('_APP_CONNECTIONS_DB_USAGE', $defaultConnection)
+    );
+    if ($connection === '') {
+        $connection = $defaultConnection;
+    }
+
+    return new Logs(new LogsClickHouse(
+        dsn: $connection,
+        client: $client,
+        // Function and site runtime logs are what Alloy collects today.
+        table: 'runtime_logs',
+        retention: (int) System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600),
+    ));
 }, []);
 
 $container->set('publisherForBuilds', fn (Publisher $publisher) => new BuildPublisher(
@@ -409,15 +442,7 @@ $container->set('cache', function (Registry $register, Telemetry $telemetry) {
 
 $container->set('cacheControlForStorage', fn () => fn (StorageCacheControl $config): string => \sprintf('private, max-age=%d', $config->maxAge));
 
-$container->set('locks', fn (Group $pools) => fn (string $key, int $ttl, callable $callback, float $timeout = 0.0): mixed => $pools->get('lock')->use(
-    function (\Redis $redis) use ($key, $ttl, $callback, $timeout): mixed {
-        // The callback receives the lock so long-running holders can refresh
-        // the lease and verify it is still theirs before committing work.
-        $lock = new Distributed($redis, $key, ttl: $ttl);
-
-        return $lock->withLock(fn () => $callback($lock), timeout: $timeout);
-    }
-), ['pools']);
+$container->set('locks', fn (Group $pools) => Locks::using($pools), ['pools']);
 
 // The lease spans the callback; throwing from it makes the pool reconnect the socket.
 $container->set('timelimit', fn (Group $pools) => fn (string $key, int $limit, int $seconds, callable $callback): mixed => $pools->get('abuse')->use(

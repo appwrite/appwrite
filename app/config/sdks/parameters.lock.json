@@ -249,6 +249,20 @@
             "secret"
         ],
         "avatars.deletePhoto": [],
+        "avatars.getTeamPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "avatars.updateTeamPhoto": [
+            "teamId",
+            "file"
+        ],
+        "avatars.deleteTeamPhoto": [
+            "teamId"
+        ],
         "avatars.getBrowser": [
             "code",
             "width",
@@ -975,13 +989,15 @@
             "total"
         ],
         "videos.listCaptions": [
-            "videoId"
+            "videoId",
+            "queries",
+            "total"
         ],
         "videos.listCodecs": [],
         "videos.listRenditions": [
             "videoId",
-            "output",
-            "status"
+            "queries",
+            "total"
         ],
         "videos.update": [
             "videoId",
@@ -1286,6 +1302,20 @@
             "acknowledged"
         ],
         "avatars.deletePhoto": [],
+        "avatars.getTeamPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "avatars.updateTeamPhoto": [
+            "teamId",
+            "file"
+        ],
+        "avatars.deleteTeamPhoto": [
+            "teamId"
+        ],
         "avatars.getBrowser": [
             "code",
             "width",
@@ -2394,6 +2424,23 @@
             "qos",
             "expiry"
         ],
+        "messaging.createBirdEmailProvider": [
+            "providerId",
+            "name",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail",
+            "enabled"
+        ],
+        "messaging.createBirdSMSProvider": [
+            "providerId",
+            "name",
+            "from",
+            "apiKey",
+            "enabled"
+        ],
         "messaging.createEmail": [
             "messageId",
             "subject",
@@ -2463,7 +2510,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.createResendProvider": [
             "providerId",
@@ -2671,6 +2719,23 @@
             "qos",
             "expiry"
         ],
+        "messaging.updateBirdEmailProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail"
+        ],
+        "messaging.updateBirdSMSProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "from"
+        ],
         "messaging.updateEmail": [
             "messageId",
             "topics",
@@ -2740,7 +2805,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.updateResendProvider": [
             "providerId",
@@ -2981,7 +3047,8 @@
             "cooldown",
             "enabled",
             "notify",
-            "severity"
+            "severity",
+            "escalationId"
         ],
         "monitors.delete": [
             "monitorId"
@@ -3001,7 +3068,8 @@
             "cooldown",
             "enabled",
             "notify",
-            "severity"
+            "severity",
+            "escalationId"
         ],
         "notifications.list": [
             "queries",
@@ -3015,6 +3083,12 @@
             "projectId",
             "scopes",
             "duration"
+        ],
+        "organization.createEscalation": [
+            "escalationId",
+            "name",
+            "steps",
+            "repeat"
         ],
         "organization.createProject": [
             "projectId",
@@ -3034,6 +3108,9 @@
             "recipientId",
             "expire"
         ],
+        "organization.deleteEscalation": [
+            "escalationId"
+        ],
         "organization.deleteProject": [
             "projectId"
         ],
@@ -3043,6 +3120,9 @@
         ],
         "organization.deleteProjectTransfer": [
             "transferId"
+        ],
+        "organization.getEscalation": [
+            "escalationId"
         ],
         "organization.getProject": [
             "projectId"
@@ -3054,6 +3134,10 @@
         "organization.getProjectTransfer": [
             "transferId",
             "secret"
+        ],
+        "organization.listEscalations": [
+            "queries",
+            "total"
         ],
         "organization.listProjectKeys": [
             "projectId",
@@ -3069,6 +3153,12 @@
             "queries",
             "search",
             "total"
+        ],
+        "organization.updateEscalation": [
+            "escalationId",
+            "name",
+            "steps",
+            "repeat"
         ],
         "organization.updateProject": [
             "projectId",
@@ -3387,6 +3477,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Bird": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Bitbucket": [
             "key",
             "secret",
@@ -3400,6 +3495,12 @@
         "project.updateOAuth2Box": [
             "clientId",
             "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Clerk": [
+            "clientId",
+            "clientSecret",
+            "endpoint",
             "enabled"
         ],
         "project.updateOAuth2Cloudflare": [
@@ -3474,6 +3575,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Instagram": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Kakao": [
             "clientId",
             "clientSecret",
@@ -3519,6 +3625,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Netlify": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Notion": [
             "oauthClientId",
             "oauthClientSecret",
@@ -3542,6 +3653,11 @@
             "authorizationServerId",
             "enabled",
             "prompt"
+        ],
+        "project.updateOAuth2Patreon": [
+            "clientId",
+            "clientSecret",
+            "enabled"
         ],
         "project.updateOAuth2Paypal": [
             "clientId",
@@ -3594,9 +3710,19 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Strava": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Stripe": [
             "clientId",
             "apiSecretKey",
+            "enabled"
+        ],
+        "project.updateOAuth2Supabase": [
+            "clientId",
+            "clientSecret",
             "enabled"
         ],
         "project.updateOAuth2TikTok": [
@@ -3620,6 +3746,11 @@
             "enabled"
         ],
         "project.updateOAuth2Vercel": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2VK": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -3865,6 +3996,14 @@
         "reviews.list": [
             "queries",
             "total"
+        ],
+        "reviews.listAuthors": [
+            "range",
+            "repositoryId"
+        ],
+        "reviews.listCategories": [
+            "range",
+            "repositoryId"
         ],
         "reviews.listEvents": [
             "reviewId",
@@ -5097,6 +5236,9 @@
             "success",
             "failure"
         ],
+        "vcs.createInstallation": [
+            "installationId"
+        ],
         "vcs.createOriginInstallation": [
             "success",
             "failure"
@@ -5132,7 +5274,8 @@
         "vcs.listInstallations": [
             "queries",
             "search",
-            "total"
+            "total",
+            "shared"
         ],
         "vcs.listNamespaces": [
             "installationId",
@@ -5433,13 +5576,15 @@
             "total"
         ],
         "videos.listCaptions": [
-            "videoId"
+            "videoId",
+            "queries",
+            "total"
         ],
         "videos.listCodecs": [],
         "videos.listRenditions": [
             "videoId",
-            "output",
-            "status"
+            "queries",
+            "total"
         ],
         "videos.update": [
             "videoId",
@@ -5768,6 +5913,20 @@
             "acknowledged"
         ],
         "avatars.deletePhoto": [],
+        "avatars.getTeamPhoto": [
+            "teamId",
+            "width",
+            "height",
+            "quality",
+            "output"
+        ],
+        "avatars.updateTeamPhoto": [
+            "teamId",
+            "file"
+        ],
+        "avatars.deleteTeamPhoto": [
+            "teamId"
+        ],
         "avatars.getBrowser": [
             "code",
             "width",
@@ -6852,6 +7011,23 @@
             "qos",
             "expiry"
         ],
+        "messaging.createBirdEmailProvider": [
+            "providerId",
+            "name",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail",
+            "enabled"
+        ],
+        "messaging.createBirdSMSProvider": [
+            "providerId",
+            "name",
+            "from",
+            "apiKey",
+            "enabled"
+        ],
         "messaging.createEmail": [
             "messageId",
             "subject",
@@ -6921,7 +7097,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.createResendProvider": [
             "providerId",
@@ -7129,6 +7306,23 @@
             "qos",
             "expiry"
         ],
+        "messaging.updateBirdEmailProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "fromName",
+            "fromEmail",
+            "replyToName",
+            "replyToEmail"
+        ],
+        "messaging.updateBirdSMSProvider": [
+            "providerId",
+            "name",
+            "enabled",
+            "apiKey",
+            "from"
+        ],
         "messaging.updateEmail": [
             "messageId",
             "topics",
@@ -7198,7 +7392,8 @@
             "contentAvailable",
             "critical",
             "priority",
-            "channelId"
+            "channelId",
+            "mutableContent"
         ],
         "messaging.updateResendProvider": [
             "providerId",
@@ -7439,7 +7634,8 @@
             "cooldown",
             "enabled",
             "notify",
-            "severity"
+            "severity",
+            "escalationId"
         ],
         "monitors.delete": [
             "monitorId"
@@ -7459,7 +7655,8 @@
             "cooldown",
             "enabled",
             "notify",
-            "severity"
+            "severity",
+            "escalationId"
         ],
         "organization.createEphemeralProjectKey": [
             "projectId",
@@ -7803,6 +8000,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Bird": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Bitbucket": [
             "key",
             "secret",
@@ -7816,6 +8018,12 @@
         "project.updateOAuth2Box": [
             "clientId",
             "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Clerk": [
+            "clientId",
+            "clientSecret",
+            "endpoint",
             "enabled"
         ],
         "project.updateOAuth2Cloudflare": [
@@ -7890,6 +8098,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Instagram": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Kakao": [
             "clientId",
             "clientSecret",
@@ -7935,6 +8148,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Netlify": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Notion": [
             "oauthClientId",
             "oauthClientSecret",
@@ -7958,6 +8176,11 @@
             "authorizationServerId",
             "enabled",
             "prompt"
+        ],
+        "project.updateOAuth2Patreon": [
+            "clientId",
+            "clientSecret",
+            "enabled"
         ],
         "project.updateOAuth2Paypal": [
             "clientId",
@@ -8010,9 +8233,19 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Strava": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Stripe": [
             "clientId",
             "apiSecretKey",
+            "enabled"
+        ],
+        "project.updateOAuth2Supabase": [
+            "clientId",
+            "clientSecret",
             "enabled"
         ],
         "project.updateOAuth2TikTok": [
@@ -8036,6 +8269,11 @@
             "enabled"
         ],
         "project.updateOAuth2Vercel": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2VK": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -8251,6 +8489,14 @@
         "reviews.list": [
             "queries",
             "total"
+        ],
+        "reviews.listAuthors": [
+            "range",
+            "repositoryId"
+        ],
+        "reviews.listCategories": [
+            "range",
+            "repositoryId"
         ],
         "reviews.listEvents": [
             "reviewId",
@@ -9727,13 +9973,15 @@
             "total"
         ],
         "videos.listCaptions": [
-            "videoId"
+            "videoId",
+            "queries",
+            "total"
         ],
         "videos.listCodecs": [],
         "videos.listRenditions": [
             "videoId",
-            "output",
-            "status"
+            "queries",
+            "total"
         ],
         "videos.update": [
             "videoId",

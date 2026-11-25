@@ -704,7 +704,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Tracking disabled': '計測を無効にしました',
   'Browser versions': 'ブラウザのバージョン',
   'OS versions': 'OS のバージョン',
-  'Versions': 'バージョン',
+  Versions: 'バージョン',
   'Browser version': 'ブラウザのバージョン',
   'OS version': 'OS のバージョン',
   'Identified users, ranked by visitors': '識別されたユーザー (訪問者数順)',
@@ -827,8 +827,24 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Screens: '画面',
   'Most viewed screens': '最も閲覧された画面',
   'Where visitors are browsing from': '訪問者の閲覧地域',
+  'Where your users are': 'ユーザーの所在地',
+  'Users online now': '現在オンラインのユーザー',
+  'user online': '人のユーザーがオンライン',
+  'users online': '人のユーザーがオンライン',
+  'Unique users active in the last': '直近でアクティブだったユニークユーザー:',
+  'Could not load live users': 'ライブユーザーを読み込めませんでした',
+  'Active screens': 'アクティブな画面',
+  'No one is using the app right now.':
+    '現在アプリを使用しているユーザーはいません。',
+  'Users by country': '国別ユーザー',
+  'Visitors and app users, pages and screens, sources, locations, and bots, plus any custom events you track.':
+    '訪問者とアプリユーザー、ページと画面、参照元、地域、ボット、そしてトラッキングしているカスタムイベント。',
   'What visitors are browsing with': '訪問者の利用環境',
-  'What visitors are using': '訪問者の利用デバイス',
+  'What your users are on': 'ユーザーの利用環境',
+  'Active users': 'アクティブユーザー',
+  'Screen views': '画面表示数',
+  'Signed-in users': 'サインイン済みユーザー',
+  'Screens/session': 'セッションあたりの画面数',
   'Human visitors versus bots': '人間の訪問者とボットの比較',
   'AI agents and crawlers': 'AI エージェントとクローラー',
   Agents: 'エージェント',
@@ -2192,7 +2208,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Shared with all Functions and Sites in this project.':
     'このプロジェクト内のすべての Functions とサイトで共有されます。',
   'Showing first': '最初の',
-  Since: '開始',
   'Some PostgreSQL features are not migrated. OAuth users and functions are not migrated automatically.':
     '一部の PostgreSQL 機能は移行されません。OAuth ユーザーと Functions は自動的に移行されません。',
   'Some entities failed to migrate. Check status counts above.':
@@ -2245,7 +2260,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'インポート中に既存の ID を持つ行に遭遇した場合。',
   'When enabled, all emails will be sent through your configured SMTP server.':
     '有効にすると、すべてのメールは設定した SMTP サーバー経由で送信されます。',
-  'an A or AAAA record': 'A または AAAA レコード',
   'and all its databases, functions, and files? This action cannot be undone.':
     'とそのすべてのデータベース、Functions、ファイル? この操作は元に戻せません。',
   characters: '文字',
@@ -2263,14 +2277,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'have been enabled.': 'を有効にしました。',
   here: 'こちら',
   installations: 'インストール',
-  // pragma: allowlist secret
-  "instead. If you're using Cloudflare or another CDN, make sure the proxy is disabled (set to DNS only) for this record, since Appwrite serves your domain through its own CDN.":
-    'を使用してください。Cloudflare やその他の CDN を使用している場合は、Appwrite が独自の CDN 経由でドメインを配信するため、このレコードのプロキシを無効 (DNS only) にしてください。', // pragma: allowlist secret
-  "is an apex domain, CNAME record is only supported by certain providers. If yours doesn't, please verify using":
-    'はエイペックスドメインです。CNAME レコードは一部のプロバイダーでのみサポートされています。サポートされていない場合は、次で検証してください',
   item: '項目',
   'key for the API key.': 'API キーのキー。',
-  nameservers: 'ネームサーバー',
   'protocol has been disabled': 'プロトコルを無効にしました',
   'protocol has been enabled': 'プロトコルを有効にしました',
   recipient: '受信者',
@@ -2546,6 +2554,27 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'Mailgun 経由でトランザクションメールを送信します。',
   'Send transactional email through Resend.':
     'Resend 経由でトランザクションメールを送信します。',
+  'Send SMS through Bird.': 'Bird 経由で SMS を送信します。',
+  'A Bird API key with the sms:write scope.':
+    'sms:write スコープを持つ Bird の API キー。',
+  'A sender your Bird workspace owns: a number with its country code, or an alphanumeric sender ID.':
+    'Bird ワークスペースが所有する送信元: 国番号付きの電話番号、または英数字の送信者 ID。',
+  'One-click Bird SMS': 'ワンクリック Bird SMS',
+  'Let Appwrite create the API key and fill in one of your senders.':
+    'Appwrite が API キーを作成し、送信元を入力します。',
+  'Loading senders…': '送信元を読み込み中…',
+  'Add a sender, then check again.':
+    '送信元を追加して、もう一度確認してください。',
+  'Manage senders': '送信元を管理',
+  'Failed to load senders from the SMS provider':
+    'SMS プロバイダーから送信元を読み込めませんでした',
+  'Failed to create the API key with the SMS provider':
+    'SMS プロバイダーでの API キーの作成に失敗しました',
+  'Send email through Bird.': 'Bird 経由でメールを送信します。',
+  'A Bird API key with the emails:write scope.':
+    'emails:write スコープを持つ Bird の API キー。',
+  'Bird API keys start with bk_ and their region, for example bk_eu1_.':
+    'Bird の API キーは bk_ とリージョンで始まります（例: bk_eu1_）。',
   'Send transactional email through SendGrid.':
     'SendGrid 経由でトランザクションメールを送信します。',
   Sender: '送信元',
@@ -3215,16 +3244,16 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   avatars: 'アバター',
   Organizations: '組織',
   Install: 'インストール',
-  // SMTP quick setup (universal card: Resend today, Mailgun and SendGrid next)
+  // SMTP quick setup (universal card: Resend and Bird today, Mailgun next)
   'Connect an email provider and Appwrite fills in your SMTP settings automatically.':
     'メールプロバイダーを接続すると、Appwrite が SMTP 設定を自動で入力します。',
   'Set up': 'セットアップ',
   'Creates a sending-only API key for a verified domain.':
     '検証済みドメイン用の送信専用 API キーを作成します。',
+  'Creates an API key that can only send email.':
+    'メール送信のみ行える API キーを作成します。',
   'Creates a domain sending key for a verified domain.':
     '検証済みドメイン用のドメイン送信キーを作成します。',
-  'Creates a restricted API key with mail send access.':
-    'メール送信権限を持つ制限付き API キーを作成します。',
   'Failed to connect the email provider':
     'メールプロバイダーへの接続に失敗しました',
   'The provider was authorized for a different Appwrite account. Try again while signed in to this account.':
@@ -3239,6 +3268,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Check again': '再確認',
   'The credential is restricted to this domain and can only send email.':
     'この認証情報はこのドメインに制限され、メール送信のみ行えます。',
+  'The credential can only send email. It is not tied to a domain, so pick the one your sender address uses.':
+    'この認証情報はメール送信のみ行えます。特定のドメインには紐づかないため、送信者アドレスのドメインを選択してください。',
   'Must use the selected domain.': '選択したドメインを使用する必要があります。',
   'Enter a sender name.': '送信者名を入力してください。',
   'Enter a sender email on the selected domain.':
@@ -3252,6 +3283,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'Appwrite が検証済みドメイン用の API キーを作成し、これらの項目を入力します。',
   'Generate API key': 'API キーを生成',
   'One-click Resend sender': 'ワンクリック Resend 送信者',
+  'One-click Bird sender': 'ワンクリック Bird 送信者',
   'Creating the sending credential…': '送信用の認証情報を作成中…',
   'Failed to create the API key with the email provider':
     'メールプロバイダーでの API キーの作成に失敗しました',
@@ -3268,19 +3300,19 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Sending domain': '送信ドメイン',
   Sender: '送信者',
   'Disconnect Resend': 'Resend を切断',
+  'Disconnect Bird': 'Bird を切断',
   'Disconnect Mailgun': 'Mailgun を切断',
-  'Disconnect SendGrid': 'SendGrid を切断',
   'Provider actions': 'プロバイダーの操作',
   'Set up SMTP with Resend': 'Resend で SMTP をセットアップ',
+  'Set up SMTP with Bird': 'Bird で SMTP をセットアップ',
   'Set up SMTP with Mailgun': 'Mailgun で SMTP をセットアップ',
-  'Set up SMTP with SendGrid': 'SendGrid で SMTP をセットアップ',
   'Creating credential and saving SMTP settings…':
     '認証情報を作成して SMTP 設定を保存中…',
   'Custom SMTP is enabled and your project now sends emails through this provider.':
     'カスタム SMTP が有効になり、プロジェクトはこのプロバイダー経由でメールを送信するようになりました。',
   'Connect with Resend': 'Resend に接続',
+  'Connect with Bird': 'Bird に接続',
   'Connect with Mailgun': 'Mailgun に接続',
-  'Connect with SendGrid': 'SendGrid に接続',
   'Appwrite will no longer be able to create sending credentials for this provider. Credentials already saved in your SMTP settings keep working.':
     'Appwrite はこのプロバイダーの送信用認証情報を作成できなくなります。SMTP 設定に保存済みの認証情報は引き続き動作します。',
   'Provider disconnected': 'プロバイダーを切断しました',
@@ -3466,6 +3498,26 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'environments per project.': '個の環境をプロジェクトごとに作成できます。',
   'Delete an environment to create another.':
     '別の環境を作成するには、環境を 1 つ削除してください。',
+  // Environments for a plan without them: examples in the switcher and the upgrade they open
+  'Add an environment': '環境を追加',
+  'Test before you release': 'リリース前にテスト',
+  'Share work in progress': '作業中の内容を共有',
+  'Break things freely': '気兼ねなく試せる',
+  'Try changes before your users do': 'ユーザーより先に変更を試す',
+  'An environment is a separate copy of your project, with its own resources and users.':
+    '環境はプロジェクトの独立したコピーで、独自のリソースとユーザーを持ちます。',
+  '{plan} includes up to {limit} environments per project.':
+    '{plan} プランでは、プロジェクトごとに最大 {limit} 個の環境を作成できます。',
+  'Start from a copy of production': '本番のコピーから始める',
+  'Copy databases, functions and settings. Bringing data is optional.':
+    'データベース、Functions、設定をコピーできます。データのコピーは任意です。',
+  'Keep production untouched': '本番には影響しません',
+  'Each environment has its own data, files and users.':
+    '環境ごとにデータ、ファイル、ユーザーが分かれています。',
+  'Switch with one line': '1 行で切り替え',
+  'Same project ID and endpoint. Set the environment ID in your SDK.':
+    'プロジェクト ID とエンドポイントはそのままです。SDK に環境 ID を設定するだけです。',
+  'Upgrade to {plan}': '{plan} にアップグレード',
   // Settings of an environment: its name, its ID, and deleting it
   'Environment name has been updated': '環境名を更新しました',
   'Failed to update environment name': '環境名の更新に失敗しました',
@@ -3477,7 +3529,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Project:': 'プロジェクト:',
   'Failed to load migrations': 'マイグレーションの読み込みに失敗しました',
   'Failed to refresh migrations': 'マイグレーションの更新に失敗しました',
-  'The list below may be out of date.': '以下の一覧は最新でない可能性があります。',
+  'The list below may be out of date.':
+    '以下の一覧は最新でない可能性があります。',
   'An environment with this ID already exists in this project.':
     'この ID の環境はこのプロジェクトに既に存在します。',
   'Use lowercase letters, numbers and hyphens, starting with a letter or a number.':
@@ -3948,6 +4001,15 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '誰かが対応中であることをチームに知らせます。モニターが回復するまでアラートは発生し続けます。',
   'Nobody has acknowledged this alert':
     'このアラートはまだ誰も確認していません',
+  Acknowledged: '確認済み',
+  'Alert acknowledged': 'アラートを確認済みにしました',
+  "Your team sees that you're on it. It keeps firing until its monitor recovers.":
+    'あなたが対応中であることがチームに表示されます。モニターが回復するまでアラートは発生し続けます。',
+  'This alert has already resolved': 'このアラートはすでに解決しています',
+  'Only a firing alert can be acknowledged.':
+    '確認済みにできるのは発生中のアラートだけです。',
+  "Your role can't change alerts. Ask an owner or a developer.":
+    'あなたのロールではアラートを変更できません。オーナーまたは開発者に依頼してください。',
   "You don't have permission to manage monitors.":
     'モニターを管理する権限がありません。',
   'between two alerts from this monitor.':
@@ -3957,6 +4019,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '{count} 件の通知を送信 (クールダウンごとに 1 件)',
   'Its alerts stay in the history.': 'アラートは履歴に残ります。',
   'Send alerts to a webhook': 'アラートを Webhook に送信',
+  'Deploy an alert function': 'アラート用の関数をデプロイ',
   Owners: 'オーナー',
   Editors: '編集者',
   Analysts: 'アナリスト',
@@ -3972,8 +4035,10 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'スマートフォンがサイレントやおやすみモードでも鳴ります。',
   Severity: '重大度',
   Warning: '警告',
-  'Worth knowing about. Nothing needs doing yet.': '知っておくべき情報です。まだ対応は不要です。',
-  'Look into it soon, before it becomes a problem.': '問題になる前に、早めに確認してください。',
+  'Worth knowing about. Nothing needs doing yet.':
+    '知っておくべき情報です。まだ対応は不要です。',
+  'Look into it soon, before it becomes a problem.':
+    '問題になる前に、早めに確認してください。',
   'Something is broken and needs fixing.': '何かが壊れていて、修正が必要です。',
   'Critical. Rings on phones even on silent.':
     '重要。サイレントでもスマートフォンが鳴ります。',
@@ -4009,7 +4074,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'This rule has a schedule this version of the Console cannot show. It is kept unless you remove it or set a new one.':
     'このルールには、このバージョンのコンソールでは表示できないスケジュールがあります。削除するか新しいスケジュールを設定しない限り、そのまま保持されます。',
   'Remove schedule': 'スケジュールを削除',
-  'The schedule will be removed when you save.': '保存するとスケジュールが削除されます。',
+  'The schedule will be removed when you save.':
+    '保存するとスケジュールが削除されます。',
   'Apply this rule only on certain days or at certain times. When off, the rule is always active.':
     '特定の曜日や時間帯にのみこのルールを適用します。オフの場合、ルールは常に有効です。',
   Repeat: '繰り返し',
@@ -4090,16 +4156,20 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'パスワードを送信する前に、ディレクトリの証明書を検証します。',
   'The CA or self-signed certificate to trust. Leave empty to use the system trust store.':
     '信頼する CA 証明書または自己署名証明書。空にするとシステムの信頼ストアを使用します。',
-  'How long to wait for each answer, from 1 to 30.': '各応答を待つ時間。1 から 30 まで。',
+  'How long to wait for each answer, from 1 to 30.':
+    '各応答を待つ時間。1 から 30 まで。',
   'Service account for the search, or empty for anonymous.':
     '検索に使うサービスアカウント。空にすると匿名で検索します。',
   'Never shown again. Re-enter it when the connection changes.':
     '再表示されません。接続を変更する際は再入力してください。',
-  'Enter the bind password again to save.': '保存するにはバインドパスワードを再入力してください。',
+  'Enter the bind password again to save.':
+    '保存するにはバインドパスワードを再入力してください。',
   'Only its members can sign in. Leave empty to allow everyone.':
     'このグループのメンバーだけがサインインできます。空にするとすべてのユーザーを許可します。',
-  'An ID that never changes, such as entryUUID.': '変更されない ID。entryUUID など。',
-  'Attribute holding the display name, usually cn.': '表示名を保持する属性。通常は cn。',
+  'An ID that never changes, such as entryUUID.':
+    '変更されない ID。entryUUID など。',
+  'Attribute holding the display name, usually cn.':
+    '表示名を保持する属性。通常は cn。',
   'Attribute holding an E.164 phone number. Optional.':
     'E.164 形式の電話番号を保持する属性。任意。',
   'Using Active Directory?': 'Active Directory を使用していますか?',
@@ -4262,6 +4332,156 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Notes mark releases, campaigns or incidents on the chart for everyone in the project.':
     'メモはリリース、キャンペーン、障害などをグラフ上に記録し、プロジェクトの全員に表示されます。',
   'Launched the new pricing page': '新しい料金ページを公開',
-  'The note is removed from the chart for everyone.': 'このメモは全員のグラフから削除されます。',
+  'The note is removed from the chart for everyone.':
+    'このメモは全員のグラフから削除されます。',
   'Former member': '元メンバー',
+  Notes: 'メモ',
+  Escalations: 'エスカレーション',
+  Escalation: 'エスカレーション',
+  Escalating: 'エスカレーション中',
+  'Notify roles once': 'ロールに 1 回通知',
+  'Select an escalation.': 'エスカレーションを選択してください。',
+  'Each step of the escalation is notified in turn until someone acknowledges the alert.':
+    '誰かがアラートを確認するまで、エスカレーションの各ステップに順番に通知します。',
+  'Create an escalation': 'エスカレーションを作成',
+  'Manage escalations': 'エスカレーションを管理',
+  'Could not load escalations.': 'エスカレーションを読み込めませんでした。',
+  'Your organization has no escalations yet.':
+    'この組織にはまだエスカレーションがありません。',
+  'Select an escalation': 'エスカレーションを選択',
+  'repeats {count}×': '{count} 回繰り返し',
+  'Acknowledging stops the escalation. It keeps firing until its monitor recovers.':
+    '確認するとエスカレーションが止まります。アラートはモニターが回復するまで発生し続けます。',
+  'No step notified yet': 'まだ通知されたステップはありません',
+  'Step {step} of {total}': 'ステップ {step}/{total}',
+  Notified: '通知済み',
+  'Step {step}': 'ステップ {step}',
+  'round {round}': '{round} 巡目',
+  'Stopped, acknowledged': '停止済み（確認済み）',
+  'Stopped, resolved': '停止済み（解決済み）',
+  'All steps notified': 'すべてのステップに通知済み',
+  'Escalation has been deleted': 'エスカレーションを削除しました',
+  'Monitors use this escalation. Move them to another escalation or to roles first.':
+    'モニターがこのエスカレーションを使用しています。先に別のエスカレーションまたはロールに切り替えてください。',
+  'Failed to delete escalation': 'エスカレーションを削除できませんでした',
+  'Notify your team step by step until someone acknowledges the alert. Pick an escalation on any monitor.':
+    '誰かがアラートを確認するまで、チームに段階的に通知します。エスカレーションは任意のモニターで選択できます。',
+  'No escalations yet.': 'エスカレーションはまだありません。',
+  'Delete escalation': 'エスカレーションを削除',
+  'Add members': 'メンバーを追加',
+  'Enter a name.': '名前を入力してください。',
+  'Each step needs a role or a member.':
+    '各ステップにはロールまたはメンバーが必要です。',
+  'Escalation has been updated': 'エスカレーションを更新しました',
+  'Escalation has been created': 'エスカレーションを作成しました',
+  'Failed to update escalation': 'エスカレーションを更新できませんでした',
+  'Failed to create escalation': 'エスカレーションを作成できませんでした',
+  'Edit escalation': 'エスカレーションを編集',
+  'Create escalation': 'エスカレーションを作成',
+  'Steps are notified in turn until someone acknowledges the alert.':
+    '誰かがアラートを確認するまで、ステップに順番に通知します。',
+  'On-call': 'オンコール',
+  'Remove step {step}': 'ステップ {step} を削除',
+  'Seconds to wait': '待機する秒数',
+  'seconds after the alert fires': '秒後（アラート発生から）',
+  'seconds after the previous step': '秒後（前のステップから）',
+  'Add step': 'ステップを追加',
+  Once: '1 回',
+  '{count} times': '{count} 回',
+  "Starts again from the first step, a monitor's cooldown after the last one.":
+    '最後のステップからモニターのクールダウン後に、最初のステップから再開します。',
+  now: '今すぐ',
+  'after {delay}': '{delay} 後',
+  'analytics properties': 'アナリティクスプロパティ',
+  'analytics property': 'アナリティクスプロパティ',
+  'per project.': '(プロジェクトごと)。',
+  'to create another.': 'して、さらに作成してください。',
+  'to enable analytics on this site.':
+    'して、このサイトでアナリティクスを有効にしてください。',
+  'Your plan checks at most every {interval}.':
+    'ご利用のプランでは、チェック間隔は最短で{interval}です。',
+  'Synthetic checks: {used} of {limit} allowed on your plan.':
+    'Synthetic チェック: プランの上限 {limit} 件中 {used} 件を使用中です。',
+  'Synthetic checks: {used} of {included} included.':
+    'Synthetic チェック: プランに含まれる {included} 件中 {used} 件を使用中です。',
+  'Each extra check costs {price} per month.':
+    '追加のチェックは 1 件あたり月額 {price} です。',
+  'Upgrade your plan to add more synthetic checks.':
+    'Synthetic チェックを追加するには、プランをアップグレードしてください。',
+  'Escalations: {used} of {limit} allowed on your plan.':
+    'エスカレーション: プランの上限 {limit} 件中 {used} 件を使用中です。',
+  'On-call responders: {used} of {included} included.':
+    'オンコール対応者: プランに含まれる {included} 人中 {used} 人です。',
+  'Each extra responder costs {price} per month.':
+    '追加の対応者は 1 人あたり月額 {price} です。',
+  'Upgrade your plan to create more escalations.':
+    'エスカレーションをさらに作成するには、プランをアップグレードしてください。',
+  'Your plan allows up to {count} steps per escalation.':
+    'ご利用のプランでは、1 つのエスカレーションに設定できるステップは {count} 個までです。',
+  'Upgrade your plan to repeat escalations.':
+    'エスカレーションを繰り返すには、プランをアップグレードしてください。',
+  'Usage monitors: {used} of {limit} allowed on your plan.':
+    '使用量モニター: プランの上限 {limit} 件中 {used} 件を使用中です。',
+  'Upgrade your plan to add more usage monitors.':
+    '使用量モニターを追加するには、プランをアップグレードしてください。',
+  // Analytics for signed-in users
+  'Signed-in users, ranked by visits': 'サインイン済みユーザー (訪問数順)',
+  'View user': 'ユーザーを表示',
+  'Could not load analytics': 'アナリティクスを読み込めませんでした',
+  'No analytics yet': 'アナリティクスはまだありません',
+  "Add an analytics property and turn on User identification to see each signed-in user's pages and events here.":
+    'アナリティクスプロパティを追加してユーザー識別を有効にすると、サインイン済みユーザーごとのページとイベントがここに表示されます。',
+  'Add analytics': 'アナリティクスを追加',
+  'Link {name} to their analytics': '{name} をアナリティクスにリンク',
+  "Turn on User identification in a property's settings to record the signed-in user on every event, so their pages, events and sessions show here.":
+    'プロパティの設定でユーザー識別を有効にすると、すべてのイベントにサインイン中のユーザーが記録され、そのページ、イベント、セッションがここに表示されます。',
+  'Open property settings': 'プロパティ設定を開く',
+  'Last active': '最終アクティブ',
+  Calls: '呼び出し',
+  'Active days': 'アクティブ日数',
+  'No events from this user in the last 30 days':
+    '過去 30 日間、このユーザーのイベントはありません',
+  '30 days ago': '30 日前',
+  'No custom events': 'カスタムイベントはありません',
+  'No model calls': 'モデル呼び出しはありません',
+  'No screens viewed': '表示された画面はありません',
+  'No pages viewed': '表示されたページはありません',
+  'View in analytics': 'アナリティクスで表示',
+  'New installs and updates of your app':
+    'アプリの新規インストールとアップデート',
+  'Add the latest tracking SDK to your app to count installs and updates.':
+    '最新のトラッキング SDK をアプリに追加すると、インストールとアップデートを計測できます。',
+  'Pushes received on devices, and how many were opened':
+    'デバイスで受信したプッシュ通知と開封数',
+  'No push notifications tracked yet': 'プッシュ通知はまだ計測されていません',
+  'Pushes sent with Messaging show their reach and opens here once the tracking SDK is in your app.':
+    'トラッキング SDK をアプリに追加すると、Messaging で送信したプッシュ通知の到達数と開封数がここに表示されます。',
+  'Open Messaging': 'Messaging を開く',
+  Received: '受信',
+  Opened: '開封',
+  'Open rate': '開封率',
+  Rate: '率',
+  'No pushes with a message ID in this range':
+    'この期間にメッセージ ID 付きのプッシュはありません',
+  '{count} delivered': '{count} 件配信',
+  'View message': 'メッセージを表示',
+  Views: '表示',
+  'Last seen': '最終確認',
+  'Not in this period': 'この期間はなし',
+  'of {count}': '/ {count}',
+  'Events per day, last 30 days': '1 日あたりのイベント (過去 30 日間)',
+  Properties: 'プロパティ',
+  'Where this user was active, last 30 days':
+    'このユーザーがアクティブだった場所 (過去 30 日間)',
+  'No activity': 'アクティビティなし',
+  'No locations': '場所はありません',
+  'No sources': 'ソースはありません',
+  'No browsers': 'ブラウザはありません',
+  'No operating systems': 'OS はありません',
+  'No devices': 'デバイスはありません',
+  'No OS versions': 'OS バージョンはありません',
+  views: '表示',
+  'signed in': '人がサインイン中',
+  'Signed in now': '現在サインイン中',
+  'and {count} more': 'ほか {count} 人',
 }

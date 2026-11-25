@@ -15,6 +15,7 @@ use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\System\System;
 
 /**
  * Code review for a provider's webhook handler: queues reviews of pull requests and answers to
@@ -129,16 +130,29 @@ trait Reviews
         }
 
         $handle = $this->getReviewerHandle();
+        $author = \strval($parsedPayload['commentAuthor'] ?? '');
+        $authorType = \strval($parsedPayload['commentAuthorType'] ?? '');
+        $repositoryName = ($parsedPayload['owner'] ?? '') . '/' . ($parsedPayload['repositoryName'] ?? '');
+        $installationId = \strval($parsedPayload['installationId'] ?? '');
         $providerRepositoryId = \strval($parsedPayload['repositoryId'] ?? '');
-        $repositories = $this->findReviewRepositories($provider, $providerRepositoryId, \strval($parsedPayload['installationId'] ?? ''), $dbForPlatform, $authorization);
+        // Each comment that is not answered says why: a dropped reply otherwise leaves no trace.
+        $subject = "{$commentKind} comment {$commentId} on pull request {$pullNumber} of repository '{$repositoryName}' by '{$author}' ({$authorType})";
+
+        $repositories = $this->findReviewRepositories($provider, $providerRepositoryId, $installationId, $dbForPlatform, $authorization);
         if (empty($repositories)) {
+            Console::info("Ignored {$subject}: no project reviews the repository through installation '{$installationId}'");
             return;
         }
 
         // Every answer is a model run the project pays for: trusted humans and other apps may ask, never the reviewer itself.
         // Checked once code review is known to be on, as a provider may have to be asked who the author is.
         $association = $this->getCommentAuthorAssociation($parsedPayload, $vcsFactory);
-        if (!$this->canTriggerFromComment(\strval($parsedPayload['commentAuthor'] ?? ''), \strval($parsedPayload['commentAuthorType'] ?? ''), $association, $this->getReviewerLogin())) {
+        if (!$this->canTriggerFromComment($author, $authorType, $association, $this->getReviewerLogin())) {
+            // Other apps may ask, so the only bot refused here is the reviewer itself, whose own
+            // comments arrive on every review. Everyone else refused gets a line.
+            if ($authorType !== 'Bot' && $authorType !== 'App') {
+                Console::info("Ignored {$subject}: the author is not an owner, member or collaborator ({$association})");
+            }
             return;
         }
 
@@ -148,7 +162,11 @@ trait Reviews
         foreach ($repositories as $repository) {
             try {
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $repository->getAttribute('projectId', '')));
-                if ($project->isEmpty() || !$this->isProjectInCurrentRegion($project)) {
+                if ($project->isEmpty()) {
+                    Console::info("Ignored {$subject} for repository '{$repository->getId()}': its project is missing");
+                    continue;
+                }
+                if (!$this->isProjectInCurrentRegion($project)) {
                     continue;
                 }
 
@@ -185,7 +203,7 @@ trait Reviews
                 try {
                     $this->beforeQueueReview($project, $repository, $dbForPlatform, $authorization);
                 } catch (Exception $error) {
-                    Console::warning("Skipped comment for repository '{$repository->getId()}': " . $error->getMessage());
+                    Console::warning("Skipped {$subject} for repository '{$repository->getId()}': " . $error->getMessage());
                     continue;
                 }
 
@@ -201,6 +219,7 @@ trait Reviews
                         'author' => $parsedPayload['commentAuthor'] ?? '',
                     ])));
                 } catch (DuplicateException) {
+                    Console::info("Ignored {$subject} for repository '{$repository->getId()}': it is already queued");
                     continue;
                 }
 
@@ -228,6 +247,8 @@ trait Reviews
                     if ($queued === false) {
                         throw new \Exception('The broker rejected the chat message.');
                     }
+
+                    Console::info("Queued {$subject} for repository '{$repository->getId()}'");
                 } catch (\Throwable $error) {
                     // Released, so a redelivery of the comment can queue it again.
                     $authorization->skip(fn () => $dbForProject->deleteDocument('reviewChats', $chat->getId()));
@@ -235,7 +256,7 @@ trait Reviews
                     throw $error;
                 }
             } catch (\Throwable $error) {
-                Console::warning("Failed to queue comment for repository '{$repository->getId()}': " . $error->getMessage());
+                Console::warning("Failed to queue {$subject} for repository '{$repository->getId()}': " . $error->getMessage());
             }
         }
     }
@@ -270,6 +291,7 @@ trait Reviews
             'providerRepositoryOwner' => $parsedPayload['owner'] ?? '',
             'providerRepositoryName' => $parsedPayload['repositoryName'] ?? '',
             'providerPullRequestId' => (string) $pullNumber,
+            'providerPullRequestAuthor' => $parsedPayload['pullRequestAuthor'] ?? '',
             'providerCommitHash' => $headSha,
             'trigger' => $trigger['kind'],
             'providerCommentId' => isset($trigger['comment']) ? (string) $trigger['comment']['id'] : '',
@@ -491,7 +513,7 @@ trait Reviews
     /**
      * The repository as the review service's jobs name it.
      *
-     * @return array{provider: string, projectId: string, projectInternalId: string, repositoryId: string, installationId: string, providerInstallationId: string, providerRepositoryId: string, owner: string, name: string, consoleUrl?: string}
+     * @return array{provider: string, projectId: string, projectInternalId: string, repositoryId: string, installationId: string, providerInstallationId: string, providerRepositoryId: string, owner: string, name: string, consoleUrl?: string, imagesUrl?: string}
      */
     private function getReviewRepository(string $provider, array $parsedPayload, Document $project, Document $repository, array $platform): array
     {
@@ -511,6 +533,13 @@ trait Reviews
         $consoleUrl = $platform['consoleUrl'] ?? '';
         if ($consoleUrl !== '') {
             $reviewRepository['consoleUrl'] = $consoleUrl;
+        }
+
+        // For the status images in the summary comment, served from here as for Sites and Functions comments.
+        $hostname = $platform['consoleHostname'] ?? '';
+        if ($hostname !== '') {
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+            $reviewRepository['imagesUrl'] = $protocol . '://' . $hostname;
         }
 
         return $reviewRepository;

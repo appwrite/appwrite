@@ -7,6 +7,7 @@ use Appwrite\Auth\AuthDevice;
 use Appwrite\Auth\LDAP\Client;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\Validator\Phone;
+use Appwrite\Bus\Events\EmailVerified;
 use Appwrite\Bus\Events\SessionCreated;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
@@ -171,7 +172,11 @@ class Create extends Base
 
         // The directory is the project's own authority on who its users are, so the address
         // it returns is trusted the way a provider's attested email is for OAuth2.
-        [$newUser, $newTarget] = $this->resolveUser($user, SESSION_PROVIDER_LDAP, $entry['id'], $entry['email'], true, $entry['name'], $dbForProject, $project, $plan, $proofForPassword, $authorization, $mqtt, $queueForRealtime);
+        [$newUser, $newTarget] = $this->resolveUser($user, SESSION_PROVIDER_LDAP, $entry['id'], $entry['email'], true, $entry['name'], $dbForProject, $project, $plan, $proofForPassword, $authorization, $mqtt, $queueForRealtime, $bus);
+
+        // Every change to the address below is saved and read back onto the user, and a claim already
+        // dispatched EmailVerified, so the user in hand tells whether this sign-in verified the email
+        $wasVerified = $newUser === null && $user->getAttribute('emailVerification', false);
 
         $authorization->addRole(Role::user($user->getId())->toString());
         $authorization->addRole(Role::users()->toString());
@@ -188,7 +193,7 @@ class Create extends Base
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $secret = $proofForToken->generate();
-        $geoRecord = $geo->get($request->getIP());
+        $geoRecord = $geo->get($request->getClientIP());
         $session = new Document(array_merge(
             [
                 '$id' => Id::unique(),
@@ -201,7 +206,7 @@ class Create extends Base
                 'providerUid' => $entry['id'],
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
-                'ip' => $request->getIP(),
+                'ip' => $request->getClientIP(),
                 'factors' => ['password'],
                 'countryCode' => \strtolower($geoRecord->getCountryCode()),
                 'continentCode' => $geoRecord->getContinentCode() === '--' ? null : $geoRecord->getContinentCode(),
@@ -270,6 +275,10 @@ class Create extends Base
             ->setParam('sessionId', $session->getId())
             ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken'])
         ;
+
+        if (!$wasVerified && $user->getAttribute('emailVerification', false)) {
+            $bus->dispatch(new EmailVerified(user: $user->getArrayCopy(), project: $project->getArrayCopy()));
+        }
 
         $bus->dispatch(new SessionCreated(
             user: $user->getArrayCopy(),

@@ -56,11 +56,19 @@ export function ProductPageLayout({ content }: ProductPageLayoutProps) {
             {pageLayoutCopy.startBuilding}
           </Link>
         </Button>
-        <Button variant="outline" size="lg" className="h-10 bg-background/60 text-[14px]" asChild>
-          <a href={product.docsPath} {...analyticsAttrs('product-view-docs')}>
-            {pageLayoutCopy.viewDocs}
-          </a>
-        </Button>
+        {product.docsPath ? (
+          <Button variant="outline" size="lg" className="h-10 bg-background/60 text-[14px]" asChild>
+            <a href={product.docsPath} {...analyticsAttrs('product-view-docs')}>
+              {pageLayoutCopy.viewDocs}
+            </a>
+          </Button>
+        ) : (
+          <Button variant="outline" size="lg" className="h-10 bg-background/60 text-[14px]" asChild>
+            <Link to="/pricing" {...analyticsAttrs('product-view-pricing')}>
+              {pageLayoutCopy.viewPricing}
+            </Link>
+          </Button>
+        )}
       </ProductHero>
 
       <ProductFeatureSections productId={content.id} />

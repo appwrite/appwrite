@@ -4,7 +4,7 @@ title: Initialize SDK
 description: Add Authentication to a SvelteKit project using Appwrite.
 step: 3
 ---
-Before you can use Appwrite, you need to instanciate the Appwrite `Client` class with the project ID and endpoint. 
+Before you can use Appwrite, you need to instantiate the Appwrite `Client` class with the project ID and endpoint. 
 This tells the SDK where your Appwrite project is hosted and which one to connect to.
 
 The client is then used to initialize services like `Databases` and `Account`, so they all point to the same Appwrite project.

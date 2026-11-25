@@ -26,6 +26,9 @@ export const ANALYTICS_ACTIONS = {
   'feedback-open': 'Feedback Opened',
   'support-open': 'Support Opened',
   'notifications-open': 'Notifications Opened',
+  'notifications-beep-app-store': 'Notifications Beep App Store Clicked',
+  'notifications-beep-google-play': 'Notifications Beep Google Play Clicked',
+  'notifications-beep-dismiss': 'Notifications Beep Promotion Dismissed',
   'ai-agent-open': 'AI Agent Opened',
   'upgrade-clicked': 'Upgrade Clicked',
   'auth-sign-in': 'Sign In Clicked',
@@ -122,6 +125,11 @@ export const ANALYTICS_ACTIONS = {
   'for-agents-install-skills': 'For Agents Install Skills Clicked',
   'for-agents-connect-mcp': 'For Agents Connect MCP Clicked',
   'for-agents-view-docs': 'For Agents View Docs Clicked',
+  'zero-copy-command': 'Zero Copy Command Clicked',
+  'zero-copy-entry': 'Zero Copy Entry Clicked',
+  'zero-copy-prompt': 'Zero Copy Prompt Clicked',
+  'zero-open-agent': 'Zero Open Agent Clicked',
+  'zero-sign-up': 'Zero Sign Up Clicked',
 
   // Pricing page CTAs
   'pricing-start-free': 'Pricing Start Free Clicked',
@@ -172,6 +180,7 @@ export const ANALYTICS_ACTIONS = {
   'specs-contact-sales': 'Specifications Contact Sales Clicked',
   'replicas-contact-sales': 'Replicas Contact Sales Clicked',
   'compliance-contact-sales': 'Compliance Contact Sales Clicked',
+  'preview-domains-contact-sales': 'Preview Domains Contact Sales Clicked',
   'support-contact-sales': 'Support Contact Sales Clicked',
   'support-ticket-contact-sales': 'Support Ticket Contact Sales Clicked',
 
@@ -229,6 +238,7 @@ export const ANALYTICS_ACTIONS = {
   'marketing-product-storage': 'Marketing Product Storage Clicked',
   'marketing-product-functions': 'Marketing Product Functions Clicked',
   'marketing-product-messaging': 'Marketing Product Messaging Clicked',
+  'marketing-product-videos': 'Marketing Product Videos Clicked',
   'marketing-product-realtime': 'Marketing Product Realtime Clicked',
   'marketing-product-sites': 'Marketing Product Sites Clicked',
   'marketing-product-domains': 'Marketing Product Domains Clicked',
@@ -236,6 +246,7 @@ export const ANALYTICS_ACTIONS = {
   'marketing-product-firewall': 'Marketing Product Firewall Clicked',
   'marketing-product-advisor': 'Marketing Product Advisor Clicked',
   'marketing-product-agent': 'Marketing Product Agent Clicked',
+  'marketing-product-zero': 'Marketing Product Zero Clicked',
 
   // Docs nav
   'docs-audience-developers': 'Docs Audience Developers Clicked',
@@ -254,11 +265,14 @@ export const ANALYTICS_ACTIONS = {
 
   // Project settings
   'smtp-quick-setup-resend': 'SMTP One-Click Setup Resend Clicked',
+  'smtp-quick-setup-bird': 'SMTP One-Click Setup Bird Clicked',
   'smtp-quick-setup-mailgun': 'SMTP One-Click Setup Mailgun Clicked',
-  'smtp-quick-setup-sendgrid': 'SMTP One-Click Setup SendGrid Clicked',
 
   // Messaging
   'messaging-quick-setup-resend': 'Messaging One-Click Setup Resend Clicked',
+  'messaging-quick-setup-bird': 'Messaging One-Click Setup Bird Clicked',
+  'messaging-quick-setup-bird-sms':
+    'Messaging One-Click Setup Bird SMS Clicked',
 
   // Resource creation
   'create-project': 'Create Project Clicked',
@@ -268,7 +282,6 @@ export const ANALYTICS_ACTIONS = {
   'start-promo-banner-learn-more': 'Start Promo Banner Learn More Clicked',
   'product-hunt-banner-upvote': 'Product Hunt Banner Upvote Clicked',
   'mcp1-launch-banner-try': 'MCP1 Launch Banner Try Clicked',
-  'firewall-moved-banner-open': 'Firewall Moved Banner Open Clicked',
   'init-recap-promo-banner-view-recap':
     'Init Recap Promo Banner View Recap Clicked',
   'native-oauth-promo-banner-open-settings':
@@ -366,6 +379,7 @@ const MARKETING_PRODUCT_ACTIONS: Record<string, AnalyticsActionId> = {
   storage: 'marketing-product-storage',
   functions: 'marketing-product-functions',
   messaging: 'marketing-product-messaging',
+  videos: 'marketing-product-videos',
   realtime: 'marketing-product-realtime',
   sites: 'marketing-product-sites',
   domains: 'marketing-product-domains',
@@ -373,6 +387,7 @@ const MARKETING_PRODUCT_ACTIONS: Record<string, AnalyticsActionId> = {
   firewall: 'marketing-product-firewall',
   advisor: 'marketing-product-advisor',
   agent: 'marketing-product-agent',
+  zero: 'marketing-product-zero',
 }
 
 const ORG_TAB_ACTIONS: Record<string, AnalyticsActionId> = {
@@ -415,6 +430,7 @@ const CONTACT_SALES_ACTIONS: Record<SalesSource, AnalyticsActionId> = {
   specs: 'specs-contact-sales',
   replicas: 'replicas-contact-sales',
   compliance: 'compliance-contact-sales',
+  'preview-domains': 'preview-domains-contact-sales',
   support: 'support-contact-sales',
   'support-ticket': 'support-ticket-contact-sales',
   'plan-picker': 'upgrade-contact-sales',

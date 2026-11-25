@@ -2,7 +2,6 @@ import { useMemo, type ReactNode } from 'react'
 import { BreakdownRow } from './BreakdownRow'
 import { AnalyticsValueMenu } from './AnalyticsValueMenu'
 import { useAnalyticsCardTab } from '@/hooks/use-analytics-card-tab'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { AnalyticsDimension, type Models } from '@appwrite.io/console'
 import { Bot, Copy, Filter, FilterX, User, X } from 'lucide-react'
 import {
@@ -47,9 +46,6 @@ const BOT_LIST_ROWS = 5
 const KIND_BUTTON_CLASS =
   '-m-1.5 flex min-w-0 cursor-pointer items-center gap-3 rounded-lg p-1.5 text-start transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
 const KIND_ACTIVE_CLASS = 'bg-muted/60 ring-1 ring-border'
-/** Same layout with the filter flag off: not interactive. */
-const KIND_STATIC_CLASS =
-  '-m-1.5 flex min-w-0 cursor-default items-center gap-3 rounded-lg p-1.5 text-start'
 
 /** Headline share: the console's stat size, not a hero number. */
 const FIGURE_CLASS =
@@ -179,9 +175,6 @@ export function TrafficSplit({
     trafficKind,
     toggleTrafficKind,
   } = useAnalyticsFilters()
-  // Humans/bots filtering is unverified against the backend (see the flag).
-  const { features } = useConsoleProfile()
-  const trafficFilterEnabled = features.analyticsTrafficFilter
 
   const { breakdown: trafficTypes, isLoading, error } = useAnalyticsBreakdown(
     projectId,
@@ -296,7 +289,6 @@ export function TrafficSplit({
       const category = segment.category
       return () => addEqualFilter('botCategory', category)
     }
-    if (!trafficFilterEnabled) return undefined
     const kind = segment.kind === 'human' ? 'human' : 'bot'
     return () => toggleTrafficKind(kind)
   }
@@ -374,26 +366,18 @@ export function TrafficSplit({
           count={totals.human}
           sharePercent={humanShare}
           hasData={hasData}
-          filterEnabled={trafficFilterEnabled}
           activeKind={trafficKind}
           onToggle={toggleTrafficKind}
         >
         <button
           type="button"
-          // aria-disabled, not disabled: a disabled button gets no
-          // right-click, and the menu still has copy actions.
-          aria-disabled={!trafficFilterEnabled}
-          onClick={() => trafficFilterEnabled && toggleTrafficKind('human')}
-          aria-pressed={trafficFilterEnabled ? trafficKind === 'human' : undefined}
+          onClick={() => toggleTrafficKind('human')}
+          aria-pressed={trafficKind === 'human'}
           title={
-            !trafficFilterEnabled
-              ? undefined
-              : trafficKind === 'human'
-                ? t('Remove filter')
-                : t('Show humans only')
+            trafficKind === 'human' ? t('Remove filter') : t('Show humans only')
           }
           className={cn(
-            trafficFilterEnabled ? KIND_BUTTON_CLASS : KIND_STATIC_CLASS,
+            KIND_BUTTON_CLASS,
             trafficKind === 'human' && KIND_ACTIVE_CLASS,
           )}
         >
@@ -437,24 +421,18 @@ export function TrafficSplit({
           count={totals.bot}
           sharePercent={botShare}
           hasData={hasData}
-          filterEnabled={trafficFilterEnabled}
           activeKind={trafficKind}
           onToggle={toggleTrafficKind}
         >
         <button
           type="button"
-          aria-disabled={!trafficFilterEnabled}
-          onClick={() => trafficFilterEnabled && toggleTrafficKind('bot')}
-          aria-pressed={trafficFilterEnabled ? trafficKind === 'bot' : undefined}
+          onClick={() => toggleTrafficKind('bot')}
+          aria-pressed={trafficKind === 'bot'}
           title={
-            !trafficFilterEnabled
-              ? undefined
-              : trafficKind === 'bot'
-                ? t('Remove filter')
-                : t('Show bots only')
+            trafficKind === 'bot' ? t('Remove filter') : t('Show bots only')
           }
           className={cn(
-            trafficFilterEnabled ? KIND_BUTTON_CLASS : KIND_STATIC_CLASS,
+            KIND_BUTTON_CLASS,
             'text-end',
             trafficKind === 'bot' && KIND_ACTIVE_CLASS,
           )}
@@ -487,7 +465,7 @@ export function TrafficSplit({
       </div>
 
       {/* The bar. Each segment is a filter: a bot type → that category;
-          behind the flag, humans → humans only and "Other bots" → bots only.
+          humans → humans only and "Other bots" → bots only.
           The hit area is taller than the drawn bar so it's easy to click. */}
       <TooltipProvider delayDuration={0}>
         <div
@@ -670,15 +648,13 @@ export function TrafficSplit({
 }
 
 /**
- * Right-click menu for the Humans / Bots figures. Filtering follows the
- * `analyticsTrafficFilter` flag; copying is always available.
+ * Right-click menu for the Humans / Bots figures: filter, exclude, or copy.
  */
 function TrafficKindMenu({
   kind,
   count,
   sharePercent,
   hasData,
-  filterEnabled,
   activeKind,
   onToggle,
   children,
@@ -687,7 +663,6 @@ function TrafficKindMenu({
   count: number
   sharePercent: number
   hasData: boolean
-  filterEnabled: boolean
   activeKind: AnalyticsTrafficKind | null
   onToggle: (kind: AnalyticsTrafficKind) => void
   children: ReactNode
@@ -702,25 +677,21 @@ function TrafficKindMenu({
         <ContextMenuLabel className="text-[11px] font-normal text-muted-foreground">
           {label}
         </ContextMenuLabel>
-        {filterEnabled ? (
-          <>
-            <ContextMenuItem onSelect={() => onToggle(kind)}>
-              <ContextMenuIcon icon={activeKind === kind ? X : Filter} />
-              {activeKind === kind
-                ? t('Remove filter')
-                : kind === 'human'
-                  ? t('Show humans only')
-                  : t('Show bots only')}
-            </ContextMenuItem>
-            {activeKind !== other ? (
-              <ContextMenuItem onSelect={() => onToggle(other)}>
-                <ContextMenuIcon icon={FilterX} />
-                {kind === 'human' ? t('Exclude humans') : t('Exclude bots')}
-              </ContextMenuItem>
-            ) : null}
-            <ContextMenuSeparator />
-          </>
+        <ContextMenuItem onSelect={() => onToggle(kind)}>
+          <ContextMenuIcon icon={activeKind === kind ? X : Filter} />
+          {activeKind === kind
+            ? t('Remove filter')
+            : kind === 'human'
+              ? t('Show humans only')
+              : t('Show bots only')}
+        </ContextMenuItem>
+        {activeKind !== other ? (
+          <ContextMenuItem onSelect={() => onToggle(other)}>
+            <ContextMenuIcon icon={FilterX} />
+            {kind === 'human' ? t('Exclude humans') : t('Exclude bots')}
+          </ContextMenuItem>
         ) : null}
+        <ContextMenuSeparator />
         <ContextMenuItem
           disabled={!hasData}
           onSelect={() => copyToClipboard('Count', String(count))}

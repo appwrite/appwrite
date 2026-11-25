@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Teams\Http\Memberships\Status;
 
 use Appwrite\Abuse\Limit;
 use Appwrite\Auth\MFA\Type;
+use Appwrite\Bus\Events\EmailVerified;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Realtime;
@@ -19,6 +20,7 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
@@ -85,10 +87,11 @@ class Update extends Action
             ->inject('cookieDomain')
             ->inject('mqtt')
             ->inject('queueForRealtime')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $targetUser, Database $dbForProject, Authorization $authorization, $project, Geo $geo, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain, Mqtt $mqtt, Realtime $queueForRealtime)
+    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $targetUser, Database $dbForProject, Authorization $authorization, $project, Geo $geo, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain, Mqtt $mqtt, Realtime $queueForRealtime, Bus $bus)
     {
         $protocol = $request->getProtocol();
 
@@ -157,15 +160,17 @@ class Update extends Action
                 'providerUid' => $targetUser->getAttribute('email'),
                 'secret' => $proofForToken->hash($sessionSecret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
-                'ip' => $request->getIP(),
-                'countryCode' => \strtolower($geo->get($request->getIP())->getCountryCode()),
+                'ip' => $request->getClientIP(),
+                'countryCode' => \strtolower($geo->get($request->getClientIP())->getCountryCode()),
                 'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
         }
 
         $claimed = null;
-        $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $project, $membership, $team, $targetUser, $hasSession, $secret, $proofForToken, $mqtt, &$session, &$claimed) {
+        $emailVerified = false;
+        $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $project, $membership, $team, $targetUser, $hasSession, $secret, $proofForToken, $mqtt, &$session, &$claimed, &$emailVerified) {
             $claimed = null; // A retried attempt starts over
+            $emailVerified = false;
             // Lock the user first, as an address change does, so a voided invite cannot slip through
             /** @var User $user */
             $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $targetUser->getId(), forUpdate: true));
@@ -212,6 +217,7 @@ class Update extends Action
             }
 
             if ($verification !== null) {
+                $emailVerified = $verification === 'emailVerification' && !$user->getAttribute('emailVerification', false);
                 $targetUser->setAttribute($verification, true);
                 $authorization->skip(fn () => $dbForProject->updateDocument('users', $targetUser->getId(), new Document([$verification => true])));
             }
@@ -269,6 +275,10 @@ class Update extends Action
         }
 
         $dbForProject->purgeCachedDocument('users', $targetUser->getId());
+
+        if ($emailVerified) {
+            $bus->dispatch(new EmailVerified(user: $targetUser->getArrayCopy(), project: $project->getArrayCopy()));
+        }
 
         if ($claimed !== null) {
             try {

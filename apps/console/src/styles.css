@@ -712,6 +712,13 @@ html:not([lang='en']):not([lang='he']) {
     @apply bg-background text-foreground;
   }
 
+  /* Embed player paints black before the themed shell. See THEME_SCRIPT. */
+  html.embed-player,
+  html.embed-player body {
+    background: #000 !important;
+    color-scheme: dark;
+  }
+
   /*
    * 90s theme: serif body, layered “early web” motifs on <html>, transparent body so texture shows.
    */
@@ -1092,10 +1099,54 @@ html:not([lang='en']):not([lang='he']) {
   will-change: transform, opacity;
 }
 
+/* Player shell on mount. The picture fades separately, once the first frame is ready. */
+@keyframes player-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-player-fade-in {
+  animation: player-fade-in 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-video-toggle-flash {
     animation-name: video-toggle-flash-fade;
   }
+
+  .animate-player-fade-in {
+    animation: none;
+  }
+}
+
+/* Native WebVTT cues on the stream / embed player */
+.video-stream-player {
+  --video-subtitle-bottom-offset: 0.75rem;
+  --video-subtitle-font-size: 1em;
+}
+
+.video-stream-player::cue {
+  font-size: var(--video-subtitle-font-size);
+  line-height: 1.35;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  background-color: rgb(0 0 0 / 0.72);
+  color: #fff;
+}
+
+.video-stream-player::-webkit-media-text-track-container {
+  transform: translateY(calc(-1 * var(--video-subtitle-bottom-offset)));
+}
+
+.video-stream-player::-webkit-media-text-track-display {
+  overflow: visible !important;
 }
 
 /* Halloween: header cobwebs, sidebar graveyard scene, and terminal caution tape */
@@ -3435,6 +3486,409 @@ pre.prism-code .token-line > span {
   }
 }
 
+/* Init 5 hero: the init_ underscore blinks like a terminal caret, then settles. */
+@keyframes init5-caret-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.init5-caret {
+  animation: init5-caret-blink 0.7s steps(1, end) var(--init5-caret-delay, 1.3s)
+    3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .init5-caret {
+    animation: none;
+  }
+}
+
+/* Init 5 wordmark: short comets of light trace each letter's outline. */
+@keyframes init5-wordmark-trace {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.init5-wordmark-trail {
+  /* Two comets per letter, each with a bright head and a soft halo. */
+  stroke-dasharray: 13 37;
+  stroke-linecap: round;
+  animation: init5-wordmark-trace 6.4s linear infinite;
+  filter: drop-shadow(0 0 3px var(--brand-cta))
+    drop-shadow(0 0 8px color-mix(in oklch, var(--brand-cta) 60%, transparent));
+}
+
+.init5-wordmark-glow {
+  filter: drop-shadow(
+    0 0 14px color-mix(in oklch, var(--brand-cta) 70%, transparent)
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .init5-wordmark-trail {
+    display: none;
+  }
+}
+
+/*
+ * Init 5 light frame: the hero's light trails in miniature. A comet of
+ * peach -> pink -> violet light circles a hairline border. Add an
+ * `.init5-light-halo` child for a soft glow that follows the comet around the
+ * rounded edge. Reduced motion keeps the arc still.
+ */
+@property --init5-trail-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes init5-trail-orbit {
+  to {
+    --init5-trail-angle: 360deg;
+  }
+}
+
+.init5-light-frame,
+.init5-globe-orbit {
+  /* Stops only: the angle must resolve on the element that animates it. */
+  --init5-trail-stops:
+    transparent 0deg 228deg,
+    color-mix(in oklch, var(--network-globe-edge) 70%, transparent) 290deg,
+    var(--brand-cta) 336deg, var(--network-globe-region) 354deg,
+    transparent 360deg;
+}
+
+.init5-light-frame {
+  position: relative;
+}
+
+/* The same comet orbiting the Init 5 community globe's outline. */
+.init5-globe-orbit {
+  --init5-trail-duration: 12s;
+  --init5-trail-glow: 0.9;
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+}
+
+.init5-light-frame::before,
+.init5-light-halo::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  /* Keep only the border ring; the rounded corners come from border-radius. */
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  animation: init5-trail-orbit var(--init5-trail-duration, 7s) linear infinite;
+  animation-delay: var(--init5-trail-delay, 0s);
+}
+
+/* Hairline border with the comet riding on it. */
+.init5-light-frame::before {
+  padding: 1px;
+  background:
+    conic-gradient(from var(--init5-trail-angle), var(--init5-trail-stops)),
+    linear-gradient(var(--border), var(--border));
+}
+
+/*
+ * Halo: the same comet on a slightly thicker ring, glowing through a
+ * drop-shadow on the parent. The filter runs after the ring's mask, so the
+ * glow hugs the rounded edge instead of filling the box.
+ */
+.init5-light-halo {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--init5-trail-glow, 0.55);
+  transition: opacity 0.4s ease-out;
+  filter: drop-shadow(
+      0 0 4px color-mix(in oklch, var(--brand-cta) 85%, transparent)
+    )
+    drop-shadow(0 0 14px color-mix(in oklch, var(--brand-cta) 55%, transparent));
+}
+
+.init5-light-halo::before {
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--init5-trail-angle),
+    var(--init5-trail-stops)
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .init5-light-frame::before,
+  .init5-light-halo::before {
+    animation: none;
+    --init5-trail-angle: 40deg;
+  }
+}
+
+/*
+ * Init 5 site banner: a comet of the hero's light runs along the bottom edge
+ * once, lighting the bar as it passes, and leaves past the right edge. The
+ * wrapper moves by its own width (the banner's), so the comet starts just off
+ * the left edge.
+ */
+@keyframes init5-banner-sweep {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(140%);
+  }
+}
+
+.init5-banner-sweep {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transform: translateX(140%);
+  animation: init5-banner-sweep 4.5s cubic-bezier(0.45, 0, 0.25, 1) 0.6s 1
+    both;
+}
+
+.init5-banner-sweep::before,
+.init5-banner-sweep::after {
+  content: '';
+  position: absolute;
+  right: 100%;
+  width: 40%;
+}
+
+/* The light the comet throws up into the bar, centered on its head. */
+.init5-banner-sweep::before {
+  inset-block: 0;
+  right: 80%;
+  background:
+    radial-gradient(
+      14px 5px at 50% 100%,
+      var(--network-globe-region),
+      color-mix(in oklch, var(--brand-cta) 60%, transparent) 50%,
+      transparent
+    ),
+    radial-gradient(
+      closest-side at 50% 100%,
+      color-mix(in oklch, var(--brand-cta) 38%, transparent),
+      color-mix(in oklch, var(--network-globe-edge) 14%, transparent) 55%,
+      transparent
+    );
+}
+
+/* The comet: violet tail, pink body, peach head. */
+.init5-banner-sweep::after {
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklch, var(--network-globe-edge) 70%, transparent) 45%,
+    var(--brand-cta) 85%,
+    var(--network-globe-region)
+  );
+  filter: drop-shadow(0 0 3px var(--brand-cta))
+    drop-shadow(0 0 8px color-mix(in oklch, var(--brand-cta) 60%, transparent));
+}
+
+/*
+ * Init 5 online list. Everyone online wears a ring of the hero's light
+ * (peach -> pink -> violet); a person coming online arrives like a strike in
+ * the fog, a flash of light across their row and a flare on their ring, then
+ * a dimmer re-flash; and now and then a comet runs down the panel's edge.
+ */
+.init5-online-ring::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  padding: 1px;
+  background: conic-gradient(
+    from 200deg,
+    var(--network-globe-region),
+    var(--brand-cta),
+    var(--network-globe-edge),
+    var(--network-globe-region)
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+@keyframes init5-online-ring-strike {
+  0% {
+    filter: none;
+  }
+  6% {
+    filter: brightness(1.8)
+      drop-shadow(0 0 4px var(--brand-cta))
+      drop-shadow(0 0 10px var(--network-globe-edge));
+  }
+  14% {
+    filter: brightness(1.1) drop-shadow(0 0 2px var(--brand-cta));
+  }
+  22% {
+    filter: brightness(1.5) drop-shadow(0 0 6px var(--brand-cta));
+  }
+  100% {
+    filter: none;
+  }
+}
+
+.init5-online-ring--strike {
+  animation: init5-online-ring-strike 1.4s ease-out 1 both;
+}
+
+/* Flash, dim, a dimmer re-flash, then dark: the storm's strike. */
+@keyframes init5-online-strike {
+  0% {
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  12% {
+    opacity: 0.25;
+  }
+  20% {
+    opacity: 0.75;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.init5-online-strike {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    140px 44px at 18px 50%,
+    color-mix(in oklch, white 70%, var(--network-globe-edge)) 0%,
+    color-mix(in oklch, var(--brand-cta) 45%, transparent) 28%,
+    color-mix(in oklch, var(--network-globe-edge) 18%, transparent) 58%,
+    transparent 82%
+  );
+  opacity: 0;
+  animation: init5-online-strike 1.4s ease-out 1 both;
+}
+
+html:not(.dark) .init5-online-strike {
+  background: radial-gradient(
+    140px 44px at 18px 50%,
+    color-mix(in oklch, var(--brand-cta) 38%, transparent) 0%,
+    color-mix(in oklch, var(--network-globe-edge) 16%, transparent) 50%,
+    transparent 82%
+  );
+}
+
+/* A comet down the panel's edge, then a long rest before the next one. */
+@keyframes init5-online-edge {
+  0% {
+    transform: translateY(-100%);
+  }
+  22%,
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+.init5-online-edge {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  z-index: 2;
+  width: 1px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.init5-online-edge::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 140px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in oklch, var(--network-globe-edge) 70%, transparent) 45%,
+    var(--brand-cta) 85%,
+    var(--network-globe-region)
+  );
+  filter: drop-shadow(0 0 3px var(--brand-cta));
+  transform: translateY(-100%);
+  animation: init5-online-edge 11s cubic-bezier(0.45, 0, 0.25, 1) 2s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .init5-online-strike,
+  .init5-online-edge {
+    display: none;
+  }
+
+  .init5-online-ring--strike {
+    animation: none;
+  }
+}
+
+/* Init 5's card in "Browse Init events": comets of light run round the 5. */
+@keyframes init-browse-five-trail {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.init-browse-five-trail {
+  fill: none;
+  stroke: color-mix(in oklch, var(--network-globe-region) 60%, white);
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 12 88;
+  filter: drop-shadow(0 0 1.5px var(--brand-cta))
+    drop-shadow(0 0 4px color-mix(in oklch, var(--brand-cta) 70%, transparent));
+  animation: init-browse-five-trail 6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .init-browse-five-trail {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .init5-banner-sweep {
+    display: none;
+  }
+}
 
 /*
  * Homepage Console section: the screenshot tilts up into place as it scrolls

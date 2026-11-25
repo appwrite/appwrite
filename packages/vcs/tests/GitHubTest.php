@@ -14,9 +14,12 @@ use Utopia\VCS\Exception\RepositoryNotFound;
 final class GitHubTest extends Base
 {
     /** @var array<string> */
+    #[\Override]
     protected static array $supportedWebhookScopes = [GitHub::WEBHOOK_SCOPE_INSTALLATION, GitHub::WEBHOOK_SCOPE_REPOSITORY];
 
+    #[\Override]
     protected static string $eventHeader = 'x-github-event';
+    #[\Override]
     protected static string $signatureHeader = 'x-hub-signature-256';
 
     protected function createAdapter(): GitHub
@@ -174,6 +177,7 @@ final class GitHubTest extends Base
             'owner' => self::EVENT_OWNER,
             'installationId' => '9876',
             'pullRequestNumber' => 42,
+            'pullRequestAuthor' => 'hubot',
             'action' => 'created',
             'commentId' => 1001,
             'commentKind' => 'issue',
@@ -201,6 +205,32 @@ final class GitHubTest extends Base
         $this->assertSame('review', $events[0]['commentKind']);
         $this->assertSame(42, $events[0]['pullRequestNumber']);
         $this->assertSame(900, $events[0]['commentReplyToId']);
+        $this->assertSame('hubot', $events[0]['pullRequestAuthor']);
+    }
+
+    public function testGetEventPullRequestAuthor(): void
+    {
+        $payload = (string) json_encode([
+            'action' => 'opened',
+            'number' => 42,
+            'pull_request' => [
+                'user' => ['login' => 'hubot', 'avatar_url' => 'https://avatars.githubusercontent.com/u/1'],
+                'head' => ['ref' => 'feature', 'sha' => 'abc', 'user' => ['login' => self::EVENT_OWNER]],
+                'base' => ['user' => ['login' => self::EVENT_OWNER]],
+            ],
+            'sender' => ['html_url' => 'https://github.com/octocat'],
+            'repository' => [
+                'id' => (int) self::EVENT_REPOSITORY_ID,
+                'name' => self::EVENT_REPOSITORY_NAME,
+                'owner' => ['login' => self::EVENT_OWNER],
+            ],
+            'installation' => ['id' => 9876],
+        ]);
+
+        $events = $this->vcsAdapter->getEvents(GitHub::EVENT_PULL_REQUEST, $payload);
+
+        $this->assertCount(1, $events);
+        $this->assertSame('hubot', $events[0]['pullRequestAuthor']);
     }
 
     private function commentPayload(string $event, bool $pullRequest = true, ?int $replyTo = null): string
@@ -228,9 +258,9 @@ final class GitHubTest extends Base
         ];
 
         if ($event === GitHub::EVENT_ISSUE_COMMENT) {
-            $payload['issue'] = ['number' => 42] + ($pullRequest ? ['pull_request' => ['url' => 'https://api.github.com/pulls/42']] : []);
+            $payload['issue'] = ['number' => 42, 'user' => ['login' => 'hubot']] + ($pullRequest ? ['pull_request' => ['url' => 'https://api.github.com/pulls/42']] : []);
         } else {
-            $payload['pull_request'] = ['number' => 42];
+            $payload['pull_request'] = ['number' => 42, 'user' => ['login' => 'hubot']];
         }
 
         return (string) json_encode($payload);

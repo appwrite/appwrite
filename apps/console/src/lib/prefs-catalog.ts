@@ -10,6 +10,7 @@
  * 2. Add an entry to PREFS_CATALOG below.
  */
 
+import { BEEP_PREFS_KEY } from '@/lib/notifications/beep-prefs'
 import { USER_PREFS_KEY_COVER_GENERATIONS } from '@/lib/cover-generator/cover-generation-prefs'
 import { USER_PREFS_KEY_DIAGRAM_GENERATIONS } from '@/lib/diagram-generator/generation-prefs'
 import { USER_PREFS_KEY_API_REFERENCE_UI } from '@/lib/docs/references/api-reference-ui-prefs'
@@ -85,6 +86,7 @@ import {
   USER_PREFS_KEY_VIDEOS_LIST_VIEW_MODE,
   USER_PREFS_KEY_VIDEOS_SIDEBAR_WIDTH,
   USER_PREFS_KEY_VIDEOS_PLAYER,
+  USER_PREFS_KEY_VIDEOS_CREATE_SOURCE,
   USER_PREFS_KEY_USAGE_CHART_INTERVAL,
 } from '@/lib/user-prefs-keys'
 
@@ -344,6 +346,14 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     key: USER_PREFS_KEY_VIDEOS_PLAYER,
     description:
       'Video player settings (JSON): volume, mute, playback format, quality height, subtitle language.',
+    category: 'Videos',
+  },
+  {
+    id: 'videosCreateSource',
+    scope: 'account',
+    key: USER_PREFS_KEY_VIDEOS_CREATE_SOURCE,
+    description:
+      'Last source tab in the create video wizard: upload, storage, or demo. Not per project.',
     category: 'Videos',
   },
   {
@@ -637,6 +647,14 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     key: USER_PREFS_KEY_BUILD_NOTIFICATIONS_OPTED_OUT,
     description: 'User opted out of Console browser alerts.',
     category: 'Browser alerts',
+  },
+  {
+    id: 'beep',
+    scope: 'account',
+    key: BEEP_PREFS_KEY,
+    description:
+      'Beep mobile push settings (object): muted organizations and projects, resolved pushes, snoozes. Shared with the Beep app.',
+    category: 'Notifications',
   },
   {
     id: 'communitySupport',

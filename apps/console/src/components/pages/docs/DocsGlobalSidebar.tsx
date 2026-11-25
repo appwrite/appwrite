@@ -39,6 +39,7 @@ import {
   Type,
   UserCircle,
   Users,
+  Video,
   X,
   Zap,
   type LucideIcon,
@@ -70,6 +71,7 @@ import {
 import { isAgentDocsPathname } from '@/lib/docs/agent-docs-feature'
 import { isAnalyticsDocsPathname } from '@/lib/docs/analytics-docs-feature'
 import { isPartnersDocsPathname } from '@/lib/docs/partners-docs-feature'
+import { isVideosDocsPathname } from '@/lib/docs/videos-docs-feature'
 import { isDocsProductNavNew } from '@/lib/products/new-badge'
 import { ProductNewBadge } from '@/components/global/shared/ProductNewBadge'
 import {
@@ -135,6 +137,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   folder: Folder,
   zap: Zap,
   send: Send,
+  video: Video,
   globe: Globe,
   link: Link2,
   key: Key,
@@ -561,11 +564,16 @@ export function DocsGlobalSidebar({
     }
     if (!features.analytics && isAnalyticsDocsPathname(pathname)) {
       navigate({ to: '/docs', replace: true })
+      return
+    }
+    if (!features.videos && isVideosDocsPathname(pathname)) {
+      navigate({ to: '/docs', replace: true })
     }
   }, [
     features.agent,
     features.analytics,
     features.partnersDocs,
+    features.videos,
     hasMounted,
     navigate,
     pathname,

@@ -34,6 +34,7 @@ import {
 import { useDebugMode } from '@/components/global/providers/DebugMode'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { isCloudProfile } from '@/lib/console-profiles'
 import {
   analyticsAttrs,
   getSidebarNavAnalyticsAction,
@@ -49,12 +50,14 @@ import {
   MessageSquare,
   Settings,
   BarChart3,
+  Gauge,
   Key,
   ChevronLeft,
   X,
   Globe,
   Plug,
   Activity,
+  Shield,
   ScanSearch,
   Package,
   FileText,
@@ -122,8 +125,10 @@ interface SidebarCopy {
     activity: string
     logs: string
     usage: string
+    monitors: string
     analytics: string
     errors: string
+    firewall: string
     advisor: string
     settings: string
   }
@@ -267,6 +272,12 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
           path: `/projects/${projectId}/usage`,
         },
         {
+          id: 'monitors',
+          label: sidebarCopy.items.monitors,
+          icon: Gauge,
+          path: `/projects/${projectId}/monitors`,
+        },
+        {
           id: 'errors',
           label: sidebarCopy.items.errors,
           icon: AlertTriangle,
@@ -278,6 +289,12 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
     {
       label: sidebarCopy.sections.protect,
       items: [
+        {
+          id: 'firewall',
+          label: sidebarCopy.items.firewall,
+          icon: Shield,
+          path: `/projects/${projectId}/firewall`,
+        },
         {
           id: 'reviews',
           label: sidebarCopy.items.reviews,
@@ -342,7 +359,18 @@ export function ConsoleSidebar({
 
   const visibleCategories = useMemo(() => {
     const { navCategories: categories } = getNavItems(projectId, sidebarCopy)
+    // Logs leaves "Soon" once runtime logs are on. Cloud only: self-hosted
+    // doesn't serve `/v1/logs`.
+    const logsReady = isCloudProfile() && features.runtimeLogs
     return categories
+      .map((cat) => ({
+        ...cat,
+        items: cat.items.map((item) =>
+          item.id === 'logs' && logsReady
+            ? { ...item, comingSoon: false }
+            : item,
+        ),
+      }))
       .map((cat) => ({
         ...cat,
         items: (isDebugModeOpen
@@ -353,10 +381,19 @@ export function ConsoleSidebar({
             return features.usageStats && canSeeUsageNav(access, features)
           if (item.id === 'activity')
             return features.activity && canSeeActivityNav(access, features)
+          if (item.id === 'firewall')
+            return (
+              isCloudProfile() &&
+              canSeeProjectNavItem(access, features, item.id)
+            )
           if (item.id === 'analytics')
             return (
               features.analytics &&
               canSeeProjectNavItem(access, features, item.id)
+            )
+          if (item.id === 'monitors')
+            return (
+              features.alerts && canSeeProjectNavItem(access, features, item.id)
             )
           if (item.id === 'videos')
             return (
@@ -493,7 +530,10 @@ export function ConsoleSidebar({
         <span
           key={item.id}
           className={cn(
-            secondarySidebarNavLinkClassName(false, 'cursor-not-allowed text-muted-foreground/50'),
+            secondarySidebarNavLinkClassName(
+              false,
+              'cursor-not-allowed text-muted-foreground/50',
+            ),
             collapsed && !isMobile
               ? SECONDARY_SIDEBAR_NAV_LINK_COLLAPSED_CLASS
               : SECONDARY_SIDEBAR_NAV_LINK_GRID_TRAILING_CLASS,
@@ -541,7 +581,10 @@ export function ConsoleSidebar({
         {...(navAnalytics ? analyticsAttrs(navAnalytics) : {})}
         onClick={() => handleNavClick(item, isMobile)}
         className={cn(
-          secondarySidebarNavLinkClassName(isActive, 'transition-colors duration-150'),
+          secondarySidebarNavLinkClassName(
+            isActive,
+            'transition-colors duration-150',
+          ),
           collapsed && !isMobile
             ? SECONDARY_SIDEBAR_NAV_LINK_COLLAPSED_CLASS
             : SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
@@ -591,7 +634,10 @@ export function ConsoleSidebar({
     <div key={category.label} className="space-y-0.5">
       {(!collapsed || isMobile) && (
         <p
-          className={cn(SECONDARY_SIDEBAR_GROUP_HEADING_CLASS, isMobile && 'px-3')}
+          className={cn(
+            SECONDARY_SIDEBAR_GROUP_HEADING_CLASS,
+            isMobile && 'px-3',
+          )}
         >
           {category.label}
         </p>
@@ -633,7 +679,8 @@ export function ConsoleSidebar({
             ref={navRef}
             className={cn(
               'overlay-scrollbar min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-3 py-4',
-              showHalloweenScene && 'relative z-10 flex flex-col [&>*]:shrink-0',
+              showHalloweenScene &&
+                'relative z-10 flex flex-col [&>*]:shrink-0',
             )}
             onKeyDown={handleKeyDown}
             role="navigation"
@@ -645,7 +692,10 @@ export function ConsoleSidebar({
             )}
 
             {features.projectEnvironments && (
-              <EnvironmentSwitcher projectId={projectId} collapsed={collapsed} />
+              <EnvironmentSwitcher
+                projectId={projectId}
+                collapsed={collapsed}
+              />
             )}
 
             {/* Overview */}

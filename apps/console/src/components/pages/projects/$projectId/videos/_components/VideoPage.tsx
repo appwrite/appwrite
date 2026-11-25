@@ -33,6 +33,8 @@ export function VideoPage({
   showFilters = false,
   filterTrigger,
   actions,
+  titleActions,
+  titleLeading,
   createLabel,
   onCreate,
   createDisabled = false,
@@ -58,6 +60,10 @@ export function VideoPage({
   filterTrigger?: ReactNode
   /** Buttons before the primary create action. */
   actions?: ReactNode
+  /** Controls in the title row, for pages without a toolbar row. */
+  titleActions?: ReactNode
+  /** Rendered before the title, outside its truncation (e.g. a back button). */
+  titleLeading?: ReactNode
   createLabel?: string
   onCreate?: () => void
   createDisabled?: boolean
@@ -93,6 +99,7 @@ export function VideoPage({
 
   const titleNode = (
     <div className="flex min-w-0 items-center gap-2">
+      {titleLeading}
       <span className="flex min-w-0 items-center gap-1.5">
         <span className="truncate">{title}</span>
         {term ? <VideoTermHint term={term} side="bottom" /> : null}
@@ -118,6 +125,12 @@ export function VideoPage({
         fullWidthBorder
         fullWidth
         title={titleNode}
+        titleRightContent={
+          titleActions ? (
+            // h-9 controls overhang the 17px title so the row keeps its standard height.
+            <div className="-my-2 flex items-center">{titleActions}</div>
+          ) : undefined
+        }
         beforeSearchButtons={toolbar}
         searchPlaceholder={searchPlaceholder}
         searchValue={searchValue}

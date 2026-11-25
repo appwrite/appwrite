@@ -1836,7 +1836,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "products/analytics/dashboard",
     "title": "Dashboard",
-    "description": "A tour of the Appwrite Analytics dashboard, from the metrics and chart to date ranges, live visitors, and the cards that break traffic down by source, page, location, technology, bots, and custom events.",
+    "description": "A tour of the Appwrite Analytics dashboard, from the metrics, chart, and notes to date ranges, live visitors, and the cards that break traffic down by source, page, location, technology, bots, and custom events.",
     "excerpt": "Each property has a dashboard on its **Analytics** tab. It shows the property's traffic for the date range you pick: the headline metrics, a chart over time, and cards that break visits down by where they came from, what they viewed, and who sent them. Metrics and chart The top of the dashboard has a tab for each metric: **Unique visitors**, **Visits**, **Pageviews**, **Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time**. Each tab shows the total for the…",
     "breadcrumbs": [
       "products",
@@ -2161,6 +2161,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Auth",
       "Concepts",
       "Labels"
+    ]
+  },
+  {
+    "slug": "products/auth/ldap",
+    "title": "LDAP login",
+    "description": "Let users sign in to your app with the username and password from your LDAP directory, such as Active Directory or OpenLDAP, with group restrictions and attribute mapping.",
+    "excerpt": "LDAP login lets users sign in to your app with the username and password they already use in your organization's directory, such as Active Directory or OpenLDAP. The directory checks the password, so it is never stored in Appwrite. The first sign-in creates an Appwrite account from the user's directory entry, and every later sign-in keeps the account's name, email, and phone number in sync with the directory. Use LDAP login for internal tools, employee and student portals, and apps…",
+    "breadcrumbs": [
+      "Auth",
+      "Guides",
+      "LDAP login"
     ]
   },
   {
@@ -5647,6 +5658,126 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/videos",
+    "title": "Videos",
+    "description": "Stream video and audio with Appwrite Videos. Turn files in Storage into adaptive HLS, DASH, and CMAF streams with encoding profiles, captions, and scrubbing thumbnails.",
+    "excerpt": "Appwrite **Videos** turns video and audio files in Storage into adaptive streams. You create a video from a file that is already in a bucket, encode it into a ladder of renditions, and hand the master manifest URL to any HLS or DASH player. The source file stays in its bucket, untouched. Each video has its own permissions, so who can watch a stream is separate from who can download the file. You manage videos under **Videos** in your project,…",
+    "breadcrumbs": [
+      "products",
+      "Videos"
+    ]
+  },
+  {
+    "slug": "products/videos/captions",
+    "title": "Captions",
+    "description": "Add WebVTT or SubRip captions to an Appwrite video, use subtitle tracks embedded in the source, and set a default language for players.",
+    "excerpt": "**Captions** are text tracks attached to a video. Players pick them up from the master manifest and let viewers switch languages. A caption comes from a file in Storage, from the caption editor in the Console, or from the source file itself. Appwrite does not transcribe speech, so to caption a video that has no track yet, upload the output of a transcription service or write the track in the caption editor. Captions make a video usable with the sound…",
+    "breadcrumbs": [
+      "products",
+      "Videos",
+      "Captions"
+    ]
+  },
+  {
+    "slug": "products/videos/inspector",
+    "title": "Inspect playback",
+    "description": "Use the Appwrite Videos inspector to watch a playback session's experience score, buffer, bitrate, network requests, and manifests.",
+    "excerpt": "The **inspector** shows what the player in the Console is doing while it plays a video. Use it to check how fast a stream starts, whether it rebuffers, which renditions it picks, and what the player actually requested. Open the inspector 1. Open **Videos** in your project and select a video with at least one ready rendition. 2. Play the video on its **Overview**. The inspector shows under the player and fills in as the session runs. 3. To give…",
+    "breadcrumbs": [
+      "products",
+      "Videos",
+      "Inspect playback"
+    ]
+  },
+  {
+    "slug": "products/videos/outputs",
+    "title": "Outputs",
+    "description": "Learn the difference between HLS, DASH, and CMAF outputs in Appwrite Videos, where to find each master manifest, and which players support them.",
+    "excerpt": "An **output** is the streaming format a rendition is packaged in. Appwrite Videos packages renditions as **HLS**, **DASH**, or **CMAF**. Each output has a **master manifest**: the playlist a player loads first, which lists every rendition and caption track so the player can pick the best one. What a manifest looks like A manifest is a small text file. You rarely read one, but seeing it makes the rest of this page easier to follow. Here is a CMAF HLS…",
+    "breadcrumbs": [
+      "products",
+      "Videos",
+      "Outputs"
+    ]
+  },
+  {
+    "slug": "products/videos/permissions",
+    "title": "Permissions",
+    "description": "Learn how Appwrite Videos controls who can watch a stream with per-video permissions, and which scopes manage videos and encoding profiles.",
+    "excerpt": "Appwrite Videos has two kinds of access: who can **watch** a stream, and who can **manage** videos, renditions, captions, and profiles. Playback Each video has its own permissions. Manifest, segment, caption, timeline, and thumbnail requests check the video's **read** permission. The source file's permissions in Storage are checked only when the video is created: whoever creates it must be able to read the file. After that, playback never looks at the file, so the source can stay private while its…",
+    "breadcrumbs": [
+      "products",
+      "Videos",
+      "Permissions"
+    ]
+  },
+  {
+    "slug": "products/videos/play",
+    "title": "Play a video in your app",
+    "description": "Play Appwrite Videos streams on the web, Apple platforms, Android, Flutter, and React Native by loading the master manifest in a standard player.",
+    "excerpt": "Appwrite Videos streams work with standard HLS and DASH players. You give the player the master manifest URL, and it handles adaptive bitrate and captions on its own. There is no Appwrite SDK to add for playback. Open a video and select **Install**. Pick a platform, player, framework, and format to get install steps and code with your stream URL already filled in. **Copy prompt** copies the same setup as instructions for an AI coding agent. Before you start 1.…",
+    "breadcrumbs": [
+      "products",
+      "Videos",
+      "Play a video in your app"
+    ]
+  },
+  {
+    "slug": "products/videos/profiles",
+    "title": "Encoding profiles",
+    "description": "Learn how Appwrite Videos encoding profiles set the resolution, bitrate, and codec of each rendition, and how profile changes apply.",
+    "excerpt": "An **encoding profile** is a reusable encoding target. It sets the resolution, video bitrate, audio bitrate, and codec for every rendition encoded from it. Profiles belong to a project and are shared by all its videos. Together, the profiles you encode a video with form its **bitrate ladder**: a set of renditions from low to high quality that players switch between as bandwidth changes. Resolution and bitrate Two numbers decide how a rendition looks and how much data it needs:…",
+    "breadcrumbs": [
+      "products",
+      "Videos",
+      "Encoding profiles"
+    ]
+  },
+  {
+    "slug": "products/videos/quick-start",
+    "title": "Start with Videos",
+    "description": "Create your first Appwrite video from a Storage file, encode an adaptive ladder, and play the stream in a browser.",
+    "excerpt": "In this quick start you create a video from a file, encode it into a few renditions, and play the stream with a web player. Create encoding profiles New projects have no encoding profiles, so create a small ladder first. You only do this once per project. 1. Sign in to Appwrite Cloud and open a project. 2. Open **Videos** in the sidebar and select **Encoding profiles**. 3. Click **Create profile**. 4. Select the **360p**, **720p**, and **1080p** presets, and…",
+    "breadcrumbs": [
+      "products",
+      "Videos",
+      "Start with Videos"
+    ]
+  },
+  {
+    "slug": "products/videos/renditions",
+    "title": "Renditions",
+    "description": "Learn how Appwrite Videos encodes a rendition per profile and output, how rendition status and progress work, and how to retry a failed encode.",
+    "excerpt": "A **rendition** is one encoded copy of a video at the resolution and bitrate of one profile, packaged for one output. The renditions of a video make up the ladder that adaptive players switch between. Why several renditions Viewers watch on very different connections. If you only had a 1080p copy, someone on a slow mobile network would wait for it to buffer. With a ladder of renditions, the player starts on one it can fetch quickly, then moves up…",
+    "breadcrumbs": [
+      "products",
+      "Videos",
+      "Renditions"
+    ]
+  },
+  {
+    "slug": "products/videos/timeline",
+    "title": "Timeline",
+    "description": "Learn how Appwrite Videos generates sprite sheets and a WebVTT index for scrubbing thumbnails, and how to load them in your player.",
+    "excerpt": "The **timeline** gives a video scrubbing thumbnails: viewers see a preview frame while they drag across the progress bar. It is made of **sprite sheets**, images that pack many thumbnails into a grid, plus a **WebVTT index** that maps each time range to a thumbnail inside a sprite. Why sprite sheets A one-hour video could need hundreds of thumbnails. Loading each as its own image would mean hundreds of requests the moment a viewer starts scrubbing. A sprite sheet packs…",
+    "breadcrumbs": [
+      "products",
+      "Videos",
+      "Timeline"
+    ]
+  },
+  {
+    "slug": "products/videos/videos",
+    "title": "Videos",
+    "description": "Learn how an Appwrite video points at a Storage file, which metadata it holds, how its status is derived, and what deleting it removes.",
+    "excerpt": "A **video** is the root resource in Appwrite Videos. It points at a video or audio file in a Storage bucket and holds the media metadata probed from that file. Renditions, captions, and the timeline all belong to a video. Source file You create a video from a file in a Storage bucket, using the bucket ID and the file ID. The file must be a video or audio file, such as MP4, MOV, WebM, MKV, MP3, or M4A, and…",
+    "breadcrumbs": [
+      "products",
+      "Videos",
+      "Videos"
+    ]
+  },
+  {
     "slug": "quick-starts/android",
     "title": "Start with Android (Kotlin)",
     "description": "Get started with Appwrite on Android and learn how to build secure and scalable apps using our powerful backend.",
@@ -7786,7 +7917,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/sveltekit-csr-auth/step-2",
     "title": "Create project",
     "description": "Add Authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "You can create a Svelte project using SvelteKit. The command will give you a prompt with several project types. We'll be starting with a skeleton project. The prompt will be something similar to this. After the prompt is finished, you can head over to the newly created project. Adding Appwrite to your Svelte app Appwrite provides a Web SDK that can be used in your Svelte apps. You can use Appwrite by installing the Web SDK as an NPM package.",
+    "excerpt": "Create a minimal SvelteKit project with JavaScript and JSDoc type checking. Adding Appwrite to your Svelte app Appwrite provides a Web SDK that can be used in your Svelte apps. You can use Appwrite by installing the Web SDK as an NPM package.",
     "breadcrumbs": [
       "SvelteKit",
       "Steps",
@@ -7797,7 +7928,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/sveltekit-csr-auth/step-3",
     "title": "Initialize SDK",
     "description": "Add Authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "Before you can use Appwrite, you need to instanciate the Appwrite class with the project ID and endpoint. This tells the SDK where your Appwrite project is hosted and which one to connect to. The client is then used to initialize services like and , so they all point to the same Appwrite project. You can do this by instantiating the services you need in a file like and **exporting the instances**. and are environment variables that are exported in…",
+    "excerpt": "Before you can use Appwrite, you need to instantiate the Appwrite class with the project ID and endpoint. This tells the SDK where your Appwrite project is hosted and which one to connect to. The client is then used to initialize services like and , so they all point to the same Appwrite project. You can do this by instantiating the services you need in a file like and **exporting the instances**. and are environment variables that are exported in…",
     "breadcrumbs": [
       "SvelteKit",
       "Steps",
@@ -7863,7 +7994,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/sveltekit-ssr-auth/step-2",
     "title": "Create project",
     "description": "Add authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "Create a Svelte project using SvelteKit. The command will give you a prompt with several project types. We'll be starting with a skeleton project. The prompt will be something similar to this. After the prompt is finished, you can head over to the newly created project. Install Appwrite Appwrite provides a Node SDK that can be used in your Svelte apps. You can use Appwrite by installing the Node SDK as an NPM package. The Node SDK is intended for…",
+    "excerpt": "Create a minimal SvelteKit project with JavaScript and JSDoc type checking. Install Appwrite Appwrite provides a Node SDK that can be used in your Svelte apps. You can use Appwrite by installing the Node SDK as an NPM package. The Node SDK is intended for server-side use. If you want to use Appwrite in a client-side application, you should use the Web SDK instead.",
     "breadcrumbs": [
       "SvelteKit SSR",
       "Steps",
@@ -7951,7 +8082,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/sveltekit/step-2",
     "title": "Create app",
     "description": "Create a SvelteKit app project using Appwrite.",
-    "excerpt": "Create SvelteKit project Create a SvelteKit app with the command and select Add dependencies Install the JavaScript Appwrite SDK. You can start the development server to watch your app update in the browser as you make changes. Your app should be available at http://localhost:5173.",
+    "excerpt": "Create SvelteKit project Create a SvelteKit app using the minimal template. Add dependencies Install the JavaScript Appwrite SDK. You can start the development server to watch your app update in the browser as you make changes. Your app should be available at http://localhost:5173.",
     "breadcrumbs": [
       "SvelteKit",
       "Steps",

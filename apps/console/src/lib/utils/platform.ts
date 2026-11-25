@@ -22,6 +22,18 @@ export function getPlatformIdentifier(
 /** Web platform hostname that accepts requests from every website. */
 export const WILDCARD_HOSTNAME = '*'
 
+/**
+ * Hostname seeded on a new project's first web app.
+ *
+ * Platform hostnames are the API's origin boundary: it folds them into the
+ * allowed-hostname list behind CORS with credentials and the origin check, and
+ * a `*` entry matches every host. Session cookies are SameSite=None, so a
+ * seeded WILDCARD_HOSTNAME would let any website a signed-in user visits call
+ * the project's client API with their session. Loopback keeps local
+ * development working without handing that out.
+ */
+export const LOOPBACK_HOSTNAME = 'localhost'
+
 export function isWildcardHostname(hostname: string): boolean {
   return hostname.trim() === WILDCARD_HOSTNAME
 }

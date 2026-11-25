@@ -41,12 +41,14 @@ import { AuthenticatorType, MessagingProviderType } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { UserAnalytics } from './UserAnalytics'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { decodeIdTokenClaims } from '@/lib/oauth2/id-token'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
-import { InitialsAvatar, PhotoAvatar } from '@/components/global/shared/Avatar'
+import { PhotoAvatar, TeamAvatar } from '@/components/global/shared/Avatar'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
 import { Button } from '@/components/ui/button'
@@ -213,6 +215,7 @@ export function View() {
   })
   const location = useLocation()
   const navigate = useNavigate()
+  const { features } = useConsoleProfile()
 
   // Fetch user data - hooks must be called unconditionally
   const {
@@ -247,9 +250,13 @@ export function View() {
     if (userIdIndex >= 0 && pathParts[userIdIndex + 1]) {
       const tabFromPath = pathParts[userIdIndex + 1]
       if (
-        ['memberships', 'identities', 'targets', 'sessions'].includes(
-          tabFromPath,
-        )
+        [
+          'memberships',
+          'identities',
+          'targets',
+          'sessions',
+          'analytics',
+        ].includes(tabFromPath)
       ) {
         return tabFromPath
       }
@@ -307,8 +314,21 @@ export function View() {
           userId: userId as string,
         },
       },
+      ...(features.analytics
+        ? [
+            {
+              id: 'analytics',
+              label: t('Analytics'),
+              to: '/projects/$projectId/auth/users/$userId/analytics',
+              params: {
+                projectId: projectId as string,
+                userId: userId as string,
+              },
+            },
+          ]
+        : []),
     ],
-    [projectId, userId, t],
+    [projectId, userId, t, features.analytics],
   )
 
   const handleBack = () => {
@@ -502,6 +522,15 @@ export function View() {
           {activeTab === 'targets' && (
             <div className="px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
               <TargetsTab projectId={projectId!} userId={userId!} />
+            </div>
+          )}
+          {activeTab === 'analytics' && (
+            <div className="px-4 py-4 sm:px-6">
+              <UserAnalytics
+                projectId={projectId!}
+                userId={userId!}
+                displayName={displayName}
+              />
             </div>
           )}
           {activeTab === 'sessions' && (
@@ -2194,7 +2223,12 @@ function MembershipsTab({
                     onClick={() => openDrawer(membership)}
                   >
                     <div className="flex items-center gap-2">
-                      <InitialsAvatar name={membership.teamName} size="sm" />
+                      <TeamAvatar
+                        teamId={membership.teamId}
+                        projectId={projectId}
+                        name={membership.teamName}
+                        size="sm"
+                      />
                       <span className="text-[13px] font-medium text-foreground">
                         {membership.teamName}
                       </span>

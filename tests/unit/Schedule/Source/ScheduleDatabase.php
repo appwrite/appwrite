@@ -65,6 +65,17 @@ final class ScheduleDatabase extends Database
     #[\Override]
     public function find(string $collection, array $queries = [], PermissionType $forPermission = PermissionType::Read): array
     {
-        return array_values($this->documents[$collection] ?? []);
+        // Each source reads only its own resource type, as the real query does.
+        $types = null;
+        foreach ($queries as $query) {
+            if ($query->getAttribute() === 'resourceType') {
+                $types = $query->getValues();
+            }
+        }
+
+        return array_values(array_filter(
+            $this->documents[$collection] ?? [],
+            fn (Document $document) => $types === null || \in_array($document->getAttribute('resourceType'), $types, true),
+        ));
     }
 }

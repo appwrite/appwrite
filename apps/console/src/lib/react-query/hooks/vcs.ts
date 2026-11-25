@@ -15,6 +15,7 @@ import { Query } from '@appwrite.io/console'
 import { VCSDetectionType } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { isFeatureEnabled } from '@/lib/console-profiles'
 import {
   DEFAULT_STALE_TIME,
   LONG_STALE_TIME,
@@ -53,6 +54,48 @@ export async function fetchVcsInstallations(
 
   const projectSdk = sdk.forProject(projectId)
   const queries = [Query.limit(limit), Query.offset(page * limit)]
+  const list = await projectSdk.vcs.listInstallations({ queries })
+
+  if (page > 0 || list.total > 0 || !isFeatureEnabled('gitInstallationReuse')) {
+    return list
+  }
+
+  // A project with no installation reuses the GitHub organizations the
+  // organization's other projects already connected, instead of sending the
+  // user through GitHub's install flow again.
+  const { client } = projectSdk
+  const endpoint = `${client.config.endpoint}/vcs/installations`
+  try {
+    const shared = (await client.call(
+      'get',
+      new URL(endpoint),
+      {},
+      { shared: true, queries: [Query.limit(100)] },
+    )) as Models.InstallationList
+    const unique = [
+      ...new Map(
+        shared.installations.map((i) => [i.providerInstallationId, i]),
+      ).values(),
+    ]
+    if (unique.length === 0) {
+      return list
+    }
+
+    await Promise.allSettled(
+      unique.map((installation) =>
+        client.call(
+          'post',
+          new URL(endpoint),
+          { 'content-type': 'application/json' },
+          { installationId: installation.$id },
+        ),
+      ),
+    )
+  } catch {
+    // Servers without installation reuse reject the shared param; keep the empty list.
+    return list
+  }
+
   return await projectSdk.vcs.listInstallations({ queries })
 }
 
@@ -387,7 +430,15 @@ export function vcsInstallationsQueryOptions(
   limit: number = DEFAULT_PAGE_SIZE,
 ) {
   return queryOptions({
-    queryKey: ['vcs', 'installations', projectId, page, limit],
+    // An empty list cached with the experiment off would hide reuse once it is turned on
+    queryKey: [
+      'vcs',
+      'installations',
+      projectId,
+      page,
+      limit,
+      isFeatureEnabled('gitInstallationReuse'),
+    ],
     queryFn: () => fetchVcsInstallations(projectId!, page, limit),
     enabled: !!projectId,
     staleTime: LONG_STALE_TIME,

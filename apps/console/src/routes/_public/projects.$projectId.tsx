@@ -24,9 +24,8 @@ import { OrganizationFailedInvoiceHeaderBanner } from '@/components/global/share
 import { OrganizationInvoiceAuthorizeHeaderBanner } from '@/components/global/shared/OrganizationInvoiceAuthorizeHeaderBanner'
 import { OrganizationPlanLimitHeaderBanner } from '@/components/global/shared/OrganizationPlanLimitHeaderBanner'
 import {
-  fetchProject,
   productionProjectQueryOptions,
-  fetchOrganizationById,
+  projectQueryOptions,
   organizationPlanQueryOptions,
   organizationQueryOptions,
   organizationScopesQueryOptions,
@@ -261,13 +260,8 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     // rest of the match (child beforeLoad + loaders) so nested pages cannot
     // re-fetch project.get and hang the fullscreen loader.
     const ensureProject = () =>
-      context.queryClient.ensureQueryData({
-        queryKey: ['project', projectId],
-        queryFn: () => fetchProject(projectId),
-        staleTime: 5 * 60 * 1000,
-        retry: false,
-      })
-    let projectData: Awaited<ReturnType<typeof fetchProject>>
+      context.queryClient.ensureQueryData(projectQueryOptions(projectId))
+    let projectData: Awaited<ReturnType<typeof ensureProject>>
     try {
       // The restored environment may have been deleted while this tab was
       // elsewhere, which fails the fetch with the header set. Leave it, which
@@ -356,8 +350,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
       // Fresh fetch so we do not reuse a cached org payload that omitted billingLimits
       const organization = await context.queryClient
         .fetchQuery({
-          queryKey: ['organization', teamId],
-          queryFn: () => fetchOrganizationById(teamId),
+          ...organizationQueryOptions(teamId),
           staleTime: 30 * 1000,
         })
         .catch(() => null)
@@ -425,12 +418,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     if (projectBlocked) {
       const blockedFeatures = getActiveProfileFeatures()
       const projectData = await queryClient
-        .ensureQueryData({
-          queryKey: ['project', projectId],
-          queryFn: () => fetchProject(projectId),
-          staleTime: 5 * 60 * 1000,
-          retry: false,
-        })
+        .ensureQueryData(projectQueryOptions(projectId))
         .catch(() => null)
 
       registerProjectRegionFromProject(projectData)
@@ -462,12 +450,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     try {
       const features = getActiveProfileFeatures()
       const [projectData] = await Promise.all([
-        queryClient.ensureQueryData({
-          queryKey: ['project', projectId],
-          queryFn: () => fetchProject(projectId),
-          staleTime: 5 * 60 * 1000, // 5 minutes
-          retry: false,
-        }),
+        queryClient.ensureQueryData(projectQueryOptions(projectId)),
         // Header ProjectSelector uses useOrganizations; prefetch so navigation does not flash skeleton
         queryClient
           .ensureQueryData(organizationsQueryOptions())
@@ -479,37 +462,37 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
 
       registerProjectRegionFromProject(projectData)
 
-      // Fetch organization plan if we have a teamId (critical for header/limit checking)
-      if (projectData?.teamId) {
-        if (features.billing) {
-          await queryClient
-            .ensureQueryData(organizationPlanQueryOptions(projectData.teamId))
-            .catch(() => {})
-          // Keep org billingLimits warm for plan-usage curtain first paint
-          await queryClient
-            .ensureQueryData(organizationQueryOptions(projectData.teamId))
-            .catch(() => {})
-          await prefetchOrganizationInvoiceDataIfAllowed(
-            queryClient,
-            projectData.teamId,
-          )
-        }
-        if (features.orgRoles) {
-          await queryClient
-            .ensureQueryData(
-              organizationScopesQueryOptions(projectData.teamId, projectId),
-            )
-            .catch(() => {})
-        }
+      // These inputs to the project shell are independent once its team is known.
+      const teamId = projectData?.teamId
+      const shellQueries: Promise<unknown>[] = []
+      if (teamId && features.billing) {
+        shellQueries.push(
+          queryClient
+            .ensureQueryData(organizationPlanQueryOptions(teamId))
+            .catch(() => {}),
+          queryClient
+            .ensureQueryData(organizationQueryOptions(teamId))
+            .catch(() => {}),
+          prefetchOrganizationInvoiceDataIfAllowed(queryClient, teamId),
+        )
       }
-
-      // Prefetch console variables (CNAME, A, AAAA, nameservers, CAA) for domain verification.
-      // Skip heavy background work when the project is plan-locked.
+      if (teamId && features.orgRoles) {
+        shellQueries.push(
+          queryClient
+            .ensureQueryData(organizationScopesQueryOptions(teamId, projectId))
+            .catch(() => {}),
+        )
+      }
       if (!planUsageLimitReached) {
-        await queryClient
-          .ensureQueryData(consoleVariablesQueryOptions(projectData?.region))
-          .catch(() => {})
+        shellQueries.push(
+          queryClient
+            .ensureQueryData(consoleVariablesQueryOptions(projectData?.region))
+            .catch(() => {}),
+        )
+      }
+      await Promise.all(shellQueries)
 
+      if (!planUsageLimitReached) {
         // Warm API explorer specs in the background so Explorer opens without a loading state.
         void queryClient
           .prefetchQuery(apiExplorerSpecQueryOptions('server'))
