@@ -605,8 +605,13 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 // A runtime may send header names in any casing.
                 $headers = \array_change_key_case($headers);
 
-                // A failed response may be replaced by a branded page, and a sized one keeps its content-length; both need the whole body.
-                $streamed = $statusCode < 400 && !\array_key_exists('content-length', $headers);
+                // A failed response may be replaced by a branded page, and a small sized one keeps its
+                // content-length; both need the whole body. A declared length is only a hint for that
+                // choice: a larger one streams, so the body never has to fit in this process at once.
+                $declared = $headers['content-length'] ?? null;
+                $declared = \is_array($declared) ? ($declared[0] ?? null) : $declared;
+                $sized = \is_numeric($declared) && (int) $declared <= MAX_OUTPUT_CHUNK_SIZE;
+                $streamed = $statusCode < 400 && !$sized;
 
                 if ($streamed) {
                     $headers[$type === 'function' ? 'x-appwrite-execution-id' : 'x-appwrite-log-id'] = $execution->getId();
@@ -622,7 +627,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                         }
 
                         // Framing describes the buffered response, not the chunked one.
-                        if ($lowercased === 'transfer-encoding') {
+                        if ($lowercased === 'transfer-encoding' || $lowercased === 'content-length') {
                             continue;
                         }
 
@@ -638,6 +643,10 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             }
 
             if (!$streamed) {
+                // Bounded whatever the runtime declared: a runtime may send more than it announced.
+                if (\strlen($streamBody) + \strlen($chunk) > MAX_OUTPUT_CHUNK_SIZE) {
+                    throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Execution response is too large to buffer.', view: $errorView);
+                }
                 $streamBody .= $chunk;
 
                 return;
