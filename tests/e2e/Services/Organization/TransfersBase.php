@@ -374,6 +374,23 @@ trait TransfersBase
         ]);
         $this->assertSame(200, $users['headers']['status-code']);
 
+        // Ephemeral keys are not stored, so the claim cannot delete them
+        $ephemeral = $this->client->call(Client::METHOD_POST, '/organization/projects/' . $projectId . '/keys/ephemeral', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], $this->getOwnerHeaders()), [
+            'scopes' => ['users.read'],
+            'duration' => 3600,
+        ]);
+        $this->assertSame(201, $ephemeral['headers']['status-code']);
+
+        $users = $this->client->call(Client::METHOD_GET, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $ephemeral['body']['secret'],
+        ]);
+        $this->assertSame(200, $users['headers']['status-code']);
+
         /**
          * Test for FAILURE
          */
@@ -423,6 +440,13 @@ trait TransfersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $key['body']['secret'],
+        ]);
+        $this->assertSame(401, $users['headers']['status-code']);
+
+        $users = $this->client->call(Client::METHOD_GET, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $ephemeral['body']['secret'],
         ]);
         $this->assertSame(401, $users['headers']['status-code']);
 
