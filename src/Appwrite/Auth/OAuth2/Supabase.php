@@ -13,6 +13,11 @@ class Supabase extends OAuth2
     use PKCE;
 
     /**
+     * Prefix of the temporary login roles created for migrations
+     */
+    public const string ROLE_PREFIX = 'appwrite_migration_';
+
+    /**
      * @var array
      */
     protected array $user = [];
