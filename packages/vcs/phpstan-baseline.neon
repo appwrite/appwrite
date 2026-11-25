@@ -1021,12 +1021,6 @@ parameters:
 			path: src/Adapter/Git/GitLab.php
 
 		-
-			message: '#^Cannot access offset mixed on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/Adapter/Git/GitLab.php
-
-		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
 			count: 2
@@ -1111,7 +1105,7 @@ parameters:
 			path: src/Adapter/Git/GitLab.php
 
 		-
-			message: '#^Parameter \#1 \$array of function array_key_last expects array, mixed given\.$#'
+			message: '#^Parameter \#1 \$array of function array_last expects array, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Adapter/Git/GitLab.php

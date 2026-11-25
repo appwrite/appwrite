@@ -38,8 +38,10 @@ class GitHub extends Git
      */
     public const GITHUB_APP_JWT_EXPIRY = 60 * 9;
 
+    #[\Override]
     protected string $endpoint = 'https://api.github.com';
 
+    #[\Override]
     protected string $accessToken = '';
 
     protected string $jwtToken;
@@ -51,6 +53,7 @@ class GitHub extends Git
      *
      * @var array<string, string>
      */
+    #[\Override]
     protected $headers = ['content-type' => 'application/json'];
 
     public function __construct(protected Cache $cache)
