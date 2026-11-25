@@ -783,13 +783,15 @@ class V25 extends Migration
      * or its team for a monitor without one, and keeps the chosen ID in `monitorId`.
      * The rename keeps `$sequence`, which alerts join on, and runs after every
      * collection is migrated so `schedules` and `users` hold their attributes. Every
-     * step is skipped once done, so a failed run can be repeated.
+     * step is skipped once done, so a failed run can be repeated; it throws after the
+     * last monitor when any step failed, so the migration is not recorded as done.
      */
     private function migrateMonitorIds(): void
     {
         /** @var array<string, string> $stored chosen ID to stored ID, the oldest monitor first, as opt-outs named it */
         $stored = [];
         $sequence = null;
+        $failures = 0;
 
         do {
             $queries = [Query::orderAsc('$sequence'), Query::limit($this->limit)];
@@ -818,6 +820,7 @@ class V25 extends Migration
                         continue;
                     } catch (Throwable $th) {
                         Console::warning("Failed to move monitor \"{$old}\" to \"{$new}\": {$th->getMessage()}");
+                        $failures++;
                         continue;
                     }
                 }
@@ -828,25 +831,29 @@ class V25 extends Migration
                     $this->moveSchedules($monitor, $monitorId);
                 } catch (Throwable $th) {
                     Console::warning("Failed to move the schedule of monitor \"{$monitorId}\" to \"{$monitor->getId()}\": {$th->getMessage()}");
+                    $failures++;
                 }
             }
         } while (\count($monitors) === $this->limit);
 
-        if ($stored === []) {
-            return;
+        if ($stored !== []) {
+            // A user's opt-outs name monitors by ID, next to whole types.
+            try {
+                foreach ($this->dbForProject->cursor('users', [Query::isNotNull('alertsUnsubscribed')], batchSize: $this->limit) as $user) {
+                    $unsubscribed = $user->getAttribute('alertsUnsubscribed', []);
+                    $moved = \array_map(fn (string $entry): string => $stored[$entry] ?? $entry, $unsubscribed);
+                    if ($moved !== $unsubscribed) {
+                        $this->dbForProject->updateDocument('users', $user->getId(), new Document(['alertsUnsubscribed' => $moved]));
+                    }
+                }
+            } catch (Throwable $th) {
+                Console::warning('Failed to move alert opt-outs to the new monitor IDs: ' . $th->getMessage());
+                $failures++;
+            }
         }
 
-        // A user's opt-outs name monitors by ID, next to whole types.
-        try {
-            foreach ($this->dbForProject->cursor('users', [Query::isNotNull('alertsUnsubscribed')], batchSize: $this->limit) as $user) {
-                $unsubscribed = $user->getAttribute('alertsUnsubscribed', []);
-                $moved = \array_map(fn (string $entry): string => $stored[$entry] ?? $entry, $unsubscribed);
-                if ($moved !== $unsubscribed) {
-                    $this->dbForProject->updateDocument('users', $user->getId(), new Document(['alertsUnsubscribed' => $moved]));
-                }
-            }
-        } catch (Throwable $th) {
-            Console::warning('Failed to move alert opt-outs to the new monitor IDs: ' . $th->getMessage());
+        if ($failures > 0) {
+            throw new Exception("Failed {$failures} step(s) of moving monitors to project-scoped IDs; run the migration again to retry them.");
         }
     }
 

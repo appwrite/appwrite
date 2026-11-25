@@ -683,4 +683,81 @@ final class V25Test extends TestCase
         $this->assertEqualsWithDelta(\time() + 20 * 24 * 60 * 60, \strtotime($expiry), 120);
         $this->assertEmpty($database->getDocument('certificates', \md5($gone))->getAttribute('expireDate'));
     }
+
+    public function testMovesMonitorsToProjectScopedIds(): void
+    {
+        $authorization = new Authorization();
+        $authorization->disable();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+        $database->setValidation(false);
+
+        $collections = Config::getParam('collections', [])['console'];
+        foreach (['monitors', 'schedules', 'users'] as $id) {
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($collections[$id]['attributes']),
+                indexes: \array_values($collections[$id]['indexes']),
+            ));
+        }
+
+        // A monitor from the previous release, under its global ID, and the schedule the worker stopped
+        // while it could not find the monitor.
+        $database->createDocument('monitors', new Document([
+            '$id' => 'egress',
+            'name' => 'Egress',
+            'teamId' => 'team',
+            'teamInternalId' => '3',
+            'projectId' => 'project',
+            'projectInternalId' => '7',
+            'region' => 'default',
+            'enabled' => true,
+        ]));
+        $database->createDocument('schedules', new Document([
+            '$id' => 'schedule',
+            'region' => 'default',
+            'resourceType' => SCHEDULE_RESOURCE_TYPE_MONITOR,
+            'resourceId' => 'egress',
+            'projectId' => 'project',
+            'active' => false,
+        ]));
+        $database->createDocument('users', new Document([
+            '$id' => 'user',
+            'alertsUnsubscribed' => ['egress', 'type:usage'],
+        ]));
+
+        $migration = new class ($database) extends V25 {
+            public function __construct(Database $database)
+            {
+                $this->dbForProject = $database;
+                $this->project = new Document(['$id' => 'console', '$sequence' => 'console']);
+                $this->collections = ['console' => []];
+            }
+        };
+
+        // A second run finds every step done and changes nothing.
+        \ob_start();
+        try {
+            $migration->execute();
+            $migration->execute();
+        } finally {
+            \ob_end_clean();
+        }
+
+        $stored = \md5('7:egress');
+        $this->assertTrue($database->getDocument('monitors', 'egress')->isEmpty());
+        $monitor = $database->getDocument('monitors', $stored);
+        $this->assertSame('egress', $monitor->getAttribute('monitorId'));
+        $this->assertSame('Egress', $monitor->getAttribute('name'));
+
+        $schedule = $database->getDocument('schedules', 'schedule');
+        $this->assertSame($stored, $schedule->getAttribute('resourceId'));
+        $this->assertTrue($schedule->getAttribute('active'));
+
+        $this->assertSame([$stored, 'type:usage'], $database->getDocument('users', 'user')->getAttribute('alertsUnsubscribed'));
+    }
 }
