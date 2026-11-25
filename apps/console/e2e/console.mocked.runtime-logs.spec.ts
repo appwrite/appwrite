@@ -362,10 +362,12 @@ async function mockAppwriteApi(page: Page) {
       if (!resourceType && !resourceId) {
         // The project's Logs page: every resource, narrowed by queries.
         const types = equalValues(url, 'resourceType')
+        const ids = equalValues(url, 'resourceId')
         const streams = equalValues(url, 'stream')
         const logs = projectLogs().filter(
           (row) =>
             (!types || types.includes(row.resourceType)) &&
+            (!ids || ids.includes(row.resourceId)) &&
             (!streams || streams.includes(row.stream)),
         )
         return json(200, { total: 0, logs })
@@ -446,6 +448,8 @@ async function mockAppwriteApi(page: Page) {
       ['functions', FUNCTION],
       ['sites', SITE],
     ] as const) {
+      if (apiPath === `/${collection}`)
+        return json(200, { total: 1, [collection]: [resource] })
       const base = `/${collection}/${resource.$id}`
       if (apiPath === base) return json(200, resource)
       if (apiPath === `${base}/deployments`) {
@@ -680,14 +684,22 @@ test.describe('runtime logs', () => {
       page.locator(`a[href$="/projects/${PROJECT.$id}/logs"]`).first(),
     ).toBeVisible()
 
-    // The resource filter goes to the API
-    await page.getByRole('combobox', { name: 'Resource' }).click()
-    await page.getByRole('option', { name: 'Sites' }).click()
+    // The resource filter goes to the API: a whole kind, or one resource
+    const resource = page.getByRole('combobox', { name: 'Resource' })
+    await resource.click()
+    await page.getByRole('option', { name: 'All sites' }).click()
     await expect(logs).toContainText(SITE_LINE)
     await expect(logs).not.toContainText(FUNCTION_LINE)
     await expect(logs).not.toContainText(DATABASE_LINE)
 
-    await page.getByRole('combobox', { name: 'Resource' }).click()
+    await resource.click()
+    await expect(page.getByRole('group', { name: 'Functions' })).toBeVisible()
+    await page.getByRole('option', { name: FUNCTION.name }).click()
+    await expect(resource).toContainText(FUNCTION.name)
+    await expect(logs).toContainText(FUNCTION_LINE)
+    await expect(logs).not.toContainText(SITE_LINE)
+
+    await resource.click()
     await page.getByRole('option', { name: 'All resources' }).click()
     await expect(logs).toContainText(FUNCTION_LINE)
 
