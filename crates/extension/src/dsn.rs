@@ -11,7 +11,9 @@ use ext_php_rs::zend::{ClassEntry, ce};
 use php_std::value::{Number, numeric_bytes_ex};
 use utopia_dsn::Error;
 
-use crate::string::{Bytes, PhpString};
+use std::cell::OnceCell;
+
+use crate::string::{Bytes, PhpString, Shared};
 
 /// What PHP throws for a DSN `parse_url` cannot split. Rust reads the DSN as
 /// UTF-8, so a DSN of other bytes is refused with it too.
@@ -25,15 +27,45 @@ const NOT_REPRESENTABLE: &str = "Unable to build DSN: a part does not survive en
 /// stores nothing twice.
 #[php_class]
 #[php(name = "Utopia\\DSN\\DSN")]
-#[derive(Clone)]
 pub struct Dsn {
     dsn: utopia_dsn::Dsn,
+    strings: Strings,
+}
+
+/// What the getters return, each made on its first call and shared after that, as PHP's
+/// getters return the strings its properties hold. Construction makes none of them.
+#[derive(Default)]
+struct Strings {
+    scheme: OnceCell<Shared>,
+    user: OnceCell<Option<Shared>>,
+    password: OnceCell<Option<Shared>>,
+    host: OnceCell<Shared>,
+    port: OnceCell<Option<Shared>>,
+    path: OnceCell<Shared>,
+    query: OnceCell<Option<Shared>>,
+}
+
+/// A `clone` makes its own strings when read.
+impl Clone for Dsn {
+    fn clone(&self) -> Self {
+        Self::wrap(self.dsn.clone())
+    }
 }
 
 impl Dsn {
     fn wrap(dsn: utopia_dsn::Dsn) -> Self {
-        Self { dsn }
+        Self { dsn, strings: Strings::default() }
     }
+}
+
+/// The string `cell` holds, made from `make` on the first call.
+fn shared(cell: &OnceCell<Shared>, make: impl FnOnce() -> Shared) -> Shared {
+    cell.get_or_init(make).share()
+}
+
+/// The string or null `cell` holds, made from `make` on the first call.
+fn shared_or_null(cell: &OnceCell<Option<Shared>>, make: impl FnOnce() -> Option<Shared>) -> Option<Shared> {
+    cell.get_or_init(make).as_ref().map(Shared::share)
 }
 
 /// What `getParam()` returns: the parameter's bytes, or the caller's default.
@@ -205,38 +237,38 @@ impl Dsn {
     }
 
     /// `getScheme(): string`.
-    pub fn get_scheme(&self) -> &str {
-        self.dsn.scheme()
+    pub fn get_scheme(&self) -> Shared {
+        shared(&self.strings.scheme, || Shared::new(self.dsn.scheme().as_bytes()))
     }
 
     /// `getUser(): ?string`.
-    pub fn get_user(&self) -> Option<Bytes<'_>> {
-        self.dsn.user().map(Bytes)
+    pub fn get_user(&self) -> Option<Shared> {
+        shared_or_null(&self.strings.user, || self.dsn.user().map(Shared::new))
     }
 
     /// `getPassword(): ?string`.
-    pub fn get_password(&self) -> Option<Bytes<'_>> {
-        self.dsn.password().map(Bytes)
+    pub fn get_password(&self) -> Option<Shared> {
+        shared_or_null(&self.strings.password, || self.dsn.password().map(Shared::new))
     }
 
     /// `getHost(): string`.
-    pub fn get_host(&self) -> &str {
-        self.dsn.host()
+    pub fn get_host(&self) -> Shared {
+        shared(&self.strings.host, || Shared::new(self.dsn.host().as_bytes()))
     }
 
     /// `getPort(): ?string`: the port's decimal form, as PHP stores it.
-    pub fn get_port(&self) -> Option<String> {
-        self.dsn.port().map(|port| port.to_string())
+    pub fn get_port(&self) -> Option<Shared> {
+        shared_or_null(&self.strings.port, || self.dsn.port().map(|port| Shared::new(port.to_string().as_bytes())))
     }
 
     /// `getPath(): ?string`: `''` when the DSN has none.
-    pub fn get_path(&self) -> Option<Bytes<'_>> {
-        Some(Bytes(self.dsn.path()))
+    pub fn get_path(&self) -> Option<Shared> {
+        Some(shared(&self.strings.path, || Shared::new(self.dsn.path())))
     }
 
     /// `getQuery(): ?string`.
-    pub fn get_query(&self) -> Option<&str> {
-        self.dsn.query()
+    pub fn get_query(&self) -> Option<Shared> {
+        shared_or_null(&self.strings.query, || self.dsn.query().map(|query| Shared::new(query.as_bytes())))
     }
 
     /// `getParam(string $key, string $default = ''): string`.
