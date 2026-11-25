@@ -1,4 +1,6 @@
 import {
+  lazy,
+  Suspense,
   useState,
   useEffect,
   useLayoutEffect,
@@ -100,8 +102,6 @@ import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
 import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 import { FULL_ACCESS } from '@/lib/console-roles'
 import { useCommandCenterResourceSearch } from '@/hooks/use-command-center-resource-search'
-import { DocsSearchView } from '@/components/pages/docs/DocsSearchView'
-import { BlogSearchView } from '@/components/pages/blog/BlogSearchView'
 import { CommandCenterFeedbackView } from '@/components/global/shared/CommandCenterFeedbackView'
 import { CommandCenterSupportView } from '@/components/global/shared/CommandCenterSupportView'
 import { useDocsPreview } from '@/components/global/providers/DocsPreviewContext'
@@ -118,6 +118,19 @@ import type {
 } from './CommandCenter.types'
 
 export type { CommandCenterContext, CreateResourceType }
+
+// Docs and blog search bring their search indexes (the docs one is about half
+// a megabyte), so they load when their page in the dialog first opens.
+const DocsSearchView = lazy(() =>
+  import('@/components/pages/docs/DocsSearchView').then((m) => ({
+    default: m.DocsSearchView,
+  })),
+)
+const BlogSearchView = lazy(() =>
+  import('@/components/pages/blog/BlogSearchView').then((m) => ({
+    default: m.BlogSearchView,
+  })),
+)
 
 type ResourceScope =
   | 'databases'
@@ -1655,24 +1668,28 @@ export function CommandCenter({
             onKeyDown={handleKeyDown}
           />
         ) : currentPage === 'docs' ? (
-          <DocsSearchView
-            isMobile={isMobile}
-            inputRef={docsInputRef}
-            onBack={() => setPages([])}
-            onClose={() => onOpenChange(false)}
-            onKeyDown={handleKeyDown}
-            onSelect={handleDocsSelect}
-            onOpenShortcuts={() => setPages((p) => [...p, 'shortcuts'])}
-          />
+          <Suspense fallback={null}>
+            <DocsSearchView
+              isMobile={isMobile}
+              inputRef={docsInputRef}
+              onBack={() => setPages([])}
+              onClose={() => onOpenChange(false)}
+              onKeyDown={handleKeyDown}
+              onSelect={handleDocsSelect}
+              onOpenShortcuts={() => setPages((p) => [...p, 'shortcuts'])}
+            />
+          </Suspense>
         ) : currentPage === 'blog' ? (
-          <BlogSearchView
-            isMobile={isMobile}
-            inputRef={blogInputRef}
-            onBack={() => setPages([])}
-            onClose={() => onOpenChange(false)}
-            onKeyDown={handleKeyDown}
-            onOpenShortcuts={() => setPages((p) => [...p, 'shortcuts'])}
-          />
+          <Suspense fallback={null}>
+            <BlogSearchView
+              isMobile={isMobile}
+              inputRef={blogInputRef}
+              onBack={() => setPages([])}
+              onClose={() => onOpenChange(false)}
+              onKeyDown={handleKeyDown}
+              onOpenShortcuts={() => setPages((p) => [...p, 'shortcuts'])}
+            />
+          </Suspense>
         ) : currentPage === 'feedback' ? (
           <CommandCenterFeedbackView
             isMobile={isMobile}

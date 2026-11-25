@@ -208,7 +208,7 @@ export function SqlWorkbench({
       undo: () => sqlEditorRef.current?.undo(),
       redo: () => sqlEditorRef.current?.redo(),
       save: () => setSaveDialogOpen(true),
-      format: () => onSqlChange(formatPostgresSql(sql)),
+      format: () => void formatPostgresSql(sql).then(onSqlChange),
       run: onRun,
       explain: onExplain,
       analyze: onAnalyze,
@@ -318,7 +318,7 @@ export function SqlWorkbench({
               isExplaining={isExplaining}
               activePlanMode={activePlanMode}
               onSave={() => setSaveDialogOpen(true)}
-              onFormat={() => onSqlChange(formatPostgresSql(sql))}
+              onFormat={() => void formatPostgresSql(sql).then(onSqlChange)}
               onRun={onRun}
               onExplain={onExplain}
               onAnalyze={onAnalyze}
