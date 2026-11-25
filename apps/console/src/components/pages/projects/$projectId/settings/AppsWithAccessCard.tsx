@@ -32,10 +32,8 @@ export function AppsWithAccessCard({
 }) {
   const t = useT()
   const { access } = useOrganizationScopes(teamId)
-  const { installations, isLoading } = useProjectInstalledApps(
-    teamId,
-    projectId,
-  )
+  const { installations, isLoading, isError, refetch } =
+    useProjectInstalledApps(teamId, projectId)
   const updateMutation = useUpdateOrganizationInstalledApp(teamId)
   const [removeTarget, setRemoveTarget] =
     useState<Models.AppInstallation | null>(null)
@@ -97,6 +95,21 @@ export function AppsWithAccessCard({
           {isLoading ? (
             <div className="flex items-center justify-center py-6">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : isError ? (
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[13px] text-destructive">
+                {t('Failed to load apps with access.')}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 text-[12px]"
+                onClick={() => void refetch()}
+              >
+                {t('Try again')}
+              </Button>
             </div>
           ) : installations.length === 0 ? (
             <p className="text-[13px] text-muted-foreground">
