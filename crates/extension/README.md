@@ -997,6 +997,9 @@ The abstract `Utopia\Auth\Hash` and its eight hashes, `Argon2`, `Bcrypt`, `MD5`,
 `Plaintext`, `Scrypt`, `ScryptModified` and `Sha`, always registered, over
 `php-std` (`password_hash()`, `password_verify()`, `crypt()`, `hash()`, `base64_*()`,
 `mb_convert_encoding()`) and `crates/utopia/auth` (PECL `scrypt()`, Firebase's modified scrypt, phpass).
+`crypt()`, bcrypt's `password_verify()` and `md5()` run the C that ext/standard exports
+(`php_crypt()`, `PHP_MD5*`, in `src/auth/native.rs`), as PHP's own functions do: the Rust ports
+give the same bytes, but php-std's blowfish is 18% slower than PHP's.
 Once the extension had served them in every Cloud region (appwrite-labs/cloud#7503), the PHP
 classes (`src/Hash.php` and `src/Hashes/*`) were removed from `packages/auth`, which now requires
 `ext-utopia` like `packages/image` and keeps their signatures in `stubs/Hash.php`; 0.12.x on
