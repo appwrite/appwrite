@@ -42,7 +42,7 @@ class XList extends Base
                 description: <<<EOT
                 Get a list of your organization's escalations. Use `Query.search('search', term)` to search escalation IDs and names.
                 EOT,
-                auth: [AuthType::ADMIN, AuthType::ORGANIZATION],
+                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::ORGANIZATION],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
