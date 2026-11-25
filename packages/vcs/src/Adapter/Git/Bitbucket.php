@@ -103,9 +103,9 @@ class Bitbucket extends Git
      * Global Headers
      *
      * Bitbucket runs an XSRF check on writes whose User-Agent looks like a
-     * browser, which the shared HTTP client's does, and refuses them with
-     * 403 "XSRF checks failed for request". X-Atlassian-Token: no-check opts
-     * API calls out of that check.
+     * browser and refuses them with 403 "XSRF checks failed for request".
+     * X-Atlassian-Token: no-check opts API calls out of that check whatever
+     * User-Agent reaches Bitbucket.
      *
      * @link https://support.atlassian.com/atlassian-cloud/kb/xsrf-check-failed-when-calling-cloud-apis/
      *
