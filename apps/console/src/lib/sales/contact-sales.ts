@@ -15,6 +15,7 @@ export const SALES_SOURCES = [
   'support',
   'support-ticket',
   'plan-picker',
+  'videos',
 ] as const
 
 export type SalesSource = (typeof SALES_SOURCES)[number]
