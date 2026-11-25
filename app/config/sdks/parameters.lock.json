@@ -2996,6 +2996,9 @@
             "password",
             "port"
         ],
+        "migrations.createSupabaseProjectCredentials": [
+            "projectRef"
+        ],
         "migrations.delete": [
             "migrationId"
         ],
