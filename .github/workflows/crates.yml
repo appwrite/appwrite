@@ -53,7 +53,11 @@ jobs:
 
       # A rerun after a publish that succeeded packages the same version again instead of
       # failing on "already exists", so the mirror step still runs.
-      - name: Publish to crates.io
+      #
+      # The token is for a crate's first version: crates.io only lets a crate that exists be
+      # given a trusted publisher. Once the fourteen are published, each can name this
+      # workflow as its trusted publisher and the secret can go.
+      - name: Publish to crates.io # zizmor: ignore[use-trusted-publishing] a crate's first version cannot use it
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
           PACKAGE: ${{ steps.crate.outputs.package }}
