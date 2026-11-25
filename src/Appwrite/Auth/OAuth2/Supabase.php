@@ -227,6 +227,21 @@ class Supabase extends OAuth2
     }
 
     /**
+     * Run SQL on the project's database as its owner
+     *
+     * @return array<array<string, mixed>>
+     */
+    public function query(string $accessToken, string $projectRef, string $sql): array
+    {
+        return \json_decode($this->request(
+            'POST',
+            'https://api.supabase.com/v1/projects/' . \rawurlencode($projectRef) . '/database/query',
+            ['Authorization: Bearer ' . $accessToken, 'Content-Type: application/json'],
+            (string) \json_encode(['query' => $sql])
+        ), true) ?? [];
+    }
+
+    /**
      * @param string $accessToken
      *
      * @return array
