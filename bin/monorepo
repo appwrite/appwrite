@@ -839,7 +839,9 @@ switch ($command) {
 
         sh("git tag {$tag}");
         sh("git push origin {$tag}");
-        out("pushed {$tag} — CI will mirror the tag, publish to Packagist, and create the GitHub release");
+        out(str_starts_with($package, 'rs/')
+            ? "pushed {$tag} — CI will publish to crates.io and push the release to the mirror"
+            : "pushed {$tag} — CI will mirror the tag, publish to Packagist, and create the GitHub release");
         break;
 
     case 'validate':
