@@ -7,6 +7,7 @@ use Utopia\Abuse\Challenge\Clearance;
 use Utopia\Abuse\Challenge\Password;
 use Utopia\Abuse\Challenge\Status;
 use Utopia\Auth\Hashes\Bcrypt;
+use Utopia\Auth\Hashes\PHPass;
 use Utopia\Auth\Hashes\Scrypt;
 use Utopia\Auth\Proofs\Password as PasswordProof;
 
@@ -18,6 +19,9 @@ final class PasswordTest extends TestCase
 
     /** A hash Appwrite stores for the password "appwrite" (its own e2e fixture). */
     private const string APPWRITE_HASH = '$argon2i$v=19$m=20,t=3,p=2$YXBwd3JpdGU$A/54i238ed09ZR4NwlACU5XnkjNBZU9QeOEuhjLiexI';
+
+    /** A portable PHPass hash of "open sesame" ($P$, as WordPress stores them). */
+    private const string PHPASS_HASH = '$P$6abcdefghCj/oL.5zumm7o2h0nT5970';
 
     private const array CLIENT = ['ip' => '203.0.113.0/24', 'ua' => 'ua-hash'];
 
@@ -67,6 +71,15 @@ final class PasswordTest extends TestCase
 
         $password = new Password(self::SECRET, $hash, new PasswordProof()->setHash($scrypt));
         $this->assertSame(Status::Valid, $this->answer($password, self::PASSWORD));
+        $this->assertSame(Status::Rejected, $this->answer($password, 'wrong'));
+    }
+
+    public function testAPhpassHashNeedsAProofSetToPhpass(): void
+    {
+        $this->assertSame(Status::Rejected, $this->answer($this->password(self::PHPASS_HASH), 'open sesame'));
+
+        $password = new Password(self::SECRET, self::PHPASS_HASH, new PasswordProof()->setHash(new PHPass()));
+        $this->assertSame(Status::Valid, $this->answer($password, 'open sesame'));
         $this->assertSame(Status::Rejected, $this->answer($password, 'wrong'));
     }
 
