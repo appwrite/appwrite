@@ -140,27 +140,19 @@ class Get extends Base
         Bus $bus,
     ): void {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $port = $request->getPort();
-        $callbackBase = $protocol . '://' . $request->getHostname();
-        // An empty port means the host named none, so the scheme's default applies
-        if ($port !== '' && $port !== ($protocol === 'https' ? '443' : '80')) {
-            $callbackBase .= ':' . $port;
-        }
-
-        $callback = $callbackBase . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
+        $callback = $this->getOAuth2Callback($provider, $project, $request);
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
         $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
         $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
         $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
 
-        $oAuthProviders = Config::getParam('oAuthProviders') ?? [];
-        $className = $oAuthProviders[$provider]['class'] ?? null;
+        $definition = $this->getOAuth2Provider($provider);
+        $className = $definition['class'] ?? null;
         if ($className === null || !\class_exists($className)) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
-        $providers = Config::getParam('oAuthProviders') ?? [];
-        $providerName = $providers[$provider]['name'] ?? '';
+        $providerName = $definition['name'] ?? '';
 
         /** @var OAuth2 $oauth2 */
         $oauth2 = new $className($clientForOAuth2, $appId, $appSecret, $callback);
@@ -308,6 +300,11 @@ class Get extends Base
 
         if (empty($oauth2ID)) {
             $failureRedirect(Exception::USER_MISSING_ID);
+        }
+
+        // The identity names something people share, so it can attach to the signed-in caller but never sign anyone in
+        if ($user->isEmpty() && $oauth2->isLinkOnly()) {
+            $failureRedirect(Exception::USER_UNAUTHORIZED);
         }
 
         $name = '';
@@ -716,7 +713,7 @@ class Get extends Base
                 'secret' => $proofForTokenOAuth2->hash($secret), // One way hash encryption to protect DB leak
                 'expire' => $expire,
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
-                'ip' => $request->getIP(),
+                'ip' => $request->getClientIP(),
             ]);
 
             // If the `token` param is not set, we persist the session in a cookie
@@ -724,7 +721,7 @@ class Get extends Base
             $detector = new Detector($request->getUserAgent('UNKNOWN'));
             $secret = $proofForToken->generate();
 
-            $geoRecord = $geo->get($request->getIP());
+            $geoRecord = $geo->get($request->getClientIP());
             $session = new Document(array_merge([
                 '$id' => Id::unique(),
                 '$permissions' => [
@@ -744,7 +741,7 @@ class Get extends Base
                 'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry),
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
-                'ip' => $request->getIP(),
+                'ip' => $request->getClientIP(),
                 'factors' => [TYPE::EMAIL, 'oauth2'], // include a special oauth2 factor to bypass MFA checks
                 'countryCode' => \strtolower($geoRecord->getCountryCode()),
                 'continentCode' => $geoRecord->getContinentCode() === '--' ? null : $geoRecord->getContinentCode(),

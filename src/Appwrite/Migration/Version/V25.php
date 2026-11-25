@@ -140,7 +140,7 @@ class V25 extends Migration
 
                 case 'notifications':
                     if ($collectionType === 'console') {
-                        $attributes = ['teamId', 'teamInternalId'];
+                        $attributes = ['teamId', 'teamInternalId', 'subjectType', 'subjectId', 'status'];
                         foreach ($attributes as $attribute) {
                             try {
                                 $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
@@ -151,10 +151,12 @@ class V25 extends Migration
 
                         $this->dbForProject->purgeCachedCollection($id);
 
-                        try {
-                            $this->createIndexFromCollection($this->dbForProject, $id, '_key_team');
-                        } catch (Throwable $th) {
-                            Console::warning("Failed to create index \"_key_team\" from {$id}: {$th->getMessage()}");
+                        foreach (['_key_team', '_key_subject'] as $index) {
+                            try {
+                                $this->createIndexFromCollection($this->dbForProject, $id, $index);
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to create index \"{$index}\" from {$id}: {$th->getMessage()}");
+                            }
                         }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
@@ -619,6 +621,15 @@ class V25 extends Migration
                                 }
                             }
                         }
+                        // Segments created before each row stored its bytes. An existing
+                        // attribute is skipped; a second migrate hits that path.
+                        if ($existed && $id === 'videosRenditionsSegments') {
+                            try {
+                                $this->createAttributeFromCollection($this->dbForProject, $id, 'size');
+                            } catch (Duplicate) {
+                            }
+                            $this->dbForProject->purgeCachedCollection($id);
+                        }
                     } finally {
                         $this->dbForProject->setTenant($tenant);
                     }
@@ -626,13 +637,24 @@ class V25 extends Migration
 
                 case 'monitors':
                 case 'monitorAlerts':
+                case 'escalations':
                     // New in 2.7.0. Platform collections, so only the console project visits them.
                     $this->createCollection($id);
-                    // Created before monitors had a severity, or alerts were acknowledged.
-                    $attributes = $id === 'monitorAlerts' ? ['severity', 'acknowledgedAt', 'acknowledgedBy', 'acknowledgedByName'] : ['severity'];
+                    // Created before monitors had a severity or an escalation, or alerts were acknowledged or escalated.
+                    $attributes = match ($id) {
+                        'monitorAlerts' => ['severity', 'acknowledgedAt', 'acknowledgedBy', 'acknowledgedByName', 'escalationId', 'escalationSteps', 'escalationUserIds', 'escalationRepeat', 'escalationStep', 'escalationRound', 'escalatesAt'],
+                        'monitors' => ['severity', 'escalationId'],
+                        default => [],
+                    };
                     foreach ($attributes as $attribute) {
                         try {
                             $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
+                        } catch (Duplicate) {
+                        }
+                    }
+                    if ($id === 'monitors') {
+                        try {
+                            $this->createIndexFromCollection($this->dbForProject, $id, '_key_escalationId');
                         } catch (Duplicate) {
                         }
                     }

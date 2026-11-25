@@ -586,6 +586,7 @@ const RESOURCE_TYPE_REPORTS = 'reports';
 const RESOURCE_TYPE_VIDEOS = 'videos';
 const RESOURCE_TYPE_REVIEWS = 'reviews';
 const RESOURCE_TYPE_MONITORS = 'monitors';
+const RESOURCE_TYPE_ALERTS = 'alerts';
 
 // Insight types — engine-specific so the CTA action can reference the right public API.
 const ADVISOR_INSIGHT_TYPES = [
@@ -645,6 +646,7 @@ const SCHEDULE_RESOURCE_TYPE_EXECUTION = 'execution';
 const SCHEDULE_RESOURCE_TYPE_FUNCTION = 'function';
 const SCHEDULE_RESOURCE_TYPE_MESSAGE = 'message';
 const SCHEDULE_RESOURCE_TYPE_MONITOR = 'monitor';
+const SCHEDULE_RESOURCE_TYPE_ESCALATION = 'escalation';
 
 // Monitor types, the kind of check a monitor runs; see `types` in app/config/alerts.php
 const MONITOR_TYPE_USAGE = 'usage';

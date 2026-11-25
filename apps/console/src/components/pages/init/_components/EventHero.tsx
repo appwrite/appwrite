@@ -5,8 +5,15 @@ import type {
   LaunchEventLiveBanner,
   LaunchEventOnlineUser,
 } from '@/lib/init/types'
-import type { ReactNode } from 'react'
-import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { ComponentType, ReactNode, RefObject } from 'react'
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import {
@@ -27,6 +34,7 @@ import { ChevronRight } from 'lucide-react'
 import { EventCtaButton } from '../shared/EventCtas'
 import { InitCollapsedDayNav } from './InitCollapsedDayNav'
 import { InitHeroBackground } from './InitHeroBackground'
+import { Init5HeroContent } from './init5/Init5HeroContent'
 import { useInitTicketVideoRecording } from '@/lib/init/init-ticket-video-recording-context'
 import { InitWordmark } from './InitWordmark'
 import { useInitHref } from '@/lib/init/use-init-href'
@@ -120,6 +128,9 @@ interface EventHeroProps {
   headerAddon?: ReactNode
   /** Shown in the collapsed sticky bar when the user scrolls past the hero. */
   liveBanner?: LaunchEventLiveBanner
+  HeroBackground?: InitHeroBackgroundComponent
+  /** Init 5: cinematic split layout with the canvas 5 stage. */
+  heroLayout?: 'default' | 'init5'
 }
 
 type MainBounds = {
@@ -127,6 +138,14 @@ type MainBounds = {
   width: number
   top: number
 }
+
+export type InitHeroBackgroundComponent = ComponentType<{
+  containerRef: RefObject<HTMLElement | null>
+  compact?: boolean
+  active?: boolean
+  onInteractionStart?: () => void
+  onInteractionEnd?: () => void
+}>
 
 function CollapsedHeroBar({
   event,
@@ -137,6 +156,7 @@ function CollapsedHeroBar({
   activeDay,
   particlesActive,
   days,
+  HeroBackground = InitHeroBackground,
 }: {
   event: InitDisplayEvent
   visible: boolean
@@ -146,6 +166,7 @@ function CollapsedHeroBar({
   activeDay: number
   particlesActive: boolean
   days: InitDisplayEvent['days']
+  HeroBackground?: InitHeroBackgroundComponent
 }) {
   const t = useT()
   const barRef = useRef<HTMLDivElement>(null)
@@ -173,7 +194,9 @@ function CollapsedHeroBar({
         'fixed z-[15] overflow-hidden border-b border-border',
         'bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80',
         'transition-[transform,opacity] duration-300 ease-out',
-        visible ? 'translate-y-0 opacity-100' : 'pointer-events-none -translate-y-full opacity-0',
+        visible
+          ? 'translate-y-0 opacity-100'
+          : 'pointer-events-none -translate-y-full opacity-0',
       )}
       style={{
         top: bounds?.top ?? 0,
@@ -183,7 +206,7 @@ function CollapsedHeroBar({
       }}
     >
       {visible && showStickyJool ? (
-        <InitHeroBackground
+        <HeroBackground
           containerRef={barRef}
           compact
           active={particlesActive}
@@ -277,7 +300,12 @@ function CollapsedHeroBar({
                   </span>
                 </div>
                 {resolvedLiveHref ? (
-                  <Button variant="outline" size="sm" className="h-7 shrink-0 text-[12px]" asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 shrink-0 text-[12px]"
+                    asChild
+                  >
                     <a
                       href={resolvedLiveHref.href}
                       {...(resolvedLiveHref.external
@@ -302,7 +330,13 @@ function CollapsedHeroBar({
   )
 }
 
-export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
+export function EventHero({
+  event,
+  headerAddon,
+  liveBanner,
+  HeroBackground = InitHeroBackground,
+  heroLayout = 'default',
+}: EventHeroProps) {
   const t = useT()
   const { data: account } = useQuery(consoleAccountQueryOptions())
   const heroRef = useRef<HTMLDivElement>(null)
@@ -310,7 +344,10 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [collapseEnabled, setCollapseEnabled] = useState(true)
   const [mainBounds, setMainBounds] = useState<MainBounds | null>(null)
-  const dayNumbers = useMemo(() => event.days.map((day) => day.day), [event.days])
+  const dayNumbers = useMemo(
+    () => event.days.map((day) => day.day),
+    [event.days],
+  )
   const activeDay = useInitScrollSpyDay(dayNumbers)
   const { isCapturing: isTicketVideoCapturing } = useInitTicketVideoRecording()
   const { isReady: isPresenceReady } = useInitPresence()
@@ -333,7 +370,9 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
   }, [event.giveaway, t])
 
   useEffect(() => {
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const prefersReducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches
     setCollapseEnabled(!prefersReducedMotion)
   }, [])
 
@@ -380,14 +419,13 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (!entry.isIntersecting) {
-          setIsCollapsed(true)
-          return
-        }
-
-        if (entry.boundingClientRect.top >= -1) {
-          setIsCollapsed(false)
-        }
+        if (!entry) return
+        // The sentinel sits under the hero: collapse only once it has scrolled
+        // above the top edge, not while a tall hero still pushes it below the fold.
+        const rootTop = entry.rootBounds?.top ?? 0
+        setIsCollapsed(
+          !entry.isIntersecting && entry.boundingClientRect.top < rootTop,
+        )
       },
       { root: main, threshold: 0 },
     )
@@ -408,41 +446,46 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
           activeDay={activeDay}
           particlesActive={!isTicketVideoCapturing}
           days={event.days}
+          HeroBackground={HeroBackground}
         />
       ) : null}
 
       <div
         ref={heroRef}
-        className="relative min-h-[420px] overflow-hidden border-b border-border bg-background sm:min-h-[480px]"
+        className={cn(
+          'relative overflow-hidden border-b border-border bg-background',
+          heroLayout === 'init5'
+            ? 'isolate lg:min-h-[clamp(640px,calc(100svh_-_120px),880px)]'
+            : 'min-h-[420px] sm:min-h-[480px]',
+        )}
       >
-        <InitHeroBackground
+        <HeroBackground
           containerRef={heroRef}
           active={!isTicketVideoCapturing}
           onInteractionStart={handleJoolInteractionStart}
           onInteractionEnd={handleJoolInteractionEnd}
         />
 
-        <div className="relative z-10 mx-auto flex min-h-[420px] w-full max-w-7xl flex-col items-center justify-center px-4 py-12 text-center sm:min-h-[480px] sm:px-6 sm:py-16">
-          {headerAddon}
-          <p
-            className={cn(
-              'text-[11px] font-semibold uppercase tracking-[0.25em] text-foreground',
-              headerAddon && 'mt-4',
-            )}
-          >
-            {event.dateRangeLabel}
-          </p>
-          <InitWordmark className="mt-6 text-[clamp(48px,12vw,96px)] text-foreground" />
-          <p className="mx-auto mt-4 max-w-xl text-[14px] leading-relaxed text-muted-foreground">
-            {event.description}
-          </p>
-          {!event.isRecapMode ? (
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-              {!account ? (
-                <EventCtaButton cta={event.primaryCta} variant="brandCta" size="lg" />
+        {heroLayout === 'init5' ? (
+          <Init5HeroContent
+            event={event}
+            headerAddon={headerAddon}
+            reduceMotion={Boolean(reduceMotion)}
+            actions={
+              event.isRecapMode ? null : !account ? (
+                <EventCtaButton
+                  cta={event.primaryCta}
+                  variant="brandCta"
+                  size="lg"
+                />
               ) : event.prizes ? (
                 <>
-                  <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
+                  <Button
+                    variant="brandCta"
+                    size="lg"
+                    className="h-10 text-[14px]"
+                    asChild
+                  >
                     <a href={`#${INIT_PRIZES_SECTION_ID}`}>
                       {event.giveaway?.ctaLabel ?? 'View prizes'}
                     </a>
@@ -455,25 +498,89 @@ export function EventHero({ event, headerAddon, liveBanner }: EventHeroProps) {
                     />
                   ) : null}
                 </>
-              ) : null}
-            </div>
-          ) : null}
-          {!event.isRecapMode && event.presenceEnabled ? (
-            <div className="mt-8 flex min-h-8 items-center justify-center gap-3">
-              <AnimatePresence>
-                {isPresenceReady && event.onlineCount > 0 ? (
-                  <HeroOnlineAvatarStack
-                    key="online-now"
-                    users={event.onlineUsers}
-                    count={event.onlineCount}
-                    countCapped={event.onlineCountCapped}
-                    reduceMotion={reduceMotion}
+              ) : null
+            }
+            presence={
+              !event.isRecapMode && event.presenceEnabled ? (
+                <div className="mt-8 flex min-h-8 items-center justify-center gap-3 lg:justify-start">
+                  <AnimatePresence>
+                    {isPresenceReady && event.onlineCount > 0 ? (
+                      <HeroOnlineAvatarStack
+                        key="online-now"
+                        users={event.onlineUsers}
+                        count={event.onlineCount}
+                        countCapped={event.onlineCountCapped}
+                        reduceMotion={reduceMotion}
+                      />
+                    ) : null}
+                  </AnimatePresence>
+                </div>
+              ) : null
+            }
+          />
+        ) : (
+          <div className="relative z-10 mx-auto flex min-h-[420px] w-full max-w-7xl flex-col items-center justify-center px-4 py-12 text-center sm:min-h-[480px] sm:px-6 sm:py-16">
+            {headerAddon}
+            <p
+              className={cn(
+                'text-[11px] font-semibold uppercase tracking-[0.25em] text-foreground',
+                headerAddon && 'mt-4',
+              )}
+            >
+              {event.dateRangeLabel}
+            </p>
+            <InitWordmark className="mt-6 text-[clamp(48px,12vw,96px)] text-foreground" />
+            <p className="mx-auto mt-4 max-w-xl text-[14px] leading-relaxed text-muted-foreground">
+              {event.description}
+            </p>
+            {!event.isRecapMode ? (
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+                {!account ? (
+                  <EventCtaButton
+                    cta={event.primaryCta}
+                    variant="brandCta"
+                    size="lg"
                   />
+                ) : event.prizes ? (
+                  <>
+                    <Button
+                      variant="brandCta"
+                      size="lg"
+                      className="h-10 text-[14px]"
+                      asChild
+                    >
+                      <a href={`#${INIT_PRIZES_SECTION_ID}`}>
+                        {event.giveaway?.ctaLabel ?? 'View prizes'}
+                      </a>
+                    </Button>
+                    {giveawayDiscordCta ? (
+                      <EventCtaButton
+                        cta={giveawayDiscordCta}
+                        variant="outline"
+                        size="lg"
+                      />
+                    ) : null}
+                  </>
                 ) : null}
-              </AnimatePresence>
-            </div>
-          ) : null}
-        </div>
+              </div>
+            ) : null}
+            {!event.isRecapMode && event.presenceEnabled ? (
+              <div className="mt-8 flex min-h-8 items-center justify-center gap-3">
+                <AnimatePresence>
+                  {isPresenceReady && event.onlineCount > 0 ? (
+                    <HeroOnlineAvatarStack
+                      key="online-now"
+                      users={event.onlineUsers}
+                      count={event.onlineCount}
+                      countCapped={event.onlineCountCapped}
+                      reduceMotion={reduceMotion}
+                    />
+                  ) : null}
+                </AnimatePresence>
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
 
       <div ref={sentinelRef} className="h-px w-full shrink-0" aria-hidden />

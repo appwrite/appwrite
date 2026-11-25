@@ -10,6 +10,7 @@ import {
   Shield,
   ShieldCheck,
   Target,
+  UserRound,
   X,
 } from 'lucide-react'
 import {
@@ -38,6 +39,7 @@ import {
   useAnalyticsGoal,
   useAnalyticsValueMenuContext,
 } from './analytics-filters-context'
+import { isConsolePath } from './BreakdownRow'
 
 /**
  * Right-click menu for a value in an analytics card or "Show more" list:
@@ -148,6 +150,14 @@ export function AnalyticsValueMenu({
           <ContextMenuIcon icon={Copy} />
           {t('Copy value')}
         </ContextMenuItem>
+        {href &&
+        isConsolePath(href) &&
+        dimension === AnalyticsDimension.UserId ? (
+          <ContextMenuItem onSelect={() => navigate({ to: href })}>
+            <ContextMenuIcon icon={UserRound} />
+            {t('View user')}
+          </ContextMenuItem>
+        ) : null}
         {href ? (
           <ContextMenuItem onSelect={() => openInNewTab(href)}>
             <ContextMenuIcon icon={ExternalLink} />

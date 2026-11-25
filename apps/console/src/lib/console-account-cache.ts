@@ -6,6 +6,8 @@ type ConsoleAccountGlobalCache = {
   resolved: Map<number, Models.User>
   inflight: Map<number, Promise<Models.User>>
   unauthenticated: Map<number, unknown>
+  /** Bumped by every full clear: sign-out, impersonation, account deletion. */
+  session: number
 }
 
 function getGlobalCache(): ConsoleAccountGlobalCache {
@@ -17,9 +19,18 @@ function getGlobalCache(): ConsoleAccountGlobalCache {
       resolved: new Map(),
       inflight: new Map(),
       unauthenticated: new Map(),
+      session: 0,
     }
   }
   return g[GLOBAL_CACHE_KEY]
+}
+
+/**
+ * Which sign-in the cached account belongs to. It changes whenever the whole
+ * cache is cleared, so signing out and back into the same account is a new one.
+ */
+export function getConsoleAccountSession(): number {
+  return getGlobalCache().session
 }
 
 export function getConsoleAccountSync(
@@ -48,7 +59,9 @@ export function setConsoleAccountUnauthenticatedError(
   getGlobalCache().unauthenticated.set(revision, error)
 }
 
-export function clearConsoleAccountUnauthenticatedError(revision?: number): void {
+export function clearConsoleAccountUnauthenticatedError(
+  revision?: number,
+): void {
   const cache = getGlobalCache()
   if (revision === undefined) {
     cache.unauthenticated.clear()
@@ -63,6 +76,7 @@ export function clearConsoleAccountCache(revision?: number): void {
     cache.resolved.clear()
     cache.inflight.clear()
     cache.unauthenticated.clear()
+    cache.session += 1
     return
   }
   cache.resolved.delete(revision)

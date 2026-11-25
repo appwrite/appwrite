@@ -1,6 +1,8 @@
 import { useState, type KeyboardEvent, type ReactNode } from 'react'
-import { Browser } from '@appwrite.io/console'
+import { Link } from '@tanstack/react-router'
+import { Browser, type Models } from '@appwrite.io/console'
 import {
+  ArrowUpRight,
   ExternalLink,
   Globe,
   Link2,
@@ -8,16 +10,26 @@ import {
   Megaphone,
   Search,
   Sparkles,
+  UserRound,
   Users,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { sdk } from '@/lib/appwrite/sdk'
+import { PhotoAvatar } from '@/components/global/shared/Avatar'
 import {
   CountryFlagIcon,
   breakdownLeadingIconFrameClass,
 } from '../../usage/_components/UsageBreakdownRows'
 import { formatNumber } from './format'
+
+const ROW_LINK_CLASS =
+  'flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-hover:opacity-100'
+
+/** A path inside the Console, as opposed to a visitor-facing URL. */
+export function isConsolePath(href: string): boolean {
+  return href.startsWith('/') && !href.startsWith('//')
+}
 
 /**
  * One ranked row in a breakdown panel: a proportional background bar, an
@@ -40,14 +52,18 @@ export function BreakdownRow({
   actionTitle,
   href,
   conversionRate,
+  hrefTitle,
 }: {
   /** Conversion rate of the selected goal for this row, 0-100; omitted when none is selected. */
   conversionRate?: number | null
   /**
-   * External URL for the value (a page or hostname). Adds a small "open in a
-   * new window" icon after the label, shown on hover / focus.
+   * Link for the value, shown as a small icon after the label on hover /
+   * focus. An external URL (a page or hostname) opens in a new window; a
+   * Console path (`/projects/...`, a user in Auth) opens in place.
    */
   href?: string
+  /** Hover hint for the link icon. */
+  hrefTitle?: string
   /** Small trailing badge after the label (e.g. "Plotted"). */
   badge?: ReactNode
   /** Makes the row a button (e.g. apply a page filter for this value). */
@@ -121,7 +137,19 @@ export function BreakdownRow({
         >
           {label}
         </span>
-        {href ? (
+        {href && isConsolePath(href) ? (
+          // A Console page (a user in Auth) opens in place, like any link.
+          <Link
+            to={href}
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
+            title={hrefTitle}
+            aria-label={hrefTitle}
+            className={ROW_LINK_CLASS}
+          >
+            <ArrowUpRight className="h-3 w-3" />
+          </Link>
+        ) : href ? (
           <a
             href={href}
             target="_blank"
@@ -129,9 +157,9 @@ export function BreakdownRow({
             // Opening the page must not also toggle the row's filter.
             onClick={(event) => event.stopPropagation()}
             onKeyDown={(event) => event.stopPropagation()}
-            title={href}
+            title={hrefTitle ?? href}
             aria-label={`Open ${href} in a new window`}
-            className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-hover:opacity-100"
+            className={ROW_LINK_CLASS}
           >
             <ExternalLink className="h-3 w-3" />
           </a>
@@ -381,5 +409,39 @@ export function BrowserIcon({ name }: { name: string | null | undefined }) {
         onError={() => setFailed(true)}
       />
     </span>
+  )
+}
+
+/**
+ * A project user's photo (initials while it loads), in the same 16px slot as
+ * flags and favicons. An ID with no project user gets a neutral person icon.
+ */
+export function AnalyticsUserAvatar({
+  projectId,
+  userId,
+  user,
+}: {
+  projectId: string
+  userId: string
+  user: Models.User | null | undefined
+}) {
+  if (!user) {
+    return (
+      <span
+        className="flex h-4 w-4 shrink-0 items-center justify-center"
+        aria-hidden
+      >
+        <UserRound className="h-3.5 w-3.5 text-muted-foreground" />
+      </span>
+    )
+  }
+  return (
+    <PhotoAvatar
+      projectId={projectId}
+      userId={userId}
+      name={user.name || user.email || user.phone || userId}
+      size="xs"
+      className="h-4 w-4 shrink-0 text-[7px]"
+    />
   )
 }
