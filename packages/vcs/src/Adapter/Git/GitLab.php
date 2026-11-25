@@ -700,7 +700,10 @@ class GitLab extends Git
             }
             $responseBody = $response['body'] ?? [];
             $namespace = $responseBody['namespace'] ?? [];
-            return $namespace['path'] ?? '';
+            // A subgroup's path is only its last segment; the API needs the full path
+            $path = \is_array($namespace) ? ($namespace['full_path'] ?? $namespace['path'] ?? '') : '';
+
+            return \is_string($path) ? $path : '';
         }
 
         $url = '/user';
@@ -1041,9 +1044,8 @@ class GitLab extends Git
                 }
 
                 $repositoryId = \strval($project['id'] ?? '');
-                $repositoryName = $project['name'] ?? '';
+                [$owner, $repositoryName] = $this->getProjectPath($project);
                 $repositoryUrl = $project['web_url'] ?? '';
-                $owner = $project['namespace'] ?? '';
                 $ref = \is_string($payloadArray['ref'] ?? null) ? $payloadArray['ref'] : '';
                 $branch = str_starts_with($ref, 'refs/heads/') ? substr($ref, \strlen('refs/heads/')) : $ref;
                 $branchUrl = !empty($repositoryUrl) && !empty($branch) ? $repositoryUrl . '/-/tree/' . $branch : '';
@@ -1086,9 +1088,8 @@ class GitLab extends Git
                 $mr = $payloadArray['object_attributes'] ?? [];
 
                 $repositoryId = \strval($project['id'] ?? '');
-                $repositoryName = $project['name'] ?? '';
+                [$owner, $repositoryName] = $this->getProjectPath($project);
                 $repositoryUrl = $project['web_url'] ?? '';
-                $owner = $project['namespace'] ?? '';
                 $branch = $mr['source_branch'] ?? '';
                 $branchUrl = !empty($repositoryUrl) && !empty($branch) ? $repositoryUrl . '/-/tree/' . $branch : '';
                 $action = self::MERGE_REQUEST_ACTION_MAP[$mr['action'] ?? ''] ?? '';
@@ -1154,12 +1155,13 @@ class GitLab extends Git
 
         $isReview = ($note['type'] ?? null) === 'DiffNote';
         $discussionId = \is_scalar($note['discussion_id'] ?? null) ? (string) $note['discussion_id'] : '';
+        [$owner, $repositoryName] = $this->getProjectPath($project);
 
         return [[
             'repositoryId' => $this->stringOf($project['id'] ?? null),
-            'repositoryName' => $project['name'] ?? '',
+            'repositoryName' => $repositoryName,
             'repositoryUrl' => $project['web_url'] ?? '',
-            'owner' => $project['namespace'] ?? '',
+            'owner' => $owner,
             'installationId' => '',
             'pullRequestNumber' => \is_numeric($mergeRequest['iid'] ?? null) ? (int) $mergeRequest['iid'] : 0,
             'pullRequestAuthor' => $this->pullRequestAuthorOf($payload, $mergeRequest['author_id'] ?? null),
@@ -1255,6 +1257,33 @@ class GitLab extends Git
             $accessLevel > 0 => 'read',
             default => '',
         };
+    }
+
+    /**
+     * A webhook's project carries display names in 'namespace' and 'name' ("Jane Doe",
+     * "My App"), which the API cannot address. Its 'path_with_namespace' holds the
+     * paths the API takes, with the full group path for projects in subgroups.
+     *
+     * @return array{string, string} The owner path and the repository path
+     */
+    private function getProjectPath(mixed $project): array
+    {
+        if (!\is_array($project)) {
+            return ['', ''];
+        }
+
+        $path = $project['path_with_namespace'] ?? null;
+        if (\is_string($path)) {
+            $separator = \strrpos($path, '/');
+            if ($separator !== false) {
+                return [\substr($path, 0, $separator), \substr($path, $separator + 1)];
+            }
+        }
+
+        $owner = $project['namespace'] ?? '';
+        $name = $project['name'] ?? '';
+
+        return [\is_string($owner) ? $owner : '', \is_string($name) ? $name : ''];
     }
 
     /**

@@ -35,16 +35,19 @@ export function prefetchInitFilms(
 /**
  * A day's launch films on a stage of the Init 5 storm: fog and lightning at
  * its sides and the hero's comet circling the picture. A day with several
- * films (Monitors and Beep) switches between them.
+ * films (Monitors and Beep) switches between them with tabs under the picture.
  */
 export function InitFilmDialog({
   title,
   films,
+  poweredBy = false,
   open,
   onOpenChange,
 }: {
   title: string
   films: LaunchEventDayFilm[]
+  /** Say the films play on Appwrite Videos; only once that day is revealed. */
+  poweredBy?: boolean
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
@@ -61,12 +64,18 @@ export function InitFilmDialog({
     >
       <DialogContent
         overlayClassName="bg-[#09090b]/95 backdrop-blur-md"
-        className="dark w-[min(88vw,calc((100dvh-12rem)*16/9),1600px)] max-w-none gap-4 border-0 bg-transparent p-0 text-white shadow-none sm:max-w-none [&>button[data-slot=dialog-close]]:end-0 [&>button[data-slot=dialog-close]]:top-1.5 [&>button[data-slot=dialog-close]]:bg-transparent [&>button[data-slot=dialog-close]]:text-white"
+        className={cn(
+          'dark max-w-none gap-4 border-0 bg-transparent p-0 text-white shadow-none sm:max-w-none [&>button[data-slot=dialog-close]]:end-0 [&>button[data-slot=dialog-close]]:top-1.5 [&>button[data-slot=dialog-close]]:bg-transparent [&>button[data-slot=dialog-close]]:text-white',
+          // Leave room for the row under the picture: film tabs, the label.
+          films.length > 1 || poweredBy
+            ? 'w-[min(88vw,calc((100dvh-15rem)*16/9),1600px)]'
+            : 'w-[min(88vw,calc((100dvh-12rem)*16/9),1600px)]',
+        )}
       >
         <div className="pointer-events-none absolute -inset-x-[14%] -inset-y-[18%] -z-10">
           <Init5Storm edges="sides" dark />
         </div>
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pe-10">
+        <div className="pe-10">
           <DialogTitle className="font-aeonik-pro text-[clamp(20px,2.2vw,28px)] font-normal leading-tight tracking-tight text-white">
             {title}
             <span className="text-[var(--brand-cta)]">_</span>
@@ -74,31 +83,6 @@ export function InitFilmDialog({
           <DialogDescription className="sr-only">
             The launch film, played with the Appwrite player.
           </DialogDescription>
-          {films.length > 1 ? (
-            <div
-              className="flex gap-1 rounded-full border border-white/10 bg-white/5 p-1"
-              role="tablist"
-              aria-label="Launch films"
-            >
-              {films.map((entry, index) => (
-                <button
-                  key={entry.videoId}
-                  type="button"
-                  role="tab"
-                  aria-selected={index === active}
-                  onClick={() => setActive(index)}
-                  className={cn(
-                    'cursor-pointer rounded-full px-3 py-1 text-[12px] font-medium transition-colors',
-                    index === active
-                      ? 'bg-white/12 text-white'
-                      : 'text-white/55 hover:text-white',
-                  )}
-                >
-                  {entry.label}
-                </button>
-              ))}
-            </div>
-          ) : null}
         </div>
         <div
           className="init5-light-frame aspect-video w-full rounded-2xl shadow-[0_30px_120px_-40px_color-mix(in_oklch,var(--brand-cta)_55%,transparent)]"
@@ -116,6 +100,48 @@ export function InitFilmDialog({
             ) : null}
           </div>
         </div>
+        {films.length > 1 || poweredBy ? (
+          <div className="grid grid-cols-1 items-center justify-items-center gap-3 sm:grid-cols-[1fr_auto_1fr]">
+            {films.length > 1 ? (
+              <div
+                className="flex max-w-full sm:col-start-2 flex-wrap justify-center gap-1 rounded-3xl border border-white/10 bg-white/5 p-1"
+                role="tablist"
+                aria-label="Launch films"
+              >
+                {films.map((entry, index) => (
+                  <button
+                    key={entry.videoId}
+                    type="button"
+                    role="tab"
+                    aria-selected={index === active}
+                    onClick={() => setActive(index)}
+                    className={cn(
+                      'cursor-pointer rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors',
+                      index === active
+                        ? 'bg-white/12 text-white'
+                        : 'text-white/55 hover:text-white',
+                    )}
+                  >
+                    {entry.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            {poweredBy ? (
+              <a
+                href="/products/videos"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[12px] sm:col-start-3 sm:justify-self-end text-white/50 transition-colors hover:text-white"
+              >
+                Powered by{' '}
+                <span className="font-medium text-white/80">
+                  Appwrite Videos
+                </span>
+              </a>
+            ) : null}
+          </div>
+        ) : null}
       </DialogContent>
     </Dialog>
   )
