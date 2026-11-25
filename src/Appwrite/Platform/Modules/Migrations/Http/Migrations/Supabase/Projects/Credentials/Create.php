@@ -138,6 +138,8 @@ class Create extends Base
                     continue;
                 }
 
+                // Expiry only stops new sign ins, so sessions still open are ended first
+                $oauth2->query($accessToken, $projectRef, 'SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE usename = \'' . $name . '\'');
                 $oauth2->query($accessToken, $projectRef, 'DROP ROLE IF EXISTS ' . $name);
             }
         } catch (\Throwable) {
