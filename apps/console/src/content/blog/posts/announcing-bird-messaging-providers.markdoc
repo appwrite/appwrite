@@ -19,8 +19,6 @@ faqs:
     answer: "No. One-click setup relies on Bird being configured as an OAuth2 provider for the Appwrite Cloud Console, so it only appears on Appwrite Cloud. The Bird email and SMS providers themselves are live on Appwrite Cloud and ship in the next self-hosted Appwrite release, where you create the API key in Bird and enter it by hand."
   - question: "Why does Bird refuse my test emails to example.com addresses?"
     answer: "Bird refuses placeholder domains such as `example.com` and `test.com`. Appwrite retries a refused batch one message at a time, so only those recipients fail and the rest are delivered. Use real addresses for test users, or Bird's sandbox addresses such as `delivered@messagebird.dev`, which accept mail without a real inbox."
-  - question: "Can I call the Bird provider endpoints from the Appwrite server SDKs?"
-    answer: "The `createBirdEmailProvider`, `updateBirdEmailProvider`, `createBirdSMSProvider`, and `updateBirdSMSProvider` methods ship with the next release of each server SDK. Until then, call the REST endpoints `POST /v1/messaging/providers/bird-email` and `POST /v1/messaging/providers/bird-sms` with an API key that has the `providers.write` scope. Sending messages already works from every server SDK with `createEmail` and `createSMS`."
 ---
 
 If your team already sends through [Bird](https://bird.com), connecting it to Appwrite used to take a detour. Email only worked by pointing the generic [SMTP provider](/docs/products/messaging/smtp) at Bird's relay and working out the regional host and username yourself. SMS didn't work at all, so a project that sent email through Bird still needed a second vendor for one-time codes and reminders.
