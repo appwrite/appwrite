@@ -42,7 +42,7 @@ class Create extends Action
             ->setHttpPath('/v1/organization/projects/:projectId/keys/ephemeral')
             ->desc('Create ephemeral project key')
             ->groups(['api', 'organization'])
-            ->label('scope', ['organization.projects.keys.write', 'keys.write'])
+            ->label('scope', [self::SCOPE_WRITE, 'keys.write'])
             ->label('event', 'keys.[keyId].create')
             ->label('audits.event', 'project.key.create')
             ->label('audits.resource', 'project.key/{response.$id}')
@@ -101,7 +101,7 @@ class Create extends Action
             throw new Exception(Exception::KEY_CREATION_DENIED);
         }
 
-        $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey);
+        $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey, self::SCOPE_WRITE);
 
         // The request may run through the console project; events and audits belong to the resolved project
         $queueForEvents->setProject($project);

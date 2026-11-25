@@ -19,9 +19,15 @@ use Utopia\Query\AST\Reference\Table;
 use Utopia\Query\AST\Specification\Window as WindowSpecification;
 use Utopia\Query\AST\Statement\Select;
 use Utopia\Query\Exception;
+use Utopia\Query\StringLiteral;
 
 class Serializer
 {
+    public function __construct(
+        protected readonly StringLiteral $literal = StringLiteral::Backslash,
+    ) {
+    }
+
     public function serialize(Select $stmt): string
     {
         $parts = [];
@@ -138,16 +144,26 @@ class Serializer
     {
         $prec = $this->operatorPrecedence($expression->operator);
 
-        // Non-commutative left-associative operators require a stricter precedence
-        // on the right child so equal-precedence right subtrees keep their grouping.
-        $rightPrec = in_array(strtoupper($expression->operator), ['-', '/', '%'], true)
-            ? $prec + 1
-            : $prec;
+        // Operators are left-associative, so an equal-precedence right subtree
+        // keeps its grouping: `a * (b / c)` is not `a * b / c` under integer
+        // division, nor `a - (b - c)` `a - b - c`. Only the same associative
+        // operator may drop it: `a + (b + c)` is `a + b + c`. Raw SQL is not
+        // regrouped; it takes the operator's own precedence, which is how
+        // serializeBinaryChild() knows to enclose it as an operand of AND.
+        $right = $expression->right;
+        $associative = $right instanceof Binary
+            && strtoupper($right->operator) === strtoupper($expression->operator)
+            && in_array(strtoupper($expression->operator), ['+', '*', '||', 'AND', 'OR'], true);
+        $rightPrec = $associative || $right instanceof Raw ? $prec : $prec + 1;
 
         $left = $this->serializeBinaryChild($expression->left, $prec);
         $right = $this->serializeBinaryChild($expression->right, $rightPrec);
 
         $sql = $left . ' ' . $expression->operator . ' ' . $right;
+
+        if ($expression->escape !== null) {
+            $sql .= ' ESCAPE ' . $this->serializeBinaryChild($expression->escape, $rightPrec);
+        }
 
         if ($parentPrecedence !== null && $prec < $parentPrecedence) {
             return '(' . $sql . ')';
@@ -212,8 +228,7 @@ class Serializer
         if (is_float($expression->value)) {
             return (string) $expression->value;
         }
-        $escaped = str_replace(['\\', "'"], ['\\\\', "''"], $expression->value);
-        return "'" . $escaped . "'";
+        return $this->literal->quote($expression->value);
     }
 
     private function serializeStar(Star $expression): string

@@ -2,7 +2,12 @@ import { Link } from '@tanstack/react-router'
 import { useMemo } from 'react'
 import type { ReactNode } from 'react'
 import { InitWordmark } from '@/components/pages/init/_components/InitWordmark'
+import { Init5Storm } from '@/components/pages/init/_components/init5/Init5Storm'
 import { Badge } from '@/components/ui/badge'
+import {
+  INIT5_FIVE_GLYPH_PATH,
+  INIT5_FIVE_GLYPH_VIEWBOX,
+} from '@/lib/init/init5-hero/five-glyph'
 import { getEnvProfileFeatures } from '@/lib/console-profiles'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
@@ -11,6 +16,9 @@ import {
 } from '@/lib/init/org-promo-banner'
 import type { LaunchEventCta } from '@/lib/init/types'
 import { useT } from '@/lib/i18n/translate'
+
+/** Init 5 wears the hero's light trails; earlier weeks keep the plain mark. */
+const LIGHT_TRAIL_EVENT_IDS = new Set(['init-nov-2026'])
 
 const BADGE_VARIANT: Record<InitOrgPromoPhase, 'info' | 'success' | 'warning'> =
   {
@@ -54,19 +62,31 @@ function InitOrgPromoBannerLink({
 
 export function InitOrgPromoBanner() {
   const t = useT()
-  const { mockInitCurrentDay } = useDebugOverrides()
+  const { mockInitCurrentDay, mockInitActiveEventId } = useDebugOverrides()
   const content = useMemo(() => {
     if (!getEnvProfileFeatures().init) return null
-    return getInitOrgPromoBannerContent({ currentDay: mockInitCurrentDay })
-  }, [mockInitCurrentDay])
+    return getInitOrgPromoBannerContent({
+      currentDay: mockInitCurrentDay,
+      activeEventId: mockInitActiveEventId,
+    })
+  }, [mockInitCurrentDay, mockInitActiveEventId])
   if (!content) return null
+
+  const lightTrails = LIGHT_TRAIL_EVENT_IDS.has(content.eventId)
 
   return (
     <div className="relative w-full shrink-0 overflow-hidden border-b border-border bg-background">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[length:18px_18px] opacity-60"
-      />
+      {lightTrails ? (
+        <>
+          <Init5Storm edges="sides" />
+          <div aria-hidden className="init5-banner-sweep" />
+        </>
+      ) : (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[length:18px_18px] opacity-60"
+        />
+      )}
       <InitOrgPromoBannerLink
         cta={content.cta}
         className="group/banner relative flex h-14 w-full cursor-pointer items-center justify-center gap-2 px-4 sm:gap-2.5 sm:px-6"
@@ -75,7 +95,20 @@ export function InitOrgPromoBanner() {
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-muted/0 transition-colors duration-300 ease-out group-hover/banner:bg-muted/30"
         />
-        <InitWordmark className="relative z-10 shrink-0 text-[20px] text-foreground transition-colors duration-300 ease-out group-hover/banner:text-foreground sm:text-[22px]" />
+        <InitWordmark
+          lightTrails={lightTrails}
+          className="relative z-10 shrink-0 text-[20px] text-foreground transition-colors duration-300 ease-out group-hover/banner:text-foreground sm:text-[22px]"
+        />
+        {lightTrails ? (
+          <svg
+            viewBox={INIT5_FIVE_GLYPH_VIEWBOX}
+            aria-label="5"
+            role="img"
+            className="relative z-10 -ms-0.5 h-[1.05em] w-auto shrink-0 text-[20px] text-foreground sm:text-[22px]"
+          >
+            <path fill="currentColor" d={INIT5_FIVE_GLYPH_PATH} />
+          </svg>
+        ) : null}
         <span
           aria-hidden
           className="relative z-10 hidden shrink-0 text-muted-foreground/40 sm:inline"
@@ -83,7 +116,7 @@ export function InitOrgPromoBanner() {
           ·
         </span>
         <span className="relative z-10 hidden shrink-0 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground md:inline">
-          {content.dateRangeLabel}
+          {t(content.dateRangeLabel)}
         </span>
         {content.badgeLabel ? (
           <>
@@ -99,6 +132,11 @@ export function InitOrgPromoBanner() {
             >
               {t(content.badgeLabel)}
             </Badge>
+            {content.day ? (
+              <span className="relative z-10 hidden shrink-0 text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground sm:inline">
+                {t('Day')} {content.day}
+              </span>
+            ) : null}
           </>
         ) : null}
         <span
