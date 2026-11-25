@@ -32,7 +32,7 @@
         }
     },
     "require": {
-        "php": ">=8.0",
+        "php": ">=8.5",
         "utopia-php/console": "^0.3.1"
     }
 }
