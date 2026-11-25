@@ -61,6 +61,8 @@ export type ConsoleProfileFeatures = {
   nativeDbsMongo: boolean
   /** An experiment, off by default; the quality team turns it on from the header Previews menu. Videos product (transcoding, renditions, subtitles, HLS/DASH playback) via the `videos` SDK service. */
   videos: boolean
+  /** An experiment, off by default; the quality team turns it on from the header Previews menu. A project without a Git installation reuses the GitHub organization installations of the organization's other projects. */
+  gitInstallationReuse: boolean
   /**
    * Internal only, switched on from the debug menu. Review product (AI code
    * review of GitHub pull requests) via the `reviews` service. Even when on, it
@@ -145,6 +147,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   databaseSpecifications: 'Database specifications',
   nativeDbsMongo: 'Native DBs: MongoDB',
   videos: 'Videos',
+  gitInstallationReuse: 'Git installation reuse',
   reviews: 'Review',
   projectEnvironments: 'Project environments',
   sso: 'Single sign-on',
@@ -202,6 +205,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       databaseSpecifications: true,
       nativeDbsMongo: false,
       videos: false,
+      gitInstallationReuse: false,
       reviews: false,
       projectEnvironments: false,
       sso: false,
@@ -249,6 +253,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       databaseSpecifications: false,
       nativeDbsMongo: false,
       videos: false,
+      gitInstallationReuse: false,
       reviews: false,
       projectEnvironments: false,
       sso: false,

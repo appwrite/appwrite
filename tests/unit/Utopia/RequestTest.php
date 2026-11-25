@@ -720,4 +720,74 @@ final class RequestTest extends TestCase
 
         return $route;
     }
+
+    /**
+     * @return \Iterator<string, array{array<string, mixed>, array<string, string>, array<string, mixed>, string}>
+     */
+    public static function projectCases(): \Iterator
+    {
+        yield 'body param' => [['project' => 'body'], ['x-appwrite-project' => 'header'], [], 'body'];
+        yield 'header' => [[], ['x-appwrite-project' => 'header'], [], 'header'];
+        yield 'GitLab webhook project object' => [['project' => ['id' => 89442539]], [], [], ''];
+        yield 'object falls back to the header' => [['project' => ['id' => 1]], ['x-appwrite-project' => 'header'], [], 'header'];
+        yield 'query on a POST' => [[], [], ['project' => 'query'], 'query'];
+        yield 'query array' => [[], [], ['project' => ['x']], ''];
+        yield 'nothing' => [[], [], [], ''];
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @param array<string, string> $headers
+     * @param array<string, mixed> $query
+     */
+    #[DataProvider('projectCases')]
+    public function testGetProject(array $payload, array $headers, array $query, string $expected): void
+    {
+        $request = $this->post($payload, $headers, $query);
+
+        $this->assertSame($expected, $request->getProject());
+    }
+
+    /**
+     * @return \Iterator<string, array{array<string, mixed>, array<string, string>, string}>
+     */
+    public static function modeCases(): \Iterator
+    {
+        yield 'body param' => [['mode' => 'admin'], [], 'admin'];
+        yield 'header' => [[], ['x-appwrite-mode' => 'admin'], 'admin'];
+        yield 'non-string body falls back to the header' => [['mode' => ['admin']], ['x-appwrite-mode' => 'admin'], 'admin'];
+        yield 'non-string body without a header' => [['mode' => ['admin']], [], APP_MODE_DEFAULT];
+        yield 'nothing' => [[], [], APP_MODE_DEFAULT];
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @param array<string, string> $headers
+     */
+    #[DataProvider('modeCases')]
+    public function testGetMode(array $payload, array $headers, string $expected): void
+    {
+        $request = $this->post($payload, $headers, []);
+
+        $this->assertSame($expected, $request->getMode());
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @param array<string, string> $headers
+     * @param array<string, mixed> $query
+     */
+    private function post(array $payload, array $headers, array $query): Request
+    {
+        $request = new Request(new SwooleRequest());
+        $request->setMethod(Request::METHOD_POST);
+        $request->setPayload($payload);
+        $request->setQueryString($query);
+
+        foreach ($headers as $name => $value) {
+            $request->setHeader($name, $value);
+        }
+
+        return $request;
+    }
 }

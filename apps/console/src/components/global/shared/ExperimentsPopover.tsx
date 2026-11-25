@@ -1,6 +1,7 @@
 import {
   FlaskConical,
   Gauge,
+  GitBranch,
   Layers,
   LockKeyhole,
   type LucideIcon,
@@ -34,6 +35,7 @@ import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 const EXPERIMENT_ICONS = {
   alerts: Gauge,
   analytics: ANALYTICS_PRODUCT_ICON,
+  gitInstallationReuse: GitBranch,
   projectEnvironments: Layers,
   sso: LockKeyhole,
   videos: VIDEOS_PRODUCT_ICON,

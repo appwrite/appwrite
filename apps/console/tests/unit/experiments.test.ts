@@ -25,19 +25,21 @@ describe('hasQualityLabel', () => {
 })
 
 describe('experiments catalog', () => {
-  test('lists Appwrite Analytics, project environments, single sign-on, alerts and Videos', () => {
+  test('lists Appwrite Analytics, project environments, single sign-on, alerts, Videos and Git installation reuse', () => {
     expect(EXPERIMENTS.map((experiment) => experiment.flag)).toEqual([
       'analytics',
       'projectEnvironments',
       'sso',
       'alerts',
       'videos',
+      'gitInstallationReuse',
     ])
     expect(EXPERIMENTS[0]?.name).toBe('Appwrite Analytics')
     expect(EXPERIMENTS[1]?.name).toBe('Project environments')
     expect(EXPERIMENTS[2]?.name).toBe('Single sign-on')
     expect(EXPERIMENTS[3]?.name).toBe('Monitors and alerts')
     expect(EXPERIMENTS[4]?.name).toBe('Appwrite Videos')
+    expect(EXPERIMENTS[5]?.name).toBe('Git installation reuse')
     for (const experiment of EXPERIMENTS) {
       expect(experiment.description.length).toBeGreaterThan(0)
     }

@@ -57,6 +57,7 @@ import {
   Globe,
   Plug,
   Activity,
+  Shield,
   ScanSearch,
   Package,
   FileText,
@@ -127,6 +128,7 @@ interface SidebarCopy {
     monitors: string
     analytics: string
     errors: string
+    firewall: string
     advisor: string
     settings: string
   }
@@ -288,6 +290,12 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
       label: sidebarCopy.sections.protect,
       items: [
         {
+          id: 'firewall',
+          label: sidebarCopy.items.firewall,
+          icon: Shield,
+          path: `/projects/${projectId}/firewall`,
+        },
+        {
           id: 'reviews',
           label: sidebarCopy.items.reviews,
           icon: GitPullRequest,
@@ -373,6 +381,11 @@ export function ConsoleSidebar({
             return features.usageStats && canSeeUsageNav(access, features)
           if (item.id === 'activity')
             return features.activity && canSeeActivityNav(access, features)
+          if (item.id === 'firewall')
+            return (
+              isCloudProfile() &&
+              canSeeProjectNavItem(access, features, item.id)
+            )
           if (item.id === 'analytics')
             return (
               features.analytics &&

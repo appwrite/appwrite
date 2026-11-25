@@ -43,6 +43,7 @@ import {
   isOptionalAuthPage,
 } from '@/components/global/auth/RequireAuth'
 import { applyScreenshotModeAccount } from '@/lib/screenshot-mode'
+import { useScreenshotMode } from '@/components/global/providers/ScreenshotMode'
 import { getConsoleAccountUnauthenticatedError } from '@/lib/console-account-cache'
 import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
 import { organizationsQueryOptions } from '@/lib/react-query/hooks/organizations'
@@ -684,7 +685,9 @@ export function ConsoleHeader({
     pathname: location.pathname,
     showMarketingNav,
   })
-  const showExperiments = hasQualityLabel(headerAccount?.labels)
+  const { isScreenshotModeActive } = useScreenshotMode()
+  const showExperiments =
+    !isScreenshotModeActive && hasQualityLabel(headerAccount?.labels)
   const showCenterSearch = centerSearch && !hideSearch && !preLaunch
   const showRightSearch = !hideSearch && !centerSearch && !preLaunch
   const { modKey: searchModKey, isMac } = usePlatform()

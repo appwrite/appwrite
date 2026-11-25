@@ -77,6 +77,41 @@ class Request extends UtopiaRequest
     }
 
     /**
+     * The ID of the project the request names: the `project` param, else the
+     * X-Appwrite-Project header, else a `project` query parameter (which a non-GET
+     * request only exposes through the query string, as presigned URLs do).
+     *
+     * Only a string names a project. A body can carry its own `project` key, such as
+     * the object in a GitLab webhook, and a realtime request can send a query array.
+     */
+    public function getProject(): string
+    {
+        $project = $this->getParam('project');
+
+        if (!\is_string($project)) {
+            $project = $this->getHeaderLine('x-appwrite-project', '');
+        }
+
+        if ($project === '') {
+            $query = $this->getQuery('project', '');
+            $project = \is_string($query) ? $query : '';
+        }
+
+        return $project;
+    }
+
+    /**
+     * The mode the request asks for: the `mode` param, else the X-Appwrite-Mode header.
+     * Only a string asks for a mode; a body can carry its own `mode` key.
+     */
+    public function getMode(): string
+    {
+        $mode = $this->getParam('mode');
+
+        return \is_string($mode) ? $mode : $this->getHeaderLine('x-appwrite-mode', APP_MODE_DEFAULT);
+    }
+
+    /**
      * @inheritdoc
      */
     public function getParams(): array
