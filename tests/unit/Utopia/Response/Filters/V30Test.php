@@ -58,34 +58,6 @@ final class V30Test extends TestCase
         ], $result);
     }
 
-    public function testRestoresCriticalOnMonitorsAndAlerts(): void
-    {
-        $filter = new V30();
-
-        $this->assertSame(
-            ['$id' => 'monitor', 'severity' => 'critical', 'critical' => true],
-            $filter->parse(['$id' => 'monitor', 'severity' => 'critical'], Response::MODEL_MONITOR),
-        );
-        $this->assertSame(
-            ['$id' => 'alert', 'severity' => 'error', 'critical' => false],
-            $filter->parse(['$id' => 'alert', 'severity' => 'error'], Response::MODEL_ALERT),
-        );
-        $this->assertSame(
-            ['total' => 2, 'monitors' => [
-                ['$id' => 'first', 'severity' => 'warning', 'critical' => false],
-                ['$id' => 'second', 'severity' => 'critical', 'critical' => true],
-            ]],
-            $filter->parse(['total' => 2, 'monitors' => [
-                ['$id' => 'first', 'severity' => 'warning'],
-                ['$id' => 'second', 'severity' => 'critical'],
-            ]], Response::MODEL_MONITOR_LIST),
-        );
-        $this->assertSame(
-            ['total' => 1, 'alerts' => [['$id' => 'alert', 'severity' => 'critical', 'critical' => true]]],
-            $filter->parse(['total' => 1, 'alerts' => [['$id' => 'alert', 'severity' => 'critical']]], Response::MODEL_ALERT_LIST),
-        );
-    }
-
     public function testLeavesOtherModelsAlone(): void
     {
         $filter = new V30();

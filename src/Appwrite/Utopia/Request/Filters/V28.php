@@ -18,8 +18,9 @@ class V28 extends Filter
     }
 
     /**
-     * `severity` replaced the `critical` flag, so a flag sent by an older
-     * client sets the severity it meant unless a severity is sent as well.
+     * `severity` replaced the `critical` flag. Only an explicit `true` from an
+     * older client sets a severity, unless one is sent as well; any other value
+     * is dropped so an update cannot downgrade an existing severity.
      */
     protected function parseCritical(array $content): array
     {
@@ -30,13 +31,9 @@ class V28 extends Filter
         $critical = $content['critical'];
         unset($content['critical']);
 
-        if ($critical === null || isset($content['severity'])) {
-            return $content;
+        if ($critical === true && !isset($content['severity'])) {
+            $content['severity'] = Severity::Critical->value;
         }
-
-        $content['severity'] = \filter_var($critical, FILTER_VALIDATE_BOOLEAN)
-            ? Severity::Critical->value
-            : Severity::Warning->value;
 
         return $content;
     }
