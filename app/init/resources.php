@@ -338,6 +338,7 @@ $container->set('executionStore', function (): ExecutionStore {
         dsn: $connection,
         client: $client,
         retention: (int) System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600),
+        insertBuffer: max(0, (int) System::getEnv('_APP_EXECUTIONS_INSERT_BUFFER', 0)),
     );
 }, []);
 
