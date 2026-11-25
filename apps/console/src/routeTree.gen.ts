@@ -397,6 +397,7 @@ import { Route as PublicProjectsProjectIdVideosVideoIdTimelineRouteImport } from
 import { Route as PublicProjectsProjectIdAnalyticsPropertyIdUsersUserIdRouteImport } from './routes/_public/projects.$projectId.analytics.$propertyId.users.$userId'
 import { Route as PublicProjectsProjectIdAuthTeamsTeamIdActivityRouteImport } from './routes/_public/projects.$projectId.auth.teams.$teamId.activity'
 import { Route as PublicProjectsProjectIdAuthTeamsTeamIdMembersRouteImport } from './routes/_public/projects.$projectId.auth.teams.$teamId.members'
+import { Route as PublicProjectsProjectIdAuthTeamsTeamIdSsoRouteImport } from './routes/_public/projects.$projectId.auth.teams.$teamId.sso'
 import { Route as PublicProjectsProjectIdAuthUsersUserIdActivityRouteImport } from './routes/_public/projects.$projectId.auth.users.$userId.activity'
 import { Route as PublicProjectsProjectIdAuthUsersUserIdAnalyticsRouteImport } from './routes/_public/projects.$projectId.auth.users.$userId.analytics'
 import { Route as PublicProjectsProjectIdAuthUsersUserIdIdentitiesRouteImport } from './routes/_public/projects.$projectId.auth.users.$userId.identities'
@@ -2718,6 +2719,12 @@ const PublicProjectsProjectIdAuthTeamsTeamIdMembersRoute =
     path: '/members',
     getParentRoute: () => PublicProjectsProjectIdAuthTeamsTeamIdRoute,
   } as any)
+const PublicProjectsProjectIdAuthTeamsTeamIdSsoRoute =
+  PublicProjectsProjectIdAuthTeamsTeamIdSsoRouteImport.update({
+    id: '/sso',
+    path: '/sso',
+    getParentRoute: () => PublicProjectsProjectIdAuthTeamsTeamIdRoute,
+  } as any)
 const PublicProjectsProjectIdAuthUsersUserIdActivityRoute =
   PublicProjectsProjectIdAuthUsersUserIdActivityRouteImport.update({
     id: '/activity',
@@ -4133,6 +4140,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/analytics/$propertyId/users/$userId': typeof PublicProjectsProjectIdAnalyticsPropertyIdUsersUserIdRoute
   '/projects/$projectId/auth/teams/$teamId/activity': typeof PublicProjectsProjectIdAuthTeamsTeamIdActivityRoute
   '/projects/$projectId/auth/teams/$teamId/members': typeof PublicProjectsProjectIdAuthTeamsTeamIdMembersRoute
+  '/projects/$projectId/auth/teams/$teamId/sso': typeof PublicProjectsProjectIdAuthTeamsTeamIdSsoRoute
   '/projects/$projectId/auth/users/$userId/activity': typeof PublicProjectsProjectIdAuthUsersUserIdActivityRoute
   '/projects/$projectId/auth/users/$userId/analytics': typeof PublicProjectsProjectIdAuthUsersUserIdAnalyticsRoute
   '/projects/$projectId/auth/users/$userId/identities': typeof PublicProjectsProjectIdAuthUsersUserIdIdentitiesRoute
@@ -4602,6 +4610,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/analytics/$propertyId/users/$userId': typeof PublicProjectsProjectIdAnalyticsPropertyIdUsersUserIdRoute
   '/projects/$projectId/auth/teams/$teamId/activity': typeof PublicProjectsProjectIdAuthTeamsTeamIdActivityRoute
   '/projects/$projectId/auth/teams/$teamId/members': typeof PublicProjectsProjectIdAuthTeamsTeamIdMembersRoute
+  '/projects/$projectId/auth/teams/$teamId/sso': typeof PublicProjectsProjectIdAuthTeamsTeamIdSsoRoute
   '/projects/$projectId/auth/users/$userId/activity': typeof PublicProjectsProjectIdAuthUsersUserIdActivityRoute
   '/projects/$projectId/auth/users/$userId/analytics': typeof PublicProjectsProjectIdAuthUsersUserIdAnalyticsRoute
   '/projects/$projectId/auth/users/$userId/identities': typeof PublicProjectsProjectIdAuthUsersUserIdIdentitiesRoute
@@ -5120,6 +5129,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/analytics/$propertyId/users/$userId': typeof PublicProjectsProjectIdAnalyticsPropertyIdUsersUserIdRoute
   '/_public/projects/$projectId/auth/teams/$teamId/activity': typeof PublicProjectsProjectIdAuthTeamsTeamIdActivityRoute
   '/_public/projects/$projectId/auth/teams/$teamId/members': typeof PublicProjectsProjectIdAuthTeamsTeamIdMembersRoute
+  '/_public/projects/$projectId/auth/teams/$teamId/sso': typeof PublicProjectsProjectIdAuthTeamsTeamIdSsoRoute
   '/_public/projects/$projectId/auth/users/$userId/activity': typeof PublicProjectsProjectIdAuthUsersUserIdActivityRoute
   '/_public/projects/$projectId/auth/users/$userId/analytics': typeof PublicProjectsProjectIdAuthUsersUserIdAnalyticsRoute
   '/_public/projects/$projectId/auth/users/$userId/identities': typeof PublicProjectsProjectIdAuthUsersUserIdIdentitiesRoute
@@ -5641,6 +5651,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/analytics/$propertyId/users/$userId'
     | '/projects/$projectId/auth/teams/$teamId/activity'
     | '/projects/$projectId/auth/teams/$teamId/members'
+    | '/projects/$projectId/auth/teams/$teamId/sso'
     | '/projects/$projectId/auth/users/$userId/activity'
     | '/projects/$projectId/auth/users/$userId/analytics'
     | '/projects/$projectId/auth/users/$userId/identities'
@@ -6110,6 +6121,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/analytics/$propertyId/users/$userId'
     | '/projects/$projectId/auth/teams/$teamId/activity'
     | '/projects/$projectId/auth/teams/$teamId/members'
+    | '/projects/$projectId/auth/teams/$teamId/sso'
     | '/projects/$projectId/auth/users/$userId/activity'
     | '/projects/$projectId/auth/users/$userId/analytics'
     | '/projects/$projectId/auth/users/$userId/identities'
@@ -6627,6 +6639,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/analytics/$propertyId/users/$userId'
     | '/_public/projects/$projectId/auth/teams/$teamId/activity'
     | '/_public/projects/$projectId/auth/teams/$teamId/members'
+    | '/_public/projects/$projectId/auth/teams/$teamId/sso'
     | '/_public/projects/$projectId/auth/users/$userId/activity'
     | '/_public/projects/$projectId/auth/users/$userId/analytics'
     | '/_public/projects/$projectId/auth/users/$userId/identities'
@@ -9542,6 +9555,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdAuthTeamsTeamIdMembersRouteImport
       parentRoute: typeof PublicProjectsProjectIdAuthTeamsTeamIdRoute
     }
+    '/_public/projects/$projectId/auth/teams/$teamId/sso': {
+      id: '/_public/projects/$projectId/auth/teams/$teamId/sso'
+      path: '/sso'
+      fullPath: '/projects/$projectId/auth/teams/$teamId/sso'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthTeamsTeamIdSsoRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthTeamsTeamIdRoute
+    }
     '/_public/projects/$projectId/auth/users/$userId/activity': {
       id: '/_public/projects/$projectId/auth/users/$userId/activity'
       path: '/activity'
@@ -11068,6 +11088,7 @@ const PublicProjectsProjectIdAuthPoliciesRouteWithChildren =
 interface PublicProjectsProjectIdAuthTeamsTeamIdRouteChildren {
   PublicProjectsProjectIdAuthTeamsTeamIdActivityRoute: typeof PublicProjectsProjectIdAuthTeamsTeamIdActivityRoute
   PublicProjectsProjectIdAuthTeamsTeamIdMembersRoute: typeof PublicProjectsProjectIdAuthTeamsTeamIdMembersRoute
+  PublicProjectsProjectIdAuthTeamsTeamIdSsoRoute: typeof PublicProjectsProjectIdAuthTeamsTeamIdSsoRoute
 }
 
 const PublicProjectsProjectIdAuthTeamsTeamIdRouteChildren: PublicProjectsProjectIdAuthTeamsTeamIdRouteChildren =
@@ -11076,6 +11097,8 @@ const PublicProjectsProjectIdAuthTeamsTeamIdRouteChildren: PublicProjectsProject
       PublicProjectsProjectIdAuthTeamsTeamIdActivityRoute,
     PublicProjectsProjectIdAuthTeamsTeamIdMembersRoute:
       PublicProjectsProjectIdAuthTeamsTeamIdMembersRoute,
+    PublicProjectsProjectIdAuthTeamsTeamIdSsoRoute:
+      PublicProjectsProjectIdAuthTeamsTeamIdSsoRoute,
   }
 
 const PublicProjectsProjectIdAuthTeamsTeamIdRouteWithChildren =

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { AlertCircle } from 'lucide-react'
@@ -28,6 +28,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
 import { EnableSSOAddonDialog } from './EnableSSOAddonDialog'
 import { DisableSSOAddonDialog } from './DisableSSOAddonDialog'
@@ -48,10 +49,15 @@ function isPermissionError(error: unknown): boolean {
 type SSOAddonCardProps = {
   target: SSOAddonTarget
   /**
-   * An organization's add-on is off while its domains, identity providers or
-   * Require SSO remain: say that single sign-on is paused, and what still works.
+   * The add-on is off while domains, identity providers or Require SSO remain:
+   * say that single sign-on is paused, and what still works.
    */
   paused?: boolean
+  /**
+   * A project's card away from its teams (project settings): once the add-on
+   * is on, or being enabled, point to where single sign-on is set up.
+   */
+  showSetupLink?: boolean
 }
 
 /**
@@ -59,13 +65,17 @@ type SSOAddonCardProps = {
  * single sign-on experiment with the rest of it.
  *
  * - A project's (`sso`) lets its teams verify domains, connect identity
- *   providers and turn on Require SSO through the Teams API. Signing in with
- *   single sign-on is for the Console only, so the card says nothing about it.
- *   Inside an environment it shows the project's add-on and changes nothing.
+ *   providers and turn on Require SSO, each on its Single sign-on tab or
+ *   through the Teams API. Inside an environment it shows the project's
+ *   add-on and changes nothing.
  * - An organization's (`ssoOrg`) is single sign-on into the Console for people
  *   on its verified domains, set up on its Single sign-on page.
  */
-export function SSOAddonCard({ target, paused = false }: SSOAddonCardProps) {
+export function SSOAddonCard({
+  target,
+  paused = false,
+  showSetupLink = false,
+}: SSOAddonCardProps) {
   const t = useT()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -344,6 +354,13 @@ export function SSOAddonCard({ target, paused = false }: SSOAddonCardProps) {
   })()
 
   const showPaused = paused && !loading && status !== 'active'
+  const setupProjectId =
+    showSetupLink &&
+    target.scope === 'project' &&
+    !loading &&
+    (status === 'active' || status === 'pending')
+      ? target.projectId
+      : null
 
   return (
     <>
@@ -368,6 +385,21 @@ export function SSOAddonCard({ target, paused = false }: SSOAddonCardProps) {
               ? t(SSO_ADDON_DESCRIPTION)
               : t(ORGANIZATION_SSO_ADDON_DESCRIPTION)}
           </p>
+          {setupProjectId ? (
+            <p className="mt-2 text-[13px] text-muted-foreground max-w-2xl">
+              {t(
+                'Set it up for each team on its Single sign-on tab, under Auth.',
+              )}{' '}
+              <Link
+                to="/projects/$projectId/auth/teams"
+                params={{ projectId: setupProjectId }}
+                className="font-medium text-foreground underline underline-offset-2 hover:text-primary"
+                {...analyticsAttrs('open-team-sso-setup')}
+              >
+                {t('Go to teams')}
+              </Link>
+            </p>
+          ) : null}
         </div>
 
         {statusCopy || showPaused ? (
@@ -381,9 +413,13 @@ export function SSOAddonCard({ target, paused = false }: SSOAddonCardProps) {
                     {t('Single sign-on is paused')}
                   </AlertTitle>
                   <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
-                    {t(
-                      'Until the add-on is active, nobody signs in through your identity providers and Require SSO has no effect. You can still delete domains and identity providers, and turn Require SSO off.',
-                    )}
+                    {target.scope === 'project'
+                      ? t(
+                          "Until the add-on is active, nobody signs in through the identity providers of this project's teams and Require SSO has no effect. You can still delete domains and identity providers, and turn Require SSO off.",
+                        )
+                      : t(
+                          'Until the add-on is active, nobody signs in through your identity providers and Require SSO has no effect. You can still delete domains and identity providers, and turn Require SSO off.',
+                        )}
                   </AlertDescription>
                 </Alert>
               ) : null}

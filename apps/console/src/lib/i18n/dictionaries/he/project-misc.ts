@@ -3379,6 +3379,11 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'אין לכם הרשאה לנהל את התוספים של הארגון הזה.',
   'Single sign-on add-on is already active for this organization':
     'תוסף ההתחברות היחידה (SSO) כבר פעיל בארגון זה',
+  'Set it up for each team on its Single sign-on tab, under Auth.':
+    'מגדירים אותה לכל צוות בלשונית ההתחברות היחידה (SSO) שלו, תחת אימות.',
+  'Go to teams': 'מעבר לצוותים',
+  "Until the add-on is active, nobody signs in through the identity providers of this project's teams and Require SSO has no effect. You can still delete domains and identity providers, and turn Require SSO off.":
+    'עד שהתוסף יהיה פעיל, אף אחד לא מתחבר דרך ספקי הזהויות של הצוותים בפרויקט וחיוב SSO לא חל. עדיין אפשר למחוק דומיינים וספקי זהויות, ולכבות את חיוב ה-SSO.',
   "Single sign-on in a project needs the Single sign-on add-on. Enable it in the project's settings.":
     'התחברות יחידה (SSO) בפרויקט דורשת את תוסף ההתחברות היחידה (SSO). הפעילו אותו בהגדרות הפרויקט.',
   'Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then single sign-on for the organization stops, and people who can only sign in through your identity providers can no longer sign in.':

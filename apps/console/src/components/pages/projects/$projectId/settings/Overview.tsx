@@ -1100,6 +1100,7 @@ export function ProjectSettingsOverview({
               projectId,
               inEnvironment: !!environmentId,
             }}
+            showSetupLink
           />
 
           {/* MCP Server Section. Its prompts name a project: inside an

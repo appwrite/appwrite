@@ -1816,4 +1816,29 @@ export const heAuthStorageDictionary: Record<string, string> = {
     'מושבת - חברים מקבלים את תפקידי הצוות בכל דרך שבה יתחברו.',
   "Members on the team's verified domains who signed in another way keep their account but lose the team's roles until they sign in through one of its identity providers. Their other teams are not affected. Team owners keep their roles, so a broken identity provider never locks the team out.":
     'חברים בדומיינים המאומתים של הצוות שהתחברו בדרך אחרת ישמרו על החשבון שלהם, אבל יאבדו את תפקידי הצוות עד שיתחברו דרך אחד מספקי הזהויות שלו. הצוותים האחרים שלהם לא מושפעים. בעלי הצוות שומרים על התפקידים שלהם, כך שספק זהויות תקול לעולם לא ינעל את הצוות בחוץ.',
+  'What this team gets': 'מה הצוות מקבל',
+  "Your app's users sign in through their company's identity provider, and the team decides who joins it and with which roles.":
+    'משתמשי האפליקציה שלכם מתחברים דרך ספק הזהויות של החברה שלהם, והצוות קובע מי מצטרף אליו ועם אילו תפקידים.',
+  'Verify the email domains your users sign in with.':
+    'אמתו את דומייני האימייל שאיתם המשתמשים שלכם מתחברים.',
+  'Connect OpenID Connect identity providers, like Okta, Microsoft Entra ID, Google Workspace or Keycloak.':
+    'חברו ספקי זהויות של OpenID Connect, למשל Okta,‏ Microsoft Entra ID,‏ Google Workspace או Keycloak.',
+  'Users on a verified domain sign in to your app through them and join this team with the roles you choose.':
+    'משתמשים בדומיין מאומת מתחברים דרכם לאפליקציה שלכם ומצטרפים לצוות הזה עם התפקידים שתבחרו.',
+  "Require SSO, so members on those domains get the team's roles only after signing in through an identity provider.":
+    'חיוב SSO, כך שחברים בדומיינים האלה מקבלים את תפקידי הצוות רק אחרי התחברות דרך ספק זהויות.',
+  'The add-on is for the whole project: every team in it, in each of its environments, can use it.':
+    'התוסף הוא לכל הפרויקט: כל צוות בו, בכל אחת מהסביבות שלו, יכול להשתמש בו.',
+  'Add sign-in to your app': 'הוספת התחברות לאפליקציה שלכם',
+  'There is no SDK method for it yet: your app sends these two requests.':
+    'עדיין אין לזה מתודה ב-SDK: האפליקציה שלכם שולחת את שתי הבקשות האלה.',
+  '1. Find the identity providers for an email':
+    '1. מציאת ספקי הזהויות לכתובת אימייל',
+  'It answers with the identity providers that can sign that email in, each with its $id and name.':
+    'התשובה כוללת את ספקי הזהויות שיכולים לחבר את כתובת האימייל הזו, כל אחד עם ה-$id והשם שלו.',
+  '2. Send the browser to the chosen one': '2. שליחת הדפדפן לספק שנבחר',
+  "On success, the browser returns to the success URL with the user's session cookie for this project set.":
+    'בהצלחה, הדפדפן חוזר לכתובת ההצלחה כשעוגיית הסשן של המשתמש בפרויקט הזה כבר מוגדרת.',
+  'On failure, it returns to the failure URL with an error query parameter that holds JSON with message, type and code.':
+    'בכישלון, הוא חוזר לכתובת הכישלון עם פרמטר השאילתה error, שמכיל JSON עם message,‏ type ו-code.',
 }

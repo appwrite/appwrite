@@ -1857,4 +1857,30 @@ export const jaAuthStorageDictionary: Record<string, string> = {
     '無効 - メンバーはどの方法でサインインしてもチームのロールを得られます。',
   "Members on the team's verified domains who signed in another way keep their account but lose the team's roles until they sign in through one of its identity providers. Their other teams are not affected. Team owners keep their roles, so a broken identity provider never locks the team out.":
     '別の方法でサインインしたチームの検証済みドメインのメンバーは、アカウントはそのままですが、チームの ID プロバイダーのいずれかでサインインするまでチームのロールを失います。他のチームには影響しません。チームのオーナーはロールを保持するため、ID プロバイダーに問題が起きてもチームから締め出されることはありません。',
+  'What this team gets': 'このチームでできること',
+  "Your app's users sign in through their company's identity provider, and the team decides who joins it and with which roles.":
+    'アプリのユーザーは会社の ID プロバイダー経由でサインインし、誰がどのロールでチームに参加するかはチームが決めます。',
+  'Verify the email domains your users sign in with.':
+    'ユーザーがサインインに使うメールアドレスのドメインを検証します。',
+  'Connect OpenID Connect identity providers, like Okta, Microsoft Entra ID, Google Workspace or Keycloak.':
+    'Okta、Microsoft Entra ID、Google Workspace、Keycloak などの OpenID Connect の ID プロバイダーを接続します。',
+  'Users on a verified domain sign in to your app through them and join this team with the roles you choose.':
+    '検証済みドメインのユーザーは、そのプロバイダー経由でアプリにサインインし、選んだロールでこのチームに参加します。',
+  "Require SSO, so members on those domains get the team's roles only after signing in through an identity provider.":
+    'SSO の必須化により、それらのドメインのメンバーは ID プロバイダー経由でサインインした後にのみチームのロールを得られます。',
+  'The add-on is for the whole project: every team in it, in each of its environments, can use it.':
+    'アドオンはプロジェクト全体のものです。プロジェクト内のすべてのチームが、どの環境でも利用できます。',
+  'Add sign-in to your app': 'アプリにサインインを追加',
+  'There is no SDK method for it yet: your app sends these two requests.':
+    'まだ SDK のメソッドはありません。アプリから次の 2 つのリクエストを送信します。',
+  '1. Find the identity providers for an email':
+    '1. メールアドレスの ID プロバイダーを調べる',
+  'It answers with the identity providers that can sign that email in, each with its $id and name.':
+    'そのメールアドレスでサインインできる ID プロバイダーが、それぞれの $id と name とともに返されます。',
+  '2. Send the browser to the chosen one':
+    '2. 選んだプロバイダーへブラウザーを送る',
+  "On success, the browser returns to the success URL with the user's session cookie for this project set.":
+    '成功すると、このプロジェクトのユーザーのセッション Cookie が設定された状態で、ブラウザーは success URL に戻ります。',
+  'On failure, it returns to the failure URL with an error query parameter that holds JSON with message, type and code.':
+    '失敗すると、message、type、code を含む JSON を持つ error クエリパラメーターとともに、failure URL に戻ります。',
 }

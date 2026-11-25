@@ -3446,6 +3446,11 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'この組織のアドオンを管理する権限がありません。',
   'Single sign-on add-on is already active for this organization':
     'シングルサインオンアドオンはこの組織ですでに有効です',
+  'Set it up for each team on its Single sign-on tab, under Auth.':
+    '認証の各チームにある「シングルサインオン」タブで、チームごとに設定します。',
+  'Go to teams': 'チームへ移動',
+  "Until the add-on is active, nobody signs in through the identity providers of this project's teams and Require SSO has no effect. You can still delete domains and identity providers, and turn Require SSO off.":
+    'アドオンが有効になるまで、このプロジェクトのチームの ID プロバイダー経由でサインインするユーザーはおらず、SSO の必須化も適用されません。ドメインと ID プロバイダーの削除、および SSO の必須化をオフにすることは引き続き可能です。',
   "Single sign-on in a project needs the Single sign-on add-on. Enable it in the project's settings.":
     'プロジェクトのシングルサインオンにはシングルサインオンアドオンが必要です。プロジェクトの設定で有効にしてください。',
   'Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then single sign-on for the organization stops, and people who can only sign in through your identity providers can no longer sign in.':

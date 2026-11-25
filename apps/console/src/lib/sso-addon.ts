@@ -37,9 +37,9 @@ export function ssoAddonStatus(
 }
 
 /**
- * What the project's Single sign-on add-on unlocks, in its card and its dialog.
- * Signing in through single sign-on is for the Console only: the add-on lets a
- * project's teams set it up, and the copy claims nothing more.
+ * What the project's Single sign-on add-on unlocks, in its card and its dialog:
+ * the project's teams set single sign-on up, each on its Single sign-on tab or
+ * through the Teams API.
  */
 export const SSO_ADDON_DESCRIPTION =
   'With this add-on, the teams in this project can verify domains, connect identity providers and turn on Require SSO through the Teams API.'
