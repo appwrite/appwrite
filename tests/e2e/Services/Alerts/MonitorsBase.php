@@ -325,7 +325,7 @@ trait MonitorsBase
             Query::cursorAfter(new Document(['$id' => $firstId]))->toString(),
         ]);
         $this->assertSame(200, $after['headers']['status-code']);
-        $this->assertNotContains($firstId, \array_column($after['body']['monitors'], '$id'));
+        $this->assertSame([$second['body']['$id']], \array_column($after['body']['monitors'], '$id'));
 
         $untotaled = $this->client->call(Client::METHOD_GET, '/monitors', $this->headers(), [
             'queries' => [Query::search('search', $name)->toString()],
