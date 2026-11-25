@@ -7,11 +7,22 @@ import type {
 import { INIT_YOUTUBE_CHANNEL_HREF } from './links'
 import { ZERO_PRODUCT_ICON } from '@/lib/zero/product-icon'
 
+/**
+ * The Init project, where the launch films live as public Appwrite Videos
+ * (HLS at 360p, 720p and 1080p), uploaded from the videos repo's renders.
+ */
+const INIT_FILMS_PROJECT_ID = '659868b10fff07726b85'
+
+function film(videoId: string, label: string) {
+  return { projectId: INIT_FILMS_PROJECT_ID, videoId, label }
+}
+
 export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
   {
     day: 1,
     dateLabel: 'NOVEMBER 30',
     weekdayLabel: 'MONDAY, NOVEMBER 30',
+    films: [film('6b0699795af86bf06c71', 'Appwrite Analytics')],
     title: 'Introducing Appwrite Analytics',
     description: 'Privacy-friendly analytics for your websites and apps.',
     longDescription:
@@ -57,6 +68,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     day: 2,
     dateLabel: 'DECEMBER 1',
     weekdayLabel: 'TUESDAY, DECEMBER 1',
+    films: [film('6b06997c4d548dd9c923', 'Appwrite Videos')],
     title: 'Introducing Appwrite Videos',
     description: 'Transcode, stream, and caption video in your project.',
     longDescription:
@@ -94,6 +106,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     day: 3,
     dateLabel: 'DECEMBER 2',
     weekdayLabel: 'WEDNESDAY, DECEMBER 2',
+    films: [film('6b06997e69c6d8752727', 'Appwrite Zero')],
     title: 'Introducing Appwrite Zero',
     description: 'A working Appwrite project, no signup needed.',
     longDescription:
@@ -119,6 +132,10 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     day: 4,
     dateLabel: 'DECEMBER 3',
     weekdayLabel: 'THURSDAY, DECEMBER 3',
+    films: [
+      film('6b06998119745bf62699', 'Appwrite Monitors'),
+      film('6b0699833ee06f00bb1f', 'Appwrite Beep'),
+    ],
     title: 'Introducing Appwrite Monitors & Appwrite Beep',
     description: 'Know when your project needs you, wherever you are.',
     longDescription:
@@ -144,6 +161,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     day: 5,
     dateLabel: 'DECEMBER 4',
     weekdayLabel: 'FRIDAY, DECEMBER 4',
+    films: [film('6b069984bd3a67b27e19', 'Appwrite Reviews')],
     title: 'Introducing Appwrite Reviews',
     description: 'Code review for your Sites, Functions and repositories.',
     longDescription:

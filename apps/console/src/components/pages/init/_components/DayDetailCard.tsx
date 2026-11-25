@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import type {
   LaunchEventDay,
+  LaunchEventDayFilm,
   LaunchEventDayResource,
   LaunchEventScheduleItem,
   InitDisplayEvent,
@@ -13,6 +14,12 @@ import { Badge } from '@/components/ui/badge'
 import { InitDayCardHeaderNav } from './InitDayCardHeaderNav'
 import { InitScheduleRow } from './InitScheduleRow'
 import { ArrowUpRight, BookOpen, FileText, Package, Play } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useInitHref } from '@/lib/init/use-init-href'
@@ -156,6 +163,96 @@ function DayPrimaryLink({
     <a href={resolved.href} {...NEW_TAB} className={className}>
       {children}
     </a>
+  )
+}
+
+/** The Appwrite player, as the console's public `/player` page, in a frame. */
+function DayFilmPlayer({ film }: { film: LaunchEventDayFilm }) {
+  const src = `/player/${encodeURIComponent(film.videoId)}?project=${encodeURIComponent(film.projectId)}`
+  return (
+    <iframe
+      key={film.videoId}
+      src={src}
+      title={film.label}
+      allow="autoplay; fullscreen; picture-in-picture"
+      allowFullScreen
+      className="aspect-video w-full rounded-lg border-0 bg-black"
+    />
+  )
+}
+
+/**
+ * The day's cover as a play button: the launch film opens in the Appwrite
+ * player. A day with several films (Monitors and Beep) switches between them.
+ */
+function DayFilmCover({
+  day,
+  films,
+  children,
+}: {
+  day: LaunchEventDay
+  films: LaunchEventDayFilm[]
+  children: ReactNode
+}) {
+  const [open, setOpen] = useState(false)
+  const [active, setActive] = useState(0)
+  const film = films[active] ?? films[0]!
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => {
+          setActive(0)
+          setOpen(true)
+        }}
+        className="group/film relative block w-full cursor-pointer rounded-lg text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        aria-label={`Play the ${films.map((entry) => entry.label).join(' and ')} launch film`}
+      >
+        {children}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute bottom-3 end-3 flex items-center gap-1.5 rounded-full bg-black/70 px-3 py-1.5 text-[12px] font-medium text-white shadow-sm backdrop-blur-sm transition-colors group-hover/film:bg-[var(--brand-cta)]"
+        >
+          <Play className="size-3.5 fill-current" aria-hidden />
+          Watch the launch
+        </span>
+      </button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="w-[min(92vw,960px)] max-w-none gap-3 p-3 sm:max-w-none sm:p-4">
+          <DialogTitle className="pe-8 text-[15px]">{day.title}</DialogTitle>
+          <DialogDescription className="sr-only">
+            The launch film, played with the Appwrite player.
+          </DialogDescription>
+          {films.length > 1 ? (
+            <div
+              className="flex gap-1.5"
+              role="tablist"
+              aria-label="Launch films"
+            >
+              {films.map((entry, index) => (
+                <button
+                  key={entry.videoId}
+                  type="button"
+                  role="tab"
+                  aria-selected={index === active}
+                  onClick={() => setActive(index)}
+                  className={cn(
+                    'rounded-md border px-2.5 py-1 text-[12px] font-medium transition-colors',
+                    index === active
+                      ? 'border-[var(--brand-cta)] bg-[color-mix(in_srgb,var(--brand-cta)_12%,transparent)] text-foreground'
+                      : 'border-border text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  {entry.label}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          <DayFilmPlayer film={film} />
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 
@@ -304,7 +401,11 @@ export function DayDetailCard({
         </div>
 
         <div className="flex items-center p-6">
-          {primaryArticleHref ? (
+          {day.films?.length ? (
+            <DayFilmCover day={day} films={day.films}>
+              {visualBlock}
+            </DayFilmCover>
+          ) : primaryArticleHref ? (
             <DayPrimaryLink
               href={primaryArticleHref}
               className="block w-full transition-opacity hover:opacity-90"
