@@ -461,7 +461,10 @@ export function VideoStreamPlayerControls({
   useEffect(() => {
     const el = seekTrackRef.current
     if (!el) return
-    const update = () => setTrackWidth(el.getBoundingClientRect().width)
+    // Layout width, not the on-screen box: a dialog opening with a zoom
+    // measures smaller mid-animation, and a transform never fires a resize,
+    // so the playhead would stop short of the end for good.
+    const update = () => setTrackWidth(el.offsetWidth)
     update()
     const observer = new ResizeObserver(update)
     observer.observe(el)
@@ -482,7 +485,7 @@ export function VideoStreamPlayerControls({
       const cue = findTimelineCueAtTime(scrubCues, time)
       if (!cue) return null
 
-      const x = seekThumbCenterX(fraction, rect.width)
+      const x = seekThumbCenterX(fraction, track.offsetWidth)
       return { time, x, cue }
     },
     [duration, hasScrubCues, scrubCues],
@@ -561,7 +564,7 @@ export function VideoStreamPlayerControls({
         if (cue) {
           setScrubPreview({
             time,
-            x: seekThumbCenterX(fraction, rect.width),
+            x: seekThumbCenterX(fraction, track.offsetWidth),
             cue,
           })
           return
