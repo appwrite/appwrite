@@ -239,7 +239,7 @@ trait MonitorsBase
         /**
          * Test for FAILURE
          */
-        $outside =$this->updateMonitor($monitorId, ['rules' => [
+        $outside = $this->updateMonitor($monitorId, ['rules' => [
             Query::greaterThan('network.inbound', 1)->toString(),
             Query::equal('resourceType', ['bucket'])->toString(),
             Query::equal('resourceId', ['anything'])->toString(),
