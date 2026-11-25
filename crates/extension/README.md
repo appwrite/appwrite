@@ -106,13 +106,14 @@ utopia.libraries = "validators,dsn,domains"
 
 `Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN`, `Utopia\Locale\Locale`,
 `Utopia\UserAgent\UserAgent`, `Utopia\Domains\Domain`, `Utopia\Emails\Email`, the validators
-of `packages/validators`, the password hashes of `packages/auth` and the 104 classes of
+of `packages/validators`, the password hashes of `packages/auth`, every class of
+`packages/detector` and the 104 classes of
 `packages/query` listed under [Utopia\Query](#utopiaquery-the-classifiers-the-tokenizers-query-the-ast-and-the-schemas) are registered unless
 `utopia.libraries` leaves them out: they have no PHP implementation. Their signatures are in `stubs/`, `packages/image/stubs/`,
 `packages/user-agent/stubs/`, `packages/domains/stubs/`, `packages/emails/stubs/`,
-`packages/validators/stubs/`, `packages/auth/stubs/` and `packages/query/stubs/` for PHPStan, which runs without the
+`packages/validators/stubs/`, `packages/auth/stubs/`, `packages/query/stubs/` and `packages/detector/stubs/` for PHPStan, which runs without the
 extension. A library that still has a PHP implementation is registered only when
-`_APP_EXTENSION_LIBRARIES` names its package; today those are `detector`, `compression`,
+`_APP_EXTENSION_LIBRARIES` names its package; today those are `compression`,
 `balancer` and `database` (four classes of `utopia-php/database`, from `vendor/`). Otherwise
 Composer loads the package's PHP class as before:
 
@@ -149,10 +150,11 @@ package removed whole so it is never installed here.
 
 ## Utopia\Detector
 
-Over `crates/utopia/detector`, registered when `_APP_EXTENSION_LIBRARIES` names `detector`: every
-class of `packages/detector` (the `Detector` and `Detection` bases, the `Framework`, `Packager`,
-`Rendering` and `Runtime` detectors, `Strategy`, and the 15 frameworks, 3 packagers, 2 renderings
-and 11 runtimes), so none of the package's PHP classes loads. Off by default.
+Over `crates/utopia/detector`, always registered: every class of `packages/detector` (the
+`Detector` and `Detection` bases, the `Framework`, `Packager`, `Rendering` and `Runtime` detectors,
+`Strategy`, and the 15 frameworks, 3 packagers, 2 renderings and 11 runtimes). The PHP sources were
+removed once it ran in every Cloud region (2026-11-23); their signatures are in
+`packages/detector/stubs/`, one file per class, for PHPStan and editors.
 
 Built by hand like the validators (`src/classes/`), in `src/detector/`: the same names, inheritance
 chain, constants, signatures and typed properties (`$options`, `$inputs`, `$packager`, `$framework`,
@@ -175,13 +177,14 @@ persistent immutable arrays, and returned without an allocation, as PHP returns 
 OPcache holds. `detect()` reads the inputs where they lie and asks a native option nothing
 through PHP.
 
-`packages/detector/tests` run on the extension, and `tests/detector.php` (5,536 lines) is identical
-on both: reflection of every class, every leaf's answers and commands with every packager,
+`packages/detector/tests` run on the extension. While both existed, `tests/detector.php` (5,536
+lines) was identical on both; it went with the PHP classes, since there is nothing left to compare
+against. It covered reflection of every class, every leaf's answers and commands with every packager,
 adapters over 38 configurations, every pair of frameworks in both orders (675 cases), 3,000 seeded
 random projects, 40 real-world projects through all four detectors, 42 manifests (valid, invalid,
 deeply nested, YAML), rendering builds, runtime strategies, argument coercion and errors, PHP
-subclasses of the bases, leaves and detectors, and a 5,000-file repository. The differences below
-are asserted at its end. Nothing in Appwrite or Cloud subclasses a detector class.
+subclasses of the bases, leaves and detectors, and a 5,000-file repository, and asserted the
+differences below at its end. Nothing in Appwrite or Cloud subclasses a detector class.
 
 Known differences from the PHP classes:
 
