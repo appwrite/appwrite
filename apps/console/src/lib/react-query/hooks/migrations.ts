@@ -858,3 +858,23 @@ export function useCreateSupabaseProjectCredentials(
     },
   })
 }
+
+export function useDeleteSupabaseOAuth2(
+  projectId: string | null | undefined,
+  region?: string,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      if (!projectId) throw new Error('Project ID is required')
+      return await sdk
+        .forProject(projectId, region)
+        .migrations.deleteSupabaseOAuth2()
+    },
+    onSuccess: () => {
+      queryClient.removeQueries({
+        queryKey: ['migrations', 'supabase', 'projects', projectId],
+      })
+    },
+  })
+}
