@@ -260,12 +260,12 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     prizes: INIT_NOV_2026_PRIZES,
     releaseAvailability: {
       unlockDay: 5,
-      sectionTitle: 'Cloud and Self-host ship with Init.',
+      sectionTitle: 'Cloud and Self-host are live.',
       sectionDescription:
-        'Init 5 features will roll out on Appwrite Cloud during launch week. Self-host availability will be announced per feature.',
-      lockedTitle: 'Cloud ships daily during Init week.',
+        'Every Init 5 feature is live on Appwrite Cloud, and Community Edition ships them all for self-hosting.',
+      lockedTitle: 'Cloud ships daily. Self-host lands when Init wraps.',
       lockedDescription:
-        'Each Init 5 feature goes live on Cloud on its launch day. Self-host timing will be shared in each announcement.',
+        'Each Init 5 feature goes live on Appwrite Cloud on its launch day. Community Edition ships every feature for self-hosting at the end of Init week.',
       cloud: {
         title: 'Appwrite Cloud',
         availabilityLabel: 'Live each Init day',
@@ -276,9 +276,9 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
       },
       selfHosted: {
         title: 'Community Edition',
-        availabilityLabel: 'Per feature',
+        availabilityLabel: 'End of Init week',
         description:
-          'Self-host availability will be shared in each Init 5 announcement.',
+          'Self-host every Init 5 feature on your own infrastructure.',
         ctaLabel: 'Installation docs',
         href: '/docs/advanced/self-hosting',
       },
@@ -310,7 +310,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     promoBanner: {
       before:
         'Join us on our biggest Init ever. 5 days, 5 new product launches. It will be electric.',
-      during: 'Init 5 is live. Catch today\'s reveal and the launch stream.',
+      during: "Init 5 is live. Catch today's reveal and the launch stream.",
       after: 'Init 5 is a wrap. Explore every launch and rewatch the streams.',
     },
     recap: {
