@@ -293,27 +293,24 @@ export function ImportWizardView() {
         )
         setReportData(report)
       } else if (provider === 'Supabase') {
+        const supabase = connected ?? {
+          endpoint: supabaseEndpoint.trim(),
+          apiKey: supabaseApiKey.trim(),
+          databaseHost: databaseHost.trim(),
+          username: supabaseUsername.trim() || 'postgres',
+          password: supabasePassword,
+          port: parseInt(supabasePort, 10) || 5432,
+        }
         if (
-          !supabaseEndpoint.trim() ||
-          !supabaseApiKey.trim() ||
-          !databaseHost.trim() ||
-          !supabasePassword.trim()
+          !supabase.endpoint ||
+          !supabase.apiKey ||
+          !supabase.databaseHost ||
+          !supabase.password
         ) {
           toast.error(t('Please fill required Supabase fields'))
           return
         }
-        const report = await fetchSupabaseReport(
-          pid,
-          {
-            endpoint: supabaseEndpoint.trim(),
-            apiKey: supabaseApiKey.trim(),
-            databaseHost: databaseHost.trim(),
-            username: supabaseUsername.trim() || 'postgres',
-            password: supabasePassword,
-            port: parseInt(supabasePort, 10) || 5432,
-          },
-          region,
-        )
+        const report = await fetchSupabaseReport(pid, supabase, region)
         setReportData(report)
       } else if (provider === 'Firebase') {
         if (!serviceAccount.trim()) {
