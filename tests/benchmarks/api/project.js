@@ -325,6 +325,7 @@ const bench = define({
         { skipped: 'DELETE /v1/project/passwords', reason: 'added on main in the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
         { skipped: 'PATCH /v1/project/policies/account-devices', reason: 'added on main in the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
         { skipped: 'PATCH /v1/project/oauth2/bird', reason: 'added on main after the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'PATCH /v1/project/oauth2/clerk', reason: 'added on main after the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
         { skipped: 'DELETE /v1/project/sessions', reason: 'signs out every user of the run\'s project, whose sessions the other scenarios use' },
     ],
 });
