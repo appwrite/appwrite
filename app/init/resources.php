@@ -39,6 +39,7 @@ use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
+use Appwrite\Storage\Uploads;
 use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Utopia\Database\Documents\Project;
 use Appwrite\Vcs\Factory as VcsFactory;
@@ -443,6 +444,8 @@ $container->set('cache', function (Registry $register, Telemetry $telemetry) {
 $container->set('cacheControlForStorage', fn () => fn (StorageCacheControl $config): string => \sprintf('private, max-age=%d', $config->maxAge));
 
 $container->set('locks', fn (Group $pools) => Locks::using($pools), ['pools']);
+
+$container->set('uploads', fn (Group $pools) => new Uploads(fn (callable $callback): mixed => $pools->get('lock')->use($callback)), ['pools']);
 
 // The lease spans the callback; throwing from it makes the pool reconnect the socket.
 $container->set('timelimit', fn (Group $pools) => fn (string $key, int $limit, int $seconds, callable $callback): mixed => $pools->get('abuse')->use(
