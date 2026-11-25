@@ -17,6 +17,12 @@ php "$tests/dsn-getters.php" > "$output/dsn-getters.jsonl"
 diff "$tests/dsn-getters.expected" "$output/dsn-getters.jsonl"
 php -d opcache.enable_cli=1 "$tests/dsn-getters.php" > "$output/dsn-getters.opcache.jsonl"
 diff "$tests/dsn-getters.expected" "$output/dsn-getters.opcache.jsonl"
+# Query likewise: its hand-written getters, constructor and classify(), shared strings and arrays,
+# clones and deep trees, against the output they gave through ext-php-rs.
+php "$tests/query-handlers.php" > "$output/query-handlers.txt"
+diff "$tests/query-handlers.expected" "$output/query-handlers.txt"
+php -d opcache.enable_cli=1 "$tests/query-handlers.php" > "$output/query-handlers.opcache.txt"
+diff "$tests/query-handlers.expected" "$output/query-handlers.opcache.txt"
 vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php packages/image/tests
 
 for library in $libraries; do

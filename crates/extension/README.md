@@ -571,6 +571,16 @@ PHP's time. Anything else (a float, an array, an object, a string that is not UT
 its own `toArray()`) goes to PHP's `json_encode()` as before. `contains()` raises the deprecation
 `#[\Deprecated]` raised.
 
+A query holds its attribute and alias as PHP strings and its method's case object, as PHP's
+properties hold them: the constructor keeps the strings and the array it is given by refcount, the
+getters return them without copying, and `clone` shares the values of a query that holds no
+queries, as PHP's copy-on-write array does. `__construct()`, `getMethod()`, `getAttribute()`,
+`getValues()`, `getAlias()` and the classifiers' `classify()` have hand-written handlers
+(`src/classes/retarget.rs`), which skip ext-php-rs's per-call `setjmp` and argument parsing. Each
+takes the calls PHP code makes (the types the method declares, the right number of arguments) and
+hands any other to ext-php-rs's own handler, which converts and throws as before;
+`tests/query-handlers.php` pins what they return and throw.
+
 Subclasses are what most of the binding is about. `Utopia\Database\Query`, `Utopia\Audit\Query`
 and `Utopia\Usage\UsageQuery` extend `Query`:
 
@@ -643,8 +653,10 @@ if the package and the extension are out of step.
 PHP recurses on its own heap, so it parses and writes a tree as deep as its memory allows. Rust
 recurses on the native stack, which a Swoole coroutine keeps at 2 MB. Reading one level of a tree
 takes 3.1 KB of it in a release build. So the binding measures a tree first, and works on anything
-deeper than 32 levels on a stack allocated for that depth (`stacker`). Nothing that runs there
-calls PHP code. With this, the extension takes every tree PHP takes: the corpus goes to 20,000
+deeper than 32 levels on a larger stack: one kept per thread (`src/classes/stack.rs`, 4 MB mapped
+with a guard page, resident only as far as it is used), so a deep tree costs no fresh page faults
+on each call, and a stack mapped for the call (`stacker`) for a tree deeper than that holds. Nothing
+that runs there calls PHP code. With this, the extension takes every tree PHP takes: the corpus goes to 20,000
 levels, and under a 512 KB or 128 KB fiber stack both implementations stop at the same input,
 where PHP's own engine overflows freeing the objects.
 
