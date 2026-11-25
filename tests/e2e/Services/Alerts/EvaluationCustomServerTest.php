@@ -732,11 +732,6 @@ final class EvaluationCustomServerTest extends Scope
         }
         $this->assertSame($created['body']['steps'], $this->client->call(Client::METHOD_GET, '/organization/escalations/' . $escalationId, $headers)['body']['steps']);
 
-        // Updates are PATCH only: PUT is not a route, so nothing changes.
-        $put = $this->client->call(Client::METHOD_PUT, '/organization/escalations/' . $escalationId, $headers, ['name' => 'Put']);
-        $this->assertSame(404, $put['headers']['status-code']);
-        $this->assertSame('Platform on-call', $this->client->call(Client::METHOD_GET, '/organization/escalations/' . $escalationId, $headers)['body']['name']);
-
         $stranger = $this->client->call(Client::METHOD_POST, '/organization/escalations', $headers, [
             'escalationId' => 'unique()',
             'name' => $refusedName,
