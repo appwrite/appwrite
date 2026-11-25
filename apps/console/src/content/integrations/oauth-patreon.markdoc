@@ -1,0 +1,80 @@
+---
+layout: integration
+title: OAuth with Patreon
+description: Let creators and their members sign in with Patreon, and use the Patreon API to unlock content for paying members.
+date: 2026-11-25
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/oauth-patreon/cover.avif
+category: auth
+product:
+    vendor: Patreon
+    description: 'Patreon is a membership platform where creators offer paid tiers and exclusive content to their members.'
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+images:
+    - /images/integrations/oauth-patreon/cover.avif
+---
+
+Patreon is a membership platform where creators run paid tiers for their community. Creators often build companion apps, such as a members-only video library, a Discord-style community, or a game with supporter perks, and need to know who is a member. Sign in with Patreon gives your app the user and a Patreon API token in one step, so you can check their membership with the [Patreon API](https://docs.patreon.com/).
+
+# How does the integration work?
+
+Appwrite Auth has a Patreon OAuth2 provider built on Patreon's OAuth flow and its v2 API. The session stores Patreon's access token as `providerAccessToken`, so your server can call the Patreon API on the user's behalf.
+
+Appwrite requests the `identity` and `identity[email]` scopes and reads the user from Patreon's v2 identity endpoint. It stores the user's full name and email address, and their Patreon user ID becomes the provider user ID on the user's [identity](/docs/products/auth/identities). The profile image is stored on the identity too, so it also powers [user photos](/docs/products/avatars/user-photos) in Appwrite Avatars.
+
+The email address is marked as verified only when Patreon reports `is_email_verified` as `true`. Patreon issues refresh tokens, so [`updateSession`](/docs/products/auth/oauth2#refresh-tokens) can renew the provider access token.
+
+{% info title="Self-hosted availability" %}
+Sign in with Patreon is live on Appwrite Cloud and ships in the next self-hosted Appwrite release.
+{% /info %}
+
+# How to implement
+
+To add Patreon sign-in to your app, complete these steps.
+
+## Step 1: Copy the redirect URI from Appwrite
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already.
+
+In the Appwrite Console, open your project, go to **Auth** > **Social providers**, and open **Patreon**. Copy the **Redirect URI** shown in the dialog. It includes the provider ID and your project ID:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/patreon/<PROJECT_ID>
+```
+
+The URI starts with the API endpoint your app uses, so on self-hosted Appwrite it starts with your own domain. Always copy the exact value from the Console.
+
+## Step 2: Register a Patreon client
+
+Open the [Clients & API Keys](https://www.patreon.com/portal/registration/register-clients) page in the Patreon developer portal and create a client. Fill in the app details, add the redirect URI from step 1 to the client's redirect URIs, and choose API version 2. Patreon only accepts redirect URIs that were registered on the client.
+
+After you create the client, copy its **Client ID** and **Client Secret** from the same page.
+
+Treat the client secret like a password. If it's ever exposed, replace it in the developer portal and update it in Appwrite.
+
+## Step 3: Enable the provider in Appwrite
+
+Back in **Auth** > **Social providers**, open **Patreon**. Paste the Client ID into **Client ID** and the Client Secret into **Client Secret**, turn the provider on, and select **Update**.
+
+## Step 4: Add Patreon sign-in to your app
+
+Pass `OAuthProvider.Patreon` as the provider when you start the OAuth2 flow. The value is in the Node.js server SDK from `node-appwrite` 32.0.0. Until your client SDK includes it, start the flow from your server with `createOAuth2Token` and exchange the returned `userId` and `secret` for a session, as described in [server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2). Add your app's domain as a platform in your Appwrite project so Appwrite accepts your `success` and `failure` URLs.
+
+# Things to know about Patreon sign-in
+
+- **Use a v2 client.** Appwrite calls Patreon's v2 API, and Patreon is retiring its v1 API, so create the client with API version 2.
+- **Memberships need more scopes.** To check which tiers a user pays for, pass `identity.memberships` in the `scopes` parameter. Appwrite adds it to the defaults. Read the membership from Patreon's identity endpoint with the session's `providerAccessToken`, since Appwrite only stores the user's name, email, and photo.
+- **Unverified emails don't take over accounts.** If Patreon doesn't report the email as verified and another user already has that address, Appwrite redirects to your failure URL instead of signing the user in. To connect Patreon to an existing account, have the user sign in first and then start `createOAuth2Session` from the browser, which links Patreon as a new [identity](/docs/products/auth/identities).
+
+# Read more about Patreon and Appwrite Auth
+
+If you would like to learn more about Patreon and Appwrite Auth, these resources are a good place to start:
+
+- [Patreon API documentation](https://docs.patreon.com/)
+- [Announcing 14 new OAuth2 login providers in Appwrite Auth](/blog/post/announcing-14-new-oauth2-providers)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2)

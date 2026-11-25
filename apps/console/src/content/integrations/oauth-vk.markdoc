@@ -1,0 +1,115 @@
+---
+layout: integration
+title: OAuth with VK
+description: Let users sign in with their VK ID account in Appwrite Auth, the sign-in that people in Russia already use across VK services.
+date: 2026-11-25
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/oauth-vk/cover.avif
+category: auth
+product:
+    vendor: VK
+    description: 'VK runs the VK social network and VK ID, the account people in Russia use to sign in to VK services and other apps.'
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+images:
+    - /images/integrations/oauth-vk/cover.avif
+---
+
+VK runs one of the most used social networks in Russia, and [VK ID](https://id.vk.com/about/business/go) is the account people use to sign in to VK services and other apps. Sign in with VK ID lets those users get into your app with the account they already have, without creating a new password.
+
+# How does the integration work?
+
+Appwrite Auth has a VK provider built on the VK ID OAuth API. When a user signs in, VK ID asks them to allow your app access to their data and sends them back to Appwrite, which creates the user or signs in the existing one.
+
+Appwrite requests the `vkid.personal_info` and `email` scopes and uses PKCE. It stores the user's first and last name, email address, and avatar. The avatar also powers [user photos](/docs/products/avatars/user-photos) in Appwrite Avatars. The user's VK ID becomes the provider user ID on the user's [identity](/docs/products/auth/identities).
+
+VK ID doesn't report whether the email address is verified, so Appwrite stores it as unverified. If another user in your project already has the same address, Appwrite redirects to your failure URL instead of signing in to that account. To connect VK to an existing account, have the user sign in first and then start `createOAuth2Session` from the browser, which links VK as a new identity.
+
+{% info title="Self-hosted availability" %}
+Sign in with VK is live on Appwrite Cloud and ships in the next self-hosted Appwrite release.
+{% /info %}
+
+# How to implement
+
+To add VK sign-in to your app, complete these steps.
+
+## Step 1: Copy the redirect URI from Appwrite
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already.
+
+In the Appwrite Console, open your project, go to **Auth** > **Social providers**, and open **VK**. Copy the **Redirect URI** shown in the drawer. It includes the provider ID and your project ID:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/vk/<PROJECT_ID>
+```
+
+On self-hosted Appwrite, the URI starts with your own domain. Always copy the exact value from the Console.
+
+## Step 2: Create a VK ID app
+
+You manage VK ID apps in the [VK ID business account](https://id.vk.com/about/business/go), which you sign in to with VK Business ID. The account and its documentation are in Russian, so the steps below give the Russian labels too.
+
+1. Go to **My apps** (Мои приложения) and click **Add app** (Добавить приложение).
+2. Enter the app name users will see on the sign-in screen, and choose the **Web** platform.
+3. Set **Base domain** (Базовый домен) to the host of the redirect URI you copied in step 1, such as `<REGION>.cloud.appwrite.io`, and **Trusted redirect URL** (Доверенный redirect URL) to the full redirect URI. The redirect URL's domain must match the base domain exactly, including case.
+4. Click **Create app** (Создать приложение).
+
+Open the app's card. Under the app information, copy the **App ID** (ID приложения) and the **Protected key** (Защищённый ключ). Appwrite uses them as the client ID and client secret.
+
+Then finish the app settings:
+
+- Under **Access keys** (Ключи доступа), keep **Confidentiality level** (Уровень конфиденциальности) set to **Public** (Публичное). A confidential VK ID app requires a service key in every token request and only accepts requests from server IP addresses you list, and Appwrite doesn't send a service key.
+- Under **Accesses** (Доступы), turn on access to the user's email address.
+
+## Step 3: Enable the provider in Appwrite
+
+Back in the **VK** drawer in the Appwrite Console:
+
+1. Paste the App ID into **Client ID** and the Protected key into **Client Secret**.
+2. Turn the provider on.
+3. Click **Update**.
+
+## Step 4: Add VK sign-in to your app
+
+Add your app's domain as a web platform in your Appwrite project, so Appwrite accepts your `success` and `failure` URLs.
+
+`OAuthProvider.Vk` is available in the Node.js server SDK from `node-appwrite` 32.0.0. Start the sign-in on your server with `createOAuth2Token` and redirect the user to the URL it returns:
+
+```server-nodejs
+import { Client, Account, OAuthProvider } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const account = new Account(client);
+
+const redirectUrl = await account.createOAuth2Token({
+    provider: OAuthProvider.Vk,
+    success: 'https://example.com/oauth/success',
+    failure: 'https://example.com/oauth/failure',
+    state: state, // A random value you also store in a cookie
+});
+```
+
+When the user comes back to your `success` URL, check that its `state` matches the cookie, then exchange the `userId` and `secret` parameters for a session with `createSession`. [Server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2) walks through both endpoints. From a client app, call `createOAuth2Session` with `OAuthProvider.Vk` once your client SDK version includes it.
+
+# Things to know about VK ID
+
+- **Confirm your business profile.** VK ID asks you to confirm your business profile in VK Business ID to get full access to app settings and keys. If you don't confirm it within 60 days of creating your first app, VK ID blocks your apps. Extended data accesses are also only available after confirmation.
+- **Refresh tokens belong to a device.** VK ID issues tokens for the `device_id` it returns with each sign-in and refuses a refresh without it. Appwrite handles this for you by storing the session's `providerRefreshToken` as `<device_id>:<refresh_token>`. If you call the VK ID token endpoint yourself, split the value at the first colon.
+
+# Read more about VK and Appwrite Auth
+
+If you would like to learn more about VK and Appwrite Auth, these resources are a good place to start:
+
+- [VK ID for business](https://id.vk.com/about/business/go)
+- [Creating a VK ID app (in Russian)](https://id.vk.com/about/business/go/docs/ru/vkid/latest/vk-id/connection/create-application)
+- [Announcing 14 new OAuth2 login providers in Appwrite Auth](/blog/post/announcing-14-new-oauth2-providers)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2)
+- [Manage linked accounts with Identities](/docs/products/auth/identities)

@@ -1,0 +1,77 @@
+---
+layout: integration
+title: OAuth with Linear
+description: Let users sign in with their Linear account and work with their issues and projects through the Linear API.
+date: 2026-11-25
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/oauth-linear/cover.avif
+category: auth
+product:
+    vendor: Linear
+    description: 'Linear is an issue tracker and project planning tool for software teams, with a GraphQL API for building integrations.'
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+images:
+    - /images/integrations/oauth-linear/cover.avif
+---
+
+Linear is the issue tracker many software teams plan and ship their work in, and its [GraphQL API](https://linear.app/developers) lets other apps read and update that work. If you're building for Linear users, such as a release notes generator, a triage bot, or a team dashboard, Sign in with Linear gives your app the user and a Linear API token in one step.
+
+# How does the integration work?
+
+Appwrite Auth has a Linear OAuth2 provider built on [Linear's OAuth 2.0 flow](https://linear.app/developers/oauth-2-0-authentication), with PKCE on the authorization code exchange. The session stores Linear's access token as `providerAccessToken`, so your server can call the Linear API on the user's behalf.
+
+Appwrite requests the `read` scope and reads the signed-in user from the `viewer` query of the Linear GraphQL API. It stores the user's name and email address, and their Linear user ID becomes the provider user ID on the user's [identity](/docs/products/auth/identities). The avatar is stored on the identity too, so it also powers [user photos](/docs/products/avatars/user-photos) in Appwrite Avatars.
+
+Linear doesn't report whether the email address is verified, so Appwrite stores it as unverified. If another user in your project already has the same address, Appwrite redirects to your failure URL instead of signing in to that account. To connect Linear to an existing account, have the user sign in first and then start `createOAuth2Session` from the browser, which links Linear as a new [identity](/docs/products/auth/identities).
+
+{% info title="Self-hosted availability" %}
+Sign in with Linear is live on Appwrite Cloud and ships in the next self-hosted Appwrite release.
+{% /info %}
+
+# How to implement
+
+To add Linear sign-in to your app, complete these steps.
+
+## Step 1: Copy the redirect URI from Appwrite
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already.
+
+In the Appwrite Console, open your project, go to **Auth** > **Social providers**, and open **Linear**. Copy the **Redirect URI** shown in the dialog. It includes the provider ID and your project ID:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/linear/<PROJECT_ID>
+```
+
+The URI starts with the API endpoint your app uses, so on self-hosted Appwrite it starts with your own domain. Always copy the exact value from the Console.
+
+## Step 2: Create a Linear OAuth application
+
+In Linear, go to **Settings** > **API** and [create a new OAuth application](https://linear.app/settings/api/applications/new). Give it a name and paste the redirect URI from step 1 as a callback URL. After you create the application, copy its **Client ID** and **Client secret**.
+
+Treat the client secret like a password. If it's ever exposed, rotate it under **Settings** > **API** and update it in Appwrite.
+
+## Step 3: Enable the provider in Appwrite
+
+Back in **Auth** > **Social providers**, open **Linear**. Paste the client ID into **Client ID** and the client secret into **Client Secret**, turn the provider on, and select **Update**.
+
+## Step 4: Add Linear sign-in to your app
+
+Pass `OAuthProvider.Linear` as the provider when you start the OAuth2 flow. The value is in the Node.js server SDK from `node-appwrite` 32.0.0. Until your client SDK includes it, start the flow from your server with `createOAuth2Token` and exchange the returned `userId` and `secret` for a session, as described in [server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2). Add your app's domain as a platform in your Appwrite project so Appwrite accepts your `success` and `failure` URLs.
+
+# Things to know about Linear sign-in
+
+- **Short-lived access tokens.** Linear access tokens are valid for 24 hours, and each refresh token expires 30 days after it's issued. A refresh returns a new access token and a new refresh token, which Appwrite stores. Call [`updateSession`](/docs/products/auth/oauth2#refresh-tokens) before you use an expired `providerAccessToken`, and send the user through sign-in again if they haven't been back in 30 days.
+- **Write access needs more scopes.** The `read` scope is always included. To create issues or comments, pass scopes such as `write`, `issues:create`, or `comments:create` in the `scopes` parameter. Appwrite adds them to the defaults.
+
+# Read more about Linear and Appwrite Auth
+
+If you would like to learn more about Linear and Appwrite Auth, these resources are a good place to start:
+
+- [Linear OAuth 2.0 authentication](https://linear.app/developers/oauth-2-0-authentication)
+- [Announcing 14 new OAuth2 login providers in Appwrite Auth](/blog/post/announcing-14-new-oauth2-providers)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2)

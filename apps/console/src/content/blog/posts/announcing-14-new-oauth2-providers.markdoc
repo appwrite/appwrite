@@ -1,0 +1,303 @@
+---
+layout: post
+title: "Announcing 14 new OAuth2 login providers in Appwrite Auth"
+description: Appwrite Auth adds 14 OAuth2 login providers, from Vercel, Linear, and Atlassian to Reddit, Roblox, LINE, and Naver. See what each returns and how to add them.
+date: 2026-11-25
+cover: /images/blog/announcing-14-new-oauth2-providers/cover.avif
+timeToRead: 9
+author: aditya-oberai
+category: announcements
+featured: false
+faqs:
+  - question: "Which new OAuth2 providers does Appwrite support?"
+    answer: "Appwrite Auth added 14 OAuth2 providers: Atlassian, Instagram, LINE, Linear, Naver, Netlify, Patreon, Railway, Reddit, Roblox, Strava, Vercel, VK, and WorkOS. They use the same [OAuth2 login](/docs/products/auth/oauth2) flow as GitHub or Google. Enable them in the Appwrite Console under **Auth** > **Social providers** with the client ID and secret from each provider's developer portal."
+  - question: "What are the OAuthProvider enum values for the new providers?"
+    answer: "They are `OAuthProvider.Atlassian`, `Instagram`, `Line`, `Linear`, `Naver`, `Netlify`, `Patreon`, `Railway`, `Reddit`, `Roblox`, `Strava`, `Vercel`, `Vk`, and `Workos`. Note the casing on `Line`, `Vk`, and `Workos`. All 14 are in `node-appwrite` 32.0.0 and the Python SDK 28.0.0. The client SDKs don't have them all yet: the Web, Apple, Android, and React Native SDKs include `Naver`, and the Flutter SDK includes `Naver` and `Workos`."
+  - question: "Why don't users who sign in with Instagram, Reddit, Roblox, or Strava have an email address?"
+    answer: "None of these providers share the account's email address with Appwrite's sign-in. Appwrite creates these users without an email and recognizes them on later sign-ins by their provider user ID. If your app needs an email, collect it after sign-in and set it from your server with the Users API."
+  - question: "Why does LINE, Linear, Naver, Netlify, or VK sign-in fail for a user who already has an account?"
+    answer: "These providers return an email address but don't tell Appwrite whether it's verified. Appwrite won't sign someone into an existing account based on an unverified email, so it redirects to your failure URL when the address already belongs to another user. To connect the provider to that account, have the user sign in first and then start `createOAuth2Session` from the browser, which links the provider as a new [identity](/docs/products/auth/identities)."
+  - question: "Can users sign in with a personal Instagram account?"
+    answer: "No. Appwrite's Instagram provider uses the Instagram API with Instagram Login, which only works with Instagram professional accounts, meaning business and creator accounts. Personal accounts can't complete the sign-in. If your audience is mostly personal accounts, offer another provider alongside Instagram."
+  - question: "How do I get the user's email address from LINE?"
+    answer: "Appwrite requests the `email` scope for LINE, but LINE only shares email addresses with channels that have the email address permission. Apply for it on your LINE Login channel's **Basic settings** tab in the LINE Developers Console. Appwrite stores the email as unverified, because LINE doesn't report whether it's verified."
+  - question: "Are the new OAuth2 providers available on self-hosted Appwrite?"
+    answer: "All 14 providers are live on Appwrite Cloud and ship in the next self-hosted Appwrite release. Follow the [upgrade guide](/docs/advanced/self-hosting/production/updates) to update your instance when it's out."
+---
+
+Sign-in buttons convert best when they match the accounts your users already have. A deployment dashboard's users live on Vercel, Netlify, or Railway. A Roblox game companion app's players have Roblox accounts. An app for Japan or Thailand needs LINE, and one for South Korea needs Naver next to Kakao.
+
+Until now, none of these were OAuth2 providers in Appwrite. Supporting one meant writing your own OAuth2 client: the authorization redirect, the code exchange, PKCE where the provider requires it, token refresh, and mapping each provider's profile onto a user. Then you kept it working every time the provider changed its API.
+
+Today, we are announcing **14 new OAuth2 login providers** in Appwrite Auth: **Atlassian**, **Instagram**, **LINE**, **Linear**, **Naver**, **Netlify**, **Patreon**, **Railway**, **Reddit**, **Roblox**, **Strava**, **Vercel**, **VK**, and **WorkOS**. Each one works with the same [OAuth2 login](/docs/products/auth/oauth2) flow as the providers you already use, and each has its own value in the `OAuthProvider` enum.
+
+# What the new OAuth2 providers give you
+
+- **14 new sign-in options.** Enable any of them in the Console and add a button. There's no OAuth2 client to build or maintain.
+- **One API for every provider.** `createOAuth2Token` on the server and `createOAuth2Session` on the client work the same way for all 14. Only the `OAuthProvider` value changes.
+- **PKCE handled for you.** LINE, Linear, Railway, Roblox, Vercel, and VK use PKCE. Appwrite generates the verifier and challenge and sends them during the code exchange.
+- **Access tokens for each provider's API.** The session stores the provider's access token as `providerAccessToken`, so your server can call the Vercel, Linear, Atlassian, or Strava API on the user's behalf.
+- **Token refresh.** Appwrite refreshes the provider token through [`updateSession`](/docs/products/auth/oauth2#refresh-tokens) using the refresh token the provider issues.
+- **Profile photos from every provider.** All 14 share the user's avatar, so they power [Avatars user photos](/docs/products/avatars/user-photos) with no extra API call.
+- **Linked accounts.** A user who signs in with Reddit can link Strava or GitHub to the same account through [Identities](/docs/products/auth/identities).
+- **Live on Appwrite Cloud.** All 14 are available on [Appwrite Cloud](/sign-in) today and ship in the next self-hosted Appwrite release.
+
+# Meet the 14 new providers
+
+The new providers fall into four groups. Offer as many as you like side by side; users who start with one can link the others later and keep a single Appwrite account.
+
+## Developer platforms: Vercel, Netlify, Railway, Linear, and Atlassian
+
+These providers fit apps built on top of the user's account on that platform, like deployment dashboards, integrations, and internal tools. The same sign-in gives your server a token for the platform's API, so you don't need a separate "connect your account" step.
+
+### Vercel
+
+[Sign in with Vercel](https://vercel.com/docs/sign-in-with-vercel) lets apps sign users in with their Vercel account. Appwrite requests `openid`, `email`, `profile`, and `offline_access`, uses PKCE, and stores the user's name, email, and photo. The email is marked as verified only when Vercel reports it as verified.
+
+### Netlify
+
+[Netlify OAuth applications](https://docs.netlify.com/api-and-cli-guides/api-guides/get-started-with-api/) let users authorize your app against their Netlify account. Appwrite sends no scopes and stores the user's full name, email, and avatar, with the email marked as unverified because Netlify doesn't report its status.
+
+### Railway
+
+[Login with Railway](https://docs.railway.com/integrations/oauth) signs users in with their Railway account. Appwrite requests `openid`, `email`, `profile`, and `offline_access`, uses PKCE, and asks Railway to show its consent screen, because Railway only issues a refresh token when consent is requested. The email is marked as verified only when Railway reports it as verified.
+
+### Linear
+
+[Linear OAuth](https://linear.app/developers/oauth-2-0-authentication) fits tools that work with your users' issues and projects. Appwrite requests `read` with PKCE and stores the user's name, email, and avatar, with the email marked as unverified because Linear doesn't report its status. Add scopes such as `write` when your app needs to change data in Linear.
+
+### Atlassian
+
+[Atlassian OAuth 2.0 (3LO) apps](https://developer.atlassian.com/cloud/jira/platform/oauth-2-3lo-apps/) sign users in with the Atlassian account they use for Jira and Confluence. Appwrite requests `read:me` and `offline_access` and stores the user's name, email, and photo, with the email marked as verified only when Atlassian reports it as verified. Add Jira or Confluence scopes, such as `read:jira-work`, to call those APIs.
+
+## Communities and creators: Reddit, Roblox, Patreon, Strava, and Instagram
+
+These providers bring an audience. Add them when your app serves a community that already lives on the platform.
+
+### Reddit
+
+[Reddit OAuth2](https://github.com/reddit-archive/reddit/wiki/OAuth2) signs users in with their Reddit account. Appwrite requests `identity` with a permanent token, so the session gets a refresh token, and stores the username and avatar. Reddit doesn't share email addresses, so Reddit users are created without one.
+
+### Roblox
+
+[Roblox OAuth 2.0](https://create.roblox.com/docs/cloud/auth/oauth2-overview) lets companion apps, community sites, and creator tools sign players in with their Roblox account. Appwrite requests `openid` and `profile` with PKCE and stores the player's display name and avatar. Roblox doesn't share email addresses, so Roblox users are created without one.
+
+### Patreon
+
+[Patreon OAuth](https://docs.patreon.com/#oauth) signs users in with their Patreon account, which suits apps that creators offer to their members. Appwrite requests `identity` and `identity[email]` and stores the user's name, email, and photo. The email is marked as verified only when Patreon reports it as verified. Add `identity.memberships` to see which campaigns the user belongs to.
+
+### Strava
+
+[Strava's OAuth](https://developers.strava.com/docs/authentication/) signs athletes in with their Strava account. Appwrite requests `read` and stores the athlete's name and profile photo. Strava doesn't share email addresses, so Strava users are created without one. Add `activity:read` to read the athlete's activities from your server.
+
+### Instagram
+
+Appwrite's Instagram provider uses the [Instagram API with Instagram Login](https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login), which only works with Instagram professional accounts: business and creator accounts. Appwrite requests `instagram_business_basic` and stores the account's name or username and profile picture, but no email. Appwrite exchanges Instagram's short-lived token for a 60-day long-lived one and refreshes it with the session.
+
+## Regional sign-in: LINE, Naver, and VK
+
+These are the accounts users expect to see in their markets.
+
+### LINE
+
+[LINE Login](https://developers.line.biz/en/docs/line-login/) signs users in with the account they use for LINE, the default messaging app in Japan, Taiwan, and Thailand. Appwrite requests `openid`, `profile`, and `email` with PKCE and stores the user's name, email, and photo. LINE only shares email addresses with channels that have the email address permission, so apply for it on your channel's **Basic settings** tab. Appwrite stores LINE emails as unverified.
+
+### Naver
+
+[Naver Login](https://developers.naver.com/docs/login/overview/overview.md) signs users in with their Naver account. Naver runs South Korea's largest search engine and web portal, so together with Kakao it covers the sign-in options most Korean users expect. Naver asks users for the consent items you configure on your Naver app, so Appwrite doesn't request any scopes. Appwrite stores the user's name or nickname, email, and profile image, with the email marked as unverified.
+
+### VK
+
+[VK ID](https://id.vk.com/about/business/go/docs/ru/vkid/latest/vk-id/connection/start-integration/how-auth-works) signs users in with their VK account. Appwrite requests `vkid.personal_info` and `email` with PKCE and stores the user's name, email, and avatar, with the email marked as unverified because VK doesn't report its status.
+
+## Enterprise sign-in: WorkOS
+
+### WorkOS
+
+[WorkOS AuthKit](https://workos.com/docs/user-management) is a hosted sign-in for business apps. With the WorkOS provider, users sign in through your AuthKit environment and arrive in Appwrite as regular users. Appwrite sends no scopes, stores the user's name, email, and photo, and marks the email as verified only when WorkOS reports it as verified.
+
+## The new providers at a glance
+
+Each provider name links to its integration guide, which walks through registering your app on the provider's side. The email column shows whether the provider shares the user's email address with Appwrite, and whether Appwrite marks it as verified.
+
+| Provider                                   | `OAuthProvider` value     | Default scopes                                 | Email address                                  |
+| ------------------------------------------ | ------------------------- | ---------------------------------------------- | ---------------------------------------------- |
+| [Atlassian](/integrations/oauth-atlassian) | `OAuthProvider.Atlassian` | `read:me`, `offline_access`                    | Shared, verified if Atlassian verified it      |
+| [Instagram](/integrations/oauth-instagram) | `OAuthProvider.Instagram` | `instagram_business_basic`                     | Not shared                                     |
+| [LINE](/integrations/oauth-line)           | `OAuthProvider.Line`      | `openid`, `profile`, `email`                   | Shared with permission, marked unverified      |
+| [Linear](/integrations/oauth-linear)       | `OAuthProvider.Linear`    | `read`                                         | Shared, marked unverified                      |
+| [Naver](/integrations/oauth-naver)         | `OAuthProvider.Naver`     | None, uses your app's consent items            | Shared if the user consents, marked unverified |
+| [Netlify](/integrations/oauth-netlify)     | `OAuthProvider.Netlify`   | None                                           | Shared, marked unverified                      |
+| [Patreon](/integrations/oauth-patreon)     | `OAuthProvider.Patreon`   | `identity`, `identity[email]`                  | Shared, verified if Patreon verified it        |
+| [Railway](/integrations/oauth-railway)     | `OAuthProvider.Railway`   | `openid`, `email`, `profile`, `offline_access` | Shared, verified if Railway verified it        |
+| [Reddit](/integrations/oauth-reddit)       | `OAuthProvider.Reddit`    | `identity`                                     | Not shared                                     |
+| [Roblox](/integrations/oauth-roblox)       | `OAuthProvider.Roblox`    | `openid`, `profile`                            | Not shared                                     |
+| [Strava](/integrations/oauth-strava)       | `OAuthProvider.Strava`    | `read`                                         | Not shared                                     |
+| [Vercel](/integrations/oauth-vercel)       | `OAuthProvider.Vercel`    | `openid`, `email`, `profile`, `offline_access` | Shared, verified if Vercel verified it         |
+| [VK](/integrations/oauth-vk)               | `OAuthProvider.Vk`        | `vkid.personal_info`, `email`                  | Shared, marked unverified                      |
+| [WorkOS](/integrations/oauth-workos)       | `OAuthProvider.Workos`    | None                                           | Shared, verified if WorkOS verified it         |
+
+The email column also decides how Appwrite matches a sign-in to an existing account:
+
+- **Verified email.** When Atlassian, Patreon, Railway, Vercel, or WorkOS reports the address as verified, a sign-in whose email matches an existing user signs in to that user.
+- **Unverified email.** LINE, Linear, Naver, Netlify, and VK users get the email with `emailVerification` set to `false`. If another user already has that address, Appwrite redirects to your failure URL instead of signing the user in, because an unverified address doesn't prove ownership. To connect the provider to that account, have the user sign in first and then start `createOAuth2Session` from the browser, which links the provider as a new [identity](/docs/products/auth/identities). A sign-in your server starts with `createOAuth2Token` never links to the browser's signed-in user.
+- **No email.** Appwrite creates Instagram, Reddit, Roblox, and Strava users without an email address and recognizes them on later sign-ins by their provider user ID. If your app needs an email, ask for it after sign-in and set it with the Users API's `updateEmail` method.
+
+# Add the new providers to your app
+
+Before you write any code:
+
+1. In the Appwrite Console, open your project and go to **Auth** > **Social providers**.
+2. Open the provider, turn it on, and paste the client ID and secret from the provider's developer portal.
+3. Copy the redirect URI shown in the dialog into your app's settings on the provider's side.
+4. Add your app's domain as a web platform so Appwrite accepts your `success` and `failure` URLs.
+
+![The Social providers page in the Appwrite Console with Instagram, LINE, Linear, Naver, Netlify, and Patreon marked New](/images/blog/announcing-14-new-oauth2-providers/social-providers.avif)
+
+![The Vercel OAuth2 settings panel in the Appwrite Console with Client ID, Client Secret, and the Redirect URI to copy](/images/blog/announcing-14-new-oauth2-providers/vercel-settings.avif)
+
+## Sign in from server-side apps
+
+Server-side apps, including server-rendered (SSR) apps built with frameworks like Next.js, Nuxt, SvelteKit, and Astro, handle sign-in on the server and keep the session in a cookie. Server-side OAuth2 login takes two routes. The first calls `createOAuth2Token` and redirects the user to the provider. The second receives the user back from Appwrite, checks that this browser started the sign-in, and exchanges the `userId` and `secret` URL parameters for a session with `createSession`. The [server-side rendering docs](/docs/products/auth/server-side-rendering#oauth2) cover the full flow in more languages.
+
+The examples below use Express and `node-appwrite` 32.0.0 or later, which includes all 14 `OAuthProvider` values. Start with an admin client that uses an API key with the `sessions.write` scope, and a function that stores a random `state` value in a cookie. Appwrite returns that value unchanged on your `success` and `failure` URLs, so the callback can check that the sign-in it receives is one this browser started.
+
+```server-nodejs
+import crypto from 'node:crypto';
+import express from 'express';
+import cookieParser from 'cookie-parser';
+import { Client, Account, OAuthProvider } from 'node-appwrite';
+
+const app = express();
+app.use(cookieParser());
+
+const adminClient = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>'); // Needs the sessions.write scope
+
+// A random value only this browser holds
+function createState(res) {
+    const state = crypto.randomBytes(32).toString('hex');
+    res.cookie('oauth_state', state, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax', // Sent on the redirect back to your app
+        maxAge: 10 * 60 * 1000,
+        path: '/',
+    });
+    return state;
+}
+```
+
+With 14 new providers, one route that takes the provider from the URL is easier to maintain than a route per provider. Map the URL segment to an `OAuthProvider` value, and only list the providers you enabled in the Console.
+
+```server-nodejs
+// Only the providers you enabled in the Console
+const providers = {
+    atlassian: OAuthProvider.Atlassian,
+    linear: OAuthProvider.Linear,
+    netlify: OAuthProvider.Netlify,
+    railway: OAuthProvider.Railway,
+    reddit: OAuthProvider.Reddit,
+    vercel: OAuthProvider.Vercel,
+    workos: OAuthProvider.Workos,
+};
+
+app.get('/oauth/:provider', async (req, res) => {
+    const provider = providers[req.params.provider];
+    if (!provider) {
+        return res.status(404).send('Unknown provider');
+    }
+
+    const account = new Account(adminClient);
+
+    const redirectUrl = await account.createOAuth2Token({
+        provider,
+        success: 'https://example.com/oauth/success',
+        failure: 'https://example.com/oauth/failure',
+        state: createState(res),
+    });
+
+    res.redirect(redirectUrl);
+});
+```
+
+A link to `/oauth/vercel` now starts Sign in with Vercel. Finally, add the callback route. It's the same for every provider: check that the `state` URL parameter matches the cookie, then create the session and store the session secret in a cookie. Without the `state` check, an attacker could send a user a success link for the attacker's account and sign the user into it.
+
+```server-nodejs
+app.get('/oauth/success', async (req, res) => {
+    const { userId, secret, state } = req.query;
+
+    // Only accept a sign-in this browser started
+    const expected = req.cookies.oauth_state;
+    if (!expected || state !== expected) {
+        return res.redirect('/login?error=oauth');
+    }
+    res.clearCookie('oauth_state', { path: '/' });
+
+    try {
+        const account = new Account(adminClient);
+        const session = await account.createSession({ userId, secret });
+
+        res.cookie('a_session_<PROJECT_ID>', session.secret, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'lax',
+            expires: new Date(session.expire),
+            path: '/',
+        });
+
+        res.redirect('/');
+    } catch (error) {
+        res.redirect('/login?error=oauth');
+    }
+});
+```
+
+From here, every request that needs the user creates a session client from that cookie, as shown in the [session client docs](/docs/products/auth/server-side-rendering#session-client).
+
+## Request more access with scopes
+
+To call a provider's API beyond the user's profile, pass a `scopes` array. Appwrite adds your scopes to the provider's defaults, so the user is still signed in with the scopes in the table above. For example, a training app that reads the athlete's Strava activities asks for `activity:read`:
+
+```server-nodejs
+const redirectUrl = await account.createOAuth2Token({
+    provider: OAuthProvider.Strava,
+    success: 'https://example.com/oauth/success',
+    failure: 'https://example.com/oauth/failure',
+    scopes: ['activity:read'], // Added to Strava's default read scope
+    state: createState(res),
+});
+```
+
+After sign-in, read the provider's access token from the session's `providerAccessToken` on your server and call the provider's API with it.
+
+## Sign in from the browser and mobile apps
+
+Apps that sign users in from the browser or a mobile app call `createOAuth2Session` with the same `OAuthProvider` values. Today, the `appwrite` Web SDK 29.3.1 and the Apple, Android, and React Native SDKs include `OAuthProvider.Naver`, and the Flutter SDK includes `Naver` and `Workos`. Until the other values land, start sign-in for the rest from your server with the flow above.
+
+```client-web
+import { Client, Account, OAuthProvider } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+account.createOAuth2Session({
+    provider: OAuthProvider.Naver,
+    success: 'https://example.com/success',
+    failure: 'https://example.com/failure',
+});
+```
+
+# Getting started with the new OAuth2 providers
+
+All 14 providers are live on Appwrite Cloud now. Pick the ones your users already have accounts on, register your app with each provider using its integration guide, and add its `OAuthProvider` value to your sign-in route. Self-hosted instances get them in the next Appwrite release.
+
+- [OAuth2 login](/docs/products/auth/oauth2)
+- [Server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2)
+- [Avatars user photos](/docs/products/avatars/user-photos)
+- [Sign up for Appwrite Cloud](/sign-in)

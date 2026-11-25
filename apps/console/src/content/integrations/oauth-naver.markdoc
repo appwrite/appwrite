@@ -1,0 +1,110 @@
+---
+layout: integration
+title: OAuth with Naver
+description: Let users in South Korea sign in with their Naver account, the account behind Korea's largest search engine and web portal.
+date: 2026-11-25
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/oauth-naver/cover.avif
+category: auth
+product:
+    vendor: Naver
+    description: "Naver runs South Korea's largest search engine and web portal, and Naver Login lets people sign in to other apps with their Naver ID."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+images:
+    - /images/integrations/oauth-naver/cover.avif
+---
+
+Naver runs South Korea's largest search engine and web portal, and most people in Korea have a Naver ID for search, mail, shopping, and blogs. [Naver Login](https://developers.naver.com/docs/login/overview/overview.md) lets them sign in to your app with that ID, which makes it, together with [Kakao](/integrations/oauth-kakao), one of the sign-in options users in Korea expect to see.
+
+# How does the integration work?
+
+Appwrite Auth has a Naver OAuth2 provider built on the Naver Login API. When a user signs in, Naver asks them to agree to share the profile items your app requests, then sends them back to Appwrite, which creates the user or signs in the existing one.
+
+Naver doesn't use OAuth scopes. Instead, you choose the profile items your app receives when you register it with Naver, and users can decline any item except their unique identifier. Appwrite reads the profile from the Naver profile API and stores the user's name, or their nickname when the name isn't shared, and their email address. The unique identifier becomes the provider user ID on the user's [identity](/docs/products/auth/identities). The profile image is stored on the identity too, so it also powers [user photos](/docs/products/avatars/user-photos) in Appwrite Avatars.
+
+Naver doesn't report whether the email address is verified, so Appwrite stores it as unverified. Naver issues refresh tokens, so [`updateSession`](/docs/products/auth/oauth2#refresh-tokens) can renew the provider access token, which is valid for one hour.
+
+{% info title="Self-hosted availability" %}
+Sign in with Naver is live on Appwrite Cloud and ships in the next self-hosted Appwrite release.
+{% /info %}
+
+# How to implement
+
+To add Naver sign-in to your app, complete these steps.
+
+## Step 1: Copy the redirect URI from Appwrite
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already.
+
+In the Appwrite Console, open your project, go to **Auth** > **Social providers**, and open **Naver**. Copy the **Redirect URI** shown in the dialog. It includes the provider ID and your project ID:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/naver/<PROJECT_ID>
+```
+
+The URI starts with the API endpoint your app uses, so on self-hosted Appwrite it starts with your own domain. Always copy the exact value from the Console.
+
+## Step 2: Register an application with Naver
+
+In [Naver Developers](https://developers.naver.com/), select **Application** > **애플리케이션 등록** (Register application). The first time, you agree to the terms of use and verify a phone number. Then fill in the registration form:
+
+1. Enter an **애플리케이션 이름** (application name). Naver shows it to users on the sign-in screen, so keep it short and recognizable.
+2. Under **사용 API** (APIs), choose **네이버 로그인** (Naver Login) and select the profile items your app needs, such as name, email address, nickname, and profile image. Mark each one as required or optional.
+3. Under **로그인 오픈 API 서비스 환경** (service environment), add **PC 웹** (PC web). Enter your app's domain as the **서비스 URL** (service URL), and paste the redirect URI from step 1 into **네이버 로그인 Callback URL**. You can add up to five callback URLs.
+4. Select **등록하기** (Register).
+
+Open **Application** > **내 애플리케이션** (My applications), select your app, and copy the **Client ID** and **Client Secret** from the **개요** (Overview) tab. Select **보기** (View) to reveal the secret.
+
+Treat the client secret like a password. If it's ever exposed, issue a new one from the same page and update it in Appwrite.
+
+## Step 3: Enable the provider in Appwrite
+
+Back in **Auth** > **Social providers**, open **Naver**. Paste the Client ID into **Client ID** and the Client Secret into **Client Secret**, turn the provider on, and select **Update**.
+
+## Step 4: Add Naver sign-in to your app
+
+Before you start the flow from a web app, add your app's domain as a web platform in your Appwrite project, so Appwrite accepts your `success` and `failure` URLs.
+
+From the browser, call `createOAuth2Session`. Appwrite sends the user to Naver, creates the session when they return, and redirects them to your `success` URL.
+
+```client-web
+import { Client, Account, OAuthProvider } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+account.createOAuth2Session({
+    provider: OAuthProvider.Naver,
+    success: 'https://example.com/success',
+    failure: 'https://example.com/failure',
+});
+```
+
+`OAuthProvider.Naver` is in the Web SDK from `appwrite` 29.3.0 and the Node.js SDK from `node-appwrite` 31.3.0. For a server-side rendered app, start the flow on the server with `createOAuth2Token` and exchange the returned `userId` and `secret` for a session, as described in [server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2). For Flutter, Apple, and Android apps, follow [OAuth 2 login](/docs/products/auth/oauth2#init) with the same `OAuthProvider` value.
+
+## Step 5: Pass Naver's review
+
+Until your application passes Naver's review (검수), only Naver IDs registered as administrators or testers of the application can sign in. When sign-in works end to end, request a review from the application's page in Naver Developers. Naver checks that you only request profile items your service actually uses, and it rejects services that ask users who sign up with Naver to create a separate password.
+
+# Things to know about Naver sign-in
+
+- **Identifiers belong to one application.** Naver gives each user a different unique identifier in each registered application. If you switch your Appwrite project to a different Naver application, returning users get new identifiers and become new users in Appwrite.
+- **Users can decline profile items.** Every profile item except the unique identifier can be declined on Naver's consent screen. A user who declines email sharing is created without an email address, and one who declines the name falls back to their nickname.
+- **Unverified emails don't take over accounts.** Because Naver emails are stored as unverified, Appwrite redirects to your failure URL when another user already has the same address, instead of signing the user in to that account. To connect Naver to an existing account, have the user sign in first and then start `createOAuth2Session` from the browser, which links Naver as a new [identity](/docs/products/auth/identities).
+- **One-hour access tokens.** Naver access tokens expire after an hour. When Naver renews one, it doesn't send a new refresh token, so Appwrite keeps the existing one.
+
+# Read more about Naver and Appwrite Auth
+
+If you would like to learn more about Naver and Appwrite Auth, these resources are a good place to start:
+
+- [Naver Login developer guide (Korean)](https://developers.naver.com/docs/login/devguide/devguide.md)
+- [Announcing 14 new OAuth2 login providers in Appwrite Auth](/blog/post/announcing-14-new-oauth2-providers)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [OAuth with Kakao](/integrations/oauth-kakao)

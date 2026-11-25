@@ -1,0 +1,112 @@
+---
+layout: integration
+title: OAuth with Roblox
+description: Let players and creators sign in with their Roblox account in Appwrite Auth, with their display name, avatar headshot, and Roblox user ID.
+date: 2026-11-25
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/oauth-roblox/cover.avif
+category: auth
+product:
+    vendor: Roblox
+    description: 'Roblox is a platform where people play, create, and share immersive experiences made by its creator community.'
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+images:
+    - /images/integrations/oauth-roblox/cover.avif
+---
+
+Roblox is a platform where people play, create, and share experiences made by its creator community. [Roblox OAuth 2.0](https://create.roblox.com/docs/cloud/auth/oauth2-overview) lets people sign in to your app with their Roblox account, which suits companion sites for experiences, creator tools, and community apps that link a Roblox account to a profile on your side.
+
+# How does the integration work?
+
+Appwrite Auth has a Roblox OAuth2 provider built on Roblox's OpenID Connect endpoints. When a user signs in, Roblox asks them to authorize your app and sends them back to Appwrite, which creates the user or signs in the existing one.
+
+Appwrite requests the `openid` and `profile` scopes and uses PKCE. It stores the user's Roblox display name as their name, along with their avatar headshot, which also powers [user photos](/docs/products/avatars/user-photos) in Appwrite Avatars. The user's Roblox user ID (`sub`) becomes the provider user ID on the user's [identity](/docs/products/auth/identities). Roblox users can change their display name and username, so use the user ID to recognize them.
+
+Roblox sign-in doesn't give Appwrite an email address, so Appwrite creates Roblox users without one and recognizes them on later sign-ins by their Roblox user ID. If your app needs an email address, ask for it after sign-in and set it from your server with the [Users API](/docs/products/auth/users).
+
+{% info title="Self-hosted availability" %}
+Sign in with Roblox is live on Appwrite Cloud and ships in the next self-hosted Appwrite release.
+{% /info %}
+
+# How to implement
+
+To add Roblox sign-in to your app, complete these steps.
+
+## Step 1: Copy the redirect URI from Appwrite
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already.
+
+In the Appwrite Console, open your project, go to **Auth** > **Social providers**, and open **Roblox**. Copy the **Redirect URI** shown in the drawer. It includes the provider ID and your project ID:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/roblox/<PROJECT_ID>
+```
+
+On self-hosted Appwrite, the URI starts with your own domain. Always copy the exact value from the Console.
+
+## Step 2: Register a Roblox OAuth 2.0 app
+
+You can register apps only for Roblox accounts or groups you own.
+
+1. In the [Creator Dashboard](https://create.roblox.com/dashboard/creations), go to [OAuth 2.0 Apps](https://create.roblox.com/dashboard/credentials?activeTab=OAuthTab) and click **Create App**.
+2. Enter a unique **Application Name**, agree to the Roblox Terms of Service, and click **Create**.
+3. Copy the **Client ID** and **Secret**. Roblox shows the secret only once. After you close the page, you can only generate a new one.
+4. Click **Continue to Edit**.
+5. Under the permission settings, choose the **App Category** that fits your app and add the `openid` and `profile` scopes. Appwrite requests both on every sign-in.
+6. Under **Redirect URLs**, add the redirect URI you copied in step 1, then save.
+
+## Step 3: Enable the provider in Appwrite
+
+Back in the **Roblox** drawer in the Appwrite Console:
+
+1. Paste the client ID into **Client ID** and the secret into **Client Secret**.
+2. Turn the provider on.
+3. Click **Update**.
+
+## Step 4: Add Roblox sign-in to your app
+
+Add your app's domain as a web platform in your Appwrite project, so Appwrite accepts your `success` and `failure` URLs.
+
+`OAuthProvider.Roblox` is available in the Node.js server SDK from `node-appwrite` 32.0.0. Start the sign-in on your server with `createOAuth2Token` and redirect the user to the URL it returns:
+
+```server-nodejs
+import { Client, Account, OAuthProvider } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const account = new Account(client);
+
+const redirectUrl = await account.createOAuth2Token({
+    provider: OAuthProvider.Roblox,
+    success: 'https://example.com/oauth/success',
+    failure: 'https://example.com/oauth/failure',
+    state: state, // A random value you also store in a cookie
+});
+```
+
+When the user comes back to your `success` URL, check that its `state` matches the cookie, then exchange the `userId` and `secret` parameters for a session with `createSession`. [Server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2) walks through both endpoints. From a client app, call `createOAuth2Session` with `OAuthProvider.Roblox` once your client SDK version includes it.
+
+# Things to know about Roblox sign-in
+
+- **New apps are private.** A newly registered Roblox app can be authorized by at most 10 unique users, which is enough to test with your team. To open it to everyone, click **Edit and Publish** on the OAuth 2.0 Apps page and submit it for review with a demo video of the sign-in flow and a justification for its scopes. The [app registration guide](https://create.roblox.com/docs/cloud/auth/oauth2-registration) lists what Roblox checks.
+- **Access tokens are short-lived.** Roblox access tokens are valid for 15 minutes, and each refresh token is valid for 90 days and works once. Appwrite saves the new refresh token every time [`updateSession`](/docs/products/auth/oauth2#refresh-tokens) renews the provider access token.
+- **Some users have no photo.** Roblox doesn't return an avatar headshot until it has been generated, or after it has been moderated, so those users have no photo in Appwrite.
+- **No email address.** Roblox users have no email in Appwrite until you set one, so features that need an address, such as [email verification](/docs/products/auth/verify-user), don't work for them until then.
+
+# Read more about Roblox and Appwrite Auth
+
+If you would like to learn more about Roblox and Appwrite Auth, these resources are a good place to start:
+
+- [Roblox OAuth 2.0 overview](https://create.roblox.com/docs/cloud/auth/oauth2-overview)
+- [Roblox OAuth 2.0 app registration](https://create.roblox.com/docs/cloud/auth/oauth2-registration)
+- [Announcing 14 new OAuth2 login providers in Appwrite Auth](/blog/post/announcing-14-new-oauth2-providers)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2)
+- [Manage linked accounts with Identities](/docs/products/auth/identities)

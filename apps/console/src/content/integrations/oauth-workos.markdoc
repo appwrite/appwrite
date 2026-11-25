@@ -1,0 +1,108 @@
+---
+layout: integration
+title: OAuth with WorkOS
+description: Sign users in through WorkOS AuthKit and land them in your app with an Appwrite session, including enterprise SSO configured in WorkOS.
+date: 2026-11-25
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/oauth-workos/cover.avif
+category: auth
+product:
+    vendor: WorkOS
+    description: 'WorkOS provides authentication for B2B apps, including enterprise single sign-on, directory sync, and AuthKit, a hosted sign-in page.'
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+images:
+    - /images/integrations/oauth-workos/cover.avif
+---
+
+WorkOS provides authentication for B2B apps, including enterprise single sign-on and [AuthKit](https://workos.com/docs/authkit), a hosted sign-in page. With the WorkOS provider in Appwrite Auth, users sign in through AuthKit and come back to your app with an Appwrite session, so your app can offer the sign-in methods you configure in WorkOS, such as an organization's SSO connection, and keep using Appwrite for everything after sign-in.
+
+# How does the integration work?
+
+Appwrite sends users to AuthKit, which offers every sign-in method configured in your WorkOS environment, such as email and password, social sign-in, or an organization's SSO connection. When the user comes back, Appwrite exchanges the code with the WorkOS User Management API, which returns the user along with the tokens. Appwrite then creates the user or signs in the existing one.
+
+Appwrite stores the user's first and last name, email address, and profile picture. The picture also powers [user photos](/docs/products/avatars/user-photos) in Appwrite Avatars. The WorkOS user ID, which starts with `user_`, becomes the provider user ID on the user's [identity](/docs/products/auth/identities). The email address is marked as verified only when WorkOS reports `email_verified` as `true`.
+
+{% info title="Self-hosted availability" %}
+Sign in with WorkOS is live on Appwrite Cloud and ships in the next self-hosted Appwrite release.
+{% /info %}
+
+# How to implement
+
+To add WorkOS sign-in to your app, complete these steps.
+
+## Step 1: Copy the redirect URI from Appwrite
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already.
+
+In the Appwrite Console, open your project, go to **Auth** > **Social providers**, and open **WorkOS**. Copy the **Redirect URI** shown in the drawer. It includes the provider ID and your project ID:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/workos/<PROJECT_ID>
+```
+
+On self-hosted Appwrite, the URI starts with your own domain. Always copy the exact value from the Console.
+
+## Step 2: Configure WorkOS
+
+In the [WorkOS Dashboard](https://dashboard.workos.com), set up AuthKit for the environment you want to use, and configure the sign-in methods and SSO connections your users need. Then:
+
+1. Open **Applications**, select your application, and go to the **Redirects** tab. Add the redirect URI you copied in step 1.
+2. Copy the environment's **Client ID**, which starts with `client_`, and an **API key**, which starts with `sk_`. Appwrite uses the API key as the client secret.
+
+Each WorkOS environment, such as staging and production, has its own client ID and API keys, so copy both from the environment you configured. The API key can call any WorkOS API for that environment, so treat it like a password.
+
+## Step 3: Enable the provider in Appwrite
+
+Back in the **WorkOS** drawer in the Appwrite Console:
+
+1. Paste the client ID into **Client ID** and the API key into **Client Secret**.
+2. Turn the provider on.
+3. Click **Update**.
+
+## Step 4: Add WorkOS sign-in to your app
+
+Add your app's domain as a web platform in your Appwrite project, so Appwrite accepts your `success` and `failure` URLs.
+
+`OAuthProvider.Workos` is available in the Node.js server SDK from `node-appwrite` 32.0.0. Start the sign-in on your server with `createOAuth2Token` and redirect the user to the URL it returns:
+
+```server-nodejs
+import { Client, Account, OAuthProvider } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const account = new Account(client);
+
+const redirectUrl = await account.createOAuth2Token({
+    provider: OAuthProvider.Workos,
+    success: 'https://example.com/oauth/success',
+    failure: 'https://example.com/oauth/failure',
+    state: state, // A random value you also store in a cookie
+});
+```
+
+When the user comes back to your `success` URL, check that its `state` matches the cookie, then exchange the `userId` and `secret` parameters for a session with `createSession`. [Server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2) walks through both endpoints. From a client app, call `createOAuth2Session` with `OAuthProvider.Workos` once your client SDK version includes it.
+
+# Things to know about WorkOS sign-in
+
+- **Sign-in methods come from WorkOS.** Appwrite always sends users to AuthKit, so they see the methods configured in your WorkOS environment. Add SSO connections and social providers in WorkOS, not in Appwrite.
+- **The `scopes` parameter has no effect.** Appwrite doesn't send scopes to WorkOS for this provider, so scopes you pass to `createOAuth2Token` or `createOAuth2Session` are ignored.
+- **Refresh tokens are stored for you.** WorkOS returns a refresh token with the user, and [`updateSession`](/docs/products/auth/oauth2#refresh-tokens) uses it to renew the provider access token.
+- **Unverified emails don't take over accounts.** If WorkOS doesn't report the email as verified and another user already has that address, Appwrite redirects to your failure URL instead of signing the user in. To connect WorkOS to that account, have the user sign in first and then start `createOAuth2Session` from the browser, which links WorkOS as a new [identity](/docs/products/auth/identities).
+
+# Read more about WorkOS and Appwrite Auth
+
+If you would like to learn more about WorkOS and Appwrite Auth, these resources are a good place to start:
+
+- [WorkOS AuthKit](https://workos.com/docs/authkit)
+- [WorkOS AuthKit authentication API](https://workos.com/docs/reference/authkit/authentication)
+- [Announcing 14 new OAuth2 login providers in Appwrite Auth](/blog/post/announcing-14-new-oauth2-providers)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2)
+- [Manage linked accounts with Identities](/docs/products/auth/identities)

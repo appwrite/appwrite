@@ -270,7 +270,7 @@ When a user signs in with [OAuth2](/docs/products/auth/oauth2), Appwrite stores 
 
 These providers supply a profile photo:
 
-Auth0, Autodesk, Bitbucket, Box, Dailymotion, Discord, Disqus, Dropbox, Etsy, Facebook, Figma, Gitea, GitHub, GitLab, Google, Hugging Face, Kakao, Kick, LinkedIn, Notion, PayPal, Salesforce, Slack, Spotify, TikTok, Twitch, WordPress, X, Yahoo, Yammer, Yandex, Zoho, and Zoom.
+Atlassian, Auth0, Autodesk, Bitbucket, Box, Dailymotion, Discord, Disqus, Dropbox, Etsy, Facebook, Figma, Gitea, GitHub, GitLab, Google, Hugging Face, Instagram, Kakao, Kick, LINE, Linear, LinkedIn, Naver, Netlify, Notion, Patreon, PayPal, Railway, Reddit, Roblox, Salesforce, Slack, Spotify, Strava, TikTok, Twitch, Vercel, VK, WordPress, WorkOS, X, Yahoo, Yammer, Yandex, Zoho, and Zoom.
 
 [Native sign-in](/docs/products/auth/native-sign-in) with Google stores the photo from the ID token's `picture` claim.
 

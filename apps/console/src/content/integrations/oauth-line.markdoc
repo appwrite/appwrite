@@ -1,0 +1,89 @@
+---
+layout: integration
+title: OAuth with LINE
+description: Let users sign in with LINE, the messaging app most people use in Japan, Thailand, and Taiwan, through LINE Login in Appwrite Auth.
+date: 2026-11-25
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/oauth-line/cover.avif
+category: auth
+product:
+    vendor: LINE
+    description: 'LINE is a messaging app used daily across Japan, Thailand, Taiwan, and Indonesia, with LINE Login for signing in to other apps.'
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+images:
+    - /images/integrations/oauth-line/cover.avif
+---
+
+LINE is the messaging app most people in Japan, Thailand, and Taiwan already have on their phones. [LINE Login](https://developers.line.biz/en/docs/line-login/integrate-line-login/) lets them sign in to your app with that LINE account, which makes it the sign-in option users in those markets expect to see.
+
+# How does the integration work?
+
+Appwrite Auth has a LINE OAuth2 provider built on LINE Login v2.1, which follows OpenID Connect. Appwrite uses PKCE for the authorization code exchange, then verifies the ID token LINE returns and reads the user's details from it.
+
+Appwrite requests the `openid`, `profile`, and `email` scopes and stores the user's display name and email address. The user's LINE user ID (`sub`) becomes the provider user ID on the user's [identity](/docs/products/auth/identities). The profile picture is stored on the identity too, so it also powers [user photos](/docs/products/avatars/user-photos) in Appwrite Avatars.
+
+LINE doesn't report whether the email address is verified, so Appwrite stores it as unverified. LINE issues refresh tokens, so [`updateSession`](/docs/products/auth/oauth2#refresh-tokens) can renew the provider access token.
+
+{% info title="Self-hosted availability" %}
+Sign in with LINE is live on Appwrite Cloud and ships in the next self-hosted Appwrite release.
+{% /info %}
+
+# How to implement
+
+To add LINE sign-in to your app, complete these steps.
+
+## Step 1: Copy the redirect URI from Appwrite
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already.
+
+In the Appwrite Console, open your project, go to **Auth** > **Social providers**, and open **LINE**. Copy the **Redirect URI** shown in the dialog. It includes the provider ID and your project ID:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/line/<PROJECT_ID>
+```
+
+The URI starts with the API endpoint your app uses, so on self-hosted Appwrite it starts with your own domain. Always copy the exact value from the Console.
+
+## Step 2: Create a LINE Login channel
+
+1. Sign in to the [LINE Developers Console](https://developers.line.biz/console/) and create a provider if you don't have one. A provider is the company or person offering the app.
+2. Select the provider, open the **Channels** tab, and choose **LINE Login**. Fill in the channel details, including the region you provide the service in, and choose **Web app** as the app type. A channel can't be moved to another provider after it's created.
+3. Open the channel's **LINE Login** tab and paste the redirect URI from step 1 into **Callback URL**.
+4. Open the **Basic settings** tab and copy the **Channel ID** and **Channel secret**.
+
+Treat the channel secret like a password. If it's ever exposed, issue a new one in the LINE Developers Console and update it in Appwrite.
+
+## Step 3: Apply for email address permission
+
+Appwrite requests the `email` scope, and LINE only lets a channel request it after you apply for permission. On the **Basic settings** tab, find **OpenID Connect** and select **Apply** next to **Email address permission**. Agree to the terms and upload a screenshot of the screen in your app that tells users you collect their email address and what you use it for. When LINE accepts the application, the permission shows as **Applied**.
+
+## Step 4: Enable the provider in Appwrite
+
+Back in **Auth** > **Social providers**, open **LINE**. Paste the Channel ID into **Client ID** and the Channel secret into **Client Secret**, turn the provider on, and select **Update**.
+
+## Step 5: Add LINE sign-in to your app
+
+Pass `OAuthProvider.Line` as the provider when you start the OAuth2 flow. The value is in the Node.js server SDK from `node-appwrite` 32.0.0. Until your client SDK includes it, start the flow from your server with `createOAuth2Token` and exchange the returned `userId` and `secret` for a session, as described in [server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2). Add your app's domain as a platform in your Appwrite project so Appwrite accepts your `success` and `failure` URLs.
+
+## Step 6: Publish the channel
+
+New LINE Login channels start in **Developing** status, where only users with the Admin or Tester role on the channel can sign in. When sign-in works end to end, select the **Developing** status at the top of the channel page to publish it. A published channel can't go back to **Developing**, so finish testing first.
+
+# Things to know about LINE sign-in
+
+- **User IDs belong to the provider.** LINE gives the same person a different user ID under each provider. Keep every LINE Login channel your app uses under the same provider, or the same person signing in through another provider's channel becomes a different user in Appwrite.
+- **Unverified emails don't take over accounts.** Because LINE emails are stored as unverified, Appwrite redirects to your failure URL when another user already has the same address, instead of signing the user in to that account. To connect LINE to an existing account, have the user sign in first and then start `createOAuth2Session` from the browser, which links LINE as a new [identity](/docs/products/auth/identities).
+- **Token lifetimes.** LINE access tokens are valid for 30 days, and a refresh token is valid until 90 days after its access token was issued. Once the refresh token expires, the user has to sign in again before you can call LINE APIs with the session's `providerAccessToken`.
+
+# Read more about LINE and Appwrite Auth
+
+If you would like to learn more about LINE and Appwrite Auth, these resources are a good place to start:
+
+- [Integrating LINE Login with your web app](https://developers.line.biz/en/docs/line-login/integrate-line-login/)
+- [Announcing 14 new OAuth2 login providers in Appwrite Auth](/blog/post/announcing-14-new-oauth2-providers)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2)

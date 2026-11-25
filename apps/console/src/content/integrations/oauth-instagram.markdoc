@@ -1,0 +1,86 @@
+---
+layout: integration
+title: OAuth with Instagram
+description: Let creators and businesses sign in with their Instagram professional account through Instagram's business login in Appwrite Auth.
+date: 2026-11-25
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/oauth-instagram/cover.avif
+category: auth
+product:
+    vendor: Instagram
+    description: 'Instagram is the photo and video app from Meta, with professional accounts for creators and businesses.'
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+images:
+    - /images/integrations/oauth-instagram/cover.avif
+---
+
+Instagram is Meta's photo and video app, and its professional accounts are how creators and businesses publish, sell, and measure their work there. If you're building for that audience, such as a creator dashboard, a scheduling tool, or a brand analytics app, Sign in with Instagram lets them start with the account they already run their business on.
+
+# How does the integration work?
+
+Appwrite Auth has an Instagram OAuth2 provider built on [business login for Instagram](https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/business-login), part of the Instagram API with Instagram Login. That API is built for Instagram professional accounts, meaning business and creator accounts.
+
+Appwrite requests the `instagram_business_basic` scope and reads the user's Instagram user ID, name, username, and profile picture. It stores the name, or the username when the account has no name, and the Instagram user ID becomes the provider user ID on the user's [identity](/docs/products/auth/identities). The profile picture also powers [user photos](/docs/products/avatars/user-photos) in Appwrite Avatars.
+
+Instagram doesn't share email addresses through this API, so Appwrite creates Instagram users without an email address and recognizes them on later sign-ins by their Instagram user ID. If your app needs an email address, ask for it after sign-in and set it from your server with the Users API.
+
+{% info title="Self-hosted availability" %}
+Sign in with Instagram is live on Appwrite Cloud and ships in the next self-hosted Appwrite release.
+{% /info %}
+
+# How to implement
+
+To add Instagram sign-in to your app, complete these steps.
+
+## Step 1: Copy the redirect URI from Appwrite
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already.
+
+In the Appwrite Console, open your project, go to **Auth** > **Social providers**, and open **Instagram**. Copy the **Redirect URI** shown in the dialog. It includes the provider ID and your project ID:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/instagram/<PROJECT_ID>
+```
+
+The URI starts with the API endpoint your app uses, so on self-hosted Appwrite it starts with your own domain. Always copy the exact value from the Console.
+
+## Step 2: Create a Meta app with Instagram business login
+
+1. In the [Meta App Dashboard](https://developers.facebook.com/apps/), select **Create App**. Choose **Other** as the use case and **Business** as the app type.
+2. Find the **Instagram** product and select **Set up**. This adds **API setup with Instagram login** to your app.
+3. Under **3. Set up Instagram business login**, select **Business login settings**. Paste the redirect URI from step 1 into **OAuth redirect URIs** and save.
+4. Copy the **Instagram app ID** and **Instagram app secret** from the same page.
+
+Treat the app secret like a password. If it's ever exposed, reset it in the App Dashboard and update it in Appwrite.
+
+## Step 3: Enable the provider in Appwrite
+
+Back in **Auth** > **Social providers**, open **Instagram**. Paste the Instagram app ID into **Client ID** and the Instagram app secret into **Client Secret**, turn the provider on, and select **Update**.
+
+## Step 4: Add Instagram sign-in to your app
+
+Pass `OAuthProvider.Instagram` as the provider when you start the OAuth2 flow. The value is in the Node.js server SDK from `node-appwrite` 32.0.0. Until your client SDK includes it, start the flow from your server with `createOAuth2Token` and exchange the returned `userId` and `secret` for a session, as described in [server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2). Add your app's domain as a platform in your Appwrite project so Appwrite accepts your `success` and `failure` URLs.
+
+## Step 5: Test, then request Advanced Access
+
+While you build, sign in with Instagram professional accounts you own or manage and have added to your app as testers under **App Roles** > **Roles** in the App Dashboard. To let any Instagram professional account sign in, your app needs Advanced Access to `instagram_business_basic`, which requires [App Review](https://developers.facebook.com/docs/app-review).
+
+# Things to know about Instagram sign-in
+
+- **Professional accounts only.** Business login for Instagram works with business and creator accounts. Users with a personal Instagram account have to switch it to a professional account before they can sign in.
+- **No email address.** Instagram users are created without an email, so they can't receive email OTPs, magic links, or password recovery emails until you set one with the Users API.
+- **60-day tokens.** Appwrite exchanges Instagram's short-lived token for a long-lived token that's valid for 60 days, and uses it as the refresh token too. [`updateSession`](/docs/products/auth/oauth2#refresh-tokens) can renew it once it's at least 24 hours old. A token that isn't refreshed within 60 days expires, and the user has to sign in again.
+- **More access needs more scopes.** To publish content or read insights with the session's `providerAccessToken`, pass Instagram permissions such as `instagram_business_content_publish` or `instagram_business_manage_insights` in the `scopes` parameter. Appwrite adds them to the defaults. Serving accounts you don't own or manage needs Advanced Access to each permission.
+
+# Read more about Instagram and Appwrite Auth
+
+If you would like to learn more about Instagram and Appwrite Auth, these resources are a good place to start:
+
+- [Business login for Instagram](https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/business-login)
+- [Announcing 14 new OAuth2 login providers in Appwrite Auth](/blog/post/announcing-14-new-oauth2-providers)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2)
