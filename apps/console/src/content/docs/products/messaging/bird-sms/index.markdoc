@@ -42,6 +42,13 @@ On Appwrite Cloud, the **Configure Bird** step opens with a **One-click setup** 
 1. Click **Generate API key**.
 1. Review the fields and click **Create provider**.
 
+{% only_dark %}
+![One-click setup card with a Bird sender selected](/images/docs/messaging/providers/bird/dark/one-click-bird-sms.avif)
+{% /only_dark %}
+{% only_light %}
+![One-click setup card with a Bird sender selected](/images/docs/messaging/providers/bird/one-click-bird-sms.avif)
+{% /only_light %}
+
 Appwrite creates an API key in your Bird workspace named `Appwrite SMS: <project name>` with only the `sms:write` scope, and fills it into the **API key** field. It also fills the **Sender** with the one you picked and, if you left it empty, sets the provider **Name** to `One-click Bird SMS`.
 
 If you leave the wizard without creating the provider, Appwrite revokes the key it generated so it doesn't stay unused in your Bird workspace. Clicking **Generate API key** again replaces the key in the form and revokes the previous one.
