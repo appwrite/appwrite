@@ -267,7 +267,7 @@ $platforms = [
             [
                 'key' => 'agent-skills',
                 'name' => 'AgentSkills',
-                'version' => '0.3.0',
+                'version' => '0.7.0',
                 'url' => 'https://github.com/appwrite/skills',
                 'enabled' => true,
                 'beta' => false,
