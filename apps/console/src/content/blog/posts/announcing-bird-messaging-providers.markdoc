@@ -63,7 +63,7 @@ Before you start, verify a sending domain under **Email** > **Domains** in your 
 ![The Configure Bird step for the email provider after connecting Bird, with a verified domain selected and the Generate API key button above the provider fields](/images/blog/announcing-bird-messaging-providers/one-click-bird-email.avif)
 {% /only_light %}
 
-Appwrite creates a key named `Appwrite SMTP: <project name>` with only the `emails:write` scope. Bird keys aren't tied to a domain, so the domain you pick sets the sender: the sender email becomes `noreply@<domain>` unless you already typed an address on that domain, the sender name defaults to your project name, and the provider name defaults to `One-click Bird sender`.
+Appwrite creates a key named `Appwrite SMTP: <project name>` with only the `emails:write` scope.
 
 To fill the form by hand instead, create a key under **Platform tools** > **API keys** in Bird with the `emails` scope at the `write` level and paste it into **API key**. The [Bird email docs](/docs/products/messaging/bird-email) cover both paths.
 
@@ -123,50 +123,6 @@ Appwrite creates a sending-only key and writes the relay settings for your works
 | Password | The `emails:write` key Appwrite creates |
 
 Custom SMTP is enabled as soon as the setup finishes, and your existing reply-to address is kept. The full steps are in the [custom SMTP docs](/docs/products/auth/message-templates#smtp-one-click-setup).
-
-# Create Bird providers from your backend
-
-The Console is the quickest path, but you can also create the providers through the Messaging API. The `createBirdEmailProvider` and `createBirdSMSProvider` methods ship with the next release of each server SDK. Until then, call the REST endpoints with an API key that has the `providers.write` scope:
-
-{% tabs %}
-{% tabsitem #bird-email title="Bird email" %}
-```http
-POST /v1/messaging/providers/bird-email HTTP/1.1
-Content-Type: application/json
-X-Appwrite-Project: <PROJECT_ID>
-X-Appwrite-Key: <API_KEY>
-
-{
-  "providerId": "bird-email",
-  "name": "Bird email",
-  "apiKey": "<BIRD_API_KEY>",
-  "fromName": "Acme",
-  "fromEmail": "noreply@<YOUR_DOMAIN>",
-  "enabled": true
-}
-```
-{% /tabsitem %}
-{% tabsitem #bird-sms title="Bird SMS" %}
-```http
-POST /v1/messaging/providers/bird-sms HTTP/1.1
-Content-Type: application/json
-X-Appwrite-Project: <PROJECT_ID>
-X-Appwrite-Key: <API_KEY>
-
-{
-  "providerId": "bird-sms",
-  "name": "Bird SMS",
-  "apiKey": "<BIRD_API_KEY>",
-  "from": "+12065550100",
-  "enabled": true
-}
-```
-{% /tabsitem %}
-{% /tabs %}
-
-A provider is only enabled once it has everything it needs to send: an API key and a sender email for email, an API key and a sender for SMS. Each update endpoint only accepts its own channel, so `PATCH /v1/messaging/providers/bird-sms/:providerId` refuses an email provider with `provider_incorrect_type`.
-
-Sending doesn't change. `createEmail` and `createSMS` work from every server SDK today, and messages go out through the provider each target is linked to, or through the project's first enabled provider of that type when the target has none. The [send email](/docs/products/messaging/send-email-messages) and [send SMS](/docs/products/messaging/send-sms-messages) guides walk through topics, targets, and scheduling.
 
 # How Bird delivery works in Appwrite
 
