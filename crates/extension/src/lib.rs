@@ -143,7 +143,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
             .class::<query::builder::ClickHouseBuilder>()
             .class::<query::builder::MongoDbBuilder>();
     }
-    module.request_shutdown_function(request_shutdown)
+    module.request_startup_function(request_startup).request_shutdown_function(request_shutdown)
 }
 
 /// Registers the classes built by hand rather than with `#[php_class]`: `Locale`, `UserAgent`, the
@@ -153,6 +153,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
 /// `utopia.libraries`.
 fn startup(_kind: i32, module: i32) -> i32 {
     ext_php_rs::internal::startup_guard(|| {
+        classes::retarget::reset();
         libraries::startup(module);
         if stable("locale") {
             locale::register()?;
@@ -188,6 +189,17 @@ fn startup(_kind: i32, module: i32) -> i32 {
         }
         Ok(())
     })
+}
+
+/// Points the `#[php_class]` methods that have hand-written handlers at them, once the classes
+/// are registered: the first RINIT after MINIT.
+extern "C" fn request_startup(_kind: i32, _module: i32) -> i32 {
+    classes::retarget::once(|| {
+        if stable("dsn") {
+            dsn::retarget();
+        }
+    });
+    0
 }
 
 /// Forgets what the classes hold for the request when it ends, as PHP frees its static state.
