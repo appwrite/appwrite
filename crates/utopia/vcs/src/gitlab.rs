@@ -244,7 +244,16 @@ impl Adapter for GitLab {
                 ));
             }
             let namespace = or(response.at("namespace"), Value::Array(Array::new()));
-            return php::return_string(or(at(&namespace, "path"), ""), &format!("{CLASS}::getOwnerName"));
+            // A subgroup's path is only its last segment; the API needs the full path.
+            let path = if matches!(namespace, Value::Array(_)) {
+                or(at(&namespace, "full_path"), or(at(&namespace, "path"), ""))
+            } else {
+                s("")
+            };
+            return Ok(match path {
+                Value::Str(path) => String::from_utf8_lossy(path.as_bytes()).into_owned(),
+                _ => String::new(),
+            });
         }
         let response = self.get("/user").await?;
         if response.status >= 400 {
@@ -525,6 +534,7 @@ impl Adapter for GitLab {
                     latest = list.values().last().cloned().unwrap_or(Value::Null);
                 }
 
+                let (owner, repository_name) = project_path(&project);
                 let repository_url = or(at(&project, "web_url"), "");
                 let branch = crate::github::push_branch(&at(&payload, "ref"));
                 let branch_url = concat_if_both(&repository_url, "/-/tree/", &branch);
@@ -547,11 +557,11 @@ impl Adapter for GitLab {
                     ("branch", branch),
                     ("branchUrl", branch_url),
                     ("repositoryId", Value::Str(php::string(&or(at(&project, "id"), "")))),
-                    ("repositoryName", or(at(&project, "name"), "")),
+                    ("repositoryName", repository_name),
                     ("repositoryUrl", repository_url),
                     ("installationId", s("")),
                     ("commitHash", checkout_sha),
-                    ("owner", or(at(&project, "namespace"), "")),
+                    ("owner", owner),
                     ("authorUrl", s("")),
                     ("authorAvatarUrl", or(at(&payload, "user_avatar"), "")),
                     ("headCommitAuthorName", or(path(&latest, &["author", "name"]), "")),
@@ -567,6 +577,7 @@ impl Adapter for GitLab {
             "Merge Request Hook" => {
                 let project = or(at(&payload, "project"), Value::Array(Array::new()));
                 let mr = or(at(&payload, "object_attributes"), Value::Array(Array::new()));
+                let (owner, repository_name) = project_path(&project);
                 let repository_url = or(at(&project, "web_url"), "");
                 let branch = or(at(&mr, "source_branch"), "");
                 let branch_url = concat_if_both(&repository_url, "/-/tree/", &branch);
@@ -588,11 +599,11 @@ impl Adapter for GitLab {
                     ("branch", branch),
                     ("branchUrl", branch_url),
                     ("repositoryId", Value::Str(php::string(&or(at(&project, "id"), "")))),
-                    ("repositoryName", or(at(&project, "name"), "")),
+                    ("repositoryName", repository_name),
                     ("repositoryUrl", repository_url),
                     ("installationId", s("")),
                     ("commitHash", or(path(&mr, &["last_commit", "id"]), "")),
-                    ("owner", or(at(&project, "namespace"), "")),
+                    ("owner", owner),
                     ("authorUrl", s("")),
                     ("authorAvatarUrl", or(path(&payload, &["user", "avatar_url"]), "")),
                     ("headCommitUrl", or(path(&mr, &["last_commit", "url"]), "")),
@@ -1108,4 +1119,22 @@ impl Git for GitLab {
 /// compare as numbers).
 fn loose_is(event: &str, name: &str) -> bool {
     s(event).loose_eq(&s(name))
+}
+
+/// A webhook project's owner and repository paths (`getProjectPath()`): its
+/// `namespace` and `name` are display names ("Jane Doe", "My App") the API
+/// cannot address, while `path_with_namespace` holds the paths it takes,
+/// with the full group path for projects in subgroups.
+fn project_path(project: &Value) -> (Value, Value) {
+    if !matches!(project, Value::Array(_)) {
+        return (s(""), s(""));
+    }
+    if let Value::Str(path) = at(project, "path_with_namespace") {
+        let bytes = path.as_bytes();
+        if let Some(separator) = bytes.iter().rposition(|b| *b == b'/') {
+            return (s(&bytes[..separator]), s(&bytes[separator + 1..]));
+        }
+    }
+    let string = |v: Value| if matches!(v, Value::Str(_)) { v } else { s("") };
+    (string(or(at(project, "namespace"), "")), string(or(at(project, "name"), "")))
 }

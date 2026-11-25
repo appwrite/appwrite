@@ -10,7 +10,10 @@ use crate::error::{Error, Result};
 use crate::php;
 
 /// The browser `User-Agent` every call sends.
-const USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36";
+/// Sent on every provider API call (PHP `Adapter::USER_AGENT`). GitHub
+/// requires a User-Agent; it names this client honestly, since a
+/// browser-like one makes Bitbucket apply its XSRF check to writes.
+pub const USER_AGENT: &str = "utopia-php/vcs";
 
 /// An HTTP method.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -131,6 +134,9 @@ pub(crate) struct Transport {
     /// Whether self-signed certificates are accepted (PHP `$selfSigned`,
     /// `false` by default: provider certificates are verified).
     pub self_signed: bool,
+    /// The adapter's own headers after `content-type` (the rest of PHP's
+    /// `$headers`), sent before the call's `Authorization`.
+    pub headers: Vec<(&'static str, &'static str)>,
     /// Made on the first call: an adapter that only parses webhooks never
     /// needs them. One set verifies certificates, the other does not, so
     /// toggling `self_signed` after a call takes effect on the next one.
@@ -168,6 +174,7 @@ impl Transport {
         Transport {
             endpoint: endpoint.into(),
             self_signed: false,
+            headers: Vec::new(),
             verifying: OnceLock::new(),
             trusting: OnceLock::new(),
         }
@@ -213,6 +220,9 @@ impl Transport {
         let mut request = Request::new(call.method.as_str(), &url).map_err(Error::Client)?;
         let content_type = if form { "application/x-www-form-urlencoded" } else { "application/json" };
         request = request.header("content-type", content_type).map_err(Error::Client)?;
+        for (name, value) in &self.headers {
+            request = request.header(name, value).map_err(Error::Client)?;
+        }
         if let Some(authorization) = &call.authorization {
             request = request.header("Authorization", authorization).map_err(Error::Client)?;
         }

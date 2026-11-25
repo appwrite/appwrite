@@ -83,9 +83,13 @@ pub struct Bitbucket {
 impl Bitbucket {
     /// An adapter on `https://api.bitbucket.org/2.0`.
     pub fn new(cache: Arc<Cache>) -> Self {
+        let mut transport = Transport::new("https://api.bitbucket.org/2.0");
+        // Bitbucket runs an XSRF check on writes whose User-Agent looks like a
+        // browser; `X-Atlassian-Token: no-check` opts API calls out of it.
+        transport.headers = vec![("x-atlassian-token", "no-check")];
         Bitbucket {
             cache,
-            transport: Transport::new("https://api.bitbucket.org/2.0"),
+            transport,
             bitbucket_url: "https://bitbucket.org".into(),
             access_token: None,
             authenticated_user: Mutex::new(None),
