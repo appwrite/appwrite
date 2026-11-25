@@ -72,6 +72,9 @@ export interface WizardFormData {
 
   // Upload file (for manual path)
   uploadFile: File | undefined
+
+  // Platform the settings were imported from, whose settings detection must not replace
+  importedFrom: string | undefined
 }
 
 /**
@@ -103,6 +106,7 @@ const defaultFormData: WizardFormData = {
   createdSiteId: undefined,
   createdDeploymentId: undefined,
   uploadFile: undefined,
+  importedFrom: undefined,
 }
 
 const FORM_DATA_STORAGE_KEY = 'sites-create-wizard-form-data'
