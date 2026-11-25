@@ -57,6 +57,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
+import { SupabaseConnect, SUPABASE_CONNECT_PARAM } from './SupabaseConnect'
 
 export type ImportProvider =
   | 'AppwriteSelfHosted'
@@ -615,6 +616,20 @@ export function ImportWizardView() {
               <strong>service_role</strong> {t('key for the API key.')}
             </p>
           </div>
+          <div className="border-t border-border" />
+          <SupabaseConnect
+            projectId={pid}
+            region={region}
+            onCredentials={(credentials) => {
+              setSupabaseEndpoint(credentials.endpoint)
+              setSupabaseApiKey(credentials.apiKey)
+              setDatabaseHost(credentials.databaseHost)
+              setSupabaseUsername(credentials.username)
+              setSupabasePassword(credentials.password)
+              setSupabasePort(String(credentials.port))
+              void handleFetchReport(credentials)
+            }}
+          />
           <div className="border-t border-border" />
           <div className="px-6 py-4 space-y-4">
             <div className="space-y-2">
