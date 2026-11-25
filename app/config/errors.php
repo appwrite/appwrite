@@ -377,6 +377,11 @@ return [
         'description' => 'This authenticator is already verified on the current user.',
         'code' => 409,
     ],
+    Exception::USER_AUTHENTICATOR_LAST_FACTOR => [
+        'name' => Exception::USER_AUTHENTICATOR_LAST_FACTOR,
+        'description' => 'This authenticator is the last verified factor of a user with MFA enabled. Disable MFA before deleting it.',
+        'code' => 400,
+    ],
     Exception::USER_PHONE_NOT_FOUND => [
         'name' => Exception::USER_PHONE_NOT_FOUND,
         'description' => 'The current user does not have a phone number associated with their account.',
