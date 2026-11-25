@@ -962,7 +962,8 @@ export function useFirewallConditionBreakdowns(
 /**
  * Prefetch a Firewall tab: the rules for its scope, the unfiltered total the
  * plan limit counts, the attack mode rule, and (in the background) traffic.
- * Call from the function, site and project settings Firewall tab loaders.
+ * Call from the function and site Firewall tab loaders, and the project
+ * Firewall page's API tab.
  */
 export async function prefetchFirewallTabData(
   queryClient: QueryClient,
