@@ -211,10 +211,35 @@ trait MonitorsBase
         ]);
         $this->assertSame([], $warning['body']['monitors']);
 
+        // Clients on 2.7.x still send and read the `critical` flag `severity` replaced.
+        $legacy = \array_merge($this->headers(), ['x-appwrite-response-format' => '2.7.0']);
+        $older = $this->client->call(Client::METHOD_POST, '/monitors/usage', $legacy, [
+            'monitorId' => 'unique()',
+            'name' => 'Legacy ' . \uniqid(),
+            'rules' => [Query::greaterThan('network.outbound', 1000000)->toString()],
+            'critical' => true,
+        ]);
+        $this->assertSame(201, $older['headers']['status-code']);
+        $this->assertTrue($older['body']['critical']);
+        $this->assertSame('critical', $this->getMonitor($older['body']['$id'])['body']['severity']);
+
+        // Any `critical` other than true is dropped, so an older client cannot downgrade the severity.
+        $kept = $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $older['body']['$id'], $legacy, ['critical' => false]);
+        $this->assertSame(200, $kept['headers']['status-code']);
+        $this->assertTrue($kept['body']['critical']);
+        $this->assertSame('critical', $this->getMonitor($older['body']['$id'])['body']['severity']);
+
+        $raised = $this->createMonitor(['severity' => 'info']);
+        $this->assertFalse($this->client->call(Client::METHOD_GET, '/monitors/' . $raised['body']['$id'], $legacy)['body']['critical']);
+        $raised = $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $raised['body']['$id'], $legacy, ['critical' => true]);
+        $this->assertSame(200, $raised['headers']['status-code']);
+        $this->assertTrue($raised['body']['critical']);
+        $this->assertSame('critical', $this->getMonitor($raised['body']['$id'])['body']['severity']);
+
         /**
          * Test for FAILURE
          */
-        $outside = $this->updateMonitor($monitorId, ['rules' => [
+        $outside =$this->updateMonitor($monitorId, ['rules' => [
             Query::greaterThan('network.inbound', 1)->toString(),
             Query::equal('resourceType', ['bucket'])->toString(),
             Query::equal('resourceId', ['anything'])->toString(),
