@@ -699,7 +699,8 @@ class GitLab extends Git
             }
             $responseBody = $response['body'] ?? [];
             $namespace = $responseBody['namespace'] ?? [];
-            return $namespace['path'] ?? '';
+            // A subgroup's path is only its last segment; the API needs the full path
+            return $namespace['full_path'] ?? $namespace['path'] ?? '';
         }
 
         $url = '/user';
@@ -1040,9 +1041,8 @@ class GitLab extends Git
                 }
 
                 $repositoryId = \strval($project['id'] ?? '');
-                $repositoryName = $project['name'] ?? '';
+                [$owner, $repositoryName] = $this->getProjectPath($project);
                 $repositoryUrl = $project['web_url'] ?? '';
-                $owner = $project['namespace'] ?? '';
                 $ref = \is_string($payloadArray['ref'] ?? null) ? $payloadArray['ref'] : '';
                 $branch = str_starts_with($ref, 'refs/heads/') ? substr($ref, \strlen('refs/heads/')) : $ref;
                 $branchUrl = !empty($repositoryUrl) && !empty($branch) ? $repositoryUrl . '/-/tree/' . $branch : '';
@@ -1085,9 +1085,8 @@ class GitLab extends Git
                 $mr = $payloadArray['object_attributes'] ?? [];
 
                 $repositoryId = \strval($project['id'] ?? '');
-                $repositoryName = $project['name'] ?? '';
+                [$owner, $repositoryName] = $this->getProjectPath($project);
                 $repositoryUrl = $project['web_url'] ?? '';
-                $owner = $project['namespace'] ?? '';
                 $branch = $mr['source_branch'] ?? '';
                 $branchUrl = !empty($repositoryUrl) && !empty($branch) ? $repositoryUrl . '/-/tree/' . $branch : '';
                 $action = self::MERGE_REQUEST_ACTION_MAP[$mr['action'] ?? ''] ?? '';
@@ -1123,6 +1122,27 @@ class GitLab extends Git
      * secret token verbatim, so there's no HMAC to compute here.
      */
     #[\Override]
+    /**
+     * A webhook's project carries display names in 'namespace' and 'name' ("Jane Doe",
+     * "My App"), which the API cannot address. Its 'path_with_namespace' holds the
+     * paths the API takes, with the full group path for projects in subgroups.
+     *
+     * @param array<string, mixed> $project
+     * @return array{0: string, 1: string} The owner path and the repository path
+     */
+    private function getProjectPath(array $project): array
+    {
+        $path = $project['path_with_namespace'] ?? '';
+
+        if (!\is_string($path) || !\str_contains($path, '/')) {
+            return [$project['namespace'] ?? '', $project['name'] ?? ''];
+        }
+
+        $separator = \strrpos($path, '/');
+
+        return [\substr($path, 0, $separator), \substr($path, $separator + 1)];
+    }
+
     public function validateWebhookEvent(string $payload, string $signature, string $signatureKey): bool
     {
         return hash_equals($signatureKey, $signature);
