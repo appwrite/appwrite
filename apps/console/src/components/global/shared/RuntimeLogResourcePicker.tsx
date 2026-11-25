@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Database, Globe, Layers, Terminal } from 'lucide-react'
 import {
   SearchableSelect,
@@ -10,15 +10,18 @@ import {
   sitesQueryOptions,
   type RuntimeLogResourceType,
 } from '@/lib/react-query/hooks'
+import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
 import { useT } from '@/lib/i18n/translate'
 
-/** Functions and sites listed for picking; the search box filters within them. */
-const PICK_LIMIT = 100
+/** Functions and sites listed for picking; the search box asks the API for more. */
+const PICK_LIMIT = 25
 
 /** Every resource (`type` null), every resource of one type, or one resource. */
 export interface RuntimeLogResource {
   type: RuntimeLogResourceType | null
   id?: string
+  /** Shown on the trigger once a search no longer lists the picked resource. */
+  name?: string
 }
 
 function encode(resource: RuntimeLogResource): string {
@@ -47,15 +50,19 @@ export function RuntimeLogResourcePicker({
 }) {
   const t = useT()
   const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState('')
+  const query = useDebouncedValue(search.trim(), 250) || undefined
   // Load the lists once the menu is first opened, or when a resource is already picked
   const enabled = !!projectId && (open || !!value.id)
   const functions = useQuery({
-    ...functionsQueryOptions(projectId, 0, PICK_LIMIT),
+    ...functionsQueryOptions(projectId, 0, PICK_LIMIT, query),
     enabled,
+    placeholderData: keepPreviousData,
   })
   const sites = useQuery({
-    ...sitesQueryOptions(projectId, 0, PICK_LIMIT),
+    ...sitesQueryOptions(projectId, 0, PICK_LIMIT, query),
     enabled,
+    placeholderData: keepPreviousData,
   })
 
   const items = useMemo<SearchableSelectItem[]>(
@@ -100,15 +107,21 @@ export function RuntimeLogResourcePicker({
   return (
     <SearchableSelect
       value={encode(value)}
-      onValueChange={(next) => onValueChange(decode(next))}
+      onValueChange={(next) =>
+        onValueChange({
+          ...decode(next),
+          name: items.find((item) => item.value === next)?.label,
+        })
+      }
       items={items}
       onOpenChange={setOpen}
+      // The API searches functions and sites, so large projects reach every one
+      onSearchChange={setSearch}
       ariaLabel={t('Resource')}
       isFetching={functions.isFetching || sites.isFetching}
       searchPlaceholder="Search resources"
       emptyMessage="No resources found"
-      // A picked resource outside the loaded page still names itself
-      selectedName={value.id}
+      selectedName={value.name ?? value.id}
       triggerClassName="w-[200px]"
       contentClassName="w-[280px]"
       listClassName="min-h-0"
