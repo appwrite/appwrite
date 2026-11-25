@@ -199,5 +199,6 @@ extern "C" fn request_shutdown(kind: i32, module: i32) -> i32 {
     query::builder::request_shutdown();
     balancer::request_shutdown();
     database::request_shutdown();
+    validators::compose::request_shutdown();
     locale::request_shutdown(kind, module)
 }
