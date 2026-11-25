@@ -7,6 +7,7 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Abuse\Challenge\Issuer;
 use Utopia\Abuse\Challenge\Nonce;
 use Utopia\Abuse\Challenge\ProofOfWork;
+use Utopia\Abuse\Challenge\ProofOfWork\Result as ProofOfWorkResult;
 use Utopia\Abuse\Challenge\Status;
 use Utopia\Abuse\Tests\Challenge\Nonce\Memory;
 
@@ -159,6 +160,21 @@ final class ProofOfWorkTest extends TestCase
         $this->assertSame(8, $result->difficulty);
         $this->assertSame('p1', $result->claims['project']);
         $this->assertNull($result->error);
+    }
+
+    public function testVerifyReturnsAProofOfWorkResultEvenForAnUnreadableToken(): void
+    {
+        $pow = $this->pow();
+        $puzzle = $pow->withParams(self::BINDING)->issue();
+
+        $garbage = $pow->withParams(self::BINDING)->verify('not-a-token', 'x');
+        $this->assertInstanceOf(ProofOfWorkResult::class, $garbage);
+        $this->assertSame(Status::InvalidToken, $garbage->status);
+        $this->assertSame(0, $garbage->difficulty);
+
+        $foreign = $pow->withParams(['ip' => 'other'])->verify($puzzle->value, 'x');
+        $this->assertSame(Status::BindingMismatch, $foreign->status);
+        $this->assertSame([], $foreign->claims);
     }
 
     public function testVerifyRejectsReplayOfTheSameSubmission(): void

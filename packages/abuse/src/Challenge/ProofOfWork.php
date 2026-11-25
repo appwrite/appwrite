@@ -4,6 +4,7 @@ namespace Utopia\Abuse\Challenge;
 
 use Throwable;
 use Utopia\Abuse\Challenge;
+use Utopia\Abuse\Challenge\ProofOfWork\Result as ProofOfWorkResult;
 use Utopia\Abuse\Challenge\ProofOfWork\Token as ProofOfWorkToken;
 
 /**
@@ -75,17 +76,17 @@ final readonly class ProofOfWork extends Challenge
      * presented by another client never spends the owner's attempt.
      */
     #[\Override]
-    public function verify(string $token, string $answer): Result
+    public function verify(string $token, string $answer): ProofOfWorkResult
     {
         $claims = $this->claimsFrom($token);
         if ($claims instanceof Result) {
-            return $claims;
+            return new ProofOfWorkResult($claims->status);
         }
 
         $nonce = $claims['nonce'] ?? null;
         $difficulty = $claims['difficulty'] ?? null;
         if (!\is_string($nonce) || $nonce === '' || !\is_int($difficulty) || $difficulty < 0 || $difficulty > self::MAX_DIFFICULTY) {
-            return new Result(Status::InvalidToken, $claims);
+            return new ProofOfWorkResult(Status::InvalidToken, $claims);
         }
 
         $issuedMs = $claims['iatMs'] ?? 0;
@@ -96,7 +97,7 @@ final readonly class ProofOfWork extends Challenge
             $fresh = $this->nonces->withParams(self::keyParams($claims))->consume($nonce, $this->issuer->ttl);
         } catch (Throwable $e) {
             if (!$this->acceptWhenNoncesUnavailable) {
-                return new Result(Status::Unavailable, $claims, $difficulty, $elapsedMs, $e);
+                return new ProofOfWorkResult(Status::Unavailable, $claims, $difficulty, $elapsedMs, $e);
             }
             // The replay guard did not run; the solution is still checked below.
             $fresh = true;
@@ -104,14 +105,14 @@ final readonly class ProofOfWork extends Challenge
         }
 
         if (!$fresh) {
-            return new Result(Status::Replay, $claims, $difficulty, $elapsedMs);
+            return new ProofOfWorkResult(Status::Replay, $claims, $difficulty, $elapsedMs);
         }
 
         if (!self::isSolution($nonce, $answer, $difficulty)) {
-            return new Result(Status::Rejected, $claims, $difficulty, $elapsedMs, $error);
+            return new ProofOfWorkResult(Status::Rejected, $claims, $difficulty, $elapsedMs, $error);
         }
 
-        return new Result(Status::Valid, $claims, $difficulty, $elapsedMs, $error);
+        return new ProofOfWorkResult(Status::Valid, $claims, $difficulty, $elapsedMs, $error);
     }
 
     /**
