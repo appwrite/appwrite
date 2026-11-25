@@ -72,6 +72,8 @@ export interface VideoStreamPlayerProps {
   layout?: 'console' | 'embed'
   /** Seek once when the stream is ready (`?start=` on the embed URL). */
   initialStartSeconds?: number
+  /** Start playing once the stream can play, for a viewer who asked to watch. */
+  autoPlay?: boolean
 }
 
 /** Height of the docked player strip. */
@@ -100,6 +102,7 @@ export function VideoStreamPlayer({
   variant = 'default',
   layout = 'console',
   initialStartSeconds,
+  autoPlay = false,
 }: VideoStreamPlayerProps) {
   const t = useT()
   const videoRef = useRef<HTMLVideoElement | null>(null)
@@ -176,15 +179,18 @@ export function VideoStreamPlayer({
     [projectId, video.$id, readyIds],
   )
 
+  // A visitor's playback from the public playlist has no source file.
   const sourceFileUrl = useMemo(
     () =>
-      applyVideoStreamAccess(
-        sdk.forProject(projectId).storage.getFileView({
-          bucketId: video.bucketId,
-          fileId: video.fileId,
-        }),
-        streamAccess,
-      ),
+      video.bucketId && video.fileId
+        ? applyVideoStreamAccess(
+            sdk.forProject(projectId).storage.getFileView({
+              bucketId: video.bucketId,
+              fileId: video.fileId,
+            }),
+            streamAccess,
+          )
+        : '',
     [projectId, video.bucketId, video.fileId, streamAccess],
   )
 
@@ -935,6 +941,7 @@ export function VideoStreamPlayer({
                 )}
                 style={videoSubtitleStyle}
                 playsInline
+                autoPlay={autoPlay}
                 aria-label={video.name}
                 onClick={() => {
                   const el = videoRef.current
@@ -1044,6 +1051,7 @@ export function VideoStreamPlayer({
                   )}
                   style={videoSubtitleStyle}
                   playsInline
+                  autoPlay={autoPlay}
                   aria-label={video.name}
                   onClick={() => {
                     const el = videoRef.current

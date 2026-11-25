@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import type {
   LaunchEventDay,
+  LaunchEventDayFilm,
   LaunchEventDayResource,
   LaunchEventScheduleItem,
   InitDisplayEvent,
@@ -13,6 +14,8 @@ import { Badge } from '@/components/ui/badge'
 import { InitDayCardHeaderNav } from './InitDayCardHeaderNav'
 import { InitScheduleRow } from './InitScheduleRow'
 import { ArrowUpRight, BookOpen, FileText, Package, Play } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
+import { InitFilmDialog, prefetchInitFilms } from './init5/InitFilmDialog'
 import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useInitHref } from '@/lib/init/use-init-href'
@@ -156,6 +159,62 @@ function DayPrimaryLink({
     <a href={resolved.href} {...NEW_TAB} className={className}>
       {children}
     </a>
+  )
+}
+
+/**
+ * The day's cover as a play button: the launch film opens in the Appwrite
+ * player. Pointing at the cover warms the player and the film's playlist.
+ */
+function DayFilmCover({
+  day,
+  films,
+  children,
+}: {
+  day: LaunchEventDay
+  films: LaunchEventDayFilm[]
+  children: ReactNode
+}) {
+  const [open, setOpen] = useState(false)
+  const queryClient = useQueryClient()
+  const prefetch = () => prefetchInitFilms(queryClient, films)
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        onPointerEnter={prefetch}
+        onFocus={prefetch}
+        className="group/film relative block w-full cursor-pointer rounded-lg text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        aria-label={`Play the ${films.map((entry) => entry.label).join(' and ')} launch film`}
+      >
+        {children}
+        {/* A dimmed cover and a large play button say this cover is a film. */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 rounded-lg bg-black/25 transition-colors duration-300 group-hover/film:bg-black/40"
+        />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3"
+        >
+          <span className="relative flex size-16 items-center justify-center rounded-full bg-[var(--brand-cta)] text-white shadow-[0_0_0_8px_color-mix(in_srgb,var(--brand-cta)_22%,transparent),0_12px_40px_-8px_var(--brand-cta)] transition-transform duration-300 group-hover/film:scale-110 sm:size-[72px]">
+            <span className="absolute inset-0 animate-ping rounded-full bg-[var(--brand-cta)] opacity-25 [animation-duration:2.4s] motion-reduce:hidden" />
+            <Play className="relative ms-1 size-7 fill-current" />
+          </span>
+          <span className="rounded-full bg-black/70 px-3 py-1 text-[12px] font-medium text-white backdrop-blur-sm">
+            {films.length > 1 ? 'Watch the launch films' : 'Watch the launch'}
+          </span>
+        </span>
+      </button>
+      <InitFilmDialog
+        title={day.title}
+        films={films}
+        open={open}
+        onOpenChange={setOpen}
+      />
+    </>
   )
 }
 
@@ -304,7 +363,11 @@ export function DayDetailCard({
         </div>
 
         <div className="flex items-center p-6">
-          {primaryArticleHref ? (
+          {day.films?.length ? (
+            <DayFilmCover day={day} films={day.films}>
+              {visualBlock}
+            </DayFilmCover>
+          ) : primaryArticleHref ? (
             <DayPrimaryLink
               href={primaryArticleHref}
               className="block w-full transition-opacity hover:opacity-90"
