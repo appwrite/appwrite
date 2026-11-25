@@ -3040,6 +3040,7 @@
             "search",
             "total"
         ],
+        "migrations.listSupabaseProjects": [],
         "migrations.retry": [
             "migrationId"
         ],
