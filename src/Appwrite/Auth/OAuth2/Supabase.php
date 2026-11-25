@@ -179,6 +179,32 @@ class Supabase extends OAuth2
     }
 
     /**
+     * The key that bypasses row level security: the legacy service role key, or a secret key
+     */
+    public function getSecretKey(string $accessToken, string $projectRef): string
+    {
+        $keys = \json_decode($this->request(
+            'GET',
+            'https://api.supabase.com/v1/projects/' . \rawurlencode($projectRef) . '/api-keys?reveal=true',
+            ['Authorization: Bearer ' . $accessToken]
+        ), true) ?? [];
+
+        foreach ($keys as $key) {
+            if (($key['type'] ?? '') === 'legacy' && ($key['name'] ?? '') === 'service_role') {
+                return $key['api_key'] ?? '';
+            }
+        }
+
+        foreach ($keys as $key) {
+            if (($key['type'] ?? '') === 'secret') {
+                return $key['api_key'] ?? '';
+            }
+        }
+
+        return '';
+    }
+
+    /**
      * @param string $accessToken
      *
      * @return array
