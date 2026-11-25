@@ -124,6 +124,7 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame('critical', $alert['severity']);
         $this->assertArrayNotHasKey('critical', $alert);
         $this->assertSame($monitorId, $alert['monitorId']);
+        $this->assertSame($this->getProject()['$id'], $alert['projectId']);
         $this->assertSame($name, $alert['name']);
         $this->assertSame('usage', $alert['type']);
         $this->assertSame('project', $alert['resourceType']);
