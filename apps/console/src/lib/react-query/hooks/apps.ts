@@ -1105,7 +1105,7 @@ export function useOrganizationAppInstallation(
   organizationId: string | null | undefined,
   appId: string | null | undefined,
 ) {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['organization', organizationId, 'installations', 'app', appId],
     queryFn: async () => {
       const response = await sdk.forConsole.teams.listInstallations({
@@ -1120,7 +1120,13 @@ export function useOrganizationAppInstallation(
     retry: false,
   })
 
-  return { installation: data ?? null, isLoading }
+  // `installation` is null both when the app isn't installed and when the
+  // lookup failed; `isResolved` tells them apart.
+  return {
+    installation: data ?? null,
+    isResolved: data !== undefined && !isError,
+    isLoading,
+  }
 }
 
 /**
