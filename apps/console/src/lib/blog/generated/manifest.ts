@@ -5,7 +5,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
   {
     "slug": "announcing-automatic-image-format",
     "href": "/blog/post/announcing-automatic-image-format",
-    "title": "Announcing automatic AVIF and WebP for image previews",
+    "title": "Announcing automatic image formats based on browser support",
     "description": "Set output to auto on Appwrite Storage previews and Avatars screenshots, and every browser gets AVIF, WebP, or the original format from the same image URL.",
     "date": "2026-11-26",
     "lastUpdated": "2026-11-26",
