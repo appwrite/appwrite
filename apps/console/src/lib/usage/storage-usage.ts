@@ -76,8 +76,13 @@ export type OverviewStorageBreakdownType =
   | 'functions'
   | 'sites'
 
-export interface OverviewStorageBreakdownOption {
-  value: OverviewStorageBreakdownType
+/** Usage page panels: the overview families plus Videos (shown behind its flag). */
+export type StorageBreakdownType = OverviewStorageBreakdownType | 'videos'
+
+export interface OverviewStorageBreakdownOption<
+  T extends StorageBreakdownType = OverviewStorageBreakdownType,
+> {
+  value: T
   label: string
   title: string
   /** `resourceType` tag values that roll up into this panel. */
@@ -123,14 +128,36 @@ export const OVERVIEW_STORAGE_BREAKDOWN_OPTIONS: ReadonlyArray<OverviewStorageBr
     },
   ] as const
 
+/**
+ * Video renditions, captions and timelines. Billed with the unified storage
+ * gauge as one `video` row per project, so it has no per-resource breakdown.
+ * Shown on the Usage page only while the Videos product is enabled; the
+ * project overview toggle keeps to the options above.
+ */
+export const VIDEOS_STORAGE_BREAKDOWN_OPTION: OverviewStorageBreakdownOption<'videos'> =
+  {
+    value: 'videos',
+    label: 'Videos',
+    title: 'Videos',
+    resourceTypes: ['video'],
+    description:
+      'Storage used by video renditions, captions, and thumbnail timelines. Counts toward your plan storage limit.',
+  }
+
+export const VIDEOS_STORAGE_DOCS_HREF = '/docs/products/videos'
+
 export const OVERVIEW_STORAGE_BREAKDOWN_TYPES =
   OVERVIEW_STORAGE_BREAKDOWN_OPTIONS.map(
     (option) => option.value,
   ) as readonly OverviewStorageBreakdownType[]
 
 export function getOverviewStorageBreakdownOption(
-  value: OverviewStorageBreakdownType,
-): OverviewStorageBreakdownOption {
+  value: StorageBreakdownType,
+): OverviewStorageBreakdownOption<StorageBreakdownType> {
+  if (value === VIDEOS_STORAGE_BREAKDOWN_OPTION.value) {
+    return VIDEOS_STORAGE_BREAKDOWN_OPTION
+  }
+
   return (
     OVERVIEW_STORAGE_BREAKDOWN_OPTIONS.find(
       (option) => option.value === value,
@@ -140,7 +167,7 @@ export function getOverviewStorageBreakdownOption(
 
 /** Utopia `queries[]` scoping the unified gauge to one panel's resource types. */
 function storageResourceTypeQueries(
-  breakdownType: OverviewStorageBreakdownType,
+  breakdownType: StorageBreakdownType,
   queries?: string[],
 ): string[] {
   return [
@@ -305,7 +332,9 @@ export async function fetchProjectOverviewStorageOverview(
     ),
   ])
 
-  const chartPoints = mergeOverviewStorageChartPoints(series.chartPointsBySeries)
+  const chartPoints = mergeOverviewStorageChartPoints(
+    series.chartPointsBySeries,
+  )
   const previousChartPoints = mergeOverviewStorageChartPoints(
     series.previousChartPointsBySeries,
   )
@@ -333,7 +362,7 @@ export async function fetchProjectOverviewStorageOverview(
 export async function fetchProjectStorageResourceTypeUsageOverview(
   projectId: string,
   dateRange: DateRange | undefined,
-  breakdownType: OverviewStorageBreakdownType,
+  breakdownType: StorageBreakdownType,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   options?: FetchUsageOverviewOptions,
 ): Promise<StorageResourceTypeUsageOverview> {
