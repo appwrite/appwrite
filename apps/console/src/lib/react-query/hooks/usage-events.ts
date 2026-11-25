@@ -29,6 +29,7 @@ import {
   fetchProjectFunctionGbHoursOverview,
   fetchProjectGbHoursOverview,
   fetchProjectSiteGbHoursOverview,
+  fetchProjectVideoGbHoursOverview,
   type ProjectGbHoursOverview,
 } from '@/lib/usage/gb-hours-events'
 import {
@@ -60,7 +61,7 @@ import {
   fetchProjectStorageResourceTypeUsageOverview,
   fetchProjectOverviewStorageOverview,
   fetchProjectStorageOverview,
-  type OverviewStorageBreakdownType,
+  type StorageBreakdownType,
   type ProjectOverviewStorageOverview,
   type StorageImageTransformationsOverview,
   type StorageResourceTypeUsageOverview,
@@ -1114,6 +1115,52 @@ export function siteGbHoursOverviewQueryOptions(
   })
 }
 
+export function videoGbHoursOverviewQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
+  filterQueries?: UsageFilterQueries,
+  logRetentionHours?: number,
+  dateRangePresetId?: string | null,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } =
+    normalizeDateRangeKey(dateRange, { dateRangePresetId, logRetentionHours })
+
+  return queryOptions({
+    queryKey: appendUsageFiltersToQueryKey(
+      [
+        'usage-events',
+        'video-gb-hours',
+        usageOverviewQueryScope(includeBreakdown),
+        'project',
+        projectId,
+        rangeKeyPart,
+        interval,
+      ],
+      filterQueries,
+    ),
+    queryFn: () =>
+      fetchProjectVideoGbHoursOverview(
+        projectId!,
+        getBounds(),
+        interval,
+        mergeUsageFetchOptions(
+          { includeBreakdown },
+          filterQueries,
+          logRetentionHours,
+        ),
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
 export function storageOverviewQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
@@ -1605,6 +1652,45 @@ export function useProjectSiteGbHoursOverview(
   })
 }
 
+/** Video encode GB-hours (`executions.mbSeconds` with `service=videos`). */
+export function useProjectVideoGbHoursOverview(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  includeBreakdown = true,
+) {
+  const { filterQueries, logRetentionHours, dateRangePresetId, usageLogRetentionReady } = useUsageSectionFilterQueries()
+
+  const queryClient = useQueryClient()
+
+  return useQuery({
+    ...videoGbHoursOverviewQueryOptions(
+      projectId,
+      dateRange,
+      interval,
+      includeBreakdown,
+      filterQueries,
+      logRetentionHours,
+      dateRangePresetId,
+    ),
+    enabled: !!projectId && enabled && usageLogRetentionReady,
+    placeholderData: usageOverviewPlaceholderData<ProjectGbHoursOverview>(
+      queryClient,
+      projectId,
+      videoGbHoursOverviewQueryOptions(
+        projectId,
+        dateRange,
+        interval,
+        !includeBreakdown,
+        filterQueries,
+        logRetentionHours,
+      dateRangePresetId,
+      ).queryKey,
+    ),
+  })
+}
+
 export function useProjectStorageOverview(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
@@ -1692,7 +1778,7 @@ export function useProjectOverviewStorageOverview(
 }
 
 function storageResourceTypeUsageQueryOptions(
-  breakdownType: OverviewStorageBreakdownType,
+  breakdownType: StorageBreakdownType,
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
@@ -1785,7 +1871,7 @@ function imageTransformationsUsageQueryOptions(
 
 /** Unified storage gauge scoped to one resource family (buckets, databases, …). */
 export function useProjectStorageResourceTypeUsage(
-  breakdownType: OverviewStorageBreakdownType,
+  breakdownType: StorageBreakdownType,
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   enabled = true,
@@ -4217,6 +4303,7 @@ export function refetchProjectComputeUsageQueries(
     'gb-hours',
     'function-gb-hours',
     'site-gb-hours',
+    'video-gb-hours',
   ])
 
   return queryClient.refetchQueries({
