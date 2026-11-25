@@ -32,7 +32,6 @@ import {
 } from '@/lib/react-query/hooks'
 import { DEFAULT_STALE_TIME } from '@/lib/react-query/hooks/constants'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 import {
   buildVcsAuthUrl,
@@ -70,13 +69,11 @@ export function Repositories({
 }: RepositoriesProps) {
   const t = useT()
   const { project } = useProject(projectId)
-  const { features } = useConsoleProfile()
   const { vcsProviders } = useConsoleVariables()
   // Providers a new installation can be connected from to review its repositories.
-  const connectProviders = getVisibleVcsOAuthProviders(
-    features,
-    vcsProviders,
-  ).filter((provider) => isReviewVcsProvider(provider.id))
+  const connectProviders = getVisibleVcsOAuthProviders(vcsProviders).filter(
+    (provider) => isReviewVcsProvider(provider.id),
+  )
   const { data: installationsData, isLoading: installationsLoading } =
     useVcsInstallations(projectId, 0, 100)
   const installations = useMemo(

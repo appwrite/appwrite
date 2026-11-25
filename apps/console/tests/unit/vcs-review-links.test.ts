@@ -45,6 +45,18 @@ describe('Review links', () => {
     expect(urls.comment('d0c1')).toBeNull()
   })
 
+  test('GitLab keeps the path an instance is served under', () => {
+    const urls = getProviderReviewUrls({
+      ...review,
+      provider: 'gitlab',
+      organizationUrl: 'https://example.com/gitlab/acme/',
+    })!
+
+    expect(urls.pullRequest).toBe(
+      'https://example.com/gitlab/acme/api/-/merge_requests/7',
+    )
+  })
+
   test('GitLab and Bitbucket fall back to their public hosts', () => {
     expect(
       getProviderReviewUrls({ ...review, provider: 'gitlab' })!.pullRequest,

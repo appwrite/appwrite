@@ -415,7 +415,14 @@ export function getProviderReviewUrls(params: {
   const host = (fallback: string | null) => {
     if (params.organizationUrl) {
       try {
-        return new URL(params.organizationUrl).origin
+        // Keep the path an instance is served under (https://example.com/gitlab),
+        // dropping only the organization the URL ends with.
+        const url = new URL(params.organizationUrl)
+        const base = url.pathname.replace(/\/+$/, '')
+        const tail = `/${encodeVcsPath(organization)}`
+        return base.toLowerCase().endsWith(tail.toLowerCase())
+          ? url.origin + base.slice(0, -tail.length)
+          : url.origin
       } catch {
         return null
       }
