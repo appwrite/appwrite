@@ -92,9 +92,9 @@ export function trackAppwritePageview(options: TrackingEventOptions) {
       tracker.track('pageview', pageview)
       return
     }
-    // The SDK failed to load: hold the view for the next start, unless a newer
-    // route's view is already waiting there.
-    pendingPageview ??= pageview
+    // The SDK failed to load: hold the view for the next start. Views queued on
+    // the failed load resolve in route order, so the latest route is kept.
+    pendingPageview = pageview
   })
 }
 

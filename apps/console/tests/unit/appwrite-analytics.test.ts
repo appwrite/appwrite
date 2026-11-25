@@ -165,9 +165,10 @@ describe('appwrite analytics', () => {
     expect(calls.at(-1)).toBe('property:web')
   })
 
-  test('a pageview sent while the load fails is sent once tracking starts', async () => {
+  test('the latest pageview made while the load fails is sent once tracking starts', async () => {
     failImport = true
     startAppwriteAnalytics()
+    trackPageView('/console/login')
     trackPageView('/console/recover')
     await flush()
     expect(calls.filter((call) => call.startsWith('track:'))).toEqual([])
