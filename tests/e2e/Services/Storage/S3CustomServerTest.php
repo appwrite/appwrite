@@ -143,6 +143,17 @@ final class S3CustomServerTest extends Scope
             $this->assertSame("script-src 'none';", $head['headers']['content-security-policy'], $case['name']);
             $this->assertSame('nosniff', $head['headers']['x-content-type-options'], $case['name']);
             $this->assertStringStartsWith('attachment;', $head['headers']['content-disposition'], $case['name']);
+            $size = (string) \strlen($object['body']);
+            $this->assertSame($size, $head['headers']['content-length'], $case['name']);
+
+            // A proxy may forward HeadObject as a GET: the response has no body, so it
+            // must not declare the object's length, and completes instead of stalling.
+            $headOverGet = $this->call(Client::METHOD_GET, $path, ['x-id' => 'HeadObject']);
+            $this->assertSame(200, $headOverGet['headers']['status-code'], $case['name']);
+            $this->assertSame('', $headOverGet['body'], $case['name']);
+            $this->assertSame('0', $headOverGet['headers']['content-length'] ?? '0', $case['name']);
+            $this->assertSame($size, $headOverGet['headers']['x-amz-meta-content-length'], $case['name']);
+            $this->assertSame($object['headers']['etag'], $headOverGet['headers']['etag'], $case['name']);
 
             $override = $this->call(Client::METHOD_GET, $path, [
                 'response-content-type' => 'text/html',
