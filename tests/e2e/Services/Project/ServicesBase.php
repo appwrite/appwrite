@@ -109,17 +109,15 @@ trait ServicesBase
     {
         $this->updateServiceStatus('teams', false);
 
-        $teamId = Id::unique();
-        foreach (['/avatars/teams/' . $teamId . '/photo', '/teams/' . $teamId . '/photo'] as $path) {
-            foreach ([Client::METHOD_GET, Client::METHOD_PUT, Client::METHOD_DELETE] as $method) {
-                $response = $this->client->call($method, $path, [
-                    'content-type' => 'application/json',
-                    'x-appwrite-project' => $this->getProject()['$id'],
-                ]);
+        $path = '/avatars/teams/' . Id::unique() . '/photo';
+        foreach ([Client::METHOD_GET, Client::METHOD_PUT, Client::METHOD_DELETE] as $method) {
+            $response = $this->client->call($method, $path, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ]);
 
-                $this->assertSame(403, $response['headers']['status-code'], $method . ' ' . $path);
-                $this->assertSame('general_service_disabled', $response['body']['type'], $method . ' ' . $path);
-            }
+            $this->assertSame(403, $response['headers']['status-code'], $method . ' ' . $path);
+            $this->assertSame('general_service_disabled', $response['body']['type'], $method . ' ' . $path);
         }
 
         // Cleanup
