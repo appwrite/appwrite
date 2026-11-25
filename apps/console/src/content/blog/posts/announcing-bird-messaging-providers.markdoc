@@ -2,7 +2,7 @@
 layout: post
 title: "Announcing Bird email and SMS in Appwrite Messaging"
 description: Appwrite Messaging now sends email and SMS through Bird, with one-click Bird setup in the Console for both providers and for your project's custom SMTP.
-date: 2026-11-26
+date: 2026-11-25
 cover: /images/blog/announcing-bird-messaging-providers/cover.avif
 timeToRead: 7
 author: aditya-oberai
@@ -64,7 +64,7 @@ The SMS provider needs a sender your workspace owns. On Bird's **Senders** page,
 3. Pick a **Sender** and click **Generate API key**.
 4. Review the fields and click **Create provider**.
 
-![The Configure Bird step for the SMS provider, with the One-click setup card above the Name, API key, and Sender fields](/images/blog/announcing-bird-messaging-providers/configure-bird-sms.avif)
+![The Configure Bird step for the SMS provider after connecting Bird, with a sender selected and the Generate API key button above the provider fields](/images/blog/announcing-bird-messaging-providers/one-click-bird-sms.avif)
 
 This key is named `Appwrite SMS: <project name>` and holds only `sms:write`, so the email key and the SMS key stay separate. You can revoke either in Bird without touching the other channel. The [Bird SMS docs](/docs/products/messaging/bird-sms) list the manual fields and the sender rules.
 

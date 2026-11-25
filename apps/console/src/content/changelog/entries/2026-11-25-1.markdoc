@@ -1,7 +1,7 @@
 ---
 layout: changelog
 title: "Send email and SMS through Bird with Appwrite Messaging"
-date: 2026-11-26
+date: 2026-11-25
 cover: /images/blog/announcing-bird-messaging-providers/cover.avif
 tags: messaging, auth, console, integrations
 ---
