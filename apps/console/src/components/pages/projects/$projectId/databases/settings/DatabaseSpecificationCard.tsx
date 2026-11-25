@@ -122,7 +122,6 @@ export function DatabaseSpecificationCard({
         databaseId,
         dbKind,
         specification,
-        database.specification,
         database.name,
       ),
     onSuccess: async (result) => {
@@ -377,10 +376,7 @@ export function DatabaseSpecificationCard({
       </Table>
       {hasLockedDatabaseSpecifications(specs) ? (
         <div className="px-6 py-3">
-          <SpecificationsUpgradeNote
-            orgId={project?.teamId}
-            showContactSales
-          />
+          <SpecificationsUpgradeNote orgId={project?.teamId} />
         </div>
       ) : null}
     </div>

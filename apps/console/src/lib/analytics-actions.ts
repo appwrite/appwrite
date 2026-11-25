@@ -1,3 +1,5 @@
+import type { SalesSource } from '@/lib/sales/contact-sales'
+
 /**
  * Curated analytics actions for low-cardinality, specific Plausible event names.
  *
@@ -24,10 +26,14 @@ export const ANALYTICS_ACTIONS = {
   'feedback-open': 'Feedback Opened',
   'support-open': 'Support Opened',
   'notifications-open': 'Notifications Opened',
+  'notifications-beep-app-store': 'Notifications Beep App Store Clicked',
+  'notifications-beep-google-play': 'Notifications Beep Google Play Clicked',
+  'notifications-beep-dismiss': 'Notifications Beep Promotion Dismissed',
   'ai-agent-open': 'AI Agent Opened',
   'upgrade-clicked': 'Upgrade Clicked',
   'auth-sign-in': 'Sign In Clicked',
   'auth-sign-up': 'Sign Up Clicked',
+  'zero-claim': 'Zero Claim Clicked',
   'header-console': 'Header Console Clicked',
   'header-home': 'Header Home Clicked',
   'header-docs': 'Header Docs Clicked',
@@ -72,6 +78,8 @@ export const ANALYTICS_ACTIONS = {
   'marketing-view-pricing': 'Marketing View Pricing Clicked',
   'home-start-project': 'Home Start Project Clicked',
   'home-view-docs': 'Home View Docs Clicked',
+  'home-console-open': 'Home Console Open Clicked',
+  'home-factory-station': 'Home Factory Station Clicked',
   'home-start-building': 'Home Start Building Clicked',
   'home-view-pricing': 'Home View Pricing Clicked',
   'home-join-init': 'Home Join Init Clicked',
@@ -87,7 +95,8 @@ export const ANALYTICS_ACTIONS = {
   'alternative-migrate': 'Alternative Migrate Clicked',
   'alternative-compare-other': 'Alternative Compare Other Clicked',
   'secret-start-building': 'Secret Campaign Start Building Clicked',
-  'secret-sticky-start-building': 'Secret Campaign Sticky Start Building Clicked',
+  'secret-sticky-start-building':
+    'Secret Campaign Sticky Start Building Clicked',
   'secret-read-docs': 'Secret Campaign Read Docs Clicked',
   'secret-open-files': 'Secret Campaign Open Files Clicked',
   'secret-source': 'Secret Campaign Source Clicked',
@@ -116,6 +125,11 @@ export const ANALYTICS_ACTIONS = {
   'for-agents-install-skills': 'For Agents Install Skills Clicked',
   'for-agents-connect-mcp': 'For Agents Connect MCP Clicked',
   'for-agents-view-docs': 'For Agents View Docs Clicked',
+  'zero-copy-command': 'Zero Copy Command Clicked',
+  'zero-copy-entry': 'Zero Copy Entry Clicked',
+  'zero-copy-prompt': 'Zero Copy Prompt Clicked',
+  'zero-open-agent': 'Zero Open Agent Clicked',
+  'zero-sign-up': 'Zero Sign Up Clicked',
 
   // Pricing page CTAs
   'pricing-start-free': 'Pricing Start Free Clicked',
@@ -125,11 +139,13 @@ export const ANALYTICS_ACTIONS = {
   'pricing-promo-start-free': 'Pricing Promo Start Free Clicked',
   'pricing-promo-start-start': 'Pricing Promo Start Start Clicked',
   'pricing-promo-start-pro': 'Pricing Promo Start Pro Clicked',
-  'pricing-promo-contact-enterprise': 'Pricing Promo Contact Enterprise Clicked',
+  'pricing-promo-contact-enterprise':
+    'Pricing Promo Contact Enterprise Clicked',
   'pricing-compare-start-free': 'Pricing Compare Start Free Clicked',
   'pricing-compare-start-start': 'Pricing Compare Start Start Clicked',
   'pricing-compare-start-pro': 'Pricing Compare Start Pro Clicked',
-  'pricing-compare-contact-enterprise': 'Pricing Compare Contact Enterprise Clicked',
+  'pricing-compare-contact-enterprise':
+    'Pricing Compare Contact Enterprise Clicked',
 
   // Docs CTAs
   'docs-get-started': 'Docs Get Started Clicked',
@@ -155,12 +171,25 @@ export const ANALYTICS_ACTIONS = {
   'upgrade-apply-coupon-confirm': 'Upgrade Apply Coupon Confirm Clicked',
   'upgrade-free-conflict-choice': 'Upgrade Free Conflict Choice Selected',
 
+  // In-console sales links (see `SALES_SOURCES`)
+  'billing-contact-sales': 'Billing Contact Sales Clicked',
+  'settings-contact-sales': 'Settings Contact Sales Clicked',
+  'members-contact-sales': 'Members Contact Sales Clicked',
+  'backups-contact-sales': 'Backups Contact Sales Clicked',
+  'activity-contact-sales': 'Activity Contact Sales Clicked',
+  'specs-contact-sales': 'Specifications Contact Sales Clicked',
+  'replicas-contact-sales': 'Replicas Contact Sales Clicked',
+  'compliance-contact-sales': 'Compliance Contact Sales Clicked',
+  'preview-domains-contact-sales': 'Preview Domains Contact Sales Clicked',
+  'support-contact-sales': 'Support Contact Sales Clicked',
+  'support-ticket-contact-sales': 'Support Ticket Contact Sales Clicked',
+
   // Console project sidebar
   'nav-sidebar-overview': 'Sidebar Overview Clicked',
   'nav-sidebar-apps': 'Sidebar Apps Clicked',
   'nav-sidebar-agents': 'Sidebar Agents Clicked',
   'nav-sidebar-api-keys': 'Sidebar API Keys Clicked',
-  'nav-sidebar-explorer': 'Sidebar Explorer Clicked',
+  'nav-sidebar-playground': 'Sidebar Playground Clicked',
   'nav-sidebar-auth': 'Sidebar Auth Clicked',
   'nav-sidebar-databases': 'Sidebar Databases Clicked',
   'nav-sidebar-storage': 'Sidebar Storage Clicked',
@@ -170,7 +199,6 @@ export const ANALYTICS_ACTIONS = {
   'nav-sidebar-sites': 'Sidebar Sites Clicked',
   'nav-sidebar-stores': 'Sidebar Stores Clicked',
   'nav-sidebar-activity': 'Sidebar Activity Clicked',
-  'nav-sidebar-realtime': 'Sidebar Realtime Clicked',
   'nav-sidebar-logs': 'Sidebar Logs Clicked',
   'nav-sidebar-usage': 'Sidebar Usage Clicked',
   'nav-sidebar-analytics': 'Sidebar Analytics Clicked',
@@ -210,6 +238,7 @@ export const ANALYTICS_ACTIONS = {
   'marketing-product-storage': 'Marketing Product Storage Clicked',
   'marketing-product-functions': 'Marketing Product Functions Clicked',
   'marketing-product-messaging': 'Marketing Product Messaging Clicked',
+  'marketing-product-videos': 'Marketing Product Videos Clicked',
   'marketing-product-realtime': 'Marketing Product Realtime Clicked',
   'marketing-product-sites': 'Marketing Product Sites Clicked',
   'marketing-product-domains': 'Marketing Product Domains Clicked',
@@ -217,6 +246,7 @@ export const ANALYTICS_ACTIONS = {
   'marketing-product-firewall': 'Marketing Product Firewall Clicked',
   'marketing-product-advisor': 'Marketing Product Advisor Clicked',
   'marketing-product-agent': 'Marketing Product Agent Clicked',
+  'marketing-product-zero': 'Marketing Product Zero Clicked',
 
   // Docs nav
   'docs-audience-developers': 'Docs Audience Developers Clicked',
@@ -235,11 +265,14 @@ export const ANALYTICS_ACTIONS = {
 
   // Project settings
   'smtp-quick-setup-resend': 'SMTP One-Click Setup Resend Clicked',
+  'smtp-quick-setup-bird': 'SMTP One-Click Setup Bird Clicked',
   'smtp-quick-setup-mailgun': 'SMTP One-Click Setup Mailgun Clicked',
-  'smtp-quick-setup-sendgrid': 'SMTP One-Click Setup SendGrid Clicked',
 
   // Messaging
   'messaging-quick-setup-resend': 'Messaging One-Click Setup Resend Clicked',
+  'messaging-quick-setup-bird': 'Messaging One-Click Setup Bird Clicked',
+  'messaging-quick-setup-bird-sms':
+    'Messaging One-Click Setup Bird SMS Clicked',
 
   // Resource creation
   'create-project': 'Create Project Clicked',
@@ -248,7 +281,10 @@ export const ANALYTICS_ACTIONS = {
   'postgres-promo-banner-try-now': 'PostgreSQL Promo Banner Try Now Clicked',
   'start-promo-banner-learn-more': 'Start Promo Banner Learn More Clicked',
   'product-hunt-banner-upvote': 'Product Hunt Banner Upvote Clicked',
-  'init-recap-promo-banner-view-recap': 'Init Recap Promo Banner View Recap Clicked',
+  'mcp1-launch-banner-try': 'MCP1 Launch Banner Try Clicked',
+  'firewall-moved-banner-open': 'Firewall Moved Banner Open Clicked',
+  'init-recap-promo-banner-view-recap':
+    'Init Recap Promo Banner View Recap Clicked',
   'native-oauth-promo-banner-open-settings':
     'Native OAuth Promo Banner Open Settings Clicked',
   'native-oauth-promo-banner-learn-more':
@@ -270,6 +306,8 @@ export const ANALYTICS_ACTIONS = {
   'firewall-spider-promo-modal-learn-more':
     'Firewall Spider Promo Modal Learn More Clicked',
   'firewall-spider-promo-sound': 'Firewall Spider Promo Sound Toggled',
+  'github-star-wizard-star': 'GitHub Star Wizard Star Clicked',
+  'github-star-wizard-skip': 'GitHub Star Wizard Skip Clicked',
   'create-table': 'Create Table Clicked',
   'create-row': 'Create Row Clicked',
   'create-bucket': 'Create Bucket Clicked',
@@ -316,7 +354,7 @@ const SIDEBAR_NAV_ACTIONS: Record<string, AnalyticsActionId> = {
   apps: 'nav-sidebar-apps',
   agents: 'nav-sidebar-agents',
   'api-keys': 'nav-sidebar-api-keys',
-  explorer: 'nav-sidebar-explorer',
+  playground: 'nav-sidebar-playground',
   auth: 'nav-sidebar-auth',
   databases: 'nav-sidebar-databases',
   storage: 'nav-sidebar-storage',
@@ -326,7 +364,6 @@ const SIDEBAR_NAV_ACTIONS: Record<string, AnalyticsActionId> = {
   sites: 'nav-sidebar-sites',
   stores: 'nav-sidebar-stores',
   activity: 'nav-sidebar-activity',
-  realtime: 'nav-sidebar-realtime',
   logs: 'nav-sidebar-logs',
   usage: 'nav-sidebar-usage',
   analytics: 'nav-sidebar-analytics',
@@ -343,6 +380,7 @@ const MARKETING_PRODUCT_ACTIONS: Record<string, AnalyticsActionId> = {
   storage: 'marketing-product-storage',
   functions: 'marketing-product-functions',
   messaging: 'marketing-product-messaging',
+  videos: 'marketing-product-videos',
   realtime: 'marketing-product-realtime',
   sites: 'marketing-product-sites',
   domains: 'marketing-product-domains',
@@ -350,6 +388,7 @@ const MARKETING_PRODUCT_ACTIONS: Record<string, AnalyticsActionId> = {
   firewall: 'marketing-product-firewall',
   advisor: 'marketing-product-advisor',
   agent: 'marketing-product-agent',
+  zero: 'marketing-product-zero',
 }
 
 const ORG_TAB_ACTIONS: Record<string, AnalyticsActionId> = {
@@ -381,6 +420,21 @@ const UPGRADE_PLAN_SELECT_ACTIONS: Record<string, AnalyticsActionId> = {
   'tier-2': 'upgrade-select-scale',
   enterprise: 'upgrade-select-enterprise',
   'tier-enterprise': 'upgrade-select-enterprise',
+}
+
+const CONTACT_SALES_ACTIONS: Record<SalesSource, AnalyticsActionId> = {
+  billing: 'billing-contact-sales',
+  settings: 'settings-contact-sales',
+  members: 'members-contact-sales',
+  backups: 'backups-contact-sales',
+  activity: 'activity-contact-sales',
+  specs: 'specs-contact-sales',
+  replicas: 'replicas-contact-sales',
+  compliance: 'compliance-contact-sales',
+  'preview-domains': 'preview-domains-contact-sales',
+  support: 'support-contact-sales',
+  'support-ticket': 'support-ticket-contact-sales',
+  'plan-picker': 'upgrade-contact-sales',
 }
 
 /** Exact docs global-nav hrefs → curated actions (top-level section entries only). */
@@ -437,6 +491,12 @@ export function getUpgradePlanSelectAnalyticsAction(
     UPGRADE_PLAN_SELECT_ACTIONS[key] ??
     UPGRADE_PLAN_SELECT_ACTIONS[key.replace(/\s+/g, '-')]
   )
+}
+
+export function getContactSalesAnalyticsAction(
+  source: SalesSource,
+): AnalyticsActionId {
+  return CONTACT_SALES_ACTIONS[source]
 }
 
 export function getDocsNavAnalyticsAction(

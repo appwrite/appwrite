@@ -17,13 +17,15 @@ use Utopia\Schedule\Clock\System as SystemClock;
 use Utopia\Span\Span;
 
 /**
- * Enqueues maintenance for the slice of inactive projects one slot owns.
+ * Enqueues maintenance for the slice of a cohort's projects one slot owns.
  *
- * With integer sequences, block b of BLOCK sequences belongs to slot b % slots, which stays stable as the table grows;
- * otherwise a project belongs to the slot its ID hashes to.
+ * Inactive projects are most of the table: with integer sequences, block b of BLOCK sequences belongs to slot
+ * b % slots, which stays stable as the table grows. Active projects are few and spread across it, so they, and any
+ * cohort without integer sequences, are read by page through the accessedAt index, and a project belongs to the slot
+ * its ID hashes to.
  *
- * Before each block or page it enqueues, the sweep checks the deletes queue. At BACKLOG messages or more it waits WAIT
- * seconds once, and if the queue is still backed up it sends the slot's message to the maintenance queue again with a
+ * Before each block or page it enqueues, the sweep checks the deletes queue. When its oldest message has waited LAG
+ * seconds or more it waits WAIT seconds once, and if the queue is still backed up it sends the slot's message to the maintenance queue again with a
  * cursor at that block or page and returns, so no job outlives a short wait. A message older than one period is
  * skipped, since by then the slot's next run has superseded it.
  *
@@ -36,7 +38,7 @@ final readonly class Sweep
 
     public const int PAGE = 1000;
 
-    public const int BACKLOG = 100;
+    public const int LAG = 60;
 
     public const int WAIT = 10;
 
@@ -70,20 +72,13 @@ final readonly class Sweep
         $cutoff = DateTime::format($cutoff);
 
         $region = Query::equal('region', [$message->region]);
+        $passes = $message->cohort->conditions($cutoff);
 
-        if ($this->dbForPlatform->getIdAttributeType() === ColumnType::Integer) {
-            $this->blocks($message, [
-                $region,
-                Query::or([
-                    Query::lessThan('accessedAt', $cutoff),
-                    Query::isNull('accessedAt'),
-                ]),
-            ]);
+        if ($message->cohort === Cohort::Inactive && $this->dbForPlatform->getIdAttributeType() === ColumnType::Integer) {
+            $this->blocks($message, [$region, Query::or($passes)]);
             return;
         }
 
-        // One condition at a time, so each read can use the region and accessedAt index.
-        $passes = [Query::lessThan('accessedAt', $cutoff), Query::isNull('accessedAt')];
         for ($pass = $message->pass; $pass < \count($passes); $pass++) {
             if (!$this->pages($message, $pass, [$region, $passes[$pass]], $pass === $message->pass ? $message->cursor : '')) {
                 return;
@@ -131,7 +126,7 @@ final readonly class Sweep
     }
 
     /**
-     * Without integer sequences ownership is a hash of the ID, so every slice reads the whole inactive cohort. The
+     * Ownership by page is a hash of the ID, so every slice reads the whole cohort. The
      * cursor is the ID of the last project read; if that project has since been deleted the pass starts over.
      *
      * @param list<Query> $filters
@@ -169,13 +164,13 @@ final readonly class Sweep
      */
     private function deferred(MaintenanceMessage $message, int $pass, string $cursor): bool
     {
-        $pending = $this->publisherForDeletes->getSize();
-        if ($pending >= self::BACKLOG) {
+        $age = $this->publisherForDeletes->getAge();
+        if ($age >= self::LAG) {
             $this->clock->sleep(self::WAIT);
-            $pending = $this->publisherForDeletes->getSize();
+            $age = $this->publisherForDeletes->getAge();
         }
 
-        if ($pending < self::BACKLOG) {
+        if ($age < self::LAG) {
             return false;
         }
 
@@ -187,14 +182,15 @@ final readonly class Sweep
             region: $message->region,
             pass: $pass,
             cursor: $cursor,
+            cohort: $message->cohort,
         ));
 
         if ($published === false) {
             throw new \RuntimeException('Failed to defer maintenance for slot due at ' . $message->due);
         }
 
-        Span::add('maintenance.deferred', $pending);
-        Console::info('maintenance: deferred slot ' . $message->slot . ' due at ' . $message->due . ' behind ' . $pending . ' pending deletes');
+        Span::add('maintenance.deferred', $age);
+        Console::info('maintenance: deferred slot ' . $message->slot . ' due at ' . $message->due . ' while deletes wait ' . $age . 's');
 
         return true;
     }

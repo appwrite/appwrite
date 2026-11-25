@@ -25,6 +25,7 @@ import {
   fetchLookupBatches,
 } from '@/lib/appwrite-id'
 import { sdk } from '@/lib/appwrite/sdk'
+import { isFeatureEnabled } from '@/lib/console-profiles'
 import { SpecificationType } from '@/lib/specifications'
 import {
   fetchAllVariables,
@@ -255,6 +256,23 @@ function templatesSortKey(arr: string[] | undefined): string {
   return [...arr].sort().join('\u0001')
 }
 
+/** Use case of the alert function templates, listed only while the alerts preview is on. */
+export const ALERT_TEMPLATES_USE_CASE = 'monitoring'
+
+/**
+ * Use cases to ask the API for. Without the alerts preview that is every use case but
+ * monitoring, and `[]` when a filter asked for monitoring alone, so nothing is listed.
+ */
+function visibleTemplateUseCases(
+  useCases: string[] | undefined,
+): string[] | undefined {
+  if (isFeatureEnabled('alerts')) return useCases
+  const requested = useCases?.length
+    ? useCases
+    : Object.values(FunctionTemplateUseCase)
+  return requested.filter((useCase) => useCase !== ALERT_TEMPLATES_USE_CASE)
+}
+
 /** SDK types use enum arrays; API accepts the same string values as the template catalog. */
 function listTemplatesFilterPayload(
   runtimes: string[] | undefined,
@@ -283,9 +301,14 @@ export async function fetchFunctionTemplatesPage(
     return { templates: [], total: 0 }
   }
 
+  const visibleUseCases = visibleTemplateUseCases(useCases)
+  if (visibleUseCases?.length === 0) {
+    return { templates: [], total: 0 }
+  }
+
   const projectSdk = sdk.forProject(projectId)
   const response = await projectSdk.functions.listTemplates({
-    ...listTemplatesFilterPayload(runtimes, useCases),
+    ...listTemplatesFilterPayload(runtimes, visibleUseCases),
     limit,
     offset,
     total: true,
@@ -318,6 +341,7 @@ export function functionTemplatesPageQueryOptions(
       limit,
       templatesSortKey(rt),
       templatesSortKey(uc),
+      isFeatureEnabled('alerts'),
     ],
     queryFn: () =>
       fetchFunctionTemplatesPage(projectId!, offset, limit, rt, uc),
@@ -348,13 +372,18 @@ export async function fetchAllFunctionTemplates(
     return { templates: [], total: 0 }
   }
 
+  const visibleUseCases = visibleTemplateUseCases(filters?.useCases)
+  if (visibleUseCases?.length === 0) {
+    return { templates: [], total: 0 }
+  }
+
   const projectSdk = sdk.forProject(projectId)
   const all: Models.TemplateFunction[] = []
   let offset = 0
   let total = 0
   while (true) {
     const response = await projectSdk.functions.listTemplates({
-      ...listTemplatesFilterPayload(filters?.runtimes, filters?.useCases),
+      ...listTemplatesFilterPayload(filters?.runtimes, visibleUseCases),
       limit: FUNCTION_TEMPLATES_LIST_BATCH,
       offset,
       total: offset === 0,
@@ -405,6 +434,7 @@ export function allFunctionTemplatesQueryOptions(
       projectId,
       templatesSortKey(filters?.runtimes),
       templatesSortKey(filters?.useCases),
+      isFeatureEnabled('alerts'),
     ],
     queryFn: () => fetchAllFunctionTemplates(projectId!, filters),
     enabled: !!projectId,
@@ -558,21 +588,31 @@ export async function fetchFunctionDomains(
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const trimmedSearch = search?.trim() || ''
+
+  // The SDK's listRules has no text `search` param; match domain or `$id` in queries.
+  const searchQueries = trimmedSearch
+    ? [
+        Query.or([
+          Query.contains('domain', trimmedSearch.toLowerCase()),
+          Query.startsWith('$id', trimmedSearch),
+        ]),
+      ]
+    : []
+
   const fixedQueries = [
     Query.equal('type', ['deployment', 'redirect']),
     Query.equal('deploymentResourceType', 'function'),
     Query.equal('deploymentResourceId', functionId),
     Query.equal('trigger', 'manual'),
     ...(filterQueries ?? []),
+    ...searchQueries,
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
   ]
 
-  const response = await projectSdk.proxy.listRules({
-    queries: fixedQueries,
-    search: search?.trim() || undefined,
-  })
+  const response = await projectSdk.proxy.listRules({ queries: fixedQueries })
 
   return {
     rules: response.rules || [],
@@ -1541,7 +1581,13 @@ export function useCreateFunctionDomainRule(
         functionId,
       })
     },
-    onSuccess: () => {
+    onSuccess: async (_rule, { functionId }) => {
+      // Refetch, not invalidate: the domains list is unmounted behind the
+      // add route and uses refetchOnMount: false, so it would stay stale
+      // when the wizard is left on its verify step.
+      await queryClient.refetchQueries({
+        queryKey: ['proxy-rules', 'function', projectId, functionId],
+      })
       queryClient.invalidateQueries({
         queryKey: ['proxy-rules'],
       })
@@ -1604,7 +1650,13 @@ export function useCreateSmtpDomainRule(projectId: string | null | undefined) {
       }
       return await createSmtpDomainRule(projectId, params)
     },
-    onSuccess: () => {
+    onSuccess: async (_rule, { functionId }) => {
+      // Refetch, not invalidate: the domains list is unmounted behind the
+      // add route and uses refetchOnMount: false, so it would stay stale
+      // when the wizard is left on its verify step.
+      await queryClient.refetchQueries({
+        queryKey: ['proxy-rules', 'function', projectId, functionId],
+      })
       queryClient.invalidateQueries({
         queryKey: ['proxy-rules'],
       })

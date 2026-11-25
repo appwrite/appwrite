@@ -5,6 +5,7 @@
  */
 
 import {
+  keepPreviousData,
   queryOptions,
   useMutation,
   useQuery,
@@ -13,7 +14,7 @@ import {
 import { Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { Dependencies } from './dependencies'
-import { DEFAULT_STALE_TIME } from './constants'
+import { DEFAULT_STALE_TIME, DOMAINS_DEFAULT_PAGE_SIZE } from './constants'
 import { getActiveProfileId } from '@/lib/console-profiles'
 
 type VerifyDomainInput =
@@ -32,12 +33,16 @@ type VerifyDomainInput =
  *
  * @param projectId - The project ID
  * @param region - The project region
+ * @param page - Zero-based page index
+ * @param limit - Rules per page
  * @param search - Optional search query
  * @returns Proxy rules list response from the API
  */
 export async function fetchProjectDomains(
   projectId: string,
   region?: string,
+  page: number = 0,
+  limit: number = DOMAINS_DEFAULT_PAGE_SIZE,
   search?: string,
 ) {
   if (!projectId) {
@@ -45,16 +50,28 @@ export async function fetchProjectDomains(
   }
 
   const projectSdk = sdk.forProject(projectId, region)
+  const trimmedSearch = search?.trim() || ''
+
+  // The SDK's listRules has no text `search` param; match domain or `$id` in queries.
+  const searchQueries = trimmedSearch
+    ? [
+        Query.or([
+          Query.contains('domain', trimmedSearch.toLowerCase()),
+          Query.startsWith('$id', trimmedSearch),
+        ]),
+      ]
+    : []
+
   const queries = [
     Query.equal('type', 'api'),
     Query.equal('trigger', 'manual'),
+    ...searchQueries,
     Query.orderDesc('$createdAt'),
+    Query.limit(limit),
+    Query.offset(page * limit),
   ]
 
-  const response = await projectSdk.proxy.listRules({
-    queries,
-    search: search?.trim() || undefined,
-  })
+  const response = await projectSdk.proxy.listRules({ queries })
 
   return {
     rules: response.rules || [],
@@ -75,11 +92,21 @@ export async function fetchProjectDomains(
 export function projectDomainsQueryOptions(
   projectId: string | null | undefined,
   region?: string,
+  page: number = 0,
+  limit: number = DOMAINS_DEFAULT_PAGE_SIZE,
   search?: string,
 ) {
   return queryOptions({
-    queryKey: ['proxy-rules', 'project', projectId, region, search],
-    queryFn: () => fetchProjectDomains(projectId!, region, search),
+    queryKey: [
+      'proxy-rules',
+      'project',
+      projectId,
+      region,
+      page,
+      limit,
+      search,
+    ],
+    queryFn: () => fetchProjectDomains(projectId!, region, page, limit, search),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -87,6 +114,7 @@ export function projectDomainsQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -99,22 +127,27 @@ export function projectDomainsQueryOptions(
  *
  * @param projectId - The project ID
  * @param region - The project region
+ * @param page - Zero-based page index
+ * @param limit - Rules per page
  * @param search - Optional search query
  * @returns Proxy rules list with loading state
  */
 export function useProjectDomains(
   projectId: string | null | undefined,
   region?: string,
+  page: number = 0,
+  limit: number = DOMAINS_DEFAULT_PAGE_SIZE,
   search?: string,
 ) {
-  const { data, isLoading, error, refetch } = useQuery(
-    projectDomainsQueryOptions(projectId, region, search),
-  )
+  const { data, isLoading, isFetching, isPlaceholderData, error, refetch } =
+    useQuery(projectDomainsQueryOptions(projectId, region, page, limit, search))
 
   return {
     rules: data?.rules || [],
     total: data?.total || 0,
     isLoading,
+    isFetching,
+    isPlaceholderData,
     error,
     refetch,
   }
@@ -179,8 +212,11 @@ export function useCreateDomain(
         domain: domain.toLowerCase().trim(),
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch, not invalidate: the domains list is unmounted behind the
+      // add route and uses refetchOnMount: false, so it would stay stale
+      // when the wizard is left on its verify step.
+      await queryClient.refetchQueries({
         queryKey: ['proxy-rules', 'project', projectId],
       })
       queryClient.invalidateQueries({
@@ -216,25 +252,34 @@ export function useVerifyDomain(
       }
 
       if (getActiveProfileId() === 'cloud' && organizationDomainId) {
-        try {
-          await sdk.forConsole.domains.verifyNameservers({
-            domainId: organizationDomainId,
+        // Best-effort and not awaited: its NS lookup must not hold up the
+        // rule check. The organization domain can change either way.
+        void sdk.forConsole.domains
+          .verifyNameservers({ domainId: organizationDomainId })
+          .catch(() => {})
+          .finally(() => {
+            void queryClient.refetchQueries({
+              queryKey: ['domain', organizationDomainId],
+            })
+            void queryClient.refetchQueries({
+              queryKey: ['domains', 'organization'],
+            })
           })
-        } catch {
-          // Nameserver verification is best-effort before proxy rule
-          // verification, but should not block verification.
-        }
       }
 
       const projectSdk = sdk.forProject(projectId, region)
       return await projectSdk.proxy.updateRuleStatus({ ruleId })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['proxy-rules', 'project', projectId],
+    // A failed check saves its logs and records too.
+    onSettled: async () => {
+      // Every proxy rule list of this project. Function deployment keys hold projectId fourth, the others third.
+      await queryClient.refetchQueries({
+        queryKey: ['proxy-rules'],
+        predicate: (query) => query.queryKey.includes(projectId),
       })
-      queryClient.invalidateQueries({
-        queryKey: Dependencies.DOMAINS,
+      await queryClient.refetchQueries({
+        queryKey: ['proxy-rule'],
+        predicate: (query) => query.queryKey.includes(projectId),
       })
     },
   })
@@ -267,6 +312,82 @@ export function useDeleteDomain(
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: ['proxy-rules'],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to change what a site or function domain serves: the active
+ * deployment, a branch, or a redirect. The domain and its certificate stay.
+ */
+export function useUpdateDomainRule(
+  projectId: string | null | undefined,
+  region?: string,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: {
+      ruleId: string
+      resourceType: 'site' | 'function'
+      resourceId: string
+      behaviour: 'active' | 'branch' | 'redirect'
+      branch?: string
+      redirectUrl?: string
+      statusCode?: string
+    }) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      const projectSdk = sdk.forProject(projectId, region)
+      const { ruleId, resourceType, resourceId, behaviour } = params
+      const branch = behaviour === 'branch' ? params.branch : undefined
+
+      if (behaviour === 'redirect') {
+        const { ProxyResourceType, StatusCode } = await import(
+          '@appwrite.io/console'
+        )
+        const codeMap: Record<
+          string,
+          (typeof StatusCode)[keyof typeof StatusCode]
+        > = {
+          '301': StatusCode.MovedPermanently,
+          '302': StatusCode.Found,
+          '307': StatusCode.TemporaryRedirect,
+          '308': StatusCode.PermanentRedirect,
+        }
+        return await projectSdk.proxy.updateRedirectRule({
+          ruleId,
+          url: params.redirectUrl?.trim() ?? '',
+          statusCode: codeMap[params.statusCode ?? '302'] ?? StatusCode.Found,
+          resourceId,
+          resourceType:
+            resourceType === 'site'
+              ? ProxyResourceType.Site
+              : ProxyResourceType.Function,
+        })
+      }
+
+      if (resourceType === 'site') {
+        return await projectSdk.proxy.updateSiteRule({
+          ruleId,
+          siteId: resourceId,
+          branch,
+        })
+      }
+      return await projectSdk.proxy.updateFunctionRule({
+        ruleId,
+        functionId: resourceId,
+        branch,
+      })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['proxy-rules'],
+      })
+      queryClient.invalidateQueries({
+        queryKey: Dependencies.DOMAINS,
       })
     },
   })

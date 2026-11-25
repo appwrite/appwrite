@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
+use Appwrite\Auth\Key;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
@@ -28,7 +29,6 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git;
 
 class Create extends Base
 {
@@ -83,7 +83,7 @@ class Create extends Base
             ->param('fallbackFile', '', new Text(255, 0), 'Fallback file for single page application sites.', true)
             ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the site.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
-            ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.', true)
+            ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, no comments or checks are posted to commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Directory(), 'Path to site code in the linked repo.', true)
             ->param('providerBranches', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
             ->param('providerPaths', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
@@ -103,6 +103,9 @@ class Create extends Base
             ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 keeps all deployments unless the server applies a default retention.', true)
             ->param('scopes', [], new ArrayList(new WhiteList(\array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_SCOPES_SIZE), 'List of scopes allowed for API key auto-generated for every site build and SSR execution. Maximum of ' . APP_LIMIT_ARRAY_SCOPES_SIZE . ' scopes are allowed.', true, enum: new Enum(name: 'ProjectKeyScopes'))
             ->param('description', '', new Text(1024, 0), 'Optional description for the site.', true)
+            ->param('providerComments', true, new Boolean(), 'Post a build summary on pull requests for the repo linked to the site. Commit statuses are still reported when disabled. Ignored in silent mode.', true)
+            ->param('providerDeployments', true, new Boolean(), 'Deploy every push that matches the branch and path rules for the repo linked to the site. When disabled, deploy manually.', true)
+            ->param('providerStatuses', true, new Boolean(), 'Report the build status on each commit for the repo linked to the site. Ignored in silent mode.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
@@ -110,6 +113,7 @@ class Create extends Base
             ->inject('dbForPlatform')
             ->inject('vcsFactory')
             ->inject('repositoryWebhooks')
+            ->inject('apiKey')
             ->callback($this->action(...));
     }
 
@@ -139,14 +143,22 @@ class Create extends Base
         int $deploymentRetention,
         array $scopes,
         string $description,
+        bool $providerComments,
+        bool $providerDeployments,
+        bool $providerStatuses,
         Response $response,
         Database $dbForProject,
         Document $project,
         Event $queueForEvents,
         Database $dbForPlatform,
         VcsFactory $vcsFactory,
-        RepositoryWebhooks $repositoryWebhooks
+        RepositoryWebhooks $repositoryWebhooks,
+        ?Key $apiKey,
     ) {
+        if ($apiKey !== null && !$apiKey->mayGrant($scopes)) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'An API key cannot grant scopes it does not hold.');
+        }
+
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
             $adapters = \array_keys($configFramework['adapters'] ?? []);
@@ -178,6 +190,11 @@ class Create extends Base
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
         }
 
+        if (!empty($providerRepositoryId)) {
+            $providerAdapter = $vcsFactory->fromInstallation($installation);
+            [$owner, $repositoryName] = $this->resolveInstallationRepository($providerAdapter, $installation, $providerRepositoryId);
+        }
+
         $site = new Document([
             '$id' => $siteId,
             'enabled' => $enabled,
@@ -204,6 +221,9 @@ class Create extends Base
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
+            'providerComments' => $providerComments,
+            'providerDeployments' => $providerDeployments,
+            'providerStatuses' => $providerStatuses,
             'providerBranches' => $providerBranches,
             'providerPaths' => $providerPaths,
             'buildSpecification' => $buildSpecification,
@@ -237,12 +257,7 @@ class Create extends Base
             $repository = $dbForPlatform->createDocument('repositories', $repository);
 
             try {
-                $providerAdapter = $vcsFactory->fromInstallation($installation);
-                if (!\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $providerAdapter->getSupportedWebhookScopes(), true)) {
-                    $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
-                    $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
-                    $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
-                }
+                $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
             } catch (\Throwable $error) {
                 // Don't leave an orphaned repositories document behind -- it
                 // would make the next retry's connection count look like a

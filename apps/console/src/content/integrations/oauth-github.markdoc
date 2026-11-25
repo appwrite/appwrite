@@ -1,0 +1,82 @@
+---
+layout: integration
+title: OAuth with GitHub
+description: Authenticate users with an existing GitHub account
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-github/cover.avif
+category: auth
+product:
+    vendor: GitHub
+    description: 'GitHub is a platform for hosting Git repositories and collaborating on code.'
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+[GitHub](https://github.com/) is a platform for hosting Git repositories and collaborating on code through pull requests, issues, and Actions. Most developers already have a GitHub account.
+
+# How does the integration work?
+
+You can use the GitHub OAuth adapter in Appwrite Auth to let users sign in with their GitHub account. This is the natural sign-in option for developer tools, open source dashboards, and anything built for engineers. The session stores GitHub's access token as `providerAccessToken`, so your server can call the GitHub API on the user's behalf.
+
+Appwrite requests the `user:email` scope and reads the user's email addresses from GitHub. It uses the primary email when it's verified, or another verified email otherwise, and marks that address as verified in Appwrite.
+
+# How to implement
+
+To implement the GitHub OAuth adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Create an OAuth app on GitHub
+
+On GitHub, open **Settings** > **Developer settings** > **OAuth Apps** and click **New OAuth App**. To create the app under an organization instead, use the organization's **Developer settings**.
+
+Fill in the **Application name** and **Homepage URL**. GitHub requires an **Authorization callback URL** to register the app, so temporarily enter `https://temporary-endpoint.com/`. You'll replace it with the URI from Appwrite in the next step.
+
+Register the application, then save its **Client ID** and click **Generate a new client secret**. Copy the secret right away, because GitHub shows it only once.
+
+## Step 2: Add GitHub OAuth adapter to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. In your Appwrite project, head over to the **Auth** page, open the **Settings** tab, and click **GitHub** under the **OAuth2 Providers** section.
+
+Fill in the provider form:
+
+- **OAuth2 app Client ID, or App ID**: the alphanumeric **Client ID** of your app. Don't use the numeric App ID of a GitHub App, such as `370006`.
+- **Client Secret**: the client secret you generated.
+
+Optionally, set **Prompt** to `select_account` so GitHub asks users which account to use. Turn the provider on and click **Update**. Appwrite checks the credentials with GitHub when you enable the provider, and tells you whether the Client ID doesn't exist or the secret is wrong.
+
+Copy the **Redirect URI** shown in the form. On Appwrite Cloud it looks like `https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/github/<PROJECT_ID>`, but always copy the exact value from the Console. Back on GitHub, replace the temporary **Authorization callback URL** with it and update the application.
+
+## Step 3: Test the provider
+
+Start a session from your app with the `OAuthProvider.Github` value. Pass extra GitHub scopes in `scopes` if your app calls the GitHub API, such as `repo`. With the Web SDK:
+
+```js
+import { Client, Account, OAuthProvider } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+account.createOAuth2Session({
+    provider: OAuthProvider.Github,
+    success: 'https://example.com/success',
+    failure: 'https://example.com/failed',
+});
+```
+
+Add your app's domain as a web platform in your Appwrite project so Appwrite accepts the `success` and `failure` URLs. Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow for other platforms and for server-side sign-in.
+
+# Read more about GitHub and Appwrite Auth
+
+If you would like to learn more about GitHub and Appwrite Auth, we have some resources that you should visit:
+
+- [Creating an OAuth app on GitHub](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Read the OAuth 2 profile and provider token](/docs/products/auth/oauth2#profile)
+- [Link multiple sign-in methods with identities](/docs/products/auth/identities)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)

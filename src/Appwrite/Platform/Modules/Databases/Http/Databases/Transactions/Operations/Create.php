@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Operations;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Action;
@@ -43,9 +44,7 @@ class Create extends Action
             ->groups(['api', 'database', 'transactions'])
             ->label('scope', 'documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
-            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT * 2, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
                 namespace: 'databases',
                 group: 'transactions',
@@ -132,7 +131,7 @@ class Create extends Action
                 'bulkUpsert',
                 'bulkDelete'
             ])) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
+                throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
             }
 
             $database = $databases[$operation['databaseId']] ??= $authorization->skip(fn () => $dbForProject->getDocument('databases', $operation['databaseId']));
@@ -273,15 +272,7 @@ class Create extends Action
             ]);
         }
 
-        $transaction = $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged, $operations) {
-            $dbForProject->createDocuments('transactionLogs', $staged);
-            return $dbForProject->increaseDocumentAttribute(
-                'transactions',
-                $transactionId,
-                'operations',
-                \count($operations)
-            );
-        }));
+        $transaction = $authorization->skip(fn () => $this->stage($dbForProject, $transactionId, $staged, $maxBatch));
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)

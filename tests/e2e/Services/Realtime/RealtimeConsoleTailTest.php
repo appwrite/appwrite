@@ -27,7 +27,7 @@ final class RealtimeConsoleTailTest extends Scope
         $otherProjectId = $this->createOrganizationProject($headers, $teamId);
 
         $member = $this->createConsoleAccount();
-        $this->addOrganizationMember($headers, $teamId, $member['email'], ['project-' . $otherProjectId . '-developer']);
+        $this->addOrganizationMember($headers, $teamId, $member, ['project-' . $otherProjectId . '-developer']);
 
         /**
          * Test for SUCCESS
@@ -61,7 +61,7 @@ final class RealtimeConsoleTailTest extends Scope
         $projectId = $this->createOrganizationProject($headers, $teamId);
 
         $member = $this->createConsoleAccount();
-        $membershipId = $this->addOrganizationMember($headers, $teamId, $member['email'], ['developer']);
+        $membershipId = $this->addOrganizationMember($headers, $teamId, $member, ['developer']);
 
         $client = $this->getConsoleWebsocket($member['session']);
         $response = $this->subscribe($client, ['memberships', 'console.tail.' . $projectId]);
@@ -90,7 +90,7 @@ final class RealtimeConsoleTailTest extends Scope
         $projectId = $this->createOrganizationProject($headers, $teamId);
 
         $member = $this->createConsoleAccount();
-        $this->addOrganizationMember($headers, $teamId, $member['email'], ['developer']);
+        $this->addOrganizationMember($headers, $teamId, $member, ['developer']);
 
         $client = $this->getConsoleWebsocket($member['session']);
         $response = $this->subscribe($client, ['console.tail.' . $projectId]);
@@ -108,6 +108,45 @@ final class RealtimeConsoleTailTest extends Scope
         $this->createProjectUser($projectId);
 
         $this->assertTailStopped($client, 'Tail kept streaming to the previous team after the project was transferred.');
+
+        $client->close();
+    }
+
+    public function testTailEndsWhenProjectIsClaimed(): void
+    {
+        $headers = $this->getRootHeaders();
+        $teamId = $this->createOrganization($headers);
+        $destinationTeamId = $this->createOrganization($headers);
+        $projectId = $this->createOrganizationProject($headers, $teamId);
+
+        $member = $this->createConsoleAccount();
+        $this->addOrganizationMember($headers, $teamId, $member, ['developer']);
+
+        $client = $this->getConsoleWebsocket($member['session']);
+        $response = $this->subscribe($client, ['console.tail.' . $projectId]);
+        $this->assertTrue($response['data']['success']);
+
+        $this->createProjectUser($projectId);
+        $this->receiveUntilEvent($client, fn (array $message): bool => \in_array('console.tail', $message['data']['events'] ?? [], true));
+
+        $transfer = $this->client->call(Client::METHOD_POST, '/organization/transfers', \array_merge($headers, [
+            'x-appwrite-organization' => $teamId,
+        ]), [
+            'projectId' => $projectId,
+        ]);
+        $this->assertSame(201, $transfer['headers']['status-code']);
+
+        $claim = $this->client->call(Client::METHOD_PATCH, '/organization/transfers/' . $transfer['body']['$id'] . '/status', \array_merge($headers, [
+            'x-appwrite-organization' => $destinationTeamId,
+        ]), [
+            'secret' => $transfer['body']['secret'],
+        ]);
+        $this->assertSame(200, $claim['headers']['status-code']);
+        $this->assertSame($destinationTeamId, $claim['body']['teamId']);
+
+        $this->createProjectUser($projectId);
+
+        $this->assertTailStopped($client, 'Tail kept streaming to the previous team after the project was claimed.');
 
         $client->close();
     }
@@ -269,8 +308,9 @@ final class RealtimeConsoleTailTest extends Scope
         ];
     }
 
-    private function addOrganizationMember(array $headers, string $teamId, string $email, array $roles): string
+    private function addOrganizationMember(array $headers, string $teamId, array $member, array $roles): string
     {
+        $email = $member['email'];
         $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', $headers, [
             'email' => $email,
             'roles' => $roles,
@@ -283,10 +323,12 @@ final class RealtimeConsoleTailTest extends Scope
         });
         $tokens = $this->extractQueryParamsFromEmailLink($invite['html']);
 
+        // Signed in, as accepting signed out claims the unverified account and revokes its session
         $confirm = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $membership['body']['$id'] . '/status', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $member['session'],
         ], [
             'userId' => $tokens['userId'],
             'secret' => $tokens['secret'],

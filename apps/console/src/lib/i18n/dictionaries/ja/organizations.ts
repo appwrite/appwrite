@@ -3,6 +3,11 @@
  * Keys are the exact English source strings (English is the source of truth).
  */
 export const jaOrganizationsDictionary: Record<string, string> = {
+  'Invoice breakdown unavailable.': '請求書の内訳は利用できません。',
+  'Recorded charges; detailed pricing unavailable.':
+    '記録済みの請求額です。料金の詳細は利用できません。',
+  'No invoice yet.': '請求書はまだありません。',
+
   'A valid transfer price is required to continue.':
     '続行するには有効な移管料金が必要です。',
   "We couldn't load a transfer price. Try again to continue.":
@@ -171,6 +176,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Create a project first': '先にプロジェクトを作成してください',
   'Create organization': '組織を作成',
   'Create project': 'プロジェクトを作成',
+  'My first project': '最初のプロジェクト',
   'Advanced security': '高度なセキュリティ',
   'Security add-on': 'セキュリティアドオン',
   '+ more': '+ その他',
@@ -241,7 +247,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Domain name': 'ドメイン名',
   'Domain name does not match': 'ドメイン名が一致しません',
   'Domain not found': 'ドメインが見つかりません',
-  'Domain not verified': 'ドメインが未検証です',
   'Domain not verified yet': 'ドメインはまだ検証されていません',
   'Domain transfer in progress': 'ドメイン移管を実施中',
   'Domain transfer started': 'ドメイン移管を開始しました',
@@ -299,6 +304,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Failed to load logo files': 'ロゴファイルの読み込みに失敗しました',
   'Failed to load members': 'メンバーの読み込みに失敗しました',
   'Failed to load page': 'ページの読み込みに失敗しました',
+  'Failed to load preset records':
+    'プリセットの DNS レコードの読み込みに失敗しました',
   'Failed to load projects': 'プロジェクトの読み込みに失敗しました',
   'Failed to load regions': 'リージョンの読み込みに失敗しました',
   'Failed to read file. Please try again.':
@@ -401,7 +408,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Loading payment methods...': '支払い方法を読み込み中...',
   'Loading plan details...': 'プラン詳細を読み込み中...',
   'Loading plans...': 'プランを読み込み中...',
-  'Loading platforms': 'プラットフォームを読み込み中',
   'Loading price for': '価格を読み込み中:',
   'Loading projects...': 'プロジェクトを読み込み中...',
   'Loading request usage': 'リクエスト使用量を読み込み中',
@@ -429,6 +435,14 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Name must be no longer than': '名前は次より長くできません',
   'Need 24/7 or enterprise support?':
     '24時間365日またはエンタープライズサポートが必要ですか?',
+  'Need SSO or custom organization roles?':
+    'SSO やカスタム組織ロールが必要ですか?',
+  'Need a custom SLA or a private Slack channel?':
+    'カスタム SLA やプライベート Slack チャンネルが必要ですか?',
+  'Running Appwrite at scale?': '大規模に Appwrite を運用していますか?',
+  'Get a custom SLA, a private Slack channel, and SOC 2 and HIPAA without add-ons.':
+    'カスタム SLA、プライベート Slack チャンネル、アドオン不要の SOC 2 と HIPAA をご利用いただけます。',
+  'Talk to sales': '営業に相談',
   'Next page': '次のページ',
   'Next payment of': '次回の支払い額',
   'Next projects page': '次のプロジェクトページ',
@@ -532,6 +546,9 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Please select a state': '州を選択してください',
   'Please select exactly': '正確に選択してください',
   'Please try again.': 'もう一度お試しください。',
+  'Port is required': 'ポートは必須です',
+  'Port must be between 0 and 65535':
+    'ポートは 0 から 65535 の範囲で指定してください',
   'Post-logout redirect URIs': 'ログアウト後のリダイレクト URI',
   'Postal code': '郵便番号',
   'Preparing your organization dashboard.': '組織ダッシュボードを準備中です。',
@@ -539,6 +556,9 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Previous projects page': '前のプロジェクトページ',
   'Primary payment method updated': '主要な支払い方法を更新しました',
   'Priority for SRV record': 'SRV レコードの優先度',
+  'Priority is required': '優先度は必須です',
+  'Priority must be between 0 and 65535':
+    '優先度は 0 から 65535 の範囲で指定してください',
   'Privacy policy': 'プライバシーポリシー',
   'Project (optional)': 'プロジェクト (任意)',
   'Project ID': 'プロジェクト ID',
@@ -547,6 +567,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Project keys': 'プロジェクトキー',
   'Project pinned': 'プロジェクトをピン留めしました',
   'Project unpinned': 'プロジェクトのピン留めを解除しました',
+  'Projects subtotal': 'プロジェクト小計',
   'Projects that will be deleted:': '削除されるプロジェクト:',
   'Promo code': 'プロモコード',
   'Public client': 'パブリッククライアント',
@@ -647,6 +668,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'このアプリは無効で、ユーザーを認可できません。',
   'This organization has no projects.':
     'この組織にはプロジェクトがありません。',
+  'These DNS records will be added. Records this domain already has are left unchanged. Nothing is created until you confirm.':
+    'これらの DNS レコードが追加されます。このドメインに既にあるレコードは変更されません。確認するまで何も作成されません。',
   'This will add': 'これにより次が追加されます',
   'Ticket submitted': 'チケットを送信しました',
   'Total due': '合計支払額',
@@ -697,6 +720,9 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'View recap': 'まとめを見る',
   'View charges breakdown': '料金内訳を表示',
   'View detailed pricing': '詳細な料金を表示',
+  'Weight is required': '重みは必須です',
+  'Weight must be between 0 and 65535':
+    '重みは 0 から 65535 の範囲で指定してください',
   'View invoice': '請求書を表示',
   'View members': 'メンバーを表示',
   'View project': 'プロジェクトを表示',
@@ -739,7 +765,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'is taken': 'は使用済みです',
   'member slot': 'メンバースロット',
   'member slots': 'メンバースロット',
-  'more platforms': 'その他のプラットフォーム',
   "now. Then you'll be charged": 'を今すぐ支払います。その後、次が請求されます',
   'of budget': 'の予算',
   'over limit': '上限超過',
@@ -781,6 +806,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'バックアップの支払い方法を設定しておくと、主要な支払い方法が失敗した場合でもサービスが中断されません。',
   'A card was entered in a previous attempt. Complete the details below to finish adding it.':
     '前回の試行でカード情報が入力されています。以下の詳細を入力して追加を完了してください。',
+  'Use a different card': '別のカードを使用',
   'A new payment method has been added to your account':
     '新しい支払い方法がアカウントに追加されました',
   'A records map a domain to an IPv4 address, allowing browsers to find your website by translating the domain name to an IP address.':
@@ -809,6 +835,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'チーム管理と請求の書き込みを除くすべてのリソース。',
   'Allow OAuth2 Device Authorization Grant (RFC 8628).':
     'OAuth2 Device Authorization Grant (RFC 8628) を許可します。',
+  'Already in this organization': 'すでにこの組織にあります',
   'Apply Appwrite credits to your organization. Credits expire after a set period and do not roll over.':
     '組織に Appwrite クレジットを適用します。クレジットは一定期間後に失効し、繰り越されません。',
   'Apps published by your organization.': '組織が公開しているアプリ。',
@@ -824,6 +851,9 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     '次から請求先住所を削除してもよろしいですか',
   'Auto renewal is available for domains registered with Appwrite.':
     '自動更新は Appwrite で登録したドメインで利用できます。',
+  'Registered with another registrar': '別のレジストラで登録されています',
+  'Renew this domain with its current registrar.':
+    'このドメインは現在のレジストラで更新してください。',
   'Billing address has been created and set for your organization':
     '請求先住所を作成し、組織に設定しました',
   'Billing, team, cross-project. One key for the whole org.':
@@ -900,6 +930,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'プランの上限を超えた追加使用による予期しない課金を防ぐには、予算上限を有効にしてください。支出上限に達すると、サービスは自動的に一時停止されます。',
   'Enter a coupon code to update your estimated total. Applied credits expire after a set period and do not roll over.':
     'クーポンコードを入力すると見積合計が更新されます。適用したクレジットは一定期間後に失効し、繰り越されません。',
+  'Enter a domain like example.com':
+    'example.com のようにドメインを入力してください',
   'Enter a full domain name (e.g. example.com)':
     'ドメイン名をすべて入力してください (例: example.com)',
   'Enter tax ID (e.g., VAT, GST, EIN)':
@@ -908,6 +940,13 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'プロトコルを除いたドメイン名を入力してください (例: example.com)',
   'Enter the domain name you want to add to your organization.':
     '組織に追加したいドメイン名を入力してください。',
+  'Enter the hostname only, without https:// or a path.':
+    'https:// やパスを含めず、ホスト名のみを入力してください。',
+  'Enter the hostname only:': 'ホスト名のみを入力してください:',
+  'Remove the spaces.': 'スペースを削除してください。',
+  'Remove the trailing dot.': '末尾のドットを削除してください。',
+  'Wildcard domains are not supported. Enter a specific hostname.':
+    'ワイルドカードドメインには対応していません。特定のホスト名を入力してください。',
   'Enter your card details to add a new payment method.':
     '新しい支払い方法を追加するには、カード情報を入力してください。',
   'Enter your full domain name to load a price quote.':
@@ -1098,6 +1137,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'この組織に参加できなくなります。',
   'This app may have been deleted or you do not have access.':
     'このアプリは削除されたか、アクセス権がない可能性があります。',
+  "This domain can't be transferred. Check the name and try again.":
+    'このドメインは移管できません。名前を確認して、もう一度お試しください。',
   'This entire organization will be deleted, including all of its projects and resources.':
     'この組織全体と、そのすべてのプロジェクトおよびリソースが削除されます。',
   'This invoice is missing authentication details.':
@@ -1318,6 +1359,10 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   Name: '名前',
   Nameserver: 'ネームサーバー',
   Nameservers: 'ネームサーバー',
+  'Nameservers not pointed to Appwrite':
+    'ネームサーバーが Appwrite を指していません',
+  'Appwrite nameservers': 'Appwrite のネームサーバー',
+  'External nameservers': '外部のネームサーバー',
   Network: 'ネットワーク',
   Next: '次へ',
   No: 'いいえ',
@@ -1558,9 +1603,11 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'プラン変更時にどのバックアップポリシーが停止するかを読み込めませんでした。',
   'Could not load which dedicated databases are spun down when your plan changes.':
     'プラン変更時にどの専用データベースが停止されるかを読み込めませんでした。',
-  'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.': 'このアプリをインストールした組織は、以下のスコープをアプリに付与します。インストールの作成または更新後、ユーザーはリダイレクト URL に戻ります。',
+  'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.':
+    'このアプリをインストールした組織は、以下のスコープをアプリに付与します。インストールの作成または更新後、ユーザーはリダイレクト URL に戻ります。',
   'Installation settings updated': 'インストール設定を更新しました',
-  'No installation scopes are available.': '利用できるインストールスコープはありません。',
+  'No installation scopes are available.':
+    '利用できるインストールスコープはありません。',
   'Choose a new plan': '新しいプランを選択',
   'Plans could not be loaded. Refresh and try again.':
     'プランを読み込めませんでした。更新してやり直してください。',
@@ -1621,4 +1668,34 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Build on top of Appwrite': 'Appwrite の上に構築する',
   'Create OAuth2 apps that let Appwrite users connect their projects with consent-based, scoped access instead of pasted API keys. Publish them to the marketplace for every organization to find.':
     'API キーを貼り付ける代わりに、同意に基づくスコープ付きのアクセスで Appwrite ユーザーがプロジェクトを接続できる OAuth2 アプリを作成できます。マーケットプレイスに公開して、あらゆる組織に見つけてもらいましょう。',
+  'Set up auto-pay': '自動支払いを設定',
+  'Auto-pay is set up': '自動支払いを設定しました',
+  'Failed to set up auto-pay': '自動支払いの設定に失敗しました',
+  'The bank asks for an OTP on automatic payments with this card. Set up auto-pay so payments up to $150 go through without one.':
+    'このカードでは、自動支払いのたびに銀行が OTP を求めます。自動支払いを設定すると、$150 までの支払いは OTP なしで処理されます。',
+  'Only the card owner can set up auto-pay':
+    'カードの所有者のみが自動支払いを設定できます',
+  'Check nameservers': 'ネームサーバーを確認',
+  'Nameservers changed': 'ネームサーバーが変更されました',
+  'The nameservers for this domain no longer point to Appwrite. The domain status has been updated.':
+    'このドメインのネームサーバーは Appwrite を指していません。ドメインのステータスを更新しました。',
+  'Organization photo': '組織の写真',
+  'Shown next to your organization name across the Console.':
+    'コンソール全体で組織名の横に表示されます。',
+  'PNG, JPEG, or WebP up to 5MB.': 'PNG、JPEG、WebP(5MBまで)。',
+  'Only organization owners can change the photo.':
+    '写真を変更できるのは組織のオーナーのみです。',
+  'Organization photo updated': '組織の写真を更新しました',
+  'Failed to update organization photo': '組織の写真の更新に失敗しました',
+  'Organization photo removed': '組織の写真を削除しました',
+  'Failed to remove organization photo': '組織の写真の削除に失敗しました',
+  'Remove organization photo': '組織の写真を削除',
+  'The photo is replaced with a placeholder. You can upload a new photo at any time.':
+    '写真はプレースホルダーに置き換えられます。新しい写真はいつでもアップロードできます。',
+  'Synthetic checks': 'Synthetic チェック',
+  Escalations: 'エスカレーション',
+  '{current} in use, the selected plan allows {limit}. Delete {excess} to continue.':
+    '{current} 件を使用中ですが、選択したプランの上限は {limit} 件です。続行するには {excess} 件を削除してください。',
+  'Additional synthetic checks': '追加の Synthetic チェック',
+  'Additional on-call responders': '追加のオンコール対応者',
 }

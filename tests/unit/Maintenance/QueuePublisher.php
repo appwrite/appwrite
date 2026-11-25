@@ -9,10 +9,10 @@ use Utopia\Queue\Queue;
 use Utopia\Schedule\Clock\Test as TestClock;
 
 /**
- * A queue that consumers drain at a fixed rate on the test clock. Its size
- * is what was prefilled and published minus what has drained since, and it
- * never drains below empty, so a queue that sat idle has no credit to
- * swallow a later burst. A rate of zero never drains.
+ * A queue that consumers drain oldest first at a fixed rate on the test clock.
+ * It starts with $prefill messages published $age seconds before it is first
+ * read, and never drains below empty, so a queue that sat idle has no credit
+ * to swallow a later burst. A rate of zero never drains.
  *
  * Setting $refuse refuses that publish attempt, counted from 1 across every
  * queue, and each one after it, until it is set back to null.
@@ -29,8 +29,11 @@ final class QueuePublisher implements Synchronous
     /** @var array<string, list<float>> */
     private array $times = [];
 
+    /** @var array<string, list<float>> when each message still waiting was published, oldest first */
+    private array $waiting = [];
+
     /** @var array<string, float> */
-    private array $levels = [];
+    private array $credit = [];
 
     /** @var array<string, float> */
     private array $observed = [];
@@ -39,6 +42,7 @@ final class QueuePublisher implements Synchronous
         private readonly TestClock $clock,
         private readonly float $rate,
         private readonly int $prefill = 0,
+        private readonly int $age = 0,
     ) {
     }
 
@@ -50,9 +54,10 @@ final class QueuePublisher implements Synchronous
         }
 
         $this->drain($queue);
+        $now = $this->now();
         $this->payloads[$queue->name][] = $payload;
-        $this->times[$queue->name][] = (float) $this->clock->now()->format('U.u');
-        $this->levels[$queue->name]++;
+        $this->times[$queue->name][] = $now;
+        $this->waiting[$queue->name][] = $now;
 
         return true;
     }
@@ -83,7 +88,16 @@ final class QueuePublisher implements Synchronous
 
         $this->drain($queue);
 
-        return (int) \ceil($this->levels[$queue->name]);
+        return \count($this->waiting[$queue->name]);
+    }
+
+    #[\Override]
+    public function getQueueAge(Queue $queue): int
+    {
+        $this->drain($queue);
+        $oldest = $this->waiting[$queue->name][0] ?? null;
+
+        return $oldest === null ? 0 : (int) ($this->now() - $oldest);
     }
 
     #[\Override]
@@ -112,11 +126,21 @@ final class QueuePublisher implements Synchronous
 
     private function drain(Queue $queue): void
     {
-        $now = (float) $this->clock->now()->format('U.u');
-        $level = $this->levels[$queue->name] ?? (float) $this->prefill;
-        $elapsed = $now - ($this->observed[$queue->name] ?? $now);
+        $now = $this->now();
+        $this->waiting[$queue->name] ??= \array_fill(0, $this->prefill, $now - $this->age);
+        $credit = ($this->credit[$queue->name] ?? 0.0) + $this->rate * ($now - ($this->observed[$queue->name] ?? $now));
 
-        $this->levels[$queue->name] = \max(0.0, $level - $this->rate * $elapsed);
+        while ($credit >= 1.0 && $this->waiting[$queue->name] !== []) {
+            \array_shift($this->waiting[$queue->name]);
+            $credit--;
+        }
+
+        $this->credit[$queue->name] = $this->waiting[$queue->name] === [] ? 0.0 : $credit;
         $this->observed[$queue->name] = $now;
+    }
+
+    private function now(): float
+    {
+        return (float) $this->clock->now()->format('U.u');
     }
 }

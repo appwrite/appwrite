@@ -19,9 +19,11 @@ import { useCallback, useState } from 'react'
 import { endOfDay, startOfDay, subDays, subHours, subYears } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
 import { normalizeUsageDateRangeSelection } from '@/lib/usage/usage-date-range'
+import { resolveUsageChartIntervalWithin } from '@/lib/usage/chart-interval'
 import {
   AnalyticsDimension,
   AnalyticsInterval,
+  type AnalyticsPropertyType,
   ID,
   Query,
   type Models,
@@ -118,8 +120,8 @@ export const ANALYTICS_PAGEVIEW_EVENT = 'pageview'
 
 /**
  * Events the trackers send on their own (see the setup wizard's snippet
- * notes): the web tracker's automatic events plus Flutter's screen and
- * lifecycle events. Everything else is a custom event the app tracks
+ * notes): the web tracker's automatic events plus the mobile SDKs' screen,
+ * lifecycle, install and push events. Everything else is a custom event the app tracks
  * explicitly.
  */
 export const ANALYTICS_AUTOMATIC_EVENTS: ReadonlySet<string> = new Set([
@@ -131,9 +133,15 @@ export const ANALYTICS_AUTOMATIC_EVENTS: ReadonlySet<string> = new Set([
   'screen_view',
   'app_backgrounded',
   'app_foregrounded',
+  'first_open',
+  'app_updated',
+  'push_received',
+  'push_opened',
 ])
 
-export function isCustomAnalyticsEvent(name: string | null | undefined): boolean {
+export function isCustomAnalyticsEvent(
+  name: string | null | undefined,
+): boolean {
   return !!name && !ANALYTICS_AUTOMATIC_EVENTS.has(name)
 }
 
@@ -213,7 +221,9 @@ function keepPreviousAcrossRange<T>(
  * The last 24 whole hours: from the start of the hour 23 hours ago to the end
  * of the current hour. Hour-aligned, so the query key only changes hourly.
  */
-export function getLast24HoursAnalyticsRange(now: Date = new Date()): AnalyticsRange {
+export function getLast24HoursAnalyticsRange(
+  now: Date = new Date(),
+): AnalyticsRange {
   const end = new Date(now)
   end.setMinutes(59, 59, 999)
   const start = new Date(now)
@@ -232,7 +242,9 @@ export function analyticsRangeKey(range: AnalyticsRange): string {
  * period" comparisons. For a calendar range (`startOfDay .. endOfDay`) this
  * lands exactly on the preceding N calendar days.
  */
-export function getPreviousAnalyticsRange(range: AnalyticsRange): AnalyticsRange {
+export function getPreviousAnalyticsRange(
+  range: AnalyticsRange,
+): AnalyticsRange {
   const start = new Date(range.startAt).getTime()
   const end = new Date(range.endAt).getTime()
   const span = Math.max(0, end - start) + 1
@@ -286,8 +298,21 @@ export const ANALYTICS_CHART_INTERVALS: readonly AnalyticsChartInterval[] = [
 
 export const DEFAULT_ANALYTICS_CHART_INTERVAL: AnalyticsChartInterval = '1d'
 
+export function resolveAnalyticsChartInterval(
+  interval: AnalyticsChartInterval,
+  dateRange: DateRange | undefined,
+): AnalyticsChartInterval {
+  return resolveUsageChartIntervalWithin(
+    interval,
+    dateRange,
+    ANALYTICS_CHART_INTERVALS,
+  )
+}
+
 function toApiInterval(interval: AnalyticsChartInterval): AnalyticsInterval {
-  return interval === '1h' ? AnalyticsInterval.OneHour : AnalyticsInterval.OneDay
+  return interval === '1h'
+    ? AnalyticsInterval.OneHour
+    : AnalyticsInterval.OneDay
 }
 
 /** Zero-filled metric used while loading or when a property has no data yet. */
@@ -918,6 +943,8 @@ export async function fetchAnalyticsLiveVisitors(
   )
   return {
     visitors: response.metrics?.[0]?.visitors ?? 0,
+    /** Of those, the identified ones (signed in, or sent with a user ID). */
+    users: response.metrics?.[0]?.users ?? 0,
     checkedAt: range.endAt,
   }
 }
@@ -946,6 +973,7 @@ export function useAnalyticsLiveVisitors(
 
   return {
     visitors: data?.visitors,
+    users: data?.users,
     checkedAt: data?.checkedAt,
     isLoading,
     isFetching,
@@ -987,6 +1015,46 @@ export function useAnalyticsLivePages(
   return { pages: data ?? [], isLoading }
 }
 
+/**
+ * User IDs active in the live window, most active first. Fetched only while
+ * someone identified is live, for the avatars beside the counter.
+ */
+export function useAnalyticsLiveUsers(
+  projectId: string | null | undefined,
+  propertyId: string | null | undefined,
+  enabled: boolean,
+  limit: number = 20,
+) {
+  const { data, isLoading } = useQuery({
+    queryKey: ['analytics', 'live-users', projectId, propertyId, limit],
+    queryFn: async () => {
+      const range = liveRange()
+      const response = await withReadTimeout(
+        'live users',
+        sdk.forProject(projectId!).analytics.listMetrics({
+          propertyId: propertyId!,
+          dimensions: [AnalyticsDimension.UserId],
+          startAt: range.startAt,
+          endAt: range.endAt,
+          limit,
+        }),
+      )
+      // Every live user is one visitor, so rank by what they're doing.
+      return (response.metrics || [])
+        .filter((row): row is typeof row & { value: string } => !!row.value)
+        .sort((a, b) => b.events - a.events)
+    },
+    enabled: enabled && !!projectId && !!propertyId && isClientQueryEnabled,
+    staleTime: 0,
+    retry: false,
+    refetchInterval: enabled ? ANALYTICS_LIVE_POLL_INTERVAL_MS : false,
+    refetchIntervalInBackground: false,
+    placeholderData: keepPreviousData,
+  })
+
+  return { users: data ?? [], isLoading }
+}
+
 // ─── Breakdowns ─────────────────────────────────────────────────────────────
 
 /** Ranked values for one dimension, already sorted by visitors desc. */
@@ -997,6 +1065,7 @@ export async function fetchAnalyticsBreakdown(
   range: AnalyticsRange = getDefaultAnalyticsRange(),
   limit: number = ANALYTICS_BREAKDOWN_LIMIT,
   filters: readonly AnalyticsFilter[] = NO_FILTERS,
+  propKey?: string,
 ) {
   const response = await withReadTimeout(
     'breakdown',
@@ -1007,6 +1076,7 @@ export async function fetchAnalyticsBreakdown(
       startAt: range.startAt,
       endAt: range.endAt,
       limit,
+      propKey,
     }),
   )
 
@@ -1024,6 +1094,7 @@ export function analyticsBreakdownQueryOptions(
   limit: number = ANALYTICS_BREAKDOWN_LIMIT,
   enabled: boolean = true,
   filters: readonly AnalyticsFilter[] = NO_FILTERS,
+  propKey?: string,
 ) {
   const queryKey = [
     'analytics',
@@ -1034,6 +1105,7 @@ export function analyticsBreakdownQueryOptions(
     analyticsRangeKey(range),
     limit,
     ...analyticsFiltersKey(filters),
+    ...(propKey ? ['propKey', propKey] : []),
   ]
   return queryOptions({
     queryKey,
@@ -1049,6 +1121,7 @@ export function analyticsBreakdownQueryOptions(
         range,
         limit,
         filters,
+        propKey,
       ),
     // Panels only request the dimension of their visible tab, so 21 dimensions
     // never fan out into 21 requests on mount.
@@ -1057,7 +1130,10 @@ export function analyticsBreakdownQueryOptions(
       !!projectId &&
       !!propertyId &&
       isClientQueryEnabled &&
-      isAnalyticsFilterShapeSupported(filters, { kind: 'breakdown', dimension }),
+      isAnalyticsFilterShapeSupported(filters, {
+        kind: 'breakdown',
+        dimension,
+      }),
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
@@ -1075,6 +1151,7 @@ export function useAnalyticsBreakdown(
   limit: number = ANALYTICS_BREAKDOWN_LIMIT,
   enabled: boolean = true,
   filters: readonly AnalyticsFilter[] = NO_FILTERS,
+  propKey?: string,
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
     analyticsBreakdownQueryOptions(
@@ -1085,6 +1162,7 @@ export function useAnalyticsBreakdown(
       limit,
       enabled,
       filters,
+      propKey,
     ),
   )
 
@@ -1109,6 +1187,7 @@ export type CreateAnalyticsPropertyInput = {
   propertyId?: string
   name: string
   domain?: string
+  type?: AnalyticsPropertyType
 }
 
 export function useCreateAnalyticsProperty(
@@ -1124,6 +1203,7 @@ export function useCreateAnalyticsProperty(
         propertyId: input.propertyId?.trim() || ID.unique(),
         name: input.name.trim(),
         domain: input.domain?.trim() || undefined,
+        type: input.type,
       })
     },
     onSuccess: async () => {
@@ -1146,6 +1226,8 @@ export type UpdateAnalyticsPropertyInput = {
   domain?: string
   enabled?: boolean
   allowedOrigins?: string[]
+  identifyUsers?: boolean
+  type?: AnalyticsPropertyType
 }
 
 export function useUpdateAnalyticsProperty(
@@ -1165,6 +1247,10 @@ export function useUpdateAnalyticsProperty(
         ...(input.allowedOrigins !== undefined && {
           allowedOrigins: input.allowedOrigins,
         }),
+        ...(input.identifyUsers !== undefined && {
+          identifyUsers: input.identifyUsers,
+        }),
+        ...(input.type !== undefined && { type: input.type }),
       })
     },
     onSuccess: async (property) => {
@@ -1199,6 +1285,180 @@ export function useDeleteAnalyticsProperty(
       })
       await queryClient.refetchQueries({
         queryKey: ['analytics', 'properties', projectId],
+      })
+    },
+  })
+}
+
+// ─── Annotations ────────────────────────────────────────────────────────────
+
+/** The API's page cap. */
+const ANALYTICS_ANNOTATIONS_PAGE_SIZE = 100
+/** Bounds one chart window to 1,000 notes. */
+const ANALYTICS_ANNOTATIONS_MAX_PAGES = 10
+
+export async function fetchAnalyticsAnnotations(
+  projectId: string,
+  propertyId: string,
+  range: AnalyticsRange,
+) {
+  const annotations: Models.AnalyticsAnnotation[] = []
+  for (let page = 0; page < ANALYTICS_ANNOTATIONS_MAX_PAGES; page++) {
+    const last = annotations.at(-1)
+    const response = await withReadTimeout(
+      'listAnnotations',
+      sdk.forProject(projectId).analytics.listAnnotations({
+        propertyId,
+        queries: [
+          Query.greaterThanEqual('date', range.startAt),
+          Query.lessThanEqual('date', range.endAt),
+          Query.orderAsc('date'),
+          Query.limit(ANALYTICS_ANNOTATIONS_PAGE_SIZE),
+          ...(last ? [Query.cursorAfter(last.$id)] : []),
+        ],
+      }),
+    )
+    annotations.push(...(response.annotations ?? []))
+    if (
+      (response.annotations ?? []).length < ANALYTICS_ANNOTATIONS_PAGE_SIZE ||
+      annotations.length >= response.total
+    )
+      break
+  }
+  return annotations
+}
+
+export function analyticsAnnotationsQueryOptions(
+  projectId: string | null | undefined,
+  propertyId: string | null | undefined,
+  range: AnalyticsRange,
+) {
+  return queryOptions({
+    queryKey: [
+      'analytics',
+      'annotations',
+      projectId,
+      propertyId,
+      analyticsRangeKey(range),
+    ],
+    queryFn: () => fetchAnalyticsAnnotations(projectId!, propertyId!, range),
+    enabled: !!projectId && !!propertyId && isClientQueryEnabled,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useAnalyticsAnnotations(
+  projectId: string | null | undefined,
+  propertyId: string | null | undefined,
+  range: AnalyticsRange,
+) {
+  const { data } = useQuery(
+    analyticsAnnotationsQueryOptions(projectId, propertyId, range),
+  )
+  return { annotations: data ?? [] }
+}
+
+/**
+ * Display names of the members who wrote notes, by user ID. A user who has
+ * left the organization has no membership, so is missing from the map.
+ */
+export function useAnalyticsAnnotationAuthors(
+  organizationId: string | null | undefined,
+  userIds: readonly string[],
+) {
+  const { data } = useQuery({
+    queryKey: ['analytics', 'annotation-authors', organizationId, userIds],
+    queryFn: async () => {
+      const chunks: string[][] = []
+      // A query takes at most 100 values.
+      for (let index = 0; index < userIds.length; index += 100) {
+        chunks.push(userIds.slice(index, index + 100))
+      }
+      const responses = await Promise.all(
+        chunks.map((chunk) =>
+          sdk.forConsole.teams.listMemberships({
+            teamId: organizationId!,
+            queries: [Query.equal('userId', chunk), Query.limit(chunk.length)],
+          }),
+        ),
+      )
+      return new Map(
+        responses.flatMap((response) =>
+          response.memberships.map(
+            (membership) => [membership.userId, membership.userName] as const,
+          ),
+        ),
+      )
+    },
+    enabled: !!organizationId && userIds.length > 0 && isClientQueryEnabled,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnWindowFocus: false,
+  })
+  return { authors: data }
+}
+
+export type SaveAnalyticsAnnotationInput = {
+  /** Omit to create a note. */
+  annotationId?: string
+  date: string
+  content: string
+}
+
+export function useSaveAnalyticsAnnotation(
+  projectId: string | null | undefined,
+  propertyId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (input: SaveAnalyticsAnnotationInput) => {
+      if (!projectId || !propertyId) throw new Error('Property is required')
+      const analytics = sdk.forProject(projectId).analytics
+      const params = {
+        propertyId,
+        date: input.date,
+        content: input.content.trim(),
+      }
+      return input.annotationId
+        ? await analytics.updateAnnotation({
+            ...params,
+            annotationId: input.annotationId,
+          })
+        : await analytics.createAnnotation({
+            ...params,
+            annotationId: ID.unique(),
+          })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['analytics', 'annotations', projectId, propertyId],
+      })
+    },
+  })
+}
+
+export function useDeleteAnalyticsAnnotation(
+  projectId: string | null | undefined,
+  propertyId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (annotationId: string) => {
+      if (!projectId || !propertyId) throw new Error('Property is required')
+      await sdk.forProject(projectId).analytics.deleteAnnotation({
+        propertyId,
+        annotationId,
+      })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['analytics', 'annotations', projectId, propertyId],
       })
     },
   })

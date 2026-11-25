@@ -2,17 +2,24 @@ import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/overview/Overview'
 import {
   apiKeysQueryOptions,
-  mapApiKeysFromResponse,
   platformsQueryOptions,
   bandwidthOverviewQueryOptions,
   requestsOverviewQueryOptions,
   executionsOverviewQueryOptions,
   gbHoursOverviewQueryOptions,
   overviewStorageOverviewQueryOptions,
-  fetchProject,
+  projectQueryOptions,
   organizationPlanQueryOptions,
   accountConsentsQueryOptions,
+  overviewDatabasesQueryOptions,
+  overviewSitesQueryOptions,
+  overviewFunctionsQueryOptions,
+  overviewBucketsQueryOptions,
+  overviewUsersQueryOptions,
+  overviewTopicsQueryOptions,
 } from '@/lib/react-query/hooks'
+import { DEFAULT_STALE_TIME } from '@/lib/react-query/hooks/constants'
+import { loadDebugOverrides } from '@/lib/debug-overrides'
 import { hasAccountMcpAgentConnected } from '@/lib/mcp-adoption'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { ensureProjectRegion } from '@/lib/project-region'
@@ -107,40 +114,44 @@ export const Route = createFileRoute('/_public/projects/$projectId/overview')({
       // Parent layout loader may still be resolving region; register before project-scoped prefetch.
       await ensureProjectRegion(queryClient, projectId)
 
-      // API keys can hang when billable services are blocked. Bound the wait so the
-      // project layout (and budget curtain) can still mount.
-      const [apiKeysRaw, account, consents] = await Promise.all([
-        Promise.race([
-          queryClient
-            .ensureQueryData(apiKeysQueryOptions(projectId))
-            .catch(() => null),
-          new Promise<null>((resolve) => {
-            window.setTimeout(() => resolve(null), 4000)
-          }),
-        ]),
-        queryClient
-          .ensureQueryData(consoleAccountQueryOptions())
-          .catch(() => null),
-        queryClient
-          .ensureQueryData(accountConsentsQueryOptions())
-          .catch(() => null),
-      ])
-      const usageStatsEnabled = getActiveProfileFeatures().usageStats
+      // Share the in-flight key request with its card and reuse it on short return visits.
+      void queryClient.prefetchQuery({
+        ...apiKeysQueryOptions(projectId),
+        gcTime: DEFAULT_STALE_TIME,
+      })
 
       // Non-critical data: prefetch in the background so the page can render immediately.
       void queryClient
         .prefetchQuery(platformsQueryOptions(projectId))
         .catch(() => undefined)
+      void queryClient
+        .prefetchQuery(overviewDatabasesQueryOptions(projectId))
+        .catch(() => undefined)
+      void queryClient
+        .prefetchQuery(overviewSitesQueryOptions(projectId))
+        .catch(() => undefined)
+      void queryClient
+        .prefetchQuery(overviewFunctionsQueryOptions(projectId))
+        .catch(() => undefined)
+      void queryClient
+        .prefetchQuery(overviewBucketsQueryOptions(projectId))
+        .catch(() => undefined)
+      void queryClient
+        .prefetchQuery(overviewUsersQueryOptions(projectId))
+        .catch(() => undefined)
+      void queryClient
+        .prefetchQuery(overviewTopicsQueryOptions(projectId))
+        .catch(() => undefined)
 
-      if (usageStatsEnabled) {
-        const project = await queryClient
-          .ensureQueryData({
-            queryKey: ['project', projectId],
-            queryFn: () => fetchProject(projectId),
-            staleTime: 5 * 60 * 1000,
-          })
-          .catch(() => null)
-
+      if (getActiveProfileFeatures().usageStats) {
+        const [project, account] = await Promise.all([
+          queryClient
+            .ensureQueryData(projectQueryOptions(projectId))
+            .catch(() => null),
+          queryClient
+            .ensureQueryData(consoleAccountQueryOptions())
+            .catch(() => null),
+        ])
         const organizationPlan = project?.teamId
           ? await queryClient
               .ensureQueryData(organizationPlanQueryOptions(project.teamId))
@@ -175,10 +186,11 @@ export const Route = createFileRoute('/_public/projects/$projectId/overview')({
         void Promise.all(usagePrefetchTasks).catch(() => undefined)
       }
 
-      return {
-        apiKeys: mapApiKeysFromResponse(apiKeysRaw),
-        apiKeysRaw,
-        mcpAgentConnected: hasAccountMcpAgentConnected(consents),
+      if (loadDebugOverrides().showProjectAgents) {
+        const consents = await queryClient
+          .ensureQueryData(accountConsentsQueryOptions())
+          .catch(() => null)
+        return hasAccountMcpAgentConnected(consents)
       }
     } catch (error) {
       console.warn('Failed to fetch overview data in loader:', error)
@@ -190,19 +202,6 @@ export const Route = createFileRoute('/_public/projects/$projectId/overview')({
 
 function ProjectOverviewPage() {
   const { projectId } = Route.useParams()
-  const loaderData = Route.useLoaderData()
-  return (
-    <View
-      projectId={projectId}
-      initialData={
-        loaderData
-          ? {
-              apiKeys: loaderData.apiKeys,
-              apiKeysRaw: loaderData.apiKeysRaw,
-              mcpAgentConnected: loaderData.mcpAgentConnected,
-            }
-          : undefined
-      }
-    />
-  )
+  const mcpAgentConnected = Route.useLoaderData()
+  return <View projectId={projectId} mcpAgentConnected={mcpAgentConnected} />
 }

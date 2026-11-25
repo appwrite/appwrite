@@ -23,11 +23,12 @@ import { useAnalyticsFilters } from './analytics-filters-context'
 import { isKnownBreakdownValue } from '@/lib/analytics/breakdown-values'
 import {
   ANALYTICS_FILTER_UNSUPPORTED_MESSAGE,
-  analyticsFilterAttributeForDimension,
+  analyticsFilterAttributeForTab,
   isAnalyticsFilterShapeSupported,
 } from '@/lib/analytics/analytics-filters'
 import { BreakdownMessage, BreakdownSkeleton } from './BreakdownPanel'
 import type { BreakdownTab } from './BreakdownPanel'
+import { breakdownTabLabel } from './BreakdownTabBar'
 
 /** Rows added per "Load more". */
 export const BREAKDOWN_DIALOG_PAGE_SIZE = 50
@@ -49,7 +50,7 @@ export type BreakdownDialogProps = {
   tabs: BreakdownTab[]
   initialTabId?: string
   /** Which measure ranks and sizes the rows. */
-  valueKey?: 'visitors' | 'events'
+  valueKey?: 'visitors' | 'events' | 'sessions'
   valueLabel?: string
   renderLeading?: (
     entry: Models.AnalyticsMetric,
@@ -68,6 +69,8 @@ export type BreakdownDialogProps = {
   rowFilter?: (entry: Models.AnalyticsMetric) => boolean
   /** External URL for a row (pages, hostnames): adds an open-in-new icon. */
   rowHref?: (value: string, tabId: string) => string | undefined
+  /** Hover hint for the row link (e.g. "View user"). */
+  rowHrefTitle?: string
 }
 
 /**
@@ -99,16 +102,19 @@ export function BreakdownDialog({
   renderBadge,
   rowFilter,
   rowHref,
+  rowHrefTitle,
 }: BreakdownDialogProps) {
   const t = useT()
   const [activeTab, setActiveTab] = useState(initialTabId ?? tabs[0]?.id ?? '')
-  const [limit, setLimit] = useState(BREAKDOWN_DIALOG_PAGE_SIZE)
+  const initialLimit =
+    valueKey === 'visitors' ? BREAKDOWN_DIALOG_PAGE_SIZE : BREAKDOWN_DIALOG_MAX_ROWS
+  const [limit, setLimit] = useState(initialLimit)
   const [filter, setFilter] = useState('')
 
   const active = tabs.find((tab) => tab.id === activeTab) ?? tabs[0]
 
   const { filters, addEqualFilter, isFilterActive } = useAnalyticsFilters()
-  const filterAttribute = analyticsFilterAttributeForDimension(active.dimension)
+  const filterAttribute = analyticsFilterAttributeForTab(active)
   const unsupported = !isAnalyticsFilterShapeSupported(filters, {
     kind: 'breakdown',
     dimension: active.dimension,
@@ -122,14 +128,21 @@ export function BreakdownDialog({
     limit,
     true,
     filters,
+    active.propKey,
   )
   const { data, isLoading, isFetching, error } = useQuery({
     ...baseOptions,
     // Keep the rows on screen while the next page loads, but never carry rows
-    // across a tab switch (a different dimension). Key index 4 is the
-    // dimension in analyticsBreakdownQueryOptions.
-    placeholderData: (previous, previousQuery) =>
-      previousQuery?.queryKey[4] === active.dimension ? previous : undefined,
+    // across a tab switch. Key index 4 is the dimension in
+    // analyticsBreakdownQueryOptions; prop tabs share `props` and differ by
+    // the value after the `propKey` marker.
+    placeholderData: (previous, previousQuery) => {
+      const key = previousQuery?.queryKey
+      if (key?.[4] !== active.dimension) return undefined
+      const marker = key.indexOf('propKey')
+      const previousPropKey = marker === -1 ? undefined : key[marker + 1]
+      return previousPropKey === active.propKey ? previous : undefined
+    },
   })
 
   // Raw rows from the API, before `rowFilter`: paging decides on these, since
@@ -141,17 +154,19 @@ export function BreakdownDialog({
     // Same rule as the cards: unknown rows are dropped before ranking.
     const breakdown = (data?.breakdown ?? []).filter(
       (entry) =>
-        isKnownBreakdownValue(entry.value) && (!rowFilter || rowFilter(entry)),
+        (isKnownBreakdownValue(entry.value) ||
+          (!!active.blankLabel && !entry.value?.trim())) &&
+        (!rowFilter || rowFilter(entry)),
     )
     return valueKey === 'visitors'
       ? breakdown
       : [...breakdown].sort((a, b) => (b[valueKey] ?? 0) - (a[valueKey] ?? 0))
-  }, [data, valueKey, rowFilter])
+  }, [data, valueKey, rowFilter, active.blankLabel])
 
   const labelFor = (entry: Models.AnalyticsMetric) =>
     entry.value
       ? (formatLabel?.(entry.value, active.id) ?? entry.value)
-      : t('Unknown')
+      : t(active.blankLabel ?? 'Unknown')
 
   const { filtered, columnTotal, max } = useMemo(() => {
     const total = rows.reduce((sum, entry) => sum + (entry[valueKey] ?? 0), 0)
@@ -200,7 +215,7 @@ export function BreakdownDialog({
               value={active.id}
               onValueChange={(value) => {
                 setActiveTab(value)
-                setLimit(BREAKDOWN_DIALOG_PAGE_SIZE)
+                setLimit(initialLimit)
                 setFilter('')
               }}
             />
@@ -220,11 +235,16 @@ export function BreakdownDialog({
 
         {/* Column header */}
         <div className="flex items-center justify-between px-7 pt-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          <span>{t(active.label)}</span>
+          <span>{breakdownTabLabel(t, active)}</span>
           <span className="flex items-center gap-3">
             <span>{t('Share')}</span>
             <span className="min-w-[50px] text-end">
-              {valueLabel ?? (valueKey === 'events' ? t('Events') : t('Visitors'))}
+              {valueLabel ??
+                (valueKey === 'events'
+                  ? t('Events')
+                  : valueKey === 'sessions'
+                    ? t('Visits')
+                    : t('Visitors'))}
             </span>
           </span>
         </div>
@@ -301,26 +321,29 @@ export function BreakdownDialog({
                         ? undefined
                         : rowHref?.(entry.value, active.id)
                     }
+                    hrefTitle={rowHrefTitle && t(rowHrefTitle)}
                   />
                 )
-                return onRowClick && entry.value ? (
-                  <button
-                    key={`${entry.value}-${index}`}
-                    type="button"
-                    className="block w-full cursor-pointer text-start"
-                    onClick={() => onRowClick(entry, active.id)}
-                  >
-                    {row}
-                  </button>
-                ) : entry.value ? (
+                return entry.value ? (
                   <AnalyticsValueMenu
                     key={`${entry.value}-${index}`}
                     dimension={active.dimension}
+                    attribute={filterAttribute}
                     value={entry.value}
                     label={labelFor(entry)}
                     href={rowHref?.(entry.value, active.id)}
                   >
-                    <div>{row}</div>
+                    {onRowClick ? (
+                      <button
+                        type="button"
+                        className="block w-full cursor-pointer text-start"
+                        onClick={() => onRowClick(entry, active.id)}
+                      >
+                        {row}
+                      </button>
+                    ) : (
+                      <div>{row}</div>
+                    )}
                   </AnalyticsValueMenu>
                 ) : (
                   <div key={`${entry.value}-${index}`}>{row}</div>

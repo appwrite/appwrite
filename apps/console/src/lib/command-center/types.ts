@@ -50,7 +50,7 @@ export interface CommandContext {
     onOrgInviteMember?: () => void
     onOrgCreateProject?: () => void
     onToggleTerminal?: () => void
-    onSetTheme?: (theme: 'light' | 'dark' | 'system') => void
+    onSetTheme?: (theme: 'light' | 'dark') => void
     /** Open project Connect dialog on the MCP tab. */
     onOpenConnectMcp?: () => void
   }

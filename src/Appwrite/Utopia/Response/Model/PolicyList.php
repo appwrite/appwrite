@@ -49,6 +49,7 @@ class PolicyList extends Model
             Response::MODEL_POLICY_DENY_CORPORATE_EMAIL,
             Response::MODEL_POLICY_DENY_REALTIME_GUESTS,
             Response::MODEL_POLICY_PASSKEY,
+            Response::MODEL_POLICY_ACCOUNT_DEVICES,
         ];
     }
 

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Utopia\Queue\Broker;
 
+use Utopia\DSN\DSN;
 use Utopia\Lock\Mutex;
 use Utopia\NATS\Connection as NatsConnection;
+use Utopia\NATS\ConnectionOptions;
 use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\JetStreamException;
 use Utopia\NATS\Exception\NoRespondersException;
@@ -69,10 +71,10 @@ use Utopia\Queue\Queue;
  *     leave on the connection that fetched it; rebinding it (see onCommands()) is what
  *     moves the per-message ack path off the receive socket entirely.
  *
- * The two locks are never nested, so they cannot deadlock, and each connection has
- * exactly one lock — a broker built from a live Connection serves both roles from one
- * socket and therefore shares one lock, which is the whole reason $commandsLock is
- * resolved from the source's shape rather than always constructed.
+ * Each connection has one lock. A live Connection serves both roles from one
+ * socket and shares one lock, so receiveEach() invokes callbacks only after the
+ * receive completes. Factory-backed brokers can acknowledge incremental arrivals
+ * on the separate commands connection while the receive lock is held.
  *
  * Together this is what lets a NATS worker run job('…', N) above one, so the broker no
  * longer carries Consumer\Exclusive. Publishing stays on the receive connection: a
@@ -80,7 +82,7 @@ use Utopia\Queue\Queue;
  * publish. Its commands connection is opened lazily on the first ack, so a publisher
  * never pays for a socket it will not use.
  */
-class Nats implements Synchronous, Consumer, Bounded
+class Nats implements Synchronous, Consumer\Streaming, Bounded
 {
     // Wire-level identifiers (stream/subject naming, durable consumers, advisories).
     private const string STREAM_PREFIX = 'Q_';
@@ -153,6 +155,33 @@ class Nats implements Synchronous, Consumer, Bounded
      * because the socket is momentarily busy — matching Connection\Locking.
      */
     private const float ACQUIRE_TIMEOUT = -1;
+
+    /**
+     * Query parameters a `nats://` broker DSN may set, and how each is read; see
+     * {@see self::fromDSN()}. Each names the constructor parameter it sets.
+     *
+     * `inactiveThreshold` is deliberately absent. JetStream deletes an idle durable
+     * when it expires while this broker keeps serving the cached handle, so the fetch
+     * reads as an empty queue rather than an error: the worker stops receiving and
+     * says nothing while the jobs pile up. A DSN must not be able to switch that on.
+     *
+     * @var array<string, 'float'|'int'|'list'|'discard'>
+     */
+    public const array DSN_PARAMS = [
+        'ackWait' => 'float',
+        'maxDeliver' => 'int',
+        'replicas' => 'int',
+        'backoff' => 'list',
+        'deadMaxAge' => 'float',
+        'duplicateWindow' => 'float',
+        'maxAge' => 'float',
+        'maxMsgSize' => 'int',
+        'maxMsgs' => 'int',
+        'maxBytes' => 'int',
+        'discard' => 'discard',
+        'maxAckPending' => 'int',
+        'maxWaiting' => 'int',
+    ];
 
     /** @var array<string, bool> queues whose streams/consumers have been provisioned */
     private array $provisioned = [];
@@ -400,6 +429,226 @@ class Nats implements Synchronous, Consumer, Bounded
         if ($this->inactiveThreshold !== null && $this->inactiveThreshold <= 0) {
             throw new \InvalidArgumentException('inactiveThreshold must be a positive number of seconds, or null to keep durable consumers forever');
         }
+    }
+
+    /**
+     * Build a broker from `nats://[user[:password]@]host[:port]?param=value&...`.
+     *
+     * The query string carries the queue's stream and consumer config, so a queue is
+     * tuned in configuration rather than a release, and a producer and a consumer that
+     * read the same DSN provision the same queue. Anything the DSN leaves out keeps
+     * the constructor's default. {@see self::dsnArguments()} reads the query.
+     *
+     * Everything that is code rather than configuration -- $onError, $codec,
+     * $messageId, $provisioning -- is passed by name in $arguments. A parameter the
+     * DSN owns is refused there, so a queue's config has one source.
+     *
+     * The connection is opened lazily, on first use, so this is safe to call before a
+     * fork and costs nothing on a broker that is never used.
+     *
+     * @param string $name Client name the server shows in `/connz`, so an operator
+     *        can tell which process holds a connection.
+     * @param mixed ...$arguments Other constructor parameters, by name.
+     */
+    public static function fromDSN(DSN $dsn, string $name = '', mixed ...$arguments): self
+    {
+        foreach (\array_keys($arguments) as $argument) {
+            if (!\is_string($argument)) {
+                throw new \InvalidArgumentException('fromDSN() takes the broker\'s other parameters by name');
+            }
+            if (\array_key_exists($argument, self::DSN_PARAMS) || $argument === 'source') {
+                throw new \InvalidArgumentException("{$argument} is read from the DSN; set it there");
+            }
+        }
+
+        $options = self::connectionOptions($dsn, $name);
+
+        // Spread by name: PHPStan cannot match an array's keys to parameters, but each
+        // value was cast to its parameter's type by dsnArguments() or passed by the
+        // caller, and the constructor still checks every range.
+        return new self(
+            static fn (): NatsConnection => NatsConnection::connect($options),
+            ...self::dsnArguments($dsn), // @phpstan-ignore argument.type
+            ...$arguments, // @phpstan-ignore argument.type
+        );
+    }
+
+    /**
+     * The constructor arguments a broker DSN's query string sets, validated and cast.
+     *
+     * Strict, because a DSN is typed by hand: an unknown parameter is a typo that
+     * would otherwise run the queue on defaults nobody chose, and every number is
+     * checked before it is cast because PHP reads `30s` as 30.0 and `4.9` as 4.
+     * Ranges are left to the constructor, which refuses what it cannot honour.
+     *
+     * The JetStream coupling between the redelivery knobs is resolved here rather
+     * than refused, because a DSN states intent: an explicit ackWait rewrites the
+     * schedule's first step, otherwise the first step is the ack wait, and a
+     * maxDeliver lowered into the schedule trims it to fit. Delays below a second
+     * are raised to one, and `deadMaxAge=0` keeps dead letters forever.
+     *
+     * @return array<string, float|int|list<float>|DiscardPolicy|null>
+     * @throws \InvalidArgumentException
+     */
+    public static function dsnArguments(DSN $dsn): array
+    {
+        if ($dsn->getScheme() !== 'nats') {
+            throw new \InvalidArgumentException("A NATS broker DSN must use the nats:// scheme, got {$dsn->getScheme()}://");
+        }
+
+        // Read by hand rather than with parse_str(), which keeps the last of a repeated
+        // key and rewrites `.` and spaces in names, so a duplicate or a mangled name
+        // would pass as a valid parameter.
+        $query = [];
+        foreach (\explode('&', $dsn->getQuery() ?? '') as $pair) {
+            if ($pair === '') {
+                continue;
+            }
+            [$name, $value] = \array_pad(\explode('=', $pair, 2), 2, '');
+            $name = \urldecode($name);
+            if (\array_key_exists($name, $query)) {
+                throw new \InvalidArgumentException("Parameter '{$name}' is given more than once in the NATS broker DSN");
+            }
+            $query[$name] = \urldecode($value);
+        }
+
+        /** @var array<string, int> $counts */
+        $counts = [];
+        /** @var array<string, float> $seconds */
+        $seconds = [];
+        /** @var list<float>|null $backoff */
+        $backoff = null;
+        $discard = null;
+
+        foreach ($query as $param => $value) {
+            $kind = self::DSN_PARAMS[$param] ?? null;
+            if ($kind === null) {
+                throw new \InvalidArgumentException(\sprintf("Unknown parameter '%s' in the NATS broker DSN; allowed: %s", $param, \implode(', ', \array_keys(self::DSN_PARAMS))));
+            }
+
+            switch ($kind) {
+                case 'int':
+                    // Only the stream limits have a negative value, -1 for unlimited.
+                    $signed = \in_array($param, ['maxMsgs', 'maxBytes'], true) && \str_starts_with($value, '-');
+                    // Round-tripped so a value past PHP_INT_MAX is refused rather than
+                    // clamped to it, along with leading zeros and a sign.
+                    if (!\ctype_digit($signed ? \substr($value, 1) : $value) || (string) (int) $value !== $value) {
+                        throw new \InvalidArgumentException("{$param} must be a whole number, got \"{$value}\"");
+                    }
+                    $counts[$param] = (int) $value;
+                    break;
+                case 'float':
+                    $seconds[$param] = self::seconds($value) ?? throw new \InvalidArgumentException("{$param} must be a number of seconds, got \"{$value}\" -- units and suffixes are not read");
+                    break;
+                case 'list':
+                    $backoff = [];
+                    foreach (\explode(',', $value) as $step) {
+                        $delay = self::seconds($step) ?? throw new \InvalidArgumentException("{$param} must be a comma-separated list of seconds, got \"{$value}\"");
+                        $backoff[] = \max(1.0, $delay);
+                    }
+                    break;
+                case 'discard':
+                    $discard = match (\strtolower($value)) {
+                        'old' => DiscardPolicy::Old,
+                        'new' => DiscardPolicy::New,
+                        default => throw new \InvalidArgumentException("discard must be 'old' or 'new', got \"{$value}\""),
+                    };
+                    break;
+            }
+        }
+
+        foreach (['maxDeliver', 'replicas'] as $param) {
+            if (isset($counts[$param])) {
+                $counts[$param] = \max(1, $counts[$param]);
+            }
+        }
+        if (isset($seconds['ackWait'])) {
+            $seconds['ackWait'] = \max(1.0, $seconds['ackWait']);
+        }
+
+        /** @var array<string, float|int|list<float>|DiscardPolicy|null> $arguments */
+        $arguments = [...$counts, ...$seconds];
+
+        // Exactly zero, so a negative typo still reaches the constructor's range check.
+        if (($seconds['deadMaxAge'] ?? null) === 0.0) {
+            $arguments['deadMaxAge'] = null;
+        }
+        if ($discard !== null) {
+            $arguments['discard'] = $discard;
+        }
+
+        if ($backoff !== null) {
+            if (isset($seconds['ackWait'])) {
+                $backoff[0] = $seconds['ackWait'];
+            } else {
+                $arguments['ackWait'] = $backoff[0];
+            }
+
+            // The constructor's own default, when the DSN leaves maxDeliver out.
+            $maxDeliver = $counts['maxDeliver'] ?? 5;
+            if ($maxDeliver <= \count($backoff)) {
+                $backoff = $maxDeliver > 1 ? \array_slice($backoff, 0, $maxDeliver - 1) : null;
+            }
+            $arguments['backoff'] = $backoff;
+        }
+
+        \ksort($arguments);
+
+        return $arguments;
+    }
+
+    /**
+     * A number of seconds as a DSN writes one, or null when it is anything else.
+     *
+     * is_numeric() alone admits surrounding whitespace, a leading `+`, `1e999`, which
+     * casts to INF, and `1e-999`, which casts to 0.0 and would then read as the
+     * keep-forever zero; each is a value the operator did not write as a plain number.
+     */
+    private static function seconds(string $value): ?float
+    {
+        if (!\is_numeric($value) || \trim($value) !== $value || \str_starts_with($value, '+')) {
+            return null;
+        }
+
+        $seconds = (float) $value;
+        if (!\is_finite($seconds)) {
+            return null;
+        }
+
+        // Zero only when it is written as one. The mantissa decides, so `0e5` is a zero
+        // and `1e-999` is a non-zero value that underflowed.
+        $mantissa = \explode('e', \strtolower($value), 2)[0];
+        if ($seconds === 0.0 && \trim($mantissa, '0.') !== '') {
+            return null;
+        }
+
+        return $seconds;
+    }
+
+    /**
+     * Connection options for a `nats://` DSN, for a caller that needs a raw
+     * connection to the same server. The credentials are URL-decoded, and a user
+     * with no password is a token, as in a NATS URL.
+     */
+    public static function connectionOptions(DSN $dsn, string $name = ''): ConnectionOptions
+    {
+        $user = (string) $dsn->getUser();
+        $password = (string) $dsn->getPassword();
+
+        return new ConnectionOptions(
+            // An IPv6 literal keeps its brackets in getHost(), so it joins the port as is.
+            servers: 'nats://' . $dsn->getHost() . ':' . ($dsn->getPort() ?? '4222'),
+            name: $name,
+            user: $user !== '' && $password !== '' ? $user : null,
+            pass: $user !== '' && $password !== '' ? $password : null,
+            token: $user !== '' && $password === '' ? $user : null,
+        );
+    }
+
+    /** How many times a message is delivered before it is dead-lettered. */
+    public function getMaxDeliver(): int
+    {
+        return $this->maxDeliver;
     }
 
     /**
@@ -928,21 +1177,59 @@ class Nats implements Synchronous, Consumer, Bounded
 
     public function receive(Queue $queue, int $timeout, int $n = 1): array
     {
+        $messages = [];
+        $this->receiveInto($queue, $timeout, $n, static function (Message $message) use (&$messages): void {
+            $messages[] = $message;
+        });
+        return $messages;
+    }
+
+    public function receiveEach(Queue $queue, int $timeout, int $n, callable $onMessage): void
+    {
+        if (!$this->source instanceof \Closure) {
+            // A shared socket cannot run commands until the receive lock is released.
+            foreach ($this->receive($queue, $timeout, $n) as $message) {
+                $onMessage($message);
+            }
+            return;
+        }
+        $this->receiveInto($queue, $timeout, $n, $onMessage);
+    }
+
+    /** @param callable(Message): void $onMessage */
+    private function receiveInto(Queue $queue, int $timeout, int $n, callable $onMessage): void
+    {
         try {
-            return $this->synchronize(function () use ($queue, $timeout, $n): array {
+            $this->synchronize(function () use ($queue, $timeout, $n, $onMessage): void {
+                $received = 0;
+                $callbackFailed = false;
+                $deliver = static function (Message $message) use ($onMessage, &$callbackFailed): void {
+                    try {
+                        $onMessage($message);
+                    } catch (\Throwable $error) {
+                        $callbackFailed = true;
+                        throw $error;
+                    }
+                };
                 try {
-                    return $this->pull($queue, $timeout, max(1, $n));
+                    $this->pull($queue, $timeout, max(1, $n), $deliver, $received);
                 } catch (ConnectionException|ProtocolException $error) {
-                    // Once. Only pull()'s first fetch fails here, and it handed nothing over.
+                    /** @var bool $callbackFailed Updated by the receive callback. */
+                    if ($callbackFailed) {
+                        throw $error;
+                    }
+                    if ($received > 0) {
+                        // Keep partial deliveries; a retry could exceed the reserved buffer.
+                        $this->report($error);
+                        return;
+                    }
                     if (!$this->lostConnection($error) || !$this->reconnectReceive()) {
                         throw $error;
                     }
-
-                    return $this->pull($queue, $timeout, max(1, $n));
+                    $this->pull($queue, $timeout, max(1, $n), $deliver, $received);
                 }
             });
         } finally {
-            // Off the lock, and on the way out however pull() ended.
             $this->flushReports();
         }
     }
@@ -950,10 +1237,11 @@ class Nats implements Synchronous, Consumer, Bounded
     /**
      * The body of receive(), on the connection lock.
      *
-     * Holds it across the fetch, which is what an ack from a handler coroutine waits
-     * behind — see the class docblock for that bound and why it is safe.
+     * A separate command connection lets handlers acknowledge while a pull is pending.
+     *
+     * @param callable(Message): void $onMessage
      */
-    private function pull(Queue $queue, int $timeout, int $max): array
+    private function pull(Queue $queue, int $timeout, int $max, callable $onMessage, int &$received): void
     {
         $this->ensure($queue);
         $key = $this->identity($queue);
@@ -981,23 +1269,9 @@ class Nats implements Synchronous, Consumer, Bounded
         );
         $this->drainDeadLetters($queue, $key);
 
-        // Fetch one message first so a sparse queue never waits for a batch to fill.
-        $deliveries = $this->fetch($this->consumers[$key], 1, (float) $timeout, false);
-
-        // Whatever else is already waiting, on a poll that cannot block.
-        if ($deliveries !== [] && \count($deliveries) < $max) {
-            try {
-                $deliveries = array_merge($deliveries, $this->fetch($this->consumers[$key], $max - \count($deliveries), 0.25, true));
-            } catch (ConnectionException|ProtocolException $error) {
-                $this->report($error);
-            }
-        }
-
-        $messages = [];
-
         $spare = $this->spareDelivery[$key] ?? null;
-
-        foreach ($deliveries as $jsMessage) {
+        $deliver = function (JetStreamMessage $jsMessage) use ($queue, $key, $onMessage, &$received, &$spare): void {
+            $received++;
             // The server allows one delivery past maxDeliver (see provisionOnce()), and it
             // only reaches here when no attempt before it ended in reject() -- a worker
             // died holding each one. Dead-lettered on this delivery rather than by the
@@ -1017,7 +1291,7 @@ class Nats implements Synchronous, Consumer, Bounded
                 if ($spare !== null && $jsMessage->metadata()->numDelivered >= $spare) {
                     $this->park($queue, $jsMessage, 'max deliveries exceeded');
 
-                    continue;
+                    return;
                 }
             }
 
@@ -1034,21 +1308,25 @@ class Nats implements Synchronous, Consumer, Bounded
                 // burning an attempt and a maxAckPending slot for a full ackWait.
                 $this->park($queue, $jsMessage, 'payload could not be decoded');
 
-                continue;
+                return;
             }
 
             /** @var array{pid: string, queue: string, timestamp: int, payload: array<mixed>} $data */
             $this->inFlight[$data['pid']] = $jsMessage;
 
-            $messages[] = new Message($data)
+            $onMessage(new Message($data)
                 // JetStream counts deliveries from 1; expose it as the Redis-style attempt count.
                 ->setAttempts(max(0, $jsMessage->metadata()->numDelivered - 1))
                 ->setMaxAttempts($this->maxDeliver)
                 ->setSequence($jsMessage->metadata()->streamSequence)
-                ->setSize(\strlen($jsMessage->getData()));
-        }
+                ->setSize(\strlen($jsMessage->getData())));
+        };
 
-        return $messages;
+        // Hand the first message over immediately, then top up the same buffer.
+        $this->consumers[$key]->fetchEach(1, $deliver, (float) $timeout);
+        if ($received > 0 && $received < $max) {
+            $this->consumers[$key]->fetchEach($max - $received, $deliver, 0.25, true);
+        }
     }
 
     /**
@@ -1476,7 +1754,7 @@ class Nats implements Synchronous, Consumer, Bounded
             $remaining = $limit ?? $consumer->info(true)->numPending;
             $failure = null;
             while ($remaining > 0) {
-                $jsMessage = $this->fetch($consumer, 1, 1.0, false)[0] ?? null;
+                $jsMessage = $consumer->next(1.0);
                 if (!$jsMessage instanceof JetStreamMessage) {
                     break;
                 }
@@ -1646,6 +1924,32 @@ class Nats implements Synchronous, Consumer, Bounded
     }
 
     /**
+     * The first message past what the consumer has delivered is the oldest still waiting. One that cannot be read,
+     * or that was removed since the consumer was read, reads as 0.
+     */
+    public function getQueueAge(Queue $queue): int
+    {
+        $stream = $this->workStream($queue);
+
+        return $this->count(function () use ($stream): int {
+            $info = $this->commandsConsumer($stream)->info(true);
+            if ($info->numPending === 0) {
+                return 0;
+            }
+
+            $stored = $this->commandsJs()->getMessage($stream, $info->delivered->streamSeq + 1);
+
+            try {
+                $envelope = $this->codec->decode($stored->data);
+            } catch (\Throwable) {
+                return 0;
+            }
+
+            return \is_array($envelope) && \is_numeric($envelope['timestamp'] ?? null) ? \max(0, \time() - (int) $envelope['timestamp']) : 0;
+        });
+    }
+
+    /**
      * The dead stream, which is where every failure this broker keeps ends up: a
      * terminal reject and an exhausted one are copied to the same place.
      */
@@ -1697,17 +2001,27 @@ class Nats implements Synchronous, Consumer, Bounded
      */
     public function maintain(): void
     {
+        // Neither a failed tick nor one queue failing may leave the other queues'
+        // stranded messages where they are; the first failure is raised once they are
+        // swept, for the adapter's error callback. A tick that could not reconnect
+        // leaves the connection disconnected, and command() drops it, so the reaps
+        // below run on a freshly built one rather than failing on the same corpse.
+        // Not every client's tick notices a socket the server closed, though, so a
+        // reap can still be the first to find out; see reapOnLiveConnection().
+        $failure = null;
+
         if ($this->commandsConnection instanceof NatsConnection && $this->commandsConnection !== $this->connection) {
             $commands = $this->commandsConnection;
-            $this->command(fn () => $commands->tick());
+            try {
+                $this->command(fn () => $commands->tick());
+            } catch (\Throwable $error) {
+                $failure = $error;
+            }
         }
 
-        // One queue failing must not leave the others' stranded messages where they are,
-        // and is raised once they are swept, for the adapter's error callback.
-        $failure = null;
         foreach ($this->served as $queue) {
             try {
-                $this->reap($queue, limit: self::REAP_LIMIT);
+                $this->reapOnLiveConnection($queue, $failure);
             } catch (\Throwable $error) {
                 $failure ??= $error;
             }
@@ -1716,6 +2030,35 @@ class Nats implements Synchronous, Consumer, Bounded
         if ($failure !== null) {
             throw $failure;
         }
+    }
+
+    /**
+     * Reap, and reap once more on a rebuilt commands connection if the first pass found
+     * that connection gone.
+     *
+     * utopia-php/nats up to 1.6.0 ticks a quiet connection without reading it, so it
+     * still reads as connected after the server has closed the socket under it: the
+     * tick passes, and the reap's first request is what meets the closed socket. Left
+     * at that, every queue's stranded messages wait for the next maintenance tick.
+     *
+     * Retrying is safe: every read in reap() is idempotent, a reading is only recorded
+     * once the consumer info has come back, and bury() is safe to repeat (see reap()).
+     * The lost connection is still reported, through $failure, so the adapter hears of it.
+     */
+    private function reapOnLiveConnection(Queue $queue, ?\Throwable &$failure): void
+    {
+        try {
+            $this->reap($queue, limit: self::REAP_LIMIT);
+
+            return;
+        } catch (ConnectionException|ProtocolException $error) {
+            if (!$this->lostConnection($error) || !$this->command($this->reconnectCommands(...))) {
+                throw $error;
+            }
+            $failure ??= $error;
+        }
+
+        $this->reap($queue, limit: self::REAP_LIMIT);
     }
 
     /**
@@ -1779,22 +2122,6 @@ class Nats implements Synchronous, Consumer, Bounded
         if ($this->commandsConnection instanceof NatsConnection && $this->commandsConnection !== $this->connection) {
             $this->commandsConnection->close();
         }
-    }
-
-    /**
-     * Fetch up to $batch deliveries, as a list.
-     *
-     * @return list<JetStreamMessage>
-     */
-    private function fetch(NatsConsumer $consumer, int $batch, float $timeout, bool $noWait): array
-    {
-        $messages = [];
-
-        foreach ($consumer->fetch($batch, $timeout, $noWait) as $message) {
-            $messages[] = $message;
-        }
-
-        return $messages;
     }
 
     /**

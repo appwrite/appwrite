@@ -3,6 +3,7 @@
 namespace Utopia\Messaging\Adapter;
 
 use Utopia\Messaging\Adapter;
+use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
 use Utopia\Messaging\Messages\SMS as SMSMessage;
 
 abstract class SMS extends Adapter
@@ -18,6 +19,21 @@ abstract class SMS extends Adapter
     public function getMessageType(): string
     {
         return static::MESSAGE_TYPE;
+    }
+
+    /**
+     * Label each attempt with the recipient's country calling code (`91`, `1`),
+     * not an ISO region: `1` and `7` span several countries and the number alone
+     * cannot tell them apart. Numbers that match no known code count as `unknown`.
+     *
+     * @return array<string, string>
+     */
+    #[\Override]
+    protected function recipientAttributes(?string $recipient): array
+    {
+        return [
+            'country_code' => ($recipient === null ? null : CallingCode::fromPhoneNumber($recipient)) ?? 'unknown',
+        ];
     }
 
     /**

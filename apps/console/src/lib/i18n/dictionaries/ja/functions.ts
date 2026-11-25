@@ -224,6 +224,9 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'No domains yet': 'ドメインはまだありません',
   'No events configured': 'イベントが設定されていません',
   'No executions yet': '実行はまだありません',
+  'No GB-hours yet': 'GB時間はまだありません',
+  'Invocations will show up here.': '実行はここに表示されます。',
+  'Compute usage will show up here.': 'コンピュート使用量はここに表示されます。',
   'No files yet': 'ファイルはまだありません',
   'No functions yet': '関数はまだありません',
   'No headers': 'ヘッダーがありません',
@@ -321,10 +324,8 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'This action cannot be undone.': 'この操作は元に戻せません。',
   'this function': 'この関数',
   'Timeout updated successfully': 'タイムアウトを更新しました',
-  'Enterprise runtime options': 'Enterprise ランタイムオプション',
-  'The Enterprise plan includes always-on functions to minimize cold starts, as well as higher CPU and memory configurations for more demanding workloads.':
-    'Enterprise プランには、コールドスタートを最小化する Always-on 関数に加え、より高負荷なワークロード向けの CPU とメモリ構成が含まれます。',
-  'Contact us to learn more.': '詳しくはお問い合わせください。',
+  'Always-on functions and higher CPU and memory are available on Enterprise.':
+    'Enterprise プランでは、Always-on 関数や、より多くの CPU とメモリをご利用いただけます。',
   'to unlock additional specifications.': 'して、追加の仕様を利用できます。',
   'Total size': '合計サイズ',
   'Total Size': '合計サイズ',
@@ -756,4 +757,5 @@ export const jaFunctionsDictionary: Record<string, string> = {
     'このリージョンはまだメールサーバーを報告していないため、MX レコードを表示できません。先に TXT レコードを追加し、後で MX レコードを確認してください。',
   "This function's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
     'この関数の Git インストールからリポジトリにアクセスできなくなったため、プッシュはデプロイされません。リポジトリの接続を解除してから、現在そのリポジトリがあるインストールで接続し直してください。',
+  'View executions': '実行を表示',
 }

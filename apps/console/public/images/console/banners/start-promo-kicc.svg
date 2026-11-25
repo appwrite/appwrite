@@ -1,0 +1,37 @@
+<svg width="482" height="340" viewBox="0 0 482 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="kiccGrad" x1="241" y1="26" x2="241" y2="381" gradientUnits="userSpaceOnUse">
+<stop stop-color="#19191C"/>
+<stop offset="0.17" stop-color="#2F1820"/>
+<stop offset="0.34" stop-color="#531A2C"/>
+<stop offset="0.51" stop-color="#9F1D42"/>
+<stop offset="0.68" stop-color="#FD366E"/>
+<stop offset="0.85" stop-color="#FEAFC5"/>
+<stop offset="1" stop-color="#EDEDF0"/>
+</linearGradient>
+<g id="kiccBack">
+<path d="M104 236H126V296H104Z"/>
+<path d="M128 214H146V296H128Z"/>
+<path d="M338 226H356V296H338Z"/>
+<path d="M358 244H382V296H358Z"/>
+<path d="M137 214V202"/>
+</g>
+<g id="kicc">
+<path d="M220 104H262V296H220Z"/>
+<path d="M210 92H272V104H210Z"/>
+<path d="M218 92L225 80H257L264 92Z"/>
+<path d="M239.25 58H242.75V80H239.25Z"/>
+<path d="M280 296L314 214H330L364 296Z"/>
+<path d="M276 280H368V296H276Z"/>
+<path d="M150 262H220V296H150Z"/>
+<path d="M96 296H386V310H96Z"/>
+</g>
+</defs>
+<use href="#kiccBack" fill="#19191C"/>
+<use href="#kiccBack" fill="url(#kiccGrad)"/>
+<use href="#kiccBack" stroke="#FD366E" stroke-width="1.36239"/>
+<use href="#kicc" fill="#19191C"/>
+<use href="#kicc" fill="url(#kiccGrad)"/>
+<use href="#kicc" stroke="#FD366E" stroke-width="1.36239"/>
+<g stroke="#FD366E" stroke-width="1.36239" stroke-linecap="round" fill="none"><path d="M227 104V296"/><path d="M234 104V296"/><path d="M241 104V296"/><path d="M248 104V296"/><path d="M255 104V296"/><path d="M220 140H262"/><path d="M220 180H262"/><path d="M220 220H262"/><path d="M210 98H272"/><path d="M322 214L322 280"/><path d="M314 214L296 280"/><path d="M330 214L348 280"/><path d="M160 268V296"/><path d="M172 268V296"/><path d="M184 268V296"/><path d="M196 268V296"/><path d="M208 268V296"/></g>
+</svg>

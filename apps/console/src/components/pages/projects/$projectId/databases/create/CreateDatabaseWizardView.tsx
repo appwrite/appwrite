@@ -1432,10 +1432,7 @@ export function CreateDatabaseWizardView({
             </div>
             {hasLockedDatabaseSpecifications(selectableSpecs) && (
               <div className="mt-3">
-                <SpecificationsUpgradeNote
-                  orgId={project?.teamId}
-                  showContactSales
-                />
+                <SpecificationsUpgradeNote orgId={project?.teamId} />
               </div>
             )}
           </section>
@@ -1450,6 +1447,7 @@ export function CreateDatabaseWizardView({
               onReplicaCountChange={setHaReplicaCount}
               pitrEnabled={pitrEnabled}
               onPitrEnabledChange={setPitrEnabled}
+              orgId={project?.teamId}
             />
           </section>
         )}

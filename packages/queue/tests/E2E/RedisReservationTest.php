@@ -77,7 +77,13 @@ final class RedisReservationTest extends TestCase
         $this->assertSame(0, $broker->getQueueSize($this->queue));
         $reservations = $this->redis->zRange($this->key('reservations'), 0, -1);
         $this->assertCount(1, $reservations);
+        $this->assertIsString($reservations[0]);
         $this->assertSame(1, $this->redis->lLen($reservations[0]));
+        $deadline = $this->redis->zScore($this->key('reservations'), $reservations[0]);
+        $this->assertIsFloat($deadline);
+        $seconds = $this->redis->time()[0];
+        $this->assertIsNumeric($seconds);
+        $this->assertLessThanOrEqual((int) $seconds + 10, $deadline);
         $this->redis->zAdd($this->key('reservations'), 0, $reservations[0]);
         $broker->maintain();
         $this->assertSame(1, $broker->getQueueSize($this->queue));
@@ -103,30 +109,30 @@ final class RedisReservationTest extends TestCase
         if (!\function_exists('pcntl_fork')) {
             self::markTestSkipped('Requires pcntl');
         }
+        $this->broker->publish($this->queue, ['survives' => true]);
+        $payload = $this->redis->rPop($this->key('queue'));
+        $this->assertIsString($payload);
         $pid = pcntl_fork();
         if ($pid === 0) {
             $receive = new class ('127.0.0.1', (int) (getenv('REDIS_PORT') ?: 16379)) extends Connection {
+                public string $payload;
+
                 public function rightPopLeftPush(string $queue, string $destination, int $timeout): string|false
                 {
+                    // Publish only once the initial reserve has observed an empty queue.
+                    $this->leftPush($queue, $this->payload);
                     $raw = parent::rightPopLeftPush($queue, $destination, $timeout);
                     posix_kill(getmypid(), SIGKILL);
                     return $raw;
                 }
             };
+            $receive->payload = $payload;
             new Broker($receive, $receive)->receive($this->queue, 3, 100);
             exit(1);
         }
-        usleep(100_000);
-        $this->broker->publish($this->queue, ['survives' => true]);
         pcntl_waitpid($pid, $status);
-        $this->assertTrue(pcntl_wifsignaled($status));
-        $reservations = $this->redis->zRange($this->key('reservations'), 0, -1);
-        $this->assertCount(1, $reservations);
-        $this->assertSame(1, $this->redis->lLen($reservations[0]));
-        $this->redis->zAdd($this->key('reservations'), 0, $reservations[0]);
-        // Register the queue without consuming its reservation, then recover it.
-        $this->broker->receive($this->queue, 0);
-        $this->broker->maintain();
+        $this->assertTrue(\is_int($status) && pcntl_wifsignaled($status));
+        $this->assertSame(0, $this->redis->zCard($this->key('reservations')));
         $message = $this->broker->receive($this->queue, 0)[0];
         $this->assertSame(['survives' => true], $message->getPayload());
         $this->broker->commit($this->queue, $message);
@@ -182,6 +188,7 @@ final class RedisReservationTest extends TestCase
         $this->redis->del($claim);
         $this->redis->lPush($claim, 'invalid');
         $commands = new class ('127.0.0.1', (int) (getenv('REDIS_PORT') ?: 16379)) extends Connection {
+            /** @var list<int|float> */
             public array $sizes = [];
             public function execute(string $script, array $keys, array $args): mixed
             {
@@ -399,6 +406,81 @@ final class RedisReservationTest extends TestCase
             $this->broker->commit($this->queue, $message);
         }
         $this->assertSame('1', $this->redis->get($this->key('stats') . '.success'));
+    }
+
+    /** @return array<string, array{string}> */
+    public static function lateClaims(): array
+    {
+        return ['expired' => ['expired'], 'already recovered' => ['unregistered']];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('lateClaims')]
+    public function testLateClaimRequeuesInsteadOfDelivering(string $state): void
+    {
+        $this->broker->publish($this->queue, ['n' => 1]);
+        $this->broker->publish($this->queue, ['n' => 2]);
+        $receive = new class ('127.0.0.1', (int) (getenv('REDIS_PORT') ?: 16379)) extends Connection {
+            /** @var \Closure(string): void */
+            public \Closure $beforeClaim;
+
+            public function execute(string $script, array $keys, array $args): mixed
+            {
+                if (str_starts_with($script, '-- KEYS: reservations, reservation,')) {
+                    ($this->beforeClaim)($keys[1]);
+                }
+                return parent::execute($script, $keys, $args);
+            }
+        };
+        $receive->beforeClaim = function (string $reservation) use ($state): void {
+            if ($state === 'expired') {
+                $this->redis->zAdd($this->key('reservations'), 0, $reservation);
+            } else {
+                $this->redis->zRem($this->key('reservations'), $reservation);
+            }
+        };
+        try {
+            new Broker($receive, $receive)->receive($this->queue, 0, 2);
+            self::fail('A late claim must not deliver');
+        } catch (\RuntimeException $e) {
+            $this->assertStringContainsString('requeued', $e->getMessage());
+        }
+        $this->assertSame(0, $this->redis->zCard($this->key('reservations')));
+        $this->assertSame(0, $this->redis->lLen($this->key('processing')));
+        $this->assertSame([], $this->redis->keys($this->key('reservations') . '.*'));
+        $this->assertSame(2, $this->broker->getQueueSize($this->queue));
+        $messages = $this->broker->receive($this->queue, 0, 2);
+        $this->assertSame([1, 2], array_map(fn (\Utopia\Queue\Message $m) => $m->getPayload()['n'], $messages));
+    }
+
+    public function testAnotherReceiverCanClaimTheBlockingMoveBeforeItsReply(): void
+    {
+        $receive = new class ('127.0.0.1', (int) (getenv('REDIS_PORT') ?: 16379)) extends Connection {
+            /** @var \Closure(): void */
+            public \Closure $beforePop;
+            /** @var \Closure(): void */
+            public \Closure $afterPop;
+
+            public function rightPopLeftPush(string $queue, string $destination, int $timeout): string|false
+            {
+                ($this->beforePop)();
+                $raw = parent::rightPopLeftPush($queue, $destination, $timeout);
+                ($this->afterPop)();
+                return $raw;
+            }
+        };
+        $receive->beforePop = function (): void {
+            $this->broker->publishMany($this->queue, [['n' => 1], ['n' => 2]]);
+        };
+        $receive->afterPop = function (): void {
+            $first = $this->broker->receive($this->queue, 0)[0];
+            $this->assertSame(['n' => 1], $first->getPayload());
+            $this->broker->commit($this->queue, $first);
+        };
+
+        $messages = new Broker($receive, $receive)->receive($this->queue, 1, 2);
+        $this->assertCount(1, $messages);
+        $this->assertSame(['n' => 2], $messages[0]->getPayload());
+        $this->broker->commit($this->queue, $messages[0]);
     }
 
     private function key(string $kind): string

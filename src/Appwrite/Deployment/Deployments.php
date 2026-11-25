@@ -3,6 +3,7 @@
 namespace Appwrite\Deployment;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\Key;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
@@ -346,6 +347,10 @@ readonly class Deployments
         $queued = $this->dbForProject->updateDocuments('deployments', new Document([
             'status' => 'waiting',
             'buildPath' => static::buildPath($this->project->getId(), $deployment->getId()),
+            // These results belong to this build, including when duplicating a deployment.
+            'buildDuration' => null,
+            'buildEndedAt' => null,
+            'adapter' => '',
         ]), [
             Query::equal('$id', [$deployment->getId()]),
             Query::notEqual('status', 'canceled'),
@@ -580,7 +585,7 @@ readonly class Deployments
             $base = "{$endpoint}/v1/{$resource->getCollection()}/{$resource->getId()}/deployments/{$deploymentId}";
             $sourceUrl = "{$base}/download?" . \http_build_query([
                 'type' => Token::TYPE_SOURCE,
-                'project' => $projectId,
+                ...static::query($project),
                 'token' => Token::sign($deploymentId, Token::TYPE_SOURCE, $ttl),
             ]);
             $sourceArtifacts = [
@@ -666,6 +671,19 @@ readonly class Deployments
                 key: System::getEnv('_APP_JOBS_SECRET', ''),
             ),
         ];
+    }
+
+    /**
+     * The query parameters that name the project in a link the build requests, such as the
+     * one it downloads its uploaded source from. A platform whose projects are not all
+     * reached by their own ID overrides this: storage paths and job ids keep the project's
+     * own ID, but a link has to name the project the way a request reaches it.
+     *
+     * @return array<string, string>
+     */
+    protected static function query(Document $project): array
+    {
+        return ['project' => $project->getId()];
     }
 
     /**
@@ -1030,7 +1048,7 @@ readonly class Deployments
             }
         }
 
-        $apiKey = (new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $timeout, 0))->encode([
+        $apiKey = (new JWT(EncryptionKey::current(), 'HS256', $timeout, 0))->encode([
             Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectId' => $project->getId(),
             'projectSequence' => $project->getSequence(),

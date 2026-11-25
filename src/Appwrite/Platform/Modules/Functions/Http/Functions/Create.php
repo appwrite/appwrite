@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
+use Appwrite\Auth\Key;
 use Appwrite\Bus\Events\RuleCreated;
 use Appwrite\Certificates\Certificates;
 use Appwrite\Deployment\Deployments;
@@ -95,14 +96,14 @@ class Create extends Base
             ->param('schedule', '', new Cron(), 'Schedule CRON syntax. Cannot be combined with interval.', true)
             ->param('timeout', 15, new Range(1, (int) System::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
             ->param('enabled', true, new Boolean(), 'Is function enabled? When set to \'disabled\', users cannot access the function but Server SDKs with and API key can still access the function. No data is lost when this is toggled.', true)
-            ->param('logging', true, new Boolean(), 'When disabled, executions will exclude logs and errors, and will be slightly faster.', true)
+            ->param('logging', false, new Boolean(), 'When disabled, executions will exclude logs and errors, and will be slightly faster. Disabled by default.', true)
             ->param('entrypoint', '', new Text(1028, 0), 'Entrypoint File. This path is relative to the "providerRootDirectory".', true)
             ->param('commands', '', new Text(8192, 0), 'Build Commands.', true)
             ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_SCOPES_SIZE), 'List of scopes allowed for API key auto-generated for every execution. Maximum of ' . APP_LIMIT_ARRAY_SCOPES_SIZE . ' scopes are allowed.', true, enum: new Enum(name: 'ProjectKeyScopes'))
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
             ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the function.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function.', true)
-            ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
+            ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, no comments or checks are posted to commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Directory(), 'Path to function code in the linked repo.', true)
             ->param('providerBranches', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
             ->param('providerPaths', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
@@ -126,6 +127,9 @@ class Create extends Base
             ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 keeps all deployments unless the server applies a default retention.', true)
             ->param('interval', 0, new Range(0, Database::MAX_INT), 'Minutes between scheduled executions. Appwrite picks when within each interval the function runs. Use 0 to disable. Cannot be combined with schedule.', true)
             ->param('description', '', new Text(1024, 0), 'Optional description for the function.', true)
+            ->param('providerComments', true, new Boolean(), 'Post a build summary on pull requests for the repo linked to the function. Commit statuses are still reported when disabled. Ignored in silent mode.', true)
+            ->param('providerDeployments', true, new Boolean(), 'Deploy every push that matches the branch and path rules for the repo linked to the function. When disabled, deploy manually.', true)
+            ->param('providerStatuses', true, new Boolean(), 'Report the build status on each commit for the repo linked to the function. Ignored in silent mode.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('timelimit')
@@ -146,6 +150,7 @@ class Create extends Base
             ->inject('authorization')
             ->inject('bus')
             ->inject('platform')
+            ->inject('apiKey')
             ->callback($this->action(...));
     }
 
@@ -178,6 +183,9 @@ class Create extends Base
         int $deploymentRetention,
         int $interval,
         string $description,
+        bool $providerComments,
+        bool $providerDeployments,
+        bool $providerStatuses,
         Response $response,
         Database $dbForProject,
         callable $timelimit,
@@ -197,8 +205,13 @@ class Create extends Base
         RepositoryWebhooks $repositoryWebhooks,
         Authorization $authorization,
         Bus $bus,
-        array $platform
+        array $platform,
+        ?Key $apiKey,
     ) {
+        if ($apiKey !== null && !$apiKey->mayGrant($scopes)) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'An API key cannot grant scopes it does not hold.');
+        }
+
         $schedule ??= '';
 
         if ($schedule !== '' && $interval !== 0) {
@@ -257,6 +270,11 @@ class Create extends Base
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
         }
 
+        if (!empty($providerRepositoryId)) {
+            $providerAdapter = $vcsFactory->fromInstallation($installation);
+            [$owner, $repositoryName] = $this->resolveInstallationRepository($providerAdapter, $installation, $providerRepositoryId);
+        }
+
         try {
             $function = $dbForProject->createDocument('functions', new Document([
                 '$id' => $functionId,
@@ -290,6 +308,9 @@ class Create extends Base
                 'providerBranch' => $providerBranch,
                 'providerRootDirectory' => $providerRootDirectory,
                 'providerSilentMode' => $providerSilentMode,
+                'providerComments' => $providerComments,
+                'providerDeployments' => $providerDeployments,
+                'providerStatuses' => $providerStatuses,
                 'providerBranches' => $providerBranches,
                 'providerPaths' => $providerPaths,
                 'buildSpecification' => $buildSpecification,
@@ -336,12 +357,7 @@ class Create extends Base
             ]));
 
             try {
-                $providerAdapter = $vcsFactory->fromInstallation($installation);
-                if (!\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $providerAdapter->getSupportedWebhookScopes(), true)) {
-                    $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
-                    $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
-                    $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
-                }
+                $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
             } catch (\Throwable $error) {
                 $dbForPlatform->deleteDocument('repositories', $repository->getId());
                 throw $error;

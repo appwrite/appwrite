@@ -1,5 +1,4 @@
-import type { Models, VideoOutput, VideoRenditionStatus } from '@appwrite.io/console'
-import type { CompactFilterKey } from '@/lib/table-filters'
+import type { Models } from '@appwrite.io/console'
 
 /** Flat record for client-side FiltersPopover matching. */
 export function renditionToFilterRecord(
@@ -12,47 +11,16 @@ export function renditionToFilterRecord(
   }
 }
 
-/**
- * When the URL filter map is a single equality on `output` or `status`, the API
- * can narrow the list. Any other filter shape falls back to a full list fetch.
- */
-export function apiRenditionListParams(
-  filterMap: Map<CompactFilterKey, string>,
-): { output?: VideoOutput; status?: VideoRenditionStatus } | undefined {
-  if (filterMap.size === 0) return undefined
-
-  let output: VideoOutput | undefined
-  let status: VideoRenditionStatus | undefined
-  let otherFilters = 0
-
-  for (const key of filterMap.keys()) {
-    if (key.o !== 'equal' || key.v == null || key.v === '') {
-      otherFilters += 1
-      continue
-    }
-    if (key.c === 'output') {
-      output = String(key.v) as VideoOutput
-    } else if (key.c === 'status') {
-      status = String(key.v) as VideoRenditionStatus
-    } else {
-      otherFilters += 1
-    }
-  }
-
-  if (otherFilters > 0) return undefined
-  if (!output && !status) return undefined
-  return { output, status }
-}
-
 export const RENDITIONS_DEFAULT_SORT_BY = 'output'
 export const RENDITIONS_DEFAULT_SORT_ORDER = 'asc' as const
 
 /** Spreadsheet column ids used in the renditions sort URL param. */
 export type RenditionSortColumn =
-  | 'rendition'
   | 'profile'
   | 'output'
   | 'resolution'
+  | 'videoBitRate'
+  | 'audioBitRate'
   | 'bitrate'
   | 'segmentLength'
   | 'status'
@@ -91,6 +59,12 @@ export function compareVideoRenditions(
       break
     case 'resolution':
       cmp = a.width * a.height - b.width * b.height
+      break
+    case 'videoBitRate':
+      cmp = a.videoBitRate - b.videoBitRate
+      break
+    case 'audioBitRate':
+      cmp = a.audioBitRate - b.audioBitRate
       break
     case 'bitrate':
       cmp =

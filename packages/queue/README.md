@@ -98,6 +98,30 @@ Each queue is a WorkQueue-retention stream (a message is removed once acknowledg
 
 The server-side consumer is created with `max_deliver` one above `maxDeliver`, so reading it off `/jsz` shows the extra delivery. A message whose every attempt died unacknowledged, with no `reject()`, arrives once more and `receive()` dead-letters it without running a handler. At exactly `maxDeliver`, JetStream would retire it silently. It would stay on the work stream, counted as neither pending nor in flight, and only reach the dead stream if a broker happened to be subscribed when the server announced it. The consumer carries a `utopia_queue_spare_delivery` metadata key saying so. A broker under `Provisioning::Require`, which never writes configuration, reads that key to find the spare delivery, and reports through `onError` if it adopts a consumer provisioned without one. Requires [`utopia-php/nats`](https://github.com/utopia-php/nats).
 
+### From a DSN
+
+`Nats::fromDSN()` builds the broker from `nats://[user[:password]@]host[:port]?param=value&...`, so a queue is tuned in configuration rather than code, and a producer and a consumer that read the same DSN provision the same queue:
+
+```php
+use Utopia\DSN\DSN;
+use Utopia\Queue\Broker\Nats;
+
+$broker = Nats::fromDSN(
+    new DSN('nats://user:pass@nats:4222?replicas=3&backoff=30,120,600&maxAckPending=360&maxBytes=1073741824&discard=new'),
+    'worker-audits',                 // client name, shown in the server's /connz
+    onError: fn (\Throwable $e) => error_log($e->getMessage()),
+);
+```
+
+The query string sets the constructor parameters listed in `Nats::DSN_PARAMS`, and anything left out keeps its default. It is read strictly. An unknown parameter is refused, because a typo would otherwise run the queue on defaults nobody chose. A number with a unit (`30s`) or a fraction where a count goes (`4.9`) is refused before the cast. `inactiveThreshold` is not settable from a DSN at all. Redelivery knobs that JetStream couples are reconciled rather than refused:
+
+- An explicit `ackWait` replaces the schedule's first step; otherwise the first step is the ack wait.
+- A `maxDeliver` lowered into the schedule trims it.
+- Delays below a second are raised to one.
+- `deadMaxAge=0` keeps dead letters forever.
+
+Code-level parameters (`onError`, `codec`, `messageId`, `provisioning`, …) are passed by name. A parameter the DSN owns is refused there, so a queue's configuration has one source. `Nats::connectionOptions()` gives the same server and credentials to code that needs a raw connection.
+
 ### Shaping a queue
 
 Beyond redelivery, the constructor carries what a queue holds and how much of it is in flight. `maxMsgSize`, `maxMsgs`, `maxBytes` and `discard` bound the work stream — `discard: DiscardPolicy::New` turns a full stream into backpressure, where the publish fails rather than the oldest message being dropped, and it needs one of the two limits to apply to. `maxMsgSize` also applies to the dead stream, so a message the queue accepted can always be dead-lettered. `maxAckPending`, `maxWaiting` and `inactiveThreshold` shape the worker consumers; `maxAckPending` is the one to set, because JetStream's default of 1000 hands out far more than a worker can hold and the surplus spends its `ackWait` window waiting to be picked up. `maxAge` states the message TTL directly instead of deriving it from the queue's `jobTtl`, which each side builds separately.
@@ -214,7 +238,15 @@ Queue 5 renames `enqueueMany()` to `publishMany()` on `Publisher\Synchronous` an
 
 ### Batched receive
 
-`job('v1-stats-usage', coroutines: 1, prefetch: 100)` allows up to 100 unacknowledged messages while running one handler at a time. Prefetch counts waiting messages, running handlers, and messages awaiting confirmation. It defaults to the coroutine count; an explicit lower value is rejected. A batch is the number of messages in one broker operation, which can be smaller than prefetch. The Swoole adapter enforces the prefetch limit and renews all outstanding messages from one loop.
+`job('v1-functions', coroutines: 30, prefetch: 30, maxInFlight: 90)` sets three independent limits:
+
+- `coroutines`: running handlers.
+- `prefetch`: receive-buffer capacity, including the outstanding pull reservation; defaults to `coroutines` and may be smaller.
+- `maxInFlight`: all held messages, including buffered work, running handlers, and pending confirmations; defaults to `coroutines + prefetch`.
+
+Following [NATS ADR-37](https://github.com/nats-io/nats-architecture-and-design/blob/fac1b7e7ff96498afbb768b11d3d313f10c14ff3/adr/ADR-37.md#buffering-messages), Swoole refills at the buffer's half-full watermark. Handing a message to a handler frees buffer space immediately; acknowledgement frees in-flight capacity separately. One receive is outstanding at a time. Its size is the buffer's free space, clamped by available in-flight capacity. All limits must be positive. A tight in-flight limit applies backpressure even if the buffer has room; slow acknowledgements cannot accumulate unbounded deliveries. NATS uses `Consumer\Streaming` and the client’s `fetchEach()` to hand off each arrival before the pull finishes. This lets handlers and renewals progress even when the shared broker window is full. Redis and other array-based consumers retain batched delivery. Renewals cover all held messages, including buffered work. Buffered jobs can start during a slow receive; shutdown returns unstarted work and drains running jobs before closing the consumer.
+
+**Queue 7 receive-buffer migration:** `prefetch` previously meant the total unacknowledged limit. Set `maxInFlight` explicitly to that old value to retain the old reservation budget, and choose receive-buffer capacity separately. The new default reserves room for both handlers and a buffer, so the total allowance doubles when `prefetch` is omitted. Review NATS `maxAckPending` across all replicas; it is shared broker flow control, not the per-worker receive buffer. Exclusive consumers require `maxInFlight: 1`. Third-party adapters overriding `run()` must accept the new optional `maxInFlight` argument. NATS requires client 1.7 or newer for incremental pulls; publish that before queue 7 and the Platform update. Pooled consumers retain their existing serialized batch path. NATS brokers constructed with a live connection also collect the batch before invoking `receiveEach()` callbacks, so callbacks can acknowledge after the shared receive lock is released. Use a dedicated NATS consumer with a connection factory for incremental delivery and concurrent commands. Callback exceptions propagate to the caller.
 
 Consumers retain `receive(Queue $queue, int $timeout, int $n = 1): array`, `commit()`, and `reject()`. Sparse queues return available messages without waiting to fill a batch. Each message has an independent outcome. Completed requests already waiting on a connection are coalesced without a timer; handlers can continue while confirmations are pending, within the same delivery bound. Success hooks run after their own confirmation, so a later handler can start before an earlier success hook.
 
@@ -226,11 +258,11 @@ NATS keeps explicit, server-confirmed acknowledgements. The NATS client's `reque
 
 **Rollback:** old consumers can read the unchanged ready payloads, but do not recover new reservation lists. Before retiring the last new consumer, stop its receives, drain its work, and recover expired reservations with its maintenance path. Check `<namespace>.reservations.<queue>` is empty before removing that recovery capability. Merely reducing prefetch to one does not remove reservation state.
 
-**Queue 5 migration:** `Server::job()` keeps its positional argument order, but renames `maxCoroutines` to `coroutines` and `batch` to `prefetch`. Rename named arguments and Platform job metadata keys; replace `Server::batch()` with `Server::prefetch()`. Direct adapter queue specs also use `coroutines` and `prefetch`. Omitting prefetch now uses the coroutine count. To preserve the previous effective bound when passing both numbers, pass `prefetch: max($oldBatch, $coroutines)`. Platform's updated worker configuration requires queue 5.
+**Queue 5 migration:** `Server::job()` keeps its positional argument order, but renames `maxCoroutines` to `coroutines` and `batch` to `prefetch`. Rename named arguments and Platform job metadata keys; replace `Server::batch()` with `Server::prefetch()`. Direct adapter queue specs also use `coroutines` and `prefetch`. Omitting prefetch now uses the coroutine count. To preserve the previous effective bound when passing both numbers, pass `maxInFlight: max($oldBatch, $coroutines)` and select `prefetch` independently. When upgrading directly to the current Platform worker configuration, use Queue 7 and the receive-buffer migration above.
 
 Third-party consumers keep the existing `Consumer` contract. `commit()` acknowledges processed work; `reject()` applies the broker's retry/dead-letter policy. Optional `release()` returns work whose handler never started. On Redis it never counts as an attempt. A NATS NAK always counts toward `maxDeliver`, so `Broker\Nats` instead requeues the message as a new one, which starts with no attempts, and acknowledges the original once the copy is stored. The requeued job joins the back of the queue. Only a successful requeue is free. On a bounded work stream with `DiscardPolicy::Old`, where a requeue would evict the oldest stored job, or when the requeue is refused, it falls back to a NAK after `releaseDelay` seconds (default 5), which spends an attempt. If the connection fails before the NAK reaches the server, the original is redelivered after `ackWait`, which also spends one. If the copy is stored but the ack is lost, the job is delivered twice. Existing single-message `extend()` implementations remain supported alongside variadic renewal; no new renewal interface is required. Receipt identity stays opaque on `Message` and is separate from its message ID.
 
-Keep prefetch at its default until representative measurements justify a change. With one coroutine, compare prefetch 1, 8, 32, and 100 using the same persistence and acknowledgement guarantees. Local no-op throughput does not establish a production setting. See [the implementation plan](docs/batching.md) and [prior art](docs/prior-art.md).
+Size the buffer with representative mixed-duration workloads: more prefetch can reserve short jobs behind long handlers on one worker while another worker is free. With one coroutine, compare prefetch 1, 8, 32, and 100 using the same persistence and acknowledgement guarantees. Local no-op throughput does not establish a production setting. See [the implementation plan](docs/batching.md) and [prior art](docs/prior-art.md).
 
 ## Message encoding
 

@@ -225,17 +225,15 @@ export function ManifestsSection({
                 {content.error}
               </p>
             ) : null}
-            <div className="max-h-[620px] overflow-auto">
-              {loading && !content ? (
-                <p className="p-4 text-[12px] text-muted-foreground">
-                  {t('Loading...')}
-                </p>
-              ) : content?.content ? (
-                <ManifestCode text={content.content} />
-              ) : (
-                <p className="p-4 text-[12px] text-muted-foreground">-</p>
-              )}
-            </div>
+            {loading && !content ? (
+              <p className="p-4 text-[12px] text-muted-foreground">
+                {t('Loading...')}
+              </p>
+            ) : content?.content ? (
+              <ManifestCode text={content.content} />
+            ) : (
+              <p className="p-4 text-[12px] text-muted-foreground">-</p>
+            )}
           </>
         )}
       </div>

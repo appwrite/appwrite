@@ -26,7 +26,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'already exists': 'は既に存在します',
   'is longer than 8192 allowed characters':
     'は許可される8192文字を超えています',
-  'contact sales': '営業にお問い合わせ',
   'to include more repos.': 'して、さらに多くのリポジトリを含めてください。',
   'to unlock additional specifications.':
     'して、追加の仕様を有効にしてください。',
@@ -74,6 +73,11 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Connect existing repository': '既存のリポジトリを接続',
   'Connect to GitHub': 'GitHub に接続',
   'Connect to GitLab': 'GitLab に接続',
+  'Connect Entire': 'Entire の接続',
+  'Add Entire account': 'Entire アカウントを追加',
+  'Add Origin account': 'Origin アカウントを追加',
+  'Add Bitbucket account': 'Bitbucket アカウントを追加',
+  'Add Gitea account': 'Gitea アカウントを追加',
   'Console user': 'コンソールユーザー',
   'Contact Support': 'サポートに連絡',
   'Contact sales': '営業に連絡',
@@ -256,6 +260,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'My filters': '自分のフィルター',
   'Name, email, phone, or user ID…': '名前、メール、電話、またはユーザー ID…',
   'Need more resources?': 'リソースが足りませんか?',
+  'Higher CPU and memory are available on Enterprise.':
+    'Enterprise プランでは、より多くの CPU とメモリをご利用いただけます。',
   'Next image': '次の画像',
   'No API key scopes are available from the server.':
     'サーバーから利用可能な API キースコープがありません。',
@@ -379,6 +385,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   Searching: '検索中',
   'Select database': 'データベースを選択',
   'Select a bucket to browse files': 'ファイルを閲覧するバケットを選択',
+  'This file type is not supported.':
+    'このファイル形式はサポートされていません。',
   'Select a timezone': 'タイムゾーンを選択',
   'Select a service to build': 'ビルドするサービスを選択',
   'Select all': 'すべて選択',
@@ -551,7 +559,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'No organizations found': '組織が見つかりません',
   'Light theme': 'ライトテーマ',
   'Dark theme': 'ダークテーマ',
-  'System theme': 'システムテーマ',
   // Refresh toasts (default label)
   'data refreshed successfully': 'データを更新しました',
   'Failed to refresh data': 'データの更新に失敗しました',
@@ -563,7 +570,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Focus search': '検索にフォーカス',
   'Set theme to light': 'ライトテーマに設定',
   'Set theme to dark': 'ダークテーマに設定',
-  'Set theme to system': 'システムテーマに設定',
   // Keyboard shortcuts reference: terminal shortcut descriptions
   'Toggle terminal': 'ターミナルの表示を切り替え',
   'Enter full screen': '全画面表示',
@@ -669,8 +675,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Adaptive video streaming, renditions and subtitles':
     'アダプティブ動画ストリーミング、レンディション、字幕',
   'Audit log of project events': 'プロジェクトイベントの監査ログ',
-  'Realtime channels and live messages':
-    'Realtime チャンネルとライブメッセージ',
   'Usage statistics and quotas': '使用統計とクォータ',
   'Website analytics and traffic insights':
     'ウェブサイト分析とトラフィックのインサイト',
@@ -718,7 +722,28 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Settings · Migrations': '設定 · マイグレーション',
   'Import data from other backends': '他のバックエンドからデータをインポート',
   'Settings · SMTP': '設定 · SMTP',
-  'Security · Firewall rules': 'セキュリティ · ファイアウォールルール',
+  'Settings · Firewall': '設定 · ファイアウォール',
+  'Firewall has moved': 'ファイアウォールの場所が変わりました',
+  'Firewall rules now sit next to what they protect: a Firewall tab on each function and site, and one in project settings for the API.':
+    'ファイアウォールのルールは、保護する対象のそばに移りました。各関数とサイトの「ファイアウォール」タブと、API 用のプロジェクト設定のタブです。',
+  'Got it': '了解',
+  'Open API firewall': 'API のファイアウォールを開く',
+  // Function and site overview cards, filter chips
+  '1 rule': '1 件のルール',
+  '{count} rules': '{count} 件のルール',
+  'vs previous 24 hours': '前の 24 時間と比較',
+  'No blocked traffic yet': 'ブロックされたトラフィックはまだありません',
+  'Denied requests will show up here.':
+    '拒否されたリクエストはここに表示されます。',
+  '24 hours ago': '24 時間前',
+  'No requests yet': 'リクエストはまだありません',
+  'No bandwidth yet': '帯域幅の使用はまだありません',
+  Humans: '人間',
+  Bots: 'ボット',
+  only: 'のみ',
+  On: 'オン',
+  SSR: 'SSR',
+  Static: '静的',
   // Command center: project settings card entries
   'Settings · Project name': '設定 · プロジェクト名',
   'Rename your project': 'プロジェクト名を変更',
@@ -1009,8 +1034,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
     '内蔵の Appwrite CLI ターミナルを切り替え',
   'Connect platforms (web, iOS, Android, Flutter, server)':
     'プラットフォームを接続 (Web、iOS、Android、Flutter、サーバー)',
-  'Browse and test Appwrite REST API endpoints':
-    'Appwrite REST API エンドポイントを閲覧してテスト',
+  'Test REST API endpoints and Realtime subscriptions':
+    'REST API エンドポイントと Realtime サブスクリプションをテスト',
   'Users, teams, sessions and authentication providers':
     'ユーザー、チーム、セッション、認証プロバイダー',
   'Project settings, custom domains, variables, webhooks':
@@ -1166,6 +1191,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   File: 'ファイル',
   Filters: 'フィルター',
   'Filtered by': '絞り込み',
+  'Change operator': '演算子を変更',
+  'Change value': '値を変更',
   Function: '関数',
   Functions: '関数',
   Impersonate: 'なりすまし',
@@ -1314,6 +1341,11 @@ export const jaSharedUiDictionary: Record<string, string> = {
     'Appwrite 2.0 が本日 Product Hunt でローンチ',
   'Appwrite 2.0 on Product Hunt': 'Product Hunt の Appwrite 2.0',
   'Share your take': 'フィードバックを送る',
+  'Just launched': '新登場',
+  'MCP1 by Appwrite: one URL for every MCP server':
+    'Appwrite の MCP1：すべての MCP サーバーを 1 つの URL で',
+  'MCP1 by Appwrite is live': 'Appwrite の MCP1 が登場',
+  'Try MCP1': 'MCP1 を試す',
   'Created by': '作成者',
   'Authorized resources': '認可済みリソース',
   'No scopes granted': '付与されたスコープはありません',
@@ -1353,13 +1385,56 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Load more': 'さらに読み込む',
   'Loading more failed. Try again.':
     'さらに読み込めませんでした。もう一度お試しください。',
-  Experiments: '実験',
-  'Features the quality team can try before they launch. Choices stay in this browser.':
-    '公開前に品質チームが試せる機能です。選択内容はこのブラウザに保存されます。',
+  'Browse Init events': 'Init イベントを見る',
+  'Switch between past and upcoming Init launch weeks.':
+    '過去と今後の Init ローンチ週を切り替えます。',
+  Past: '過去',
+  Upcoming: '近日公開',
+  'AUGUST 31 - SEPTEMBER 4': '8月31日 - 9月4日',
+  'NOVEMBER 30 - DECEMBER 4': '11月30日 - 12月4日',
+  'Starts in': '開始まで',
+  'Join us on our biggest Init ever. 5 days, 5 new product launches. It will be electric.':
+    '過去最大の Init に参加しよう。5日間で5つの新製品をローンチ。電撃的な1週間になります。',
+  "Init 5 is live. Catch today's reveal and the launch stream.":
+    'Init 5 開催中。今日の発表とローンチ配信をお見逃しなく。',
+  'Init 5 is a wrap. Explore every launch and rewatch the streams.':
+    'Init 5 は終了しました。すべてのローンチを確認し、配信をもう一度ご覧ください。',
+  'Introducing Appwrite Analytics': 'Appwrite Analytics のご紹介',
+  'Introducing Appwrite Videos': 'Appwrite Videos のご紹介',
+  'Introducing Appwrite Zero': 'Appwrite Zero のご紹介',
+  'Introducing Appwrite Monitors & Appwrite Beep':
+    'Appwrite Monitors と Appwrite Beep のご紹介',
+  'Introducing Appwrite Reviews': 'Appwrite Reviews のご紹介',
+  'Ask us anything': '何でも聞いてください',
+  'Bring your questions about every Init 5 launch. The team answers live on r/appwrite.':
+    'Init 5 のすべてのローンチについて質問をお寄せください。チームが r/appwrite でライブで回答します。',
+  'The team answered your questions about every Init 5 launch on r/appwrite.':
+    'チームが r/appwrite で Init 5 のすべてのローンチに関する質問に回答しました。',
+  Previews: 'プレビュー',
+  'Early access. Saved in this browser.':
+    '早期アクセスです。このブラウザに保存されます。',
   'Appwrite Analytics': 'Appwrite Analytics',
-  'Show Analytics in the console and track visitors, pages, sources, campaigns, and custom events in a project.':
-    'コンソールにアナリティクスを表示し、プロジェクト内の訪問者、ページ、参照元、キャンペーン、カスタムイベントを計測します。',
+  'Visitor, page, and campaign tracking.':
+    '訪問者、ページ、キャンペーンを計測します。',
+  'Appwrite Videos': 'Appwrite Videos',
+  'Transcode, stream, and caption videos.':
+    '動画のトランスコード、配信、字幕付けを行います。',
+  'Project environments': 'プロジェクト環境',
+  'Switch or clone staging and production.':
+    'ステージングと本番を切り替え、複製します。',
   'Repository not available': 'リポジトリを利用できません',
   'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
     'この Git インストールからリポジトリにアクセスできなくなりました。削除された、インストールから外された、または別のインストールに移された可能性があります。デプロイを続けるには、リポジトリを接続し直してください。',
+  // Halloween caution tape
+  Caution: '注意',
+  'Spooky zone': '恐怖ゾーン',
+  // GitHub star wizard
+  'Enjoying Appwrite?': 'Appwriteを楽しんでいますか？',
+  'Appwrite is open source and built in the open. A star helps more developers discover it.':
+    'Appwriteはオープンソースで、オープンに開発されています。スターを付けると、より多くの開発者がAppwriteを見つけやすくなります。',
+  'No thanks': 'いいえ、結構です',
+  'One-time ask, promise. May your builds be ever green.':
+    'お願いするのは今回だけ、約束します。あなたのビルドがいつもグリーンでありますように。',
+  'Settings · Identity servers': '設定 · ID サーバー',
+  'LDAP directory sign-in': 'LDAP ディレクトリでのサインイン',
 }

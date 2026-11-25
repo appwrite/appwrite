@@ -2,6 +2,8 @@
 
 namespace Utopia\Query\Builder;
 
+use Utopia\Query\AST\Serializer;
+use Utopia\Query\AST\Serializer\ClickHouse as ClickHouseSerializer;
 use Utopia\Query\Builder as BaseBuilder;
 use Utopia\Query\Builder\ClickHouse\Format;
 use Utopia\Query\Builder\ClickHouse\FormattedInsertStatement;
@@ -26,6 +28,9 @@ use Utopia\Query\Exception\ValidationException;
 use Utopia\Query\Hook\Join\Placement;
 use Utopia\Query\Query;
 use Utopia\Query\QuotesIdentifiers;
+use Utopia\Query\StringLiteral;
+use Utopia\Query\Tokenizer\ClickHouse as ClickHouseTokenizer;
+use Utopia\Query\Tokenizer\Tokenizer;
 
 class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, TableSampling, FullOuterJoins, StringAggregates, StatisticalAggregates, BitwiseAggregates, LimitBy, ArrayJoins, AsofJoins, WithFill, Rollup, Cube, Totals, ApproximateAggregates, RawSql, CrossJoins
 {
@@ -42,6 +47,8 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
     use Trait\RawSql;
     use Trait\StatisticalAggregates;
     use Trait\StringAggregates;
+
+    protected StringLiteral $literal = StringLiteral::BackslashUtf8;
 
     /**
      * @var array<Query>
@@ -96,6 +103,18 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
      */
     protected string $deleteMode = self::DELETE_MODE_LIGHTWEIGHT;
 
+    #[\Override]
+    protected function createAstSerializer(): Serializer
+    {
+        return new ClickHouseSerializer($this->literal);
+    }
+
+    #[\Override]
+    protected function createTokenizer(): Tokenizer
+    {
+        return new ClickHouseTokenizer($this->literal);
+    }
+
     /**
      * Add PREWHERE filters (evaluated before reading all columns — major ClickHouse optimization)
      *
@@ -137,7 +156,7 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
     #[\Override]
     public function hint(string $hint): static
     {
-        if (!\preg_match('/^[A-Za-z0-9_=., ]+$/', $hint)) {
+        if (!\preg_match('/^[A-Za-z0-9_=., ]+$/D', $hint)) {
             throw new ValidationException('Invalid hint: ' . $hint);
         }
 
@@ -207,7 +226,7 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
      */
     public function insertFormat(string $format, array $columns = []): static
     {
-        if (!\preg_match('/^[A-Za-z][A-Za-z0-9_]*$/', $format)) {
+        if (!\preg_match('/^[A-Za-z][A-Za-z0-9_]*$/D', $format)) {
             throw new ValidationException('Invalid ClickHouse INSERT format: ' . $format);
         }
 
@@ -255,13 +274,13 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
     public function settings(array $settings): static
     {
         foreach ($settings as $key => $value) {
-            if (!\preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $key)) {
+            if (!\preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/D', $key)) {
                 throw new ValidationException('Invalid ClickHouse setting key: ' . $key);
             }
 
             $value = (string) $value;
 
-            if (!\preg_match('/^[a-zA-Z0-9_.]+$/', $value)) {
+            if (!\preg_match('/^[a-zA-Z0-9_.]+$/D', $value)) {
                 throw new ValidationException('Invalid ClickHouse setting value: ' . $value);
             }
 
@@ -439,7 +458,7 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
      */
     public function withParamType(string $column, string $type): static
     {
-        if (! \preg_match('/^[A-Za-z][A-Za-z0-9_]*(?:\((?:[^()]*|\([^()]*\))*\))?$/', $type)) {
+        if (! \preg_match('/^[A-Za-z][A-Za-z0-9_]*(?:\((?:[^()]*|\([^()]*\))*\))?$/D', $type)) {
             throw new ValidationException('Invalid ClickHouse type: ' . $type);
         }
 
@@ -600,7 +619,6 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
         /** @var string $rawVal */
         $rawVal = $values[0];
 
-        // startsWith: prefix='', suffix='%'
         if ($prefix === '' && $suffix === '%') {
             $func = $not ? 'NOT startsWith' : 'startsWith';
             $this->addBinding($rawVal, $column);
@@ -608,7 +626,6 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
             return $func . '(' . $attribute . ', ?)';
         }
 
-        // endsWith: prefix='%', suffix=''
         if ($prefix === '%' && $suffix === '') {
             $func = $not ? 'NOT endsWith' : 'endsWith';
             $this->addBinding($rawVal, $column);
@@ -616,12 +633,9 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
             return $func . '(' . $attribute . ', ?)';
         }
 
-        // Fallback for any other LIKE pattern (should not occur in practice)
-        $val = $this->escapeLikeValue($rawVal);
-        $this->addBinding($prefix . $val . $suffix, $column);
-        $keyword = $not ? 'NOT LIKE' : 'LIKE';
+        $this->addBinding($prefix . $this->escapeLikeValue($rawVal) . $suffix, $column);
 
-        return $attribute . ' ' . $keyword . ' ?';
+        return $this->compileLikePredicate($attribute, $not);
     }
 
     /**

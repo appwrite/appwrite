@@ -24,9 +24,27 @@ import {
   isResendUnauthorizedError,
   listResendDomains,
 } from './resend-api'
+import {
+  BIRD_CREDENTIAL_NAME_MAX_LENGTH,
+  BIRD_DOMAINS_URL,
+  BIRD_OAUTH_SCOPES,
+  BIRD_SENDERS_URL,
+  BIRD_SMTP_PORT,
+  BIRD_SMTP_SECURE,
+  BIRD_SMTP_USERNAME,
+  birdSmtpHost,
+} from './bird'
+import {
+  createBirdCredential,
+  createBirdSmsCredential,
+  deleteBirdCredential,
+  isBirdUnauthorizedError,
+  listBirdDomains,
+  listBirdSmsSenders,
+} from './bird-api'
 import type { QuickSetupDomain } from './quick-setup'
 
-export type SmtpQuickSetupProviderId = 'resend' | 'mailgun' | 'sendgrid'
+export type SmtpQuickSetupProviderId = 'resend' | 'bird' | 'mailgun'
 
 /** A sending credential minted at the provider; `secret` becomes the SMTP password. */
 export interface SmtpQuickSetupCredential {
@@ -47,6 +65,20 @@ export interface SmtpQuickSetupApi {
   isUnauthorizedError(error: unknown): boolean
 }
 
+/**
+ * SMS calls for the messaging wizard's SMS one-click setup, on providers that
+ * also send SMS. Senders reuse the domain shape so the same picker lists them.
+ */
+export interface SmsQuickSetupApi {
+  listSenders(accessToken: string): Promise<QuickSetupDomain[]>
+  createCredential(
+    accessToken: string,
+    input: { name: string },
+  ): Promise<SmtpQuickSetupCredential>
+  /** Where the user manages SMS senders at the provider. */
+  sendersUrl: string
+}
+
 export interface SmtpQuickSetupProvider {
   id: SmtpQuickSetupProviderId
   name: string
@@ -62,12 +94,16 @@ export interface SmtpQuickSetupProvider {
   connectLabel: string
   setupTitle: string
   disconnectTitle: string
+  /** What the minted credential can do, shown next to the domain picker. */
+  credentialDescription: string
+  /** Relay settings, resolved for the selected sending domain. */
   smtp: {
-    host: string
+    /** Bird runs one relay per region, and each domain lives in one. */
+    host: (domain: QuickSetupDomain) => string
     port: number
     secure: 'tls' | 'ssl'
-    /** Mailgun uses `postmaster@<domain>`, so this resolves per selected domain. */
-    username: (domainName: string) => string
+    /** Mailgun uses `postmaster@<domain>`. */
+    username: (domain: QuickSetupDomain) => string
   }
   /** Where the user manages sending domains at the provider. */
   domainsUrl: string
@@ -76,6 +112,8 @@ export interface SmtpQuickSetupProvider {
   /** Console OAuth2 provider that issues an access token for this provider. */
   oauth?: { provider: OAuthProvider; scopes: string[] }
   api?: SmtpQuickSetupApi
+  /** Bird also sends SMS, with a key minted by the same authorization. */
+  sms?: SmsQuickSetupApi
 }
 
 /** Provider entry that the flow can actually run end to end. */
@@ -91,8 +129,10 @@ export const SMTP_QUICK_SETUP_PROVIDERS: readonly SmtpQuickSetupProvider[] = [
     connectLabel: 'Connect with Resend',
     setupTitle: 'Set up SMTP with Resend',
     disconnectTitle: 'Disconnect Resend',
+    credentialDescription:
+      'The credential is restricted to this domain and can only send email.',
     smtp: {
-      host: RESEND_SMTP_HOST,
+      host: () => RESEND_SMTP_HOST,
       port: RESEND_SMTP_PORT,
       secure: RESEND_SMTP_SECURE,
       username: () => RESEND_SMTP_USERNAME,
@@ -109,6 +149,39 @@ export const SMTP_QUICK_SETUP_PROVIDERS: readonly SmtpQuickSetupProvider[] = [
     },
   },
   {
+    id: 'bird',
+    name: 'Bird',
+    iconPath: '/icons/bird.svg',
+    tagline: 'Creates an API key that can only send email.',
+    connectLabel: 'Connect with Bird',
+    setupTitle: 'Set up SMTP with Bird',
+    disconnectTitle: 'Disconnect Bird',
+    credentialDescription:
+      'The credential can only send email. It is not tied to a domain, so pick the one your sender address uses.',
+    smtp: {
+      // Domains are listed with the access token, whose prefix names the region.
+      host: (domain) => (domain.region ? birdSmtpHost(domain.region) : ''),
+      port: BIRD_SMTP_PORT,
+      secure: BIRD_SMTP_SECURE,
+      username: () => BIRD_SMTP_USERNAME,
+    },
+    domainsUrl: BIRD_DOMAINS_URL,
+    credentialNameMaxLength: BIRD_CREDENTIAL_NAME_MAX_LENGTH,
+    analyticsAction: 'smtp-quick-setup-bird',
+    oauth: { provider: OAuthProvider.Bird, scopes: BIRD_OAUTH_SCOPES },
+    api: {
+      listDomains: listBirdDomains,
+      createCredential: createBirdCredential,
+      deleteCredential: deleteBirdCredential,
+      isUnauthorizedError: isBirdUnauthorizedError,
+    },
+    sms: {
+      listSenders: listBirdSmsSenders,
+      createCredential: createBirdSmsCredential,
+      sendersUrl: BIRD_SENDERS_URL,
+    },
+  },
+  {
     id: 'mailgun',
     name: 'Mailgun',
     iconPath: '/icons/mailgun.svg',
@@ -116,35 +189,18 @@ export const SMTP_QUICK_SETUP_PROVIDERS: readonly SmtpQuickSetupProvider[] = [
     connectLabel: 'Connect with Mailgun',
     setupTitle: 'Set up SMTP with Mailgun',
     disconnectTitle: 'Disconnect Mailgun',
+    credentialDescription:
+      'The credential is restricted to this domain and can only send email.',
     smtp: {
-      host: 'smtp.mailgun.org',
+      host: () => 'smtp.mailgun.org',
       port: 587,
       secure: 'tls',
-      username: (domainName) => `postmaster@${domainName}`,
+      username: (domain) => `postmaster@${domain.name}`,
     },
     domainsUrl: 'https://app.mailgun.com/mg/sending/domains',
     credentialNameMaxLength: 64,
     analyticsAction: 'smtp-quick-setup-mailgun',
     // No console OAuth2 provider for Mailgun yet, so this stays "Coming soon".
-  },
-  {
-    id: 'sendgrid',
-    name: 'SendGrid',
-    iconPath: '/icons/sendgrid.svg',
-    tagline: 'Creates a restricted API key with mail send access.',
-    connectLabel: 'Connect with SendGrid',
-    setupTitle: 'Set up SMTP with SendGrid',
-    disconnectTitle: 'Disconnect SendGrid',
-    smtp: {
-      host: 'smtp.sendgrid.net',
-      port: 587,
-      secure: 'tls',
-      username: () => 'apikey',
-    },
-    domainsUrl: 'https://app.sendgrid.com/settings/sender_auth',
-    credentialNameMaxLength: 100,
-    analyticsAction: 'smtp-quick-setup-sendgrid',
-    // No console OAuth2 provider for SendGrid yet, so this stays "Coming soon".
   },
 ]
 

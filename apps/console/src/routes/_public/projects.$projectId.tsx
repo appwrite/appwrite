@@ -14,6 +14,7 @@ import { EducationPlanCurtain } from '@/components/global/layout/EducationPlanCu
 import { BudgetLimitProjectCurtain } from '@/components/global/layout/BudgetLimitProjectCurtain'
 import { PlanUsageLimitProjectCurtain } from '@/components/global/layout/PlanUsageLimitProjectCurtain'
 import { PausedProjectCurtain } from '@/components/global/layout/PausedProjectCurtain'
+import { ZeroExpiredCurtain } from '@/components/global/layout/ZeroExpiredCurtain'
 import { hasActiveProjectBlock } from '@/lib/project-blocks'
 import { RealtimeProvider } from '@/components/global/providers/RealtimeProvider'
 import { BuildNotificationsProvider } from '@/components/global/providers/BuildNotificationsProvider'
@@ -23,8 +24,8 @@ import { OrganizationFailedInvoiceHeaderBanner } from '@/components/global/share
 import { OrganizationInvoiceAuthorizeHeaderBanner } from '@/components/global/shared/OrganizationInvoiceAuthorizeHeaderBanner'
 import { OrganizationPlanLimitHeaderBanner } from '@/components/global/shared/OrganizationPlanLimitHeaderBanner'
 import {
-  fetchProject,
-  fetchOrganizationById,
+  productionProjectQueryOptions,
+  projectQueryOptions,
   organizationPlanQueryOptions,
   organizationQueryOptions,
   organizationScopesQueryOptions,
@@ -37,6 +38,7 @@ import {
   isBudgetLimitReached,
   isPlanUsageLimitReached,
   isProjectLockedByPlanUsage,
+  isProjectLockedByProjectUsage,
   resolveProjectTeamIdFromConsole,
   useOrganizationById,
 } from '@/lib/react-query/hooks'
@@ -48,6 +50,7 @@ import {
 import { consoleVariablesQueryOptions } from '@/lib/react-query/hooks/console-variables'
 import { ErrorComponent } from '@/components/error/Component'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
+import { ZeroBanner } from '@/components/global/shared/ZeroBanner'
 import { PostgresPromoBanner } from '@/components/global/shared/PostgresPromoBanner'
 import { reportConsoleAccess } from '@/lib/appwrite/console-access'
 import {
@@ -55,6 +58,7 @@ import {
   registerProjectRegionFromProject,
 } from '@/lib/project-region'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useIsZeroAccount } from '@/hooks/use-zero-account'
 import { ProjectCliShellLayout } from '@/components/global/cli-shell/ProjectCliShellLayout'
 import {
   isHttpNotFoundError,
@@ -66,6 +70,13 @@ import {
   INITIAL_LOADER_SHELL_GATE,
   setInitialLoaderShellGate,
 } from '@/lib/initial-loader/shell-gates'
+import { ProjectEnvironmentBanner } from '@/components/pages/projects/$projectId/shared/ProjectEnvironmentBanner'
+import {
+  getActiveEnvironmentId,
+  restoreActiveEnvironment,
+  setActiveEnvironment,
+} from '@/lib/active-environment'
+import { projectEnvironmentId } from '@/lib/project-environments'
 /** Tab segment for routes under `.../tables/:tableId/<tab>` or `.../collections/:id/<tab>` */
 const DATABASE_TABLE_VIEW_TABS = new Set([
   'rows',
@@ -178,6 +189,7 @@ function ProjectAccessErrorView({
       <div className="sticky top-0 z-[110] flex shrink-0 flex-col bg-background">
         <CloudStatusBanner />
         <ConsoleImpersonationBanner />
+        <ZeroBanner />
       </div>
       <main className="min-h-0 flex-1 overflow-y-auto">
         <ErrorComponent error={error} info={undefined} reset={reset} />
@@ -193,7 +205,12 @@ function ProjectRouteErrorComponent({
   error: unknown
   reset: () => void
 }) {
-  return <ProjectAccessErrorView error={error instanceof Error ? error : new Error(String(error))} reset={reset} />
+  return (
+    <ProjectAccessErrorView
+      error={error instanceof Error ? error : new Error(String(error))}
+      reset={reset}
+    />
+  )
 }
 
 export const Route = createFileRoute('/_public/projects/$projectId')({
@@ -217,6 +234,12 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
       return EMPTY_PROJECT_LAYOUT_CONTEXT
     }
 
+    // Before anything is fetched: the environment the Console is in for this
+    // project decides what every project request below and in the child loaders
+    // acts on, and which cache it fills. Restored from session storage so a reload
+    // and a fresh navigation both land in the same environment.
+    restoreActiveEnvironment(projectId)
+
     // Region lookup may fail with 402 when budget-locked; ignore and continue.
     await ensureProjectRegion(context.queryClient, projectId).catch(() => {})
 
@@ -236,15 +259,35 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     // Always resolve the project first. Throwing on access errors stops the
     // rest of the match (child beforeLoad + loaders) so nested pages cannot
     // re-fetch project.get and hang the fullscreen loader.
-    let projectData: Awaited<ReturnType<typeof fetchProject>>
+    const ensureProject = () =>
+      context.queryClient.ensureQueryData(projectQueryOptions(projectId))
+    let projectData: Awaited<ReturnType<typeof ensureProject>>
     try {
-      projectData = await context.queryClient.ensureQueryData({
-        queryKey: ['project', projectId],
-        queryFn: () => fetchProject(projectId),
-        staleTime: 5 * 60 * 1000,
-        retry: false,
+      // The restored environment may have been deleted while this tab was
+      // elsewhere, which fails the fetch with the header set. Leave it, which
+      // drops the failed query, and load the project itself rather than carry a
+      // dead environment on every request. Other errors are handled below.
+      projectData = await ensureProject().catch((projectError: unknown) => {
+        if (
+          !getActiveEnvironmentId(projectId) ||
+          getAppwriteErrorInfo(projectError).type !==
+            'project_environment_not_found'
+        ) {
+          throw projectError
+        }
+        setActiveEnvironment(projectId, null)
+        return ensureProject()
       })
       registerProjectRegionFromProject(projectData)
+
+      // Inside an environment the project answers as the environment. The header
+      // names the project it belongs to before it, so that is resolved before
+      // the layout renders rather than popping in beside the environment's name.
+      if (projectEnvironmentId(projectData)) {
+        await context.queryClient
+          .ensureQueryData(productionProjectQueryOptions(projectId))
+          .catch(() => {})
+      }
 
       // Self-hosted usage availability is a backend capability. Resolve the
       // public Console variable before child route guards and navigation render.
@@ -307,8 +350,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
       // Fresh fetch so we do not reuse a cached org payload that omitted billingLimits
       const organization = await context.queryClient
         .fetchQuery({
-          queryKey: ['organization', teamId],
-          queryFn: () => fetchOrganizationById(teamId),
+          ...organizationQueryOptions(teamId),
           staleTime: 30 * 1000,
         })
         .catch(() => null)
@@ -319,7 +361,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
       // leave the project open so customers can delete resources.
       const planUsageLimitReached =
         !budgetLimitReached &&
-        (isProjectLockedByPlanUsage(projectData) ||
+        (isProjectLockedByProjectUsage(projectData) ||
           isProjectLockedByPlanUsage(organization))
 
       if (budgetLimitReached || planUsageLimitReached) {
@@ -376,12 +418,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     if (projectBlocked) {
       const blockedFeatures = getActiveProfileFeatures()
       const projectData = await queryClient
-        .ensureQueryData({
-          queryKey: ['project', projectId],
-          queryFn: () => fetchProject(projectId),
-          staleTime: 5 * 60 * 1000,
-          retry: false,
-        })
+        .ensureQueryData(projectQueryOptions(projectId))
         .catch(() => null)
 
       registerProjectRegionFromProject(projectData)
@@ -413,12 +450,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     try {
       const features = getActiveProfileFeatures()
       const [projectData] = await Promise.all([
-        queryClient.ensureQueryData({
-          queryKey: ['project', projectId],
-          queryFn: () => fetchProject(projectId),
-          staleTime: 5 * 60 * 1000, // 5 minutes
-          retry: false,
-        }),
+        queryClient.ensureQueryData(projectQueryOptions(projectId)),
         // Header ProjectSelector uses useOrganizations; prefetch so navigation does not flash skeleton
         queryClient
           .ensureQueryData(organizationsQueryOptions())
@@ -430,37 +462,37 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
 
       registerProjectRegionFromProject(projectData)
 
-      // Fetch organization plan if we have a teamId (critical for header/limit checking)
-      if (projectData?.teamId) {
-        if (features.billing) {
-          await queryClient
-            .ensureQueryData(organizationPlanQueryOptions(projectData.teamId))
-            .catch(() => {})
-          // Keep org billingLimits warm for plan-usage curtain first paint
-          await queryClient
-            .ensureQueryData(organizationQueryOptions(projectData.teamId))
-            .catch(() => {})
-          await prefetchOrganizationInvoiceDataIfAllowed(
-            queryClient,
-            projectData.teamId,
-          )
-        }
-        if (features.orgRoles) {
-          await queryClient
-            .ensureQueryData(
-              organizationScopesQueryOptions(projectData.teamId, projectId),
-            )
-            .catch(() => {})
-        }
+      // These inputs to the project shell are independent once its team is known.
+      const teamId = projectData?.teamId
+      const shellQueries: Promise<unknown>[] = []
+      if (teamId && features.billing) {
+        shellQueries.push(
+          queryClient
+            .ensureQueryData(organizationPlanQueryOptions(teamId))
+            .catch(() => {}),
+          queryClient
+            .ensureQueryData(organizationQueryOptions(teamId))
+            .catch(() => {}),
+          prefetchOrganizationInvoiceDataIfAllowed(queryClient, teamId),
+        )
       }
-
-      // Prefetch console variables (CNAME, A, AAAA, nameservers, CAA) for domain verification.
-      // Skip heavy background work when the project is plan-locked.
+      if (teamId && features.orgRoles) {
+        shellQueries.push(
+          queryClient
+            .ensureQueryData(organizationScopesQueryOptions(teamId, projectId))
+            .catch(() => {}),
+        )
+      }
       if (!planUsageLimitReached) {
-        await queryClient
-          .ensureQueryData(consoleVariablesQueryOptions(projectData?.region))
-          .catch(() => {})
+        shellQueries.push(
+          queryClient
+            .ensureQueryData(consoleVariablesQueryOptions(projectData?.region))
+            .catch(() => {}),
+        )
+      }
+      await Promise.all(shellQueries)
 
+      if (!planUsageLimitReached) {
         // Warm API explorer specs in the background so Explorer opens without a loading state.
         void queryClient
           .prefetchQuery(apiExplorerSpecQueryOptions('server'))
@@ -517,6 +549,7 @@ function ProjectLayout() {
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [hidePausedCurtain, setHidePausedCurtain] = useState(false)
+  const isZero = useIsZeroAccount()
   const loaderData = Route.useLoaderData() as ProjectLayoutLoaderData
   const routeContext = Route.useRouteContext()
   const {
@@ -600,7 +633,7 @@ function ProjectLayout() {
       (routeContext.planUsageLimitReached === true ||
         loaderData?.planUsageLimitReached === true ||
         isProjectLockedByPlanUsage(billingOrganization) ||
-        isProjectLockedByPlanUsage(project)),
+        isProjectLockedByProjectUsage(project)),
   )
 
   const projectBlocked = Boolean(
@@ -610,17 +643,21 @@ function ProjectLayout() {
         loaderData?.projectBlocked === true ||
         hasActiveProjectBlock(projectData, projectId)),
   )
-  const planUsageBillingLimits =
-    billingOrganization?.billingLimits &&
-    isPlanUsageLimitReached(billingOrganization)
-      ? billingOrganization.billingLimits
-      : project?.billingLimits
+  // The curtain names whichever limit locked the project: the organization's,
+  // or the project's own bandwidth on plans that bill other overage.
+  const planUsageCurtainLimits = isProjectLockedByPlanUsage(
+    billingOrganization,
+  )
+    ? billingOrganization?.billingLimits
+    : project?.billingLimits
+  // A project's own limits come from plans that bill overage, so only the
+  // organization's limits mean API access is suspended.
+  const planUsageBillingLimits = billingOrganization?.billingLimits
   const showPlanUsageLimitBanner =
     !budgetLimitReached &&
     !planUsageLimitReached &&
     features.billing &&
-    (isPlanUsageLimitReached(billingOrganization) ||
-      isPlanUsageLimitReached(project))
+    isPlanUsageLimitReached(billingOrganization)
 
   const skipInvoiceBanners =
     budgetLimitReached || planUsageLimitReached || projectBlocked
@@ -744,9 +781,8 @@ function ProjectLayout() {
     isDatabaseVisualizerView ||
     activeSection === 'usage' ||
     activeSection === 'activity' ||
-    activeSection === 'realtime' ||
     activeSection === 'storage' ||
-    activeSection === 'explorer' ||
+    activeSection === 'playground' ||
     activeSection === 'agents' ||
     isFunctionsEditorView ||
     isFunctionExecutionsTab ||
@@ -846,7 +882,7 @@ function ProjectLayout() {
       ) : planUsageLimitReached ? (
         <PlanUsageLimitProjectCurtain
           teamId={budgetCurtainTeamId}
-          billingLimits={planUsageBillingLimits}
+          billingLimits={planUsageCurtainLimits}
         />
       ) : projectBlocked && projectForPaused?.teamId ? (
         <BlockedProjectCurtain teamId={projectForPaused.teamId} />
@@ -855,7 +891,9 @@ function ProjectLayout() {
         teamIdForBilling ? (
         <EducationPlanCurtain orgId={teamIdForBilling} />
       ) : null}
-      {isPaused && projectForPaused && (
+      {isPaused && projectForPaused && isZero ? (
+        <ZeroExpiredCurtain />
+      ) : isPaused && projectForPaused && (
         <PausedProjectCurtain
           projectId={projectForPaused.$id}
           teamId={projectForPaused.teamId}
@@ -878,6 +916,7 @@ function ProjectLayout() {
             }}
             headerBanner={
               <>
+                <ProjectEnvironmentBanner projectId={projectId} />
                 <PostgresPromoBanner />
                 <OrganizationFailedInvoiceHeaderBanner
                   organizationId={teamIdForBilling}

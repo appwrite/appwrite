@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import { Loader2 } from 'lucide-react'
 import {
   Dialog,
@@ -16,6 +15,7 @@ import { useT } from '@/lib/i18n/translate'
 import {
   VerifySmtpDomainContent,
   dnsPendingVerificationError,
+  domainVerificationError,
 } from './VerifySmtpDomainContent'
 
 interface VerifySmtpDomainProps {
@@ -37,7 +37,6 @@ export function VerifySmtpDomain({
   onVerifySuccess,
 }: VerifySmtpDomainProps) {
   const t = useT()
-  const queryClient = useQueryClient()
   const verifyMutation = useVerifyDomain(projectId, region)
   const [current, setCurrent] = useState(rule)
   const [verificationError, setVerificationError] =
@@ -57,7 +56,6 @@ export function VerifySmtpDomain({
         current.$id,
       )) as SmtpProxyRule
       if (updated.status === 'verified') {
-        await queryClient.refetchQueries({ queryKey: ['proxy-rules'] })
         toast.success(t('Email domain verified'))
         onOpenChange(false)
         onVerifySuccess()
@@ -65,8 +63,8 @@ export function VerifySmtpDomain({
         setCurrent(updated)
         setVerificationError(dnsPendingVerificationError(t))
       }
-    } catch {
-      setVerificationError(dnsPendingVerificationError(t))
+    } catch (err) {
+      setVerificationError(domainVerificationError(t, err))
     }
   }
 

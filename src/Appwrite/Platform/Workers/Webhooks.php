@@ -80,7 +80,7 @@ class Webhooks extends Action
         }
 
         $events = $payload['events'];
-        $webhookPayload = json_encode($payload['payload']);
+        $webhookPayload = !empty($payload['body']) ? $payload['body'] : json_encode($payload['payload']);
         $user = new Document($payload['user'] ?? []);
 
         Span::add('project.id', $project->getId());
@@ -377,6 +377,7 @@ class Webhooks extends Action
             $publisherForNotifications->enqueue(new NotificationMessage(
                 project: $project,
                 recipients: $recipients,
+                template: MAIL_TEMPLATE_WEBHOOK_FAILED,
                 deduplicationKey: 'webhook:' . $webhook->getId() . ':paused:' . $webhook->getUpdatedAt(),
                 subject: $subject,
                 bodyTemplate: __DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl',

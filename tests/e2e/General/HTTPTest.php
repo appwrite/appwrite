@@ -128,14 +128,14 @@ final class HTTPTest extends Scope
             'host' => 'appwrite.test',
         ], $this->getHeaders()), [], true, false);
 
-        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals(302, $response['headers']['status-code']);
         $this->assertEquals('http://localhost/auth/oauth2/success', $response['headers']['location']);
 
         $response = $this->client->call(Client::METHOD_GET, '/auth/oauth2/failure', \array_merge([
             'host' => 'appwrite.test',
         ], $this->getHeaders()), [], true, false);
 
-        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals(302, $response['headers']['status-code']);
         $this->assertEquals('http://localhost/auth/oauth2/failure', $response['headers']['location']);
     }
 

@@ -1,0 +1,20 @@
+---
+layout: changelog
+title: "Firewall rules can now match on session age and MFA age"
+date: 2026-10-29
+tags: firewall, auth, security
+---
+
+[**Firewall**](/docs/products/firewall) rules have two new [conditions](/docs/products/firewall/conditions), **Session age** and **MFA age**, under a new **Authentication** group in the rule builder. Use them to make sensitive endpoints require a recent sign-in or a recent MFA challenge.
+
+- **Session age** is the time since the user's session was created.
+- **MFA age** is the time since the user last completed an MFA challenge.
+
+Both support greater than, greater than or equal, less than, less than or equal, is empty, and is not empty. Enter the value in seconds, minutes, hours, or days, and the Console sends it in seconds.
+
+On API rules, guests and API keys have no session, so these attributes are empty for them. Add a separate **is empty** rule to block them. On Functions rules, the value comes from the user JWT. Sites rules don't offer these conditions.
+
+
+{% arrow_link href="/docs/products/firewall/conditions" %}
+Read the firewall conditions docs
+{% /arrow_link %}

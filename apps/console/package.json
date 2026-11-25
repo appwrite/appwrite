@@ -59,8 +59,8 @@
     "benchmark:init-memory": "bun run scripts/benchmark-init-memory.ts"
   },
   "dependencies": {
-    "@appwrite.io/console": "https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@72189c489364c30b89f2cac2d07c21f5b269f32f",
-    "@appwrite.io/specs": "github:appwrite/specs#83b9f17549a0735f29ec89600160ee9cdc9ededd",
+    "@appwrite.io/console": "https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@0bf35c963e692ad8881086cb0821877bbd301452",
+    "@appwrite.io/specs": "github:appwrite/specs#753c42642c9386bf802a59fbc6f7baa54e7b5e3d",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -135,6 +135,7 @@
     "motion": "^12.23.22",
     "next-themes": "^0.4.6",
     "node-appwrite": "^20.2.1",
+    "node-html-markdown": "^2.0.0",
     "prism-react-renderer": "^2.4.1",
     "prismjs": "^1.30.0",
     "react": "19.1.1",
@@ -167,7 +168,11 @@
     "@tanstack/react-store": "^0.11.2",
     "@tanstack/store": "^0.11.2",
     "dompurify": "^3.4.17",
-    "sharp": "^0.35.5"
+    "sharp": "^0.35.5",
+    "glob": "^14.0.2",
+    "ip-address": "^10.7.4",
+    "seroval": "^1.6.11",
+    "seroval-plugins": "^1.6.11"
   },
   "pnpm": {
     "overrides": {
@@ -176,12 +181,19 @@
       "@tanstack/react-store": "^0.11.2",
       "@tanstack/store": "^0.11.2",
       "dompurify": "^3.4.17",
-      "sharp": "^0.35.5"
+      "sharp": "^0.35.5",
+      "glob": "^14.0.2",
+      "ip-address": "^10.7.4",
+      "seroval": "^1.6.11",
+      "seroval-plugins": "^1.6.11"
     }
   },
   "devDependencies": {
+    "@happy-dom/global-registrator": "^21.0.4",
     "@playwright/test": "^1.58.2",
     "@tanstack/router-cli": "1.167.40",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
     "@types/bun": "^1.4.0",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.12.0",
@@ -194,10 +206,12 @@
     "editorconfig-checker": "6.2.0",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-unused-imports": "^4.3.0",
+    "happy-dom": "^21.0.4",
     "prettier": "^3.5.3",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.50.0",
     "vite": "npm:rolldown-vite@7.3.1",
-    "vite-plugin-devtools-json": "^1.0.0"
+    "vite-plugin-devtools-json": "^1.0.0",
+    "webmcp-types": "^0.1.10"
   }
 }

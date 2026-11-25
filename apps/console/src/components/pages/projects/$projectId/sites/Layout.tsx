@@ -4,6 +4,7 @@ import {
   useParams,
   useNavigate,
   useLocation,
+  useRouterState,
 } from '@tanstack/react-router'
 import {
   useQueryClient,
@@ -21,7 +22,12 @@ import {
   useOrganizationScopes,
   cancelSiteDeployment,
 } from '@/lib/react-query/hooks'
-import { canShowSiteSettingsTab } from '@/lib/console-access-checks'
+import {
+  canSeeProjectNavItem,
+  canSeeUsageNav,
+  canShowSiteSettingsTab,
+} from '@/lib/console-access-checks'
+import { isCloudProfile } from '@/lib/console-profiles'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { Button } from '@/components/ui/button'
 import {
@@ -67,7 +73,7 @@ import {
   useSettingsRedeployPending,
 } from '@/lib/utils/settings-redeploy-alert'
 
-/** When provided, Deployments view renders this below the active deployment card (filter + create). */
+/** When provided, Deployments view renders this below the header (filter + create). */
 export const DeploymentsToolbarContext =
   React.createContext<React.ReactNode>(null)
 
@@ -83,6 +89,9 @@ function SiteLayoutContent() {
   const t = useT()
   const { projectId, siteId } = useParams({ strict: false })
   const location = useLocation()
+  const resolvedPathname = useRouterState({
+    select: (s) => s.resolvedLocation?.pathname ?? s.location.pathname,
+  })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { triggerRefresh, hasRefreshHandler } = useRefresh()
@@ -93,22 +102,30 @@ function SiteLayoutContent() {
   const { data: site } = useProjectSite(projectId, siteId)
 
   const activeTab = useMemo(() => {
-    const pathParts = location.pathname.split('/').filter(Boolean)
+    const pathParts = resolvedPathname.split('/').filter(Boolean)
     const sitesIndex = pathParts.findIndex((part) => part === 'sites')
 
     if (sitesIndex >= 0 && pathParts[sitesIndex + 2]) {
       const tab = pathParts[sitesIndex + 2]
       if (
-        ['deployments', 'logs', 'domains', 'variables', 'settings'].includes(
-          tab,
-        )
+        [
+          'overview',
+          'deployments',
+          'logs',
+          'runtime-logs',
+          'domains',
+          'usage',
+          'firewall',
+          'variables',
+          'settings',
+        ].includes(tab)
       ) {
         return tab
       }
     }
 
-    return 'deployments'
-  }, [location.pathname])
+    return 'overview'
+  }, [resolvedPathname])
 
   const activeDeploymentId = getRedeploySourceDeploymentId(site)
   const isLogsTab = activeTab === 'logs'
@@ -130,6 +147,11 @@ function SiteLayoutContent() {
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const showSettingsTab = canShowSiteSettingsTab(access, features)
+  const showUsageTab = features.usageStats && canSeeUsageNav(access, features)
+  const showFirewallTab =
+    isCloudProfile() && canSeeProjectNavItem(access, features, 'firewall')
+  // Cloud only: self-hosted doesn't serve `/v1/logs`, even with the flag on.
+  const showRuntimeLogsTab = isCloudProfile() && features.runtimeLogs
 
   const [cancelBuildDialogOpen, setCancelBuildDialogOpen] = useState(false)
   const [redeployDialogOpen, setRedeployDialogOpen] = useState(false)
@@ -297,9 +319,15 @@ function SiteLayoutContent() {
   const tabs: Tab[] = useMemo(
     () => [
       {
+        id: 'overview',
+        label: t('Overview'),
+        to: '/projects/$projectId/sites/$siteId',
+        params: { projectId: projectId!, siteId: siteId! },
+      },
+      {
         id: 'deployments',
         label: t('Deployments'),
-        to: '/projects/$projectId/sites/$siteId',
+        to: '/projects/$projectId/sites/$siteId/deployments',
         params: { projectId: projectId!, siteId: siteId! },
       },
       {
@@ -310,10 +338,41 @@ function SiteLayoutContent() {
       },
       {
         id: 'logs',
-        label: t('Logs'),
+        // Runtime output takes the Logs name once it ships
+        label: showRuntimeLogsTab ? t('Requests') : t('Logs'),
         to: '/projects/$projectId/sites/$siteId/logs',
         params: { projectId: projectId!, siteId: siteId! },
       },
+      ...(showRuntimeLogsTab
+        ? [
+            {
+              id: 'runtime-logs' as const,
+              label: t('Logs'),
+              to: '/projects/$projectId/sites/$siteId/runtime-logs',
+              params: { projectId: projectId!, siteId: siteId! },
+            },
+          ]
+        : []),
+      ...(showUsageTab
+        ? [
+            {
+              id: 'usage' as const,
+              label: t('Usage'),
+              to: '/projects/$projectId/sites/$siteId/usage',
+              params: { projectId: projectId!, siteId: siteId! },
+            },
+          ]
+        : []),
+      ...(showFirewallTab
+        ? [
+            {
+              id: 'firewall' as const,
+              label: t('Firewall'),
+              to: '/projects/$projectId/sites/$siteId/firewall',
+              params: { projectId: projectId!, siteId: siteId! },
+            },
+          ]
+        : []),
       ...(showSettingsTab
         ? [
             {
@@ -331,7 +390,15 @@ function SiteLayoutContent() {
           ]
         : []),
     ],
-    [projectId, siteId, showSettingsTab, t],
+    [
+      projectId,
+      siteId,
+      showUsageTab,
+      showFirewallTab,
+      showRuntimeLogsTab,
+      showSettingsTab,
+      t,
+    ],
   )
 
   // Redirect from settings or variables when user lacks permission
@@ -346,7 +413,7 @@ function SiteLayoutContent() {
     }
   }, [showSettingsTab, activeTab, projectId, siteId, navigate])
 
-  const isLogsTabLayout = activeTab === 'logs'
+  const isLogsTabLayout = activeTab === 'logs' || activeTab === 'runtime-logs'
 
   const buildingAlert = isBuilding ? (
     <div className="border-b border-border bg-blue-500/5">
@@ -454,7 +521,12 @@ function SiteLayoutContent() {
             tabs={tabs}
             activeTab={activeTab}
             fullWidthBorder
-            fullWidth={activeTab === 'logs'}
+            fullWidth={
+              activeTab === 'logs' ||
+              activeTab === 'runtime-logs' ||
+              activeTab === 'usage' ||
+              activeTab === 'firewall'
+            }
             showToolbarBottomBorder={isLogsTabLayout}
             showFilters={activeTab === 'logs' || activeTab === 'domains'}
             filterTrigger={
@@ -504,7 +576,6 @@ function SiteLayoutContent() {
                     })
                 : undefined
             }
-            beforeCreateButtons={undefined}
             contentAfterBorder={
               buildingAlert || configAlert ? (
                 <div>
@@ -520,40 +591,38 @@ function SiteLayoutContent() {
         >
           <DeploymentsToolbarContext.Provider
             value={
-              activeTab === 'deployments' ? (
-                <>
-                  <FiltersPopover
-                    open={filtersOpen}
-                    onOpenChange={setFiltersOpen}
-                    columns={siteFilterColumns}
-                    filterMap={siteFilterMap}
-                    onRemoveFilter={removeSiteFilter}
-                    onClearAll={clearAllSiteFilters}
-                    onApplyFilter={applySiteFilter}
-                    resourceLabel={t('deployments')}
-                    filterScope="sites.deployments"
-                    onApplyQuery={(queryParam) => {
-                      navigate({
-                        to: location.pathname,
-                        search: (prev) => ({
-                          ...(typeof prev === 'object' && prev !== null
-                            ? prev
-                            : {}),
-                          query: queryParam ?? undefined,
-                          page: 1,
-                        }),
-                        replace: true,
-                      })
-                    }}
-                    teamId={project?.teamId}
-                  />
-                  <CreateDeploymentDropdown
-                    onSelectGit={() => setGitDeployOpen(true)}
-                    onSelectCli={() => setCliDeployOpen(true)}
-                    onSelectManual={() => setManualDeployOpen(true)}
-                  />
-                </>
-              ) : null
+              <>
+                <FiltersPopover
+                  open={filtersOpen}
+                  onOpenChange={setFiltersOpen}
+                  columns={deploymentsFilterColumns}
+                  filterMap={siteFilterMap}
+                  onRemoveFilter={removeSiteFilter}
+                  onClearAll={clearAllSiteFilters}
+                  onApplyFilter={applySiteFilter}
+                  resourceLabel={t('deployments')}
+                  filterScope="sites.deployments"
+                  onApplyQuery={(queryParam) => {
+                    navigate({
+                      to: location.pathname,
+                      search: (prev) => ({
+                        ...(typeof prev === 'object' && prev !== null
+                          ? prev
+                          : {}),
+                        query: queryParam ?? undefined,
+                        page: 1,
+                      }),
+                      replace: true,
+                    })
+                  }}
+                  teamId={project?.teamId}
+                />
+                <CreateDeploymentDropdown
+                  onSelectGit={() => setGitDeployOpen(true)}
+                  onSelectCli={() => setCliDeployOpen(true)}
+                  onSelectManual={() => setManualDeployOpen(true)}
+                />
+              </>
             }
           >
             <Outlet />

@@ -1,7 +1,17 @@
 import type { ReactNode } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { AnalyticsDimension } from '@appwrite.io/console'
-import { Ban, Copy, ExternalLink, Filter, FilterX, Shield, ShieldCheck, X } from 'lucide-react'
+import {
+  Ban,
+  Copy,
+  ExternalLink,
+  Filter,
+  FilterX,
+  Shield,
+  ShieldCheck,
+  UserRound,
+  X,
+} from 'lucide-react'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -13,7 +23,10 @@ import {
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { copyToClipboard, openInNewTab } from '@/lib/utils/context-menu'
 import { buildFilterQueryString } from '@/lib/table-filters'
-import { analyticsFilterAttributeForDimension } from '@/lib/analytics/analytics-filters'
+import {
+  analyticsFilterAttributeForDimension,
+  type AnalyticsFilterAttribute,
+} from '@/lib/analytics/analytics-filters'
 import {
   firewallAllowOnlyCountryQuery,
   firewallCreateQueryForAnalyticsValue,
@@ -24,6 +37,7 @@ import {
   useAnalyticsFilters,
   useAnalyticsValueMenuContext,
 } from './analytics-filters-context'
+import { isConsolePath } from './BreakdownRow'
 
 /**
  * Right-click menu for a value in an analytics card or "Show more" list:
@@ -33,12 +47,15 @@ import {
  */
 export function AnalyticsValueMenu({
   dimension,
+  attribute: attributeOverride,
   value,
   label,
   href,
   children,
 }: {
   dimension: AnalyticsDimension
+  /** Filter attribute when it isn't the dimension's own (custom props). */
+  attribute?: AnalyticsFilterAttribute | null
   /** Raw value (filters, firewall). */
   value: string
   /** Display value for the menu title (e.g. country name). */
@@ -52,7 +69,10 @@ export function AnalyticsValueMenu({
     useAnalyticsFilters()
   const { projectId, firewallSiteId } = useAnalyticsValueMenuContext()
 
-  const attribute = analyticsFilterAttributeForDimension(dimension)
+  const attribute =
+    attributeOverride !== undefined
+      ? attributeOverride
+      : analyticsFilterAttributeForDimension(dimension)
   const isActive = attribute ? isFilterActive(attribute, value) : false
   const isExcluded = attribute
     ? Array.from(filterMap.keys()).some(
@@ -118,6 +138,12 @@ export function AnalyticsValueMenu({
           <ContextMenuIcon icon={Copy} />
           {t('Copy value')}
         </ContextMenuItem>
+        {href && isConsolePath(href) && dimension === AnalyticsDimension.UserId ? (
+          <ContextMenuItem onSelect={() => navigate({ to: href })}>
+            <ContextMenuIcon icon={UserRound} />
+            {t('View user')}
+          </ContextMenuItem>
+        ) : null}
         {href ? (
           <ContextMenuItem onSelect={() => openInNewTab(href)}>
             <ContextMenuIcon icon={ExternalLink} />

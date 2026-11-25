@@ -1,0 +1,23 @@
+---
+layout: changelog
+title: Announcing Appwrite 2.7.1 for self-hosted deployments
+date: 2026-11-04
+cover: /images/changelog/2026-11-04.avif
+tags: security, functions, sites, infrastructure
+---
+
+Appwrite 2.7.1 is now available for self-hosting. This is a security release for the 2.7 line with several security fixes, including the fix for the runtime vulnerability described in our [November 1st incident report](/blog/post/incident-report-sites-functions-runtime-vulnerability). We strongly recommend upgrading your instance.
+
+Upgrading from 2.7.0 only replaces the images. Read the upgrade notes before you upgrade.
+
+{% arrow_link href="/docs/advanced/self-hosting/installation" %}
+Install Appwrite 2.7.1
+{% /arrow_link %}
+
+{% arrow_link href="/docs/advanced/self-hosting/production/updates#upgrading-to-latest" %}
+Upgrade your self-hosted instance
+{% /arrow_link %}
+
+{% arrow_link href="https://github.com/appwrite/appwrite/releases/tag/2.7.1" %}
+View the release notes on GitHub
+{% /arrow_link %}

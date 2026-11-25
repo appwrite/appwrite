@@ -53,8 +53,31 @@ final class ProxyTest extends TestCase
         $proxy = new Proxy('app.example.com', $app, $app, [$this->recorder('custom', $seen)]);
 
         $proxy->issueCertificate('cert', 'Custom.EXAMPLE.com', null);
+        $proxy->getCertificateExpiry('Custom.EXAMPLE.com', null);
 
-        $this->assertSame(['custom:issue:custom.example.com'], $seen->getArrayCopy());
+        $this->assertSame(['custom:issue:custom.example.com', 'custom:expiry:custom.example.com'], $seen->getArrayCopy());
+    }
+
+    public function testReportsTheEarliestExpiry(): void
+    {
+        $calls = new \ArrayObject();
+        $app = $this->provider('app', Status::ISSUED, false, null, false, $calls, '2027-03-01 00:00:00.000');
+        $unknown = $this->provider('cloudflare', Status::UNKNOWN, true, null, false, $calls);
+        $later = $this->provider('fastly', Status::ISSUED, false, null, false, $calls, '2027-02-01 00:00:00.000');
+        $sooner = $this->provider('cloudfront', Status::ISSUED, false, null, false, $calls, '2027-01-15 00:00:00.000');
+        $proxy = new Proxy('app.example.com', $app, $app, [$unknown, $later, $sooner]);
+
+        // A certificate about to lapse on one provider is not hidden by a newer one on another
+        $this->assertSame('2027-01-15 00:00:00.000', $proxy->getCertificateExpiry('custom.example.com', null));
+        $this->assertSame('2027-03-01 00:00:00.000', $proxy->getCertificateExpiry('app.example.com', null));
+    }
+
+    public function testExpiryIsUnknownWhenNoProviderCanTell(): void
+    {
+        $provider = $this->provider('cloudflare', Status::UNKNOWN, true, null, false, new \ArrayObject());
+        $proxy = new Proxy('app.example.com', $provider, $provider, [$provider, $provider]);
+
+        $this->assertNull($proxy->getCertificateExpiry('custom.example.com', null));
     }
 
     /** @param \ArrayObject<int, mixed> $seen */
@@ -78,6 +101,11 @@ final class ProxyTest extends TestCase
             {
                 return Status::ISSUED;
             }
+            public function getCertificateExpiry(string $domain, ?string $domainType): ?string
+            {
+                $this->seen->append($this->name . ':expiry:' . $domain);
+                return null;
+            }
             public function isRenewRequired(string $domain, ?string $domainType): bool
             {
                 return false;
@@ -98,11 +126,11 @@ final class ProxyTest extends TestCase
     }
 
     /** @param \ArrayObject<int, mixed> $calls */
-    private function provider(string $name, string $status, bool $instant, ?string $date, bool $renew, \ArrayObject $calls): Provider
+    private function provider(string $name, string $status, bool $instant, ?string $date, bool $renew, \ArrayObject $calls, ?string $expiry = null): Provider
     {
-        return new readonly class ($name, $status, $instant, $date, $renew, $calls) implements Provider {
+        return new readonly class ($name, $status, $instant, $date, $renew, $calls, $expiry) implements Provider {
             /** @param \ArrayObject<int, mixed> $calls */
-            public function __construct(private string $name, private string $status, private bool $instant, private ?string $date, private bool $renew, private \ArrayObject $calls)
+            public function __construct(private string $name, private string $status, private bool $instant, private ?string $date, private bool $renew, private \ArrayObject $calls, private ?string $expiry)
             {
             }
             public function issueCertificate(string $certName, string $domain, ?string $domainType): ?string
@@ -117,6 +145,10 @@ final class ProxyTest extends TestCase
             public function getCertificateStatus(string $domain, ?string $domainType): string
             {
                 return $this->status;
+            }
+            public function getCertificateExpiry(string $domain, ?string $domainType): ?string
+            {
+                return $this->expiry;
             }
             public function isRenewRequired(string $domain, ?string $domainType): bool
             {

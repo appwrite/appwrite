@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Organization\Http\Projects\Keys\Ephemeral;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\Key;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event as QueueEvent;
@@ -21,7 +22,6 @@ use Utopia\Database\Id;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
@@ -42,7 +42,7 @@ class Create extends Action
             ->setHttpPath('/v1/organization/projects/:projectId/keys/ephemeral')
             ->desc('Create ephemeral project key')
             ->groups(['api', 'organization'])
-            ->label('scope', ['organization.projects.keys.write', 'keys.write'])
+            ->label('scope', [self::SCOPE_WRITE, 'keys.write'])
             ->label('event', 'keys.[keyId].create')
             ->label('audits.event', 'project.key.create')
             ->label('audits.resource', 'project.key/{response.$id}')
@@ -101,14 +101,14 @@ class Create extends Action
             throw new Exception(Exception::KEY_CREATION_DENIED);
         }
 
-        $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey);
+        $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey, self::SCOPE_WRITE);
 
         // The request may run through the console project; events and audits belong to the resolved project
         $queueForEvents->setProject($project);
         $auditContext->project = $project;
         $keyId = Id::unique();
 
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $duration, 0);
+        $jwt = new JWT(EncryptionKey::current(), 'HS256', $duration, 0);
 
         $secret = $jwt->encode([
             Key::PURPOSE_CLAIM => Key::PURPOSE,

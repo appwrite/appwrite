@@ -17,6 +17,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Id;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime;
 use Utopia\Database\Validator\UID;
@@ -43,7 +44,7 @@ class Create extends Action
             ->setHttpPath('/v1/organization/projects/:projectId/keys')
             ->desc('Create project key')
             ->groups(['api', 'organization'])
-            ->label('scope', ['organization.projects.keys.write', 'keys.write'])
+            ->label('scope', [self::SCOPE_WRITE, 'keys.write'])
             ->label('event', 'keys.[keyId].create')
             ->label('audits.event', 'project.key.create')
             ->label('audits.resource', 'project.key/{response.$id}')
@@ -112,7 +113,7 @@ class Create extends Action
             throw new Exception(Exception::KEY_CREATION_DENIED);
         }
 
-        $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey);
+        $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey, self::SCOPE_WRITE);
 
         // The request may run through the console project; events and audits belong to the resolved project
         $queueForEvents->setProject($project);
@@ -135,7 +136,16 @@ class Create extends Action
         ]);
 
         try {
-            $key = $authorization->skip(fn () => $dbForPlatform->createDocument('keys', $key));
+            // Locked against a transfer claim, which deletes the project's keys as it moves the project:
+            // a key created while the claim runs would otherwise survive it with the previous owner
+            $key = $authorization->skip(fn () => $dbForPlatform->withTransaction(function () use ($dbForPlatform, $project, $key) {
+                $locked = $dbForPlatform->getDocument('projects', $project->getId(), [Query::select(['teamInternalId'])], forUpdate: true);
+                if ($locked->isEmpty() || $locked->getAttribute('teamInternalId') !== $project->getAttribute('teamInternalId')) {
+                    throw new Exception(Exception::PROJECT_NOT_FOUND);
+                }
+
+                return $dbForPlatform->createDocument('keys', $key);
+            }));
         } catch (DuplicateException) {
             throw new Exception(Exception::KEY_ALREADY_EXISTS);
         }

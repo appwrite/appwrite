@@ -5,6 +5,7 @@ import { AppwriteException } from '@appwrite.io/console'
 import { ReactNode, useEffect, useRef, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useConsoleImpersonationRevision } from '@/hooks/use-console-impersonation-revision'
+import { useOpenAiAdsLead } from '@/lib/hooks/useOpenAiAdsLead'
 import { isHttpForbiddenError } from '@/lib/utils/error-formatting'
 import {
   consoleAccountQueryOptions,
@@ -50,6 +51,11 @@ export function isOptionalAuthPage(pathname: string): boolean {
   if (pathname === '/oauth2/consent') return true
   // Native SDK OAuth relays open in a browser with no console session.
   if (pathname.startsWith('/auth/oauth2/')) return true
+  // Alert email unsubscribe links carry a token instead of a session.
+  if (pathname === '/auth/alerts/unsubscribe') return true
+  // Transfer links are opened by whoever they were shared with, signed in or
+  // not; the page asks a guest to sign in and returns to it afterwards.
+  if (pathname === '/transfer') return true
   const features = getActiveProfileFeatures()
   if (pathname === '/init' || pathname.startsWith('/init/')) {
     return isInitSurfaceEnabled()
@@ -76,6 +82,7 @@ export function isOptionalAuthPage(pathname: string): boolean {
   // Debug demos must stay reachable without auth redirects (and without
   // signing the user out via linked auth routes).
   if (pathname.startsWith('/debug/')) return true
+  if (pathname === '/player' || pathname.startsWith('/player/')) return true
   // Do not gate on the marketing feature flag. Debug profile overrides can flip
   // that after hydrate; a guest 401 must not bounce /blog to /sign-in.
   return matchesMarketingPagePath(pathname)
@@ -136,6 +143,8 @@ function shouldSkipDuplicateAuthRedirect(key: string): boolean {
  */
 export function shouldRedirectToConsoleMfa(pathname: string): boolean {
   if (pathname === '/mfa') return false
+  // A guest signing in to claim a transfer finishes MFA and comes back.
+  if (pathname === '/transfer') return true
   return !isOptionalAuthPage(pathname)
 }
 
@@ -313,6 +322,8 @@ export function RequireAuth({
     syncOpenAiAdsUser(accountData)
     maybeMeasureOpenAiAdsRegistrationAfterAuth(accountData)
   }, [accountData])
+
+  useOpenAiAdsLead(error ? undefined : accountData)
 
   useAuthErrorNavigation(error, location)
 

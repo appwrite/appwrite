@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Schedule\Source;
 
+use Appwrite\Schedule\Source\Alerts;
 use Appwrite\Schedule\Source\Functions;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
+use Utopia\Schedule\Clock\Test as TestClock;
 use Utopia\Schedule\Scheduler;
 
 final class DatabaseTest extends TestCase
@@ -99,6 +101,110 @@ final class DatabaseTest extends TestCase
 
         $this->assertSame('project', $entry->payload['project']->getId());
         $this->assertFalse($database->getDocument('schedules', 'schedule')->isEmpty());
+    }
+
+    public function testAlertScheduleNeedsNoProject(): void
+    {
+        $database = $this->alertSchedules();
+        // An escalating alert's next step, due once.
+        $database->documents['schedules']['escalation'] = new Document([
+            '$id' => 'escalation',
+            '$sequence' => '12',
+            'projectId' => 'project',
+            'projectInternalId' => '5',
+            'resourceId' => 'outage',
+            'resourceType' => SCHEDULE_RESOURCE_TYPE_ESCALATION,
+            'schedule' => '2026-10-29 00:10:00.000',
+            'active' => true,
+            'resourceUpdatedAt' => '2026-10-29 00:00:00.000',
+        ]);
+        $source = new Alerts($database, fn (array $schedules): array => \array_fill_keys(\array_map(fn (Document $schedule) => $schedule->getId(), $schedules), 60));
+
+        $entries = [];
+        foreach ($source->snapshot() as $row) {
+            $this->assertTrue($row->active);
+            $entries[(string) $row->data->getAttribute('resourceId')] = $source->make($row);
+        }
+
+        // A monitor without a project, such as an organization's; unlike a function's row, its row is not an orphan.
+        $this->assertSame('spend', $entries['spend']->payload['monitorId']);
+        $this->assertTrue($entries['spend']->payload['project']->isEmpty());
+        $this->assertFalse($database->getDocument('schedules', 'organization')->isEmpty());
+
+        $this->assertSame('egress', $entries['egress']->payload['monitorId']);
+        $this->assertSame('project', $entries['egress']->payload['project']->getId());
+        $this->assertSame('5', $entries['egress']->payload['project']->getSequence());
+
+        // The alert's step fires once, at its time, for the worker to notify by the alert.
+        $this->assertSame('outage', $entries['outage']->payload['alertId']);
+        $this->assertSame('', $entries['outage']->payload['monitorId']);
+        $this->assertSame('project', $entries['outage']->payload['project']->getId());
+        $this->assertFalse($entries['outage']->trigger->recurring());
+        $this->assertEquals(
+            [new \DateTimeImmutable('2026-10-29 00:10:00.000')],
+            $entries['outage']->trigger->occurrencesBetween(new \DateTimeImmutable('2026-10-29 00:00:00'), new \DateTimeImmutable('2026-10-29 01:00:00')),
+        );
+        // An active escalation remains owed after downtime beyond the scheduler's recovery window.
+        $clock = new TestClock(new \DateTimeImmutable('2026-10-29 01:00:00'));
+        $scheduler = new Scheduler($source, clock: $clock);
+        $scheduler->reconcile(true);
+        $scheduler->tick();
+        $scheduler->commit();
+        $clock->advance(1);
+        $this->assertContains('outage', \array_column(\array_column($scheduler->tick(), 'payload'), 'alertId'));
+        $scheduler->commit();
+        $scheduler->reconcile(true);
+        $clock->advance(1);
+        $this->assertNotContains('outage', \array_column(\array_column($scheduler->tick(), 'payload'), 'alertId'));
+    }
+
+    public function testAlertIntervalChangeReschedulesTheMonitor(): void
+    {
+        $database = $this->alertSchedules();
+        $interval = 60;
+        $source = new Alerts($database, function (array $schedules) use (&$interval): array {
+            // The organization's monitor is left out, as for an organization that is gone.
+            return ['rule' => $interval];
+        });
+
+        $before = \iterator_to_array($source->snapshot());
+        $interval = 900;
+        $after = \iterator_to_array($source->snapshot());
+
+        // A new version makes the scheduler rebuild the entry on the new interval,
+        // although the row itself did not change.
+        $this->assertNotSame($before[0]->version, $after[0]->version);
+        $this->assertSame(900, $after[0]->data->getAttribute('interval'));
+        $this->assertFalse($after[1]->active);
+    }
+
+    private function alertSchedules(): ScheduleDatabase
+    {
+        $database = new ScheduleDatabase();
+        $database->documents['schedules'] = [
+            'rule' => new Document([
+                '$id' => 'rule',
+                '$sequence' => '10',
+                'projectId' => 'project',
+                'projectInternalId' => '5',
+                'resourceId' => 'egress',
+                'resourceType' => SCHEDULE_RESOURCE_TYPE_MONITOR,
+                'active' => true,
+                'resourceUpdatedAt' => '2026-10-29 00:00:00.000',
+            ]),
+            'organization' => new Document([
+                '$id' => 'organization',
+                '$sequence' => '11',
+                'projectId' => '',
+                'projectInternalId' => '',
+                'resourceId' => 'spend',
+                'resourceType' => SCHEDULE_RESOURCE_TYPE_MONITOR,
+                'active' => true,
+                'resourceUpdatedAt' => '2026-10-29 00:00:00.000',
+            ]),
+        ];
+
+        return $database;
     }
 
     private function source(ScheduleDatabase $database): Functions

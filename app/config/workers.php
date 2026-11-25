@@ -5,7 +5,11 @@
  *
  * Keys are Platform worker Action names. Each entry is the same shape a single
  * worker used to get from env + defaults — queue name (overridable) and
- * coroutines. databases must stay at 1 (ordered writes / adapter locks).
+ * coroutines. Optional prefetch limits buffered work; maxInFlight limits all
+ * held messages. They default to coroutines and coroutines + prefetch.
+ * Dedicated workers can override them with _APP_WORKER_PREFETCH and
+ * _APP_WORKER_MAX_IN_FLIGHT; combined workers use per-queue configuration.
+ * databases must stay at 1 coroutine (ordered writes / adapter locks).
  */
 
 use Appwrite\Event\Event;
@@ -45,6 +49,8 @@ return [
         'queue' => 'database_db_main',
         'queueEnv' => '_APP_QUEUE_NAME',
         'coroutines' => 1,
+        // Leave the next schema job in the broker until this one is confirmed.
+        'maxInFlight' => 1,
     ],
     'builds' => [
         'queue' => Event::BUILDS_QUEUE_NAME,
@@ -56,10 +62,11 @@ return [
         'queueEnv' => '_APP_JOBS_QUEUE_NAME',
         'coroutines' => 8,
     ],
+    // Each job captures light and dark together, so 4 jobs keep the browser at 8 captures.
     'screenshots' => [
         'queue' => Event::SCREENSHOTS_QUEUE_NAME,
         'queueEnv' => '_APP_SCREENSHOTS_QUEUE_NAME',
-        'coroutines' => 8,
+        'coroutines' => 4,
     ],
     'certificates' => [
         'queue' => Event::CERTIFICATES_QUEUE_NAME,
@@ -86,6 +93,12 @@ return [
         'queueEnv' => '_APP_NOTIFICATIONS_QUEUE_NAME',
         'coroutines' => 1,
     ],
+    // Each job reads one rule's usage and publishes at most one notification.
+    'alerts' => [
+        'queue' => Event::ALERTS_QUEUE_NAME,
+        'queueEnv' => '_APP_ALERTS_QUEUE_NAME',
+        'coroutines' => 8,
+    ],
     'messaging' => [
         'queue' => Event::MESSAGING_QUEUE_NAME,
         'queueEnv' => '_APP_MESSAGING_QUEUE_NAME',
@@ -94,6 +107,11 @@ return [
     'migrations' => [
         'queue' => Event::MIGRATIONS_QUEUE_NAME,
         'queueEnv' => '_APP_MIGRATIONS_QUEUE_NAME',
+        'coroutines' => 1,
+    ],
+    'videos' => [
+        'queue' => Event::VIDEOS_QUEUE_NAME,
+        'queueEnv' => '_APP_VIDEOS_QUEUE_NAME',
         'coroutines' => 1,
     ],
 ];

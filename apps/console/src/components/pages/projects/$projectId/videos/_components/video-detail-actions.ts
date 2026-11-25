@@ -2,14 +2,14 @@ import { createContext, useContext } from 'react'
 
 export type VideoDetailActions = {
   openCreateRenditions: () => void
-  openCreateSubtitle: () => void
+  openCreateCaption: () => void
   canWrite: boolean
   writeDisabledReason: string | null
 }
 
 export const VideoDetailActionsContext = createContext<VideoDetailActions>({
   openCreateRenditions: () => {},
-  openCreateSubtitle: () => {},
+  openCreateCaption: () => {},
   canWrite: false,
   writeDisabledReason: null,
 })

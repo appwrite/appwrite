@@ -9,8 +9,8 @@ use Appwrite\Messaging\Adapter\Push\Appwrite as AppwritePush;
 use Appwrite\Messaging\Provider;
 use Appwrite\Messaging\Status as MessageStatus;
 use Appwrite\Network\Validator\PublicHostname;
-use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
+use Appwrite\Storage\Encryption;
 use Appwrite\Usage\Context as UsageContext;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
@@ -901,7 +901,7 @@ class Messaging extends Action
         do {
             $queries = [
                 Query::equal('topicInternalId', $topicInternalIds),
-                Query::equal('userId', \array_keys($pending)),
+                Query::equal('userId', \array_map(strval(...), \array_keys($pending))),
                 Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
                 Query::select(['$sequence', 'targetInternalId']),
                 Query::orderAsc('$sequence'),
@@ -984,7 +984,7 @@ class Messaging extends Action
 
         do {
             $queries = [
-                Query::equal('userId', \array_keys($mqttUsers)),
+                Query::equal('userId', \array_map(strval(...), \array_keys($mqttUsers))),
                 Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
                 Query::select(['$sequence', 'providerId', 'identifier', 'expired']),
                 Query::orderAsc('$sequence'),
@@ -1479,23 +1479,18 @@ class Messaging extends Action
                 continue;
             }
 
+            $encryption = new Encryption($file);
+            if ($encryption->isSegmented()) {
+                $encryption->copy($deviceForFiles, $this->getLocalDevice($project), $target, $contentType);
+                $prepared[] = new Attachment($file->getAttribute('name'), $target, $contentType);
+                continue;
+            }
+
             $source = (string) $deviceForFiles->read($path);
 
             if (!empty($cipher)) {
-                $source = OpenSSL::decrypt(
-                    $source,
-                    $cipher,
-                    System::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
-                    0,
-                    \hex2bin($file->getAttribute('openSSLIV')),
-                    \hex2bin($file->getAttribute('openSSLTag'))
-                );
-
-                // A rotated or missing key leaves ciphertext no one can read, which must fail the send rather
-                // than reach a recipient.
-                if ($source === false) {
-                    throw new \Exception('Failed to decrypt attachment ' . $file->getId());
-                }
+                // A rotated or missing key throws, failing the send rather than reaching a recipient.
+                $source = $encryption->decrypt($source);
             }
 
             $decompressed = match ($algorithm) {
@@ -1635,6 +1630,7 @@ class Messaging extends Action
         $critical = $message['data']['critical'] ?? null;
         $priority = $message['data']['priority'] ?? null;
         $channelId = $message['data']['channelId'] ?? null;
+        $mutableContent = $message['data']['mutableContent'] ?? null;
 
         if ($title === '') {
             $title = null;
@@ -1663,7 +1659,8 @@ class Messaging extends Action
             $contentAvailable,
             $critical,
             $priority,
-            $channelId
+            $channelId,
+            mutableContent: $mutableContent,
         );
     }
 

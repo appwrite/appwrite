@@ -1,12 +1,12 @@
 <?php
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Network\Platform;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Query\Schema\ColumnType;
-use Utopia\System\System;
 
 Database::addFilter(
     'casting',
@@ -159,6 +159,20 @@ Database::addFilter(
     }
 );
 
+Database::addFilter(
+    'subQueryRuleRecords',
+    function (mixed $value) {
+        return;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        return $database->getAuthorization()->skip(fn () => $database
+            ->find('ruleRecords', [
+                Query::equal('ruleInternalId', [$document->getSequence()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]));
+    }
+);
+
 // Dev keys were removed in 2.3.0, but installs that have not yet run the V25
 // migration still carry this filter on the projects collection. Without it
 // registered, every project document fails to decode.
@@ -194,6 +208,19 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return  $database->getAuthorization()->skip(fn () => $database->find('sessions', [
             Query::equal('userInternalId', [$document->getSequence()]),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]));
+    }
+);
+
+Database::addFilter(
+    'subQueryDeviceSessions',
+    function (mixed $value) {
+        return;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        return  $database->getAuthorization()->skip(fn () => $database->find('sessions', [
+            Query::equal('deviceInternalId', [$document->getSequence()]),
             Query::limit(APP_LIMIT_SUBQUERY),
         ]));
     }
@@ -282,7 +309,11 @@ Database::addFilter(
 Database::addFilter(
     'encrypt',
     function (mixed $value) {
-        $key = System::getEnv('_APP_OPENSSL_KEY_V1');
+        $version = EncryptionKey::version();
+        $key = EncryptionKey::get($version);
+        if ($key === '') {
+            throw new \RuntimeException('_APP_OPENSSL_KEY_V' . $version . ' is not configured, refusing to encrypt.');
+        }
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
         $tag = null;
 
@@ -291,7 +322,7 @@ Database::addFilter(
             'method' => OpenSSL::CIPHER_AES_128_GCM,
             'iv' => \bin2hex($iv),
             'tag' => \bin2hex($tag ?? ''),
-            'version' => '1',
+            'version' => $version,
         ], JSON_UNESCAPED_SLASHES);
     },
     function (mixed $value) {
@@ -299,7 +330,7 @@ Database::addFilter(
             return;
         }
         $value = json_decode($value, true);
-        $key = System::getEnv('_APP_OPENSSL_KEY_V' . $value['version']);
+        $key = EncryptionKey::get((string) $value['version']);
 
         return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
     }

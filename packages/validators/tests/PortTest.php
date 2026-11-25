@@ -6,9 +6,11 @@ namespace Utopia\Validator\Tests;
 
 use Iterator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Validator\Port;
 
+#[RequiresPhpExtension('utopia')]
 final class PortTest extends TestCase
 {
     public function testType(): void

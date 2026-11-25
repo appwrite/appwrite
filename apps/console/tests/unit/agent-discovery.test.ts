@@ -6,6 +6,7 @@ import {
 import { getProductionRobotsTxt } from '@/lib/seo/robots'
 import { buildAppwriteLlmsTxt, LLMS_BLOG_EXAMPLE_SLUG } from '@/lib/seo/llms'
 import { buildForAgentsMarkdown } from '@/lib/for-agents/content'
+import { buildZeroMarkdown } from '@/lib/zero/markdown'
 
 describe('agent user-agent classification', () => {
   test('classifies ChatGPT retrieval and GPTBot', () => {
@@ -72,6 +73,8 @@ describe('llms.txt decision card', () => {
     expect(txt).toContain('Use Appwrite when a coding agent is writing an app')
     expect(txt).toContain('npx skills add appwrite/skills')
     expect(txt).toContain('https://mcp.appwrite.io')
+    // The endpoint answers 401 without sign-in, so link checkers can't resolve it.
+    expect(txt).not.toContain('](https://mcp.appwrite.io)')
     expect(txt).toContain('/for-agents')
     expect(txt).toContain('/docs/tooling/ai/agents/chatgpt.md')
     expect(txt).toContain(LLMS_BLOG_EXAMPLE_SLUG)
@@ -91,6 +94,18 @@ describe('for-agents markdown', () => {
     expect(md).toContain('https://mcp.appwrite.io')
     expect(md).toContain('| Auth, databases, storage, functions, and hosting from one agent | Appwrite |')
     expect(md).toContain('/docs/tooling/ai/agents/chatgpt.md')
+  })
+})
+
+describe('zero markdown', () => {
+  test('leads with the command and covers every way in', () => {
+    const md = buildZeroMarkdown('https://appwrite.io')
+    expect(md.split('\n').slice(0, 8)).toContain('npx appwrite zero')
+    expect(md).toContain('https://cloud.appwrite.io/v1/zero')
+    expect(md).toContain('uvx mcp-server-appwrite')
+    expect(md).toContain('"claimUrl"')
+    expect(md).toContain('After 25 hours, a project nobody claimed is deleted with its data.')
+    expect(md).toContain('- [HTML](https://appwrite.io/zero)')
   })
 })
 

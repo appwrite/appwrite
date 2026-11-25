@@ -20,6 +20,7 @@ const CONSOLE_AREA_PREFIXES = new Set([
   'assistant',
   'agent',
   'upgrade',
+  'transfer',
 ])
 
 const CONSOLE_AUTH_EXACT_PATHS = new Set([
@@ -77,6 +78,9 @@ export function isExcludedMarketingSiteLayoutPath(
   }
   if (normalized === '/debug' || normalized.startsWith('/debug/')) return true
   if (normalized === '/reset') return true
+  if (normalized === '/player' || normalized.startsWith('/player/')) {
+    return true
+  }
   return false
 }
 

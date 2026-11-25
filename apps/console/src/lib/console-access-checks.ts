@@ -95,6 +95,18 @@ export function canCreateProject(
   return whenOrgRoles(access, features, access.canWriteProjects)
 }
 
+/**
+ * Send a project out of, or receive one into, an organization. The API requires
+ * the owner role on both sides, and only honors organization-wide roles, so
+ * pass the access resolved without a project.
+ */
+export function canTransferProject(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return whenOrgRoles(access, features, access.isOwner)
+}
+
 export function canCreateDatabase(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
@@ -141,12 +153,28 @@ export function canCreateSite(
   return whenOrgRoles(access, features, access.canWriteSites)
 }
 
-/** Create videos, renditions, subtitles, timelines, and profiles (`videos.write`). */
+/** Create videos, renditions, and captions (`videos.write`). */
 export function canCreateVideo(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
 ): boolean {
   return whenOrgRoles(access, features, access.canWriteVideos)
+}
+
+/** Create, update, and delete encoding profiles (`project.videos.profiles.write`). */
+export function canManageVideoProfiles(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return whenOrgRoles(access, features, access.canWriteVideoProfiles)
+}
+
+/** Turn code review on or off for a repository (`reviews.write`). */
+export function canWriteReviewRepositories(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return whenOrgRoles(access, features, access.canWriteReviews)
 }
 
 export function canShowVideoSettings(
@@ -209,6 +237,13 @@ export function canWriteWebhooks(
   features: AccessCheckFeatures,
 ): boolean {
   return whenOrgRoles(access, features, access.canWriteWebhooks)
+}
+
+export function canWriteMonitors(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return whenOrgRoles(access, features, access.canWriteMonitors)
 }
 
 export function canCreateMigration(
@@ -275,9 +310,7 @@ export function canShowProjectOAuth2Server(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
 ): boolean {
-  return (
-    isCloudProfile() && canShowAuthSecuritySettings(access, features)
-  )
+  return isCloudProfile() && canShowAuthSecuritySettings(access, features)
 }
 
 export function canShowTopicSettingsTab(
@@ -296,7 +329,6 @@ export function canSeeProjectNavItem(
   switch (itemId) {
     case 'apps':
     case 'api-keys':
-    case 'explorer':
     case 'agents':
       return (access.isOwner || access.isDeveloper) && access.canSeeProjects
     case 'databases':
@@ -311,8 +343,11 @@ export function canSeeProjectNavItem(
       return access.canWriteSites
     case 'videos':
       return access.canSeeVideos
+    case 'reviews':
+      return access.canSeeReviews
     case 'usage':
-    case 'realtime':
+    case 'monitors':
+    case 'playground':
     case 'analytics':
       return access.canSeeProjects
     case 'activity':

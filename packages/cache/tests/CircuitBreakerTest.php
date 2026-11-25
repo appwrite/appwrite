@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Utopia\Cache\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
-use Utopia\Cache\Adapter;
 use Utopia\Cache\Adapter\CircuitBreaker;
 use Utopia\Cache\Adapter\Memory;
+use Utopia\Cache\Adapter\Redis\ConnectionException;
+use Utopia\Cache\Adapter\Redis\TimeoutException;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Exception\Unavailable;
@@ -19,6 +21,127 @@ use Utopia\Telemetry\Adapter\Test as TestTelemetry;
 
 final class CircuitBreakerTest extends TestCase
 {
+    /** @return iterable<string, array{string}> */
+    public static function coordinationOperations(): iterable
+    {
+        foreach (['getVersion', 'loadVersioned', 'compareAndSwap'] as $operation) {
+            yield $operation => [$operation];
+        }
+    }
+
+    #[DataProvider('coordinationOperations')]
+    public function testOpenCircuitRejectsCoordinationWithoutCallingTheBackend(string $operation): void
+    {
+        $backend = new CoordinationMemory();
+        $version = $backend->getVersion('key');
+        $breaker = new UtopiaCircuitBreaker(timeout: 3600);
+        $breaker->trip();
+        $cache = new CircuitBreaker($backend, $breaker);
+        $before = $backend->calls;
+        try {
+            match ($operation) {
+                'compareAndSwap' => $cache->compareAndSwap('key', 'value', '', $version),
+                default => $cache->{$operation}('key'),
+            };
+            $this->fail('An unavailable coordination record must not read as a miss');
+        } catch (Unavailable) {
+            $this->assertSame($before, $backend->calls);
+            $this->assertFalse($backend->load('key', 60));
+        }
+    }
+
+    #[DataProvider('coordinationOperations')]
+    public function testCoordinationFailuresOpenTheCircuitAndRecoveryUsesTheBackend(string $operation): void
+    {
+        $backend = new CoordinationMemory();
+        $version = $backend->getVersion('key');
+        $breaker = new UtopiaCircuitBreaker(timeout: 0, minimumThroughput: 1);
+        $cache = new CircuitBreaker($backend, $breaker);
+        $backend->failure = new RuntimeException('Transport unavailable');
+        try {
+            match ($operation) {
+                'compareAndSwap' => $cache->compareAndSwap('key', 'value', '', $version),
+                default => $cache->{$operation}('key'),
+            };
+            $this->fail('A transport failure must not read as eviction or a CAS conflict');
+        } catch (Unavailable) {
+            $this->assertSame(1, $breaker->getFailureCount());
+        }
+        $backend->failure = null;
+        $version = $cache->getVersion('key');
+        $committed = $cache->compareAndSwap('key', 'recovered', '', $version);
+        $this->assertNotFalse($committed);
+        $this->assertSame(['version' => $committed, 'value' => 'recovered'], $cache->loadVersioned('key'));
+    }
+
+    #[DataProvider('coordinationOperations')]
+    public function testSlowCoordinationIsRefusedWithoutOpeningTheCircuit(string $operation): void
+    {
+        $backend = new CoordinationMemory();
+        $breaker = $this->slowAwareBreaker();
+        $cache = new CircuitBreaker($backend, $breaker);
+        $version = $cache->getVersion('key');
+        $backend->failure = new TimeoutException('read deadline expired');
+
+        try {
+            $this->coordinate($cache, $operation, $version);
+            $this->fail('A slow coordination read must not read as eviction or a CAS conflict');
+        } catch (Unavailable) {
+            $this->assertTrue($breaker->isClosed());
+            $this->assertSame(0, $breaker->getFailureCount());
+            $this->assertSame(1, $breaker->getSlowCount());
+        }
+    }
+
+    #[DataProvider('coordinationOperations')]
+    public function testAllSlowCoordinationOpensTheCircuit(string $operation): void
+    {
+        $backend = new CoordinationMemory();
+        $version = $backend->getVersion('key');
+        $breaker = $this->slowAwareBreaker();
+        $cache = new CircuitBreaker($backend, $breaker);
+        $backend->failure = new TimeoutException('read deadline expired');
+
+        try {
+            $this->coordinate($cache, $operation, $version);
+            $this->fail('A slow coordination read must not read as eviction or a CAS conflict');
+        } catch (Unavailable) {
+            $this->assertTrue($breaker->isOpen());
+        }
+    }
+
+    #[DataProvider('coordinationOperations')]
+    public function testABrokenConnectionStillOpensThroughTheFailureRule(string $operation): void
+    {
+        $backend = new CoordinationMemory();
+        $version = $backend->getVersion('key');
+        $breaker = $this->slowAwareBreaker();
+        $cache = new CircuitBreaker($backend, $breaker);
+        $backend->failure = new ConnectionException('connection lost');
+
+        try {
+            $this->coordinate($cache, $operation, $version);
+            $this->fail('A transport failure must not read as eviction or a CAS conflict');
+        } catch (Unavailable) {
+            $this->assertTrue($breaker->isOpen());
+            $this->assertSame(1, $breaker->getFailureCount());
+            $this->assertSame(0, $breaker->getSlowCount());
+        }
+    }
+
+    public function testASlowLoadIsAMissThatKeepsTheCircuitClosed(): void
+    {
+        $backend = new SlowLoadMemory();
+        $breaker = $this->slowAwareBreaker();
+        $cache = new CircuitBreaker($backend, $breaker);
+        $this->assertSame('value', $cache->save('key', 'value'));
+        $backend->slow = true;
+
+        $this->assertFalse($cache->load('key', 60));
+        $this->assertTrue($breaker->isClosed());
+        $this->assertSame(1, $breaker->getSlowCount());
+    }
+
     public function testPassesThroughHealthyCacheOperations(): void
     {
         $adapter = new Memory();
@@ -31,6 +154,18 @@ final class CircuitBreakerTest extends TestCase
         $this->assertTrue($cache->ping());
         $this->assertTrue($cache->purge('key'));
         $this->assertFalse($cache->load('key', 60));
+    }
+
+    public function testPassesThroughAnEmptyArray(): void
+    {
+        $cache = new Cache(new CircuitBreaker(new Memory(), new UtopiaCircuitBreaker()));
+
+        $this->assertSame([], $cache->save('key', []));
+        $this->assertSame([], $cache->load('key', 60));
+        $this->assertSame([], $cache->saveWithLease('lease', [], '', $cache->getLease('lease')));
+        $this->assertSame([], $cache->load('lease', 60));
+        $this->assertFalse($cache->save('empty', ''));
+        $this->assertFalse($cache->save('zero', '0'));
     }
 
     public function testReturnsFallbacksWhenCacheOperationsFail(): void
@@ -94,10 +229,8 @@ final class CircuitBreakerTest extends TestCase
 
         $this->assertFalse($cache->load('key', 60));
         $this->assertFalse($cache->save('key', 'value'));
-        $this->assertFalse($cache->saveWithLease('key', 'value', 'key', '0'));
         $this->assertFalse($cache->touch('key'));
         $this->assertSame([], $cache->list('key'));
-        $this->assertSame('0', $cache->getGeneration('key'));
         $this->assertFalse($cache->flush());
         $this->assertFalse($cache->ping());
         $this->assertSame(0, $cache->getSize());
@@ -167,77 +300,26 @@ final class CircuitBreakerTest extends TestCase
         $this->assertCount(1, $operationDuration->values);
     }
 
+    private function slowAwareBreaker(): UtopiaCircuitBreaker
+    {
+        return new UtopiaCircuitBreaker(
+            timeout: 3600,
+            minimumThroughput: 1,
+            slow: [TimeoutException::class],
+            slowRatio: 0.9,
+        );
+    }
+
+    private function coordinate(CircuitBreaker $cache, string $operation, string $version): mixed
+    {
+        return match ($operation) {
+            'compareAndSwap' => $cache->compareAndSwap('key', 'value', '', $version),
+            default => $cache->{$operation}('key'),
+        };
+    }
+
     private function failingCache(): CircuitBreaker
     {
         return new CircuitBreaker(new FailingAdapter(), new UtopiaCircuitBreaker(minimumThroughput: 1));
-    }
-}
-
-class FailingAdapter implements Adapter
-{
-    public function load(string $key, int $ttl, string $hash = ''): mixed
-    {
-        throw new RuntimeException('Cache failed.');
-    }
-
-    public function save(string $key, array|string $data, string $hash = '', int $ttl = 0): bool|string|array
-    {
-        throw new RuntimeException('Cache failed.');
-    }
-
-    public function touch(string $key, string $hash = ''): bool
-    {
-        throw new RuntimeException('Cache failed.');
-    }
-
-    public function list(string $key): array
-    {
-        throw new RuntimeException('Cache failed.');
-    }
-
-    public function purge(string $key, string $hash = ''): bool
-    {
-        throw new RuntimeException('Cache failed.');
-    }
-
-    public function flush(): bool
-    {
-        throw new RuntimeException('Cache failed.');
-    }
-
-    public function ping(): bool
-    {
-        throw new RuntimeException('Cache failed.');
-    }
-
-    public function getSize(): int
-    {
-        throw new RuntimeException('Cache failed.');
-    }
-
-    public function getName(?string $key = null): string
-    {
-        return 'failing';
-    }
-}
-
-class CountingFailingAdapter extends FailingAdapter
-{
-    public int $loads = 0;
-
-    public int $purges = 0;
-
-    public function purge(string $key, string $hash = ''): bool
-    {
-        $this->purges++;
-
-        return parent::purge($key, $hash);
-    }
-
-    public function load(string $key, int $ttl, string $hash = ''): mixed
-    {
-        $this->loads++;
-
-        return parent::load($key, $ttl, $hash);
     }
 }

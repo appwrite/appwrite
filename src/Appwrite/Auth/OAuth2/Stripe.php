@@ -69,7 +69,7 @@ class Stripe extends OAuth2
             $this->tokens = \json_decode($this->request(
                 'POST',
                 'https://connect.stripe.com/oauth/token',
-                [],
+                ['Authorization: Bearer ' . $this->appSecret],
                 \http_build_query([
                     'grant_type' => $this->grantType['authorize'],
                     'code' => $code
@@ -92,7 +92,7 @@ class Stripe extends OAuth2
         $this->tokens = \json_decode($this->request(
             'POST',
             'https://connect.stripe.com/oauth/token',
-            [],
+            ['Authorization: Bearer ' . $this->appSecret],
             \http_build_query([
                 'grant_type' => $this->grantType['refresh'],
                 'refresh_token' => $refreshToken,
@@ -108,6 +108,10 @@ class Stripe extends OAuth2
     }
 
     /**
+     * A Stripe Connect grant names the connected account (`stripe_user_id`),
+     * not the person who authorized it. Every administrator of that account
+     * gets the same ID, so it cannot sign anyone in (see isLinkOnly()).
+     *
      * @param string $accessToken
      *
      * @return string
@@ -117,6 +121,17 @@ class Stripe extends OAuth2
         $user = $this->getUser($accessToken);
 
         return $user['id'] ?? '';
+    }
+
+    /**
+     * The connected account ID is shared by everyone who can administer the
+     * account, so it can only attach to an account that is already signed in.
+     *
+     * @return bool
+     */
+    public function isLinkOnly(): bool
+    {
+        return true;
     }
 
     /**

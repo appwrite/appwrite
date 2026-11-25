@@ -41,21 +41,21 @@ function serverTimeSyncKey(endpoint: string, projectId: string): string {
   return `${endpoint.replace(/\/$/, '')}|${projectId}`
 }
 
-/**
- * Record server unix time (seconds). Only the first successful sync is kept, matching
- * console/src/lib/helpers/fingerprint.ts.
- */
+/** Record server unix time (seconds); the latest sync wins. */
 export function syncServerTime(serverTimeSecs: number): void {
-  const state = getFingerprintServerTimeGlobal()
-  if (state.cache) return
-  state.cache = { serverSecs: serverTimeSecs, fetchedAtMs: Date.now() }
+  getFingerprintServerTimeGlobal().cache = {
+    serverSecs: serverTimeSecs,
+    fetchedAtMs: Date.now(),
+  }
 }
 
-/** Clear cached server clock (e.g. when the API endpoint changes in debug menu). */
-export function resetFingerprintServerTimeCache(): void {
+/** Clear the cached server clock and browser signals (endpoint change, rejected token). */
+export function resetFingerprintCache(): void {
   const state = getFingerprintServerTimeGlobal()
   state.cache = null
   state.inflight.clear()
+  cache = null
+  cachePromise = null
 }
 
 function getServerTimestamp(): number {
@@ -70,16 +70,14 @@ function getServerTimestamp(): number {
 }
 
 /**
- * Ensures server time is synced once from the Date header on GET /health/version
- * (same as console (console)/+layout.ts). Await before generating fingerprints when
- * the app may not have completed the background sync yet (e.g. Restore project).
+ * Syncs server time from the Date header on GET /health/version. Await right before
+ * generating a fingerprint: a sync kept from page load goes stale if the clock jumps.
  */
 export function ensureFingerprintServerTimeSynced(
   endpoint: string,
   projectId: string,
 ): Promise<void> {
   const state = getFingerprintServerTimeGlobal()
-  if (state.cache) return Promise.resolve()
   if (!endpoint?.trim() || !projectId?.trim()) {
     return Promise.resolve()
   }
@@ -306,14 +304,16 @@ async function getCachedSignals(): Promise<StaticSignals> {
     return cachePromise
   }
 
-  cachePromise = collectStaticSignals()
+  const pending = collectStaticSignals()
+  cachePromise = pending
 
   try {
-    const signals = await cachePromise
-    cache = { signals, collectedAt: now }
+    const signals = await pending
+    // A reset during collection wins; don't cache what was collected before it.
+    if (cachePromise === pending) cache = { signals, collectedAt: now }
     return signals
   } finally {
-    cachePromise = null
+    if (cachePromise === pending) cachePromise = null
   }
 }
 

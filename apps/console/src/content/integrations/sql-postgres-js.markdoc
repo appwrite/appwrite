@@ -1,0 +1,100 @@
+---
+layout: integration
+title: postgres.js with managed PostgreSQL
+description: Query an Appwrite native PostgreSQL database from Node.js with the postgres.js driver
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/sql-postgres-js/cover.avif
+category: databases
+product:
+    vendor: postgres.js
+    description: 'postgres.js, published as the postgres package, is an open-source PostgreSQL client for Node.js built around tagged template queries.'
+platform:
+    - 'Cloud'
+---
+
+[postgres.js](https://github.com/porsager/postgres), published on npm as `postgres`, is an open-source PostgreSQL client for Node.js. You write queries as tagged template literals, and the library turns interpolated values into safe parameters and manages a connection pool for you.
+
+# How does the integration work?
+
+An Appwrite native PostgreSQL database is a standard PostgreSQL engine that Appwrite provisions in your project's region, with its own hostname, credentials, and TLS. postgres.js connects to it like any other PostgreSQL server, with no Appwrite-specific adapter, and Drizzle ORM can use it as its PostgreSQL driver.
+
+Long-running servers can connect to the engine directly on port `5432`. Serverless functions should connect through the database's connection pooler on port `6432`, with prepared statements turned off.
+
+{% info title="Available on Appwrite Cloud" %}
+Native PostgreSQL databases run in every Appwrite Cloud region and are available on paid plans.
+{% /info %}
+
+# How to implement
+
+To query an Appwrite native PostgreSQL database with postgres.js, there are several steps you must complete:
+
+## Step 1: Create a native PostgreSQL database
+
+[Create an account on Appwrite Cloud](/sign-up) if you haven't already. In your project, go to **Databases**, click **Create database**, and select **PostgreSQL** from the **Native databases** group. Pick a specification and click **Create database**. The database becomes `ready` within a few minutes.
+
+Open the database and click **Credentials**. The **Details** tab shows the host, port, user, password, and database name. The primary user is `admin`. Keep the password in an environment variable and never commit it.
+
+## Step 2: Create the client
+
+Install the driver with `npm install postgres`, then create the client once at module scope:
+
+```js
+import postgres from 'postgres';
+
+const sql = postgres({
+    host: 'db-<hash>.<region>.appwrite.center',
+    port: 5432,
+    username: 'admin',
+    password: process.env.DB_PASSWORD,
+    database: '<database>',
+    ssl: 'verify-full',
+    max: 10,
+    idle_timeout: 30,
+    connect_timeout: 10
+});
+```
+
+`ssl: 'verify-full'` enables TLS and verifies the server certificate against the system CA store. If your runtime image has no trust store, such as a distroless image, pass `ssl: { rejectUnauthorized: true, ca: fs.readFileSync('./ca-bundle.crt') }` with a public CA bundle instead.
+
+## Step 3: Use the pooler from serverless runtimes
+
+postgres.js uses prepared statements by default, and the pooler's transaction mode does not support them. When you connect through the pooler, set `prepare: false`:
+
+```js
+const sql = postgres({
+    host: 'db-<hash>.<region>.appwrite.center',
+    port: 6432,
+    username: 'admin',
+    password: process.env.DB_PASSWORD,
+    database: '<database>',
+    ssl: 'verify-full',
+    prepare: false,
+    max: 1
+});
+```
+
+Keep `max` at `1` or `2` per serverless instance, because one invocation rarely needs more than one connection. Leave `prepare` at its default on the direct port or with the pooler in session mode, and run migrations on port `5432`.
+
+## Step 4: Test the connection
+
+Run a query to confirm the client can reach the database:
+
+```js
+const [row] = await sql`SELECT now() AS time`;
+console.log(row.time);
+```
+
+If you see `prepared statement "..." does not exist`, you are on the pooler port with prepared statements on, so set `prepare: false`. If the connection times out, check the database's IP allowlist and raise `connect_timeout`.
+
+# Read more about postgres.js and Appwrite Databases
+
+If you would like to learn more about postgres.js and Appwrite Databases, we have some resources that you should visit:
+
+- [Node.js drivers for native PostgreSQL databases](/docs/products/databases/postgresql/integrations/drivers)
+- [Connect to a native PostgreSQL database](/docs/products/databases/postgresql/connections)
+- [PostgreSQL connection pooling](/docs/products/databases/postgresql/connection-pooling)
+- [Managed PostgreSQL on Appwrite](/docs/products/databases/postgresql)
+- [postgres.js on GitHub](https://github.com/porsager/postgres)

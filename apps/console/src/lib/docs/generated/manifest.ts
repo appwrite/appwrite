@@ -101,6 +101,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
+    "slug": "advanced/billing/project-transfers",
+    "title": "Project transfers",
+    "description": "Move an Appwrite Cloud project to another organization, directly or with a single-use transfer link that an owner of the other organization claims.",
+    "layout": "article",
+    "readingTimeMinutes": 6
+  },
+  {
     "slug": "advanced/billing/refund-policy",
     "title": "Refund policy",
     "description": "Learn about Appwrite's refund policy for services, including eligibility criteria and the request process.",
@@ -182,7 +189,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Audit logs",
     "description": "Appwrite provides audit logs to help detect anomalies and investigate security incidents.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "advanced/security/authentication",
@@ -210,7 +217,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Encryption",
     "description": "Learn about Appwrite's use of encryption across Appwrite's databases and storage buckets to protect user data.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "advanced/security/gdpr",
@@ -322,7 +329,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Environment variables",
     "description": "Customize the behavior of your self-hosted Appwrite instance to your unique needs. Customize SMTP, SMS, functions, S3 adaptor, database, and other behaiors.",
     "layout": "article",
-    "readingTimeMinutes": 24
+    "readingTimeMinutes": 26
   },
   {
     "slug": "advanced/self-hosting/configuration/functions",
@@ -497,7 +504,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Updates and migrations",
     "description": "Keep your self-hosted Appwrite instance up-to-date. Learn how to perform updates, manage versions, and ensure your self-hosted Appwrite stays current.",
     "layout": "article",
-    "readingTimeMinutes": 6
+    "readingTimeMinutes": 7
   },
   {
     "slug": "apis",
@@ -1291,6 +1298,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
+    "slug": "products/auth/account-switching",
+    "title": "Account switching",
+    "description": "Let users stay signed in to several accounts in one browser or app and switch between them with Appwrite Auth devices, without signing out and back in.",
+    "layout": "article",
+    "readingTimeMinutes": 5
+  },
+  {
     "slug": "products/auth/accounts",
     "title": "Accounts",
     "description": "Unlock advanced user management - Appwrite's Account API for seamless signups, authentication, and dynamic permissions.",
@@ -1323,14 +1337,14 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Email OTP",
     "description": "Seamless sign in with Email OTP authentication in Appwrite. Learn how to provide simple and secure passwordless user accounts.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/auth/email-password",
     "title": "Email and password login",
     "description": "Implement email and password authentication with Appwrite. Securely register and authenticate users in your applications using Appwrite's robust email-based authentication system.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/auth/email-policies",
@@ -1368,6 +1382,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 1
   },
   {
+    "slug": "products/auth/ldap",
+    "title": "LDAP login",
+    "description": "Let users sign in to your app with the username and password from your LDAP directory, such as Active Directory or OpenLDAP, with group restrictions and attribute mapping.",
+    "layout": "article",
+    "readingTimeMinutes": 11
+  },
+  {
     "slug": "products/auth/magic-url",
     "title": "Magic URL login",
     "description": "Add magic URL to your authentication in Appwrite. Explore the convenience of passwordless login and email-based authentication using magic links.",
@@ -1386,7 +1407,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Multi-factor authentication",
     "description": "Add multiple layers of authentication to your applications powered by Appwrite Authentication.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/auth/multi-tenancy",
@@ -1677,7 +1698,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Verify user",
     "description": "Learn about Appwrite's email and phone verification system, including verification flows and role-based access control.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/avatars",
@@ -2993,7 +3014,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Deploy from Git",
     "description": "Learn to version and update your Appwrite Functions' code with deployments.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 7
   },
   {
     "slug": "products/functions/deploy-manually",
@@ -3014,7 +3035,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Develop Appwrite Functions",
     "description": "Master serverless function development with Appwrite. Learn how to write and test functions locally, debug code, and optimize for efficient execution.",
     "layout": "article",
-    "readingTimeMinutes": 8
+    "readingTimeMinutes": 16
   },
   {
     "slug": "products/functions/develop-locally",
@@ -3029,6 +3050,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Execute Appwrite Functions through domains using standard HTTP GET, POST, or other request methods to serve static, JSON, HTML, or other content.",
     "layout": "article",
     "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/functions/email",
+    "title": "Email triggers",
+    "description": "Execute an Appwrite Function when an email arrives at its address. Use the built-in address of the function or connect a custom domain.",
+    "layout": "article",
+    "readingTimeMinutes": 10
   },
   {
     "slug": "products/functions/environment-variables",
@@ -3098,7 +3126,14 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Apple Push Notification service",
     "description": "Send push notifications to apps on Apple devices through Apple Push Notification service (APNs) using Appwrite Messaging.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 8
+  },
+  {
+    "slug": "products/messaging/appwrite-push",
+    "title": "Appwrite Push",
+    "description": "Deliver push notifications from Appwrite to apps built with the Web, Flutter, React Native, Android, and Apple SDKs, without Firebase or device tokens.",
+    "layout": "article",
+    "readingTimeMinutes": 18
   },
   {
     "slug": "products/messaging/fcm",
@@ -3154,7 +3189,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Send push notification",
     "description": "Send push notification to your users using Appwrite Messaging.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 6
   },
   {
     "slug": "products/messaging/send-sms-messages",
@@ -3210,7 +3245,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Topics",
     "description": "Allow groups of users to subscribe to a common topic and receive the same notifications.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/messaging/twilio",
@@ -3329,7 +3364,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Deploy from Git",
     "description": "Learn to version and update your Appwrite Sites' code with deployments.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 8
   },
   {
     "slug": "products/sites/deploy-manually",
@@ -3350,7 +3385,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Develop Appwrite Sites",
     "description": "Master site development with Appwrite.",
     "layout": "article",
-    "readingTimeMinutes": 6
+    "readingTimeMinutes": 7
   },
   {
     "slug": "products/sites/domains",
@@ -3392,7 +3427,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Migrating from Vercel to Appwrite Sites",
     "description": "A step-by-step guide to migrate your web applications from Vercel to Appwrite Sites.",
     "layout": "article",
-    "readingTimeMinutes": 7
+    "readingTimeMinutes": 8
   },
   {
     "slug": "products/sites/previews",
@@ -3587,6 +3622,83 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "slug": "products/storage/upload-download",
     "title": "Upload and download",
     "description": "Effortlessly upload and download files with Appwrite Storage. Learn how to handle file uploads, manage file versions, and ensure secure downloads in your applications.",
+    "layout": "article",
+    "readingTimeMinutes": 6
+  },
+  {
+    "slug": "products/videos",
+    "title": "Videos",
+    "description": "Stream video and audio with Appwrite Videos. Turn files in Storage into adaptive HLS, DASH, and CMAF streams with encoding profiles, captions, and scrubbing thumbnails.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
+    "slug": "products/videos/captions",
+    "title": "Captions",
+    "description": "Add WebVTT or SubRip captions to an Appwrite video, use subtitle tracks embedded in the source, and set a default language for players.",
+    "layout": "article",
+    "readingTimeMinutes": 6
+  },
+  {
+    "slug": "products/videos/inspector",
+    "title": "Inspect playback",
+    "description": "Use the Appwrite Videos inspector to watch a playback session's experience score, buffer, bitrate, network requests, and manifests.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
+    "slug": "products/videos/outputs",
+    "title": "Outputs",
+    "description": "Learn the difference between HLS, DASH, and CMAF outputs in Appwrite Videos, where to find each master manifest, and which players support them.",
+    "layout": "article",
+    "readingTimeMinutes": 5
+  },
+  {
+    "slug": "products/videos/permissions",
+    "title": "Permissions",
+    "description": "Learn how Appwrite Videos controls who can watch a stream with per-video permissions, and which scopes manage videos and encoding profiles.",
+    "layout": "article",
+    "readingTimeMinutes": 5
+  },
+  {
+    "slug": "products/videos/play",
+    "title": "Play a video in your app",
+    "description": "Play Appwrite Videos streams on the web, Apple platforms, Android, Flutter, and React Native by loading the master manifest in a standard player.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
+    "slug": "products/videos/profiles",
+    "title": "Encoding profiles",
+    "description": "Learn how Appwrite Videos encoding profiles set the resolution, bitrate, and codec of each rendition, and how profile changes apply.",
+    "layout": "article",
+    "readingTimeMinutes": 6
+  },
+  {
+    "slug": "products/videos/quick-start",
+    "title": "Start with Videos",
+    "description": "Create your first Appwrite video from a Storage file, encode an adaptive ladder, and play the stream in a browser.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/videos/renditions",
+    "title": "Renditions",
+    "description": "Learn how Appwrite Videos encodes a rendition per profile and output, how rendition status and progress work, and how to retry a failed encode.",
+    "layout": "article",
+    "readingTimeMinutes": 5
+  },
+  {
+    "slug": "products/videos/timeline",
+    "title": "Timeline",
+    "description": "Learn how Appwrite Videos generates sprite sheets and a WebVTT index for scrubbing thumbnails, and how to load them in your player.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
+    "slug": "products/videos/videos",
+    "title": "Videos",
+    "description": "Learn how an Appwrite video points at a Storage file, which metadata it holds, how its status is derived, and what deleting it removes.",
     "layout": "article",
     "readingTimeMinutes": 6
   },
@@ -3917,7 +4029,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "AI in Functions",
     "description": "Learn how to integrate AI capabilities into your Appwrite Functions using the Vercel AI SDK.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "tooling/ai/arena",
@@ -3950,7 +4062,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
       },
       {
         "question": "Is there more than one Appwrite MCP server?",
-        "answer": "No. Cloud uses one hosted server at https://mcp.appwrite.io. It covers API actions and docs search. Self-hosted Appwrite uses a local stdio server with an API key. Do not add separate appwrite-api and appwrite-docs servers."
+        "answer": "No. Cloud uses one hosted server at https://mcp.appwrite.io. It covers API actions and docs search. Self-hosted Appwrite uses a local stdio server with an API key. Do not add separate appwrite-api and appwrite-docs servers. Only an agent that cannot sign in should use https://mcp.appwrite.io/docs/mcp, which serves the same docs search without the API."
       }
     ]
   },
@@ -3966,7 +4078,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Appwrite MCP server",
     "description": "Enable LLMs and code-generation tools to interact with your Appwrite project and documentation",
     "layout": "article",
-    "readingTimeMinutes": 8
+    "readingTimeMinutes": 9
   },
   {
     "slug": "tooling/ai/persistent-agents-with-realtime",
@@ -4260,7 +4372,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Commands",
     "description": "Learn about Appwrites CLI and the powerful, feature complete commands to manage Appwrite's auth, databases, functions, storage, and more.",
     "layout": "article",
-    "readingTimeMinutes": 6
+    "readingTimeMinutes": 7
   },
   {
     "slug": "tooling/command-line/functions",
@@ -4281,7 +4393,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Installation",
     "description": "Get started with the Appwrite CLI by following the installation guide. Learn how to set up and configure the CLI on your development environment.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 6
   },
   {
     "slug": "tooling/command-line/non-interactive",
@@ -4310,6 +4422,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Efficiently deploy your Appwrite teams using the Command-Line Tool (CLI).",
     "layout": "article",
     "readingTimeMinutes": 4
+  },
+  {
+    "slug": "tooling/command-line/terminal",
+    "title": "Terminal",
+    "description": "Browse, query, and manage your Appwrite projects in an interactive, keyboard-driven interface with the terminal command in the Appwrite CLI.",
+    "layout": "article",
+    "readingTimeMinutes": 8
   },
   {
     "slug": "tooling/command-line/topics",
@@ -5044,7 +5163,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   },
   {
     "slug": "tutorials/subscriptions-with-stripe/step-2",
-    "title": "Setup Stripe",
+    "title": "Set up Stripe",
     "description": "Add paid app subscription plans to your app with Stripe and Appwrite Functions.",
     "layout": "tutorial",
     "readingTimeMinutes": 2,

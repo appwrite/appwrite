@@ -402,6 +402,9 @@ export const heFunctionsDictionary: Record<string, string> = {
   'No domains yet': 'אין דומיינים עדיין',
   'No events configured': 'לא הוגדרו אירועים',
   'No executions yet': 'אין הרצות עדיין',
+  'No GB-hours yet': 'אין GB-hours עדיין',
+  'Invocations will show up here.': 'הרצות יופיעו כאן.',
+  'Compute usage will show up here.': 'שימוש במחשוב יופיע כאן.',
   'No files yet': 'אין קבצים עדיין',
   'No functions yet': 'אין פונקציות עדיין',
   'No headers': 'אין Headers',
@@ -591,10 +594,8 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Timeout must be between 1 and 900 seconds':
     'ה-Timeout חייב להיות בין 1 ל-900 שניות',
   'Timeout updated successfully': 'ה-Timeout עודכן בהצלחה',
-  'Enterprise runtime options': 'אפשרויות runtime ב-Enterprise',
-  'The Enterprise plan includes always-on functions to minimize cold starts, as well as higher CPU and memory configurations for more demanding workloads.':
-    'תוכנית Enterprise כוללת פונקציות Always-on לצמצום cold starts, וגם תצורות CPU וזיכרון גבוהות יותר לעומסים תובעניים.',
-  'Contact us to learn more.': 'צרו קשר לפרטים נוספים.',
+  'Always-on functions and higher CPU and memory are available on Enterprise.':
+    'פונקציות Always-on ומשאבי CPU וזיכרון גבוהים יותר זמינים בתוכנית Enterprise.',
   'to make it available to end users.': 'כדי להפוך אותה לזמינה למשתמשי קצה.',
   'to unlock additional specifications.': 'כדי לפתוח מפרטים נוספים.',
   'Total size': 'גודל כולל',
@@ -756,4 +757,5 @@ export const heFunctionsDictionary: Record<string, string> = {
     'האזור הזה עדיין לא מדווח על שרת הדואר שלו, ולכן לא ניתן להציג את רשומת ה-MX. הוסיפו עכשיו את רשומת ה-TXT וחזרו מאוחר יותר לרשומת ה-MX.',
   "This function's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
     'התקנת ה-Git של הפונקציה הזו כבר לא מגיעה ל-repo שלה, ולכן Push חדש לא ייפרס. נתקו את ה-repo ואז חברו אותו מחדש דרך ההתקנה שבה הוא נמצא עכשיו.',
+  'View executions': 'הצגת הרצות',
 }

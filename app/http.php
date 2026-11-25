@@ -33,7 +33,7 @@ use Utopia\System\System;
 try {
     EncryptionKey::assertProduction(
         System::getEnv('_APP_ENV', 'production'),
-        System::getEnv('_APP_OPENSSL_KEY_V1')
+        EncryptionKey::current()
     );
 } catch (\RuntimeException $exception) {
     Console::error($exception->getMessage());
@@ -402,6 +402,35 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                 }
 
                 Console::warning("  └── Execution schema setup failed. Retrying ({$attempts})...");
+                sleep($sleep);
+            }
+        }
+
+        Span::current()?->finish();
+
+        /** @var \Appwrite\Logs\Logs $logs */
+        $logs = $container->get('logs');
+
+        Span::init('logs.setup');
+
+        $max = 15;
+        $sleep = 2;
+        $attempts = 0;
+
+        while (true) {
+            try {
+                $attempts++;
+                $logs->getAdapter()->setup();
+                Console::success('[Setup] - Log schema is ready');
+                break;
+            } catch (\Throwable $e) {
+                if ($attempts >= $max) {
+                    Span::add('logs.ready', false);
+                    Console::warning('[Setup] - Skip: log schema is not ready: ' . $e->getMessage());
+                    break;
+                }
+
+                Console::warning("  └── Log schema setup failed. Retrying ({$attempts})...");
                 sleep($sleep);
             }
         }

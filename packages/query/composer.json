@@ -14,7 +14,10 @@
     "autoload": {
         "psr-4": {
             "Utopia\\Query\\": "src/"
-        }
+        },
+        "files": [
+            "src/extension.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

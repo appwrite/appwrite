@@ -586,7 +586,7 @@ class MariaDBTest extends TestCase
             ->update();
         $this->assertBindingCount($result);
 
-        $this->assertSame('UPDATE `docs` SET `tags` = JSON_REMOVE(`tags`, JSON_UNQUOTE(JSON_SEARCH(`tags`, \'one\', ?))) WHERE `id` IN (?)', $result->query);
+        $this->assertSame('UPDATE `docs` SET `tags` = COALESCE(JSON_REMOVE(`tags`, JSON_UNQUOTE(JSON_SEARCH(`tags`, \'one\', ?, \'!\'))), `tags`) WHERE `id` IN (?)', $result->query);
     }
 
     public function testSetJsonPath(): void
@@ -957,7 +957,7 @@ class MariaDBTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `customers` WHERE `active` IN (?) AND EXISTS (SELECT * FROM `orders` WHERE orders.customer_id = customers.id AND `total` > ?)', $result->query);
+        $this->assertSame('SELECT * FROM `customers` WHERE `active` IN (?) AND EXISTS (SELECT * FROM `orders` WHERE (orders.customer_id = customers.id) AND `total` > ?)', $result->query);
     }
 
     public function testUpsertOnDuplicateKeyUpdate(): void
@@ -1491,7 +1491,7 @@ class MariaDBTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `users` WHERE a = ?', $result->query);
+        $this->assertSame('SELECT * FROM `users` WHERE (a = ?)', $result->query);
         $this->assertSame([1], $result->bindings);
     }
 
@@ -1504,7 +1504,7 @@ class MariaDBTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `users` WHERE `b` IN (?) AND a = ?', $result->query);
+        $this->assertSame('SELECT * FROM `users` WHERE `b` IN (?) AND (a = ?)', $result->query);
         $this->assertContains(1, $result->bindings);
         $this->assertContains(2, $result->bindings);
     }

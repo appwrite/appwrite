@@ -511,6 +511,60 @@ final class MqttServerTest extends Scope
         }
     }
 
+    public function testReplacedDeviceSessionIsDisconnected(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $deviceKey = 'a_device_' . $projectId;
+        $sessionKey = 'a_session_' . $projectId;
+        ['userId' => $userId] = $this->createUser();
+        $client = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        // An account switching device holds one session per user: signing in again replaces the held one
+        $device = $this->client->call(Client::METHOD_POST, '/account/devices', $client);
+        $this->assertSame(201, $device['headers']['status-code']);
+        $deviceCookie = $device['cookies'][$deviceKey];
+
+        // Joining a session rotates the device secret, so each sign-in carries the cookie the last one issued
+        $signIn = function () use ($client, $deviceKey, &$deviceCookie, $userId): array {
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge($client, [
+                'cookie' => $deviceKey . '=' . $deviceCookie,
+            ]), [
+                'email' => 'mqtt-' . $userId . '@appwrite.io',
+                'password' => 'password',
+            ]);
+
+            $deviceCookie = $response['cookies'][$deviceKey] ?? $deviceCookie;
+
+            return $response;
+        };
+
+        $replaced = $signIn();
+        $this->assertSame(201, $replaced['headers']['status-code']);
+        $kept = $this->createSession($userId);
+
+        $replacedSubscriber = $this->subscribeToUserTopic($projectId, $userId, $replaced['cookies'][$sessionKey], 'e2e-revoke-device-replaced-', 'appwrite-session');
+        $keptSubscriber = $this->subscribeToUserTopic($projectId, $userId, $kept, 'e2e-revoke-device-kept-', 'appwrite-session');
+
+        try {
+            $again = $signIn();
+            $this->assertSame(201, $again['headers']['status-code']);
+            $this->assertNotSame($replaced['body']['$id'], $again['body']['$id']);
+
+            // Test for SUCCESS: the connection opened with the replaced session is ended.
+            $this->assertSame(Disconnect::NOT_AUTHORIZED, $replacedSubscriber->awaitDisconnect(self::REVOKE_TIMEOUT), 'the broker did not disconnect a connection whose session was replaced on its device');
+
+            // Test for SUCCESS: a connection on another session of the user, not on the device, stays open.
+            $this->assertTrue($keptSubscriber->ping(), 'a connection on a session still active was disconnected');
+        } finally {
+            $replacedSubscriber->disconnect();
+            $keptSubscriber->disconnect();
+        }
+    }
+
     public function testEnablingMfaDisconnectsSessionMissingFactor(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -1880,6 +1934,75 @@ final class MqttServerTest extends Scope
             $this->assertGreaterThan(0, $this->usageSeriesTotal($projectId, $usageKey, 'mqtt.messages.delivered'), 'delivery usage was not recorded');
             $this->assertGreaterThan(0, $this->usageSeriesTotal($projectId, $usageKey, 'mqtt.connections'), 'connection usage was not recorded');
         }, 180_000, 3_000);
+    }
+
+    public function testAcknowledgedDeliveryCountsTowardProjectUsage(): void
+    {
+        $this->skipIfUsageUnavailable();
+
+        [$projectId, $usageKey] = $this->deliverToFreshProject(acknowledge: true);
+
+        $this->assertEventually(function () use ($projectId, $usageKey): void {
+            $this->assertGreaterThan(0, $this->usageSeriesTotal($projectId, $usageKey, 'mqtt.messages.acked'), 'acknowledged delivery was not recorded');
+        }, 180_000, 3_000);
+    }
+
+    public function testUnacknowledgedDeliveryIsNotCountedAsAcked(): void
+    {
+        $this->skipIfUsageUnavailable();
+
+        [$projectId, $usageKey] = $this->deliverToFreshProject(acknowledge: false);
+
+        // Deliveries and acks flush together, so once the delivery shows up the ack count is final.
+        $this->assertEventually(function () use ($projectId, $usageKey): void {
+            $this->assertGreaterThan(0, $this->usageSeriesTotal($projectId, $usageKey, 'mqtt.messages.delivered'), 'delivery usage was not recorded');
+        }, 180_000, 3_000);
+
+        $this->assertSame(0, $this->usageSeriesTotal($projectId, $usageKey, 'mqtt.messages.acked'));
+    }
+
+    /**
+     * Push one QoS 1 message to a connected user of a fresh project, acknowledging it or not.
+     *
+     * @return array{0: string, 1: string} the project ID and a key that can read its usage
+     */
+    private function deliverToFreshProject(bool $acknowledge): array
+    {
+        $project = $this->getProject(fresh: true);
+        $projectId = $project['$id'];
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $project['apiKey'],
+        ];
+
+        $userId = Id::unique();
+        $user = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => $userId,
+            'email' => 'mqtt-ack-' . $userId . '@appwrite.io',
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $jwtResponse = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', $server, []);
+        $this->assertEquals(201, $jwtResponse['headers']['status-code']);
+
+        $this->setupAppwriteProvider($server);
+
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $subscriber->connect($projectId, $jwtResponse['body']['jwt'], 'e2e-ack-' . $userId, cleanStart: true));
+        $this->assertSame([1], $subscriber->subscribe(['users/' . $userId]));
+
+        try {
+            $this->publishToUser($server, $userId, 'Ping', 'ack me');
+            $received = $subscriber->consume(limit: 1, timeout: 20.0, shouldAck: fn () => $acknowledge);
+            $this->assertCount(1, $received);
+            $this->assertSame(1, $received[0]['qos']);
+        } finally {
+            $subscriber->disconnect();
+        }
+
+        return [$projectId, $this->mintProjectKey($projectId, ['usage.read'])];
     }
 
     /** Skip when the stack has no usage pipeline (the dedicated MQTT lane may omit it). */

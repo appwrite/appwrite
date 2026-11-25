@@ -438,6 +438,7 @@ class ClickHouse extends SQL
             Attribute::string(key: 'deviceName'),
             Attribute::string(key: 'deviceBrand'),
             Attribute::string(key: 'deviceModel'),
+            Attribute::string(key: 'reason'),
         ];
     }
 
@@ -1217,6 +1218,11 @@ class ClickHouse extends SQL
                     $cursor = $this->normalizeCursorRow($rawCursor);
                     $cursorDirection = $method === Method::CursorAfter ? 'after' : 'before';
                     break;
+
+                default:
+                    // A method with no clause here (and, or, groupBy, …) used to be skipped,
+                    // which widened the result to every row the other filters allowed.
+                    throw new \Exception('Query method not supported by the ClickHouse audit adapter: ' . $method->value);
             }
         }
 

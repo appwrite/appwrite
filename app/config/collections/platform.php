@@ -35,6 +35,7 @@ $platformCollections = [
             Attribute::string(key: 'services', size: 16384, default: [], filters: [Filter::Json]),
             Attribute::string(key: 'apis', size: 16384, default: [], filters: [Filter::Json]),
             Attribute::string(key: 'smtp', size: 16384, default: [], filters: [Filter::Json, 'encrypt']),
+            Attribute::string(key: 'ldap', size: 16384, default: [], filters: [Filter::Json, 'encrypt']),
             // TODO make sure size fits
             Attribute::string(key: 'templates', size: 1_000_000, default: [], filters: [Filter::Json]),
             Attribute::string(key: 'auths', size: 16384, default: [], filters: [Filter::Json]),
@@ -46,6 +47,7 @@ $platformCollections = [
             Attribute::integer(key: 'pingCount', default: 0, signed: false),
             Attribute::datetime(key: 'pingedAt'),
             Attribute::string(key: 'labels', size: 128, default: [], array: true),
+            Attribute::string(key: 'prefs', size: 65535, default: new \stdClass(), filters: [Filter::Json]),
             Attribute::string(key: 'onboarding', size: 65536, default: [], filters: [Filter::Json]),
             Attribute::string(key: 'status', size: 100),
         ],
@@ -136,6 +138,34 @@ $platformCollections = [
         ],
     ],
 
+    'transfers' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('transfers'),
+        'name' => 'transfers',
+        'attributes' => [
+            // What is being transferred
+            Attribute::string(key: 'resourceType', required: true),
+            Attribute::string(key: 'resourceId', required: true),
+            Attribute::string(key: 'resourceInternalId', required: true),
+            // Who owns the resource when the transfer is created
+            Attribute::string(key: 'senderType', required: true),
+            Attribute::string(key: 'senderId', required: true),
+            Attribute::string(key: 'senderInternalId', required: true),
+            // Who may claim the resource; an empty recipientId allows any recipient of the type
+            Attribute::string(key: 'recipientType', required: true),
+            Attribute::string(key: 'recipientId', default: ''),
+            Attribute::string(key: 'recipientInternalId', default: ''),
+            // Encrypted rather than hashed, so the sender can copy the link again
+            Attribute::string(key: 'secret', size: 512, required: true, filters: ['encrypt']),
+            Attribute::datetime(key: 'expire', required: true),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_resource', attributes: ['resourceType', 'resourceInternalId']),
+            Index::key(key: '_key_sender', attributes: ['senderType', 'senderInternalId']),
+            Index::key(key: '_key_expire', attributes: ['expire']),
+        ],
+    ],
+
     'webhooks' => [
         '$collection' => Id::custom(Database::METADATA),
         '$id' => Id::custom('webhooks'),
@@ -158,6 +188,115 @@ $platformCollections = [
         'indexes' => [
             Index::key(key: '_key_project', attributes: ['projectInternalId'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),
             Index::key(key: '_key_project_id', attributes: ['projectId'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),
+        ],
+    ],
+
+    'monitors' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('monitors'),
+        'name' => 'Monitors',
+        'attributes' => [
+            Attribute::string(key: 'name', size: 128, required: true, default: ''),
+            Attribute::string(key: 'teamId', required: true, default: ''),
+            Attribute::id(key: 'teamInternalId', required: true, default: ''),
+            Attribute::string(key: 'projectId', default: ''),
+            Attribute::id(key: 'projectInternalId'),
+            Attribute::string(key: 'region', size: 16, default: ''),
+            Attribute::string(key: 'type', size: 32, required: true, default: ''),
+            Attribute::string(key: 'resourceType', size: 32, required: true, default: ''),
+            Attribute::string(key: 'resourceId', required: true, default: ''),
+            Attribute::id(key: 'resourceInternalId', required: true, default: ''),
+            Attribute::string(key: 'rules', size: 1024, default: [], array: true),
+            Attribute::string(key: 'metric', size: 64, required: true, default: ''),
+            Attribute::string(key: 'comparator', size: 32, required: true, default: ''),
+            Attribute::double(key: 'threshold', required: true, default: 0.0),
+            Attribute::integer(key: 'window', required: true, default: 3600, signed: false),
+            Attribute::integer(key: 'cooldown', required: true, default: 3600, signed: false),
+            Attribute::string(key: 'notify', size: 32, default: ['owner'], array: true),
+            Attribute::string(key: 'escalationId', default: ''),
+            Attribute::string(key: 'severity', size: 16, default: 'warning'),
+            Attribute::boolean(key: 'enabled', required: true, default: true),
+            Attribute::string(key: 'status', size: 16, required: true, default: 'ok'),
+            Attribute::double(key: 'value'),
+            Attribute::datetime(key: 'evaluatedAt'),
+            Attribute::datetime(key: 'triggeredAt'),
+            Attribute::boolean(key: 'announced', default: false),
+            Attribute::string(key: 'alertId', default: ''),
+            Attribute::string(key: 'search', size: 2048),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_teamInternalId', attributes: ['teamInternalId']),
+            Index::key(key: '_key_projectInternalId', attributes: ['projectInternalId']),
+            Index::key(key: '_key_resource', attributes: ['resourceType', 'resourceInternalId']),
+            Index::key(key: '_key_region_enabled', attributes: ['region', 'enabled']),
+            Index::key(key: '_key_escalationId', attributes: ['escalationId']),
+            Index::fulltext(key: '_fulltext_search', attributes: ['search']),
+        ],
+    ],
+
+    'monitorAlerts' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('monitorAlerts'),
+        'name' => 'Monitor Alerts',
+        'attributes' => [
+            Attribute::string(key: 'name', size: 128, required: true, default: ''),
+            Attribute::string(key: 'monitorId', required: true, default: ''),
+            Attribute::id(key: 'monitorInternalId', required: true, default: ''),
+            Attribute::string(key: 'teamId', required: true, default: ''),
+            Attribute::id(key: 'teamInternalId', required: true, default: ''),
+            Attribute::string(key: 'projectId', default: ''),
+            Attribute::id(key: 'projectInternalId'),
+            Attribute::string(key: 'region', size: 16, default: ''),
+            Attribute::string(key: 'status', size: 16, required: true, default: 'firing'),
+            Attribute::string(key: 'rules', size: 1024, default: [], array: true),
+            Attribute::string(key: 'severity', size: 16, default: 'warning'),
+            Attribute::string(key: 'type', size: 32, required: true, default: ''),
+            Attribute::string(key: 'resourceType', size: 32, required: true, default: ''),
+            Attribute::string(key: 'resourceId', required: true, default: ''),
+            Attribute::string(key: 'metric', size: 64, required: true, default: ''),
+            Attribute::string(key: 'comparator', size: 32, required: true, default: ''),
+            Attribute::double(key: 'threshold', required: true, default: 0.0),
+            Attribute::double(key: 'value', required: true, default: 0.0),
+            Attribute::double(key: 'peak', required: true, default: 0.0),
+            Attribute::integer(key: 'notifications', required: true, default: 0, signed: false),
+            Attribute::datetime(key: 'resolvedAt'),
+            Attribute::datetime(key: 'acknowledgedAt'),
+            Attribute::string(key: 'acknowledgedBy', default: ''),
+            Attribute::string(key: 'acknowledgedByName', size: 128, default: ''),
+            Attribute::string(key: 'escalationId', default: ''),
+            Attribute::string(key: 'escalationSteps', size: 65535, default: [], filters: [Filter::Json]),
+            Attribute::string(key: 'escalationUserIds', size: 1_000_000, default: [], filters: [Filter::Json]),
+            Attribute::integer(key: 'escalationRepeat', default: 0, signed: false),
+            Attribute::integer(key: 'escalationStep', default: 0, signed: false),
+            Attribute::integer(key: 'escalationRound', default: 0, signed: false),
+            Attribute::datetime(key: 'escalatesAt'),
+            Attribute::string(key: 'search', size: 2048),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_teamInternalId', attributes: ['teamInternalId']),
+            Index::key(key: '_key_project_status', attributes: ['projectInternalId', 'status']),
+            Index::key(key: '_key_monitor_status', attributes: ['monitorInternalId', 'status']),
+            Index::key(key: '_key_resource', attributes: ['resourceType', 'resourceId']),
+            Index::key(key: '_key_region_status_resolvedAt', attributes: ['region', 'status', 'resolvedAt']),
+            Index::fulltext(key: '_fulltext_search', attributes: ['search']),
+        ],
+    ],
+
+    'escalations' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('escalations'),
+        'name' => 'Escalations',
+        'attributes' => [
+            Attribute::string(key: 'name', size: 128, required: true, default: ''),
+            Attribute::string(key: 'teamId', required: true, default: ''),
+            Attribute::id(key: 'teamInternalId', required: true, default: ''),
+            Attribute::string(key: 'steps', size: 65535, default: [], filters: [Filter::Json]),
+            Attribute::integer(key: 'repeat', default: 0, signed: false),
+            Attribute::string(key: 'search', size: 2048),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_teamInternalId', attributes: ['teamInternalId']),
+            Index::fulltext(key: '_fulltext_search', attributes: ['search']),
         ],
     ],
 
@@ -185,12 +324,17 @@ $platformCollections = [
             Attribute::boolean(key: 'read', default: false),
             Attribute::datetime(key: 'firstSeen'),
             Attribute::datetime(key: 'lastSeen'),
+            // What a console notification is about, such as an alert, and where it stands; empty for a notification about nothing that changes
+            Attribute::string(key: 'subjectType', size: 64, default: ''),
+            Attribute::string(key: 'subjectId', default: ''),
+            Attribute::string(key: 'status', size: 16, default: ''),
         ],
         'indexes' => [
             Index::key(key: '_key_messageId', attributes: ['messageId'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),
             Index::unique(key: '_key_recipient', attributes: ['messageId', 'channel', 'recipientHash'], lengths: [Database::LENGTH_KEY, 64, 64], orders: [OrderDirection::Asc, OrderDirection::Asc, OrderDirection::Asc]),
             Index::key(key: '_key_project', attributes: ['projectId', 'projectInternalId'], lengths: [Database::LENGTH_KEY, 0], orders: [OrderDirection::Asc, OrderDirection::Asc]),
             Index::key(key: '_key_team', attributes: ['teamId', 'teamInternalId']),
+            Index::key(key: '_key_subject', attributes: ['subjectType', 'subjectId'], lengths: [64, Database::LENGTH_KEY], orders: [OrderDirection::Asc, OrderDirection::Asc]),
             Index::key(key: '_key_project_resource', attributes: ['projectId', 'projectInternalId', 'resourceType', 'resourceId', 'resourceInternalId'], lengths: [Database::LENGTH_KEY, 0, 64, Database::LENGTH_KEY, 0], orders: [OrderDirection::Asc, OrderDirection::Asc, OrderDirection::Asc, OrderDirection::Asc, OrderDirection::Asc]),
             Index::key(key: '_key_project_parent_resource', attributes: ['projectId', 'projectInternalId', 'parentResourceType', 'parentResourceId', 'parentResourceInternalId'], lengths: [Database::LENGTH_KEY, 0, 64, Database::LENGTH_KEY, 0], orders: [OrderDirection::Asc, OrderDirection::Asc, OrderDirection::Asc, OrderDirection::Asc, OrderDirection::Asc]),
         ],
@@ -210,6 +354,9 @@ $platformCollections = [
             Attribute::integer(key: 'attempts'),
             Attribute::string(key: 'logs', size: 1000000),
             Attribute::datetime(key: 'updated'),
+            Attribute::datetime(key: 'expireDate'),
+            // Last state the certificate provider reported, or failed once generation gave up; a Utopia\Cdn\Certificates\Status value
+            Attribute::string(key: 'status', size: 16, default: ''),
         ],
         'indexes' => [
             Index::key(key: '_key_domain', attributes: ['domain'], lengths: [255], orders: [OrderDirection::Asc]),
@@ -257,6 +404,8 @@ $platformCollections = [
             Attribute::string(key: 'owner', size: 16, default: ''),
             Attribute::string(key: 'region', size: 16, required: true),
             Attribute::string(key: 'logs', size: 1000000, default: ''),
+            // Latest DNS record checks from verification, one ruleRecords row per record type
+            Attribute::string(key: 'records', size: 16384, filters: ['subQueryRuleRecords']),
         ],
         'indexes' => [
             Index::fulltext(key: '_key_search', attributes: ['search']),
@@ -277,6 +426,33 @@ $platformCollections = [
         ],
     ],
 
+    'ruleRecords' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('ruleRecords'),
+        'name' => 'Rule Records',
+        'attributes' => [
+            Attribute::string(key: 'projectInternalId', required: true),
+            Attribute::string(key: 'ruleInternalId', required: true),
+            Attribute::string(key: 'ruleId'),
+            // 'CAA', 'CNAME', 'A' or 'AAAA'
+            Attribute::string(key: 'type', size: 16, required: true),
+            // Hostname the record was looked up for, or the parent a blocking CAA record was found on
+            Attribute::string(key: 'name', required: true),
+            // Value the user must set
+            Attribute::string(key: 'expected', required: true),
+            // Values DNS returned, at most 10
+            Attribute::string(key: 'current', array: true, default: []),
+            // 'verified', 'missing', 'mismatch', 'misplaced' or 'failed'
+            Attribute::string(key: 'status', size: 16, required: true),
+            Attribute::string(key: 'message', size: 1000, default: ''),
+            Attribute::boolean(key: 'required', default: false),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_rule', attributes: ['ruleInternalId'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),
+            Index::key(key: '_key_project', attributes: ['projectInternalId'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),
+        ],
+    ],
+
     'installations' => [
         '$collection' => Id::custom(Database::METADATA),
         '$id' => Id::custom('installations'),
@@ -291,6 +467,8 @@ $platformCollections = [
             Attribute::text(key: 'personalAccessToken', size: 65535, filters: ['encrypt']),
             Attribute::datetime(key: 'personalAccessTokenExpiry'),
             Attribute::text(key: 'personalRefreshToken', size: 65535, filters: ['encrypt']),
+            // Code review only: whether repositories added to the installation later are reviewed.
+            Attribute::boolean(key: 'reviewNewRepositories', default: false),
         ],
         'indexes' => [
             Index::key(key: '_key_projectInternalId', attributes: ['projectInternalId'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),
@@ -313,6 +491,8 @@ $platformCollections = [
             Attribute::string(key: 'resourceInternalId'),
             Attribute::string(key: 'resourceType', required: true),
             Attribute::string(key: 'providerPullRequestIds', size: 128, array: true),
+            // Code review only: how hard its pull requests are reviewed (Appwrite\Reviews\Strength).
+            Attribute::string(key: 'strength', size: 16, default: 'normal'),
         ],
         'indexes' => [
             Index::key(key: '_key_installationId', attributes: ['installationId'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),

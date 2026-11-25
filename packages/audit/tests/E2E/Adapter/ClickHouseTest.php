@@ -149,6 +149,40 @@ final class ClickHouseTest extends TestCase
     }
 
     /**
+     * A method the adapter has no SQL for (and, or, groupBy, …) used to be skipped,
+     * so a logical filter returned every log the other filters allowed. find() and
+     * count() now refuse it.
+     */
+    public function testUnsupportedQueryMethodsAreRefusedNotSkipped(): void
+    {
+        $unsupported = [
+            'or' => Query::or([Query::equal('event', ['create']), Query::equal('event', ['delete'])]),
+            'and' => Query::and([Query::equal('event', ['create'])]),
+            'groupBy' => Query::groupBy(['event']),
+        ];
+
+        foreach ($unsupported as $name => $query) {
+            foreach (['find', 'count'] as $call) {
+                $thrown = null;
+                try {
+                    $this->audit->{$call}([Query::equal('userId', ['userId']), $query]);
+                } catch (Exception $e) {
+                    $thrown = $e;
+                }
+
+                $this->assertNotNull($thrown, "{$call}() with {$name} should throw");
+                $this->assertSame(
+                    'Query method not supported by the ClickHouse audit adapter: ' . $query->getMethod()->value,
+                    $thrown->getMessage(),
+                    "{$call}() with {$name}",
+                );
+            }
+        }
+
+        $this->assertNotEmpty($this->audit->find([Query::equal('userId', ['userId'])]));
+    }
+
+    /**
      * Test setDatabase validates empty identifier
      */
     public function testSetDatabaseValidatesEmpty(): void
@@ -757,6 +791,49 @@ final class ClickHouseTest extends TestCase
         $this->assertSame($ua['deviceName'], $log->getDeviceName());
         $this->assertSame($ua['deviceBrand'], $log->getDeviceBrand());
         $this->assertSame($ua['deviceModel'], $log->getDeviceModel());
+    }
+
+    /**
+     * The reason an actor gave must round-trip through a real write/read cycle,
+     * and read as null on a log written without one.
+     */
+    public function testReasonRoundTrip(): void
+    {
+        $actorId = 'reason-actor-' . uniqid('', true);
+        $time = \Utopia\Database\DateTime::formatTz(\Utopia\Database\DateTime::now()) ?? '';
+
+        $batchEvents = $this->applyRequiredAttributesToBatch([
+            [
+                'actorId' => $actorId,
+                'event' => 'reason.given',
+                'resource' => 'document/reason-1',
+                'userAgent' => 'RoundTrip/1.0',
+                'ip' => '8.8.8.8',
+                'data' => [],
+                'time' => $time,
+                'reason' => 'Tým podpory — replaced by the sessions table',
+            ],
+            [
+                'actorId' => $actorId,
+                'event' => 'reason.missing',
+                'resource' => 'document/reason-2',
+                'userAgent' => 'RoundTrip/1.0',
+                'ip' => '8.8.8.8',
+                'data' => [],
+                'time' => $time,
+            ],
+        ]);
+        $this->assertTrue($this->audit->logBatch($batchEvents));
+
+        $logs = $this->audit->getLogsByUser($actorId);
+        $this->assertCount(2, $logs, 'reason round-trip logs were not persisted');
+
+        $byEvent = [];
+        foreach ($logs as $log) {
+            $byEvent[$log->getEvent()] = $log;
+        }
+        $this->assertSame('Tým podpory — replaced by the sessions table', $byEvent['reason.given']->getReason());
+        $this->assertNull($byEvent['reason.missing']->getReason());
     }
 
     /**

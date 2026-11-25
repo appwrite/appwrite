@@ -6,11 +6,12 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Message\Migration as MigrationMessage;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Extend\Exception;
-use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Platform\Modules\Migrations\Http\Migrations\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Storage\Encryption;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
@@ -28,7 +29,6 @@ use Utopia\Migration\Transfer;
 use Utopia\Platform\Enum;
 use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
-use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\WhiteList;
 
@@ -69,6 +69,7 @@ class Create extends Action
             ->param('collectionId', '', new UID(), 'Collection ID to import documents into.')
             ->param('internalFile', false, new Boolean(), 'Is the file stored in an internal bucket?', true)
             ->param('onDuplicate', OnDuplicate::Fail->value, new WhiteList(OnDuplicate::values()), 'Behavior when a row with an existing $id is encountered. "fail" (default): abort on first conflict. "skip": silently ignore. "overwrite": replace existing row.', true, enum: new Enum(name: 'OnDuplicate'))
+            ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
@@ -90,6 +91,7 @@ class Create extends Action
         string $collectionId,
         bool $internalFile,
         string $onDuplicate,
+        Request $request,
         Response $response,
         Database $dbForProject,
         Database $dbForPlatform,
@@ -133,6 +135,16 @@ class Create extends Action
         }
 
         $databaseType = $database->getAttribute('type');
+
+        $scopes = $this->authorize($request, [], [
+            match ($databaseType) {
+                DATABASE_TYPE_DOCUMENTSDB => ['documentsdb.documents.write'],
+                DATABASE_TYPE_VECTORSDB => ['vectorsdb.documents.write'],
+                default => ['rows.write', 'documents.write'],
+            },
+            ...($internalFile ? [] : [['files.read']]),
+        ]);
+
         if (!\in_array($databaseType, CSV_ALLOWED_DATABASE_TYPES)) {
             throw new Exception(Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED, 'Database type not supported for csv');
         }
@@ -142,7 +154,6 @@ class Create extends Action
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        // No encryption or compression on files above 20MB.
         $hasEncryption = !empty($file->getAttribute('openSSLCipher'));
         $compression = $file->getAttribute('algorithm', Compression::NONE);
         $hasCompression = $compression !== Compression::NONE;
@@ -150,18 +161,14 @@ class Create extends Action
         $migrationId = Id::unique();
         $newPath = $deviceForMigrations->getPath($migrationId . '_' . $fileId . '.csv');
 
-        if ($hasEncryption || $hasCompression) {
+        $encryption = new Encryption($file);
+        if ($encryption->isSegmented()) {
+            $encryption->copy($deviceForFiles, $deviceForMigrations, $newPath, 'text/csv');
+        } elseif ($hasEncryption || $hasCompression) {
             $source = (string) $deviceForFiles->read($path);
 
             if ($hasEncryption) {
-                $source = OpenSSL::decrypt(
-                    $source,
-                    $file->getAttribute('openSSLCipher'),
-                    System::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
-                    0,
-                    hex2bin($file->getAttribute('openSSLIV')),
-                    hex2bin($file->getAttribute('openSSLTag'))
-                );
+                $source = $encryption->decrypt($source);
             }
 
             if ($hasCompression) {
@@ -210,6 +217,7 @@ class Create extends Action
                 'path' => $newPath,
                 'size' => $fileSize,
                 'onDuplicate' => $onDuplicate,
+                'scopes' => $scopes,
             ],
         ]));
 

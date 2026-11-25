@@ -22,6 +22,12 @@ abstract readonly class RedisBase extends TimeLimit
     /**
      * KEYS[1] window counter. ARGV[1] value, ARGV[2] ttl seconds.
      */
+    protected const string UNHIT_SCRIPT = <<<'LUA'
+        local c = tonumber(redis.call('GET', KEYS[1]) or '0') or 0
+        if c > 0 then redis.call('DECR', KEYS[1]) end
+        return c
+        LUA;
+
     protected const string SET_SCRIPT = <<<'LUA'
         redis.call('SET', KEYS[1], ARGV[1])
         redis.call('EXPIRE', KEYS[1], ARGV[2])
@@ -63,6 +69,12 @@ abstract readonly class RedisBase extends TimeLimit
     protected function set(string $key, int $window, int $value): void
     {
         $this->eval(self::SET_SCRIPT, [$this->windowKey($key, $window)], [$value, $this->seconds]);
+    }
+
+    #[\Override]
+    protected function unhit(string $key, int $window): void
+    {
+        $this->eval(self::UNHIT_SCRIPT, [$this->windowKey($key, $window)], []);
     }
 
     #[\Override]

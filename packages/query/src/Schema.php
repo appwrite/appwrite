@@ -10,8 +10,14 @@ use Utopia\Query\Schema\IndexType;
 use Utopia\Query\Schema\Order;
 use Utopia\Query\Schema\Table;
 
+/**
+ * DDL takes no bound parameters, so string literals (comments, defaults, enum
+ * values) are inlined through the dialect's {@see StringLiteral}.
+ */
 abstract class Schema
 {
+    protected StringLiteral $literal = StringLiteral::Backslash;
+
     /** @var (Closure(Statement): (array<mixed>|int))|null */
     protected ?Closure $executor = null;
 
@@ -297,7 +303,7 @@ abstract class Schema
             }
 
             if ($column->comment !== null) {
-                $parts[] = "COMMENT '" . \str_replace(['\\', "'"], ['\\\\', "''"], $column->comment) . "'";
+                $parts[] = 'COMMENT ' . $this->literal->quote($column->comment);
             }
 
             return \implode(' ', $parts);
@@ -324,7 +330,7 @@ abstract class Schema
         }
 
         if ($column->comment !== null) {
-            $parts[] = "COMMENT '" . \str_replace(['\\', "'"], ['\\\\', "''"], $column->comment) . "'";
+            $parts[] = 'COMMENT ' . $this->literal->quote($column->comment);
         }
 
         return \implode(' ', $parts);
@@ -356,7 +362,7 @@ abstract class Schema
         }
 
         /** @var string|int|float $value */
-        return "'" . \str_replace(['\\', "'"], ['\\\\', "''"], (string) $value) . "'";
+        return $this->literal->quote((string) $value);
     }
 
     /**
@@ -399,7 +405,7 @@ abstract class Schema
 
             if (isset($index->collations[$col])) {
                 $collation = $index->collations[$col];
-                if (! \preg_match('/^[A-Za-z0-9_]+$/', $collation)) {
+                if (! \preg_match('/^[A-Za-z0-9_]+$/D', $collation)) {
                     throw new ValidationException('Invalid collation: ' . $collation);
                 }
                 $part .= ' COLLATE ' . $collation;

@@ -1,0 +1,35 @@
+<svg width="482" height="340" viewBox="0 0 482 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="lotusTowerGrad" x1="241" y1="26" x2="241" y2="381" gradientUnits="userSpaceOnUse">
+<stop stop-color="#19191C"/>
+<stop offset="0.17" stop-color="#2F1820"/>
+<stop offset="0.34" stop-color="#531A2C"/>
+<stop offset="0.51" stop-color="#9F1D42"/>
+<stop offset="0.68" stop-color="#FD366E"/>
+<stop offset="0.85" stop-color="#FEAFC5"/>
+<stop offset="1" stop-color="#EDEDF0"/>
+</linearGradient>
+<g id="lotusTowerBack">
+<path d="M104 240H124V296H104Z"/>
+<path d="M126 222H142V296H126Z"/>
+<path d="M342 230H360V296H342Z"/>
+<path d="M362 250H382V296H362Z"/>
+</g>
+<g id="lotusTower">
+<path d="M140 262H342V296H140Z"/>
+<path d="M134 262L156 248H326L348 262Z"/>
+<path d="M233 248L236 134H246L249 248Z"/>
+<path d="M241 138C214 134 200 116 204 96C218 100 230 106 241 118C252 106 264 100 278 96C282 116 268 134 241 138Z"/>
+<path d="M241 138C228 122 228 98 241 76C254 98 254 122 241 138Z"/>
+<path d="M239.25 36H242.75V76H239.25Z"/>
+<path d="M96 296H386V310H96Z"/>
+</g>
+</defs>
+<use href="#lotusTowerBack" fill="#19191C"/>
+<use href="#lotusTowerBack" fill="url(#lotusTowerGrad)"/>
+<use href="#lotusTowerBack" stroke="#FD366E" stroke-width="1.36239"/>
+<use href="#lotusTower" fill="#19191C"/>
+<use href="#lotusTower" fill="url(#lotusTowerGrad)"/>
+<use href="#lotusTower" stroke="#FD366E" stroke-width="1.36239"/>
+<g stroke="#FD366E" stroke-width="1.36239" stroke-linecap="round" fill="none"><path d="M241 118L241 136"/><path d="M216 106C224 116 232 126 241 134"/><path d="M266 106C258 116 250 126 241 134"/><path d="M235 170H247"/><path d="M234.5 210H247.5"/><path d="M156 268V296"/><path d="M172 268V296"/><path d="M188 268V296"/><path d="M204 268V296"/><path d="M220 268V296"/><path d="M236 268V296"/><path d="M252 268V296"/><path d="M268 268V296"/><path d="M284 268V296"/><path d="M300 268V296"/><path d="M316 268V296"/></g>
+</svg>

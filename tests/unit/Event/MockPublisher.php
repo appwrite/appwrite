@@ -42,6 +42,11 @@ class MockPublisher implements Publisher
         return count($this->events[$queue->name] ?? []);
     }
 
+    public function getQueueAge(Queue $queue): int
+    {
+        return 0;
+    }
+
     public function getFailedCount(Queue $queue): int
     {
         // Nothing recorded here ever fails: this double only collects what was

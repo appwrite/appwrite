@@ -6,6 +6,7 @@ namespace Tests\Unit\Utopia;
 
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Parameter;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Request\Filter;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -14,6 +15,7 @@ use Swoole\Http\Request as SwooleRequest;
 use Tests\Unit\Utopia\Request\Filters\First;
 use Tests\Unit\Utopia\Request\Filters\Second;
 use Tests\Unit\Utopia\Request\Filters\ThrowingFilter;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Route;
 
 final class RequestTest extends TestCase
@@ -100,6 +102,61 @@ final class RequestTest extends TestCase
         } finally {
             putenv($previous === false ? '_APP_TRUSTED_PROXIES' : '_APP_TRUSTED_PROXIES=' . $previous);
         }
+    }
+
+    #[DataProvider('forwardedIPCases')]
+    public function testGetClientIPHonorsForwardedIPFromKey(string $forwardedIP, string $expected): void
+    {
+        $request = $this->requestWithForwardedIP($forwardedIP, User::ROLE_KEYS);
+
+        $this->assertSame($expected, $request->getClientIP());
+        $this->assertSame('203.0.113.10', $request->getIP());
+    }
+
+    public function testGetClientIPIgnoresForwardedIPWithoutKey(): void
+    {
+        $request = $this->requestWithForwardedIP('198.51.100.7', User::ROLE_USERS);
+
+        $this->assertSame('203.0.113.10', $request->getClientIP());
+    }
+
+    public function testGetClientIPIgnoresForwardedIPBeforeAuthorization(): void
+    {
+        $swoole = new SwooleRequest();
+        $swoole->server = ['remote_addr' => '203.0.113.10'];
+        $swoole->header = ['x-forwarded-ip' => '198.51.100.7'];
+        $request = new Request($swoole);
+
+        $this->assertSame('203.0.113.10', $request->getClientIP());
+    }
+
+    /**
+     * @return \Iterator<string, array{0: string, 1: string}>
+     */
+    public static function forwardedIPCases(): \Iterator
+    {
+        yield 'IPv4' => ['198.51.100.7', '198.51.100.7'];
+        yield 'IPv6' => ['2001:db8::7', '2001:db8::7'];
+        yield 'surrounding whitespace' => [' 198.51.100.7 ', '198.51.100.7'];
+        yield 'not an address uses connection' => ['not-an-ip', '203.0.113.10'];
+        yield 'list of addresses uses connection' => ['198.51.100.7, 198.51.100.8', '203.0.113.10'];
+        yield 'empty uses connection' => ['', '203.0.113.10'];
+    }
+
+    private function requestWithForwardedIP(string $forwardedIP, string $role): Request
+    {
+        $swoole = new SwooleRequest();
+        $swoole->server = ['remote_addr' => '203.0.113.10'];
+        $swoole->header = ['x-forwarded-ip' => $forwardedIP];
+
+        $authorization = new Authorization();
+        $authorization->addRole($role);
+
+        $request = new Request($swoole);
+        $request->setAuthorization($authorization);
+        $request->setUser(new User());
+
+        return $request;
     }
 
     /**
@@ -255,6 +312,111 @@ final class RequestTest extends TestCase
         $this->assertSame($secondRoute, $secondRequest->getRoute());
     }
 
+    #[DataProvider('acceptedTypeCases')]
+    public function testGetAcceptedType(string $accept, ?string $expected): void
+    {
+        $this->request->addHeader('accept', $accept);
+
+        $this->assertSame($expected, $this->request->getAcceptedType(['image/avif', 'image/webp']));
+    }
+
+    public static function acceptedTypeCases(): \Iterator
+    {
+        yield 'browser with avif' => ['image/avif,image/webp,image/apng,image/*,*/*;q=0.8', 'image/avif'];
+        yield 'server preference wins over header order' => ['image/webp, image/avif', 'image/avif'];
+        yield 'webp only' => ['image/webp,*/*', 'image/webp'];
+        yield 'refused with zero quality' => ['image/avif;q=0, image/webp;q=0.5', 'image/webp'];
+        yield 'case and spacing' => [' IMAGE/AVIF ; Q=1 ', 'image/avif'];
+        yield 'wildcards do not count' => ['image/*,*/*', null];
+        yield 'empty' => ['', null];
+    }
+
+    public function testGetNegotiatedParamsResolvesAuto(): void
+    {
+        $this->setupNegotiatedRoute();
+        $this->request->addHeader('accept', 'image/webp,*/*');
+        $this->request->setQueryString(['output' => 'auto']);
+
+        $this->assertSame(['output' => 'webp'], $this->request->getNegotiatedParams());
+    }
+
+    public function testGetNegotiatedParamsFallsBackToEmpty(): void
+    {
+        $this->setupNegotiatedRoute();
+        $this->request->addHeader('accept', '*/*');
+        $this->request->setQueryString(['output' => 'auto']);
+
+        $this->assertSame(['output' => ''], $this->request->getNegotiatedParams());
+    }
+
+    public function testGetNegotiatedParamsIgnoresExplicitValues(): void
+    {
+        $this->setupNegotiatedRoute();
+        $this->request->addHeader('accept', 'image/avif');
+        $this->request->setQueryString(['output' => 'png']);
+
+        $this->assertSame([], $this->request->getNegotiatedParams());
+    }
+
+    public function testCacheIdentifierKeysAutoByNegotiatedValue(): void
+    {
+        $avif = $this->negotiatedRequest('image/avif,image/webp', ['output' => 'auto', 'width' => '100']);
+        $webp = $this->negotiatedRequest('image/webp', ['output' => 'auto', 'width' => '100']);
+        $none = $this->negotiatedRequest('*/*', ['output' => 'auto', 'width' => '100']);
+
+        $this->assertNotSame($avif->cacheIdentifier(), $webp->cacheIdentifier());
+        $this->assertSame($avif->cacheIdentifier(), $this->negotiatedRequest('*/*', ['output' => 'avif', 'width' => '100'])->cacheIdentifier());
+        $this->assertSame($webp->cacheIdentifier(), $this->negotiatedRequest('image/avif', ['output' => 'webp', 'width' => '100'])->cacheIdentifier());
+        $this->assertSame($none->cacheIdentifier(), $this->negotiatedRequest('image/avif', ['width' => '100'])->cacheIdentifier());
+    }
+
+    public function testCacheIdentifierNegotiatesWithoutCacheParams(): void
+    {
+        // Routes without a `cache.params` allowlist (like avatars screenshots) key every param
+        $route = new Route(Request::METHOD_GET, '/screenshots');
+        $route->label('cache.negotiate', ['output' => ['avif' => 'image/avif', 'webp' => 'image/webp']]);
+        $url = 'https://example.com';
+
+        $avif = $this->negotiatedRequest('image/avif', ['url' => $url, 'output' => 'auto'], $route);
+        $none = $this->negotiatedRequest('*/*', ['url' => $url, 'output' => 'auto'], $route);
+
+        $this->assertSame($avif->cacheIdentifier(), $this->negotiatedRequest('*/*', ['url' => $url, 'output' => 'avif'], $route)->cacheIdentifier());
+        $this->assertSame($none->cacheIdentifier(), $this->negotiatedRequest('image/avif', ['url' => $url], $route)->cacheIdentifier());
+        $this->assertNotSame($avif->cacheIdentifier(), $none->cacheIdentifier());
+    }
+
+    public function testCacheIdentifierIgnoresAcceptForExplicitValues(): void
+    {
+        $first = $this->negotiatedRequest('image/avif', ['output' => 'png']);
+        $second = $this->negotiatedRequest('*/*', ['output' => 'png']);
+
+        $this->assertSame($first->cacheIdentifier(), $second->cacheIdentifier());
+    }
+
+    public function testCacheIdentifierKeysByTheAcceptedTypeNotTheHeader(): void
+    {
+        // A route that upgrades to webp from the Accept header alone, like video thumbnails
+        $route = new Route(Request::METHOD_GET, '/thumbnail');
+        $route->label('cache.accept', ['image/webp']);
+
+        $chrome = $this->negotiatedRequest('image/avif,image/webp,image/apng,*/*;q=0.8', [], $route);
+        $firefox = $this->negotiatedRequest('image/webp,*/*', [], $route);
+        $legacy = $this->negotiatedRequest('image/png,*/*', [], $route);
+
+        $this->assertSame($chrome->cacheIdentifier(), $firefox->cacheIdentifier());
+        $this->assertNotSame($chrome->cacheIdentifier(), $legacy->cacheIdentifier());
+    }
+
+    public function testCacheIdentifierIgnoresAcceptWithoutCacheAccept(): void
+    {
+        $route = new Route(Request::METHOD_GET, '/download');
+
+        $webp = $this->negotiatedRequest('image/webp', ['token' => 'abc'], $route);
+        $html = $this->negotiatedRequest('text/html', ['token' => 'abc'], $route);
+
+        $this->assertSame($webp->cacheIdentifier(), $html->cacheIdentifier());
+    }
+
     public function testGetHeaderLineReturnsStringValue(): void
     {
         $this->request->addHeader('referer', 'https://example.com');
@@ -275,6 +437,41 @@ final class RequestTest extends TestCase
         $request = new Request($swoole);
 
         $this->assertSame('https://a.example, https://b.example', $request->getHeaderLine('referer'));
+    }
+
+    /**
+     * @param array{0: ?string, 1: ?int, 2: ?int} $expected
+     */
+    #[DataProvider('ranges')]
+    public function testParseRange(string $header, array $expected): void
+    {
+        $swoole = new SwooleRequest();
+        $swoole->header = ['range' => $header];
+        $request = new Request($swoole);
+
+        $this->assertSame($expected[0], $request->getRangeUnit());
+        $this->assertSame($expected[1], $request->getRangeStart());
+        $this->assertSame($expected[2], $request->getRangeEnd());
+    }
+
+    /**
+     * @return \Iterator<string, array{string, array{(string | null), (int | null), (int | null)}}>
+     */
+    public static function ranges(): \Iterator
+    {
+        // RFC 9110 bounds are inclusive, so start === end asks for one byte.
+        yield 'first byte' => ['bytes=0-0', ['bytes', 0, 0]];
+        yield 'last byte' => ['bytes=511-511', ['bytes', 511, 511]];
+        yield 'closed' => ['bytes=100-199', ['bytes', 100, 199]];
+        yield 'open ended' => ['bytes=100-', ['bytes', 100, null]];
+        yield 'other unit' => ['items=0-1', ['items', 0, 1]];
+        yield 'reversed' => ['bytes=200-100', [null, null, null]];
+        yield 'suffix' => ['bytes=-500', [null, null, null]];
+        yield 'multiple' => ['bytes=0-99,200-299', [null, null, null]];
+        yield 'not a number' => ['bytes=a-b', [null, null, null]];
+        yield 'no bounds' => ['bytes=', [null, null, null]];
+        yield 'no unit' => ['=0-99', [null, null, null]];
+        yield 'empty' => ['', [null, null, null]];
     }
 
     public function testGetHeadersSynthesizesCookieHeaderFromCookieJar(): void
@@ -494,5 +691,33 @@ final class RequestTest extends TestCase
         $this->request->addFilter(new First());
         $this->request->addFilter(new Second());
         $this->request->setRoute($route);
+    }
+
+    /**
+     * @param array<string, string> $query
+     */
+    private function negotiatedRequest(string $accept, array $query, ?Route $route = null): Request
+    {
+        $swoole = new SwooleRequest();
+        $swoole->header = ['accept' => $accept];
+        $request = new Request($swoole);
+        $request->setQueryString($query);
+        $request->setRoute($route ?? $this->negotiatedRoute());
+
+        return $request;
+    }
+
+    private function setupNegotiatedRoute(): void
+    {
+        $this->request->setRoute($this->negotiatedRoute());
+    }
+
+    private function negotiatedRoute(): Route
+    {
+        $route = new Route(Request::METHOD_GET, '/preview');
+        $route->label('cache.params', ['output', 'width']);
+        $route->label('cache.negotiate', ['output' => ['avif' => 'image/avif', 'webp' => 'image/webp']]);
+
+        return $route;
     }
 }

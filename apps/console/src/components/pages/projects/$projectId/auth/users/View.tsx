@@ -34,12 +34,15 @@ import {
   Copy,
   Check,
   ShieldAlert,
+  Network,
 } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import { AuthenticatorType, MessagingProviderType } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { UserAnalytics } from './UserAnalytics'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
@@ -212,6 +215,7 @@ export function View() {
   })
   const location = useLocation()
   const navigate = useNavigate()
+  const { features } = useConsoleProfile()
 
   // Fetch user data - hooks must be called unconditionally
   const {
@@ -246,7 +250,7 @@ export function View() {
     if (userIdIndex >= 0 && pathParts[userIdIndex + 1]) {
       const tabFromPath = pathParts[userIdIndex + 1]
       if (
-        ['memberships', 'identities', 'targets', 'sessions'].includes(
+        ['memberships', 'identities', 'targets', 'sessions', 'analytics'].includes(
           tabFromPath,
         )
       ) {
@@ -306,13 +310,26 @@ export function View() {
           userId: userId as string,
         },
       },
+      ...(features.analytics
+        ? [
+            {
+              id: 'analytics',
+              label: t('Analytics'),
+              to: '/projects/$projectId/auth/users/$userId/analytics',
+              params: {
+                projectId: projectId as string,
+                userId: userId as string,
+              },
+            },
+          ]
+        : []),
     ],
-    [projectId, userId, t],
+    [projectId, userId, t, features.analytics],
   )
 
   const handleBack = () => {
     navigate({
-      to: '/projects/$projectId/auth',
+      to: '/projects/$projectId/auth/users',
       params: { projectId: projectId! },
     })
   }
@@ -501,6 +518,15 @@ export function View() {
           {activeTab === 'targets' && (
             <div className="px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
               <TargetsTab projectId={projectId!} userId={userId!} />
+            </div>
+          )}
+          {activeTab === 'analytics' && (
+            <div className="px-4 py-4 sm:px-6">
+              <UserAnalytics
+                projectId={projectId!}
+                userId={userId!}
+                displayName={displayName}
+              />
             </div>
           )}
           {activeTab === 'sessions' && (
@@ -1917,7 +1943,7 @@ function DeleteUserSection({
       onSuccess: () => {
         toast.success(`${displayName} ${t('has been deleted')}`)
         navigate({
-          to: '/projects/$projectId/auth',
+          to: '/projects/$projectId/auth/users',
           params: { projectId: projectId! },
         })
       },
@@ -2668,6 +2694,7 @@ function IdentitiesTab({
       auth0: 'Auth0',
       authentik: 'Authentik',
       oidc: 'OIDC',
+      ldap: 'LDAP',
     }
     return nameMap[provider.toLowerCase()] || provider
   }
@@ -2685,7 +2712,7 @@ function IdentitiesTab({
       <EmptyState
         icon={Key}
         title={t('No identities available')}
-        description={t('No OAuth identities linked to this user.')}
+        description={t('No identities linked to this user.')}
         isEmpty={true}
         variant="card"
         iconSize="md"
@@ -2700,7 +2727,7 @@ function IdentitiesTab({
           <Info className="h-4 w-4 text-muted-foreground" />
           <p className="text-[13px] text-muted-foreground">
             {t(
-              "User identities are the user's connected OAuth accounts. The user can sign in using these identities.",
+              'Identities link this user to accounts they sign in with elsewhere, such as an OAuth2 provider or an LDAP directory.',
             )}
           </p>
         </div>
@@ -2734,14 +2761,18 @@ function IdentitiesTab({
                   </TableCell>
                   <TableCell className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <img
-                        src={`/icons/${getProviderIcon(identity.provider)}`}
-                        alt={identity.provider}
-                        className={`h-4 w-4 ${PUBLIC_ICON_MUTED_CLASSES}`}
-                        onError={(e) => {
-                          e.currentTarget.src = '/icons/empty.svg'
-                        }}
-                      />
+                      {identity.provider === 'ldap' ? (
+                        <Network className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <img
+                          src={`/icons/${getProviderIcon(identity.provider)}`}
+                          alt={identity.provider}
+                          className={`h-4 w-4 ${PUBLIC_ICON_MUTED_CLASSES}`}
+                          onError={(e) => {
+                            e.currentTarget.src = '/icons/empty.svg'
+                          }}
+                        />
+                      )}
                       <span className="text-[13px] font-medium text-foreground">
                         {getProviderName(identity.provider)}
                       </span>
@@ -3185,6 +3216,7 @@ function SessionsTab({
       discord: 'Discord',
       twitch: 'Twitch',
       spotify: 'Spotify',
+      ldap: 'LDAP',
     }
     return nameMap[provider.toLowerCase()] || provider
   }
@@ -3320,6 +3352,8 @@ function SessionsTab({
                                     e.currentTarget.style.display = 'none'
                                   }}
                                 />
+                              ) : session.provider === 'ldap' ? (
+                                <Network className="h-3 w-3 text-muted-foreground/60" />
                               ) : (
                                 <Key className="h-3 w-3 text-muted-foreground/60" />
                               )}

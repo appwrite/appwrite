@@ -2,14 +2,18 @@
 
 namespace Utopia\Query\Tests\E2E\Builder;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Utopia\Query\Builder\Case\Expression as CaseExpression;
 use Utopia\Query\Builder\Case\Operator;
 use Utopia\Query\Builder\MySQL as Builder;
+use Utopia\Query\Hook\Filter\Tenant;
 use Utopia\Query\Query;
 use Utopia\Query\Tests\E2E\IntegrationTestCase;
 
 class MySQLIntegrationTest extends IntegrationTestCase
 {
+    use LikeEscapeCases;
+
     private Builder $builder;
 
     protected function setUp(): void
@@ -239,6 +243,48 @@ class MySQLIntegrationTest extends IntegrationTestCase
         );
 
         $this->assertCount(0, $rows);
+    }
+
+    /**
+     * A raw OR beside the Tenant hook's condition used to escape it, so the
+     * scoped read returned, and the scoped delete removed, the other tenant's
+     * matching row as well.
+     */
+    public function testWhereRawOrStaysInsideTenantScope(): void
+    {
+        $this->trackMysqlTable('notes');
+        $this->mysqlStatement('DROP TABLE IF EXISTS `notes`');
+        $this->mysqlStatement('
+            CREATE TABLE `notes` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `tenant_id` VARCHAR(10) NOT NULL,
+                `title` VARCHAR(100) NOT NULL
+            ) ENGINE=InnoDB
+        ');
+        $this->mysqlStatement("INSERT INTO `notes` (`tenant_id`, `title`) VALUES ('7', 'draft'), ('7', 'kept'), ('8', 'draft'), ('8', 'archived')");
+
+        $scoped = fn (): Builder => new Builder()
+            ->addHook(new Tenant(['7']))
+            ->from('notes')
+            ->whereRaw('title = ? OR title = ?', ['draft', 'archived']);
+
+        $rows = $this->executeOnMysql($scoped()->select(['tenant_id', 'title'])->build());
+        $this->assertSame([['tenant_id' => '7', 'title' => 'draft']], $rows);
+
+        $this->executeOnMysql($scoped()->delete());
+
+        $rows = $this->executeOnMysql(
+            $this->fresh()
+                ->from('notes')
+                ->select(['tenant_id', 'title'])
+                ->sortAsc('id')
+                ->build()
+        );
+        $this->assertSame([
+            ['tenant_id' => '7', 'title' => 'kept'],
+            ['tenant_id' => '8', 'title' => 'draft'],
+            ['tenant_id' => '8', 'title' => 'archived'],
+        ], $rows);
     }
 
     public function testSelectWithGroupByAndHaving(): void
@@ -984,5 +1030,53 @@ class MySQLIntegrationTest extends IntegrationTestCase
         $rows = $this->executeOnMysql($builder->sortAsc('id')->build());
 
         return \array_column($rows, 'search');
+    }
+
+    /**
+     * @param  list<string>  $expected
+     */
+    #[DataProvider('likePatterns')]
+    public function testLikePatternMatchesLiterally(bool $noBackslashEscapes, Query $query, array $expected): void
+    {
+        $pdo = $this->connectMysql();
+        $this->trackMysqlTable('patterns');
+        $this->seedPatterns($pdo);
+
+        $result = $this->fresh()
+            ->from('patterns')
+            ->select(['value'])
+            ->filter([$query])
+            ->sortAsc('id')
+            ->build();
+
+        $rows = $this->inSqlMode($pdo, $noBackslashEscapes, fn (): array => $this->executeOnMysql($result));
+
+        $this->assertSame($expected, \array_column($rows, 'value'));
+    }
+
+    /**
+     * @param  list<mixed>  $expected
+     */
+    #[DataProvider('jsonRemovals')]
+    public function testJsonSetRemoveMatchesLiterally(bool $noBackslashEscapes, string $tags, mixed $value, array $expected): void
+    {
+        $pdo = $this->connectMysql();
+        $this->trackMysqlTable('tagged');
+        $this->seedTags($pdo, $tags);
+
+        $update = $this->fresh()
+            ->from('tagged')
+            ->setJsonRemove('tags', $value)
+            ->filter([Query::equal('id', [1])])
+            ->update();
+
+        $this->inSqlMode($pdo, $noBackslashEscapes, fn (): array => $this->executeOnMysql($update));
+
+        $this->assertSame($expected, $this->storedTags($pdo));
+    }
+
+    protected static function jsonSearchMatchesNumbers(): bool
+    {
+        return false;
     }
 }

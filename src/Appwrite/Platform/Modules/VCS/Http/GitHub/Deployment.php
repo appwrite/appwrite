@@ -54,6 +54,7 @@ trait Deployment
         callable $deploymentsFactory,
     ) {
         $errors = [];
+        $heads = [];
         $provider = $vcs->getName();
         foreach ($repositories as $repository) {
             $logBase = "vcs.{$provider}.event.repo.unknown";
@@ -114,10 +115,17 @@ trait Deployment
                 }
                 $resourceInternalId = $resource->getSequence();
 
+                if ($resource->getAttribute('providerDeployments', true) === false) {
+                    Span::add("{$logBase}.build.skipped.reason", 'auto deploy off');
+                    Span::add("{$logBase}.build.skipped", 'true');
+                    continue;
+                }
+
                 $validator = new Contains(VCS_DEPLOYMENT_SKIP_PATTERNS);
                 if ($validator->isValid($providerCommitMessage)) {
                     Span::add("{$logBase}.build.skipped.reason", $validator->getDescription());
                     Span::add("{$logBase}.build.skipped", 'true');
+                    $this->reportSkip($vcs, $providerInstallationId, $repository, $project, $resource, $providerCommitHash, 'the commit message asks to skip deployments');
                     continue;
                 }
 
@@ -126,6 +134,7 @@ trait Deployment
                 if (!$branchTrigger->isValid($providerBranch)) {
                     Span::add("{$logBase}.build.skipped.reason", 'branch');
                     Span::add("{$logBase}.build.skipped", 'true');
+                    $this->reportSkip($vcs, $providerInstallationId, $repository, $project, $resource, $providerCommitHash, "branch '{$providerBranch}' does not match the deployment branches");
                     continue;
                 }
 
@@ -143,6 +152,7 @@ trait Deployment
                     if (!$pathMatched) {
                         Span::add("{$logBase}.build.skipped.reason", 'path');
                         Span::add("{$logBase}.build.skipped", 'true');
+                        $this->reportSkip($vcs, $providerInstallationId, $repository, $project, $resource, $providerCommitHash, 'no changed file matches the deployment paths');
                         continue;
                     }
                 }
@@ -165,6 +175,40 @@ trait Deployment
                     $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
                 } catch (RepositoryNotFound $e) {
                     throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+                }
+
+                // A provider without an installation-scoped webhook authenticates every delivery
+                // with the one instance-wide secret Appwrite registers on each connected
+                // repository, so the body speaks for no particular repository: anyone holding it
+                // could name this repository, its production branch and any commit in it. The
+                // branch and the commit are only trusted once the provider itself reports the
+                // commit as that branch's head, which a forged delivery cannot choose.
+                if (empty($providerPullRequestId) && !\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $vcs->getSupportedWebhookScopes(), true)) {
+                    $key = "{$owner}/{$repositoryName}/{$providerBranch}";
+
+                    if (!\array_key_exists($key, $heads)) {
+                        try {
+                            $heads[$key] = $vcs->getLatestCommit($owner, $repositoryName, $providerBranch)['commitHash'] ?? '';
+                        } catch (RepositoryNotFound) {
+                            $heads[$key] = null;
+                        }
+                    }
+
+                    $head = $heads[$key];
+
+                    if ($head === null) {
+                        Span::add("{$logBase}.build.skipped.reason", 'branch not found');
+                        Span::add("{$logBase}.build.skipped", 'true');
+                        Console::warning("Skipping repository '{$repositoryId}': branch '{$providerBranch}' was not found");
+                        continue;
+                    }
+
+                    if (empty($providerCommitHash) || $providerCommitHash !== $head) {
+                        Span::add("{$logBase}.build.skipped.reason", 'commit is not the branch head');
+                        Span::add("{$logBase}.build.skipped", 'true');
+                        Console::warning("Skipping repository '{$repositoryId}': pushed commit '{$providerCommitHash}' is not the head of branch '{$providerBranch}'");
+                        continue;
+                    }
                 }
 
                 $isAuthorized = !$external;
@@ -216,8 +260,9 @@ trait Deployment
                 }
 
                 $latestCommentId = '';
+                $comments = $resource->getAttribute('providerSilentMode', false) === false && $resource->getAttribute('providerComments', true) !== false;
 
-                if (!empty($providerPullRequestId) && $resource->getAttribute('providerSilentMode', false) === false) {
+                if ($comments && !empty($providerPullRequestId)) {
                     $latestComment = $authorization->skip(fn () => $dbForPlatform->findOne('vcsComments', [
                         Query::equal('providerRepositoryId', [$providerRepositoryId]),
                         Query::equal('providerPullRequestId', [$providerPullRequestId]),
@@ -253,7 +298,7 @@ trait Deployment
                             try {
                                 $comment = new Comment($platform, $vcs->supportsCommentImages());
                                 $comment->parseComment($vcs->getComment($owner, $repositoryName, $latestCommentId));
-                                $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $commentPreviewUrl);
+                                $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $commentPreviewUrl, $providerCommitHash);
 
                                 $latestCommentId = \strval($vcs->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                             } catch (\Throwable $e) {
@@ -264,7 +309,7 @@ trait Deployment
                         }
                     } else {
                         $comment = new Comment($platform, $vcs->supportsCommentImages());
-                        $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $commentPreviewUrl);
+                        $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $commentPreviewUrl, $providerCommitHash);
                         $latestCommentId = \strval($vcs->createComment($owner, $repositoryName, $providerPullRequestId, $comment->generateComment()));
 
                         if (!empty($latestCommentId)) {
@@ -290,7 +335,7 @@ trait Deployment
                             ])));
                         }
                     }
-                } elseif (!empty($providerBranch)) {
+                } elseif ($comments && !empty($providerBranch)) {
                     $latestComments = $authorization->skip(fn () => $dbForPlatform->find('vcsComments', [
                         Query::equal('providerRepositoryId', [$providerRepositoryId]),
                         Query::equal('providerBranch', [$providerBranch]),
@@ -326,7 +371,7 @@ trait Deployment
                             try {
                                 $comment = new Comment($platform, $vcs->supportsCommentImages());
                                 $comment->parseComment($vcs->getComment($owner, $repositoryName, $latestCommentId));
-                                $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
+                                $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '', $providerCommitHash);
 
                                 $latestCommentId = \strval($vcs->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                             } catch (\Throwable $e) {
@@ -339,9 +384,10 @@ trait Deployment
                 }
 
                 if (!$isAuthorized) {
-                    $resourceName = $resource->getAttribute('name');
-                    $projectName = $project->getAttribute('name');
-                    $name = "{$resourceName} ({$projectName})";
+                    if ($resource->getAttribute('providerSilentMode', false) === true || $resource->getAttribute('providerStatuses', true) === false) {
+                        continue;
+                    }
+
                     $message = 'Authorization required for external contributor.';
 
                     $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
@@ -351,18 +397,39 @@ trait Deployment
                         throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
                     }
                     $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
-                    $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $authorizeUrl, $name);
+                    // Keyed like the build's check, so the build takes it over once authorized
+                    try {
+                        $vcs->updateCheck(
+                            $owner,
+                            $repositoryName,
+                            $providerCommitHash,
+                            'action_required',
+                            $resource->getAttribute('name'),
+                            $message,
+                            "Authorize the build: {$authorizeUrl}",
+                            $authorizeUrl,
+                            suite: $project->getAttribute('name'),
+                            key: "{$project->getId()}/{$resource->getCollection()}/{$resource->getId()}",
+                            suiteKey: $project->getId(),
+                        );
+                    } catch (\Throwable $e) {
+                        Console::warning("Failed to report authorization required for '{$resource->getId()}': " . $e->getMessage());
+                    }
                     continue;
                 }
 
                 if (!empty($providerPullRequestId)) {
                     // Update comment ID so running build can update comment
-                    $authorization->skip(fn () => $dbForProject->updateDocuments('deployments', new Document([
-                        'providerCommentId' => \strval($latestCommentId)
-                    ]), [
-                        Query::equal('providerCommitHash', [$providerCommitHash]),
-                        Query::equal('providerBranch', [$providerBranch]),
-                    ]));
+                    if (!empty($latestCommentId)) {
+                        $authorization->skip(fn () => $dbForProject->updateDocuments('deployments', new Document([
+                            'providerCommentId' => \strval($latestCommentId)
+                        ]), [
+                            Query::equal('resourceInternalId', [$resource->getSequence()]),
+                            Query::equal('resourceType', [$resourceCollection]),
+                            Query::equal('providerCommitHash', [$providerCommitHash]),
+                            Query::equal('providerBranch', [$providerBranch]),
+                        ]));
+                    }
 
                     // A build that moved on while the comment was written reported before it
                     // could find the comment, so the comment takes the state it is in now
@@ -411,8 +478,11 @@ trait Deployment
                     'repositoryId' => $repositoryId,
                     'repositoryInternalId' => $repositoryInternalId,
                     'providerBranchUrl' => $providerBranchUrl,
-                    'providerRepositoryName' => $providerRepositoryName,
-                    'providerRepositoryOwner' => $providerRepositoryOwner,
+                    // Owner and name are resolved from the installation and the stored repository, not the
+                    // delivery body: on providers with an instance-wide webhook secret a forged push must not
+                    // redirect a tenant's build to a repository the sender controls.
+                    'providerRepositoryName' => $repositoryName,
+                    'providerRepositoryOwner' => $owner,
                     'providerRepositoryUrl' => $providerRepositoryUrl,
                     'providerCommitHash' => $providerCommitHash,
                     'providerCommitAuthorUrl' => $providerCommitAuthorUrl,
@@ -433,8 +503,8 @@ trait Deployment
                             $deployment,
                             $timeout,
                             $vcs,
-                            $providerRepositoryOwner,
-                            $providerRepositoryName,
+                            $owner,
+                            $repositoryName,
                             $providerCommitHash,
                             $resource->getAttribute('providerRootDirectory', ''),
                         ));
@@ -529,7 +599,7 @@ trait Deployment
 
                     // VCS commit preview
                     if (!empty($providerCommitHash)) {
-                        $domain = "commit-" . substr($providerCommitHash, 0, 16) . ".{$sitesDomain}";
+                        $domain = ComputeBase::commitDomain($project, $resource, $providerCommitHash, $sitesDomain);
                         $ruleId = md5($domain);
                         try {
                             $rule = $authorization->skip(
@@ -592,7 +662,7 @@ trait Deployment
                             if (!empty($previewUrl)) {
                                 $comment = new Comment($platform, $vcs->supportsCommentImages());
                                 $comment->parseComment($vcs->getComment($owner, $repositoryName, $latestCommentId));
-                                $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $previewUrl);
+                                $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $previewUrl, $providerCommitHash);
                                 $vcs->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment());
                             }
                         } catch (\Throwable $e) {
@@ -603,7 +673,7 @@ trait Deployment
                     }
                 }
 
-                if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false) {
+                if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false && $resource->getAttribute('providerStatuses', true) !== false) {
                     // The deployment exists by now, so a refused report is logged like
                     // every later one: failing the push here would make a provider that
                     // retries deliveries deploy the commit again.
@@ -654,4 +724,32 @@ trait Deployment
         return null;
     }
 
+    /**
+     * Reports a push the resource's triggers skipped as a neutral check, keyed
+     * like the build's, so the commit says why nothing was deployed.
+     */
+    private function reportSkip(Git $vcs, string $providerInstallationId, Document $repository, Document $project, Document $resource, string $providerCommitHash, string $reason): void
+    {
+        if ($providerCommitHash === '' || $resource->getAttribute('providerSilentMode', false) === true || $resource->getAttribute('providerStatuses', true) === false) {
+            return;
+        }
+
+        try {
+            $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
+            $vcs->updateCheck(
+                $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId),
+                $vcs->getRepositoryName($providerRepositoryId),
+                $providerCommitHash,
+                'neutral',
+                $resource->getAttribute('name'),
+                // The title is all a commit status shows, so it carries the reason
+                "Deployment skipped: {$reason}",
+                suite: $project->getAttribute('name'),
+                key: "{$project->getId()}/{$resource->getCollection()}/{$resource->getId()}",
+                suiteKey: $project->getId(),
+            );
+        } catch (\Throwable $e) {
+            Console::warning("Failed to report skipped deployment for '{$resource->getId()}': " . $e->getMessage());
+        }
+    }
 }

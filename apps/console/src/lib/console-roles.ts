@@ -24,6 +24,7 @@ export const DEFAULT_SCOPES = [
   'keys.write',
   'platforms.write',
   'webhooks.write',
+  'monitors.write',
   'users.write',
   'teams.read',
   'teams.write',
@@ -36,6 +37,10 @@ export const DEFAULT_SCOPES = [
   'sites.write',
   'videos.read',
   'videos.write',
+  'project.videos.profiles.read',
+  'project.videos.profiles.write',
+  'reviews.read',
+  'reviews.write',
   'domains.write',
   'executions.write',
   'migrations.write',
@@ -64,6 +69,7 @@ export type ConsoleAccess = {
   canSeeTeams: boolean
   canSeeSites: boolean
   canSeeVideos: boolean
+  canSeeReviews: boolean
   /** Activity / audit log events (`GET /activities/events`). */
   canSeeEvents: boolean
   canSeeBilling: boolean
@@ -77,6 +83,7 @@ export type ConsoleAccess = {
   canWriteKeys: boolean
   canWritePlatforms: boolean
   canWriteWebhooks: boolean
+  canWriteMonitors: boolean
   canWriteUsers: boolean
   canWriteTeams: boolean
   canWriteMessages: boolean
@@ -84,6 +91,8 @@ export type ConsoleAccess = {
   canWriteProviders: boolean
   canWriteSites: boolean
   canWriteVideos: boolean
+  canWriteVideoProfiles: boolean
+  canWriteReviews: boolean
   canWriteDomains: boolean
   canWriteExecutions: boolean
   canWriteMigrations: boolean
@@ -118,6 +127,7 @@ export function deriveAccessFromRolesScopes(
     canSeeTeams: has('teams.read'),
     canSeeSites: has('sites.read'),
     canSeeVideos: hasVideoScopes ? has('videos.read') : has('buckets.read'),
+    canSeeReviews: has('reviews.read'),
     canSeeEvents: has('events.read'),
     canSeeBilling: has('billing.read'),
     canWriteProjects: has('projects.write'),
@@ -129,6 +139,7 @@ export function deriveAccessFromRolesScopes(
     canWriteKeys: has('keys.write'),
     canWritePlatforms: has('platforms.write'),
     canWriteWebhooks: has('webhooks.write'),
+    canWriteMonitors: has('monitors.write'),
     canWriteUsers: has('users.write'),
     canWriteTeams: has('teams.write'),
     canWriteMessages: has('messages.write'),
@@ -136,6 +147,16 @@ export function deriveAccessFromRolesScopes(
     canWriteProviders: has('providers.write'),
     canWriteSites: has('sites.write'),
     canWriteVideos: hasVideoScopes ? has('videos.write') : has('buckets.write'),
+    // Profiles are project settings with their own scope; roles that predate it
+    // fall back to the videos scope.
+    canWriteVideoProfiles: scopes.some((s) =>
+      s.startsWith('project.videos.profiles.'),
+    )
+      ? has('project.videos.profiles.write')
+      : hasVideoScopes
+        ? has('videos.write')
+        : has('buckets.write'),
+    canWriteReviews: has('reviews.write'),
     canWriteDomains: has('domains.write'),
     canWriteExecutions: has('executions.write'),
     canWriteMigrations: has('migrations.write'),

@@ -30,6 +30,11 @@ const RING_PROPAGATION_SPEED = 3
 const CAMERA_Z = 300
 const ARC_STROKE = 0.3
 
+/** Points and rings take one color: a gradient arc lends its first. */
+function arcStartColor(color: string | string[]): string {
+  return Array.isArray(color) ? (color[0] ?? '') : color
+}
+
 function applyGlobeLand(globe: ThreeGlobe, landColor: string) {
   globe
     .hexPolygonsData(countries.features)
@@ -261,7 +266,7 @@ export function Globe({
         points.push({
           size: pointSize,
           order: arc.order,
-          color: arc.color,
+          color: arcStartColor(arc.color),
           lat: arc.startLat,
           lng: arc.startLng,
           radius: 2,
@@ -270,7 +275,7 @@ export function Globe({
         points.push({
           size: pointSize,
           order: arc.order,
-          color: arc.color,
+          color: arcStartColor(arc.color),
           lat: arc.endLat,
           lng: arc.endLng,
           radius: 2,
@@ -375,7 +380,7 @@ export function Globe({
           .map((arc) => ({
             lat: arc.startLat,
             lng: arc.startLng,
-            color: arc.color,
+            color: arcStartColor(arc.color),
           })),
       )
     }, 2000)

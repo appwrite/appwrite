@@ -54,7 +54,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   then: 'ואז',
   'already exists': 'כבר קיים',
   'is longer than 8192 allowed characters': 'ארוך מ-8192 התווים המותרים',
-  'contact sales': 'צרו קשר עם מכירות',
   'to include more repos.': 'כדי לכלול repos נוספים.',
   'to unlock additional specifications.': 'כדי לפתוח מפרטים נוספים.',
 
@@ -142,6 +141,11 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Connect existing repository': 'חיבור repo קיים',
   'Connect to GitHub': 'התחברות ל-GitHub',
   'Connect to GitLab': 'התחברות ל-GitLab',
+  'Connect Entire': 'חיבור Entire',
+  'Add Entire account': 'הוספת חשבון Entire',
+  'Add Origin account': 'הוספת חשבון Origin',
+  'Add Bitbucket account': 'הוספת חשבון Bitbucket',
+  'Add Gitea account': 'הוספת חשבון Gitea',
   'Console user': 'משתמש קונסולה',
   'Contact Support': 'פנייה לתמיכה',
   'Contact sales': 'פנייה למכירות',
@@ -262,6 +266,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Filter name': 'שם הסינון',
   Filters: 'סינונים',
   'Filtered by': 'מסונן לפי',
+  'Change operator': 'שינוי אופרטור',
+  'Change value': 'שינוי ערך',
   'Find a branch...': 'חיפוש ענף...',
   'Fix payment': 'הסדרת התשלום',
   'Authorize payment': 'אישור תשלום',
@@ -396,6 +402,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'My filters': 'הסינונים שלי',
   'Name, email, phone, or user ID…': 'שם, אימייל, טלפון או מזהה משתמש…',
   'Need more resources?': 'צריכים משאבים נוספים?',
+  'Higher CPU and memory are available on Enterprise.':
+    'משאבי CPU וזיכרון גבוהים יותר זמינים בתוכנית Enterprise.',
   'Next image': 'התמונה הבאה',
 
   // Empty states
@@ -578,6 +586,7 @@ export const heSharedUiDictionary: Record<string, string> = {
 
   Secret: 'סודי',
   'Select a bucket to browse files': 'בחרו באקט כדי לעיין בקבצים',
+  'This file type is not supported.': 'סוג קובץ זה אינו נתמך.',
   'Select a timezone': 'בחירת אזור זמן',
   'Select a service to build': 'בחרו שירות לבנייה',
   'Select all': 'בחירת הכול',
@@ -858,7 +867,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   Theme: 'ערכת נושא',
   'Light theme': 'ערכת נושא בהירה',
   'Dark theme': 'ערכת נושא כהה',
-  'System theme': 'ערכת נושא לפי המערכת',
 
   // Refresh toasts (default label)
   'data refreshed successfully': 'הנתונים רועננו בהצלחה',
@@ -877,7 +885,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Focus search': 'מעבר לשדה החיפוש',
   'Set theme to light': 'החלפה לערכת נושא בהירה',
   'Set theme to dark': 'החלפה לערכת נושא כהה',
-  'Set theme to system': 'החלפה לערכת נושא לפי המערכת',
 
   // Keyboard shortcuts reference: terminal shortcut descriptions
   'Toggle terminal': 'פתיחה או סגירה של הטרמינל',
@@ -1011,9 +1018,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Connect platforms (web, iOS, Android, Flutter, server)':
     'חיבור פלטפורמות (ווב, iOS, Android, Flutter, שרת)',
   'Server API keys and tokens': 'מפתחות API וטוקנים לשרת',
-  // pragma: allowlist secret
-  'Browse and test Appwrite REST API endpoints':
-    'עיון ובדיקה של נקודות הקצה של Appwrite REST API', // pragma: allowlist secret
+  'Test REST API endpoints and Realtime subscriptions':
+    'בדיקת נקודות קצה של REST API ומינויי Realtime',
   'Users, teams, sessions and authentication providers':
     'משתמשים, צוותים, סשנים וספקי אימות',
   'Manage databases, tables and collections':
@@ -1026,7 +1032,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Adaptive video streaming, renditions and subtitles':
     'סטרימינג וידאו אדפטיבי, גרסאות קידוד וכתוביות',
   'Audit log of project events': 'יומן ביקורת של אירועי הפרויקט',
-  'Realtime channels and live messages': 'ערוצי זמן אמת והודעות חיות', // pragma: allowlist secret
   'Usage statistics and quotas': 'נתוני שימוש ומכסות',
   'Website analytics and traffic insights': 'אנליטיקת אתרים ותובנות תעבורה',
   'Project settings, custom domains, variables, webhooks':
@@ -1104,7 +1109,27 @@ export const heSharedUiDictionary: Record<string, string> = {
     'שרת SMTP מותאם אישית לאימיילים יוצאים',
   Advisor: 'יועץ',
   Firewall: 'חומת אש',
-  'Security · Firewall rules': 'אבטחה · כללי חומת אש',
+  'Settings · Firewall': 'הגדרות · חומת אש',
+  'Firewall has moved': 'חומת האש עברה למקום אחר',
+  'Firewall rules now sit next to what they protect: a Firewall tab on each function and site, and one in project settings for the API.':
+    'כללי חומת האש נמצאים עכשיו ליד מה שהם מגינים עליו: לשונית חומת אש בכל פונקציה ובכל אתר, ואחת בהגדרות הפרויקט עבור ה-API.',
+  'Got it': 'הבנתי',
+  'Open API firewall': 'פתיחת חומת האש של ה-API',
+  // Function and site overview cards, filter chips
+  '1 rule': 'כלל אחד',
+  '{count} rules': '{count} כללים',
+  'vs previous 24 hours': 'לעומת 24 השעות הקודמות',
+  'No blocked traffic yet': 'עדיין אין תעבורה חסומה',
+  'Denied requests will show up here.': 'בקשות שנדחו יופיעו כאן.',
+  '24 hours ago': 'לפני 24 שעות',
+  'No requests yet': 'עדיין אין בקשות',
+  'No bandwidth yet': 'עדיין אין תעבורת נתונים',
+  Humans: 'בני אדם',
+  Bots: 'בוטים',
+  only: 'בלבד',
+  On: 'פעיל',
+  SSR: 'SSR',
+  Static: 'סטטי',
   'IP allow/block lists and request rules':
     'רשימות היתר/חסימה של IP וכללי בקשות',
 
@@ -1353,6 +1378,11 @@ export const heSharedUiDictionary: Record<string, string> = {
     'Appwrite 2.0 מושק היום ב-Product Hunt',
   'Appwrite 2.0 on Product Hunt': 'Appwrite 2.0 ב-Product Hunt',
   'Share your take': 'שתפו את דעתכם',
+  'Just launched': 'הושק עכשיו',
+  'MCP1 by Appwrite: one URL for every MCP server':
+    'MCP1 מבית Appwrite: כתובת URL אחת לכל שרתי ה-MCP',
+  'MCP1 by Appwrite is live': 'MCP1 מבית Appwrite הושק',
+  'Try MCP1': 'נסו את MCP1',
   'Created by': 'נוצר על ידי',
   'Authorized resources': 'משאבים מורשים',
   'No scopes granted': 'לא הוענקו הרשאות גישה',
@@ -1391,13 +1421,54 @@ export const heSharedUiDictionary: Record<string, string> = {
   'App key copied': 'מפתח האפליקציה הועתק',
   'Load more': 'טעינת עוד',
   'Loading more failed. Try again.': 'טעינת פריטים נוספים נכשלה. נסו שוב.',
-  Experiments: 'ניסויים',
-  'Features the quality team can try before they launch. Choices stay in this browser.':
-    "פיצ'רים שצוות האיכות יכול לנסות לפני ההשקה. הבחירות נשמרות בדפדפן הזה.",
+  'Browse Init events': 'עיון באירועי Init',
+  'Switch between past and upcoming Init launch weeks.':
+    'מעבר בין שבועות השקה קודמים ועתידיים של Init.',
+  Past: 'עבר',
+  Upcoming: 'בקרוב',
+  'AUGUST 31 - SEPTEMBER 4': '31 באוגוסט - 4 בספטמבר',
+  'NOVEMBER 30 - DECEMBER 4': '30 בנובמבר - 4 בדצמבר',
+  'Starts in': 'מתחיל בעוד',
+  'Join us on our biggest Init ever. 5 days, 5 new product launches. It will be electric.':
+    'הצטרפו ל-Init הגדול ביותר שלנו אי פעם. 5 ימים, 5 השקות מוצר חדשות. זה הולך להיות מחשמל.',
+  "Init 5 is live. Catch today's reveal and the launch stream.":
+    'Init 5 באוויר. אל תפספסו את החשיפה של היום ואת שידור ההשקה.',
+  'Init 5 is a wrap. Explore every launch and rewatch the streams.':
+    'Init 5 הסתיים. גלו כל השקה וצפו שוב בשידורים.',
+  'Introducing Appwrite Analytics': 'מציגים את Appwrite Analytics',
+  'Introducing Appwrite Videos': 'מציגים את Appwrite Videos',
+  'Introducing Appwrite Zero': 'מציגים את Appwrite Zero',
+  'Introducing Appwrite Monitors & Appwrite Beep':
+    'מציגים את Appwrite Monitors ואת Appwrite Beep',
+  'Introducing Appwrite Reviews': 'מציגים את Appwrite Reviews',
+  'Ask us anything': 'שאלו אותנו הכול',
+  'Bring your questions about every Init 5 launch. The team answers live on r/appwrite.':
+    'הביאו את השאלות שלכם על כל השקה של Init 5. הצוות עונה בשידור חי ב-r/appwrite.',
+  'The team answered your questions about every Init 5 launch on r/appwrite.':
+    'הצוות ענה על השאלות שלכם על כל השקה של Init 5 ב-r/appwrite.',
+  Previews: 'תצוגות מקדימות',
+  'Early access. Saved in this browser.': 'גישה מוקדמת. נשמר בדפדפן הזה.',
   'Appwrite Analytics': 'Appwrite Analytics',
-  'Show Analytics in the console and track visitors, pages, sources, campaigns, and custom events in a project.':
-    'הציגו את אנליטיקה בקונסולה ועקבו אחרי מבקרים, עמודים, מקורות, קמפיינים ואירועים מותאמים בפרויקט.',
+  'Visitor, page, and campaign tracking.':
+    'מעקב אחרי מבקרים, עמודים וקמפיינים.',
+  'Appwrite Videos': 'Appwrite Videos',
+  'Transcode, stream, and caption videos.': 'קידוד, הזרמה וכתוביות לסרטונים.',
+  'Project environments': 'סביבות פרויקט',
+  'Switch or clone staging and production.':
+    'מעבר או שכפול בין staging לפרודקשן.',
   'Repository not available': 'ה-repo לא זמין',
   'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
     'התקנת ה-Git הזו כבר לא מגיעה ל-repo. ייתכן שהוא נמחק, הוסר מההתקנה או הועבר להתקנה אחרת. חברו את ה-repo מחדש כדי להמשיך לפרוס.',
+  // Halloween caution tape
+  Caution: 'זהירות',
+  'Spooky zone': 'אזור מפחיד',
+  // GitHub star wizard
+  'Enjoying Appwrite?': 'נהנים מ-Appwrite?',
+  'Appwrite is open source and built in the open. A star helps more developers discover it.':
+    'Appwrite הוא קוד פתוח שנבנה בשקיפות מלאה. כוכב עוזר ליותר מפתחים לגלות אותו.',
+  'No thanks': 'לא תודה',
+  'One-time ask, promise. May your builds be ever green.':
+    'מבקשים רק פעם אחת, מבטיחים. שה-builds שלכם יהיו תמיד ירוקים.',
+  'Settings · Identity servers': 'הגדרות · שרתי זהויות',
+  'LDAP directory sign-in': 'התחברות דרך ספריית LDAP',
 }

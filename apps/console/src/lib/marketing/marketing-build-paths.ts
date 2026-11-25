@@ -14,7 +14,10 @@ import {
   isIntegrationPrerenderPath,
 } from '../integrations/prerender-paths'
 import { isThreadsRoutePath } from '../threads/prerender-paths'
-import { MARKETING_PAGE_PATHS } from './marketing-page-paths'
+import {
+  MARKETING_PAGE_PATHS,
+  UNLAUNCHED_MARKETING_PATHS,
+} from './marketing-page-paths'
 import {
   getSitesPrerenderScope,
   sitesPrerenderIncludesBlogPosts,
@@ -22,7 +25,9 @@ import {
   sitesPrerenderIncludesThreads,
 } from './sites-prerender-scope'
 
-export const MARKETING_PRERENDER_PATHS = MARKETING_PAGE_PATHS
+export const MARKETING_PRERENDER_PATHS = MARKETING_PAGE_PATHS.filter(
+  (path) => !UNLAUNCHED_MARKETING_PATHS.includes(path),
+)
 
 export function getAllMarketingPrerenderPaths(
   clientDirectory?: string,

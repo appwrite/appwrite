@@ -2192,6 +2192,53 @@ trait DatabasesBase
         }
     }
 
+    /**
+     * Columns that do not fit the row the adapter allows must name that limit.
+     * It used to be reported as the database running out of tables, a limit that
+     * does not exist, which discarded the only actionable detail.
+     */
+    public function testCreateCollectionInlineRowWidthExceeded(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+        if (getenv('_APP_DB_ADAPTER') === 'mongodb') {
+            $this->markTestSkipped('MongoDB has no row width limit to exceed');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $containerId = Id::unique();
+
+        // Each of these spends 16002 bytes of the row, so five of them do not fit
+        // the 65535-byte row every SQL adapter allows.
+        $schema = [];
+        for ($i = 0; $i < 5; $i++) {
+            $schema[] = ['key' => 'wide' . $i, 'type' => ColumnType::String->value, 'size' => 4000];
+        }
+
+        $wide = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => $containerId,
+            'name' => 'Wide',
+            $this->getSchemaResource() => $schema,
+        ]);
+
+        $this->assertSame(400, $wide['headers']['status-code']);
+        $this->assertSame(
+            $this->isTablesAPI() ? Exception::COLUMN_LIMIT_EXCEEDED : Exception::ATTRIBUTE_LIMIT_EXCEEDED,
+            $wide['body']['type'],
+        );
+        $this->assertStringContainsString('Document size limit of', $wide['body']['message']);
+        $this->assertStringNotContainsString('maximum number of ' . $this->getContainerResource(), $wide['body']['message']);
+
+        $missing = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $containerId), $headers);
+        $this->assertSame(404, $missing['headers']['status-code']);
+    }
+
     public function testCreateCollectionInlineEncryptedStringTooSmall(): void
     {
         if (!$this->getSupportForAttributes()) {
@@ -4572,6 +4619,166 @@ trait DatabasesBase
             'lengths' => [-1]
         ]);
         $this->assertEquals(400, $create['headers']['status-code']);
+    }
+
+    /**
+     * The engine drops a deleted column from every index that covered it, so the index documents have to
+     * follow positionally: the length and the order at the removed column's position go with it, and the
+     * ones of the columns that remain stay where they were.
+     */
+    public function testDeleteIndexedColumn(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
+            'databaseId' => Id::unique(),
+            'name' => 'Indexed column deletion',
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'IndexedColumn',
+        ]);
+
+        $this->assertEquals(201, $container['headers']['status-code']);
+        $containerId = $container['body']['$id'];
+
+        foreach (['first', 'second'] as $key) {
+            $column = $this->createAttribute($databaseId, $containerId, ColumnType::String->value, [
+                'key' => $key,
+                'size' => 128,
+                'required' => false,
+            ]);
+
+            $this->assertEquals(202, $column['headers']['status-code']);
+        }
+
+        $this->waitForAllAttributes($databaseId, $containerId);
+
+        // Equal lengths and equal orders, so that pruning by value cannot pass for pruning by position.
+        $index = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $containerId), $headers, [
+            'key' => 'pair',
+            'type' => IndexType::Key->value,
+            $this->getIndexAttributesParam() => ['first', 'second'],
+            'lengths' => [64, 64],
+            'orders' => ['ASC', 'ASC'],
+        ]);
+
+        $this->assertEquals(202, $index['headers']['status-code']);
+
+        $this->waitForIndex($databaseId, $containerId, 'pair');
+
+        $deleted = $this->client->call(Client::METHOD_DELETE, $this->getSchemaUrl($databaseId, $containerId, '', 'first'), $headers);
+
+        $this->assertEquals(204, $deleted['headers']['status-code']);
+
+        $this->assertEventually(function () use ($databaseId, $containerId, $headers) {
+            $index = $this->client->call(Client::METHOD_GET, $this->getIndexUrl($databaseId, $containerId, 'pair'), $headers);
+
+            $this->assertEquals(200, $index['headers']['status-code']);
+            $this->assertEquals(['second'], $index['body'][$this->getIndexAttributesParam()]);
+            $this->assertEquals([64], $index['body']['lengths']);
+            $this->assertEquals(['ASC'], $index['body']['orders']);
+        }, 60000, 500);
+
+        $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $containerId), $headers);
+    }
+
+    /**
+     * An index the engine never created is deleted by its document alone. The delete must not leave it
+     * stuck on the index being absent from the schema, since absent is the end state it asks for.
+     */
+    public function testDeleteFailedIndex(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
+            'databaseId' => Id::unique(),
+            'name' => 'Failed index deletion',
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'FailedIndex',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $container['headers']['status-code']);
+        $containerId = $container['body']['$id'];
+
+        $column = $this->createAttribute($databaseId, $containerId, ColumnType::String->value, [
+            'key' => 'email',
+            'size' => 128,
+            'required' => false,
+        ]);
+
+        $this->assertEquals(202, $column['headers']['status-code']);
+
+        $this->waitForAttribute($databaseId, $containerId, 'email');
+
+        foreach (['first', 'second'] as $record) {
+            $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), $headers, [
+                $this->getRecordIdParam() => Id::unique(),
+                'data' => ['email' => 'duplicate@appwrite.io'],
+            ]);
+
+            $this->assertEquals(201, $created['headers']['status-code'], $record);
+        }
+
+        // A unique index over rows that already hold the same value can only fail, and only in the worker.
+        $index = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $containerId), $headers, [
+            'key' => 'uniqueEmail',
+            'type' => IndexType::Unique->value,
+            $this->getIndexAttributesParam() => ['email'],
+        ]);
+
+        $this->assertEquals(202, $index['headers']['status-code']);
+
+        $this->assertEventually(function () use ($databaseId, $containerId, $headers) {
+            $index = $this->client->call(Client::METHOD_GET, $this->getIndexUrl($databaseId, $containerId, 'uniqueEmail'), $headers);
+
+            $this->assertEquals(200, $index['headers']['status-code']);
+            $this->assertEquals('failed', $index['body']['status']);
+        }, 60000, 500);
+
+        $deleted = $this->client->call(Client::METHOD_DELETE, $this->getIndexUrl($databaseId, $containerId, 'uniqueEmail'), $headers);
+
+        $this->assertEquals(204, $deleted['headers']['status-code']);
+
+        $this->assertEventually(function () use ($databaseId, $containerId, $headers) {
+            $index = $this->client->call(Client::METHOD_GET, $this->getIndexUrl($databaseId, $containerId, 'uniqueEmail'), $headers);
+
+            $this->assertEquals(404, $index['headers']['status-code'], \json_encode($index['body']));
+        }, 60000, 500);
+
+        $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $containerId), $headers);
     }
 
     public function testListIndexes(): void
@@ -7757,6 +7964,101 @@ trait DatabasesBase
 
         $this->assertEquals(200, $upserted['headers']['status-code']);
         $this->assertEquals(2025, $upserted['body']['releaseYear']);
+    }
+
+    public function testBulkWritesRequireKeyOrPrivilegedUser(): void
+    {
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $keyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $callerHeaders = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $schema = $this->getSupportForAttributes()
+            ? [$this->getSchemaResource() => [['key' => 'title', 'type' => ColumnType::String->value, 'size' => 64]]]
+            : [];
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $keyHeaders, array_merge([
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Bulk Writes',
+            'permissions' => [
+                Permission::create(Role::users()),
+                Permission::read(Role::users()),
+                Permission::update(Role::users()),
+                Permission::delete(Role::users()),
+            ],
+            $this->getSecurityParam() => false,
+        ], $schema));
+
+        $this->assertSame(201, $container['headers']['status-code'], $container['body']['message'] ?? '');
+        $containerId = $container['body']['$id'];
+
+        $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), $keyHeaders, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['title' => 'Original'],
+        ]);
+
+        $this->assertSame(201, $record['headers']['status-code'], $record['body']['message'] ?? '');
+        $recordId = $record['body']['$id'];
+
+        $writes = [
+            'bulk create' => [201, fn (): array => $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), $callerHeaders, [
+                $this->getRecordResource() => [
+                    ['$id' => Id::unique(), 'title' => 'Created'],
+                ],
+            ])],
+            'bulk update' => [200, fn (): array => $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $containerId), $callerHeaders, [
+                'data' => [
+                    'title' => 'Updated',
+                    '$permissions' => [Permission::read(Role::any())],
+                ],
+            ])],
+            'bulk upsert' => [200, fn (): array => $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $containerId), $callerHeaders, [
+                $this->getRecordResource() => [
+                    ['$id' => $recordId, 'title' => 'Upserted', '$createdAt' => '2000-01-01T00:00:00.000+00:00'],
+                ],
+            ])],
+            'bulk delete' => [200, fn (): array => $this->client->call(Client::METHOD_DELETE, $this->getRecordUrl($databaseId, $containerId), $callerHeaders, [
+                'queries' => [Query::equal('$id', [$recordId])->toString()],
+            ])],
+        ];
+
+        if ($this->getSide() !== 'client') {
+            /**
+             * Test for SUCCESS
+             */
+            foreach ($writes as $write => [$status, $call]) {
+                $response = $call();
+                $this->assertSame($status, $response['headers']['status-code'], $write . ': ' . ($response['body']['message'] ?? ''));
+            }
+
+            return;
+        }
+
+        /**
+         * Test for FAILURE
+         */
+        foreach ($writes as $write => [, $call]) {
+            $response = $call();
+            $this->assertSame(401, $response['headers']['status-code'], $write . ' must refuse a session');
+            $this->assertSame(Exception::GENERAL_UNAUTHORIZED_SCOPE, $response['body']['type'], $write);
+        }
+
+        $unchanged = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId, $recordId), $keyHeaders);
+
+        $this->assertSame(200, $unchanged['headers']['status-code'], 'A refused bulk delete leaves the record in place');
+        $this->assertSame('Original', $unchanged['body']['title']);
+        $this->assertSame([], $unchanged['body']['$permissions'], 'A refused bulk update grants no permissions');
+        $this->assertSame($record['body']['$createdAt'], $unchanged['body']['$createdAt'], 'A refused bulk upsert keeps the original timestamp');
+
+        $listed = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId), $keyHeaders);
+
+        $this->assertSame(200, $listed['headers']['status-code']);
+        $this->assertSame(1, $listed['body']['total'], 'A refused bulk create adds no records');
     }
 
     public function testBulkOperators(): void

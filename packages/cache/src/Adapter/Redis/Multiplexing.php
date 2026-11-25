@@ -36,7 +36,7 @@ use Utopia\Telemetry\UpDownCounter;
  * again by the very next command, and at typical concurrency that is a
  * coroutine per command: creating one costs more CPU than the command itself.
  */
-class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeature
+class Multiplexing extends Versioned implements Adapter, Batchable, TelemetryFeature
 {
     private ?ConnectionContext $connection = null;
 
@@ -53,7 +53,11 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
     private ?Counter $writeFailures = null;
 
     /**
-     * @param  float  $timeout connect timeout in seconds
+     * @param  float  $timeout connect timeout in seconds, covering the TCP
+     *                         connect and the AUTH/SELECT handshake. The
+     *                         handshake belongs to establishing the connection,
+     *                         not to any caller's read, so it is not held to
+     *                         $readTimeout.
      * @param  float  $readTimeout per-call read deadline in seconds — how long
      *                             one caller waits for its own reply before
      *                             giving up. Caches should fail fast, default
@@ -233,7 +237,7 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
 
     public function save(string $key, array|string $data, string $hash = '', int $ttl = 0): bool|string|array
     {
-        if ($key === '' || $key === '0' || empty($data)) {
+        if ($key === '' || $key === '0' || $data === '' || $data === '0') {
             return false;
         }
 
@@ -247,7 +251,7 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
 
         try {
             $value = $this->envelope->encode($data, time());
-            $this->command(['HSET', $key, $hash, $value]);
+            $this->command(['HSET', $key, $hash, $value, self::VERSION_FIELD, \bin2hex(\random_bytes(16))]);
 
             if ($ttl > 0) {
                 $this->command(['EXPIRE', $key, (string) $ttl]);
@@ -284,6 +288,9 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
             return false;
         }
 
+        $args[] = self::VERSION_FIELD;
+        $args[] = \bin2hex(\random_bytes(16));
+
         try {
             $this->command($args);
 
@@ -319,7 +326,7 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
             return false;
         }
 
-        return $this->command(['HSET', $key, $hash, $payload]) !== false;
+        return $this->command(['HSET', $key, $hash, $payload, self::VERSION_FIELD, \bin2hex(\random_bytes(16))]) !== false;
     }
 
     /**
@@ -355,11 +362,6 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
     protected function leaseEval(string $script, string $key, array $args): mixed
     {
         return $this->command(['EVAL', $script, '1', $key, ...$args]);
-    }
-
-    protected function leaseHget(string $key, string $field): mixed
-    {
-        return $this->command(['HGET', $key, $field]);
     }
 
     public function flush(): bool
@@ -530,18 +532,25 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
     {
         $client = new Client($this->host, $this->port, $this->timeout);
 
+        // The handshake is part of connecting, so it gets the connect deadline.
+        // Held to the per-call $readTimeout (0.25s by default), every caller on a
+        // freshly started, busy worker builds an adapter whose AUTH reply lands a
+        // little late, and the constructor throws "Timed out waiting for Redis
+        // response" for a server that was healthy throughout.
+        $handshakeTimeout = $this->timeout;
+
         try {
             if ($this->auth !== null) {
                 $authArgs = \is_array($this->auth)
                     ? array_merge(['AUTH'], array_values($this->auth))
                     : ['AUTH', $this->auth];
 
-                if ($client->command($authArgs, $this->readTimeout) !== 'OK') {
+                if ($client->command($authArgs, $handshakeTimeout) !== 'OK') {
                     throw new \RedisException('Redis AUTH failed');
                 }
             }
 
-            if ($this->dbIndex !== 0 && $client->command(['SELECT', (string) $this->dbIndex], $this->readTimeout) !== 'OK') {
+            if ($this->dbIndex !== 0 && $client->command(['SELECT', (string) $this->dbIndex], $handshakeTimeout) !== 'OK') {
                 throw new \RedisException('Redis SELECT failed');
             }
         } catch (Throwable $th) {

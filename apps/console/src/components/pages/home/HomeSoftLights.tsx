@@ -300,7 +300,7 @@ export function ProductBentoSoftLights({
   return (
     <div
       className={cn(
-        'pointer-events-none absolute inset-0 z-0 transition-opacity duration-300 group-hover:opacity-70 motion-reduce:transition-none motion-reduce:group-hover:opacity-100',
+        'product-bento-soft-light',
         blend
           ? cn(
               'overflow-visible',
@@ -342,11 +342,7 @@ export function handleProductBentoPointerMove(event: PointerEvent<HTMLElement>) 
 export function ProductBentoSpotlight() {
   return (
     <div
-      className={cn(
-        'pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100',
-        'bg-[radial-gradient(520px_circle_at_var(--spot-x,50%)_var(--spot-y,0%),rgba(133,219,216,0.14)_0%,rgba(133,219,216,0.05)_35%,transparent_65%)]',
-        'dark:bg-[radial-gradient(520px_circle_at_var(--spot-x,50%)_var(--spot-y,0%),rgba(133,219,216,0.06)_0%,rgba(133,219,216,0.02)_35%,transparent_65%)]',
-      )}
+      className="product-bento-spotlight"
       aria-hidden
     />
   )

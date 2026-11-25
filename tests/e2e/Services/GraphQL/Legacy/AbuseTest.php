@@ -37,29 +37,39 @@ final class AbuseTest extends Scope
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_DOCUMENT);
         $max = 120;
+        // Operations go in batches, so the route's per-operation limit is reached well inside the
+        // GraphQL endpoint's own cap of 60 requests a minute
+        $batchSize = 10;
 
-        for ($i = 0; $i <= $max + 1; $i++) {
-            $gqlPayload = [
-                'query' => $query,
-                'variables' => [
-                    'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
-                    'documentId' => Id::unique(),
-                    'data' => [
-                        'name' => 'John Doe',
+        for ($sent = 0; $sent <= $max + 1; $sent += $batchSize) {
+            $batch = [];
+            for ($i = $sent; $i < \min($sent + $batchSize, $max + 2); $i++) {
+                $batch[] = [
+                    'query' => $query,
+                    'variables' => [
+                        'databaseId' => $databaseId,
+                        'collectionId' => $collectionId,
+                        'documentId' => Id::unique(),
+                        'data' => [
+                            'name' => 'John Doe',
+                        ],
                     ],
-                ],
-            ];
+                ];
+            }
 
             $response = $this->client->call(Client::METHOD_POST, '/graphql', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $projectId,
-            ], $gqlPayload);
+            ], $batch);
 
-            if ($i < $max) {
-                $this->assertArrayNotHasKey('errors', $response['body']);
-            } else {
-                $this->assertArrayHasKey('errors', $response['body']);
+            $this->assertSame(200, $response['headers']['status-code'], 'Body: ' . \json_encode($response['body']));
+
+            foreach ($batch as $offset => $_) {
+                if ($sent + $offset < $max) {
+                    $this->assertArrayNotHasKey('errors', $response['body'][$offset]);
+                } else {
+                    $this->assertArrayHasKey('errors', $response['body'][$offset]);
+                }
             }
         }
     }
@@ -96,6 +106,28 @@ final class AbuseTest extends Scope
         $max = System::getEnv('_APP_GRAPHQL_MAX_QUERY_COMPLEXITY', '250');
 
         $this->assertEquals('Max query complexity should be ' . $max . ' but got 259.', $response['body']['errors'][0]['message']);
+    }
+
+    public function testZeroSelectionListComplexityBlocked()
+    {
+        $projectId = $this->getProject()['$id'];
+
+        // Every selected field is removed by @skip, so the per-row selection cost is 0. The list
+        // resolver still runs (a find() + count()), so aliasing the field must not be free: each
+        // alias is charged for its rows regardless, and enough of them exceed the complexity cap.
+        $aliases = [];
+        for ($i = 0; $i < 40; $i++) {
+            $aliases[] = "a{$i}: databasesListDocuments(databaseId: \"database\", collectionId: \"collection\") { total @skip(if: true) documents @skip(if: true) { _id } }";
+        }
+        $query = 'query { ' . \implode("\n", $aliases) . ' }';
+
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), ['query' => $query]);
+
+        $this->assertArrayHasKey('errors', $response['body']);
+        $this->assertStringContainsString('Max query complexity should be', (string) $response['body']['errors'][0]['message']);
     }
 
     public function testTooManyQueriesBlocked()

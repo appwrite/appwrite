@@ -100,8 +100,8 @@ class Create extends Action
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'factors' => ['server'],
-                'ip' => $request->getIP(),
-                'countryCode' => \strtolower($geo->get($request->getIP())->getCountryCode()),
+                'ip' => $request->getClientIP(),
+                'countryCode' => \strtolower($geo->get($request->getClientIP())->getCountryCode()),
                 'expire' => $expire,
             ],
             $detector->getOS(),
@@ -128,12 +128,13 @@ class Create extends Action
 
         $session
             ->setAttribute('secret', $encoded)
+            ->setAttribute('userName', $user->getAttribute('name', ''))
             ->setAttribute('countryName', $countryName);
 
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())
-            ->setPayload($response->output($session, Response::MODEL_SESSION));
+            ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken']);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($session, Response::MODEL_SESSION);

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Sites;
 
+use Appwrite\Permission;
+use Appwrite\Role;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -154,6 +156,99 @@ final class SitesConsoleClientTest extends Scope
     }
 
     #[Group('screenshots')]
+    public function testSiteScreenshotsMoveWithProjectTeam(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => Id::unique(),
+            'name' => 'Moving site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'buildCommand' => '',
+            'installCommand' => '',
+            'fallbackFile' => '',
+        ]);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => 'true'
+        ]);
+
+        $files = [];
+        $this->assertEventually(function () use ($siteId, $deploymentId, &$files) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals(200, $deployment['headers']['status-code']);
+            $this->assertNotEmpty($deployment['body']['screenshotLight']);
+            $this->assertNotEmpty($deployment['body']['screenshotDark']);
+            $files = [$deployment['body']['screenshotLight'], $deployment['body']['screenshotDark']];
+        });
+
+        $console = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ];
+
+        $team = $this->createTeamFixture($console, [
+            'teamId' => Id::unique(),
+            'name' => 'Screenshots Target Team',
+        ]);
+        $this->assertSame(200, $team['headers']['status-code']);
+        $teamId = $team['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/team', $console, [
+            'teamId' => $teamId,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame($teamId, $response['body']['teamId']);
+
+        $projectId = $this->getProject()['$id'];
+        foreach ($files as $fileId) {
+            $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/screenshots/files/' . $fileId, $console);
+            $this->assertSame(200, $file['headers']['status-code']);
+            $this->assertReadableAsProject($teamId, $projectId, $file['body']['$permissions']);
+        }
+
+        /**
+         * Test for SUCCESS - claiming a transfer link moves the screenshots too
+         */
+        $claimer = $this->createTeamFixture($console, [
+            'teamId' => Id::unique(),
+            'name' => 'Screenshots Claiming Team',
+        ]);
+        $this->assertSame(200, $claimer['headers']['status-code']);
+        $claimerId = $claimer['body']['$id'];
+
+        $transfer = $this->client->call(Client::METHOD_POST, '/organization/transfers', array_merge($console, [
+            'x-appwrite-organization' => $teamId,
+        ]), [
+            'projectId' => $this->getProject()['$id'],
+        ]);
+        $this->assertSame(201, $transfer['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/organization/transfers/' . $transfer['body']['$id'] . '/status', array_merge($console, [
+            'x-appwrite-organization' => $claimerId,
+        ]), [
+            'secret' => $transfer['body']['secret'],
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame($claimerId, $response['body']['teamId']);
+
+        // The claim revokes the previous owner's keys, so the fixture needs a key from the new owner
+        self::$project['apiKey'] = $this->getNewKey($this->getProjectKeyScopes());
+
+        foreach ($files as $fileId) {
+            $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/screenshots/files/' . $fileId, $console);
+            $this->assertSame(200, $file['headers']['status-code']);
+            $this->assertReadableAsProject($claimerId, $projectId, $file['body']['$permissions']);
+        }
+
+        $this->cleanupSite($siteId);
+    }
+
+    #[Group('screenshots')]
     public function testDeleteDeploymentScreenshots(): void
     {
         $siteId = $this->setupSite([
@@ -247,6 +342,26 @@ final class SitesConsoleClientTest extends Scope
         } while (\microtime(true) < $deadline);
 
         $this->cleanupSite($siteId);
+    }
+
+    /**
+     * Readable as the project is: by the team's and the project's owners and developers, and by no other team or
+     * project. The roles are the project's own, so a platform with more project roles adds those too.
+     *
+     * @param array<string> $permissions
+     */
+    private function assertReadableAsProject(string $teamId, string $projectId, array $permissions): void
+    {
+        foreach (['owner', 'developer', "project-{$projectId}-owner", "project-{$projectId}-developer"] as $role) {
+            $this->assertContains(Permission::read(Role::team($teamId, $role)), $permissions);
+        }
+
+        foreach ($permissions as $permission) {
+            $this->assertStringStartsWith('read("team:' . $teamId . '/', $permission);
+            if (\str_contains($permission, '/project-')) {
+                $this->assertStringContainsString("/project-{$projectId}-", $permission);
+            }
+        }
     }
 
     private function getScreenshot(string $screenshotId): array

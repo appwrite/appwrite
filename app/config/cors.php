@@ -22,6 +22,7 @@ return [
         'X-Appwrite-Mode',
         'X-Appwrite-JWT',
         'X-Appwrite-Organization',
+        'X-Appwrite-Environment',
         'X-Appwrite-Response-Format',
         'X-Appwrite-Timeout',
         'X-Appwrite-ID',
@@ -31,6 +32,7 @@ return [
         'X-Appwrite-Impersonate-User-Id',
         'X-Appwrite-Impersonate-User-Email',
         'X-Appwrite-Impersonate-User-Phone',
+        'X-Appwrite-Reason',
         // SDK generator
         'X-SDK-Version',
         'X-SDK-Name',
@@ -48,6 +50,7 @@ return [
         'X-Requested-With',
         'X-Forwarded-For',
         'X-Forwarded-User-Agent',
+        'X-Forwarded-IP',
     ],
     'exposedHeaders' => [
         'X-Appwrite-Session',

@@ -33,6 +33,9 @@ use Utopia\Query\Exception\ValidationException;
 use Utopia\Query\Method;
 use Utopia\Query\Query;
 use Utopia\Query\Schema\ColumnType;
+use Utopia\Query\StringLiteral;
+use Utopia\Query\Tokenizer\PostgreSQL as PostgreSQLTokenizer;
+use Utopia\Query\Tokenizer\Tokenizer;
 
 class PostgreSQL extends SQL implements
     VectorSearch,
@@ -84,10 +87,18 @@ class PostgreSQL extends SQL implements
 
     protected string $wrapChar = '"';
 
+    protected StringLiteral $literal = StringLiteral::Extended;
+
     #[\Override]
     protected function createAstSerializer(): Serializer
     {
-        return new PostgreSQLSerializer();
+        return new PostgreSQLSerializer($this->literal);
+    }
+
+    #[\Override]
+    protected function createTokenizer(): Tokenizer
+    {
+        return new PostgreSQLTokenizer($this->literal);
     }
 
     /** @var ?array{attribute: string, vector: array<float>, metric: VectorMetric} */
@@ -285,16 +296,12 @@ class PostgreSQL extends SQL implements
 
         $parts = [$sql];
 
-        $extraWhere = [];
-        if ($updateFrom->condition !== '') {
-            $extraWhere[] = $updateFrom->condition;
-            foreach ($updateFrom->bindings as $binding) {
-                $this->addBinding($binding);
-            }
-        }
-
         $this->compileWhereClauses($parts);
-        $this->mergeIntoWhereClause($parts, $extraWhere);
+
+        if ($updateFrom->condition !== '') {
+            $this->mergeIntoWhereClause($parts, $this->enclose($updateFrom->condition));
+            $this->addBindings($updateFrom->bindings);
+        }
 
         return new Statement(\implode(' ', $parts), $this->getBindingValues(), executor: $this->executor);
     }
@@ -339,42 +346,29 @@ class PostgreSQL extends SQL implements
 
         $parts = [$sql];
 
-        $extraWhere = [];
-        if ($deleteUsing->condition !== '') {
-            $extraWhere[] = $deleteUsing->condition;
-            foreach ($deleteUsing->bindings as $binding) {
-                $this->addBinding($binding);
-            }
-        }
-
         $this->compileWhereClauses($parts);
-        $this->mergeIntoWhereClause($parts, $extraWhere);
+
+        if ($deleteUsing->condition !== '') {
+            $this->mergeIntoWhereClause($parts, $this->enclose($deleteUsing->condition));
+            $this->addBindings($deleteUsing->bindings);
+        }
 
         return new Statement(\implode(' ', $parts), $this->getBindingValues(), executor: $this->executor);
     }
 
     /**
-     * Merge additional conditions into the trailing WHERE clause in $parts.
-     * If the last part already begins with "WHERE ", append with AND; otherwise
-     * push a new WHERE fragment. No-op when $extra is empty.
-     *
      * @param  array<string>  $parts
-     * @param  list<string>   $extra
      */
-    private function mergeIntoWhereClause(array &$parts, array $extra): void
+    private function mergeIntoWhereClause(array &$parts, string $condition): void
     {
-        if (empty($extra)) {
-            return;
-        }
-
         $lastPart = \end($parts);
         if (\is_string($lastPart) && \str_starts_with($lastPart, 'WHERE ')) {
-            $parts[\count($parts) - 1] = $lastPart . ' AND ' . \implode(' AND ', $extra);
+            $parts[\count($parts) - 1] = $lastPart . ' AND ' . $condition;
 
             return;
         }
 
-        $parts[] = 'WHERE ' . \implode(' AND ', $extra);
+        $parts[] = 'WHERE ' . $condition;
     }
 
     public function upsert(): Statement
@@ -614,10 +608,10 @@ class PostgreSQL extends SQL implements
 
         $chain = $base;
         foreach ($parts as $key) {
-            $chain .= '->' . $this->quoteJsonKey($key);
+            $chain .= '->' . $this->literal->quote($key);
         }
 
-        return $chain . '->>' . $this->quoteJsonKey($lastKey);
+        return $chain . '->>' . $this->literal->quote($lastKey);
     }
 
     private function quoteArrayElement(string $element): string
@@ -631,26 +625,6 @@ class PostgreSQL extends SQL implements
         }
 
         return '"' . \str_replace(['\\', '"'], ['\\\\', '\\"'], $element) . '"';
-    }
-
-    /**
-     * A key without a backslash is emitted as a plain literal, which reads the same whatever
-     * standard_conforming_strings is set to; a key with one uses the E'' form, which always
-     * treats a backslash as an escape.
-     */
-    private function quoteJsonKey(string $key): string
-    {
-        if (\str_contains($key, "\0")) {
-            throw new ValidationException('JSON key contains a NUL byte');
-        }
-
-        $escaped = \str_replace("'", "''", $key);
-
-        if (!\str_contains($key, '\\')) {
-            return "'" . $escaped . "'";
-        }
-
-        return "E'" . \str_replace('\\', '\\\\', $escaped) . "'";
     }
 
     #[\Override]
@@ -917,7 +891,7 @@ class PostgreSQL extends SQL implements
         $operator = $values[1];
         $value = $values[2];
 
-        if (!\preg_match('/^[a-zA-Z0-9_.\[\]]+$/', $path)) {
+        if (!\preg_match('/^[a-zA-Z0-9_.\[\]]+$/D', $path)) {
             throw new ValidationException('Invalid JSON path: ' . $path);
         }
 
@@ -948,5 +922,4 @@ class PostgreSQL extends SQL implements
 
         return '(' . $attribute . ' ' . $operator . ' ?::vector)';
     }
-
 }

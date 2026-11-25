@@ -6,10 +6,7 @@ import type {
   MarketplaceApp,
   MarketplaceAppCategory,
 } from '@/lib/marketplace/types'
-import {
-  MARKETPLACE_TOTAL_CAP,
-  formatMarketplaceCount,
-} from '@/lib/marketplace/types'
+import { formatListTotal } from '@/lib/list-total'
 import {
   MARKETPLACE_SIDEBAR_LINKS,
   buildMarketplaceNavGroups,
@@ -154,13 +151,13 @@ export function View() {
     // Catalog and category counts come from server totals, which honour the
     // search term, so they stay correct beyond the first page of results.
     if (navId === 'explore' || navId === 'catalog') {
-      return formatMarketplaceCount(catalogTotal)
+      return formatListTotal(catalogTotal)
     }
     if (navId === 'my-apps') return String(matchingOwnedApps.length)
     if (navId.startsWith('category:')) {
       const category = navId.slice('category:'.length) as MarketplaceAppCategory
       const total = categoryTotals?.[category]
-      return total === undefined ? '' : formatMarketplaceCount(total)
+      return total === undefined ? '' : formatListTotal(total)
     }
     return ''
   }
@@ -277,11 +274,6 @@ export function View() {
           <Pagination
             currentPage={page}
             totalItems={listedTotal}
-            totalDisplay={
-              listedTotal >= MARKETPLACE_TOTAL_CAP
-                ? formatMarketplaceCount(listedTotal)
-                : undefined
-            }
             pageSize={MARKETPLACE_PAGE_SIZE}
             onPageChange={setPage}
             onPageSizeChange={() => {}}

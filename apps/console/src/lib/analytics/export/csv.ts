@@ -83,7 +83,7 @@ export function buildCsvEntries(
       ``,
       `Files`,
       `  summary.csv           Property-wide totals${comparing ? ' with comparison' : ''}`,
-      `  timeseries.csv        Visitors, sessions and events per bucket`,
+      `  timeseries.csv        Visitors, sessions, pageviews and events per bucket`,
       `  breakdowns/*.csv      Top 100 values per dimension, ranked by visitors`,
       ``,
       `Times are ISO 8601 in UTC. Visitors and sessions in breakdowns are`,
@@ -135,18 +135,21 @@ export function buildCsvEntries(
             'Bucket start',
             'Visitors',
             'Sessions',
+            'Pageviews',
             'Events',
             'Comparison bucket start',
             'Comparison visitors',
             'Comparison sessions',
+            'Comparison pageviews',
             'Comparison events',
           ]
-        : ['Bucket start', 'Visitors', 'Sessions', 'Events'],
+        : ['Bucket start', 'Visitors', 'Sessions', 'Pageviews', 'Events'],
       data.series.map((point, index) => {
         const row: unknown[] = [
           point.day.toISOString(),
           point.visitors,
           point.sessions,
+          point.pageviews,
           point.events,
         ]
         if (comparing) {
@@ -155,6 +158,7 @@ export function buildCsvEntries(
             previous?.day.toISOString(),
             previous?.visitors,
             previous?.sessions,
+            previous?.pageviews,
             previous?.events,
           )
         }

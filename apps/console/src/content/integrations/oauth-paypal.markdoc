@@ -1,0 +1,69 @@
+---
+layout: integration
+title: OAuth with PayPal
+description: Authenticate users with an existing PayPal account
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-paypal/cover.avif
+category: auth
+product:
+    vendor: PayPal
+    description: "PayPal is an online payments platform that people use to pay merchants, send money, and check out with a stored account."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+PayPal is an online payments platform that people use to pay merchants, send money, and check out with a stored account instead of entering card details. [Log in with PayPal](https://developer.paypal.com/log-in/how-it-works) lets apps sign customers in with their PayPal account and, with their consent, read profile details such as their name and email address.
+
+# How does the integration work?
+
+You can use the PayPal OAuth adapter in Appwrite Auth for user authentication and management. This can be convenient for users because they can start using your app without creating a new account, and it fits stores and marketplaces whose customers already pay with PayPal.
+
+Appwrite requests the `openid`, `profile`, and `email` scopes, identifies the user by their PayPal payer ID, and stores their name and primary email address. The email address is marked as verified only when PayPal reports the account as verified. PayPal also shares the user's profile photo, which Appwrite uses for [user photos](/docs/products/avatars/user-photos) in Appwrite Avatars.
+
+Appwrite has two PayPal providers. **PayPal** signs users in with live PayPal accounts, and **PayPal Sandbox** uses PayPal's sandbox environment with test accounts, so you can build and test the flow before you go live.
+
+# How to implement
+
+To implement the PayPal OAuth adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Create a PayPal app
+
+First, sign in to the [PayPal Developer Dashboard](https://developer.paypal.com/dashboard/), open **Apps & Credentials**, and create an app. Use the **Sandbox** environment while you test, and create a separate app in the **Live** environment for production. Save the app's **Client ID** and **Secret key 1** for later use.
+
+On the app's page, check **Log in with PayPal** under **Other features** and select **Advanced Settings**. Choose the user information your app needs, including the email address, and add a privacy policy URL and a user agreement URL. You will set the **Return URL** in the next step.
+
+Sandbox apps can use Log in with PayPal as soon as you save. For a live app, saving submits the feature for review by PayPal, so plan for that before you launch.
+
+## Step 2: Add the PayPal OAuth adapter to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. In your Appwrite project, head over to the **Auth** page, open the **Settings** tab, and click **PayPal** under the **OAuth2 Providers** section. For a sandbox app, click **PayPal Sandbox** instead.
+
+Enter the **Client ID**, and paste either of your app's secret keys into the **Secret Key 1 or Secret Key 2** field. Turn the provider on and click **Update**.
+
+Copy the **Redirect URI** shown in the provider settings. It follows this format:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/paypal/<PROJECT_ID>
+```
+
+The URI starts with the API endpoint your app uses, so on self-hosted Appwrite it starts with your own domain. The **PayPal Sandbox** provider has its own URI, ending in `/paypalSandbox/<PROJECT_ID>`. Always copy the exact value from the Console. Back in the PayPal Developer Dashboard, paste it into the **Return URL** field in the Log in with PayPal advanced settings and save.
+
+PayPal doesn't accept `localhost` in return URLs, so when Appwrite runs on `localhost` it sends PayPal `127.0.0.1` instead. Register the Return URL with `127.0.0.1` in that case.
+
+## Step 3: Test the provider
+
+Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow to test your provider. Pass `OAuthProvider.Paypal` as the provider, or `OAuthProvider.PaypalSandbox` for a sandbox app, when you call `createOAuth2Session` from a client app or `createOAuth2Token` from a server. Add your app's domain as a platform in your Appwrite project so Appwrite accepts your `success` and `failure` URLs.
+
+# Read more about PayPal and Appwrite Auth
+
+If you would like to learn more about PayPal and Appwrite Auth, we have some resources that you should visit:
+
+- [How Log in with PayPal works](https://developer.paypal.com/log-in/how-it-works)
+- [PayPal Developer Dashboard](https://developer.paypal.com/dashboard/)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Understanding OAuth and OpenID Connect](/blog/post/oauth-openid)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)

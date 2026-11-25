@@ -2,6 +2,8 @@
 
 namespace Appwrite\Migration\Version;
 
+use Appwrite\Alert\Severity;
+use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Migration\Migration;
 use Exception;
 use Throwable;
@@ -15,6 +17,7 @@ use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Query;
 use Utopia\Migration\Resource;
 use Utopia\Query\Schema\ColumnType;
+use Utopia\System\System;
 
 class V25 extends Migration
 {
@@ -76,6 +79,18 @@ class V25 extends Migration
                         }
 
                         try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'prefs');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"prefs\" in collection {$id}: {$th->getMessage()}");
+                        }
+
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'ldap');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"ldap\" in collection {$id}: {$th->getMessage()}");
+                        }
+
+                        try {
                             $this->createIndexFromCollection($this->dbForProject, $id, '_key_accessedAt');
                         } catch (Throwable $th) {
                             Console::warning("Failed to create index \"_key_accessedAt\" from {$id}: {$th->getMessage()}");
@@ -125,7 +140,7 @@ class V25 extends Migration
 
                 case 'notifications':
                     if ($collectionType === 'console') {
-                        $attributes = ['teamId', 'teamInternalId'];
+                        $attributes = ['teamId', 'teamInternalId', 'subjectType', 'subjectId', 'status'];
                         foreach ($attributes as $attribute) {
                             try {
                                 $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
@@ -136,10 +151,12 @@ class V25 extends Migration
 
                         $this->dbForProject->purgeCachedCollection($id);
 
-                        try {
-                            $this->createIndexFromCollection($this->dbForProject, $id, '_key_team');
-                        } catch (Throwable $th) {
-                            Console::warning("Failed to create index \"_key_team\" from {$id}: {$th->getMessage()}");
+                        foreach (['_key_team', '_key_subject'] as $index) {
+                            try {
+                                $this->createIndexFromCollection($this->dbForProject, $id, $index);
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to create index \"{$index}\" from {$id}: {$th->getMessage()}");
+                            }
                         }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
@@ -164,6 +181,22 @@ class V25 extends Migration
                             } catch (Throwable $th) {
                                 Console::warning("Failed to convert attribute \"{$attribute}\" to text in collection {$id}: {$th->getMessage()}");
                             }
+                        }
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'reviewNewRepositories');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"reviewNewRepositories\" in collection {$id}: {$th->getMessage()}");
+                        }
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'repositories':
+                    if ($collectionType === 'console') {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'strength');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"strength\" in collection {$id}: {$th->getMessage()}");
                         }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
@@ -313,7 +346,7 @@ class V25 extends Migration
                 case 'functions':
                 case 'sites':
                     if ($collectionType === 'projects') {
-                        $attributes = ['providerBranches', 'providerPaths', 'description'];
+                        $attributes = ['providerBranches', 'providerPaths', 'description', 'providerComments', 'providerDeployments', 'providerStatuses'];
                         if ($id === 'sites') {
                             $attributes[] = 'scopes';
                         }
@@ -382,6 +415,19 @@ class V25 extends Migration
                     }
                     break;
 
+                case 'teams':
+                    // Added for custom team photos
+                    foreach (['photoId', 'photoSize'] as $attribute) {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
+                        }
+                    }
+
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
                 case 'users':
                     // Added in V23. An install whose V23 users step failed, or one that
                     // upgraded straight from 1.8.x, arrives here without them and every
@@ -411,8 +457,8 @@ class V25 extends Migration
                         Console::warning("Failed to create index \"_key_passwordPwned\" from {$id}: {$th->getMessage()}");
                     }
 
-                    // Added in 2.4.0 for custom user photos
-                    foreach (['photoId', 'photoSize'] as $attribute) {
+                    // Added in 2.4.0 for custom user photos, and in 2.7.0 for alert email opt-outs
+                    foreach (['photoId', 'photoSize', 'alertsUnsubscribed'] as $attribute) {
                         try {
                             $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
                         } catch (Throwable $th) {
@@ -457,6 +503,39 @@ class V25 extends Migration
                         Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
                     }
 
+                    // Added in 2.8.0 for account switching: the device a session belongs to.
+                    $deviceAttributes = ['deviceInternalId', 'deviceId'];
+                    try {
+                        $this->createAttributesFromCollection($this->dbForProject, $id, $deviceAttributes);
+                    } catch (Throwable $th) {
+                        Console::warning('Failed to create attributes "' . \implode(', ', $deviceAttributes) . "\" in collection {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_device');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create index \"_key_device\" from {$id}: {$th->getMessage()}");
+                    }
+
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'devices':
+                    // Added in 2.8.0 for account switching.
+                    // On shared tables the collection is global: created with a project's tenant, its
+                    // metadata row would belong to that project only and be missing for every other one.
+                    $tenant = $this->dbForProject->getTenant();
+                    if ($this->dbForProject->hasSharedTables()) {
+                        $this->dbForProject->setTenant(null);
+                    }
+                    try {
+                        $this->createCollection('devices');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create collection \"devices\": {$th->getMessage()}");
+                    } finally {
+                        $this->dbForProject->setTenant($tenant);
+                    }
+
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
@@ -484,6 +563,12 @@ class V25 extends Migration
                     }
                     break;
 
+                case 'transfers':
+                    if ($collectionType === 'console') {
+                        $this->createCollection($id);
+                    }
+                    break;
+
                 case 'presenceLogs':
                     // Added in 1.9.5 and created only by V24, which an install that ran the 1.9.6
                     // migration or upgraded straight from 1.8.x never ran. createCollection() is a
@@ -507,7 +592,90 @@ class V25 extends Migration
                 case 'videosProfiles':
                 case 'videosCaptions':
                 case 'videosCaptionsSegments':
-                    // New in 2.6.0. The document pass visits these collections even when video APIs are disabled.
+                case 'reviews':
+                case 'reviewFindings':
+                case 'reviewEvents':
+                case 'reviewChats':
+                case 'reviewLearnings':
+                case 'reviewUsage':
+                    // Videos are new in 2.6.0, reviews in 2.7.0. Both are created even when the
+                    // feature is disabled, so turning it on later needs no migration, and the
+                    // document pass visits them regardless.
+                    // On shared tables the collection is global: created with a project's tenant, its
+                    // metadata row would belong to that project only and be missing for every other one.
+                    $tenant = $this->dbForProject->getTenant();
+                    if ($this->dbForProject->hasSharedTables()) {
+                        $this->dbForProject->setTenant(null);
+                    }
+                    try {
+                        // An install already on 2.7 has the collection, and gets the attributes
+                        // added to it since created on their own.
+                        $existed = $this->dbForProject->findCollection($id) !== null;
+                        $this->createCollection($id);
+                        if ($existed && $id === 'reviews') {
+                            foreach (['strength', 'providerPullRequestAuthor'] as $attribute) {
+                                try {
+                                    $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
+                                } catch (Throwable $th) {
+                                    Console::warning("Failed to create attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
+                                }
+                            }
+                        }
+                        // Segments created before each row stored its bytes. An existing
+                        // attribute is skipped; a second migrate hits that path.
+                        if ($existed && $id === 'videosRenditionsSegments') {
+                            try {
+                                $this->createAttributeFromCollection($this->dbForProject, $id, 'size');
+                            } catch (Duplicate) {
+                            }
+                            $this->dbForProject->purgeCachedCollection($id);
+                        }
+                    } finally {
+                        $this->dbForProject->setTenant($tenant);
+                    }
+                    break;
+
+                case 'monitors':
+                case 'monitorAlerts':
+                case 'escalations':
+                    // New in 2.7.0. Platform collections, so only the console project visits them.
+                    $this->createCollection($id);
+                    // Created before monitors had a severity or an escalation, or alerts were acknowledged or escalated.
+                    $attributes = match ($id) {
+                        'monitorAlerts' => ['severity', 'acknowledgedAt', 'acknowledgedBy', 'acknowledgedByName', 'escalationId', 'escalationSteps', 'escalationUserIds', 'escalationRepeat', 'escalationStep', 'escalationRound', 'escalatesAt'],
+                        'monitors' => ['severity', 'escalationId'],
+                        default => [],
+                    };
+                    foreach ($attributes as $attribute) {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
+                        } catch (Duplicate) {
+                        }
+                    }
+                    if ($id === 'monitors') {
+                        try {
+                            $this->createIndexFromCollection($this->dbForProject, $id, '_key_escalationId');
+                        } catch (Duplicate) {
+                        }
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'rules':
+                    // The latest DNS record checks from verification, shown on proxy rules and read from
+                    // ruleRecords. An existing attribute is skipped; any other failure propagates, since
+                    // without it no rule shows its checks.
+                    if ($collectionType === 'console' && $this->dbForProject->findCollection($id) !== null) {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'records');
+                        } catch (Duplicate) {
+                        }
+                        $this->dbForProject->purgeCachedCollection($id);
+                    }
+                    break;
+
+                case 'ruleRecords':
+                    // New with the DNS record checks. A platform collection, so only the console project visits it.
                     $this->createCollection($id);
                     break;
 
@@ -573,6 +741,31 @@ class V25 extends Migration
 
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
+
+                case 'certificates':
+                    // The certificate's expiry and its provider's renewal state, shown on proxy rules.
+                    // Attributes that exist are skipped, and a console without the collection has
+                    // nothing to add to; any other failure propagates, since without them the
+                    // worker silently drops both on every write.
+                    if ($collectionType === 'console' && $this->dbForProject->findCollection($id) !== null) {
+                        $this->createAttributesFromCollection($this->dbForProject, $id, ['expireDate', 'status']);
+                        $this->dbForProject->purgeCachedCollection($id);
+
+                        // A certificate issued before this release has no expiry, so maintenance would
+                        // never check it as it nears expiry. Read it from the certificate in storage.
+                        $letsEncrypt = new LetsEncrypt(System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', '')));
+                        foreach ($this->dbForProject->cursor($id, batchSize: 100) as $certificate) {
+                            if (!empty($certificate->getAttribute('expireDate'))) {
+                                continue;
+                            }
+                            $expireDate = $letsEncrypt->getCertificateExpiry($certificate->getAttribute('domain', ''), null);
+                            if ($expireDate !== null) {
+                                $this->dbForProject->updateDocument($id, $certificate->getId(), new Document(['expireDate' => $expireDate]));
+                            }
+                        }
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
             }
         }
     }
@@ -612,6 +805,15 @@ class V25 extends Migration
 
     protected function migrateDocument(Document $document): Document
     {
+        // A column added to existing rows leaves them null, not at its default.
+        if (\in_array($document->getCollection(), ['monitors', 'monitorAlerts'], true)) {
+            if (empty($document->getAttribute('severity'))) {
+                $document->setAttribute('severity', Severity::Warning->value);
+            }
+
+            return $document;
+        }
+
         if (\in_array($document->getCollection(), ['keys', 'functions', 'sites'], true)) {
             $retired = ['devKeys.read', 'devKeys.write', 'assistant.read'];
             $scopes = $document->getAttribute('scopes', []);

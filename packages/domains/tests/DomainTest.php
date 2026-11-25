@@ -18,9 +18,11 @@ declare(strict_types=1);
 namespace Utopia\Domains\Tests;
 
 use Exception;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Domains\Domain;
 
+#[RequiresPhpExtension('utopia')]
 final class DomainTest extends TestCase
 {
     public function testEdgecaseDomains(): void

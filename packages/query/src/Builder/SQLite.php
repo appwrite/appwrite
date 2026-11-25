@@ -13,6 +13,9 @@ use Utopia\Query\Builder\Feature\UpsertSelect;
 use Utopia\Query\Exception\UnsupportedException;
 use Utopia\Query\Exception\ValidationException;
 use Utopia\Query\Method;
+use Utopia\Query\StringLiteral;
+use Utopia\Query\Tokenizer\SQLite as SQLiteTokenizer;
+use Utopia\Query\Tokenizer\Tokenizer;
 
 class SQLite extends SQL implements Json, ConditionalAggregates, StringAggregates, InsertOrIgnore, Upsert, UpsertSelect
 {
@@ -21,13 +24,25 @@ class SQLite extends SQL implements Json, ConditionalAggregates, StringAggregate
     use Trait\Upsert;
     use Trait\UpsertSelect;
 
+    protected const bool DECLARES_LIKE_ESCAPE = true;
+
+    protected const ?string IMPLICIT_LIKE_ESCAPE = null;
+
+    protected StringLiteral $literal = StringLiteral::Standard;
+
     /** @var array<string, Condition> */
     protected array $jsonSets = [];
 
     #[\Override]
     protected function createAstSerializer(): Serializer
     {
-        return new SQLiteSerializer();
+        return new SQLiteSerializer($this->literal);
+    }
+
+    #[\Override]
+    protected function createTokenizer(): Tokenizer
+    {
+        return new SQLiteTokenizer($this->literal);
     }
 
     #[\Override]
@@ -270,7 +285,7 @@ class SQLite extends SQL implements Json, ConditionalAggregates, StringAggregate
         $operator = $values[1];
         $value = $values[2];
 
-        if (!\preg_match('/^[a-zA-Z0-9_.\[\]]+$/', $path)) {
+        if (!\preg_match('/^[a-zA-Z0-9_.\[\]]+$/D', $path)) {
             throw new ValidationException('Invalid JSON path: ' . $path);
         }
 

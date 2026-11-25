@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\Key;
 use Appwrite\Bus\Events\RequestCompleted;
 use Appwrite\Event\Context\Audit as AuditContext;
@@ -11,6 +12,7 @@ use Appwrite\Event\Publisher\Audit;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
+use Appwrite\Event\Validator\Reason;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
@@ -18,6 +20,7 @@ use Appwrite\Locking\Lock;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Platform\Modules\Storage\Config\CacheControl;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
+use Appwrite\Platform\Modules\Videos\Base as VideosBase;
 use Appwrite\Reference\Renderer;
 use Appwrite\SDK\Method;
 use Appwrite\Usage\Context;
@@ -26,8 +29,6 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Adapter\TimeLimit;
 use Utopia\Bus\Bus;
-use Utopia\Cache\Adapter\Filesystem;
-use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
@@ -153,9 +154,22 @@ Http::init()
                 throw new Exception(Exception::PROJECT_KEY_EXPIRED);
             }
 
-            // Set role and scopes from API key
+            // Organization and account keys act through the Console API only, so refuse them before the key is touched or audited.
+            // Organization scopes name organization resources, and some share a name with a project scope (monitors.*, keys.*):
+            // on any other project they would reach that project's own routes in every project of the organization.
+            if ($apiKey->getType() === API_KEY_ORGANIZATION && $project->getId() !== 'console') {
+                throw new Exception(Exception::USER_UNAUTHORIZED, 'Organization API keys can only be used with the console project.');
+            }
+
+            // Account keys would inject the console user's roles (user:{id}, users, team:{orgId}) into that project's data plane,
+            // where caller-chosen console user and organization IDs can collide with the project's own users and teams.
+            if ($apiKey->getType() === API_KEY_ACCOUNT && $project->getId() !== 'console') {
+                throw new Exception(Exception::USER_UNAUTHORIZED, 'Account API keys can only be used with the console project.');
+            }
+
+            // Set role and scopes from API key. Every key also holds 'public', which guests already have, so endpoints open to anyone stay open to keys.
             $role = $apiKey->getRole();
-            $scopes = $apiKey->getScopes();
+            $scopes = [...$apiKey->getScopes(), 'public'];
 
             // Handle special key role case
             if ($apiKey->getRole() === User::ROLE_KEYS) {
@@ -238,20 +252,26 @@ Http::init()
                     }
                 }
 
-                $userClone = clone $user;
-                $userClone->setAttribute('type', match ($apiKey->getType()) {
-                    API_KEY_STANDARD => ACTOR_TYPE_KEY_PROJECT,
-                    API_KEY_ACCOUNT => ACTOR_TYPE_KEY_ACCOUNT,
-                    default => ACTOR_TYPE_KEY_ORGANIZATION,
-                });
+                // Audit only reads these attributes, avoid cloning the whole user with its sessions, memberships and tokens
+                $auditUser = new Document([
+                    '$id' => $user->getId(),
+                    '$sequence' => $user->getSequence(),
+                    'name' => $user->getAttribute('name', ''),
+                    'email' => $user->getAttribute('email', ''),
+                    'type' => match ($apiKey->getType()) {
+                        API_KEY_STANDARD => ACTOR_TYPE_KEY_PROJECT,
+                        API_KEY_ACCOUNT => ACTOR_TYPE_KEY_ACCOUNT,
+                        default => ACTOR_TYPE_KEY_ORGANIZATION,
+                    },
+                ]);
 
                 if ($apiKey->getType() === API_KEY_STANDARD || $apiKey->getType() === API_KEY_ORGANIZATION) {
-                    $userClone
+                    $auditUser
                         ->setAttribute('$id', $dbKey->getId())
                         ->setAttribute('$sequence', $dbKey->getSequence());
                 }
 
-                $auditContext->user = $userClone;
+                $auditContext->user = $auditUser;
             }
 
             // Apply permission
@@ -259,14 +279,6 @@ Http::init()
                 $authorization->addRole(Role::team($team->getId())->toString());
                 $authorization->addRole(Role::team($team->getId(), 'owner')->toString());
             } elseif ($apiKey->getType() === API_KEY_ACCOUNT) {
-                // Account keys act as the console user on the Console API only. On any other
-                // project they would inject the console user's roles (user:{id}, users,
-                // team:{orgId}) into that project's data plane, where caller-chosen console
-                // user and organization IDs can collide with the project's own users and teams.
-                if ($project->getId() !== 'console') {
-                    throw new Exception(Exception::USER_UNAUTHORIZED, 'Account API keys can only be used with the console project.');
-                }
-
                 $authorization->addRole(Role::user($user->getId())->toString());
                 $authorization->addRole(Role::users()->toString());
 
@@ -376,6 +388,13 @@ Http::init()
             )
         ) {
             $scopes[] = 'users.read';
+            $response->setHideCredentials(true);
+        }
+
+        // Reading users is not authority over their credentials. Minted keys are exempt, as their minter could grant users.write
+        // and user migrations read hashes with users.read; OAuth2 tokens only delegate their holder's role
+        $isMintedKey = ! empty($apiKey) && $apiKey->getType() !== API_KEY_OAUTH2;
+        if (\in_array('users.read', $scopes, true) && ! \in_array('users.write', $scopes, true) && ! $isMintedKey) {
             $response->setHideCredentials(true);
         }
 
@@ -522,12 +541,17 @@ Http::init()
                 throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
             }
 
-            if (
-                array_key_exists($namespace, $project->getAttribute('services', []))
-                && ! $project->getAttribute('services', [])[$namespace]
-                && ! ($rolesSource->isPrivileged($authorization->getRoles()) || $rolesSource->isKey($authorization->getRoles()))
-            ) {
-                throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
+            // A route served under one SDK namespace can also belong to another service, such as team
+            // photos under avatars; its `services` label names the other switches it must respect.
+            $switches = $project->getAttribute('services', []);
+            foreach (\array_unique([$namespace, ...$route->getLabel('services', [])]) as $service) {
+                if (
+                    array_key_exists($service, $switches)
+                    && ! $switches[$service]
+                    && ! ($rolesSource->isPrivileged($authorization->getRoles()) || $rolesSource->isKey($authorization->getRoles()))
+                ) {
+                    throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
+                }
             }
         }
 
@@ -574,8 +598,9 @@ Http::init()
         }
     });
 
+// GraphQL routes are not in the api group, but declare limits of their own: one request carries a batch of operations
 Http::init()
-    ->groups(['api'])
+    ->groups(['api', 'graphql'])
     ->inject('route')
     ->inject('request')
     ->inject('response')
@@ -583,51 +608,34 @@ Http::init()
     ->inject('user')
     ->inject('timelimit')
     ->inject('authorization')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit, Authorization $authorization) {
+    ->inject('params')
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit, Authorization $authorization, array $pathParams) {
         $response->setUser($user);
         $request->setUser($user);
 
         $roles = $authorization->getRoles();
-        $shouldCheckAbuse = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled'
-            && ! $user->isKey($roles)
-            && ! $user->isPrivileged($roles);
+        $abuseEnabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+        // A key or a privileged console caller is trusted with throughput, so the limits that only pace legitimate
+        // work are read for its headers and never counted. A limit declared for everyone still counts for it:
+        // being trusted to call an endpoint is not the same as being trusted to guess the secret it takes.
+        $trusted = $user->isKey($roles) || $user->isPrivileged($roles);
 
-        $abuseLimit = $route->getLabel('abuse-limit', 0);
         $increasedLimitProjects = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS', ''))));
-        if (\in_array($project->getId(), $increasedLimitProjects, true)) {
-            $abuseLimit *= 100;
-        }
+        $multiplier = \in_array($project->getId(), $increasedLimitProjects, true) ? 100 : 1;
 
-        $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
-        $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
+        /** @var list<Limit> $limits */
+        $limits = $route->getLabel('abuse', []);
+        $values = $limits === [] ? [] : Limit::values($route, $request, $project, $user, $pathParams);
         $closestLimit = null;
+        $reserved = [];
 
-        foreach ($abuseKeyLabel as $abuseKey) {
-            $isRateLimited = false;
-            $checking = false;
+        foreach ($limits as $limit) {
+            $max = $limit->limit * $multiplier;
+            $shouldCheckAbuse = $abuseEnabled && $limit->counts($trusted);
 
             try {
-                $params = [
-                    '{projectId}' => (string) $project->getId(),
-                    '{userId}' => (string) $user->getId(),
-                    '{userAgent}' => (string) $request->getUserAgent(''),
-                    '{ip}' => (string) $request->getIP(),
-                    '{url}' => $route->getPath(),
-                    '{method}' => (string) $request->getMethod(),
-                    '{chunkId}' => (string) $request->getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE),
-                ];
-
-                foreach ($request->getParams() as $key => $value) {
-                    if (! empty($value)) {
-                        $value = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
-                        // Sign in matches emails case-insensitively, so the limit must too
-                        $params['{param-' . $key . '}'] = $key === 'email' ? \strtolower($value) : $value;
-                    }
-                }
-
-                $checking = true;
-                $isRateLimited = $timelimit($abuseKey, $abuseLimit, $route->getLabel('abuse-time', 3600), function (TimeLimit $timeLimit) use ($params, $response, $shouldCheckAbuse, &$closestLimit): bool {
-                    $timeLimit = $timeLimit->withParams($params);
+                $isRateLimited = $timelimit($limit->key($values), $max, $limit->seconds, function (TimeLimit $timeLimit) use ($response, $shouldCheckAbuse, &$closestLimit): bool {
+                    // A failure limit's hit is reserved here too, atomically, and given back if the request succeeds.
                     $result = $shouldCheckAbuse ? $timeLimit->check() : $timeLimit->peek();
                     if ($result->limit && ($result->remaining < $closestLimit || is_null($closestLimit))) {
                         $closestLimit = $result->remaining;
@@ -639,18 +647,28 @@ Http::init()
                     return $shouldCheckAbuse && $result->limited;
                 });
             } catch (\Throwable $th) {
-                // Only a limiter outage fails open; a request that breaks the key is refused.
-                if (! $checking) {
-                    throw $th;
-                }
-
+                // A limiter outage fails open.
                 \error_log((string) $th);
 
                 continue;
             }
 
             if ($isRateLimited) {
+                // A refused request is not a failed attempt. Without this, an IP over its cap would keep spending
+                // the per-account quota of every account it tries, locking those accounts out from everywhere.
+                foreach ($reserved as $hit) {
+                    try {
+                        $timelimit($hit->key($values), $hit->limit, $hit->seconds, fn (TimeLimit $timeLimit) => $timeLimit->release());
+                    } catch (\Throwable $th) {
+                        \error_log((string) $th);
+                    }
+                }
+
                 throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
+            }
+
+            if ($shouldCheckAbuse && $limit->failures) {
+                $reserved[] = $limit;
             }
         }
     });
@@ -675,9 +693,10 @@ Http::init()
     ->inject('platform')
     ->inject('authorization')
     ->inject('cacheControlForStorage')
+    ->inject('responseCache')
     ->inject('impersonatorUser')
     ->inject('targetUser')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage, Document $impersonatorUser, User $targetUser) {
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage, callable $responseCache, Document $impersonatorUser, User $targetUser) {
 
         $response->setUser($targetUser);
         $response->setImpersonatorUser($impersonatorUser);
@@ -708,18 +727,31 @@ Http::init()
         $auditContext->hostname = $request->getHostname();
         $auditContext->sdk = \strtolower($request->getHeaderLine('x-sdk-name', ''));
         $auditContext->sdkVersion = $request->getHeaderLine('x-sdk-version', '');
+
+        // Why the caller made this request, shown next to it in Activity. Always percent-decoded, like a W3C Baggage value,
+        // so clients that cannot send non-ASCII header bytes (browsers, Node) can send any language; a literal % goes as %25.
+        // Validated before trimming, so an encoded line break or NUL at either end is refused rather than dropped.
+        $reason = \rawurldecode($request->getHeaderLine('x-appwrite-reason', ''));
+        $reasonValidator = new Reason(APP_LIMIT_AUDIT_REASON_LENGTH);
+        if (! $reasonValidator->isValid($reason)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid X-Appwrite-Reason header value: ' . $reasonValidator->getDescription() . ' Percent-encode it with encodeURIComponent.');
+        }
+        $auditContext->reason = \trim($reason);
+
         $auditContext->event = $route->getLabel('audits.event', '');
         $auditContext->project = $project;
         $auditContext->impersonatorUser = $impersonatorUser->isEmpty() ? null : $impersonatorUser;
 
         /* If a session exists, use the target user (impersonated target or actor) for audit */
         if (! $targetUser->isEmpty()) {
-            $userClone = clone $targetUser;
-            // $user doesn't support `type` and can cause unintended effects.
-            if (empty($targetUser->getAttribute('type'))) {
-                $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER);
-            }
-            $auditContext->user = $userClone;
+            // Audit only reads these attributes, avoid cloning the whole user with its sessions, memberships and tokens
+            $auditContext->user = new Document([
+                '$id' => $targetUser->getId(),
+                '$sequence' => $targetUser->getSequence(),
+                'name' => $targetUser->getAttribute('name', ''),
+                'email' => $targetUser->getAttribute('email', ''),
+                'type' => $targetUser->getAttribute('type') ?: ($mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER),
+            ]);
         }
 
         $rolesSource = $impersonatorUser->isEmpty() ? $user : $targetUser;
@@ -733,13 +765,33 @@ Http::init()
             $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && ! $rolesSource->isPrivileged($roles);
 
             $key = $request->cacheIdentifier();
+            // `auto` params resolved from the Accept header: the response varies by Accept
+            $negotiated = ! empty($request->getNegotiatedParams());
             Span::add('storage.cache.key', $key);
             $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
-            $cache = new Cache(
-                new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
-            );
+            [$cache, $fallback] = $responseCache($key);
+            Span::add('storage.cache.device', $fallback !== null);
             $timestamp = 60 * 60 * 24 * 180; // Temporarily increase the TTL to 180 day to ensure files in the cache are still fetched.
             $data = $cache->load($key, $timestamp);
+
+            // A key that just moved to the device: copy it across instead of regenerating it.
+            if (empty($data) && $fallback !== null) {
+                $data = $fallback->load($key, $timestamp);
+                if (! empty($data)) {
+                    $cache->save($key, $data);
+                    Span::add('storage.cache.copied', true);
+                }
+            }
+
+            $miss = static function () use ($response, $storageCacheOperationsCounter): void {
+                $storageCacheOperationsCounter->add(1, ['result' => 'miss']);
+                Span::add('storage.cache.hit', false);
+                $response
+                    ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+                    ->addHeader('Pragma', 'no-cache')
+                    ->addHeader('Expires', '0')
+                    ->addHeader('X-Appwrite-Cache', 'miss');
+            };
 
             if (! empty($data) && ! $cacheLog->isEmpty()) {
                 $cacheControl = \sprintf('private, max-age=%d', $timestamp);
@@ -783,6 +835,19 @@ Http::init()
                     if ($file->isEmpty()) {
                         throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
                     }
+
+                    // Cached before this file existed: a deleted file with the same ID, whose
+                    // entries the deletes worker has not purged yet.
+                    if ($cacheLog->getCreatedAt() < $file->getCreatedAt()) {
+                        $authorization->skip(fn () => $dbForProject->deleteDocument('cache', $cacheLog->getId()));
+                        $cache->purge($key);
+                        $fallback?->purge($key);
+                        Span::add('storage.cache.superseded', true);
+                        $miss();
+
+                        return;
+                    }
+
                     Span::add('storage.bucket.id', $bucketId);
                     Span::add('storage.file.id', $fileId);
                     // Do not update transformedAt if it's a console user
@@ -808,8 +873,16 @@ Http::init()
                             fileSecurity: $fileSecurity,
                             cacheLog: $cacheLog,
                             route: $route,
+                            negotiated: $negotiated,
                         ));
                     }
+                } elseif ($type === 'video') {
+                    // Thumbnail previews inherit access from the video document's
+                    // `$permissions` — re-check that before serving cached bytes.
+                    $videoId = $parts[1] ?? null;
+                    VideosBase::getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
+
+                    Span::add('video.id', $videoId);
                 }
 
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');
@@ -817,27 +890,42 @@ Http::init()
                     $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), new Document([
                         'accessedAt' => DateTime::now(),
                     ])));
-                    // Refresh the filesystem file's mtime so TTL-based expiry in cache->load() stays valid
-                    $cache->save($key, $data);
+                    // Refresh the file's mtime so TTL-based expiry in cache->load() stays valid.
+                    // A device entry isn't rewritten: if it expires, it misses and refills once.
+                    if ($fallback === null) {
+                        $cache->save($key, $data);
+                    }
                 }
 
                 $response
                     ->addHeader('Cache-Control', $cacheControl)
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'));
+
+                // The action that sets Vary never runs on a hit. Repeat the
+                // route's cache.vary headers so a private cache does not reuse
+                // negotiated bytes for a different Accept. Negotiated `auto`
+                // params vary on Accept even when the route lists no headers.
+                $vary = $route->getLabel('cache.vary', []);
+                if (! \is_array($vary)) {
+                    $vary = [];
+                }
+                if ($negotiated && ! \in_array('accept', \array_map('strtolower', $vary), true)) {
+                    $vary[] = 'accept';
+                }
+                if ($vary !== []) {
+                    $response->addHeader('Vary', \implode(', ', \array_map(
+                        static fn (string $header): string => \ucwords($header, '-'),
+                        $vary
+                    )));
+                }
                 $storageCacheOperationsCounter->add(1, ['result' => 'hit']);
                 if (! $isImageTransformation || ! $isDisabled) {
                     Span::add('storage.cache.hit', true);
                     $response->send($data);
                 }
             } else {
-                $storageCacheOperationsCounter->add(1, ['result' => 'miss']);
-                Span::add('storage.cache.hit', false);
-                $response
-                    ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
-                    ->addHeader('Pragma', 'no-cache')
-                    ->addHeader('Expires', '0')
-                    ->addHeader('X-Appwrite-Cache', 'miss');
+                $miss();
             }
         }
     });
@@ -846,10 +934,18 @@ Http::init()
     ->groups(['session'])
     ->inject('route')
     ->inject('user')
-    ->action(function (Route $route, User $user) {
+    ->inject('authDevice')
+    ->action(function (Route $route, User $user, ?Document $authDevice) {
         // Sign-ins that link to or upgrade the current account accept a caller
         // who is already logged in (e.g. converting an anonymous account)
         if ($route->getLabel('session.allowActive', false)) {
+            return;
+        }
+
+        // An account switching device may hold several accounts at once: creating another
+        // session adds it to the device instead of being refused. The create action attaches
+        // the new session and makes it the active one (see AuthDevice::attach).
+        if ($authDevice !== null) {
             return;
         }
 
@@ -983,44 +1079,39 @@ Http::shutdown()
     ->groups(['api'])
     ->inject('route')
     ->inject('request')
-    ->inject('response')
     ->inject('project')
     ->inject('user')
     ->inject('timelimit')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit) {
-        $abuseEnabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
-        $abuseResetCode = $route->getLabel('abuse-reset', []);
-        $abuseResetCode = \is_array($abuseResetCode) ? $abuseResetCode : [$abuseResetCode];
-
-        if (! $abuseEnabled || \count($abuseResetCode) === 0 || ! \in_array($response->getStatusCode(), $abuseResetCode)) {
+    ->inject('authorization')
+    ->inject('params')
+    ->action(function (Route $route, Request $request, Document $project, User $user, callable $timelimit, Authorization $authorization, array $pathParams) {
+        // Shutdown hooks run only when the request did not throw, so it is not a failure: give back the hits its
+        // failure limits reserved on arrival. A request that failed never gets here and keeps them.
+        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'disabled') {
             return;
         }
 
-        $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
-        $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
+        $roles = $authorization->getRoles();
+        $trusted = $user->isKey($roles) || $user->isPrivileged($roles);
 
-        foreach ($abuseKeyLabel as $abuseKey) {
-            $params = [
-                '{projectId}' => (string) $project->getId(),
-                '{userId}' => (string) $user->getId(),
-                '{userAgent}' => (string) $request->getUserAgent(''),
-                '{ip}' => (string) $request->getIP(),
-                '{url}' => $route->getPath(),
-                '{method}' => (string) $request->getMethod(),
-                '{chunkId}' => (string) $request->getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE),
-            ];
+        // Only the limits init counted for this caller reserved anything, so only those have a hit to give back.
+        /** @var list<Limit> $limits */
+        $limits = \array_filter($route->getLabel('abuse', []), fn (Limit $limit): bool => $limit->failures && $limit->counts($trusted));
+        if ($limits === []) {
+            return;
+        }
 
-            foreach ($request->getParams() as $key => $value) {
-                if (! empty($value)) {
-                    $value = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
-                    // Sign in matches emails case-insensitively, so the limit must too
-                    $params['{param-' . $key . '}'] = $key === 'email' ? \strtolower($value) : $value;
-                }
+        // A release takes back a hit from the current window, never below zero. It can take back one this request
+        // did not reserve: when init failed open on a limiter outage, or when the window turned during the request.
+        // Either costs at most one extra failure, and carrying each reservation from init to here is not worth that.
+        $values = Limit::values($route, $request, $project, $user, $pathParams);
+        foreach ($limits as $limit) {
+            try {
+                $timelimit($limit->key($values), $limit->limit, $limit->seconds, fn (TimeLimit $timeLimit) => $timeLimit->release());
+            } catch (\Throwable $th) {
+                // The response is already decided; a limiter outage must not turn it into a 500.
+                \error_log((string) $th);
             }
-
-            $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), function (TimeLimit $timeLimit) use ($params): void {
-                $timeLimit->withParams($params)->reset();
-            });
         }
     });
 
@@ -1054,12 +1145,14 @@ Http::shutdown()
         }
 
         if (! $targetUser->isEmpty()) {
-            $userClone = clone $targetUser;
-            // $user doesn't support `type` and can cause unintended effects.
-            if (empty($targetUser->getAttribute('type'))) {
-                $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER);
-            }
-            $auditContext->user = $userClone;
+            // Audit only reads these attributes, avoid cloning the whole user with its sessions, memberships and tokens
+            $auditContext->user = new Document([
+                '$id' => $targetUser->getId(),
+                '$sequence' => $targetUser->getSequence(),
+                'name' => $targetUser->getAttribute('name', ''),
+                'email' => $targetUser->getAttribute('email', ''),
+                'type' => $targetUser->getAttribute('type') ?: ($mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER),
+            ]);
         } elseif ($auditContext->user === null || $auditContext->user->isEmpty()) {
             /**
              * User in the request is empty, and no user was set for auditing previously.
@@ -1097,7 +1190,8 @@ Http::shutdown()
     ->inject('user')
     ->inject('dbForProject')
     ->inject('authorization')
-    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization) {
+    ->inject('responseCache')
+    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization, callable $responseCache) {
         if (! $route->getLabel('cache', false)) {
             return;
         }
@@ -1108,10 +1202,8 @@ Http::shutdown()
             return;
         }
 
-        $cache = new Cache(
-            new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
-        );
         $key = $request->cacheIdentifier();
+        [$cache, $fallback] = $responseCache($key);
         $signature = md5($data['payload']);
         $now = DateTime::now();
         $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
@@ -1153,7 +1245,8 @@ Http::shutdown()
         }
 
         // Existing entry: refresh the access time once per APP_CACHE_UPDATE window
-        // (keeps the file mtime current for TTL checks) and re-persist on content change.
+        // (on the filesystem, also the file mtime for TTL checks) and re-persist on content
+        // change, or when the load missed, so an emptied store refills instead of waiting.
         $stale = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $cacheLog->getAttribute('accessedAt', 0);
         if ($stale) {
             $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), new Document([
@@ -1161,7 +1254,11 @@ Http::shutdown()
             ])));
         }
 
-        if ($stale || $signature !== $cacheLog->getAttribute('signature')) {
+        // A read entry is rewritten on the device on one day in 15, spread by key, so a bucket's
+        // expiry counted from the last write doesn't take out everything copied on the same day.
+        $rewrite = $stale && ($fallback === null || \crc32($key) % 15 === \intdiv(\time(), 86400) % 15);
+        $missed = \in_array('miss', $response->getHeaders()['x-appwrite-cache'] ?? [], true);
+        if ($rewrite || $missed || $signature !== $cacheLog->getAttribute('signature')) {
             $cache->save($key, $data['payload']);
         }
     });

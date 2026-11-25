@@ -3,6 +3,8 @@ includes:
 
 parameters:
     level: max
+    scanFiles:
+        - stubs/Domain.php
     paths:
         - src
         - tests

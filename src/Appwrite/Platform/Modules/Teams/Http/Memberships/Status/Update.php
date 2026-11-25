@@ -2,20 +2,27 @@
 
 namespace Appwrite\Platform\Modules\Teams\Http\Memberships\Status;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\MFA\Type;
+use Appwrite\Bus\Events\EmailVerified;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
+use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Geo\Geo;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -48,8 +55,7 @@ class Update extends Action
             ->label('audits.event', 'membership.update')
             ->label('audits.resource', 'team/{request.teamId}')
             ->label('audits.userId', '{request.userId}')
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', 'ip:{ip},url:{url}')
+            ->label('abuse', [Limit::attempts(['ip', 'url'], 10)])
             ->label('sdk', new Method(
                 namespace: 'teams',
                 group: 'memberships',
@@ -79,10 +85,13 @@ class Update extends Action
             ->inject('proofForToken')
             ->inject('domainVerification')
             ->inject('cookieDomain')
+            ->inject('mqtt')
+            ->inject('queueForRealtime')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $targetUser, Database $dbForProject, Authorization $authorization, $project, Geo $geo, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain)
+    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $targetUser, Database $dbForProject, Authorization $authorization, $project, Geo $geo, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain, Mqtt $mqtt, Realtime $queueForRealtime, Bus $bus)
     {
         $protocol = $request->getProtocol();
 
@@ -151,14 +160,19 @@ class Update extends Action
                 'providerUid' => $targetUser->getAttribute('email'),
                 'secret' => $proofForToken->hash($sessionSecret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
-                'ip' => $request->getIP(),
-                'countryCode' => \strtolower($geo->get($request->getIP())->getCountryCode()),
+                'ip' => $request->getClientIP(),
+                'countryCode' => \strtolower($geo->get($request->getClientIP())->getCountryCode()),
                 'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
         }
 
-        $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $membership, $team, $targetUser, $secret, $proofForToken, &$session) {
+        $claimed = null;
+        $emailVerified = false;
+        $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $project, $membership, $team, $targetUser, $hasSession, $secret, $proofForToken, $mqtt, &$session, &$claimed, &$emailVerified) {
+            $claimed = null; // A retried attempt starts over
+            $emailVerified = false;
             // Lock the user first, as an address change does, so a voided invite cannot slip through
+            /** @var User $user */
             $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $targetUser->getId(), forUpdate: true));
 
             // Re-read under a lock, a concurrent accept of the same invite must not be counted twice
@@ -172,10 +186,6 @@ class Update extends Action
                 throw new Exception(Exception::TEAM_INVALID_SECRET);
             }
 
-            $confirmed = $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['joined' => $membership->getAttribute('joined'), 'confirm' => true]));
-
-            $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
-
             // The invite proves the address it was sent to, and only one address on file tells which that was
             $hasEmail = !empty($user->getAttribute('email'));
             $hasPhone = !empty($user->getAttribute('phone'));
@@ -185,14 +195,31 @@ class Update extends Action
                 default => null,
             };
 
-            if ($verification !== null) {
-                $targetUser->setAttribute($verification, true);
-                $authorization->skip(fn () => $dbForProject->updateDocument('users', $targetUser->getId(), new Document([$verification => true])));
+            // Accepting while signed out proves an unverified email or phone, so whoever registered it keeps no other way in.
+            // MFA in force is left alone: an address, verified or not, never stands in for a second factor, so the holder signs in to accept
+            $guarded = !$hasSession && $user->getMinimumFactors() > 1;
+            if ($guarded) {
+                throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
             }
 
-            // The session counts only the channel the invite proved; when that is unknown the user signs in instead
-            if ($verification === null) {
-                $session = null;
+            // With both an email and a phone on file the invite cannot tell which one it proved, so the holder signs in to accept
+            if (!$hasSession && $verification === null) {
+                throw new Exception(Exception::USER_UNAUTHORIZED, 'Sign in to accept this invitation.');
+            }
+
+            $confirmed = $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['joined' => $membership->getAttribute('joined'), 'confirm' => true]));
+
+            $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+            if (!$hasSession && !$user->getAttribute($verification, false)) {
+                $proven = $verification === 'phoneVerification' ? MESSAGE_TYPE_SMS : MESSAGE_TYPE_EMAIL;
+                $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, $proven, $mqtt));
+                $claimed = $user;
+            }
+
+            if ($verification !== null) {
+                $emailVerified = $verification === 'emailVerification' && !$user->getAttribute('emailVerification', false);
+                $targetUser->setAttribute($verification, true);
+                $authorization->skip(fn () => $dbForProject->updateDocument('users', $targetUser->getId(), new Document([$verification => true])));
             }
 
             if ($session !== null) {
@@ -248,6 +275,26 @@ class Update extends Action
         }
 
         $dbForProject->purgeCachedDocument('users', $targetUser->getId());
+
+        if ($emailVerified) {
+            $bus->dispatch(new EmailVerified(user: $targetUser->getArrayCopy(), project: $project->getArrayCopy()));
+        }
+
+        if ($claimed !== null) {
+            try {
+                $mqtt->revoke($project->getId(), $claimed->getId());
+            } catch (\Throwable $error) {
+                Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+            }
+
+            // Sent before the request's own event, which would otherwise reach the registrant with the claimant's data
+            (clone $queueForRealtime)
+                ->reset()
+                ->setProject($project)
+                ->setEvent('users.[userId].sessions.delete')
+                ->setParam('userId', $claimed->getId())
+                ->trigger();
+        }
 
         $queueForEvents
             ->setParam('userId', $targetUser->getId())

@@ -1333,7 +1333,7 @@ class SQLiteTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `customers` WHERE `active` IN (?) AND EXISTS (SELECT * FROM `orders` WHERE orders.customer_id = customers.id AND `total` > ?)', $result->query);
+        $this->assertSame('SELECT * FROM `customers` WHERE `active` IN (?) AND EXISTS (SELECT * FROM `orders` WHERE (orders.customer_id = customers.id) AND `total` > ?)', $result->query);
     }
 
     public function testInsertOrIgnoreVerifySyntax(): void
@@ -1509,7 +1509,7 @@ class SQLiteTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `files` WHERE `path` LIKE ? AND `name` LIKE ?', $result->query);
+        $this->assertSame('SELECT * FROM `files` WHERE `path` LIKE ? ESCAPE \'\\\' AND `name` LIKE ? ESCAPE \'\\\'', $result->query);
     }
 
     public function testDistinctWithAggregate(): void
@@ -1785,7 +1785,7 @@ class SQLiteTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `products` WHERE `price` > ? AND `name` LIKE ? AND `description` LIKE ? AND `sku` IS NOT NULL', $result->query);
+        $this->assertSame('SELECT * FROM `products` WHERE `price` > ? AND `name` LIKE ? ESCAPE \'\\\' AND `description` LIKE ? ESCAPE \'\\\' AND `sku` IS NOT NULL', $result->query);
     }
 
     public function testFromNoneEmitsNoFromClause(): void
@@ -1955,7 +1955,7 @@ class SQLiteTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `users` WHERE a = ?', $result->query);
+        $this->assertSame('SELECT * FROM `users` WHERE (a = ?)', $result->query);
         $this->assertSame([1], $result->bindings);
     }
 
@@ -1968,7 +1968,7 @@ class SQLiteTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `users` WHERE `b` IN (?) AND a = ?', $result->query);
+        $this->assertSame('SELECT * FROM `users` WHERE `b` IN (?) AND (a = ?)', $result->query);
         $this->assertContains(1, $result->bindings);
         $this->assertContains(2, $result->bindings);
     }

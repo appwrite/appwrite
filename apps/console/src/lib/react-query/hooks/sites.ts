@@ -12,6 +12,7 @@ import {
   keepPreviousData,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
+import { toast } from 'sonner'
 import { Query, ID } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import {
@@ -20,6 +21,8 @@ import {
   fetchLookupBatches,
 } from '@/lib/appwrite-id'
 import { sdk } from '@/lib/appwrite/sdk'
+import { translate } from '@/lib/i18n/translate'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { SpecificationType } from '@/lib/specifications'
 import {
   fetchAllVariables,
@@ -334,21 +337,31 @@ export async function fetchSiteDomains(
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const trimmedSearch = search?.trim() || ''
+
+  // The SDK's listRules has no text `search` param; match domain or `$id` in queries.
+  const searchQueries = trimmedSearch
+    ? [
+        Query.or([
+          Query.contains('domain', trimmedSearch.toLowerCase()),
+          Query.startsWith('$id', trimmedSearch),
+        ]),
+      ]
+    : []
+
   const fixedQueries = [
     Query.equal('type', ['deployment', 'redirect']),
     Query.equal('deploymentResourceType', 'site'),
     Query.equal('deploymentResourceId', siteId),
     Query.equal('trigger', 'manual'),
     ...(filterQueries ?? []),
+    ...searchQueries,
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
   ]
 
-  const response = await projectSdk.proxy.listRules({
-    queries: fixedQueries,
-    search: search?.trim() || undefined,
-  })
+  const response = await projectSdk.proxy.listRules({ queries: fixedQueries })
 
   return {
     rules: response.rules || [],
@@ -1307,6 +1320,9 @@ export interface CreateSiteParams {
   providerRootDirectory?: string
   buildSpecification?: string
   runtimeSpecification?: string
+  scopes?: string[]
+  /** Enables analytics right after create; `sites.create` has no such param. */
+  analytics?: boolean
 }
 
 /**
@@ -1327,7 +1343,7 @@ export function useCreateSite(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (params: CreateSiteParams) => {
+    mutationFn: async ({ analytics, ...params }: CreateSiteParams) => {
       if (!projectId) {
         throw new Error('Project ID is required')
       }
@@ -1336,14 +1352,30 @@ export function useCreateSite(projectId: string | null | undefined) {
         params.siteId && params.siteId.trim() !== ''
           ? params.siteId.trim()
           : ID.unique()
-      return await projectSdk.sites.create({
+      const site = await projectSdk.sites.create({
         ...params,
         siteId,
       } as Extract<Parameters<typeof projectSdk.sites.create>[0], object>)
+      if (!analytics) return site
+      // Best effort: a refusal such as the Free plan's property limit must not fail the create.
+      try {
+        return await projectSdk.sites.updateAnalytics({
+          siteId: site.$id,
+          enabled: true,
+        })
+      } catch (error) {
+        toast.error(
+          getErrorMessage(error, translate('Failed to enable analytics')),
+        )
+        return site
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: Dependencies.SITES,
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['analytics', 'properties', projectId],
       })
     },
   })
@@ -1666,7 +1698,13 @@ export function useCreateSiteDomainRule(projectId: string | null | undefined) {
         siteId,
       })
     },
-    onSuccess: () => {
+    onSuccess: async (_rule, { siteId }) => {
+      // Refetch, not invalidate: the domains list is unmounted behind the
+      // add route and uses refetchOnMount: false, so it would stay stale
+      // when the wizard is left on its verify step.
+      await queryClient.refetchQueries({
+        queryKey: ['proxy-rules', 'site', projectId, siteId],
+      })
       queryClient.invalidateQueries({
         queryKey: ['proxy-rules'],
       })

@@ -909,6 +909,7 @@ final class MessagingTest extends TestCase
             'A query must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' values.' => [Query::equal('id', [...$values, 'one more'])->toString()],
             'A query must be at most ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.' => [Query::equal('id', [\str_repeat('x', APP_LIMIT_ARRAY_ELEMENT_SIZE)])->toString()],
             'A subscription must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries, counting the ones nested in and/or.' => [...$nested, Query::equal('a', ['b'])->toString()],
+            'A query must be a string.' => [['equal', 'x']],
         ] as $message => $queries) {
             try {
                 Realtime::convertQueries($queries);
@@ -917,6 +918,13 @@ final class MessagingTest extends TestCase
                 $this->assertSame($message, $e->getMessage());
             }
         }
+    }
+
+    public function testConvertQueriesRejectsSelectOtherThanAll(): void
+    {
+        $this->expectException(QueryException::class);
+        $this->expectExceptionMessage('Only select("*") is allowed in Realtime queries.');
+        Realtime::convertQueries([Query::select(['name'])->toString()]);
     }
 
     public function testCountQueriesIncludesNested(): void
@@ -1378,6 +1386,41 @@ final class MessagingTest extends TestCase
         $this->assertNotContains('memberships.membership_id.status', $membershipResult['channels']);
     }
 
+    public function testFromPayloadKeepsDottedUserIdIntact(): void
+    {
+        // A custom user id may contain dots. The account channel and user role must carry the
+        // whole id, not the part before the first dot, or the event reaches a different user.
+        $result = Realtime::fromPayload(
+            event: 'users.john.doe.sessions.session_id.create',
+            payload: new Document(['$id' => Id::custom('session_id')]),
+            userId: 'john.doe',
+        );
+
+        $this->assertContains('account.john.doe', $result['channels']);
+        $this->assertContains(Role::user(Id::custom('john.doe'))->toString(), $result['roles']);
+
+        // The truncated id must not be addressed: a user whose id is literally `john` would
+        // otherwise receive john.doe's account events.
+        $this->assertNotContains('account.john', $result['channels']);
+        $this->assertNotContains(Role::user(Id::custom('john'))->toString(), $result['roles']);
+
+        // The suffix (sessions.*.create) still changes access, so the resolve flag holds.
+        $this->assertTrue($result['permissionsChanged']);
+
+        // A top-level create on a dotted id must still emit the action channels, keyed on the
+        // whole id — the top-level check keys off the parsed suffix, not a fixed part index.
+        $create = Realtime::fromPayload(
+            event: 'users.john.doe.create',
+            payload: new Document(['$id' => Id::custom('john.doe')]),
+            userId: 'john.doe',
+        );
+
+        $this->assertContains('account.create', $create['channels']);
+        $this->assertContains('account.john.doe', $create['channels']);
+        $this->assertContains('account.john.doe.create', $create['channels']);
+        $this->assertNotContains('account.john.create', $create['channels']);
+    }
+
     public function testMembershipDeleteReachesSubjectAfterTeamRoleIsRevoked(): void
     {
         // Delete is published with permissionsChanged, and the realtime worker
@@ -1555,6 +1598,25 @@ final class MessagingTest extends TestCase
         $this->assertContains(Role::any()->toString(), $result['roles']);
     }
 
+    public function testFromPayloadVideoRenditionChannels(): void
+    {
+        $result = Realtime::fromPayload(
+            event: 'videos.video1.renditions.rendition1.update',
+            payload: new Document([
+                '$id' => 'rendition1',
+                // Roles come only from the stamped payload ACL — not the project team.
+                '$permissions' => [Permission::read(Role::user('user1'))],
+            ]),
+            project: new Document(['$id' => 'project1', 'teamId' => 'team1']),
+        );
+
+        $this->assertContains('videos.video1.renditions.rendition1', $result['channels']);
+        $this->assertContains('console', $result['channels']);
+        $this->assertContains('projects.project1', $result['channels']);
+        $this->assertContains(Role::user('user1')->toString(), $result['roles']);
+        $this->assertNotContains(Role::team('team1')->toString(), $result['roles']);
+    }
+
     public function testFromPayloadTeamCreateSetsPermissionsChangedAndTeamRole(): void
     {
         $teamId = Id::custom('team123');
@@ -1585,6 +1647,7 @@ final class MessagingTest extends TestCase
         yield 'attributes' => ['databases.database1.collections.collection1.attributes.attribute1.create'];
         yield 'columns' => ['tablesdb.database1.tables.table1.columns.column1.update'];
         yield 'indexes' => ['documentsdb.database1.collections.collection1.indexes.index1.delete'];
+        yield 'alerts' => ['monitors.monitor1.alerts.alert1.firing'];
     }
 
     #[DataProvider('consoleProjectEvents')]
@@ -1669,6 +1732,48 @@ final class MessagingTest extends TestCase
         ]);
 
         $this->assertSame([3], \array_keys($receivers));
+    }
+
+    public static function deploymentEvents(): \Iterator
+    {
+        yield 'functions' => ['functions.function1.deployments.deployment1.update'];
+        yield 'sites' => ['sites.site1.deployments.deployment1.update'];
+    }
+
+    #[DataProvider('deploymentEvents')]
+    public function testFromPayloadDeploymentsReachOnlyProjectReaders(string $event): void
+    {
+        $project = new Document([
+            '$id' => Id::custom('project1'),
+            'teamId' => 'org1',
+            '$permissions' => [
+                Permission::read(Role::team('org1', 'owner')),
+                Permission::read(Role::team('org1', 'project-project1-developer')),
+            ],
+        ]);
+
+        $result = Realtime::fromPayload(
+            event: $event,
+            payload: new Document(['$id' => Id::custom('deployment1')]),
+            project: $project,
+        );
+
+        $this->assertSame('console', $result['projectId']);
+
+        $realtime = new Realtime();
+        $realtime->subscribe('console', 1, 'sub', [Role::team('org1')->toString(), Role::team('org1', 'project-project2-developer')->toString()], ['console']);
+        $realtime->subscribe('console', 2, 'sub', [Role::team('org1')->toString(), Role::team('org1', 'project-project1-developer')->toString()], ['console']);
+
+        $receivers = $realtime->getSubscribers([
+            'project' => 'console',
+            'roles' => $result['roles'],
+            'data' => [
+                'channels' => $result['channels'],
+                'payload' => ['$id' => 'deployment1'],
+            ],
+        ]);
+
+        $this->assertSame([2], \array_keys($receivers));
     }
 
     public function testFromPayloadDocumentSecurityIncludesPayloadAnyRead(): void

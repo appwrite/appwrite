@@ -18,6 +18,8 @@ class Redis implements Synchronous, Consumer
     /** Heartbeat lifetime; handlers refresh it every third of this interval. */
     private const int CLAIM_TTL = 90;
 
+    private const int RESERVATION_GRACE = 10;
+
     /** Lock expiry schedules the next fleet sweep; never release it early. */
     private const int REAP_INTERVAL = 60;
 
@@ -108,18 +110,14 @@ class Redis implements Synchronous, Consumer
                 "{$queue->namespace}.processing.{$queue->name}",
                 "{$queue->namespace}.stats.{$queue->name}.total",
                 "{$queue->namespace}.stats.{$queue->name}.processing"];
-            $count = min(self::REAP_LIMIT, max(1, $n));
-            $batch = $this->script($this->receive, 'reserve', $keys, [$count, self::CLAIM_TTL, max(0, $timeout), 0]);
+            $incoming = "{$queue->namespace}.incoming.{$queue->name}";
+            $keys[] = $incoming;
+            $args = [min(self::REAP_LIMIT, max(1, $n)), self::RESERVATION_GRACE];
+            $batch = $this->script($this->receive, 'reserve', $keys, $args);
             if ($batch === [] && $timeout > 0) {
-                // The script registered this reservation before blocking. A crash
-                // after the move is recoverable even before PHP sees the reply.
-                $raw = $this->receive->rightPopLeftPush($key, $reservation, $timeout);
-                if (\is_string($raw)) {
-                    $batch = [$raw];
-                    if ($count > 1) {
-                        $batch = [...$batch, ...$this->script($this->receive, 'reserve', $keys, [$count - 1, self::CLAIM_TTL, 0, 1])];
-                    }
-                }
+                // Any receiver can drain this queue-scoped list after a lost pop reply.
+                $this->receive->rightPopLeftPush($key, $incoming, $timeout);
+                $batch = $this->script($this->receive, 'reserve', $keys, $args);
             }
 
             if ($this->reconnectAttempt > 0) {
@@ -163,7 +161,8 @@ class Redis implements Synchronous, Consumer
             "{$queue->namespace}.processing.{$queue->name}",
             "{$queue->namespace}.stats.{$queue->name}.total",
             "{$queue->namespace}.stats.{$queue->name}.processing",
-            "{$queue->namespace}.poison.{$queue->name}"];
+            "{$queue->namespace}.poison.{$queue->name}",
+            "{$queue->namespace}.queue.{$queue->name}"];
         $messages = $args = $poison = [];
         foreach ($batch as $raw) {
             $size = \is_string($raw) ? \strlen($raw) : 0;
@@ -188,7 +187,9 @@ class Redis implements Synchronous, Consumer
             $args[] = $raw;
             $args[] = $pid;
         }
-        $this->script($this->receive, 'claim', $keys, [self::CLAIM_TTL, $token, \count($messages), ...$args, ...$poison]);
+        if ($this->script($this->receive, 'claim', $keys, [self::CLAIM_TTL, $token, \count($messages), ...$args, ...$poison]) === -1) {
+            throw new \RuntimeException('Queue reservation expired before it was claimed; its messages were requeued');
+        }
         return $messages;
     }
 
@@ -398,10 +399,14 @@ class Redis implements Synchronous, Consumer
                 break;
             }
 
-            // The payload expired; nothing left to requeue.
+            // An expired payload leaves nothing to requeue. One the codec cannot
+            // read is parked, so it stays inspectable and something references it.
             $job = $this->getJob($queue, $pid);
             if ($job === false) {
-                $this->script($this->commands, 'retry', [$failed], [$pid]);
+                $keys = \is_string($this->commands->get("{$queue->namespace}.jobs.{$queue->name}.{$pid}"))
+                    ? [$failed, "{$queue->namespace}.dead.{$queue->name}"]
+                    : [$failed];
+                $this->script($this->commands, 'retry', $keys, [$pid, $pid]);
                 continue;
             }
 
@@ -530,14 +535,16 @@ class Redis implements Synchronous, Consumer
     /**
      * Requeue with a fresh pid and timestamp, carrying the attempt count
      * forward so retry() and reap() can park messages that never succeed.
-     * The failed entry goes in the same step, so a sweep that stops part way
-     * leaves the job failed rather than nowhere.
+     * The failed entry and the payload under the old pid go in the same step,
+     * so a sweep that stops part way leaves the job failed rather than nowhere,
+     * and no payload is left behind that nothing references and may never expire.
      */
     private function requeue(Queue $queue, string $pid, Message $job): bool
     {
         return $this->script($this->commands, 'retry', [
             "{$queue->namespace}.failed.{$queue->name}",
             "{$queue->namespace}.queue.{$queue->name}",
+            "{$queue->namespace}.jobs.{$queue->name}.{$pid}",
         ], [$pid, $this->retryPayload($queue, $job)]) === 1;
     }
 
@@ -594,6 +601,26 @@ class Redis implements Synchronous, Consumer
         return $failedJobs
             ? $this->getFailedCount($queue)
             : $this->commands->listSize("{$queue->namespace}.queue.{$queue->name}");
+    }
+
+    /**
+     * Messages are pushed on the left and received from the right, so the right end is the oldest still waiting.
+     * One the codec cannot read reads as 0; the consumer parks it as poison.
+     */
+    public function getQueueAge(Queue $queue): int
+    {
+        $oldest = $this->commands->listRange("{$queue->namespace}.queue.{$queue->name}", 1, -1)[0] ?? null;
+        if (!\is_string($oldest)) {
+            return 0;
+        }
+
+        try {
+            $envelope = $this->codec->decode($oldest);
+        } catch (\Throwable) {
+            return 0;
+        }
+
+        return \is_array($envelope) && \is_numeric($envelope['timestamp'] ?? null) ? \max(0, \time() - (int) $envelope['timestamp']) : 0;
     }
 
     /**

@@ -1452,6 +1452,224 @@ final class RealtimeCustomClientTest extends Scope
         $assertClosed($client, "users.{$userId}.delete");
     }
 
+    public function testConnectionEndsWithAccountClaim(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        // Someone registers an address they do not own and keeps a connection open
+        $register = function () use ($projectId, $headers): array {
+            $email = \uniqid('claimed-', true) . '@localhost.test';
+            $account = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+                'userId' => Id::unique(),
+                'email' => $email,
+                'password' => 'registrant-password',
+            ]);
+            $this->assertEquals(201, $account['headers']['status-code']);
+
+            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+                'email' => $email,
+                'password' => 'registrant-password',
+            ]);
+            $this->assertEquals(201, $session['headers']['status-code']);
+
+            $client = $this->getWebsocket(['account'], [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+            ]);
+            $response = \json_decode($client->receive(), true);
+            $this->assertEquals('connected', $response['type']);
+            $this->assertEquals($account['body']['$id'], $response['data']['user']['$id']);
+
+            return [$account['body']['$id'], $email, $client];
+        };
+
+        // Closed before the claim's own event, which describes the claimant, reaches it.
+        $assertClosed = function (WebSocketClient $client): void {
+            $frames = $this->receiveUntilClosed($client);
+            foreach ($frames as $frame) {
+                $this->assertEmpty($frame['data']['payload'] ?? [], 'The registrant received the claimant\'s data: ' . \json_encode($frame));
+            }
+            $last = \end($frames);
+            $this->assertEquals('error', $last['type'] ?? null);
+            $this->assertEquals(401, $last['data']['code'] ?? null);
+        };
+
+        /**
+         * Test for SUCCESS - the address's owner signs in with a magic URL
+         */
+        [$userId, $email, $client] = $register();
+
+        $token = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', $headers, [
+            'userId' => $userId,
+            'email' => $email,
+        ]);
+        $this->assertEquals(201, $token['headers']['status-code']);
+        $mail = $this->getLastEmailByAddress($email);
+        $secret = \substr($mail['text'], \strpos($mail['text'], '&secret=') + 8, 64);
+
+        $session = $this->client->call(Client::METHOD_PUT, '/account/sessions/magic-url', $headers, [
+            'userId' => $userId,
+            'secret' => $secret,
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $assertClosed($client);
+
+        /**
+         * Test for SUCCESS - the address's owner accepts a team invitation signed out
+         */
+        [, $email, $client] = $register();
+
+        // Invited by a member, as an API key adds members without an invitation
+        $team = $this->client->call(Client::METHOD_POST, '/teams', \array_merge($headers, $this->getHeaders()), [
+            'teamId' => Id::unique(),
+            'name' => 'Claimed Invites',
+        ]);
+        $this->assertEquals(201, $team['headers']['status-code']);
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['body']['$id'] . '/memberships', \array_merge($headers, $this->getHeaders()), [
+            'email' => $email,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#invitation',
+        ]);
+        $this->assertEquals(201, $membership['headers']['status-code']);
+
+        $invite = $this->extractQueryParamsFromEmailLink($this->getLastEmailByAddress($email)['html']);
+        $confirmation = $this->client->call(Client::METHOD_PATCH, '/teams/' . $invite['teamId'] . '/memberships/' . $invite['membershipId'] . '/status', $headers, [
+            'userId' => $invite['userId'],
+            'secret' => $invite['secret'],
+        ]);
+        $this->assertEquals(200, $confirmation['headers']['status-code']);
+        $assertClosed($client);
+
+        /**
+         * Test for SUCCESS - the address's owner resets the password
+         */
+        [$userId, $email, $client] = $register();
+
+        $recovery = $this->client->call(Client::METHOD_POST, '/account/recovery', $headers, [
+            'email' => $email,
+            'url' => 'http://localhost/recovery',
+        ]);
+        $this->assertEquals(201, $recovery['headers']['status-code']);
+
+        // The registrant still owns the account when recovery is requested, so it may see that
+        $this->receiveUntilEvent($client, fn (array $message) => \in_array("users.{$userId}.recovery.{$recovery['body']['$id']}.create", $message['data']['events'] ?? [], true));
+
+        $secret = $this->extractQueryParamsFromEmailLink($this->getLastEmailByAddress($email)['html'])['secret'];
+        $recovery = $this->client->call(Client::METHOD_PUT, '/account/recovery', $headers, [
+            'userId' => $userId,
+            'secret' => $secret,
+            'password' => 'claimant-password',
+        ]);
+        $this->assertEquals(200, $recovery['headers']['status-code']);
+        $assertClosed($client);
+
+        /**
+         * Test for SUCCESS - the address's owner signs in with an ID token
+         */
+        $console = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ];
+        $provider = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', $console, [
+            'provider' => 'mock',
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+        $this->assertEquals(200, $provider['headers']['status-code']);
+        $provider = $this->client->call(Client::METHOD_PATCH, '/mock/tests/general/oauth2/native', $console, [
+            'projectId' => $projectId,
+            'provider' => 'mock',
+            'enabled' => true,
+            'clientIds' => [],
+        ]);
+        $this->assertEquals(204, $provider['headers']['status-code']);
+
+        [$userId, $email, $client] = $register();
+
+        $idToken = $this->client->call(Client::METHOD_GET, '/mock/tests/general/oauth2/id-token', $headers, [
+            'claims' => \json_encode([
+                'iss' => 'https://localhost/v1/mock',
+                'aud' => '1',
+                'iat' => \time(),
+                'exp' => \time() + 3600,
+                'sub' => \uniqid('claimant-', true),
+                'email' => $email,
+                'email_verified' => true,
+            ]),
+            'header' => '',
+        ]);
+        $this->assertEquals(200, $idToken['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/id-token', $headers, [
+            'provider' => 'mock',
+            'idToken' => $idToken['body']['token'],
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $this->assertEquals($userId, $session['body']['userId']);
+        $assertClosed($client);
+
+        /**
+         * Test for SUCCESS - the address's owner signs in with OAuth
+         */
+        // The mock provider always returns this address, so a fresh project keeps it away from other tests
+        $oauthProjectId = $this->getProject(true)['$id'];
+        $oauthHeaders = \array_merge($headers, ['x-appwrite-project' => $oauthProjectId]);
+        $cookieKey = 'a_session_' . $oauthProjectId;
+
+        $account = $this->client->call(Client::METHOD_POST, '/account', $oauthHeaders, [
+            'userId' => Id::unique(),
+            'email' => 'useroauth@localhost.test',
+            'password' => 'registrant-password',
+        ]);
+        $this->assertEquals(201, $account['headers']['status-code']);
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $oauthHeaders, [
+            'email' => 'useroauth@localhost.test',
+            'password' => 'registrant-password',
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        $client = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost',
+            'cookie' => $cookieKey . '=' . $session['cookies'][$cookieKey],
+        ], $oauthProjectId);
+        $response = \json_decode($client->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+
+        $provider = $this->client->call(Client::METHOD_PATCH, '/projects/' . $oauthProjectId . '/oauth2', $console, [
+            'provider' => 'mock',
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+        $this->assertEquals(200, $provider['headers']['status-code']);
+
+        // Follow the provider's redirects back to the app, as a browser would
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/mock', $oauthHeaders, [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $cookies = \implode('; ', \array_map(fn (string $name, string $value): string => $name . '=' . $value, \array_keys($response['cookies']), $response['cookies']));
+
+        $browser = new Client();
+        $browser->setEndpoint('');
+        for ($hop = 0; $hop < 3; $hop++) {
+            $response = $browser->call(Client::METHOD_GET, $response['headers']['location'], $hop === 0 ? [] : ['cookie' => $cookies], followRedirects: false);
+            $this->assertEquals(301, $response['headers']['status-code']);
+        }
+        $this->assertArrayHasKey($cookieKey, $response['cookies']);
+        $assertClosed($client);
+    }
+
     public function testConnectionEndsWithImpersonatorSession(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -1506,8 +1724,12 @@ final class RealtimeCustomClientTest extends Scope
             return $client;
         };
 
+        // Closed before the claim's own event, which describes the claimant, reaches it.
         $assertClosed = function (WebSocketClient $client): void {
             $frames = $this->receiveUntilClosed($client);
+            foreach ($frames as $frame) {
+                $this->assertEmpty($frame['data']['payload'] ?? [], 'The registrant received the claimant\'s data: ' . \json_encode($frame));
+            }
             $last = \end($frames);
             $this->assertEquals('error', $last['type'] ?? null);
             $this->assertEquals(401, $last['data']['code'] ?? null);
@@ -3917,6 +4139,146 @@ final class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($deleteEvent['data']['payload']);
 
         $client->close();
+    }
+
+    /**
+     * A membership event is addressed to the whole team, while the payload it carries is the
+     * HTTP response rendered for the writing caller — here an API key, which sees the new
+     * member's real id, name and email. The project's membership privacy policy must be
+     * applied to the broadcast too, or a teammate learns what the read endpoints hide.
+     */
+    public function testChannelMembershipsPrivacy(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $adminHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $privacy = $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $adminHeaders, [
+            'userId' => false,
+            'userEmail' => false,
+            'userPhone' => false,
+            'userName' => false,
+            'userMFA' => false,
+            'userAccessedAt' => false,
+        ]);
+        $this->assertEquals(200, $privacy['headers']['status-code']);
+
+        $team = $this->client->call(Client::METHOD_POST, '/teams', $adminHeaders, [
+            'teamId' => Id::unique(),
+            'name' => 'Realtime Privacy Team ' . uniqid(),
+        ]);
+        $this->assertEquals(201, $team['headers']['status-code']);
+        $teamId = $team['body']['$id'];
+
+        // The teammate who listens: an ordinary confirmed member with no elevated scope
+        $teammate = $this->createRealtimeUser('Realtime Teammate');
+        $client = $this->getWebsocket(['memberships'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $teammate['cookie'],
+        ]);
+        $response = json_decode($client->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+
+        $teammateMembership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', $adminHeaders, [
+            'userId' => $teammate['$id'],
+            'roles' => ['member'],
+        ]);
+        $this->assertEquals(201, $teammateMembership['headers']['status-code']);
+
+        // Their connection re-resolves its roles on their own membership event, so it holds team:{teamId} from here on
+        $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => ($message['type'] ?? null) === 'event'
+                && \in_array("teams.{$teamId}.memberships." . $teammateMembership['body']['$id'] . '.create', $message['data']['events'] ?? [], true)
+        );
+
+        $member = $this->createRealtimeUser('Realtime Private Member');
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', $adminHeaders, [
+            'userId' => $member['$id'],
+            'roles' => ['member'],
+        ]);
+        $this->assertEquals(201, $membership['headers']['status-code']);
+        $membershipId = $membership['body']['$id'];
+
+        // The API key writing the membership sees the member's details, the team must not
+        $this->assertEquals($member['$id'], $membership['body']['userId']);
+        $this->assertEquals('Realtime Private Member', $membership['body']['userName']);
+        $this->assertEquals($member['email'], $membership['body']['userEmail']);
+
+        $createEvent = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => ($message['type'] ?? null) === 'event'
+                && \in_array("teams.{$teamId}.memberships.{$membershipId}.create", $message['data']['events'] ?? [], true)
+        );
+
+        $payload = $createEvent['data']['payload'];
+        $this->assertArrayNotHasKey('userId', $payload);
+        $this->assertArrayNotHasKey('userName', $payload);
+        $this->assertArrayNotHasKey('userEmail', $payload);
+        $this->assertArrayNotHasKey('userPhone', $payload);
+        $this->assertArrayNotHasKey('mfa', $payload);
+        $this->assertEquals($membershipId, $payload['$id']);
+        $this->assertEquals($teamId, $payload['teamId']);
+        $this->assertEquals(['member'], $payload['roles']);
+
+        $roles = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $membershipId, $adminHeaders, [
+            'roles' => ['member', 'editor'],
+        ]);
+        $this->assertEquals(200, $roles['headers']['status-code']);
+
+        $updateEvent = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => ($message['type'] ?? null) === 'event'
+                && \in_array("teams.{$teamId}.memberships.{$membershipId}.update", $message['data']['events'] ?? [], true)
+        );
+
+        $payload = $updateEvent['data']['payload'];
+        $this->assertArrayNotHasKey('userId', $payload);
+        $this->assertArrayNotHasKey('userName', $payload);
+        $this->assertArrayNotHasKey('userEmail', $payload);
+        $this->assertEquals(['member', 'editor'], $payload['roles']);
+
+        $client->close();
+    }
+
+    /**
+     * Create a confirmed-capable user with a session, for membership realtime tests.
+     *
+     * @return array{'$id': string, email: string, cookie: string}
+     */
+    private function createRealtimeUser(string $name): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $email = uniqid('', true) . getmypid() . bin2hex(random_bytes(4)) . '@localhost.test';
+
+        $user = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => 'password',
+            'name' => $name,
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        return [
+            '$id' => $user['body']['$id'],
+            'email' => $email,
+            'cookie' => $session['cookies']['a_session_' . $projectId],
+        ];
     }
 
     public function testChannelsTablesDB()
