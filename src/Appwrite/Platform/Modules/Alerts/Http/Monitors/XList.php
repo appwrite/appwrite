@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Alerts\Http\Monitors;
 
+use Appwrite\Alert\Monitors as MonitorIds;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Alerts\Base;
 use Appwrite\SDK\AuthType;
@@ -17,6 +18,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Query\Method as QueryMethod;
 use Utopia\Validator\Boolean;
 
 class XList extends Base
@@ -77,6 +79,8 @@ class XList extends Base
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        $queries = $this->chosenIds($queries);
+
         $projectInternalId = (string) $project->getSequence();
         $queries[] = Query::equal('projectInternalId', [$projectInternalId]);
 
@@ -90,12 +94,9 @@ class XList extends Base
             }
 
             $monitorId = $cursor->getValue();
-            $cursorDocument = $authorization->skip(fn () => $dbForPlatform->findOne('monitors', [
-                Query::equal('$id', [$monitorId]),
-                Query::equal('projectInternalId', [$projectInternalId]),
-            ]));
+            $cursorDocument = $authorization->skip(fn () => $dbForPlatform->getDocument('monitors', MonitorIds::id($projectInternalId, $monitorId)));
 
-            if ($cursorDocument->isEmpty()) {
+            if ($cursorDocument->isEmpty() || $cursorDocument->getAttribute('projectInternalId') !== $projectInternalId) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Monitor '{$monitorId}' for the 'cursor' value not found.");
             }
 
@@ -115,5 +116,26 @@ class XList extends Base
             'monitors' => $monitors,
             'total' => $total,
         ]), Response::MODEL_MONITOR_LIST);
+    }
+
+    /**
+     * Points queries on `$id` at the chosen `monitorId`, since `$id` is stored scoped to the project.
+     *
+     * @param array<Query> $queries
+     * @return array<Query>
+     */
+    private function chosenIds(array $queries): array
+    {
+        return \array_map(function (Query $query): Query {
+            $method = $query->getMethod();
+            if ($method === QueryMethod::And || $method === QueryMethod::Or) {
+                return (clone $query)->setValues($this->chosenIds($query->getValues()));
+            }
+            if ($query->getAttribute() === '$id') {
+                return (clone $query)->setAttribute('monitorId');
+            }
+
+            return $query;
+        }, $queries);
     }
 }

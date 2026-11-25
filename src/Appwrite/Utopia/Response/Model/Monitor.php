@@ -7,6 +7,7 @@ use Appwrite\Alert\Status;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Config\Config;
+use Utopia\Database\Document;
 
 class Monitor extends Model
 {
@@ -150,6 +151,19 @@ class Monitor extends Model
                 'required' => false,
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ]);
+    }
+
+    /**
+     * The ID the monitor was created with, not the project-scoped one it is stored under.
+     */
+    public function filter(Document $document): Document
+    {
+        $monitorId = (string) $document->getAttribute('monitorId', '');
+        if ($monitorId !== '') {
+            $document->setAttribute('$id', $monitorId);
+        }
+
+        return $document;
     }
 
     public function getName(): string

@@ -11,8 +11,10 @@ trait MonitorsBase
     public function testCreateUsageMonitor(): void
     {
         $name = 'Egress spike ' . \uniqid();
+        $monitorId = 'egress-' . \uniqid();
 
         $created = $this->createMonitor([
+            'monitorId' => $monitorId,
             'name' => $name,
             'rules' => [Query::greaterThan('network.outbound', 2.5e9)->toString()],
             'window' => 600,
@@ -23,13 +25,16 @@ trait MonitorsBase
          * Test for SUCCESS
          */
         $this->assertSame(201, $created['headers']['status-code']);
+        // The ID a project chose is the ID it reads back, whatever the server stores it under.
+        $this->assertSame($monitorId, $created['body']['$id']);
         // A monitor only decides when to fire; delivery is up to project events and the team's notifications.
         $this->assertArrayNotHasKey('channels', $created['body']);
         $this->assertArrayNotHasKey('webhookUrl', $created['body']);
         $this->assertArrayNotHasKey('webhookSecret', $created['body']);
 
-        $monitor = $this->getMonitor($created['body']['$id']);
+        $monitor = $this->getMonitor($monitorId);
         $this->assertSame(200, $monitor['headers']['status-code']);
+        $this->assertSame($monitorId, $monitor['body']['$id']);
         $this->assertSame($name, $monitor['body']['name']);
         $this->assertSame('usage', $monitor['body']['type']);
         $this->assertSame($this->getProject()['$id'], $monitor['body']['projectId']);
@@ -141,9 +146,10 @@ trait MonitorsBase
         $first = $this->createMonitor();
         $this->assertSame(201, $first['headers']['status-code']);
 
-        $duplicate = $this->createMonitor(['monitorId' => $first['body']['$id']]);
+        $duplicate = $this->createMonitor(['monitorId' => $first['body']['$id'], 'name' => 'Duplicate']);
         $this->assertSame(409, $duplicate['headers']['status-code']);
         $this->assertSame('monitor_already_exists', $duplicate['body']['type']);
+        $this->assertSame($first['body']['name'], $this->getMonitor($first['body']['$id'])['body']['name']);
 
         $this->assertSame($before + 1, $this->listMonitors()['body']['total']);
     }
@@ -300,10 +306,12 @@ trait MonitorsBase
     public function testListMonitors(): void
     {
         $name = 'Listed ' . \uniqid();
-        $first = $this->createMonitor(['name' => $name . ' one']);
+        $firstId = 'listed-' . \uniqid();
+        $first = $this->createMonitor(['monitorId' => $firstId, 'name' => $name . ' one']);
         $second = $this->createMonitor(['name' => $name . ' two', 'rules' => [Query::greaterThan('files.storage', 1)->toString()], 'enabled' => false]);
         $this->assertSame(201, $first['headers']['status-code']);
         $this->assertSame(201, $second['headers']['status-code']);
+        $this->assertSame($firstId, $first['body']['$id']);
 
         /**
          * Test for SUCCESS
@@ -324,6 +332,20 @@ trait MonitorsBase
             Query::cursorAfter(new Document(['$id' => $first['body']['$id']]))->toString(),
         ]);
         $this->assertSame([$second['body']['$id']], \array_column($paged['body']['monitors'], '$id'));
+
+        // Filters and cursors take the chosen ID, not the one the server stores it under.
+        $byId = $this->listMonitors([Query::equal('$id', [$firstId])->toString()]);
+        $this->assertSame(200, $byId['headers']['status-code']);
+        $this->assertSame(1, $byId['body']['total']);
+        $this->assertSame([$firstId], \array_column($byId['body']['monitors'], '$id'));
+        $this->assertSame($name . ' one', $byId['body']['monitors'][0]['name']);
+
+        $after = $this->listMonitors([
+            Query::search('search', $name)->toString(),
+            Query::cursorAfter(new Document(['$id' => $firstId]))->toString(),
+        ]);
+        $this->assertSame(200, $after['headers']['status-code']);
+        $this->assertSame([$second['body']['$id']], \array_column($after['body']['monitors'], '$id'));
 
         $untotaled = $this->client->call(Client::METHOD_GET, '/monitors', $this->headers(), [
             'queries' => [Query::search('search', $name)->toString()],

@@ -71,7 +71,7 @@ class Delete extends Base
             Query::equal('escalationId', [$escalation->getId()]),
         ]));
         if (!$monitor->isEmpty()) {
-            throw new Exception(Exception::ESCALATION_IN_USE, "Escalation '{$escalation->getId()}' is used by monitor '{$monitor->getId()}'.");
+            throw new Exception(Exception::ESCALATION_IN_USE, "Escalation '{$escalation->getId()}' is used by monitor '{$monitor->getAttribute('monitorId')}'.");
         }
 
         $authorization->skip(fn () => $dbForPlatform->deleteDocument('escalations', $escalation->getId()));

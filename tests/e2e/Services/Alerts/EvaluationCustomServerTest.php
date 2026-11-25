@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Alerts;
 
+use Ahc\Jwt\JWT;
 use Appwrite\Alert\Escalation;
 use Appwrite\Alert\Meter;
+use Appwrite\Alert\Monitors;
 use Appwrite\Alert\Unsubscribe;
 use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Bus\Events\RequestCompleted;
@@ -96,8 +98,10 @@ final class EvaluationCustomServerTest extends Scope
             $this->assertSame(200, $this->client->call(Client::METHOD_GET, '/monitors', $this->headers())['headers']['status-code']);
         }
 
+        // Alerts, events and pushes name the monitor by the ID the project chose.
+        $monitorId = 'egress-' . \uniqid();
         $created = $this->client->call(Client::METHOD_POST, '/monitors/usage', $this->headers(), [
-            'monitorId' => 'unique()',
+            'monitorId' => $monitorId,
             'name' => $name,
             'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
             'window' => 3600,
@@ -106,7 +110,7 @@ final class EvaluationCustomServerTest extends Scope
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
         $this->assertSame('critical', $created['body']['severity']);
-        $monitorId = $created['body']['$id'];
+        $this->assertSame($monitorId, $created['body']['$id']);
 
         /**
          * Test for SUCCESS
@@ -581,6 +585,7 @@ final class EvaluationCustomServerTest extends Scope
             $this->assertStringStartsWith('[Firing] ' . $name . ' · ', $email['subject']);
         });
         $alert = $this->getAlert($firing['alertId']);
+        $this->assertSame($monitorId, $alert['monitorId']);
         $this->assertSame($escalation['body']['$id'], $alert['escalationId']);
         $this->assertSame([$firing['alertId']], \array_column($this->listAlerts([
             Query::equal('escalationId', [$escalation['body']['$id']])->toString(),
@@ -850,16 +855,83 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame([NOTIFICATION_TYPE_CONSOLE, NOTIFICATION_TYPE_EMAIL, NOTIFICATION_TYPE_PUSH], $this->ownerChannels($monitorId, $root['$id']));
         $this->assertSame(['monitor' => false, 'all' => false], \array_intersect_key($this->unsubscribe(Client::METHOD_GET, $token)['body'], ['monitor' => 0, 'all' => 0]));
 
+        // Another project's monitor of the same ID is a different monitor: unsubscribing from this one leaves it alone.
+        $unsubscribe = new Unsubscribe([System::getEnv('_APP_OPENSSL_KEY_V1')]);
+        $projectScope = $this->projectInternalId($this->getProject()['$id']);
+        $twin = $this->getProject(true);
+        $this->assertSame(201, $this->client->call(Client::METHOD_POST, '/monitors/usage', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $twin['$id'],
+            'x-appwrite-key' => $twin['apiKey'],
+        ], [
+            'monitorId' => $monitorId,
+            'name' => 'Twin ' . $name,
+            'rules' => [Query::greaterThan('network.outbound', 10)->toString()],
+            'enabled' => false,
+        ])['headers']['status-code']);
+        $twinToken = $unsubscribe->token($root['$id'], $monitorId, 'usage', $this->projectInternalId($twin['$id']));
+        $this->assertSame('Twin ' . $name, $this->unsubscribe(Client::METHOD_GET, $twinToken)['body']['monitorName']);
+        $this->assertSame(204, $this->unsubscribe(Client::METHOD_POST, $token)['headers']['status-code']);
+        $this->assertTrue($this->unsubscribe(Client::METHOD_GET, $token)['body']['monitor']);
+        $this->assertFalse($this->unsubscribe(Client::METHOD_GET, $twinToken)['body']['monitor']);
+        $this->assertSame(204, $this->unsubscribe(Client::METHOD_DELETE, $token)['headers']['status-code']);
+        $this->assertFalse($this->unsubscribe(Client::METHOD_GET, $token)['body']['monitor']);
+
+        // A link sent before monitor IDs were scoped names the monitor by its chosen ID alone, and reaches the oldest monitor holding it.
+        $legacy = fn (string $userId): string => (new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', ALERT_UNSUBSCRIBE_TTL, 0))->encode([
+            'userId' => $userId,
+            'monitorId' => $monitorId,
+            'type' => 'usage',
+            'purpose' => 'alerts_unsubscribe',
+        ]);
+        $page = $this->unsubscribe(Client::METHOD_GET, $legacy($root['$id']));
+        $this->assertSame(200, $page['headers']['status-code']);
+        $this->assertSame($name, $page['body']['monitorName']);
+        $this->assertFalse($page['body']['monitor']);
+        $this->assertSame(204, $this->unsubscribe(Client::METHOD_POST, $legacy($root['$id']))['headers']['status-code']);
+        $this->assertTrue($this->unsubscribe(Client::METHOD_GET, $token)['body']['monitor']);
+        $this->assertFalse($this->unsubscribe(Client::METHOD_GET, $twinToken)['body']['monitor']);
+        $this->assertSame([NOTIFICATION_TYPE_CONSOLE], $this->ownerChannels($monitorId, $root['$id']));
+        $this->assertSame(204, $this->unsubscribe(Client::METHOD_DELETE, $legacy($root['$id']))['headers']['status-code']);
+        $this->assertFalse($this->unsubscribe(Client::METHOD_GET, $token)['body']['monitor']);
+
         /**
          * Test for FAILURE
          */
-        $unsubscribe = new Unsubscribe([System::getEnv('_APP_OPENSSL_KEY_V1')]);
+        // For someone outside the monitor's organization, a link names no monitor and stops none, scoped or not.
+        $stranger = $this->client->call(Client::METHOD_POST, '/account', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'userId' => 'unique()',
+            'email' => 'stranger-' . \uniqid() . '@localhost.test',
+            'password' => 'password-' . \uniqid(), // pragma: allowlist secret
+        ]);
+        $this->assertSame(201, $stranger['headers']['status-code']);
+        $strangerId = $stranger['body']['$id'];
+        foreach ([
+            'legacy' => $legacy($strangerId),
+            'scoped' => $unsubscribe->token($strangerId, $monitorId, 'usage', $projectScope),
+        ] as $case => $foreign) {
+            $page = $this->unsubscribe(Client::METHOD_GET, $foreign);
+            $this->assertSame(200, $page['headers']['status-code'], $case);
+            $this->assertSame('', $page['body']['monitorName'], $case);
+            $this->assertSame('', $page['body']['projectName'], $case);
+            $this->assertFalse($page['body']['monitor'], $case);
+            $this->assertSame(204, $this->unsubscribe(Client::METHOD_POST, $foreign)['headers']['status-code'], $case);
+        }
+        $stored = null;
+        $this->withFactory(function (object $factory) use ($strangerId, &$stored): void {
+            $stored = $factory->platform()->getDocument('users', $strangerId)->getAttribute('alertsUnsubscribed', []);
+        });
+        $this->assertSame([], $stored);
+
         [$head, $claims, $signature] = \explode('.', $token);
         $forged = $head . '.' . \rtrim(\strtr(\base64_encode((string) \json_encode(['monitorId' => $other] + (array) \json_decode((string) \base64_decode(\strtr($claims, '-_', '+/')), true))), '+/', '-_'), '=') . '.' . $signature;
         foreach ([
             'tampered' => $forged,
-            'expired' => $unsubscribe->token($root['$id'], $monitorId, 'usage', \time() - ALERT_UNSUBSCRIBE_TTL - 60),
-            'another secret' => (new Unsubscribe(['another-secret']))->token($root['$id'], $monitorId, 'usage'),
+            'expired' => $unsubscribe->token($root['$id'], $monitorId, 'usage', $projectScope, \time() - ALERT_UNSUBSCRIBE_TTL - 60),
+            'another secret' => (new Unsubscribe(['another-secret']))->token($root['$id'], $monitorId, 'usage', $projectScope),
             'missing' => '',
         ] as $case => $invalid) {
             foreach ([Client::METHOD_GET, Client::METHOD_POST] as $method) {
@@ -939,7 +1011,7 @@ final class EvaluationCustomServerTest extends Scope
     {
         $root = $this->getRoot()['$id'];
         $monitorId = $this->createPausedMonitor('Deleted later ' . \uniqid());
-        $token = (new Unsubscribe([System::getEnv('_APP_OPENSSL_KEY_V1')]))->token($root, $monitorId, 'usage');
+        $token = (new Unsubscribe([System::getEnv('_APP_OPENSSL_KEY_V1')]))->token($root, $monitorId, 'usage', $this->projectInternalId($this->getProject()['$id']));
         $this->assertSame(204, $this->unsubscribe(Client::METHOD_POST, $token, 'all')['headers']['status-code']);
 
         $this->assertSame(204, $this->client->call(Client::METHOD_DELETE, '/monitors/' . $monitorId, $this->headers())['headers']['status-code']);
@@ -963,7 +1035,10 @@ final class EvaluationCustomServerTest extends Scope
     {
         $root = $this->getRoot()['$id'];
         $unsubscribe = new Unsubscribe([System::getEnv('_APP_OPENSSL_KEY_V1')]);
-        $scopes = \array_map(fn (int $i) => 'concurrent' . $i . \uniqid(), \range(1, 12));
+        $projectScope = $this->projectInternalId($this->getProject()['$id']);
+        $monitorIds = \array_map(fn (int $i) => $this->createPausedMonitor('Concurrent ' . $i . ' ' . \uniqid()), \range(1, 12));
+        // Each is stored under the ID the server keeps the monitor by.
+        $entries = \array_map(fn (string $monitorId) => Monitors::id($projectScope, $monitorId), $monitorIds);
 
         /**
          * Test for SUCCESS
@@ -971,12 +1046,12 @@ final class EvaluationCustomServerTest extends Scope
         // Every opt-out sent at once is kept, none overwriting another.
         $multi = \curl_multi_init();
         $handles = [];
-        foreach ($scopes as $scope) {
+        foreach ($monitorIds as $monitorId) {
             $handle = \curl_init('http://appwrite.test/v1/console/alerts/unsubscribe?project=console');
             \curl_setopt_array($handle, [
                 CURLOPT_POST => true,
                 CURLOPT_HTTPHEADER => ['content-type: application/json', 'x-appwrite-project: console'],
-                CURLOPT_POSTFIELDS => \json_encode(['token' => $unsubscribe->token($root, $scope, 'usage')]),
+                CURLOPT_POSTFIELDS => \json_encode(['token' => $unsubscribe->token($root, $monitorId, 'usage', $projectScope)]),
                 CURLOPT_RETURNTRANSFER => true,
             ]);
             \curl_multi_add_handle($multi, $handle);
@@ -996,16 +1071,16 @@ final class EvaluationCustomServerTest extends Scope
         $this->withFactory(function (object $factory) use ($root, &$stored): void {
             $stored = $factory->platform()->getDocument('users', $root)->getAttribute('alertsUnsubscribed', []);
         });
-        $this->assertSame([], \array_values(\array_diff($scopes, $stored)), 'An unsubscribe sent alongside others was lost.');
+        $this->assertSame([], \array_values(\array_diff($entries, $stored)), 'An unsubscribe sent alongside others was lost.');
 
         // And resumed at once, every one of them goes.
-        foreach ($scopes as $scope) {
-            $this->assertSame(204, $this->unsubscribe(Client::METHOD_DELETE, $unsubscribe->token($root, $scope, 'usage'))['headers']['status-code']);
+        foreach ($monitorIds as $monitorId) {
+            $this->assertSame(204, $this->unsubscribe(Client::METHOD_DELETE, $unsubscribe->token($root, $monitorId, 'usage', $projectScope))['headers']['status-code']);
         }
         $this->withFactory(function (object $factory) use ($root, &$stored): void {
             $stored = $factory->platform()->getDocument('users', $root)->getAttribute('alertsUnsubscribed', []);
         });
-        $this->assertSame([], \array_values(\array_intersect($scopes, $stored)));
+        $this->assertSame([], \array_values(\array_intersect($entries, $stored)));
     }
 
     public function testTransferredProjectAlertsItsNewOrganizationsOwners(): void
@@ -1567,14 +1642,15 @@ final class EvaluationCustomServerTest extends Scope
                     $later = (new \DateTimeImmutable())->add(new \DateInterval('PT' . ($lag + 1) . 'S'));
 
                     // Usage still inside the lag is not read yet: evaluated as it is written, there is nothing to compare.
-                    $requests = $platform->getDocument('monitors', $monitors['lag']);
+                    $projectScope = (string) $project->getSequence();
+                    $requests = $platform->getDocument('monitors', Monitors::id($projectScope, $monitors['lag']));
                     $cases['lag'] = ['early' => $worker->read($requests, $isolated, $dbForProject, $connection, $written), 'late' => $worker->read($requests, $isolated, $dbForProject, $connection, $later)];
 
                     foreach ($cases as $case => &$expectation) {
                         if ($case === 'lag') {
                             continue;
                         }
-                        $monitor = $platform->getDocument('monitors', $monitors[$case]);
+                        $monitor = $platform->getDocument('monitors', Monitors::id($projectScope, $monitors[$case]));
                         $expectation['measured'] = $worker->read($monitor, $isolated, $dbForProject, $connection, $later);
 
                         if (isset($expectation['wrong'])) {
@@ -2190,6 +2266,19 @@ final class EvaluationCustomServerTest extends Scope
     }
 
     /**
+     * The project's internal ID, which scopes its monitors' IDs and their unsubscribe tokens.
+     */
+    private function projectInternalId(string $projectId): string
+    {
+        $sequence = '';
+        $this->withFactory(function (object $factory) use ($projectId, &$sequence): void {
+            $sequence = (string) $factory->platform()->getDocument('projects', $projectId)->getSequence();
+        });
+
+        return $sequence;
+    }
+
+    /**
      * Runs the alerts worker's evaluation of the monitor against a measured value,
      * with a queue that accepts or refuses its announcements.
      */
@@ -2220,9 +2309,10 @@ final class EvaluationCustomServerTest extends Scope
             }
         };
 
+        $project = $dbForPlatform->getDocument('projects', $this->getProject()['$id']);
         $evaluator->evaluateNow(
-            $dbForPlatform->getDocument('monitors', $monitorId),
-            $dbForPlatform->getDocument('projects', $this->getProject()['$id']),
+            $dbForPlatform->getDocument('monitors', Monitors::id((string) $project->getSequence(), $monitorId)),
+            $project,
             $value,
             $dbForPlatform,
             $publisher,
