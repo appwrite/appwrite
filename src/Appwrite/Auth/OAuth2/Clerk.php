@@ -38,6 +38,13 @@ class Clerk extends OAuth2
         return 'clerk';
     }
 
+    public function verifyCredentials(): void
+    {
+        if (empty($this->getClerkDomain())) {
+            throw new \Exception('Clerk endpoint is required.');
+        }
+    }
+
     /**
      * @return string
      */
