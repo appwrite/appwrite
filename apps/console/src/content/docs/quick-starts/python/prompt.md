@@ -21,7 +21,7 @@ Do exactly these steps in order. Confirm each step succeeds before continuing. I
 
 ## Step 2: Create Python project
 
-- SDK 27.3.0 requires Python 3.10 or later. Check `python --version` and select a supported interpreter before creating the virtual environment.
+- SDK 28.1.0 requires Python 3.10 or later. Check `python --version` and select a supported interpreter before creating the virtual environment.
 
 - Create a directory for the project:
 

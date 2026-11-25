@@ -47,7 +47,7 @@ Other scopes are optional.
 
 {% /section %}
 {% section #step-2 step=2 title="Create Python project" %}
-Use Python 3.10 or later with SDK 27.3.0. Check `python --version` and select a supported interpreter before creating the virtual environment.
+Use Python 3.10 or later with SDK 28.1.0. Check `python --version` and select a supported interpreter before creating the virtual environment.
 
 Create a directory for the project.
 
