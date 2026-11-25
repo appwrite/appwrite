@@ -1138,7 +1138,7 @@ export function useProjectInstalledApps(
   organizationId: string | null | undefined,
   projectId: string | null | undefined,
 ) {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: [
       'organization',
       organizationId,
@@ -1175,5 +1175,5 @@ export function useProjectInstalledApps(
     retry: false,
   })
 
-  return { installations: data ?? [], isLoading }
+  return { installations: data ?? [], isLoading, isError, refetch }
 }
