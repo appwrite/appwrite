@@ -280,26 +280,62 @@ class Videos extends Action
         $started = \microtime(true);
         $stage = 'claim';
         $outcome = 'error';
+        // Ownership token: claim and reclaim bump $updatedAt. Probe and
+        // captionsExtracted also rewrite the video row, so refresh after
+        // prepareSource. Terminal writes require the token to still match.
+        $claimUpdatedAt = '';
 
         try {
             $this->log('Videos worker: timeline started for video ' . $video->getId());
-            // Compare-and-swap: only one updateDocuments may leave pending.
-            // A deleted video or a stale redelivery updates nothing and stops
-            // before download or tiling.
-            $updated = $dbForProject->updateDocuments(
-                'videos',
-                new Document([
-                    'timelineStatus' => Base::STATUS_STARTED,
-                    'timelineError' => null,
-                ]),
-                [
-                    Query::equal('$id', [$video->getId()]),
-                    Query::equal('timelineStatus', [Base::STATUS_PENDING]),
-                ]
-            );
-            if ($updated === 0) {
-                $current = $dbForProject->getDocument('videos', $video->getId());
-                $outcome = $current->isEmpty() ? 'halted' : 'duplicate';
+            $current = $dbForProject->getDocument('videos', $video->getId());
+            if ($current->isEmpty()) {
+                $outcome = 'halted';
+                return;
+            }
+
+            $rowStatus = (string) $current->getAttribute('timelineStatus', '');
+            if ($rowStatus === Base::STATUS_PENDING) {
+                // Compare-and-swap: only one updateDocuments may leave pending.
+                // A deleted video or a stale redelivery updates nothing and stops
+                // before download or tiling.
+                $updated = $dbForProject->updateDocuments(
+                    'videos',
+                    new Document([
+                        'timelineStatus' => Base::STATUS_STARTED,
+                        'timelineError' => null,
+                    ]),
+                    [
+                        Query::equal('$id', [$video->getId()]),
+                        Query::equal('timelineStatus', [Base::STATUS_PENDING]),
+                    ]
+                );
+                if ($updated === 0) {
+                    $current = $dbForProject->getDocument('videos', $video->getId());
+                    $outcome = $current->isEmpty() ? 'halted' : 'duplicate';
+                    return;
+                }
+            } elseif ($rowStatus === Base::STATUS_STARTED) {
+                $priorUpdatedAt = (string) $current->getUpdatedAt();
+                $updated = $dbForProject->updateDocuments(
+                    'videos',
+                    new Document([
+                        'timelineStatus' => Base::STATUS_STARTED,
+                        'timelineError' => null,
+                    ]),
+                    [
+                        Query::equal('$id', [$video->getId()]),
+                        Query::equal('timelineStatus', [Base::STATUS_STARTED]),
+                        Query::equal('$updatedAt', [$priorUpdatedAt]),
+                    ]
+                );
+                if ($updated === 0) {
+                    $current = $dbForProject->getDocument('videos', $video->getId());
+                    $outcome = $current->isEmpty() ? 'halted' : 'duplicate';
+                    return;
+                }
+                $this->log('Timeline for video ' . $video->getId() . ' reclaimed from started');
+            } else {
+                $outcome = 'duplicate';
                 return;
             }
 
@@ -308,6 +344,7 @@ class Videos extends Action
                 $outcome = 'halted';
                 return;
             }
+            $claimUpdatedAt = (string) $video->getUpdatedAt();
 
             $workspace = $this->jobWorkspace(
                 $projectId,
@@ -329,6 +366,8 @@ class Videos extends Action
                 VideoAction::Timeline->value,
                 $stage
             );
+            // Probe / captionsExtracted rewrite the video row; refresh the token.
+            $claimUpdatedAt = (string) $video->getUpdatedAt();
 
             $this->notify(
                 $queueForRealtime,
@@ -348,12 +387,16 @@ class Videos extends Action
 
             if ($width <= 0 || $height <= 0) {
                 Span::add('warning.message', 'Source has no video track; timeline skipped');
+                $parked = $this->timelineStatus($dbForProject, $video, Base::STATUS_SKIPPED, null, $claimUpdatedAt);
+                if ($parked->isEmpty()) {
+                    $outcome = 'reclaimed';
+                    return;
+                }
                 $outcome = 'skipped';
-                $parked = $this->timelineStatus($dbForProject, $video, Base::STATUS_SKIPPED);
                 $this->notify(
                     $queueForRealtime,
                     $project,
-                    $parked->isEmpty() ? $video : $parked,
+                    $parked,
                     'videos.[videoId].timelines.update',
                     ['videoId' => $video->getId()],
                     $permissions
@@ -448,11 +491,15 @@ class Videos extends Action
             $this->phase($telemetry, VideoAction::Timeline->value, 'upload', $phaseStart);
             Span::add('timeline.size', $size);
 
-            $parked = $this->timelineStatus($dbForProject, $video, Base::STATUS_READY);
+            $parked = $this->timelineStatus($dbForProject, $video, Base::STATUS_READY, null, $claimUpdatedAt);
+            if ($parked->isEmpty()) {
+                $outcome = 'reclaimed';
+                return;
+            }
             $this->notify(
                 $queueForRealtime,
                 $project,
-                $parked->isEmpty() ? $video : $parked,
+                $parked,
                 'videos.[videoId].timelines.update',
                 ['videoId' => $video->getId()],
                 $permissions
@@ -466,26 +513,43 @@ class Videos extends Action
                 $this->runtime($telemetry, $runtime, 'ffmpeg', $stage);
             }
 
+            // Only a run that still owns the claim may park as error.
+            if ($claimUpdatedAt === '') {
+                if ($th instanceof AppwriteException && $th->getCode() < 500) {
+                    Span::add('error.type', $th->getType());
+                    Span::add('warning.message', $th->getMessage());
+                    return;
+                }
+                throw $th;
+            }
+
             $reason = $this->reason($th, $stage);
             Span::add('error.reason', $reason);
             try {
-                $parked = $this->timelineStatus($dbForProject, $video, Base::STATUS_ERROR, $reason);
+                $parked = $this->timelineStatus($dbForProject, $video, Base::STATUS_ERROR, $reason, $claimUpdatedAt);
             } catch (\Throwable $park) {
                 // A bookkeeping failure must not replace the job failure.
                 $this->log('Videos worker: failed to park timeline for video ' . $video->getId() . ': ' . $park->getMessage(), 'error');
                 Span::add('error.park_failed', true);
-                $parked = $video;
+                $parked = new Document([]);
             }
-            if (!$parked->isEmpty()) {
-                $this->notify(
-                    $queueForRealtime,
-                    $project,
-                    $parked,
-                    'videos.[videoId].timelines.update',
-                    ['videoId' => $video->getId()],
-                    $permissions
-                );
+            if ($parked->isEmpty()) {
+                $outcome = 'reclaimed';
+                if ($th instanceof AppwriteException && $th->getCode() < 500) {
+                    Span::add('error.type', $th->getType());
+                    Span::add('warning.message', $th->getMessage());
+                    return;
+                }
+                throw $th;
             }
+            $this->notify(
+                $queueForRealtime,
+                $project,
+                $parked,
+                'videos.[videoId].timelines.update',
+                ['videoId' => $video->getId()],
+                $permissions
+            );
             if ($th instanceof AppwriteException && $th->getCode() < 500) {
                 Span::add('error.type', $th->getType());
                 Span::add('warning.message', $th->getMessage());
@@ -545,29 +609,69 @@ class Videos extends Action
         $outcome = 'error';
         $conversion = '';
         $claimed = false;
+        // Ownership token: claim and reclaim bump $updatedAt; ready and park
+        // writes require it to still match.
+        $claimUpdatedAt = '';
 
         try {
-            // Compare-and-swap: only one updateDocuments may leave pending.
-            // A delete that wins while still pending removes the row, this
-            // updates nothing, and the job stops before download.
-            $updated = $dbForProject->updateDocuments(
-                'videosCaptions',
-                new Document([
-                    'status' => Base::STATUS_STARTED,
-                    'error' => null,
-                ]),
-                [
-                    Query::equal('$id', [$caption->getId()]),
-                    Query::equal('status', [Base::STATUS_PENDING]),
-                ]
-            );
-            if ($updated === 0) {
+            $current = $dbForProject->getDocument('videosCaptions', $caption->getId());
+            if ($current->isEmpty()) {
+                $outcome = 'duplicate';
+                return;
+            }
+
+            $rowStatus = (string) $current->getAttribute('status', '');
+            if ($rowStatus === Base::STATUS_PENDING) {
+                // Compare-and-swap: only one updateDocuments may leave pending.
+                // A delete that wins while still pending removes the row, this
+                // updates nothing, and the job stops before download.
+                $updated = $dbForProject->updateDocuments(
+                    'videosCaptions',
+                    new Document([
+                        'status' => Base::STATUS_STARTED,
+                        'error' => null,
+                    ]),
+                    [
+                        Query::equal('$id', [$caption->getId()]),
+                        Query::equal('status', [Base::STATUS_PENDING]),
+                    ]
+                );
+                if ($updated === 0) {
+                    $outcome = 'duplicate';
+                    return;
+                }
+            } elseif ($rowStatus === Base::STATUS_STARTED) {
+                $priorUpdatedAt = (string) $current->getUpdatedAt();
+                $updated = $dbForProject->updateDocuments(
+                    'videosCaptions',
+                    new Document([
+                        'status' => Base::STATUS_STARTED,
+                        'error' => null,
+                        'path' => null,
+                        'size' => 0,
+                        'targetDuration' => null,
+                    ]),
+                    [
+                        Query::equal('$id', [$caption->getId()]),
+                        Query::equal('status', [Base::STATUS_STARTED]),
+                        Query::equal('$updatedAt', [$priorUpdatedAt]),
+                    ]
+                );
+                if ($updated === 0) {
+                    $outcome = 'duplicate';
+                    return;
+                }
+
+                $this->wipeCaptionTrace($dbForProject, $deviceForVideos, $current);
+                $this->log('Caption ' . $caption->getId() . ' reclaimed from started');
+            } else {
                 $outcome = 'duplicate';
                 return;
             }
 
             $caption = $dbForProject->getDocument('videosCaptions', $caption->getId());
             $claimed = true;
+            $claimUpdatedAt = (string) $caption->getUpdatedAt();
             $this->notify(
                 $queueForRealtime,
                 $project,
@@ -622,10 +726,17 @@ class Videos extends Action
 
             $stage = 'persist';
             $phaseStart = \microtime(true);
-            // Maintenance may park the row as aborted while this job runs.
+            // Maintenance or a reclaim may have moved the row out of this run.
             $current = $dbForProject->getDocument('videosCaptions', $caption->getId());
-            if ($current->isEmpty() || $current->getAttribute('status') !== Base::STATUS_STARTED) {
-                $outcome = 'halted';
+            if (
+                $current->isEmpty()
+                || $current->getAttribute('status') !== Base::STATUS_STARTED
+                || (string) $current->getUpdatedAt() !== $claimUpdatedAt
+            ) {
+                $outcome = (
+                    !$current->isEmpty()
+                    && (string) $current->getUpdatedAt() !== $claimUpdatedAt
+                ) ? 'reclaimed' : 'halted';
                 $caption = $current;
                 return;
             }
@@ -638,45 +749,64 @@ class Videos extends Action
                 $captionPath,
                 $queueForRealtime,
                 $project,
-                $permissions
+                $permissions,
+                $claimUpdatedAt
             );
+            if ($caption->isEmpty()) {
+                $outcome = 'reclaimed';
+                return;
+            }
             $this->phase($telemetry, VideoAction::Caption->value, 'persist', $phaseStart);
             Span::add('caption.size', (int) $caption->getAttribute('size', 0));
             $outcome = 'ready';
         } catch (\Throwable $th) {
             Span::add('error.stage', $stage);
-            // Only a run that claimed the row may park it as error — a lost
+            // Only a run that still owns the claim may park it as error — a lost
             // claim must not overwrite a live job or resurrect a deleted caption.
             // Do not overwrite aborted/error parks from maintenance.
             $current = $dbForProject->getDocument('videosCaptions', $caption->getId());
             $status = $current->isEmpty() ? '' : (string) $current->getAttribute('status', '');
-            $mayPark = $claimed
+            $owns = $claimed
+                && (string) $current->getUpdatedAt() === $claimUpdatedAt;
+            $mayPark = $owns
                 ? !\in_array($status, [Base::STATUS_ABORTED, Base::STATUS_ERROR], true)
-                : $status === Base::STATUS_PENDING;
+                : (!$claimed && $status === Base::STATUS_PENDING);
 
             if (!$current->isEmpty() && $mayPark) {
                 $reason = $this->reason($th, $stage);
                 Span::add('error.reason', $reason);
                 try {
-                    $caption = $dbForProject->updateDocument(
+                    $queries = [
+                        Query::equal('$id', [$caption->getId()]),
+                    ];
+                    if ($owns) {
+                        $queries[] = Query::equal('$updatedAt', [$claimUpdatedAt]);
+                        $queries[] = Query::equal('status', [Base::STATUS_STARTED]);
+                    } else {
+                        $queries[] = Query::equal('status', [Base::STATUS_PENDING]);
+                    }
+                    $parked = $dbForProject->updateDocuments(
                         'videosCaptions',
-                        $caption->getId(),
                         new Document([
                             'status' => Base::STATUS_ERROR,
                             'error' => $reason,
-                        ])
+                        ]),
+                        $queries
                     );
-                    $this->notify(
-                        $queueForRealtime,
-                        $project,
-                        $caption,
-                        'videos.[videoId].captions.[captionId].update',
-                        [
-                            'videoId' => $caption->getAttribute('videoId', $video->getId()),
-                            'captionId' => $caption->getId(),
-                        ],
-                        $permissions
-                    );
+                    if ($parked > 0) {
+                        $caption = $dbForProject->getDocument('videosCaptions', $caption->getId());
+                        $this->notify(
+                            $queueForRealtime,
+                            $project,
+                            $caption,
+                            'videos.[videoId].captions.[captionId].update',
+                            [
+                                'videoId' => $caption->getAttribute('videoId', $video->getId()),
+                                'captionId' => $caption->getId(),
+                            ],
+                            $permissions
+                        );
+                    }
                 } catch (\Throwable $park) {
                     // A bookkeeping failure must not replace the job failure.
                     $this->log('Videos worker: failed to park caption ' . $caption->getId() . ': ' . $park->getMessage(), 'error');
@@ -754,6 +884,9 @@ class Videos extends Action
             : (string) $rendition->getAttribute('output', Base::OUTPUT_HLS);
         $permissions = $this->readPermissions($videoMessage->video);
         $claimed = false;
+        // Ownership token for this run. Progress, persist, ready, park, usage and
+        // partial cleanup all require the row's startedAt to still match.
+        $claimStartedAt = '';
         $codec = Base::normalizeCodec(
             $rendition->getAttribute('codec')
                 ?: $profile->getAttribute('codec')
@@ -771,39 +904,81 @@ class Videos extends Action
         $tag = 'Rendition ' . $rendition->getId() . ' (project ' . $projectId . ', video ' . $videoId . ')';
 
         try {
-            // Every rendition owns exactly one Encode message, so a message whose
-            // row already left `pending` is a stale redelivery and is dropped here.
+            // pending: first claim. started/ended: a killed worker left the row
+            // mid-run — reclaim, wipe its trace, and encode again. ready/error/
+            // aborted: settled; a redelivery is a no-op (no second usage event).
             $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
-            if ($current->isEmpty() || $current->getAttribute('status') !== Base::STATUS_PENDING) {
+            if ($current->isEmpty()) {
                 $outcome = 'duplicate';
-                $status = (string) $current->getAttribute('status', '');
                 return;
             }
 
-            // Compare-and-swap: concurrent coroutines can both see `pending`;
-            // only one updateDocuments may transition the row. Claim before
-            // downloading so a duplicate redelivery never fetches the source.
-            $updated = $dbForProject->updateDocuments(
-                'videosRenditions',
-                new Document([
-                    'startedAt' => DateTime::now(),
-                    'status' => Base::STATUS_STARTED,
-                    'progress' => '0',
-                ]),
-                [
+            $rowStatus = (string) $current->getAttribute('status', '');
+            if ($rowStatus === Base::STATUS_PENDING) {
+                // Compare-and-swap: concurrent coroutines can both see `pending`;
+                // only one updateDocuments may transition the row. Claim before
+                // downloading so a duplicate redelivery never fetches the source.
+                $updated = $dbForProject->updateDocuments(
+                    'videosRenditions',
+                    new Document([
+                        'startedAt' => DateTime::now(),
+                        'status' => Base::STATUS_STARTED,
+                        'progress' => '0',
+                    ]),
+                    [
+                        Query::equal('$id', [$rendition->getId()]),
+                        Query::equal('status', [Base::STATUS_PENDING]),
+                    ]
+                );
+                if ($updated === 0) {
+                    $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
+                    $outcome = 'duplicate';
+                    $status = (string) $current->getAttribute('status', Base::STATUS_STARTED);
+                    return;
+                }
+            } elseif (\in_array($rowStatus, [Base::STATUS_STARTED, Base::STATUS_ENDED], true)) {
+                $priorStartedAt = (string) $current->getAttribute('startedAt', '');
+                $queries = [
                     Query::equal('$id', [$rendition->getId()]),
-                    Query::equal('status', [Base::STATUS_PENDING]),
-                ]
-            );
-            if ($updated === 0) {
-                // A sibling coroutine won the claim.
+                    Query::equal('status', [$rowStatus]),
+                    Query::equal('startedAt', [$priorStartedAt]),
+                ];
+                if ($rowStatus === Base::STATUS_ENDED) {
+                    $queries[] = Query::equal('endedAt', [(string) $current->getAttribute('endedAt', '')]);
+                }
+
+                $updated = $dbForProject->updateDocuments(
+                    'videosRenditions',
+                    new Document([
+                        'startedAt' => DateTime::now(),
+                        'status' => Base::STATUS_STARTED,
+                        'progress' => '0',
+                        'size' => 0,
+                        'endedAt' => null,
+                        'metadata' => null,
+                        'targetDuration' => null,
+                        'error' => null,
+                    ]),
+                    $queries
+                );
+                if ($updated === 0) {
+                    $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
+                    $outcome = 'duplicate';
+                    $status = (string) $current->getAttribute('status', '');
+                    return;
+                }
+
+                $this->wipeRenditionTrace($dbForProject, $deviceForVideos, $current);
+                $this->log($tag . ' reclaimed from ' . $rowStatus);
+            } else {
                 $outcome = 'duplicate';
-                $status = Base::STATUS_STARTED;
+                $status = $rowStatus;
                 return;
             }
 
             $rendition = $dbForProject->getDocument('videosRenditions', $rendition->getId());
             $claimed = true;
+            $claimStartedAt = (string) $rendition->getAttribute('startedAt', '');
             Span::add('rendition.name', (string) $rendition->getAttribute('name', ''));
             Span::add('rendition.output', $output);
             Span::add('rendition.codec', $codec);
@@ -967,7 +1142,7 @@ class Videos extends Action
                         $wrote = true;
                         $uploader->take($written);
                     })
-                    ->on(Packager::PROGRESS, function (mixed $progress) use ($dbForProject, $queueForRealtime, $project, $permissions, &$rendition, &$lastProgress, &$halted, &$last, &$advancedAt, &$advancedTime) {
+                    ->on(Packager::PROGRESS, function (mixed $progress) use ($dbForProject, $queueForRealtime, $project, $permissions, &$rendition, &$lastProgress, &$halted, &$last, &$advancedAt, &$advancedTime, $claimStartedAt) {
                         if (!$progress instanceof Progress) {
                             return;
                         }
@@ -1000,7 +1175,11 @@ class Videos extends Action
                         $lastProgress = $percentage;
 
                         $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
-                        if ($current->isEmpty() || $current->getAttribute('status') !== Base::STATUS_STARTED) {
+                        if (
+                            $current->isEmpty()
+                            || $current->getAttribute('status') !== Base::STATUS_STARTED
+                            || (string) $current->getAttribute('startedAt', '') !== $claimStartedAt
+                        ) {
                             // Stop ffmpeg now instead of letting it finish unused work.
                             $halted = true;
                             throw new \Exception('Encode halted: rendition left started');
@@ -1061,14 +1240,15 @@ class Videos extends Action
                 );
             }
 
-            // Maintenance (or an e2e park) may have moved the row out of
-            // `started` while ffmpeg was still running — stop before ending.
+            // Maintenance, an e2e park, or a reclaim may have moved the row out
+            // of this run's ownership while ffmpeg was still running.
             $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
             if (
                 $current->isEmpty()
                 || $current->getAttribute('status') !== Base::STATUS_STARTED
+                || (string) $current->getAttribute('startedAt', '') !== $claimStartedAt
             ) {
-                $outcome = 'halted';
+                $outcome = $this->encodeLost($current, $claimStartedAt);
                 $status = (string) $current->getAttribute('status', '');
                 return;
             }
@@ -1098,22 +1278,34 @@ class Videos extends Action
             if (
                 $current->isEmpty()
                 || $current->getAttribute('status') !== Base::STATUS_STARTED
+                || (string) $current->getAttribute('startedAt', '') !== $claimStartedAt
             ) {
-                $outcome = 'halted';
+                $outcome = $this->encodeLost($current, $claimStartedAt);
                 $status = (string) $current->getAttribute('status', '');
                 return;
             }
 
-            $rendition = $dbForProject->updateDocument(
+            $updated = $dbForProject->updateDocuments(
                 'videosRenditions',
-                $rendition->getId(),
                 new Document(\array_filter([
                     'status' => Base::STATUS_ENDED,
                     'endedAt' => DateTime::now(),
                     'metadata' => $metadata,
                     'targetDuration' => $targetDuration,
-                ], fn ($value) => $value !== null))
+                ], fn ($value) => $value !== null)),
+                [
+                    Query::equal('$id', [$rendition->getId()]),
+                    Query::equal('status', [Base::STATUS_STARTED]),
+                    Query::equal('startedAt', [$claimStartedAt]),
+                ]
             );
+            if ($updated === 0) {
+                $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
+                $outcome = $this->encodeLost($current, $claimStartedAt);
+                $status = (string) $current->getAttribute('status', '');
+                return;
+            }
+            $rendition = $dbForProject->getDocument('videosRenditions', $rendition->getId());
             $this->notify(
                 $queueForRealtime,
                 $project,
@@ -1145,23 +1337,35 @@ class Videos extends Action
             if (
                 $current->isEmpty()
                 || $current->getAttribute('status') !== Base::STATUS_ENDED
+                || (string) $current->getAttribute('startedAt', '') !== $claimStartedAt
             ) {
-                $outcome = 'halted';
+                $outcome = $this->encodeLost($current, $claimStartedAt);
                 $status = (string) $current->getAttribute('status', '');
                 return;
             }
 
-            $rendition = $dbForProject->updateDocument(
+            $updated = $dbForProject->updateDocuments(
                 'videosRenditions',
-                $rendition->getId(),
                 new Document([
                     'status' => Base::STATUS_READY,
                     'progress' => '100',
                     // Retained bytes. The usage event is skipped; StatsResources
                     // sums this column into the videos.storage gauge.
                     'size' => $storageBytes,
-                ])
+                ]),
+                [
+                    Query::equal('$id', [$rendition->getId()]),
+                    Query::equal('status', [Base::STATUS_ENDED]),
+                    Query::equal('startedAt', [$claimStartedAt]),
+                ]
             );
+            if ($updated === 0) {
+                $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
+                $outcome = $this->encodeLost($current, $claimStartedAt);
+                $status = (string) $current->getAttribute('status', '');
+                return;
+            }
+            $rendition = $dbForProject->getDocument('videosRenditions', $rendition->getId());
             $this->notify(
                 $queueForRealtime,
                 $project,
@@ -1178,9 +1382,10 @@ class Videos extends Action
             $this->log($tag . ' ready');
         } catch (\Throwable $th) {
             $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
-            // The progress listener stopped ffmpeg because the row left `started`.
+            // The progress listener stopped ffmpeg because the row left `started`
+            // or another delivery reclaimed this run's startedAt.
             if ($halted) {
-                $outcome = 'halted';
+                $outcome = $this->encodeLost($current, $claimStartedAt);
                 $status = $current->isEmpty() ? '' : (string) $current->getAttribute('status', '');
                 return;
             }
@@ -1188,37 +1393,55 @@ class Videos extends Action
             // Do not overwrite aborted/error parks from maintenance or e2e seeding.
             // Pre-claim failures may only park while the row is still `pending` —
             // never clobber a sibling coroutine that already won the claim.
+            // A reclaim that took this run's startedAt also must not be parked.
             $status = $current->isEmpty() ? '' : (string) $current->getAttribute('status', '');
-            $mayPark = $claimed
+            $owns = $claimed
+                && (string) $current->getAttribute('startedAt', '') === $claimStartedAt;
+            $mayPark = $owns
                 ? !\in_array($status, [Base::STATUS_ABORTED, Base::STATUS_ERROR], true)
-                : $status === Base::STATUS_PENDING;
+                : (!$claimed && $status === Base::STATUS_PENDING);
 
             if (!$current->isEmpty() && $mayPark) {
                 $reason = $this->reason($th, $stage);
                 Span::add('error.reason', $reason);
                 try {
-                    $rendition = $dbForProject->updateDocument(
+                    $queries = [
+                        Query::equal('$id', [$rendition->getId()]),
+                    ];
+                    if ($owns) {
+                        $queries[] = Query::equal('startedAt', [$claimStartedAt]);
+                        $queries[] = Query::equal('status', [
+                            Base::STATUS_STARTED,
+                            Base::STATUS_ENDED,
+                        ]);
+                    } else {
+                        $queries[] = Query::equal('status', [Base::STATUS_PENDING]);
+                    }
+                    $parked = $dbForProject->updateDocuments(
                         'videosRenditions',
-                        $rendition->getId(),
                         new Document([
                             'status' => Base::STATUS_ERROR,
                             'endedAt' => DateTime::now(),
                             'progress' => $rendition->getAttribute('progress', '0'),
                             'error' => $reason,
-                        ])
+                        ]),
+                        $queries
                     );
-                    $this->notify(
-                        $queueForRealtime,
-                        $project,
-                        $rendition,
-                        'videos.[videoId].renditions.[renditionId].update',
-                        [
-                            'videoId' => $rendition->getAttribute('videoId', ''),
-                            'renditionId' => $rendition->getId(),
-                        ],
-                        $permissions
-                    );
-                    $status = Base::STATUS_ERROR;
+                    if ($parked > 0) {
+                        $rendition = $dbForProject->getDocument('videosRenditions', $rendition->getId());
+                        $this->notify(
+                            $queueForRealtime,
+                            $project,
+                            $rendition,
+                            'videos.[videoId].renditions.[renditionId].update',
+                            [
+                                'videoId' => $rendition->getAttribute('videoId', ''),
+                                'renditionId' => $rendition->getId(),
+                            ],
+                            $permissions
+                        );
+                        $status = Base::STATUS_ERROR;
+                    }
                 } catch (\Throwable $park) {
                     // A bookkeeping failure must not replace the job failure.
                     $this->log('Videos worker: failed to park rendition ' . $rendition->getId() . ': ' . $park->getMessage(), 'error');
@@ -1277,9 +1500,18 @@ class Videos extends Action
                 ['output' => $output, 'codec' => $codec] + ($outcome === 'error' ? ['error_stage' => $stage] : [])
             );
 
-            // Only a run that actually claimed the rendition (pending -> started)
-            // is billable; duplicate messages and re-queued downloads are no-ops.
-            if ($claimed) {
+            // Only a run that still owns the claim is billable. A duplicate, or a
+            // loser whose startedAt was taken by a reclaim, must not publish.
+            $owns = false;
+            if ($claimed && $claimStartedAt !== '') {
+                $owned = $dbForProject->getDocument('videosRenditions', $rendition->getId());
+                $owns = !$owned->isEmpty()
+                    && (string) $owned->getAttribute('startedAt', '') === $claimStartedAt;
+                if ($owns) {
+                    $rendition = $owned;
+                }
+            }
+            if ($owns) {
                 try {
                     $computeMs = (int) \round((\microtime(true) - $startedAt) * 1000);
                     VideoUsage::publish(
@@ -1300,8 +1532,9 @@ class Videos extends Action
 
             // Segments go up while ffmpeg runs, so an error, a halt or a failed
             // upload can leave part of a rendition in storage. Only this run's
-            // claim leads here, and nothing serves the path until `ready`.
-            if ($wrote && $path !== null && $outcome !== 'ready') {
+            // still-owned claim leads here; a reclaim must not delete the new
+            // owner's directory. Nothing serves the path until `ready`.
+            if ($owns && $wrote && $path !== null && $outcome !== 'ready') {
                 try {
                     $deviceForVideos->delete($path, true);
                 } catch (\Throwable $th) {
@@ -1412,6 +1645,10 @@ class Videos extends Action
     /**
      * Write a staged WebVTT file as the caption's single segment and mark ready.
      *
+     * When $claimUpdatedAt is set, the ready write is conditioned on that token
+     * so a reclaim cannot be overwritten by a loser. An empty document means
+     * another delivery took the claim.
+     *
      * @param array<string> $permissions
      */
     private function persistCaptionVtt(
@@ -1422,7 +1659,8 @@ class Videos extends Action
         string $vttPath,
         Realtime $queueForRealtime,
         Document $project,
-        array $permissions
+        array $permissions,
+        string $claimUpdatedAt = ''
     ): Document {
         $dbForProject->deleteDocuments('videosCaptionsSegments', [
             Query::equal('captionInternalId', [$caption->getSequence()]),
@@ -1454,17 +1692,36 @@ class Videos extends Action
             'text/vtt'
         );
 
-        $caption = $dbForProject->updateDocument(
-            'videosCaptions',
-            $caption->getId(),
-            new Document([
-                'targetDuration' => $duration,
-                'status' => Base::STATUS_READY,
-                'error' => null,
-                'path' => $fullPath,
-                'size' => $bytes,
-            ])
-        );
+        $ready = new Document([
+            'targetDuration' => $duration,
+            'status' => Base::STATUS_READY,
+            'error' => null,
+            'path' => $fullPath,
+            'size' => $bytes,
+        ]);
+
+        if ($claimUpdatedAt === '') {
+            $caption = $dbForProject->updateDocument(
+                'videosCaptions',
+                $caption->getId(),
+                $ready
+            );
+        } else {
+            $updated = $dbForProject->updateDocuments(
+                'videosCaptions',
+                $ready,
+                [
+                    Query::equal('$id', [$caption->getId()]),
+                    Query::equal('status', [Base::STATUS_STARTED]),
+                    Query::equal('$updatedAt', [$claimUpdatedAt]),
+                ]
+            );
+            if ($updated === 0) {
+                return new Document([]);
+            }
+            $caption = $dbForProject->getDocument('videosCaptions', $caption->getId());
+        }
+
         $this->notify(
             $queueForRealtime,
             $project,
@@ -2783,17 +3040,111 @@ class Videos extends Action
     }
 
     /**
-     * Sparse timeline state write on the video row after a claim has won.
-     * An empty result means the video was deleted mid-job and there is
-     * nothing left to update or notify. The pending→started claim itself
-     * uses updateDocuments so overlapping deliveries cannot both proceed.
+     * Whether a mid-run ownership miss is a reclaim (another delivery took
+     * startedAt) or a halt (sweeper / delete / park left this claim intact).
      */
-    private function timelineStatus(Database $dbForProject, Document $video, string $status, ?string $error = null): Document
+    private function encodeLost(Document $current, string $claimStartedAt): string
     {
-        return $dbForProject->updateDocument('videos', $video->getId(), new Document([
-            'timelineStatus' => $status,
-            'timelineError' => $error,
-        ]));
+        if (
+            !$current->isEmpty()
+            && $claimStartedAt !== ''
+            && (string) $current->getAttribute('startedAt', '') !== $claimStartedAt
+        ) {
+            return 'reclaimed';
+        }
+
+        return 'halted';
+    }
+
+    /**
+     * Removes a prior encode attempt's segment rows and device directory without
+     * deleting the rendition row. Same cleanup as Deletes::deleteVideoRendition.
+     */
+    private function wipeRenditionTrace(Database $dbForProject, Device $deviceForVideos, Document $rendition): void
+    {
+        $dbForProject->deleteDocuments('videosRenditionsSegments', [
+            Query::equal('renditionInternalId', [$rendition->getSequence()]),
+        ]);
+
+        $path = (string) $rendition->getAttribute('path', '');
+        if ($path === '') {
+            return;
+        }
+
+        try {
+            $deviceForVideos->delete($path, true);
+        } catch (\Throwable $th) {
+            $this->log(
+                'Videos worker: failed to wipe reclaimed rendition ' . $path . ': ' . $th->getMessage(),
+                'warning'
+            );
+            Span::add('rendition.reclaim_cleanup_failed', true);
+        }
+    }
+
+    /**
+     * Removes a prior caption attempt's segment rows and staged VTT without
+     * deleting the caption row.
+     */
+    private function wipeCaptionTrace(Database $dbForProject, Device $deviceForVideos, Document $caption): void
+    {
+        $dbForProject->deleteDocuments('videosCaptionsSegments', [
+            Query::equal('captionInternalId', [$caption->getSequence()]),
+        ]);
+
+        $path = (string) $caption->getAttribute('path', '');
+        if ($path === '') {
+            return;
+        }
+
+        try {
+            $deviceForVideos->delete($path);
+        } catch (\Throwable $th) {
+            $this->log(
+                'Videos worker: failed to wipe reclaimed caption ' . $path . ': ' . $th->getMessage(),
+                'warning'
+            );
+            Span::add('caption.reclaim_cleanup_failed', true);
+        }
+    }
+
+    /**
+     * Sparse timeline state write on the video row after a claim has won.
+     * Conditioned on timelineStatus=started and the ownership token so a
+     * reclaim cannot be overwritten by a loser. An empty result means the
+     * video was deleted, or another delivery took the claim.
+     *
+     * @param-out string $claimUpdatedAt
+     */
+    private function timelineStatus(
+        Database $dbForProject,
+        Document $video,
+        string $status,
+        ?string $error,
+        string &$claimUpdatedAt
+    ): Document {
+        $updated = $dbForProject->updateDocuments(
+            'videos',
+            new Document([
+                'timelineStatus' => $status,
+                'timelineError' => $error,
+            ]),
+            [
+                Query::equal('$id', [$video->getId()]),
+                Query::equal('timelineStatus', [Base::STATUS_STARTED]),
+                Query::equal('$updatedAt', [$claimUpdatedAt]),
+            ]
+        );
+        if ($updated === 0) {
+            return new Document([]);
+        }
+
+        $parked = $dbForProject->getDocument('videos', $video->getId());
+        if (!$parked->isEmpty()) {
+            $claimUpdatedAt = (string) $parked->getUpdatedAt();
+        }
+
+        return $parked;
     }
 
     /**

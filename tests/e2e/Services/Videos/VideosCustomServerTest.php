@@ -1954,6 +1954,162 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
+     * A redelivery of an in-progress encode (started or ended) reclaims the
+     * row, wipes the prior attempt's segments and files, and reaches ready
+     * again. Ready and error rows stay duplicates: the redelivery leaves them
+     * as they are.
+     */
+    public function testRedeliveryReclaimsInProgressEncode(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $profileId = $this->profile('360p')['$id'];
+        $videoId = $this->createReadyVideo()['$id'];
+
+        foreach (['started', 'ended'] as $status) {
+            $create = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+                'profileId' => $profileId,
+                'output' => 'hls',
+            ]);
+            $this->assertEquals(202, $create['headers']['status-code'], $status);
+            $renditionId = $create['body']['$id'];
+            $ready = $this->waitForRenditionTerminalState($videoId, $renditionId);
+            $this->assertEquals('ready', $ready['status'], $status);
+
+            // Seed leftover artifacts in place: status goes back to in-progress
+            // while path/segments from the finished encode remain until reclaim.
+            $this->timeTravelRendition($projectId, $renditionId, status: $status, enqueue: true);
+
+            $reclaimed = $this->waitForRenditionTerminalState($videoId, $renditionId);
+            $this->assertEquals('ready', $reclaimed['status'], $status);
+            $this->assertNotSame($ready['startedAt'], $reclaimed['startedAt'], 'the encode did not run again from ' . $status);
+            $this->assertNotEmpty($this->renditionPlaylists($videoId, $renditionId), $status);
+
+            $delete = $this->client->call(
+                Client::METHOD_DELETE,
+                '/videos/' . $videoId . '/renditions/' . $renditionId,
+                $this->headers()
+            );
+            $this->assertEquals(204, $delete['headers']['status-code'], $status);
+        }
+
+        $create = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $profileId,
+            'output' => 'hls',
+        ]);
+        $this->assertEquals(202, $create['headers']['status-code']);
+        $renditionId = $create['body']['$id'];
+        $ready = $this->waitForRenditionTerminalState($videoId, $renditionId);
+        $this->assertEquals('ready', $ready['status']);
+
+        foreach (['ready', 'error'] as $status) {
+            if ($status !== 'ready') {
+                $this->timeTravelRendition($projectId, $renditionId, status: $status);
+            }
+            $before = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $renditionId, $this->headers());
+            $this->assertEquals($status, $before['body']['status']);
+
+            $this->timeTravelRendition($projectId, $renditionId, enqueue: true);
+            $this->settleVideosQueue();
+
+            $after = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $renditionId, $this->headers());
+            $this->assertEquals(200, $after['headers']['status-code']);
+            $this->assertEquals($status, $after['body']['status']);
+            $this->assertSame($before['body']['startedAt'], $after['body']['startedAt'], 'a ' . $status . ' rendition was encoded again');
+            $this->assertSame($before['body']['$updatedAt'], $after['body']['$updatedAt'], 'a ' . $status . ' rendition was written again');
+        }
+    }
+
+    /**
+     * A redelivery of a started timeline reclaims and reaches ready again.
+     * Ready and error stay duplicates.
+     */
+    public function testRedeliveryReclaimsInProgressTimeline(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $videoId = $this->createVideo();
+        $ready = $this->waitForTimelineTerminalState($videoId);
+        $this->assertEquals('ready', $ready['timelineStatus']);
+
+        $sheets = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', $this->headers());
+        $this->assertEquals(200, $sheets['headers']['status-code']);
+        $previews = $this->timelinePreviewIds((string) $sheets['body']);
+        $this->assertNotEmpty($previews);
+
+        $this->timeTravelVideo($projectId, $videoId, status: 'started', enqueue: true);
+        $this->waitForTimelineRegenerated($videoId, $previews);
+        $reclaimed = $this->waitForTimelineTerminalState($videoId);
+        $this->assertEquals('ready', $reclaimed['timelineStatus']);
+
+        foreach (['ready', 'error'] as $status) {
+            if ($status !== 'ready') {
+                $this->timeTravelVideo($projectId, $videoId, status: $status);
+            }
+            $before = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->headers());
+            $this->assertEquals($status, $before['body']['timelineStatus']);
+
+            $this->timeTravelVideo($projectId, $videoId, enqueue: true);
+            $this->settleVideosQueue();
+
+            $after = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->headers());
+            $this->assertEquals(200, $after['headers']['status-code']);
+            $this->assertEquals($status, $after['body']['timelineStatus']);
+            $this->assertSame($before['body']['$updatedAt'], $after['body']['$updatedAt'], 'a ' . $status . ' timeline was written again');
+        }
+    }
+
+    /**
+     * A redelivery of a started caption reclaims, wipes the prior VTT, and
+     * reaches ready again. Ready and error stay duplicates.
+     */
+    public function testRedeliveryReclaimsInProgressCaption(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $videoId = $this->createReadyVideo()['$id'];
+
+        $create = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getCaptionFile()['$id'],
+            'name' => 'English',
+            'code' => 'eng',
+        ]);
+        $this->assertEquals(201, $create['headers']['status-code']);
+        $captionId = $create['body']['$id'];
+        $ready = $this->waitForCaptionTerminalState($videoId, $captionId);
+        $this->assertEquals('ready', $ready['status']);
+
+        $this->timeTravelCaption($projectId, $captionId, status: 'started', enqueue: true);
+        $reclaimed = $this->waitForCaptionTerminalState($videoId, $captionId);
+        $this->assertEquals('ready', $reclaimed['status']);
+        $this->assertNotSame($ready['$updatedAt'], $reclaimed['$updatedAt'], 'the caption was not processed again');
+
+        foreach (['ready', 'error'] as $status) {
+            if ($status !== 'ready') {
+                $this->timeTravelCaption($projectId, $captionId, status: $status);
+            }
+            $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', $this->headers());
+            $before = \array_column($list['body']['captions'] ?? [], null, '$id')[$captionId];
+            $this->assertEquals($status, $before['status']);
+
+            $this->timeTravelCaption($projectId, $captionId, enqueue: true);
+            $this->settleVideosQueue();
+
+            $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', $this->headers());
+            $after = \array_column($list['body']['captions'] ?? [], null, '$id')[$captionId];
+            $this->assertEquals($status, $after['status']);
+            $this->assertSame($before['$updatedAt'], $after['$updatedAt'], 'a ' . $status . ' caption was written again');
+        }
+    }
+
+    /**
+     * Waits until the videos queue has taken what was enqueued before this
+     * call: a job queued now is only reached after those.
+     */
+    private function settleVideosQueue(): void
+    {
+        $this->waitForTimelineTerminalState($this->createVideo());
+    }
+
+    /**
      * A project accepts VIDEO_LIMIT video creates per ENCODE_PERIOD. The next
      * create is rate-limited. Uses a fresh project so exhausting the project-scoped
      * counter does not break later createVideo() calls in this suite.
@@ -4601,76 +4757,78 @@ final class VideosCustomServerTest extends Scope
         string $projectId,
         string $renditionId,
         ?string $status = null,
-        ?string $updatedAt = null
+        ?string $updatedAt = null,
+        bool $enqueue = false
     ): void {
-        $command = (new Command('docker'))
-            ->argument('exec')
-            ->argument('appwrite')
-            ->argument('task-time-travel')
-            ->argument('--projectId=' . $projectId)
-            ->argument('--resourceType=videos_rendition')
-            ->argument('--resourceId=' . $renditionId);
-
-        if ($status !== null) {
-            $command->argument('--status=' . $status);
-        }
-        if ($updatedAt !== null) {
-            $command->argument('--updatedAt=' . $updatedAt);
-        }
-
-        $stdout = '';
-        $stderr = '';
-        $code = Console::execute($command, '', $stdout, $stderr);
-        $this->assertSame(0, $code, "Time-travel command failed with code $code: $stderr ($stdout)");
+        $this->timeTravel(
+            $projectId,
+            'videos_rendition',
+            $renditionId,
+            $status,
+            $updatedAt,
+            $enqueue
+        );
     }
 
     private function timeTravelVideo(
         string $projectId,
         string $videoId,
         ?string $status = null,
-        ?string $updatedAt = null
+        ?string $updatedAt = null,
+        bool $enqueue = false
     ): void {
-        $command = (new Command('docker'))
-            ->argument('exec')
-            ->argument('appwrite')
-            ->argument('task-time-travel')
-            ->argument('--projectId=' . $projectId)
-            ->argument('--resourceType=video')
-            ->argument('--resourceId=' . $videoId);
-
         // Seeds timelineStatus: a video has no status of its own.
-        if ($status !== null) {
-            $command->argument('--status=' . $status);
-        }
-        if ($updatedAt !== null) {
-            $command->argument('--updatedAt=' . $updatedAt);
-        }
-
-        $stdout = '';
-        $stderr = '';
-        $code = Console::execute($command, '', $stdout, $stderr);
-        $this->assertSame(0, $code, "Time-travel command failed with code $code: $stderr ($stdout)");
+        $this->timeTravel(
+            $projectId,
+            'video',
+            $videoId,
+            $status,
+            $updatedAt,
+            $enqueue
+        );
     }
 
     private function timeTravelCaption(
         string $projectId,
         string $captionId,
         ?string $status = null,
-        ?string $updatedAt = null
+        ?string $updatedAt = null,
+        bool $enqueue = false
+    ): void {
+        $this->timeTravel(
+            $projectId,
+            'videos_caption',
+            $captionId,
+            $status,
+            $updatedAt,
+            $enqueue
+        );
+    }
+
+    private function timeTravel(
+        string $projectId,
+        string $resourceType,
+        string $resourceId,
+        ?string $status = null,
+        ?string $updatedAt = null,
+        bool $enqueue = false
     ): void {
         $command = (new Command('docker'))
             ->argument('exec')
             ->argument('appwrite')
             ->argument('task-time-travel')
             ->argument('--projectId=' . $projectId)
-            ->argument('--resourceType=videos_caption')
-            ->argument('--resourceId=' . $captionId);
+            ->argument('--resourceType=' . $resourceType)
+            ->argument('--resourceId=' . $resourceId);
 
         if ($status !== null) {
             $command->argument('--status=' . $status);
         }
         if ($updatedAt !== null) {
             $command->argument('--updatedAt=' . $updatedAt);
+        }
+        if ($enqueue) {
+            $command->argument('--enqueue=true');
         }
 
         $stdout = '';
