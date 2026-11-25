@@ -135,14 +135,6 @@ A few details of the email provider are worth knowing before your first campaign
 
 For tests without a real inbox, [Bird's mail sandbox](https://bird.com/docs/guides/email/testing-sandbox) accepts addresses such as `delivered@messagebird.dev` through the normal API.
 
-# How the Bird connection works
-
-**Connect with Bird** runs an OAuth2 flow from the Console to Bird. A Bird authorization grants access to one workspace rather than to a person, so Appwrite links it to the Console account you're signed in to and never uses it to sign anyone in.
-
-The authorization is broader than any key it creates, because listing domains and senders and creating keys need it. That access stays on your Console account. Your project only ever stores the single-scope key Appwrite creates, which you can find in Bird by its `Appwrite SMTP` or `Appwrite SMS` name.
-
-Keys don't linger either. If you leave the provider wizard without creating the provider, Appwrite revokes the key it generated, and clicking **Generate API key** again revokes the previous one. Disconnecting Bird from the SMTP tab removes the Bird identity from your Console account without changing settings already saved on your projects.
-
 # When to reach for Bird
 
 - **Your team already runs email or SMS on Bird.** Keep your verified domains, senders, and delivery reporting in one place, and let Appwrite send through them.
