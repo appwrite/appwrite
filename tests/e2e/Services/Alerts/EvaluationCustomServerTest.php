@@ -96,8 +96,10 @@ final class EvaluationCustomServerTest extends Scope
             $this->assertSame(200, $this->client->call(Client::METHOD_GET, '/monitors', $this->headers())['headers']['status-code']);
         }
 
+        // Alerts, events and pushes name the monitor by the ID the project chose.
+        $monitorId = 'egress-' . \uniqid();
         $created = $this->client->call(Client::METHOD_POST, '/monitors/usage', $this->headers(), [
-            'monitorId' => 'unique()',
+            'monitorId' => $monitorId,
             'name' => $name,
             'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
             'window' => 3600,
@@ -106,7 +108,7 @@ final class EvaluationCustomServerTest extends Scope
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
         $this->assertSame('critical', $created['body']['severity']);
-        $monitorId = $created['body']['$id'];
+        $this->assertSame($monitorId, $created['body']['$id']);
 
         /**
          * Test for SUCCESS
@@ -564,6 +566,7 @@ final class EvaluationCustomServerTest extends Scope
             $this->assertStringStartsWith('[Firing] ' . $name . ' · ', $email['subject']);
         });
         $alert = $this->getAlert($firing['alertId']);
+        $this->assertSame($monitorId, $alert['monitorId']);
         $this->assertSame($escalation['body']['$id'], $alert['escalationId']);
         $this->assertSame(1, $alert['escalationStep']);
         $this->assertNotNull($alert['escalatesAt']);
