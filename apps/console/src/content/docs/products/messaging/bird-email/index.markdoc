@@ -167,6 +167,7 @@ $result = $messaging->createEmail('<MESSAGE_ID>', '<SUBJECT>', '<CONTENT>');
 ```
 ```python
 from appwrite.client import Client
+from appwrite.services.messaging import Messaging
 
 client = Client()
 
