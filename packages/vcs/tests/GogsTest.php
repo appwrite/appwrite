@@ -11,12 +11,9 @@ use Utopia\VCS\Adapter\Git\Gogs;
 
 final class GogsTest extends GiteaBase
 {
-    #[\Override]
     protected static string $defaultBranch = 'master';
 
-    #[\Override]
     protected static string $eventHeader = 'x-gogs-event';
-    #[\Override]
     protected static string $signatureHeader = 'x-gogs-signature';
 
     protected function createAdapter(): Gogs

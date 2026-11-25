@@ -20,19 +20,13 @@ final class BitbucketTest extends Base
     private const string FORK_UUID = '{99999999-2222-3333-4444-555555555555}';
 
     // Bitbucket names an empty repository's first branch 'master'
-    #[\Override]
     protected static string $defaultBranch = 'master';
-    #[\Override]
     protected static string $eventHeader = 'x-event-key';
-    #[\Override]
     protected static string $signatureHeader = 'x-hub-signature';
-    #[\Override]
     protected static string $pushEventName = 'repo:push';
-    #[\Override]
     protected static string $pullRequestEventName = 'pullrequest:created';
 
     // Bitbucket's push payload carries no file lists at all
-    #[\Override]
     protected static bool $reportsAffectedFilesInPushEvent = false;
 
     protected function createAdapter(): Bitbucket

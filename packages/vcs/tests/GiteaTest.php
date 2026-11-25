@@ -10,9 +10,7 @@ use Utopia\VCS\Adapter\Git\Gitea;
 
 final class GiteaTest extends GiteaBase
 {
-    #[\Override]
     protected static string $eventHeader = 'x-gitea-event';
-    #[\Override]
     protected static string $signatureHeader = 'x-gitea-signature';
 
     protected function createAdapter(): Gitea

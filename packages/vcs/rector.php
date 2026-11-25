@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
+use Rector\Php85\Rector\Property\AddOverrideAttributeToOverriddenPropertiesRector;
 
 return RectorConfig::configure()
     ->withPaths([__DIR__ . '/src', __DIR__ . '/tests'])
@@ -13,4 +14,5 @@ return RectorConfig::configure()
         typeDeclarations: true,
         earlyReturn: true,
         phpunitCodeQuality: true,
-    );
+    )
+    ->withSkip([AddOverrideAttributeToOverriddenPropertiesRector::class]);

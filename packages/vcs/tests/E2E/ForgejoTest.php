@@ -11,9 +11,7 @@ use Utopia\VCS\Tests\Services;
 
 final class ForgejoTest extends GiteaBase
 {
-    #[\Override]
     protected static string $owner = '';
-    #[\Override]
     protected static string $avatarDomain = '/avatars/';
 
     protected function setupAdapter(): void

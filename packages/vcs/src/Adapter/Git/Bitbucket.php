@@ -85,7 +85,6 @@ class Bitbucket extends Git
         'pullrequest:rejected' => 'closed',
     ];
 
-    #[\Override]
     protected string $endpoint = 'https://api.bitbucket.org/2.0';
 
     /**
@@ -93,7 +92,6 @@ class Bitbucket extends Git
      */
     protected string $bitbucketUrl = 'https://bitbucket.org';
 
-    #[\Override]
     protected string $accessToken;
 
     /** @var array<string, mixed>|null */
@@ -104,7 +102,6 @@ class Bitbucket extends Git
      *
      * @var array<string, string>
      */
-    #[\Override]
     protected $headers = ['content-type' => 'application/json'];
 
     public function __construct(protected Cache $cache)

@@ -11,7 +11,6 @@ use Utopia\VCS\Tests\Services;
 
 final class GiteaTest extends GiteaBase
 {
-    #[\Override]
     protected static string $owner = '';
 
     protected function setupAdapter(): void

@@ -13,16 +13,13 @@ class GitLab extends Git
     public const CONTENTS_FILE = 'file';
     public const CONTENTS_DIRECTORY = 'dir';
 
-    #[\Override]
     protected string $endpoint = 'http://gitlab:80/api/v4';
     protected string $gitlabUrl = 'http://gitlab:80';
-    #[\Override]
     protected string $accessToken;
 
     /**
      * @var array<string, string>
      */
-    #[\Override]
     protected $headers = ['content-type' => 'application/json'];
 
     public function __construct(protected Cache $cache)

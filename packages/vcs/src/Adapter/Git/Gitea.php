@@ -15,10 +15,8 @@ class Gitea extends Git
 
     public const CONTENTS_DIRECTORY = 'dir';
 
-    #[\Override]
     protected string $endpoint = 'http://gitea:3000/api/v1';
 
-    #[\Override]
     protected string $accessToken;
 
     protected ?string $refreshToken = null;
@@ -30,7 +28,6 @@ class Gitea extends Git
      *
      * @var array<string, string>
      */
-    #[\Override]
     protected $headers = ['content-type' => 'application/json'];
 
     public function __construct(protected Cache $cache)
