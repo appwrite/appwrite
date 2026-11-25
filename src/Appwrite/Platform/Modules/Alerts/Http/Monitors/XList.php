@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Alerts\Http\Monitors;
 
+use Appwrite\Alert\Monitors as MonitorIds;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Alerts\Base;
 use Appwrite\SDK\AuthType;
@@ -17,6 +18,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Query\Method as QueryMethod;
 use Utopia\Validator\Boolean;
 
 class XList extends Base
@@ -92,12 +94,9 @@ class XList extends Base
             }
 
             $monitorId = $cursor->getValue();
-            $cursorDocument = $authorization->skip(fn () => $dbForPlatform->findOne('monitors', [
-                Query::equal('monitorId', [$monitorId]),
-                Query::equal('projectInternalId', [$projectInternalId]),
-            ]));
+            $cursorDocument = $authorization->skip(fn () => $dbForPlatform->getDocument('monitors', MonitorIds::id($projectInternalId, $monitorId)));
 
-            if ($cursorDocument->isEmpty()) {
+            if ($cursorDocument->isEmpty() || $cursorDocument->getAttribute('projectInternalId') !== $projectInternalId) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Monitor '{$monitorId}' for the 'cursor' value not found.");
             }
 
@@ -127,14 +126,16 @@ class XList extends Base
      */
     private function chosenIds(array $queries): array
     {
-        foreach ($queries as $query) {
-            if (\in_array($query->getMethod(), Query::LOGICAL_TYPES, true)) {
-                $query->setValues($this->chosenIds($query->getValues()));
-            } elseif ($query->getAttribute() === '$id') {
-                $query->setAttribute('monitorId');
+        return \array_map(function (Query $query): Query {
+            $method = $query->getMethod();
+            if ($method === QueryMethod::And || $method === QueryMethod::Or) {
+                return (clone $query)->setValues($this->chosenIds($query->getValues()));
             }
-        }
+            if ($query->getAttribute() === '$id') {
+                return (clone $query)->setAttribute('monitorId');
+            }
 
-        return $queries;
+            return $query;
+        }, $queries);
     }
 }

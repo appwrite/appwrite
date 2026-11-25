@@ -16,14 +16,14 @@ final class UnsubscribeTest extends TestCase
     {
         $unsubscribe = new Unsubscribe([self::SECRET]);
 
-        $this->assertSame(['userId' => 'ana', 'monitorId' => 'egress', 'scope' => '7', 'type' => 'usage'], $unsubscribe->verify($unsubscribe->token('ana', 'egress', 'usage', scope: '7')));
+        $this->assertSame(['userId' => 'ana', 'monitorId' => 'egress', 'scope' => '7', 'type' => 'usage'], $unsubscribe->verify($unsubscribe->token('ana', 'egress', 'usage', '7')));
     }
 
     public function testTokenExpires(): void
     {
         $unsubscribe = new Unsubscribe([self::SECRET], ttl: 3600);
         $now = 1_800_000_000;
-        $token = $unsubscribe->token('ana', 'egress', 'usage', $now);
+        $token = $unsubscribe->token('ana', 'egress', 'usage', '7', $now);
 
         $this->assertSame('ana', $unsubscribe->verify($token, $now + 3599)['userId']);
 
@@ -33,14 +33,14 @@ final class UnsubscribeTest extends TestCase
 
     public static function forged(): \Iterator
     {
-        $token = (new Unsubscribe([self::SECRET]))->token('ana', 'egress', 'usage');
+        $token = (new Unsubscribe([self::SECRET]))->token('ana', 'egress', 'usage', '7');
         [$header, $payload, $signature] = \explode('.', $token);
         $claims = \json_decode((string) \base64_decode(\strtr($payload, '-_', '+/')), true);
         $encode = fn (array $claims): string => \rtrim(\strtr(\base64_encode((string) \json_encode($claims)), '+/', '-_'), '=');
 
         yield 'another user' => [$header . '.' . $encode(['userId' => 'ben'] + $claims) . '.' . $signature];
         yield 'another monitor' => [$header . '.' . $encode(['monitorId' => 'storage'] + $claims) . '.' . $signature];
-        yield 'another secret' => [(new Unsubscribe(['another-secret']))->token('ana', 'egress', 'usage')];
+        yield 'another secret' => [(new Unsubscribe(['another-secret']))->token('ana', 'egress', 'usage', '7')];
         yield 'not a token' => ['not-a-token'];
         yield 'empty' => [''];
     }

@@ -228,7 +228,7 @@ $platformCollections = [
         'indexes' => [
             Index::key(key: '_key_teamInternalId', attributes: ['teamInternalId']),
             Index::key(key: '_key_projectInternalId', attributes: ['projectInternalId']),
-            Index::key(key: '_key_project_monitorId', attributes: ['projectInternalId', 'monitorId']),
+            Index::key(key: '_key_monitorId_project', attributes: ['monitorId', 'projectInternalId']),
             Index::key(key: '_key_resource', attributes: ['resourceType', 'resourceInternalId']),
             Index::key(key: '_key_region_enabled', attributes: ['region', 'enabled']),
             Index::key(key: '_key_escalationId', attributes: ['escalationId']),

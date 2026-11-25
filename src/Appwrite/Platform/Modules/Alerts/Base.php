@@ -75,7 +75,6 @@ class Base extends Action
         $monitorId = $monitorId === 'unique()' ? Id::unique() : $monitorId;
 
         $monitor = new Document([
-            '$id' => Monitors::id((string) $project->getSequence(), $monitorId),
             '$permissions' => [],
             'monitorId' => $monitorId,
             'name' => $name,
@@ -95,6 +94,7 @@ class Base extends Action
             'status' => Status::Ok->value,
             'search' => $this->search($monitorId, $name, $parsed->metric, $parsed->resourceType, $resourceId),
         ]);
+        $monitor->setAttribute('$id', Monitors::id(Monitors::scope($monitor), $monitorId));
 
         try {
             $monitor = $authorization->skip(fn () => $dbForPlatform->createDocument('monitors', $monitor));

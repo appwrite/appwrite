@@ -18,11 +18,21 @@ readonly class Monitors
     private const int BATCH = 100;
 
     /**
-     * The stored `$id` of a monitor whose chosen ID is `$monitorId`, scoped by its project's internal ID, or `team:<teamInternalId>` for a monitor without a project.
+     * The stored `$id` of the monitor with the chosen ID `$monitorId` in `$scope`.
      */
     public static function id(string $scope, string $monitorId): string
     {
         return \md5($scope . ':' . $monitorId);
+    }
+
+    /**
+     * What a monitor's chosen ID is unique within: its project, or its team when it has none.
+     */
+    public static function scope(Document $monitor): string
+    {
+        $projectInternalId = (string) $monitor->getAttribute('projectInternalId', '');
+
+        return $projectInternalId !== '' ? $projectInternalId : 'team:' . $monitor->getAttribute('teamInternalId', '');
     }
 
     public function __construct(private Database $dbForPlatform)

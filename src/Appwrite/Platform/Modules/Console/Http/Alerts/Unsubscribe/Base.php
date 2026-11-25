@@ -94,7 +94,8 @@ abstract class Base extends Action
 
     /**
      * The user and the monitor the token names. A monitor deleted since the
-     * email was sent comes back holding only its type, with an empty ID.
+     * email was sent, or in a team the user no longer belongs to, comes back
+     * holding only its type, with an empty ID.
      *
      * @return array{0: Document, 1: Document}
      */
@@ -115,36 +116,27 @@ abstract class Base extends Action
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $monitor = $monitorScope !== ''
-            ? $authorization->skip(fn () => $dbForPlatform->getDocument('monitors', Monitors::id($monitorScope, $monitorId)))
-            : $this->legacyMonitor($user, $monitorId, $dbForPlatform, $authorization);
+        $monitor = $authorization->skip(fn () => $monitorScope !== ''
+            ? $dbForPlatform->getDocument('monitors', Monitors::id($monitorScope, $monitorId))
+            // Issued before monitor IDs were scoped, when the chosen ID was unique across projects.
+            : $dbForPlatform->findOne('monitors', [
+                Query::equal('monitorId', [$monitorId]),
+                Query::orderAsc('$sequence'),
+            ]));
+
+        if (!$monitor->isEmpty()) {
+            $membership = $authorization->skip(fn () => $dbForPlatform->findOne('memberships', [
+                Query::equal('teamInternalId', [(string) $monitor->getAttribute('teamInternalId')]),
+                Query::equal('userInternalId', [(string) $user->getSequence()]),
+                Query::equal('confirm', [true]),
+            ]));
+            if ($membership->isEmpty()) {
+                $monitor = new Document();
+            }
+        }
 
         // The type comes from the token, so a deleted monitor's link still reaches its type-wide opt-out.
         return [$user, $monitor->isEmpty() ? new Document(['$id' => '', 'type' => $type]) : $monitor];
-    }
-
-    /**
-     * A token issued before monitor IDs were scoped names the monitor by the ID it was
-     * created with, then unique across projects, so the oldest monitor holding it is that
-     * one, provided the user still belongs to its organization.
-     */
-    private function legacyMonitor(Document $user, string $monitorId, Database $dbForPlatform, Authorization $authorization): Document
-    {
-        $monitor = $authorization->skip(fn () => $dbForPlatform->findOne('monitors', [
-            Query::equal('monitorId', [$monitorId]),
-            Query::orderAsc('$sequence'),
-        ]));
-        if ($monitor->isEmpty()) {
-            return $monitor;
-        }
-
-        $membership = $authorization->skip(fn () => $dbForPlatform->findOne('memberships', [
-            Query::equal('teamInternalId', [(string) $monitor->getAttribute('teamInternalId')]),
-            Query::equal('userInternalId', [(string) $user->getSequence()]),
-            Query::equal('confirm', [true]),
-        ]));
-
-        return $membership->isEmpty() ? new Document() : $monitor;
     }
 
     /**

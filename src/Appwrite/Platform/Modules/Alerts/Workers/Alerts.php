@@ -117,6 +117,7 @@ class Alerts extends Action
 
             return;
         }
+        Span::add('monitor.id', $monitor->getAttribute('monitorId') ?: $monitor->getId());
         if (!$monitor->getAttribute('enabled', false) || $monitor->getAttribute('projectInternalId') !== (string) $project->getSequence()) {
             return;
         }
@@ -306,7 +307,7 @@ class Alerts extends Action
                 '$id' => $alertId,
                 '$permissions' => [],
                 'name' => (string) $monitor->getAttribute('name'),
-                'monitorId' => (string) $monitor->getAttribute('monitorId'),
+                'monitorId' => $monitor->getAttribute('monitorId') ?: $monitor->getId(),
                 'monitorInternalId' => (string) $monitor->getSequence(),
                 'teamId' => (string) $project->getAttribute('teamId', ''),
                 'teamInternalId' => (string) $project->getAttribute('teamInternalId', ''),
@@ -326,7 +327,7 @@ class Alerts extends Action
                 'value' => $value,
                 'peak' => $value,
                 'notifications' => 0,
-                'search' => \implode(' ', \array_filter([$alertId, (string) $monitor->getAttribute('monitorId'), (string) $monitor->getAttribute('name'), (string) $monitor->getAttribute('metric')])),
+                'search' => \implode(' ', \array_filter([$alertId, $monitor->getAttribute('monitorId') ?: $monitor->getId(), (string) $monitor->getAttribute('name'), (string) $monitor->getAttribute('metric')])),
             ]));
         } catch (Duplicate) {
             return $dbForPlatform->getDocument('monitorAlerts', $alertId);
@@ -510,7 +511,7 @@ class Alerts extends Action
             'since' => $alert->isEmpty() ? null : new \DateTimeImmutable($alert->getCreatedAt()),
             'cooldown' => (int) $monitor->getAttribute('cooldown', 0),
             // The monitor's drawer, which pauses it from its header.
-            'pauseUrl' => $consoleUrl . $this->path($project) . '/monitors?monitor=' . $monitor->getAttribute('monitorId'),
+            'pauseUrl' => $consoleUrl . $this->path($project) . '/monitors?monitor=' . ($monitor->getAttribute('monitorId') ?: $monitor->getId()),
         ];
 
         foreach ($members as [$user]) {
@@ -535,7 +536,7 @@ class Alerts extends Action
                 $recipients[] = ['address' => (string) $user->getAttribute('email'), 'channel' => NOTIFICATION_TYPE_EMAIL, ...$resource];
             }
 
-            $token = $unsubscribe->token($user->getId(), (string) $monitor->getAttribute('monitorId'), $type, scope: (string) $monitor->getAttribute('projectInternalId'));
+            $token = $unsubscribe->token($user->getId(), $monitor->getAttribute('monitorId') ?: $monitor->getId(), $type, Monitors::scope($monitor));
             $email = new Email(...$notice, timeZone: $this->timeZone($user));
 
             $this->publish($publisherForNotifications, new NotificationMessage(
@@ -577,7 +578,7 @@ class Alerts extends Action
                         'severity' => $alert->getAttribute('severity') ?: Severity::Warning->value,
                         'status' => $status === Status::Firing ? State::Firing->value : State::Resolved->value,
                         'alertId' => $alert->getId(),
-                        'monitorId' => (string) $monitor->getAttribute('monitorId'),
+                        'monitorId' => $monitor->getAttribute('monitorId') ?: $monitor->getId(),
                         'organizationId' => (string) $project->getAttribute('teamId', ''),
                         'projectId' => $project->getId(),
                         'url' => $notice['url'],
@@ -614,9 +615,10 @@ class Alerts extends Action
             return;
         }
 
-        $monitor = $dbForPlatform->getDocument('monitors', Monitors::id((string) $alert->getAttribute('projectInternalId'), (string) $alert->getAttribute('monitorId')));
-        // A monitor since recreated under the same ID is not the one that opened the alert.
-        if ($alert->getAttribute('status') !== State::Firing->value || $alert->getAttribute('acknowledgedAt') !== null || $monitor->isEmpty() || (string) $monitor->getSequence() !== (string) $alert->getAttribute('monitorInternalId')) {
+        $monitor = $dbForPlatform->findOne('monitors', [
+            Query::equal('$sequence', [(string) $alert->getAttribute('monitorInternalId')]),
+        ]);
+        if ($alert->getAttribute('status') !== State::Firing->value || $alert->getAttribute('acknowledgedAt') !== null || $monitor->isEmpty()) {
             $escalations->stop($alert);
 
             return;

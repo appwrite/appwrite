@@ -48,10 +48,10 @@ readonly class Unsubscribe
     }
 
     /**
+     * @param string $scope what the monitor's chosen ID is unique within, as `Monitors::scope()` gives it
      * @param ?int $now Unix time the token is issued at; the current time when null
-     * @param string $scope what the monitor's stored ID is scoped by, as `Monitors::id()` takes it; empty in tokens issued before monitor IDs were scoped
      */
-    public function token(string $userId, string $monitorId, string $type, ?int $now = null, string $scope = ''): string
+    public function token(string $userId, string $monitorId, string $type, string $scope, ?int $now = null): string
     {
         return $this->jwt($this->secrets[0] ?? '', $now)->encode([
             'userId' => $userId,
