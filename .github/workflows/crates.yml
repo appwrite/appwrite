@@ -31,10 +31,8 @@ jobs:
           name="${GITHUB_REF_NAME#rs/}"
           version="${name##*/}"
           name="${name%/*}"
-          for parent in crates/utopia crates/support; do
-            if [ -f "$parent/$name/Cargo.toml" ]; then directory="$parent/$name"; fi
-          done
-          [ -n "${directory:-}" ] || { echo "no crate named $name" >&2; exit 1; }
+          directory="crates/utopia/$name"
+          [ -f "$directory/Cargo.toml" ] || { echo "no crate named $name" >&2; exit 1; }
           package=$(cargo metadata --no-deps --format-version 1 |
             jq -r --arg manifest "$PWD/$directory/Cargo.toml" '.packages[] | select(.manifest_path == $manifest) | .name')
           stated=$(cargo metadata --no-deps --format-version 1 |

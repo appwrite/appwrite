@@ -11,12 +11,12 @@ against.
 Usage (from a php-src checkout of the PHP version the dev image runs,
 e.g. tag php-8.5.12):
 
-    python3 crates/support/php-std/data/timezonedb.py /path/to/php-src/ext/date/lib
+    python3 crates/utopia/php-std/data/timezonedb.py /path/to/php-src/ext/date/lib
 
 Writes:
-    crates/support/php-std/data/timezonedb.bin             the slim data blob
-    crates/support/php-std/src/datetime/tzindex.rs         version and index
-    crates/support/php-std/src/datetime/abbreviations.rs  timezonemap.h, fallbackmap.h
+    crates/utopia/php-std/data/timezonedb.bin             the slim data blob
+    crates/utopia/php-std/src/datetime/tzindex.rs         version and index
+    crates/utopia/php-std/src/datetime/abbreviations.rs  timezonemap.h, fallbackmap.h
 """
 
 import os

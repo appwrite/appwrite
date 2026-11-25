@@ -10,7 +10,7 @@
  * `<name>/<version>`, which pushes `<version>` to the mirror for Packagist to
  * pick up. See rfc/monorepo.md.
  *
- * A Rust crate in crates/utopia/<name> or crates/support/<name> is listed and released
+ * A Rust crate in crates/utopia/<name> is listed and released
  * under the name `rs/<name>`: `rs/<name>/<version>` tags it, and crates.yml publishes that
  * version to crates.io and to the crate's mirror at github.com/utopia-rs/<name>.
  */
@@ -123,8 +123,7 @@ function packages(): array
  */
 function crates(): array
 {
-    $manifests = [...(glob('crates/utopia/*/Cargo.toml') ?: []), ...(glob('crates/support/*/Cargo.toml') ?: [])];
-    $names = array_map(fn (string $manifest) => 'rs/' . basename(dirname($manifest)), $manifests);
+    $names = array_map(fn (string $manifest) => 'rs/' . basename(dirname($manifest)), glob('crates/utopia/*/Cargo.toml') ?: []);
     sort($names);
 
     return $names;
@@ -138,13 +137,9 @@ function directory(string $name): ?string
     if (!str_starts_with($name, 'rs/')) {
         return is_dir("packages/{$name}") ? "packages/{$name}" : null;
     }
-    foreach (['crates/utopia/', 'crates/support/'] as $parent) {
-        if (is_file($parent . substr($name, 3) . '/Cargo.toml')) {
-            return $parent . substr($name, 3);
-        }
-    }
+    $directory = 'crates/utopia/' . substr($name, 3);
 
-    return null;
+    return is_file("{$directory}/Cargo.toml") ? $directory : null;
 }
 
 function remote(string $package): string

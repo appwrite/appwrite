@@ -4,13 +4,13 @@
 # kept out of `packages/` (that directory is reserved for Composer packages and
 # is wired into the PHP CI, autoloader and Docker image).
 #
-#   crates/utopia/<name>    Generic Utopia libraries (Rust equivalents of packages/<name>).
-#   crates/support/<name>   Support crates shared by Utopia crates: php-std (PHP engine semantics).
+#   crates/utopia/<name>    Generic Utopia libraries (Rust equivalents of packages/<name>), and
+#                           php-std, the PHP engine semantics they share.
 #   crates/extension        The `utopia` PHP extension: Utopia crates as the PHP classes of
 #                           packages/<name>, so PHP runs the Rust implementation.
 [workspace]
 resolver = "3"
-members = ["crates/utopia/*", "crates/support/*", "crates/extension"]
+members = ["crates/utopia/*", "crates/extension"]
 
 [workspace.package]
 version = "0.1.0"
@@ -18,12 +18,12 @@ edition = "2024"
 rust-version = "1.97"
 license = "BSD-3-Clause"
 repository = "https://github.com/appwrite/appwrite"
-# The crates under crates/utopia and crates/support are published to crates.io. See rfc/monorepo.md.
+# The crates under crates/utopia are published to crates.io. See rfc/monorepo.md.
 publish = true
 
 [workspace.dependencies]
 # The version is what a published crate asks crates.io for; this checkout uses the path.
-php-std = { package = "utopia-php-std", path = "crates/support/php-std", version = "0.1.0" }
+php-std = { package = "utopia-php-std", path = "crates/utopia/php-std", version = "0.1.0" }
 utopia-auth = { path = "crates/utopia/auth" }
 utopia-balancer = { path = "crates/utopia/balancer" }
 utopia-compression = { path = "crates/utopia/compression" }

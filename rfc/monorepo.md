@@ -149,7 +149,7 @@ RUN composer dump-autoload --optimize --no-dev --no-scripts --no-plugins
 
 ### Rust crates
 
-The crates in `crates/utopia/<name>` and `crates/support/<name>` are published to crates.io, not split. Inside the workspace they inherit their version, edition and dependencies from the root `Cargo.toml`; `cargo publish` writes the standalone manifest a published crate needs, so nothing here does.
+The crates in `crates/utopia/<name>` are published to crates.io, not split. Inside the workspace they inherit their version, edition and dependencies from the root `Cargo.toml`; `cargo publish` writes the standalone manifest a published crate needs, so nothing here does.
 
 ```bash
 bin/monorepo list                      # packages and crates (rs/<name>), with their latest release tag
