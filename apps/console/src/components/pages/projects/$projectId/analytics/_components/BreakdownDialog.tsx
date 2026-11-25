@@ -50,7 +50,7 @@ export type BreakdownDialogProps = {
   tabs: BreakdownTab[]
   initialTabId?: string
   /** Which measure ranks and sizes the rows. */
-  valueKey?: 'visitors' | 'events'
+  valueKey?: 'visitors' | 'events' | 'sessions'
   valueLabel?: string
   renderLeading?: (
     entry: Models.AnalyticsMetric,
@@ -69,6 +69,8 @@ export type BreakdownDialogProps = {
   rowFilter?: (entry: Models.AnalyticsMetric) => boolean
   /** External URL for a row (pages, hostnames): adds an open-in-new icon. */
   rowHref?: (value: string, tabId: string) => string | undefined
+  /** Hover hint for the row link (e.g. "View user"). */
+  rowHrefTitle?: string
 }
 
 /**
@@ -100,6 +102,7 @@ export function BreakdownDialog({
   renderBadge,
   rowFilter,
   rowHref,
+  rowHrefTitle,
 }: BreakdownDialogProps) {
   const t = useT()
   const [activeTab, setActiveTab] = useState(initialTabId ?? tabs[0]?.id ?? '')
@@ -151,17 +154,19 @@ export function BreakdownDialog({
     // Same rule as the cards: unknown rows are dropped before ranking.
     const breakdown = (data?.breakdown ?? []).filter(
       (entry) =>
-        isKnownBreakdownValue(entry.value) && (!rowFilter || rowFilter(entry)),
+        (isKnownBreakdownValue(entry.value) ||
+          (!!active.blankLabel && !entry.value?.trim())) &&
+        (!rowFilter || rowFilter(entry)),
     )
     return valueKey === 'visitors'
       ? breakdown
       : [...breakdown].sort((a, b) => (b[valueKey] ?? 0) - (a[valueKey] ?? 0))
-  }, [data, valueKey, rowFilter])
+  }, [data, valueKey, rowFilter, active.blankLabel])
 
   const labelFor = (entry: Models.AnalyticsMetric) =>
     entry.value
       ? (formatLabel?.(entry.value, active.id) ?? entry.value)
-      : t('Unknown')
+      : t(active.blankLabel ?? 'Unknown')
 
   const { filtered, columnTotal, max } = useMemo(() => {
     const total = rows.reduce((sum, entry) => sum + (entry[valueKey] ?? 0), 0)
@@ -234,7 +239,12 @@ export function BreakdownDialog({
           <span className="flex items-center gap-3">
             <span>{t('Share')}</span>
             <span className="min-w-[50px] text-end">
-              {valueLabel ?? (valueKey === 'events' ? t('Events') : t('Visitors'))}
+              {valueLabel ??
+                (valueKey === 'events'
+                  ? t('Events')
+                  : valueKey === 'sessions'
+                    ? t('Visits')
+                    : t('Visitors'))}
             </span>
           </span>
         </div>
@@ -311,18 +321,10 @@ export function BreakdownDialog({
                         ? undefined
                         : rowHref?.(entry.value, active.id)
                     }
+                    hrefTitle={rowHrefTitle && t(rowHrefTitle)}
                   />
                 )
-                return onRowClick && entry.value ? (
-                  <button
-                    key={`${entry.value}-${index}`}
-                    type="button"
-                    className="block w-full cursor-pointer text-start"
-                    onClick={() => onRowClick(entry, active.id)}
-                  >
-                    {row}
-                  </button>
-                ) : entry.value ? (
+                return entry.value ? (
                   <AnalyticsValueMenu
                     key={`${entry.value}-${index}`}
                     dimension={active.dimension}
@@ -331,7 +333,17 @@ export function BreakdownDialog({
                     label={labelFor(entry)}
                     href={rowHref?.(entry.value, active.id)}
                   >
-                    <div>{row}</div>
+                    {onRowClick ? (
+                      <button
+                        type="button"
+                        className="block w-full cursor-pointer text-start"
+                        onClick={() => onRowClick(entry, active.id)}
+                      >
+                        {row}
+                      </button>
+                    ) : (
+                      <div>{row}</div>
+                    )}
                   </AnalyticsValueMenu>
                 ) : (
                   <div key={`${entry.value}-${index}`}>{row}</div>

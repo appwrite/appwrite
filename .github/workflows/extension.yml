@@ -1,4 +1,4 @@
-name: Extension
+name: Extension image
 
 # Publishes the utopia extension on its own as appwrite/utopia-extension, so PHP
 # services outside the Appwrite image (Edge, DNS) load the same build the
@@ -6,12 +6,17 @@ name: Extension
 #
 #   COPY --from=appwrite/utopia-extension:<version> /utopia.so /usr/local/lib/php/utopia.so
 #
-# A release publishes <version> and latest; main publishes main. A manual run
+# A release publishes <version> and latest; main publishes main and, for a
+# consumer that vendors this repository at a commit, the build-<hash> that
+# crates/extension/tag.sh prints for the tree. A manual run
 # on any other branch only builds and smoke-tests, so an unreviewed ref can
 # never replace a published tag. Each
 # architecture builds on its own native runner (no QEMU) and is smoke-tested on
 # stock php:8.5-cli-alpine with only the documented runtime packages before it
-# is pushed. See crates/extension/README.md.
+# is pushed. That image floats on purpose, while the build's base is pinned: it
+# is what a consumer pulls, so a run that fails there on an unrelated commit
+# means the stock image moved (a new Alpine, another libheif) and the extension
+# no longer loads on it. See crates/extension/README.md.
 
 on:
   release:
@@ -45,6 +50,9 @@ jobs:
   build:
     name: Build (${{ matrix.arch }})
     runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    outputs:
+      build: ${{ steps.version.outputs.build }}
     strategy:
       matrix:
         include:
@@ -57,19 +65,33 @@ jobs:
         with:
           persist-credentials: false
 
-      # A release stamps its version into phpversion('utopia'); main and manual
-      # runs keep the crate version and publish under the main tag.
+      # A release stamps its version into phpversion('utopia'), as release.yml
+      # does for the Appwrite image; main and manual runs keep the crate version
+      # and publish under the main tag. A published version is immutable, as
+      # appwrite/appwrite's are: consumers pin the tag, so a rerun must not
+      # replace what they pulled. The check is on the manifest tag, which is
+      # written last, so a run that failed halfway can still be rerun.
       - name: Resolve version
         id: version
         env:
           RELEASE: ${{ github.event.release.tag_name }}
         run: |
+          set -euo pipefail
           if [ "$GITHUB_EVENT_NAME" = "release" ]; then
-            echo "stamp=$RELEASE" >> "$GITHUB_OUTPUT"
-            echo "tag=$RELEASE" >> "$GITHUB_OUTPUT"
+            version="${RELEASE#v}"
+            status=$(curl --silent --output /dev/null --write-out '%{http_code}' \
+              --retry 3 --retry-all-errors --max-time 30 \
+              "https://hub.docker.com/v2/repositories/$IMAGE/tags/$version" || true)
+            if [ "$status" != "404" ]; then
+              echo "::error::Docker Hub answered $status for $IMAGE:$version. Published versions are immutable; ship a new patch version instead."
+              exit 1
+            fi
+            echo "stamp=$version" >> "$GITHUB_OUTPUT"
+            echo "tag=$version" >> "$GITHUB_OUTPUT"
           else
             echo "stamp=" >> "$GITHUB_OUTPUT"
             echo "tag=main" >> "$GITHUB_OUTPUT"
+            echo "build=$(crates/extension/tag.sh)" >> "$GITHUB_OUTPUT"
           fi
 
       - uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
@@ -131,6 +153,7 @@ jobs:
     needs: build
     if: github.event_name == 'release' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
@@ -142,11 +165,12 @@ jobs:
       - name: Publish
         env:
           RELEASE: ${{ github.event.release.tag_name }}
+          BUILD: ${{ needs.build.outputs.build }}
         run: |
           tag=main
-          extra=""
+          extra="--tag $IMAGE:$BUILD"
           if [ "$GITHUB_EVENT_NAME" = "release" ]; then
-            tag="$RELEASE"
+            tag="${RELEASE#v}"
             extra="--tag $IMAGE:latest"
           fi
           docker buildx imagetools create --tag "$IMAGE:$tag" $extra \

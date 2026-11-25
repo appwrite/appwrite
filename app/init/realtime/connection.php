@@ -163,7 +163,7 @@ return function (Container $container): void {
             $allowedSchemes = [...$allowedSchemes, ...Platform::getSchemes($project->getAttribute('platforms', []))];
         }
 
-        return new Origin(\array_unique($allowedHostnames), \array_unique($allowedSchemes));
+        return new Origin(\array_unique($allowedHostnames), \array_unique($allowedSchemes), System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled');
     }, ['platform', 'request', 'project', 'authorization', 'mode']);
 
     $container->set('proofForToken', function (): Token {

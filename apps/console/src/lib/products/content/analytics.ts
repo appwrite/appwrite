@@ -12,22 +12,37 @@ import type { ProductPageContent } from '@/lib/products/types'
  */
 export const analyticsProductContent: ProductPageContent = {
   id: 'analytics',
-  metaTitle: 'Analytics: cookieless, privacy-first web and app analytics',
+  metaTitle: 'Analytics: built into your Appwrite hosting and auth',
   metaDescription:
-    'Appwrite Analytics measures visitors, pages, sources, campaigns, and custom events without cookies or stored IP addresses. See human, bot, and AI traffic side by side, in the same project as your app.',
+    'Appwrite Analytics is built into Sites and Auth: turn it on when you create a site, no script to paste, and see signed-in users by name next to every visitor, bot, and AI agent. No cookies, no stored IP addresses.',
   hero: {
-    title: 'See who’s really visiting, humans and AI',
+    title: 'Analytics built into your hosting and auth',
     description:
-      'Understand who visits, where they come from, and what they do, without cookies, fingerprints, or stored IP addresses. Track websites and apps from the same Appwrite project that runs them.',
+      'Turn it on when you create a site and Appwrite adds the tracker for you. Your signed-in users show up by name, next to every visitor, bot, and AI agent, without cookies or stored IP addresses.',
     stats: [
+      { value: 'No script', label: 'Sites adds the tracker' },
+      { value: 'By name', label: 'Signed-in users from Auth' },
       { value: 'No cookies', label: 'Nothing stored in the browser' },
       { value: '50K', label: 'Free events every month' },
-      { value: '2 clicks', label: 'From any bot to a Firewall rule' },
       { value: 'MCP', label: 'Ask your traffic from any AI tool' },
-      { value: 'Any platform', label: 'Web, mobile, and server SDKs' },
     ],
   },
   faq: [
+    {
+      question: 'Do I need to add a tracking script to my Appwrite Site?',
+      answer:
+        'No. Leave Enable analytics on when you create the site, or turn it on later in the site’s settings, and Appwrite adds the tracker to every page served from your production domains. Preview deployments aren’t tracked. Sites hosted anywhere else use the Web SDK or a script tag.',
+      links: [
+        { label: 'Quick start', href: '/docs/products/analytics/quick-start' },
+        { label: 'Sites', href: '/docs/products/sites' },
+      ],
+    },
+    {
+      question: 'Can I see which of my users visited?',
+      answer:
+        'Yes, if they sign in with Appwrite Auth and you turn on user identification for the property. Events sent from a signed-in session then carry the user’s ID, and the Console shows those users by name and photo, ranks them by visits, lists who is online now, and adds an Analytics tab to each user in Auth. Anonymous visitors aren’t affected, and only your project’s user IDs are stored, never emails or names.',
+      links: [{ label: 'Privacy and data', href: '/docs/products/analytics/privacy' }],
+    },
     {
       question: 'Does Appwrite Analytics use cookies?',
       answer:
@@ -37,7 +52,7 @@ export const analyticsProductContent: ProductPageContent = {
     {
       question: 'Do I need a cookie banner or consent for Appwrite Analytics?',
       answer:
-        'Appwrite Analytics is designed so you can measure traffic without one: it sets no cookies, stores no IP addresses or user agents, keeps no persistent identifiers, and honors Do Not Track and Global Privacy Control. Whether a banner is required for your site depends on your jurisdiction and everything else you run, so confirm your setup with your own counsel.',
+        'Appwrite Analytics is designed so you can measure traffic without one: it sets no cookies, stores no IP addresses or user agents, keeps no persistent identifiers for anonymous visitors, and honors Do Not Track and Global Privacy Control. Whether a banner is required for your site depends on your jurisdiction and everything else you run, so confirm your setup with your own counsel.',
       links: [{ label: 'Privacy and data', href: '/docs/products/analytics/privacy' }],
     },
     {
@@ -55,7 +70,7 @@ export const analyticsProductContent: ProductPageContent = {
     {
       question: 'Which platforms can I track?',
       answer:
-        'Websites and web apps, mobile and desktop apps, and backends, using Appwrite’s client and server SDKs or the REST API, including server-side tracking from an Appwrite Function. Client code only ever uses a public property ID, so it never needs an API key.',
+        'Websites and web apps, mobile and desktop apps, AI agents, and backends, using Appwrite’s client and server SDKs or the REST API, including server-side tracking from an Appwrite Function. Each property has a type, web, mobile, or agent, that fits its dashboard to what you track. Client code only ever uses a public property ID, so it never needs an API key.',
       links: [
         { label: 'Quick start', href: '/docs/products/analytics/quick-start' },
         { label: 'Server-side tracking', href: '/docs/products/analytics/server-side' },
@@ -75,8 +90,8 @@ export const analyticsProductContent: ProductPageContent = {
     },
   ],
   cta: {
-    title: 'Measure your traffic, not your visitors',
+    title: 'Built in, not bolted on',
     description:
-      'Create a property, add one snippet, and watch the first visitors arrive without a cookie in sight.',
+      'Create a site with analytics on, sign your users in with Auth, and see who’s visiting from the same project.',
   },
 }

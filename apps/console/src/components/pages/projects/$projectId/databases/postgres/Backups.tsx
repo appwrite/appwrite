@@ -539,9 +539,19 @@ export function View({ projectId, databaseId }: ViewProps) {
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1 min-w-0">
-                          <h4 className="text-[14px] font-medium text-foreground mb-1">
-                            {policy.name || t('Unnamed Policy')}
-                          </h4>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="text-[14px] font-medium text-foreground">
+                              {policy.name || t('Unnamed Policy')}
+                            </h4>
+                            {policy.enabled === false ? (
+                              <Badge
+                                variant="secondary"
+                                className="text-[12px] font-normal"
+                              >
+                                {t('Paused')}
+                              </Badge>
+                            ) : null}
+                          </div>
                           <p className="text-[13px] text-muted-foreground">
                             {scheduleText} • {retentionText}
                           </p>
@@ -591,7 +601,9 @@ export function View({ projectId, databaseId }: ViewProps) {
                             {t('Next')}
                           </div>
                           <div className="text-foreground">
-                            {getNextBackupDate(policy.schedule, t)}
+                            {policy.enabled === false
+                              ? '-'
+                              : getNextBackupDate(policy.schedule, t)}
                           </div>
                         </div>
                       </div>

@@ -66,9 +66,17 @@ export interface InitEventTicketTypeRule {
   when: (context: InitTicketTypeMatcherContext) => boolean
 }
 
+/** An event's own artwork for a ticket type. */
+export type InitTicketArtwork = Pick<
+  InitTicketTypeDefinition,
+  'backgroundSrc' | 'themeBackgroundSrcLight' | 'themeBackgroundSrcDark'
+>
+
 /** Per-event ticket type rules - first match wins. */
 export interface InitEventTicketConfig {
   rules: InitEventTicketTypeRule[]
+  /** Artwork by ticket type; types left out use the catalog's. */
+  artwork?: Partial<Record<InitTicketTypeId, InitTicketArtwork>>
 }
 
 export interface ResolvedInitTicketAppearance {
@@ -177,9 +185,10 @@ export function resolveInitTicketAppearance(
   themeUsesDarkImage: boolean,
   mockTypeId?: InitTicketTypeId | null,
 ): ResolvedInitTicketAppearance {
-  const type = mockTypeId
+  const catalogType = mockTypeId
     ? INIT_TICKET_TYPE_CATALOG[mockTypeId]
     : resolveInitTicketType(config, context)
+  const type = { ...catalogType, ...config.artwork?.[catalogType.id] }
   const usesDarkChrome = type.forceDarkChrome ?? themeUsesDarkImage
 
   const backgroundSrc =

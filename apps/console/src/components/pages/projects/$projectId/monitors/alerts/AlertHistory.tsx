@@ -371,7 +371,7 @@ function AlertEntry({ alert, now, width, time, onOpen }: AlertEntryProps) {
           </span>
           <span
             className={cn(
-              'w-14 shrink-0 text-end text-[12px] tabular-nums',
+              'w-20 shrink-0 whitespace-nowrap text-end text-[12px] tabular-nums',
               firing
                 ? 'text-red-600 dark:text-red-400'
                 : 'text-muted-foreground',

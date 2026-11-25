@@ -304,7 +304,7 @@ class JoinTest extends TestCase
             'greaterThan' => [Query::greaterThan('ord.total', 5), '`ord`.`total` > ?'],
             'between' => [Query::between('ord.total', 1, 10), '`ord`.`total` BETWEEN ? AND ?'],
             'isNull' => [Query::isNull('ord.deleted_at'), '`ord`.`deleted_at` IS NULL'],
-            'startsWith' => [Query::startsWith('ord.code', 'A'), '`ord`.`code` LIKE ?'],
+            'startsWith' => [Query::startsWith('ord.code', 'A'), '`ord`.`code` LIKE ? ESCAPE \'!\''],
             'and' => [
                 Query::and([Query::equal('ord.status', ['paid']), Query::isNotNull('ord.paid_at')]),
                 '(`ord`.`status` IN (?) AND `ord`.`paid_at` IS NOT NULL)',

@@ -385,7 +385,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   Searching: '検索中',
   'Select database': 'データベースを選択',
   'Select a bucket to browse files': 'ファイルを閲覧するバケットを選択',
-  'This file type is not supported.': 'このファイル形式はサポートされていません。',
+  'This file type is not supported.':
+    'このファイル形式はサポートされていません。',
   'Select a timezone': 'タイムゾーンを選択',
   'Select a service to build': 'ビルドするサービスを選択',
   'Select all': 'すべて選択',
@@ -1384,6 +1385,31 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Load more': 'さらに読み込む',
   'Loading more failed. Try again.':
     'さらに読み込めませんでした。もう一度お試しください。',
+  'Browse Init events': 'Init イベントを見る',
+  'Switch between past and upcoming Init launch weeks.':
+    '過去と今後の Init ローンチ週を切り替えます。',
+  Past: '過去',
+  Upcoming: '近日公開',
+  'AUGUST 31 - SEPTEMBER 4': '8月31日 - 9月4日',
+  'NOVEMBER 30 - DECEMBER 4': '11月30日 - 12月4日',
+  'Starts in': '開始まで',
+  'Join us on our biggest Init ever. 5 days, 5 new product launches. It will be electric.':
+    '過去最大の Init に参加しよう。5日間で5つの新製品をローンチ。電撃的な1週間になります。',
+  "Init 5 is live. Catch today's reveal and the launch stream.":
+    'Init 5 開催中。今日の発表とローンチ配信をお見逃しなく。',
+  'Init 5 is a wrap. Explore every launch and rewatch the streams.':
+    'Init 5 は終了しました。すべてのローンチを確認し、配信をもう一度ご覧ください。',
+  'Introducing Appwrite Analytics': 'Appwrite Analytics のご紹介',
+  'Introducing Appwrite Videos': 'Appwrite Videos のご紹介',
+  'Introducing Appwrite Zero': 'Appwrite Zero のご紹介',
+  'Introducing Appwrite Monitors & Appwrite Beep':
+    'Appwrite Monitors と Appwrite Beep のご紹介',
+  'Introducing Appwrite Reviews': 'Appwrite Reviews のご紹介',
+  'Ask us anything': '何でも聞いてください',
+  'Bring your questions about every Init 5 launch. The team answers live on r/appwrite.':
+    'Init 5 のすべてのローンチについて質問をお寄せください。チームが r/appwrite でライブで回答します。',
+  'The team answered your questions about every Init 5 launch on r/appwrite.':
+    'チームが r/appwrite で Init 5 のすべてのローンチに関する質問に回答しました。',
   Previews: 'プレビュー',
   'Early access. Saved in this browser.':
     '早期アクセスです。このブラウザに保存されます。',
