@@ -140,6 +140,14 @@ final class EvaluationCustomServerTest extends Scope
             Query::equal('monitorId', [$monitorId])->toString(),
             Query::equal('status', ['firing'])->toString(),
         ])['alerts'], '$id'));
+        $this->assertSame([$firing['alertId']], \array_column($this->listAlerts([
+            Query::equal('monitorId', [$monitorId])->toString(),
+            Query::equal('severity', ['critical'])->toString(),
+        ])['alerts'], '$id'));
+        $this->assertSame([], $this->listAlerts([
+            Query::equal('monitorId', [$monitorId])->toString(),
+            Query::equal('severity', ['warning'])->toString(),
+        ])['alerts']);
 
         // The project's webhook receives the event, signed like every project webhook, with the alert as its payload.
         $delivery = $this->waitForEvent($webhook['path'], $monitorId, 'firing');
@@ -229,6 +237,10 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame('', $undone['acknowledgedBy']);
         $this->assertSame('', $undone['acknowledgedByName']);
         $this->waitForAcknowledgement($acknowledgements['path'], $firing['alertId'], 'unacknowledged');
+        $this->assertSame([], $this->listAlerts([
+            Query::equal('monitorId', [$monitorId])->toString(),
+            Query::isNotNull('acknowledgedAt')->toString(),
+        ])['alerts']);
         $this->assertSame('firing', $this->bellNotifications($name)[0]['status']);
 
         // An API key acknowledges as nobody in particular.
@@ -236,6 +248,10 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertNotNull($byKey['acknowledgedAt']);
         $this->assertSame('', $byKey['acknowledgedBy']);
         $this->assertSame('', $byKey['acknowledgedByName']);
+        $this->assertSame([$firing['alertId']], \array_column($this->listAlerts([
+            Query::equal('monitorId', [$monitorId])->toString(),
+            Query::isNotNull('acknowledgedAt')->toString(),
+        ])['alerts'], '$id'));
         // Two acknowledgements reached the webhook: the member's and the key's, not the repeat in between.
         $event = 'monitors.' . $monitorId . '.alerts.' . $firing['alertId'] . '.acknowledged';
         $deliveries = fn (): int => \count(\array_filter(
@@ -570,6 +586,9 @@ final class EvaluationCustomServerTest extends Scope
         $alert = $this->getAlert($firing['alertId']);
         $this->assertSame($monitorId, $alert['monitorId']);
         $this->assertSame($escalation['body']['$id'], $alert['escalationId']);
+        $this->assertSame([$firing['alertId']], \array_column($this->listAlerts([
+            Query::equal('escalationId', [$escalation['body']['$id']])->toString(),
+        ])['alerts'], '$id'));
         $this->assertSame(1, $alert['escalationStep']);
         $this->assertNotNull($alert['escalatesAt']);
         $this->assertSame([], $this->emailSubjects($developer, $name));
