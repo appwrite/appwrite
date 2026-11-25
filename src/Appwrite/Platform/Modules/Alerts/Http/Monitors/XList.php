@@ -77,6 +77,8 @@ class XList extends Base
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        $queries = $this->chosenIds($queries);
+
         $projectInternalId = (string) $project->getSequence();
         $queries[] = Query::equal('projectInternalId', [$projectInternalId]);
 
@@ -91,7 +93,7 @@ class XList extends Base
 
             $monitorId = $cursor->getValue();
             $cursorDocument = $authorization->skip(fn () => $dbForPlatform->findOne('monitors', [
-                Query::equal('$id', [$monitorId]),
+                Query::equal('monitorId', [$monitorId]),
                 Query::equal('projectInternalId', [$projectInternalId]),
             ]));
 
@@ -115,5 +117,24 @@ class XList extends Base
             'monitors' => $monitors,
             'total' => $total,
         ]), Response::MODEL_MONITOR_LIST);
+    }
+
+    /**
+     * Points queries on `$id` at the chosen `monitorId`, since `$id` is stored scoped to the project.
+     *
+     * @param array<Query> $queries
+     * @return array<Query>
+     */
+    private function chosenIds(array $queries): array
+    {
+        foreach ($queries as $query) {
+            if (\in_array($query->getMethod(), Query::LOGICAL_TYPES, true)) {
+                $query->setValues($this->chosenIds($query->getValues()));
+            } elseif ($query->getAttribute() === '$id') {
+                $query->setAttribute('monitorId');
+            }
+        }
+
+        return $queries;
     }
 }

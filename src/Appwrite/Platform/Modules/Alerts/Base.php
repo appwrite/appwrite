@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Alerts;
 
+use Appwrite\Alert\Monitors;
 use Appwrite\Alert\Rules;
 use Appwrite\Alert\Schedules;
 use Appwrite\Alert\Severity;
@@ -25,7 +26,7 @@ class Base extends Action
 {
     protected function getMonitor(Database $dbForPlatform, Authorization $authorization, Document $project, string $monitorId): Document
     {
-        $monitor = $authorization->skip(fn () => $dbForPlatform->getDocument('monitors', $monitorId));
+        $monitor = $authorization->skip(fn () => $dbForPlatform->getDocument('monitors', Monitors::id((string) $project->getSequence(), $monitorId)));
 
         if ($monitor->isEmpty() || $monitor->getAttribute('projectInternalId') !== (string) $project->getSequence()) {
             throw new Exception(Exception::MONITOR_NOT_FOUND);
@@ -74,8 +75,9 @@ class Base extends Action
         $monitorId = $monitorId === 'unique()' ? Id::unique() : $monitorId;
 
         $monitor = new Document([
-            '$id' => $monitorId,
+            '$id' => Monitors::id((string) $project->getSequence(), $monitorId),
             '$permissions' => [],
+            'monitorId' => $monitorId,
             'name' => $name,
             'teamId' => (string) $project->getAttribute('teamId', ''),
             'teamInternalId' => (string) $project->getAttribute('teamInternalId', ''),
@@ -165,7 +167,7 @@ class Base extends Action
 
         if (!$changes->isEmpty()) {
             $changes->setAttribute('search', $this->search(
-                $monitor->getId(),
+                (string) $monitor->getAttribute('monitorId'),
                 (string) $changes->getAttribute('name', $monitor->getAttribute('name')),
                 (string) $changes->getAttribute('metric', $monitor->getAttribute('metric')),
                 (string) $changes->getAttribute('resourceType', $monitor->getAttribute('resourceType')),

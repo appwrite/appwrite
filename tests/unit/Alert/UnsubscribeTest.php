@@ -16,7 +16,7 @@ final class UnsubscribeTest extends TestCase
     {
         $unsubscribe = new Unsubscribe([self::SECRET]);
 
-        $this->assertSame(['userId' => 'ana', 'monitorId' => 'egress', 'type' => 'usage'], $unsubscribe->verify($unsubscribe->token('ana', 'egress', 'usage')));
+        $this->assertSame(['userId' => 'ana', 'monitorId' => 'egress', 'scope' => '7', 'type' => 'usage'], $unsubscribe->verify($unsubscribe->token('ana', 'egress', 'usage', scope: '7')));
     }
 
     public function testTokenExpires(): void

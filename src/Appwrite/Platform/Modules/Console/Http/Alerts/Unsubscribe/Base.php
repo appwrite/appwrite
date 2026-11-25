@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Console\Http\Alerts\Unsubscribe;
 
 use Appwrite\Abuse\Limit;
+use Appwrite\Alert\Monitors;
 use Appwrite\Alert\Unsubscribe;
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\Extend\Exception;
@@ -12,6 +13,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Operator;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -79,7 +81,8 @@ abstract class Base extends Action
             $entry = Unsubscribe::type((string) $monitor->getAttribute('type'));
         }
 
-        $change = $this->change($user->getAttribute('alertsUnsubscribed', []), $entry);
+        // A deleted monitor has no emails of its own left to stop or resume.
+        $change = $entry === '' ? null : $this->change($user->getAttribute('alertsUnsubscribed', []), $entry);
         if ($change !== null) {
             $authorization->skip(fn () => $dbForPlatform->updateDocument('users', $user->getId(), new Document([
                 'alertsUnsubscribed' => $change,
@@ -91,7 +94,7 @@ abstract class Base extends Action
 
     /**
      * The user and the monitor the token names. A monitor deleted since the
-     * email was sent comes back holding only its ID and type.
+     * email was sent comes back holding only its type, with an empty ID.
      *
      * @return array{0: Document, 1: Document}
      */
@@ -102,7 +105,7 @@ abstract class Base extends Action
         $token = $token !== '' ? $token : (string) $request->getQuery('token', '');
 
         try {
-            ['userId' => $userId, 'monitorId' => $monitorId, 'type' => $type] = (new Unsubscribe(EncryptionKey::accepted()))->verify($token);
+            ['userId' => $userId, 'monitorId' => $monitorId, 'scope' => $monitorScope, 'type' => $type] = (new Unsubscribe(EncryptionKey::accepted()))->verify($token);
         } catch (\InvalidArgumentException) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
@@ -112,10 +115,36 @@ abstract class Base extends Action
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $monitor = $authorization->skip(fn () => $dbForPlatform->getDocument('monitors', $monitorId));
+        $monitor = $monitorScope !== ''
+            ? $authorization->skip(fn () => $dbForPlatform->getDocument('monitors', Monitors::id($monitorScope, $monitorId)))
+            : $this->legacyMonitor($user, $monitorId, $dbForPlatform, $authorization);
 
         // The type comes from the token, so a deleted monitor's link still reaches its type-wide opt-out.
-        return [$user, $monitor->isEmpty() ? new Document(['$id' => $monitorId, 'type' => $type]) : $monitor];
+        return [$user, $monitor->isEmpty() ? new Document(['$id' => '', 'type' => $type]) : $monitor];
+    }
+
+    /**
+     * A token issued before monitor IDs were scoped names the monitor by the ID it was
+     * created with, then unique across projects, so the oldest monitor holding it is that
+     * one, provided the user still belongs to its organization.
+     */
+    private function legacyMonitor(Document $user, string $monitorId, Database $dbForPlatform, Authorization $authorization): Document
+    {
+        $monitor = $authorization->skip(fn () => $dbForPlatform->findOne('monitors', [
+            Query::equal('monitorId', [$monitorId]),
+            Query::orderAsc('$sequence'),
+        ]));
+        if ($monitor->isEmpty()) {
+            return $monitor;
+        }
+
+        $membership = $authorization->skip(fn () => $dbForPlatform->findOne('memberships', [
+            Query::equal('teamInternalId', [(string) $monitor->getAttribute('teamInternalId')]),
+            Query::equal('userInternalId', [(string) $user->getSequence()]),
+            Query::equal('confirm', [true]),
+        ]));
+
+        return $membership->isEmpty() ? new Document() : $monitor;
     }
 
     /**
