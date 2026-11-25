@@ -1,11 +1,13 @@
 # Utopia Auth
 
 > [!IMPORTANT]
-> This repository is a read-only mirror of [`crates/utopia/auth`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/auth) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+> This repository is a read-only mirror of [`crates/utopia/auth`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/auth) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there: please open issues and pull requests in that repository.
 
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
-The password hash algorithms of utopia-php/auth: PECL scrypt, Firebase's modified scrypt and phpass.
+The password hash algorithms of utopia-php/auth that PHP does not ship: the scrypt KDF of the PECL `scrypt` extension, Firebase's modified scrypt and phpass's portable hashes. The rest (`password_hash()`, `password_verify()`, `crypt()`, `hash()`) are PHP's own functions, ported in `php-std`.
+
+Every function returns what PHP returns for the same input, byte for byte, including where PHP fails.
 
 This library is maintained by the [Appwrite team](https://appwrite.io).
 
@@ -37,8 +39,6 @@ assert_eq!(key.len(), 64);
 
 ## Contributing
 
-Development happens in [appwrite/appwrite](https://github.com/appwrite/appwrite), where this crate lives at [`crates/utopia/auth`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/auth). Run these commands from a checkout of it. The [contributing guide](https://utopia-docs.appwrite.network/contributing) covers each step.
-
 ### Test
 
 ```bash
@@ -47,6 +47,8 @@ cargo clippy -p utopia-auth --all-targets -- -D warnings
 cargo fmt --all --check
 ```
 
-## License
+The tests hold RFC 7914's scrypt vectors, outputs of PECL scrypt 2.0.1 (salts and passwords with NUL bytes, empty ones, every failure) and Firebase's published vector.
 
-BSD-3-Clause. See [LICENSE](LICENSE).
+### Compare with PHP
+
+The utopia PHP extension serves this crate and `php-std` as `Utopia\Auth\Hash` and `Utopia\Auth\Hashes\*`, which no longer have a PHP implementation. `crates/extension/tests/run.sh` runs `packages/auth/tests` on them in the development image.

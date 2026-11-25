@@ -1,7 +1,7 @@
 # Utopia Domains
 
 > [!IMPORTANT]
-> This repository is a read-only mirror of [`crates/utopia/domains`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/domains) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+> This repository is a read-only mirror of [`crates/utopia/domains`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/domains) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there: please open issues and pull requests in that repository.
 
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
@@ -15,8 +15,6 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 [dependencies]
 utopia-domains = { git = "https://github.com/utopia-rs/domains" }
 ```
-
-A domain name such as `blog.example.co.uk` has a structure DNS alone does not tell you: `co.uk` is a public suffix (anyone can register under it), `example` is the registered name, and `blog` is a subdomain. This library reads that structure from the Public Suffix List. This guide covers the common tasks.
 
 ## Split a domain into its parts
 
@@ -54,14 +52,24 @@ assert_eq!(local.registerable(), "");
 
 ## Contributing
 
-Development happens in [appwrite/appwrite](https://github.com/appwrite/appwrite), where this crate lives at [`crates/utopia/domains`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/domains). Run these commands from a checkout of it. The [contributing guide](https://utopia-docs.appwrite.network/contributing) covers each step.
-
 ### Test
 
 ```bash
 cargo test -p utopia-domains
 cargo clippy -p utopia-domains --all-targets -- -D warnings
 cargo fmt --all --check
+```
+
+### Compare with PHP
+
+The utopia PHP extension serves this crate as `Utopia\Domains\Domain`, which no longer has a PHP implementation. `crates/extension/tests/run.sh` runs `packages/domains/tests` on it in the development image.
+
+### Public Suffix List
+
+`data/public-suffix-list.txt` is `packages/domains/data/data.php` in the crate's format. After refreshing the package's list, regenerate it from the repository root:
+
+```bash
+php crates/utopia/domains/data/export.php > crates/utopia/domains/data/public-suffix-list.txt
 ```
 
 ## License

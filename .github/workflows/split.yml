@@ -41,15 +41,15 @@ jobs:
       - name: Resolve mirrors
         id: mirrors
         run: |
-          # <name>/<version> is a package, rs/<name>/<version> a crate. The other org's token
-          # still needs one repository to be scoped to; it is not pushed to.
+          # <name>/<version> is a package, rs/<name>/<version> a crate. A tag gets a token for
+          # its own mirror and none for the other organisation.
           packages=$(bin/monorepo list | awk '$1 !~ /^rs\// {print $1}' | paste -sd, -)
           crates=$(bin/monorepo list | awk '$1 ~ /^rs\// {sub(/^rs\//, "", $1); print $1}' | paste -sd, -)
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
             name="${GITHUB_REF_NAME%/*}"
             case "$name" in
-              rs/*) crates="${name#rs/}" ;;
-              *) packages="$name" ;;
+              rs/*) packages=""; crates="${name#rs/}" ;;
+              *) packages="$name"; crates="" ;;
             esac
           fi
           echo "repositories=$packages" >> "$GITHUB_OUTPUT"
@@ -57,6 +57,7 @@ jobs:
 
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: app-token
+        if: steps.mirrors.outputs.repositories != ''
         with:
           app-id: ${{ vars.SPLIT_APP_ID }}
           private-key: ${{ secrets.SPLIT_APP_PRIVATE_KEY }}
@@ -67,6 +68,7 @@ jobs:
 
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: crates-token
+        if: steps.mirrors.outputs.crates != ''
         with:
           app-id: ${{ vars.SPLIT_RS_APP_ID }}
           private-key: ${{ secrets.SPLIT_RS_APP_PRIVATE_KEY }}

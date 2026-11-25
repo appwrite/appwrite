@@ -1,7 +1,7 @@
 # Utopia Locale
 
 > [!IMPORTANT]
-> This repository is a read-only mirror of [`crates/utopia/locale`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/locale) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+> This repository is a read-only mirror of [`crates/utopia/locale`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/locale) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there: please open issues and pull requests in that repository.
 
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
@@ -183,6 +183,10 @@ cargo test -p utopia-locale
 cargo clippy -p utopia-locale --all-targets -- -D warnings
 cargo fmt --all --check
 ```
+
+### Compare with PHP
+
+The utopia PHP extension serves this crate as `Utopia\Locale\Locale`, which no longer has a PHP implementation.
 
 ## License
 

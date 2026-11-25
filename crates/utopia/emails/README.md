@@ -1,7 +1,7 @@
 # Utopia Emails
 
 > [!IMPORTANT]
-> This repository is a read-only mirror of [`crates/utopia/emails`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/emails) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+> This repository is a read-only mirror of [`crates/utopia/emails`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/emails) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there: please open issues and pull requests in that repository.
 
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
@@ -29,6 +29,7 @@ assert_eq!(email.get(), b"user.name+tag@mail.example.com");
 assert_eq!(email.local(), b"user.name+tag");
 assert_eq!(email.domain(), b"mail.example.com");
 assert!(email.is_valid() && email.has_valid_local() && email.has_valid_domain_syntax());
+# Ok::<(), utopia_emails::Error>(())
 ```
 
 ## Canonical forms
@@ -42,6 +43,7 @@ let email = Email::new("John.Doe+news@googlemail.com")?;
 
 assert_eq!(email.canonical()?.address(), b"johndoe@gmail.com");
 assert_eq!(email.canonical_domain(), Some("gmail.com"));
+# Ok::<(), utopia_emails::Error>(())
 ```
 
 ## Free and disposable domains
@@ -60,14 +62,24 @@ assert!(!lists.is_disposable(b"appwrite.io", b"appwrite.io"));
 
 ## Contributing
 
-Development happens in [appwrite/appwrite](https://github.com/appwrite/appwrite), where this crate lives at [`crates/utopia/emails`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/emails). Run these commands from a checkout of it. The [contributing guide](https://utopia-docs.appwrite.network/contributing) covers each step.
-
 ### Test
 
 ```bash
 cargo test -p utopia-emails
 cargo clippy -p utopia-emails --all-targets -- -D warnings
 cargo fmt --all --check
+```
+
+### Compare with PHP
+
+The utopia PHP extension serves this crate as `Utopia\Emails\Email`, which no longer has a PHP implementation. `crates/extension/tests/run.sh` runs `packages/emails/tests` on it in the development image.
+
+### Domain lists
+
+`data/free-domains.txt` and `data/disposable-domains.txt` are `packages/emails/data/{free,disposable}-domains.php` in the crate's format. After refreshing the package's lists (`composer import:all` in `packages/emails`), regenerate them from the repository root:
+
+```bash
+php crates/utopia/emails/data/export.php
 ```
 
 ## License

@@ -1,7 +1,7 @@
 # Utopia Detector
 
 > [!IMPORTANT]
-> This repository is a read-only mirror of [`crates/utopia/detector`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/detector) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+> This repository is a read-only mirror of [`crates/utopia/detector`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/detector) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there: please open issues and pull requests in that repository.
 
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
@@ -118,6 +118,30 @@ cargo test -p utopia-detector
 cargo clippy -p utopia-detector --all-targets -- -D warnings
 cargo fmt --all --check
 ```
+
+### Compare with PHP
+
+Replay the results PHP recorded for every case against Rust, without PHP:
+
+```bash
+COMPAT_LIB=detector cargo test -p compat
+```
+
+Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):
+
+```bash
+bin/compat run detector
+bin/compat fuzz detector
+bin/compat check detector
+```
+
+### Benchmark
+
+```bash
+bin/compat bench detector
+```
+
+This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`tests/compat/detector/bench.json`](https://github.com/appwrite/appwrite/blob/main/tests/compat/detector/bench.json). Run it on a quiet machine, one library at a time.
 
 ## License
 

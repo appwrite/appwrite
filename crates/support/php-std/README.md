@@ -1,7 +1,7 @@
 # PHP standard library
 
 > [!IMPORTANT]
-> This repository is a read-only mirror of [`crates/support/php-std`](https://github.com/appwrite/appwrite/tree/main/crates/support/php-std) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+> This repository is a read-only mirror of [`crates/support/php-std`](https://github.com/appwrite/appwrite/tree/main/crates/support/php-std) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there: please open issues and pull requests in that repository.
 
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 

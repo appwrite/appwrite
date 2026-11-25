@@ -1,7 +1,7 @@
 # Utopia Balancer
 
 > [!IMPORTANT]
-> This repository is a read-only mirror of [`crates/utopia/balancer`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/balancer) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+> This repository is a read-only mirror of [`crates/utopia/balancer`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/balancer) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there: please open issues and pull requests in that repository.
 
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
@@ -110,6 +110,30 @@ cargo test -p utopia-balancer
 cargo clippy -p utopia-balancer --all-targets -- -D warnings
 cargo fmt --all --check
 ```
+
+### Compare with PHP
+
+Replay the results PHP recorded for every case against Rust, without PHP:
+
+```bash
+COMPAT_LIB=balancer cargo test -p compat
+```
+
+Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):
+
+```bash
+bin/compat run balancer
+bin/compat fuzz balancer
+bin/compat check balancer
+```
+
+### Benchmark
+
+```bash
+bin/compat bench balancer
+```
+
+This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`tests/compat/balancer/bench.json`](https://github.com/appwrite/appwrite/blob/main/tests/compat/balancer/bench.json). Run it on a quiet machine, one library at a time.
 
 ## License
 

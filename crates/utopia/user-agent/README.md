@@ -1,7 +1,7 @@
 # Utopia User Agent
 
 > [!IMPORTANT]
-> This repository is a read-only mirror of [`crates/utopia/user-agent`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/user-agent) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+> This repository is a read-only mirror of [`crates/utopia/user-agent`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/user-agent) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there: please open issues and pull requests in that repository.
 
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
@@ -174,6 +174,10 @@ cargo test -p utopia-user-agent
 cargo clippy -p utopia-user-agent --all-targets -- -D warnings
 cargo fmt --all --check
 ```
+
+### Compare with PHP
+
+The utopia PHP extension serves this crate as `Utopia\UserAgent\UserAgent`, which no longer has a PHP implementation. `crates/extension/tests/run.sh` runs `packages/user-agent/tests` on it in the development image.
 
 ## License
 

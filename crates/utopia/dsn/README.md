@@ -1,7 +1,7 @@
 # Utopia DSN
 
 > [!IMPORTANT]
-> This repository is a read-only mirror of [`crates/utopia/dsn`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/dsn) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+> This repository is a read-only mirror of [`crates/utopia/dsn`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/dsn) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there: please open issues and pull requests in that repository.
 
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
@@ -120,6 +120,10 @@ cargo test -p utopia-dsn
 cargo clippy -p utopia-dsn --all-targets -- -D warnings
 cargo fmt --all --check
 ```
+
+### Compare with PHP
+
+The utopia PHP extension serves this crate as `Utopia\DSN\DSN`, which no longer has a PHP implementation.
 
 ## License
 

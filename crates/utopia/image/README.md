@@ -1,7 +1,7 @@
 # Utopia Image
 
 > [!IMPORTANT]
-> This repository is a read-only mirror of [`crates/utopia/image`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/image) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+> This repository is a read-only mirror of [`crates/utopia/image`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/image) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there: please open issues and pull requests in that repository.
 
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
@@ -85,6 +85,10 @@ cargo test -p utopia-image
 cargo clippy -p utopia-image --all-targets -- -D warnings
 cargo fmt --all --check
 ```
+
+### Compare with PHP
+
+The utopia PHP extension serves this crate as `Utopia\Image\Canvas` and `Utopia\Image\Font`, which have no PHP implementation. `crates/extension/tests/canvas.php` and `packages/image/tests` run on it in the development image (`crates/extension/tests/run.sh`).
 
 ## License
 
