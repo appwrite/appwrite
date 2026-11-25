@@ -702,13 +702,13 @@ final class EvaluationCustomServerTest extends Scope
                 'steps' => $steps,
             ]);
             $this->assertSame(400, $refused['headers']['status-code'], $case);
-            $this->assertStringContainsString('`steps[0]`', $refused['body']['message'], $case);
-            $this->assertStringContainsString($reason, $refused['body']['message'], $case);
+            $this->assertStringContainsString('`steps[0]`', (string) $refused['body']['message'], $case);
+            $this->assertStringContainsString($reason, (string) $refused['body']['message'], $case);
 
             $rejected = $this->client->call(Client::METHOD_PATCH, '/organization/escalations/' . $escalationId, $headers, ['steps' => $steps]);
             $this->assertSame(400, $rejected['headers']['status-code'], $case);
-            $this->assertStringContainsString('`steps[0]`', $rejected['body']['message'], $case);
-            $this->assertStringContainsString($reason, $rejected['body']['message'], $case);
+            $this->assertStringContainsString('`steps[0]`', (string) $rejected['body']['message'], $case);
+            $this->assertStringContainsString($reason, (string) $rejected['body']['message'], $case);
         }
         $this->assertSame($created['body']['steps'], $this->client->call(Client::METHOD_GET, '/organization/escalations/' . $escalationId, $headers)['body']['steps']);
 
