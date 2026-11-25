@@ -354,10 +354,6 @@ In the settings, you can update a provider's configuration or delete the provide
 {% tabsitem #server-sdk title="Server SDK" %}
 To update or delete providers programmatically, use an [Appwrite Server SDK](/docs/sdks#server).
 
-{% info title="Bird methods in the server SDKs" %}
-The `updateBirdSMSProvider` and `createBirdSMSProvider` methods ship with the next release of each server SDK. Until your SDK includes them, call the REST endpoint shown in the HTTP tab.
-{% /info %}
-
 {% multicode %}
 ```server-nodejs
 const sdk = require('node-appwrite');
