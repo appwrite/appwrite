@@ -762,6 +762,8 @@ final class RequestTest extends TestCase
         yield 'non-string body with the header' => [['mode' => ['admin']], ['x-appwrite-mode' => 'admin'], [], 'admin'];
         yield 'query' => [[], [], ['mode' => 'admin'], 'admin'];
         yield 'query array falls back to the header' => [[], ['x-appwrite-mode' => 'admin'], ['mode' => ['x']], 'admin'];
+        yield 'query over the header' => [[], ['x-appwrite-mode' => 'default'], ['mode' => 'admin'], 'admin'];
+        yield 'empty query falls back to the header' => [[], ['x-appwrite-mode' => 'admin'], ['mode' => ''], 'admin'];
         yield 'nothing' => [[], [], [], APP_MODE_DEFAULT];
     }
 
