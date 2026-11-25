@@ -1881,6 +1881,10 @@ export const jaAuthStorageDictionary: Record<string, string> = {
     '2. 選んだプロバイダーへブラウザーを送る',
   "On success, the browser returns to the success URL with the user's session cookie for this project set.":
     '成功すると、このプロジェクトのユーザーのセッション Cookie が設定された状態で、ブラウザーは success URL に戻ります。',
+  'Users can sign in through this identity provider.':
+    'ユーザーはこの ID プロバイダーでサインインできます。',
+  'Both URLs must be on the hostname of a web platform added to this project.':
+    'どちらの URL も、このプロジェクトに追加した Web プラットフォームのホスト名上にある必要があります。',
   'On failure, it returns to the failure URL with an error query parameter that holds JSON with message, type and code.':
     '失敗すると、message、type、code を含む JSON を持つ error クエリパラメーターとともに、failure URL に戻ります。',
 }

@@ -1839,6 +1839,10 @@ export const heAuthStorageDictionary: Record<string, string> = {
   '2. Send the browser to the chosen one': '2. שליחת הדפדפן לספק שנבחר',
   "On success, the browser returns to the success URL with the user's session cookie for this project set.":
     'בהצלחה, הדפדפן חוזר לכתובת ההצלחה כשעוגיית הסשן של המשתמש בפרויקט הזה כבר מוגדרת.',
+  'Users can sign in through this identity provider.':
+    'משתמשים יכולים להתחבר דרך ספק הזהויות הזה.',
+  'Both URLs must be on the hostname of a web platform added to this project.':
+    'שתי הכתובות חייבות להיות בשם המארח של פלטפורמת ווב שנוספה לפרויקט הזה.',
   'On failure, it returns to the failure URL with an error query parameter that holds JSON with message, type and code.':
     'בכישלון, הוא חוזר לכתובת הכישלון עם פרמטר השאילתה error, שמכיל JSON עם message,‏ type ו-code.',
 }

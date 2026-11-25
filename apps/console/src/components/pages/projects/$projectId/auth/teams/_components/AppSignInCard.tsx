@@ -71,6 +71,11 @@ export function AppSignInCard({
           <ul className="list-disc space-y-1 ps-4 text-[12px] text-muted-foreground">
             <li>
               {t(
+                'Both URLs must be on the hostname of a web platform added to this project.',
+              )}
+            </li>
+            <li>
+              {t(
                 "On success, the browser returns to the success URL with the user's session cookie for this project set.",
               )}
             </li>

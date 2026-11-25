@@ -631,7 +631,9 @@ function ProviderForm({
           {t('Enabled')}
         </Label>
         <p id="sso-enabled-hint" className="text-[12px] text-muted-foreground">
-          {t('People can sign in through this identity provider.')}
+          {forTeam
+            ? t('Users can sign in through this identity provider.')
+            : t('People can sign in through this identity provider.')}
         </p>
       </div>
       <Switch

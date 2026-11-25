@@ -3341,8 +3341,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'תוסף Premium Geo DB יוסר בסוף מחזור החיוב הנוכחי',
   'Unable to verify Premium Geo DB addon status. Please retry.':
     'לא ניתן לאמת את סטטוס תוסף Premium Geo DB. נסו שוב.',
-  'With this add-on, the teams in this project can verify domains, connect identity providers and turn on Require SSO through the Teams API.':
-    'עם התוסף הזה, הצוותים בפרויקט יכולים לאמת דומיינים, לחבר ספקי זהויות ולהפעיל חיוב SSO דרך Teams API.',
+  "With this add-on, your app's users sign in through their company's identity provider. Each team in this project can verify domains, connect identity providers and turn on Require SSO.":
+    'עם התוסף הזה, משתמשי האפליקציה שלכם מתחברים דרך ספק הזהויות של החברה שלהם. כל צוות בפרויקט יכול לאמת דומיינים, לחבר ספקי זהויות ולהפעיל חיוב SSO.',
   '{price}/month, prorated for the current billing cycle.':
     '{price}/חודש, בחיוב יחסי למחזור החיוב הנוכחי.',
   'Billed monthly, prorated for the current billing cycle.':
@@ -3369,8 +3369,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'תוסף ההתחברות היחידה (SSO) כבר פעיל בפרויקט זה',
   'Single sign-on add-on will be removed at the end of your current billing cycle':
     'תוסף ההתחברות היחידה (SSO) יוסר בסוף מחזור החיוב הנוכחי',
-  'Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then the teams in this project can no longer verify domains, connect identity providers or turn on Require SSO through the Teams API.':
-    'האם אתם בטוחים שברצונכם להשבית את תוסף ההתחברות היחידה (SSO)? הוא יישאר פעיל עד סוף מחזור החיוב הנוכחי ולא יחודש. אחר כך הצוותים בפרויקט לא יוכלו עוד לאמת דומיינים, לחבר ספקי זהויות או להפעיל חיוב SSO דרך Teams API.',
+  "Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then nobody signs in to your app through the identity providers of this project's teams, and the teams can no longer verify domains, connect identity providers or turn on Require SSO.":
+    'האם אתם בטוחים שברצונכם להשבית את תוסף ההתחברות היחידה (SSO)? הוא יישאר פעיל עד סוף מחזור החיוב הנוכחי ולא יחודש. אחר כך אף אחד לא יתחבר לאפליקציה שלכם דרך ספקי הזהויות של הצוותים בפרויקט, והצוותים לא יוכלו עוד לאמת דומיינים, לחבר ספקי זהויות או להפעיל חיוב SSO.',
   "With this add-on, people on your organization's verified domains sign in to the Console through its identity providers.":
     'עם התוסף הזה, אנשים בדומיינים המאומתים של הארגון שלכם מתחברים לקונסולה דרך ספקי הזהויות שלו.',
   'This add-on is available on {plans}. Upgrade your plan to enable it.':

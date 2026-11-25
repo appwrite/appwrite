@@ -4,9 +4,9 @@ import { expect, test } from './fixtures'
 
 /**
  * The project's Single sign-on add-on (`sso`), on Settings next to Premium Geo
- * DB. It lets the project's teams verify domains, connect identity providers
- * and turn on Require SSO through the Teams API; signing in through single
- * sign-on is for the Console only, so the card never offers it. A plan sells it when its `supportedAddons` say `sso`; the add-on is
+ * DB. With it the app's users sign in through the identity providers of the
+ * project's teams, and each team verifies domains, connects identity providers
+ * and turns on Require SSO. A plan sells it when its `supportedAddons` say `sso`; the add-on is
  * listed, priced, enabled (`projects.createSSOAddon`), confirmed and deleted
  * like every project add-on. An environment has the add-on of its project.
  *
@@ -397,20 +397,20 @@ test.describe('the Single sign-on project add-on', () => {
     const card = ssoCard(page)
     await expect(card).toContainText('Not enabled')
     await expect(card).toContainText(
-      'With this add-on, the teams in this project can verify domains, connect identity providers and turn on Require SSO through the Teams API.',
+      "With this add-on, your app's users sign in through their company's identity provider. Each team in this project can verify domains, connect identity providers and turn on Require SSO.",
     )
     await expect(card).toContainText(
       '$150.00/month, prorated for the current billing cycle.',
     )
-    // What it unlocks is setup: signing in with it is for the Console only
-    await expect(card).not.toContainText(/sign in|signs in|signing in/i)
+    // It sells what the API does: the app's users sign in through it
+    await expect(card).toContainText("your app's users sign in")
 
     await card.getByRole('button', { name: 'Enable add-on' }).click()
     const dialog = page.getByRole('dialog', {
       name: 'Enable the Single sign-on add-on',
     })
     await expect(dialog).toContainText(
-      'turn on Require SSO through the Teams API',
+      "your app's users sign in through their company's identity provider",
     )
     await expect(dialog).toContainText('$150.00 / month')
     await expect(dialog).toContainText('$60.00')
@@ -437,7 +437,7 @@ test.describe('the Single sign-on project add-on', () => {
       name: 'Disable the Single sign-on add-on',
     })
     await expect(dialog).toContainText(
-      'Then the teams in this project can no longer verify domains, connect identity providers or turn on Require SSO through the Teams API.',
+      "Then nobody signs in to your app through the identity providers of this project's teams, and the teams can no longer verify domains, connect identity providers or turn on Require SSO.",
     )
     await dialog.getByRole('button', { name: 'Disable add-on' }).click()
     await expect.poll(() => mock.sent.deletes).toEqual(['addon-sso'])

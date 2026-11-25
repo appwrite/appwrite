@@ -80,7 +80,7 @@ export function DisableSSOAddonDialog({
           <DialogDescription className="text-[13px] mt-2">
             {target.scope === 'project'
               ? t(
-                  'Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then the teams in this project can no longer verify domains, connect identity providers or turn on Require SSO through the Teams API.',
+                  "Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then nobody signs in to your app through the identity providers of this project's teams, and the teams can no longer verify domains, connect identity providers or turn on Require SSO.",
                 )
               : t(
                   'Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then single sign-on for the organization stops, and people who can only sign in through your identity providers can no longer sign in.',

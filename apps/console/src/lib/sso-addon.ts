@@ -38,11 +38,11 @@ export function ssoAddonStatus(
 
 /**
  * What the project's Single sign-on add-on unlocks, in its card and its dialog:
- * the project's teams set single sign-on up, each on its Single sign-on tab or
- * through the Teams API.
+ * the app's users sign in through the identity providers of the project's
+ * teams, and each team sets that up on its Single sign-on tab.
  */
 export const SSO_ADDON_DESCRIPTION =
-  'With this add-on, the teams in this project can verify domains, connect identity providers and turn on Require SSO through the Teams API.'
+  "With this add-on, your app's users sign in through their company's identity provider. Each team in this project can verify domains, connect identity providers and turn on Require SSO."
 
 /**
  * What the organization's Single sign-on add-on unlocks, in its card and its

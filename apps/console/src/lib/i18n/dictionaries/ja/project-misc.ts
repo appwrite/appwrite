@@ -3409,8 +3409,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'Premium Geo DB アドオンは現在の請求サイクル終了時に削除されます',
   'Unable to verify Premium Geo DB addon status. Please retry.':
     'Premium Geo DB アドオンの状態を確認できませんでした。再試行してください。',
-  'With this add-on, the teams in this project can verify domains, connect identity providers and turn on Require SSO through the Teams API.':
-    'このアドオンを使うと、このプロジェクトのチームは Teams API でドメインの検証、ID プロバイダーの接続、SSO の必須化を行えます。',
+  "With this add-on, your app's users sign in through their company's identity provider. Each team in this project can verify domains, connect identity providers and turn on Require SSO.":
+    'このアドオンを使うと、アプリのユーザーは会社の ID プロバイダー経由でサインインできます。このプロジェクトの各チームは、ドメインの検証、ID プロバイダーの接続、SSO の必須化を行えます。',
   '{price}/month, prorated for the current billing cycle.':
     '{price}/月、現在の請求サイクルに按分されます。',
   'Billed monthly, prorated for the current billing cycle.':
@@ -3436,8 +3436,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'シングルサインオンアドオンはこのプロジェクトですでに有効です',
   'Single sign-on add-on will be removed at the end of your current billing cycle':
     'シングルサインオンアドオンは現在の請求サイクルの終了時に削除されます',
-  'Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then the teams in this project can no longer verify domains, connect identity providers or turn on Require SSO through the Teams API.':
-    'シングルサインオンアドオンを無効にしますか? 現在の請求サイクル終了まで有効のままで、更新されません。その後、このプロジェクトのチームは Teams API でドメインの検証、ID プロバイダーの接続、SSO の必須化を行えなくなります。',
+  "Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then nobody signs in to your app through the identity providers of this project's teams, and the teams can no longer verify domains, connect identity providers or turn on Require SSO.":
+    'シングルサインオンアドオンを無効にしますか? 現在の請求サイクル終了まで有効のままで、更新されません。その後、このプロジェクトのチームの ID プロバイダー経由でアプリにサインインできなくなり、チームはドメインの検証、ID プロバイダーの接続、SSO の必須化を行えなくなります。',
   "With this add-on, people on your organization's verified domains sign in to the Console through its identity providers.":
     'このアドオンを使うと、組織の検証済みドメインのユーザーは組織の ID プロバイダー経由でコンソールにサインインします。',
   'This add-on is available on {plans}. Upgrade your plan to enable it.':
