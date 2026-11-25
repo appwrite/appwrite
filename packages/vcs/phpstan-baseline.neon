@@ -1071,7 +1071,7 @@ parameters:
 		-
 			message: '#^Method Utopia\\VCS\\Adapter\\Git\\GitLab\:\:getOwnerName\(\) should return string but returns mixed\.$#'
 			identifier: return.type
-			count: 2
+			count: 1
 			path: src/Adapter/Git/GitLab.php
 
 		-
