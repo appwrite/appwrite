@@ -21,8 +21,6 @@ faqs:
     answer: "No. Image transformations are billed per [origin image](/docs/advanced/billing/image-transformations), not per variant, so AVIF, WebP, and the original format of the same file count as one origin image."
   - question: "Which Appwrite endpoints support output set to auto?"
     answer: "Storage file previews (`storage.getFilePreview`) and Avatars screenshots (`avatars.getScreenshot`). Screenshots fall back to PNG instead of the original format."
-  - question: "Is output set to auto available on self-hosted Appwrite?"
-    answer: "Automatic output format is live on Appwrite Cloud and ships in the next self-hosted Appwrite release."
 ---
 
 AVIF files are often much smaller than JPEGs of the same quality, and WebP sits in between. Appwrite Storage previews [can already output AVIF](/blog/post/new-image-formats-avif-heic). The catch is that a preview URL set to AVIF serves AVIF to every client, including the ones that can't decode it. So most apps settle for one format that works everywhere and leave the savings on the table.

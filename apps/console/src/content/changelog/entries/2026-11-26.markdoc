@@ -8,7 +8,7 @@ tags: storage, performance, sdk
 
 [Storage file previews](/docs/products/storage/images#automatic-output-format) and [Avatars screenshots](/docs/products/avatars/screenshots#automatic-output-format) can now pick their output format automatically. Appwrite checks which image formats the browser says it supports and returns AVIF when it can, WebP next, and otherwise the original format for previews or PNG for screenshots. One preview URL now gives Chrome, Edge, and Firefox AVIF and Safari WebP, with no separate URL per format.
 
-SDKs that download image bytes in native and server apps don't name a specific format, so they keep getting the original. Each browser caches its own format, and Appwrite caches every format separately. Previews that ask for a specific format work as before. It's live on Appwrite Cloud and ships in the next self-hosted Appwrite release.
+SDKs that download image bytes in native and server apps don't name a specific format, so they keep getting the original. Each browser caches its own format, and Appwrite caches every format separately. Previews that ask for a specific format work as before. It's live on Appwrite Cloud now.
 
 {% arrow_link href="/blog/post/announcing-automatic-image-format" %}
 Read the announcement
