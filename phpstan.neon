@@ -8,8 +8,6 @@ parameters:
     - tests
   bootstrapFiles:
     - app/init/constants.php
-  scanDirectories:
-    - vendor/swoole/ide-helper
   scanFiles:
     # Utopia\Image\Canvas, which the utopia extension registers
     - packages/image/stubs/Canvas.php
@@ -28,6 +26,9 @@ parameters:
     - packages/migration/tests/Adapters/MockDestination.php
     # AppwriteColumnLimitTest's LimitedMemoryAdapter, which the compat migration adapter builds
     - packages/migration/tests/Destinations/AppwriteColumnLimitTest.php
+  scanDirectories:
+    - vendor/swoole/ide-helper
+    - packages/query/stubs
   excludePaths:
     - tests/resources
     # Written against utopia-php/agents before its redesign (models, tools and a

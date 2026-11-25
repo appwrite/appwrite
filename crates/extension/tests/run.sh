@@ -22,13 +22,11 @@ vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php packages/i
 for library in $libraries; do
     echo "== $library" >&2
     [ -f "$tests/$library.php" ] || { echo "missing parity corpus $tests/$library.php" >&2; exit 1; }
-    # packages/query/tests/E2E needs MySQL, PostgreSQL, ClickHouse and MongoDB servers.
-    unit=; [ "$library" = query ] && unit='--exclude-filter \\E2E\\'
     # database is utopia-php/database in vendor/: the unit tests of the classes the extension serves.
     suite="packages/$library/tests"
     [ "$library" = database ] && suite=$(printf 'vendor/utopia-php/database/tests/unit/%sTest.php ' Id Role Permission DateTime)
     # shellcheck disable=SC2086
-    _APP_EXTENSION_LIBRARIES=$library vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php $unit $suite
+    _APP_EXTENSION_LIBRARIES=$library vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php $suite
     _APP_EXTENSION_LIBRARIES= php "$tests/$library.php" > "$output/$library.php.jsonl"
     _APP_EXTENSION_LIBRARIES=$library php "$tests/$library.php" > "$output/$library.rust.jsonl"
     diff "$output/$library.php.jsonl" "$output/$library.rust.jsonl"
@@ -41,15 +39,11 @@ for library in $libraries; do
     diff "$output/$library.php.jsonl" "$output/$library.all.jsonl"
 done
 
-# query has two more corpora: its builders, and the builders when a build yields and another
-# runs on the same thread.
-for corpus in query-builders query-coroutines; do
-    echo "== $corpus" >&2
-    _APP_EXTENSION_LIBRARIES= php "$tests/$corpus.php" > "$output/$corpus.php.jsonl"
-    _APP_EXTENSION_LIBRARIES=query php "$tests/$corpus.php" > "$output/$corpus.rust.jsonl"
-    diff "$output/$corpus.php.jsonl" "$output/$corpus.rust.jsonl"
-    [ -s "$output/$corpus.rust.jsonl" ] || { echo "$corpus corpus printed nothing" >&2; exit 1; }
-done
+# The query builders when a build yields and another runs on the same thread: no build may see
+# another's overrides.
+echo "== query-coroutines" >&2
+php "$tests/query-coroutines.php" | tail -n 1 | grep -q '"crossed":0}$' ||
+    { echo "query builds crossed between coroutines" >&2; exit 1; }
 
 # A PHP subclass of every class, cached by opcache: what the extension's defaults and constants
 # must survive (opcache frees what it copies into shared memory as PHP's allocator's).
@@ -120,6 +114,9 @@ for package in user-agent domains emails validators auth; do
     echo "== $package (no PHP)" >&2
     vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php "packages/$package/tests"
 done
+# packages/query/tests/E2E needs MySQL, PostgreSQL, ClickHouse and MongoDB servers.
+echo "== query (no PHP)" >&2
+vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php --exclude-filter '\\E2E\\' packages/query/tests
 
 # Locale has no package to test, so its corpus is checked against the output pinned from the PHP
 # class it replaced (utopia-php/locale).

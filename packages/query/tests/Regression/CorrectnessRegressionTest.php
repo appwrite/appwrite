@@ -253,37 +253,6 @@ class CorrectnessRegressionTest extends TestCase
         $this->assertSame('SELECT * FROM `t` ORDER BY `name` ASC, `age` DESC, RAND()', $plan->query);
     }
 
-    public function testResetClearsAliasQualificationState(): void
-    {
-        if (new \ReflectionClass(Builder::class)->isInternal()) {
-            $this->markTestSkipped('Reads the private state and the source of the PHP class, which the utopia extension replaces.');
-        }
-
-        // prepareAliasQualification() sets $qualify and $aggregationAliases
-        // on each build(). reset() must clear both so the builder is in a
-        // clean state between builds — the values are per-build transient
-        // and not part of the user-facing API surface.
-        $builder = new MySQLBuilder();
-        $builder
-            ->from('users', 'u')
-            ->queries([
-                Query::join('orders', 'o', [Query::on('id', 'user_id')]),
-                Query::sum('amount', 'total'),
-            ])
-            ->build();
-
-        $qualify = new \ReflectionProperty(Builder::class, 'qualify');
-        $aggregationAliases = new \ReflectionProperty(Builder::class, 'aggregationAliases');
-
-        $this->assertTrue($qualify->getValue($builder));
-        $this->assertNotSame([], $aggregationAliases->getValue($builder));
-
-        $builder->reset();
-
-        $this->assertFalse($qualify->getValue($builder), 'reset() must clear $qualify.');
-        $this->assertSame([], $aggregationAliases->getValue($builder), 'reset() must clear $aggregationAliases.');
-    }
-
     public function testResetPreservesUserInstalledHooks(): void
     {
         // Hooks and the executor are user-installed infrastructure, orthogonal
@@ -367,35 +336,6 @@ class CorrectnessRegressionTest extends TestCase
         $this->assertStringNotContainsString('LIMIT ?', $plan->query);
     }
 
-    /**
-     * The join-type match arm used to have `default => JoinType::Inner`, which
-     * silently downgraded unknown join methods to INNER. Every real join enum
-     * member is already listed in the match, so the only reliable regression
-     * test is to read the compiled source and verify the default arm now
-     * throws UnsupportedException — any future join method added to
-     * Method::isJoin() but missed in the match will fail loudly.
-     */
-    public function testUnsupportedJoinMethodMatchThrows(): void
-    {
-        if (new \ReflectionClass(Builder::class)->isInternal()) {
-            $this->markTestSkipped('Reads the private state and the source of the PHP class, which the utopia extension replaces.');
-        }
-
-        $reflection = new \ReflectionMethod(Builder::class, 'buildJoinsClause');
-        $source = $this->readMethodSource($reflection);
-
-        $this->assertStringNotContainsString(
-            'default => JoinType::Inner',
-            $source,
-            'buildJoinsClause must not silently coerce unknown join methods to INNER.',
-        );
-        $this->assertMatchesRegularExpression(
-            '/default\s*=>\s*throw\s+new\s+UnsupportedException/',
-            $source,
-            'buildJoinsClause must throw UnsupportedException on unknown join methods.',
-        );
-    }
-
     public function testMongoDbHasNoForUpdate(): void
     {
         $this->assertFalse(
@@ -434,18 +374,5 @@ class CorrectnessRegressionTest extends TestCase
 
         $this->expectException(ValidationException::class);
         $builder->orderWithFill('ts', 'ASC, 1; DROP TABLE t');
-    }
-
-    private function readMethodSource(\ReflectionMethod $method): string
-    {
-        $file = $method->getFileName();
-        $this->assertIsString($file);
-        $lines = \file($file, FILE_IGNORE_NEW_LINES);
-        $this->assertIsArray($lines);
-
-        $start = $method->getStartLine() - 1;
-        $end = $method->getEndLine();
-
-        return \implode("\n", \array_slice($lines, $start, $end - $start));
     }
 }
