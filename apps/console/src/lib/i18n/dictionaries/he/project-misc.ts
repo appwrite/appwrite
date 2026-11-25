@@ -3923,6 +3923,15 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Let your team know someone is on it. It keeps firing until its monitor recovers.':
     'כך הצוות יודע שמישהו מטפל בזה. ההתראה תמשיך לפעול עד שהמוניטור יחזור לשגרה.',
   'Nobody has acknowledged this alert': 'אף אחד עדיין לא אישר טיפול בהתראה הזו',
+  Acknowledged: 'בטיפול',
+  'Alert acknowledged': 'אישרתם טיפול בהתראה',
+  "Your team sees that you're on it. It keeps firing until its monitor recovers.":
+    'הצוות רואה שאתם מטפלים בזה. ההתראה תמשיך לפעול עד שהמוניטור יחזור לשגרה.',
+  'This alert has already resolved': 'ההתראה הזו כבר נסגרה',
+  'Only a firing alert can be acknowledged.':
+    'אפשר לאשר טיפול רק בהתראה פעילה.',
+  "Your role can't change alerts. Ask an owner or a developer.":
+    'התפקיד שלכם לא מאפשר לשנות התראות. פנו לבעלים או למפתח.',
   "You don't have permission to manage monitors.":
     'אין לכם הרשאה לנהל מוניטורים.',
   'between two alerts from this monitor.': 'בין שתי התראות מהמוניטור הזה.',
@@ -4297,4 +4306,89 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'per project.': 'לכל פרויקט.',
   'to create another.': 'כדי ליצור נכס נוסף.',
   'to enable analytics on this site.': 'כדי להפעיל אנליטיקה באתר הזה.',
+  'Your plan checks at most every {interval}.':
+    'בתוכנית שלך הבדיקות רצות לכל היותר פעם ב-{interval}.',
+  'Synthetic checks: {used} of {limit} allowed on your plan.':
+    'בדיקות סינתטיות: {used} מתוך {limit} שהתוכנית שלך מאפשרת.',
+  'Synthetic checks: {used} of {included} included.':
+    'בדיקות סינתטיות: {used} מתוך {included} כלולות בתוכנית.',
+  'Each extra check costs {price} per month.':
+    'כל בדיקה נוספת עולה {price} לחודש.',
+  'Upgrade your plan to add more synthetic checks.':
+    'כדי להוסיף בדיקות סינתטיות, יש לשדרג את התוכנית.',
+  'Escalations: {used} of {limit} allowed on your plan.':
+    'הסלמות: {used} מתוך {limit} שהתוכנית שלך מאפשרת.',
+  'On-call responders: {used} of {included} included.':
+    'כוננים: {used} מתוך {included} כלולים בתוכנית.',
+  'Each extra responder costs {price} per month.':
+    'כל כונן נוסף עולה {price} לחודש.',
+  'Upgrade your plan to create more escalations.':
+    'כדי ליצור הסלמות נוספות, יש לשדרג את התוכנית.',
+  'Your plan allows up to {count} steps per escalation.':
+    'התוכנית שלך מאפשרת עד {count} שלבים בכל הסלמה.',
+  'Upgrade your plan to repeat escalations.':
+    'כדי לחזור על הסלמות, יש לשדרג את התוכנית.',
+  'Usage monitors: {used} of {limit} allowed on your plan.':
+    'מוניטורי שימוש: {used} מתוך {limit} שהתוכנית שלך מאפשרת.',
+  'Upgrade your plan to add more usage monitors.':
+    'כדי להוסיף מוניטורי שימוש, יש לשדרג את התוכנית.',
+  // Analytics for signed-in users
+  'Signed-in users, ranked by visits': 'משתמשים מחוברים, לפי מספר הביקורים',
+  'View user': 'הצגת המשתמש',
+  'Could not load analytics': 'לא ניתן לטעון את האנליטיקה',
+  'No analytics yet': 'אין עדיין אנליטיקה',
+  "Add an analytics property and turn on User identification to see each signed-in user's pages and events here.":
+    'הוסיפו נכס אנליטיקה והפעילו זיהוי משתמשים כדי לראות כאן את הדפים והאירועים של כל משתמש מחובר.',
+  'Add analytics': 'הוספת אנליטיקה',
+  'Link {name} to their analytics': 'קישור {name} לנתוני האנליטיקה שלו',
+  "Turn on User identification in a property's settings to record the signed-in user on every event, so their pages, events and sessions show here.":
+    'הפעילו זיהוי משתמשים בהגדרות הנכס כדי לתעד את המשתמש המחובר בכל אירוע, כך שהדפים, האירועים והסשנים שלו יוצגו כאן.',
+  'Open property settings': 'פתיחת הגדרות הנכס',
+  'Last active': 'פעילות אחרונה',
+  Calls: 'קריאות',
+  'Active days': 'ימים פעילים',
+  'No events from this user in the last 30 days':
+    'אין אירועים מהמשתמש הזה ב-30 הימים האחרונים',
+  '30 days ago': 'לפני 30 יום',
+  'No custom events': 'אין אירועים מותאמים',
+  'No model calls': 'אין קריאות למודלים',
+  'No screens viewed': 'לא נצפו מסכים',
+  'No pages viewed': 'לא נצפו דפים',
+  'View in analytics': 'הצגה באנליטיקה',
+  'New installs and updates of your app': 'התקנות ועדכונים חדשים של האפליקציה',
+  'Add the latest tracking SDK to your app to count installs and updates.':
+    'הוסיפו את ה-SDK העדכני למעקב לאפליקציה כדי לספור התקנות ועדכונים.',
+  'Pushes received on devices, and how many were opened':
+    'התראות שהתקבלו במכשירים, וכמה מהן נפתחו',
+  'No push notifications tracked yet': 'עדיין לא נמדדו התראות פוש',
+  'Pushes sent with Messaging show their reach and opens here once the tracking SDK is in your app.':
+    'התראות שנשלחו דרך Messaging יציגו כאן את ההגעה והפתיחות שלהן כשה-SDK למעקב יהיה באפליקציה.',
+  'Open Messaging': 'פתיחת Messaging',
+  Received: 'התקבלו',
+  Opened: 'נפתחו',
+  'Open rate': 'שיעור פתיחה',
+  Rate: 'שיעור',
+  'No pushes with a message ID in this range':
+    'אין התראות עם מזהה הודעה בטווח הזה',
+  '{count} delivered': '{count} נמסרו',
+  'View message': 'הצגת ההודעה',
+  Views: 'צפיות',
+  'Last seen': 'נראה לאחרונה',
+  'Not in this period': 'לא בתקופה הזו',
+  'of {count}': 'מתוך {count}',
+  'Events per day, last 30 days': 'אירועים ליום, 30 הימים האחרונים',
+  Properties: 'נכסים',
+  'Where this user was active, last 30 days':
+    'היכן המשתמש היה פעיל, 30 הימים האחרונים',
+  'No activity': 'אין פעילות',
+  'No locations': 'אין מיקומים',
+  'No sources': 'אין מקורות',
+  'No browsers': 'אין דפדפנים',
+  'No operating systems': 'אין מערכות הפעלה',
+  'No devices': 'אין מכשירים',
+  'No OS versions': 'אין גרסאות מערכת הפעלה',
+  views: 'צפיות',
+  'signed in': 'מחוברים',
+  'Signed in now': 'מחוברים עכשיו',
+  'and {count} more': 'ועוד {count}',
 }

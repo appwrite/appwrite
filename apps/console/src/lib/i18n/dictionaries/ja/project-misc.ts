@@ -4001,6 +4001,15 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '誰かが対応中であることをチームに知らせます。モニターが回復するまでアラートは発生し続けます。',
   'Nobody has acknowledged this alert':
     'このアラートはまだ誰も確認していません',
+  Acknowledged: '確認済み',
+  'Alert acknowledged': 'アラートを確認済みにしました',
+  "Your team sees that you're on it. It keeps firing until its monitor recovers.":
+    'あなたが対応中であることがチームに表示されます。モニターが回復するまでアラートは発生し続けます。',
+  'This alert has already resolved': 'このアラートはすでに解決しています',
+  'Only a firing alert can be acknowledged.':
+    '確認済みにできるのは発生中のアラートだけです。',
+  "Your role can't change alerts. Ask an owner or a developer.":
+    'あなたのロールではアラートを変更できません。オーナーまたは開発者に依頼してください。',
   "You don't have permission to manage monitors.":
     'モニターを管理する権限がありません。',
   'between two alerts from this monitor.':
@@ -4386,5 +4395,92 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'analytics property': 'アナリティクスプロパティ',
   'per project.': '(プロジェクトごと)。',
   'to create another.': 'して、さらに作成してください。',
-  'to enable analytics on this site.': 'して、このサイトでアナリティクスを有効にしてください。',
+  'to enable analytics on this site.':
+    'して、このサイトでアナリティクスを有効にしてください。',
+  'Your plan checks at most every {interval}.':
+    'ご利用のプランでは、チェック間隔は最短で{interval}です。',
+  'Synthetic checks: {used} of {limit} allowed on your plan.':
+    'Synthetic チェック: プランの上限 {limit} 件中 {used} 件を使用中です。',
+  'Synthetic checks: {used} of {included} included.':
+    'Synthetic チェック: プランに含まれる {included} 件中 {used} 件を使用中です。',
+  'Each extra check costs {price} per month.':
+    '追加のチェックは 1 件あたり月額 {price} です。',
+  'Upgrade your plan to add more synthetic checks.':
+    'Synthetic チェックを追加するには、プランをアップグレードしてください。',
+  'Escalations: {used} of {limit} allowed on your plan.':
+    'エスカレーション: プランの上限 {limit} 件中 {used} 件を使用中です。',
+  'On-call responders: {used} of {included} included.':
+    'オンコール対応者: プランに含まれる {included} 人中 {used} 人です。',
+  'Each extra responder costs {price} per month.':
+    '追加の対応者は 1 人あたり月額 {price} です。',
+  'Upgrade your plan to create more escalations.':
+    'エスカレーションをさらに作成するには、プランをアップグレードしてください。',
+  'Your plan allows up to {count} steps per escalation.':
+    'ご利用のプランでは、1 つのエスカレーションに設定できるステップは {count} 個までです。',
+  'Upgrade your plan to repeat escalations.':
+    'エスカレーションを繰り返すには、プランをアップグレードしてください。',
+  'Usage monitors: {used} of {limit} allowed on your plan.':
+    '使用量モニター: プランの上限 {limit} 件中 {used} 件を使用中です。',
+  'Upgrade your plan to add more usage monitors.':
+    '使用量モニターを追加するには、プランをアップグレードしてください。',
+  // Analytics for signed-in users
+  'Signed-in users, ranked by visits': 'サインイン済みユーザー (訪問数順)',
+  'View user': 'ユーザーを表示',
+  'Could not load analytics': 'アナリティクスを読み込めませんでした',
+  'No analytics yet': 'アナリティクスはまだありません',
+  "Add an analytics property and turn on User identification to see each signed-in user's pages and events here.":
+    'アナリティクスプロパティを追加してユーザー識別を有効にすると、サインイン済みユーザーごとのページとイベントがここに表示されます。',
+  'Add analytics': 'アナリティクスを追加',
+  'Link {name} to their analytics': '{name} をアナリティクスにリンク',
+  "Turn on User identification in a property's settings to record the signed-in user on every event, so their pages, events and sessions show here.":
+    'プロパティの設定でユーザー識別を有効にすると、すべてのイベントにサインイン中のユーザーが記録され、そのページ、イベント、セッションがここに表示されます。',
+  'Open property settings': 'プロパティ設定を開く',
+  'Last active': '最終アクティブ',
+  Calls: '呼び出し',
+  'Active days': 'アクティブ日数',
+  'No events from this user in the last 30 days':
+    '過去 30 日間、このユーザーのイベントはありません',
+  '30 days ago': '30 日前',
+  'No custom events': 'カスタムイベントはありません',
+  'No model calls': 'モデル呼び出しはありません',
+  'No screens viewed': '表示された画面はありません',
+  'No pages viewed': '表示されたページはありません',
+  'View in analytics': 'アナリティクスで表示',
+  'New installs and updates of your app':
+    'アプリの新規インストールとアップデート',
+  'Add the latest tracking SDK to your app to count installs and updates.':
+    '最新のトラッキング SDK をアプリに追加すると、インストールとアップデートを計測できます。',
+  'Pushes received on devices, and how many were opened':
+    'デバイスで受信したプッシュ通知と開封数',
+  'No push notifications tracked yet': 'プッシュ通知はまだ計測されていません',
+  'Pushes sent with Messaging show their reach and opens here once the tracking SDK is in your app.':
+    'トラッキング SDK をアプリに追加すると、Messaging で送信したプッシュ通知の到達数と開封数がここに表示されます。',
+  'Open Messaging': 'Messaging を開く',
+  Received: '受信',
+  Opened: '開封',
+  'Open rate': '開封率',
+  Rate: '率',
+  'No pushes with a message ID in this range':
+    'この期間にメッセージ ID 付きのプッシュはありません',
+  '{count} delivered': '{count} 件配信',
+  'View message': 'メッセージを表示',
+  Views: '表示',
+  'Last seen': '最終確認',
+  'Not in this period': 'この期間はなし',
+  'of {count}': '/ {count}',
+  'Events per day, last 30 days': '1 日あたりのイベント (過去 30 日間)',
+  Properties: 'プロパティ',
+  'Where this user was active, last 30 days':
+    'このユーザーがアクティブだった場所 (過去 30 日間)',
+  'No activity': 'アクティビティなし',
+  'No locations': '場所はありません',
+  'No sources': 'ソースはありません',
+  'No browsers': 'ブラウザはありません',
+  'No operating systems': 'OS はありません',
+  'No devices': 'デバイスはありません',
+  'No OS versions': 'OS バージョンはありません',
+  views: '表示',
+  'signed in': '人がサインイン中',
+  'Signed in now': '現在サインイン中',
+  'and {count} more': 'ほか {count} 人',
 }

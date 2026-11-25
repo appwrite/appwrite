@@ -5,10 +5,13 @@ namespace Utopia\Query\Schema;
 use Utopia\Query\Builder\Statement;
 use Utopia\Query\Exception\UnsupportedException;
 use Utopia\Query\Schema\Feature\Views;
+use Utopia\Query\StringLiteral;
 
 class SQLite extends SQL implements Views
 {
     use Trait\Views;
+
+    protected StringLiteral $literal = StringLiteral::Standard;
 
     #[\Override]
     public function table(string $name): Table\SQLite
