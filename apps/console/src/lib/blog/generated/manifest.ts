@@ -3,6 +3,34 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-bird-messaging-providers",
+    "href": "/blog/post/announcing-bird-messaging-providers",
+    "title": "Announcing Bird email and SMS in Appwrite Messaging",
+    "description": "Appwrite Messaging now sends email and SMS through Bird, with one-click Bird setup in the Console for both providers and for your project's custom SMTP.",
+    "date": "2026-11-25",
+    "lastUpdated": "2026-11-25",
+    "timeToRead": 7,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-bird-messaging-providers/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "announcing-native-request-response",
+    "href": "/blog/post/announcing-native-request-response",
+    "title": "Announcing native request and response in Appwrite Functions",
+    "description": "Every Appwrite Functions runtime now hands your code its native request object, and Node.js, Bun, Deno, Python, and Dart functions can return native responses.",
+    "date": "2026-11-24",
+    "lastUpdated": "2026-11-24",
+    "timeToRead": 7,
+    "author": "matej-baco",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-native-request-response/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "appwrite-is-moving-from-php-to-rust",
     "href": "/blog/post/appwrite-is-moving-from-php-to-rust",
     "title": "Appwrite is moving from PHP to Rust",
