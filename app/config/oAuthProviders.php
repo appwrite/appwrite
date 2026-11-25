@@ -131,6 +131,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Box',
     ],
+    'clerk' => [
+        'name' => 'Clerk',
+        'developers' => 'https://clerk.com/docs/advanced-usage/clerk-idp',
+        'icon' => 'icon-clerk',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => 'clerk.phtml',
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Clerk',
+    ],
     'cloudflare' => [
         'name' => 'Cloudflare',
         'developers' => 'https://developers.cloudflare.com/fundamentals/oauth/',
