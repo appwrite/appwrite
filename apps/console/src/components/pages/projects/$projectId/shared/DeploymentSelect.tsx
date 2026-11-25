@@ -1,11 +1,10 @@
+import { useMemo } from 'react'
 import type { Models } from '@appwrite.io/console'
+import { GitCommitHorizontal, Terminal, Upload } from 'lucide-react'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+  SearchableSelect,
+  type SearchableSelectItem,
+} from '@/components/global/shared/SearchableSelect'
 import { getRelativeTimeString } from '@/components/global/shared/DateTooltip'
 import { useT } from '@/lib/i18n/translate'
 
@@ -18,6 +17,19 @@ interface DeploymentSelectProps {
   disabled?: boolean
 }
 
+/** How the deployment was made, for deployments without a commit message. */
+function sourceLabel(type: string | undefined): string {
+  if (type === 'cli') return 'CLI deployment'
+  if (type === 'manual') return 'Manual deployment'
+  return 'Deployment'
+}
+
+function sourceIcon(deployment: Models.Deployment) {
+  if (deployment.type === 'cli') return Terminal
+  if (deployment.type === 'manual') return Upload
+  return GitCommitHorizontal
+}
+
 /** Picks one of a function's or site's deployments, newest first. */
 export function DeploymentSelect({
   deployments,
@@ -27,40 +39,58 @@ export function DeploymentSelect({
   disabled,
 }: DeploymentSelectProps) {
   const t = useT()
-  // Keep a value from the URL selectable even when it is not on the first page.
-  const options =
-    value && !deployments.some((deployment) => deployment.$id === value)
-      ? [{ $id: value } as Models.Deployment, ...deployments]
-      : deployments
+
+  const items = useMemo<SearchableSelectItem[]>(
+    () =>
+      deployments.map((deployment) => {
+        const commit = deployment.providerCommitMessage?.split('\n')[0].trim()
+        const label = commit || t(sourceLabel(deployment.type))
+        const status = deployment.status
+          ? t(
+              deployment.status.charAt(0).toUpperCase() +
+                deployment.status.slice(1),
+            )
+          : undefined
+        return {
+          value: deployment.$id,
+          label,
+          description: [
+            deployment.$id,
+            deployment.$id === activeDeploymentId ? t('Active') : status,
+            deployment.$createdAt
+              ? getRelativeTimeString(deployment.$createdAt)
+              : undefined,
+          ]
+            .filter(Boolean)
+            .join(' · '),
+          searchText: [
+            label,
+            deployment.$id,
+            deployment.providerBranch,
+            deployment.providerCommitHash,
+          ]
+            .filter(Boolean)
+            .join(' '),
+          icon: sourceIcon(deployment),
+        }
+      }),
+    [t, deployments, activeDeploymentId],
+  )
 
   return (
-    <Select value={value} onValueChange={onChange} disabled={disabled}>
-      <SelectTrigger
-        className="h-9 w-[340px] max-w-full text-[13px]"
-        aria-label={t('Deployment')}
-      >
-        <SelectValue placeholder={t('Select deployment')} />
-      </SelectTrigger>
-      <SelectContent>
-        {options.map((deployment) => {
-          const commit = deployment.providerCommitMessage?.split('\n')[0]
-          return (
-            <SelectItem key={deployment.$id} value={deployment.$id}>
-              <span className="font-mono">{deployment.$id}</span>
-              {deployment.$id === activeDeploymentId && (
-                <span className="ms-2 text-emerald-600 dark:text-emerald-400">
-                  {t('Active')}
-                </span>
-              )}
-              {deployment.$createdAt && (
-                <span className="ms-2 text-muted-foreground">
-                  {commit || getRelativeTimeString(deployment.$createdAt)}
-                </span>
-              )}
-            </SelectItem>
-          )
-        })}
-      </SelectContent>
-    </Select>
+    <SearchableSelect
+      value={value ?? ''}
+      onValueChange={onChange}
+      items={items}
+      disabled={disabled}
+      ariaLabel={t('Deployment')}
+      placeholder="Select deployment"
+      searchPlaceholder="Search deployments"
+      emptyMessage="No deployments found"
+      // A deployment from the URL that is not among the newest is shown by id
+      selectedName={value}
+      triggerClassName="w-[240px] max-w-full"
+      contentClassName="w-[320px] max-w-[calc(100vw-2rem)]"
+    />
   )
 }
