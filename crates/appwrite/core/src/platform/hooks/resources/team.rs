@@ -40,7 +40,15 @@ pub(in crate::platform) async fn team(
         let path = if route.name == "wildcard" { request.uri() } else { route.path };
         let organization = request.header_or_empty("x-appwrite-organization");
         if path.starts_with("/v1/projects/:projectId") {
-            text(&get("projects", project_id_from_path(request, path_params)).await?, "teamInternalId")
+            // The matched route's own `projectId`, not the outer request's
+            // `projectIdFromPath`: a GraphQL field rebuilds this resource for
+            // its own route.
+            let project_id = match path_params.iter().find(|(name, _)| name == "projectId") {
+                Some((_, Value::String(id))) => id.clone(),
+                Some((_, Value::Number(n))) => n.to_string(),
+                _ => String::new(),
+            };
+            text(&get("projects", project_id).await?, "teamInternalId")
         } else if path == "/v1/projects" {
             let team_id = request.params().get("teamId").and_then(Value::as_str).unwrap_or_default().to_owned();
             return Ok(get("teams", team_id).await?);
@@ -56,21 +64,6 @@ pub(in crate::platform) async fn team(
     Ok(authorization
         .skip(platform_db.find_one("teams", vec![Query::equal("$sequence", [team_internal_id.as_str()])]))
         .await?)
-}
-
-/// The `projectIdFromPath` resource: the `projectId` route param of a
-/// `/v1/projects/...` URI, else empty.
-fn project_id_from_path(request: &Request, path_params: &[(String, Value)]) -> String {
-    let mut segments = request.uri().split('/').filter(|s| !s.is_empty());
-    if segments.next() != Some("v1") || segments.next() != Some("projects") {
-        return String::new();
-    }
-    path_params
-        .iter()
-        .find(|(name, _)| name == "projectId")
-        .and_then(|(_, v)| v.as_str())
-        .unwrap_or_default()
-        .to_owned()
 }
 
 /// The `$id` and `$sequence` of the `team` resource ([`team`]), `None` when
@@ -161,6 +154,8 @@ mod team_tests {
         assert_eq!(team_of(&db, &console, &project_route, "/v1/projects/p1", &[], &path).await, "t1");
         let missing = [("projectId", "missing")];
         assert_eq!(team_of(&db, &console, &project_route, "/v1/projects/missing", &[], &missing).await, "");
+        // (the route's own `projectId`, whatever the URI, as a GraphQL field's route has it)
+        assert_eq!(team_of(&db, &console, &project_route, "/v1/graphql", &[], &path).await, "t1");
         // list the projects of a `teamId`,
         let projects = route("/v1/projects", &["api", "projects"]);
         assert_eq!(team_of(&db, &console, &projects, "/v1/projects?teamId=t1", &[], &[]).await, "t1");
