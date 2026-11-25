@@ -9,7 +9,7 @@ export const Route = createFileRoute('/_public/organizations/$orgId/settings')({
 
     const { queryClient } = context
 
-    await queryClient.ensureQueryData(organizationsQueryOptions())
+    await queryClient.prefetchQuery(organizationsQueryOptions())
   },
   component: SettingsPage,
 })

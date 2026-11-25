@@ -25,7 +25,7 @@ export const Route = createFileRoute(
     if (typeof window === 'undefined') return
     const { queryClient } = context
     await Promise.all([
-      queryClient.ensureQueryData(organizationsQueryOptions()),
+      queryClient.prefetchQuery(organizationsQueryOptions()),
       queryClient
         .ensureQueryData(escalationsQueryOptions(params.orgId))
         .catch(() => undefined),

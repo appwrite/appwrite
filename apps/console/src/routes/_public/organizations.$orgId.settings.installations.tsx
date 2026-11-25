@@ -25,7 +25,7 @@ export const Route = createFileRoute(
     if (typeof window === 'undefined') return
     const { orgId } = params
     const { queryClient } = context
-    await queryClient.ensureQueryData(organizationsQueryOptions())
+    await queryClient.prefetchQuery(organizationsQueryOptions())
     if (orgId) {
       await queryClient.prefetchInfiniteQuery(
         organizationInstalledAppsInfiniteQueryOptions(orgId),

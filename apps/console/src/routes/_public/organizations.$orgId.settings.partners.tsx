@@ -27,7 +27,7 @@ export const Route = createFileRoute(
     if (typeof window === 'undefined') return
     const { orgId } = params
     const { queryClient } = context
-    await queryClient.ensureQueryData(organizationsQueryOptions())
+    await queryClient.prefetchQuery(organizationsQueryOptions())
     if (!orgId) return
 
     const canAccess = await canAccessOrganizationApiKeys(queryClient, orgId)

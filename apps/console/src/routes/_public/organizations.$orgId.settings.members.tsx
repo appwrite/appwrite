@@ -18,7 +18,7 @@ export const Route = createFileRoute(
 
     // The first page OrgOverview shows: the org layout has usually loaded it.
     await Promise.all([
-      queryClient.ensureQueryData(organizationsQueryOptions()),
+      queryClient.prefetchQuery(organizationsQueryOptions()),
       orgId
         ? queryClient.ensureQueryData(
             organizationMembershipsQueryOptions(

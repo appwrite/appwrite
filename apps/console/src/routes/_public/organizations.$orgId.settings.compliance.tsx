@@ -21,7 +21,7 @@ export const Route = createFileRoute(
   loader: async ({ context }) => {
     if (typeof window === 'undefined') return
     const { queryClient } = context
-    await queryClient.ensureQueryData(organizationsQueryOptions())
+    await queryClient.prefetchQuery(organizationsQueryOptions())
   },
   component: CompliancePage,
 })
