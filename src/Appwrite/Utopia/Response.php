@@ -266,6 +266,7 @@ class Response extends SwooleResponse
     public const MODEL_MIGRATION_FIREBASE_PROJECT_LIST = 'firebaseProjectList';
     public const MODEL_MIGRATION_SUPABASE_PROJECT = 'supabaseProject';
     public const MODEL_MIGRATION_SUPABASE_PROJECT_LIST = 'supabaseProjectList';
+    public const MODEL_MIGRATION_SUPABASE_CREDENTIALS = 'supabaseCredentials';
 
     // Project
     public const MODEL_PROJECT = 'project';
