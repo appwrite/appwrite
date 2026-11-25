@@ -12,6 +12,7 @@ use Utopia\Console\Console;
 use Utopia\Database\Attribute;
 use Utopia\Database\Attribute\Update as AttributeUpdate;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\NotFound;
@@ -654,7 +655,7 @@ class V25 extends Migration
                         }
                     }
                     if ($id === 'monitors') {
-                        foreach (['_key_escalationId', '_key_project_monitorId'] as $index) {
+                        foreach (['_key_escalationId', '_key_monitorId_project'] as $index) {
                             try {
                                 $this->createIndexFromCollection($this->dbForProject, $id, $index);
                             } catch (Duplicate) {
@@ -780,20 +781,18 @@ class V25 extends Migration
     /**
      * Monitor IDs were global; each is now stored under an ID scoped to its project,
      * or its team for a monitor without one, and keeps the chosen ID in `monitorId`.
-     * The rename keeps `$sequence`, which alerts and schedules join on, and runs after
-     * every collection is migrated so `schedules` and `users` hold their attributes.
+     * The rename keeps `$sequence`, which alerts join on, and runs after every
+     * collection is migrated so `schedules` and `users` hold their attributes. Every
+     * step is skipped once done, so a failed run can be repeated.
      */
     private function migrateMonitorIds(): void
     {
-        $renamed = [];
+        /** @var array<string, string> $stored chosen ID to stored ID, the oldest monitor first, as opt-outs named it */
+        $stored = [];
         $sequence = null;
 
         do {
-            $queries = [
-                Query::or([Query::isNull('monitorId'), Query::equal('monitorId', [''])]),
-                Query::orderAsc('$sequence'),
-                Query::limit($this->limit),
-            ];
+            $queries = [Query::orderAsc('$sequence'), Query::limit($this->limit)];
             if ($sequence !== null) {
                 $queries[] = Query::greaterThan('$sequence', $sequence);
             }
@@ -801,50 +800,106 @@ class V25 extends Migration
 
             foreach ($monitors as $monitor) {
                 $sequence = $monitor->getSequence();
+                $monitorId = (string) $monitor->getAttribute('monitorId', '');
                 $old = $monitor->getId();
-                $projectInternalId = (string) $monitor->getAttribute('projectInternalId', '');
-                $scope = $projectInternalId !== '' ? $projectInternalId : 'team:' . $monitor->getAttribute('teamInternalId', '');
-                $new = Monitors::id($scope, $old);
 
-                try {
-                    $this->dbForProject->updateDocument('monitors', $old, new Document([
-                        '$id' => $new,
-                        'monitorId' => $old,
-                    ]));
-                    $renamed[$old] = $new;
-                } catch (Throwable $th) {
-                    Console::warning("Failed to move monitor \"{$old}\" to \"{$new}\": {$th->getMessage()}");
-                    continue;
+                if ($monitorId === '') {
+                    $monitorId = $old;
+                    $new = Monitors::id(Monitors::scope($monitor), $old);
+
+                    try {
+                        $monitor = $this->dbForProject->updateDocument('monitors', $old, new Document([
+                            '$id' => $new,
+                            'monitorId' => $old,
+                        ]));
+                    } catch (Duplicate) {
+                        Console::warning("Monitor \"{$old}\" of project \"{$monitor->getAttribute('projectId')}\" is disabled: a monitor with its ID was created in the project before it was moved.");
+                        $this->disableMonitor($monitor);
+                        continue;
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to move monitor \"{$old}\" to \"{$new}\": {$th->getMessage()}");
+                        continue;
+                    }
                 }
 
+                $stored[$monitorId] ??= $monitor->getId();
+
                 try {
-                    $schedules = $this->dbForProject->find('schedules', [
-                        Query::equal('region', [(string) $monitor->getAttribute('region')]),
-                        Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_MONITOR]),
-                        Query::equal('resourceId', [$old]),
-                    ]);
-                    foreach ($schedules as $schedule) {
-                        $this->dbForProject->updateDocument('schedules', $schedule->getId(), new Document(['resourceId' => $new]));
-                    }
+                    $this->moveSchedules($monitor, $monitorId);
                 } catch (Throwable $th) {
-                    Console::warning("Failed to move the schedule of monitor \"{$old}\" to \"{$new}\": {$th->getMessage()}");
+                    Console::warning("Failed to move the schedule of monitor \"{$monitorId}\" to \"{$monitor->getId()}\": {$th->getMessage()}");
                 }
             }
         } while (\count($monitors) === $this->limit);
 
+        if ($stored === []) {
+            return;
+        }
+
         // A user's opt-outs name monitors by ID, next to whole types.
-        foreach (\array_chunk($renamed, $this->limit, true) as $chunk) {
-            try {
-                foreach ($this->dbForProject->cursor('users', [Query::containsAny('alertsUnsubscribed', \array_keys($chunk))], batchSize: $this->limit) as $user) {
-                    $unsubscribed = \array_values(\array_map(
-                        fn (string $entry): string => $chunk[$entry] ?? $entry,
-                        $user->getAttribute('alertsUnsubscribed', [])
-                    ));
-                    $this->dbForProject->updateDocument('users', $user->getId(), new Document(['alertsUnsubscribed' => $unsubscribed]));
+        try {
+            foreach ($this->dbForProject->cursor('users', [Query::isNotNull('alertsUnsubscribed')], batchSize: $this->limit) as $user) {
+                $unsubscribed = $user->getAttribute('alertsUnsubscribed', []);
+                $moved = \array_map(fn (string $entry): string => $stored[$entry] ?? $entry, $unsubscribed);
+                if ($moved !== $unsubscribed) {
+                    $this->dbForProject->updateDocument('users', $user->getId(), new Document(['alertsUnsubscribed' => $moved]));
                 }
-            } catch (Throwable $th) {
-                Console::warning('Failed to move alert opt-outs to the new monitor IDs: ' . $th->getMessage());
             }
+        } catch (Throwable $th) {
+            Console::warning('Failed to move alert opt-outs to the new monitor IDs: ' . $th->getMessage());
+        }
+    }
+
+    /**
+     * Points the monitor's schedule at its stored ID. Moving `resourceUpdatedAt` makes a
+     * running scheduler pick the change up, and `active` undoes a stop the worker made
+     * while the monitor could not be found under its old ID.
+     */
+    private function moveSchedules(Document $monitor, string $monitorId): void
+    {
+        foreach ($this->monitorSchedules($monitor, [$monitorId, $monitor->getId()]) as $schedule) {
+            if ($schedule->getAttribute('resourceId') === $monitor->getId()) {
+                continue;
+            }
+            $this->dbForProject->updateDocument('schedules', $schedule->getId(), new Document([
+                'resourceId' => $monitor->getId(),
+                'active' => (bool) $monitor->getAttribute('enabled', false),
+                'resourceUpdatedAt' => DateTime::now(),
+            ]));
+        }
+    }
+
+    /**
+     * The monitor's schedules among those naming any of `$resourceIds`.
+     *
+     * @param list<string> $resourceIds
+     * @return array<Document>
+     */
+    private function monitorSchedules(Document $monitor, array $resourceIds): array
+    {
+        return $this->dbForProject->find('schedules', [
+            Query::equal('region', [(string) $monitor->getAttribute('region')]),
+            Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_MONITOR]),
+            Query::equal('projectId', [(string) $monitor->getAttribute('projectId', '')]),
+            Query::equal('resourceId', $resourceIds),
+        ]);
+    }
+
+    /**
+     * Stops a monitor that cannot take its scoped ID, so it does not go on evaluating unseen.
+     */
+    private function disableMonitor(Document $monitor): void
+    {
+        try {
+            $this->dbForProject->updateDocument('monitors', $monitor->getId(), new Document(['enabled' => false]));
+            foreach ($this->monitorSchedules($monitor, [$monitor->getId()]) as $schedule) {
+                $this->dbForProject->updateDocument('schedules', $schedule->getId(), new Document([
+                    'active' => false,
+                    'resourceUpdatedAt' => DateTime::now(),
+                ]));
+            }
+        } catch (Throwable $th) {
+            Console::warning("Failed to disable monitor \"{$monitor->getId()}\": {$th->getMessage()}");
         }
     }
 
