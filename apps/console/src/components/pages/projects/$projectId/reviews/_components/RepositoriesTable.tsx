@@ -19,18 +19,24 @@ import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import type { ReviewRepository } from '@/lib/appwrite/reviews'
 import { useT } from '@/lib/i18n/translate'
 import { copyToClipboard } from '@/lib/utils/context-menu'
-import { VcsIcon } from '@/lib/vcs/providers'
+import {
+  getKnownVcsProvider,
+  getProviderRepositoryUrl,
+  VcsIcon,
+} from '@/lib/vcs/providers'
 import { ReviewToggle } from './ReviewToggle'
 import { StrengthSelect } from './StrengthSelect'
 
 const HEAD_CLASS =
   'px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
 
-/** One row of the table: a GitHub repository and, when reviewed, its row. */
+/** One row of the table: a provider's repository and, when reviewed, its row. */
 export type RepositoryRowData = {
   installationId: string
+  /** The installation's provider, such as `github` or `origin`. */
+  provider: string
   providerRepositoryId: string
-  /** `owner/name`, or the GitHub ID while the name is loading. */
+  /** `owner/name`, or the provider's ID while the name is loading. */
   name: string
   private?: boolean
   /** Shown under the name when the project has several installations. */
@@ -99,14 +105,22 @@ function RepositoryRow({
 }) {
   const t = useT()
   const resolved = row.name !== row.providerRepositoryId
-  const url = resolved ? `https://github.com/${row.name}` : undefined
+  const [organization, ...repositoryName] = row.name.split('/')
+  const url = resolved
+    ? getProviderRepositoryUrl({
+        provider: row.provider,
+        organization,
+        repositoryName: repositoryName.join('/'),
+      })
+    : null
+  const providerLabel = getKnownVcsProvider(row.provider)?.label ?? ''
 
   return (
     <TableRow className="border-b border-border/50">
       <TableCell className="px-4 py-3">
         <div className="flex min-w-0 items-center gap-2">
           <VcsIcon
-            type="github"
+            type={row.provider}
             className="h-4 w-4 shrink-0 text-muted-foreground"
           />
           <div className="min-w-0">
@@ -180,7 +194,7 @@ function RepositoryRow({
               <DropdownMenuItem asChild>
                 <a href={url} target="_blank" rel="noreferrer">
                   <MenuItemContent icon={ExternalLink}>
-                    {t('Open on GitHub')}
+                    {t(`Open on ${providerLabel}`)}
                   </MenuItemContent>
                 </a>
               </DropdownMenuItem>

@@ -90,4 +90,56 @@ abstract class GiteaBase extends Base
             'sender' => ['login' => self::EVENT_OWNER, 'html_url' => 'http://gitea:3000/' . self::EVENT_OWNER],
         ]);
     }
+
+    /**
+     * @param array<string, mixed> $overrides
+     */
+    private function commentPayload(array $overrides = []): string
+    {
+        return (string) json_encode([
+            'action' => 'created',
+            'is_pull' => true,
+            'issue' => ['number' => self::EVENT_PULL_REQUEST_NUMBER, 'user' => ['login' => 'author']],
+            'pull_request' => ['number' => self::EVENT_PULL_REQUEST_NUMBER, 'user' => ['login' => 'author']],
+            'comment' => [
+                'id' => 99,
+                'body' => '@appwrite review',
+                'html_url' => 'http://gitea:3000/o/r/pulls/42#issuecomment-99',
+                'user' => ['id' => 5, 'login' => 'octo'],
+            ],
+            'repository' => [
+                'id' => (int) self::EVENT_REPOSITORY_ID,
+                'name' => self::EVENT_REPOSITORY_NAME,
+                'html_url' => 'http://gitea:3000/' . self::EVENT_OWNER . '/' . self::EVENT_REPOSITORY_NAME,
+                'owner' => ['login' => self::EVENT_OWNER],
+            ],
+            ...$overrides,
+        ]);
+    }
+
+    public function testGetEventPullRequestComment(): void
+    {
+        $events = $this->vcsAdapter->getEvents('issue_comment', $this->commentPayload());
+
+        $this->assertCount(1, $events);
+        $event = $events[0];
+        $this->assertSame('created', $event['action']);
+        $this->assertSame(self::EVENT_REPOSITORY_ID, $event['repositoryId']);
+        $this->assertSame(self::EVENT_OWNER, $event['owner']);
+        $this->assertSame(self::EVENT_PULL_REQUEST_NUMBER, $event['pullRequestNumber']);
+        $this->assertSame('author', $event['pullRequestAuthor']);
+        $this->assertSame('99', $event['commentId']);
+        // Review thread replies look the same; the caller looks their thread up
+        $this->assertSame('issue', $event['commentKind']);
+        $this->assertSame('@appwrite review', $event['commentBody']);
+        $this->assertSame('octo', $event['commentAuthor']);
+        $this->assertSame('5', $event['commentAuthorId']);
+        $this->assertSame('User', $event['commentAuthorType']);
+    }
+
+    public function testGetEventIgnoresOtherComments(): void
+    {
+        $this->assertSame([], $this->vcsAdapter->getEvents('issue_comment', $this->commentPayload(['is_pull' => false])));
+        $this->assertSame([], $this->vcsAdapter->getEvents('issue_comment', $this->commentPayload(['action' => 'edited'])));
+    }
 }

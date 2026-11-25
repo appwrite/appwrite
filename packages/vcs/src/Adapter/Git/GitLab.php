@@ -576,7 +576,7 @@ class GitLab extends Git
         return $response['body'] ?? [];
     }
 
-    public function createWebhook(string $owner, string $repositoryName, string $url, string $secret, array $events = ['push', 'pull_request']): int
+    public function createWebhook(string $owner, string $repositoryName, string $url, string $secret, array $events = ['push', 'pull_request', 'comment']): int
     {
         $ownerPath = $this->getOwnerPath($owner);
         $projectPath = urlencode("{$ownerPath}/{$repositoryName}");
@@ -588,6 +588,7 @@ class GitLab extends Git
             'enable_ssl_verification' => false,
             'push_events' => \in_array('push', $events),
             'merge_requests_events' => \in_array('pull_request', $events),
+            'note_events' => \in_array('comment', $events),
         ];
 
         $response = $this->call(self::METHOD_POST, $apiUrl, ['Authorization' => 'Bearer ' . $this->accessToken], $payload);
@@ -1111,12 +1112,151 @@ class GitLab extends Git
                     'headCommitUrl' => $mr['last_commit']['url'] ?? '',
                     'external' => $external,
                     'pullRequestNumber' => $mr['iid'] ?? '',
+                    'pullRequestAuthor' => $this->pullRequestAuthorOf($payloadArray, \is_array($mr) ? ($mr['author_id'] ?? null) : null),
                     'action' => $action,
                 ]];
+
+            case 'Note Hook':
+                return $this->commentEvents($payloadArray);
 
             default:
                 return [];
         }
+    }
+
+    /**
+     * A comment created on a merge request, in the shape GitHub's comment
+     * events are reported in. A note on a diff opens or continues a
+     * discussion on a line, a 'review' comment whose thread is that
+     * discussion; GitLab does not say which note opened it, so every diff
+     * note names the discussion as the one it replies to. Any other note is
+     * an 'issue' comment on the conversation. Comments on commits, issues and
+     * snippets, system notes and edits are left out.
+     *
+     * @param array<mixed> $payload
+     * @return array<array<mixed>>
+     */
+    private function commentEvents(array $payload): array
+    {
+        $note = \is_array($payload['object_attributes'] ?? null) ? $payload['object_attributes'] : [];
+        $mergeRequest = \is_array($payload['merge_request'] ?? null) ? $payload['merge_request'] : [];
+        $project = \is_array($payload['project'] ?? null) ? $payload['project'] : [];
+        $user = \is_array($payload['user'] ?? null) ? $payload['user'] : [];
+
+        if (($note['noteable_type'] ?? '') !== 'MergeRequest' || ($note['system'] ?? false) === true) {
+            return [];
+        }
+
+        // Older GitLab releases send no action; a note they report is a new one.
+        $action = $note['action'] ?? 'create';
+        if ($action !== 'create') {
+            return [];
+        }
+
+        $isReview = ($note['type'] ?? null) === 'DiffNote';
+        $discussionId = \is_scalar($note['discussion_id'] ?? null) ? (string) $note['discussion_id'] : '';
+        [$owner, $repositoryName] = $this->getProjectPath($project);
+
+        return [[
+            'repositoryId' => $this->stringOf($project['id'] ?? null),
+            'repositoryName' => $repositoryName,
+            'repositoryUrl' => $project['web_url'] ?? '',
+            'owner' => $owner,
+            'installationId' => '',
+            'pullRequestNumber' => \is_numeric($mergeRequest['iid'] ?? null) ? (int) $mergeRequest['iid'] : 0,
+            'pullRequestAuthor' => $this->pullRequestAuthorOf($payload, $mergeRequest['author_id'] ?? null),
+            'action' => 'created',
+            'commentId' => $this->stringOf($note['id'] ?? null),
+            'commentKind' => $isReview ? 'review' : 'issue',
+            'commentThreadId' => $isReview ? $discussionId : '',
+            'commentReplyToId' => $isReview ? $discussionId : '',
+            'commentBody' => \is_string($note['note'] ?? null) ? $note['note'] : '',
+            'commentUrl' => \is_string($note['url'] ?? null) ? $note['url'] : '',
+            'commentAuthor' => $user['username'] ?? '',
+            'commentAuthorId' => $this->stringOf($user['id'] ?? null),
+            // GitLab's bot users (project and group access tokens) are members like anyone else.
+            'commentAuthorType' => 'User',
+        ]];
+    }
+
+    /**
+     * A response's HTTP status code.
+     *
+     * @param array<mixed> $response
+     */
+    private function statusCodeOf(array $response): int
+    {
+        $headers = \is_array($response['headers'] ?? null) ? $response['headers'] : [];
+
+        return \is_int($headers['status-code'] ?? null) ? $headers['status-code'] : 0;
+    }
+
+    /**
+     * A response's decoded JSON body, or an empty array when it has none.
+     *
+     * @param array<mixed> $response
+     * @return array<mixed>
+     */
+    private function bodyOf(array $response): array
+    {
+        return \is_array($response['body'] ?? null) ? $response['body'] : [];
+    }
+
+    /**
+     * A scalar payload value as a string, and empty for anything else.
+     */
+    private function stringOf(mixed $value): string
+    {
+        return \is_scalar($value) ? (string) $value : '';
+    }
+
+    /**
+     * A merge request's author, which a hook names by id only: known when the
+     * user who triggered the hook is the author, empty otherwise.
+     *
+     * @param array<mixed> $payload
+     */
+    private function pullRequestAuthorOf(array $payload, mixed $authorId): string
+    {
+        $user = \is_array($payload['user'] ?? null) ? $payload['user'] : [];
+        $userId = $this->stringOf($user['id'] ?? null);
+        if ($userId === '' || $userId !== $this->stringOf($authorId)) {
+            return '';
+        }
+
+        return \is_string($user['username'] ?? null) ? $user['username'] : '';
+    }
+
+    /**
+     * A user's permission on a repository, from their access level including
+     * the one inherited from its groups: 'admin' for maintainers and owners,
+     * 'write' for developers, 'read' below that, and empty when they are no
+     * member. The repository is named by its project id, as hooks name its
+     * namespace by display name rather than by path.
+     *
+     * @throws Exception
+     */
+    public function getCollaboratorPermission(string $repositoryId, string $userId): string
+    {
+        $response = $this->call(self::METHOD_GET, '/projects/' . rawurlencode($repositoryId) . '/members/all/' . rawurlencode($userId), ['Authorization' => 'Bearer ' . $this->accessToken]);
+
+        $statusCode = $this->statusCodeOf($response);
+        if ($statusCode === 404) {
+            return '';
+        }
+        if ($statusCode >= 400) {
+            throw new Exception("Failed to get member: HTTP {$statusCode}", $statusCode);
+        }
+
+        $accessLevel = $this->bodyOf($response)['access_level'] ?? 0;
+        $accessLevel = \is_int($accessLevel) ? $accessLevel : 0;
+
+        return match (true) {
+            $accessLevel >= 40 => 'admin',
+            $accessLevel >= 30 => 'write',
+            $accessLevel > 0 => 'read',
+            default => '',
+        };
     }
 
     /**
