@@ -15,9 +15,10 @@ mkdir -p /tmp/compat-fs
 # host.docker.internal defined on Linux as Docker Desktop defines it on macOS
 # (cases reach the host's published ports through it).
 # PHP is the oracle, so the utopia extension registers only the libraries that have no PHP
-# implementation left. One that still ships its PHP (query, and the opt-in detector,
-# compression, balancer and database) runs that PHP here, not the extension's Rust.
-LIBRARIES=dsn,domains,emails,image,locale,user-agent,validators,auth
+# implementation left (query's builders now live only in the extension). The opt-in ones that
+# still ship their PHP (detector, compression, balancer, database) run that PHP here, whatever
+# _APP_EXTENSION_LIBRARIES the image sets.
+LIBRARIES=dsn,domains,emails,image,locale,user-agent,validators,auth,query
 exec docker run --rm -i \
     --user "$(id -u):$(id -g)" \
     --add-host=host.docker.internal:host-gateway \
