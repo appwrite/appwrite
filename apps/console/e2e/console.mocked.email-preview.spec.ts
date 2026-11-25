@@ -196,6 +196,32 @@ function emailMessage(
   } as Models.Message
 }
 
+function pushMessage(): Models.Message {
+  return {
+    $id: MESSAGE_ID,
+    $createdAt: NOW,
+    $updatedAt: NOW,
+    providerType: 'push',
+    topics: [],
+    users: [],
+    targets: [TARGET.$id],
+    deliveredAt: NOW,
+    deliveryErrors: [],
+    deliveredTotal: 1,
+    data: {
+      title: 'Your files expire soon',
+      body: 'Open the workspace to keep them.',
+      // Stored shape from the push create endpoint.
+      image: {
+        bucketId: 'bucket0000000000000001',
+        fileId: 'file000000000000000001',
+        url: 'https://cloud.appwrite.io/v1/storage/buckets/bucket0000000000000001/files/file000000000000000001/view',
+      },
+    },
+    status: 'sent',
+  } as Models.Message
+}
+
 function corsHeaders(route: Route): Record<string, string> {
   const request = route.request()
   const origin = request.headers()['origin'] ?? 'http://localhost:4173'
@@ -452,6 +478,27 @@ test.describe('email body preview (mocked API)', () => {
     await expect(
       previewFrame(page).getByText('Hello from the draft'),
     ).toBeVisible()
+  })
+})
+
+test.describe('push message (mocked API)', () => {
+  test('a push with a storage image opens and names the image', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, pushMessage())
+    await page.goto(`/projects/${PROJECT.$id}/messaging/${MESSAGE_ID}`, {
+      waitUntil: 'domcontentloaded',
+    })
+
+    await expect(page.getByText('Your files expire soon').first()).toBeVisible({
+      timeout: 30_000,
+    })
+    await expect(
+      page.getByText(
+        'Current image: bucket0000000000000001:file000000000000000001',
+      ),
+    ).toBeVisible()
+    await expect(page.getByText('An unexpected error occurred.')).toHaveCount(0)
   })
 })
 
