@@ -1118,11 +1118,6 @@ class GitLab extends Git
     }
 
     /**
-     * GitLab doesn't sign the payload -- it just echoes back the configured
-     * secret token verbatim, so there's no HMAC to compute here.
-     */
-    #[\Override]
-    /**
      * A webhook's project carries display names in 'namespace' and 'name' ("Jane Doe",
      * "My App"), which the API cannot address. Its 'path_with_namespace' holds the
      * paths the API takes, with the full group path for projects in subgroups.
@@ -1143,6 +1138,11 @@ class GitLab extends Git
         return [\substr($path, 0, $separator), \substr($path, $separator + 1)];
     }
 
+    /**
+     * GitLab doesn't sign the payload -- it just echoes back the configured
+     * secret token verbatim, so there's no HMAC to compute here.
+     */
+    #[\Override]
     public function validateWebhookEvent(string $payload, string $signature, string $signatureKey): bool
     {
         return hash_equals($signatureKey, $signature);
