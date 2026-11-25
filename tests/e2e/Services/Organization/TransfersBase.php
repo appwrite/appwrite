@@ -384,12 +384,25 @@ trait TransfersBase
         ]);
         $this->assertSame(201, $ephemeral['headers']['status-code']);
 
-        $users = $this->client->call(Client::METHOD_GET, '/users', [
+        // The project route mints them too, for a console session in admin mode
+        $projectEphemeral = $this->client->call(Client::METHOD_POST, '/project/keys/ephemeral', array_merge($this->getOwnerHeaders(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $ephemeral['body']['secret'],
+            'x-appwrite-mode' => 'admin',
+        ]), [
+            'scopes' => ['users.read'],
+            'duration' => 3600,
         ]);
-        $this->assertSame(200, $users['headers']['status-code']);
+        $this->assertSame(201, $projectEphemeral['headers']['status-code']);
+
+        foreach ([$ephemeral, $projectEphemeral] as $minted) {
+            $users = $this->client->call(Client::METHOD_GET, '/users', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $minted['body']['secret'],
+            ]);
+            $this->assertSame(200, $users['headers']['status-code']);
+        }
 
         /**
          * Test for FAILURE
@@ -443,12 +456,14 @@ trait TransfersBase
         ]);
         $this->assertSame(401, $users['headers']['status-code']);
 
-        $users = $this->client->call(Client::METHOD_GET, '/users', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $ephemeral['body']['secret'],
-        ]);
-        $this->assertSame(401, $users['headers']['status-code']);
+        foreach ([$ephemeral, $projectEphemeral] as $minted) {
+            $users = $this->client->call(Client::METHOD_GET, '/users', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $minted['body']['secret'],
+            ]);
+            $this->assertSame(401, $users['headers']['status-code']);
+        }
 
         $keys = $this->client->call(Client::METHOD_GET, '/organization/projects/' . $projectId . '/keys', array_merge([
             'x-appwrite-project' => 'console',
