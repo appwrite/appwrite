@@ -125,6 +125,21 @@ final class InstallationTokensTest extends TestCase
         $this->assertSame(1, $oauth2->refreshCalls);
     }
 
+    public function testTokenAboutToExpireIsRefreshed(): void
+    {
+        $db = $this->createMock(Database::class);
+        $db->expects($this->once())->method('updateDocument')->willReturnArgument(2);
+
+        $oauth2 = $this->fakeOAuth2();
+
+        // A token handed out now must outlast the work it is handed out for
+        $installation = $this->expired()->setAttribute('personalAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), InstallationTokens::EXPIRY_MARGIN - 60));
+        $result = (new InstallationTokens())->refresh($installation, $db, $oauth2);
+
+        $this->assertSame('fresh-token', $result->getAttribute('personalAccessToken'));
+        $this->assertSame(1, $oauth2->refreshCalls);
+    }
+
     public function testFallsBackToIdentityWhenInstallationHasNoTokens(): void
     {
         $installation = new Document(['$id' => 'installation1']);

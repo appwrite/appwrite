@@ -13,6 +13,7 @@
 //! call dispatched by the engine to its own method.
 
 pub mod hashes;
+mod native;
 
 use std::sync::atomic::{AtomicPtr, Ordering};
 

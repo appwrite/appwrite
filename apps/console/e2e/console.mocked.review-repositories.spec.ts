@@ -8,7 +8,7 @@ import { expect, test } from './fixtures'
  * It used to load the first 100 reviewed repositories with no paging or
  * search, and adding one went through a dialog that closed after every pick.
  * Now "Reviewed" pages through what the project reviews, and "All
- * repositories" pages and searches through the GitHub installation, with a
+ * repositories" pages and searches through a GitHub installation, with a
  * switch on every row that turns review on or off in place.
  *
  * The API is mocked at the network layer, with more repositories than fit on
@@ -299,7 +299,7 @@ test.describe('review repositories', () => {
     await expect(toggle('service-011')).toBeChecked()
     await expect(toggle('service-012')).not.toBeChecked()
 
-    await page.getByPlaceholder('Search GitHub repositories...').fill('130')
+    await page.getByPlaceholder('Search repositories...').fill('130')
     await expect(row('service-130')).toBeVisible()
     await expect(row('service-000')).toHaveCount(0)
 

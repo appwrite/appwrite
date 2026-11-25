@@ -14,6 +14,7 @@ import {
   formatGbHoursValue,
   mbSecondsToGbHours,
 } from '@/lib/usage/format-metric'
+import { buildUsageResourceFilterQueries } from '@/lib/usage/usage-resource-queries'
 
 /** Combined MB-seconds metrics that roll up to GB-hours (overview). */
 export const GB_HOURS_MB_SECONDS_METRICS = [
@@ -32,6 +33,18 @@ export const SITE_GB_HOURS_MB_SECONDS_METRICS = [
   'sites.executions.mbSeconds',
   'sites.builds.mbSeconds',
 ] as const
+
+/**
+ * Video encode MB-seconds. The videos worker publishes encode compute on the
+ * shared `executions.mbSeconds` counter tagged `service=videos`, so it is
+ * already part of the combined GB-hours total and is billed with it.
+ */
+export const VIDEO_GB_HOURS_MB_SECONDS_METRICS = [
+  'executions.mbSeconds',
+] as const
+
+/** Usage `service` tag the videos worker sets on its encode compute. */
+export const VIDEO_USAGE_SERVICE = 'videos' as const
 
 const GB_HOURS_BREAKDOWN_DIMENSIONS = ['resourceId', 'resourceType'] as const
 
@@ -139,5 +152,31 @@ export async function fetchProjectSiteGbHoursOverview(
     SITE_GB_HOURS_MB_SECONDS_METRICS,
     interval,
     options,
+  )
+}
+
+/**
+ * Chart series for video encode compute. Encode events carry no `resourceId`,
+ * so there is no per-resource breakdown.
+ */
+export async function fetchProjectVideoGbHoursOverview(
+  projectId: string,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
+): Promise<ProjectGbHoursOverview> {
+  return fetchGbHoursOverviewForMetrics(
+    projectId,
+    dateRange,
+    VIDEO_GB_HOURS_MB_SECONDS_METRICS,
+    interval,
+    {
+      ...options,
+      includeBreakdown: false,
+      queries: buildUsageResourceFilterQueries({
+        queries: options?.queries,
+        service: VIDEO_USAGE_SERVICE,
+      }),
+    },
   )
 }

@@ -2180,6 +2180,11 @@ export const heProjectMiscDictionary: Record<string, string> = {
     "זמן חישוב של פונקציות במהלך התקופה שנבחרה, נמדד בג'יגה-בייט-שעות (GBH). זיכרון שהוקצה לפונקציות כפול משך ההרצה והבנייה.",
   'Site compute time during the selected period, measured in gigabyte-hours (GBH). Memory allocated to sites multiplied by request handling and build duration.':
     "זמן חישוב של אתרים במהלך התקופה שנבחרה, נמדד בג'יגה-בייט-שעות (GBH). זיכרון שהוקצה לאתרים כפול משך הטיפול בבקשות והבנייה.",
+  'Video encoding GB-hours': 'GB-hours של קידוד וידאו',
+  'Video encoding compute during the selected period, measured in gigabyte-hours (GBH). Encoder memory multiplied by encode duration. Included in GB-hours.':
+    "זמן חישוב של קידוד וידאו במהלך התקופה שנבחרה, נמדד בג'יגה-בייט-שעות (GBH). זיכרון המקודד כפול משך הקידוד. נכלל ב-GB-hours.",
+  'Storage used by video renditions, captions, and thumbnail timelines. Counts toward your plan storage limit.':
+    'אחסון שמשמש גרסאות קידוד של וידאו, כתוביות וצירי תמונות ממוזערות. נספר במגבלת האחסון של התוכנית.',
   'Top storage buckets': 'באקטי האחסון המובילים',
   'Top buckets by origin images': 'באקטים מובילים לפי תמונות מקור',
   'Top executed functions': 'הפונקציות המורצות ביותר',

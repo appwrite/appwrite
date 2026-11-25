@@ -1,5 +1,11 @@
 import type { ReactNode } from 'react'
-import { AtSign, FileCode, GitPullRequest, ListChecks } from 'lucide-react'
+import {
+  AtSign,
+  FileCode,
+  GitBranch,
+  GitPullRequest,
+  ListChecks,
+} from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import {
   ProductEmptyStateCreateButton,
@@ -133,10 +139,10 @@ export function ReviewsEmptyState({
 
   const steps: ProductEmptyStateStep[] = [
     {
-      icon: (props) => <VcsIcon type="github" {...props} />,
-      title: 'Connect GitHub',
+      icon: GitBranch,
+      title: 'Connect a Git provider',
       description:
-        'Install the GitHub app on your account or organization, then turn on review for the repositories you pick.',
+        'Connect GitHub, GitLab, Gitea, Bitbucket or Origin, then turn on review for the repositories you pick.',
     },
     {
       icon: ListChecks,
@@ -160,7 +166,7 @@ export function ReviewsEmptyState({
         icon={GitPullRequest}
         title={t('Review pull requests with AI')}
         description={t(
-          'Catch bugs and security issues before they merge. Choose the repositories to review, and every pull request in them gets a review on GitHub.',
+          'Catch bugs and security issues before they merge. Choose the repositories to review, and every pull request in them gets a review where it is opened.',
         )}
         actions={
           <ProductEmptyStateCreateButton

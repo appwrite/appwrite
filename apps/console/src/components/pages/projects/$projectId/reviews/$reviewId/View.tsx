@@ -27,12 +27,10 @@ import type {
 import { isReviewRunning, useReview } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
+import type { ProviderReviewUrls } from '@/lib/vcs/providers'
 import { ServiceHeader } from '../../shared/ServiceHeader'
 import { Trace } from '../_components/Trace'
-import {
-  ReviewActionsMenu,
-  reviewGitHubUrls,
-} from '../_components/ReviewActions'
+import { ReviewActionsMenu, useReviewUrls } from '../_components/ReviewActions'
 import {
   FindingSeverityBadge,
   ReviewAuthorLink,
@@ -70,6 +68,7 @@ export function View({ initialReview }: ViewProps = {}) {
   const { review: reviewFromHook, isLoading } = useReview(projectId, reviewId)
   const review = reviewFromHook ?? initialReview ?? null
   const triggerLabel = useReviewTriggerLabel()
+  const links = useReviewUrls(projectId, review)
 
   // A running review's duration counts up.
   const running = review ? isReviewRunning(review) : false
@@ -138,11 +137,17 @@ export function View({ initialReview }: ViewProps = {}) {
     )
   }
 
-  const urls = reviewGitHubUrls(review)
   const duration = reviewDuration(review, now)
   const compareUrl =
-    review.providerBaseCommitHash && review.providerCommitHash
-      ? `${urls.repository}/compare/${review.providerBaseCommitHash}...${review.providerCommitHash}`
+    links && review.providerBaseCommitHash && review.providerCommitHash
+      ? (links.urls.compare(
+          review.providerBaseCommitHash,
+          review.providerCommitHash,
+        ) ?? undefined)
+      : undefined
+  const commitUrl =
+    links && review.providerCommitHash
+      ? links.urls.commit(review.providerCommitHash)
       : undefined
 
   return (
@@ -174,22 +179,29 @@ export function View({ initialReview }: ViewProps = {}) {
         }
         titleRightContent={
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 text-[13px]"
-              asChild
-            >
-              <a
-                href={urls.review}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={t('Open on GitHub')}
+            {links && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-[13px]"
+                asChild
               >
-                <ExternalLink className="h-3.5 w-3.5 sm:me-1.5" />
-                <span className="hidden sm:inline">{t('Open on GitHub')}</span>
-              </a>
-            </Button>
+                <a
+                  href={links.urls.review}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={t('Open on {provider}').replace(
+                    '{provider}',
+                    links.label,
+                  )}
+                >
+                  <ExternalLink className="h-3.5 w-3.5 sm:me-1.5" />
+                  <span className="hidden sm:inline">
+                    {t('Open on {provider}').replace('{provider}', links.label)}
+                  </span>
+                </a>
+              </Button>
+            )}
             <ReviewActionsMenu
               projectId={projectId}
               review={review}
@@ -248,19 +260,24 @@ export function View({ initialReview }: ViewProps = {}) {
                         <span className="text-muted-foreground">...</span>
                       </>
                     )}
-                    <a
-                      href={compareUrl ?? urls.commit}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-foreground hover:underline"
-                      title={
-                        compareUrl
-                          ? t('Compare on GitHub')
-                          : t('Open commit on GitHub')
-                      }
-                    >
-                      {review.providerCommitHash.slice(0, 7)}
-                    </a>
+                    {links ? (
+                      <a
+                        href={compareUrl ?? commitUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-foreground hover:underline"
+                        title={(compareUrl
+                          ? t('Compare on {provider}')
+                          : t('Open commit on {provider}')
+                        ).replace('{provider}', links.label)}
+                      >
+                        {review.providerCommitHash.slice(0, 7)}
+                      </a>
+                    ) : (
+                      <span className="text-foreground">
+                        {review.providerCommitHash.slice(0, 7)}
+                      </span>
+                    )}
                   </span>
                 ) : (
                   <Empty />
@@ -383,8 +400,8 @@ export function View({ initialReview }: ViewProps = {}) {
                     <Finding
                       key={finding.$id}
                       finding={finding}
-                      commitUrl={`${urls.repository}/blob/${review.providerCommitHash}`}
-                      pullRequestUrl={urls.pullRequest}
+                      commitHash={review.providerCommitHash}
+                      urls={links?.urls ?? null}
                     />
                   ))}
                 </ul>
@@ -460,18 +477,23 @@ function SeverityChip({
 
 function Finding({
   finding,
-  commitUrl,
-  pullRequestUrl,
+  commitHash,
+  urls,
 }: {
   finding: ReviewFinding
-  commitUrl: string
-  pullRequestUrl: string
+  commitHash: string
+  /** The review's links on its provider, or null where none can be built. */
+  urls: ProviderReviewUrls | null
 }) {
   const t = useT()
-  const lines =
-    finding.startLine === finding.endLine
-      ? `L${finding.startLine}`
-      : `L${finding.startLine}-L${finding.endLine}`
+  const fileUrl =
+    urls && commitHash
+      ? urls.file(commitHash, finding.path, finding.startLine, finding.endLine)
+      : undefined
+  const commentUrl =
+    urls && finding.providerCommentId
+      ? urls.comment(finding.providerCommentId)
+      : null
 
   return (
     <li className="px-6 py-4">
@@ -488,7 +510,7 @@ function Finding({
       </div>
       <div className="mt-1.5 flex flex-wrap items-center gap-3">
         <a
-          href={`${commitUrl}/${finding.path}#${lines}`}
+          href={fileUrl}
           target="_blank"
           rel="noreferrer"
           className="flex min-w-0 items-center gap-1.5 font-mono text-[12px] text-muted-foreground hover:text-foreground"
@@ -499,9 +521,9 @@ function Finding({
             {finding.endLine !== finding.startLine && `-${finding.endLine}`}
           </span>
         </a>
-        {finding.providerCommentId && (
+        {commentUrl && (
           <a
-            href={`${pullRequestUrl}#discussion_r${finding.providerCommentId}`}
+            href={commentUrl}
             target="_blank"
             rel="noreferrer"
             className="text-[12px] text-muted-foreground hover:text-foreground hover:underline"

@@ -15,6 +15,7 @@ import {
   AppwriteException,
   Query,
   VCSDetectionType,
+  type Models,
 } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import type {
@@ -30,7 +31,7 @@ import type {
   ReviewStrength,
 } from '@/lib/appwrite/reviews'
 import { DEFAULT_PAGE_SIZE, DEFAULT_STALE_TIME } from './constants'
-import { fetchRepositories } from './vcs'
+import { fetchRepositories, useVcsInstallations } from './vcs'
 
 /** Reviews are fanned out by the review service, so poll while one is running. */
 const REVIEW_POLL_INTERVAL = 5 * 1000
@@ -504,7 +505,39 @@ export function useReviewCategories(
 }
 
 /**
- * Which of the given GitHub repositories the project reviews, keyed by GitHub
+ * The installation the repository a review ran on is connected through, which
+ * names its provider and, for a self-hosted one, its host. Null until both are
+ * loaded, or when the installation is gone.
+ */
+export function useReviewInstallation(
+  projectId: string | null | undefined,
+  repositoryId: string | null | undefined,
+): Models.Installation | null {
+  const { data: repository } = useQuery({
+    queryKey: ['reviews', 'repository', projectId, repositoryId],
+    queryFn: async () => {
+      const { repositories } = await sdk
+        .forProject(projectId!)
+        .reviews.listRepositories({
+          queries: [Query.equal('$id', [repositoryId!]), Query.limit(1)],
+          total: false,
+        })
+      return repositories[0] ?? null
+    },
+    enabled: !!projectId && !!repositoryId,
+    staleTime: DEFAULT_STALE_TIME,
+  })
+  const { data: installations } = useVcsInstallations(projectId, 0, 100)
+
+  return (
+    installations?.installations.find(
+      (installation) => installation.$id === repository?.installationId,
+    ) ?? null
+  )
+}
+
+/**
+ * Which of the given repositories the project reviews, keyed by the provider's
  * repository ID. Works for any number of reviewed repositories, since only the
  * listed ones are looked up.
  */
