@@ -1869,6 +1869,19 @@ fn des_crypt(key: &[u8], setting: &[u8]) -> Option<Vec<u8>> {
 
 mod tables;
 
+/// `md5($data)`: the lowercase hex digest, in a buffer rather than a new string.
+pub fn md5_hex(data: &[u8]) -> [u8; 32] {
+    use md5::Digest;
+    const DIGITS: &[u8; 16] = b"0123456789abcdef";
+    let digest = md5::Md5::digest(data);
+    let mut out = [0u8; 32];
+    for (i, byte) in digest.iter().enumerate() {
+        out[2 * i] = DIGITS[usize::from(byte >> 4)];
+        out[2 * i + 1] = DIGITS[usize::from(byte & 0x0f)];
+    }
+    out
+}
+
 /// `hash($algo, $data)` as lowercase hex, for every algorithm of
 /// `hash_algos()`; `None` for any other name (PHP's "must be a valid hashing
 /// algorithm"). The name is case-insensitive.

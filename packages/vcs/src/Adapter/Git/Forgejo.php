@@ -6,8 +6,10 @@ namespace Utopia\VCS\Adapter\Git;
 
 class Forgejo extends Gitea
 {
+    #[\Override]
     protected string $endpoint = 'http://forgejo:3000/api/v1';
 
+    #[\Override]
     protected string $giteaUrl = 'http://forgejo:3000';
 
     /**

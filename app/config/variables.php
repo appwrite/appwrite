@@ -2236,6 +2236,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_EXECUTIONS_INSERT_BUFFER',
+                'description' => 'Milliseconds ClickHouse may hold execution snapshots to write them together, using its async insert buffer. With 0, the default, every snapshot is written at once. Set it on installations that write so many executions that ClickHouse merges fall behind. Each write then takes up to this long and holds a pooled connection, so size _APP_POOL_SIZE_EXECUTIONS for the writes per second times this window.',
+                'introduction' => '',
+                'default' => '0',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_MAINTENANCE_RETENTION_USAGE_TTL',
                 'description' => 'Retention in days for raw and daily usage events. Gauges have no TTL. Set to 0 to disable event TTLs.',
                 'introduction' => '',

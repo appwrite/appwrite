@@ -235,6 +235,7 @@ export const enCatalog = {
         monitors: 'Monitors',
         analytics: 'Analytics',
         errors: 'Errors',
+        firewall: 'Firewall',
         advisor: 'Advisor',
         settings: 'Settings',
       },

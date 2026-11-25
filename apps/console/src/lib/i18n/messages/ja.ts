@@ -258,6 +258,7 @@ export const jaCatalog: EnCatalog = {
         usage: '使用量',
         analytics: 'アナリティクス',
         errors: 'エラー',
+        firewall: 'Firewall',
         advisor: 'Advisor',
         settings: '設定',
       },

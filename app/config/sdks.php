@@ -232,7 +232,7 @@ $platforms = [
                 'key' => 'cli',
                 'name' => 'Command Line',
                 'description' => 'The Appwrite CLI manages your Appwrite projects from the terminal. Create and link projects, deploy functions and sites, sync tables, buckets, teams and other resources through `appwrite.config.json`, and call any Appwrite API. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)',
-                'version' => '28.13.3',
+                'version' => '28.16.0',
                 'url' => 'https://github.com/appwrite/sdk-for-cli',
                 'package' => 'https://www.npmjs.com/package/appwrite-cli',
                 'enabled' => true,
@@ -433,7 +433,7 @@ $platforms = [
             [
                 'key' => 'go',
                 'name' => 'Go',
-                'version' => 'v7.20.0',
+                'version' => 'v7.22.0',
                 'url' => 'https://github.com/appwrite/sdk-for-go',
                 'package' => 'https://github.com/appwrite/sdk-for-go',
                 'enabled' => true,

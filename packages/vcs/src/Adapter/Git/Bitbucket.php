@@ -85,6 +85,7 @@ class Bitbucket extends Git
         'pullrequest:rejected' => 'closed',
     ];
 
+    #[\Override]
     protected string $endpoint = 'https://api.bitbucket.org/2.0';
 
     /**
@@ -92,6 +93,7 @@ class Bitbucket extends Git
      */
     protected string $bitbucketUrl = 'https://bitbucket.org';
 
+    #[\Override]
     protected string $accessToken;
 
     /** @var array<string, mixed>|null */
@@ -100,9 +102,20 @@ class Bitbucket extends Git
     /**
      * Global Headers
      *
+     * Bitbucket runs an XSRF check on writes whose User-Agent looks like a
+     * browser and refuses them with 403 "XSRF checks failed for request".
+     * X-Atlassian-Token: no-check opts API calls out of that check whatever
+     * User-Agent reaches Bitbucket.
+     *
+     * @link https://support.atlassian.com/atlassian-cloud/kb/xsrf-check-failed-when-calling-cloud-apis/
+     *
      * @var array<string, string>
      */
-    protected $headers = ['content-type' => 'application/json'];
+    #[\Override]
+    protected $headers = [
+        'content-type' => 'application/json',
+        'x-atlassian-token' => 'no-check',
+    ];
 
     public function __construct(protected Cache $cache)
     {

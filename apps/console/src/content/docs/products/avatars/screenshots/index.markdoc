@@ -115,7 +115,7 @@ The `getScreenshot` method accepts the following parameters:
 | width | integer | The output image width in pixels. Pass `0` to use original width, or `1-2000` for custom width. Defaults to `0` (original width) if not provided. |
 | height | integer | The output image height in pixels. Pass `0` to use original height, or `1-2000` for custom height. Defaults to `0` (original height) if not provided. |
 | quality | integer | Screenshot quality. Accepts values between `0-100`. `-1` preserves original image quality. Defaults to `-1` if not provided. |
-| output | string | Output image format. Supported formats: `jpg`, `jpeg`, `png`, `gif`, `webp`. Defaults to `png` if not provided. |
+| output | string | Output image format. Supported formats: `jpg`, `jpeg`, `png`, `gif`, `webp`, `avif`. Pass `auto` to get AVIF or WebP when the request's `Accept` header lists them, falling back to `png`. See [automatic output format](#automatic-output-format). Defaults to `png` if not provided. |
 
 # Viewport customization {% #viewport-customization %}
 
@@ -721,6 +721,31 @@ val defaultScreenshot = avatars.getScreenshot(
 )
 ```
 {% /multicode %}
+
+# Automatic output format {% #automatic-output-format %}
+
+Set `output` to `auto` to let the client's `Accept` header pick the format. Appwrite returns AVIF if the header lists `image/avif`, WebP if it lists `image/webp`, and PNG otherwise. Wildcards such as `image/*` don't count, and responses include `Vary: Accept`.
+
+This works best with the URL the Web SDK returns, loaded by the browser as an image. The other SDKs download screenshot bytes with `Accept: image/*`, so they get PNG. [Automatic output format](/docs/products/storage/images#automatic-output-format) for Storage previews explains which clients send which header.
+
+```js
+import { Client, Avatars, ImageFormat } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const avatars = new Avatars(client);
+
+// Returns a screenshot URL. The browser's Accept header picks the format.
+const url = avatars.getScreenshot({
+    url: 'https://example.com',
+    width: 600,
+    output: ImageFormat.Auto
+});
+
+document.querySelector('#link-preview').src = url;
+```
 
 # Use cases {% #use-cases %}
 

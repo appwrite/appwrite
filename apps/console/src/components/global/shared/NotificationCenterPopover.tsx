@@ -12,6 +12,7 @@ import {
   ChevronDown,
   Circle,
   CircleAlert,
+  CircleCheck,
   Clock,
   ExternalLink,
   Info,
@@ -101,6 +102,20 @@ const SEVERITY_GLYPHS: Record<Severity, string> = {
   error: 'text-red-600 dark:text-red-400',
   warning: 'text-amber-600 dark:text-amber-500',
   info: 'text-muted-foreground',
+}
+
+const RESOLVED_GLYPH = 'text-green-600 dark:text-green-500'
+
+/**
+ * Whether the notification is about an alert that stopped firing. Rows stored
+ * before notifications named their alert carry no status, only the
+ * "[Resolved]" the Alerts worker puts at the front of the title.
+ */
+function isResolvedAlert(notification: Models.Notification): boolean {
+  if (notification.subjectType === 'alerts') {
+    return notification.status === 'resolved'
+  }
+  return notification.title.startsWith('[Resolved]')
 }
 
 /** A neutral tile with the icon in the notification's severity color. */
@@ -221,6 +236,7 @@ function NotificationRow({
   const t = useT()
   const isUnread = !notification.read
   const severity = severityOf(notification.type)
+  const resolved = isResolvedAlert(notification)
   const projectId = notification.projectId?.trim() ?? ''
   const canOpen = getNotificationNavigateTarget(notification) !== null
   const isAlert =
@@ -243,8 +259,8 @@ function NotificationRow({
       {isUnread ? <UnreadDot /> : null}
       <div className="pointer-events-none relative">
         <NotificationIcon
-          icon={SEVERITY_ICONS[severity]}
-          className={SEVERITY_GLYPHS[severity]}
+          icon={resolved ? CircleCheck : SEVERITY_ICONS[severity]}
+          className={resolved ? RESOLVED_GLYPH : SEVERITY_GLYPHS[severity]}
         />
       </div>
       <div className="pointer-events-none relative min-w-0 flex-1 overflow-hidden">

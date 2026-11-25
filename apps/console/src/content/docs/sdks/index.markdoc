@@ -108,7 +108,7 @@ Server libraries for integrating with Appwrite to build server side integrations
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/go.svg" alt="Go logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/go.svg" alt="Go logo" size="m" /%}{% /only_light %}
-* Go SDK `7.20.0`
+* Go SDK `7.22.0`
 * [appwrite/sdk-for-go](https://github.com/appwrite/sdk-for-go)
 * 
 ---
@@ -529,7 +529,7 @@ You can discover the available enums in each SDK at the source.
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/go.svg" alt="Go logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/go.svg" alt="Go logo" size="m" /%}{% /only_light %}
-* Go SDK `7.20.0`
+* Go SDK `7.22.0`
 * [appwrite/sdk-for-go](https://github.com/appwrite/sdk-for-go)
 *
 ---
