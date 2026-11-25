@@ -5,7 +5,10 @@
  */
 
 import type { QueryClient } from '@tanstack/react-query'
-import { getActiveProfileFeatures, isCloudProfile } from '@/lib/console-profiles'
+import {
+  getActiveProfileFeatures,
+  isCloudProfile,
+} from '@/lib/console-profiles'
 import {
   canShowDatabaseSecuritySettings,
   canShowTableSecuritySettings,
@@ -17,6 +20,7 @@ import {
   canShowSiteSettingsTab,
   canShowVideoSettings,
   canShowTopicSettingsTab,
+  canWriteMonitors,
   canAccessOrgSettingsOverview,
   canAccessOrgDomains,
   canShowOrgApiKeysSettings,
@@ -207,6 +211,16 @@ export async function canAccessTopicSettings(
   if (!access) return true
   const features = getActiveProfileFeatures()
   return canShowTopicSettingsTab(access, features)
+}
+
+/** A monitor's Settings, for members who can change monitors. */
+export async function canAccessMonitorSettings(
+  queryClient: QueryClient,
+  projectId: string,
+): Promise<boolean> {
+  const access = await getProjectAccess(queryClient, projectId)
+  if (!access) return true
+  return canWriteMonitors(access, getActiveProfileFeatures())
 }
 
 /** Organization Settings overview (owner-only). */

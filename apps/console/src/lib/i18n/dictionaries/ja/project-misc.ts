@@ -4351,6 +4351,15 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Escalations: 'エスカレーション',
   Escalation: 'エスカレーション',
   Escalating: 'エスカレーション中',
+  'Alert when the value is': '値が次の条件のときにアラート',
+  'Counted over': '集計期間',
+  'Undo acknowledgement': '確認を取り消す',
+  'Someone needs to act now, even at night.':
+    '夜間でも、今すぐ誰かが対応する必要があります。',
+  'The push plays a siren through silent mode and Do Not Disturb.':
+    'プッシュ通知はサイレントモードやおやすみモードでもサイレンを鳴らします。',
+  'Every level is emailed, shown in the console and pushed to phones, with the level in the title. Webhooks and functions receive it with the alert events. A critical push rings only on phones that allowed critical alerts.':
+    'すべてのレベルはメールで送信され、コンソールに表示され、タイトルにレベルを含めてスマートフォンにプッシュ通知されます。Webhook と関数はアラートイベントとともにレベルを受け取ります。重大なプッシュ通知は、重大な通知を許可したスマートフォンでのみ鳴ります。',
   'Notify roles once': 'ロールに 1 回通知',
   'Select an escalation.': 'エスカレーションを選択してください。',
   'Each step of the escalation is notified in turn until someone acknowledges the alert.':

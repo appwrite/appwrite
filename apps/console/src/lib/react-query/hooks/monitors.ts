@@ -78,6 +78,16 @@ export async function fetchMonitor(
   )
 }
 
+/** One monitor, under the list's key so updates that refetch the list refresh it too. */
+export function monitorQueryOptions(projectId: string, monitorId: string) {
+  return queryOptions({
+    queryKey: ['monitors', 'project', projectId, 'monitor', monitorId],
+    queryFn: () => fetchMonitor(projectId, monitorId),
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+  })
+}
+
 export function monitorsQueryOptions(projectId: string | null | undefined) {
   return queryOptions({
     queryKey: ['monitors', 'project', projectId],

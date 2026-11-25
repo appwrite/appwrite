@@ -4,7 +4,6 @@ import { Link } from '@tanstack/react-router'
 import * as RadioGroupPrimitive from '@radix-ui/react-radio-group'
 import {
   BellRing,
-  Check,
   ChevronDown,
   CircleX,
   Info,
@@ -61,6 +60,7 @@ import {
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
+import { RecipientsField } from '@/components/global/shared/RecipientsField'
 import { RuleChart } from './RuleChart'
 
 /** Monitor form state; `threshold` is in `byteUnit` for byte metrics and in GB-hours for MB-seconds. */
@@ -134,12 +134,13 @@ export function ruleFormFromMonitor(rule: ParsedMonitor): RuleForm {
 export const SEVERITIES: {
   value: MonitorSeverity
   label: string
+  /** When to pick it. */
   hint: string
+  /** How its alerts are delivered differently from the other levels. */
+  delivery?: string
   icon: LucideIcon
   /** The icon's color, always shown. */
   tone: string
-  /** The chip once selected. */
-  selected: string
 }[] = [
   {
     value: 'info',
@@ -147,8 +148,6 @@ export const SEVERITIES: {
     hint: 'Worth knowing about. Nothing needs doing yet.',
     icon: Info,
     tone: 'text-blue-600 dark:text-blue-400',
-    selected:
-      'border-blue-500/60 bg-blue-500/10 text-blue-700 ring-blue-500/60 dark:text-blue-300',
   },
   {
     value: 'warning',
@@ -156,8 +155,6 @@ export const SEVERITIES: {
     hint: 'Look into it soon, before it becomes a problem.',
     icon: TriangleAlert,
     tone: 'text-amber-600 dark:text-amber-400',
-    selected:
-      'border-amber-500/60 bg-amber-500/10 text-amber-700 ring-amber-500/60 dark:text-amber-300',
   },
   {
     value: 'error',
@@ -165,17 +162,14 @@ export const SEVERITIES: {
     hint: 'Something is broken and needs fixing.',
     icon: CircleX,
     tone: 'text-orange-600 dark:text-orange-400',
-    selected:
-      'border-orange-500/60 bg-orange-500/10 text-orange-700 ring-orange-500/60 dark:text-orange-300',
   },
   {
     value: 'critical',
     label: 'Critical',
-    hint: "Rings on your phone even when it's on silent or in Do Not Disturb.",
+    hint: 'Someone needs to act now, even at night.',
+    delivery: 'The push plays a siren through silent mode and Do Not Disturb.',
     icon: BellRing,
     tone: 'text-red-600 dark:text-red-400',
-    selected:
-      'border-red-500/60 bg-red-500/10 text-red-700 ring-red-500/60 dark:text-red-300',
   },
 ]
 
@@ -248,8 +242,7 @@ export function monitorInputFromForm(
     window: metricDefinition(form.metric).counter ? form.window : undefined,
     cooldown: form.cooldown,
     notify: form.notify,
-    escalationId:
-      form.recipients === 'escalation' ? form.escalationId : '',
+    escalationId: form.recipients === 'escalation' ? form.escalationId : '',
     severity: form.severity,
   }
 }
@@ -402,6 +395,61 @@ interface RuleFieldsProps {
   form: RuleForm
   onChange: (changes: Partial<RuleForm>) => void
   disabled?: boolean
+  /** Sets the threshold to half the highest value charted until it is edited. */
+  suggestThreshold?: boolean
+}
+
+/** Half of a charted peak as a form threshold, rounded to two significant digits. */
+export function thresholdFromPeak(
+  metric: AlertMetric,
+  peak: number,
+): Pick<RuleForm, 'threshold'> & { byteUnit?: ByteUnit } {
+  return thresholdFromValue(metric, peak / 2)
+}
+
+/** A value in the metric's unit as a form threshold, rounded to two significant digits. */
+export function thresholdFromValue(
+  metric: AlertMetric,
+  value: number,
+): Pick<RuleForm, 'threshold'> & { byteUnit?: ByteUnit } {
+  const half = value
+  const round = (value: number) => {
+    if (value <= 0) return 0
+    const step = 10 ** (Math.floor(Math.log10(value)) - 1)
+    return parseFloat((Math.round(value / step) * step).toFixed(6))
+  }
+  const unit = metricDefinition(metric).unit
+  if (unit === 'bytes') {
+    const scale =
+      [...BYTE_UNITS].reverse().find((entry) => half >= entry.bytes) ??
+      BYTE_UNITS[0]
+    return { threshold: round(half / scale.bytes), byteUnit: scale.value }
+  }
+  if (unit === 'gbHours') {
+    return { threshold: round(half / MB_SECONDS_PER_GB_HOUR) }
+  }
+  if (unit === 'percent') return { threshold: Math.min(100, round(half)) }
+  return { threshold: Math.max(1, Math.round(round(half))) }
+}
+
+/** A labeled control in the condition grid. */
+function Field({
+  label,
+  className,
+  children,
+}: {
+  label: string
+  className?: string
+  children: ReactNode
+}) {
+  return (
+    <div className={cn('min-w-0 space-y-1.5', className)}>
+      <span className="block text-[12px] font-medium text-muted-foreground">
+        {label}
+      </span>
+      {children}
+    </div>
+  )
 }
 
 /** A muted word between the controls of the condition sentence. */
@@ -417,7 +465,7 @@ export function SectionHeading({
   description?: string
 }) {
   return (
-    <div className="mb-3">
+    <div className="mb-4">
       <h3 className="text-[13px] font-semibold text-foreground">{title}</h3>
       {description && (
         <p className="mt-0.5 text-[12px] text-muted-foreground">
@@ -428,15 +476,66 @@ export function SectionHeading({
   )
 }
 
-export function RuleFields({
+/** Every field of a usage monitor: its condition, who it notifies, and its name and cooldown. */
+export function RuleFields(props: RuleFieldsProps) {
+  const t = useT()
+  const { projectId, form, onChange, disabled } = props
+  const { project } = useProject(projectId)
+  return (
+    <div className="space-y-8">
+      <ConditionFields {...props} />
+
+      <NotifyFields
+        notify={form.notify}
+        severity={form.severity}
+        escalation={{
+          organizationId: project?.teamId,
+          recipients: form.recipients,
+          escalationId: form.escalationId,
+        }}
+        onChange={onChange}
+        disabled={disabled}
+      />
+
+      <OptionalFields
+        name={form.name}
+        cooldown={form.cooldown}
+        placeholder={suggestedName(form, t)}
+        onChange={onChange}
+        disabled={disabled}
+      />
+    </div>
+  )
+}
+
+/** What the monitor measures and when it fires, over a chart of that measure. */
+export function ConditionFields({
   projectId,
   form,
   onChange,
   disabled,
-}: RuleFieldsProps) {
+  suggestThreshold = false,
+  bare = false,
+}: RuleFieldsProps & {
+  /** Leaves out the heading, for a card that has its own. */
+  bare?: boolean
+}) {
   const t = useT()
+  const [suggesting, setSuggesting] = useState(suggestThreshold)
+  // The series the last suggestion came from, so each one suggests once.
+  const [suggested, setSuggested] = useState('')
+  const seriesKey = [
+    form.metric,
+    form.resourceType,
+    form.resourceId,
+    form.window,
+  ].join('|')
+  const suggest = (peak: number) => {
+    if (suggested === seriesKey || peak <= 0) return
+    setSuggested(seriesKey)
+    onChange(thresholdFromPeak(form.metric, peak))
+  }
   const { isCloud } = useConsoleProfile()
-  const { project } = useProject(projectId)
   const definition = metricDefinition(form.metric)
   // Dedicated databases and analytics exist only on the cloud profile.
   const metrics = METRIC_NAMES.filter(
@@ -468,8 +567,8 @@ export function RuleFields({
   }
 
   return (
-    <div className="space-y-7">
-      <section>
+    <section>
+      {!bare && (
         <SectionHeading
           title={t('Condition')}
           description={
@@ -478,91 +577,88 @@ export function RuleFields({
               : t('The latest reading is compared at every check.')
           }
         />
-        <div className="rounded-xl border border-border bg-muted/20 p-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <Word>{t('When')}</Word>
+      )}
+      <div className="grid gap-x-4 gap-y-5 sm:grid-cols-2">
+        <Field label={t('Metric')}>
+          <Select
+            value={form.metric}
+            onValueChange={(next) => {
+              if (next in METRICS) setMetric(next as AlertMetric)
+            }}
+            disabled={disabled}
+          >
+            <SelectTrigger className="h-9 w-full" aria-label={t('Metric')}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {groups.map((group) => (
+                <SelectGroup key={group.value}>
+                  <SelectLabel>{t(group.label)}</SelectLabel>
+                  {group.metrics.map((metric) => (
+                    <SelectItem key={metric} value={metric}>
+                      {t(metricDefinition(metric).label)}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field label={t('Applies to')}>
+          {resourceTypes.length > 1 ? (
             <Select
-              value={form.metric}
+              value={form.resourceType}
               onValueChange={(next) => {
-                if (next in METRICS) setMetric(next as AlertMetric)
+                if (next) {
+                  onChange({
+                    resourceType: next as AlertResourceType,
+                    resourceId: '',
+                  })
+                }
               }}
               disabled={disabled}
             >
               <SelectTrigger
-                className="h-9 w-auto min-w-44"
-                aria-label={t('Metric')}
+                className="h-9 w-full"
+                aria-label={t('Resource type')}
               >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {groups.map((group) => (
-                  <SelectGroup key={group.value}>
-                    <SelectLabel>{t(group.label)}</SelectLabel>
-                    {group.metrics.map((metric) => (
-                      <SelectItem key={metric} value={metric}>
-                        {t(metricDefinition(metric).label)}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
+                {resourceTypes.map((type) => (
+                  <SelectItem key={type.value} value={type.value}>
+                    {type.value === 'project'
+                      ? t('The whole project')
+                      : t(type.label)}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Word>{t('on')}</Word>
-            {resourceTypes.length > 1 ? (
-              <Select
-                value={form.resourceType}
-                onValueChange={(next) => {
-                  if (next) {
-                    onChange({
-                      resourceType: next as AlertResourceType,
-                      resourceId: '',
-                    })
-                  }
-                }}
-                disabled={disabled}
-              >
-                <SelectTrigger
-                  className="h-9 w-auto min-w-36"
-                  aria-label={t('Resource type')}
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {resourceTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.value === 'project'
-                        ? t('The whole project')
-                        : t(type.label)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : (
-              <span className="text-[13px] font-medium text-foreground">
-                {form.resourceType === 'project'
-                  ? t('the whole project')
-                  : t(
-                      RESOURCE_TYPES.find(
-                        (type) => type.value === form.resourceType,
-                      )?.label ?? '',
-                    )}
-              </span>
-            )}
-            {form.resourceType !== 'project' && (
-              <div className="min-w-48 flex-1">
-                <ResourcePicker
-                  projectId={projectId}
-                  resourceType={form.resourceType}
-                  value={form.resourceId}
-                  onChange={(resourceId) => onChange({ resourceId })}
-                  disabled={disabled}
-                />
-              </div>
-            )}
-          </div>
-
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <Word>{t('is')}</Word>
+          ) : (
+            <div className="flex h-9 items-center rounded-md border border-border bg-muted/40 px-3 text-[13px] text-muted-foreground">
+              {form.resourceType === 'project'
+                ? t('The whole project')
+                : t(
+                    RESOURCE_TYPES.find(
+                      (type) => type.value === form.resourceType,
+                    )?.label ?? '',
+                  )}
+            </div>
+          )}
+        </Field>
+        {form.resourceType !== 'project' && (
+          <Field label={t('Resource')} className="sm:col-span-2">
+            <ResourcePicker
+              projectId={projectId}
+              resourceType={form.resourceType}
+              value={form.resourceId}
+              onChange={(resourceId) => onChange({ resourceId })}
+              disabled={disabled}
+            />
+          </Field>
+        )}
+        <Field label={t('Alert when the value is')}>
+          <div className="flex gap-2">
             <Select
               value={form.comparator}
               onValueChange={(next) =>
@@ -571,7 +667,7 @@ export function RuleFields({
               disabled={disabled}
             >
               <SelectTrigger
-                className="h-9 w-auto min-w-40"
+                className="h-9 w-auto min-w-0 shrink-0"
                 aria-label={t('Comparator')}
               >
                 <SelectValue />
@@ -584,112 +680,105 @@ export function RuleFields({
                 ))}
               </SelectContent>
             </Select>
-            <div className="flex items-center gap-1.5">
+            <div className="relative min-w-0 flex-1">
               <NumberInput
                 id="alert-threshold"
                 aria-label={t('Threshold')}
-                className="h-9 w-28"
+                className={cn(
+                  'h-9 w-full',
+                  definition.unit !== 'bytes' && 'pe-20',
+                )}
                 min={0}
                 max={definition.unit === 'percent' ? 100 : undefined}
                 step="any"
                 value={form.threshold}
-                onValueChange={(threshold) => onChange({ threshold })}
+                onValueChange={(threshold) => {
+                  setSuggesting(false)
+                  onChange({ threshold })
+                }}
                 disabled={disabled}
               />
-              {definition.unit === 'bytes' ? (
-                <Select
-                  value={form.byteUnit}
-                  onValueChange={(next) =>
-                    onChange({ byteUnit: next as ByteUnit })
-                  }
-                  disabled={disabled}
-                >
-                  <SelectTrigger className="h-9 w-20" aria-label={t('Unit')}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {BYTE_UNITS.map((unit) => (
-                      <SelectItem key={unit.value} value={unit.value}>
-                        {unit.value}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <Word>
+              {definition.unit !== 'bytes' && (
+                <span className="pointer-events-none absolute inset-y-0 end-3 flex max-w-16 items-center truncate text-[13px] text-muted-foreground">
                   {definition.unit === 'percent'
                     ? '%'
                     : definition.unit === 'gbHours'
                       ? t('GB-hours')
                       : t(definition.suffix ?? 'operations')}
-                </Word>
+                </span>
               )}
             </div>
-            {definition.counter && (
-              <>
-                <Word>{t('within')}</Word>
-                <Select
-                  value={String(form.window)}
-                  onValueChange={(next) => onChange({ window: Number(next) })}
-                  disabled={disabled}
+            {definition.unit === 'bytes' && (
+              <Select
+                value={form.byteUnit}
+                onValueChange={(next) => {
+                  setSuggesting(false)
+                  onChange({ byteUnit: next as ByteUnit })
+                }}
+                disabled={disabled}
+              >
+                <SelectTrigger
+                  className="h-9 w-20 shrink-0"
+                  aria-label={t('Unit')}
                 >
-                  <SelectTrigger
-                    className="h-9 w-auto min-w-32"
-                    aria-label={t('Window')}
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {durationOptions(WINDOWS, form.window, t).map((option) => (
-                      <SelectItem
-                        key={option.value}
-                        value={String(option.value)}
-                      >
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {BYTE_UNITS.map((unit) => (
+                    <SelectItem key={unit.value} value={unit.value}>
+                      {unit.value}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             )}
           </div>
+        </Field>
+        {definition.counter && (
+          <Field label={t('Counted over')}>
+            <Select
+              value={String(form.window)}
+              onValueChange={(next) => onChange({ window: Number(next) })}
+              disabled={disabled}
+            >
+              <SelectTrigger className="h-9 w-full" aria-label={t('Window')}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {durationOptions(WINDOWS, form.window, t).map((option) => (
+                  <SelectItem key={option.value} value={String(option.value)}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+        )}
+      </div>
 
-          <div className="mt-4 border-t border-border pt-4">
-            <RuleChart
-              projectId={projectId}
-              rule={{
-                metric: form.metric,
-                resourceType: form.resourceType,
-                resourceId: formResourceId(form),
-                window: form.window,
-                comparator: form.comparator,
-                threshold: formThreshold(form),
-              }}
-            />
-          </div>
-        </div>
-      </section>
-
-      <NotifyFields
-        notify={form.notify}
-        severity={form.severity}
-        escalation={{
-          organizationId: project?.teamId,
-          recipients: form.recipients,
-          escalationId: form.escalationId,
-        }}
-        onChange={onChange}
-        disabled={disabled}
-      />
-
-      <OptionalFields
-        name={form.name}
-        cooldown={form.cooldown}
-        placeholder={suggestedName(form, t)}
-        onChange={onChange}
-        disabled={disabled}
-      />
-    </div>
+      <div className="mt-6">
+        <RuleChart
+          projectId={projectId}
+          rule={{
+            metric: form.metric,
+            resourceType: form.resourceType,
+            resourceId: formResourceId(form),
+            window: form.window,
+            comparator: form.comparator,
+            threshold: formThreshold(form),
+          }}
+          onPeak={suggesting ? suggest : undefined}
+          onThresholdChange={
+            disabled
+              ? undefined
+              : (value) => {
+                  setSuggesting(false)
+                  onChange(thresholdFromValue(form.metric, value))
+                }
+          }
+        />
+      </div>
+    </section>
   )
 }
 
@@ -700,7 +789,13 @@ export function NotifyFields({
   escalation,
   onChange,
   disabled,
+  bare = false,
+  recipientsOnly = false,
 }: {
+  /** Leaves out the heading, for a card that has its own. */
+  bare?: boolean
+  /** Leaves out the severity, for a card of its own. */
+  recipientsOnly?: boolean
   notify: string[]
   severity: MonitorSeverity
   /** Offers an escalation instead of the roles. */
@@ -720,241 +815,169 @@ export function NotifyFields({
   const t = useT()
   const usesEscalation = escalation?.recipients === 'escalation'
   return (
-    <section>
-      <SectionHeading
-        title={t('Notify')}
-        description={
-          usesEscalation
-            ? t(
-                'Each step of the escalation is notified in turn until someone acknowledges the alert.',
-              )
-            : t(
-                'Members with these roles get an email and a console notification when the monitor fires and again when it resolves.',
-              )
-        }
-      />
-      {escalation && (
-        <RadioGroupPrimitive.Root
-          aria-label={t('Recipients')}
-          value={escalation.recipients}
-          onValueChange={(next) => onChange({ recipients: next as Recipients })}
-          disabled={disabled}
-          orientation="horizontal"
-          className="mb-3 inline-flex rounded-md border border-border p-0.5"
-        >
-          {(
-            [
-              { value: 'roles', label: 'Notify roles once' },
-              { value: 'escalation', label: 'Escalation' },
-            ] as const
-          ).map((option) => (
-            <RadioGroupPrimitive.Item
-              key={option.value}
-              value={option.value}
-              className={cn(
-                'h-7 rounded px-3 text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60',
-                escalation.recipients === option.value
-                  ? 'bg-accent font-medium text-foreground'
-                  : 'text-muted-foreground hover:text-foreground',
-              )}
-            >
-              {t(option.label)}
-            </RadioGroupPrimitive.Item>
-          ))}
-        </RadioGroupPrimitive.Root>
-      )}
-      {escalation && usesEscalation ? (
-        <EscalationPicker
-          organizationId={escalation.organizationId}
-          value={escalation.escalationId}
-          onChange={(escalationId) => onChange({ escalationId })}
-          disabled={disabled}
-        />
-      ) : (
-        <>
-          <div className="flex flex-wrap gap-2">
-            {NOTIFY_ROLES.map((role) => {
-              const selected = notify.includes(role)
-              return (
-                <button
-                  key={role}
-                  type="button"
-                  role="checkbox"
-                  aria-checked={selected}
-                  disabled={disabled}
-                  onClick={() =>
-                    onChange({
-                      notify: selected
-                        ? notify.filter((entry) => entry !== role)
-                        : [...notify, role],
-                    })
-                  }
-                  className={cn(
-                    'inline-flex h-8 items-center gap-2 rounded-md border px-3 text-[13px] transition-colors disabled:cursor-not-allowed disabled:opacity-60',
-                    selected
-                      ? 'border-foreground text-foreground ring-1 ring-inset ring-foreground'
-                      : 'border-border text-muted-foreground hover:bg-accent/40',
-                  )}
-                >
-                  <span
-                    aria-hidden
-                    className={cn(
-                      'flex h-3.5 w-3.5 items-center justify-center rounded-[4px] border-[1.5px]',
-                      selected
-                        ? 'border-foreground bg-foreground text-background'
-                        : 'border-muted-foreground/60',
-                    )}
-                  >
-                    {selected && (
-                      <Check className="h-2.5 w-2.5" strokeWidth={3} />
-                    )}
-                  </span>
-                  {t(roleLabel(role))}
-                </button>
-              )
-            })}
-          </div>
-          <p className="mt-2 text-[12px] text-muted-foreground">
-            {notify.length === 0
-              ? t(
-                  'Nobody is emailed or notified. The alerts still fire their events for project webhooks and functions.',
-                )
-              : t(
-                  'Project webhooks and functions can also listen to its alert events.',
-                )}
-          </p>
-        </>
-      )}
-      <div className="mt-4">
-        <Label id="alert-severity" className="text-[13px] font-semibold">
-          {t('Severity')}
-        </Label>
-        {/* Radix gives the group one tab stop and moves the selection with the arrow keys. */}
-        <RadioGroupPrimitive.Root
-          aria-labelledby="alert-severity"
-          value={severity}
-          onValueChange={(next) =>
-            onChange({ severity: next as MonitorSeverity })
+    <>
+      <section>
+        {!bare && (
+          <SectionHeading
+            title={t('Notify')}
+            description={t(
+              'Who gets an email, a push and a console notification when the monitor fires and when it resolves.',
+            )}
+          />
+        )}
+        <RecipientsField
+          organizationId={escalation?.organizationId}
+          roles={NOTIFY_ROLES}
+          members={false}
+          escalations={!!escalation}
+          label={t('Add who gets notified')}
+          value={{
+            roles: notify,
+            userIds: [],
+            escalationId: usesEscalation ? escalation.escalationId : '',
+          }}
+          onChange={(next) =>
+            onChange({
+              notify: next.roles,
+              recipients: next.escalationId ? 'escalation' : 'roles',
+              escalationId: next.escalationId,
+            })
           }
           disabled={disabled}
-          orientation="horizontal"
-          className="mt-2 flex flex-wrap gap-2"
-        >
-          {SEVERITIES.map(({ value, label, icon: Icon, tone, ...level }) => (
-            <RadioGroupPrimitive.Item
-              key={value}
-              value={value}
-              className={cn(
-                'inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60',
-                severity === value
-                  ? cn('font-medium ring-1 ring-inset', level.selected)
-                  : 'border-border text-muted-foreground hover:bg-accent/40',
-              )}
-            >
-              <Icon aria-hidden className={cn('h-3.5 w-3.5', tone)} />
-              {t(label)}
-            </RadioGroupPrimitive.Item>
-          ))}
-        </RadioGroupPrimitive.Root>
-        <p className="mt-2 text-[12px] text-muted-foreground">
-          {t(SEVERITIES.find(({ value }) => value === severity)?.hint ?? '')}
+        />
+        <p className="mt-3 text-[12px] text-muted-foreground">
+          {usesEscalation ? (
+            <EscalationSummary
+              organizationId={escalation.organizationId}
+              escalationId={escalation.escalationId}
+            />
+          ) : notify.length === 0 ? (
+            t(
+              'Nobody is emailed or notified. The alerts still fire their events for project webhooks and functions.',
+            )
+          ) : (
+            t(
+              'Notified once when the monitor fires and again when it resolves. Pick an escalation instead to notify step by step until someone acknowledges.',
+            )
+          )}
         </p>
-      </div>
-    </section>
+      </section>
+      {!recipientsOnly && (
+        <section>
+          <h3
+            id="alert-severity"
+            className="text-[13px] font-semibold text-foreground"
+          >
+            {t('Severity')}
+          </h3>
+          <SeverityPicker
+            value={severity}
+            onChange={(next) => onChange({ severity: next })}
+            disabled={disabled}
+          />
+        </section>
+      )}
+    </>
   )
 }
 
-/** One of the organization's escalations, with what its steps do. */
-function EscalationPicker({
-  organizationId,
+/**
+ * The four levels as cards that say when to pick each and what its alerts do, so the one
+ * that changes delivery, critical, reads differently from the rest.
+ */
+export function SeverityPicker({
   value,
   onChange,
   disabled,
 }: {
-  organizationId: string | undefined
-  value: string
-  onChange: (escalationId: string) => void
+  value: MonitorSeverity
+  onChange: (severity: MonitorSeverity) => void
   disabled?: boolean
 }) {
   const t = useT()
-  const { escalations, isLoading, error, refetch } =
-    useEscalations(organizationId)
-  const { memberName } = useEscalationMembers(organizationId)
-  const selected = escalations.find((escalation) => escalation.$id === value)
-  const manage = organizationId ? (
-    <Link
-      to="/organizations/$orgId/settings/escalations"
-      params={{ orgId: organizationId }}
-      className="text-[12px] text-foreground underline underline-offset-2"
-    >
-      {escalations.length === 0 && !isLoading
-        ? t('Create an escalation')
-        : t('Manage escalations')}
-    </Link>
-  ) : null
-
-  if (error) {
-    return (
-      <div className="flex items-center gap-2 text-[13px] text-destructive">
-        <span>{t('Could not load escalations.')}</span>
-        <button
-          type="button"
-          className="underline underline-offset-2"
-          onClick={() => void refetch()}
-        >
-          {t('Retry')}
-        </button>
-      </div>
-    )
-  }
-
-  if (!isLoading && escalations.length === 0) {
-    return (
-      <p className="text-[13px] text-muted-foreground">
-        {t('Your organization has no escalations yet.')} {manage}
-      </p>
-    )
-  }
-
+  const current =
+    SEVERITIES.find((entry) => entry.value === value) ?? SEVERITIES[1]
   return (
-    <div className="space-y-2">
-      <Select
+    <>
+      {/* Radix gives the group one tab stop and moves the selection with the arrow keys. */}
+      <RadioGroupPrimitive.Root
+        aria-labelledby="alert-severity"
         value={value}
-        onValueChange={(next) => {
-          if (next) onChange(next)
-        }}
+        onValueChange={(next) => onChange(next as MonitorSeverity)}
         disabled={disabled}
+        className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4"
       >
-        <SelectTrigger className="w-full" aria-label={t('Escalation')}>
-          <SelectValue
-            placeholder={isLoading ? t('Loading...') : t('Select an escalation')}
-          />
-        </SelectTrigger>
-        <SelectContent>
-          {escalations.map((escalation) => (
-            <SelectItem key={escalation.$id} value={escalation.$id}>
-              {escalation.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <p className="text-[12px] text-muted-foreground">
-        {selected && (
-          <>
-            {escalationSummary(
-              selected.steps,
-              memberName,
-              (role) => t(roleLabel(role)),
-              t,
+        {SEVERITIES.map(({ value: level, label, icon: Icon, tone }) => (
+          <RadioGroupPrimitive.Item
+            key={level}
+            value={level}
+            className={cn(
+              'flex h-10 items-center justify-center gap-2 rounded-lg border text-[13px] font-medium text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60',
+              value === level
+                ? 'border-foreground ring-1 ring-inset ring-foreground'
+                : 'border-border hover:bg-accent/40',
             )}
-            {selected.repeat > 0 &&
-              ` · ${t('repeats {count}×').replace('{count}', String(selected.repeat))}`}
-            {' · '}
-          </>
+          >
+            <Icon aria-hidden className={cn('h-4 w-4 shrink-0', tone)} />
+            {t(label)}
+          </RadioGroupPrimitive.Item>
+        ))}
+      </RadioGroupPrimitive.Root>
+      {/* What the chosen level means, in one line under the choice. */}
+      <p aria-live="polite" className="mt-3 text-[13px] text-foreground">
+        {t(current.hint)}
+        {current.delivery && (
+          <span className="text-muted-foreground"> {t(current.delivery)}</span>
         )}
-        {manage}
       </p>
-    </div>
+      <p className="mt-3 text-[12px] text-muted-foreground">
+        {t(
+          'Every level is emailed, shown in the console and pushed to phones, with the level in the title. Webhooks and functions receive it with the alert events. A critical push rings only on phones that allowed critical alerts.',
+        )}
+      </p>
+    </>
+  )
+}
+
+/** What the chosen escalation does, with a way to change escalations. */
+function EscalationSummary({
+  organizationId,
+  escalationId,
+}: {
+  organizationId: string | undefined
+  escalationId: string
+}) {
+  const t = useT()
+  const { escalations } = useEscalations(organizationId)
+  const { memberName } = useEscalationMembers(organizationId)
+  const selected = escalations.find(
+    (escalation) => escalation.$id === escalationId,
+  )
+  return (
+    <>
+      {selected && (
+        <>
+          {escalationSummary(
+            selected.steps,
+            memberName,
+            (role) => t(roleLabel(role)),
+            t,
+          )}
+          {selected.repeat > 0 &&
+            ` · ${t('repeats {count}×').replace('{count}', String(selected.repeat))}`}
+          {' · '}
+        </>
+      )}
+      {organizationId && (
+        <Link
+          to="/organizations/$orgId/settings/escalations"
+          params={{ orgId: organizationId }}
+          className="text-foreground underline underline-offset-2"
+        >
+          {t('Manage escalations')}
+        </Link>
+      )}
+    </>
   )
 }
 

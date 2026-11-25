@@ -279,7 +279,7 @@ export function MonitorTypePicker({
       onValueChange={(next) => onChange(next as 'usage' | ProbeType)}
       disabled={disabled}
       orientation="horizontal"
-      className="flex flex-wrap gap-2"
+      className="grid grid-cols-2 gap-2 sm:grid-cols-5"
     >
       {MONITOR_TYPES.map(({ value: type, label, icon: Icon }) => {
         const locked = probesLocked && type !== 'usage'
@@ -289,13 +289,13 @@ export function MonitorTypePicker({
             value={type}
             disabled={locked}
             className={cn(
-              'inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60',
+              'flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60',
               value === type
                 ? 'border-foreground font-medium text-foreground ring-1 ring-inset ring-foreground'
                 : 'border-border text-muted-foreground hover:bg-accent/40',
             )}
           >
-            <Icon aria-hidden className="h-3.5 w-3.5" />
+            <Icon aria-hidden className="h-4 w-4" />
             {t(label)}
             {locked && <Lock aria-hidden className="h-3 w-3" />}
           </RadioGroupPrimitive.Item>
@@ -320,10 +320,13 @@ function Field({
 }) {
   return (
     <div className={cn('min-w-0', className)}>
-      <Label htmlFor={id} className="text-[13px] font-semibold">
+      <Label
+        htmlFor={id}
+        className="text-[12px] font-medium text-muted-foreground"
+      >
         {label}
       </Label>
-      <div className="mt-2">{children}</div>
+      <div className="mt-1.5">{children}</div>
       {hint && (
         <p className="mt-1.5 text-[12px] text-muted-foreground">{hint}</p>
       )}
@@ -372,7 +375,12 @@ export function ProbeFields({
   form,
   onChange,
   disabled,
-}: ProbeFieldsProps & { projectId: string }) {
+  part,
+}: ProbeFieldsProps & {
+  projectId: string
+  /** Only what the check calls and how often, for a settings card of its own. */
+  part?: 'target'
+}) {
   const t = useT()
   const { project } = useProject(projectId)
   const { plan } = useOrganizationPlan(project?.teamId)
@@ -387,13 +395,13 @@ export function ProbeFields({
   }, [disabled, form.interval, minimum, onChange])
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-8">
       <section>
         <SectionHeading
           title={t('Target')}
           description={definition ? t(definition.description) : undefined}
         />
-        <div className="space-y-4 rounded-xl border border-border bg-muted/20 p-4">
+        <div className="space-y-5">
           {form.type === 'http' && (
             <>
               <div className="grid gap-4 sm:grid-cols-[120px_1fr]">
@@ -678,25 +686,29 @@ export function ProbeFields({
         )}
       </section>
 
-      <NotifyFields
-        notify={form.notify}
-        severity={form.severity}
-        escalation={{
-          organizationId: project?.teamId,
-          recipients: form.recipients,
-          escalationId: form.escalationId,
-        }}
-        onChange={onChange}
-        disabled={disabled}
-      />
+      {part !== 'target' && (
+        <>
+          <NotifyFields
+            notify={form.notify}
+            severity={form.severity}
+            escalation={{
+              organizationId: project?.teamId,
+              recipients: form.recipients,
+              escalationId: form.escalationId,
+            }}
+            onChange={onChange}
+            disabled={disabled}
+          />
 
-      <OptionalFields
-        name={form.name}
-        cooldown={form.cooldown}
-        placeholder={suggestedProbeName(form) || t('Name')}
-        onChange={onChange}
-        disabled={disabled}
-      />
+          <OptionalFields
+            name={form.name}
+            cooldown={form.cooldown}
+            placeholder={suggestedProbeName(form) || t('Name')}
+            onChange={onChange}
+            disabled={disabled}
+          />
+        </>
+      )}
     </div>
   )
 }
