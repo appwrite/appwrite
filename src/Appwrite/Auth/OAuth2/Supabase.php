@@ -171,6 +171,14 @@ class Supabase extends OAuth2
     }
 
     /**
+     * @return array<array<string, mixed>>
+     */
+    public function getProjects(string $accessToken): array
+    {
+        return \json_decode($this->request('GET', 'https://api.supabase.com/v1/projects', ['Authorization: Bearer ' . $accessToken]), true) ?? [];
+    }
+
+    /**
      * @param string $accessToken
      *
      * @return array
