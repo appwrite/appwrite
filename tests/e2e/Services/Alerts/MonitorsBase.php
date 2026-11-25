@@ -343,6 +343,12 @@ trait MonitorsBase
         $unknown = $this->listMonitors([Query::equal('channels', ['email'])->toString()]);
         $this->assertSame(400, $unknown['headers']['status-code']);
 
+        // A monitor's metric lives in its rules, so it is not a filter.
+        $metric = $this->listMonitors([Query::equal('metric', ['network.outbound'])->toString()]);
+        $this->assertSame(400, $metric['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $metric['body']['type']);
+        $this->assertStringContainsString('metric', (string) $metric['body']['message']);
+
         $cursor = $this->listMonitors([Query::cursorAfter(new Document(['$id' => 'missing']))->toString()]);
         $this->assertSame(400, $cursor['headers']['status-code']);
     }
