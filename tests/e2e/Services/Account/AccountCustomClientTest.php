@@ -8311,12 +8311,25 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(400, $delete['headers']['status-code']);
         $this->assertEquals('user_authenticator_last_factor', $delete['body']['type']);
 
-        $disable = $this->client->call(Client::METHOD_PATCH, '/account/mfa', $headers, [
+        // An admin is held to the same rule through the Users API
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $delete = $this->client->call(Client::METHOD_DELETE, '/users/' . $data['id'] . '/mfa/authenticators/totp', $serverHeaders);
+        $this->assertEquals(400, $delete['headers']['status-code']);
+        $this->assertEquals('user_authenticator_last_factor', $delete['body']['type']);
+
+        // Once MFA is disabled, the last factor can go
+        $disable = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['id'] . '/mfa', $serverHeaders, [
             'mfa' => false,
         ]);
         $this->assertEquals(200, $disable['headers']['status-code']);
+        $this->assertFalse($disable['body']['mfa']);
 
-        $delete = $this->client->call(Client::METHOD_DELETE, '/account/mfa/authenticators/totp', $headers);
+        $delete = $this->client->call(Client::METHOD_DELETE, '/users/' . $data['id'] . '/mfa/authenticators/totp', $serverHeaders);
         $this->assertEquals(204, $delete['headers']['status-code']);
     }
 
