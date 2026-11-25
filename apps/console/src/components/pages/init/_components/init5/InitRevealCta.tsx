@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { ArrowDown, Play } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
+  isFilmPlayerRevealed,
   isLaunchEventDayLocked,
   type InitDisplayEvent,
   type LaunchEventDay,
@@ -18,6 +19,8 @@ interface Reveal {
   detail?: string
   title: string
   films: LaunchEventDayFilm[]
+  /** The films say they play on Appwrite Videos, once that day is revealed. */
+  poweredBy: boolean
   /** The day card the secondary button scrolls to. */
   day: number
   dayLabel: string
@@ -41,6 +44,7 @@ export function resolveInitReveal(event: InitDisplayEvent): Reveal | null {
       label: 'Watch the launches',
       title: `${INIT_EVENT_CATALOG[event.id]?.editionLabel ?? 'Init'} launches`,
       films: revealed.flatMap((day) => day.films ?? []),
+      poweredBy: isFilmPlayerRevealed(event),
       day: revealed[0]!.day,
       dayLabel: 'Browse the launches',
     }
@@ -56,6 +60,7 @@ export function resolveInitReveal(event: InitDisplayEvent): Reveal | null {
     detail: films.map((film) => film.label).join(' & '),
     title: latest.title,
     films,
+    poweredBy: isFilmPlayerRevealed(event),
     day: latest.day,
     dayLabel: `Go to day ${latest.day}`,
   }
@@ -102,6 +107,7 @@ export function InitRevealCta({ reveal }: { reveal: Reveal }) {
       <InitFilmDialog
         title={reveal.title}
         films={reveal.films}
+        poweredBy={reveal.poweredBy}
         open={open}
         onOpenChange={setOpen}
       />

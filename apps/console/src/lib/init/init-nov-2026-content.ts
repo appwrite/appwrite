@@ -69,6 +69,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     dateLabel: 'DECEMBER 1',
     weekdayLabel: 'TUESDAY, DECEMBER 1',
     films: [film('6b06b8ea2b4ba42f96fc', 'Appwrite Videos')],
+    launchesFilmPlayer: true,
     title: 'Introducing Appwrite Videos',
     description: 'Transcode, stream, and caption video in your project.',
     longDescription:
