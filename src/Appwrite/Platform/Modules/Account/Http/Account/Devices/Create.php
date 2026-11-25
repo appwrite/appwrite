@@ -131,7 +131,7 @@ class Create extends Action
 
         $secret = $proofForToken->generate();
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
-        $geoRecord = $geo->get($request->getIP());
+        $geoRecord = $geo->get($request->getClientIP());
 
         $deviceId = Id::unique();
         $device = new Document(array_merge(
@@ -142,7 +142,7 @@ class Create extends Action
                 'activeSessionId' => '',
                 'activeSessionInternalId' => '',
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
-                'ip' => $request->getIP(),
+                'ip' => $request->getClientIP(),
                 'countryCode' => \strtolower($geoRecord->getCountryCode()),
                 'expire' => $expire,
             ],

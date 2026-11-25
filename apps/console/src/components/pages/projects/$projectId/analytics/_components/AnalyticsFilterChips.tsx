@@ -1,3 +1,4 @@
+import { useParams } from '@tanstack/react-router'
 import { useT } from '@/lib/i18n/translate'
 import { useCountryLookups } from '@/lib/react-query/hooks'
 import { ActiveFilterChips } from '@/components/global/shared/ActiveFilterChips'
@@ -5,6 +6,10 @@ import {
   analyticsFilterColumns,
   trafficKindOfFilterKey,
 } from '@/lib/analytics/analytics-filters'
+import {
+  analyticsUserLabel,
+  useAnalyticsUserDirectory,
+} from '@/lib/analytics/user-directory'
 import { useAnalyticsFilters } from './analytics-filters-context'
 
 /**
@@ -21,6 +26,8 @@ export function AnalyticsFilterChips() {
     onClearAllFilters,
   } = useAnalyticsFilters()
   const { lookups: countryLookups } = useCountryLookups()
+  const { projectId } = useParams({ strict: false })
+  const lookupUser = useAnalyticsUserDirectory(projectId)
 
   return (
     <ActiveFilterChips
@@ -30,6 +37,12 @@ export function AnalyticsFilterChips() {
       onApplyFilter={onApplyFilter}
       onRemoveFilter={onRemoveFilter}
       onClearAllFilters={onClearAllFilters}
+      // A user filter reads as the person, not their ID.
+      displayValue={(key) =>
+        key.c === 'userId' && typeof key.v === 'string'
+          ? analyticsUserLabel(key.v, lookupUser(key.v))
+          : undefined
+      }
       // The humans/bots filter is an empty-category query underneath; show
       // what it means rather than `Bot category is ""`.
       fixedTag={(key) => {
