@@ -21,6 +21,7 @@ import { DEFAULT_PAGE_SIZE, DEFAULT_STALE_TIME } from './constants'
 import {
   CHALLENGE_DIFFICULTY_DEFAULT,
   CHALLENGE_TTL_DEFAULT,
+  challengeRuleFields,
   getRuleChallenge,
   type FirewallCreatableAction,
 } from '@/lib/firewall/actions'
@@ -100,6 +101,8 @@ export type CreateFirewallRuleInput = {
   challengeType?: string
   difficulty?: number
   ttl?: number
+  /** Password challenges only. */
+  password?: string
   /** When the rule is active. Leave out for always active. */
   schedule?: FirewallSchedulePayload
 }
@@ -127,6 +130,8 @@ export type UpdateFirewallRuleInput = {
   challengeType?: string
   difficulty?: number
   ttl?: number
+  /** Password challenges only. Leave out to keep the stored password. */
+  password?: string
   /** Leave out to keep the stored schedule; an empty object removes it. */
   schedule?: FirewallSchedulePayload | Record<string, never>
 }
@@ -381,13 +386,7 @@ async function createFirewallRule(
     case WafRuleAction.Deny:
       return waf.createDenyRule(base)
     case WafRuleAction.Challenge:
-      // challengeType is optional; omit to let the API apply its default.
-      return waf.createChallengeRule({
-        ...base,
-        challengeType: input.challengeType?.trim() || undefined,
-        difficulty: input.difficulty,
-        ttl: input.ttl,
-      })
+      return waf.createChallengeRule({ ...base, ...challengeRuleFields(input) })
     case WafRuleAction.RateLimit:
       return waf.createRateLimitRule({
         ...base,
@@ -433,12 +432,7 @@ async function updateFirewallRule(
     case WafRuleAction.Deny:
       return waf.updateDenyRule(base)
     case WafRuleAction.Challenge:
-      return waf.updateChallengeRule({
-        ...base,
-        challengeType: input.challengeType,
-        difficulty: input.difficulty,
-        ttl: input.ttl,
-      })
+      return waf.updateChallengeRule({ ...base, ...challengeRuleFields(input) })
     case WafRuleAction.RateLimit:
       return waf.updateRateLimitRule({
         ...base,

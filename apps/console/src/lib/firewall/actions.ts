@@ -23,6 +23,63 @@ export const CHALLENGE_TTL_MIN = 900
 export const CHALLENGE_TTL_MAX = 86400
 export const CHALLENGE_TTL_DEFAULT = 1800
 
+/** How a challenge rule tests visitors. */
+export const FIREWALL_CHALLENGE_TYPES = [
+  { value: 'compute', label: 'Compute' },
+  { value: 'password', label: 'Password' },
+] as const
+
+export type FirewallChallengeType =
+  (typeof FIREWALL_CHALLENGE_TYPES)[number]['value']
+
+/** Password challenge length bounds, in bytes like the API counts them. */
+export const CHALLENGE_PASSWORD_MIN_LENGTH = 8
+export const CHALLENGE_PASSWORD_MAX_LENGTH = 256
+
+/**
+ * Whether a password challenge's password can be sent. Empty passes only when
+ * it is not required: updating a rule that already has a password keeps it.
+ */
+export function isChallengePasswordValid(
+  password: string,
+  required: boolean,
+): boolean {
+  if (password === '') return !required
+  const length = new TextEncoder().encode(password).length
+  return (
+    length >= CHALLENGE_PASSWORD_MIN_LENGTH &&
+    length <= CHALLENGE_PASSWORD_MAX_LENGTH
+  )
+}
+
+/**
+ * Challenge fields for createChallengeRule / updateChallengeRule. Password
+ * rules carry no difficulty, and an empty password is left out so an update
+ * keeps the stored one.
+ */
+export function challengeRuleFields(input: {
+  challengeType?: string
+  difficulty?: number
+  ttl?: number
+  password?: string
+}) {
+  if (input.challengeType === 'password') {
+    return {
+      challengeType: input.challengeType,
+      ttl: input.ttl,
+      // Not in the pinned @appwrite.io/console params yet, which drop it; it
+      // reaches the API once the SDK is regenerated with password challenges.
+      password: input.password || undefined,
+    }
+  }
+  // challengeType is optional; omit to let the API apply its default.
+  return {
+    challengeType: input.challengeType?.trim() || undefined,
+    difficulty: input.difficulty,
+    ttl: input.ttl,
+  }
+}
+
 /** Keys a rate-limit rule can be bucketed by. */
 export const FIREWALL_RATE_LIMIT_KEYS = [
   { value: 'ip', label: 'IP address' },
