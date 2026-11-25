@@ -197,7 +197,8 @@ const PREVIEW_SERIES: TrendPoint[] = [
 /**
  * Analytics on the site's deployments page, for the last 24 hours.
  *
- * - Linked (a property tracks one of the site's domains): headline visitors
+ * - Linked (the property the site's analytics switch created, or else one
+ *   that tracks one of the site's domains): headline visitors
  *   with its trend, an hourly chart, live visitors, top sources, and "View
  *   analytics" or "Install" before the first event.
  * - Not linked: a preview of the same layout and "Add analytics", which opens
@@ -211,9 +212,19 @@ export function SiteAnalyticsCard({
   siteName,
   siteDomains,
   domainsLoading = false,
+  linkedPropertyId,
+  tracked = false,
 }: {
   projectId: string
   siteName: string
+  /**
+   * The property the site's analytics switch links (`site.analyticsPropertyId`).
+   * Its domain can be empty (analytics turned on before the site had a
+   * domain), so it wins over matching by domain.
+   */
+  linkedPropertyId?: string
+  /** The site's analytics switch is on: Appwrite injects the tracker itself. */
+  tracked?: boolean
   /** Every domain serving the site; the shortest is used to prefill. */
   siteDomains: readonly string[]
   /** While the site's domains load, matching would flash "not linked". */
@@ -233,8 +244,11 @@ export function SiteAnalyticsCard({
     error,
   } = useAnalyticsProperties(enabled ? projectId : null, 0, 100, '')
   const property = useMemo(
-    () => findPropertyForSite(properties, siteDomains),
-    [properties, siteDomains],
+    () =>
+      (linkedPropertyId
+        ? properties.find((entry) => entry.$id === linkedPropertyId)
+        : undefined) ?? findPropertyForSite(properties, siteDomains),
+    [properties, siteDomains, linkedPropertyId],
   )
 
   // 24 whole hours ending with the current one, fixed per mount so the query
@@ -438,7 +452,9 @@ export function SiteAnalyticsCard({
                     {t('Waiting for the first visitor')}
                   </p>
                   <p className="text-[11px] text-muted-foreground">
-                    {t('Install tracking and load a page on the site.')}
+                    {tracked
+                      ? t('Load a page on the site’s production domain.')
+                      : t('Install tracking and load a page on the site.')}
                   </p>
                 </div>
               ) : null
@@ -477,7 +493,8 @@ export function SiteAnalyticsCard({
         ) : property ? (
           <>
             {/* Only once stats say there's no traffic: never flashes in. */}
-            {statsLoaded && !hasTraffic ? (
+            {/* The switch injects the tracker, so there is nothing to install. */}
+            {statsLoaded && !hasTraffic && !tracked ? (
               <Button
                 variant="secondary"
                 size="sm"
