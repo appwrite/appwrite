@@ -38,6 +38,7 @@ import {
 } from '@/lib/utils/video-format'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
+import { useLongWait } from '@/hooks/use-long-wait'
 import { useVideoPlayerPrefs } from '@/hooks/use-video-player-prefs'
 import { StreamDebugPanel, type StreamManifest } from './StreamDebugPanel'
 import {
@@ -744,6 +745,8 @@ export function VideoStreamPlayer({
     !state.fatalError &&
     state.firstFrameAt == null &&
     state.loadStartedAt != null
+  // The play button turns into a spinner only on a slow start.
+  const streamLoadingLong = useLongWait(streamLoading)
 
   /** Overlay-style controls, same chrome as the embed player page. */
   const menuOnlyAdvanced = true
@@ -801,7 +804,7 @@ export function VideoStreamPlayer({
         onSelectSubtitleSize={selectSubtitleSize}
         onReload={() => reload()}
         hasNewRenditions={hasNewRenditions}
-        isLoading={streamLoading}
+        isLoading={streamLoadingLong}
         scrubCues={timelineCues}
         fullscreen={fullscreen}
         onToggleFullscreen={toggleFullscreen}

@@ -1,4 +1,5 @@
 import { Loader2 } from 'lucide-react'
+import { useLongWait } from '@/hooks/use-long-wait'
 import { VideoStreamPlayer } from '@/components/pages/projects/$projectId/videos/_components/player/VideoStreamPlayer'
 import type { LaunchEventDayFilm } from '@/lib/init/types'
 import { usePublicHlsPlayback } from '@/lib/react-query/hooks/videos'
@@ -10,12 +11,18 @@ import { usePublicHlsPlayback } from '@/lib/react-query/hooks/videos'
  */
 export default function InitFilmPlayer({ film }: { film: LaunchEventDayFilm }) {
   const { data, isLoading } = usePublicHlsPlayback(film.projectId, film.videoId)
+  const loadingLong = useLongWait(isLoading)
 
   if (!data) {
     return (
       <div className="flex size-full items-center justify-center bg-black text-[13px] text-white/60">
         {isLoading ? (
-          <Loader2 className="size-7 animate-spin" aria-label="Loading film" />
+          loadingLong ? (
+            <Loader2
+              className="size-7 animate-spin"
+              aria-label="Loading film"
+            />
+          ) : null
         ) : (
           <p>This film isn&apos;t ready to play yet.</p>
         )}
