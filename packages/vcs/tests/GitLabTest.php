@@ -150,10 +150,11 @@ final class GitLabTest extends Base
             $this->assertSame($mapped, $result['action'], "native action '{$native}' should map to '{$mapped}'");
         }
     }
+
     /**
-     * @return array<string, array{0: string, 1: array<string, mixed>}>
+     * @return \Iterator<string, array{string, array<string, mixed>}>
      */
-    public static function providerProjectPaths(): array
+    public static function providerProjectPaths(): \Iterator
     {
         $project = [
             'id' => 89442539,
@@ -163,20 +164,18 @@ final class GitLabTest extends Base
             'web_url' => 'https://gitlab.com/jane-doe/magic-portfolio',
         ];
 
-        return [
-            'push' => ['Push Hook', [
-                'object_kind' => 'push',
-                'ref' => 'refs/heads/main',
-                'checkout_sha' => 'abc123',
-                'project' => $project,
-                'commits' => [],
-            ]],
-            'merge request' => ['Merge Request Hook', [
-                'object_kind' => 'merge_request',
-                'project' => $project,
-                'object_attributes' => ['iid' => 1, 'action' => 'open', 'source_branch' => 'feature', 'target_branch' => 'main'],
-            ]],
-        ];
+        yield 'push' => ['Push Hook', [
+            'object_kind' => 'push',
+            'ref' => 'refs/heads/main',
+            'checkout_sha' => 'abc123',
+            'project' => $project,
+            'commits' => [],
+        ]];
+        yield 'merge request' => ['Merge Request Hook', [
+            'object_kind' => 'merge_request',
+            'project' => $project,
+            'object_attributes' => ['iid' => 1, 'action' => 'open', 'source_branch' => 'feature', 'target_branch' => 'main'],
+        ]];
     }
 
     /**

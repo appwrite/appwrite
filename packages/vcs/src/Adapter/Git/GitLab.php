@@ -700,7 +700,9 @@ class GitLab extends Git
             $responseBody = $response['body'] ?? [];
             $namespace = $responseBody['namespace'] ?? [];
             // A subgroup's path is only its last segment; the API needs the full path
-            return $namespace['full_path'] ?? $namespace['path'] ?? '';
+            $path = \is_array($namespace) ? ($namespace['full_path'] ?? $namespace['path'] ?? '') : '';
+
+            return \is_string($path) ? $path : '';
         }
 
         $url = '/user';
@@ -1122,20 +1124,26 @@ class GitLab extends Git
      * "My App"), which the API cannot address. Its 'path_with_namespace' holds the
      * paths the API takes, with the full group path for projects in subgroups.
      *
-     * @param array<string, mixed> $project
-     * @return array{0: string, 1: string} The owner path and the repository path
+     * @return array{string, string} The owner path and the repository path
      */
-    private function getProjectPath(array $project): array
+    private function getProjectPath(mixed $project): array
     {
-        $path = $project['path_with_namespace'] ?? '';
-
-        if (!\is_string($path) || !\str_contains($path, '/')) {
-            return [$project['namespace'] ?? '', $project['name'] ?? ''];
+        if (!\is_array($project)) {
+            return ['', ''];
         }
 
-        $separator = \strrpos($path, '/');
+        $path = $project['path_with_namespace'] ?? null;
+        if (\is_string($path)) {
+            $separator = \strrpos($path, '/');
+            if ($separator !== false) {
+                return [\substr($path, 0, $separator), \substr($path, $separator + 1)];
+            }
+        }
 
-        return [\substr($path, 0, $separator), \substr($path, $separator + 1)];
+        $owner = $project['namespace'] ?? '';
+        $name = $project['name'] ?? '';
+
+        return [\is_string($owner) ? $owner : '', \is_string($name) ? $name : ''];
     }
 
     /**
