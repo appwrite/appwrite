@@ -127,14 +127,15 @@ export function DatabaseSpecificationCard({
     onSuccess: async (result) => {
       seedDatabaseProductRouteKind(projectId, databaseId, dbKind)
       invalidateDatabaseModel(projectId, databaseId)
-      if (
+      // A dedicated database whose read missed its specification still reads
+      // as serverless here; only a migration result means one started.
+      const migrated =
         dbKind === 'tablesdb' &&
-        currentIsServerless &&
-        result &&
+        !!result &&
         typeof result === 'object' &&
         '$id' in result &&
         'phase' in result
-      ) {
+      if (migrated) {
         queryClient.setQueryData(
           tablesDatabaseMigrationsQueryKey(projectId, databaseId),
           [result as Models.DatabaseMigration],
@@ -145,7 +146,7 @@ export function DatabaseSpecificationCard({
           queryKey: ['database', 'project', projectId, databaseId],
         }),
         refetchProjectDatabaseLists(queryClient, projectId),
-        dbKind === 'tablesdb' && currentIsServerless
+        migrated
           ? queryClient.refetchQueries({
               queryKey: tablesDatabaseMigrationsQueryKey(
                 projectId,
@@ -155,7 +156,7 @@ export function DatabaseSpecificationCard({
           : Promise.resolve(),
       ])
       toast.success(
-        currentIsServerless
+        migrated
           ? t('Migration to dedicated compute started')
           : t('Compute tier update started'),
       )
