@@ -786,15 +786,19 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             }
 
             // A buffered response is framed by the bytes sent, never by the length the runtime
-            // declared: a mismatch would leave the connection out of step with the body. A HEAD
-            // response carries no body, so the length it declares cannot do that.
-            if ($streamed !== true && $request->getMethod() !== Request::METHOD_HEAD) {
+            // declared: a mismatch would leave the connection out of step with the body. HEAD and
+            // 304 responses carry no body, so the representation length they declare cannot do
+            // that; 1xx and 204 responses must not declare one at all.
+            $responseStatus = $executionResponse['statusCode'];
+            if ($streamed !== true && $request->getMethod() !== Request::METHOD_HEAD && $responseStatus !== 304) {
                 foreach (\array_keys($executionResponse['headers']) as $name) {
                     if (\strtolower((string) $name) === 'content-length') {
                         unset($executionResponse['headers'][$name]);
                     }
                 }
-                $headerOverrides['content-length'] = \strlen($executionResponse['body']);
+                if ($responseStatus >= 200 && $responseStatus !== 204) {
+                    $headerOverrides['content-length'] = \strlen($executionResponse['body']);
+                }
             }
 
             // Headers that must have single values (RFC 7230)
