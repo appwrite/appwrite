@@ -785,6 +785,18 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 $headerOverrides['x-appwrite-log-id'] = $execution->getId();
             }
 
+            // A buffered response is framed by the bytes sent, never by the length the runtime
+            // declared: a mismatch would leave the connection out of step with the body. A HEAD
+            // response carries no body, so the length it declares cannot do that.
+            if ($streamed !== true && $request->getMethod() !== Request::METHOD_HEAD) {
+                foreach (\array_keys($executionResponse['headers']) as $name) {
+                    if (\strtolower((string) $name) === 'content-length') {
+                        unset($executionResponse['headers'][$name]);
+                    }
+                }
+                $headerOverrides['content-length'] = \strlen($executionResponse['body']);
+            }
+
             // Headers that must have single values (RFC 7230)
             $singleValueHeaders = ['content-length', 'content-type'];
 
