@@ -313,7 +313,7 @@ extern "C" fn argon2_hash(ex: &mut ExecuteData, retval: &mut Zval) {
 /// `password_verify($value, $hash)`, `Argon2`'s and `Bcrypt`'s.
 extern "C" fn password_verify(ex: &mut ExecuteData, retval: &mut Zval) {
     let Some(args) = strings(ex, "Utopia\\Auth\\Hash::verify", 2, 2) else { return };
-    set_bool(retval, php_std::string::password_verify(&args[0], &args[1]));
+    set_bool(retval, super::native::password_verify(&args[0], &args[1]));
 }
 
 /// A setter that stores its `int` argument as the option `key` and returns `$this`.
@@ -383,7 +383,7 @@ extern "C" fn bcrypt_hash(ex: &mut ExecuteData, retval: &mut Zval) {
     warn_salt(&options);
     let mut setting = format!("$2y${cost:02}$").into_bytes();
     setting.extend(utopia_auth::password_salt(22));
-    set_str(retval, &php_std::string::crypt(&args[0], &setting));
+    set_str(retval, &super::native::crypt(&args[0], &setting));
 }
 
 extern "C" fn bcrypt_cost(ex: &mut ExecuteData, retval: &mut Zval) {
@@ -424,7 +424,7 @@ fn plaintext_register(class: &'static mut ClassEntry, tables: ArgInfoTables) {
 }
 
 fn md5_of(_: &mut ZendObject, value: &[u8]) -> Option<Vec<u8>> {
-    Some(php_std::string::md5_hex(value).to_vec())
+    Some(super::native::md5_hex(value).to_vec())
 }
 fn plaintext_of(_: &mut ZendObject, value: &[u8]) -> Option<Vec<u8>> {
     Some(value.to_vec())
@@ -437,7 +437,7 @@ extern "C" fn md5_construct(ex: &mut ExecuteData, _: &mut Zval) {
 }
 extern "C" fn md5_hash(ex: &mut ExecuteData, retval: &mut Zval) {
     let Some([value]) = string_zvals::<1>(ex, "Utopia\\Auth\\Hashes\\MD5::hash") else { return };
-    set_str(retval, &php_std::string::md5_hex(bytes(&value)));
+    set_str(retval, &super::native::md5_hex(bytes(&value)));
 }
 extern "C" fn md5_verify(ex: &mut ExecuteData, retval: &mut Zval) {
     verify_by_hashing(ex, retval, "Utopia\\Auth\\Hashes\\MD5::verify", stored(&MD5), md5_of);
@@ -1192,7 +1192,7 @@ fn phpass_of(this: &mut ZendObject, value: &[u8]) -> Option<Vec<u8>> {
     let mut random = Vec::new();
     if !engine::truthy(&option_read(&options, "portable_hashes")?) {
         random = random_on(this, 16)?;
-        let hashed = php_std::string::crypt(value, &gensalt_blowfish_of(this, &random)?);
+        let hashed = super::native::crypt(value, &gensalt_blowfish_of(this, &random)?);
         if hashed.len() == 60 {
             return Some(hashed);
         }
@@ -1218,7 +1218,7 @@ extern "C" fn phpass_verify(ex: &mut ExecuteData, retval: &mut Zval) {
     let Some(this) = this(ex) else { return };
     let Some(mut computed) = crypt_private_of(this, &args[0], &args[1]) else { return };
     if computed.first() == Some(&b'*') {
-        computed = php_std::string::crypt(&args[0], &args[1]);
+        computed = super::native::crypt(&args[0], &args[1]);
     }
     set_bool(retval, utopia_auth::hash_equals(&args[1], &computed));
 }
