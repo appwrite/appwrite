@@ -23,7 +23,7 @@ export function FunctionVariablesCard({
   const [page, setPage] = useState(0)
   const [limit, setLimit] = useState(SMALL_PAGE_SIZE)
 
-  const { variables, total, isLoading } = useFunctionVariables(
+  const { variables, allVariables, total, isLoading } = useFunctionVariables(
     projectId,
     functionId,
     page,
@@ -47,6 +47,7 @@ export function FunctionVariablesCard({
         'Configure environment variables for your function. Function-specific variables override global project variables. Set the environment variables or secret keys that will be passed to this function.',
       )}
       variables={variables}
+      allVariables={allVariables}
       total={total}
       isLoading={isLoading}
       createMutation={createMutation}

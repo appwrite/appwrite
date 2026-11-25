@@ -248,6 +248,13 @@ export type VariablesSettingsCardSettingsProps = VariablesCardSharedProps & {
   variant?: 'settings'
   description: string
   variables: VariableRecord[]
+  /**
+   * Every variable, including ones outside the current page. The bulk editor
+   * shows the non-secret entries from this list. A save only creates, updates,
+   * or deletes variables that were loaded here, so one that never arrived
+   * cannot be removed. Defaults to `variables`.
+   */
+  allVariables?: VariableRecord[]
   total: number
   isLoading: boolean
   createMutation: {
@@ -318,6 +325,10 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
   const wizardDisabled = isWizard ? (props.disabled ?? false) : false
 
   const variables = isWizard ? [] : props.variables
+  const allVariables = isWizard ? undefined : props.allVariables
+  // The table is one page. The editor has to see the whole loaded set, and a
+  // save may only touch that set. A variable that was not loaded stays put.
+  const loadedVariables = allVariables ?? variables
   const total = isWizard ? wizardVariables.length : props.total
   const isLoading = isWizard ? false : props.isLoading
   const createMutation = isWizard ? undefined : props.createMutation
@@ -366,6 +377,9 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
   const [editorContent, setEditorContent] = useState('')
   const [editorFormat, setEditorFormat] = useState<'env' | 'json'>('env')
   const [editorError, setEditorError] = useState('')
+  // Records copied into the editor. Saves diff against this, not a later fetch,
+  // so a variable that was not in the dialog cannot be deleted.
+  const editorRecordsRef = useRef<VariableRecord[]>([])
   const [deleteError, setDeleteError] = useState('')
   const [showSecrets, setShowSecrets] = useState<Set<string>>(new Set())
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -401,8 +415,9 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
 
   useEffect(() => {
     if (!showEditorModal || isWizard) return
-    if (variables.length > 0) {
-      const editableVars = variables.filter((v) => !v.secret)
+    editorRecordsRef.current = loadedVariables
+    if (loadedVariables.length > 0) {
+      const editableVars = loadedVariables.filter((v) => !v.secret)
       setEditorContent(
         editorFormat === 'env'
           ? variablesToEnv(editableVars)
@@ -411,7 +426,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
     } else {
       setEditorContent(editorFormat === 'env' ? '' : '{}')
     }
-  }, [showEditorModal, editorFormat, variables, isWizard])
+  }, [showEditorModal, editorFormat, loadedVariables, isWizard])
 
   const handleWizardCreate = () => {
     if (!onWizardChange) return
@@ -527,7 +542,8 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
   }
 
   const handleOpenEditor = () => {
-    const list = isWizard ? wizardVariables : variables
+    const list = isWizard ? wizardVariables : loadedVariables
+    if (!isWizard) editorRecordsRef.current = loadedVariables
     const nonSecret = list.filter((v) => !v.secret)
     setEditorContent(
       editorFormat === 'env'
@@ -724,9 +740,10 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
           ? envToObject(editorContent)
           : jsonToObject(editorContent)
 
-      const editableVars = variables.filter((v) => !v.secret)
+      const records = editorRecordsRef.current
+      const editableVars = records.filter((v) => !v.secret)
       const secretKeys = new Set(
-        variables.filter((v) => v.secret).map((v) => v.key),
+        records.filter((v) => v.secret).map((v) => v.key),
       )
 
       // Only the keys being created are format-checked. An existing key is
@@ -799,7 +816,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
   }
 
   const handleDownload = () => {
-    const editableVars = (isWizard ? wizardVariables : variables).filter(
+    const editableVars = (isWizard ? wizardVariables : loadedVariables).filter(
       (v) => !v.secret,
     )
     const content =
@@ -841,7 +858,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
       )
       setEditorFormat(format)
     } catch {
-      const editableVars = (isWizard ? wizardVariables : variables).filter(
+      const editableVars = (isWizard ? wizardVariables : loadedVariables).filter(
         (v) => !v.secret,
       )
       setEditorContent(
@@ -896,6 +913,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
       setEditorContent('')
       setEditorError('')
       setEditorFormat('env')
+      editorRecordsRef.current = []
     }
   }, [showEditorModal])
 

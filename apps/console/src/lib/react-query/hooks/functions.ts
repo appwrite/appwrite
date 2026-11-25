@@ -1194,7 +1194,8 @@ export function useFunctionExecutions(
 }
 
 /**
- * Hook to fetch function variables with pagination
+ * Hook to fetch function variables with pagination.
+ * `variables` is the current page. `allVariables` is the full list.
  *
  * @param projectId - The project ID
  * @param functionId - The function ID
@@ -1226,6 +1227,7 @@ export function useFunctionVariables(
   return {
     data,
     variables,
+    allVariables: all,
     total,
     isLoading,
     error,

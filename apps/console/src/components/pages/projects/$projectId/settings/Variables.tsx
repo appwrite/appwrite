@@ -19,7 +19,7 @@ export function Variables() {
   const [limit, setLimit] = useState(SMALL_PAGE_SIZE)
 
   const { project } = useProject(projectId)
-  const { variables, total, isLoading } = useProjectVariables(
+  const { variables, allVariables, total, isLoading } = useProjectVariables(
     projectId,
     page,
     limit,
@@ -35,6 +35,7 @@ export function Variables() {
           title={t('Global variables')}
           description={t('Set the environment variables or secret keys that will be passed to all Functions and Sites within your project.')}
           variables={variables}
+          allVariables={allVariables}
           total={total}
           isLoading={isLoading}
           createMutation={createMutation}

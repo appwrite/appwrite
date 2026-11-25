@@ -1581,7 +1581,8 @@ export function useCreatePlatform(projectId: string | null | undefined) {
 
 /**
  * Hook to fetch project variables.
- * When `limit` is omitted, returns the full list (e.g. global-key lookup for sites).
+ * When `limit` is omitted, `variables` is the full list (e.g. global-key lookup).
+ * `allVariables` is always the full list.
  *
  * @param projectId - The project ID
  * @param page - Page number (0-indexed) when paginating
@@ -1612,6 +1613,7 @@ export function useProjectVariables(
 
   return {
     variables,
+    allVariables: all,
     total,
     isLoading,
     error,

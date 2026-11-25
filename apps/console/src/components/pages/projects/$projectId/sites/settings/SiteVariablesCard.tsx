@@ -31,6 +31,7 @@ export function SiteVariablesCard({
   const [limit, setLimit] = useState(SMALL_PAGE_SIZE)
   const {
     variables: siteVariables,
+    allVariables,
     total,
     isLoading,
   } = useSiteVariables(projectId, siteId, page, limit)
@@ -53,6 +54,7 @@ export function SiteVariablesCard({
         'Configure environment variables for your site deployments. Site-specific variables override global project variables. Set the environment variables or secret keys that will be passed to this site during deployment.',
       )}
       variables={siteVariables}
+      allVariables={allVariables}
       total={total}
       isLoading={isLoading}
       createMutation={createMutation}
