@@ -24,6 +24,11 @@ class Create extends Base
      */
     private const int EXPIRY = 86400;
 
+    /**
+     * How long a session of the temporary role may sit idle before Postgres ends it
+     */
+    private const string IDLE_TIMEOUT = '1h';
+
     public static function getName(): string
     {
         return 'createSupabaseProjectCredentials';
@@ -42,7 +47,7 @@ class Create extends Base
                 group: null,
                 name: 'createSupabaseProjectCredentials',
                 description: <<<EOT
-                Create temporary credentials to migrate a project of the connected Supabase account. The project's database gets a read only login role that expires after 24 hours. Pass the credentials to the Supabase report and migration endpoints.
+                Create temporary credentials to migrate a project of the connected Supabase account. The project's database gets a read only login role that can sign in for 24 hours. Its sessions end after an hour idle, and once expired it is dropped with any open session the next time credentials are created for the project. Pass the credentials to the Supabase report and migration endpoints.
                 EOT,
                 auth: [AuthType::ADMIN],
                 responses: [
@@ -104,6 +109,13 @@ class Create extends Base
             } catch (\Throwable) {
                 throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Unable to create a database role on the Supabase project.');
             }
+        }
+
+        // Expiry only stops new sign ins, so a session left open after the migration ends once idle
+        try {
+            $oauth2->query($accessToken, $projectRef, 'ALTER ROLE ' . $role . ' SET idle_session_timeout = \'' . self::IDLE_TIMEOUT . '\'');
+        } catch (\Throwable) {
+            // Postgres before 14 has no idle timeout; expired roles are still dropped with their sessions later
         }
 
         $response
