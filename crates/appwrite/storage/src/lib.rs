@@ -12,6 +12,7 @@ mod folder;
 mod http;
 mod model;
 mod scan;
+pub mod uploads;
 
 use appwrite_core::action;
 use appwrite_core::platform::{Audit, Labels, Limit, Module, Route};

@@ -23,6 +23,7 @@ use crate::base::{
 use crate::device::{self, Stored};
 use crate::filename::Filename;
 use crate::model::FileModel;
+use crate::uploads::Uploads;
 
 use super::meta;
 use crate::encryption;
@@ -258,6 +259,11 @@ async fn transfer(
                 Ok(_) => created_in_request = true,
                 Err(err) if err.is_a(Kind::Duplicate) => return Err(Error::new(ErrorType::StorageFileAlreadyExists)),
                 Err(err) => return Err(base::map_db(err)),
+            }
+            // Maintenance only checks tracked buckets hourly; a lost hint waits for its periodic full scan.
+            let uploads = Uploads::new(ctx.state.lock.redis().clone());
+            if let Err(err) = uploads.track(&ctx.project.id, bucket.id()).await {
+                tracing::warn!("Failed to track upload {file_id}: {err}");
             }
         }
     }

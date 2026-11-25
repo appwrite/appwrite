@@ -228,6 +228,8 @@ dependencies = [
  "indexmap",
  "md-5 0.10.6",
  "php-std",
+ "rand 0.10.3",
+ "redis",
  "serde",
  "serde_json",
  "tracing",

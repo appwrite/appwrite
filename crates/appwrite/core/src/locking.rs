@@ -24,6 +24,12 @@ impl Locking {
         Self { conn, enabled }
     }
 
+    /// The `lock` pool's Redis, for what PHP keeps there besides leases
+    /// (`Appwrite\Storage\Uploads`).
+    pub fn redis(&self) -> &ConnectionManager {
+        &self.conn
+    }
+
     /// `(new Distributed($redis, $key))->withLock($section, $timeout)`: a
     /// lock that must hold (an instance-wide limit), waiting up to `timeout`
     /// seconds. `None` when another holder kept it (`Contention`); unlike
