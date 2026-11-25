@@ -4335,6 +4335,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'The note is removed from the chart for everyone.':
     'このメモは全員のグラフから削除されます。',
   'Former member': '元メンバー',
+  Notes: 'メモ',
   Escalations: 'エスカレーション',
   Escalation: 'エスカレーション',
   Escalating: 'エスカレーション中',

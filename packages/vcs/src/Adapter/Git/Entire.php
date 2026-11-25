@@ -163,6 +163,7 @@ class Entire extends Git
      * Control-plane API. Entire runs one core per jurisdiction and any serves
      * any installation; the nearest one is the right choice.
      */
+    #[\Override]
     protected string $endpoint = 'https://us.auth.entire.io/api/v1';
 
     /**
@@ -224,6 +225,7 @@ class Entire extends Git
      */
     protected int $provisioningInterval = 1_000_000;
 
+    #[\Override]
     protected string $accessToken = '';
 
     /**
@@ -260,6 +262,7 @@ class Entire extends Git
      *
      * @var array<string, string>
      */
+    #[\Override]
     protected $headers = ['content-type' => 'application/json'];
 
     public function __construct(protected Cache $cache)

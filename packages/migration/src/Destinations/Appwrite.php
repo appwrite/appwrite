@@ -1159,12 +1159,13 @@ class Appwrite extends Destination
             ));
             return false;
         } catch (LimitException $e) {
-            $resource->setStatus(Resource::STATUS_ERROR, 'Attribute limit exceeded');
+            $message = $this->columnLimitMessage($e);
+            $resource->setStatus(Resource::STATUS_ERROR, $message);
             $this->addError(new Exception(
                 resourceName: $resource->getName(),
                 resourceGroup: $resource->getGroup(),
                 resourceId: $resource->getId(),
-                message: 'Attribute limit exceeded',
+                message: $message,
                 previous: $e,
             ));
             return false;
@@ -1224,12 +1225,13 @@ class Appwrite extends Destination
             } catch (LimitException $e) {
                 $this->dbForProject->deleteDocument(self::META_ATTRIBUTES, $column->getId());
 
-                $resource->setStatus(Resource::STATUS_ERROR, 'Attribute limit exceeded');
+                $message = $this->columnLimitMessage($e);
+                $resource->setStatus(Resource::STATUS_ERROR, $message);
                 $this->addError(new Exception(
                     resourceName: $resource->getName(),
                     resourceGroup: $resource->getGroup(),
                     resourceId: $resource->getId(),
-                    message: 'Attribute limit exceeded',
+                    message: $message,
                     previous: $e,
                 ));
                 return false;
@@ -1299,6 +1301,20 @@ class Appwrite extends Destination
         $this->syncVectorDimension($resource, $type, $database, $table);
 
         return true;
+    }
+
+    /**
+     * The only limits a column can hit are the destination table's own: how many
+     * columns it may hold, and the row width they add up to. Which of the two it
+     * was, and by how much, lives in the database library's message, and it is the
+     * only part the user can act on — so forward it rather than reporting the
+     * column count limit for both.
+     */
+    private function columnLimitMessage(LimitException $e): string
+    {
+        $message = \trim($e->getMessage());
+
+        return $message === '' ? 'Attribute limit exceeded' : $message;
     }
 
     /**

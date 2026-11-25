@@ -14,14 +14,72 @@ use ext_php_rs::types::{ZendObject, Zval};
 use ext_php_rs::zend::{ClassEntry, ExecuteData, ExecutorGlobals};
 use utopia_auth::scrypt::Failure;
 
-use super::{BASE, STATIC, args, base_class, exact, fail, name_of, option_of, options_of, return_this, set_option_on};
-use crate::classes::engine::{
-    self, Key, MAY_BE_ARRAY, MAY_BE_BOOL, MAY_BE_LONG, MAY_BE_STRING, Property, bool_arg, long_arg, str_arg, string,
+use super::{
+    BASE, STATIC, args, base_class, exact, fail, name_of, option_of, options_of, return_this, set_literal_option,
 };
-use crate::classes::leaf::{self, Method, PRIVATE, PROTECTED, PUBLIC, set_bool, set_str, stored, this};
+use crate::classes::engine::{
+    self, Key, Literal, MAY_BE_ARRAY, MAY_BE_BOOL, MAY_BE_LONG, MAY_BE_STRING, Property, bool_arg, long_arg, str_arg,
+    string,
+};
+use crate::classes::leaf::{self, Method, PRIVATE, PROTECTED, PUBLIC, set_bool, set_literal, set_str, stored, this};
+
+/// What each hash's `getName()` returns, and its constructor stores as the `type` option:
+/// interned, as PHP's literals are.
+static ARGON2_NAME: Literal = Literal::new("argon2");
+static BCRYPT_NAME: Literal = Literal::new("bcrypt");
+static MD5_NAME: Literal = Literal::new("md5");
+static PHPASS_NAME: Literal = Literal::new("phpass");
+static PLAINTEXT_NAME: Literal = Literal::new("plaintext");
+static SCRYPT_NAME: Literal = Literal::new("scrypt");
+static SCRYPT_MODIFIED_NAME: Literal = Literal::new("scryptMod");
+static SHA_NAME: Literal = Literal::new("sha");
+
+/// The option keys the constructors and setters write, interned as PHP's literals are.
+static KEY_COST: Literal = Literal::new("cost");
+static KEY_COST_CPU: Literal = Literal::new("costCpu");
+static KEY_COST_MEMORY: Literal = Literal::new("costMemory");
+static KEY_COST_PARALLEL: Literal = Literal::new("costParallel");
+static KEY_ITERATION_COUNT_LOG2: Literal = Literal::new("iteration_count_log2");
+static KEY_LENGTH: Literal = Literal::new("length");
+static KEY_MEMORY_COST: Literal = Literal::new("memory_cost");
+static KEY_PORTABLE_HASHES: Literal = Literal::new("portable_hashes");
+static KEY_RANDOM_STATE: Literal = Literal::new("random_state");
+static KEY_SALT: Literal = Literal::new("salt");
+static KEY_SALT_SEPARATOR: Literal = Literal::new("saltSeparator");
+static KEY_SIGNER_KEY: Literal = Literal::new("signerKey");
+static KEY_THREADS: Literal = Literal::new("threads");
+static KEY_TIME_COST: Literal = Literal::new("time_cost");
+static KEY_TYPE: Literal = Literal::new("type");
+static KEY_VERSION: Literal = Literal::new("version");
 
 /// Registers the hashes, after the base they extend.
 pub fn register() -> ext_php_rs::error::Result<()> {
+    engine::intern(&[
+        &ARGON2_NAME,
+        &BCRYPT_NAME,
+        &MD5_NAME,
+        &PHPASS_NAME,
+        &PLAINTEXT_NAME,
+        &SCRYPT_NAME,
+        &SCRYPT_MODIFIED_NAME,
+        &SHA_NAME,
+        &KEY_COST,
+        &KEY_COST_CPU,
+        &KEY_COST_MEMORY,
+        &KEY_COST_PARALLEL,
+        &KEY_ITERATION_COUNT_LOG2,
+        &KEY_LENGTH,
+        &KEY_MEMORY_COST,
+        &KEY_PORTABLE_HASHES,
+        &KEY_RANDOM_STATE,
+        &KEY_SALT,
+        &KEY_SALT_SEPARATOR,
+        &KEY_SIGNER_KEY,
+        &KEY_THREADS,
+        &KEY_TIME_COST,
+        &KEY_TYPE,
+        &KEY_VERSION,
+    ]);
     let parent = (base_class as fn() -> &'static ClassEntry, BASE);
     leaf::build("Utopia\\Auth\\Hashes\\Argon2", parent, ARGON2_METHODS, argon2_register)?;
     leaf::build("Utopia\\Auth\\Hashes\\Bcrypt", parent, BCRYPT_METHODS, bcrypt_register)?;
@@ -75,6 +133,27 @@ fn strings(ex: &mut ExecuteData, function: &str, required: usize, count: usize) 
     Some(out)
 }
 
+/// The method's string arguments `1..=N`, all required, each the PHP string itself (shared,
+/// not copied), `None` with the exception pending.
+fn string_zvals<const N: usize>(ex: &mut ExecuteData, function: &str) -> Option<[Zval; N]> {
+    let passed = engine::args_count(ex);
+    if passed < N {
+        engine::too_few(ex, function, passed, N, N);
+        return None;
+    }
+    let mut out: [Zval; N] = std::array::from_fn(|_| Zval::new());
+    for (i, slot) in out.iter_mut().enumerate() {
+        let arg = engine::arg(ex, i)?;
+        *slot = engine::str_zval_arg(ex, u32::try_from(i + 1).unwrap_or(u32::MAX), arg)?;
+    }
+    Some(out)
+}
+
+/// The bytes of a string from [`string_zvals`].
+fn bytes(string: &Zval) -> &[u8] {
+    string.zend_str().map_or(&[], |s| s.as_bytes())
+}
+
 /// The method's one `int` argument.
 fn int(ex: &mut ExecuteData, function: &str) -> Option<i64> {
     let mut args = args(ex, function, 1, 1)?;
@@ -82,8 +161,8 @@ fn int(ex: &mut ExecuteData, function: &str) -> Option<i64> {
 }
 
 /// `$this->setOption($key, $value)` for a native constructor or setter of `class`.
-fn set(this: &mut ZendObject, class: &ClassEntry, key: &str, value: Zval) -> Option<()> {
-    set_option_on(this, class, key.as_bytes(), value)
+fn set(this: &mut ZendObject, class: &ClassEntry, key: &Literal, value: Zval) -> Option<()> {
+    set_literal_option(this, class, key, value)
 }
 
 fn long(i: i64) -> Zval {
@@ -99,9 +178,9 @@ fn boolean(b: bool) -> Zval {
 }
 
 /// `$this->setOption('type', $this->getName())`, how the constructors start.
-fn set_type(this: &mut ZendObject, class: &ClassEntry, name: &str) -> Option<()> {
+fn set_type(this: &mut ZendObject, class: &ClassEntry, name: &Literal) -> Option<()> {
     let name = name_of(this, class, name)?;
-    set(this, class, "type", name)
+    set(this, class, &KEY_TYPE, name)
 }
 
 /// `$this->hash($value)` on an object of `class` or a subclass: `native` for the former.
@@ -126,10 +205,10 @@ fn verify_by_hashing(
     class: &ClassEntry,
     native: fn(&mut ZendObject, &[u8]) -> Option<Vec<u8>>,
 ) {
-    let Some(args) = strings(ex, function, 2, 2) else { return };
+    let Some([value, hash]) = string_zvals::<2>(ex, function) else { return };
     let Some(this) = this(ex) else { return };
-    let Some(computed) = hash_of(this, class, &args[0], native) else { return };
-    set_bool(retval, utopia_auth::hash_equals(&args[1], &computed));
+    let Some(computed) = hash_of(this, class, bytes(&value), native) else { return };
+    set_bool(retval, utopia_auth::hash_equals(bytes(&hash), &computed));
 }
 
 /// `$options[$key]` as `password_hash()` reads it (`zend_hash_str_find()`, then
@@ -197,10 +276,10 @@ fn argon2_register(class: &'static mut ClassEntry, tables: ArgInfoTables) {
 extern "C" fn argon2_construct(ex: &mut ExecuteData, _: &mut Zval) {
     let class = stored(&ARGON2);
     let Some(this) = this(ex) else { return };
-    let _ = set_type(this, class, "argon2")
-        .and_then(|()| set(this, class, "memory_cost", long(65536)))
-        .and_then(|()| set(this, class, "time_cost", long(4)))
-        .and_then(|()| set(this, class, "threads", long(3)));
+    let _ = set_type(this, class, &ARGON2_NAME)
+        .and_then(|()| set(this, class, &KEY_MEMORY_COST, long(65536)))
+        .and_then(|()| set(this, class, &KEY_TIME_COST, long(4)))
+        .and_then(|()| set(this, class, &KEY_THREADS, long(3)));
 }
 
 /// `password_hash($value, PASSWORD_ARGON2ID, $this->getOptions())`.
@@ -241,7 +320,7 @@ extern "C" fn password_verify(ex: &mut ExecuteData, retval: &mut Zval) {
 }
 
 /// A setter that stores its `int` argument as the option `key` and returns `$this`.
-fn int_setter(ex: &mut ExecuteData, retval: &mut Zval, function: &str, class: &ClassEntry, key: &str) {
+fn int_setter(ex: &mut ExecuteData, retval: &mut Zval, function: &str, class: &ClassEntry, key: &Literal) {
     let Some(value) = int(ex, function) else { return };
     let Some(this) = this(ex) else { return };
     if set(this, class, key, long(value)).is_some() {
@@ -250,16 +329,16 @@ fn int_setter(ex: &mut ExecuteData, retval: &mut Zval, function: &str, class: &C
 }
 
 extern "C" fn argon2_memory(ex: &mut ExecuteData, retval: &mut Zval) {
-    int_setter(ex, retval, "Utopia\\Auth\\Hashes\\Argon2::setMemoryCost", stored(&ARGON2), "memory_cost");
+    int_setter(ex, retval, "Utopia\\Auth\\Hashes\\Argon2::setMemoryCost", stored(&ARGON2), &KEY_MEMORY_COST);
 }
 extern "C" fn argon2_time(ex: &mut ExecuteData, retval: &mut Zval) {
-    int_setter(ex, retval, "Utopia\\Auth\\Hashes\\Argon2::setTimeCost", stored(&ARGON2), "time_cost");
+    int_setter(ex, retval, "Utopia\\Auth\\Hashes\\Argon2::setTimeCost", stored(&ARGON2), &KEY_TIME_COST);
 }
 extern "C" fn argon2_threads(ex: &mut ExecuteData, retval: &mut Zval) {
-    int_setter(ex, retval, "Utopia\\Auth\\Hashes\\Argon2::setThreads", stored(&ARGON2), "threads");
+    int_setter(ex, retval, "Utopia\\Auth\\Hashes\\Argon2::setThreads", stored(&ARGON2), &KEY_THREADS);
 }
 extern "C" fn argon2_name(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, b"argon2");
+    set_literal(retval, &ARGON2_NAME);
 }
 
 // Bcrypt ------------------------------------------------------------------------------
@@ -288,7 +367,7 @@ fn bcrypt_register(class: &'static mut ClassEntry, tables: ArgInfoTables) {
 extern "C" fn bcrypt_construct(ex: &mut ExecuteData, _: &mut Zval) {
     let class = stored(&BCRYPT);
     let Some(this) = this(ex) else { return };
-    let _ = set_type(this, class, "bcrypt").and_then(|()| set(this, class, "cost", long(8)));
+    let _ = set_type(this, class, &BCRYPT_NAME).and_then(|()| set(this, class, &KEY_COST, long(8)));
 }
 
 /// `password_hash($value, PASSWORD_BCRYPT, $this->getOptions())`.
@@ -319,12 +398,12 @@ extern "C" fn bcrypt_cost(ex: &mut ExecuteData, retval: &mut Zval) {
         return fail("InvalidArgumentException", "Cost must be between 4 and 31");
     }
     let Some(this) = this(ex) else { return };
-    if set(this, stored(&BCRYPT), "cost", long(cost)).is_some() {
+    if set(this, stored(&BCRYPT), &KEY_COST, long(cost)).is_some() {
         return_this(ex, retval);
     }
 }
 extern "C" fn bcrypt_name(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, b"bcrypt");
+    set_literal(retval, &BCRYPT_NAME);
 }
 
 // MD5 and Plaintext ---------------------------------------------------------------------
@@ -351,7 +430,7 @@ fn plaintext_register(class: &'static mut ClassEntry, tables: ArgInfoTables) {
 }
 
 fn md5_of(_: &mut ZendObject, value: &[u8]) -> Option<Vec<u8>> {
-    php_std::string::hash(b"md5", value).map(String::into_bytes)
+    Some(php_std::string::md5_hex(value).to_vec())
 }
 fn plaintext_of(_: &mut ZendObject, value: &[u8]) -> Option<Vec<u8>> {
     Some(value.to_vec())
@@ -359,37 +438,36 @@ fn plaintext_of(_: &mut ZendObject, value: &[u8]) -> Option<Vec<u8>> {
 
 extern "C" fn md5_construct(ex: &mut ExecuteData, _: &mut Zval) {
     if let Some(this) = this(ex) {
-        let _ = set_type(this, stored(&MD5), "md5");
+        let _ = set_type(this, stored(&MD5), &MD5_NAME);
     }
 }
 extern "C" fn md5_hash(ex: &mut ExecuteData, retval: &mut Zval) {
-    let Some(args) = strings(ex, "Utopia\\Auth\\Hashes\\MD5::hash", 1, 1) else { return };
-    let Some(this) = this(ex) else { return };
-    if let Some(hashed) = md5_of(this, &args[0]) {
-        set_str(retval, &hashed);
-    }
+    let Some([value]) = string_zvals::<1>(ex, "Utopia\\Auth\\Hashes\\MD5::hash") else { return };
+    set_str(retval, &php_std::string::md5_hex(bytes(&value)));
 }
 extern "C" fn md5_verify(ex: &mut ExecuteData, retval: &mut Zval) {
     verify_by_hashing(ex, retval, "Utopia\\Auth\\Hashes\\MD5::verify", stored(&MD5), md5_of);
 }
 extern "C" fn md5_name(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, b"md5");
+    set_literal(retval, &MD5_NAME);
 }
 
 extern "C" fn plaintext_construct(ex: &mut ExecuteData, _: &mut Zval) {
     if let Some(this) = this(ex) {
-        let _ = set_type(this, stored(&PLAINTEXT), "plaintext");
+        let _ = set_type(this, stored(&PLAINTEXT), &PLAINTEXT_NAME);
     }
 }
 extern "C" fn plaintext_hash(ex: &mut ExecuteData, retval: &mut Zval) {
-    let Some(args) = strings(ex, "Utopia\\Auth\\Hashes\\Plaintext::hash", 1, 1) else { return };
-    set_str(retval, &args[0]);
+    // `return $value;`: the string passed, shared.
+    if let Some([value]) = string_zvals::<1>(ex, "Utopia\\Auth\\Hashes\\Plaintext::hash") {
+        *retval = value;
+    }
 }
 extern "C" fn plaintext_verify(ex: &mut ExecuteData, retval: &mut Zval) {
     verify_by_hashing(ex, retval, "Utopia\\Auth\\Hashes\\Plaintext::verify", stored(&PLAINTEXT), plaintext_of);
 }
 extern "C" fn plaintext_name(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, b"plaintext");
+    set_literal(retval, &PLAINTEXT_NAME);
 }
 
 // Sha ---------------------------------------------------------------------------------
@@ -435,7 +513,7 @@ fn sha_register(class: &'static mut ClassEntry, tables: ArgInfoTables) {
 
 extern "C" fn sha_construct(ex: &mut ExecuteData, _: &mut Zval) {
     if let Some(this) = this(ex) {
-        let _ = set(this, stored(&SHA), "version", string(b"sha256"));
+        let _ = set(this, stored(&SHA), &KEY_VERSION, string(b"sha256"));
     }
 }
 
@@ -449,7 +527,7 @@ extern "C" fn sha_version(ex: &mut ExecuteData, retval: &mut Zval) {
         );
     }
     let Some(this) = this(ex) else { return };
-    if set(this, stored(&SHA), "version", string(&args[0])).is_some() {
+    if set(this, stored(&SHA), &KEY_VERSION, string(&args[0])).is_some() {
         return_this(ex, retval);
     }
 }
@@ -469,9 +547,9 @@ fn sha_of(this: &mut ZendObject, value: &[u8]) -> Option<Vec<u8>> {
 }
 
 extern "C" fn sha_hash(ex: &mut ExecuteData, retval: &mut Zval) {
-    let Some(args) = strings(ex, "Utopia\\Auth\\Hashes\\Sha::hash", 1, 1) else { return };
+    let Some([value]) = string_zvals::<1>(ex, "Utopia\\Auth\\Hashes\\Sha::hash") else { return };
     let Some(this) = this(ex) else { return };
-    if let Some(hashed) = sha_of(this, &args[0]) {
+    if let Some(hashed) = sha_of(this, bytes(&value)) {
         set_str(retval, &hashed);
     }
 }
@@ -479,7 +557,7 @@ extern "C" fn sha_verify(ex: &mut ExecuteData, retval: &mut Zval) {
     verify_by_hashing(ex, retval, "Utopia\\Auth\\Hashes\\Sha::verify", stored(&SHA), sha_of);
 }
 extern "C" fn sha_name(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, b"sha");
+    set_literal(retval, &SHA_NAME);
 }
 
 // Scrypt ------------------------------------------------------------------------------
@@ -541,12 +619,12 @@ extern "C" fn scrypt_construct(ex: &mut ExecuteData, _: &mut Zval) {
         return fail("Random\\RandomException", utopia_auth::random::RandomError::MESSAGE);
     };
     let salt = php_std::encoding::bin2hex(&drawn);
-    let _ = set_type(this, class, "scrypt")
-        .and_then(|()| set(this, class, "costCpu", long(8)))
-        .and_then(|()| set(this, class, "costMemory", long(14)))
-        .and_then(|()| set(this, class, "costParallel", long(1)))
-        .and_then(|()| set(this, class, "length", long(64)))
-        .and_then(|()| set(this, class, "salt", string(salt.as_bytes())));
+    let _ = set_type(this, class, &SCRYPT_NAME)
+        .and_then(|()| set(this, class, &KEY_COST_CPU, long(8)))
+        .and_then(|()| set(this, class, &KEY_COST_MEMORY, long(14)))
+        .and_then(|()| set(this, class, &KEY_COST_PARALLEL, long(1)))
+        .and_then(|()| set(this, class, &KEY_LENGTH, long(64)))
+        .and_then(|()| set(this, class, &KEY_SALT, string(salt.as_bytes())));
 }
 
 /// `scrypt()`'s failure as PHP raises it: its `Error`, or its warning (then `false`).
@@ -606,7 +684,7 @@ fn scrypt_setter(
     ex: &mut ExecuteData,
     retval: &mut Zval,
     function: &str,
-    key: &str,
+    key: &Literal,
     valid: fn(i64) -> bool,
     message: &str,
 ) {
@@ -625,7 +703,7 @@ extern "C" fn scrypt_cpu(ex: &mut ExecuteData, retval: &mut Zval) {
         ex,
         retval,
         "Utopia\\Auth\\Hashes\\Scrypt::setCpuCost",
-        "costCpu",
+        &KEY_COST_CPU,
         |cost| cost > 1 && cost & (cost - 1) == 0,
         "CPU cost must be > 1 and a power of 2",
     );
@@ -635,7 +713,7 @@ extern "C" fn scrypt_memory(ex: &mut ExecuteData, retval: &mut Zval) {
         ex,
         retval,
         "Utopia\\Auth\\Hashes\\Scrypt::setMemoryCost",
-        "costMemory",
+        &KEY_COST_MEMORY,
         |cost| cost >= 1,
         "Memory cost must be >= 1",
     );
@@ -645,7 +723,7 @@ extern "C" fn scrypt_parallel(ex: &mut ExecuteData, retval: &mut Zval) {
         ex,
         retval,
         "Utopia\\Auth\\Hashes\\Scrypt::setParallelCost",
-        "costParallel",
+        &KEY_COST_PARALLEL,
         |cost| cost >= 1,
         "Parallel cost must be >= 1",
     );
@@ -655,7 +733,7 @@ extern "C" fn scrypt_length(ex: &mut ExecuteData, retval: &mut Zval) {
         ex,
         retval,
         "Utopia\\Auth\\Hashes\\Scrypt::setLength",
-        "length",
+        &KEY_LENGTH,
         |length| length >= 16,
         "Length must be >= 16 bytes",
     );
@@ -666,12 +744,12 @@ extern "C" fn scrypt_salt(ex: &mut ExecuteData, retval: &mut Zval) {
         return fail("InvalidArgumentException", "Salt cannot be empty");
     }
     let Some(this) = this(ex) else { return };
-    if set(this, stored(&SCRYPT), "salt", string(&args[0])).is_some() {
+    if set(this, stored(&SCRYPT), &KEY_SALT, string(&args[0])).is_some() {
         return_this(ex, retval);
     }
 }
 extern "C" fn scrypt_name(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, b"scrypt");
+    set_literal(retval, &SCRYPT_NAME);
 }
 
 // ScryptModified ----------------------------------------------------------------------
@@ -737,10 +815,10 @@ extern "C" fn scrypt_modified_construct(ex: &mut ExecuteData, _: &mut Zval) {
     let (Ok(salt), Ok(separator), Ok(signer)) = drawn else {
         return fail("Random\\RandomException", utopia_auth::random::RandomError::MESSAGE);
     };
-    let _ = set_type(this, class, "scryptMod")
-        .and_then(|()| set(this, class, "salt", encode(salt)))
-        .and_then(|()| set(this, class, "saltSeparator", encode(separator)))
-        .and_then(|()| set(this, class, "signerKey", encode(signer)));
+    let _ = set_type(this, class, &SCRYPT_MODIFIED_NAME)
+        .and_then(|()| set(this, class, &KEY_SALT, encode(salt)))
+        .and_then(|()| set(this, class, &KEY_SALT_SEPARATOR, encode(separator)))
+        .and_then(|()| set(this, class, &KEY_SIGNER_KEY, encode(signer)));
 }
 
 /// `$options[$key]` read as PHP reads it: `Undefined array key` warns, `null` comes back.
@@ -844,7 +922,7 @@ fn scrypt_modified_setter(
     ex: &mut ExecuteData,
     retval: &mut Zval,
     function: &str,
-    key: &str,
+    key: &Literal,
     empty: Option<&str>,
     shaped: &str,
 ) {
@@ -868,7 +946,7 @@ extern "C" fn scrypt_modified_salt(ex: &mut ExecuteData, retval: &mut Zval) {
         ex,
         retval,
         "Utopia\\Auth\\Hashes\\ScryptModified::setSalt",
-        "salt",
+        &KEY_SALT,
         Some("Salt cannot be empty"),
         "Salt must be base64 encoded",
     );
@@ -878,7 +956,7 @@ extern "C" fn scrypt_modified_separator(ex: &mut ExecuteData, retval: &mut Zval)
         ex,
         retval,
         "Utopia\\Auth\\Hashes\\ScryptModified::setSaltSeparator",
-        "saltSeparator",
+        &KEY_SALT_SEPARATOR,
         None,
         "Salt separator must be base64 encoded",
     );
@@ -888,13 +966,13 @@ extern "C" fn scrypt_modified_signer(ex: &mut ExecuteData, retval: &mut Zval) {
         ex,
         retval,
         "Utopia\\Auth\\Hashes\\ScryptModified::setSignerKey",
-        "signerKey",
+        &KEY_SIGNER_KEY,
         Some("Signer key cannot be empty"),
         "Signer key must be base64 encoded",
     );
 }
 extern "C" fn scrypt_modified_name(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, b"scryptMod");
+    set_literal(retval, &SCRYPT_MODIFIED_NAME);
 }
 
 // PHPass ------------------------------------------------------------------------------
@@ -972,10 +1050,10 @@ extern "C" fn phpass_construct(ex: &mut ExecuteData, _: &mut Zval) {
     let Some(this) = this(ex) else { return };
     // `microtime() . getmypid()`.
     let state = format!("{}{}", php_std::datetime::microtime(), std::process::id());
-    let _ = set_type(this, class, "phpass")
-        .and_then(|()| set(this, class, "iteration_count_log2", long(8)))
-        .and_then(|()| set(this, class, "portable_hashes", boolean(false)))
-        .and_then(|()| set(this, class, "random_state", string(state.as_bytes())));
+    let _ = set_type(this, class, &PHPASS_NAME)
+        .and_then(|()| set(this, class, &KEY_ITERATION_COUNT_LOG2, long(8)))
+        .and_then(|()| set(this, class, &KEY_PORTABLE_HASHES, boolean(false)))
+        .and_then(|()| set(this, class, &KEY_RANDOM_STATE, string(state.as_bytes())));
 }
 
 /// `$this->itoa64`.
@@ -1207,7 +1285,7 @@ extern "C" fn phpass_iterations(ex: &mut ExecuteData, retval: &mut Zval) {
         return fail("InvalidArgumentException", "Iteration count must be between 4 and 31");
     }
     let Some(this) = this(ex) else { return };
-    if set(this, stored(&PHPASS), "iteration_count_log2", long(count)).is_some() {
+    if set(this, stored(&PHPASS), &KEY_ITERATION_COUNT_LOG2, long(count)).is_some() {
         return_this(ex, retval);
     }
 }
@@ -1215,10 +1293,10 @@ extern "C" fn phpass_portable(ex: &mut ExecuteData, retval: &mut Zval) {
     let Some(mut args) = args(ex, "Utopia\\Auth\\Hashes\\PHPass::setPortableHashes", 1, 1) else { return };
     let Some(portable) = bool_arg(ex, 1, args.remove(0)) else { return };
     let Some(this) = this(ex) else { return };
-    if set(this, stored(&PHPASS), "portable_hashes", boolean(portable)).is_some() {
+    if set(this, stored(&PHPASS), &KEY_PORTABLE_HASHES, boolean(portable)).is_some() {
         return_this(ex, retval);
     }
 }
 extern "C" fn phpass_name(_: &mut ExecuteData, retval: &mut Zval) {
-    set_str(retval, b"phpass");
+    set_literal(retval, &PHPASS_NAME);
 }

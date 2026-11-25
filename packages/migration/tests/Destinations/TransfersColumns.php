@@ -6,6 +6,7 @@ namespace Utopia\Migration\Tests\Destinations;
 
 use Utopia\Cache\Adapter\Memory as MemoryCache;
 use Utopia\Cache\Cache;
+use Utopia\Database\Adapter;
 use Utopia\Database\Adapter\Memory as MemoryAdapter;
 use Utopia\Database\Attribute as UtopiaAttribute;
 use Utopia\Database\Collection;
@@ -176,10 +177,10 @@ trait TransfersColumns
         );
     }
 
-    private function projectDatabase(): UtopiaDatabase
+    private function projectDatabase(?Adapter $adapter = null): UtopiaDatabase
     {
         $database = new UtopiaDatabase(
-            new MemoryAdapter(),
+            $adapter ?? new MemoryAdapter(),
             new Cache(new MemoryCache()),
         );
         $database

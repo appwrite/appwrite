@@ -586,7 +586,9 @@ test.describe('runtime logs', () => {
     const surface = chart.locator('.recharts-wrapper')
     const box = (await surface.boundingBox())!
     const y = box.y + box.height / 2
-    await page.mouse.move(box.x + box.width * 0.15, y)
+    // Recharts only knows the bar under the pointer after a hover, so settle on it before pressing
+    await page.mouse.move(box.x + box.width * 0.15, y, { steps: 4 })
+    await expect(chart.locator('.recharts-tooltip-wrapper')).toBeVisible()
     await page.mouse.down()
     await page.mouse.move(box.x + box.width * 0.3, y, { steps: 8 })
     await page.mouse.up()

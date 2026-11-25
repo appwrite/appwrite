@@ -81,7 +81,7 @@ export function firewallListSearch(selection: FirewallResourceSelection): {
 
 /**
  * Console path of the Firewall tab that lists a selection's rules: the
- * function or site Firewall tab, or the project settings tab for the API.
+ * function or site Firewall tab, or the project Firewall page for the API.
  */
 export function firewallTabPath(
   projectId: string,
@@ -94,7 +94,7 @@ export function firewallTabPath(
   if (resourceType === 'sites') {
     return `/projects/${projectId}/sites/${resourceId}/firewall`
   }
-  return `/projects/${projectId}/settings/firewall`
+  return `/projects/${projectId}/firewall`
 }
 
 /**

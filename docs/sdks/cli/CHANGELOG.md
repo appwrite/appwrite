@@ -1,5 +1,33 @@
 # Change Log
 
+## 28.16.0
+
+* Breaking: `teams get-photo`, `update-photo` and `delete-photo` removed; team photos moved to the Avatars API
+* Added: `logs list` and `logs get` to read runtime logs
+* Added: `messaging create-bird-email-provider`, `create-bird-sms-provider` and their `update-` commands
+* Added: `--mutable-content` on `messaging create-push` and `update-push`
+* Added: `project update-o-auth-2-bird` and `project update-o-auth-2-supabase`
+* Fixed: `run function` no longer crashes with `No module named 'gunicorn'` after hot-swapping a Python function
+* Fixed: `init function` lists the available specifications when it rejects one
+
+## 28.15.0
+
+* Added: `zero` creates an Appwrite project with no account or card and links this directory to it
+* Added: `zero <dir>` creates the project in a new directory; `--region` picks the region, else the closest
+* Added: a Zero project builds for 60 minutes, stays claimable for 24 hours, then is deleted
+* Added: `zero --json` prints a manifest for agents: endpoint, project ID, claim link and access token
+* Added: `zero extend` adds an hour of build time, up to three times, never past the claim deadline
+* Added: `zero status`, `zero console`, `zero list` and `zero delete` for Zero projects created on this machine
+* Added: at a terminal, `zero` offers to open the console and reminds you to save the claim link
+
+## 28.14.0
+
+* Added: `--provider-comments`, `--provider-deployments` and `--provider-statuses` on `functions` and `sites` create and update
+* Added: `teams get-photo`, `teams update-photo` and `teams delete-photo`
+* Added: `analytics` commands to list, create, get, update and delete annotations
+* Added: `project` OAuth2 settings for Atlassian, Instagram, LINE, Linear, Netlify, Patreon, Railway, Reddit, Roblox, Strava, Vercel, VK and WorkOS
+* Updated: built against Go SDK `v7.21.0`
+
 ## 28.13.3
 
 * Fixed: `terminal` reads a Cloud project's usage within the history its plan keeps; the usage panel failed with `limit_history_exceeded`

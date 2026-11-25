@@ -48,7 +48,7 @@ import { CopyableId } from '@/components/global/shared/CopyableId'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { decodeIdTokenClaims } from '@/lib/oauth2/id-token'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
-import { InitialsAvatar, PhotoAvatar } from '@/components/global/shared/Avatar'
+import { PhotoAvatar, TeamAvatar } from '@/components/global/shared/Avatar'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
 import { Button } from '@/components/ui/button'
@@ -250,9 +250,13 @@ export function View() {
     if (userIdIndex >= 0 && pathParts[userIdIndex + 1]) {
       const tabFromPath = pathParts[userIdIndex + 1]
       if (
-        ['memberships', 'identities', 'targets', 'sessions', 'analytics'].includes(
-          tabFromPath,
-        )
+        [
+          'memberships',
+          'identities',
+          'targets',
+          'sessions',
+          'analytics',
+        ].includes(tabFromPath)
       ) {
         return tabFromPath
       }
@@ -2219,7 +2223,12 @@ function MembershipsTab({
                     onClick={() => openDrawer(membership)}
                   >
                     <div className="flex items-center gap-2">
-                      <InitialsAvatar name={membership.teamName} size="sm" />
+                      <TeamAvatar
+                        teamId={membership.teamId}
+                        projectId={projectId}
+                        name={membership.teamName}
+                        size="sm"
+                      />
                       <span className="text-[13px] font-medium text-foreground">
                         {membership.teamName}
                       </span>

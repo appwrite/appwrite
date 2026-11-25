@@ -118,6 +118,95 @@ if (!$recaptcha->verify($_POST['g-recaptcha-response'], $_SERVER['REMOTE_ADDR'])
 
 *Notice: The code above is for example purpose only. It is always recommended to validate user input before using it in your code. If you are using a load balancer or any proxy server you might need to get user IP from the HTTP_X_FORWARDE‌​D_FOR header.*
 
+### Challenges
+
+A challenge is something a client must answer before it gets through. Like the adapters, every kind extends one base, `Utopia\Abuse\Challenge`: it holds the signed token and the params the challenge is bound to (`withParams()`, the same as on the adapters), and each kind implements `issue()` and `verify()`. Passing a challenge earns a `Clearance`, so later requests skip it.
+
+**Proof of work.** `ProofOfWork` makes a client spend CPU: it finds an answer whose SHA-256, together with the token's nonce, has enough leading zero bits. Each token can be answered once, tracked by a `Nonce` store.
+
+```php
+<?php
+
+use Utopia\Abuse\Challenge\Clearance;
+use Utopia\Abuse\Challenge\Nonce\Redis as RedisNonce;
+use Utopia\Abuse\Challenge\ProofOfWork;
+
+$challenge = new ProofOfWork('secret', new RedisNonce('pow', $redis), difficulty: 18);
+$clearance = new Clearance('secret');
+
+$client = ['ip' => $ip, 'ua' => $userAgent];
+
+// Issue a token, then send $token->value, $token->nonce and $token->difficulty to the client:
+// it finds $answer where sha256("$nonce:$answer") starts with $difficulty zero bits
+$token = $challenge->withParams($client)->issue();
+
+// Verify the client's answer and hand out a clearance
+$result = $challenge->withParams($client)->verify($value, $answer);
+if ($result->isValid()) {
+    $cookie = $clearance->withParams($client)->issue($result->difficulty);
+}
+
+// Later requests skip the challenge while the clearance holds
+if (!$clearance->withParams($client)->verify($cookie, difficulty: 18, maxAge: 1800)) {
+    // challenge again
+}
+```
+
+Proof-of-work tokens last 120 seconds and clearances 30 minutes unless you pass a `ttl`. Tokens verify only with exactly the same params. A nonce store outage rejects the solution (`Status::Unavailable`) unless you pass `acceptWhenNoncesUnavailable: true`. To bind to a network rather than an exact IP, use `Identity`: `new Identity()->ipPrefix($ip)` gives the /24 (IPv4) or /48 (IPv6) the address belongs to, and `userAgentHash()` hashes the User-Agent.
+
+**Password.** `Password` asks for a password you set, e.g. on a firewall rule. It keeps only a hash, checked with `utopia-php/auth`'s password proof, so it accepts the hashes Appwrite stores for user passwords (Argon2), as well as Bcrypt. For PHPass (`$P$`), Scrypt, SHA or MD5 hashes, pass a proof set to that hash: `new Password('secret', $hash, new PasswordProof()->setHash(new Scrypt()))`. It does not limit guesses: rate-limit verify per client yourself, e.g. with a `TimeLimit` adapter.
+
+```php
+<?php
+
+use Utopia\Abuse\Challenge\Password;
+use Utopia\Auth\Proofs\Password as PasswordProof;
+
+$hash = new PasswordProof()->hash('open sesame');   // store this, not the password
+
+$password = new Password('secret', $hash);
+
+$token  = $password->withParams($client)->issue();                // render a form carrying $token->value
+$result = $password->withParams($client)->verify($value, $guess);  // Valid or Rejected
+
+// Tie the clearance to this version of the password, so changing it ends every clearance
+$pass = $clearance->withParams([...$client, 'version' => $password->version()])->issue();
+```
+
+**Adding a kind.** Extend `Challenge`, sign the claims your kind needs with `sign()`, and read them back with `claimsFrom()`, which already rejects invalid tokens and mismatched params:
+
+```php
+<?php
+
+use Utopia\Abuse\Challenge;
+use Utopia\Abuse\Challenge\Result;
+use Utopia\Abuse\Challenge\Status;
+use Utopia\Abuse\Challenge\Token;
+
+final readonly class Riddle extends Challenge
+{
+    public function __construct(string $secret, private string $answer)
+    {
+        parent::__construct($secret, 'riddle', 'riddle', 60);
+    }
+
+    public function issue(array $claims = []): Token
+    {
+        return new Token($this->sign(['answer' => hash('sha256', $this->answer)], $claims));
+    }
+
+    public function verify(string $token, string $answer): Result
+    {
+        $claims = $this->claimsFrom($token);
+        if ($claims instanceof Result) {
+            return $claims; // InvalidToken or BindingMismatch
+        }
+
+        return new Result(hash_equals($claims['answer'], hash('sha256', $answer)) ? Status::Valid : Status::Rejected, $claims);
+    }
+}
+```
+
 ## System Requirements
 
 Utopia Abuse requires PHP 8.5 or later. We recommend using the latest PHP version whenever possible.
