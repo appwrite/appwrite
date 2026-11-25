@@ -271,7 +271,8 @@ export function ImportWizardView() {
     })
   }
 
-  const handleFetchReport = async () => {
+  // Credentials from a connected Supabase account arrive before the form state updates
+  const handleFetchReport = async (connected?: Models.SupabaseCredentials) => {
     if (!provider || !pid) return
     setReportError(null)
     setLoadingReport(true)
@@ -1206,7 +1207,7 @@ export function ImportWizardView() {
         <Button
           type="button"
           disabled={loadingReport}
-          onClick={handleFetchReport}
+          onClick={() => handleFetchReport()}
         >
           {t('Continue')}
         </Button>
