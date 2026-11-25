@@ -893,6 +893,15 @@ class Videos extends Action
             // emits NaN samples that the AAC encoder rejects. The aeval stage
             // maps those back to silence.
             $params = ['-dn', '-sn'];
+
+            // The adapter's thread count is written before the input, where
+            // ffmpeg applies it to the decoder alone. Left to itself the
+            // encoder starts a thread per CPU of the node, not of this
+            // container, and each one holds frames in memory.
+            if ($threads > 0) {
+                $params[] = '-threads';
+                $params[] = (string) $threads;
+            }
             if (\trim((string) $video->getAttribute('audioCodec', '')) !== '') {
                 $params[] = '-af';
                 $params[] = 'loudnorm=I=-14:TP=-1.5:LRA=11,aeval=if(isnan(val(ch))+isinf(val(ch))\,0\,val(ch)):c=same';
@@ -907,11 +916,14 @@ class Videos extends Action
                     ->crf(32)
                     ->keyframe(2.0)
                     ->params($params),
+                // A 10-bit source would otherwise come out as 10-bit H.264,
+                // which browsers do not play and which nearly doubles the
+                // memory the encode needs.
                 default => (new X264())
                     ->crf(22)
                     ->bframes(3)
                     ->keyframe(2.0)
-                    ->params($params),
+                    ->params([...$params, '-pix_fmt', 'yuv420p']),
             };
 
             // FFmpeg writes each segment's duration only into a SegmentTimeline,
