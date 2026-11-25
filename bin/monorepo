@@ -218,7 +218,7 @@ function release_notes(string $package, string $version, string $to): string
  * $transform($commit, $prefix, $tree) may rewrite the tree (Rust crates expand
  * workspace inheritance so the mirror builds standalone).
  */
-function split_tree(string $prefix, ?callable $transform = null): string
+function split_tree(string $prefix, ?callable $transform = null, array $inputs = []): string
 {
     // With an annotation present, resume from it; without one — a hand-created
     // package, or one whose import merge a squash-merge flattened — synthesize
@@ -234,7 +234,11 @@ function split_tree(string $prefix, ?callable $transform = null): string
         $range = "{$mainline[1]}..HEAD";
     }
 
-    $commits = sh("git log --reverse --first-parent --format=%H {$range} -- {$prefix}");
+    // $inputs are paths outside the prefix that $transform reads (the root Cargo.toml a crate's
+    // standalone manifest is expanded from). A commit that changes only those is replayed too,
+    // and dropped below when the tree it yields is the one the mirror already has.
+    $paths = implode(' ', array_map(escapeshellarg(...), [$prefix, ...$inputs]));
+    $commits = sh("git log --reverse --first-parent --format=%H {$range} -- {$paths}");
     foreach (array_filter(explode("\n", $commits)) as $commit) {
         unset($tree);
         exec("git rev-parse -q --verify {$commit}:{$prefix} 2>/dev/null", $tree, $missing);
@@ -1353,7 +1357,7 @@ function mirror_license_text(string $spdx): string
 
 function split_crate(string $package): string
 {
-    return split_tree(crate_prefix($package), 'materialize_crate_tree');
+    return split_tree(crate_prefix($package), 'materialize_crate_tree', ['Cargo.toml']);
 }
 
 function crate_release_notes(string $package, string $version, string $to): string

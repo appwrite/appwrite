@@ -16,6 +16,19 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 utopia-validators = { git = "https://github.com/utopia-rs/validators" }
 ```
 
+## Check a value
+
+Each function is the body of a PHP validator's method, over a value as PHP sees it (`Input`), with the same coercions, comparisons and messages.
+
+```rust
+use utopia_validators::{Input, Integer, Number, range};
+
+let int8 = Integer::new(8, false).unwrap();
+assert!(int8.accepts(true, Input::Str(b" 127 ")));
+assert!(!int8.accepts(true, Input::Float(1.0)));
+assert!(range(Number::Int(1), Number::Int(10), b"integer", Input::Str(b"5")));
+```
+
 ## Contributing
 
 Development happens in [appwrite/appwrite](https://github.com/appwrite/appwrite), where this crate lives at [`crates/utopia/validators`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/validators). Run these commands from a checkout of it. The [contributing guide](https://utopia-docs.appwrite.network/contributing) covers each step.

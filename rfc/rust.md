@@ -48,8 +48,8 @@ Commands:
 bin/monorepo crates absorb                 # README from guide.md, LICENSE, mirror.yml, repository URL
 bin/monorepo crates create-mirrors         # empty public repos on utopia-rs (once)
 bin/monorepo crates split --dry-run        # synthesize histories without pushing
-bin/monorepo crates materialize http       # print the standalone Cargo.toml the mirror would get
-bin/monorepo crates release http 0.1.0     # tag rs/http/0.1.0; CI mirrors the tag
+bin/monorepo crates materialize query      # print the standalone Cargo.toml the mirror would get
+bin/monorepo crates release query 0.1.0    # tag rs/query/0.1.0; CI mirrors the tag
 bin/monorepo validate                      # PHP packages and crate mirror shape
 ```
 
