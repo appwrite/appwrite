@@ -62,6 +62,13 @@ readonly class Escalation
                 }
             }
 
+            foreach (['roles' => 'role', 'userIds' => 'member'] as $key => $noun) {
+                $repeated = \array_unique(\array_diff_assoc($step[$key] ?? [], \array_unique($step[$key] ?? [])));
+                if ($repeated !== []) {
+                    throw new \InvalidArgumentException("Step {$index} names the same {$noun} more than once: " . \implode(', ', $repeated) . '.');
+                }
+            }
+
             $parsed[] = $parsedStep = Step::fromArray($step);
 
             $unknownRoles = \array_diff($parsedStep->roles, $roles);

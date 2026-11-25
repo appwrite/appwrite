@@ -34,7 +34,7 @@ class Update extends Base
             ->setHttpPath('/v1/organization/escalations/:escalationId')
             ->desc('Update escalation')
             ->groups(['api', 'organization', 'escalations'])
-            ->label('scope', 'monitors.write')
+            ->label('scope', 'escalations.write')
             ->label('audits.event', 'escalation.update')
             ->label('audits.resource', 'escalation/{request.escalationId}')
             ->label('sdk', new Method(

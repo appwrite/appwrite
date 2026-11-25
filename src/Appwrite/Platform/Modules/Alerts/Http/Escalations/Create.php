@@ -36,7 +36,7 @@ class Create extends Base
             ->setHttpPath('/v1/organization/escalations')
             ->desc('Create escalation')
             ->groups(['api', 'organization', 'escalations'])
-            ->label('scope', 'monitors.write')
+            ->label('scope', 'escalations.write')
             ->label('audits.event', 'escalation.create')
             ->label('audits.resource', 'escalation/{response.$id}')
             ->label('sdk', new Method(

@@ -34,7 +34,7 @@ class XList extends Base
             ->setHttpPath('/v1/organization/escalations')
             ->desc('List escalations')
             ->groups(['api', 'organization', 'escalations'])
-            ->label('scope', 'monitors.read')
+            ->label('scope', 'escalations.read')
             ->label('sdk', new Method(
                 namespace: 'organization',
                 group: 'escalations',
