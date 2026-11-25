@@ -638,6 +638,16 @@
       "services": ["Usage"]
     },
     {
+      "label": "Pub/sub Outage",
+      "group": "pubsubOutage",
+      "path": "/usr/src/code/tests/e2e/Services/Realtime",
+      "options_abuse": "disabled",
+      "storage_antivirus": "disabled",
+      "compose_profiles": "",
+      "wait": "",
+      "services": ["Realtime"]
+    },
+    {
       "label": "Queue Retry",
       "group": "queueRetry",
       "path": "/usr/src/code/tests/e2e/Services",

@@ -737,9 +737,14 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         $span = Span::init('realtime.pubsub');
         try {
             if ($attempts > 0) {
-                Console::error('Pub/sub connection lost (lasted ' . (time() - $start) . ' seconds, worker: ' . $workerId . ').
-                    Attempting restart in 5 seconds (attempt #' . $attempts . ')');
-                sleep(5); // 5 sec delay between connection attempts
+                $lasted = time() - $start;
+                // Retry a long-lived connection at once: after a failover the new primary is already up.
+                $delay = ($attempts === 1 && $lasted >= 5) ? 0 : 5;
+                Console::error('Pub/sub connection lost (lasted ' . $lasted . ' seconds, worker: ' . $workerId . ').
+                    Attempting restart in ' . $delay . ' seconds (attempt #' . $attempts . ')');
+                if ($delay > 0) {
+                    sleep($delay);
+                }
             }
             $start = time();
 
@@ -783,7 +788,6 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
             Console::error('Pub/sub error: ' . $th->getMessage());
             $attempts++;
-            sleep(DATABASE_RECONNECT_SLEEP);
             continue;
         } finally {
             $span->finish();
