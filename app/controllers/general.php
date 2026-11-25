@@ -717,7 +717,9 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                     // synchronous executions until cold starts are addressed.
                     requestTimeout: 60,
                     responseFormat: $canStreamResponse ? Executor::RESPONSE_FORMAT_STREAM : Executor::RESPONSE_FORMAT_ARRAY_HEADERS,
-                    onPart: $onExecutionPart
+                    onPart: $onExecutionPart,
+                    // Previews and disabled streaming buffer the whole response: bound it there too.
+                    maxBufferedSize: MAX_OUTPUT_CHUNK_SIZE
                 );
             } catch (ExecutorTimeout $th) {
                 throw new AppwriteException(AppwriteException::FUNCTION_SYNCHRONOUS_TIMEOUT, previous: $th);
