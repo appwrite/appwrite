@@ -4473,6 +4473,34 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
+     * H.264 with 10 bits per sample is High 10 profile, which browsers and
+     * most devices cannot decode. The master playlist names the profile the
+     * encoder really wrote, so it shows whether a 10-bit source was brought
+     * down to 8 bits.
+     */
+    public function testATenBitSourceIsEncodedAsEightBitH264(): void
+    {
+        $videoId = $this->createReadyVideo($this->getTenBitVideoFile())['$id'];
+        $this->createReadyRendition($videoId, 'hls');
+
+        $master = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/master.m3u8', $this->headers());
+        $this->assertEquals(200, $master['headers']['status-code']);
+
+        $variant = '';
+        foreach (\explode("\n", (string) $master['body']) as $line) {
+            if (\str_starts_with($line, '#EXT-X-STREAM-INF')) {
+                $variant = $line;
+                break;
+            }
+        }
+
+        // avc1.PPCCLL: PP is the profile, 64 for High and 6e for High 10.
+        $codecs = \strtolower($this->attributeValue($variant, 'CODECS'));
+        $this->assertStringContainsString('avc1.64', $codecs, 'Expected High profile, got: ' . $codecs);
+        $this->assertStringNotContainsString('avc1.6e', $codecs);
+    }
+
+    /**
      * Manifest URLs are absolute paths (`/v1/videos/...`). The test client
      * already prefixes `/v1`.
      */
