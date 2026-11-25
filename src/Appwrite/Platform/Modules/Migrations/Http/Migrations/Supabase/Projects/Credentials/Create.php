@@ -52,7 +52,7 @@ class Create extends Base
                     )
                 ]
             ))
-            ->param('projectRef', '', new Text(20, 20, \range('a', 'z')), 'Supabase project reference.')
+            ->param('projectRef', '', new Text(20, 20, [...\range('a', 'z'), ...\range('0', '9')]), 'Supabase project reference.')
             ->inject('request')
             ->inject('response')
             ->inject('user')
