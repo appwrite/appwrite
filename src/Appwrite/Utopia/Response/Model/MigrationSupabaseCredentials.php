@@ -48,7 +48,7 @@ class MigrationSupabaseCredentials extends Model
             ])
             ->addRule('expire', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Time the database credentials stop working in ISO 8601 format.',
+                'description' => 'Time after which the database credentials can no longer sign in, in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ]);
