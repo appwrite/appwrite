@@ -23,6 +23,9 @@ final class Inventory
     {
         $symbols = [];
         foreach ($dirs as $dir) {
+            // A package's stubs/ declares the classes the utopia extension provides in place of
+            // PHP: their methods are internal ones, which only count when they come from there.
+            $extension = \basename(\rtrim($dir, '/')) === 'stubs';
             $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS));
             foreach ($files as $file) {
                 if ($file->getExtension() !== 'php') {
@@ -30,7 +33,7 @@ final class Inventory
                 }
                 [$classes, $functions] = self::declarations((string) file_get_contents($file->getPathname()));
                 foreach ($classes as $class) {
-                    foreach (self::methods($class) as $method) {
+                    foreach (self::methods($class, $extension) as $method) {
                         $symbols[] = $method;
                     }
                 }
@@ -259,7 +262,7 @@ final class Inventory
     /**
      * @return list<string>
      */
-    private static function methods(string $class): array
+    private static function methods(string $class, bool $extension = false): array
     {
         try {
             if (!class_exists($class) && !trait_exists($class) && !enum_exists($class)) {
@@ -279,7 +282,7 @@ final class Inventory
             if (
                 $method->getDeclaringClass()->getName() !== $reflection->getName()
                 || $method->isAbstract()
-                || $method->isInternal()
+                || ($method->isInternal() && !($extension && $method->getExtensionName() === 'utopia'))
                 || \in_array($method->getName(), self::PLUMBING, true)
             ) {
                 continue;
