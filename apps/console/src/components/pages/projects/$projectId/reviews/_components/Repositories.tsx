@@ -50,24 +50,12 @@ export type RepositoriesFilter = 'reviewed' | 'all'
 const TOGGLE_ITEM_CLASS =
   'h-full px-3 text-[13px] font-medium text-muted-foreground hover:text-foreground data-[state=on]:bg-secondary data-[state=on]:text-secondary-foreground'
 
-type RepositoriesProps = {
-  projectId: string
-  canWrite: boolean
-  /** Searches the installation's repositories on its provider. */
-  search: string
-}
-
 /**
- * The repositories tab. "Reviewed" pages through the repositories the project
- * reviews; "All" pages through the repositories of an installation, so
- * review is turned on with a switch right where the repository is found.
+ * What the repositories tab shows: reviewed repositories or an installation's,
+ * and which installation. Held by the page, since its controls sit in the
+ * page toolbar.
  */
-export function Repositories({
-  projectId,
-  canWrite,
-  search,
-}: RepositoriesProps) {
-  const t = useT()
+export function useRepositoriesScope(projectId: string, search: string) {
   const { project } = useProject(projectId)
   const { vcsProviders } = useConsoleVariables()
   // Providers a new installation can be connected from to review its repositories.
@@ -122,8 +110,6 @@ export function Repositories({
     }
   }, [installations, installationId])
 
-  const installation = installations.find((i) => i.$id === installationId)
-
   const [reviewAllOpen, setReviewAllOpen] = useState(false)
 
   const returnUrl = `${typeof window === 'undefined' ? '' : window.location.origin}/projects/${projectId}/reviews/repositories`
@@ -135,16 +121,189 @@ export function Repositories({
       successUrl: returnUrl,
       failureUrl: returnUrl,
     })
+
+  return {
+    loading: installationsLoading || reviewedTotalLoading,
+    // Nothing to choose from until a Git provider is connected.
+    connected: installations.length > 0 || reviewedTotal > 0,
+    connectProviders,
+    connectUrl,
+    installations,
+    providers,
+    organizations,
+    reviewedTotal,
+    filter,
+    setFilter: setChosenFilter,
+    installationId,
+    setInstallationId,
+    installation: installations.find((i) => i.$id === installationId),
+    reviewAllOpen,
+    setReviewAllOpen,
+  }
+}
+
+export type RepositoriesScope = ReturnType<typeof useRepositoriesScope>
+
+/**
+ * The toolbar's scope controls: reviewed or all repositories, and which
+ * installation's.
+ */
+export function RepositoriesScopeControls({
+  scope,
+  search,
+}: {
+  scope: RepositoriesScope
+  search: string
+}) {
+  const t = useT()
+  if (scope.loading || !scope.connected) return null
+
+  return (
+    <>
+      <ToggleGroup
+        type="single"
+        variant="outline"
+        value={scope.filter}
+        onValueChange={(value) => {
+          if (value) scope.setFilter(value as RepositoriesFilter)
+        }}
+        className="h-9"
+      >
+        <ToggleGroupItem
+          value="reviewed"
+          className={TOGGLE_ITEM_CLASS}
+          disabled={search !== ''}
+        >
+          {t('Reviewed')}
+          <span className="ms-1.5 text-muted-foreground">
+            {scope.reviewedTotal}
+          </span>
+        </ToggleGroupItem>
+        <ToggleGroupItem value="all" className={TOGGLE_ITEM_CLASS}>
+          {t('All repositories')}
+        </ToggleGroupItem>
+      </ToggleGroup>
+      {scope.filter === 'all' && scope.installations.length > 1 && (
+        <Select
+          value={scope.installationId}
+          onValueChange={scope.setInstallationId}
+        >
+          <SelectTrigger
+            className="h-9 w-[200px] text-[13px]"
+            aria-label={t('Installation')}
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {scope.installations.map((installation) => (
+              <SelectItem
+                key={installation.$id}
+                value={installation.$id}
+                className="text-[13px]"
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <VcsIcon
+                    type={installation.provider}
+                    className="h-4 w-4 shrink-0"
+                  />
+                  <span className="truncate">{installation.organization}</span>
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+    </>
+  )
+}
+
+/** The toolbar's actions on the chosen installation. */
+export function RepositoriesActions({
+  scope,
+  canWrite,
+}: {
+  scope: RepositoriesScope
+  canWrite: boolean
+}) {
+  const t = useT()
+  if (scope.loading || scope.filter !== 'all' || !scope.installationId) {
+    return null
+  }
+
+  return (
+    <>
+      {scope.connectProviders.length > 0 && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-9 text-[13px]">
+              <Plus className="h-4 w-4" />
+              {t('Add installation')}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {scope.connectProviders.map((provider) => (
+              <DropdownMenuItem key={provider.id} asChild>
+                <a href={scope.connectUrl(provider.id)}>
+                  <provider.Icon className="h-4 w-4" />
+                  {provider.label}
+                </a>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-9 text-[13px]"
+        disabled={!canWrite}
+        onClick={() => scope.setReviewAllOpen(true)}
+      >
+        {t('Review all')}
+      </Button>
+    </>
+  )
+}
+
+type RepositoriesProps = {
+  projectId: string
+  canWrite: boolean
+  /** Searches the installation's repositories on its provider. */
+  search: string
+  scope: RepositoriesScope
+}
+
+/**
+ * The repositories tab. "Reviewed" pages through the repositories the project
+ * reviews; "All" pages through the repositories of an installation, so
+ * review is turned on with a switch right where the repository is found.
+ */
+export function Repositories({
+  projectId,
+  canWrite,
+  search,
+  scope,
+}: RepositoriesProps) {
+  const t = useT()
+  const {
+    filter,
+    installation,
+    installationId,
+    installations,
+    organizations,
+    providers,
+  } = scope
+
   const connectButtons = (
     <VcsProviderButtons
-      providers={connectProviders}
+      providers={scope.connectProviders}
       link={(provider, content) => (
-        <a href={connectUrl(provider.id)}>{content}</a>
+        <a href={scope.connectUrl(provider.id)}>{content}</a>
       )}
     />
   )
 
-  if (installationsLoading || reviewedTotalLoading) {
+  if (scope.loading) {
     return (
       <div className="flex justify-center py-12">
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -152,7 +311,7 @@ export function Repositories({
     )
   }
 
-  if (installations.length === 0 && reviewedTotal === 0) {
+  if (!scope.connected) {
     return (
       <EmptyState
         icon={GitPullRequest}
@@ -167,92 +326,7 @@ export function Repositories({
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
-          <ToggleGroup
-            type="single"
-            variant="outline"
-            value={filter}
-            onValueChange={(value) => {
-              if (value) setChosenFilter(value as RepositoriesFilter)
-            }}
-            className="h-9"
-          >
-            <ToggleGroupItem
-              value="reviewed"
-              className={TOGGLE_ITEM_CLASS}
-              disabled={search !== ''}
-            >
-              {t('Reviewed')}
-              <span className="ms-1.5 text-muted-foreground">
-                {reviewedTotal}
-              </span>
-            </ToggleGroupItem>
-            <ToggleGroupItem value="all" className={TOGGLE_ITEM_CLASS}>
-              {t('All repositories')}
-            </ToggleGroupItem>
-          </ToggleGroup>
-          {filter === 'all' && installations.length > 1 && (
-            <Select value={installationId} onValueChange={setInstallationId}>
-              <SelectTrigger className="h-9 w-[200px] text-[13px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {installations.map((installation) => (
-                  <SelectItem
-                    key={installation.$id}
-                    value={installation.$id}
-                    className="text-[13px]"
-                  >
-                    <span className="flex items-center gap-2">
-                      <VcsIcon
-                        type={installation.provider}
-                        className="h-3.5 w-3.5 shrink-0"
-                      />
-                      {installation.organization}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        </div>
-        {filter === 'all' && installationId && (
-          <div className="flex items-center gap-2">
-            {connectProviders.length > 0 && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-9 text-[13px]">
-                    <Plus className="h-4 w-4" />
-                    {t('Add installation')}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {connectProviders.map((provider) => (
-                    <DropdownMenuItem key={provider.id} asChild>
-                      <a href={connectUrl(provider.id)}>
-                        <provider.Icon className="h-4 w-4" />
-                        {provider.label}
-                      </a>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 text-[13px]"
-              disabled={!canWrite}
-              onClick={() => setReviewAllOpen(true)}
-            >
-              {t('Review all')}
-            </Button>
-          </div>
-        )}
-      </div>
-
+    <div className="space-y-4">
       {/* Only a GitHub app hears of repositories added to its installation. */}
       {filter === 'all' && installation?.provider === 'github' && (
         <NewRepositories
@@ -269,7 +343,7 @@ export function Repositories({
           organizations={organizations}
           providers={providers}
           showOrganization={installations.length > 1}
-          onBrowse={() => setChosenFilter('all')}
+          onBrowse={() => scope.setFilter('all')}
         />
       ) : installationId ? (
         <InstallationRepositories
@@ -296,8 +370,8 @@ export function Repositories({
           projectId={projectId}
           installationId={installationId}
           organization={organizations.get(installationId) ?? ''}
-          open={reviewAllOpen}
-          onOpenChange={setReviewAllOpen}
+          open={scope.reviewAllOpen}
+          onOpenChange={scope.setReviewAllOpen}
         />
       )}
     </div>

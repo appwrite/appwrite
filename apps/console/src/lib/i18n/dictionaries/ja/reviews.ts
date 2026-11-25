@@ -274,4 +274,50 @@ export const jaReviewsDictionary: Record<string, string> = {
     'よく却下されるカテゴリは、レビュアーに指摘を控えさせる学習の候補です。',
   'Useful findings is the share of settled findings that were fixed rather than dismissed; findings still open count for neither.':
     '有用な指摘は、決着した指摘のうち却下されずに修正されたものの割合です。未解決の指摘はどちらにも数えません。',
+  // Functions and sites: code review of the connected repository
+  'Code review': 'コードレビュー',
+  'Review pull requests': 'プルリクエストをレビュー',
+  'Code review was not turned on': 'コードレビューを有効にできませんでした',
+  'Turn it on later from Settings > Git.':
+    '後から 設定 > Git で有効にできます。',
+  'Code review is already on for this repository.':
+    'このリポジトリではコードレビューがすでに有効です。',
+  'Appwrite reviews each pull request when it is opened or gets new commits, and comments on it.':
+    'Appwrite はプルリクエストが作成されたときや新しいコミットが追加されたときにレビューし、コメントします。',
+  "Reviews use your organization's review credits.":
+    'レビューには組織のレビュークレジットが使われます。',
+  'Review pull requests to the connected repository and comment on them. The setting applies to the whole repository.':
+    '接続したリポジトリへのプルリクエストをレビューし、コメントします。この設定はリポジトリ全体に適用されます。',
+  'Each pull request is reviewed when it is opened or gets new commits.':
+    'プルリクエストは作成時と新しいコミットの追加時にレビューされます。',
+  'Review strength': 'レビュー強度',
+  'How hard pull requests are reviewed, and what each review costs.':
+    'プルリクエストをどこまで深くレビューするか、またレビューごとのコストです。',
+  'View reviews': 'レビューを表示',
+  'Connect a repository to this function to review its pull requests.':
+    'この関数にリポジトリを接続すると、プルリクエストをレビューできます。',
+  'Connect a repository to this site to review its pull requests.':
+    'このサイトにリポジトリを接続すると、プルリクエストをレビューできます。',
+  'Code review does not run on this provider':
+    'このプロバイダーではコードレビューを利用できません',
+  'Code review runs on GitHub, GitLab, Gitea, Bitbucket and Origin repositories.':
+    'コードレビューは GitHub、GitLab、Gitea、Bitbucket、Origin のリポジトリで利用できます。',
+  'Code review is off': 'コードレビューは無効です',
+  'Turn on code review to have each pull request reviewed when it is opened or gets new commits.':
+    'コードレビューを有効にすると、プルリクエストの作成時と新しいコミットの追加時にレビューされます。',
+  'Pull requests that change files in':
+    '次のディレクトリのファイルを変更するプルリクエスト:',
+  'Reviews show up here when a pull request that changes this directory is opened or gets new commits.':
+    'このディレクトリを変更するプルリクエストが作成されるか、新しいコミットが追加されると、ここにレビューが表示されます。',
+  'Reviews show up here when a pull request is opened or gets new commits.':
+    'プルリクエストが作成されるか、新しいコミットが追加されると、ここにレビューが表示されます。',
+  'No reviews of this directory among the latest ones.':
+    '最新のレビューの中に、このディレクトリのレビューはありません。',
+
+  // Row menus
+  'Copy text': 'テキストをコピー',
+  'Copy title': 'タイトルをコピー',
+  'Open profile on GitHub': 'GitHub でプロフィールを開く',
+  'Open file': 'ファイルを開く',
+  'Open comment': 'コメントを開く',
 }
