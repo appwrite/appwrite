@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `Utopia\Abuse\Challenge`: the base for things a client must answer before it gets through, like `Adapter` is for rate limits. It holds the signed token and the params it is bound to (`withParams()` / `withParam()`). Each kind implements `issue(array $claims = []): Challenge\Token` (`->value` is the signed token the client sends back) and `verify(string $token, string $answer): Result`, using the protected `sign()` and `claimsFrom()`.
+- `Challenge\ProofOfWork`: `new ProofOfWork($secret, $nonces, difficulty: 18)`. `issue()` returns a `ProofOfWork\Token` (`value`, `nonce`, `difficulty`); the client finds an answer against the nonce, and `verify($value, $answer)` returns a `ProofOfWork\Result`: a `Challenge\Result` (`status`, `claims`, `error`) plus `difficulty` and `elapsedMs`. Each token can be answered once. A nonce store outage rejects the solution unless `acceptWhenNoncesUnavailable` is set.
+- `Challenge\Result` and `Challenge\Status` (`Valid`, `InvalidToken`, `BindingMismatch`, `Rejected`, `Replay`, `Unavailable`), shared by every kind.
+- `Challenge\Clearance`: issued after a challenge is passed. `withParams([...])->issue($difficulty)` and `->verify($token, $difficulty, $maxAge)`.
+- `Challenge\Nonce`: the single-use nonce store, with a key pattern filled by `withParams()`. Backends: `Nonce\Redis`, `Nonce\RedisCluster`, `Nonce\RedisPool` and `Nonce\None`.
+- `Challenge\Issuer`: issues the signed, purpose-bound tokens everything is built on, and checks them. `Challenge\Identity`: a coarse IP prefix (configurable, /24 and /48 by default) and a User-Agent hash to bind to.
+- Requires `adhocore/jwt` `^1.1`, `utopia-php/auth` `^0.13` and the `utopia` extension (auth's password hashes live in it).
+- `Challenge\Password`: asks for a password the caller set, keeping only a hash checked with `utopia-php/auth`'s password proof (Argon2 by default, as Appwrite stores user passwords). It does not limit guesses; callers rate-limit verify. `version()` identifies the stored hash so a clearance can end when the password changes.
+
 ## 4.0.0 (unreleased)
 
 ### Breaking changes
