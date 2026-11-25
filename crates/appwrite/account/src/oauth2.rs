@@ -38,6 +38,7 @@ pub const PROVIDERS: &[(&str, &str, bool)] = &[
     ("bitbucket", "BitBucket", false),
     ("bitly", "Bitly", false),
     ("box", "Box", false),
+    ("clerk", "Clerk", false),
     ("cloudflare", "Cloudflare", false),
     ("dailymotion", "Dailymotion", false),
     ("discord", "Discord", false),
@@ -170,7 +171,9 @@ fn default_scopes(provider: &str) -> &'static [&'static str] {
         "amazon" => &["profile"],
         "apple" => &["name", "email"],
         "appwrite" | "huggingface" | "oidc" | "linkedin" | "yahoo" => &["openid", "profile", "email"],
-        "auth0" | "authentik" | "fusionauth" | "keycloak" | "okta" => &["openid", "profile", "email", "offline_access"],
+        "auth0" | "authentik" | "clerk" | "fusionauth" | "keycloak" | "okta" => {
+            &["openid", "profile", "email", "offline_access"]
+        }
         "autodesk" => &["user-profile:read"],
         "box" => &["manage_app_users"],
         "cloudflare" => &["user-details.read", "offline_access"],
@@ -401,6 +404,17 @@ impl Provider {
                     ("scope", s(self.joined_scopes(","))),
                     ("redirect_uri", callback),
                     ("state", s(state)),
+                ])
+            ),
+            "clerk" => format!(
+                "https://{}/oauth/authorize?{}",
+                self.secret_field("clerkDomain", "")?,
+                query(vec![
+                    ("client_id", id),
+                    ("redirect_uri", callback),
+                    ("state", s(state)),
+                    ("scope", s(spaced)),
+                    ("response_type", s("code".into())),
                 ])
             ),
             "dailymotion" => format!(
