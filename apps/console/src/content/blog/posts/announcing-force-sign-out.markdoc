@@ -47,7 +47,13 @@ The old session records are then deleted in the background. You don't have to wa
 
 Open your project in the Appwrite Console and go to **Auth** > **Settings**. The **Security actions** card holds the project-wide actions for incidents: **Force sign out** and **Force password reset**.
 
-![The Security actions card in the Appwrite Console with the Force sign out and Force password reset actions](/images/blog/announcing-force-password-reset/security-actions.avif)
+{% only_dark %}
+![The Security actions card in the Appwrite Console with the Force sign out and Force password reset actions](/images/blog/announcing-force-sign-out/security-actions-dark.avif)
+{% /only_dark %}
+
+{% only_light %}
+![The Security actions card in the Appwrite Console with the Force sign out and Force password reset actions](/images/blog/announcing-force-sign-out/security-actions.avif)
+{% /only_light %}
 
 Click **Sign out all users** and confirm.
 
