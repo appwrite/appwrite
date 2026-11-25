@@ -196,6 +196,7 @@
         "GET /v1/migrations/appwrite/report",
         "GET /v1/migrations/firebase/report",
         "GET /v1/migrations/nhost/report",
+        "GET /v1/migrations/supabase/oauth2",
         "GET /v1/migrations/supabase/report",
         "GET /v1/mock/github/callback",
         "GET /v1/mock/tests/general/oauth2/failure",
