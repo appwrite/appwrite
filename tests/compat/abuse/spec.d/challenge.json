@@ -181,7 +181,7 @@
       ]
     },
     "nonce.claimed": {
-      "doc": "the claims a Memory store holds: key => ttl"
+      "doc": "the claims a Memory store holds: key => ttl, with `nonce` (when given: the nonce each runtime's own pow.issue drew) named <nonce> in the keys"
     },
     "pow.new": {
       "doc": "new ProofOfWork(secret, nonces, difficulty, ttl ?? 120, accept ?? false, label ?? 'challenge', purpose ?? 'challenge') as a handle",
@@ -285,10 +285,10 @@
       ]
     },
     "pow.solve": {
-      "doc": "fixture: ProofOfWorkTest::solve(), the first counter isSolution() accepts"
+      "doc": "fixture: ProofOfWorkTest::solve(), the first counter isSolution() accepts (of a pow.issue nonce, random per runtime: cases mask it on the step and only bind it)"
     },
     "pow.wrong": {
-      "doc": "fixture: ProofOfWorkTest::wrong(), an answer the test's own hex counter says misses the target"
+      "doc": "fixture: ProofOfWorkTest::wrong(), an answer the test's own hex counter says misses the target (masked on the step like pow.solve)"
     },
     "pow.difficulty_of_hex": {
       "doc": "fixture: ProofOfWorkTest::difficultyOfHex(hex)"

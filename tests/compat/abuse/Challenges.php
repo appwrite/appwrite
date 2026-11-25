@@ -64,7 +64,19 @@ trait Challenges
             'nonce.with_param' => fn (array $a, Session $s) => $s->handle(self::object($a['nonces'], $s, Nonce::class)->withParam($a['name'], $a['value'])),
             'nonce.key' => fn (array $a, Session $s) => self::object($a['nonces'], $s, Nonce::class)->key($a['nonce']),
             'nonce.consume' => fn (array $a, Session $s) => self::object($a['nonces'], $s, Nonce::class)->consume($a['nonce'], $a['ttl']),
-            'nonce.claimed' => fn (array $a, Session $s) => self::object($a['nonces'], $s, Memory::class)->claimed->getArrayCopy(),
+            'nonce.claimed' => function (array $a, Session $s) {
+                $claimed = self::object($a['nonces'], $s, Memory::class)->claimed->getArrayCopy();
+                if (!isset($a['nonce'])) {
+                    return $claimed;
+                }
+                // Each runtime drew its own nonce: name it, so the keys compare.
+                $named = [];
+                foreach ($claimed as $key => $ttl) {
+                    $named[\str_replace($a['nonce'], '<nonce>', (string) $key)] = $ttl;
+                }
+
+                return $named;
+            },
             'pow.new' => fn (array $a, Session $s) => $s->handle(new ProofOfWork(
                 $a['secret'],
                 self::object($a['nonces'], $s, Nonce::class),

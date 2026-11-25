@@ -305,9 +305,15 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         }
         "nonce.claimed" => match s.get::<Nonce<Store>>(a.value("nonces")?)?.store() {
             Store::Memory(memory) => {
+                let nonce = a.opt("nonce").map(|_| a.bytes("nonce")).transpose()?;
                 let claimed = memory.claimed.lock().expect("claims");
                 let mut out = Array::new();
                 for (key, ttl) in claimed.iter() {
+                    // Each runtime drew its own nonce: name it, so the keys compare.
+                    let key = match &nonce {
+                        Some(n) => php_std::string::str_replace(n, b"<nonce>", key).0.into_owned(),
+                        None => key.clone(),
+                    };
                     out.set(php_std::ArrayKey::normalize(key.as_slice().into()), php_std::Value::Int(*ttl));
                 }
                 Outcome::Ok(claims_json(&out))
