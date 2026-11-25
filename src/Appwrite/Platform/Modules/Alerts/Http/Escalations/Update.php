@@ -30,7 +30,7 @@ class Update extends Base
     public function __construct()
     {
         $this
-            ->setHttpMethod(self::HTTP_REQUEST_METHOD_PUT)
+            ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/organization/escalations/:escalationId')
             ->desc('Update escalation')
             ->groups(['api', 'organization', 'escalations'])
