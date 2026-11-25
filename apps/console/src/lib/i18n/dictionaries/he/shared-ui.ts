@@ -1431,10 +1431,11 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Starts in': 'מתחיל בעוד',
   'Join us on our biggest Init ever. 5 days, 5 new product launches. It will be electric.':
     'הצטרפו ל-Init הגדול ביותר שלנו אי פעם. 5 ימים, 5 השקות מוצר חדשות. זה הולך להיות מחשמל.',
-  "Init 5 is live. Catch today's reveal and the launch stream.":
-    'Init 5 באוויר. אל תפספסו את החשיפה של היום ואת שידור ההשקה.',
-  'Init 5 is a wrap. Explore every launch and rewatch the streams.':
-    'Init 5 הסתיים. גלו כל השקה וצפו שוב בשידורים.',
+  "Init 5 is live. Catch today's reveal and join the launch event on Discord.":
+    'Init 5 באוויר. אל תפספסו את החשיפה של היום והצטרפו לאירוע ההשקה ב-Discord.',
+  'Init 5 is a wrap. Explore every launch from the week.':
+    'Init 5 הסתיים. גלו את כל ההשקות של השבוע.',
+  'Init 5 launch event': 'אירוע ההשקה של Init 5',
   'Introducing Appwrite Analytics': 'מציגים את Appwrite Analytics',
   'Introducing Appwrite Videos': 'מציגים את Appwrite Videos',
   'Introducing Appwrite Zero': 'מציגים את Appwrite Zero',

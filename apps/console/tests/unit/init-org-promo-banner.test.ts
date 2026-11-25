@@ -47,7 +47,7 @@ describe('Init org promo banner', () => {
     })
     expect(banner?.phase).toBe('after')
     expect(banner?.message).toBe(
-      'Init 5 is a wrap. Explore every launch and rewatch the streams.',
+      'Init 5 is a wrap. Explore every launch from the week.',
     )
     expect(banner?.cta.label).toBe('View recap')
   })

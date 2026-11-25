@@ -170,6 +170,8 @@ export interface LaunchEventHeaderNavCtaConfig {
 export interface LaunchEventLiveBanner {
   title: string
   href?: string
+  /** The banner's button; defaults to "Watch" (a stream). */
+  actionLabel?: string
   /**
    * Set by visibility: `startingSoon` within 1h of the livestream start,
    * `live` after it begins. Omitted on authored event data.
