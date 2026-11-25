@@ -3379,6 +3379,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'אין לכם הרשאה לנהל את התוספים של הארגון הזה.',
   'Single sign-on add-on is already active for this organization':
     'תוסף ההתחברות היחידה (SSO) כבר פעיל בארגון זה',
+  "Single sign-on in a project needs the Single sign-on add-on. Enable it in the project's settings.":
+    'התחברות יחידה (SSO) בפרויקט דורשת את תוסף ההתחברות היחידה (SSO). הפעילו אותו בהגדרות הפרויקט.',
   'Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then single sign-on for the organization stops, and people who can only sign in through your identity providers can no longer sign in.':
     'האם אתם בטוחים שברצונכם להשבית את תוסף ההתחברות היחידה (SSO)? הוא יישאר פעיל עד סוף מחזור החיוב הנוכחי ולא יחודש. אחר כך ההתחברות היחידה (SSO) של הארגון תיפסק, ואנשים שיכולים להתחבר רק דרך ספקי הזהויות שלכם לא יוכלו עוד להתחבר.',
   'Payment could not be authorized. Please try enabling the addon again.':

@@ -1822,4 +1822,39 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   "Couldn't load sign-ups": 'サインアップを読み込めませんでした',
   'sign-ups': 'サインアップ',
   second: '秒',
+  // Single sign-on for a team of a project
+  "Prove the domains this team owns. The team's identity providers sign in only users with an email on a verified domain.":
+    'このチームが所有するドメインを証明します。チームの ID プロバイダーは、検証済みドメインのメールアドレスを持つユーザーのみをサインインさせます。',
+  "Add the domain of your users' emails, then connect an identity provider so they sign in to your app with single sign-on.":
+    'ユーザーのメールアドレスのドメインを追加してから ID プロバイダーを接続すると、ユーザーがシングルサインオンでアプリにサインインできます。',
+  "Users with an email on it can no longer sign in through the team's identity providers. Users who already joined stay members.":
+    'このドメインのメールアドレスを持つユーザーは、チームの ID プロバイダー経由でサインインできなくなります。参加済みのユーザーはメンバーのままです。',
+  "Require SSO is on and this is the team's only verified domain: deleting it pauses Require SSO, and members keep the team's roles however they sign in.":
+    'SSO の必須化が有効で、これがチームの唯一の検証済みドメインです。削除すると SSO の必須化が一時停止され、メンバーはどの方法でサインインしてもチームのロールを保持します。',
+  "Prove this team owns this domain with a DNS record. The team's identity providers then sign in users with an email on it.":
+    'DNS レコードで、このドメインがチームのものであることを証明します。その後、チームの ID プロバイダーはこのドメインのメールアドレスを持つユーザーをサインインさせます。',
+  "Users on the team's verified domains sign in to your app through an identity provider, like Okta, Microsoft Entra ID, Google Workspace or Keycloak, and join the team with its roles.":
+    'チームの検証済みドメインのユーザーは、Okta、Microsoft Entra ID、Google Workspace、Keycloak などの ID プロバイダー経由でアプリにサインインし、そのロールでチームに参加します。',
+  "Connect an identity provider so users on the team's domains sign in to your app with single sign-on.":
+    'ID プロバイダーを接続すると、チームのドメインのユーザーがシングルサインオンでアプリにサインインできます。',
+  'Users can no longer sign in through it. Users who already joined stay members.':
+    'このプロバイダーではサインインできなくなります。参加済みのユーザーはメンバーのままです。',
+  "Require SSO is on and this is the team's only enabled identity provider: deleting it pauses Require SSO, and members keep the team's roles however they sign in.":
+    'SSO の必須化が有効で、これがチームの唯一の有効な ID プロバイダーです。削除すると SSO の必須化が一時停止され、メンバーはどの方法でサインインしてもチームのロールを保持します。',
+  'Your app can show this name when users choose how to sign in.':
+    'ユーザーがサインイン方法を選ぶときに、アプリでこの名前を表示できます。',
+  'Add at least one role.': 'ロールを1つ以上追加してください。',
+  'Roles users get in this team when they sign in through this identity provider.':
+    'この ID プロバイダー経由でサインインしたユーザーに、このチームで付与されるロールです。',
+  'A role can be at most 36 characters.': 'ロールは最大 36 文字です。',
+  'Use letters, numbers, periods, hyphens and underscores, starting with a letter or number.':
+    '英字、数字、ピリオド、ハイフン、アンダースコアを使い、先頭は英字か数字にしてください。',
+  "Members with an email on the team's verified domains keep their account, but get the team's roles only after signing in through one of its identity providers. Team owners keep their roles however they sign in, so a broken identity provider never locks the team out. Members on other domains are not affected.":
+    'チームの検証済みドメインのメールアドレスを持つメンバーは、アカウントはそのままですが、チームの ID プロバイダーのいずれかでサインインした後にのみチームのロールを得られます。チームのオーナーはどの方法でサインインしてもロールを保持するため、ID プロバイダーに問題が起きてもチームから締め出されることはありません。他のドメインのメンバーには影響しません。',
+  "Enabled - members on the team's verified domains get its roles only through single sign-on.":
+    '有効 - チームの検証済みドメインのメンバーは、シングルサインオンでのみチームのロールを得られます。',
+  "Disabled - members get the team's roles however they sign in.":
+    '無効 - メンバーはどの方法でサインインしてもチームのロールを得られます。',
+  "Members on the team's verified domains who signed in another way keep their account but lose the team's roles until they sign in through one of its identity providers. Their other teams are not affected. Team owners keep their roles, so a broken identity provider never locks the team out.":
+    '別の方法でサインインしたチームの検証済みドメインのメンバーは、アカウントはそのままですが、チームの ID プロバイダーのいずれかでサインインするまでチームのロールを失います。他のチームには影響しません。チームのオーナーはロールを保持するため、ID プロバイダーに問題が起きてもチームから締め出されることはありません。',
 }

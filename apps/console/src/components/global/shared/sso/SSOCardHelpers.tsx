@@ -13,19 +13,26 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { ADDON_KEY_SSO_ORG } from '@/lib/billing/addons'
+import { ADDON_KEY_SSO, ADDON_KEY_SSO_ORG } from '@/lib/billing/addons'
 import { useT } from '@/lib/i18n/translate'
 import {
   organizationAddonsQueryOptions,
   organizationPlanQueryOptions,
+  projectAddonsQueryOptions,
   useOrganizationPlan,
+  useProject,
+  useSSODomains,
+  useSSOProviders,
+  useSSORequired,
 } from '@/lib/react-query/hooks'
 import {
   isSSOAddonError,
+  PROJECT_SSO_ADDON_REQUIRED_MESSAGE,
   SSO_ADDON_REQUIRED_MESSAGE,
   ssoAddonStatus,
   type SSOAddonStatus,
 } from '@/lib/sso-addon'
+import type { SSOTarget } from '@/lib/sso-target'
 
 /**
  * Error text on the single sign-on screens. In the default dark theme
@@ -159,22 +166,70 @@ export function useSingleSubmit() {
 }
 
 /**
- * Whether the organization can set up single sign-on: it needs its Single
- * sign-on add-on (`ssoOrg`) active. `locked` only once the plan and the
- * add-ons are known: setup is never refused on a guess. `enabled: false`
- * leaves the add-ons unread, for a page that may not show single sign-on.
+ * The organization that pays for `target`'s add-on: the organization itself,
+ * or the project's, once the project is read.
  */
-export function useSSOAddonGate(orgId: string, enabled = true) {
+function useBillingOrganizationId(target: SSOTarget): string | undefined {
+  const { project } = useProject(
+    target.scope === 'project' ? target.projectId : undefined,
+  )
+  return target.scope === 'organization'
+    ? target.organizationId
+    : project?.teamId
+}
+
+/**
+ * Whether `target` can set up single sign-on: an organization needs its own
+ * Single sign-on add-on (`ssoOrg`) active, a team of a project its project's
+ * (`sso`), on the plan of the project's organization. `locked` only once the
+ * plan and the add-ons are known: setup is never refused on a guess.
+ * `enabled: false` leaves the add-ons unread, for a page that may not show
+ * single sign-on.
+ */
+export function useSSOAddonGate(target: SSOTarget, enabled = true) {
   const { features } = useConsoleProfile()
+  const orgId = useBillingOrganizationId(target)
   const { plan, isFetched } = useOrganizationPlan(orgId)
+  const read = enabled && features.billing
   const addons = useQuery(
-    organizationAddonsQueryOptions(enabled && features.billing ? orgId : null),
+    target.scope === 'organization'
+      ? organizationAddonsQueryOptions(read ? orgId : null)
+      : projectAddonsQueryOptions(read ? target.projectId : null),
   )
   const known = isFetched && !!plan && addons.isSuccess
   const status: SSOAddonStatus | null = known
-    ? ssoAddonStatus(plan, addons.data?.addons, ADDON_KEY_SSO_ORG)
+    ? ssoAddonStatus(
+        plan,
+        addons.data?.addons,
+        target.scope === 'organization' ? ADDON_KEY_SSO_ORG : ADDON_KEY_SSO,
+      )
     : null
   return { known, status, locked: known && status !== 'active' }
+}
+
+/**
+ * What a Single sign-on page shows. With the add-on not active and nothing
+ * set up, only the add-on's card; with something set up before, the setup
+ * cards stay listed, locked, to delete, and the card says it is paused.
+ */
+export function useSSOPageState(target: SSOTarget) {
+  const gate = useSSOAddonGate(target)
+  const { domains, isSuccess: domainsLoaded } = useSSODomains(target)
+  const { providers, isSuccess: providersLoaded } = useSSOProviders(target)
+  const required = useSSORequired(target)
+  const nothingSetUp =
+    domainsLoaded &&
+    providersLoaded &&
+    domains.length === 0 &&
+    providers.length === 0 &&
+    !required
+  return {
+    gate,
+    nothingSetUp,
+    // Unknown (not read yet, or no billing) is not locked: the server decides.
+    showSetup: !gate.locked || !nothingSetUp,
+    paused: gate.locked && !nothingSetUp,
+  }
 }
 
 /**
@@ -193,39 +248,52 @@ function showAddonCard() {
 }
 
 /**
- * A setup request the API refused because the organization's Single sign-on
- * add-on is not active (it ended while the page was open): say so with the
- * way to it, and reload the plan and the add-ons so the page shows its
- * locked state. Returns whether it was that refusal.
+ * A setup request the API refused because the Single sign-on add-on is not
+ * active (it ended while the page was open): say so with the way to it, and
+ * reload the plan and the add-ons so the page shows its locked state. Returns
+ * whether it was that refusal.
  */
-export function useSSOAddonErrorHandler(orgId: string) {
+export function useSSOAddonErrorHandler(target: SSOTarget) {
   const t = useT()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { features } = useConsoleProfile()
-  const { status } = useSSOAddonGate(orgId)
+  const orgId = useBillingOrganizationId(target)
+  const { status } = useSSOAddonGate(target)
+  const projectId = target.scope === 'project' ? target.projectId : null
   return useCallback(
     (error: unknown): boolean => {
       if (!isSSOAddonError(error)) return false
       // On a plan without the add-on, the upgrade; else its card on this page.
       const action = !features.billing
         ? undefined
-        : status === 'unavailable'
+        : status === 'unavailable' && orgId
           ? {
               label: t('Upgrade'),
               onClick: () => navigate({ to: '/upgrade', search: { orgId } }),
             }
           : { label: t('View add-on'), onClick: showAddonCard }
-      toast.error(t(SSO_ADDON_REQUIRED_MESSAGE), { action })
+      toast.error(
+        t(
+          projectId
+            ? PROJECT_SSO_ADDON_REQUIRED_MESSAGE
+            : SSO_ADDON_REQUIRED_MESSAGE,
+        ),
+        { action },
+      )
+      if (orgId) {
+        void queryClient.invalidateQueries({
+          queryKey: organizationPlanQueryOptions(orgId).queryKey,
+        })
+      }
       void queryClient.invalidateQueries({
-        queryKey: organizationPlanQueryOptions(orgId).queryKey,
-      })
-      void queryClient.invalidateQueries({
-        queryKey: organizationAddonsQueryOptions(orgId).queryKey,
+        queryKey: projectId
+          ? projectAddonsQueryOptions(projectId).queryKey
+          : organizationAddonsQueryOptions(orgId).queryKey,
       })
       return true
     },
-    [features, navigate, orgId, queryClient, status, t],
+    [features, navigate, orgId, projectId, queryClient, status, t],
   )
 }
 

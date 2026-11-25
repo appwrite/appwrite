@@ -14,7 +14,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import type { SSODomain } from '@/lib/appwrite/team-sso'
 import { useT } from '@/lib/i18n/translate'
-import { useCreateOrganizationEmailDomain } from '@/lib/react-query/hooks'
+import { useCreateSSODomain } from '@/lib/react-query/hooks'
+import type { SSOTarget } from '@/lib/sso-target'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   domainFieldError,
@@ -30,13 +31,13 @@ import { getEmailDomainRecord } from './VerifyEmailDomain'
 export function CreateEmailDomain({
   open,
   onOpenChange,
-  organizationId,
+  target,
   onCreated,
   onCloseAutoFocus,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  organizationId: string
+  target: SSOTarget
   onCreated: (rule: SSODomain) => void
   /** Where focus goes on close: the dialog opens from state, not a trigger. */
   onCloseAutoFocus?: (event: Event) => void
@@ -46,8 +47,8 @@ export function CreateEmailDomain({
   const [touched, setTouched] = useState(false)
   // Another organization holds the domain: the TXT record takes it over.
   const [claimDomain, setClaimDomain] = useState<string | null>(null)
-  const create = useCreateOrganizationEmailDomain(organizationId)
-  const onAddonError = useSSOAddonErrorHandler(organizationId)
+  const create = useCreateSSODomain(target)
+  const onAddonError = useSSOAddonErrorHandler(target)
   const submitOnce = useSingleSubmit()
 
   const domainError = domainFieldError(domain, touched, t)
@@ -83,7 +84,14 @@ export function CreateEmailDomain({
               close(false)
               return
             }
-            if (getDomainClaimReason(failure) === 'held') {
+            // The record that takes a domain over from another organization
+            // is the organization's own. A team of a project has no record
+            // the Console knows before the domain exists: the API's answer
+            // says what to do.
+            if (
+              target.scope === 'organization' &&
+              getDomainClaimReason(failure) === 'held'
+            ) {
               setClaimDomain(domain.trim().toLowerCase())
               return
             }
@@ -104,9 +112,13 @@ export function CreateEmailDomain({
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>{t('Add domain')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              {t(
-                'Prove your organization owns this domain with a DNS record. Your identity providers then sign in people with an email on it.',
-              )}
+              {target.scope === 'project'
+                ? t(
+                    "Prove this team owns this domain with a DNS record. The team's identity providers then sign in users with an email on it.",
+                  )
+                : t(
+                    'Prove your organization owns this domain with a DNS record. Your identity providers then sign in people with an email on it.',
+                  )}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -147,7 +159,7 @@ export function CreateEmailDomain({
                 </p>
               )}
             </div>
-            {claimDomain ? (
+            {claimDomain && target.scope === 'organization' ? (
               <Alert>
                 <AlertDescription className="space-y-3 text-[13px]">
                   <p>
@@ -158,7 +170,10 @@ export function CreateEmailDomain({
                   <div className="w-full overflow-x-auto">
                     <DnsRecordsTable
                       records={[
-                        getEmailDomainRecord(claimDomain, organizationId),
+                        getEmailDomainRecord(
+                          claimDomain,
+                          target.organizationId,
+                        ),
                       ]}
                       showTtl={false}
                       fullValues

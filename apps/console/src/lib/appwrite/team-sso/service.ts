@@ -18,6 +18,19 @@ import type {
   SSOSignInProviderList,
 } from './models'
 
+/**
+ * The single sign-on callback an identity provider sends people back to. The
+ * Console's is `/account/sessions/sso/callback`; a project's carries its ID,
+ * `/account/sessions/sso/callback/<projectId>`, as its app's users sign in to
+ * that project.
+ */
+export function ssoCallbackURL(endpoint: string, project: string): string {
+  const callback = `${endpoint}/account/sessions/sso/callback`
+  return !project || project === 'console'
+    ? callback
+    : `${callback}/${encodeURIComponent(project)}`
+}
+
 export class TeamSSO {
   client: Client
 
@@ -48,7 +61,9 @@ export class TeamSSO {
    * Require single sign-on for the organization, or stop requiring it. Members on
    * its verified domains then reach it only on a session from single sign-on;
    * owners are exempt. Requiring it needs a verified domain and an enabled
-   * provider. Resolves with the organization.
+   * provider. Resolves with the organization. On a project's client the team
+   * is one of the project's: its members on those domains keep their account
+   * but lose the team's roles until they sign in through single sign-on.
    */
   updateRequired(
     teamId: string,
@@ -137,9 +152,15 @@ export class TeamSSO {
     )
   }
 
-  /** Redirect URI to register at the identity provider: the single sign-on callback. */
+  /**
+   * Redirect URI to register at the identity provider: the single sign-on
+   * callback of the project this client is for (the Console's for `console`).
+   */
   redirectURL(): string {
-    return `${this.client.config.endpoint}/account/sessions/sso/callback`
+    return ssoCallbackURL(
+      this.client.config.endpoint,
+      this.client.config.project,
+    )
   }
 
   /**

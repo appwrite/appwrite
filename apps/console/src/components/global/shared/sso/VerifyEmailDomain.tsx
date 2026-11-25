@@ -12,7 +12,8 @@ import {
 } from '@/components/ui/dialog'
 import type { SSODomain } from '@/lib/appwrite/team-sso'
 import { useT } from '@/lib/i18n/translate'
-import { useVerifyOrganizationEmailDomain } from '@/lib/react-query/hooks'
+import { useVerifySSODomain } from '@/lib/react-query/hooks'
+import { getSSODomainRecord, type SSOTarget } from '@/lib/sso-target'
 import {
   getAppwriteErrorInfo,
   getErrorMessage,
@@ -26,20 +27,24 @@ import {
   useSSOAddonGate,
 } from './SSOCardHelpers'
 
-/** TXT record that proves an organization owns an email domain: `team:<orgId>` at `_appwrite`. */
+/**
+ * TXT record that proves an organization owns an email domain: `team:<orgId>`
+ * at `_appwrite`. Only for a domain another organization holds, which has no
+ * domain of this organization's to read the record from yet.
+ */
 export function getEmailDomainRecord(domain: string, organizationId: string) {
   return getClaimRecord(domain, `team:${organizationId}`)
 }
 
 export function VerifyEmailDomain({
   rule,
-  organizationId,
+  target,
   onOpenChange,
   onVerified,
   onCloseAutoFocus,
 }: {
   rule: SSODomain | null
-  organizationId: string
+  target: SSOTarget
   onOpenChange: (open: boolean) => void
   onVerified?: (rule: SSODomain) => void
   /** Where focus goes on close: the dialog opens from state, not a trigger. */
@@ -48,10 +53,10 @@ export function VerifyEmailDomain({
   const t = useT()
   const later = useRef<HTMLButtonElement>(null)
   const [error, setError] = useState<string | null>(null)
-  const verify = useVerifyOrganizationEmailDomain(organizationId)
+  const verify = useVerifySSODomain(target)
   // Checking the record needs the Single sign-on add-on.
-  const gate = useSSOAddonGate(organizationId)
-  const onAddonError = useSSOAddonErrorHandler(organizationId)
+  const gate = useSSOAddonGate(target)
+  const onAddonError = useSSOAddonErrorHandler(target)
 
   const close = (open: boolean) => {
     if (!open) setError(null)
@@ -117,7 +122,7 @@ export function VerifyEmailDomain({
           {rule ? (
             <div className="overflow-x-auto">
               <DnsRecordsTable
-                records={[getEmailDomainRecord(rule.domain, organizationId)]}
+                records={[getSSODomainRecord(rule)]}
                 showTtl={true}
                 fullValues
               />

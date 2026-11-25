@@ -198,7 +198,7 @@ import { View as MarketplaceView } from '../marketplace/View'
 import { View as OrgAppsView } from '../apps/View'
 import { Partners } from '../settings/Partners'
 import { SingleSignOn } from '../settings/SingleSignOn'
-import { useSSOAddonGate } from '../settings/_components/SSOCardHelpers'
+import { useSSOAddonGate } from '@/components/global/shared/sso/SSOCardHelpers'
 import { Escalations } from '../settings/Escalations'
 import { EnterpriseSuccessManager } from '@/components/pages/projects/$projectId/shared/EnterpriseSuccessManager'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -1874,7 +1874,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // Single sign-on needs the organization's Single sign-on add-on: its
   // settings tab says so while the add-on is not active.
   const ssoNeedsAddon = useSSOAddonGate(
-    orgId,
+    { scope: 'organization', organizationId: orgId },
     canShowOrgSsoSettings(access, features),
   ).locked
   // A member on a verified domain joins again through an enabled provider:

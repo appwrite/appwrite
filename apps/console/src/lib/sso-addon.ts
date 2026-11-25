@@ -55,6 +55,10 @@ export const ORGANIZATION_SSO_ADDON_DESCRIPTION =
 export const SSO_ADDON_REQUIRED_MESSAGE =
   "Single sign-on for an organization needs the Single sign-on add-on. Enable it in the organization's settings."
 
+/** The API's answer to a setup request for a team of a project without the add-on. */
+export const PROJECT_SSO_ADDON_REQUIRED_MESSAGE =
+  "Single sign-on in a project needs the Single sign-on add-on. Enable it in the project's settings."
+
 export function isSSOAddonError(error: unknown): boolean {
   return (
     error instanceof AppwriteException && error.type === 'sso_addon_required'

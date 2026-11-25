@@ -3446,6 +3446,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'この組織のアドオンを管理する権限がありません。',
   'Single sign-on add-on is already active for this organization':
     'シングルサインオンアドオンはこの組織ですでに有効です',
+  "Single sign-on in a project needs the Single sign-on add-on. Enable it in the project's settings.":
+    'プロジェクトのシングルサインオンにはシングルサインオンアドオンが必要です。プロジェクトの設定で有効にしてください。',
   'Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then single sign-on for the organization stops, and people who can only sign in through your identity providers can no longer sign in.':
     'シングルサインオンアドオンを無効にしますか? 現在の請求サイクル終了まで有効のままで、更新されません。その後、組織のシングルサインオンは停止し、ID プロバイダー経由でしかサインインできないユーザーはサインインできなくなります。',
   'Payment could not be authorized. Please try enabling the addon again.':

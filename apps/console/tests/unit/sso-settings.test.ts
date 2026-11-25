@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { getEmailDomainRecord } from '@/components/pages/organizations/$orgId/settings/_components/VerifyEmailDomain'
+import { getEmailDomainRecord } from '@/components/global/shared/sso/VerifyEmailDomain'
 import {
   canShowOrgSsoSettings,
   getFirstAllowedOrgSettingsPath,

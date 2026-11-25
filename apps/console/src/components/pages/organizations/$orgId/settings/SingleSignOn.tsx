@@ -1,42 +1,22 @@
-import { useQuery } from '@tanstack/react-query'
 import { useParams } from '@tanstack/react-router'
 import { SettingsCardsList } from '@/components/global/shared/settings-search/SettingsCardsList'
+import { EmailDomainsCard } from '@/components/global/shared/sso/EmailDomainsCard'
+import { RequireSSOCard } from '@/components/global/shared/sso/RequireSSOCard'
+import { SAMLProvidersCard } from '@/components/global/shared/sso/SAMLProvidersCard'
+import { useSSOPageState } from '@/components/global/shared/sso/SSOCardHelpers'
+import { SSOProvidersCard } from '@/components/global/shared/sso/SSOProvidersCard'
 import { SSOAddonCard } from '@/components/global/shared/sso-addon/SSOAddonCard'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import {
-  organizationQueryOptions,
-  useOrganizationEmailDomains,
-  useOrganizationSSOProviders,
-} from '@/lib/react-query/hooks'
-import { EmailDomainsCard } from './_components/EmailDomainsCard'
-import { RequireSSOCard } from './_components/RequireSSOCard'
-import { SAMLProvidersCard } from './_components/SAMLProvidersCard'
-import { useSSOAddonGate } from './_components/SSOCardHelpers'
-import { SSOProvidersCard } from './_components/SSOProvidersCard'
+import type { SSOTarget } from '@/lib/sso-target'
 
 export function SingleSignOn() {
   const { orgId = '' } = useParams({ strict: false })
+  const target: SSOTarget = { scope: 'organization', organizationId: orgId }
   // Single sign-on for the organization needs its Single sign-on add-on. The
   // add-on's card leads the page; without the add-on active, what the
   // organization kept from when it was stays listed below, to delete.
-  const gate = useSSOAddonGate(orgId)
+  const { showSetup, paused } = useSSOPageState(target)
   const { features } = useConsoleProfile()
-  const { domains, isSuccess: domainsLoaded } =
-    useOrganizationEmailDomains(orgId)
-  const { providers, isSuccess: providersLoaded } =
-    useOrganizationSSOProviders(orgId)
-  const { data: organization } = useQuery(organizationQueryOptions(orgId))
-  const required =
-    (organization as { ssoRequired?: boolean } | null | undefined)
-      ?.ssoRequired === true
-  const nothingSetUp =
-    domainsLoaded &&
-    providersLoaded &&
-    domains.length === 0 &&
-    providers.length === 0 &&
-    !required
-  // Unknown (not read yet, or no billing) is not locked: the server decides.
-  const showSetup = !gate.locked || !nothingSetUp
 
   return (
     <SettingsCardsList
@@ -50,7 +30,7 @@ export function SingleSignOn() {
           node: (
             <SSOAddonCard
               target={{ scope: 'organization', organizationId: orgId }}
-              paused={gate.locked && !nothingSetUp}
+              paused={paused}
             />
           ),
         },
@@ -68,7 +48,7 @@ export function SingleSignOn() {
               'txt',
             ],
           },
-          node: <EmailDomainsCard />,
+          node: <EmailDomainsCard target={target} />,
         },
         {
           id: 'sso-providers',
@@ -84,7 +64,7 @@ export function SingleSignOn() {
               'login',
             ],
           },
-          node: <SSOProvidersCard />,
+          node: <SSOProvidersCard target={target} />,
         },
         {
           id: 'sso-saml',
@@ -115,7 +95,7 @@ export function SingleSignOn() {
               'security',
             ],
           },
-          node: <RequireSSOCard />,
+          node: <RequireSSOCard target={target} />,
         },
       ].filter((card) =>
         card.id === 'sso-addon' ? features.billing : showSetup,

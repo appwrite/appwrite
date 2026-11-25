@@ -1,2 +1,2 @@
-export { TeamSSO } from './service'
+export { ssoCallbackURL, TeamSSO } from './service'
 export type * from './models'

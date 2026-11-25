@@ -561,6 +561,9 @@ const createProjectSdkRaw = (clientProject: Client) => ({
   storage: new Storage(clientProject),
   tokens: new Tokens(clientProject),
   teams: new Teams(clientProject),
+  // Hand-written until a Console SDK release carries the Teams single sign-on
+  // methods: single sign-on for the project's teams, on the project's client.
+  teamSSO: new TeamSSO(clientProject),
   users: new Users(clientProject),
   vcs: new Vcs(clientProject),
   proxy: new Proxy(clientProject),

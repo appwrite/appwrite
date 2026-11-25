@@ -1,7 +1,5 @@
 import { useRef, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { useParams } from '@tanstack/react-router'
-import { KeyRound, Link2, Pencil, Trash2 } from 'lucide-react'
+import { Copy, KeyRound, Link2, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { CodeSnippetCopyButton } from '@/components/global/shared/CodeSnippetCopyButton'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
@@ -36,20 +34,22 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { analyticsAttrs } from '@/lib/analytics-actions'
-import { sdk } from '@/lib/appwrite/sdk'
 import type { SSOProvider } from '@/lib/appwrite/team-sso'
 import { useT } from '@/lib/i18n/translate'
 import {
-  organizationQueryOptions,
-  useDeleteOrganizationSSOProvider,
-  useOrganizationEmailDomains,
-  useOrganizationSSOProviders,
-  useSaveOrganizationSSOProvider,
+  teamSSOFor,
+  useDeleteSSOProvider,
+  useSaveSSOProvider,
+  useSSODomains,
+  useSSOProviders,
+  useSSORequired,
 } from '@/lib/react-query/hooks'
+import { teamRoleError, type SSOTarget } from '@/lib/sso-target'
 import { buildConsoleUrl, copyToClipboard } from '@/lib/utils/context-menu'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
 import { EmailDomainRoles, emailDomainRoleLabel } from './EmailDomainRoles'
+import { TeamRolesInput } from './TeamRolesInput'
 import {
   focusOnOpen,
   SSO_ERROR_TEXT,
@@ -64,32 +64,32 @@ import {
 const HEAD =
   'px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
 
-/** The organization's identity providers: each signs people in with its own roles. */
-export function SSOProvidersCard() {
+/**
+ * The identity providers of an organization, or of a team of a project: each
+ * signs people in with its own roles. An organization's give Console roles, a
+ * team's give role names of the team, typed like a membership's.
+ */
+export function SSOProvidersCard({ target }: { target: SSOTarget }) {
   const t = useT()
-  const { orgId = '' } = useParams({ strict: false })
+  const forTeam = target.scope === 'project'
   const {
     providers,
     isError: loadFailed,
     isFetching,
     refetch,
-  } = useOrganizationSSOProviders(orgId)
-  const { domains, isSuccess: domainsLoaded } =
-    useOrganizationEmailDomains(orgId)
-  const { data: organization } = useQuery(organizationQueryOptions(orgId))
-  const save = useSaveOrganizationSSOProvider(orgId)
-  const remove = useDeleteOrganizationSSOProvider(orgId)
+  } = useSSOProviders(target)
+  const { domains, isSuccess: domainsLoaded } = useSSODomains(target)
+  const save = useSaveSSOProvider(target)
+  const remove = useDeleteSSOProvider(target)
   // Adding, updating and turning providers on or off need the Single sign-on
   // add-on; deleting works without it.
-  const gate = useSSOAddonGate(orgId)
-  const onAddonError = useSSOAddonErrorHandler(orgId)
+  const gate = useSSOAddonGate(target)
+  const onAddonError = useSSOAddonErrorHandler(target)
 
   const hasVerifiedDomain = domains.some(
     (domain) => domain.status === 'verified',
   )
-  const required =
-    (organization as { ssoRequired?: boolean } | null | undefined)
-      ?.ssoRequired === true
+  const required = useSSORequired(target)
   /** Whether `provider` is the only one people can sign in through while SSO is required. */
   const isLastEnabledWhileRequired = (provider: SSOProvider) =>
     required &&
@@ -210,9 +210,13 @@ export function SSOProvidersCard() {
             <Badge variant="outline">OIDC</Badge>
           </h3>
           <p className="mt-2 text-[13px] text-muted-foreground">
-            {t(
-              'People on your verified domains sign in through your identity provider, like Okta, Microsoft Entra ID, Google Workspace or Keycloak, and join with its roles.',
-            )}
+            {forTeam
+              ? t(
+                  "Users on the team's verified domains sign in to your app through an identity provider, like Okta, Microsoft Entra ID, Google Workspace or Keycloak, and join the team with its roles.",
+                )
+              : t(
+                  'People on your verified domains sign in through your identity provider, like Okta, Microsoft Entra ID, Google Workspace or Keycloak, and join with its roles.',
+                )}
           </p>
         </div>
         <div className="border-t border-border" />
@@ -238,9 +242,15 @@ export function SSOProvidersCard() {
             <EmptyState
               icon={KeyRound}
               title={t('No identity providers yet')}
-              description={t(
-                'Connect your identity provider so people on your domains sign in with single sign-on.',
-              )}
+              description={
+                forTeam
+                  ? t(
+                      "Connect an identity provider so users on the team's domains sign in to your app with single sign-on.",
+                    )
+                  : t(
+                      'Connect your identity provider so people on your domains sign in with single sign-on.',
+                    )
+              }
               isEmpty
               variant="default"
               className="py-2"
@@ -280,7 +290,8 @@ export function SSOProvidersCard() {
                     <div className="flex flex-wrap gap-1">
                       {provider.roles.map((role) => (
                         <Badge key={role} variant="outline">
-                          {t(emailDomainRoleLabel(role))}
+                          {/* A team's roles are names its admins typed */}
+                          {forTeam ? role : t(emailDomainRoleLabel(role))}
                         </Badge>
                       ))}
                     </div>
@@ -306,21 +317,33 @@ export function SSOProvidersCard() {
                         />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-56">
-                        {/* The link to share with the team: it opens this provider's sign-in directly. */}
-                        <DropdownMenuItem
-                          onClick={() =>
-                            copyToClipboard(
-                              t('SSO URL'),
-                              buildConsoleUrl(
-                                `/sso?provider=${encodeURIComponent(provider.$id)}`,
-                              ),
-                            )
-                          }
-                        >
-                          <MenuItemContent icon={Link2}>
-                            {t('Copy SSO URL')}
-                          </MenuItemContent>
-                        </DropdownMenuItem>
+                        {forTeam ? (
+                          // The app signs users in through a provider by its
+                          // ID; the Console's sign-in link is not theirs.
+                          <DropdownMenuItem
+                            onClick={() => copyToClipboard('ID', provider.$id)}
+                          >
+                            <MenuItemContent icon={Copy}>
+                              {t('Copy ID')}
+                            </MenuItemContent>
+                          </DropdownMenuItem>
+                        ) : (
+                          // The link to share with the team: it opens this provider's sign-in directly.
+                          <DropdownMenuItem
+                            onClick={() =>
+                              copyToClipboard(
+                                t('SSO URL'),
+                                buildConsoleUrl(
+                                  `/sso?provider=${encodeURIComponent(provider.$id)}`,
+                                ),
+                              )
+                            }
+                          >
+                            <MenuItemContent icon={Link2}>
+                              {t('Copy SSO URL')}
+                            </MenuItemContent>
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem
                           onClick={() => openForm(provider)}
                           disabled={gate.locked}
@@ -361,7 +384,7 @@ export function SSOProvidersCard() {
 
       <ProviderDialog
         provider={editing}
-        organizationId={orgId}
+        target={target}
         onOpenChange={(open) => !open && setEditing(null)}
         onCloseAutoFocus={formFocus.onCloseAutoFocus}
       />
@@ -382,11 +405,23 @@ export function SSOProvidersCard() {
                 '{name}',
                 deleting?.name ?? '',
               )}{' '}
-              {t(
-                'People can no longer sign in through it. People who already joined stay members.',
-              )}
+              {forTeam
+                ? t(
+                    'Users can no longer sign in through it. Users who already joined stay members.',
+                  )
+                : t(
+                    'People can no longer sign in through it. People who already joined stay members.',
+                  )}
               {deleting && isLastEnabledWhileRequired(deleting)
-                ? ` ${t('Require SSO is on and this is your only enabled identity provider: deleting it pauses Require SSO, and members can sign in any way they like.')}`
+                ? ` ${
+                    forTeam
+                      ? t(
+                          "Require SSO is on and this is the team's only enabled identity provider: deleting it pauses Require SSO, and members keep the team's roles however they sign in.",
+                        )
+                      : t(
+                          'Require SSO is on and this is your only enabled identity provider: deleting it pauses Require SSO, and members can sign in any way they like.',
+                        )
+                  }`
                 : null}
             </DialogDescription>
           </DialogHeader>
@@ -416,12 +451,12 @@ export function SSOProvidersCard() {
 /** Add an OpenID Connect provider, or update one: `provider` is `'new'` to add. */
 function ProviderDialog({
   provider,
-  organizationId,
+  target,
   onOpenChange,
   onCloseAutoFocus,
 }: {
   provider: SSOProvider | 'new' | null
-  organizationId: string
+  target: SSOTarget
   onOpenChange: (open: boolean) => void
   onCloseAutoFocus: (event: Event) => void
 }) {
@@ -436,7 +471,7 @@ function ProviderDialog({
           <ProviderForm
             key={provider === 'new' ? 'new' : provider.$id}
             provider={provider === 'new' ? null : provider}
-            organizationId={organizationId}
+            target={target}
             onDone={() => onOpenChange(false)}
           />
         ) : null}
@@ -447,19 +482,24 @@ function ProviderDialog({
 
 function ProviderForm({
   provider,
-  organizationId,
+  target,
   onDone,
 }: {
   provider: SSOProvider | null
-  organizationId: string
+  target: SSOTarget
   onDone: () => void
 }) {
   const t = useT()
-  const save = useSaveOrganizationSSOProvider(organizationId)
-  const onAddonError = useSSOAddonErrorHandler(organizationId)
+  const forTeam = target.scope === 'project'
+  const save = useSaveSSOProvider(target)
+  const onAddonError = useSSOAddonErrorHandler(target)
   const submitOnce = useSingleSubmit()
   const [name, setName] = useState(provider?.name ?? '')
-  const [roles, setRoles] = useState<string[]>(provider?.roles ?? ['developer'])
+  // A team has no roles of its own to start from: its admins name them.
+  const [roles, setRoles] = useState<string[]>(
+    provider?.roles ?? (forTeam ? [] : ['developer']),
+  )
+  const [roleDraft, setRoleDraft] = useState('')
   const [clientId, setClientId] = useState(provider?.oidcClientId ?? '')
   const [clientSecret, setClientSecret] = useState('')
   const [wellKnownURL, setWellKnownURL] = useState(
@@ -484,7 +524,16 @@ function ProviderForm({
   // Missing fields are named once the person tries to save.
   const [submitted, setSubmitted] = useState(false)
 
-  const redirectURL = sdk.forConsole.teamSSO.redirectURL()
+  // The Console's callback, or the project's with its ID in it.
+  const redirectURL = teamSSOFor(target).redirectURL()
+  // A team's role typed but not added yet goes with the save, when it is one.
+  const pendingRole = forTeam ? roleDraft.trim() : ''
+  const pendingRoleValid =
+    pendingRole !== '' && teamRoleError(pendingRole) === null
+  const savedRoles =
+    pendingRoleValid && !roles.includes(pendingRole)
+      ? [...roles, pendingRole]
+      : roles
   const hasEndpoints =
     wellKnownURL.trim() !== '' ||
     (authorizationURL.trim() !== '' &&
@@ -519,7 +568,8 @@ function ProviderForm({
   }
   const valid =
     name.trim() !== '' &&
-    roles.length > 0 &&
+    savedRoles.length > 0 &&
+    (pendingRole === '' || pendingRoleValid) &&
     clientId.trim() !== '' &&
     (provider !== null || clientSecret.trim() !== '') &&
     hasEndpoints &&
@@ -537,7 +587,7 @@ function ProviderForm({
           providerId: provider?.$id,
           params: {
             name: name.trim(),
-            roles,
+            roles: savedRoles,
             clientId: clientId.trim(),
             // A pasted secret often carries a trailing space or newline.
             ...(clientSecret.trim() !== ''
@@ -657,36 +707,71 @@ function ProviderForm({
               id="sso-name-message"
               className="text-[12px] text-muted-foreground"
             >
-              {t('People see the name when they choose how to sign in.')}
+              {forTeam
+                ? t(
+                    'Your app can show this name when users choose how to sign in.',
+                  )
+                : t('People see the name when they choose how to sign in.')}
             </p>
           )}
         </div>
-        <div className="space-y-2">
-          <Label id="sso-roles-label" className="text-[13px] font-medium">
-            {t('Roles')}
-          </Label>
-          <EmailDomainRoles
-            value={roles}
-            onChange={setRoles}
-            disabled={save.isPending}
-            labelledBy="sso-roles-label"
-            describedBy="sso-roles-message"
-          />
-          <p
-            id="sso-roles-message"
-            className={`text-[12px] ${
-              submitted && roles.length === 0
-                ? SSO_ERROR_TEXT
-                : 'text-muted-foreground'
-            }`}
-          >
-            {roles.length === 0
-              ? t('Pick at least one role.')
-              : t(
-                  'Roles people get when they join through this identity provider.',
-                )}
-          </p>
-        </div>
+        {forTeam ? (
+          <div className="space-y-2">
+            <Label htmlFor="sso-roles" className="text-[13px] font-medium">
+              {t('Roles')}
+            </Label>
+            <TeamRolesInput
+              id="sso-roles"
+              value={roles}
+              onChange={setRoles}
+              draft={roleDraft}
+              onDraftChange={setRoleDraft}
+              disabled={save.isPending}
+              describedBy="sso-roles-message"
+            />
+            <p
+              id="sso-roles-message"
+              className={`text-[12px] ${
+                submitted && savedRoles.length === 0
+                  ? SSO_ERROR_TEXT
+                  : 'text-muted-foreground'
+              }`}
+            >
+              {savedRoles.length === 0
+                ? t('Add at least one role.')
+                : t(
+                    'Roles users get in this team when they sign in through this identity provider.',
+                  )}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <Label id="sso-roles-label" className="text-[13px] font-medium">
+              {t('Roles')}
+            </Label>
+            <EmailDomainRoles
+              value={roles}
+              onChange={setRoles}
+              disabled={save.isPending}
+              labelledBy="sso-roles-label"
+              describedBy="sso-roles-message"
+            />
+            <p
+              id="sso-roles-message"
+              className={`text-[12px] ${
+                submitted && roles.length === 0
+                  ? SSO_ERROR_TEXT
+                  : 'text-muted-foreground'
+              }`}
+            >
+              {roles.length === 0
+                ? t('Pick at least one role.')
+                : t(
+                    'Roles people get when they join through this identity provider.',
+                  )}
+            </p>
+          </div>
+        )}
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="sso-client-id" className="text-[13px] font-medium">

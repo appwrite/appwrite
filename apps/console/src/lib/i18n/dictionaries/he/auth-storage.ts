@@ -1781,4 +1781,39 @@ export const heAuthStorageDictionary: Record<string, string> = {
   "Couldn't load sign-ups": 'לא ניתן היה לטעון הרשמות',
   'sign-ups': 'הרשמות',
   second: 'שנייה',
+  // Single sign-on for a team of a project
+  "Prove the domains this team owns. The team's identity providers sign in only users with an email on a verified domain.":
+    'הוכיחו אילו דומיינים שייכים לצוות הזה. ספקי הזהויות של הצוות מאפשרים התחברות רק למשתמשים עם אימייל בדומיין מאומת.',
+  "Add the domain of your users' emails, then connect an identity provider so they sign in to your app with single sign-on.":
+    'הוסיפו את הדומיין של כתובות האימייל של המשתמשים שלכם, ואז חברו ספק זהויות כדי שיתחברו לאפליקציה שלכם בהתחברות יחידה (SSO).',
+  "Users with an email on it can no longer sign in through the team's identity providers. Users who already joined stay members.":
+    'משתמשים עם אימייל בדומיין הזה לא יוכלו עוד להתחבר דרך ספקי הזהויות של הצוות. משתמשים שכבר הצטרפו יישארו חברים בצוות.',
+  "Require SSO is on and this is the team's only verified domain: deleting it pauses Require SSO, and members keep the team's roles however they sign in.":
+    'חיוב SSO פעיל וזה הדומיין המאומת היחיד של הצוות: מחיקתו תשהה את חיוב ה-SSO, וחברים ישמרו על תפקידי הצוות בכל דרך שבה יתחברו.',
+  "Prove this team owns this domain with a DNS record. The team's identity providers then sign in users with an email on it.":
+    'הוכיחו באמצעות רשומת DNS שהדומיין הזה שייך לצוות. לאחר מכן ספקי הזהויות של הצוות יאפשרו התחברות למשתמשים עם אימייל בדומיין.',
+  "Users on the team's verified domains sign in to your app through an identity provider, like Okta, Microsoft Entra ID, Google Workspace or Keycloak, and join the team with its roles.":
+    'משתמשים בדומיינים המאומתים של הצוות מתחברים לאפליקציה שלכם דרך ספק זהויות, למשל Okta,‏ Microsoft Entra ID,‏ Google Workspace או Keycloak, ומצטרפים לצוות עם התפקידים שלו.',
+  "Connect an identity provider so users on the team's domains sign in to your app with single sign-on.":
+    'חברו ספק זהויות כדי שמשתמשים בדומיינים של הצוות יתחברו לאפליקציה שלכם בהתחברות יחידה (SSO).',
+  'Users can no longer sign in through it. Users who already joined stay members.':
+    'משתמשים לא יוכלו עוד להתחבר דרכו. משתמשים שכבר הצטרפו יישארו חברים בצוות.',
+  "Require SSO is on and this is the team's only enabled identity provider: deleting it pauses Require SSO, and members keep the team's roles however they sign in.":
+    'חיוב SSO פעיל וזה ספק הזהויות הפעיל היחיד של הצוות: מחיקתו תשהה את חיוב ה-SSO, וחברים ישמרו על תפקידי הצוות בכל דרך שבה יתחברו.',
+  'Your app can show this name when users choose how to sign in.':
+    'האפליקציה שלכם יכולה להציג את השם הזה כשמשתמשים בוחרים איך להתחבר.',
+  'Add at least one role.': 'הוסיפו לפחות תפקיד אחד.',
+  'Roles users get in this team when they sign in through this identity provider.':
+    'התפקידים שמשתמשים מקבלים בצוות הזה כשהם מתחברים דרך ספק הזהויות הזה.',
+  'A role can be at most 36 characters.': 'תפקיד יכול להכיל עד 36 תווים.',
+  'Use letters, numbers, periods, hyphens and underscores, starting with a letter or number.':
+    'השתמשו באותיות, ספרות, נקודות, מקפים וקווים תחתונים, והתחילו באות או בספרה.',
+  "Members with an email on the team's verified domains keep their account, but get the team's roles only after signing in through one of its identity providers. Team owners keep their roles however they sign in, so a broken identity provider never locks the team out. Members on other domains are not affected.":
+    'חברים עם אימייל בדומיינים המאומתים של הצוות שומרים על החשבון שלהם, אבל מקבלים את תפקידי הצוות רק אחרי התחברות דרך אחד מספקי הזהויות שלו. בעלי הצוות שומרים על התפקידים שלהם בכל דרך שבה יתחברו, כך שספק זהויות תקול לעולם לא ינעל את הצוות בחוץ. חברים בדומיינים אחרים לא מושפעים.',
+  "Enabled - members on the team's verified domains get its roles only through single sign-on.":
+    'מופעל - חברים בדומיינים המאומתים של הצוות מקבלים את התפקידים שלו רק דרך התחברות יחידה (SSO).',
+  "Disabled - members get the team's roles however they sign in.":
+    'מושבת - חברים מקבלים את תפקידי הצוות בכל דרך שבה יתחברו.',
+  "Members on the team's verified domains who signed in another way keep their account but lose the team's roles until they sign in through one of its identity providers. Their other teams are not affected. Team owners keep their roles, so a broken identity provider never locks the team out.":
+    'חברים בדומיינים המאומתים של הצוות שהתחברו בדרך אחרת ישמרו על החשבון שלהם, אבל יאבדו את תפקידי הצוות עד שיתחברו דרך אחד מספקי הזהויות שלו. הצוותים האחרים שלהם לא מושפעים. בעלי הצוות שומרים על התפקידים שלהם, כך שספק זהויות תקול לעולם לא ינעל את הצוות בחוץ.',
 }

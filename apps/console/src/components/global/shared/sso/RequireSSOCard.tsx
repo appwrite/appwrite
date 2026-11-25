@@ -1,6 +1,4 @@
 import { useRef, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { useParams } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -17,11 +15,12 @@ import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
 import {
-  organizationQueryOptions,
-  useOrganizationEmailDomains,
-  useOrganizationSSOProviders,
-  useRequireOrganizationSSO,
+  useRequireSSO,
+  useSSODomains,
+  useSSOProviders,
+  useSSORequired,
 } from '@/lib/react-query/hooks'
+import type { SSOTarget } from '@/lib/sso-target'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
 import {
@@ -36,24 +35,23 @@ import {
  * Require SSO for the whole organization: members on its verified domains reach
  * it only after signing in through one of its identity providers. Owners are
  * exempt, and so are members on other domains.
+ *
+ * For a team of a project: members on its verified domains keep their account
+ * but not the team's roles until they sign in through one of its identity
+ * providers. Team owners are exempt, and so are members on other domains.
  */
-export function RequireSSOCard() {
+export function RequireSSOCard({ target }: { target: SSOTarget }) {
   const t = useT()
-  const { orgId = '' } = useParams({ strict: false })
-  const { data: organization } = useQuery(organizationQueryOptions(orgId))
-  const { domains, isSuccess: domainsLoaded } =
-    useOrganizationEmailDomains(orgId)
-  const { providers, isSuccess: providersLoaded } =
-    useOrganizationSSOProviders(orgId)
-  const update = useRequireOrganizationSSO(orgId)
+  const forTeam = target.scope === 'project'
+  const { domains, isSuccess: domainsLoaded } = useSSODomains(target)
+  const { providers, isSuccess: providersLoaded } = useSSOProviders(target)
+  const update = useRequireSSO(target)
   // Turning it on needs the Single sign-on add-on; turning it off works without it.
-  const gate = useSSOAddonGate(orgId)
-  const onAddonError = useSSOAddonErrorHandler(orgId)
+  const gate = useSSOAddonGate(target)
+  const onAddonError = useSSOAddonErrorHandler(target)
   const [confirming, setConfirming] = useState(false)
 
-  const required =
-    (organization as { ssoRequired?: boolean } | null | undefined)
-      ?.ssoRequired === true
+  const required = useSSORequired(target)
   const hasVerifiedDomain = domains.some(
     (domain) => domain.status === 'verified',
   )
@@ -130,9 +128,13 @@ export function RequireSSOCard() {
             id="sso-required-description"
             className="mt-2 text-[13px] text-muted-foreground"
           >
-            {t(
-              'Members with an email on your verified domains can open this organization only after signing in through your identity provider. Owners can always sign in with any method, so a broken identity provider never locks your organization out. Members on other domains keep their usual sign-in too.',
-            )}
+            {forTeam
+              ? t(
+                  "Members with an email on the team's verified domains keep their account, but get the team's roles only after signing in through one of its identity providers. Team owners keep their roles however they sign in, so a broken identity provider never locks the team out. Members on other domains are not affected.",
+                )
+              : t(
+                  'Members with an email on your verified domains can open this organization only after signing in through your identity provider. Owners can always sign in with any method, so a broken identity provider never locks your organization out. Members on other domains keep their usual sign-in too.',
+                )}
           </p>
         </div>
         <div className="border-t border-border" />
@@ -164,10 +166,18 @@ export function RequireSSOCard() {
                             'Paused - verify a domain to require single sign-on again.',
                           )
                     : draft
-                      ? t(
-                          'Enabled - members on your verified domains must use single sign-on.',
-                        )
-                      : t('Disabled - members sign in any way they like.')}
+                      ? forTeam
+                        ? t(
+                            "Enabled - members on the team's verified domains get its roles only through single sign-on.",
+                          )
+                        : t(
+                            'Enabled - members on your verified domains must use single sign-on.',
+                          )
+                      : forTeam
+                        ? t(
+                            "Disabled - members get the team's roles however they sign in.",
+                          )
+                        : t('Disabled - members sign in any way they like.')}
               </p>
             </div>
             <Switch
@@ -209,9 +219,13 @@ export function RequireSSOCard() {
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>{t('Require single sign-on')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              {t(
-                'Members on your verified domains who signed in another way lose access to this organization until they sign in through your identity provider. Their other organizations are not affected. Owners keep their usual sign-in, so a broken identity provider never locks you out.',
-              )}
+              {forTeam
+                ? t(
+                    "Members on the team's verified domains who signed in another way keep their account but lose the team's roles until they sign in through one of its identity providers. Their other teams are not affected. Team owners keep their roles, so a broken identity provider never locks the team out.",
+                  )
+                : t(
+                    'Members on your verified domains who signed in another way lose access to this organization until they sign in through your identity provider. Their other organizations are not affected. Owners keep their usual sign-in, so a broken identity provider never locks you out.',
+                  )}
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col-reverse gap-2 border-t border-border bg-muted/30 px-6 py-4 sm:flex-row sm:justify-end">

@@ -1,6 +1,4 @@
 import { useRef, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { useParams } from '@tanstack/react-router'
 import { Globe, MailCheck, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
@@ -34,10 +32,11 @@ import { analyticsAttrs } from '@/lib/analytics-actions'
 import type { SSODomain } from '@/lib/appwrite/team-sso'
 import { useT } from '@/lib/i18n/translate'
 import {
-  organizationQueryOptions,
-  useDeleteOrganizationEmailDomain,
-  useOrganizationEmailDomains,
+  useDeleteSSODomain,
+  useSSODomains,
+  useSSORequired,
 } from '@/lib/react-query/hooks'
+import type { SSOTarget } from '@/lib/sso-target'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
 import { CreateEmailDomain } from './CreateEmailDomain'
@@ -54,23 +53,21 @@ import { VerifyEmailDomain } from './VerifyEmailDomain'
 const HEAD =
   'px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
 
-export function EmailDomainsCard() {
+/** The domains of an organization, or of a team of a project. */
+export function EmailDomainsCard({ target }: { target: SSOTarget }) {
   const t = useT()
-  const { orgId = '' } = useParams({ strict: false })
+  const forTeam = target.scope === 'project'
   const {
     domains,
     isError: loadFailed,
     isFetching,
     refetch,
-  } = useOrganizationEmailDomains(orgId)
-  const { data: organization } = useQuery(organizationQueryOptions(orgId))
-  const remove = useDeleteOrganizationEmailDomain(orgId)
+  } = useSSODomains(target)
+  const remove = useDeleteSSODomain(target)
   // Setup needs the Single sign-on add-on; deleting works without it.
-  const gate = useSSOAddonGate(orgId)
+  const gate = useSSOAddonGate(target)
 
-  const required =
-    (organization as { ssoRequired?: boolean } | null | undefined)
-      ?.ssoRequired === true
+  const required = useSSORequired(target)
   /** Whether `rule` is the only verified domain while SSO is required. */
   const isLastVerifiedWhileRequired = (rule: SSODomain) =>
     required &&
@@ -142,9 +139,13 @@ export function EmailDomainsCard() {
             {t('Domains')}
           </h3>
           <p className="mt-2 text-[13px] text-muted-foreground">
-            {t(
-              'Prove the domains your organization owns. Your identity providers sign in only people with an email on a verified domain.',
-            )}
+            {forTeam
+              ? t(
+                  "Prove the domains this team owns. The team's identity providers sign in only users with an email on a verified domain.",
+                )
+              : t(
+                  'Prove the domains your organization owns. Your identity providers sign in only people with an email on a verified domain.',
+                )}
           </p>
         </div>
         <div className="border-t border-border" />
@@ -159,9 +160,15 @@ export function EmailDomainsCard() {
             <EmptyState
               icon={MailCheck}
               title={t('No domains yet')}
-              description={t(
-                'Add your company domain, then connect an identity provider so teammates sign in with single sign-on.',
-              )}
+              description={
+                forTeam
+                  ? t(
+                      "Add the domain of your users' emails, then connect an identity provider so they sign in to your app with single sign-on.",
+                    )
+                  : t(
+                      'Add your company domain, then connect an identity provider so teammates sign in with single sign-on.',
+                    )
+              }
               isEmpty
               variant="default"
               className="py-2"
@@ -272,7 +279,7 @@ export function EmailDomainsCard() {
       <CreateEmailDomain
         open={createOpen}
         onOpenChange={setCreateOpen}
-        organizationId={orgId}
+        target={target}
         onCreated={(rule) => {
           if (rule.status !== 'verified') openVerify(rule)
         }}
@@ -280,7 +287,7 @@ export function EmailDomainsCard() {
       />
       <VerifyEmailDomain
         rule={verifying}
-        organizationId={orgId}
+        target={target}
         onOpenChange={(open) => !open && setVerifying(null)}
         onVerified={(rule) =>
           // Its Verify button goes away with the refetch.
@@ -308,11 +315,23 @@ export function EmailDomainsCard() {
                 '{name}',
                 deleting?.domain ?? '',
               )}{' '}
-              {t(
-                'People with an email on it can no longer sign in through your identity providers. People who already joined stay members.',
-              )}
+              {forTeam
+                ? t(
+                    "Users with an email on it can no longer sign in through the team's identity providers. Users who already joined stay members.",
+                  )
+                : t(
+                    'People with an email on it can no longer sign in through your identity providers. People who already joined stay members.',
+                  )}
               {deleting && isLastVerifiedWhileRequired(deleting)
-                ? ` ${t('Require SSO is on and this is your only verified domain: deleting it pauses Require SSO, and members can sign in any way they like.')}`
+                ? ` ${
+                    forTeam
+                      ? t(
+                          "Require SSO is on and this is the team's only verified domain: deleting it pauses Require SSO, and members keep the team's roles however they sign in.",
+                        )
+                      : t(
+                          'Require SSO is on and this is your only verified domain: deleting it pauses Require SSO, and members can sign in any way they like.',
+                        )
+                  }`
                 : null}
             </DialogDescription>
           </DialogHeader>
