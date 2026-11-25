@@ -11,11 +11,15 @@ import {
   useQueryClient,
   queryOptions,
 } from '@tanstack/react-query'
+import { useSyncExternalStore } from 'react'
 import { Query } from '@appwrite.io/console'
 import { VCSDetectionType } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { isFeatureEnabled } from '@/lib/console-profiles'
+import {
+  isFeatureEnabled,
+  subscribeToProfileChange,
+} from '@/lib/console-profiles'
 import {
   DEFAULT_STALE_TIME,
   LONG_STALE_TIME,
@@ -462,6 +466,12 @@ export function useVcsInstallations(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
 ) {
+  // Re-render when the reuse experiment is toggled, so the list is fetched under the new key
+  useSyncExternalStore(
+    subscribeToProfileChange,
+    () => isFeatureEnabled('gitInstallationReuse'),
+    () => false,
+  )
   return useQuery(vcsInstallationsQueryOptions(projectId, page, limit))
 }
 
