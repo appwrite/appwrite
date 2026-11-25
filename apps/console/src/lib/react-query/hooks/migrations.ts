@@ -844,3 +844,17 @@ export function useSupabaseProjects(
     staleTime: DEFAULT_STALE_TIME,
   })
 }
+
+export function useCreateSupabaseProjectCredentials(
+  projectId: string | null | undefined,
+  region?: string,
+) {
+  return useMutation({
+    mutationFn: async (projectRef: string) => {
+      if (!projectId) throw new Error('Project ID is required')
+      return await sdk
+        .forProject(projectId, region)
+        .migrations.createSupabaseProjectCredentials({ projectRef })
+    },
+  })
+}
