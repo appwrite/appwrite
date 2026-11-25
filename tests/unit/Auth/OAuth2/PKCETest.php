@@ -15,6 +15,7 @@ use Appwrite\Auth\OAuth2\Linear;
 use Appwrite\Auth\OAuth2\Railway;
 use Appwrite\Auth\OAuth2\Resend;
 use Appwrite\Auth\OAuth2\Roblox;
+use Appwrite\Auth\OAuth2\Supabase;
 use Appwrite\Auth\OAuth2\Vercel;
 use Appwrite\Auth\OAuth2\X;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -45,6 +46,7 @@ final class PKCETest extends TestCase
         yield 'line' => [Line::class];
         yield 'linear' => [Linear::class];
         yield 'roblox' => [Roblox::class];
+        yield 'supabase' => [Supabase::class];
     }
 
     protected function setUp(): void

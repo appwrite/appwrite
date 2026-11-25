@@ -290,8 +290,17 @@ struct Failed;
 
 const HEX: &[u8; 16] = b"0123456789abcdef";
 
+/// Appends `s` as `json_encode()` writes a string without options, and says whether it
+/// could: PHP refuses one that is not UTF-8, and what is appended then is not JSON.
+pub fn push_string(out: &mut Vec<u8>, s: &[u8]) -> bool {
+    let mut encoder = Encoder { out: std::mem::take(out), depth: 0, max_depth: 0, error: ErrorCode::None };
+    let written = encoder.string(s, Flags::NONE).is_ok();
+    *out = encoder.out;
+    written
+}
+
 /// Appends the decimal digits of `i` (no allocation).
-pub(crate) fn push_int(out: &mut Vec<u8>, i: i64) {
+pub fn push_int(out: &mut Vec<u8>, i: i64) {
     let mut buf = [0u8; 20];
     let mut pos = buf.len();
     let mut n = i.unsigned_abs();

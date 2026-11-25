@@ -57,6 +57,7 @@ final class OAuth2Provider extends Resource
         'strava' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'vk' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'netlify' => ['clientId' => ['target' => self::TARGET_APP_ID]],
+        'supabase' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'railway' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'reddit' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'vercel' => ['clientId' => ['target' => self::TARGET_APP_ID]],

@@ -7917,7 +7917,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/sveltekit-csr-auth/step-2",
     "title": "Create project",
     "description": "Add Authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "You can create a Svelte project using SvelteKit. The command will give you a prompt with several project types. We'll be starting with a skeleton project. The prompt will be something similar to this. After the prompt is finished, you can head over to the newly created project. Adding Appwrite to your Svelte app Appwrite provides a Web SDK that can be used in your Svelte apps. You can use Appwrite by installing the Web SDK as an NPM package.",
+    "excerpt": "Create a minimal SvelteKit project with JavaScript and JSDoc type checking. Adding Appwrite to your Svelte app Appwrite provides a Web SDK that can be used in your Svelte apps. You can use Appwrite by installing the Web SDK as an NPM package.",
     "breadcrumbs": [
       "SvelteKit",
       "Steps",
@@ -7928,7 +7928,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/sveltekit-csr-auth/step-3",
     "title": "Initialize SDK",
     "description": "Add Authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "Before you can use Appwrite, you need to instanciate the Appwrite class with the project ID and endpoint. This tells the SDK where your Appwrite project is hosted and which one to connect to. The client is then used to initialize services like and , so they all point to the same Appwrite project. You can do this by instantiating the services you need in a file like and **exporting the instances**. and are environment variables that are exported in…",
+    "excerpt": "Before you can use Appwrite, you need to instantiate the Appwrite class with the project ID and endpoint. This tells the SDK where your Appwrite project is hosted and which one to connect to. The client is then used to initialize services like and , so they all point to the same Appwrite project. You can do this by instantiating the services you need in a file like and **exporting the instances**. and are environment variables that are exported in…",
     "breadcrumbs": [
       "SvelteKit",
       "Steps",
@@ -7994,7 +7994,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/sveltekit-ssr-auth/step-2",
     "title": "Create project",
     "description": "Add authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "Create a Svelte project using SvelteKit. The command will give you a prompt with several project types. We'll be starting with a skeleton project. The prompt will be something similar to this. After the prompt is finished, you can head over to the newly created project. Install Appwrite Appwrite provides a Node SDK that can be used in your Svelte apps. You can use Appwrite by installing the Node SDK as an NPM package. The Node SDK is intended for…",
+    "excerpt": "Create a minimal SvelteKit project with JavaScript and JSDoc type checking. Install Appwrite Appwrite provides a Node SDK that can be used in your Svelte apps. You can use Appwrite by installing the Node SDK as an NPM package. The Node SDK is intended for server-side use. If you want to use Appwrite in a client-side application, you should use the Web SDK instead.",
     "breadcrumbs": [
       "SvelteKit SSR",
       "Steps",
@@ -8082,7 +8082,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/sveltekit/step-2",
     "title": "Create app",
     "description": "Create a SvelteKit app project using Appwrite.",
-    "excerpt": "Create SvelteKit project Create a SvelteKit app with the command and select Add dependencies Install the JavaScript Appwrite SDK. You can start the development server to watch your app update in the browser as you make changes. Your app should be available at http://localhost:5173.",
+    "excerpt": "Create SvelteKit project Create a SvelteKit app using the minimal template. Add dependencies Install the JavaScript Appwrite SDK. You can start the development server to watch your app update in the browser as you make changes. Your app should be available at http://localhost:5173.",
     "breadcrumbs": [
       "SvelteKit",
       "Steps",

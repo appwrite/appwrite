@@ -18,6 +18,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Id;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime;
 use Utopia\Platform\Enum;
@@ -131,7 +132,16 @@ class Create extends Base
         ]);
 
         try {
-            $key = $authorization->skip(fn () => $dbForPlatform->createDocument('keys', $key));
+            // Locked against a transfer claim, which deletes the project's keys as it moves the project:
+            // a key created while the claim runs would otherwise survive it with the previous owner
+            $key = $authorization->skip(fn () => $dbForPlatform->withTransaction(function () use ($dbForPlatform, $project, $key) {
+                $locked = $dbForPlatform->getDocument('projects', $project->getId(), [Query::select(['teamInternalId'])], forUpdate: true);
+                if ($locked->isEmpty() || $locked->getAttribute('teamInternalId') !== $project->getAttribute('teamInternalId')) {
+                    throw new Exception(Exception::PROJECT_NOT_FOUND);
+                }
+
+                return $dbForPlatform->createDocument('keys', $key);
+            }));
         } catch (DuplicateException) {
             throw new Exception(Exception::KEY_ALREADY_EXISTS);
         }

@@ -1192,7 +1192,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Active screens': 'מסכים פעילים',
   'No one is using the app right now.': 'אף אחד לא משתמש באפליקציה כרגע.',
   'Users by country': 'משתמשים לפי מדינה',
-  'Visitors and app users, pages and screens, sources, locations, and bots, plus any custom events you track.': 'מבקרים ומשתמשי אפליקציה, דפים ומסכים, מקורות, מיקומים ובוטים, וגם כל אירוע מותאם שאתם עוקבים אחריו.',
+  'Visitors and app users, pages and screens, sources, locations, and bots, plus any custom events you track.':
+    'מבקרים ומשתמשי אפליקציה, דפים ומסכים, מקורות, מיקומים ובוטים, וגם כל אירוע מותאם שאתם עוקבים אחריו.',
   'What visitors are browsing with': 'באיזה כלים המבקרים גולשים',
   'What your users are on': 'במה המשתמשים שלך משתמשים',
   'Active users': 'משתמשים פעילים',
@@ -3922,6 +3923,15 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Let your team know someone is on it. It keeps firing until its monitor recovers.':
     'כך הצוות יודע שמישהו מטפל בזה. ההתראה תמשיך לפעול עד שהמוניטור יחזור לשגרה.',
   'Nobody has acknowledged this alert': 'אף אחד עדיין לא אישר טיפול בהתראה הזו',
+  Acknowledged: 'בטיפול',
+  'Alert acknowledged': 'אישרתם טיפול בהתראה',
+  "Your team sees that you're on it. It keeps firing until its monitor recovers.":
+    'הצוות רואה שאתם מטפלים בזה. ההתראה תמשיך לפעול עד שהמוניטור יחזור לשגרה.',
+  'This alert has already resolved': 'ההתראה הזו כבר נסגרה',
+  'Only a firing alert can be acknowledged.':
+    'אפשר לאשר טיפול רק בהתראה פעילה.',
+  "Your role can't change alerts. Ask an owner or a developer.":
+    'התפקיד שלכם לא מאפשר לשנות התראות. פנו לבעלים או למפתח.',
   "You don't have permission to manage monitors.":
     'אין לכם הרשאה לנהל מוניטורים.',
   'between two alerts from this monitor.': 'בין שתי התראות מהמוניטור הזה.',
@@ -4237,9 +4247,148 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'The note is removed from the chart for everyone.':
     'ההערה תוסר מהגרף עבור כולם.',
   'Former member': 'חבר לשעבר',
+  Escalations: 'הסלמות',
+  Escalation: 'הסלמה',
+  Escalating: 'בהסלמה',
+  'Notify roles once': 'להודיע לתפקידים פעם אחת',
+  'Select an escalation.': 'יש לבחור הסלמה.',
+  'Each step of the escalation is notified in turn until someone acknowledges the alert.':
+    'כל שלב בהסלמה מקבל התראה בתורו, עד שמישהו מאשר את ההתראה.',
+  'Create an escalation': 'יצירת הסלמה',
+  'Manage escalations': 'ניהול הסלמה',
+  'Could not load escalations.': 'לא ניתן היה לטעון את ההסלמה.',
+  'Your organization has no escalations yet.': 'לארגון שלך עדיין אין הסלמה.',
+  'Select an escalation': 'בחירת הסלמה',
+  'repeats {count}×': 'חוזרת {count}×',
+  'Acknowledging stops the escalation. It keeps firing until its monitor recovers.':
+    'אישור עוצר את ההסלמה. ההתראה ממשיכה לפעול עד שהמוניטור מתאושש.',
+  'No step notified yet': 'עדיין לא נשלחה התראה לאף שלב',
+  'Step {step} of {total}': 'שלב {step} מתוך {total}',
+  Notified: 'נשלח',
+  'Step {step}': 'שלב {step}',
+  'round {round}': 'סבב {round}',
+  'Stopped, acknowledged': 'נעצרה, אושרה',
+  'Stopped, resolved': 'נעצרה, נפתרה',
+  'All steps notified': 'כל השלבים קיבלו התראה',
+  'Escalation has been deleted': 'ההסלמה נמחקה',
+  'Monitors use this escalation. Move them to another escalation or to roles first.':
+    'מוניטורים משתמשים בהסלמה הזו. יש להעביר אותם קודם להסלמה אחרת או לתפקידים.',
+  'Failed to delete escalation': 'מחיקת ההסלמה נכשלה',
+  'Notify your team step by step until someone acknowledges the alert. Pick an escalation on any monitor.':
+    'להודיע לצוות שלב אחר שלב עד שמישהו מאשר את ההתראה. ניתן לבחור הסלמה בכל מוניטור.',
+  'No escalations yet.': 'עדיין אין הסלמה.',
+  'Delete escalation': 'מחיקת הסלמה',
+  'Add members': 'הוספת חברים',
+  'Enter a name.': 'יש להזין שם.',
+  'Each step needs a role or a member.': 'כל שלב צריך תפקיד או חבר.',
+  'Escalation has been updated': 'ההסלמה עודכנה',
+  'Escalation has been created': 'ההסלמה נוצרה',
+  'Failed to update escalation': 'עדכון ההסלמה נכשל',
+  'Failed to create escalation': 'יצירת ההסלמה נכשלה',
+  'Edit escalation': 'עריכת הסלמה',
+  'Create escalation': 'יצירת הסלמה',
+  'Steps are notified in turn until someone acknowledges the alert.':
+    'השלבים מקבלים התראה בתורם, עד שמישהו מאשר את ההתראה.',
+  'On-call': 'תורנות',
+  'Remove step {step}': 'הסרת שלב {step}',
+  'Seconds to wait': 'שניות המתנה',
+  'seconds after the alert fires': 'שניות אחרי שההתראה מופעלת',
+  'seconds after the previous step': 'שניות אחרי השלב הקודם',
+  'Add step': 'הוספת שלב',
+  Once: 'פעם אחת',
+  '{count} times': '{count} פעמים',
+  "Starts again from the first step, a monitor's cooldown after the last one.":
+    'מתחילה שוב מהשלב הראשון, פרק הצינון של המוניטור אחרי השלב האחרון.',
+  now: 'עכשיו',
+  'after {delay}': 'אחרי {delay}',
   'analytics properties': 'נכסי אנליטיקה',
   'analytics property': 'נכס אנליטיקה',
   'per project.': 'לכל פרויקט.',
   'to create another.': 'כדי ליצור נכס נוסף.',
   'to enable analytics on this site.': 'כדי להפעיל אנליטיקה באתר הזה.',
+  'Your plan checks at most every {interval}.':
+    'בתוכנית שלך הבדיקות רצות לכל היותר פעם ב-{interval}.',
+  'Synthetic checks: {used} of {limit} allowed on your plan.':
+    'בדיקות סינתטיות: {used} מתוך {limit} שהתוכנית שלך מאפשרת.',
+  'Synthetic checks: {used} of {included} included.':
+    'בדיקות סינתטיות: {used} מתוך {included} כלולות בתוכנית.',
+  'Each extra check costs {price} per month.':
+    'כל בדיקה נוספת עולה {price} לחודש.',
+  'Upgrade your plan to add more synthetic checks.':
+    'כדי להוסיף בדיקות סינתטיות, יש לשדרג את התוכנית.',
+  'Escalations: {used} of {limit} allowed on your plan.':
+    'הסלמות: {used} מתוך {limit} שהתוכנית שלך מאפשרת.',
+  'On-call responders: {used} of {included} included.':
+    'כוננים: {used} מתוך {included} כלולים בתוכנית.',
+  'Each extra responder costs {price} per month.':
+    'כל כונן נוסף עולה {price} לחודש.',
+  'Upgrade your plan to create more escalations.':
+    'כדי ליצור הסלמות נוספות, יש לשדרג את התוכנית.',
+  'Your plan allows up to {count} steps per escalation.':
+    'התוכנית שלך מאפשרת עד {count} שלבים בכל הסלמה.',
+  'Upgrade your plan to repeat escalations.':
+    'כדי לחזור על הסלמות, יש לשדרג את התוכנית.',
+  'Usage monitors: {used} of {limit} allowed on your plan.':
+    'מוניטורי שימוש: {used} מתוך {limit} שהתוכנית שלך מאפשרת.',
+  'Upgrade your plan to add more usage monitors.':
+    'כדי להוסיף מוניטורי שימוש, יש לשדרג את התוכנית.',
+  // Analytics for signed-in users
+  'Signed-in users, ranked by visits': 'משתמשים מחוברים, לפי מספר הביקורים',
+  'View user': 'הצגת המשתמש',
+  'Could not load analytics': 'לא ניתן לטעון את האנליטיקה',
+  'No analytics yet': 'אין עדיין אנליטיקה',
+  "Add an analytics property and turn on User identification to see each signed-in user's pages and events here.":
+    'הוסיפו נכס אנליטיקה והפעילו זיהוי משתמשים כדי לראות כאן את הדפים והאירועים של כל משתמש מחובר.',
+  'Add analytics': 'הוספת אנליטיקה',
+  'Link {name} to their analytics': 'קישור {name} לנתוני האנליטיקה שלו',
+  "Turn on User identification in a property's settings to record the signed-in user on every event, so their pages, events and sessions show here.":
+    'הפעילו זיהוי משתמשים בהגדרות הנכס כדי לתעד את המשתמש המחובר בכל אירוע, כך שהדפים, האירועים והסשנים שלו יוצגו כאן.',
+  'Open property settings': 'פתיחת הגדרות הנכס',
+  'Last active': 'פעילות אחרונה',
+  Calls: 'קריאות',
+  'Active days': 'ימים פעילים',
+  'No events from this user in the last 30 days':
+    'אין אירועים מהמשתמש הזה ב-30 הימים האחרונים',
+  '30 days ago': 'לפני 30 יום',
+  'No custom events': 'אין אירועים מותאמים',
+  'No model calls': 'אין קריאות למודלים',
+  'No screens viewed': 'לא נצפו מסכים',
+  'No pages viewed': 'לא נצפו דפים',
+  'View in analytics': 'הצגה באנליטיקה',
+  'New installs and updates of your app': 'התקנות ועדכונים חדשים של האפליקציה',
+  'Add the latest tracking SDK to your app to count installs and updates.':
+    'הוסיפו את ה-SDK העדכני למעקב לאפליקציה כדי לספור התקנות ועדכונים.',
+  'Pushes received on devices, and how many were opened':
+    'התראות שהתקבלו במכשירים, וכמה מהן נפתחו',
+  'No push notifications tracked yet': 'עדיין לא נמדדו התראות פוש',
+  'Pushes sent with Messaging show their reach and opens here once the tracking SDK is in your app.':
+    'התראות שנשלחו דרך Messaging יציגו כאן את ההגעה והפתיחות שלהן כשה-SDK למעקב יהיה באפליקציה.',
+  'Open Messaging': 'פתיחת Messaging',
+  Received: 'התקבלו',
+  Opened: 'נפתחו',
+  'Open rate': 'שיעור פתיחה',
+  Rate: 'שיעור',
+  'No pushes with a message ID in this range':
+    'אין התראות עם מזהה הודעה בטווח הזה',
+  '{count} delivered': '{count} נמסרו',
+  'View message': 'הצגת ההודעה',
+  Views: 'צפיות',
+  'Last seen': 'נראה לאחרונה',
+  'Not in this period': 'לא בתקופה הזו',
+  'of {count}': 'מתוך {count}',
+  'Events per day, last 30 days': 'אירועים ליום, 30 הימים האחרונים',
+  Properties: 'נכסים',
+  'Where this user was active, last 30 days':
+    'היכן המשתמש היה פעיל, 30 הימים האחרונים',
+  'No activity': 'אין פעילות',
+  'No locations': 'אין מיקומים',
+  'No sources': 'אין מקורות',
+  'No browsers': 'אין דפדפנים',
+  'No operating systems': 'אין מערכות הפעלה',
+  'No devices': 'אין מכשירים',
+  'No OS versions': 'אין גרסאות מערכת הפעלה',
+  views: 'צפיות',
+  'signed in': 'מחוברים',
+  'Signed in now': 'מחוברים עכשיו',
+  'and {count} more': 'ועוד {count}',
 }
