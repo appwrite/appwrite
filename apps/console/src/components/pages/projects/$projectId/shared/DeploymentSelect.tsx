@@ -40,9 +40,18 @@ export function DeploymentSelect({
 }: DeploymentSelectProps) {
   const t = useT()
 
+  // Keep a value from the URL selectable even when it is not among the newest
+  const options = useMemo(
+    () =>
+      value && !deployments.some((deployment) => deployment.$id === value)
+        ? [{ $id: value } as Models.Deployment, ...deployments]
+        : deployments,
+    [value, deployments],
+  )
+
   const items = useMemo<SearchableSelectItem[]>(
     () =>
-      deployments.map((deployment) => {
+      options.map((deployment) => {
         const commit = deployment.providerCommitMessage?.split('\n')[0].trim()
         const label = commit || t(sourceLabel(deployment.type))
         const status = deployment.status
@@ -64,7 +73,7 @@ export function DeploymentSelect({
             .filter(Boolean)
             .join(' · '),
           searchText: [
-            label,
+            deployment.providerCommitMessage || label,
             deployment.$id,
             deployment.providerBranch,
             deployment.providerCommitHash,
@@ -74,7 +83,7 @@ export function DeploymentSelect({
           icon: sourceIcon(deployment),
         }
       }),
-    [t, deployments, activeDeploymentId],
+    [t, options, activeDeploymentId],
   )
 
   return (
