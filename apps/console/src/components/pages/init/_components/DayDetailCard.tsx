@@ -6,6 +6,7 @@ import type {
   LaunchEventScheduleItem,
   InitDisplayEvent,
 } from '@/lib/init/types'
+import { isFilmPlayerRevealed } from '@/lib/init/types'
 import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
 import { buildInitDayPreviewActivity } from '@/lib/init/init-presence-day-activity'
 import { getInitDayCardId } from '@/lib/init/scroll-to-day-card'
@@ -169,10 +170,12 @@ function DayPrimaryLink({
 function DayFilmCover({
   day,
   films,
+  poweredBy,
   children,
 }: {
   day: LaunchEventDay
   films: LaunchEventDayFilm[]
+  poweredBy: boolean
   children: ReactNode
 }) {
   const [open, setOpen] = useState(false)
@@ -211,6 +214,7 @@ function DayFilmCover({
       <InitFilmDialog
         title={day.title}
         films={films}
+        poweredBy={poweredBy}
         open={open}
         onOpenChange={setOpen}
       />
@@ -364,7 +368,11 @@ export function DayDetailCard({
 
         <div className="flex items-center p-6">
           {day.films?.length ? (
-            <DayFilmCover day={day} films={day.films}>
+            <DayFilmCover
+              day={day}
+              films={day.films}
+              poweredBy={isFilmPlayerRevealed(event)}
+            >
               {visualBlock}
             </DayFilmCover>
           ) : primaryArticleHref ? (
