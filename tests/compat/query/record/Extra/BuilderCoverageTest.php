@@ -231,7 +231,7 @@ final class BuilderCoverageTest extends TestCase
     public function testPostgreSQLWithCube(): void
     {
         $result = (new PostgreSQL())->from('sales')->count('*', 'n')->groupBy(['region', 'year'])->withCube()->build();
-        $this->assertStringContainsString('CUBE', $result->query);
+        $this->assertStringContainsString('CUBE', (string) $result->query);
     }
 
     public function testSQLiteSetJsonPath(): void
