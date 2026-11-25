@@ -5,29 +5,21 @@
 
 namespace Utopia\Query;
 
-use Closure;
 use Utopia\Query\AST\Expression;
 use Utopia\Query\AST\Expression\Between;
 use Utopia\Query\AST\Expression\In;
 use Utopia\Query\AST\Raw;
 use Utopia\Query\AST\Reference\Column;
 use Utopia\Query\AST\Reference\Table;
-use Utopia\Query\AST\Serializer;
 use Utopia\Query\AST\Statement\Select;
 use Utopia\Query\Builder\Binding;
-use Utopia\Query\Builder\Case\Expression as CaseExpression;
 use Utopia\Query\Builder\Condition;
-use Utopia\Query\Builder\Feature;
 use Utopia\Query\Builder\JoinBuilder;
-use Utopia\Query\Builder\JoinType;
-use Utopia\Query\Builder\ParsedQuery;
 use Utopia\Query\Builder\Statement;
-use Utopia\Query\Builder\WindowFrame;
 use Utopia\Query\Hook\Filter;
 use Utopia\Query\Hook\Join\Placement;
-use Utopia\Query\Tokenizer\Tokenizer;
 
-abstract class Builder implements Compiler, Feature\Selects, Feature\Aggregates, Feature\Joins, Feature\Unions, Feature\CTEs, Feature\Inserts, Feature\Updates, Feature\Deletes, Feature\Hooks, Feature\Windows
+abstract class Builder implements \Utopia\Query\Compiler, \Utopia\Query\Builder\Feature\Selects, \Utopia\Query\Builder\Feature\Aggregates, \Utopia\Query\Builder\Feature\Joins, \Utopia\Query\Builder\Feature\Unions, \Utopia\Query\Builder\Feature\CTEs, \Utopia\Query\Builder\Feature\Inserts, \Utopia\Query\Builder\Feature\Updates, \Utopia\Query\Builder\Feature\Deletes, \Utopia\Query\Builder\Feature\Hooks, \Utopia\Query\Builder\Feature\Windows
 {
     #[\Override]
     abstract public function count(string $attribute = '*', string $alias = ''): static;
@@ -57,21 +49,21 @@ abstract class Builder implements Compiler, Feature\Selects, Feature\Aggregates,
      * @param  list<string>  $columns
      */
     #[\Override]
-    abstract public function with(string $name, Builder $query, array $columns = []): static;
+    abstract public function with(string $name, \Utopia\Query\Builder $query, array $columns = []): static;
     /**
      * @param  list<string>  $columns
      */
     #[\Override]
-    abstract public function withRecursive(string $name, Builder $query, array $columns = []): static;
+    abstract public function withRecursive(string $name, \Utopia\Query\Builder $query, array $columns = []): static;
     /**
      * @param  list<string>  $columns
      */
     #[\Override]
-    abstract public function withRecursiveSeedStep(string $name, Builder $seed, Builder $step, array $columns = []): static;
+    abstract public function withRecursiveSeedStep(string $name, \Utopia\Query\Builder $seed, \Utopia\Query\Builder $step, array $columns = []): static;
     #[\Override]
-    abstract public function delete(): Statement;
+    abstract public function delete(): \Utopia\Query\Builder\Statement;
     #[\Override]
-    abstract public function addHook(Hook $hook): static;
+    abstract public function addHook(\Utopia\Query\Hook $hook): static;
     #[\Override]
     abstract public function into(string $table): static;
     /**
@@ -94,13 +86,13 @@ abstract class Builder implements Compiler, Feature\Selects, Feature\Aggregates,
      * @param  list<string>  $columns
      */
     #[\Override]
-    abstract public function fromSelect(array $columns, Builder $source): static;
+    abstract public function fromSelect(array $columns, \Utopia\Query\Builder $source): static;
     #[\Override]
-    abstract public function insert(): Statement;
+    abstract public function insert(): \Utopia\Query\Builder\Statement;
     #[\Override]
-    abstract public function insertDefaultValues(): Statement;
+    abstract public function insertDefaultValues(): \Utopia\Query\Builder\Statement;
     #[\Override]
-    abstract public function insertSelect(): Statement;
+    abstract public function insertSelect(): \Utopia\Query\Builder\Statement;
     #[\Override]
     abstract public function join(string $table, string $left, string $right, string $operator = '=', string $alias = ''): static;
     #[\Override]
@@ -111,16 +103,16 @@ abstract class Builder implements Compiler, Feature\Selects, Feature\Aggregates,
      * @param  \Closure(JoinBuilder): void  $callback
      */
     #[\Override]
-    abstract public function joinWhere(string $table, Closure $callback, JoinType $type = JoinType::Inner, string $alias = ''): static;
+    abstract public function joinWhere(string $table, \Closure $callback, \Utopia\Query\Builder\JoinType $type = \Utopia\Query\Builder\JoinType::Inner, string $alias = ''): static;
     #[\Override]
     abstract public function from(string $table = '', string $alias = ''): static;
     abstract public function fromNone(): static;
-    abstract public function fromSub(Builder $subquery, string $alias): static;
-    abstract public function selectSub(Builder $subquery, string $alias): static;
-    abstract public function filterWhereIn(string $column, Builder $subquery): static;
-    abstract public function filterWhereNotIn(string $column, Builder $subquery): static;
-    abstract public function filterExists(Builder $subquery): static;
-    abstract public function filterNotExists(Builder $subquery): static;
+    abstract public function fromSub(\Utopia\Query\Builder $subquery, string $alias): static;
+    abstract public function selectSub(\Utopia\Query\Builder $subquery, string $alias): static;
+    abstract public function filterWhereIn(string $column, \Utopia\Query\Builder $subquery): static;
+    abstract public function filterWhereNotIn(string $column, \Utopia\Query\Builder $subquery): static;
+    abstract public function filterExists(\Utopia\Query\Builder $subquery): static;
+    abstract public function filterNotExists(\Utopia\Query\Builder $subquery): static;
     /**
      * @param  string|array<string>  $columns
      * @param  list<mixed>  $bindings
@@ -140,9 +132,9 @@ abstract class Builder implements Compiler, Feature\Selects, Feature\Aggregates,
     #[\Override]
     abstract public function queries(array $queries): static;
     #[\Override]
-    abstract public function sortAsc(string $attribute, ?NullsPosition $nulls = null): static;
+    abstract public function sortAsc(string $attribute, ?\Utopia\Query\NullsPosition $nulls = null): static;
     #[\Override]
-    abstract public function sortDesc(string $attribute, ?NullsPosition $nulls = null): static;
+    abstract public function sortDesc(string $attribute, ?\Utopia\Query\NullsPosition $nulls = null): static;
     #[\Override]
     abstract public function sortRandom(): static;
     #[\Override]
@@ -164,14 +156,14 @@ abstract class Builder implements Compiler, Feature\Selects, Feature\Aggregates,
     #[\Override]
     abstract public function cursorBefore(array|object $value): static;
     #[\Override]
-    abstract public function when(bool $condition, Closure $callback): static;
-    abstract public function beforeBuild(Closure $callback): static;
-    abstract public function afterBuild(Closure $callback): static;
+    abstract public function when(bool $condition, \Closure $callback): static;
+    abstract public function beforeBuild(\Closure $callback): static;
+    abstract public function afterBuild(\Closure $callback): static;
     /**
      * @param  \Closure(Statement): (array<mixed>|int)  $executor
      */
     abstract public function setExecutor(\Closure $executor): static;
-    abstract public function explain(bool $analyze = false): Statement;
+    abstract public function explain(bool $analyze = false): \Utopia\Query\Builder\Statement;
     /**
      * @return array<mixed>|int
      */
@@ -186,23 +178,23 @@ abstract class Builder implements Compiler, Feature\Selects, Feature\Aggregates,
     #[\Override]
     abstract public function reset(): static;
     #[\Override]
-    abstract public function union(Builder $other): static;
+    abstract public function union(\Utopia\Query\Builder $other): static;
     #[\Override]
-    abstract public function unionAll(Builder $other): static;
+    abstract public function unionAll(\Utopia\Query\Builder $other): static;
     #[\Override]
-    abstract public function intersect(Builder $other): static;
+    abstract public function intersect(\Utopia\Query\Builder $other): static;
     #[\Override]
-    abstract public function intersectAll(Builder $other): static;
+    abstract public function intersectAll(\Utopia\Query\Builder $other): static;
     #[\Override]
-    abstract public function except(Builder $other): static;
+    abstract public function except(\Utopia\Query\Builder $other): static;
     #[\Override]
-    abstract public function exceptAll(Builder $other): static;
+    abstract public function exceptAll(\Utopia\Query\Builder $other): static;
     #[\Override]
-    abstract public function update(): Statement;
+    abstract public function update(): \Utopia\Query\Builder\Statement;
     #[\Override]
-    abstract public function selectWindow(string $function, string $alias, ?array $partitionBy = null, ?array $orderBy = null, ?string $windowName = null, ?WindowFrame $frame = null): static;
+    abstract public function selectWindow(string $function, string $alias, ?array $partitionBy = null, ?array $orderBy = null, ?string $windowName = null, ?\Utopia\Query\Builder\WindowFrame $frame = null): static;
     #[\Override]
-    abstract public function window(string $name, ?array $partitionBy = null, ?array $orderBy = null, ?WindowFrame $frame = null): static;
+    abstract public function window(string $name, ?array $partitionBy = null, ?array $orderBy = null, ?\Utopia\Query\Builder\WindowFrame $frame = null): static;
     abstract protected function quote(string $identifier): string;
     /**
      * Compile a random ordering expression (e.g. RAND() or rand())
@@ -221,7 +213,7 @@ abstract class Builder implements Compiler, Feature\Selects, Feature\Aggregates,
      * Implementations must add any bindings they emit via $this->addBindings()
      * at the moment their fragment is emitted so ordering is preserved.
      */
-    abstract protected function buildAfterJoinsClause(ParsedQuery $grouped): string;
+    abstract protected function buildAfterJoinsClause(\Utopia\Query\Builder\ParsedQuery $grouped): string;
     /**
      * Hook called after GROUP BY and before HAVING. Override to emit
      * dialect-specific group-by modifiers (e.g. ClickHouse WITH TOTALS).
@@ -243,9 +235,9 @@ abstract class Builder implements Compiler, Feature\Selects, Feature\Aggregates,
      * Compile a CASE expression to SQL, appending bindings to $this->bindings
      * in the order WHEN-value, THEN-value, ..., ELSE-value.
      */
-    abstract protected function compileCase(CaseExpression $case): string;
+    abstract protected function compileCase(\Utopia\Query\Builder\Case\Expression $case): string;
     #[\Override]
-    abstract public function build(): Statement;
+    abstract public function build(): \Utopia\Query\Builder\Statement;
     /**
      * Wrap a compound-SELECT member for inclusion in a UNION chain. The
      * default wraps each arm in parentheses, matching the shape most
@@ -266,16 +258,16 @@ abstract class Builder implements Compiler, Feature\Selects, Feature\Aggregates,
     /**
      * @param  array<string>  $parts
      */
-    abstract protected function compileWhereClauses(array &$parts, ?ParsedQuery $grouped = null): void;
+    abstract protected function compileWhereClauses(array &$parts, ?\Utopia\Query\Builder\ParsedQuery $grouped = null): void;
     /**
      * @param  array<string>  $parts
      */
-    abstract protected function compileOrderAndLimit(array &$parts, ?ParsedQuery $grouped = null): void;
+    abstract protected function compileOrderAndLimit(array &$parts, ?\Utopia\Query\Builder\ParsedQuery $grouped = null): void;
     abstract protected function shouldEmitOffset(?int $offset, ?int $limit): bool;
     /**
      * Hook for subclasses to inject a vector distance ORDER BY expression.
      */
-    abstract protected function compileVectorOrderExpression(): ?Condition;
+    abstract protected function compileVectorOrderExpression(): ?\Utopia\Query\Builder\Condition;
     abstract protected function validateTable(): void;
     abstract protected function validateRows(string $operation): void;
     /**
@@ -287,22 +279,22 @@ abstract class Builder implements Compiler, Feature\Selects, Feature\Aggregates,
     abstract public function clone(): static;
     abstract public function __clone(): void;
     #[\Override]
-    abstract public function compileFilter(Query $query): string;
-    abstract protected function compileHavingCondition(Query $query, string $expression): string;
+    abstract public function compileFilter(\Utopia\Query\Query $query): string;
+    abstract protected function compileHavingCondition(\Utopia\Query\Query $query, string $expression): string;
     #[\Override]
-    abstract public function compileOrder(Query $query): string;
+    abstract public function compileOrder(\Utopia\Query\Query $query): string;
     #[\Override]
-    abstract public function compileLimit(Query $query): string;
+    abstract public function compileLimit(\Utopia\Query\Query $query): string;
     #[\Override]
-    abstract public function compileOffset(Query $query): string;
+    abstract public function compileOffset(\Utopia\Query\Query $query): string;
     #[\Override]
-    abstract public function compileSelect(Query $query): string;
+    abstract public function compileSelect(\Utopia\Query\Query $query): string;
     #[\Override]
-    abstract public function compileCursor(Query $query): string;
+    abstract public function compileCursor(\Utopia\Query\Query $query): string;
     #[\Override]
-    abstract public function compileAggregate(Query $query): string;
+    abstract public function compileAggregate(\Utopia\Query\Query $query): string;
     #[\Override]
-    abstract public function compileGroupBy(Query $query): string;
+    abstract public function compileGroupBy(\Utopia\Query\Query $query): string;
     /**
      * Compile a `groupByTimeBucket` clause for this dialect.
      *
@@ -314,8 +306,8 @@ abstract class Builder implements Compiler, Feature\Selects, Feature\Aggregates,
      */
     abstract protected function compileGroupByTimeBucket(string $attribute, string $interval): string;
     #[\Override]
-    abstract public function compileJoin(Query $query): string;
-    abstract protected function compileJoinWithBuilder(Query $query, JoinBuilder $joinBuilder): string;
+    abstract public function compileJoin(\Utopia\Query\Query $query): string;
+    abstract protected function compileJoinWithBuilder(\Utopia\Query\Query $query, \Utopia\Query\Builder\JoinBuilder $joinBuilder): string;
     abstract protected function resolveAttribute(string $attribute): string;
     abstract protected function resolveAndWrap(string $attribute): string;
     /**
@@ -372,7 +364,7 @@ abstract class Builder implements Compiler, Feature\Selects, Feature\Aggregates,
      * ClickHouse overrides this to always return Placement::Where since it
      * does not support subqueries in JOIN ON conditions.
      */
-    abstract protected function resolveJoinFilterPlacement(Placement $requested, bool $isCrossJoin): Placement;
+    abstract protected function resolveJoinFilterPlacement(\Utopia\Query\Hook\Join\Placement $requested, bool $isCrossJoin): \Utopia\Query\Hook\Join\Placement;
     /**
      * @param  array<mixed>  $values
      */
@@ -392,8 +384,8 @@ abstract class Builder implements Compiler, Feature\Selects, Feature\Aggregates,
      * and permission conditions.
      */
     abstract protected function enclose(string $condition): string;
-    abstract public function toAst(): Select;
-    abstract protected function createTokenizer(): Tokenizer;
-    abstract protected function createAstSerializer(): Serializer;
-    abstract public static function fromAst(Select $ast): static;
+    abstract public function toAst(): \Utopia\Query\AST\Statement\Select;
+    abstract protected function createTokenizer(): \Utopia\Query\Tokenizer\Tokenizer;
+    abstract protected function createAstSerializer(): \Utopia\Query\AST\Serializer;
+    abstract public static function fromAst(\Utopia\Query\AST\Statement\Select $ast): static;
 }

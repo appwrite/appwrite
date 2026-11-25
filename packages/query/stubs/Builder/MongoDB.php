@@ -5,37 +5,23 @@
 
 namespace Utopia\Query\Builder;
 
-use Closure;
 use Utopia\Query\AST\Expression;
 use Utopia\Query\AST\Expression\Between;
 use Utopia\Query\AST\Expression\In;
 use Utopia\Query\AST\Raw;
 use Utopia\Query\AST\Reference\Column;
 use Utopia\Query\AST\Reference\Table;
-use Utopia\Query\AST\Serializer;
 use Utopia\Query\AST\Statement\Select;
 use Utopia\Query\Builder;
-use Utopia\Query\Builder\Case\Expression as CaseExpression;
-use Utopia\Query\Builder\Feature\FullTextSearch;
-use Utopia\Query\Builder\Feature\InsertOrIgnore;
-use Utopia\Query\Builder\Feature\MongoDB\ArrayPushModifiers;
-use Utopia\Query\Builder\Feature\MongoDB\AtlasSearch;
-use Utopia\Query\Builder\Feature\MongoDB\ConditionalArrayUpdates;
-use Utopia\Query\Builder\Feature\MongoDB\FieldUpdates;
-use Utopia\Query\Builder\Feature\MongoDB\PipelineStages;
-use Utopia\Query\Builder\Feature\TableSampling;
-use Utopia\Query\Builder\Feature\Upsert;
 use Utopia\Query\Builder\MongoDB\Operation;
 use Utopia\Query\Hook;
 use Utopia\Query\Hook\Attribute;
 use Utopia\Query\Hook\Filter;
 use Utopia\Query\Hook\Join\Placement;
 use Utopia\Query\Method;
-use Utopia\Query\NullsPosition;
 use Utopia\Query\Query;
-use Utopia\Query\Tokenizer\Tokenizer;
 
-class MongoDB extends \Utopia\Query\Builder implements Upsert, InsertOrIgnore, FullTextSearch, TableSampling, FieldUpdates, ArrayPushModifiers, ConditionalArrayUpdates, PipelineStages, AtlasSearch
+class MongoDB extends \Utopia\Query\Builder implements \Utopia\Query\Builder\Feature\Upsert, \Utopia\Query\Builder\Feature\InsertOrIgnore, \Utopia\Query\Builder\Feature\FullTextSearch, \Utopia\Query\Builder\Feature\TableSampling, \Utopia\Query\Builder\Feature\MongoDB\FieldUpdates, \Utopia\Query\Builder\Feature\MongoDB\ArrayPushModifiers, \Utopia\Query\Builder\Feature\MongoDB\ConditionalArrayUpdates, \Utopia\Query\Builder\Feature\MongoDB\PipelineStages, \Utopia\Query\Builder\Feature\MongoDB\AtlasSearch
 {
     /**
      * Parameter bindings produced during compilation. Each entry carries its
@@ -103,11 +89,11 @@ class MongoDB extends \Utopia\Query\Builder implements Upsert, InsertOrIgnore, F
     {
     }
     #[\Override]
-    public function sortAsc(string $attribute, ?NullsPosition $nulls = null): static
+    public function sortAsc(string $attribute, ?\Utopia\Query\NullsPosition $nulls = null): static
     {
     }
     #[\Override]
-    public function sortDesc(string $attribute, ?NullsPosition $nulls = null): static
+    public function sortDesc(string $attribute, ?\Utopia\Query\NullsPosition $nulls = null): static
     {
     }
     #[\Override]
@@ -230,100 +216,100 @@ class MongoDB extends \Utopia\Query\Builder implements Upsert, InsertOrIgnore, F
     {
     }
     #[\Override]
-    public function insert(): Statement
+    public function insert(): \Utopia\Query\Builder\Statement
     {
     }
     #[\Override]
-    public function insertDefaultValues(): Statement
+    public function insertDefaultValues(): \Utopia\Query\Builder\Statement
     {
     }
     #[\Override]
-    public function update(): Statement
+    public function update(): \Utopia\Query\Builder\Statement
     {
     }
     #[\Override]
-    public function delete(): Statement
+    public function delete(): \Utopia\Query\Builder\Statement
     {
     }
-    public function fromSub(Builder $subquery, string $alias): static
+    public function fromSub(\Utopia\Query\Builder $subquery, string $alias): static
     {
     }
-    public function selectSub(Builder $subquery, string $alias): static
+    public function selectSub(\Utopia\Query\Builder $subquery, string $alias): static
     {
     }
-    public function filterWhereIn(string $column, Builder $subquery): static
+    public function filterWhereIn(string $column, \Utopia\Query\Builder $subquery): static
     {
     }
-    public function filterWhereNotIn(string $column, Builder $subquery): static
+    public function filterWhereNotIn(string $column, \Utopia\Query\Builder $subquery): static
     {
     }
-    public function filterExists(Builder $subquery): static
+    public function filterExists(\Utopia\Query\Builder $subquery): static
     {
     }
-    public function filterNotExists(Builder $subquery): static
-    {
-    }
-    #[\Override]
-    public function union(Builder $other): static
+    public function filterNotExists(\Utopia\Query\Builder $subquery): static
     {
     }
     #[\Override]
-    public function unionAll(Builder $other): static
+    public function union(\Utopia\Query\Builder $other): static
     {
     }
     #[\Override]
-    public function intersect(Builder $other): static
+    public function unionAll(\Utopia\Query\Builder $other): static
     {
     }
     #[\Override]
-    public function intersectAll(Builder $other): static
+    public function intersect(\Utopia\Query\Builder $other): static
     {
     }
     #[\Override]
-    public function except(Builder $other): static
+    public function intersectAll(\Utopia\Query\Builder $other): static
     {
     }
     #[\Override]
-    public function exceptAll(Builder $other): static
+    public function except(\Utopia\Query\Builder $other): static
+    {
+    }
+    #[\Override]
+    public function exceptAll(\Utopia\Query\Builder $other): static
     {
     }
     /**
      * @param  list<string>  $columns
      */
     #[\Override]
-    public function with(string $name, Builder $query, array $columns = []): static
+    public function with(string $name, \Utopia\Query\Builder $query, array $columns = []): static
     {
     }
     /**
      * @param  list<string>  $columns
      */
     #[\Override]
-    public function withRecursive(string $name, Builder $query, array $columns = []): static
+    public function withRecursive(string $name, \Utopia\Query\Builder $query, array $columns = []): static
     {
     }
     /**
      * @param  list<string>  $columns
      */
     #[\Override]
-    public function withRecursiveSeedStep(string $name, Builder $seed, Builder $step, array $columns = []): static
+    public function withRecursiveSeedStep(string $name, \Utopia\Query\Builder $seed, \Utopia\Query\Builder $step, array $columns = []): static
     {
     }
     /**
      * @param  list<string>  $columns
      */
     #[\Override]
-    public function fromSelect(array $columns, Builder $source): static
+    public function fromSelect(array $columns, \Utopia\Query\Builder $source): static
     {
     }
     #[\Override]
-    public function insertSelect(): Statement
+    public function insertSelect(): \Utopia\Query\Builder\Statement
     {
     }
     /**
      * @param  \Closure(JoinBuilder): void  $callback
      */
     #[\Override]
-    public function joinWhere(string $table, Closure $callback, JoinType $type = JoinType::Inner, string $alias = ''): static
+    public function joinWhere(string $table, \Closure $callback, \Utopia\Query\Builder\JoinType $type = \Utopia\Query\Builder\JoinType::Inner, string $alias = ''): static
     {
     }
     /**
@@ -337,25 +323,25 @@ class MongoDB extends \Utopia\Query\Builder implements Upsert, InsertOrIgnore, F
      * Hook\Attribute and Hook\Write are dialect-neutral and still apply.
      */
     #[\Override]
-    public function addHook(Hook $hook): static
+    public function addHook(\Utopia\Query\Hook $hook): static
     {
     }
     #[\Override]
-    public function selectWindow(string $function, string $alias, ?array $partitionBy = null, ?array $orderBy = null, ?string $windowName = null, ?WindowFrame $frame = null): static
+    public function selectWindow(string $function, string $alias, ?array $partitionBy = null, ?array $orderBy = null, ?string $windowName = null, ?\Utopia\Query\Builder\WindowFrame $frame = null): static
     {
     }
     #[\Override]
-    public function window(string $name, ?array $partitionBy = null, ?array $orderBy = null, ?WindowFrame $frame = null): static
+    public function window(string $name, ?array $partitionBy = null, ?array $orderBy = null, ?\Utopia\Query\Builder\WindowFrame $frame = null): static
     {
     }
     #[\Override]
-    public function when(bool $condition, Closure $callback): static
+    public function when(bool $condition, \Closure $callback): static
     {
     }
-    public function beforeBuild(Closure $callback): static
+    public function beforeBuild(\Closure $callback): static
     {
     }
-    public function afterBuild(Closure $callback): static
+    public function afterBuild(\Closure $callback): static
     {
     }
     /**
@@ -374,43 +360,43 @@ class MongoDB extends \Utopia\Query\Builder implements Upsert, InsertOrIgnore, F
     {
     }
     #[\Override]
-    public function build(): Statement
+    public function build(): \Utopia\Query\Builder\Statement
     {
     }
     #[\Override]
-    public function compileFilter(Query $query): string
+    public function compileFilter(\Utopia\Query\Query $query): string
     {
     }
     #[\Override]
-    public function compileOrder(Query $query): string
+    public function compileOrder(\Utopia\Query\Query $query): string
     {
     }
     #[\Override]
-    public function compileLimit(Query $query): string
+    public function compileLimit(\Utopia\Query\Query $query): string
     {
     }
     #[\Override]
-    public function compileOffset(Query $query): string
+    public function compileOffset(\Utopia\Query\Query $query): string
     {
     }
     #[\Override]
-    public function compileSelect(Query $query): string
+    public function compileSelect(\Utopia\Query\Query $query): string
     {
     }
     #[\Override]
-    public function compileCursor(Query $query): string
+    public function compileCursor(\Utopia\Query\Query $query): string
     {
     }
     #[\Override]
-    public function compileAggregate(Query $query): string
+    public function compileAggregate(\Utopia\Query\Query $query): string
     {
     }
     #[\Override]
-    public function compileGroupBy(Query $query): string
+    public function compileGroupBy(\Utopia\Query\Query $query): string
     {
     }
     #[\Override]
-    public function compileJoin(Query $query): string
+    public function compileJoin(\Utopia\Query\Query $query): string
     {
     }
     /**
@@ -450,7 +436,7 @@ class MongoDB extends \Utopia\Query\Builder implements Upsert, InsertOrIgnore, F
     protected function compileNotContains(string $attribute, array $values, ?string $column = null): string
     {
     }
-    protected function compileJoinWithBuilder(Query $query, JoinBuilder $joinBuilder): string
+    protected function compileJoinWithBuilder(\Utopia\Query\Query $query, \Utopia\Query\Builder\JoinBuilder $joinBuilder): string
     {
     }
     protected function resolveAttribute(string $attribute): string
@@ -493,14 +479,14 @@ class MongoDB extends \Utopia\Query\Builder implements Upsert, InsertOrIgnore, F
     protected function addBinding(mixed $value, ?string $column = null): void
     {
     }
-    public function upsert(): Statement
+    public function upsert(): \Utopia\Query\Builder\Statement
     {
     }
     #[\Override]
-    public function insertOrIgnore(): Statement
+    public function insertOrIgnore(): \Utopia\Query\Builder\Statement
     {
     }
-    public function explain(bool $analyze = false): Statement
+    public function explain(bool $analyze = false): \Utopia\Query\Builder\Statement
     {
     }
     #[\Override]
@@ -652,10 +638,10 @@ class MongoDB extends \Utopia\Query\Builder implements Upsert, InsertOrIgnore, F
     public function hint(string|array $hint): static
     {
     }
-    public function toAst(): Select
+    public function toAst(): \Utopia\Query\AST\Statement\Select
     {
     }
-    public static function fromAst(Select $ast): static
+    public static function fromAst(\Utopia\Query\AST\Statement\Select $ast): static
     {
     }
     #[\Override]
@@ -700,7 +686,7 @@ class MongoDB extends \Utopia\Query\Builder implements Upsert, InsertOrIgnore, F
     protected function shouldEmitOffset(?int $offset, ?int $limit): bool
     {
     }
-    protected function compileHavingCondition(Query $query, string $expression): string
+    protected function compileHavingCondition(\Utopia\Query\Query $query, string $expression): string
     {
     }
     /**
@@ -771,7 +757,7 @@ class MongoDB extends \Utopia\Query\Builder implements Upsert, InsertOrIgnore, F
      * Compile a CASE expression to SQL, appending bindings to $this->bindings
      * in the order WHEN-value, THEN-value, ..., ELSE-value.
      */
-    protected function compileCase(CaseExpression $case): string
+    protected function compileCase(\Utopia\Query\Builder\Case\Expression $case): string
     {
     }
     /**
@@ -791,13 +777,13 @@ class MongoDB extends \Utopia\Query\Builder implements Upsert, InsertOrIgnore, F
     /**
      * @param  array<string>  $parts
      */
-    protected function compileWhereClauses(array &$parts, ?ParsedQuery $grouped = null): void
+    protected function compileWhereClauses(array &$parts, ?\Utopia\Query\Builder\ParsedQuery $grouped = null): void
     {
     }
     /**
      * @param  array<string>  $parts
      */
-    protected function compileOrderAndLimit(array &$parts, ?ParsedQuery $grouped = null): void
+    protected function compileOrderAndLimit(array &$parts, ?\Utopia\Query\Builder\ParsedQuery $grouped = null): void
     {
     }
     /**
@@ -806,13 +792,13 @@ class MongoDB extends \Utopia\Query\Builder implements Upsert, InsertOrIgnore, F
      * Implementations must add any bindings they emit via $this->addBindings()
      * at the moment their fragment is emitted so ordering is preserved.
      */
-    protected function buildAfterJoinsClause(ParsedQuery $grouped): string
+    protected function buildAfterJoinsClause(\Utopia\Query\Builder\ParsedQuery $grouped): string
     {
     }
     /**
      * Hook for subclasses to inject a vector distance ORDER BY expression.
      */
-    protected function compileVectorOrderExpression(): ?Condition
+    protected function compileVectorOrderExpression(): ?\Utopia\Query\Builder\Condition
     {
     }
     /**
@@ -820,13 +806,13 @@ class MongoDB extends \Utopia\Query\Builder implements Upsert, InsertOrIgnore, F
      * ClickHouse overrides this to always return Placement::Where since it
      * does not support subqueries in JOIN ON conditions.
      */
-    protected function resolveJoinFilterPlacement(Placement $requested, bool $isCrossJoin): Placement
+    protected function resolveJoinFilterPlacement(\Utopia\Query\Hook\Join\Placement $requested, bool $isCrossJoin): \Utopia\Query\Hook\Join\Placement
     {
     }
-    protected function createTokenizer(): Tokenizer
+    protected function createTokenizer(): \Utopia\Query\Tokenizer\Tokenizer
     {
     }
-    protected function createAstSerializer(): Serializer
+    protected function createAstSerializer(): \Utopia\Query\AST\Serializer
     {
     }
     public function __clone(): void

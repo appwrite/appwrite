@@ -5,8 +5,6 @@
 
 namespace Utopia\Query\Builder\Feature;
 
-use Utopia\Query\Builder\WindowFrame;
-
 interface Windows
 {
     /**
@@ -18,12 +16,12 @@ interface Windows
      * @param  list<string>|null  $orderBy  Columns for ORDER BY (prefix with - for DESC)
      * @param  string|null  $windowName  Named window to reference instead of inline OVER (...)
      */
-    public function selectWindow(string $function, string $alias, ?array $partitionBy = null, ?array $orderBy = null, ?string $windowName = null, ?WindowFrame $frame = null): static;
+    public function selectWindow(string $function, string $alias, ?array $partitionBy = null, ?array $orderBy = null, ?string $windowName = null, ?\Utopia\Query\Builder\WindowFrame $frame = null): static;
     /**
      * Define a named window.
      *
      * @param  list<string>|null  $partitionBy  Columns for PARTITION BY
      * @param  list<string>|null  $orderBy  Columns for ORDER BY (prefix with - for DESC)
      */
-    public function window(string $name, ?array $partitionBy = null, ?array $orderBy = null, ?WindowFrame $frame = null): static;
+    public function window(string $name, ?array $partitionBy = null, ?array $orderBy = null, ?\Utopia\Query\Builder\WindowFrame $frame = null): static;
 }

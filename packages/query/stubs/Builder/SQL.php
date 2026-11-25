@@ -5,17 +5,9 @@
 
 namespace Utopia\Query\Builder;
 
-use Utopia\Query\Builder\Case\Expression as CaseExpression;
-use Utopia\Query\Builder\Feature\BitwiseAggregates;
-use Utopia\Query\Builder\Feature\CrossJoins;
-use Utopia\Query\Builder\Feature\Locking;
-use Utopia\Query\Builder\Feature\RawSql;
-use Utopia\Query\Builder\Feature\StatisticalAggregates;
-use Utopia\Query\Builder\Feature\Transactions;
-use Utopia\Query\Method;
 use Utopia\Query\Query;
 
-abstract class SQL extends \Utopia\Query\Builder implements Locking, Transactions, StatisticalAggregates, BitwiseAggregates, RawSql, CrossJoins
+abstract class SQL extends \Utopia\Query\Builder implements \Utopia\Query\Builder\Feature\Locking, \Utopia\Query\Builder\Feature\Transactions, \Utopia\Query\Builder\Feature\StatisticalAggregates, \Utopia\Query\Builder\Feature\BitwiseAggregates, \Utopia\Query\Builder\Feature\RawSql, \Utopia\Query\Builder\Feature\CrossJoins
 {
     abstract protected function quote(string $identifier): string;
     /**
@@ -91,8 +83,8 @@ abstract class SQL extends \Utopia\Query\Builder implements Locking, Transaction
      * an allowlist: =, !=, <>, <, >, <=, >=.
      */
     abstract public function whereColumn(string $left, string $operator, string $right): static;
-    abstract public function selectCase(CaseExpression $case): static;
-    abstract public function setCase(string $column, CaseExpression $case): static;
+    abstract public function selectCase(\Utopia\Query\Builder\Case\Expression $case): static;
+    abstract public function setCase(string $column, \Utopia\Query\Builder\Case\Expression $case): static;
     /**
      * @param  list<mixed>  $bindings
      */
@@ -124,28 +116,28 @@ abstract class SQL extends \Utopia\Query\Builder implements Locking, Transaction
     #[\Override]
     abstract public function varSamp(string $attribute, string $alias = ''): static;
     #[\Override]
-    abstract public function begin(): Statement;
+    abstract public function begin(): \Utopia\Query\Builder\Statement;
     #[\Override]
-    abstract public function commit(): Statement;
+    abstract public function commit(): \Utopia\Query\Builder\Statement;
     #[\Override]
-    abstract public function rollback(): Statement;
+    abstract public function rollback(): \Utopia\Query\Builder\Statement;
     #[\Override]
-    abstract public function savepoint(string $name): Statement;
+    abstract public function savepoint(string $name): \Utopia\Query\Builder\Statement;
     #[\Override]
-    abstract public function releaseSavepoint(string $name): Statement;
+    abstract public function releaseSavepoint(string $name): \Utopia\Query\Builder\Statement;
     #[\Override]
-    abstract public function rollbackToSavepoint(string $name): Statement;
+    abstract public function rollbackToSavepoint(string $name): \Utopia\Query\Builder\Statement;
     abstract protected function compileConflictHeader(): string;
     abstract protected function compileConflictAssignment(string $wrapped): string;
     abstract protected function compileConflictClause(): string;
     #[\Override]
-    abstract public function compileFilter(Query $query): string;
-    abstract protected function compileArrayFilter(Method $method, string $attribute, Query $query): string;
-    abstract protected function compileSpatialFilter(Method $method, string $attribute, Query $query): string;
+    abstract public function compileFilter(\Utopia\Query\Query $query): string;
+    abstract protected function compileArrayFilter(\Utopia\Query\Method $method, string $attribute, \Utopia\Query\Query $query): string;
+    abstract protected function compileSpatialFilter(\Utopia\Query\Method $method, string $attribute, \Utopia\Query\Query $query): string;
     /**
      * @param  array<mixed>  $values
      */
-    abstract protected function compileSpatialDistance(Method $method, string $attribute, array $values): string;
+    abstract protected function compileSpatialDistance(\Utopia\Query\Method $method, string $attribute, array $values): string;
     /**
      * @param  array<mixed>  $values
      */
@@ -160,7 +152,7 @@ abstract class SQL extends \Utopia\Query\Builder implements Locking, Transaction
      * @param  array<mixed>  $values
      */
     abstract protected function compileSearchExpression(string $attribute, array $values, bool $not): string;
-    abstract protected function compileJsonFilter(Method $method, string $attribute, Query $query): string;
+    abstract protected function compileJsonFilter(\Utopia\Query\Method $method, string $attribute, \Utopia\Query\Query $query): string;
     /**
      * @param  array<mixed>  $values
      */

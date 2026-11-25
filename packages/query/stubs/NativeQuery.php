@@ -5,14 +5,13 @@
 
 namespace Utopia\Query;
 
-use Utopia\Query\Builder\ParsedQuery;
 use Utopia\Query\Exception as QueryException;
 
 /** @phpstan-consistent-constructor */
 class NativeQuery
 {
     public const DEFAULT_ALIAS = 'main';
-    protected Method $method;
+    protected \Utopia\Query\Method $method;
     protected string $attribute = '';
     protected string $attributeType = '';
     protected bool $onArray = false;
@@ -22,7 +21,7 @@ class NativeQuery
     protected array $values = [];
     protected string $alias = '';
     protected bool $aliasDefaulted = false;
-    public function getMethod(): Method
+    public function getMethod(): \Utopia\Query\Method
     {
     }
     public function getAttribute(): string
@@ -62,7 +61,7 @@ class NativeQuery
     /**
      * Sets method
      */
-    public function setMethod(Method|string $method): static
+    public function setMethod(\Utopia\Query\Method|string $method): static
     {
     }
     /**
@@ -180,7 +179,7 @@ class NativeQuery
     /**
      * Compile this query using the given compiler
      */
-    public function compile(Compiler $compiler): string
+    public function compile(\Utopia\Query\Compiler $compiler): string
     {
     }
     /**
@@ -293,7 +292,7 @@ class NativeQuery
      *
      * @param  array<mixed>  $queries
      */
-    public static function groupByType(array $queries): ParsedQuery
+    public static function groupByType(array $queries): \Utopia\Query\Builder\ParsedQuery
     {
     }
     /**
@@ -590,13 +589,13 @@ class NativeQuery
     /**
      * Helper method to create Query with orderDesc method
      */
-    public static function orderDesc(string $attribute = '', ?NullsPosition $nulls = null): static
+    public static function orderDesc(string $attribute = '', ?\Utopia\Query\NullsPosition $nulls = null): static
     {
     }
     /**
      * Helper method to create Query with orderAsc method
      */
-    public static function orderAsc(string $attribute = '', ?NullsPosition $nulls = null): static
+    public static function orderAsc(string $attribute = '', ?\Utopia\Query\NullsPosition $nulls = null): static
     {
     }
     /**
@@ -849,7 +848,7 @@ class NativeQuery
      *
      * @param  array<mixed>  $values
      */
-    public function __construct(Method|string $method, string $attribute = '', array $values = [], string $alias = '')
+    public function __construct(\Utopia\Query\Method|string $method, string $attribute = '', array $values = [], string $alias = '')
     {
     }
     /**

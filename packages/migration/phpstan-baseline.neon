@@ -6985,7 +6985,7 @@ parameters:
 			path: tests/Destinations/AppwriteColumnLimitTest.php
 
 		-
-			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: tests/Destinations/AppwriteColumnLimitTest.php

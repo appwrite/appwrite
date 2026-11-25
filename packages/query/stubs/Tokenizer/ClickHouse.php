@@ -5,8 +5,6 @@
 
 namespace Utopia\Query\Tokenizer;
 
-use Utopia\Query\StringLiteral;
-
 class ClickHouse extends \Utopia\Query\Tokenizer\Tokenizer
 {
     /**
@@ -25,7 +23,7 @@ class ClickHouse extends \Utopia\Query\Tokenizer\Tokenizer
     protected function getIdentifierQuoteChar(): string
     {
     }
-    public function __construct(StringLiteral $literal = StringLiteral::BackslashUtf8)
+    public function __construct(\Utopia\Query\StringLiteral $literal = \Utopia\Query\StringLiteral::BackslashUtf8)
     {
     }
 }

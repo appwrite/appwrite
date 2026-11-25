@@ -19,7 +19,7 @@ abstract class Schema
     /**
      * @param  Closure(Statement): (array<mixed>|int)  $executor
      */
-    abstract public function setExecutor(Closure $executor): static;
+    abstract public function setExecutor(\Closure $executor): static;
     /**
      * Begin a fluent table builder. Terminal methods on the returned {@see Table}
      * (`create()`, `alter()`, `drop()`, `dropIfExists()`, `truncate()`, `rename()`)
@@ -28,12 +28,12 @@ abstract class Schema
      * Each dialect overrides this to return the dialect-specific {@see Table}
      * subclass exposing only methods supported by that dialect.
      */
-    abstract public function table(string $name): Table;
-    abstract public function compileCreate(Table $table, bool $ifNotExists = false): Statement;
-    abstract public function compileAlter(Table $table): Statement;
-    abstract public function compileDrop(string $name, bool $ifExists): Statement;
-    abstract public function compileRename(string $from, string $to): Statement;
-    abstract public function compileTruncate(string $name): Statement;
+    abstract public function table(string $name): \Utopia\Query\Schema\Table;
+    abstract public function compileCreate(\Utopia\Query\Schema\Table $table, bool $ifNotExists = false): \Utopia\Query\Builder\Statement;
+    abstract public function compileAlter(\Utopia\Query\Schema\Table $table): \Utopia\Query\Builder\Statement;
+    abstract public function compileDrop(string $name, bool $ifExists): \Utopia\Query\Builder\Statement;
+    abstract public function compileRename(string $from, string $to): \Utopia\Query\Builder\Statement;
+    abstract public function compileTruncate(string $name): \Utopia\Query\Builder\Statement;
     /**
      * @param  string[]  $columns
      * @param  array<string, int>  $lengths
@@ -41,6 +41,6 @@ abstract class Schema
      * @param  array<string, string>  $collations
      * @param  list<string>  $rawColumns  Raw SQL expressions appended to column list (bypass quoting)
      */
-    abstract public function createIndex(string $table, string $name, array $columns, bool $unique = false, string $type = '', string $method = '', string $operatorClass = '', array $lengths = [], array $orders = [], array $collations = [], array $rawColumns = []): Statement;
-    abstract public function dropIndex(string $table, string $name): Statement;
+    abstract public function createIndex(string $table, string $name, array $columns, bool $unique = false, string $type = '', string $method = '', string $operatorClass = '', array $lengths = [], array $orders = [], array $collations = [], array $rawColumns = []): \Utopia\Query\Builder\Statement;
+    abstract public function dropIndex(string $table, string $name): \Utopia\Query\Builder\Statement;
 }

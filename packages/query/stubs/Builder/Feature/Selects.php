@@ -5,10 +5,6 @@
 
 namespace Utopia\Query\Builder\Feature;
 
-use Closure;
-use Utopia\Query\Builder\Statement;
-use Utopia\Query\NullsPosition;
-
 interface Selects
 {
     public function from(string $table = '', string $alias = ''): static;
@@ -26,8 +22,8 @@ interface Selects
      * @param  array<\Utopia\Query\Query>  $queries
      */
     public function queries(array $queries): static;
-    public function sortAsc(string $attribute, ?NullsPosition $nulls = null): static;
-    public function sortDesc(string $attribute, ?NullsPosition $nulls = null): static;
+    public function sortAsc(string $attribute, ?\Utopia\Query\NullsPosition $nulls = null): static;
+    public function sortDesc(string $attribute, ?\Utopia\Query\NullsPosition $nulls = null): static;
     public function sortRandom(): static;
     public function limit(int $value): static;
     public function offset(int $value): static;
@@ -56,6 +52,6 @@ interface Selects
      * charset or SQL mode, which only bound parameters are safe against.
      */
     public function toRawSql(): string;
-    public function when(bool $condition, Closure $callback): static;
-    public function build(): Statement;
+    public function when(bool $condition, \Closure $callback): static;
+    public function build(): \Utopia\Query\Builder\Statement;
 }

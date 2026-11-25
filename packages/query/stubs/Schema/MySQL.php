@@ -6,49 +6,36 @@
 namespace Utopia\Query\Schema;
 
 use Closure;
-use Utopia\Query\Builder;
 use Utopia\Query\Builder\Statement;
-use Utopia\Query\Schema\Feature\AnalyzeTable;
-use Utopia\Query\Schema\Feature\CreatePartition;
-use Utopia\Query\Schema\Feature\Databases;
-use Utopia\Query\Schema\Feature\DropPartition;
-use Utopia\Query\Schema\Feature\ForeignKeys;
-use Utopia\Query\Schema\Feature\Partitioning;
-use Utopia\Query\Schema\Feature\Procedures;
-use Utopia\Query\Schema\Feature\RenameIndex;
-use Utopia\Query\Schema\Feature\ReplaceView;
-use Utopia\Query\Schema\Feature\TableComments;
-use Utopia\Query\Schema\Feature\Triggers;
-use Utopia\Query\Schema\Feature\Views;
 
-class MySQL extends \Utopia\Query\Schema\SQL implements ForeignKeys, Procedures, Triggers, TableComments, CreatePartition, DropPartition, Views, ReplaceView, Databases, RenameIndex, AnalyzeTable, Partitioning
+class MySQL extends \Utopia\Query\Schema\SQL implements \Utopia\Query\Schema\Feature\ForeignKeys, \Utopia\Query\Schema\Feature\Procedures, \Utopia\Query\Schema\Feature\Triggers, \Utopia\Query\Schema\Feature\TableComments, \Utopia\Query\Schema\Feature\CreatePartition, \Utopia\Query\Schema\Feature\DropPartition, \Utopia\Query\Schema\Feature\Views, \Utopia\Query\Schema\Feature\ReplaceView, \Utopia\Query\Schema\Feature\Databases, \Utopia\Query\Schema\Feature\RenameIndex, \Utopia\Query\Schema\Feature\AnalyzeTable, \Utopia\Query\Schema\Feature\Partitioning
 {
     /**
      * @param  Closure(Statement): (array<mixed>|int)  $executor
      */
-    public function setExecutor(Closure $executor): static
+    public function setExecutor(\Closure $executor): static
     {
     }
     #[\Override]
-    public function table(string $name): Table\MySQL
+    public function table(string $name): \Utopia\Query\Schema\Table\MySQL
     {
     }
-    public function compileCreate(Table $table, bool $ifNotExists = false): Statement
+    public function compileCreate(\Utopia\Query\Schema\Table $table, bool $ifNotExists = false): \Utopia\Query\Builder\Statement
     {
     }
-    public function compileAlter(Table $table): Statement
+    public function compileAlter(\Utopia\Query\Schema\Table $table): \Utopia\Query\Builder\Statement
     {
     }
-    public function compileDrop(string $name, bool $ifExists): Statement
+    public function compileDrop(string $name, bool $ifExists): \Utopia\Query\Builder\Statement
     {
     }
-    public function compileRename(string $from, string $to): Statement
+    public function compileRename(string $from, string $to): \Utopia\Query\Builder\Statement
     {
     }
-    public function compileTruncate(string $name): Statement
+    public function compileTruncate(string $name): \Utopia\Query\Builder\Statement
     {
     }
-    public function dropIndex(string $table, string $name): Statement
+    public function dropIndex(string $table, string $name): \Utopia\Query\Builder\Statement
     {
     }
     /**
@@ -58,13 +45,13 @@ class MySQL extends \Utopia\Query\Schema\SQL implements ForeignKeys, Procedures,
      * @param  array<string, string>  $collations
      * @param  list<string>  $rawColumns  Raw SQL expressions appended to column list (bypass quoting)
      */
-    public function createIndex(string $table, string $name, array $columns, bool $unique = false, string $type = '', string $method = '', string $operatorClass = '', array $lengths = [], array $orders = [], array $collations = [], array $rawColumns = []): Statement
+    public function createIndex(string $table, string $name, array $columns, bool $unique = false, string $type = '', string $method = '', string $operatorClass = '', array $lengths = [], array $orders = [], array $collations = [], array $rawColumns = []): \Utopia\Query\Builder\Statement
     {
     }
-    public function addForeignKey(string $table, string $name, string $column, string $refTable, string $refColumn, ?ForeignKeyAction $onDelete = null, ?ForeignKeyAction $onUpdate = null): Statement
+    public function addForeignKey(string $table, string $name, string $column, string $refTable, string $refColumn, ?\Utopia\Query\Schema\ForeignKeyAction $onDelete = null, ?\Utopia\Query\Schema\ForeignKeyAction $onUpdate = null): \Utopia\Query\Builder\Statement
     {
     }
-    public function dropForeignKey(string $table, string $name): Statement
+    public function dropForeignKey(string $table, string $name): \Utopia\Query\Builder\Statement
     {
     }
     /**
@@ -75,10 +62,10 @@ class MySQL extends \Utopia\Query\Schema\SQL implements ForeignKeys, Procedures,
      *
      * @param  list<array{0: ParameterDirection, 1: string, 2: string}>  $params
      */
-    public function createProcedure(string $name, array $params, string $body): Statement
+    public function createProcedure(string $name, array $params, string $body): \Utopia\Query\Builder\Statement
     {
     }
-    public function dropProcedure(string $name): Statement
+    public function dropProcedure(string $name): \Utopia\Query\Builder\Statement
     {
     }
     /**
@@ -87,55 +74,55 @@ class MySQL extends \Utopia\Query\Schema\SQL implements ForeignKeys, Procedures,
      * $body is emitted verbatim into the generated DDL and must come from
      * trusted (developer-controlled) source — never from untrusted input.
      */
-    public function createTrigger(string $name, string $table, TriggerTiming $timing, TriggerEvent $event, string $body): Statement
+    public function createTrigger(string $name, string $table, \Utopia\Query\Schema\TriggerTiming $timing, \Utopia\Query\Schema\TriggerEvent $event, string $body): \Utopia\Query\Builder\Statement
     {
     }
-    public function dropTrigger(string $name, ?string $table = null): Statement
+    public function dropTrigger(string $name, ?string $table = null): \Utopia\Query\Builder\Statement
     {
     }
-    public function commentOnTable(string $table, string $comment): Statement
+    public function commentOnTable(string $table, string $comment): \Utopia\Query\Builder\Statement
     {
     }
-    public function createPartition(string $parent, string $name, string $expression): Statement
+    public function createPartition(string $parent, string $name, string $expression): \Utopia\Query\Builder\Statement
     {
     }
-    public function dropPartition(string $table, string $name): Statement
+    public function dropPartition(string $table, string $name): \Utopia\Query\Builder\Statement
     {
     }
-    public function createView(string $name, Builder $query): Statement
+    public function createView(string $name, \Utopia\Query\Builder $query): \Utopia\Query\Builder\Statement
     {
     }
-    public function dropView(string $name): Statement
+    public function dropView(string $name): \Utopia\Query\Builder\Statement
     {
     }
-    public function createOrReplaceView(string $name, Builder $query): Statement
+    public function createOrReplaceView(string $name, \Utopia\Query\Builder $query): \Utopia\Query\Builder\Statement
     {
     }
-    public function createDatabase(string $name): Statement
+    public function createDatabase(string $name): \Utopia\Query\Builder\Statement
     {
     }
-    public function dropDatabase(string $name): Statement
+    public function dropDatabase(string $name): \Utopia\Query\Builder\Statement
     {
     }
-    public function renameIndex(string $table, string $from, string $to): Statement
+    public function renameIndex(string $table, string $from, string $to): \Utopia\Query\Builder\Statement
     {
     }
-    public function analyzeTable(string $table): Statement
+    public function analyzeTable(string $table): \Utopia\Query\Builder\Statement
     {
     }
-    public function compileCreatePartitioning(Table $table): string
+    public function compileCreatePartitioning(\Utopia\Query\Schema\Table $table): string
     {
     }
     /**
      * MySQL CHANGE COLUMN: rename and/or retype a column in one statement.
      */
-    public function changeColumn(string $table, string $oldName, string $newName, string $type): Statement
+    public function changeColumn(string $table, string $oldName, string $newName, string $type): \Utopia\Query\Builder\Statement
     {
     }
     /**
      * MySQL MODIFY COLUMN: retype a column without renaming.
      */
-    public function modifyColumn(string $table, string $name, string $type): Statement
+    public function modifyColumn(string $table, string $name, string $type): \Utopia\Query\Builder\Statement
     {
     }
 }

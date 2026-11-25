@@ -5,9 +5,6 @@
 
 namespace Utopia\Query\Classifier;
 
-use Utopia\Query\Classifier;
-use Utopia\Query\Type;
-
 /**
  * Abstract SQL Parser
  *
@@ -17,7 +14,7 @@ use Utopia\Query\Type;
  * Performance: Uses byte-level checks and simple string operations (no regex).
  * Designed to run on every packet with sub-microsecond overhead.
  */
-abstract class SQL implements Classifier
+abstract class SQL implements \Utopia\Query\Classifier
 {
     /**
      * Classify a SQL query string by its leading keyword
@@ -29,7 +26,7 @@ abstract class SQL implements Classifier
      * - COPY ... TO (read) vs COPY ... FROM (write)
      * - CTE: WITH ... SELECT (read) vs WITH ... INSERT/UPDATE/DELETE (write)
      */
-    public function classifySQL(string $query): Type
+    public function classifySQL(string $query): \Utopia\Query\Type
     {
     }
     /**

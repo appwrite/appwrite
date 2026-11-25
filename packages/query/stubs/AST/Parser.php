@@ -6,7 +6,6 @@
 namespace Utopia\Query\AST;
 
 use Utopia\Query\AST\Statement\Select;
-use Utopia\Query\StringLiteral;
 use Utopia\Query\Tokenizer\Token;
 
 /**
@@ -25,10 +24,10 @@ class Parser
      * Parse tokens into a Select.
      * @param Token[] $tokens filtered tokens (no whitespace/comments), must end with Eof
      */
-    public function parse(array $tokens): Select
+    public function parse(array $tokens): \Utopia\Query\AST\Statement\Select
     {
     }
-    public function __construct(private readonly StringLiteral $literal = StringLiteral::Backslash)
+    public function __construct(private readonly \Utopia\Query\StringLiteral $literal = \Utopia\Query\StringLiteral::Backslash)
     {
     }
 }

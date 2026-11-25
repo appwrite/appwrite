@@ -5,21 +5,18 @@
 
 namespace Utopia\Query\AST\Serializer;
 
-use Utopia\Query\AST\Statement\Select;
-use Utopia\Query\StringLiteral;
-
 class MySQL extends \Utopia\Query\AST\Serializer
 {
-    public function serialize(Select $stmt): string
+    public function serialize(\Utopia\Query\AST\Statement\Select $stmt): string
     {
     }
-    public function serializeExpression(Expression $expression): string
+    public function serializeExpression(\Utopia\Query\AST\Expression $expression): string
     {
     }
     protected function quoteIdentifier(string $name): string
     {
     }
-    public function __construct(protected readonly StringLiteral $literal = StringLiteral::Backslash)
+    public function __construct(protected readonly \Utopia\Query\StringLiteral $literal = \Utopia\Query\StringLiteral::Backslash)
     {
     }
 }

@@ -5,8 +5,6 @@
 
 namespace Utopia\Query\Builder\Feature\PostgreSQL;
 
-use Utopia\Query\Builder\VectorMetric;
-
 interface VectorSearch
 {
     /**
@@ -14,5 +12,5 @@ interface VectorSearch
      *
      * @param  array<float>  $vector  The query vector
      */
-    public function orderByVectorDistance(string $attribute, array $vector, VectorMetric $metric = VectorMetric::Cosine): static;
+    public function orderByVectorDistance(string $attribute, array $vector, \Utopia\Query\Builder\VectorMetric $metric = \Utopia\Query\Builder\VectorMetric::Cosine): static;
 }

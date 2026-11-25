@@ -28,7 +28,7 @@ use Utopia\Query\Type;
  */
 class MySQL extends \Utopia\Query\Classifier\SQL
 {
-    public function classify(string $data): Type
+    public function classify(string $data): \Utopia\Query\Type
     {
     }
     /**
@@ -41,7 +41,7 @@ class MySQL extends \Utopia\Query\Classifier\SQL
      * - COPY ... TO (read) vs COPY ... FROM (write)
      * - CTE: WITH ... SELECT (read) vs WITH ... INSERT/UPDATE/DELETE (write)
      */
-    public function classifySQL(string $query): Type
+    public function classifySQL(string $query): \Utopia\Query\Type
     {
     }
     /**

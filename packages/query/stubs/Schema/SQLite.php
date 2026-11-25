@@ -6,20 +6,18 @@
 namespace Utopia\Query\Schema;
 
 use Closure;
-use Utopia\Query\Builder;
 use Utopia\Query\Builder\Statement;
-use Utopia\Query\Schema\Feature\Views;
 
-class SQLite extends \Utopia\Query\Schema\SQL implements Views
+class SQLite extends \Utopia\Query\Schema\SQL implements \Utopia\Query\Schema\Feature\Views
 {
     /**
      * @param  Closure(Statement): (array<mixed>|int)  $executor
      */
-    public function setExecutor(Closure $executor): static
+    public function setExecutor(\Closure $executor): static
     {
     }
     #[\Override]
-    public function table(string $name): Table\SQLite
+    public function table(string $name): \Utopia\Query\Schema\Table\SQLite
     {
     }
     /**
@@ -28,24 +26,24 @@ class SQLite extends \Utopia\Query\Schema\SQL implements Views
      * base compiler would otherwise add.
      */
     #[\Override]
-    public function compileCreate(\Utopia\Query\Schema\Table $table, bool $ifNotExists = false): Statement
+    public function compileCreate(\Utopia\Query\Schema\Table $table, bool $ifNotExists = false): \Utopia\Query\Builder\Statement
     {
     }
-    public function compileAlter(Table $table): Statement
+    public function compileAlter(\Utopia\Query\Schema\Table $table): \Utopia\Query\Builder\Statement
     {
     }
-    public function compileDrop(string $name, bool $ifExists): Statement
-    {
-    }
-    #[\Override]
-    public function compileRename(string $from, string $to): Statement
+    public function compileDrop(string $name, bool $ifExists): \Utopia\Query\Builder\Statement
     {
     }
     #[\Override]
-    public function compileTruncate(string $name): Statement
+    public function compileRename(string $from, string $to): \Utopia\Query\Builder\Statement
     {
     }
-    public function dropIndex(string $table, string $name): Statement
+    #[\Override]
+    public function compileTruncate(string $name): \Utopia\Query\Builder\Statement
+    {
+    }
+    public function dropIndex(string $table, string $name): \Utopia\Query\Builder\Statement
     {
     }
     /**
@@ -55,13 +53,13 @@ class SQLite extends \Utopia\Query\Schema\SQL implements Views
      * @param  array<string, string>  $collations
      * @param  list<string>  $rawColumns  Raw SQL expressions appended to column list (bypass quoting)
      */
-    public function createIndex(string $table, string $name, array $columns, bool $unique = false, string $type = '', string $method = '', string $operatorClass = '', array $lengths = [], array $orders = [], array $collations = [], array $rawColumns = []): Statement
+    public function createIndex(string $table, string $name, array $columns, bool $unique = false, string $type = '', string $method = '', string $operatorClass = '', array $lengths = [], array $orders = [], array $collations = [], array $rawColumns = []): \Utopia\Query\Builder\Statement
     {
     }
-    public function createView(string $name, Builder $query): Statement
+    public function createView(string $name, \Utopia\Query\Builder $query): \Utopia\Query\Builder\Statement
     {
     }
-    public function dropView(string $name): Statement
+    public function dropView(string $name): \Utopia\Query\Builder\Statement
     {
     }
 }

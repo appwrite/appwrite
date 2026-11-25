@@ -5,7 +5,6 @@
 
 namespace Utopia\Query\Builder;
 
-use Closure;
 use Utopia\Query\AST\Expression;
 use Utopia\Query\AST\Expression\Between;
 use Utopia\Query\AST\Expression\In;
@@ -13,26 +12,16 @@ use Utopia\Query\AST\Literal;
 use Utopia\Query\AST\Raw;
 use Utopia\Query\AST\Reference\Column;
 use Utopia\Query\AST\Reference\Table;
-use Utopia\Query\AST\Serializer;
 use Utopia\Query\AST\Statement\Select;
 use Utopia\Query\Builder;
-use Utopia\Query\Builder\Case\Expression as CaseExpression;
-use Utopia\Query\Builder\Feature\ConditionalAggregates;
-use Utopia\Query\Builder\Feature\InsertOrIgnore;
-use Utopia\Query\Builder\Feature\Json;
-use Utopia\Query\Builder\Feature\StringAggregates;
-use Utopia\Query\Builder\Feature\Upsert;
-use Utopia\Query\Builder\Feature\UpsertSelect;
 use Utopia\Query\Hook;
 use Utopia\Query\Hook\Attribute;
 use Utopia\Query\Hook\Filter;
 use Utopia\Query\Hook\Join\Placement;
 use Utopia\Query\Method;
-use Utopia\Query\NullsPosition;
 use Utopia\Query\Query;
-use Utopia\Query\Tokenizer\Tokenizer;
 
-class SQLite extends \Utopia\Query\Builder\SQL implements Json, ConditionalAggregates, StringAggregates, InsertOrIgnore, Upsert, UpsertSelect
+class SQLite extends \Utopia\Query\Builder\SQL implements \Utopia\Query\Builder\Feature\Json, \Utopia\Query\Builder\Feature\ConditionalAggregates, \Utopia\Query\Builder\Feature\StringAggregates, \Utopia\Query\Builder\Feature\InsertOrIgnore, \Utopia\Query\Builder\Feature\Upsert, \Utopia\Query\Builder\Feature\UpsertSelect
 {
     /**
      * Parameter bindings produced during compilation. Each entry carries its
@@ -100,11 +89,11 @@ class SQLite extends \Utopia\Query\Builder\SQL implements Json, ConditionalAggre
     {
     }
     #[\Override]
-    public function sortAsc(string $attribute, ?NullsPosition $nulls = null): static
+    public function sortAsc(string $attribute, ?\Utopia\Query\NullsPosition $nulls = null): static
     {
     }
     #[\Override]
-    public function sortDesc(string $attribute, ?NullsPosition $nulls = null): static
+    public function sortDesc(string $attribute, ?\Utopia\Query\NullsPosition $nulls = null): static
     {
     }
     #[\Override]
@@ -230,122 +219,122 @@ class SQLite extends \Utopia\Query\Builder\SQL implements Json, ConditionalAggre
     {
     }
     #[\Override]
-    public function insert(): Statement
+    public function insert(): \Utopia\Query\Builder\Statement
     {
     }
     #[\Override]
-    public function insertDefaultValues(): Statement
+    public function insertDefaultValues(): \Utopia\Query\Builder\Statement
     {
     }
     #[\Override]
-    public function update(): Statement
+    public function update(): \Utopia\Query\Builder\Statement
     {
     }
     #[\Override]
-    public function delete(): Statement
+    public function delete(): \Utopia\Query\Builder\Statement
     {
     }
-    public function fromSub(Builder $subquery, string $alias): static
+    public function fromSub(\Utopia\Query\Builder $subquery, string $alias): static
     {
     }
-    public function selectSub(Builder $subquery, string $alias): static
+    public function selectSub(\Utopia\Query\Builder $subquery, string $alias): static
     {
     }
-    public function filterWhereIn(string $column, Builder $subquery): static
+    public function filterWhereIn(string $column, \Utopia\Query\Builder $subquery): static
     {
     }
-    public function filterWhereNotIn(string $column, Builder $subquery): static
+    public function filterWhereNotIn(string $column, \Utopia\Query\Builder $subquery): static
     {
     }
-    public function filterExists(Builder $subquery): static
+    public function filterExists(\Utopia\Query\Builder $subquery): static
     {
     }
-    public function filterNotExists(Builder $subquery): static
-    {
-    }
-    #[\Override]
-    public function union(Builder $other): static
+    public function filterNotExists(\Utopia\Query\Builder $subquery): static
     {
     }
     #[\Override]
-    public function unionAll(Builder $other): static
+    public function union(\Utopia\Query\Builder $other): static
     {
     }
     #[\Override]
-    public function intersect(Builder $other): static
+    public function unionAll(\Utopia\Query\Builder $other): static
     {
     }
     #[\Override]
-    public function intersectAll(Builder $other): static
+    public function intersect(\Utopia\Query\Builder $other): static
     {
     }
     #[\Override]
-    public function except(Builder $other): static
+    public function intersectAll(\Utopia\Query\Builder $other): static
     {
     }
     #[\Override]
-    public function exceptAll(Builder $other): static
+    public function except(\Utopia\Query\Builder $other): static
+    {
+    }
+    #[\Override]
+    public function exceptAll(\Utopia\Query\Builder $other): static
     {
     }
     /**
      * @param  list<string>  $columns
      */
     #[\Override]
-    public function with(string $name, Builder $query, array $columns = []): static
+    public function with(string $name, \Utopia\Query\Builder $query, array $columns = []): static
     {
     }
     /**
      * @param  list<string>  $columns
      */
     #[\Override]
-    public function withRecursive(string $name, Builder $query, array $columns = []): static
+    public function withRecursive(string $name, \Utopia\Query\Builder $query, array $columns = []): static
     {
     }
     /**
      * @param  list<string>  $columns
      */
     #[\Override]
-    public function withRecursiveSeedStep(string $name, Builder $seed, Builder $step, array $columns = []): static
+    public function withRecursiveSeedStep(string $name, \Utopia\Query\Builder $seed, \Utopia\Query\Builder $step, array $columns = []): static
     {
     }
     /**
      * @param  list<string>  $columns
      */
     #[\Override]
-    public function fromSelect(array $columns, Builder $source): static
+    public function fromSelect(array $columns, \Utopia\Query\Builder $source): static
     {
     }
     #[\Override]
-    public function insertSelect(): Statement
+    public function insertSelect(): \Utopia\Query\Builder\Statement
     {
     }
     /**
      * @param  \Closure(JoinBuilder): void  $callback
      */
     #[\Override]
-    public function joinWhere(string $table, Closure $callback, JoinType $type = JoinType::Inner, string $alias = ''): static
+    public function joinWhere(string $table, \Closure $callback, \Utopia\Query\Builder\JoinType $type = \Utopia\Query\Builder\JoinType::Inner, string $alias = ''): static
     {
     }
     #[\Override]
-    public function addHook(Hook $hook): static
+    public function addHook(\Utopia\Query\Hook $hook): static
     {
     }
     #[\Override]
-    public function selectWindow(string $function, string $alias, ?array $partitionBy = null, ?array $orderBy = null, ?string $windowName = null, ?WindowFrame $frame = null): static
+    public function selectWindow(string $function, string $alias, ?array $partitionBy = null, ?array $orderBy = null, ?string $windowName = null, ?\Utopia\Query\Builder\WindowFrame $frame = null): static
     {
     }
     #[\Override]
-    public function window(string $name, ?array $partitionBy = null, ?array $orderBy = null, ?WindowFrame $frame = null): static
+    public function window(string $name, ?array $partitionBy = null, ?array $orderBy = null, ?\Utopia\Query\Builder\WindowFrame $frame = null): static
     {
     }
     #[\Override]
-    public function when(bool $condition, Closure $callback): static
+    public function when(bool $condition, \Closure $callback): static
     {
     }
-    public function beforeBuild(Closure $callback): static
+    public function beforeBuild(\Closure $callback): static
     {
     }
-    public function afterBuild(Closure $callback): static
+    public function afterBuild(\Closure $callback): static
     {
     }
     /**
@@ -364,43 +353,43 @@ class SQLite extends \Utopia\Query\Builder\SQL implements Json, ConditionalAggre
     {
     }
     #[\Override]
-    public function build(): Statement
+    public function build(): \Utopia\Query\Builder\Statement
     {
     }
     #[\Override]
-    public function compileFilter(Query $query): string
+    public function compileFilter(\Utopia\Query\Query $query): string
     {
     }
     #[\Override]
-    public function compileOrder(Query $query): string
+    public function compileOrder(\Utopia\Query\Query $query): string
     {
     }
     #[\Override]
-    public function compileLimit(Query $query): string
+    public function compileLimit(\Utopia\Query\Query $query): string
     {
     }
     #[\Override]
-    public function compileOffset(Query $query): string
+    public function compileOffset(\Utopia\Query\Query $query): string
     {
     }
     #[\Override]
-    public function compileSelect(Query $query): string
+    public function compileSelect(\Utopia\Query\Query $query): string
     {
     }
     #[\Override]
-    public function compileCursor(Query $query): string
+    public function compileCursor(\Utopia\Query\Query $query): string
     {
     }
     #[\Override]
-    public function compileAggregate(Query $query): string
+    public function compileAggregate(\Utopia\Query\Query $query): string
     {
     }
     #[\Override]
-    public function compileGroupBy(Query $query): string
+    public function compileGroupBy(\Utopia\Query\Query $query): string
     {
     }
     #[\Override]
-    public function compileJoin(Query $query): string
+    public function compileJoin(\Utopia\Query\Query $query): string
     {
     }
     /**
@@ -440,7 +429,7 @@ class SQLite extends \Utopia\Query\Builder\SQL implements Json, ConditionalAggre
     protected function compileNotContains(string $attribute, array $values, ?string $column = null): string
     {
     }
-    protected function compileJoinWithBuilder(Query $query, JoinBuilder $joinBuilder): string
+    protected function compileJoinWithBuilder(\Utopia\Query\Query $query, \Utopia\Query\Builder\JoinBuilder $joinBuilder): string
     {
     }
     protected function resolveAttribute(string $attribute): string
@@ -503,10 +492,10 @@ class SQLite extends \Utopia\Query\Builder\SQL implements Json, ConditionalAggre
     protected function compileJsonOverlapsExpression(string $attribute, array $values): string
     {
     }
-    protected function compileSpatialFilter(Method $method, string $attribute, Query $query): string
+    protected function compileSpatialFilter(\Utopia\Query\Method $method, string $attribute, \Utopia\Query\Query $query): string
     {
     }
-    protected function compileArrayFilter(Method $method, string $attribute, Query $query): string
+    protected function compileArrayFilter(\Utopia\Query\Method $method, string $attribute, \Utopia\Query\Query $query): string
     {
     }
     /**
@@ -588,17 +577,17 @@ class SQLite extends \Utopia\Query\Builder\SQL implements Json, ConditionalAggre
     public function forShare(): static
     {
     }
-    public function upsert(): Statement
+    public function upsert(): \Utopia\Query\Builder\Statement
     {
     }
-    public function upsertSelect(): Statement
+    public function upsertSelect(): \Utopia\Query\Builder\Statement
     {
     }
     #[\Override]
-    public function insertOrIgnore(): Statement
+    public function insertOrIgnore(): \Utopia\Query\Builder\Statement
     {
     }
-    public function explain(bool $analyze = false): Statement
+    public function explain(bool $analyze = false): \Utopia\Query\Builder\Statement
     {
     }
     #[\Override]
@@ -750,27 +739,27 @@ class SQLite extends \Utopia\Query\Builder\SQL implements Json, ConditionalAggre
     {
     }
     #[\Override]
-    public function begin(): Statement
+    public function begin(): \Utopia\Query\Builder\Statement
     {
     }
     #[\Override]
-    public function commit(): Statement
+    public function commit(): \Utopia\Query\Builder\Statement
     {
     }
     #[\Override]
-    public function rollback(): Statement
+    public function rollback(): \Utopia\Query\Builder\Statement
     {
     }
     #[\Override]
-    public function savepoint(string $name): Statement
+    public function savepoint(string $name): \Utopia\Query\Builder\Statement
     {
     }
     #[\Override]
-    public function releaseSavepoint(string $name): Statement
+    public function releaseSavepoint(string $name): \Utopia\Query\Builder\Statement
     {
     }
     #[\Override]
-    public function rollbackToSavepoint(string $name): Statement
+    public function rollbackToSavepoint(string $name): \Utopia\Query\Builder\Statement
     {
     }
     /**
@@ -780,16 +769,16 @@ class SQLite extends \Utopia\Query\Builder\SQL implements Json, ConditionalAggre
     public function groupConcat(string $column, string $separator = ',', string $alias = '', ?array $orderBy = null): static
     {
     }
-    public function selectCase(CaseExpression $case): static
+    public function selectCase(\Utopia\Query\Builder\Case\Expression $case): static
     {
     }
-    public function setCase(string $column, CaseExpression $case): static
+    public function setCase(string $column, \Utopia\Query\Builder\Case\Expression $case): static
     {
     }
-    public function toAst(): Select
+    public function toAst(): \Utopia\Query\AST\Statement\Select
     {
     }
-    public static function fromAst(Select $ast): static
+    public static function fromAst(\Utopia\Query\AST\Statement\Select $ast): static
     {
     }
     #[\Override]
@@ -829,7 +818,7 @@ class SQLite extends \Utopia\Query\Builder\SQL implements Json, ConditionalAggre
     protected function shouldEmitOffset(?int $offset, ?int $limit): bool
     {
     }
-    protected function compileHavingCondition(Query $query, string $expression): string
+    protected function compileHavingCondition(\Utopia\Query\Query $query, string $expression): string
     {
     }
     /**
@@ -875,7 +864,7 @@ class SQLite extends \Utopia\Query\Builder\SQL implements Json, ConditionalAggre
      * @param  array<mixed>  $values
      */
     #[\Override]
-    protected function compileSpatialDistance(Method $method, string $attribute, array $values): string
+    protected function compileSpatialDistance(\Utopia\Query\Method $method, string $attribute, array $values): string
     {
     }
     /**
@@ -899,7 +888,7 @@ class SQLite extends \Utopia\Query\Builder\SQL implements Json, ConditionalAggre
     protected function compileJsonPathExpression(string $attribute, array $values): string
     {
     }
-    protected function compileJsonFilter(Method $method, string $attribute, Query $query): string
+    protected function compileJsonFilter(\Utopia\Query\Method $method, string $attribute, \Utopia\Query\Query $query): string
     {
     }
     #[\Override]
@@ -954,7 +943,7 @@ class SQLite extends \Utopia\Query\Builder\SQL implements Json, ConditionalAggre
      * Compile a CASE expression to SQL, appending bindings to $this->bindings
      * in the order WHEN-value, THEN-value, ..., ELSE-value.
      */
-    protected function compileCase(CaseExpression $case): string
+    protected function compileCase(\Utopia\Query\Builder\Case\Expression $case): string
     {
     }
     /**
@@ -974,13 +963,13 @@ class SQLite extends \Utopia\Query\Builder\SQL implements Json, ConditionalAggre
     /**
      * @param  array<string>  $parts
      */
-    protected function compileWhereClauses(array &$parts, ?ParsedQuery $grouped = null): void
+    protected function compileWhereClauses(array &$parts, ?\Utopia\Query\Builder\ParsedQuery $grouped = null): void
     {
     }
     /**
      * @param  array<string>  $parts
      */
-    protected function compileOrderAndLimit(array &$parts, ?ParsedQuery $grouped = null): void
+    protected function compileOrderAndLimit(array &$parts, ?\Utopia\Query\Builder\ParsedQuery $grouped = null): void
     {
     }
     /**
@@ -989,13 +978,13 @@ class SQLite extends \Utopia\Query\Builder\SQL implements Json, ConditionalAggre
      * Implementations must add any bindings they emit via $this->addBindings()
      * at the moment their fragment is emitted so ordering is preserved.
      */
-    protected function buildAfterJoinsClause(ParsedQuery $grouped): string
+    protected function buildAfterJoinsClause(\Utopia\Query\Builder\ParsedQuery $grouped): string
     {
     }
     /**
      * Hook for subclasses to inject a vector distance ORDER BY expression.
      */
-    protected function compileVectorOrderExpression(): ?Condition
+    protected function compileVectorOrderExpression(): ?\Utopia\Query\Builder\Condition
     {
     }
     /**
@@ -1003,15 +992,15 @@ class SQLite extends \Utopia\Query\Builder\SQL implements Json, ConditionalAggre
      * ClickHouse overrides this to always return Placement::Where since it
      * does not support subqueries in JOIN ON conditions.
      */
-    protected function resolveJoinFilterPlacement(Placement $requested, bool $isCrossJoin): Placement
+    protected function resolveJoinFilterPlacement(\Utopia\Query\Hook\Join\Placement $requested, bool $isCrossJoin): \Utopia\Query\Hook\Join\Placement
     {
     }
     #[\Override]
-    protected function createTokenizer(): Tokenizer
+    protected function createTokenizer(): \Utopia\Query\Tokenizer\Tokenizer
     {
     }
     #[\Override]
-    protected function createAstSerializer(): Serializer
+    protected function createAstSerializer(): \Utopia\Query\AST\Serializer
     {
     }
     public function __clone(): void

@@ -5,9 +5,6 @@
 
 namespace Utopia\Query\Classifier;
 
-use Utopia\Query\Classifier;
-use Utopia\Query\Type;
-
 /**
  * MongoDB Wire Protocol Parser
  *
@@ -29,9 +26,9 @@ use Utopia\Query\Type;
  * - TransactionBegin: startTransaction flag present
  * - TransactionEnd: commitTransaction or abortTransaction command
  */
-class MongoDB implements Classifier
+class MongoDB implements \Utopia\Query\Classifier
 {
-    public function classify(string $data): Type
+    public function classify(string $data): \Utopia\Query\Type
     {
     }
 }

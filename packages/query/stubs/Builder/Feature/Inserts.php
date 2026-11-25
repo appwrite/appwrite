@@ -5,9 +5,6 @@
 
 namespace Utopia\Query\Builder\Feature;
 
-use Utopia\Query\Builder;
-use Utopia\Query\Builder\Statement;
-
 interface Inserts
 {
     public function into(string $table): static;
@@ -20,11 +17,11 @@ interface Inserts
      * @param  string[]  $updateColumns
      */
     public function onConflict(array $keys, array $updateColumns): static;
-    public function insert(): Statement;
-    public function insertDefaultValues(): Statement;
+    public function insert(): \Utopia\Query\Builder\Statement;
+    public function insertDefaultValues(): \Utopia\Query\Builder\Statement;
     /**
      * @param  list<string>  $columns
      */
-    public function fromSelect(array $columns, Builder $source): static;
-    public function insertSelect(): Statement;
+    public function fromSelect(array $columns, \Utopia\Query\Builder $source): static;
+    public function insertSelect(): \Utopia\Query\Builder\Statement;
 }

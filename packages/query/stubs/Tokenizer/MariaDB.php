@@ -5,8 +5,6 @@
 
 namespace Utopia\Query\Tokenizer;
 
-use Utopia\Query\StringLiteral;
-
 class MariaDB extends \Utopia\Query\Tokenizer\MySQL
 {
     /**
@@ -25,7 +23,7 @@ class MariaDB extends \Utopia\Query\Tokenizer\MySQL
     protected function getIdentifierQuoteChar(): string
     {
     }
-    public function __construct(protected readonly StringLiteral $literal = StringLiteral::Backslash)
+    public function __construct(protected readonly \Utopia\Query\StringLiteral $literal = \Utopia\Query\StringLiteral::Backslash)
     {
     }
 }

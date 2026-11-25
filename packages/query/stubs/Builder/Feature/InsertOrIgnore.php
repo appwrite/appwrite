@@ -5,9 +5,7 @@
 
 namespace Utopia\Query\Builder\Feature;
 
-use Utopia\Query\Builder\Statement;
-
 interface InsertOrIgnore
 {
-    public function insertOrIgnore(): Statement;
+    public function insertOrIgnore(): \Utopia\Query\Builder\Statement;
 }

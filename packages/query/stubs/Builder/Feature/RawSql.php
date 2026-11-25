@@ -5,8 +5,6 @@
 
 namespace Utopia\Query\Builder\Feature;
 
-use Utopia\Query\Builder\Case\Expression as CaseExpression;
-
 /**
  * Splicing raw SQL fragments and CASE expressions into a statement.
  *
@@ -50,6 +48,6 @@ interface RawSql
     public function insertColumnExpression(string $column, string $expression, array $extraBindings = []): static;
     public function selectCast(string $column, string $type, string $alias = ''): static;
     public function whereColumn(string $left, string $operator, string $right): static;
-    public function selectCase(CaseExpression $case): static;
-    public function setCase(string $column, CaseExpression $case): static;
+    public function selectCase(\Utopia\Query\Builder\Case\Expression $case): static;
+    public function setCase(string $column, \Utopia\Query\Builder\Case\Expression $case): static;
 }

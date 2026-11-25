@@ -5,11 +5,8 @@
 
 namespace Utopia\Query\Builder\Feature;
 
-use Utopia\Query\Builder;
-use Utopia\Query\Builder\JoinType;
-
 interface LateralJoins
 {
-    public function joinLateral(Builder $subquery, string $alias, JoinType $type = JoinType::Inner): static;
-    public function leftJoinLateral(Builder $subquery, string $alias): static;
+    public function joinLateral(\Utopia\Query\Builder $subquery, string $alias, \Utopia\Query\Builder\JoinType $type = \Utopia\Query\Builder\JoinType::Inner): static;
+    public function leftJoinLateral(\Utopia\Query\Builder $subquery, string $alias): static;
 }

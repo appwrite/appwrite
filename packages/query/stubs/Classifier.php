@@ -23,5 +23,5 @@ interface Classifier
      * @param  string  $data  Raw protocol message bytes
      * @return Type Classification result
      */
-    public function classify(string $data): Type;
+    public function classify(string $data): \Utopia\Query\Type;
 }

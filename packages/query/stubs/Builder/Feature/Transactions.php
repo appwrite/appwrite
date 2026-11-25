@@ -5,14 +5,12 @@
 
 namespace Utopia\Query\Builder\Feature;
 
-use Utopia\Query\Builder\Statement;
-
 interface Transactions
 {
-    public function begin(): Statement;
-    public function commit(): Statement;
-    public function rollback(): Statement;
-    public function savepoint(string $name): Statement;
-    public function releaseSavepoint(string $name): Statement;
-    public function rollbackToSavepoint(string $name): Statement;
+    public function begin(): \Utopia\Query\Builder\Statement;
+    public function commit(): \Utopia\Query\Builder\Statement;
+    public function rollback(): \Utopia\Query\Builder\Statement;
+    public function savepoint(string $name): \Utopia\Query\Builder\Statement;
+    public function releaseSavepoint(string $name): \Utopia\Query\Builder\Statement;
+    public function rollbackToSavepoint(string $name): \Utopia\Query\Builder\Statement;
 }

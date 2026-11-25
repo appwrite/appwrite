@@ -20,12 +20,12 @@ interface AsofJoins
      * @param  AsofOperator  $operator  Inequality operator.
      * @param  string  $rightInequality  Right column of the inequality (e.g. 'quotes.ts').
      */
-    public function asofJoin(string $table, array $equiPairs, string $leftInequality, AsofOperator $operator, string $rightInequality, string $alias = ''): static;
+    public function asofJoin(string $table, array $equiPairs, string $leftInequality, \Utopia\Query\Builder\ClickHouse\AsofOperator $operator, string $rightInequality, string $alias = ''): static;
     /**
      * ClickHouse ASOF LEFT JOIN — left-join variant; unmatched left rows appear
      * with NULLs on the right side.
      *
      * @param  array<string, string>  $equiPairs
      */
-    public function asofLeftJoin(string $table, array $equiPairs, string $leftInequality, AsofOperator $operator, string $rightInequality, string $alias = ''): static;
+    public function asofLeftJoin(string $table, array $equiPairs, string $leftInequality, \Utopia\Query\Builder\ClickHouse\AsofOperator $operator, string $rightInequality, string $alias = ''): static;
 }
