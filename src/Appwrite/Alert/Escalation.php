@@ -27,8 +27,8 @@ readonly class Escalation
 
     /**
      * Steps and repeats as a request sends them: at least one step, each waiting
-     * `delay` seconds (up to 30 days) and notifying at least one of `$roles` or
-     * one member.
+     * `delay` seconds (0 when left out, up to 30 days) and naming distinct `$roles`,
+     * distinct `userIds` or both. Errors name the step as `steps[index]`.
      *
      * @param array<mixed> $steps
      * @param array<string> $roles the organization roles a step may name
@@ -42,23 +42,31 @@ readonly class Escalation
 
         $parsed = [];
         foreach (\array_values($steps) as $index => $step) {
-            if (!\is_array($step)) {
-                throw new \InvalidArgumentException("Step {$index} must be an object with `delay` and `roles` or `userIds`.");
+            if (!\is_array($step) || ($step !== [] && \array_is_list($step))) {
+                throw new \InvalidArgumentException("`steps[{$index}]` must be an object with `delay` and `roles` or `userIds`.");
             }
 
             $unknown = \array_diff(\array_keys($step), ['delay', 'roles', 'userIds']);
             if ($unknown !== []) {
-                throw new \InvalidArgumentException("Step {$index} has unknown keys: " . \implode(', ', $unknown) . '.');
+                throw new \InvalidArgumentException("`steps[{$index}]` has unknown keys: " . \implode(', ', $unknown) . '.');
             }
 
             $delay = $step['delay'] ?? 0;
             if (!\is_int($delay) || $delay < 0 || $delay > self::MAX_DELAY) {
-                throw new \InvalidArgumentException("Step {$index} needs a `delay` in seconds between 0 and " . self::MAX_DELAY . '.');
+                throw new \InvalidArgumentException("`steps[{$index}]` needs a `delay` in seconds between 0 and " . self::MAX_DELAY . '.');
             }
 
             foreach (['roles', 'userIds'] as $key) {
-                if (!\is_array($step[$key] ?? []) || \array_filter($step[$key] ?? [], fn ($value) => !\is_string($value) || $value === '') !== []) {
-                    throw new \InvalidArgumentException("Step {$index} needs `{$key}` to be a list of strings.");
+                $values = $step[$key] ?? [];
+                if (!\is_array($values) || !\array_is_list($values) || \array_filter($values, fn ($value) => !\is_string($value) || $value === '') !== []) {
+                    throw new \InvalidArgumentException("`steps[{$index}]` needs `{$key}` as a list of strings.");
+                }
+            }
+
+            foreach (['roles' => 'role', 'userIds' => 'member'] as $key => $noun) {
+                $repeated = \array_unique(\array_diff_assoc($step[$key] ?? [], \array_unique($step[$key] ?? [])));
+                if ($repeated !== []) {
+                    throw new \InvalidArgumentException("`steps[{$index}]` names the same {$noun} more than once: " . \implode(', ', $repeated) . '.');
                 }
             }
 
@@ -66,11 +74,11 @@ readonly class Escalation
 
             $unknownRoles = \array_diff($parsedStep->roles, $roles);
             if ($unknownRoles !== []) {
-                throw new \InvalidArgumentException("Step {$index} names roles the organization does not have: " . \implode(', ', $unknownRoles) . '. Use ' . \implode(', ', $roles) . '.');
+                throw new \InvalidArgumentException("`steps[{$index}]` names roles the organization does not have: " . \implode(', ', $unknownRoles) . '. Use ' . \implode(', ', $roles) . '.');
             }
 
             if ($parsedStep->roles === [] && $parsedStep->userIds === []) {
-                throw new \InvalidArgumentException("Step {$index} notifies nobody: name `roles`, `userIds` or both.");
+                throw new \InvalidArgumentException("`steps[{$index}]` notifies nobody: name `roles`, `userIds` or both.");
             }
         }
 

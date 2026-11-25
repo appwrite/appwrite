@@ -74,6 +74,20 @@ export type ReviewFinding = {
 }
 
 /**
+ * A changed file in a review's walkthrough.
+ */
+export type ReviewWalkthroughEntry = {
+  /**
+   * File path from the repository root.
+   */
+  path: string
+  /**
+   * What the pull request changes in the file.
+   */
+  change: string
+}
+
+/**
  * Review
  */
 export type Review = {
@@ -146,6 +160,10 @@ export type Review = {
    * Review summary in Markdown.
    */
   summary: string
+  /**
+   * What each changed file does, once completed. Empty until then.
+   */
+  walkthrough: ReviewWalkthroughEntry[]
   /**
    * Why the review was skipped or failed.
    */

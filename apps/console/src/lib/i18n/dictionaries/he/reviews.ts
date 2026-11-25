@@ -270,4 +270,48 @@ export const heReviewsDictionary: Record<string, string> = {
     'קטגוריות שנדחות לעיתים קרובות הן מועמדות ללמידה שתורה לסוקר לסמן אותן פחות.',
   'Useful findings is the share of settled findings that were fixed rather than dismissed; findings still open count for neither.':
     'ממצאים מועילים הם החלק מהממצאים שהוכרעו שתוקנו ולא נדחו; ממצאים שעדיין פתוחים אינם נספרים לאף צד.',
+  // Functions and sites: code review of the connected repository
+  'Code review': 'סקירת קוד',
+  'Review pull requests': 'סקירת Pull requests',
+  'Code review was not turned on': 'סקירת הקוד לא הופעלה',
+  'Turn it on later from Settings > Git.':
+    'אפשר להפעיל אותה בהמשך בהגדרות > Git.',
+  'Code review is already on for this repository.':
+    'סקירת הקוד כבר מופעלת למאגר הזה.',
+  'Appwrite reviews each pull request when it is opened or gets new commits, and comments on it.':
+    'Appwrite סוקר כל Pull request כשהוא נפתח או מקבל קומיטים חדשים, ומגיב בו.',
+  "Reviews use your organization's review credits.":
+    'הסקירות משתמשות בקרדיטי הסקירה של הארגון שלכם.',
+  'Review pull requests to the connected repository and comment on them. The setting applies to the whole repository.':
+    'סקירת Pull requests במאגר המחובר ותגובות בהם. ההגדרה חלה על המאגר כולו.',
+  'Each pull request is reviewed when it is opened or gets new commits.':
+    'כל Pull request נסקר כשהוא נפתח או מקבל קומיטים חדשים.',
+  'Review strength': 'עוצמת הסקירה',
+  'How hard pull requests are reviewed, and what each review costs.':
+    'עד כמה לעומק נסקרים Pull requests, וכמה עולה כל סקירה.',
+  'View reviews': 'צפייה בסקירות',
+  'Connect a repository to this function to review its pull requests.':
+    'חברו מאגר לפונקציה הזו כדי לסקור את ה-Pull requests שלו.',
+  'Connect a repository to this site to review its pull requests.':
+    'חברו מאגר לאתר הזה כדי לסקור את ה-Pull requests שלו.',
+  'Code review does not run on this provider': 'סקירת קוד לא פועלת בספק הזה',
+  'Code review runs on GitHub, GitLab, Gitea, Bitbucket and Origin repositories.':
+    'סקירת קוד פועלת במאגרים של GitHub, GitLab, Gitea, Bitbucket ו-Origin.',
+  'Code review is off': 'סקירת הקוד כבויה',
+  'Turn on code review to have each pull request reviewed when it is opened or gets new commits.':
+    'הפעילו סקירת קוד כדי שכל Pull request ייסקר כשהוא נפתח או מקבל קומיטים חדשים.',
+  'Pull requests that change files in': 'Pull requests שמשנים קבצים בתיקייה',
+  'Reviews show up here when a pull request that changes this directory is opened or gets new commits.':
+    'סקירות יופיעו כאן כש-Pull request שמשנה את התיקייה הזו נפתח או מקבל קומיטים חדשים.',
+  'Reviews show up here when a pull request is opened or gets new commits.':
+    'סקירות יופיעו כאן כש-Pull request נפתח או מקבל קומיטים חדשים.',
+  'No reviews of this directory among the latest ones.':
+    'אין סקירות של התיקייה הזו בין הסקירות האחרונות.',
+
+  // Row menus
+  'Copy text': 'העתקת הטקסט',
+  'Copy title': 'העתקת הכותרת',
+  'Open profile on GitHub': 'פתיחת הפרופיל ב-GitHub',
+  'Open file': 'פתיחת הקובץ',
+  'Open comment': 'פתיחת התגובה',
 }

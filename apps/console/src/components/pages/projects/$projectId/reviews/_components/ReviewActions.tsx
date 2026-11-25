@@ -6,34 +6,9 @@ import {
   GitCommitHorizontal,
   Link2,
   Square,
-  type LucideIcon,
 } from 'lucide-react'
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuSeparator,
-  ContextMenuSub,
-  ContextMenuSubContent,
-  ContextMenuSubTrigger,
-  ContextMenuTrigger,
-} from '@/components/ui/context-menu'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import {
-  ContextMenuIcon,
-  MenuItemContent,
-  MenuItemIcon,
-} from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import { RowActionsDropdown, RowContextMenu, type RowAction } from './RowMenus'
 import type { Review } from '@/lib/appwrite/reviews'
 import { fetchReview, useReviewInstallation } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
@@ -81,8 +56,6 @@ export function useReviewUrls(
   return urls && meta ? { urls, label: meta.label } : null
 }
 
-type Action = { icon: LucideIcon; label: string; onSelect: () => void }
-
 /**
  * What a review's menus offer, top to bottom: the copy submenu, then links.
  * Reviews are written by the review service, so there is nothing to change or
@@ -95,7 +68,7 @@ function useReviewActions(projectId: string, review: Review) {
   )
   const links = useReviewUrls(projectId, review)
 
-  const copy: Action[] = [
+  const copy: RowAction[] = [
     {
       icon: Copy,
       label: t('Copy ID'),
@@ -126,7 +99,7 @@ function useReviewActions(projectId: string, review: Review) {
     },
   ]
 
-  const opens: Action[] = [
+  const opens: RowAction[] = [
     ...(links
       ? [
           {
@@ -148,7 +121,7 @@ function useReviewActions(projectId: string, review: Review) {
     },
   ]
 
-  return { copy, links: opens, copyLabel: t('Copy') }
+  return { copy, links: opens }
 }
 
 /** Right-click menu of a review row. */
@@ -161,35 +134,8 @@ export function ReviewContextMenu({
   review: Review
   children: ReactNode
 }) {
-  const { copy, links, copyLabel } = useReviewActions(projectId, review)
-  return (
-    <ContextMenu>
-      <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-      <ContextMenuContent className="w-56">
-        <ContextMenuSub>
-          <ContextMenuSubTrigger>
-            <ContextMenuIcon icon={Copy} />
-            {copyLabel}
-          </ContextMenuSubTrigger>
-          <ContextMenuSubContent>
-            {copy.map((action) => (
-              <ContextMenuItem key={action.label} onSelect={action.onSelect}>
-                <ContextMenuIcon icon={action.icon} />
-                {action.label}
-              </ContextMenuItem>
-            ))}
-          </ContextMenuSubContent>
-        </ContextMenuSub>
-        <ContextMenuSeparator />
-        {links.map((action) => (
-          <ContextMenuItem key={action.label} onSelect={action.onSelect}>
-            <ContextMenuIcon icon={action.icon} />
-            {action.label}
-          </ContextMenuItem>
-        ))}
-      </ContextMenuContent>
-    </ContextMenu>
-  )
+  const actions = useReviewActions(projectId, review)
+  return <RowContextMenu actions={actions}>{children}</RowContextMenu>
 }
 
 /** The ⋯ menu of a review, on its row and on its page; same items as the right-click menu. */
@@ -204,39 +150,17 @@ export function ReviewActionsMenu({
   trigger?: ReactNode
 }) {
   const t = useT()
-  const { copy, links, copyLabel } = useReviewActions(projectId, review)
+  const actions = useReviewActions(projectId, review)
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        {trigger ?? (
+    <RowActionsDropdown
+      actions={actions}
+      trigger={
+        trigger ?? (
           <RowActionsMenuTrigger
             aria-label={`${t('Actions for')} ${review.providerRepositoryOwner}/${review.providerRepositoryName} #${review.providerPullRequestId}`}
           />
-        )}
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger>
-            <MenuItemIcon icon={Copy} />
-            {copyLabel}
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
-            {copy.map((action) => (
-              <DropdownMenuItem key={action.label} onClick={action.onSelect}>
-                <MenuItemContent icon={action.icon}>
-                  {action.label}
-                </MenuItemContent>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
-        <DropdownMenuSeparator />
-        {links.map((action) => (
-          <DropdownMenuItem key={action.label} onClick={action.onSelect}>
-            <MenuItemContent icon={action.icon}>{action.label}</MenuItemContent>
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+        )
+      }
+    />
   )
 }

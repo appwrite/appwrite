@@ -54,6 +54,7 @@ import {
 import type { CompactFilterKey } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 import { CreateExecutionDrawer } from './CreateExecutionDrawer'
+import { useReviewsAccess } from '../reviews/_components/useReviewsAccess'
 import { CreateDeploymentDropdown } from '../shared/CreateDeploymentDropdown'
 import { CreateGitDeploymentModal } from '../shared/CreateGitDeploymentModal'
 import { CreateCliDeploymentModal } from '../shared/CreateCliDeploymentModal'
@@ -113,6 +114,7 @@ function FunctionLayoutContent() {
           [
             'overview',
             'deployments',
+            'reviews',
             'executions',
             'runtime-logs',
             'domains',
@@ -160,6 +162,7 @@ function FunctionLayoutContent() {
     isCloudProfile() && canSeeProjectNavItem(access, features, 'firewall')
   // Cloud only: self-hosted doesn't serve `/v1/logs`, even with the flag on.
   const showRuntimeLogsTab = isCloudProfile() && features.runtimeLogs
+  const { visible: showReviewsTab } = useReviewsAccess(projectId)
 
   const [filtersOpen, setFiltersOpen] = useState(false)
   const functionFilterMap = useMemo(() => {
@@ -249,6 +252,19 @@ function FunctionLayoutContent() {
           functionId: functionId as string,
         },
       },
+      ...(showReviewsTab
+        ? [
+            {
+              id: 'reviews' as const,
+              label: t('Reviews'),
+              to: '/projects/$projectId/functions/$functionId/reviews',
+              params: {
+                projectId: projectId as string,
+                functionId: functionId as string,
+              },
+            },
+          ]
+        : []),
       {
         id: 'domains',
         label: t('Domains'),
@@ -345,6 +361,7 @@ function FunctionLayoutContent() {
     showUsageTab,
     showFirewallTab,
     showRuntimeLogsTab,
+    showReviewsTab,
     showSecuritySettings,
     t,
   ])

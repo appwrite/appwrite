@@ -2,13 +2,6 @@ import { useEffect, useState } from 'react'
 import { Copy, ExternalLink, Lightbulb, Loader2, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import {
   Table,
   TableBody,
   TableCell,
@@ -19,7 +12,6 @@ import {
 import { ConfirmActionDialog } from '@/components/global/shared/ConfirmActionDialog'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
-import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import type { ReviewLearning } from '@/lib/appwrite/reviews'
@@ -29,7 +21,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { useT } from '@/lib/i18n/translate'
-import { copyToClipboard } from '@/lib/utils/context-menu'
+import { copyToClipboard, openInNewTab } from '@/lib/utils/context-menu'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   closeDialogBeforeOverlayUnmount,
@@ -37,6 +29,7 @@ import {
 } from '@/lib/utils/overlay-lock'
 import { VcsIcon } from '@/lib/vcs/providers'
 import { ReviewAuthorLink } from './ReviewBadges'
+import { RowActionsDropdown, RowContextMenu, type RowActions } from './RowMenus'
 
 const HEAD_CLASS =
   'px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
@@ -145,92 +138,87 @@ export function Learnings({ projectId, canWrite }: LearningsProps) {
           <TableBody>
             {learnings.map((learning) => {
               const name = repositoryName(learning)
+              const actions: RowActions = {
+                copy: [
+                  {
+                    icon: Copy,
+                    label: t('Copy ID'),
+                    onSelect: () => void copyToClipboard('ID', learning.$id),
+                  },
+                  {
+                    icon: Copy,
+                    label: t('Copy text'),
+                    onSelect: () => void copyToClipboard('Text', learning.body),
+                  },
+                ],
+                links: learning.sourceUrl
+                  ? [
+                      {
+                        icon: ExternalLink,
+                        label: t('Open conversation'),
+                        onSelect: () => openInNewTab(learning.sourceUrl),
+                      },
+                    ]
+                  : [],
+                remove: canWrite
+                  ? [
+                      {
+                        icon: Trash2,
+                        label: t('Delete'),
+                        onSelect: () =>
+                          openDialogAfterOverlayCloses(() =>
+                            setLearningToDelete(learning),
+                          ),
+                      },
+                    ]
+                  : [],
+              }
               return (
-                <TableRow
-                  key={learning.$id}
-                  className="border-b border-border/50"
-                >
-                  <TableCell className="px-4 py-3 max-w-[480px]">
-                    <p className="whitespace-pre-wrap break-words text-[13px] text-foreground">
-                      {learning.body}
-                    </p>
-                  </TableCell>
-                  <TableCell className="px-4 py-3">
-                    <div className="flex min-w-0 items-center gap-2">
-                      <VcsIcon
-                        type="github"
-                        className="h-4 w-4 shrink-0 text-muted-foreground"
-                      />
-                      <span
-                        className={
-                          name
-                            ? 'truncate text-[13px] text-foreground'
-                            : 'truncate font-mono text-[12px] text-muted-foreground'
-                        }
-                      >
-                        {name ?? learning.repositoryId}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-4 py-3">
-                    <ReviewAuthorLink author={learning.author} />
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-end">
-                    <DateTooltip
-                      date={learning.$createdAt}
-                      className="text-[12px] text-muted-foreground font-mono"
-                    />
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-end">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <RowActionsMenuTrigger
-                          aria-label={t('Learning actions')}
+                <RowContextMenu key={learning.$id} actions={actions}>
+                  <TableRow className="border-b border-border/50">
+                    <TableCell className="px-4 py-3 max-w-[480px]">
+                      <p className="whitespace-pre-wrap break-words text-[13px] text-foreground">
+                        {learning.body}
+                      </p>
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <VcsIcon
+                          type="github"
+                          className="h-4 w-4 shrink-0 text-muted-foreground"
                         />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56">
-                        <DropdownMenuItem
-                          onClick={() =>
-                            void copyToClipboard('ID', learning.$id)
+                        <span
+                          className={
+                            name
+                              ? 'truncate text-[13px] text-foreground'
+                              : 'truncate font-mono text-[12px] text-muted-foreground'
                           }
                         >
-                          <MenuItemContent icon={Copy}>
-                            {t('Copy ID')}
-                          </MenuItemContent>
-                        </DropdownMenuItem>
-                        {learning.sourceUrl && (
-                          <DropdownMenuItem asChild>
-                            <a
-                              href={learning.sourceUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              <MenuItemContent icon={ExternalLink}>
-                                {t('Open conversation')}
-                              </MenuItemContent>
-                            </a>
-                          </DropdownMenuItem>
-                        )}
-                        {canWrite && (
-                          <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() =>
-                                openDialogAfterOverlayCloses(() =>
-                                  setLearningToDelete(learning),
-                                )
-                              }
-                            >
-                              <MenuItemContent icon={Trash2}>
-                                {t('Delete')}
-                              </MenuItemContent>
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
+                          {name ?? learning.repositoryId}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
+                      <ReviewAuthorLink author={learning.author} />
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-end">
+                      <DateTooltip
+                        date={learning.$createdAt}
+                        className="text-[12px] text-muted-foreground font-mono"
+                      />
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-end">
+                      <RowActionsDropdown
+                        actions={actions}
+                        trigger={
+                          <RowActionsMenuTrigger
+                            aria-label={t('Learning actions')}
+                          />
+                        }
+                      />
+                    </TableCell>
+                  </TableRow>
+                </RowContextMenu>
               )
             })}
           </TableBody>

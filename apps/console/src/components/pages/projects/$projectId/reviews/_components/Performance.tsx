@@ -3,6 +3,8 @@ import { useQueries } from '@tanstack/react-query'
 import {
   ArrowDown,
   ArrowUp,
+  Copy,
+  ExternalLink,
   BadgeCheck,
   Bug,
   GitPullRequest,
@@ -43,7 +45,9 @@ import {
 import { DEFAULT_STALE_TIME } from '@/lib/react-query/hooks/constants'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
+import { copyToClipboard, openInNewTab } from '@/lib/utils/context-menu'
 import { ReviewAuthorLink, ReviewTierBadge } from './ReviewBadges'
+import { RowContextMenu, type RowActions } from './RowMenus'
 
 const HEAD_CLASS =
   'px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
@@ -161,22 +165,24 @@ function StatCard({
  * review. Who ships pull requests that are approved, how much the reviewer
  * finds in them, and how much of it they fix.
  */
-export function Performance({ projectId }: { projectId: string }) {
-  const t = useT()
+/** Which repository and range the Performance tab covers. */
+export function usePerformanceFilters() {
   const [range, setRange] = useState<ReviewAuthorRange>('30d')
   const [repositoryId, setRepositoryId] = useState('')
-  const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({
-    key: 'pulls',
-    desc: true,
-  })
+  return { range, setRange, repositoryId, setRepositoryId }
+}
 
-  const { authors, isLoading, isFetching } = useReviewAuthors(
-    projectId,
-    range,
-    repositoryId,
-  )
-  const { categories } = useReviewCategories(projectId, range, repositoryId)
+export type PerformanceFilters = ReturnType<typeof usePerformanceFilters>
 
+/** The toolbar's repository filter. */
+export function PerformanceRepositorySelect({
+  projectId,
+  filters,
+}: {
+  projectId: string
+  filters: PerformanceFilters
+}) {
+  const t = useT()
   // A repository row stores GitHub's ID only; its name comes from GitHub, as
   // on the repositories tab, whose cache this shares.
   const { repositories } = useReviewRepositories(
@@ -203,6 +209,135 @@ export function Performance({ projectId }: { projectId: string }) {
       retry: false,
     })),
   })
+
+  return (
+    <Select
+      value={filters.repositoryId || ALL_REPOSITORIES}
+      onValueChange={(value) =>
+        filters.setRepositoryId(value === ALL_REPOSITORIES ? '' : value)
+      }
+    >
+      <SelectTrigger
+        className="h-9 w-[260px] border-border bg-background text-[13px]"
+        aria-label={t('Repository')}
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent align="start">
+        <SelectItem value={ALL_REPOSITORIES} className="text-[13px]">
+          {t('All repositories')}
+        </SelectItem>
+        {repositories.map((repository, index) => {
+          const provider = names[index]?.data
+          return (
+            <SelectItem
+              key={repository.$id}
+              value={repository.$id}
+              className="text-[13px]"
+            >
+              {provider
+                ? `${provider.organization}/${provider.name}`
+                : repository.providerRepositoryId}
+            </SelectItem>
+          )
+        })}
+      </SelectContent>
+    </Select>
+  )
+}
+
+/** The toolbar's date range, with a spinner while a new range loads. */
+export function PerformanceRangeToggle({
+  projectId,
+  filters,
+}: {
+  projectId: string
+  filters: PerformanceFilters
+}) {
+  const t = useT()
+  const { isLoading, isFetching } = useReviewAuthors(
+    projectId,
+    filters.range,
+    filters.repositoryId,
+  )
+
+  return (
+    <>
+      {isFetching && !isLoading && (
+        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+      )}
+      <ToggleGroup
+        type="single"
+        variant="outline"
+        value={filters.range}
+        onValueChange={(next) => {
+          if (next) filters.setRange(next as ReviewAuthorRange)
+        }}
+        className="h-9 gap-0"
+        aria-label={t('Date range')}
+      >
+        {RANGES.map((option, index) => (
+          <ToggleGroupItem
+            key={option.value}
+            value={option.value}
+            className={cn(
+              TOGGLE_ITEM_CLASS,
+              '!rounded-none shadow-none',
+              index === 0 && '!rounded-s-md',
+              index === RANGES.length - 1 && '!rounded-e-md',
+              index !== 0 && '!border-s-0',
+            )}
+          >
+            {t(option.label)}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
+    </>
+  )
+}
+
+export function Performance({
+  projectId,
+  filters,
+}: {
+  projectId: string
+  filters: PerformanceFilters
+}) {
+  const t = useT()
+  const { range, repositoryId } = filters
+  const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({
+    key: 'pulls',
+    desc: true,
+  })
+
+  // An author is a GitHub login; reviews queued before logins were kept have none.
+  const authorActions = (login: string): RowActions =>
+    login
+      ? {
+          copy: [
+            {
+              icon: Copy,
+              label: t('Copy name'),
+              onSelect: () => void copyToClipboard('Name', login),
+            },
+          ],
+          links: [
+            {
+              icon: ExternalLink,
+              label: t('Open profile on GitHub'),
+              onSelect: () =>
+                openInNewTab(`https://github.com/${encodeURIComponent(login)}`),
+            },
+          ],
+        }
+      : { copy: [], links: [] }
+
+  const { authors, isLoading } = useReviewAuthors(
+    projectId,
+    range,
+    repositoryId,
+  )
+  const { categories } = useReviewCategories(projectId, range, repositoryId)
 
   const totals = useMemo(
     () =>
@@ -268,74 +403,6 @@ export function Performance({ projectId }: { projectId: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Select
-          value={repositoryId || ALL_REPOSITORIES}
-          onValueChange={(value) =>
-            setRepositoryId(value === ALL_REPOSITORIES ? '' : value)
-          }
-        >
-          <SelectTrigger
-            size="sm"
-            className="w-[260px] border-border bg-background text-[13px]"
-            aria-label={t('Repository')}
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent align="start">
-            <SelectItem value={ALL_REPOSITORIES} className="text-[13px]">
-              {t('All repositories')}
-            </SelectItem>
-            {repositories.map((repository, index) => {
-              const provider = names[index]?.data
-              return (
-                <SelectItem
-                  key={repository.$id}
-                  value={repository.$id}
-                  className="text-[13px]"
-                >
-                  {provider
-                    ? `${provider.organization}/${provider.name}`
-                    : repository.providerRepositoryId}
-                </SelectItem>
-              )
-            })}
-          </SelectContent>
-        </Select>
-
-        <div className="flex items-center gap-3">
-          {isFetching && !isLoading && (
-            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-          )}
-          <ToggleGroup
-            type="single"
-            variant="outline"
-            value={range}
-            onValueChange={(next) => {
-              if (next) setRange(next as ReviewAuthorRange)
-            }}
-            className="h-9 gap-0"
-            aria-label={t('Date range')}
-          >
-            {RANGES.map((option, index) => (
-              <ToggleGroupItem
-                key={option.value}
-                value={option.value}
-                className={cn(
-                  TOGGLE_ITEM_CLASS,
-                  '!rounded-none shadow-none',
-                  index === 0 && '!rounded-s-md',
-                  index === RANGES.length - 1 && '!rounded-e-md',
-                  index !== 0 && '!border-s-0',
-                )}
-              >
-                {t(option.label)}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-        </div>
-      </div>
-
       {isLoading ? (
         <div className="flex justify-center py-12">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -415,59 +482,63 @@ export function Performance({ projectId }: { projectId: string }) {
               </TableHeader>
               <TableBody>
                 {sorted.map((author) => (
-                  <TableRow
+                  <RowContextMenu
                     key={author.author || 'unknown'}
-                    className="border-b border-border/50"
+                    actions={authorActions(author.author)}
                   >
-                    <TableCell className="px-4 py-3 max-w-[240px]">
-                      <ReviewAuthorLink author={author.author} />
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums">
-                      {author.pulls}
-                      <span className="ms-1 text-[12px] text-muted-foreground">
-                        ({author.reviews} {t('reviews')})
-                      </span>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums">
-                      {formatPercent(ratio(author.approved, author.pulls))}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums">
-                      {formatPercent(ratio(author.approvedFirst, author.pulls))}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums">
-                      {formatNumber(ratio(author.findings, author.pulls))}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums">
-                      <span
-                        className={cn(
-                          author.critical > 0 && 'text-destructive',
+                    <TableRow className="border-b border-border/50">
+                      <TableCell className="px-4 py-3 max-w-[240px]">
+                        <ReviewAuthorLink author={author.author} />
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums">
+                        {author.pulls}
+                        <span className="ms-1 text-[12px] text-muted-foreground">
+                          ({author.reviews} {t('reviews')})
+                        </span>
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums">
+                        {formatPercent(ratio(author.approved, author.pulls))}
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums">
+                        {formatPercent(
+                          ratio(author.approvedFirst, author.pulls),
                         )}
-                      >
-                        {author.critical}
-                      </span>
-                      <span className="text-muted-foreground"> / </span>
-                      {author.major}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums">
-                      {formatPercent(ratio(author.resolved, author.findings))}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums">
-                      {formatPercent(usefulRate(author))}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-end">
-                      <div className="flex justify-end">
-                        <ReviewTierBadge tier={author.tier} />
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-end">
-                      {author.lastReviewAt && (
-                        <DateTooltip
-                          date={author.lastReviewAt}
-                          className="text-[12px] text-muted-foreground font-mono"
-                        />
-                      )}
-                    </TableCell>
-                  </TableRow>
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums">
+                        {formatNumber(ratio(author.findings, author.pulls))}
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums">
+                        <span
+                          className={cn(
+                            author.critical > 0 && 'text-destructive',
+                          )}
+                        >
+                          {author.critical}
+                        </span>
+                        <span className="text-muted-foreground"> / </span>
+                        {author.major}
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums">
+                        {formatPercent(ratio(author.resolved, author.findings))}
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums">
+                        {formatPercent(usefulRate(author))}
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-end">
+                        <div className="flex justify-end">
+                          <ReviewTierBadge tier={author.tier} />
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-end">
+                        {author.lastReviewAt && (
+                          <DateTooltip
+                            date={author.lastReviewAt}
+                            className="text-[12px] text-muted-foreground font-mono"
+                          />
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  </RowContextMenu>
                 ))}
               </TableBody>
             </Table>

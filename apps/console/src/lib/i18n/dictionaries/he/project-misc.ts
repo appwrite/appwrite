@@ -2054,6 +2054,13 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'SMS messages': 'הודעות SMS', // pragma: allowlist secret
   'Events sent': 'אירועים שנשלחו',
   'Events failed': 'אירועים שנכשלו',
+  'Streaming bandwidth': 'רוחב פס של סטרימינג',
+  'Renditions encoded': 'גרסאות קידוד שקודדו',
+  'Failed renditions': 'גרסאות קידוד שנכשלו',
+  'Encoding GB-hours': 'GB-hours של קידוד',
+  'Video storage': 'אחסון סרטונים',
+  Endpoints: 'נקודות קצה',
+  'Video ID': 'מזהה סרטון',
   Webhooks: 'Webhooks',
   'Function executions': 'הרצות פונקציות',
   'Site executions': 'הרצות אתרים',
@@ -4256,6 +4263,15 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Escalations: 'הסלמות',
   Escalation: 'הסלמה',
   Escalating: 'בהסלמה',
+  'Alert when the value is': 'להתריע כשהערך',
+  'Counted over': 'נספר לאורך',
+  'Undo acknowledgement': 'ביטול האישור',
+  'Someone needs to act now, even at night.':
+    'מישהו צריך לפעול עכשיו, גם בלילה.',
+  'The push plays a siren through silent mode and Do Not Disturb.':
+    'ההתראה משמיעה צפירה גם במצב שקט ובמצב נא לא להפריע.',
+  'Every level is emailed, shown in the console and pushed to phones, with the level in the title. Webhooks and functions receive it with the alert events. A critical push rings only on phones that allowed critical alerts.':
+    'כל רמה נשלחת באימייל, מוצגת בקונסול ונשלחת כהתראה לטלפונים, עם הרמה בכותרת. Webhooks ופונקציות מקבלים אותה עם אירועי ההתראה. התראה קריטית מצלצלת רק בטלפונים שאישרו התראות קריטיות.',
   'Notify roles once': 'להודיע לתפקידים פעם אחת',
   'Select an escalation.': 'יש לבחור הסלמה.',
   'Each step of the escalation is notified in turn until someone acknowledges the alert.':

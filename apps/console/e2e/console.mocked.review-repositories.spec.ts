@@ -313,5 +313,34 @@ test.describe('review repositories', () => {
     // And off again.
     await toggle('service-130').click()
     await expect(toggle('service-130')).not.toBeChecked()
+
+    // A row's right-click menu matches its ⋯ menu.
+    await row('service-130').click({ button: 'right' })
+    await expect(
+      page.getByRole('menuitem', { name: 'Open on GitHub' }),
+    ).toBeVisible()
+    await page.getByRole('menuitem', { name: 'Copy' }).hover()
+    await expect(
+      page.getByRole('menuitem', { name: 'Copy name' }),
+    ).toBeVisible()
+    await page.keyboard.press('Escape')
+    await page.keyboard.press('Escape')
+
+    // Add repository opens GitHub's list, ready to search.
+    await page.getByPlaceholder('Search repositories...').fill('')
+    await page.getByRole('radio', { name: /Reviewed/ }).click()
+    await page.getByRole('button', { name: 'Add repository' }).click()
+    await expect(
+      page.getByRole('radio', { name: 'All repositories' }),
+    ).toBeChecked()
+    await expect(
+      page.getByPlaceholder('Search repositories...'),
+    ).toBeFocused()
+    await expect(toggle('service-000')).toBeChecked()
+    if (process.env.REVIEWS_SCREENSHOTS) {
+      await page.screenshot({
+        path: `${process.env.REVIEWS_SCREENSHOTS}/repositories-toolbar.png`,
+      })
+    }
   })
 })
