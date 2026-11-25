@@ -1,9 +1,19 @@
+import { useEffect, useMemo, useState } from 'react'
+import { Link } from '@tanstack/react-router'
+import { Query } from '@appwrite.io/console'
 import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { CopyableId } from '@/components/global/shared/CopyableId'
-import { buildFunctionUpdateParams } from '@/lib/react-query/hooks'
+import { DomainInput } from '@/components/global/shared/DomainInput'
+import {
+  buildFunctionUpdateParams,
+  createSmtpDomainRule,
+  functionDomainsQueryOptions,
+  useFunctionDomains,
+} from '@/lib/react-query/hooks'
 import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -12,11 +22,17 @@ import { Mail } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import {
-  buildFunctionEmailAddress,
+  functionEmailAddress,
   isFunctionEmailEnabled,
   putFunction,
+  suggestFunctionEmailLabel,
   type FunctionWithEmail,
 } from '@/lib/function-email'
+import { isSmtpRule } from '@/lib/function-smtp-domain'
+
+/** One page is plenty: a function rarely has more than a few addresses. */
+const ADDRESSES_LIMIT = 25
+const SMTP_QUERIES = [Query.equal('protocol', ['smtp'])]
 
 /** Lets sibling settings cards wait for an in-flight email update. */
 export function functionEmailMutationKey(
@@ -33,7 +49,15 @@ interface FunctionEmailCardProps {
   disabled?: boolean
 }
 
-/** Opt-in inbound email (SMTP) trigger, next to Schedule and Events. */
+/**
+ * Opt-in inbound email (SMTP) trigger, next to Schedule and Events.
+ *
+ * A function receives mail at the email domains stored for it as SMTP rules.
+ * While it has none, the card offers a `{label}.{zone}` domain, suggested from
+ * the function name with a random part like Function and Site domains, and
+ * saves it together with the trigger. Custom domains are added on the
+ * Domains tab.
+ */
 export function FunctionEmailCard({
   projectId,
   functionId,
@@ -47,42 +71,118 @@ export function FunctionEmailCard({
   const savedEnabled = isFunctionEmailEnabled(func)
   const [emailEnabled, setEmailEnabled] = useSyncStateFromServer(savedEnabled)
 
+  const {
+    data: domainsData,
+    isPlaceholderData,
+    isFetching: domainsFetching,
+  } = useFunctionDomains(
+    projectId,
+    functionId,
+    0,
+    ADDRESSES_LIMIT,
+    undefined,
+    SMTP_QUERIES,
+  )
+  const addresses = useMemo(
+    () => (domainsData?.rules ?? []).filter(isSmtpRule),
+    [domainsData],
+  )
+  // Only offer a new domain once this function's list is known to be empty:
+  // not while it loads, nor from another function's list kept as placeholder.
+  const domainsKnown =
+    domainsData !== undefined && !isPlaceholderData && !domainsFetching
+  const needsAddress = !!emailDomain && domainsKnown && addresses.length === 0
+
+  const suggestion = useMemo(
+    () =>
+      emailDomain
+        ? `${suggestFunctionEmailLabel(func.name)}.${emailDomain}`
+        : '',
+    [emailDomain, func.name],
+  )
+  const [domain, setDomain] = useState('')
+  const [domainValid, setDomainValid] = useState(false)
+  useEffect(() => {
+    if (domain === '' && suggestion !== '') setDomain(suggestion)
+  }, [domain, suggestion])
+
+  const createsAddress = emailEnabled && needsAddress
+
   const updateMutation = useMutation({
     mutationKey: functionEmailMutationKey(functionId),
     mutationFn: async (nextEnabled: boolean) => {
       if (!projectId || !functionId)
         throw new Error('Project ID and Function ID are required')
-      const projectSdk = sdk.forProject(projectId)
-      const params = buildFunctionUpdateParams(func, {}) as {
-        functionId: string
-      } & Record<string, unknown>
-      return await putFunction(projectSdk.client, {
-        ...params,
-        emailEnabled: nextEnabled,
-      })
+      let updated: FunctionWithEmail = func
+      if (nextEnabled !== savedEnabled) {
+        const projectSdk = sdk.forProject(projectId)
+        const params = buildFunctionUpdateParams(func, {}) as {
+          functionId: string
+        } & Record<string, unknown>
+        updated = await putFunction(projectSdk.client, {
+          ...params,
+          emailEnabled: nextEnabled,
+        })
+        queryClient.setQueryData(
+          ['function', 'project', projectId, functionId],
+          updated,
+        )
+      }
+      // Cloud only stores an email domain for a function that takes mail,
+      // so the trigger is saved first.
+      if (nextEnabled && needsAddress) {
+        // The list may have changed in another tab since it loaded.
+        const current = await queryClient.fetchQuery({
+          ...functionDomainsQueryOptions(
+            projectId,
+            functionId,
+            0,
+            ADDRESSES_LIMIT,
+            undefined,
+            SMTP_QUERIES,
+          ),
+          staleTime: 0,
+        })
+        if (current.rules.filter(isSmtpRule).length === 0) {
+          await createSmtpDomainRule(projectId, { domain, functionId })
+        }
+      }
+      return updated
     },
-    onSuccess: (updated, nextEnabled) => {
+    onSuccess: (_updated, nextEnabled) => {
       toast.success(
-        nextEnabled ? t('Email trigger enabled') : t('Email trigger disabled'),
+        nextEnabled !== savedEnabled
+          ? nextEnabled
+            ? t('Email trigger enabled')
+            : t('Email trigger disabled')
+          : t('Email address added'),
       )
-      queryClient.setQueryData(
-        ['function', 'project', projectId, functionId],
-        updated,
-      )
-      queryClient.invalidateQueries({
-        queryKey: ['functions', 'project', projectId],
-      })
     },
     onError: (error: unknown) => {
       toast.error(getErrorMessage(error, t('Failed to update email trigger')))
-      setEmailEnabled(savedEnabled)
+      // The trigger may have saved before the domain failed: show what is
+      // stored now.
+      const current = queryClient.getQueryData<FunctionWithEmail>([
+        'function',
+        'project',
+        projectId,
+        functionId,
+      ])
+      setEmailEnabled(isFunctionEmailEnabled(current ?? func))
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['functions', 'project', projectId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['proxy-rules', 'function', projectId, functionId],
+      })
     },
   })
 
   const pending = disabled || updateMutation.isPending
-  // Shown whether or not the trigger is on, so the address is known before
-  // enabling it.
-  const address = buildFunctionEmailAddress(projectId, func.$id, emailDomain)
+  const changed = emailEnabled !== savedEnabled || createsAddress
+  const canUpdate = changed && !pending && (!createsAddress || domainValid)
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -117,25 +217,39 @@ export function FunctionEmailCard({
             className="shrink-0"
           />
         </div>
-        {address ? (
+        {addresses.length > 0 ? (
           <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/30 px-3 py-3">
             <Mail className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-            <div className="min-w-0 flex-1 space-y-1">
+            <div className="min-w-0 flex-1 space-y-2">
               <p className="text-[12px] font-medium text-foreground">
-                {t('Default address')}
+                {addresses.length === 1 ? t('Address') : t('Addresses')}
               </p>
-              <CopyableId
-                id={address}
-                size="md"
-                maxWidth={420}
-                showCopyOnHover={false}
-                copyToastLabel="Email"
-                className="max-w-full"
-              />
+              {addresses.map((rule) => (
+                <div key={rule.$id} className="flex items-center gap-2">
+                  <CopyableId
+                    id={functionEmailAddress(rule.domain)}
+                    size="md"
+                    maxWidth={420}
+                    showCopyOnHover={false}
+                    copyToastLabel="Email"
+                    className="max-w-full"
+                  />
+                  {String(rule.status) !== 'verified' ? (
+                    <Badge variant="warning" className="text-[10px] shrink-0">
+                      {t('Unverified')}
+                    </Badge>
+                  ) : null}
+                </div>
+              ))}
+              <p className="text-[12px] text-muted-foreground">
+                {t('Any local part works, so mail to')}{' '}
+                <code className="font-mono">orders@{addresses[0].domain}</code>{' '}
+                {t('reaches this function too.')}
+              </p>
               {!emailEnabled ? (
                 <p className="text-[12px] text-muted-foreground">
                   {t(
-                    'Enable the email trigger to receive mail at this address.',
+                    'Enable the email trigger to receive mail at these addresses.',
                   )}
                 </p>
               ) : !func.deploymentId ? (
@@ -147,13 +261,41 @@ export function FunctionEmailCard({
               ) : null}
             </div>
           </div>
+        ) : createsAddress ? (
+          <div className="space-y-1">
+            <DomainInput
+              value={domain}
+              onChange={setDomain}
+              onValidChange={setDomainValid}
+              baseDomain={emailDomain ?? ''}
+              placeholder="my-function"
+              disabled={pending}
+            />
+            <p className="text-[12px] text-muted-foreground">
+              {t(
+                'This address is saved with the email trigger. Any local part works.',
+              )}
+            </p>
+          </div>
+        ) : null}
+        {projectId && functionId ? (
+          <p className="text-[12px] text-muted-foreground">
+            <Link
+              to="/projects/$projectId/functions/$functionId/domains"
+              params={{ projectId, functionId }}
+              className="font-medium text-foreground underline underline-offset-2 hover:no-underline"
+            >
+              {t('Manage email domains')}
+            </Link>{' '}
+            {t('to add another address or a custom domain.')}
+          </p>
         ) : null}
       </div>
       <div className="px-6 py-4 border-t border-border bg-muted/30">
         <Button
           size="sm"
           className="h-9 text-[13px]"
-          disabled={emailEnabled === savedEnabled || pending}
+          disabled={!canUpdate}
           onClick={() => updateMutation.mutate(emailEnabled)}
         >
           {t('Update')}
