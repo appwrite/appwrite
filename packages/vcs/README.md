@@ -81,7 +81,7 @@ Replace the placeholders with the actual values from your GitHub App configurati
 
 ## System requirements
 
-Utopia VCS requires PHP 8.5 or later.
+Utopia VCS requires PHP 8.4 or later.
 
 
 ## Adding an adapter

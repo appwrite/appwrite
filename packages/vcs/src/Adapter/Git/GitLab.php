@@ -1033,7 +1033,7 @@ class GitLab extends Git
                     }
                 }
                 if (empty($latestCommit) && !empty($commits)) {
-                    $latestCommit = array_last($commits);
+                    $latestCommit = $commits[array_key_last($commits)];
                 }
 
                 $repositoryId = \strval($project['id'] ?? '');
