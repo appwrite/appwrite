@@ -822,3 +822,25 @@ export function useCreateNHostMigration(
     },
   })
 }
+
+// ============================================================================
+// SUPABASE ACCOUNT CONNECTION
+// ============================================================================
+
+/**
+ * Projects of the Supabase account the console user connected. Fails with
+ * `user_identity_not_found` until an account is connected.
+ */
+export function useSupabaseProjects(
+  projectId: string | null | undefined,
+  region?: string,
+) {
+  return useQuery({
+    queryKey: ['migrations', 'supabase', 'projects', projectId, region],
+    queryFn: () =>
+      sdk.forProject(projectId!, region).migrations.listSupabaseProjects(),
+    enabled: !!projectId,
+    retry: false,
+    staleTime: DEFAULT_STALE_TIME,
+  })
+}
