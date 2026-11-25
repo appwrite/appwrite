@@ -57,6 +57,7 @@ class Origin extends Git
         'pull_request.published' => 'ready_for_review',
     ];
 
+    #[\Override]
     protected string $endpoint = 'https://api.cursor.com/v1/origin';
 
     /**
@@ -69,6 +70,7 @@ class Origin extends Git
      */
     protected string $gitEndpoint = 'https://origin.cursor.com';
 
+    #[\Override]
     protected string $accessToken = '';
 
     /**
@@ -87,6 +89,7 @@ class Origin extends Git
      *
      * @var array<string, string>
      */
+    #[\Override]
     protected $headers = ['content-type' => 'application/json'];
 
     public function __construct(protected Cache $cache)
