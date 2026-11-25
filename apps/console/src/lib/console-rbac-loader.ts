@@ -24,6 +24,7 @@ import {
   canAccessOrgSettingsOverview,
   canAccessOrgDomains,
   canShowOrgApiKeysSettings,
+  canShowOrgSsoSettings,
   canShowGetStartedSection,
   canShowAgentMcpConnectCta,
   canCreateDatabase,
@@ -254,6 +255,17 @@ export async function canAccessOrganizationApiKeys(
   if (!access) return true
   const features = getActiveProfileFeatures()
   return canShowOrgApiKeysSettings(access, features)
+}
+
+/** Organization settings → Single sign-on. */
+export async function canAccessOrganizationSso(
+  queryClient: QueryClient,
+  organizationId: string,
+): Promise<boolean> {
+  const access = await getOrganizationAccess(queryClient, organizationId)
+  if (!access) return true
+  const features = getActiveProfileFeatures()
+  return canShowOrgSsoSettings(access, features)
 }
 
 /** Project coding-agent MCP page (same audience as Connect). */
