@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-automatic-image-format",
+    "href": "/blog/post/announcing-automatic-image-format",
+    "title": "Announcing automatic image formats based on browser support",
+    "description": "Set output to auto on Appwrite Storage previews and Avatars screenshots, and every browser gets AVIF, WebP, or the original format from the same image URL.",
+    "date": "2026-11-26",
+    "lastUpdated": "2026-11-26",
+    "timeToRead": 5,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-automatic-image-format/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-bird-messaging-providers",
     "href": "/blog/post/announcing-bird-messaging-providers",
     "title": "Announcing Bird email and SMS in Appwrite Messaging",
