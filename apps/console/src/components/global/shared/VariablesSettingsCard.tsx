@@ -413,21 +413,6 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
     }
   }
 
-  useEffect(() => {
-    if (!showEditorModal || isWizard) return
-    editorRecordsRef.current = loadedVariables
-    if (loadedVariables.length > 0) {
-      const editableVars = loadedVariables.filter((v) => !v.secret)
-      setEditorContent(
-        editorFormat === 'env'
-          ? variablesToEnv(editableVars)
-          : variablesToJson(editableVars),
-      )
-    } else {
-      setEditorContent(editorFormat === 'env' ? '' : '{}')
-    }
-  }, [showEditorModal, editorFormat, loadedVariables, isWizard])
-
   const handleWizardCreate = () => {
     if (!onWizardChange) return
     for (const pair of createPairs) {
@@ -858,9 +843,9 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
       )
       setEditorFormat(format)
     } catch {
-      const editableVars = (isWizard ? wizardVariables : loadedVariables).filter(
-        (v) => !v.secret,
-      )
+      const editableVars = (
+        isWizard ? wizardVariables : editorRecordsRef.current
+      ).filter((v) => !v.secret)
       setEditorContent(
         format === 'env'
           ? variablesToEnv(editableVars)
