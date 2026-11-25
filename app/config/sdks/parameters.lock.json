@@ -2999,6 +2999,7 @@
         "migrations.delete": [
             "migrationId"
         ],
+        "migrations.deleteVercelOAuth2": [],
         "migrations.get": [
             "migrationId"
         ],
@@ -3031,11 +3032,15 @@
             "password",
             "port"
         ],
+        "migrations.getVercelProject": [
+            "projectId"
+        ],
         "migrations.list": [
             "queries",
             "search",
             "total"
         ],
+        "migrations.listVercelProjects": [],
         "migrations.retry": [
             "migrationId"
         ],
