@@ -443,6 +443,11 @@ $container->set('cache', function (Registry $register, Telemetry $telemetry) {
 
 $container->set('cacheControlForStorage', fn () => fn (StorageCacheControl $config): string => \sprintf('private, max-age=%d', $config->maxAge));
 
+// Cloud overrides this with utopia-php/cdn purgeKeys for the API Fastly service.
+// Self-hosted has no CDN in front of playback, so the default is a no-op.
+$container->set('purgeVideoCache', fn () => function (string $projectId, string $videoId): void {});
+
+
 $container->set('locks', fn (Group $pools) => Locks::using($pools), ['pools']);
 
 $container->set('uploads', fn (Group $pools) => new Uploads(fn (callable $callback): mixed => $pools->get('lock')->use($callback)), ['pools']);

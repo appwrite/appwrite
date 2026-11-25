@@ -14,6 +14,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\DateTime;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -65,8 +66,10 @@ class Delete extends Base
             ->inject('dbForProject')
             ->inject('user')
             ->inject('authorization')
+            ->inject('project')
             ->inject('queueForEvents')
             ->inject('publisherForDeletes')
+            ->inject('purgeVideoCache')
             ->callback($this->action(...));
     }
 
@@ -76,8 +79,10 @@ class Delete extends Base
         Database $dbForProject,
         User $user,
         Authorization $authorization,
+        Document $project,
         Event $queueForEvents,
-        DeletePublisher $publisherForDeletes
+        DeletePublisher $publisherForDeletes,
+        callable $purgeVideoCache
     ): void {
         $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
         // ACL before the in-progress gate — otherwise a session with only read
@@ -121,6 +126,10 @@ class Delete extends Base
         if (!$deleted) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove video from DB');
         }
+
+        // Drop every cached segment before returning. The deletes worker still
+        // removes the files; this is the matching sweep for Fastly.
+        $purgeVideoCache($project->getId(), $video->getId());
 
         // The pre-merge controller built this event but never triggered it, so the
         // cascade never ran and renditions/captions/segments were orphaned.

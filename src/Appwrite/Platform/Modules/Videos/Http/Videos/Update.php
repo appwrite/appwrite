@@ -68,7 +68,9 @@ class Update extends Base
             ->inject('dbForProject')
             ->inject('user')
             ->inject('authorization')
+            ->inject('project')
             ->inject('queueForEvents')
+            ->inject('purgeVideoCache')
             ->callback($this->action(...));
     }
 
@@ -80,9 +82,12 @@ class Update extends Base
         Database $dbForProject,
         User $user,
         Authorization $authorization,
-        Event $queueForEvents
+        Document $project,
+        Event $queueForEvents,
+        callable $purgeVideoCache
     ): void {
         $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
+        $wasPublic = $this->isPublicRead($video);
 
         $roles = $authorization->getRoles();
         $isAPIKey = $user->isKey($roles);
@@ -127,6 +132,12 @@ class Update extends Base
             $video = $authorization->skip(fn () => $dbForProject->updateDocument('videos', $video->getId(), $data));
         } else {
             $video = $dbForProject->updateDocument('videos', $video->getId(), $data);
+        }
+
+        // A rename leaves read("any") as it was and does not purge. Adding or
+        // removing world-read drops every cached segment for this video.
+        if ($wasPublic !== $this->isPublicRead($video)) {
+            $purgeVideoCache($project->getId(), $video->getId());
         }
 
         $queueForEvents->setParam('videoId', $video->getId());
