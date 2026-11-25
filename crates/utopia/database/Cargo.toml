@@ -1,17 +1,16 @@
 [package]
 name = "utopia-database"
 description = "Document database: collections, attributes, indexes, documents, queries, permissions, relationships and tenancy over pluggable adapters (PostgreSQL, MariaDB, MySQL, SQLite, in-memory, Redis, Pool, Mirror)."
-version.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-license.workspace = true
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.97"
+license = "BSD-3-Clause"
 repository = "https://github.com/utopia-rs/database"
-publish.workspace = true
 
 [dependencies]
-getrandom.workspace = true
-hex.workspace = true
-php-std.workspace = true
+getrandom = "0.3"
+hex = "0.4"
+php-std = { version = "0.1.0", git = "https://github.com/utopia-rs/php-std" }
 
 [package.metadata.utopia]
 category = "data"

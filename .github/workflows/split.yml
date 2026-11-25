@@ -1,10 +1,10 @@
 name: Split
 
 # Pushes every packages/<name> to its read-only mirror at utopia-php/<name>
-# and every crates/utopia/<name> (plus php-std) to utopia-rs/<name> on each
-# push to main. A `<name>/<version>` tag pushes `<version>` to the PHP
-# mirror; `rs/<name>/<version>` does the same for a crate. See rfc/monorepo.md
-# and rfc/rust.md.
+# on each push to main; a `<name>/<version>` tag pushes `<version>` to the
+# mirror and publishes its GitHub release. A Rust crate is the same under the
+# name rs/<name>: its directory goes to utopia-rs/<name>, and an
+# `rs/<name>/<version>` tag releases it. See rfc/monorepo.md.
 
 on:
   push:
@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
       force-crates:
-        description: Overwrite the utopia-rs mirrors' main branches. For the first sync from main only, which replaces the history pushed from the conversion branch on 2026-10-14.
+        description: Overwrite the utopia-rs mirrors' main branches. Only for the first sync from main, which replaces the unrelated history pushed there on 2026-10-14.
         type: boolean
         default: false
 
@@ -29,7 +29,6 @@ permissions:
 
 jobs:
   split:
-    if: github.ref_type != 'tag' || !startsWith(github.ref_name, 'rs/')
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -42,12 +41,19 @@ jobs:
       - name: Resolve mirrors
         id: mirrors
         run: |
+          # <name>/<version> is a package, rs/<name>/<version> a crate. The other org's token
+          # still needs one repository to be scoped to; it is not pushed to.
+          packages=$(bin/monorepo list | awk '$1 !~ /^rs\// {print $1}' | paste -sd, -)
+          crates=$(bin/monorepo list | awk '$1 ~ /^rs\// {sub(/^rs\//, "", $1); print $1}' | paste -sd, -)
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
-            repositories="${GITHUB_REF_NAME%%/*}"
-          else
-            repositories=$(for manifest in packages/*/composer.json; do basename "$(dirname "$manifest")"; done | paste -sd, -)
+            name="${GITHUB_REF_NAME%/*}"
+            case "$name" in
+              rs/*) crates="${name#rs/}" ;;
+              *) packages="$name" ;;
+            esac
           fi
-          echo "repositories=$repositories" >> "$GITHUB_OUTPUT"
+          echo "repositories=$packages" >> "$GITHUB_OUTPUT"
+          echo "crates=$crates" >> "$GITHUB_OUTPUT"
 
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: app-token
@@ -59,59 +65,29 @@ jobs:
           permission-contents: write
           permission-workflows: write
 
-      - name: Split packages
-        env:
-          SPLIT_REMOTE_BASE: https://x-access-token:${{ steps.app-token.outputs.token }}@github.com/utopia-php
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: |
-          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
-            bin/monorepo split "${GITHUB_REF_NAME%%/*}" --tag="${GITHUB_REF_NAME#*/}"
-          else
-            bin/monorepo split
-          fi
-
-  split-crates:
-    if: github.ref_type != 'tag' || startsWith(github.ref_name, 'rs/')
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Resolve crate mirrors
-        id: mirrors
-        run: |
-          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
-            # rs/<name>/<version>
-            repositories="${GITHUB_REF_NAME#rs/}"
-            repositories="${repositories%%/*}"
-          else
-            repositories=$(bin/monorepo crates list | awk '{print $1}' | paste -sd, -)
-          fi
-          echo "repositories=$repositories" >> "$GITHUB_OUTPUT"
-
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        id: app-token
+        id: crates-token
         with:
           app-id: ${{ vars.SPLIT_RS_APP_ID }}
           private-key: ${{ secrets.SPLIT_RS_APP_PRIVATE_KEY }}
           owner: utopia-rs
-          repositories: ${{ steps.mirrors.outputs.repositories }}
+          repositories: ${{ steps.mirrors.outputs.crates }}
           permission-contents: write
           permission-workflows: write
 
-      - name: Split crates
+      - name: Split packages and crates
         env:
-          SPLIT_CRATES_REMOTE_BASE: https://x-access-token:${{ steps.app-token.outputs.token }}@github.com/utopia-rs
+          SPLIT_REMOTE_BASE: https://x-access-token:${{ steps.app-token.outputs.token }}@github.com/utopia-php
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          FORCE: ${{ github.event_name == 'workflow_dispatch' && inputs.force-crates }}
+          SPLIT_CRATES_REMOTE_BASE: https://x-access-token:${{ steps.crates-token.outputs.token }}@github.com/utopia-rs
+          CRATES_GH_TOKEN: ${{ steps.crates-token.outputs.token }}
+          FORCE_CRATES: ${{ github.event_name == 'workflow_dispatch' && inputs.force-crates }}
         run: |
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
-            name="${GITHUB_REF_NAME#rs/}"
-            bin/monorepo crates split "${name%%/*}" --tag="${name#*/}"
-          elif [ "$FORCE" = "true" ]; then
-            bin/monorepo crates split --force
+            bin/monorepo split "${GITHUB_REF_NAME%/*}" --tag="${GITHUB_REF_NAME##*/}"
+          elif [ "$FORCE_CRATES" = "true" ]; then
+            # shellcheck disable=SC2046
+            bin/monorepo split $(bin/monorepo list | awk '$1 ~ /^rs\// {print $1}') --force
           else
-            bin/monorepo crates split
+            bin/monorepo split
           fi

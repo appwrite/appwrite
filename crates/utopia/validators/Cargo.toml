@@ -1,15 +1,14 @@
 [package]
 name = "utopia-validators"
 description = "The checks of Utopia's request validators: booleans, integers, floats, numbers, ranges, ports, hex colors, text, identifiers, white lists, substrings, DNS labels, hostnames, domains, hosts, IP addresses, URLs, phone numbers, JSON, FCM service accounts, globstar patterns and the validators that compose others."
-version.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-license.workspace = true
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.97"
+license = "BSD-3-Clause"
 repository = "https://github.com/utopia-rs/validators"
-publish.workspace = true
 
 [dependencies]
-php-std.workspace = true
+php-std = { version = "0.1.0", git = "https://github.com/utopia-rs/php-std" }
 
 [package.metadata.utopia]
 category = "utilities"

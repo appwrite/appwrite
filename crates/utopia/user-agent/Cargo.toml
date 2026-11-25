@@ -1,17 +1,16 @@
 [package]
 name = "utopia-user-agent"
 description = "User-agent parsing: operating system, client, device and bot."
-version.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-license.workspace = true
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.97"
+license = "BSD-3-Clause"
 repository = "https://github.com/utopia-rs/user-agent"
-publish.workspace = true
 
 [dependencies]
-aho-corasick.workspace = true
-memchr.workspace = true
-php-std.workspace = true
+aho-corasick = "1"
+memchr = "2"
+php-std = { version = "0.1.0", git = "https://github.com/utopia-rs/php-std" }
 
 [package.metadata.utopia]
 category = "utilities"

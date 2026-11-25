@@ -1,16 +1,15 @@
 [package]
 name = "utopia-domains"
 description = "Domain names split against the Public Suffix List."
-version.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-license.workspace = true
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.97"
+license = "BSD-3-Clause"
 repository = "https://github.com/utopia-rs/domains"
-publish.workspace = true
 
 [dependencies]
-php-std.workspace = true
-thiserror.workspace = true
+php-std = { version = "0.1.0", git = "https://github.com/utopia-rs/php-std" }
+thiserror = "2"
 
 [package.metadata.utopia]
 category = "utilities"

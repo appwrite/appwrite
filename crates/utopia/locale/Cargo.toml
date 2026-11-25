@@ -1,20 +1,19 @@
 [package]
 name = "utopia-locale"
 description = "Translations: languages, default and fallback locales, and placeholders."
-version.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-license.workspace = true
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.97"
+license = "BSD-3-Clause"
 repository = "https://github.com/utopia-rs/locale"
-publish.workspace = true
 
 [dependencies]
-foldhash.workspace = true
-indexmap = { workspace = true, features = ["serde"] }
-serde.workspace = true
-php-std.workspace = true
-serde_json.workspace = true
-thiserror.workspace = true
+foldhash = "0.2"
+indexmap = { version = "2", features = ["serde"] }
+serde = "1"
+php-std = { version = "0.1.0", git = "https://github.com/utopia-rs/php-std" }
+serde_json = { version = "1", features = ["raw_value", "preserve_order", "float_roundtrip"] }
+thiserror = "2"
 
 
 [package.metadata.utopia]

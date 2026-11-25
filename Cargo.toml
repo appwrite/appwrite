@@ -20,11 +20,11 @@ license = "BSD-3-Clause"
 repository = "https://github.com/appwrite/appwrite"
 publish = false
 
-# The license the Utopia crates' mirrors on github.com/utopia-rs are published under.
-# bin/monorepo writes it into each mirror's Cargo.toml, LICENSE and README; the source
-# in this repository stays under the license above.
-[workspace.metadata.utopia]
-mirror-license = "MIT"
+# Each crate under crates/utopia and crates/support has a Cargo.toml that stands on its own, so
+# its directory is its read-only mirror at github.com/utopia-rs/<name> as it is. A crate names
+# php-std by the mirror's URL; here that resolves to this checkout.
+[patch."https://github.com/utopia-rs/php-std"]
+php-std = { path = "crates/support/php-std" }
 
 [workspace.dependencies]
 php-std = { path = "crates/support/php-std" }

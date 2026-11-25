@@ -147,6 +147,18 @@ RUN composer dump-autoload --optimize --no-dev --no-scripts --no-plugins
 - `split-dev.yml` (publish a feature branch's split to the mirror so an external consumer can `require dev-<branch>`) and `mirror-redirect.yml` (close PRs and issues opened on a mirror with a pointer here) move as-is.
 - `bin/monorepo release <name> <version>` is the only way to release a package. `CHANGELOG.md` is never edited to "release".
 
+### Rust crates
+
+A crate in `crates/utopia/<name>` or `crates/support/<name>` has a read-only mirror at `utopia-rs/<name>`, and the same commands handle it under the name `rs/<name>`:
+
+```bash
+bin/monorepo list                        # packages and crates, with their latest release tag
+bin/monorepo split rs/query --dry-run    # the mirror's head, without pushing
+bin/monorepo release rs/query 0.1.0      # tag rs/query/0.1.0; CI pushes 0.1.0 to utopia-rs/query
+```
+
+The split copies the crate's directory as it is, like a package's. That only works if the directory builds outside this repository, so a crate's `Cargo.toml` inherits nothing from the workspace and names no dependency by path. `bin/monorepo validate` checks both. A crate that depends on another names it by its mirror's URL (`php-std = { version = "0.1.0", git = "https://github.com/utopia-rs/php-std" }`), and a `[patch]` section in the root `Cargo.toml` resolves that URL to this checkout.
+
 ### History
 
 Every absorb uses `git subtree add` from the library's **mirror** repository (not from `utopia-php/monorepo`'s subdirectory), so the package arrives with its full linear history and the split algorithm can continue from its `git-subtree-*` annotation. Consequences:
