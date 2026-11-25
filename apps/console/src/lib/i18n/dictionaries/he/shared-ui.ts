@@ -53,6 +53,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   close: 'סגירה',
   then: 'ואז',
   'already exists': 'כבר קיים',
+  'is defined more than once': 'מוגדר יותר מפעם אחת',
   'is longer than 8192 allowed characters': 'ארוך מ-8192 התווים המותרים',
   'to include more repos.': 'כדי לכלול repos נוספים.',
   'to unlock additional specifications.': 'כדי לפתוח מפרטים נוספים.',
