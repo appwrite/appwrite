@@ -187,6 +187,20 @@ trait VideoCustom
     }
 
     /**
+     * A 3 second 640x360 HEVC clip with 10 bits per sample, the depth HDR
+     * cameras and recent phones record in.
+     */
+    public function getTenBitVideoFile(): array
+    {
+        $file = $this->uploadVideoTo($this->getVideoBucket()['$id'], name: 'ten-bit.mp4');
+
+        return [
+            '$id' => $file['$id'],
+            'sizeOriginal' => $file['sizeOriginal'],
+        ];
+    }
+
+    /**
      * Uploads a source video into an arbitrary bucket, so tests can put one in
      * a bucket with different permissions. Files over one chunk are sent in 5 MB
      * pieces, mirroring `tests/e2e/Services/Storage/StorageBase.php`.

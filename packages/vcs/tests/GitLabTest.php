@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\VCS\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\VCS\Adapter\Git\GitLab;
@@ -148,5 +149,70 @@ final class GitLabTest extends Base
             $result = $events[0];
             $this->assertSame($mapped, $result['action'], "native action '{$native}' should map to '{$mapped}'");
         }
+    }
+
+    /**
+     * @return \Iterator<string, array{string, array<string, mixed>}>
+     */
+    public static function providerProjectPaths(): \Iterator
+    {
+        $project = [
+            'id' => 89442539,
+            'name' => 'Magic Portfolio',
+            'namespace' => 'Jane Doe',
+            'path_with_namespace' => 'jane-doe/magic-portfolio',
+            'web_url' => 'https://gitlab.com/jane-doe/magic-portfolio',
+        ];
+
+        yield 'push' => ['Push Hook', [
+            'object_kind' => 'push',
+            'ref' => 'refs/heads/main',
+            'checkout_sha' => 'abc123',
+            'project' => $project,
+            'commits' => [],
+        ]];
+        yield 'merge request' => ['Merge Request Hook', [
+            'object_kind' => 'merge_request',
+            'project' => $project,
+            'object_attributes' => ['iid' => 1, 'action' => 'open', 'source_branch' => 'feature', 'target_branch' => 'main'],
+        ]];
+    }
+
+    /**
+     * The API addresses a project by its paths, not the display names a webhook also carries.
+     *
+     * @param array<string, mixed> $body
+     */
+    #[DataProvider('providerProjectPaths')]
+    public function testGetEventProjectPaths(string $event, array $body): void
+    {
+        $payload = json_encode($body);
+
+        if ($payload === false) {
+            $this->fail('Failed to encode JSON payload');
+        }
+
+        $result = $this->vcsAdapter->getEvents($event, $payload)[0];
+
+        $this->assertSame('jane-doe', $result['owner']);
+        $this->assertSame('magic-portfolio', $result['repositoryName']);
+    }
+
+    public function testGetEventSubgroupProjectPath(): void
+    {
+        $payload = json_encode([
+            'object_kind' => 'merge_request',
+            'project' => ['id' => 1, 'name' => 'App', 'namespace' => 'Sub', 'path_with_namespace' => 'group/sub/app'],
+            'object_attributes' => ['iid' => 1, 'action' => 'open', 'source_branch' => 'feature', 'target_branch' => 'main'],
+        ]);
+
+        if ($payload === false) {
+            $this->fail('Failed to encode JSON payload');
+        }
+
+        $result = $this->vcsAdapter->getEvents('Merge Request Hook', $payload)[0];
+
+        $this->assertSame('group/sub', $result['owner']);
+        $this->assertSame('app', $result['repositoryName']);
     }
 }

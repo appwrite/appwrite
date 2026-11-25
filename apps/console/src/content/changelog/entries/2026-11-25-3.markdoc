@@ -1,0 +1,21 @@
+---
+layout: changelog
+title: "Sign out every user in a project"
+date: 2026-11-25
+cover: /images/blog/announcing-force-sign-out/cover.avif
+tags: auth, security, console, api
+---
+
+You can now sign out every user in a project at once with [force sign out](/docs/products/auth/security#force-sign-out-all-users). Use it when sessions may be in someone else's hands, for example after session tokens leak or an admin account is compromised.
+
+Click **Sign out all users** under **Auth** > **Settings** > **Security actions** in the Appwrite Console, or make one call from any server SDK with an API key. Every session created before then stops working on every client, JWTs included, and open realtime connections are closed. Users can sign in again right away.
+
+The sign out applies instantly at any project size, and API keys are not affected. If passwords may have leaked too, pair it with **Force password reset**.
+
+{% arrow_link href="/blog/post/announcing-force-sign-out" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/auth/security#force-sign-out-all-users" %}
+Learn how force sign out works
+{% /arrow_link %}

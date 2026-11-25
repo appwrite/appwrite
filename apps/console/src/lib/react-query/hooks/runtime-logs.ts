@@ -39,6 +39,8 @@ export interface RuntimeLogsFilter {
   deploymentId?: string
   /** Narrows a project-wide list to one kind of resource. */
   resourceType?: RuntimeLogResourceType
+  /** Narrows a project-wide list to one resource of `resourceType`. */
+  resourceId?: string
   stream: RuntimeLogStream
   range: RuntimeLogRange
   /** A window picked on the volume chart; replaces `range` while set. */
@@ -59,6 +61,9 @@ function filterQueries(
   if (resourceType === null) {
     if (filter.resourceType) {
       queries.push(Query.equal('resourceType', [filter.resourceType]))
+      if (filter.resourceId) {
+        queries.push(Query.equal('resourceId', [filter.resourceId]))
+      }
     }
   } else if (resourceType !== 'databases' && filter.deploymentId) {
     queries.push(Query.equal('deploymentId', [filter.deploymentId]))
