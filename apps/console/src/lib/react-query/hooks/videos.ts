@@ -23,6 +23,10 @@ import {
   type Models,
 } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import {
+  publicHlsPlayback,
+  type PublicHlsPlayback,
+} from '@/lib/videos/public-hls-playback'
 import { DEFAULT_STALE_TIME, GRID_DEFAULT_PAGE_SIZE } from './constants'
 import { Dependencies } from './dependencies'
 
@@ -136,6 +140,10 @@ export const videoKeys = {
     projectId: string | null | undefined,
     videoId: string | null | undefined,
   ) => ['video-captions', 'project', projectId, videoId] as const,
+  publicPlayback: (
+    projectId: string | null | undefined,
+    videoId: string | null | undefined,
+  ) => ['video-public-playback', 'project', projectId, videoId] as const,
   profiles: (projectId: string | null | undefined) =>
     ['video-profiles', 'project', projectId] as const,
   codecs: (projectId: string | null | undefined) =>
@@ -403,6 +411,37 @@ export function videoRenditionsQueryOptions(
     queryFn: () => fetchVideoRenditions(projectId!, videoId!),
     enabled: !!projectId && !!videoId,
     ...PREFETCHED_QUERY_DEFAULTS,
+  })
+}
+
+/**
+ * A visitor's playback when the video document is refused: the ready HLS
+ * renditions from the public master playlist, or null when that is refused too.
+ */
+export async function fetchPublicHlsPlayback(
+  projectId: string,
+  videoId: string,
+): Promise<PublicHlsPlayback | null> {
+  const url = new URL(
+    sdk.forProject(projectId).videos.getHlsManifest({ videoId }),
+  )
+  url.searchParams.delete('mode')
+  const response = await fetch(url, { credentials: 'include' })
+  if (!response.ok) return null
+  return publicHlsPlayback(videoId, await response.text())
+}
+
+export function usePublicHlsPlayback(
+  projectId: string | null | undefined,
+  videoId: string | null | undefined,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: videoKeys.publicPlayback(projectId, videoId),
+    queryFn: () => fetchPublicHlsPlayback(projectId!, videoId!),
+    enabled: enabled && !!projectId && !!videoId,
+    retry: false,
+    staleTime: DEFAULT_STALE_TIME,
   })
 }
 

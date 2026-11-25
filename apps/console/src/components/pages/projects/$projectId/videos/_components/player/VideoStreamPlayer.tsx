@@ -176,15 +176,18 @@ export function VideoStreamPlayer({
     [projectId, video.$id, readyIds],
   )
 
+  // A visitor's playback from the public playlist has no source file.
   const sourceFileUrl = useMemo(
     () =>
-      applyVideoStreamAccess(
-        sdk.forProject(projectId).storage.getFileView({
-          bucketId: video.bucketId,
-          fileId: video.fileId,
-        }),
-        streamAccess,
-      ),
+      video.bucketId && video.fileId
+        ? applyVideoStreamAccess(
+            sdk.forProject(projectId).storage.getFileView({
+              bucketId: video.bucketId,
+              fileId: video.fileId,
+            }),
+            streamAccess,
+          )
+        : '',
     [projectId, video.bucketId, video.fileId, streamAccess],
   )
 
