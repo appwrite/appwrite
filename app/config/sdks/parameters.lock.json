@@ -3497,6 +3497,12 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Clerk": [
+            "clientId",
+            "clientSecret",
+            "endpoint",
+            "enabled"
+        ],
         "project.updateOAuth2Cloudflare": [
             "clientId",
             "clientSecret",
@@ -8012,6 +8018,12 @@
         "project.updateOAuth2Box": [
             "clientId",
             "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Clerk": [
+            "clientId",
+            "clientSecret",
+            "endpoint",
             "enabled"
         ],
         "project.updateOAuth2Cloudflare": [
