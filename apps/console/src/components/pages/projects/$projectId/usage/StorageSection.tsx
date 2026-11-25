@@ -9,12 +9,14 @@ import {
   IMAGE_TRANSFORMATIONS_DOCS_HREF,
   OVERVIEW_STORAGE_BREAKDOWN_OPTIONS,
   STORAGE_DOCS_HREF,
+  VIDEOS_STORAGE_BREAKDOWN_OPTION,
+  VIDEOS_STORAGE_DOCS_HREF,
   formatImageTransformationsTotal,
   formatImageTransformationsValue,
   formatStorageBytesTotal,
   formatStorageBytesValue,
   getStorageGaugeDisplayTotal,
-  type OverviewStorageBreakdownType,
+  type StorageBreakdownType,
 } from '@/lib/usage/storage-usage'
 import { topConsumersToBreakdownItems } from '@/lib/usage/compute-usage'
 import {
@@ -24,16 +26,17 @@ import {
   useUsageResourceBreakdownLookups,
 } from '@/lib/react-query/hooks'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { StorageMetricBentoCard } from './_components/StorageMetricBentoCard'
 import { getUsageChartLoadingProps } from '@/lib/usage/usage-chart-loading'
 
-const STORAGE_CHART_GRADIENT_IDS: Record<OverviewStorageBreakdownType, string> =
-  {
-    buckets: 'usage-storage-buckets-gradient',
-    databases: 'usage-storage-databases-gradient',
-    functions: 'usage-storage-functions-gradient',
-    sites: 'usage-storage-sites-gradient',
-  }
+const STORAGE_CHART_GRADIENT_IDS: Record<StorageBreakdownType, string> = {
+  buckets: 'usage-storage-buckets-gradient',
+  databases: 'usage-storage-databases-gradient',
+  functions: 'usage-storage-functions-gradient',
+  sites: 'usage-storage-sites-gradient',
+  videos: 'usage-storage-videos-gradient',
+}
 
 type StorageSectionProps = {
   projectId: string
@@ -49,6 +52,8 @@ export function StorageSection({
   const queryClient = useQueryClient()
   const { registerRefreshHandler, unregisterRefreshHandler } = useRefresh()
   const showBreakdown = true
+  const { features } = useConsoleProfile()
+  const showVideos = Boolean(features.videos)
 
   // One query per resource family of the unified `storage` gauge. Listed
   // explicitly rather than mapped so hook order stays fixed.
@@ -80,6 +85,16 @@ export function StorageSection({
     true,
     chartInterval,
   )
+  // Video bytes are billed as one row per project, so this panel has no
+  // breakdown and is shown only while the Videos product is enabled.
+  const videosQuery = useProjectStorageResourceTypeUsage(
+    'videos',
+    projectId,
+    dateRange,
+    showVideos,
+    chartInterval,
+    false,
+  )
   const imageTransformationsQuery = useProjectImageTransformationsUsage(
     projectId,
     dateRange,
@@ -93,14 +108,19 @@ export function StorageSection({
       databases: databasesQuery,
       functions: functionsQuery,
       sites: sitesQuery,
+      videos: videosQuery,
     }),
-    [bucketsQuery, databasesQuery, functionsQuery, sitesQuery],
+    [bucketsQuery, databasesQuery, functionsQuery, sitesQuery, videosQuery],
   )
 
   const storageCards = useMemo(
     () =>
-      OVERVIEW_STORAGE_BREAKDOWN_OPTIONS.map((option) => {
+      [
+        ...OVERVIEW_STORAGE_BREAKDOWN_OPTIONS,
+        ...(showVideos ? [VIDEOS_STORAGE_BREAKDOWN_OPTION] : []),
+      ].map((option) => {
         const query = storageQueries[option.value]
+        const hasBreakdown = option.value !== 'videos'
         const chartPoints = query.isError ? [] : (query.data?.chartPoints ?? [])
         const loading = getUsageChartLoadingProps(query, chartPoints)
 
@@ -109,12 +129,14 @@ export function StorageSection({
           query,
           chartPoints,
           loading,
-          breakdownItems: query.isError
-            ? []
-            : topConsumersToBreakdownItems(query.data?.topConsumers ?? []),
+          hasBreakdown,
+          breakdownItems:
+            query.isError || !hasBreakdown
+              ? []
+              : topConsumersToBreakdownItems(query.data?.topConsumers ?? []),
         }
       }),
-    [storageQueries],
+    [storageQueries, showVideos],
   )
 
   const imageTransformationsPoints = imageTransformationsQuery.isError
@@ -131,7 +153,10 @@ export function StorageSection({
         : topConsumersToBreakdownItems(
             imageTransformationsQuery.data?.topConsumers ?? [],
           ),
-    [imageTransformationsQuery.isError, imageTransformationsQuery.data?.topConsumers],
+    [
+      imageTransformationsQuery.isError,
+      imageTransformationsQuery.data?.topConsumers,
+    ],
   )
 
   const allBreakdownItems = useMemo(() => {
@@ -160,12 +185,7 @@ export function StorageSection({
       'Usage data',
     )
     return () => unregisterRefreshHandler()
-  }, [
-    queryClient,
-    projectId,
-    registerRefreshHandler,
-    unregisterRefreshHandler,
-  ])
+  }, [queryClient, projectId, registerRefreshHandler, unregisterRefreshHandler])
 
   const handleRetryAll = () => {
     void refetchProjectStorageUsageQueries(queryClient, projectId)
@@ -173,34 +193,47 @@ export function StorageSection({
 
   return (
     <div className="space-y-6">
-      {storageCards.map(({ option, query, chartPoints, loading, breakdownItems }) => (
-        <StorageMetricBentoCard
-          key={option.value}
-          projectId={projectId}
-          title={option.title}
-          description={option.description}
-          unitLabel="bytes"
-          chartGradientId={STORAGE_CHART_GRADIENT_IDS[option.value]}
-          chartPoints={chartPoints}
-          total={getStorageGaugeDisplayTotal(chartPoints)}
-          changePercent={query.data?.changePercent ?? 0}
-          isLoading={loading.isLoading}
-          isRefreshing={loading.isRefreshing}
-          isError={query.isError}
-          queryError={query.error}
-          formatTotal={formatStorageBytesTotal}
-          formatValue={formatStorageBytesValue}
-          axisFormat="bytes"
-          showBreakdown={showBreakdown}
-          breakdownItems={breakdownItems}
-          breakdownLookup={storageLookup}
-          computeLookup={computeLookup}
-          databaseLookup={databaseLookup}
-          resourceNamesResolved={resourceNamesResolved}
-          onRetry={handleRetryAll}
-          docsHref={STORAGE_DOCS_HREF}
-        />
-      ))}
+      {storageCards.map(
+        ({
+          option,
+          query,
+          chartPoints,
+          loading,
+          hasBreakdown,
+          breakdownItems,
+        }) => (
+          <StorageMetricBentoCard
+            key={option.value}
+            projectId={projectId}
+            title={option.title}
+            description={option.description}
+            unitLabel="bytes"
+            chartGradientId={STORAGE_CHART_GRADIENT_IDS[option.value]}
+            chartPoints={chartPoints}
+            total={getStorageGaugeDisplayTotal(chartPoints)}
+            changePercent={query.data?.changePercent ?? 0}
+            isLoading={loading.isLoading}
+            isRefreshing={loading.isRefreshing}
+            isError={query.isError}
+            queryError={query.error}
+            formatTotal={formatStorageBytesTotal}
+            formatValue={formatStorageBytesValue}
+            axisFormat="bytes"
+            showBreakdown={showBreakdown && hasBreakdown}
+            breakdownItems={breakdownItems}
+            breakdownLookup={storageLookup}
+            computeLookup={computeLookup}
+            databaseLookup={databaseLookup}
+            resourceNamesResolved={resourceNamesResolved}
+            onRetry={handleRetryAll}
+            docsHref={
+              option.value === 'videos'
+                ? VIDEOS_STORAGE_DOCS_HREF
+                : STORAGE_DOCS_HREF
+            }
+          />
+        ),
+      )}
 
       <StorageMetricBentoCard
         projectId={projectId}

@@ -5269,7 +5269,7 @@ parameters:
 			path: src/Sources/Appwrite/Reader/Database.php
 
 		-
-			message: '#^Parameter \#1 \$attributes of static method Utopia\\Query\\Query\:\:select\(\) expects array\<string\>, array given\.$#'
+			message: '#^Parameter \#1 \$attributes of static method Utopia\\Query\\NativeQuery\:\:select\(\) expects array\<string\>, array given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Sources/Appwrite/Reader/Database.php
@@ -5311,13 +5311,13 @@ parameters:
 			path: src/Sources/Appwrite/Reader/Database.php
 
 		-
-			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array given\.$#'
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Sources/Appwrite/Reader/Database.php
 
 		-
-			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: src/Sources/Appwrite/Reader/Database.php
@@ -6949,7 +6949,7 @@ parameters:
 			path: tests/Destinations/AppwriteBigIntSpellingTest.php
 
 		-
-			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: tests/Destinations/AppwriteBigIntSpellingTest.php
@@ -6973,7 +6973,7 @@ parameters:
 			path: tests/Destinations/AppwriteCheckAttributeTest.php
 
 		-
-			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: tests/Destinations/AppwriteCheckAttributeTest.php
@@ -6985,7 +6985,7 @@ parameters:
 			path: tests/Destinations/AppwriteColumnLimitTest.php
 
 		-
-			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: tests/Destinations/AppwriteColumnLimitTest.php
@@ -6997,7 +6997,7 @@ parameters:
 			path: tests/Destinations/AppwriteColumnOverwriteTest.php
 
 		-
-			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: tests/Destinations/AppwriteColumnOverwriteTest.php
@@ -7051,7 +7051,7 @@ parameters:
 			path: tests/Destinations/AppwriteIndexLengthsTest.php
 
 		-
-			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: tests/Destinations/AppwriteIndexLengthsTest.php
@@ -7069,7 +7069,7 @@ parameters:
 			path: tests/Destinations/AppwriteLegacyAttributeMetadataTest.php
 
 		-
-			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: tests/Destinations/AppwriteLegacyAttributeMetadataTest.php
@@ -7087,7 +7087,7 @@ parameters:
 			path: tests/Destinations/AppwriteLegacyIndexMetadataTest.php
 
 		-
-			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: tests/Destinations/AppwriteLegacyIndexMetadataTest.php
@@ -7123,13 +7123,13 @@ parameters:
 			path: tests/Destinations/AppwriteRelationshipOnDeleteTest.php
 
 		-
-			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: tests/Destinations/AppwriteRelationshipOnDeleteTest.php
 
 		-
-			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: tests/Destinations/AppwriteRowImportTest.php
@@ -7153,7 +7153,7 @@ parameters:
 			path: tests/Destinations/AppwriteRunCompletionTest.php
 
 		-
-			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: tests/Destinations/AppwriteRunCompletionTest.php
@@ -7171,7 +7171,7 @@ parameters:
 			path: tests/Destinations/AppwriteSpatialIndexTest.php
 
 		-
-			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: tests/Destinations/AppwriteSpatialIndexTest.php

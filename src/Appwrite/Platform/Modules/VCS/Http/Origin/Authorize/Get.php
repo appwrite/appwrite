@@ -37,6 +37,8 @@ class Get extends Action
         'repository:pull_requests:reviews:write',
         'repository:checks:read',
         'repository:checks:write',
+        // Code review reads a comment author's permission before answering them.
+        'repository:members:read',
     ];
 
     public static function getName()

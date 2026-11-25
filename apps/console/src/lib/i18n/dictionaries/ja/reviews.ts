@@ -16,10 +16,6 @@ export const jaReviewsDictionary: Record<string, string> = {
 
   // Empty states
   'Review pull requests with AI': 'AI でプルリクエストをレビュー',
-  'Catch bugs and security issues before they merge. Choose the repositories to review, and every pull request in them gets a review on GitHub.':
-    'バグやセキュリティの問題をマージ前に見つけます。レビューするリポジトリを選ぶと、そのリポジトリのすべてのプルリクエストが GitHub 上でレビューされます。',
-  'Install the GitHub app on your account or organization, then turn on review for the repositories you pick.':
-    'アカウントまたは組織に GitHub アプリをインストールし、選んだリポジトリのレビューをオンにします。',
   'Get a review on every pull request': 'すべてのプルリクエストをレビュー',
   'Each new pull request and commit gets a summary, findings on the lines they concern, a verdict, and a merge confidence grade.':
     '新しいプルリクエストとコミットごとに、概要、該当する行への指摘事項、判定、マージの信頼度が付きます。',
@@ -42,9 +38,6 @@ export const jaReviewsDictionary: Record<string, string> = {
   'The review found nothing to flag.':
     'レビューで指摘事項は見つかりませんでした。',
   'View comment': 'コメントを表示',
-  'Open on GitHub': 'GitHub で開く',
-  'Compare on GitHub': 'GitHub で比較',
-  'Open commit on GitHub': 'GitHub でコミットを開く',
   'Filter findings by severity': '重要度で指摘事項を絞り込む',
 
   // Statuses and verdicts
@@ -71,8 +64,6 @@ export const jaReviewsDictionary: Record<string, string> = {
     'リポジトリのプルリクエストは、作成時と新しいコミットの追加時にレビューされます。',
   'Pull requests in this repository will no longer be reviewed. Past reviews stay in the project.':
     'このリポジトリのプルリクエストはレビューされなくなります。過去のレビューはプロジェクトに残ります。',
-  'Connect a GitHub installation to the project to review its repositories.':
-    'リポジトリをレビューするには、GitHub のインストールをプロジェクトに接続してください。',
   'Code review turned on': 'コードレビューを有効にしました',
   'Code review turned off': 'コードレビューを無効にしました',
   'Failed to turn on code review': 'コードレビューを有効にできませんでした',
@@ -192,14 +183,11 @@ export const jaReviewsDictionary: Record<string, string> = {
   'Review all repositories': 'すべてのリポジトリをレビュー',
   'Choose repositories': 'リポジトリを選択',
   'Browse repositories': 'リポジトリを参照',
-  'Search GitHub repositories...': 'GitHub リポジトリを検索...',
   'No repositories match your search': '検索に一致するリポジトリはありません',
   'No repositories reviewed yet': 'レビュー対象のリポジトリはまだありません',
-  'No GitHub installation': 'GitHub のインストールがありません',
-  'Connect GitHub to review pull requests':
-    'GitHub を接続してプルリクエストをレビュー',
-  'Install the GitHub app on your account or organization, then pick the repositories to review.':
-    'アカウントまたは組織に GitHub アプリをインストールし、レビューするリポジトリを選択してください。',
+  'No installation': 'インストールがありません',
+  'Connect a Git provider to review pull requests':
+    'Git プロバイダーを接続してプルリクエストをレビュー',
   'Turn on code review for a repository and its pull requests are reviewed when they are opened or get new commits.':
     'リポジトリのコードレビューを有効にすると、プルリクエストの作成時と新しいコミットの追加時にレビューされます。',
   'Turn on code review for every repository in {organization} ({count}).':
@@ -239,7 +227,6 @@ export const jaReviewsDictionary: Record<string, string> = {
   Learning: '学習内容',
   'Asked by': '依頼者',
   'Learning actions': '学習の操作',
-  'Open conversation on GitHub': 'GitHub で会話を開く',
   'Learning has been deleted': '学習を削除しました',
   'Failed to delete learning': '学習を削除できませんでした',
   'No learnings yet': '学習はまだありません',
@@ -287,4 +274,50 @@ export const jaReviewsDictionary: Record<string, string> = {
     'よく却下されるカテゴリは、レビュアーに指摘を控えさせる学習の候補です。',
   'Useful findings is the share of settled findings that were fixed rather than dismissed; findings still open count for neither.':
     '有用な指摘は、決着した指摘のうち却下されずに修正されたものの割合です。未解決の指摘はどちらにも数えません。',
+  // Functions and sites: code review of the connected repository
+  'Code review': 'コードレビュー',
+  'Review pull requests': 'プルリクエストをレビュー',
+  'Code review was not turned on': 'コードレビューを有効にできませんでした',
+  'Turn it on later from Settings > Git.':
+    '後から 設定 > Git で有効にできます。',
+  'Code review is already on for this repository.':
+    'このリポジトリではコードレビューがすでに有効です。',
+  'Appwrite reviews each pull request when it is opened or gets new commits, and comments on it.':
+    'Appwrite はプルリクエストが作成されたときや新しいコミットが追加されたときにレビューし、コメントします。',
+  "Reviews use your organization's review credits.":
+    'レビューには組織のレビュークレジットが使われます。',
+  'Review pull requests to the connected repository and comment on them. The setting applies to the whole repository.':
+    '接続したリポジトリへのプルリクエストをレビューし、コメントします。この設定はリポジトリ全体に適用されます。',
+  'Each pull request is reviewed when it is opened or gets new commits.':
+    'プルリクエストは作成時と新しいコミットの追加時にレビューされます。',
+  'Review strength': 'レビュー強度',
+  'How hard pull requests are reviewed, and what each review costs.':
+    'プルリクエストをどこまで深くレビューするか、またレビューごとのコストです。',
+  'View reviews': 'レビューを表示',
+  'Connect a repository to this function to review its pull requests.':
+    'この関数にリポジトリを接続すると、プルリクエストをレビューできます。',
+  'Connect a repository to this site to review its pull requests.':
+    'このサイトにリポジトリを接続すると、プルリクエストをレビューできます。',
+  'Code review does not run on this provider':
+    'このプロバイダーではコードレビューを利用できません',
+  'Code review runs on GitHub, GitLab, Gitea, Bitbucket and Origin repositories.':
+    'コードレビューは GitHub、GitLab、Gitea、Bitbucket、Origin のリポジトリで利用できます。',
+  'Code review is off': 'コードレビューは無効です',
+  'Turn on code review to have each pull request reviewed when it is opened or gets new commits.':
+    'コードレビューを有効にすると、プルリクエストの作成時と新しいコミットの追加時にレビューされます。',
+  'Pull requests that change files in':
+    '次のディレクトリのファイルを変更するプルリクエスト:',
+  'Reviews show up here when a pull request that changes this directory is opened or gets new commits.':
+    'このディレクトリを変更するプルリクエストが作成されるか、新しいコミットが追加されると、ここにレビューが表示されます。',
+  'Reviews show up here when a pull request is opened or gets new commits.':
+    'プルリクエストが作成されるか、新しいコミットが追加されると、ここにレビューが表示されます。',
+  'No reviews of this directory among the latest ones.':
+    '最新のレビューの中に、このディレクトリのレビューはありません。',
+
+  // Row menus
+  'Copy text': 'テキストをコピー',
+  'Copy title': 'タイトルをコピー',
+  'Open profile on GitHub': 'GitHub でプロフィールを開く',
+  'Open file': 'ファイルを開く',
+  'Open comment': 'コメントを開く',
 }

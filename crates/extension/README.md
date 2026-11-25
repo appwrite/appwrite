@@ -83,10 +83,10 @@ utopia.libraries = "validators,dsn,domains"
 | `validators`  | `Utopia\Validator\Validator` and every validator of `packages/validators`        |
 
 - **Unset or empty** (the default, and what Appwrite and Cloud use): every library above but
-  `detector`, `compression` and `query` registers, and `_APP_EXTENSION_LIBRARIES` switches those
-  three on (see
+  the ones that still have a PHP implementation registers, and `_APP_EXTENSION_LIBRARIES`
+  switches those on (see
   [Switching a class on](#switching-a-class-on)).
-- **Set:** only the libraries it names register, the switchable three included, and
+- **Set:** only the libraries it names register, the switchable ones included, and
   `_APP_EXTENSION_LIBRARIES` is ignored. Names are the package names, the same ones
   `_APP_EXTENSION_LIBRARIES` takes, comma separated; spaces around them are ignored. The old
   `validators-scalar`, `validators-text`, `validators-network` and `validators-compose` each mean
@@ -106,13 +106,14 @@ utopia.libraries = "validators,dsn,domains"
 
 `Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN`, `Utopia\Locale\Locale`,
 `Utopia\UserAgent\UserAgent`, `Utopia\Domains\Domain`, `Utopia\Emails\Email`, the validators
-of `packages/validators` and the password hashes of `packages/auth` are registered unless
+of `packages/validators`, the password hashes of `packages/auth` and the 104 classes of
+`packages/query` listed under [Utopia\Query](#utopiaquery-the-classifiers-the-tokenizers-query-the-ast-and-the-schemas) are registered unless
 `utopia.libraries` leaves them out: they have no PHP implementation. Their signatures are in `stubs/`, `packages/image/stubs/`,
 `packages/user-agent/stubs/`, `packages/domains/stubs/`, `packages/emails/stubs/`,
-`packages/validators/stubs/` and `packages/auth/stubs/` for PHPStan, which runs without the
+`packages/validators/stubs/`, `packages/auth/stubs/` and `packages/query/stubs/` for PHPStan, which runs without the
 extension. A library that still has a PHP implementation is registered only when
 `_APP_EXTENSION_LIBRARIES` names its package; today those are `detector`, `compression`,
-`query`, `balancer` and `database` (four classes of `utopia-php/database`, from `vendor/`). Otherwise
+`balancer` and `database` (four classes of `utopia-php/database`, from `vendor/`). Otherwise
 Composer loads the package's PHP class as before:
 
 ```sh
@@ -488,21 +489,28 @@ same exception for a URL, and fills the same properties. `==`, `var_dump()`, `(a
 
 ## Utopia\Query: the classifiers, the tokenizers, Query, the AST and the schemas
 
-Over `crates/utopia/query` (`_APP_EXTENSION_LIBRARIES=query`). `packages/query` is about 300 classes,
-so it moves to the extension one part at a time, and `query` switches on whatever part is here. So
-far that is the statement classifiers a database proxy routes with: the `Classifier` interface,
+Over `crates/utopia/query`, always registered. The PHP sources of the classes it serves were
+removed once it ran in every Cloud region (2026-11-24); their signatures are in
+`packages/query/stubs/`, one file per class, for PHPStan and editors. `packages/query` was about
+300 classes and 104 of them are the extension's: the statement classifiers a database proxy
+routes with: the `Classifier` interface,
 `Classifier\SQL` (abstract), `Classifier\MySQL`, `Classifier\PostgreSQL`, `Classifier\MongoDB` and
 the `Type` enum they return; the tokenizers; `Query`; the AST's parser and serializers; and the
-schemas, each below. Every other class of the package (`Method` and the other enums, the builders,
-the schema's blueprints, the AST's nodes and walker) is still its PHP source and works with these
-unchanged.
+schemas and the builders, each below. Every other class of the package (`Method` and the other
+enums, the schema's blueprints, the AST's nodes and walker, the hooks and exceptions) is still its
+PHP source and works with these unchanged.
+
+The sections below describe how each part was checked against the PHP class while both existed.
+The two corpora (`tests/query.php` and `tests/query-builders.php`) went with the PHP classes,
+since there is nothing left to compare against. The package's own tests and
+`tests/query-coroutines.php` run on the extension in `tests/run.sh`.
 
 The interface and the enum are registered too, not left in PHP: a class registered when the module
 starts cannot implement a userland interface, and returning the extension's own enum case costs no
 lookup. PHP code that implements `Classifier`, extends `Classifier\SQL` with its own `classify()`,
 or extends a concrete classifier and calls `parent::classify()` works as before.
 
-`crates/extension/tests/query.php` prints a corpus of results that must be identical on both
+`crates/extension/tests/query.php` printed a corpus of results that had to be identical on both
 implementations: every keyword the classifiers know, in three spellings and seven positions; SQL
 with comments, quoted and dollar-quoted text, `COPY` and CTEs, bytes that are not UTF-8 and inputs
 of 100 KB; seeded mutations of all of them; MySQL and PostgreSQL packets of every command and
@@ -543,9 +551,8 @@ whose tokens cover every byte, so they run on both implementations.
 ### Query
 
 `Utopia\Query\Query`, the value object every query is. The extension registers its methods and
-state as `Utopia\Query\NativeQuery`, and the package declares `Query` over it
-(`packages/query/src/extension.php` loads `packages/query/extension/Query.php` before the autoloader
-looks for `src/Query.php`). That one PHP class holds the two constants that are arrays,
+state as `Utopia\Query\NativeQuery`, and the package declares `Query` over it in `src/Query.php`.
+That one PHP class holds the two constants that are arrays,
 `LOGICAL_TYPES` and `GROUP_BY_TIME_BUCKET_INTERVALS`, which a class registered when the module
 starts cannot. `Utopia\Database\Query` reads the first.
 
@@ -809,9 +816,9 @@ Known differences:
 - `resolvedAttributeCache` has no order.
 - The classes declare a constructor and no `__clone()`. PHP's declare the reverse.
 
-Four things check them. `tests/query-builders.php` is a corpus like the others: 15,827 cases, the
-same on PHP and on the extension. The package's own 5,828 tests pass on the native builders, but for
-two that read the PHP class's source and private state and are skipped there. utopia-php/database
+Four things checked them. `tests/query-builders.php` was a corpus like the others: 15,827 cases,
+the same on PHP and on the extension. The package's own tests pass on the native builders; two
+that read the PHP class's source and private state were removed with it, leaving 5,826. utopia-php/database
 10.2.3 subclasses four of the builders, overrides 23 of their methods and serializes queries for its
 cache keys. Its 13,217 unit tests give the same result on the native builders as on PHP.
 `tests/query-coroutines.php` builds 720 statements in Swoole coroutines whose overrides and
@@ -997,6 +1004,9 @@ The abstract `Utopia\Auth\Hash` and its eight hashes, `Argon2`, `Bcrypt`, `MD5`,
 `Plaintext`, `Scrypt`, `ScryptModified` and `Sha`, always registered, over
 `php-std` (`password_hash()`, `password_verify()`, `crypt()`, `hash()`, `base64_*()`,
 `mb_convert_encoding()`) and `crates/utopia/auth` (PECL `scrypt()`, Firebase's modified scrypt, phpass).
+`crypt()`, bcrypt's `password_verify()` and `md5()` run the C that ext/standard exports
+(`php_crypt()`, `PHP_MD5*`, in `src/auth/native.rs`), as PHP's own functions do: the Rust ports
+give the same bytes, but php-std's blowfish is 18% slower than PHP's.
 Once the extension had served them in every Cloud region (appwrite-labs/cloud#7503), the PHP
 classes (`src/Hash.php` and `src/Hashes/*`) were removed from `packages/auth`, which now requires
 `ext-utopia` like `packages/image` and keeps their signatures in `stubs/Hash.php`; 0.12.x on
@@ -1105,5 +1115,5 @@ How it behaves inside a Swoole worker:
   encoded an AVIF and then forked left the child waiting forever on its next encode.
 
 
-`crates/support/php-std` here holds only the functions `utopia-image` calls, copied
+`crates/utopia/php-std` here holds only the functions `utopia-image` calls, copied
 unchanged from the full crate on `feat/rust-utopia-conversion`.

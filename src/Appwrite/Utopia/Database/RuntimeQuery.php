@@ -21,6 +21,8 @@ class RuntimeQuery extends Query
         Method::LessThanEqual,
         Method::GreaterThan,
         Method::GreaterThanEqual,
+        Method::Between,
+        Method::NotBetween,
 
         // Null checks
         Method::IsNull,
@@ -277,6 +279,14 @@ class RuntimeQuery extends Query
                     }
                 }
                 return false;
+
+            case Method::Between:
+                // Inclusive on both ends, like SQL BETWEEN; null never matches
+                return \count($targets) === 2 && $value !== null && $value >= $targets[0] && $value <= $targets[1];
+
+            case Method::NotBetween:
+                // SQL NULL NOT BETWEEN evaluates to NULL, so null never matches either
+                return \count($targets) === 2 && $value !== null && ($value < $targets[0] || $value > $targets[1]);
 
             case Method::IsNull:
                 return $value === null;

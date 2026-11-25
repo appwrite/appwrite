@@ -29,6 +29,12 @@ export const ANALYTICS_ACTIONS = {
   'notifications-beep-app-store': 'Notifications Beep App Store Clicked',
   'notifications-beep-google-play': 'Notifications Beep Google Play Clicked',
   'notifications-beep-dismiss': 'Notifications Beep Promotion Dismissed',
+  'monitors-beep-app-store': 'Monitors Beep App Store Clicked',
+  'monitors-beep-google-play': 'Monitors Beep Google Play Clicked',
+  'monitors-beep-dismiss': 'Monitors Beep Promotion Dismissed',
+  'create-monitor-beep-app-store': 'Create Monitor Beep App Store Clicked',
+  'create-monitor-beep-google-play': 'Create Monitor Beep Google Play Clicked',
+  'create-monitor-beep-dismiss': 'Create Monitor Beep Promotion Dismissed',
   'ai-agent-open': 'AI Agent Opened',
   'upgrade-clicked': 'Upgrade Clicked',
   'auth-sign-in': 'Sign In Clicked',
@@ -177,6 +183,8 @@ export const ANALYTICS_ACTIONS = {
   'members-contact-sales': 'Members Contact Sales Clicked',
   'backups-contact-sales': 'Backups Contact Sales Clicked',
   'activity-contact-sales': 'Activity Contact Sales Clicked',
+  'videos-contact-sales': 'Videos Contact Sales Clicked',
+  'videos-gpu-dismiss': 'Videos GPU Upsell Dismissed',
   'specs-contact-sales': 'Specifications Contact Sales Clicked',
   'replicas-contact-sales': 'Replicas Contact Sales Clicked',
   'compliance-contact-sales': 'Compliance Contact Sales Clicked',
@@ -434,6 +442,7 @@ const CONTACT_SALES_ACTIONS: Record<SalesSource, AnalyticsActionId> = {
   support: 'support-contact-sales',
   'support-ticket': 'support-ticket-contact-sales',
   'plan-picker': 'upgrade-contact-sales',
+  videos: 'videos-contact-sales',
 }
 
 /** Exact docs global-nav hrefs → curated actions (top-level section entries only). */

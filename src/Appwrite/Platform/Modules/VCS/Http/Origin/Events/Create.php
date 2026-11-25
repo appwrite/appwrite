@@ -2,14 +2,17 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Origin\Events;
 
+use Appwrite\Event\Publisher\Review as ReviewPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
+use Appwrite\Platform\Modules\VCS\Http\GitHub\Reviews;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\DeliveryClaim;
 use Appwrite\Vcs\DeliveryClaims;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\InstallationTokens;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
@@ -28,6 +31,7 @@ class Create extends Action
 {
     use HTTP;
     use Deployment;
+    use Reviews;
 
     /**
      * Origin's active signing keys, cached for the worker's lifetime. The set
@@ -59,6 +63,8 @@ class Create extends Action
             ->inject('getProjectDB')
             ->inject('deploymentsFactory')
             ->inject('platform')
+            ->inject('publisherForReviews')
+            ->inject('installationTokens')
             ->callback($this->action(...));
     }
 
@@ -71,7 +77,9 @@ class Create extends Action
         Bus $bus,
         callable $getProjectDB,
         callable $deploymentsFactory,
-        array $platform
+        array $platform,
+        ReviewPublisher $publisherForReviews,
+        InstallationTokens $installationTokens,
     ) {
         /** @var Origin $vcs */
         $vcs = $vcsFactory->fromProvider('origin');
@@ -130,8 +138,19 @@ class Create extends Action
         // and the first failure fails the delivery.
         $failure = null;
         foreach ($parsedPayloads as $parsedPayload) {
+            // Before the deployments, which may throw; queueing a review never does.
+            // Without the secret no review service runs, so nothing would consume the job.
+            if (System::getEnv('_APP_REVIEWS_SECRET', '') !== '') {
+                match (true) {
+                    $event === Origin::EVENT_PULL_REQUEST_COMMENT => $this->queueComment('origin', $parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
+                    \str_starts_with($event, Origin::EVENT_PULL_REQUEST . '.') => $this->queueReviews('origin', $parsedPayload, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
+                    default => null,
+                };
+            }
+
             try {
                 match (true) {
+                    $event === Origin::EVENT_PULL_REQUEST_COMMENT => null,
                     $event === Origin::EVENT_PUSH => $this->handlePushEvent($parsedPayload, $deliveryId, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
                     \str_starts_with($event, Origin::EVENT_PULL_REQUEST . '.') => $this->handlePullRequestEvent($parsedPayload, $deliveryId, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
                     \str_starts_with($event, Origin::EVENT_INSTALLATION . '.') => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization, $getProjectDB),
@@ -175,6 +194,52 @@ class Create extends Action
      */
     protected function postprocessEvent(Request $request): void
     {
+    }
+
+    /**
+     * Origin has no mentions of its own, so comments name the reviewer by its product's name, as
+     * in "@appwrite review".
+     */
+    protected function getReviewerHandle(Document $installation): string
+    {
+        return 'appwrite';
+    }
+
+    /**
+     * Comments the app posts are authored by the app, which the adapter names by its id.
+     */
+    protected function getReviewerLogin(Document $installation): string
+    {
+        return System::getEnv('_APP_VCS_ORIGIN_CLIENT_ID', '');
+    }
+
+    /**
+     * Origin sends no association with a comment, so a human author's permission on the
+     * repository is read: admin counts as an owner, write as a collaborator. Reading it needs the
+     * repository:members:read scope; an installation approved without it, or a failed read,
+     * leaves the author untrusted.
+     */
+    protected function getCommentAuthorAssociation(array $parsedPayload, Document $installation, VcsFactory $vcsFactory, InstallationTokens $installationTokens, Database $dbForPlatform): string
+    {
+        $authorId = \strval($parsedPayload['commentAuthorId'] ?? '');
+        if (($parsedPayload['commentAuthorType'] ?? '') !== 'User' || $authorId === '') {
+            return '';
+        }
+
+        try {
+            $vcs = $vcsFactory->fromInstallation($installation);
+            if (!$vcs instanceof Origin) {
+                return '';
+            }
+
+            $permission = $vcs->getCollaboratorPermission(\strval($parsedPayload['owner'] ?? ''), \strval($parsedPayload['repositoryName'] ?? ''), $authorId);
+        } catch (\Throwable $error) {
+            Console::warning("Failed to read the permission of comment author '{$authorId}': " . $error->getMessage());
+
+            return '';
+        }
+
+        return $this->getAssociationFromPermission($permission);
     }
 
     /**

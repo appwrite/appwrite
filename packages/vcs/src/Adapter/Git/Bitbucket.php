@@ -78,6 +78,8 @@ class Bitbucket extends Git
      * Maps Bitbucket's event keys to the pull request verbs consumers key off
      * of; both a merge and a decline count as 'closed'.
      */
+    public const EVENT_PULL_REQUEST_COMMENT = 'pullrequest:comment_created';
+
     private const array PULL_REQUEST_ACTION_MAP = [
         'pullrequest:created' => 'opened',
         'pullrequest:updated' => 'synchronize',
@@ -102,10 +104,20 @@ class Bitbucket extends Git
     /**
      * Global Headers
      *
+     * Bitbucket runs an XSRF check on writes whose User-Agent looks like a
+     * browser and refuses them with 403 "XSRF checks failed for request".
+     * X-Atlassian-Token: no-check opts API calls out of that check whatever
+     * User-Agent reaches Bitbucket.
+     *
+     * @link https://support.atlassian.com/atlassian-cloud/kb/xsrf-check-failed-when-calling-cloud-apis/
+     *
      * @var array<string, string>
      */
     #[\Override]
-    protected $headers = ['content-type' => 'application/json'];
+    protected $headers = [
+        'content-type' => 'application/json',
+        'x-atlassian-token' => 'no-check',
+    ];
 
     public function __construct(protected Cache $cache)
     {
@@ -1310,7 +1322,7 @@ class Bitbucket extends Git
      *                              'pull_request') or Bitbucket's own keys
      *                              (e.g. 'repo:push')
      */
-    public function createWebhook(string $owner, string $repositoryName, string $url, string $secret, array $events = ['push', 'pull_request']): string
+    public function createWebhook(string $owner, string $repositoryName, string $url, string $secret, array $events = ['push', 'pull_request', 'comment']): string
     {
         $apiUrl = "/repositories/{$owner}/{$repositoryName}/hooks";
 
@@ -1362,6 +1374,7 @@ class Bitbucket extends Git
             $keys = match ($event) {
                 'push' => array_merge($keys, ['repo:push']),
                 'pull_request' => array_merge($keys, array_keys(self::PULL_REQUEST_ACTION_MAP)),
+                'comment' => array_merge($keys, [self::EVENT_PULL_REQUEST_COMMENT]),
                 default => $keys,
             };
         }
@@ -1566,6 +1579,9 @@ class Bitbucket extends Git
             case 'pullrequest:rejected':
                 return [$this->parsePullRequestEvent($event, $payloadArray, $repository, $actor)];
 
+            case self::EVENT_PULL_REQUEST_COMMENT:
+                return [$this->parseCommentEvent($payloadArray, $repository)];
+
             default:
                 return [];
         }
@@ -1680,8 +1696,172 @@ class Bitbucket extends Git
             'headCommitUrl' => $repositoryUrl !== '' && $repositoryUrl !== '0' && !empty($commitHash) ? $repositoryUrl . '/commits/' . $commitHash : '',
             'external' => $external,
             'pullRequestNumber' => $pullRequest['id'] ?? '',
+            'pullRequestAuthor' => $this->usernameOf(\is_array($pullRequest['author'] ?? null) ? $pullRequest['author'] : []),
             'action' => self::PULL_REQUEST_ACTION_MAP[$event],
         ];
+    }
+
+    /**
+     * A comment created on a pull request, in the shape GitHub's comment
+     * events are reported in. One on a line or a file, or a reply in such a
+     * thread (Bitbucket copies the anchor onto replies), is a 'review'
+     * comment; anything else is an 'issue' comment on the conversation. A
+     * reply names its parent, which is its thread's first comment unless it
+     * answers another reply: getCommentThread() walks up to the first one.
+     *
+     * @param array<mixed> $payloadArray
+     * @param array<mixed> $repository
+     * @return array<mixed>
+     */
+    private function parseCommentEvent(array $payloadArray, array $repository): array
+    {
+        $pullRequest = \is_array($payloadArray['pullrequest'] ?? null) ? $payloadArray['pullrequest'] : [];
+        $comment = \is_array($payloadArray['comment'] ?? null) ? $payloadArray['comment'] : [];
+        $user = \is_array($comment['user'] ?? null) ? $comment['user'] : [];
+        $parent = \is_array($comment['parent'] ?? null) ? $comment['parent'] : [];
+
+        $content = \is_array($comment['content'] ?? null) ? $comment['content'] : [];
+
+        $isReview = \is_array($comment['inline'] ?? null);
+        $parentId = $this->stringOf($parent['id'] ?? null);
+
+        return [
+            'repositoryId' => $this->stringOf($repository['full_name'] ?? null),
+            'repositoryName' => $repository['name'] ?? '',
+            'repositoryUrl' => $this->htmlLinkOf($repository),
+            'owner' => $this->workspaceSlugOf($repository),
+            'installationId' => '',
+            'pullRequestNumber' => \is_numeric($pullRequest['id'] ?? null) ? (int) $pullRequest['id'] : 0,
+            'pullRequestAuthor' => $this->usernameOf(\is_array($pullRequest['author'] ?? null) ? $pullRequest['author'] : []),
+            'action' => 'created',
+            'commentId' => \is_scalar($comment['id'] ?? null) ? (string) $comment['id'] : '',
+            'commentKind' => $isReview ? 'review' : 'issue',
+            'commentThreadId' => '',
+            'commentReplyToId' => $isReview ? $parentId : '',
+            'commentBody' => \is_string($content['raw'] ?? null) ? $content['raw'] : '',
+            'commentUrl' => $this->htmlLinkOf($comment),
+            'commentAuthor' => $this->usernameOf($user),
+            'commentAuthorId' => $this->stringOf($user['uuid'] ?? ($user['account_id'] ?? null)),
+            // Apps and access tokens act as 'app_user' accounts.
+            'commentAuthorType' => ($user['type'] ?? 'user') === 'user' ? 'User' : 'Bot',
+        ];
+    }
+
+    /**
+     * The web address of a repository or a comment: its `links.html.href`.
+     *
+     * @param array<mixed> $resource
+     */
+    private function htmlLinkOf(array $resource): string
+    {
+        $links = \is_array($resource['links'] ?? null) ? $resource['links'] : [];
+        $html = \is_array($links['html'] ?? null) ? $links['html'] : [];
+
+        return $this->stringOf($html['href'] ?? null);
+    }
+
+    /**
+     * A response's HTTP status code.
+     *
+     * @param array<mixed> $response
+     */
+    private function statusCodeOf(array $response): int
+    {
+        $headers = \is_array($response['headers'] ?? null) ? $response['headers'] : [];
+
+        return \is_int($headers['status-code'] ?? null) ? $headers['status-code'] : 0;
+    }
+
+    /**
+     * A response's decoded JSON body, or an empty array when it has none.
+     *
+     * @param array<mixed> $response
+     * @return array<mixed>
+     */
+    private function bodyOf(array $response): array
+    {
+        return \is_array($response['body'] ?? null) ? $response['body'] : [];
+    }
+
+    /**
+     * A scalar payload value as a string, and empty for anything else.
+     */
+    private function stringOf(mixed $value): string
+    {
+        return \is_scalar($value) ? (string) $value : '';
+    }
+
+    /**
+     * The name a user is known by, as the review service names them: the
+     * nickname, falling back to the display name and the ids.
+     *
+     * @param array<mixed> $user
+     */
+    private function usernameOf(array $user): string
+    {
+        foreach (['nickname', 'display_name', 'account_id', 'uuid'] as $key) {
+            if (\is_string($user[$key] ?? null) && $user[$key] !== '') {
+                return $user[$key];
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * The first comment of the thread a pull request comment is in, found by
+     * walking up its parents: the comment itself when it replies to nothing.
+     *
+     * @throws Exception
+     */
+    public function getCommentThread(string $owner, string $repositoryName, int $pullRequestNumber, string $commentId): string
+    {
+        $id = $commentId;
+        // A thread nested deeper than this is answered at the deepest comment reached.
+        for ($depth = 0; $depth < 20; $depth++) {
+            $response = $this->call(self::METHOD_GET, "/repositories/{$owner}/{$repositoryName}/pullrequests/{$pullRequestNumber}/comments/" . rawurlencode($id), ['Authorization' => $this->authorizationHeader()]);
+            $statusCode = $this->statusCodeOf($response);
+            if ($statusCode >= 400) {
+                throw new Exception("Failed to get comment: HTTP {$statusCode}", $statusCode);
+            }
+
+            $body = $this->bodyOf($response);
+            $parent = $this->stringOf(\is_array($body['parent'] ?? null) ? ($body['parent']['id'] ?? null) : null);
+            if ($parent === '') {
+                break;
+            }
+            $id = $parent;
+        }
+
+        return $id;
+    }
+
+    /**
+     * A user's permission on a repository: 'admin', 'write', 'read', or empty
+     * when they have none. Bitbucket shows it to repository admins only, so
+     * for anyone else's token it is empty too. $userId is the user's UUID or
+     * Atlassian account id.
+     *
+     * @throws Exception
+     */
+    public function getCollaboratorPermission(string $owner, string $repositoryName, string $userId): string
+    {
+        $response = $this->call(self::METHOD_GET, "/repositories/{$owner}/{$repositoryName}/permissions-config/users/" . rawurlencode($userId), ['Authorization' => $this->authorizationHeader()]);
+
+        $statusCode = $this->statusCodeOf($response);
+        if ($statusCode === 403 || $statusCode === 404) {
+            return '';
+        }
+        if ($statusCode >= 400) {
+            throw new Exception("Failed to get repository permission: HTTP {$statusCode}", $statusCode);
+        }
+
+        return match ($this->bodyOf($response)['permission'] ?? '') {
+            'admin' => 'admin',
+            'write' => 'write',
+            'read' => 'read',
+            default => '',
+        };
     }
 
     /**

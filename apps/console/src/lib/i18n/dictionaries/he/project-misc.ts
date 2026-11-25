@@ -2054,6 +2054,13 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'SMS messages': 'הודעות SMS', // pragma: allowlist secret
   'Events sent': 'אירועים שנשלחו',
   'Events failed': 'אירועים שנכשלו',
+  'Streaming bandwidth': 'רוחב פס של סטרימינג',
+  'Renditions encoded': 'גרסאות קידוד שקודדו',
+  'Failed renditions': 'גרסאות קידוד שנכשלו',
+  'Encoding GB-hours': 'GB-hours של קידוד',
+  'Video storage': 'אחסון סרטונים',
+  Endpoints: 'נקודות קצה',
+  'Video ID': 'מזהה סרטון',
   Webhooks: 'Webhooks',
   'Function executions': 'הרצות פונקציות',
   'Site executions': 'הרצות אתרים',
@@ -2180,6 +2187,11 @@ export const heProjectMiscDictionary: Record<string, string> = {
     "זמן חישוב של פונקציות במהלך התקופה שנבחרה, נמדד בג'יגה-בייט-שעות (GBH). זיכרון שהוקצה לפונקציות כפול משך ההרצה והבנייה.",
   'Site compute time during the selected period, measured in gigabyte-hours (GBH). Memory allocated to sites multiplied by request handling and build duration.':
     "זמן חישוב של אתרים במהלך התקופה שנבחרה, נמדד בג'יגה-בייט-שעות (GBH). זיכרון שהוקצה לאתרים כפול משך הטיפול בבקשות והבנייה.",
+  'Video encoding GB-hours': 'GB-hours של קידוד וידאו',
+  'Video encoding compute during the selected period, measured in gigabyte-hours (GBH). Encoder memory multiplied by encode duration. Included in GB-hours.':
+    "זמן חישוב של קידוד וידאו במהלך התקופה שנבחרה, נמדד בג'יגה-בייט-שעות (GBH). זיכרון המקודד כפול משך הקידוד. נכלל ב-GB-hours.",
+  'Storage used by video renditions, captions, and thumbnail timelines. Counts toward your plan storage limit.':
+    'אחסון שמשמש גרסאות קידוד של וידאו, כתוביות וצירי תמונות ממוזערות. נספר במגבלת האחסון של התוכנית.',
   'Top storage buckets': 'באקטי האחסון המובילים',
   'Top buckets by origin images': 'באקטים מובילים לפי תמונות מקור',
   'Top executed functions': 'הפונקציות המורצות ביותר',
@@ -4251,6 +4263,15 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Escalations: 'הסלמות',
   Escalation: 'הסלמה',
   Escalating: 'בהסלמה',
+  'Alert when the value is': 'להתריע כשהערך',
+  'Counted over': 'נספר לאורך',
+  'Undo acknowledgement': 'ביטול האישור',
+  'Someone needs to act now, even at night.':
+    'מישהו צריך לפעול עכשיו, גם בלילה.',
+  'The push plays a siren through silent mode and Do Not Disturb.':
+    'ההתראה משמיעה צפירה גם במצב שקט ובמצב נא לא להפריע.',
+  'Every level is emailed, shown in the console and pushed to phones, with the level in the title. Webhooks and functions receive it with the alert events. A critical push rings only on phones that allowed critical alerts.':
+    'כל רמה נשלחת באימייל, מוצגת בקונסול ונשלחת כהתראה לטלפונים, עם הרמה בכותרת. Webhooks ופונקציות מקבלים אותה עם אירועי ההתראה. התראה קריטית מצלצלת רק בטלפונים שאישרו התראות קריטיות.',
   'Notify roles once': 'להודיע לתפקידים פעם אחת',
   'Select an escalation.': 'יש לבחור הסלמה.',
   'Each step of the escalation is notified in turn until someone acknowledges the alert.':
@@ -4317,6 +4338,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'כל בדיקה נוספת עולה {price} לחודש.',
   'Upgrade your plan to add more synthetic checks.':
     'כדי להוסיף בדיקות סינתטיות, יש לשדרג את התוכנית.',
+  'HTTP, DNS, TCP and SMTP monitors are available on paid plans.':
+    'מוניטורים מסוג HTTP, DNS, TCP ו-SMTP זמינים בתוכניות בתשלום.',
   'Escalations: {used} of {limit} allowed on your plan.':
     'הסלמות: {used} מתוך {limit} שהתוכנית שלך מאפשרת.',
   'On-call responders: {used} of {included} included.':

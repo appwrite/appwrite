@@ -72,6 +72,7 @@ import {
   clearSettingsRedeployPending,
   useSettingsRedeployPending,
 } from '@/lib/utils/settings-redeploy-alert'
+import { useReviewsAccess } from '../reviews/_components/useReviewsAccess'
 
 /** When provided, Deployments view renders this below the header (filter + create). */
 export const DeploymentsToolbarContext =
@@ -111,6 +112,7 @@ function SiteLayoutContent() {
         [
           'overview',
           'deployments',
+          'reviews',
           'logs',
           'runtime-logs',
           'domains',
@@ -152,6 +154,7 @@ function SiteLayoutContent() {
     isCloudProfile() && canSeeProjectNavItem(access, features, 'firewall')
   // Cloud only: self-hosted doesn't serve `/v1/logs`, even with the flag on.
   const showRuntimeLogsTab = isCloudProfile() && features.runtimeLogs
+  const { visible: showReviewsTab } = useReviewsAccess(projectId)
 
   const [cancelBuildDialogOpen, setCancelBuildDialogOpen] = useState(false)
   const [redeployDialogOpen, setRedeployDialogOpen] = useState(false)
@@ -330,6 +333,16 @@ function SiteLayoutContent() {
         to: '/projects/$projectId/sites/$siteId/deployments',
         params: { projectId: projectId!, siteId: siteId! },
       },
+      ...(showReviewsTab
+        ? [
+            {
+              id: 'reviews' as const,
+              label: t('Reviews'),
+              to: '/projects/$projectId/sites/$siteId/reviews',
+              params: { projectId: projectId!, siteId: siteId! },
+            },
+          ]
+        : []),
       {
         id: 'domains',
         label: t('Domains'),
@@ -396,6 +409,7 @@ function SiteLayoutContent() {
       showUsageTab,
       showFirewallTab,
       showRuntimeLogsTab,
+      showReviewsTab,
       showSettingsTab,
       t,
     ],

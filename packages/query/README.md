@@ -11,6 +11,12 @@ A PHP library for building type-safe, dialect-aware queries and DDL statements. 
 composer require utopia-php/query
 ```
 
+The classifiers, tokenizers, builders, schemas and `Query` are classes of the
+[utopia PHP extension](https://github.com/appwrite/appwrite/tree/main/crates/extension), which
+this package requires as `ext-utopia`. Their signatures are in `stubs/`. Version 0.8 is the last
+that runs on PHP alone.
+
+
 **Requires PHP 8.4+**
 
 ## Table of Contents

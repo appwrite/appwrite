@@ -19,6 +19,7 @@ parameters:
     - packages/auth/stubs/Hash.php
   scanDirectories:
     - vendor/swoole/ide-helper
+    - packages/query/stubs
   excludePaths:
     - tests/resources
   ignoreErrors:

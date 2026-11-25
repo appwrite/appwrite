@@ -1535,6 +1535,13 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'SMS messages': 'SMS メッセージ',
   'Events sent': '送信イベント',
   'Events failed': '失敗イベント',
+  'Streaming bandwidth': 'ストリーミング帯域幅',
+  'Renditions encoded': 'エンコード済みレンディション',
+  'Failed renditions': '失敗したレンディション',
+  'Encoding GB-hours': 'エンコード GB 時間',
+  'Video storage': '動画ストレージ',
+  Endpoints: 'エンドポイント',
+  'Video ID': '動画ID',
   Webhooks: 'Webhook',
   'Function executions': '関数の実行',
   'Site executions': 'サイトの実行',
@@ -1660,6 +1667,11 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '選択期間中の関数コンピュート時間 (ギガバイト時間 GBH で計測)。Functions に割り当てられたメモリに実行時間とビルド時間を掛けた値。',
   'Site compute time during the selected period, measured in gigabyte-hours (GBH). Memory allocated to sites multiplied by request handling and build duration.':
     '選択期間中のサイトコンピュート時間 (ギガバイト時間 GBH で計測)。サイトに割り当てられたメモリにリクエスト処理時間とビルド時間を掛けた値。',
+  'Video encoding GB-hours': '動画エンコード GB 時間',
+  'Video encoding compute during the selected period, measured in gigabyte-hours (GBH). Encoder memory multiplied by encode duration. Included in GB-hours.':
+    '選択期間中の動画エンコードのコンピュート時間 (ギガバイト時間 GBH で計測)。エンコーダーのメモリにエンコード時間を掛けた値。GB 時間に含まれます。',
+  'Storage used by video renditions, captions, and thumbnail timelines. Counts toward your plan storage limit.':
+    '動画のレンディション、字幕、サムネイルタイムラインが使用するストレージ。プランのストレージ上限に含まれます。',
   'Top storage buckets': 'ストレージバケット上位',
   'Top buckets by origin images': 'オリジン画像別バケット上位',
   'Top executed functions': '実行数上位の関数',
@@ -4339,6 +4351,15 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Escalations: 'エスカレーション',
   Escalation: 'エスカレーション',
   Escalating: 'エスカレーション中',
+  'Alert when the value is': '値が次の条件のときにアラート',
+  'Counted over': '集計期間',
+  'Undo acknowledgement': '確認を取り消す',
+  'Someone needs to act now, even at night.':
+    '夜間でも、今すぐ誰かが対応する必要があります。',
+  'The push plays a siren through silent mode and Do Not Disturb.':
+    'プッシュ通知はサイレントモードやおやすみモードでもサイレンを鳴らします。',
+  'Every level is emailed, shown in the console and pushed to phones, with the level in the title. Webhooks and functions receive it with the alert events. A critical push rings only on phones that allowed critical alerts.':
+    'すべてのレベルはメールで送信され、コンソールに表示され、タイトルにレベルを含めてスマートフォンにプッシュ通知されます。Webhook と関数はアラートイベントとともにレベルを受け取ります。重大なプッシュ通知は、重大な通知を許可したスマートフォンでのみ鳴ります。',
   'Notify roles once': 'ロールに 1 回通知',
   'Select an escalation.': 'エスカレーションを選択してください。',
   'Each step of the escalation is notified in turn until someone acknowledges the alert.':
@@ -4408,6 +4429,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '追加のチェックは 1 件あたり月額 {price} です。',
   'Upgrade your plan to add more synthetic checks.':
     'Synthetic チェックを追加するには、プランをアップグレードしてください。',
+  'HTTP, DNS, TCP and SMTP monitors are available on paid plans.':
+    'HTTP、DNS、TCP、SMTP のモニターは有料プランで利用できます。',
   'Escalations: {used} of {limit} allowed on your plan.':
     'エスカレーション: プランの上限 {limit} 件中 {used} 件を使用中です。',
   'On-call responders: {used} of {included} included.':

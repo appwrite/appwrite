@@ -567,7 +567,7 @@ class Gitea extends Git
      * @param array<string> $events Events to trigger the webhook
      * @return int Webhook ID
      */
-    public function createWebhook(string $owner, string $repositoryName, string $url, string $secret, array $events = ['push', 'pull_request']): int
+    public function createWebhook(string $owner, string $repositoryName, string $url, string $secret, array $events = ['push', 'pull_request', 'pull_request_comment']): int
     {
         $response = $this->call(
             self::METHOD_POST,
@@ -1214,11 +1214,176 @@ class Gitea extends Git
                     'headCommitUrl' => $headCommitUrl,
                     'external' => $external,
                     'pullRequestNumber' => $pullRequestNumber,
+                    'pullRequestAuthor' => \is_array($payloadPullRequestUser) ? ($payloadPullRequestUser['login'] ?? '') : '',
                     'action' => $action,
                 ]];
+
+            case 'issue_comment':
+                return $this->commentEvents($payload);
         }
 
         return [];
+    }
+
+    /**
+     * A comment created on a pull request, in the shape GitHub's comment
+     * events are reported in. Gitea sends conversation comments and replies
+     * in review threads alike, with nothing to tell them apart, so every one
+     * is an 'issue' comment here; getReviewCommentThread() finds the thread
+     * of one that is a review comment. Comments on issues and edits are left
+     * out.
+     *
+     * @param array<mixed> $payload
+     * @return array<array<mixed>>
+     */
+    private function commentEvents(array $payload): array
+    {
+        $issue = \is_array($payload['issue'] ?? null) ? $payload['issue'] : [];
+        $pullRequest = \is_array($payload['pull_request'] ?? null) ? $payload['pull_request'] : [];
+        $comment = \is_array($payload['comment'] ?? null) ? $payload['comment'] : [];
+        $repository = \is_array($payload['repository'] ?? null) ? $payload['repository'] : [];
+        $user = \is_array($comment['user'] ?? null) ? $comment['user'] : [];
+
+        if (($payload['is_pull'] ?? false) !== true || ($payload['action'] ?? '') !== 'created') {
+            return [];
+        }
+
+        $pullRequestUser = \is_array($pullRequest['user'] ?? null) ? $pullRequest['user'] : (\is_array($issue['user'] ?? null) ? $issue['user'] : []);
+        $owner = \is_array($repository['owner'] ?? null) ? $repository['owner'] : [];
+        $number = $issue['number'] ?? ($pullRequest['number'] ?? 0);
+
+        return [[
+            'repositoryId' => $this->stringOf($repository['id'] ?? null),
+            'repositoryName' => $repository['name'] ?? '',
+            'repositoryUrl' => $repository['html_url'] ?? '',
+            'owner' => $owner['login'] ?? '',
+            'installationId' => '',  // Gitea doesn't have installations
+            'pullRequestNumber' => \is_numeric($number) ? (int) $number : 0,
+            'pullRequestAuthor' => $pullRequestUser['login'] ?? '',
+            'action' => 'created',
+            'commentId' => $this->stringOf($comment['id'] ?? null),
+            'commentKind' => 'issue',
+            'commentThreadId' => '',
+            'commentReplyToId' => '',
+            'commentBody' => \is_string($comment['body'] ?? null) ? $comment['body'] : '',
+            'commentUrl' => \is_string($comment['html_url'] ?? null) ? $comment['html_url'] : '',
+            'commentAuthor' => $user['login'] ?? '',
+            'commentAuthorId' => $this->stringOf($user['id'] ?? null),
+            'commentAuthorType' => 'User',
+        ]];
+    }
+
+    /**
+     * A response's HTTP status code.
+     *
+     * @param array<mixed> $response
+     */
+    private function statusCodeOf(array $response): int
+    {
+        $headers = \is_array($response['headers'] ?? null) ? $response['headers'] : [];
+
+        return \is_int($headers['status-code'] ?? null) ? $headers['status-code'] : 0;
+    }
+
+    /**
+     * A response's decoded JSON body, or an empty array when it has none.
+     *
+     * @param array<mixed> $response
+     * @return array<mixed>
+     */
+    private function bodyOf(array $response): array
+    {
+        return \is_array($response['body'] ?? null) ? $response['body'] : [];
+    }
+
+    /**
+     * A scalar payload value as a string, and empty for anything else.
+     */
+    private function stringOf(mixed $value): string
+    {
+        return \is_scalar($value) ? (string) $value : '';
+    }
+
+    /**
+     * The thread a review comment belongs to, named by its first comment:
+     * Gitea lists a review's comments but not a thread's, so a thread is the
+     * comments of submitted reviews on one line of one file, oldest first.
+     * Empty when the comment is no review comment, as a conversation
+     * comment is not.
+     *
+     * @throws Exception
+     */
+    public function getReviewCommentThread(string $owner, string $repositoryName, int $pullRequestNumber, string $commentId): string
+    {
+        $reviews = [];
+        foreach (\range(1, 20) as $page) {
+            $response = $this->call(self::METHOD_GET, "/repos/{$owner}/{$repositoryName}/pulls/{$pullRequestNumber}/reviews?limit=50&page={$page}", ['Authorization' => "token $this->accessToken"]);
+            $statusCode = $this->statusCodeOf($response);
+            if ($statusCode >= 400) {
+                throw new Exception("Failed to list reviews: HTTP {$statusCode}", $statusCode);
+            }
+
+            $body = $this->bodyOf($response);
+            \array_push($reviews, ...$body);
+            if (\count($body) < 50) {
+                break;
+            }
+        }
+
+        $threads = [];
+        $found = null;
+        foreach ($reviews as $review) {
+            if (!\is_array($review) || ($review['state'] ?? '') === 'PENDING' || ($review['comments_count'] ?? 1) === 0) {
+                continue;
+            }
+
+            $response = $this->call(self::METHOD_GET, "/repos/{$owner}/{$repositoryName}/pulls/{$pullRequestNumber}/reviews/" . rawurlencode($this->stringOf($review['id'] ?? null)) . '/comments', ['Authorization' => "token $this->accessToken"]);
+            $statusCode = $this->statusCodeOf($response);
+            if ($statusCode >= 400) {
+                throw new Exception("Failed to list review comments: HTTP {$statusCode}", $statusCode);
+            }
+
+            foreach ($this->bodyOf($response) as $comment) {
+                if (!\is_array($comment)) {
+                    continue;
+                }
+
+                $key = $this->stringOf($comment['path'] ?? null) . "\0" . $this->stringOf($comment['position'] ?? null) . "\0" . $this->stringOf($comment['original_position'] ?? null);
+                $id = \is_int($comment['id'] ?? null) ? $comment['id'] : 0;
+                $threads[$key] = isset($threads[$key]) ? \min($threads[$key], $id) : $id;
+                if (\strval($id) === $commentId) {
+                    $found = $key;
+                }
+            }
+        }
+
+        return $found === null ? '' : \strval($threads[$found]);
+    }
+
+    /**
+     * A user's permission on a repository: 'admin' for its owner and admins,
+     * 'write', 'read', or empty when they are no collaborator.
+     *
+     * @throws Exception
+     */
+    public function getCollaboratorPermission(string $owner, string $repositoryName, string $username): string
+    {
+        $response = $this->call(self::METHOD_GET, "/repos/{$owner}/{$repositoryName}/collaborators/" . rawurlencode($username) . '/permission', ['Authorization' => "token $this->accessToken"]);
+
+        $statusCode = $this->statusCodeOf($response);
+        if ($statusCode === 404 || $statusCode === 403) {
+            return '';
+        }
+        if ($statusCode >= 400) {
+            throw new Exception("Failed to get collaborator permission: HTTP {$statusCode}", $statusCode);
+        }
+
+        return match ($this->bodyOf($response)['permission'] ?? '') {
+            'owner', 'admin' => 'admin',
+            'write' => 'write',
+            'read' => 'read',
+            default => '',
+        };
     }
 
     /**

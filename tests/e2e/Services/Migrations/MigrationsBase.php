@@ -3322,7 +3322,7 @@ trait MigrationsBase
         $stdout = '';
         $stderr = '';
         $folderPath = realpath(__DIR__ . '/../../../resources/sites') . "/$site";
-        $tarPath = "$folderPath/code.tar.gz";
+        $tarPath = \sys_get_temp_dir() . '/appwrite-site-' . $site . '-' . \getmypid() . '-' . \uniqid('', true) . '.tar.gz';
 
         $tar = (new Command('tar'))
             ->option('--exclude', 'code.tar.gz')
@@ -3332,6 +3332,12 @@ trait MigrationsBase
             ->option('-C', $folderPath)
             ->argument('.');
         Console::execute($tar, '', $stdout, $stderr);
+
+        register_shutdown_function(static function () use ($tarPath) {
+            if (\is_file($tarPath)) {
+                @\unlink($tarPath);
+            }
+        });
 
         return new CURLFile($tarPath, 'application/x-gzip', \basename($tarPath));
     }

@@ -16,10 +16,6 @@ export const heReviewsDictionary: Record<string, string> = {
 
   // Empty states
   'Review pull requests with AI': 'סקירת Pull requests עם AI',
-  'Catch bugs and security issues before they merge. Choose the repositories to review, and every pull request in them gets a review on GitHub.':
-    'אתרו באגים ובעיות אבטחה לפני המיזוג. בחרו את ה-repos לסקירה, וכל Pull request בהם יקבל סקירה ב-GitHub.',
-  'Install the GitHub app on your account or organization, then turn on review for the repositories you pick.':
-    'התקינו את אפליקציית GitHub בחשבון או בארגון שלכם, ואז הפעילו סקירה ל-repos שבחרתם.',
   'Get a review on every pull request': 'סקירה לכל Pull request',
   'Each new pull request and commit gets a summary, findings on the lines they concern, a verdict, and a merge confidence grade.':
     'כל Pull request וכל קומיט חדש מקבלים סיכום, ממצאים על השורות הרלוונטיות, החלטה וציון ביטחון למיזוג.',
@@ -41,9 +37,6 @@ export const heReviewsDictionary: Record<string, string> = {
   'Failed because': 'נכשל כי',
   'The review found nothing to flag.': 'הסקירה לא מצאה דבר שדורש תשומת לב.',
   'View comment': 'הצגת התגובה',
-  'Open on GitHub': 'פתיחה ב-GitHub',
-  'Compare on GitHub': 'השוואה ב-GitHub',
-  'Open commit on GitHub': 'פתיחת הקומיט ב-GitHub',
   'Filter findings by severity': 'סינון ממצאים לפי חומרה',
 
   // Statuses and verdicts
@@ -70,8 +63,6 @@ export const heReviewsDictionary: Record<string, string> = {
     'Pull requests ב-repo ייסקרו כשהם נפתחים או מקבלים קומיטים חדשים.',
   'Pull requests in this repository will no longer be reviewed. Past reviews stay in the project.':
     'Pull requests ב-repo הזה לא ייסקרו יותר. סקירות קודמות יישארו בפרויקט.',
-  'Connect a GitHub installation to the project to review its repositories.':
-    'חברו התקנת GitHub לפרויקט כדי לסקור את ה-repos שלה.',
   'Code review turned on': 'סקירת הקוד הופעלה',
   'Code review turned off': 'סקירת הקוד כובתה',
   'Failed to turn on code review': 'הפעלת סקירת הקוד נכשלה',
@@ -190,14 +181,11 @@ export const heReviewsDictionary: Record<string, string> = {
   'Review all repositories': 'סקירת כל המאגרים',
   'Choose repositories': 'בחירת מאגרים',
   'Browse repositories': 'עיון במאגרים',
-  'Search GitHub repositories...': 'חיפוש מאגרים ב-GitHub...',
   'No repositories match your search': 'אין מאגרים שתואמים לחיפוש',
   'No repositories reviewed yet': 'עדיין אין מאגרים בסקירה',
-  'No GitHub installation': 'אין התקנת GitHub',
-  'Connect GitHub to review pull requests':
-    'חברו את GitHub כדי לסקור Pull requests',
-  'Install the GitHub app on your account or organization, then pick the repositories to review.':
-    'התקינו את אפליקציית GitHub בחשבון או בארגון שלכם, ואז בחרו את המאגרים לסקירה.',
+  'No installation': 'אין התקנה',
+  'Connect a Git provider to review pull requests':
+    'חברו ספק Git כדי לסקור Pull requests',
   'Turn on code review for a repository and its pull requests are reviewed when they are opened or get new commits.':
     'הפעילו סקירת קוד למאגר, וה-Pull requests שלו ייסקרו כשהם נפתחים או מקבלים קומיטים חדשים.',
   'Turn on code review for every repository in {organization} ({count}).':
@@ -236,7 +224,6 @@ export const heReviewsDictionary: Record<string, string> = {
   Learning: 'למידה',
   'Asked by': 'התבקש על ידי',
   'Learning actions': 'פעולות למידה',
-  'Open conversation on GitHub': 'פתיחת השיחה ב-GitHub',
   'Learning has been deleted': 'הלמידה נמחקה',
   'Failed to delete learning': 'מחיקת הלמידה נכשלה',
   'No learnings yet': 'אין עדיין למידות',
@@ -283,4 +270,48 @@ export const heReviewsDictionary: Record<string, string> = {
     'קטגוריות שנדחות לעיתים קרובות הן מועמדות ללמידה שתורה לסוקר לסמן אותן פחות.',
   'Useful findings is the share of settled findings that were fixed rather than dismissed; findings still open count for neither.':
     'ממצאים מועילים הם החלק מהממצאים שהוכרעו שתוקנו ולא נדחו; ממצאים שעדיין פתוחים אינם נספרים לאף צד.',
+  // Functions and sites: code review of the connected repository
+  'Code review': 'סקירת קוד',
+  'Review pull requests': 'סקירת Pull requests',
+  'Code review was not turned on': 'סקירת הקוד לא הופעלה',
+  'Turn it on later from Settings > Git.':
+    'אפשר להפעיל אותה בהמשך בהגדרות > Git.',
+  'Code review is already on for this repository.':
+    'סקירת הקוד כבר מופעלת למאגר הזה.',
+  'Appwrite reviews each pull request when it is opened or gets new commits, and comments on it.':
+    'Appwrite סוקר כל Pull request כשהוא נפתח או מקבל קומיטים חדשים, ומגיב בו.',
+  "Reviews use your organization's review credits.":
+    'הסקירות משתמשות בקרדיטי הסקירה של הארגון שלכם.',
+  'Review pull requests to the connected repository and comment on them. The setting applies to the whole repository.':
+    'סקירת Pull requests במאגר המחובר ותגובות בהם. ההגדרה חלה על המאגר כולו.',
+  'Each pull request is reviewed when it is opened or gets new commits.':
+    'כל Pull request נסקר כשהוא נפתח או מקבל קומיטים חדשים.',
+  'Review strength': 'עוצמת הסקירה',
+  'How hard pull requests are reviewed, and what each review costs.':
+    'עד כמה לעומק נסקרים Pull requests, וכמה עולה כל סקירה.',
+  'View reviews': 'צפייה בסקירות',
+  'Connect a repository to this function to review its pull requests.':
+    'חברו מאגר לפונקציה הזו כדי לסקור את ה-Pull requests שלו.',
+  'Connect a repository to this site to review its pull requests.':
+    'חברו מאגר לאתר הזה כדי לסקור את ה-Pull requests שלו.',
+  'Code review does not run on this provider': 'סקירת קוד לא פועלת בספק הזה',
+  'Code review runs on GitHub, GitLab, Gitea, Bitbucket and Origin repositories.':
+    'סקירת קוד פועלת במאגרים של GitHub, GitLab, Gitea, Bitbucket ו-Origin.',
+  'Code review is off': 'סקירת הקוד כבויה',
+  'Turn on code review to have each pull request reviewed when it is opened or gets new commits.':
+    'הפעילו סקירת קוד כדי שכל Pull request ייסקר כשהוא נפתח או מקבל קומיטים חדשים.',
+  'Pull requests that change files in': 'Pull requests שמשנים קבצים בתיקייה',
+  'Reviews show up here when a pull request that changes this directory is opened or gets new commits.':
+    'סקירות יופיעו כאן כש-Pull request שמשנה את התיקייה הזו נפתח או מקבל קומיטים חדשים.',
+  'Reviews show up here when a pull request is opened or gets new commits.':
+    'סקירות יופיעו כאן כש-Pull request נפתח או מקבל קומיטים חדשים.',
+  'No reviews of this directory among the latest ones.':
+    'אין סקירות של התיקייה הזו בין הסקירות האחרונות.',
+
+  // Row menus
+  'Copy text': 'העתקת הטקסט',
+  'Copy title': 'העתקת הכותרת',
+  'Open profile on GitHub': 'פתיחת הפרופיל ב-GitHub',
+  'Open file': 'פתיחת הקובץ',
+  'Open comment': 'פתיחת התגובה',
 }
