@@ -91,6 +91,41 @@ export type MonitorInput = {
   /** Critical pushes ring through silent and Do Not Disturb on devices that allow critical alerts. */
   severity?: MonitorSeverity
   enabled?: boolean
+  /** An organization escalation that replaces `notify`; empty notifies the roles. */
+  escalationId?: string
+}
+
+/** Who one escalation step notifies, after waiting `delay` seconds. */
+export type EscalationStep = {
+  /** After the alert fires for the first step, after the previous step for later ones. */
+  delay: number
+  /** Organization roles, such as `owner` or `developer`. */
+  roles: string[]
+  /** Organization members. */
+  userIds: string[]
+}
+
+/** An organization's escalation: steps notified in turn until someone acknowledges the alert. */
+export type Escalation = {
+  $id: string
+  $createdAt: string
+  $updatedAt: string
+  name: string
+  steps: EscalationStep[]
+  /** How many more times the steps run from the first, 0 to 9. */
+  repeat: number
+}
+
+export type EscalationList = {
+  total: number
+  escalations: Escalation[]
+}
+
+/** An escalation's writable fields. */
+export type EscalationInput = {
+  name: string
+  steps: EscalationStep[]
+  repeat: number
 }
 
 export type HttpMethod =
@@ -116,6 +151,8 @@ export type ProbeSettings = {
   timeout?: number
   cooldown?: number
   notify?: string[]
+  /** An organization escalation that replaces `notify`; empty notifies the roles. */
+  escalationId?: string
   severity?: MonitorSeverity
   enabled?: boolean
 }

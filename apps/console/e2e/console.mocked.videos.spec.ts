@@ -713,7 +713,11 @@ test.describe('videos (mocked API)', () => {
     await expect
       .poll(async () => (await video.boundingBox())!.height)
       .toBeLessThan(fullHeight / 2)
-    // Stays pinned to the top of the scroll area.
+    // Stays pinned to the top of the scroll area. Measure once the docking
+    // slide-in has finished, or the 4px slide reads as the player moving.
+    await player.evaluate((node) =>
+      Promise.all(node.getAnimations().map((animation) => animation.finished)),
+    )
     const docked = (await player.boundingBox())!
     await scrollBy(300)
     await expect

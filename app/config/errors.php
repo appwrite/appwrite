@@ -1382,6 +1382,26 @@ return [
         'description' => 'The alert has resolved. Only a firing alert can be acknowledged.',
         'code' => 400,
     ],
+    Exception::ESCALATION_NOT_FOUND => [
+        'name' => Exception::ESCALATION_NOT_FOUND,
+        'description' => 'Escalation with the requested ID could not be found in this organization.',
+        'code' => 404,
+    ],
+    Exception::ESCALATION_ALREADY_EXISTS => [
+        'name' => Exception::ESCALATION_ALREADY_EXISTS,
+        'description' => 'Escalation with the same ID already exists. Try again with a different ID.',
+        'code' => 409,
+    ],
+    Exception::ESCALATION_IN_USE => [
+        'name' => Exception::ESCALATION_IN_USE,
+        'description' => 'The escalation is used by a monitor. Move its monitors to another escalation or to `notify` roles first.',
+        'code' => 409,
+    ],
+    Exception::ESCALATION_MEMBER_NOT_FOUND => [
+        'name' => Exception::ESCALATION_MEMBER_NOT_FOUND,
+        'description' => 'A step names a user who is not a member of the organization.',
+        'code' => 400,
+    ],
     Exception::KEY_NOT_FOUND => [
         'name' => Exception::KEY_NOT_FOUND,
         'description' => 'Key with the requested ID could not be found.',

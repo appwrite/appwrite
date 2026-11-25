@@ -14,9 +14,12 @@ use Utopia\VCS\Exception\RepositoryNotFound;
 final class GitHubTest extends Base
 {
     /** @var array<string> */
+    #[\Override]
     protected static array $supportedWebhookScopes = [GitHub::WEBHOOK_SCOPE_INSTALLATION, GitHub::WEBHOOK_SCOPE_REPOSITORY];
 
+    #[\Override]
     protected static string $eventHeader = 'x-github-event';
+    #[\Override]
     protected static string $signatureHeader = 'x-hub-signature-256';
 
     protected function createAdapter(): GitHub

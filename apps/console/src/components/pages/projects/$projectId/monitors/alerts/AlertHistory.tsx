@@ -13,6 +13,7 @@ import {
   formatMetricValue,
   thresholdRatio,
 } from '@/lib/alerts/metrics'
+import { escalationState } from '@/lib/alerts/escalation'
 import { formatLatency, resultLabel } from '@/lib/alerts/probes'
 import {
   alertLength,
@@ -312,6 +313,11 @@ function AlertEntry({ alert, now, width, time, onOpen }: AlertEntryProps) {
                 {acknowledgedBy(alert, t)}
               </span>
             )}
+            {escalationState(alert) === 'waiting' && (
+              <span className="shrink-0 truncate text-[11px] text-muted-foreground">
+                {t('Escalating')}
+              </span>
+            )}
           </span>
           <span className="mt-0.5 flex flex-wrap text-[12px] text-muted-foreground sm:block sm:truncate">
             {/* Each part stays whole with the dot after it, so a narrow screen wraps between parts. */}
@@ -365,7 +371,7 @@ function AlertEntry({ alert, now, width, time, onOpen }: AlertEntryProps) {
           </span>
           <span
             className={cn(
-              'w-14 shrink-0 text-end text-[12px] tabular-nums',
+              'w-20 shrink-0 whitespace-nowrap text-end text-[12px] tabular-nums',
               firing
                 ? 'text-red-600 dark:text-red-400'
                 : 'text-muted-foreground',

@@ -165,6 +165,15 @@ export function View({ initialData }: ViewProps = {}) {
                     </Badge>
                     <span>{t('by')} {mapped.author}</span>
                     <span>·</span>
+                    <span>
+                      {mapped.installs === 1
+                        ? t('1 install')
+                        : t('{count} installs').replace(
+                            '{count}',
+                            mapped.installs.toLocaleString(),
+                          )}
+                    </span>
+                    <span>·</span>
                     <DateTooltip date={mapped.$createdAt} />
                   </div>
                 </div>

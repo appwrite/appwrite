@@ -78,9 +78,11 @@ function InitGlobePresenceStats({
 function InitCommunityGlobeMount({
   countries,
   className,
+  electric,
 }: {
   countries: InitCommunityCountry[]
   className?: string
+  electric?: boolean
 }) {
   const [mounted, setMounted] = useState(false)
 
@@ -104,12 +106,18 @@ function InitCommunityGlobeMount({
 
   return (
     <Suspense fallback={null}>
-      <LazyInitCommunityGlobe countries={countries} className={className} />
+      <LazyInitCommunityGlobe
+        countries={countries}
+        className={className}
+        electric={electric}
+      />
     </Suspense>
   )
 }
 
 type InitGlobalCommunitySectionProps = {
+  /** Init 5: the globe wears the hero's light. */
+  electric?: boolean
   countries: InitCommunityCountry[]
   developerCount: number
   developerCountCapped?: boolean
@@ -118,6 +126,7 @@ type InitGlobalCommunitySectionProps = {
 }
 
 export function InitGlobalCommunitySection({
+  electric = false,
   countries,
   developerCount,
   developerCountCapped = false,
@@ -167,6 +176,7 @@ export function InitGlobalCommunitySection({
             <InitCommunityGlobeMount
               countries={countries}
               className="w-full"
+              electric={electric}
             />
             <InitGlobePresenceStats
               countries={countries}

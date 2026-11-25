@@ -114,6 +114,11 @@ final class MemoryAdapter extends Adapter
         return \min($max, \count($this->logs[$projectId] ?? []));
     }
 
+    public function histogram(string $projectId, array $queries, int $interval): array
+    {
+        return [];
+    }
+
     /** @return list<string> */
     public function ids(string $projectId): array
     {
