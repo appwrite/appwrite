@@ -20,6 +20,7 @@ parameters:
   scanDirectories:
     - vendor/swoole/ide-helper
     - packages/query/stubs
+    - packages/detector/stubs
   excludePaths:
     - tests/resources
   ignoreErrors:
