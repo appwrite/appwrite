@@ -545,6 +545,8 @@ test.describe('runtime logs', () => {
     await expect(logs).toContainText('err.stack')
     await expect(logs).toContainText('at charge (')
     await expect(logs).toContainText(ACTIVE)
+    // ...and the whole entry as logged, indented
+    await expect(logs).toContainText('"msg": "payment failed"')
 
     // The level filter narrows the loaded lines
     await page.getByRole('combobox', { name: 'Level' }).click()
