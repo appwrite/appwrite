@@ -313,7 +313,7 @@ trait MonitorsBase
         $name = 'Listed ' . \uniqid();
         $firstId = 'listed-' . \uniqid();
         $first = $this->createMonitor(['monitorId' => $firstId, 'name' => $name . ' one']);
-        $second = $this->createMonitor(['name' => $name . ' two', 'rules' => [Query::greaterThan('files.storage', 1)->toString()]]);
+        $second = $this->createMonitor(['name' => $name . ' two', 'rules' => [Query::greaterThan('files.storage', 1)->toString()], 'enabled' => false]);
         $this->assertSame(201, $first['headers']['status-code']);
         $this->assertSame(201, $second['headers']['status-code']);
         $this->assertSame($firstId, $first['body']['$id']);
@@ -327,7 +327,7 @@ trait MonitorsBase
 
         $filtered = $this->listMonitors([
             Query::search('search', $name)->toString(),
-            Query::equal('metric', ['files.storage'])->toString(),
+            Query::equal('enabled', [false])->toString(),
         ]);
         $this->assertSame([$second['body']['$id']], \array_column($filtered['body']['monitors'], '$id'));
 

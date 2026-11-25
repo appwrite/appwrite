@@ -43,7 +43,7 @@ class XList extends Base
                 group: null,
                 name: 'list',
                 description: <<<EOT
-                Get a list of the project's monitors of every type. Use queries to filter by type, resource, metric or status, and `Query.search('search', term)` to search monitor IDs, names, metrics and resources.
+                Get a list of the project's monitors of every type. Use queries to filter by type, resource, severity or status, and `Query.search('search', term)` to search monitor IDs, names, metrics and resources.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
