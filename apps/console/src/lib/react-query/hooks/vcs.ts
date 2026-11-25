@@ -15,6 +15,7 @@ import { Query } from '@appwrite.io/console'
 import { VCSDetectionType } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { isFeatureEnabled } from '@/lib/console-profiles'
 import {
   DEFAULT_STALE_TIME,
   LONG_STALE_TIME,
@@ -55,7 +56,7 @@ export async function fetchVcsInstallations(
   const queries = [Query.limit(limit), Query.offset(page * limit)]
   const list = await projectSdk.vcs.listInstallations({ queries })
 
-  if (page > 0 || list.total > 0) {
+  if (page > 0 || list.total > 0 || !isFeatureEnabled('gitInstallationReuse')) {
     return list
   }
 
