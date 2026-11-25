@@ -17,6 +17,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "announcing-force-sign-out",
+    "href": "/blog/post/announcing-force-sign-out",
+    "title": "Announcing force sign out for all your users",
+    "description": "Appwrite Auth can now sign out every user in a project with one click or one API call, so you can cut off stolen sessions in seconds.",
+    "date": "2026-11-25",
+    "lastUpdated": "2026-11-25",
+    "timeToRead": 4,
+    "author": "atharva",
+    "category": "announcements, security",
+    "featured": false,
+    "cover": "/images/blog/announcing-force-sign-out/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-native-request-response",
     "href": "/blog/post/announcing-native-request-response",
     "title": "Announcing native request and response in Appwrite Functions",
