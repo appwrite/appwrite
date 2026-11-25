@@ -42,7 +42,7 @@ readonly class Escalation
 
         $parsed = [];
         foreach (\array_values($steps) as $index => $step) {
-            if (!\is_array($step)) {
+            if (!\is_array($step) || ($step !== [] && \array_is_list($step))) {
                 throw new \InvalidArgumentException("`steps[{$index}]` must be an object with `delay` and `roles` or `userIds`.");
             }
 
