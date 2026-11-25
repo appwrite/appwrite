@@ -1454,7 +1454,7 @@ final class VideosCustomServerTest extends Scope
                     continue;
                 }
                 $listed++;
-                $segment = $this->client->call(Client::METHOD_GET, $this->manifestRequestPath($line), $this->headers());
+                $segment = $this->client->call(Client::METHOD_GET, $this->manifestRequestPath($line, $uri), $this->headers());
                 $this->assertEquals(200, $segment['headers']['status-code'], 'Segment unreachable: ' . $line);
                 $this->assertNotEmpty($segment['body'], 'Empty segment: ' . $line);
                 $served++;
@@ -1520,6 +1520,76 @@ final class VideosCustomServerTest extends Scope
         } finally {
             @\unlink($directory);
         }
+    }
+
+    /**
+     * A player shows nothing until the whole first segment has arrived, so
+     * the first one is short and the rest are full length. Every rendition
+     * of a video has to cut at the same times, or a quality switch would
+     * land in the middle of a segment.
+     */
+    public function testTheFirstSegmentIsShorterThanTheRest(): void
+    {
+        // 13 seconds long, so the short segment is followed by full ones.
+        $videoId = $this->createReadyVideo($this->getLargeVideoFile())['$id'];
+
+        $ladder = [];
+        foreach (['360p', '720p'] as $profile) {
+            $ladder[$profile] = $this->segmentDurations($videoId, $profile, 'cmaf');
+        }
+        $transport = $this->segmentDurations($videoId, '360p', 'hls');
+
+        foreach ($ladder + ['hls' => $transport] as $name => $durations) {
+            $this->assertGreaterThanOrEqual(3, \count($durations), $name . ' has too few segments to compare: ' . \implode(', ', $durations));
+            $this->assertEqualsWithDelta(2.0, $durations[0], 0.1, $name . ' starts with a full-length segment: ' . \implode(', ', $durations));
+            // The last one holds whatever is left of the video.
+            foreach (\array_slice($durations, 1, -1) as $duration) {
+                $this->assertEqualsWithDelta(4.0, $duration, 0.1, $name . ' has an odd segment after the first: ' . \implode(', ', $durations));
+            }
+        }
+
+        $this->assertEqualsWithDelta($ladder['360p'], $ladder['720p'], 0.05, 'renditions of one video cut at different times');
+    }
+
+    /**
+     * The lengths of a ready rendition's video segments, as its playlist lists them.
+     *
+     * @return list<float>
+     */
+    private function segmentDurations(string $videoId, string $profile, string $output): array
+    {
+        $create = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $this->profile($profile)['$id'],
+            'output' => $output,
+        ]);
+        $this->assertEquals(202, $create['headers']['status-code']);
+        $renditionId = $create['body']['$id'];
+        $this->assertSame('ready', $this->waitForRenditionTerminalState($videoId, $renditionId)['status'] ?? '');
+
+        // The variant line is the video; a separate audio track is listed as
+        // media, and which stream number it gets differs between outputs.
+        $master = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/' . $output . '/master.m3u8', $this->headers());
+        $this->assertEquals(200, $master['headers']['status-code']);
+        $uri = '';
+        foreach (\explode("\n", (string) $master['body']) as $raw) {
+            $line = \trim($raw);
+            if ($line !== '' && !\str_starts_with($line, '#') && \str_contains($line, '/renditions/' . $renditionId . '/')) {
+                $uri = $line;
+            }
+        }
+        $this->assertNotSame('', $uri, 'the master lists no variant for this rendition');
+
+        $playlist = $this->client->call(Client::METHOD_GET, $this->manifestRequestPath($uri), $this->headers());
+        $this->assertEquals(200, $playlist['headers']['status-code']);
+
+        $durations = [];
+        foreach (\explode("\n", (string) $playlist['body']) as $line) {
+            if (\str_starts_with($line, '#EXTINF:')) {
+                $durations[] = (float) \substr($line, \strlen('#EXTINF:'));
+            }
+        }
+
+        return $durations;
     }
 
     /**
@@ -2575,11 +2645,9 @@ final class VideosCustomServerTest extends Scope
         );
         $this->assertEquals(200, $cmafVariant['headers']['status-code']);
         $this->assertStringContainsString('#EXTINF', (string) $cmafVariant['body']);
-        $this->assertStringContainsString('#EXT-X-MAP:URI=', (string) $cmafVariant['body']);
-        $this->assertMatchesRegularExpression(
-            '#/videos/' . \preg_quote($videoId, '#') . '/outputs/cmaf/renditions/' . \preg_quote($cmafRenditionId, '#') . '/segments/#',
-            $cmafVariant['body']
-        );
+        // The init segment and every media segment are named relative to this playlist.
+        $this->assertStringContainsString('#EXT-X-MAP:URI="../../segments/', (string) $cmafVariant['body']);
+        $this->assertStringNotContainsString('/v1/', (string) $cmafVariant['body']);
 
         $cmafSegmentId = $this->playlistToken(
             (string) $cmafVariant['body'],
@@ -2726,17 +2794,15 @@ final class VideosCustomServerTest extends Scope
         $hlsProbe = $this->assertHlsLadderPlayable((string) $master['body']);
         $this->assertGreaterThanOrEqual(1, $hlsProbe['subtitles']);
 
-        $playlist = $this->client->call(
-            Client::METHOD_GET,
-            $this->manifestRequestPath($this->subtitleUri((string) $master['body'], $captionId)),
-            $this->headers()
-        );
+        $playlistUri = $this->subtitleUri((string) $master['body'], $captionId);
+        $playlist = $this->client->call(Client::METHOD_GET, $this->manifestRequestPath($playlistUri), $this->headers());
         $this->assertEquals(200, $playlist['headers']['status-code']);
 
         $segmentUri = $this->firstPlaylistSegmentUri((string) $playlist['body']);
         $this->assertNotSame('', $segmentUri, 'Captions playlist did not reference a segment');
+        $segmentPath = $this->manifestRequestPath($segmentUri, $playlistUri);
 
-        $segment = $this->client->call(Client::METHOD_GET, $this->manifestRequestPath($segmentUri), $this->headers());
+        $segment = $this->client->call(Client::METHOD_GET, $segmentPath, $this->headers());
         $this->assertEquals(200, $segment['headers']['status-code']);
         $this->assertStringContainsString('text/vtt', (string) ($segment['headers']['content-type'] ?? ''));
         $this->assertStringContainsString('WEBVTT', (string) $segment['body']);
@@ -2747,7 +2813,7 @@ final class VideosCustomServerTest extends Scope
 
         $revalidated = $this->client->call(
             Client::METHOD_GET,
-            $this->manifestRequestPath($segmentUri),
+            $segmentPath,
             $this->headers() + ['if-none-match' => $etag]
         );
         $this->assertEquals(304, $revalidated['headers']['status-code']);
@@ -2803,9 +2869,11 @@ final class VideosCustomServerTest extends Scope
         );
         $this->assertEquals(200, $captions['headers']['status-code']);
 
+        $this->assertStringNotContainsString('/v1/', (string) $captions['body'], 'caption segment lines are relative to the playlist');
+
         $captionSegmentId = $this->playlistToken(
             (string) $captions['body'],
-            '/segments/',
+            'segments/',
             '?',
             'Captions playlist did not reference a segment'
         );
@@ -3056,10 +3124,87 @@ final class VideosCustomServerTest extends Scope
         $this->assertStringContainsString('application/x-mpegurl', (string) ($playlist['headers']['content-type'] ?? ''));
         $this->assertSame('no-store, no-cache, must-revalidate', $playlist['headers']['cache-control'] ?? null);
 
+        // Segment lines are relative to the playlist, so they do not repeat its path.
+        $segments = \array_values(\array_filter(
+            \array_map(trim(...), \explode("\n", (string) $playlist['body'])),
+            fn (string $line) => $line !== '' && !\str_starts_with($line, '#')
+        ));
+        $this->assertNotEmpty($segments);
+        foreach ($segments as $line) {
+            $this->assertStringStartsWith('../../segments/', $line);
+        }
+
+        $segment = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/hls/renditions/' . $hlsId . '/' . \substr($segments[0], \strlen('../../')),
+            $this->headers()
+        );
+        $this->assertEquals(200, $segment['headers']['status-code']);
+
+        // A manifest is text that repeats itself, so it is compressed on request.
+        $mpd = '/videos/' . $videoId . '/outputs/dash/master.mpd';
+        $plain = $this->client->call(Client::METHOD_GET, $mpd, $this->headers(), decode: false);
+        $this->assertEquals(200, $plain['headers']['status-code']);
+        $this->assertArrayNotHasKey('content-encoding', $plain['headers']);
+        $this->assertGreaterThan(1024, \strlen((string) $plain['body']), 'the manifest is under the size compression starts at');
+
+        $compressed = $this->client->call(Client::METHOD_GET, $mpd, \array_merge($this->headers(), ['accept-encoding' => 'gzip']), decode: false);
+        $this->assertEquals(200, $compressed['headers']['status-code']);
+        $this->assertSame('gzip', $compressed['headers']['content-encoding'] ?? null);
+        $this->assertLessThan(\strlen((string) $plain['body']), (int) ($compressed['headers']['content-length'] ?? 0));
+
         $timeline = $this->waitForTimeline($videoId);
         $this->assertEquals(200, $timeline['headers']['status-code']);
         $this->assertStringContainsString('text/vtt', (string) ($timeline['headers']['content-type'] ?? ''));
         $this->assertSame('no-store, no-cache, must-revalidate', $timeline['headers']['cache-control'] ?? null);
+    }
+
+    /**
+     * Players open on the first variant of a master, whatever order the
+     * renditions were created in: the best one at or under 2 Mbps, or the
+     * lowest when none is that light. The rest follow from lowest to highest.
+     */
+    public function testHlsMasterListsStartRenditionFirst(): void
+    {
+        $videoId = $this->createReadyVideo()['$id'];
+
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers());
+        $this->assertEquals(200, $profiles['headers']['status-code']);
+        $ids = \array_column($profiles['body']['profiles'], '$id', 'name');
+
+        $renditions = [];
+        foreach (['480p', '720p', '360p'] as $name) {
+            $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+                'profileId' => $ids[$name],
+                'output' => 'hls',
+            ]);
+            $this->assertEquals(202, $response['headers']['status-code']);
+            $renditions[] = $response['body']['$id'];
+        }
+
+        foreach ($renditions as $renditionId) {
+            $this->assertEquals('ready', $this->waitForRenditionTerminalState($videoId, $renditionId)['status'] ?? '');
+        }
+
+        $master = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/master.m3u8', $this->headers());
+        $this->assertEquals(200, $master['headers']['status-code']);
+
+        $listed = [];
+        foreach (\explode("\n", (string) $master['body']) as $raw) {
+            $line = \trim($raw);
+            if (\str_starts_with($line, '#EXT-X-STREAM-INF:')) {
+                $listed[] = (int) \explode(',', \substr($line, \strlen('#EXT-X-STREAM-INF:BANDWIDTH=')))[0];
+            }
+        }
+        $this->assertCount(3, $listed);
+
+        $light = \array_filter($listed, fn (int $bandwidth) => $bandwidth <= 2_000_000);
+        $this->assertSame($light === [] ? \min($listed) : \max($light), $listed[0]);
+
+        $rest = \array_slice($listed, 1);
+        $ascending = $rest;
+        \sort($ascending);
+        $this->assertSame($ascending, $rest);
     }
 
     /**
@@ -3082,7 +3227,7 @@ final class VideosCustomServerTest extends Scope
 
         $segmentUri = $this->firstPlaylistSegmentUri((string) $playlist['body']);
         $this->assertNotSame('', $segmentUri, 'Captions playlist did not reference a segment');
-        $segmentPath = $this->manifestRequestPath($segmentUri);
+        $segmentPath = $this->manifestRequestPath($segmentUri, '/videos/' . $videoId . '/outputs/hls/captions/' . $captionId . '/manifest');
 
         foreach (['pending', 'error'] as $status) {
             $this->timeTravelCaption($this->getProject()['$id'], $captionId, status: $status);
@@ -4314,7 +4459,7 @@ final class VideosCustomServerTest extends Scope
         $segmentUri = $this->firstPlaylistSegmentUri((string) $playlist['body']);
         $this->assertNotSame('', $segmentUri, 'Playlist has no segment URI: ' . $uri);
 
-        $segment = $this->client->call(Client::METHOD_GET, $this->manifestRequestPath($segmentUri), $this->headers());
+        $segment = $this->client->call(Client::METHOD_GET, $this->manifestRequestPath($segmentUri, $uri), $this->headers());
         $this->assertEquals(200, $segment['headers']['status-code'], 'Segment unreachable: ' . $segmentUri);
         $this->assertNotEmpty($segment['body'], 'Empty segment: ' . $segmentUri);
     }
@@ -4473,13 +4618,29 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
-     * Manifest URLs are absolute paths (`/v1/videos/...`). The test client
-     * already prefixes `/v1`.
+     * The path a player requests for a URI it read in a manifest. A master
+     * names absolute paths (`/v1/videos/...`), and the test client already
+     * prefixes `/v1`. A media playlist names its segments relative to itself,
+     * so those are resolved against `$base`, the URI of that playlist.
      */
-    private function manifestRequestPath(string $uri): string
+    private function manifestRequestPath(string $uri, string $base = ''): string
     {
         if (\str_starts_with($uri, '/v1/')) {
             return \substr($uri, 3);
+        }
+
+        if ($base === '' || \str_starts_with($uri, '/')) {
+            return $uri;
+        }
+
+        $directory = \explode('/', \explode('?', $this->manifestRequestPath($base))[0]);
+        \array_pop($directory);
+
+        foreach (\explode('/', $uri) as $index => $part) {
+            if ($part !== '..') {
+                return \implode('/', $directory) . '/' . \implode('/', \array_slice(\explode('/', $uri), $index));
+            }
+            \array_pop($directory);
         }
 
         return $uri;

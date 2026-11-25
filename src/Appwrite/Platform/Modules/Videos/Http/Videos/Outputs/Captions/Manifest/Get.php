@@ -127,7 +127,8 @@ class Get extends Base
             throw new Exception(Exception::VIDEO_CAPTION_SEGMENT_NOT_FOUND);
         }
 
-        $baseUri = $this->baseUri($video, $output) . '/captions/' . $caption->getId() . '/segments/';
+        // Relative to this playlist, which sits at `captions/{id}/manifest`.
+        $baseUri = 'segments/';
 
         $entries = [];
 

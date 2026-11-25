@@ -562,6 +562,22 @@ $container->set('cacheClient', fn () => new HttpClientPool(new Connections(
     timeout: 1.0,
 )), []);
 
+// Read by video playback only: segments, captions, thumbnails and timelines. A new
+// connection costs a TLS handshake on every read, and a playback start makes several; a
+// kept one does not. Each read leases a connection for itself, so coroutines never share
+// one. Workers build their own device and are not given this.
+// _APP_POOL_SIZE_VIDEOS is the most connections one API worker process keeps; unset, 8.
+$container->set('videosClient', fn () => new HttpClientPool(new Connections(
+    new SwoolePoolAdapter(),
+    'videos.storage',
+    max(1, (int) System::getEnv('_APP_POOL_SIZE_VIDEOS', 8)),
+    fn () => new Retry(
+        new Client((new SwooleClientAdapter())->withConnectionReuse()),
+        new RetryStrategy(),
+    ),
+    timeout: 3.0,
+)), []);
+
 $container->set('geoClient', function () {
     $endpoint = System::getEnv('_APP_GEO_ENDPOINT', '');
     $secret = System::getEnv('_APP_GEO_SECRET', '');

@@ -254,6 +254,12 @@ abstract class Response
         // WebAssembly
         'application/wasm' => true,
         'application/javascript-binast' => true,
+
+        // Streaming manifests and captions
+        'application/x-mpegurl' => true,
+        'application/vnd.apple.mpegurl' => true,
+        'application/dash+xml' => true,
+        'text/vtt' => true,
     ];
 
     public const string COOKIE_SAMESITE_NONE = 'None';

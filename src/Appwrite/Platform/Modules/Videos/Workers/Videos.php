@@ -98,6 +98,12 @@ class Videos extends Action
     /** Packaged media segment length in seconds (HLS / DASH / CMAF). */
     private const SEGMENT_DURATION = 4;
 
+    /**
+     * Length of the first segment only. A player shows nothing until the whole
+     * first segment has arrived, so a short one puts the first frame up sooner.
+     */
+    private const FIRST_SEGMENT_DURATION = 2;
+
     /** Seconds one embedded caption track may take to extract before it counts as failed. */
     private const SUBTITLE_TIMEOUT = 60;
 
@@ -898,19 +904,27 @@ class Videos extends Action
                 $params[] = 'loudnorm=I=-14:TP=-1.5:LRA=11,aeval=if(isnan(val(ch))+isinf(val(ch))\,0\,val(ch)):c=same';
             }
 
+            // Keyframes at 0 and FIRST_SEGMENT_DURATION, then every SEGMENT_DURATION.
+            // The muxer below cuts at each of them, which is what makes the first
+            // segment short and the rest full length. The format writes a fixed
+            // cadence of its own before these params; ffmpeg uses the last one.
+            $params[] = '-force_key_frames';
+            $params[] = 'expr:if(lt(n_forced,2),gte(t,n_forced*' . self::FIRST_SEGMENT_DURATION . '),'
+                . 'gte(t,' . self::FIRST_SEGMENT_DURATION . '+(n_forced-1)*' . self::SEGMENT_DURATION . '))';
+
             $format = match ($codec) {
                 Base::CODEC_HEVC => (new HEVC())
                     ->crf(22)
-                    ->keyframe(2.0)
+                    ->keyframe(self::FIRST_SEGMENT_DURATION)
                     ->params($params),
                 Base::CODEC_VP9 => (new VP9())
                     ->crf(32)
-                    ->keyframe(2.0)
+                    ->keyframe(self::FIRST_SEGMENT_DURATION)
                     ->params($params),
                 default => (new X264())
                     ->crf(22)
                     ->bframes(3)
-                    ->keyframe(2.0)
+                    ->keyframe(self::FIRST_SEGMENT_DURATION)
                     ->params($params),
             };
 
@@ -920,9 +934,11 @@ class Videos extends Action
             // segment, so a long video seeks into the wrong segment and never
             // requests the tail.
             $target = match ($output) {
-                Base::OUTPUT_DASH => (new Dash())->template(true)->timeline(true)->segment(self::SEGMENT_DURATION)->manifests(false),
-                Base::OUTPUT_CMAF => (new Cmaf())->template(true)->timeline(true)->segment(self::SEGMENT_DURATION)->manifests(false),
-                default => (new Hls())->segment(self::SEGMENT_DURATION)->manifests(false),
+                // The shorter length, so the muxer cuts at every keyframe placed
+                // above instead of skipping the one that ends the first segment.
+                Base::OUTPUT_DASH => (new Dash())->template(true)->timeline(true)->segment(self::FIRST_SEGMENT_DURATION)->manifests(false),
+                Base::OUTPUT_CMAF => (new Cmaf())->template(true)->timeline(true)->segment(self::FIRST_SEGMENT_DURATION)->manifests(false),
+                default => (new Hls())->segment(self::FIRST_SEGMENT_DURATION)->manifests(false),
             };
 
             $path = $deviceForVideos->getPath($video->getId())
