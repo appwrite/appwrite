@@ -2,6 +2,22 @@
 
 All notable changes to `utopia-php/query` are documented in this file.
 
+## 0.9.0
+
+### Changed
+
+- The package requires the utopia PHP extension (`ext-utopia`). The classifiers, the tokenizers,
+  `Query`'s methods (as `NativeQuery`), the AST parser and serializers, the schemas, the builders
+  and their feature interfaces are the extension's classes, and their PHP sources are removed.
+  Their signatures are in `stubs/`, one file per class, for static analysis and editors.
+  Projects that cannot load the extension stay on 0.8.
+- `Query` is declared in `src/Query.php` over `NativeQuery`. `src/extension.php`, which chose
+  between the two implementations, is gone, and with it the Composer `files` entry.
+
+### Removed
+
+- 57 traits that only the PHP builders and schemas used.
+
 ## 0.8.0
 
 ### Changed
