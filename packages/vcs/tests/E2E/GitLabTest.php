@@ -11,26 +11,40 @@ use Utopia\VCS\Tests\Services;
 
 final class GitLabTest extends Base
 {
+    #[\Override]
     protected static string $owner = '';
+    #[\Override]
     protected static string $defaultBranch = 'main';
+    #[\Override]
     protected static string $openPullRequestState = 'opened';
 
     /**
      * Names GitLab delivers its webhooks under.
      */
+    #[\Override]
     protected static string $pushEventName = 'Push Hook';
+    #[\Override]
     protected static string $pullRequestEventName = 'Merge Request Hook';
 
     /** @var array<string> */
+    #[\Override]
     protected static array $pullRequestOpenedActions = ['opened', 'synchronize'];
 
+    #[\Override]
     protected static string $presignedTarballFragment = '/repository/archive.tar.gz?access_token=';
+    #[\Override]
     protected static string $presignedZipballFragment = '/repository/archive.zip?access_token=';
+    #[\Override]
     protected static string $repositoryNotFoundException = \Exception::class;
+    #[\Override]
     protected static bool $deletesRepositoriesSynchronously = false;
+    #[\Override]
     protected static bool $supportsCheckRuns = false;
+    #[\Override]
     protected static bool $supportsInstallationRepository = false;
+    #[\Override]
     protected static bool $reportsCommitAuthorAvatar = false;
+    #[\Override]
     protected static bool $reportsCommitAuthorUrl = false;
 
     protected function setupAdapter(): void

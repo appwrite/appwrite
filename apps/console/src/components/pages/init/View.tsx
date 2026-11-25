@@ -278,9 +278,6 @@ function InitPageContent({
 
             <InitPageCredits
               showPresenceCredit={Boolean(event.presenceEnabled && account)}
-              showGlobeCredit={Boolean(
-                event.presenceEnabled && !event.isRecapMode,
-              )}
             />
           </div>
         </InitTicketVideoRecordingProvider>

@@ -559,6 +559,10 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Search videos by name or ID...': 'חיפוש סרטונים לפי שם או מזהה…',
   'Search rows by ID...': 'חיפוש שורות לפי מזהה…',
   'Search sites...': 'חיפוש אתרים…',
+  'Create a function to protect it with Firewall rules.':
+    'צרו פונקציה כדי להגן עליה בכללי חומת אש.',
+  'Create a site to protect it with Firewall rules.':
+    'צרו אתר כדי להגן עליו בכללי חומת אש.',
   'Search sites by name or ID...': 'חיפוש אתרים לפי שם או מזהה…',
   'Search tables by name or ID...': 'חיפוש טבלאות לפי שם או מזהה…',
   'Search teams...': 'חיפוש צוותים…',
@@ -1109,12 +1113,7 @@ export const heSharedUiDictionary: Record<string, string> = {
     'שרת SMTP מותאם אישית לאימיילים יוצאים',
   Advisor: 'יועץ',
   Firewall: 'חומת אש',
-  'Settings · Firewall': 'הגדרות · חומת אש',
-  'Firewall has moved': 'חומת האש עברה למקום אחר',
-  'Firewall rules now sit next to what they protect: a Firewall tab on each function and site, and one in project settings for the API.':
-    'כללי חומת האש נמצאים עכשיו ליד מה שהם מגינים עליו: לשונית חומת אש בכל פונקציה ובכל אתר, ואחת בהגדרות הפרויקט עבור ה-API.',
-  'Got it': 'הבנתי',
-  'Open API firewall': 'פתיחת חומת האש של ה-API',
+  'Security · Firewall rules': 'אבטחה · כללי חומת אש',
   // Function and site overview cards, filter chips
   '1 rule': 'כלל אחד',
   '{count} rules': '{count} כללים',

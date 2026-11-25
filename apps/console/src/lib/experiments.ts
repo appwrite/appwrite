@@ -10,7 +10,12 @@ import {
 export const QUALITY_ACCOUNT_LABEL = 'quality'
 
 export type Experiment = {
-  flag: 'alerts' | 'analytics' | 'projectEnvironments' | 'videos'
+  flag:
+    | 'alerts'
+    | 'analytics'
+    | 'gitInstallationReuse'
+    | 'projectEnvironments'
+    | 'videos'
   name: string
   description: string
   /** Day the experiment reached the popover, as `YYYY-MM-DD`. */
@@ -45,6 +50,12 @@ export const EXPERIMENTS: readonly Experiment[] = [
     name: 'Appwrite Videos',
     description: 'Transcode, stream, and caption videos.',
     introducedAt: '2026-11-19',
+  },
+  {
+    flag: 'gitInstallationReuse',
+    name: 'Git installation reuse',
+    description: 'Reuse GitHub organizations connected in your other projects.',
+    introducedAt: '2026-11-25',
   },
 ]
 

@@ -6,6 +6,11 @@ const NOW = new Date()
 const hoursAgo = (hours: number) =>
   new Date(NOW.getTime() - hours * 3_600_000).toISOString()
 const daysAgo = (days: number) => hoursAgo(days * 24)
+const sinceMidnight = NOW.getTime() - new Date(NOW).setHours(0, 0, 0, 0)
+const todayHoursAgo = (hours: number) =>
+  new Date(
+    NOW.getTime() - Math.min(hours * 3_600_000, (sinceMidnight * hours) / 24),
+  ).toISOString()
 
 const PROJECT_ID = 'notificationsproj001'
 const ORGANIZATION_ID = 'orgacme00000000001'
@@ -37,8 +42,8 @@ function notification(
 ): Models.Notification {
   return {
     $id: id,
-    $createdAt: hoursAgo(1),
-    $updatedAt: hoursAgo(1),
+    $createdAt: todayHoursAgo(1),
+    $updatedAt: todayHoursAgo(1),
     type: 'info',
     channel: 'console',
     resourceType: 'users',
@@ -95,7 +100,7 @@ const NOTIFICATIONS = [
   notification('alertresolved0000001', {
     type: 'warning',
     title: 'Executions are back under 1,000 on Production',
-    $createdAt: hoursAgo(2),
+    $createdAt: todayHoursAgo(2),
     read: true,
     teamId: ORGANIZATION_ID,
     subjectType: 'alerts',
@@ -107,6 +112,13 @@ const NOTIFICATIONS = [
     title: 'Build failed for checkout',
     body: 'The deployment exited with code 1.',
     $createdAt: daysAgo(3),
+    read: true,
+  }), // Stored before notifications named their alert: only the title says it resolved.
+  notification('legacyresolved000001', {
+    type: 'info',
+    title: '[Resolved] Refetch heartbeat · Refetch',
+    body: 'The HTTP check of https://refetch.io passes again.',
+    $createdAt: daysAgo(4),
     read: true,
   }),
 ]
@@ -501,6 +513,28 @@ test.describe('Notification center (mocked API)', () => {
         resolved: false,
         snoozes: { orgphone0000000001: PHONE_SNOOZE },
       })
+  })
+
+  test('marks resolved alerts with a check', async ({ page }) => {
+    await mockApi(page)
+    const popover = await openNotifications(page)
+    const iconOf = async (text: string) =>
+      popover
+        .locator('.group')
+        .filter({ hasText: text })
+        .locator('svg')
+        .first()
+        .getAttribute('class')
+
+    expect(await iconOf('Executions are back under 1,000')).toContain(
+      'lucide-circle-check',
+    )
+    expect(await iconOf('[Resolved] Refetch heartbeat')).toContain(
+      'lucide-circle-check',
+    )
+    expect(await iconOf('Bandwidth is over 80%')).toContain(
+      'lucide-triangle-alert',
+    )
   })
 
   test('opens the alert a notification is about', async ({ page }) => {

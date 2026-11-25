@@ -280,7 +280,7 @@ export function FirewallInfo({
             </Button>
             <Button asChild>
               <Link
-                to="/projects/$projectId/settings/firewall"
+                to="/projects/$projectId/firewall"
                 params={{ projectId }}
                 {...analyticsAttrs('firewall-spider-promo-create-rule')}
                 onClick={close}

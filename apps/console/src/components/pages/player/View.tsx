@@ -8,6 +8,7 @@ import { VideoInspectorProvider } from '@/components/pages/projects/$projectId/v
 import {
   getVideoEncodingStatus,
   useProjectVideo,
+  usePublicHlsPlayback,
   useVideoRenditions,
 } from '@/lib/react-query/hooks/videos'
 import {
@@ -69,16 +70,25 @@ export function View({ videoId, initialData }: EmbedViewProps) {
     isFetched: renditionsFetched,
   } = useVideoRenditions(projectId || null, videoId)
 
-  const video = videoFromHook ?? initialData?.video
-  const renditions =
-    renditionsFromHook?.renditions ?? initialData?.renditions ?? []
-
   const loadError = useMemo(() => {
     if (!projectId) return VIDEO_EMBED_MISSING_PROJECT
     const err = videoError ?? renditionsError
     if (err) return videoEmbedErrorFromUnknown(err)
     return null
   }, [projectId, videoError, renditionsError])
+
+  // Guests may play a public video but not read its document or renditions.
+  // When those are refused, start from the public HLS playlist instead.
+  const refused = loadError?.kind === 'unauthorized'
+  const { data: publicPlayback, isLoading: publicPlaybackLoading } =
+    usePublicHlsPlayback(projectId || null, videoId, refused)
+
+  const video = videoFromHook ?? initialData?.video ?? publicPlayback?.video
+  const renditions =
+    renditionsFromHook?.renditions ??
+    initialData?.renditions ??
+    publicPlayback?.renditions ??
+    []
 
   if (!projectId) {
     return <EmbedErrorScreen error={VIDEO_EMBED_MISSING_PROJECT} />
@@ -87,7 +97,10 @@ export function View({ videoId, initialData }: EmbedViewProps) {
   const stillLoading =
     (!video && videoLoading) || (!renditionsFromHook && renditionsLoading)
 
-  if (stillLoading && !initialData?.video) {
+  if (
+    (stillLoading && !initialData?.video) ||
+    (refused && publicPlaybackLoading)
+  ) {
     return (
       <div
         className="flex h-[100dvh] w-full items-center justify-center bg-black"
@@ -99,7 +112,7 @@ export function View({ videoId, initialData }: EmbedViewProps) {
     )
   }
 
-  if (loadError && videoFetched && renditionsFetched) {
+  if (loadError && videoFetched && renditionsFetched && !publicPlayback) {
     if (loadError.kind === 'unauthorized') return <EmbedUnauthorized />
     return <EmbedErrorScreen error={loadError} />
   }
