@@ -3343,6 +3343,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'לא ניתן לאמת את סטטוס תוסף Premium Geo DB. נסו שוב.',
   "With this add-on, your app's users sign in through their company's identity provider. Each team in this project can verify domains, connect identity providers and turn on Require SSO.":
     'עם התוסף הזה, משתמשי האפליקציה שלכם מתחברים דרך ספק הזהויות של החברה שלהם. כל צוות בפרויקט יכול לאמת דומיינים, לחבר ספקי זהויות ולהפעיל חיוב SSO.',
+  'Starts next cycle': 'מתחיל במחזור הבא',
+  'The add-on starts with your next billing cycle. Single sign-on can be set up from then.':
+    'התוסף מתחיל במחזור החיוב הבא שלכם. מאז אפשר יהיה להגדיר התחברות יחידה (SSO).',
   '{price}/month, prorated for the current billing cycle.':
     '{price}/חודש, בחיוב יחסי למחזור החיוב הנוכחי.',
   'Billed monthly, prorated for the current billing cycle.':

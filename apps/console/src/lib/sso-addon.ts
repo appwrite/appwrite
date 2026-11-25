@@ -13,8 +13,11 @@ import {
  * - `active`: the add-on is on (`status` active, `currentValue` 1), single
  *   sign-on can be set up. One scheduled for removal (`nextValue` 0) stays on
  *   until the cycle ends.
- * - `pending`: the add-on waits for its payment to be confirmed, or starts with
- *   the next cycle (`currentValue` 0). It does not count yet.
+ * - `pending`: the add-on waits for its payment to be confirmed. It does not
+ *   count yet.
+ * - `scheduled`: the add-on was enabled with nothing left to pay in this cycle,
+ *   so it starts with the next one (`status` active, `currentValue` 0,
+ *   `nextValue` 1). No payment is waiting, and it does not count yet.
  * - `available`: the plan sells the add-on, and it is not on.
  * - `unavailable`: the plan does not sell the add-on.
  *
@@ -23,7 +26,12 @@ import {
  * requires nothing. Listing, deleting and turning Require SSO off still work,
  * so an organization can clean up.
  */
-export type SSOAddonStatus = 'active' | 'pending' | 'available' | 'unavailable'
+export type SSOAddonStatus =
+  | 'active'
+  | 'pending'
+  | 'scheduled'
+  | 'available'
+  | 'unavailable'
 
 export function ssoAddonStatus(
   plan: unknown,
@@ -32,7 +40,12 @@ export function ssoAddonStatus(
 ): SSOAddonStatus {
   const addon = findActiveOrPendingAddon(addons, key)
   if (addon?.status === 'active' && addon.currentValue !== 0) return 'active'
-  if (addon) return 'pending'
+  // Enabled for the next cycle; one removed again before it started is not on
+  if (addon?.status === 'active') {
+    if (addon.nextValue !== 0) return 'scheduled'
+  } else if (addon) {
+    return 'pending'
+  }
   return planSupportsAddon(plan, key) ? 'available' : 'unavailable'
 }
 

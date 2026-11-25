@@ -94,7 +94,11 @@ export function RequireSSOCard({ target }: { target: SSOTarget }) {
               : t('Single sign-on is no longer required'),
           ),
         onError: (failure: Error) => {
-          if (onAddonError(failure)) return
+          if (onAddonError(failure)) {
+            // The page locks: leave no unsaved change behind to send again
+            setDraft(required)
+            return
+          }
           toast.error(
             getErrorMessage(failure) || t('Failed to update single sign-on'),
           )

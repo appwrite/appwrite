@@ -211,6 +211,13 @@ export function SSOAddonCard({
         </Badge>
       )
     }
+    if (status === 'scheduled') {
+      return (
+        <Badge variant="info" className="text-[10px] shrink-0">
+          {t('Starts next cycle')}
+        </Badge>
+      )
+    }
     if (status === 'active' && isScheduledForRemoval) {
       return (
         <Badge variant="warning" className="text-[10px] shrink-0">
@@ -262,6 +269,11 @@ export function SSOAddonCard({
     if (status === 'pending') {
       return t(
         "A payment is awaiting confirmation. If you've completed authentication, click refresh to check the payment status.",
+      )
+    }
+    if (status === 'scheduled') {
+      return t(
+        'The add-on starts with your next billing cycle. Single sign-on can be set up from then.',
       )
     }
     if (status === 'active' && isScheduledForRemoval) {
@@ -342,6 +354,8 @@ export function SSOAddonCard({
         </Button>
       )
     }
+    // Nothing to pay or confirm: it starts by itself with the next cycle
+    if (status === 'scheduled') return null
     return (
       <Button
         size="sm"

@@ -58,6 +58,7 @@ export function DisableSSOAddonDialog({
         queryClient,
         toAddonTarget(target),
         ssoAddonKey(target),
+        target.scope === 'organization' ? target.organizationId : undefined,
       )
       toast.success(
         t(

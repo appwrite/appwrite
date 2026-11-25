@@ -3411,6 +3411,9 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'Premium Geo DB アドオンの状態を確認できませんでした。再試行してください。',
   "With this add-on, your app's users sign in through their company's identity provider. Each team in this project can verify domains, connect identity providers and turn on Require SSO.":
     'このアドオンを使うと、アプリのユーザーは会社の ID プロバイダー経由でサインインできます。このプロジェクトの各チームは、ドメインの検証、ID プロバイダーの接続、SSO の必須化を行えます。',
+  'Starts next cycle': '次のサイクルから開始',
+  'The add-on starts with your next billing cycle. Single sign-on can be set up from then.':
+    'アドオンは次の請求サイクルから開始されます。それ以降、シングルサインオンを設定できます。',
   '{price}/month, prorated for the current billing cycle.':
     '{price}/月、現在の請求サイクルに按分されます。',
   'Billed monthly, prorated for the current billing cycle.':

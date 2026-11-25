@@ -30,17 +30,35 @@ describe('ssoAddonStatus', () => {
     expect(ssoAddonStatus(DOES_NOT_SELL, [addon()], 'ssoOrg')).toBe('active')
   })
 
-  test('is pending until the add-on counts: its payment, or the next cycle', () => {
+  test('is pending while its payment waits for confirmation', () => {
+    expect(
+      ssoAddonStatus(SELLS, [addon({ status: 'pending' })], 'ssoOrg'),
+    ).toBe('pending')
+    expect(
+      ssoAddonStatus(
+        SELLS,
+        [addon({ status: 'pending', currentValue: 0 })],
+        'ssoOrg',
+      ),
+    ).toBe('pending')
+  })
+
+  test('is scheduled when it starts with the next cycle: no payment waits', () => {
     expect(
       ssoAddonStatus(
         SELLS,
         [addon({ currentValue: 0, nextValue: 1 })],
         'ssoOrg',
       ),
-    ).toBe('pending')
+    ).toBe('scheduled')
+    // Removed again before it started: it is not on, and can be enabled
     expect(
-      ssoAddonStatus(SELLS, [addon({ status: 'pending' })], 'ssoOrg'),
-    ).toBe('pending')
+      ssoAddonStatus(
+        SELLS,
+        [addon({ currentValue: 0, nextValue: 0 })],
+        'ssoOrg',
+      ),
+    ).toBe('available')
   })
 
   test('without the add-on, says whether the plan sells it', () => {

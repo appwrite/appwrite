@@ -465,6 +465,30 @@ test.describe('the Single sign-on project add-on', () => {
     await expect(card).toContainText('Active')
   })
 
+  test('says when the add-on starts with the next cycle, with no payment to check', async ({
+    page,
+  }) => {
+    // Enabled with nothing left to pay in this cycle: active, counting from the next
+    const mock = await mockAppwriteApi(page, {
+      addon: { ...ssoAddon('active', 1), currentValue: 0 },
+    })
+    await enableSso(page)
+    await openSettings(page)
+
+    const card = ssoCard(page)
+    await expect(card).toContainText('Starts next cycle')
+    await expect(card).toContainText(
+      'The add-on starts with your next billing cycle. Single sign-on can be set up from then.',
+    )
+    await expect(card).not.toContainText('Payment pending')
+    await expect(card.getByRole('button', { name: 'Refresh' })).toHaveCount(0)
+    await expect(
+      card.getByRole('button', { name: 'Enable add-on' }),
+    ).toHaveCount(0)
+    expect(mock.sent.confirmations).toEqual([])
+    expect(mock.sent.creates).toBe(0)
+  })
+
   test('offers the upgrade on a plan that does not sell it', async ({
     page,
   }) => {
