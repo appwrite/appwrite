@@ -46,6 +46,19 @@ describe('applyFrameDenyHeaders', () => {
     }
   })
 
+  test('keeps separate policies apart, replacing frame-ancestors in each', () => {
+    const headers = new Headers()
+    headers.append(
+      'Content-Security-Policy',
+      "default-src 'self'; frame-ancestors *",
+    )
+    headers.append('Content-Security-Policy', "script-src 'self'")
+    applyFrameDenyHeaders(headers, '/oauth2/device')
+    expect(headers.get('Content-Security-Policy')).toBe(
+      "default-src 'self'; frame-ancestors 'none', script-src 'self'; frame-ancestors 'none'",
+    )
+  })
+
   test('leaves other console pages alone', () => {
     for (const pathname of [
       '/',

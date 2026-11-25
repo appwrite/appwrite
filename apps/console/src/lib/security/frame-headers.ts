@@ -50,17 +50,26 @@ export function applyFrameDenyHeaders(
 
   headers.set('X-Frame-Options', 'DENY')
 
-  const directives = (headers.get('Content-Security-Policy') ?? '')
-    .split(';')
-    .map((directive) => directive.trim())
-    .filter(
-      (directive) =>
-        directive !== '' && !/^frame-ancestors(\s|$)/i.test(directive),
-    )
-  headers.set(
-    'Content-Security-Policy',
-    [...directives, FRAME_ANCESTORS_NONE].join('; '),
+  // Several Content-Security-Policy headers reach us joined with commas, one
+  // policy each. Every policy is enforced, so each gets the directive and
+  // keeps its own boundaries.
+  const policies = (headers.get('Content-Security-Policy') ?? '')
+    .split(',')
+    .map((policy) => policy.trim())
+    .filter((policy) => policy !== '')
+  const restricted = (policies.length > 0 ? policies : ['']).map((policy) =>
+    [
+      ...policy
+        .split(';')
+        .map((directive) => directive.trim())
+        .filter(
+          (directive) =>
+            directive !== '' && !/^frame-ancestors(\s|$)/i.test(directive),
+        ),
+      FRAME_ANCESTORS_NONE,
+    ].join('; '),
   )
+  headers.set('Content-Security-Policy', restricted.join(', '))
 
   return headers
 }
