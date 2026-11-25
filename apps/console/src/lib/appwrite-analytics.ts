@@ -87,7 +87,15 @@ export function trackAppwritePageview(options: TrackingEventOptions) {
     pendingPageview = pageview
     return
   }
-  void tracking.then((tracker) => tracker?.track('pageview', pageview))
+  void tracking.then((tracker) => {
+    if (tracker) {
+      tracker.track('pageview', pageview)
+      return
+    }
+    // The SDK failed to load: hold the view for the next start, unless a newer
+    // route's view is already waiting there.
+    pendingPageview ??= pageview
+  })
 }
 
 /** Custom event; a no-op until tracking has started. */

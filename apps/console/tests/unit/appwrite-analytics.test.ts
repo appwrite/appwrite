@@ -165,6 +165,23 @@ describe('appwrite analytics', () => {
     expect(calls.at(-1)).toBe('property:web')
   })
 
+  test('a pageview sent while the load fails is sent once tracking starts', async () => {
+    failImport = true
+    startAppwriteAnalytics()
+    trackPageView('/console/recover')
+    await flush()
+    expect(calls.filter((call) => call.startsWith('track:'))).toEqual([])
+
+    failImport = false
+    startAppwriteAnalytics()
+    await flush()
+    const tracked = calls.filter((call) => call.startsWith('track:'))
+    expect(tracked).toHaveLength(1)
+    expect(tracked[0]).toStartWith(
+      'track:pageview:https://cloud.appwrite.io/console/recover:',
+    )
+  })
+
   test('pageviews carry no query string, fragment or referrer query', async () => {
     trackPageView('/console/recover')
     startAppwriteAnalytics()
