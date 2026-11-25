@@ -50,6 +50,7 @@ use Utopia\Migration\Sources\JSON as SourceJSON;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Target;
+use Utopia\Migration\Tests\Destinations\LimitedMemoryAdapter;
 use Utopia\Migration\Tests\General\RequestTarget;
 use Utopia\Migration\Transfer;
 use Utopia\Migration\Warning;
@@ -385,9 +386,14 @@ final class Adapter implements Base, Benchmarks
 
             // Project databases on the Memory adapter, authorization off.
             'db.new' => function (array $a, Session $s) {
-                // A schemaless adapter is one without defined attributes.
-                $adapter = ($a['schemaless'] ?? false)
-                    ? new class () extends MemoryAdapter {
+                // A schemaless adapter is one without defined attributes; a
+                // limited one caps the columns and the row width, as
+                // AppwriteColumnLimitTest's LimitedMemoryAdapter does.
+                if (isset($a['limits'])) {
+                    require_once \dirname(__DIR__, 3) . '/packages/migration/tests/Destinations/AppwriteColumnLimitTest.php';
+                }
+                $adapter = match (true) {
+                    $a['schemaless'] ?? false => new class () extends MemoryAdapter {
                         public function capabilities(): array
                         {
                             return \array_values(\array_filter(
@@ -395,8 +401,15 @@ final class Adapter implements Base, Benchmarks
                                 static fn (Capability $c) => $c !== Capability::DefinedAttributes,
                             ));
                         }
-                    }
-                : new MemoryAdapter();
+                    },
+                    isset($a['limits']) => new LimitedMemoryAdapter(
+                        documentSize: $a['limits']['documentSize'] ?? null,
+                        attributes: isset($a['limits']['attributesAboveDefault'])
+                            ? (new MemoryAdapter())->limits()->defaultAttributes + $a['limits']['attributesAboveDefault']
+                            : null,
+                    ),
+                    default => new MemoryAdapter(),
+                };
                 $db = new UtopiaDatabase($adapter, new UtopiaCache(new MemoryCache()));
                 $db->setDatabase('appwrite')->setNamespace('_project');
                 $db->getAuthorization()->disable();

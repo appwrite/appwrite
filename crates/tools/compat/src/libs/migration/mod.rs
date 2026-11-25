@@ -35,7 +35,7 @@ pub mod codec;
 pub mod mocks;
 mod reach;
 pub mod resources;
-mod schemaless;
+mod variant;
 
 use codec::{decode, decode_array, encode, entries, error, exception, summary, warning};
 use mocks::{MockDestination, MockSource};
@@ -970,9 +970,13 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
             Outcome::Ok(json!({ "resourceId": rid, "resourceChildId": child }))
         }
         "db.new" => {
-            // A schemaless adapter is one without defined attributes.
+            // A schemaless adapter is one without defined attributes; a
+            // limited one caps the columns and the row width.
             let adapter: Arc<dyn utopia_database::Adapter> = if a.opt_bool("schemaless")?.unwrap_or(false) {
-                Arc::new(schemaless::Schemaless::new())
+                Arc::new(variant::Variant::schemaless())
+            } else if let Some(limits) = a.opt("limits") {
+                let limit = |k: &str| limits.get(k).and_then(serde_json::Value::as_i64);
+                Arc::new(variant::Variant::limited(limit("documentSize"), limit("attributesAboveDefault")))
             } else {
                 Arc::new(utopia_database::adapter::memory::Memory::new())
             };

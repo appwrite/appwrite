@@ -533,6 +533,7 @@ pub const OAUTH2_PROVIDERS: &[(&str, &[ProviderField])] = &[
     ("strava", CLIENT),
     ("vk", CLIENT),
     ("netlify", CLIENT),
+    ("clerk", &[app("clientId"), secret("endpoint", Some("clerkDomain"))]),
     ("supabase", CLIENT),
     ("railway", CLIENT),
     ("reddit", CLIENT),

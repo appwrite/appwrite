@@ -1924,6 +1924,72 @@
           "op": "resource.from_array",
           "args": {
             "class": "Auth\\OAuth2\\OAuth2Provider",
+            "provider": "clerk",
+            "array": {
+              "id": "clerk",
+              "enabled": false,
+              "clientId": "client-123",
+              "clientSecret": "super-secret",
+              "p8File": "p8-contents",
+              "serviceId": "svc",
+              "keyId": "K",
+              "teamId": "T",
+              "endpoint": "https://idp.example.test",
+              "prompt": [
+                "consent"
+              ],
+              "realmName": "realm",
+              "tenant": "",
+              "wellKnownURL": "https://w",
+              "authorizationURL": null,
+              "tokenURL": "https://t",
+              "userInfoURL": "https://u",
+              "domain": "example.test",
+              "authorizationServerId": 0
+            }
+          },
+          "bind": "p_clerk",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p_clerk"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
+            "getCreatedAt": "",
+            "getDescription": "",
+            "getDestinationAppId": "client-123",
+            "getDestinationSecretFields": {
+              "clerkDomain": "https://idp.example.test"
+            },
+            "getEnabled": false,
+            "getGroup": "auth",
+            "getId": "clerk",
+            "getMessage": "",
+            "getName": "oauth2-provider",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getProviderKey": "clerk",
+            "getSequence": "",
+            "getSettings": {
+              "clientId": "client-123",
+              "endpoint": "https://idp.example.test"
+            },
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "isConfigured": true
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\OAuth2\\OAuth2Provider",
             "provider": "kick",
             "array": {
               "id": "kick",

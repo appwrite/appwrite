@@ -1222,7 +1222,7 @@
       "doc": "The private CSV::delimiter() of a fixture stream (the suite calls it by reflection)"
     },
     "db.new": {
-      "doc": "A project database on the Memory adapter (database appwrite, namespace _project), created, authorization disabled; schemaless: no attribute support (glue)"
+      "doc": "A project database on the Memory adapter (database appwrite, namespace _project), created, authorization disabled; schemaless: no attribute support; limits {documentSize?, attributesAboveDefault?}: AppwriteColumnLimitTest's LimitedMemoryAdapter, the row size and Memory's defaultAttributes + attributesAboveDefault columns (glue)"
     },
     "db.collection": {
       "doc": "createCollection($id, $attributes, $indexes) (glue)"

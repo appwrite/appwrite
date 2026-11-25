@@ -1,6 +1,12 @@
-//! The Memory adapter without defined attributes: PHP's `db.new` with
-//! `schemaless`, an anonymous `Memory` subclass whose `capabilities()` drops
-//! `Capability::DefinedAttributes`. Every other call runs on Memory.
+//! The Memory adapters `db.new` builds besides the plain one, each an
+//! anonymous `Memory` subclass in PHP's adapter:
+//!
+//! - `schemaless`: `capabilities()` drops `Capability::DefinedAttributes`.
+//! - `limits`: AppwriteColumnLimitTest's `LimitedMemoryAdapter`, with a cap
+//!   on the columns of a table and on the bytes of a row, and the row width a
+//!   SQL adapter accounts for the column types it transfers.
+//!
+//! Every other call runs on Memory.
 
 use std::any::Any;
 use std::sync::Arc;
@@ -13,20 +19,39 @@ use utopia_database::collection::Collection;
 use utopia_database::{Adapter, Attribute, Capability, Document, Index, Query, Result, Value, schema};
 use utopia_query::schema::ColumnType;
 
-/// Memory, schemaless.
+/// Memory, schemaless or limited.
 #[derive(Debug, Default)]
-pub(super) struct Schemaless {
+pub(super) struct Variant {
     inner: Memory,
+    schemaless: bool,
+    /// The limits that replace Memory's, and with them the row width.
+    limits: Option<Arc<Limits>>,
 }
 
-impl Schemaless {
-    pub(super) fn new() -> Self {
-        Schemaless { inner: Memory::new() }
+impl Variant {
+    /// Memory without defined attributes.
+    pub(super) fn schemaless() -> Self {
+        Variant { inner: Memory::new(), schemaless: true, limits: None }
+    }
+
+    /// `LimitedMemoryAdapter($documentSize, $attributes)`: Memory's limits,
+    /// with the row size replaced, and the column count set to `extra` more
+    /// than the columns every collection holds, where given.
+    pub(super) fn limited(document_size: Option<i64>, extra: Option<i64>) -> Self {
+        let inner = Memory::new();
+        let mut limits = (*inner.limits()).clone();
+        if let Some(size) = document_size {
+            limits.document_size = size;
+        }
+        if let Some(extra) = extra {
+            limits.attributes = limits.default_attributes + extra;
+        }
+        Variant { inner, schemaless: false, limits: Some(Arc::new(limits)) }
     }
 }
 
 #[async_trait]
-impl Adapter for Schemaless {
+impl Adapter for Variant {
     fn state(&self) -> &State {
         self.inner.state()
     }
@@ -36,6 +61,9 @@ impl Adapter for Schemaless {
     }
 
     fn capabilities(&self) -> Capabilities {
+        if !self.schemaless {
+            return self.inner.capabilities();
+        }
         let mut out = Vec::new();
         for c in self.inner.capabilities().iter() {
             if c != Capability::DefinedAttributes {
@@ -46,7 +74,7 @@ impl Adapter for Schemaless {
     }
 
     fn limits(&self) -> Arc<Limits> {
-        self.inner.limits()
+        self.limits.clone().unwrap_or_else(|| self.inner.limits())
     }
 
     fn relationships(&self) -> Option<&dyn Relationships> {
@@ -110,7 +138,29 @@ impl Adapter for Schemaless {
     }
 
     fn attribute_width(&self, collection: &Collection) -> Result<i64> {
-        self.inner.attribute_width(collection)
+        let Some(limits) = &self.limits else {
+            return self.inner.attribute_width(collection);
+        };
+        // The byte accounting SQL adapters do, for the column types the
+        // column limit cases transfer: the internal columns every row carries
+        // (`_uid varchar(255)` the bulk of them), then each attribute.
+        let mut total = 1067;
+        for attribute in collection.attributes()? {
+            let size = attribute.size.unwrap_or(0);
+            total += if attribute.array {
+                // Stored externally, so only the pointer sits in the row.
+                20
+            } else if attribute.kind != ColumnType::String {
+                8
+            } else if size > limits.varchar {
+                20
+            } else if size > 255 {
+                size * 4 + 2
+            } else {
+                size * 4 + 1
+            };
+        }
+        Ok(total)
     }
 
     async fn create_attribute(&self, collection: &str, attribute: &Attribute) -> Result<bool> {

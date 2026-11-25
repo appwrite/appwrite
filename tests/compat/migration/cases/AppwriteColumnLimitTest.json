@@ -1,0 +1,2426 @@
+{
+  "source": "packages/migration/tests/Destinations/AppwriteColumnLimitTest.php",
+  "cases": [
+    {
+      "name": "testAColumnThatDoesNotFitTheRowReportsTheRowWidth",
+      "steps": [
+        {
+          "op": "db.subquery_filters",
+          "args": {}
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "limits": {
+              "documentSize": 65535
+            }
+          },
+          "bind": "db"
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "databases",
+            "attributes": [
+              {
+                "$id": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "enabled",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "search",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "originalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 128,
+                "required": false,
+                "default": "tablesdb",
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "database",
+                "type": "string",
+                "size": 2000,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "attributes",
+            "attributes": [
+              {
+                "$id": "key",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "status",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "size",
+                "type": "integer",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "required",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": false,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "signed",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "default",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "array",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": false,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "format",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "formatOptions",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "filters",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "options",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "error",
+                "type": "string",
+                "size": 2048,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "indexes",
+            "attributes": [
+              {
+                "$id": "key",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "status",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 16,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "attributes",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "lengths",
+                "type": "integer",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "orders",
+                "type": "string",
+                "size": 4,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "error",
+                "type": "string",
+                "size": 2048,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          }
+        },
+        {
+          "op": "mock.source",
+          "args": {
+            "variant": "schema"
+          },
+          "bind": "s"
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "shop",
+              "name": "Shop",
+              "type": "tablesdb",
+              "database": "source-dsn"
+            }
+          },
+          "bind": "shop"
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "shop"
+              },
+              "name": "Products",
+              "id": "products"
+            }
+          },
+          "bind": "products"
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "shop"
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "products"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "wide0",
+              "table": {
+                "$ref": "products"
+              },
+              "size": 4000
+            }
+          },
+          "bind": "wide0"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "wide0"
+            },
+            "method": "setId",
+            "args": {
+              "id": "column-wide0"
+            }
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "wide0"
+            },
+            "method": "setUpdatedAt",
+            "args": {
+              "date": ""
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "wide0"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "wide1",
+              "table": {
+                "$ref": "products"
+              },
+              "size": 4000
+            }
+          },
+          "bind": "wide1"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "wide1"
+            },
+            "method": "setId",
+            "args": {
+              "id": "column-wide1"
+            }
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "wide1"
+            },
+            "method": "setUpdatedAt",
+            "args": {
+              "date": ""
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "wide1"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "wide2",
+              "table": {
+                "$ref": "products"
+              },
+              "size": 4000
+            }
+          },
+          "bind": "wide2"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "wide2"
+            },
+            "method": "setId",
+            "args": {
+              "id": "column-wide2"
+            }
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "wide2"
+            },
+            "method": "setUpdatedAt",
+            "args": {
+              "date": ""
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "wide2"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "wide3",
+              "table": {
+                "$ref": "products"
+              },
+              "size": 4000
+            }
+          },
+          "bind": "wide3"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "wide3"
+            },
+            "method": "setId",
+            "args": {
+              "id": "column-wide3"
+            }
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "wide3"
+            },
+            "method": "setUpdatedAt",
+            "args": {
+              "date": ""
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "wide3"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "wide4",
+              "table": {
+                "$ref": "products"
+              },
+              "size": 4000
+            }
+          },
+          "bind": "wide4"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "wide4"
+            },
+            "method": "setId",
+            "args": {
+              "id": "column-wide4"
+            }
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "wide4"
+            },
+            "method": "setUpdatedAt",
+            "args": {
+              "date": ""
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "wide4"
+            }
+          }
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "structure": {
+              "attributes": [
+                {
+                  "$id": "databaseInternalId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "databaseId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "name",
+                  "type": "string",
+                  "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "enabled",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": true,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "documentSecurity",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": false,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "search",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "attributes",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": [
+                    "subQueryAttributes"
+                  ]
+                },
+                {
+                  "$id": "indexes",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": [
+                    "subQueryIndexes"
+                  ]
+                }
+              ],
+              "indexes": []
+            },
+            "on_duplicate": "fail"
+          },
+          "bind": "d"
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "database",
+              "table",
+              "column",
+              "index"
+            ]
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "wide4"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testAColumnPastTheCountLimitReportsTheCount",
+      "steps": [
+        {
+          "op": "db.subquery_filters",
+          "args": {}
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "limits": {
+              "attributesAboveDefault": 18
+            }
+          },
+          "bind": "db"
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "databases",
+            "attributes": [
+              {
+                "$id": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "enabled",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "search",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "originalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 128,
+                "required": false,
+                "default": "tablesdb",
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "database",
+                "type": "string",
+                "size": 2000,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "attributes",
+            "attributes": [
+              {
+                "$id": "key",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "status",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "size",
+                "type": "integer",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "required",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": false,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "signed",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "default",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "array",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": false,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "format",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "formatOptions",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "filters",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "options",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "error",
+                "type": "string",
+                "size": 2048,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "indexes",
+            "attributes": [
+              {
+                "$id": "key",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "status",
+                "type": "string",
+                "size": 64,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "databaseId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionInternalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "collectionId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 16,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "attributes",
+                "type": "string",
+                "size": 256,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "lengths",
+                "type": "integer",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "orders",
+                "type": "string",
+                "size": 4,
+                "required": false,
+                "default": null,
+                "array": true,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "error",
+                "type": "string",
+                "size": 2048,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          }
+        },
+        {
+          "op": "mock.source",
+          "args": {
+            "variant": "schema"
+          },
+          "bind": "s"
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "shop",
+              "name": "Shop",
+              "type": "tablesdb",
+              "database": "source-dsn"
+            }
+          },
+          "bind": "shop"
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "shop"
+              },
+              "name": "Products",
+              "id": "products"
+            }
+          },
+          "bind": "products"
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "shop"
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "products"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "column0",
+              "table": {
+                "$ref": "products"
+              }
+            }
+          },
+          "bind": "column0"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column0"
+            },
+            "method": "setId",
+            "args": {
+              "id": "column-column0"
+            }
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column0"
+            },
+            "method": "setUpdatedAt",
+            "args": {
+              "date": ""
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "column0"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "column1",
+              "table": {
+                "$ref": "products"
+              }
+            }
+          },
+          "bind": "column1"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column1"
+            },
+            "method": "setId",
+            "args": {
+              "id": "column-column1"
+            }
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column1"
+            },
+            "method": "setUpdatedAt",
+            "args": {
+              "date": ""
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "column1"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "column2",
+              "table": {
+                "$ref": "products"
+              }
+            }
+          },
+          "bind": "column2"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column2"
+            },
+            "method": "setId",
+            "args": {
+              "id": "column-column2"
+            }
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column2"
+            },
+            "method": "setUpdatedAt",
+            "args": {
+              "date": ""
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "column2"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "column3",
+              "table": {
+                "$ref": "products"
+              }
+            }
+          },
+          "bind": "column3"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column3"
+            },
+            "method": "setId",
+            "args": {
+              "id": "column-column3"
+            }
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column3"
+            },
+            "method": "setUpdatedAt",
+            "args": {
+              "date": ""
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "column3"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "column4",
+              "table": {
+                "$ref": "products"
+              }
+            }
+          },
+          "bind": "column4"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column4"
+            },
+            "method": "setId",
+            "args": {
+              "id": "column-column4"
+            }
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column4"
+            },
+            "method": "setUpdatedAt",
+            "args": {
+              "date": ""
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "column4"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "column5",
+              "table": {
+                "$ref": "products"
+              }
+            }
+          },
+          "bind": "column5"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column5"
+            },
+            "method": "setId",
+            "args": {
+              "id": "column-column5"
+            }
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column5"
+            },
+            "method": "setUpdatedAt",
+            "args": {
+              "date": ""
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "column5"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "column6",
+              "table": {
+                "$ref": "products"
+              }
+            }
+          },
+          "bind": "column6"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column6"
+            },
+            "method": "setId",
+            "args": {
+              "id": "column-column6"
+            }
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column6"
+            },
+            "method": "setUpdatedAt",
+            "args": {
+              "date": ""
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "column6"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "column7",
+              "table": {
+                "$ref": "products"
+              }
+            }
+          },
+          "bind": "column7"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column7"
+            },
+            "method": "setId",
+            "args": {
+              "id": "column-column7"
+            }
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column7"
+            },
+            "method": "setUpdatedAt",
+            "args": {
+              "date": ""
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "column7"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "column8",
+              "table": {
+                "$ref": "products"
+              }
+            }
+          },
+          "bind": "column8"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column8"
+            },
+            "method": "setId",
+            "args": {
+              "id": "column-column8"
+            }
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column8"
+            },
+            "method": "setUpdatedAt",
+            "args": {
+              "date": ""
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "column8"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "column9",
+              "table": {
+                "$ref": "products"
+              }
+            }
+          },
+          "bind": "column9"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column9"
+            },
+            "method": "setId",
+            "args": {
+              "id": "column-column9"
+            }
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column9"
+            },
+            "method": "setUpdatedAt",
+            "args": {
+              "date": ""
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "column9"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "column10",
+              "table": {
+                "$ref": "products"
+              }
+            }
+          },
+          "bind": "column10"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column10"
+            },
+            "method": "setId",
+            "args": {
+              "id": "column-column10"
+            }
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column10"
+            },
+            "method": "setUpdatedAt",
+            "args": {
+              "date": ""
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "column10"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "column11",
+              "table": {
+                "$ref": "products"
+              }
+            }
+          },
+          "bind": "column11"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column11"
+            },
+            "method": "setId",
+            "args": {
+              "id": "column-column11"
+            }
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column11"
+            },
+            "method": "setUpdatedAt",
+            "args": {
+              "date": ""
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "column11"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "column12",
+              "table": {
+                "$ref": "products"
+              }
+            }
+          },
+          "bind": "column12"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column12"
+            },
+            "method": "setId",
+            "args": {
+              "id": "column-column12"
+            }
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column12"
+            },
+            "method": "setUpdatedAt",
+            "args": {
+              "date": ""
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "column12"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "column13",
+              "table": {
+                "$ref": "products"
+              }
+            }
+          },
+          "bind": "column13"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column13"
+            },
+            "method": "setId",
+            "args": {
+              "id": "column-column13"
+            }
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column13"
+            },
+            "method": "setUpdatedAt",
+            "args": {
+              "date": ""
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "column13"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "column14",
+              "table": {
+                "$ref": "products"
+              }
+            }
+          },
+          "bind": "column14"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column14"
+            },
+            "method": "setId",
+            "args": {
+              "id": "column-column14"
+            }
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column14"
+            },
+            "method": "setUpdatedAt",
+            "args": {
+              "date": ""
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "column14"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "column15",
+              "table": {
+                "$ref": "products"
+              }
+            }
+          },
+          "bind": "column15"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column15"
+            },
+            "method": "setId",
+            "args": {
+              "id": "column-column15"
+            }
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column15"
+            },
+            "method": "setUpdatedAt",
+            "args": {
+              "date": ""
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "column15"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "column16",
+              "table": {
+                "$ref": "products"
+              }
+            }
+          },
+          "bind": "column16"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column16"
+            },
+            "method": "setId",
+            "args": {
+              "id": "column-column16"
+            }
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column16"
+            },
+            "method": "setUpdatedAt",
+            "args": {
+              "date": ""
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "column16"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "column17",
+              "table": {
+                "$ref": "products"
+              }
+            }
+          },
+          "bind": "column17"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column17"
+            },
+            "method": "setId",
+            "args": {
+              "id": "column-column17"
+            }
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column17"
+            },
+            "method": "setUpdatedAt",
+            "args": {
+              "date": ""
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "column17"
+            }
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Columns\\Text",
+            "args": {
+              "key": "column18",
+              "table": {
+                "$ref": "products"
+              }
+            }
+          },
+          "bind": "column18"
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column18"
+            },
+            "method": "setId",
+            "args": {
+              "id": "column-column18"
+            }
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "column18"
+            },
+            "method": "setUpdatedAt",
+            "args": {
+              "date": ""
+            }
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "column18"
+            }
+          }
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "structure": {
+              "attributes": [
+                {
+                  "$id": "databaseInternalId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "databaseId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "name",
+                  "type": "string",
+                  "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "enabled",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": true,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "documentSecurity",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": false,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "search",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "attributes",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": [
+                    "subQueryAttributes"
+                  ]
+                },
+                {
+                  "$id": "indexes",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": [
+                    "subQueryIndexes"
+                  ]
+                }
+              ],
+              "indexes": []
+            },
+            "on_duplicate": "fail"
+          },
+          "bind": "d"
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t"
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "database",
+              "table",
+              "column",
+              "index"
+            ]
+          }
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "column18"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

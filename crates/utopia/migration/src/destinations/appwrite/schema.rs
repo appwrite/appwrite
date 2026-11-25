@@ -891,7 +891,10 @@ impl Appwrite {
         let column = match checked {
             Ok(c) => c,
             Err(e) if e.is_a(DbKind::Duplicate) => return self.reject_with(r, "Attribute already exists", e),
-            Err(e) if e.is_a(DbKind::Limit) => return self.reject_with(r, "Attribute limit exceeded", e),
+            Err(e) if e.is_a(DbKind::Limit) => {
+                let message = column_limit_message(&e);
+                return self.reject_with(r, &message, e);
+            }
             Err(e) => {
                 self.purge_table_caches(&database, &table, &db).await?;
                 return Err(e.into());
@@ -923,7 +926,8 @@ impl Appwrite {
                 }
                 Err(e) if e.is_a(DbKind::Limit) => {
                     self.db_for_project.delete_document(META_ATTRIBUTES, column.id()).await?;
-                    return self.reject_with(r, "Attribute limit exceeded", e);
+                    let message = column_limit_message(&e);
+                    return self.reject_with(r, &message, e);
                 }
                 Err(e) => {
                     self.purge_table_caches(&database, &related, &db).await?;
@@ -1635,4 +1639,18 @@ fn flavor_of(r: &ResourceRef) -> Option<DatabaseFlavor> {
 /// `Database::PERMISSIONS`, what `Permission::aggregate()` expands to.
 fn default_permissions() -> Vec<PermissionType> {
     PermissionType::ALL.to_vec()
+}
+
+/// The status of a column the destination table's limits refused: the
+/// database library's message, which says whether the column count or the row
+/// width was hit and by how much, or the generic one when it has none.
+///
+/// PHP: `Appwrite::columnLimitMessage()`.
+fn column_limit_message(e: &utopia_database::Error) -> String {
+    let message = php_std::string::trim(e.message_bytes(), php_std::string::TRIM_CHARACTERS);
+    if message.is_empty() {
+        "Attribute limit exceeded".to_owned()
+    } else {
+        String::from_utf8_lossy(message).into_owned()
+    }
 }
