@@ -82,7 +82,7 @@ const workbenches = [
     engine: 'postgres',
     getActions: getPostgresSqlEditorActions,
   },
-] as const
+]
 
 async function renderWorkbench(engine: string) {
   const { SqlWorkbench } = (await import(
