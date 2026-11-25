@@ -1523,6 +1523,76 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
+     * A player shows nothing until the whole first segment has arrived, so
+     * the first one is short and the rest are full length. Every rendition
+     * of a video has to cut at the same times, or a quality switch would
+     * land in the middle of a segment.
+     */
+    public function testTheFirstSegmentIsShorterThanTheRest(): void
+    {
+        // 13 seconds long, so the short segment is followed by full ones.
+        $videoId = $this->createReadyVideo($this->getLargeVideoFile())['$id'];
+
+        $ladder = [];
+        foreach (['360p', '720p'] as $profile) {
+            $ladder[$profile] = $this->segmentDurations($videoId, $profile, 'cmaf');
+        }
+        $transport = $this->segmentDurations($videoId, '360p', 'hls');
+
+        foreach ($ladder + ['hls' => $transport] as $name => $durations) {
+            $this->assertGreaterThanOrEqual(3, \count($durations), $name . ' has too few segments to compare: ' . \implode(', ', $durations));
+            $this->assertEqualsWithDelta(2.0, $durations[0], 0.1, $name . ' starts with a full-length segment: ' . \implode(', ', $durations));
+            // The last one holds whatever is left of the video.
+            foreach (\array_slice($durations, 1, -1) as $duration) {
+                $this->assertEqualsWithDelta(4.0, $duration, 0.1, $name . ' has an odd segment after the first: ' . \implode(', ', $durations));
+            }
+        }
+
+        $this->assertEqualsWithDelta($ladder['360p'], $ladder['720p'], 0.05, 'renditions of one video cut at different times');
+    }
+
+    /**
+     * The lengths of a ready rendition's video segments, as its playlist lists them.
+     *
+     * @return list<float>
+     */
+    private function segmentDurations(string $videoId, string $profile, string $output): array
+    {
+        $create = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $this->profile($profile)['$id'],
+            'output' => $output,
+        ]);
+        $this->assertEquals(202, $create['headers']['status-code']);
+        $renditionId = $create['body']['$id'];
+        $this->assertSame('ready', $this->waitForRenditionTerminalState($videoId, $renditionId)['status'] ?? '');
+
+        // The variant line is the video; a separate audio track is listed as
+        // media, and which stream number it gets differs between outputs.
+        $master = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/' . $output . '/master.m3u8', $this->headers());
+        $this->assertEquals(200, $master['headers']['status-code']);
+        $uri = '';
+        foreach (\explode("\n", (string) $master['body']) as $raw) {
+            $line = \trim($raw);
+            if ($line !== '' && !\str_starts_with($line, '#') && \str_contains($line, '/renditions/' . $renditionId . '/')) {
+                $uri = $line;
+            }
+        }
+        $this->assertNotSame('', $uri, 'the master lists no variant for this rendition');
+
+        $playlist = $this->client->call(Client::METHOD_GET, $this->manifestRequestPath($uri), $this->headers());
+        $this->assertEquals(200, $playlist['headers']['status-code']);
+
+        $durations = [];
+        foreach (\explode("\n", (string) $playlist['body']) as $line) {
+            if (\str_starts_with($line, '#EXTINF:')) {
+                $durations[] = (float) \substr($line, \strlen('#EXTINF:'));
+            }
+        }
+
+        return $durations;
+    }
+
+    /**
      * A rendition parked while ffmpeg is still running is halted at the next
      * progress tick, and the segments already uploaded are removed. The
      * uploader is waited for before the delete, so nothing lands after it.
