@@ -19,6 +19,7 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
+use Utopia\Storage\Exception\NotFoundException;
 use Utopia\System\System;
 use Utopia\Validator\WhiteList;
 
@@ -112,12 +113,18 @@ class Get extends Base
 
         $path = $segment->getAttribute('path', '') . $segment->getAttribute('fileName', '');
 
-        if (!$deviceForVideos->exists($path)) {
+        $contentType = $output === self::OUTPUT_HLS ? 'video/mp2t' : 'video/iso.segment';
+
+        // Rows written before the size was stored have none; those still ask storage.
+        // A missing file answers 404 from this call or from the read below.
+        $size = (int) $segment->getAttribute('size', 0);
+        try {
+            if ($size === 0) {
+                $size = $deviceForVideos->getFileSize($path);
+            }
+        } catch (NotFoundException) {
             throw new Exception(Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND);
         }
-
-        $contentType = $output === self::OUTPUT_HLS ? 'video/mp2t' : 'video/iso.segment';
-        $size = $deviceForVideos->getFileSize($path);
 
         $response
             ->setContentType($contentType)
@@ -179,7 +186,7 @@ class Get extends Base
                 ->addHeader('Content-Range', 'bytes ' . $start . '-' . $end . '/' . $size)
                 ->addHeader('Content-Length', $end - $start + 1)
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT)
-                ->send((string) $deviceForVideos->read($path, $start, ($end - $start + 1)));
+                ->send($this->readSegment($deviceForVideos, $path, $start, ($end - $start + 1)));
 
             return;
         }
@@ -187,7 +194,8 @@ class Get extends Base
         if ($size > APP_STORAGE_READ_BUFFER) {
             for ($i = 0; $i < \ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
-                    (string) $deviceForVideos->read(
+                    $this->readSegment(
+                        $deviceForVideos,
                         $path,
                         ($i * MAX_OUTPUT_CHUNK_SIZE),
                         \min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
@@ -199,6 +207,19 @@ class Get extends Base
             return;
         }
 
-        $response->send((string) $deviceForVideos->read($path));
+        $response->send($this->readSegment($deviceForVideos, $path));
+    }
+
+    /**
+     * A stored size skips the existence check, so a file removed after the
+     * encode is discovered here. That is the same 404 as a missing row.
+     */
+    private function readSegment(Device $device, string $path, int $offset = 0, ?int $length = null): string
+    {
+        try {
+            return (string) $device->read($path, $offset, $length);
+        } catch (NotFoundException) {
+            throw new Exception(Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND);
+        }
     }
 }

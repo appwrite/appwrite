@@ -268,6 +268,12 @@ class Specs extends Action
                     'description' => 'The user agent string of the client that made the request',
                     'in' => 'header',
                 ],
+                'ForwardedIP' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Forwarded-IP',
+                    'description' => 'The IP address of the client that made the request',
+                    'in' => 'header',
+                ],
                 'Cookie' => [
                     'type' => 'apiKey',
                     'name' => 'Cookie',

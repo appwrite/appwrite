@@ -1421,6 +1421,31 @@ export const heSharedUiDictionary: Record<string, string> = {
   'App key copied': 'מפתח האפליקציה הועתק',
   'Load more': 'טעינת עוד',
   'Loading more failed. Try again.': 'טעינת פריטים נוספים נכשלה. נסו שוב.',
+  'Browse Init events': 'עיון באירועי Init',
+  'Switch between past and upcoming Init launch weeks.':
+    'מעבר בין שבועות השקה קודמים ועתידיים של Init.',
+  Past: 'עבר',
+  Upcoming: 'בקרוב',
+  'AUGUST 31 - SEPTEMBER 4': '31 באוגוסט - 4 בספטמבר',
+  'NOVEMBER 30 - DECEMBER 4': '30 בנובמבר - 4 בדצמבר',
+  'Starts in': 'מתחיל בעוד',
+  'Join us on our biggest Init ever. 5 days, 5 new product launches. It will be electric.':
+    'הצטרפו ל-Init הגדול ביותר שלנו אי פעם. 5 ימים, 5 השקות מוצר חדשות. זה הולך להיות מחשמל.',
+  "Init 5 is live. Catch today's reveal and the launch stream.":
+    'Init 5 באוויר. אל תפספסו את החשיפה של היום ואת שידור ההשקה.',
+  'Init 5 is a wrap. Explore every launch and rewatch the streams.':
+    'Init 5 הסתיים. גלו כל השקה וצפו שוב בשידורים.',
+  'Introducing Appwrite Analytics': 'מציגים את Appwrite Analytics',
+  'Introducing Appwrite Videos': 'מציגים את Appwrite Videos',
+  'Introducing Appwrite Zero': 'מציגים את Appwrite Zero',
+  'Introducing Appwrite Monitors & Appwrite Beep':
+    'מציגים את Appwrite Monitors ואת Appwrite Beep',
+  'Introducing Appwrite Reviews': 'מציגים את Appwrite Reviews',
+  'Ask us anything': 'שאלו אותנו הכול',
+  'Bring your questions about every Init 5 launch. The team answers live on r/appwrite.':
+    'הביאו את השאלות שלכם על כל השקה של Init 5. הצוות עונה בשידור חי ב-r/appwrite.',
+  'The team answered your questions about every Init 5 launch on r/appwrite.':
+    'הצוות ענה על השאלות שלכם על כל השקה של Init 5 ב-r/appwrite.',
   Previews: 'תצוגות מקדימות',
   'Early access. Saved in this browser.': 'גישה מוקדמת. נשמר בדפדפן הזה.',
   'Appwrite Analytics': 'Appwrite Analytics',

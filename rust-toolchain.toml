@@ -1,0 +1,6 @@
+# The toolchain every build of the workspace uses: rustup reads this file, so the
+# Dockerfile, CI and appwrite-labs/cloud (which builds crates/ from its vendored
+# copy of this repository) need no version of their own.
+[toolchain]
+channel = "1.97.1"
+profile = "minimal"

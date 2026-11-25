@@ -27,6 +27,7 @@ use Appwrite\Event\Publisher\Video as VideoPublisher;
 use Appwrite\Execution\Store as ExecutionStore;
 use Appwrite\Exiftool\Client as ExiftoolClient;
 use Appwrite\Geo\Client as GeoClient;
+use Appwrite\Locking\Locks;
 use Appwrite\Logs\Adapter\ClickHouse as LogsClickHouse;
 use Appwrite\Logs\Logs;
 use Appwrite\Messaging\Adapter\Mqtt;
@@ -63,7 +64,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DNS\Lookup\Recursive;
 use Utopia\DSN\DSN;
-use Utopia\Lock\Distributed;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
 use Utopia\Pools\Group;
@@ -441,15 +441,7 @@ $container->set('cache', function (Registry $register, Telemetry $telemetry) {
 
 $container->set('cacheControlForStorage', fn () => fn (StorageCacheControl $config): string => \sprintf('private, max-age=%d', $config->maxAge));
 
-$container->set('locks', fn (Group $pools) => fn (string $key, int $ttl, callable $callback, float $timeout = 0.0): mixed => $pools->get('lock')->use(
-    function (\Redis $redis) use ($key, $ttl, $callback, $timeout): mixed {
-        // The callback receives the lock so long-running holders can refresh
-        // the lease and verify it is still theirs before committing work.
-        $lock = new Distributed($redis, $key, ttl: $ttl);
-
-        return $lock->withLock(fn () => $callback($lock), timeout: $timeout);
-    }
-), ['pools']);
+$container->set('locks', fn (Group $pools) => Locks::using($pools), ['pools']);
 
 // The lease spans the callback; throwing from it makes the pool reconnect the socket.
 $container->set('timelimit', fn (Group $pools) => fn (string $key, int $limit, int $seconds, callable $callback): mixed => $pools->get('abuse')->use(

@@ -99,7 +99,7 @@ const ATTRIBUTE_TITLES: Record<AnalyticsColumnFilterAttribute, string> = {
   botCategory: 'Bot category',
   trafficType: 'Traffic',
   eventName: 'Event',
-  userId: 'User ID',
+  userId: 'User',
 }
 
 /** `trafficType` takes only its labels (`human` / `bot`), so no pattern operators. */

@@ -12,6 +12,7 @@ class Monitors extends Base
         'metric',
         'enabled',
         'severity',
+        'escalationId',
         'status',
         'evaluatedAt',
         'triggeredAt',
