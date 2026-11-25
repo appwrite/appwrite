@@ -822,3 +822,60 @@ export function useCreateNHostMigration(
     },
   })
 }
+
+// ============================================================================
+// VERCEL SITES IMPORT
+// ============================================================================
+
+/**
+ * Projects of the Vercel account the console user connected. Fails with
+ * `user_identity_not_found` until an account is connected.
+ */
+export function useVercelProjects(
+  projectId: string | null | undefined,
+  region?: string,
+) {
+  return useQuery({
+    queryKey: ['migrations', 'vercel', 'projects', projectId, region],
+    queryFn: () =>
+      sdk.forProject(projectId!, region).migrations.listVercelProjects(),
+    enabled: !!projectId,
+    retry: false,
+    staleTime: DEFAULT_STALE_TIME,
+  })
+}
+
+/** A Vercel project with its production environment variables. */
+export function useGetVercelProject(
+  projectId: string | null | undefined,
+  region?: string,
+) {
+  return useMutation({
+    mutationFn: async (vercelProjectId: string) => {
+      if (!projectId) throw new Error('Project ID is required')
+      return await sdk
+        .forProject(projectId, region)
+        .migrations.getVercelProject({ projectId: vercelProjectId })
+    },
+  })
+}
+
+export function useDeleteVercelOAuth2(
+  projectId: string | null | undefined,
+  region?: string,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      if (!projectId) throw new Error('Project ID is required')
+      return await sdk
+        .forProject(projectId, region)
+        .migrations.deleteVercelOAuth2()
+    },
+    onSuccess: () => {
+      queryClient.removeQueries({
+        queryKey: ['migrations', 'vercel', 'projects', projectId],
+      })
+    },
+  })
+}
