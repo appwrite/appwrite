@@ -7,7 +7,7 @@ use Tests\Compat\Benchmarks;
 use Tests\Compat\Session;
 
 /**
- * PHP engine functions, called directly: the oracle for crates/support/php-std.
+ * PHP engine functions, called directly: the oracle for crates/utopia/php-std.
  * Operations live in ops/<area>.php, one file per area, each returning
  * `name => callable(array $args, Session $session): mixed`.
  */

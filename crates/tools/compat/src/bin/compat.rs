@@ -297,7 +297,7 @@ fn real_main(args: &[String]) -> Result<bool, String> {
                 cli.positional[1..]
                     .iter()
                     .map(|c| {
-                        ["crates/utopia", "crates/support"]
+                        ["crates/utopia"]
                             .iter()
                             .map(|g| format!("{g}/{c}"))
                             .find(|d| !c.contains('/') && root.join(d).join("Cargo.toml").is_file())
@@ -305,7 +305,7 @@ fn real_main(args: &[String]) -> Result<bool, String> {
                     })
                     .collect()
             } else {
-                ["crates/utopia", "crates/support"]
+                ["crates/utopia"]
                     .iter()
                     .flat_map(|g| {
                         std::fs::read_dir(root.join(g))
@@ -322,7 +322,7 @@ fn real_main(args: &[String]) -> Result<bool, String> {
         "sync" => {
             let mut ok = true;
             for lib in need_lib(&cli)? {
-                let crate_dir = ["crates/utopia", "crates/support"]
+                let crate_dir = ["crates/utopia"]
                     .iter()
                     .map(|g| format!("{g}/{lib}"))
                     .find(|d| root.join(d).join("Cargo.toml").is_file())

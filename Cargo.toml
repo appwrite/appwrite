@@ -4,11 +4,9 @@
 # kept out of `packages/` (that directory is reserved for Composer packages and
 # is wired into the PHP CI, autoloader and Docker image).
 #
-#   crates/utopia/<name>    Generic Utopia libraries (Rust equivalents of packages/<name>).
-#                           Loaded here by path; mirrored read-only to github.com/utopia-rs/<name>.
-#   crates/appwrite/<name>  Appwrite domain crates: core, service modules, server binary (not mirrored)
-#   crates/support/<name>   Support crates shared by Utopia crates: php-std (PHP engine semantics),
-#                           mirrored to github.com/utopia-rs/php-std
+#   crates/utopia/<name>    Generic Utopia libraries (Rust equivalents of packages/<name>), and
+#                           php-std, the PHP engine semantics they share.
+#   crates/appwrite/<name>  Appwrite domain crates: core, service modules, server binary (not published)
 #   crates/extension        The `utopia` PHP extension: Utopia crates as the PHP classes of
 #                           packages/<name>, so PHP runs the Rust implementation.
 #   crates/tools/<name>     Development tools (not shipped): compat, the PHP/Rust differential tester
@@ -18,7 +16,7 @@
 # standard each Utopia crate is converted to.
 [workspace]
 resolver = "3"
-members = ["crates/utopia/*", "crates/appwrite/*", "crates/support/*", "crates/tools/*", "crates/extension", "example"]
+members = ["crates/utopia/*", "crates/appwrite/*", "crates/tools/*", "crates/extension", "example"]
 
 [workspace.package]
 version = "0.1.0"
@@ -26,7 +24,8 @@ edition = "2024"
 rust-version = "1.97"
 license = "BSD-3-Clause"
 repository = "https://github.com/appwrite/appwrite"
-publish = false
+# The crates under crates/utopia are published to crates.io. See rfc/monorepo.md.
+publish = true
 
 # The license the Utopia crates' mirrors on github.com/utopia-rs are published under.
 # bin/monorepo writes it into each mirror's Cargo.toml, LICENSE and README; the source
@@ -35,8 +34,8 @@ publish = false
 mirror-license = "MIT"
 
 [workspace.dependencies]
-# Support crates
-php-std = { path = "crates/support/php-std" }
+# The version is what a published crate asks crates.io for; this checkout uses the path.
+php-std = { package = "utopia-php-std", path = "crates/utopia/php-std", version = "0.1.0" }
 
 # Utopia crates
 utopia-async = { path = "crates/utopia/async" }
@@ -126,7 +125,7 @@ brotli = { version = "9", default-features = false, features = ["std"] }
 # C brotli 1.2.1, built from source and linked statically: the library PHP's ext-brotli links.
 brotlic-sys = "0.2.5"
 bytes = "1"
-# Compiles the PCRE2 10.44 sources php-std vendors (crates/support/php-std/pcre2).
+# Compiles the PCRE2 10.44 sources php-std vendors (crates/utopia/php-std/pcre2).
 cc = "1"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
 crc32fast = "1"

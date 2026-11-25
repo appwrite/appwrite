@@ -35,8 +35,8 @@ struct Crate {
     package: String,
 }
 
-/// Times each crate of `libs` (every crate in `crates/utopia` and
-/// `crates/support` when empty), prints the times, and with `write` adds the
+/// Times each crate of `libs` (every crate in `crates/utopia` when empty),
+/// prints the times, and with `write` adds the
 /// run to [`FILE`].
 pub fn run(root: &Path, libs: &[String], write: bool) -> Result<bool, String> {
     let crates = crates(root, libs)?;
@@ -138,11 +138,10 @@ pub fn latest(root: &Path) -> Option<Value> {
     }))
 }
 
-/// The crates to time: those of `libs`, or every crate of `crates/utopia`
-/// and `crates/support`.
+/// The crates to time: those of `libs`, or every crate of `crates/utopia`.
 fn crates(root: &Path, libs: &[String]) -> Result<Vec<Crate>, String> {
     let mut found = BTreeMap::new();
-    for group in ["crates/utopia", "crates/support"] {
+    for group in ["crates/utopia"] {
         for entry in std::fs::read_dir(root.join(group)).map_err(|e| format!("{group}: {e}"))?.flatten() {
             let slug = entry.file_name().to_string_lossy().into_owned();
             let Ok(manifest) = std::fs::read_to_string(entry.path().join("Cargo.toml")) else { continue };
@@ -157,9 +156,7 @@ fn crates(root: &Path, libs: &[String]) -> Result<Vec<Crate>, String> {
     if libs.is_empty() {
         return Ok(found.into_values().collect());
     }
-    libs.iter()
-        .map(|l| found.remove(l).ok_or_else(|| format!("{l}: no crate in crates/utopia or crates/support")))
-        .collect()
+    libs.iter().map(|l| found.remove(l).ok_or_else(|| format!("{l}: no crate in crates/utopia"))).collect()
 }
 
 /// The units of a `cargo build --timings` report: the `UNIT_DATA` array its

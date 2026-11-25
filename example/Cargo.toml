@@ -5,7 +5,8 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-publish.workspace = true
+# Stays in this repository: only crates/utopia is published.
+publish = false
 
 [dependencies]
 utopia-async.workspace = true

@@ -669,7 +669,7 @@ fn int_consts(text: &str, prefix: &str) -> Vec<(String, i64)> {
 /// `filter_var()`'s filters: each filter constant (aliases joined), with the
 /// cases and fuzz inputs that use it.
 fn filters(root: &Path, op: &spec::OpSpec, cases: &[(String, Value)]) -> Vec<Value> {
-    let text = std::fs::read_to_string(root.join("crates/support/php-std/src/filter.rs")).unwrap_or_default();
+    let text = std::fs::read_to_string(root.join("crates/utopia/php-std/src/filter.rs")).unwrap_or_default();
     let mut names: BTreeMap<i64, Vec<String>> = BTreeMap::new();
     for (name, value) in int_consts(&text, "FILTER_") {
         let flag = ["FILTER_FLAG_", "FILTER_REQUIRE_", "FILTER_FORCE_", "FILTER_NULL_", "FILTER_THROW_"];

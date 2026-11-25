@@ -1,6 +1,6 @@
 ## Set up
 
-The crates live in [appwrite/appwrite](https://github.com/appwrite/appwrite): every Utopia crate in `crates/utopia/<name>`, and `php-std` in `crates/support/php-std`. Each repository under [utopia-rs](https://github.com/utopia-rs) is a read-only mirror of one of those directories, so open issues and pull requests against appwrite/appwrite. Run every command on this page from the root of a checkout.
+The crates live in [appwrite/appwrite](https://github.com/appwrite/appwrite): every Utopia crate in `crates/utopia/<name>`, and `php-std` in `crates/utopia/php-std`. Each repository under [utopia-rs](https://github.com/utopia-rs) is a read-only mirror of one of those directories, so open issues and pull requests against appwrite/appwrite. Run every command on this page from the root of a checkout.
 
 You need Rust 1.97, the version CI builds and lints with. Comparing with PHP and running benchmarks also needs Docker.
 

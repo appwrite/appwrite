@@ -458,10 +458,10 @@ pub struct Usage {
 }
 
 impl Usage {
-    /// Reads php-std at `crates/support/php-std` and its users under
+    /// Reads php-std at `crates/utopia/php-std` and its users under
     /// `crates/utopia` and `crates/appwrite` (as `appwrite-<name>`).
     pub fn scan(root: &Path) -> Usage {
-        let mut usage = Usage::index(&root.join("crates/support/php-std/src"));
+        let mut usage = Usage::index(&root.join("crates/utopia/php-std/src"));
         let mut crates: Vec<Krate> = Vec::new();
         for (group, prefix) in [("crates/utopia", ""), ("crates/appwrite", "appwrite-")] {
             for dir in subdirs(&root.join(group)) {
@@ -1131,20 +1131,20 @@ mod tests {
 
     const PHP_STD: &[(&str, &str)] = &[
         (
-            "crates/support/php-std/src/lib.rs",
+            "crates/utopia/php-std/src/lib.rs",
             "pub mod string;\npub mod types;\npub mod igbinary;\npub use types::Value;\n",
         ),
         (
-            "crates/support/php-std/src/string.rs",
+            "crates/utopia/php-std/src/string.rs",
             "pub fn trim(s: &[u8]) -> &[u8] { strip(s) }\n\
              fn strip(s: &[u8]) -> &[u8] { s }\n\
              pub fn strrev(s: &[u8]) -> Vec<u8> { s.to_vec() }\n\
              pub fn empty(s: &[u8]) -> bool { s.is_empty() }\n\
              #[cfg(test)]\nmod tests { #[test] fn t() { super::strrev(b\"\"); } }\n",
         ),
-        ("crates/support/php-std/src/types.rs", "pub mod value;\npub use value::Value;\n"),
+        ("crates/utopia/php-std/src/types.rs", "pub mod value;\npub use value::Value;\n"),
         (
-            "crates/support/php-std/src/types/value.rs",
+            "crates/utopia/php-std/src/types/value.rs",
             "use crate::string::trim;\n\
              pub struct Value;\n\
              impl Value {\n\
@@ -1155,7 +1155,7 @@ mod tests {
              }\n",
         ),
         (
-            "crates/support/php-std/src/igbinary.rs",
+            "crates/utopia/php-std/src/igbinary.rs",
             "pub fn unserialize(b: &[u8]) -> Result<crate::Value, Error> { Err(Error) }\n\
              pub struct Error;\n\
              impl Error { pub fn php_class(&self) -> &str { \"\" } }\n",

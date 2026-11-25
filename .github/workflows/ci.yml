@@ -1520,7 +1520,7 @@ jobs:
         if: matrix.shard == 'integrations'
         env:
           COMPAT_IMAGE: compat-cache-php
-        run: bin/compat examples $(ls crates/utopia | grep -vxE 'agents|dsn|image|locale|user-agent|validators') $(ls crates/support)
+        run: bin/compat examples $(ls crates/utopia | grep -vxE 'agents|dsn|image|locale|user-agent|validators')
 
       - name: Stop library services
         if: always()

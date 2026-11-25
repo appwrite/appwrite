@@ -26,6 +26,8 @@ parameters:
     # The migration suite's test doubles, which the compat migration adapter extends
     - packages/migration/tests/Adapters/MockSource.php
     - packages/migration/tests/Adapters/MockDestination.php
+    # AppwriteColumnLimitTest's LimitedMemoryAdapter, which the compat migration adapter builds
+    - packages/migration/tests/Destinations/AppwriteColumnLimitTest.php
   excludePaths:
     - tests/resources
     # Written against utopia-php/agents before its redesign (models, tools and a

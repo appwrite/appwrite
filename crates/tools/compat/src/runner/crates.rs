@@ -4,7 +4,7 @@
 //!
 //! - the catalog: every PHP package in `packages/`, the `utopia-php/*`
 //!   Composer dependencies not absorbed yet, and every crate in
-//!   `crates/utopia` and `crates/support`;
+//!   `crates/utopia`;
 //! - its category: `extra.utopia.category` in the package's `composer.json`,
 //!   `[package.metadata.utopia] category` in a Rust-only crate's
 //!   `Cargo.toml`, or `crates/categories.json` for a dependency outside the

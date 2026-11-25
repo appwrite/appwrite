@@ -137,7 +137,6 @@ dependencies = [
  "hex",
  "hmac 0.12.1",
  "http",
- "php-std",
  "serde_json",
  "sha1 0.10.7",
  "sha2 0.10.9",
@@ -150,6 +149,7 @@ dependencies = [
  "utopia-domains",
  "utopia-emails",
  "utopia-http",
+ "utopia-php-std",
  "utopia-query",
  "utopia-system",
  "utopia-validators",
@@ -173,7 +173,6 @@ dependencies = [
  "hyper-rustls",
  "hyper-util",
  "md-5 0.10.6",
- "php-std",
  "rustls",
  "serde",
  "serde_json",
@@ -191,6 +190,7 @@ dependencies = [
  "utopia-http",
  "utopia-locale",
  "utopia-lock",
+ "utopia-php-std",
  "utopia-pools",
  "utopia-query",
  "utopia-queue",
@@ -227,7 +227,6 @@ dependencies = [
  "hex",
  "indexmap",
  "md-5 0.10.6",
- "php-std",
  "rand 0.10.3",
  "redis",
  "serde",
@@ -241,6 +240,7 @@ dependencies = [
  "utopia-http",
  "utopia-image",
  "utopia-lock",
+ "utopia-php-std",
  "utopia-query",
  "utopia-storage",
  "utopia-system",
@@ -254,7 +254,6 @@ dependencies = [
  "appwrite-core",
  "async-trait",
  "chrono",
- "php-std",
  "serde_json",
  "tracing",
  "utopia-async",
@@ -263,6 +262,7 @@ dependencies = [
  "utopia-domains",
  "utopia-emails",
  "utopia-http",
+ "utopia-php-std",
  "utopia-query",
  "utopia-validators",
 ]
@@ -275,7 +275,6 @@ dependencies = [
  "async-trait",
  "bytes",
  "futures-util",
- "php-std",
  "serde_json",
  "tracing",
  "utopia-async",
@@ -283,6 +282,7 @@ dependencies = [
  "utopia-database",
  "utopia-emails",
  "utopia-http",
+ "utopia-php-std",
  "utopia-query",
  "utopia-validators",
 ]
@@ -883,7 +883,6 @@ dependencies = [
  "mysql_async",
  "openssl",
  "p256",
- "php-std",
  "proc-macro2",
  "quote",
  "redis",
@@ -928,6 +927,7 @@ dependencies = [
  "utopia-nats",
  "utopia-openapi",
  "utopia-orchestration",
+ "utopia-php-std",
  "utopia-platform",
  "utopia-pools",
  "utopia-query",
@@ -3165,37 +3165,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "php-std"
-version = "0.1.0"
-dependencies = [
- "argon2",
- "blake2",
- "blowfish",
- "bytes",
- "cc",
- "foldhash",
- "getrandom 0.3.4",
- "gost94",
- "hashbrown 0.17.1",
- "icu_normalizer",
- "icu_properties",
- "indexmap",
- "md-5 0.10.6",
- "md2",
- "ripemd",
- "rustix",
- "ryu",
- "serde_json",
- "sha1 0.10.7",
- "sha2 0.10.9",
- "sha3",
- "unsafe-libyaml",
- "whirlpool",
- "xxhash-rust",
- "zeroize",
-]
-
-[[package]]
 name = "pin-project"
 version = "1.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4936,7 +4905,6 @@ dependencies = [
  "hyper",
  "hyper-rustls",
  "hyper-util",
- "php-std",
  "redis",
  "rustls",
  "sha2 0.10.9",
@@ -4944,6 +4912,7 @@ dependencies = [
  "utopia-async",
  "utopia-auth",
  "utopia-database",
+ "utopia-php-std",
 ]
 
 [[package]]
@@ -4953,12 +4922,12 @@ dependencies = [
  "chrono",
  "getrandom 0.3.4",
  "hex",
- "php-std",
  "sha1 0.10.7",
  "thiserror 2.0.21",
  "utopia-async",
  "utopia-client",
  "utopia-console",
+ "utopia-php-std",
 ]
 
 [[package]]
@@ -4994,13 +4963,13 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "http",
- "php-std",
  "serde_json",
  "thiserror 2.0.21",
  "utopia-async",
  "utopia-cache",
  "utopia-client",
  "utopia-database",
+ "utopia-php-std",
  "utopia-query",
  "utopia-validators",
 ]
@@ -5019,11 +4988,11 @@ dependencies = [
  "num-integer",
  "openssl",
  "p256",
- "php-std",
  "rand 0.10.3",
  "serde_json",
  "sha2 0.10.9",
  "thiserror 2.0.21",
+ "utopia-php-std",
  "zeroize",
 ]
 
@@ -5031,8 +5000,8 @@ dependencies = [
 name = "utopia-balancer"
 version = "0.1.0"
 dependencies = [
- "php-std",
  "thiserror 2.0.21",
+ "utopia-php-std",
  "utopia-telemetry",
 ]
 
@@ -5055,7 +5024,6 @@ dependencies = [
  "getrandom 0.3.4",
  "hex",
  "indexmap",
- "php-std",
  "postcard",
  "redis",
  "rustix",
@@ -5065,6 +5033,7 @@ dependencies = [
  "tracing",
  "utopia-async",
  "utopia-circuit-breaker",
+ "utopia-php-std",
  "utopia-pools",
  "utopia-storage",
  "utopia-telemetry",
@@ -5076,13 +5045,13 @@ version = "0.1.0"
 dependencies = [
  "getrandom 0.3.4",
  "hmac 0.12.1",
- "php-std",
  "quick-xml",
  "sha2 0.10.9",
  "thiserror 2.0.21",
  "utopia-async",
  "utopia-balancer",
  "utopia-client",
+ "utopia-php-std",
 ]
 
 [[package]]
@@ -5090,11 +5059,11 @@ name = "utopia-circuit-breaker"
 version = "0.1.0"
 dependencies = [
  "hex",
- "php-std",
  "redis",
  "sha1 0.10.7",
  "thiserror 2.0.21",
  "utopia-async",
+ "utopia-php-std",
  "utopia-telemetry",
 ]
 
@@ -5104,10 +5073,10 @@ version = "0.1.0"
 dependencies = [
  "futures-util",
  "indexmap",
- "php-std",
  "serde_json",
  "utopia-async",
  "utopia-di",
+ "utopia-php-std",
  "utopia-servers",
  "utopia-validators",
 ]
@@ -5120,11 +5089,11 @@ dependencies = [
  "bytes",
  "flate2",
  "getrandom 0.3.4",
- "php-std",
  "rustls",
  "thiserror 2.0.21",
  "tokio-rustls",
  "utopia-async",
+ "utopia-php-std",
  "utopia-pools",
  "utopia-span",
  "webpki-roots 1.0.10",
@@ -5139,8 +5108,8 @@ dependencies = [
  "libz-sys",
  "lz4-sys",
  "lzma-rust2 0.22.0",
- "php-std",
  "thiserror 2.0.21",
+ "utopia-php-std",
  "zstd-safe",
 ]
 
@@ -5148,8 +5117,8 @@ dependencies = [
 name = "utopia-config"
 version = "0.1.0"
 dependencies = [
- "php-std",
  "thiserror 2.0.21",
+ "utopia-php-std",
  "utopia-validators",
 ]
 
@@ -5157,10 +5126,10 @@ dependencies = [
 name = "utopia-console"
 version = "0.1.0"
 dependencies = [
- "php-std",
  "serde_json",
  "thiserror 2.0.21",
  "utopia-async",
+ "utopia-php-std",
  "utopia-validators",
 ]
 
@@ -5177,7 +5146,6 @@ dependencies = [
  "indexmap",
  "md-5 0.10.6",
  "mysql_async",
- "php-std",
  "postgres-protocol",
  "redis",
  "rusqlite",
@@ -5186,6 +5154,7 @@ dependencies = [
  "utopia-async",
  "utopia-cache",
  "utopia-mongo",
+ "utopia-php-std",
  "utopia-pools",
  "utopia-query",
  "utopia-validators",
@@ -5197,8 +5166,8 @@ name = "utopia-detector"
 version = "0.1.0"
 dependencies = [
  "memchr",
- "php-std",
  "thiserror 2.0.21",
+ "utopia-php-std",
 ]
 
 [[package]]
@@ -5218,12 +5187,12 @@ dependencies = [
  "http-body-util",
  "hyper",
  "hyper-util",
- "php-std",
  "rustls",
  "serde_json",
  "tokio-rustls",
  "utopia-async",
  "utopia-domains",
+ "utopia-php-std",
  "utopia-telemetry",
  "utopia-validators",
 ]
@@ -5239,11 +5208,11 @@ dependencies = [
  "hyper-rustls",
  "hyper-util",
  "indexmap",
- "php-std",
  "rustls",
  "serde_json",
  "thiserror 2.0.21",
  "utopia-async",
+ "utopia-php-std",
  "utopia-validators",
 ]
 
@@ -5251,8 +5220,8 @@ dependencies = [
 name = "utopia-dsn"
 version = "0.1.0"
 dependencies = [
- "php-std",
  "thiserror 2.0.21",
+ "utopia-php-std",
 ]
 
 [[package]]
@@ -5260,7 +5229,6 @@ name = "utopia-emails"
 version = "0.1.0"
 dependencies = [
  "indexmap",
- "php-std",
  "serde_json",
  "thiserror 2.0.21",
  "utopia-async",
@@ -5268,6 +5236,7 @@ dependencies = [
  "utopia-client",
  "utopia-console",
  "utopia-domains",
+ "utopia-php-std",
  "utopia-servers",
  "utopia-validators",
 ]
@@ -5279,7 +5248,6 @@ dependencies = [
  "ext-php-rs",
  "foldhash",
  "mimalloc",
- "php-std",
  "stacker",
  "utopia-auth",
  "utopia-balancer",
@@ -5291,6 +5259,7 @@ dependencies = [
  "utopia-emails",
  "utopia-image",
  "utopia-locale",
+ "utopia-php-std",
  "utopia-query",
  "utopia-user-agent",
  "utopia-validators",
@@ -5308,12 +5277,12 @@ dependencies = [
  "hyper",
  "indexmap",
  "libz-sys",
- "php-std",
  "serde_json",
  "thiserror 2.0.21",
  "tracing",
  "utopia-async",
  "utopia-compression",
+ "utopia-php-std",
  "utopia-system",
  "utopia-validators",
 ]
@@ -5329,10 +5298,10 @@ dependencies = [
  "jpeg-encoder",
  "kamadak-exif",
  "libheif-rs",
- "php-std",
  "png",
  "skrifa",
  "thiserror 2.0.21",
+ "utopia-php-std",
  "webp",
  "zeno",
 ]
@@ -5343,10 +5312,10 @@ version = "0.1.0"
 dependencies = [
  "foldhash",
  "indexmap",
- "php-std",
  "serde",
  "serde_json",
  "thiserror 2.0.21",
+ "utopia-php-std",
 ]
 
 [[package]]
@@ -5354,11 +5323,11 @@ name = "utopia-lock"
 version = "0.1.0"
 dependencies = [
  "getrandom 0.3.4",
- "php-std",
  "redis",
  "rustix",
  "thiserror 2.0.21",
  "utopia-async",
+ "utopia-php-std",
 ]
 
 [[package]]
@@ -5376,7 +5345,6 @@ dependencies = [
  "hyper",
  "indexmap",
  "openssl",
- "php-std",
  "rustls",
  "serde_json",
  "sha2 0.10.9",
@@ -5384,6 +5352,7 @@ dependencies = [
  "tokio-rustls",
  "utopia-async",
  "utopia-client",
+ "utopia-php-std",
  "utopia-smtp",
  "utopia-telemetry",
  "webpki-roots 1.0.10",
@@ -5398,7 +5367,6 @@ dependencies = [
  "bytes",
  "indexmap",
  "openssl",
- "php-std",
  "rustix",
  "serde_json",
  "thiserror 2.0.21",
@@ -5406,6 +5374,7 @@ dependencies = [
  "utopia-async",
  "utopia-client",
  "utopia-database",
+ "utopia-php-std",
  "utopia-query",
  "utopia-storage",
 ]
@@ -5421,10 +5390,10 @@ dependencies = [
  "hex",
  "hmac 0.12.1",
  "mongodb",
- "php-std",
  "sha2 0.10.9",
  "thiserror 2.0.21",
  "utopia-async",
+ "utopia-php-std",
 ]
 
 [[package]]
@@ -5434,12 +5403,12 @@ dependencies = [
  "foldhash",
  "futures-util",
  "indexmap",
- "php-std",
  "rustls",
  "thiserror 2.0.21",
  "tokio-rustls",
  "tokio-tungstenite",
  "utopia-async",
+ "utopia-php-std",
  "utopia-telemetry",
 ]
 
@@ -5452,7 +5421,6 @@ dependencies = [
  "bytes",
  "futures-util",
  "indexmap",
- "php-std",
  "rand 0.10.3",
  "ring",
  "rustls",
@@ -5462,6 +5430,7 @@ dependencies = [
  "thiserror 2.0.21",
  "tokio-rustls",
  "utopia-async",
+ "utopia-php-std",
  "webpki-roots 1.0.10",
 ]
 
@@ -5470,8 +5439,8 @@ name = "utopia-openapi"
 version = "0.1.0"
 dependencies = [
  "indexmap",
- "php-std",
  "thiserror 2.0.21",
+ "utopia-php-std",
 ]
 
 [[package]]
@@ -5481,10 +5450,41 @@ dependencies = [
  "bytes",
  "http-body-util",
  "hyper",
- "php-std",
  "thiserror 2.0.21",
  "utopia-async",
  "utopia-console",
+ "utopia-php-std",
+]
+
+[[package]]
+name = "utopia-php-std"
+version = "0.1.0"
+dependencies = [
+ "argon2",
+ "blake2",
+ "blowfish",
+ "bytes",
+ "cc",
+ "foldhash",
+ "getrandom 0.3.4",
+ "gost94",
+ "hashbrown 0.17.1",
+ "icu_normalizer",
+ "icu_properties",
+ "indexmap",
+ "md-5 0.10.6",
+ "md2",
+ "ripemd",
+ "rustix",
+ "ryu",
+ "serde_json",
+ "sha1 0.10.7",
+ "sha2 0.10.9",
+ "sha3",
+ "unsafe-libyaml",
+ "whirlpool",
+ "xxhash-rust",
+ "zeroize",
 ]
 
 [[package]]
@@ -5493,12 +5493,12 @@ version = "0.1.0"
 dependencies = [
  "futures-util",
  "indexmap",
- "php-std",
  "serde_json",
  "thiserror 2.0.21",
  "utopia-async",
  "utopia-cli",
  "utopia-http",
+ "utopia-php-std",
  "utopia-queue",
  "utopia-servers",
  "utopia-validators",
@@ -5508,9 +5508,9 @@ dependencies = [
 name = "utopia-pools"
 version = "0.1.0"
 dependencies = [
- "php-std",
  "thiserror 2.0.21",
  "utopia-async",
+ "utopia-php-std",
  "utopia-telemetry",
 ]
 
@@ -5519,8 +5519,8 @@ name = "utopia-query"
 version = "0.1.0"
 dependencies = [
  "md-5 0.10.6",
- "php-std",
  "thiserror 2.0.21",
+ "utopia-php-std",
 ]
 
 [[package]]
@@ -5533,7 +5533,6 @@ dependencies = [
  "getrandom 0.3.4",
  "hex",
  "indexmap",
- "php-std",
  "redis",
  "serde",
  "serde_json",
@@ -5543,6 +5542,7 @@ dependencies = [
  "utopia-dsn",
  "utopia-lock",
  "utopia-nats",
+ "utopia-php-std",
  "utopia-validators",
  "xxhash-rust",
 ]
@@ -5560,10 +5560,10 @@ version = "0.1.0"
 dependencies = [
  "getrandom 0.3.4",
  "indexmap",
- "php-std",
  "redis",
  "thiserror 2.0.21",
  "utopia-async",
+ "utopia-php-std",
  "utopia-telemetry",
 ]
 
@@ -5585,11 +5585,11 @@ version = "0.1.0"
 dependencies = [
  "getrandom 0.3.4",
  "indexmap",
- "php-std",
  "rustls",
  "thiserror 2.0.21",
  "tokio-rustls",
  "utopia-async",
+ "utopia-php-std",
  "webpki-roots 1.0.10",
 ]
 
@@ -5603,10 +5603,10 @@ dependencies = [
  "hyper",
  "hyper-rustls",
  "hyper-util",
- "php-std",
  "rustls",
  "thiserror 2.0.21",
  "utopia-async",
+ "utopia-php-std",
 ]
 
 [[package]]
@@ -5628,13 +5628,13 @@ dependencies = [
  "hyper-util",
  "indexmap",
  "md-5 0.10.6",
- "php-std",
  "quick-xml",
  "rand 0.10.3",
  "rustix",
  "sha2 0.10.9",
  "thiserror 2.0.21",
  "utopia-async",
+ "utopia-php-std",
  "utopia-telemetry",
  "utopia-validators",
 ]
@@ -5644,10 +5644,10 @@ name = "utopia-system"
 version = "0.1.0"
 dependencies = [
  "indexmap",
- "php-std",
  "rustix",
  "thiserror 2.0.21",
  "utopia-async",
+ "utopia-php-std",
 ]
 
 [[package]]
@@ -5659,11 +5659,11 @@ dependencies = [
  "hyper",
  "hyper-rustls",
  "hyper-util",
- "php-std",
  "rustls",
  "thiserror 2.0.21",
  "tower-service",
  "utopia-async",
+ "utopia-php-std",
  "webpki-roots 1.0.10",
 ]
 
@@ -5676,11 +5676,11 @@ dependencies = [
  "hex",
  "indexmap",
  "md-5 0.10.6",
- "php-std",
  "sha2 0.10.9",
  "utopia-async",
  "utopia-client",
  "utopia-database",
+ "utopia-php-std",
  "utopia-query",
  "utopia-validators",
 ]
@@ -5691,16 +5691,16 @@ version = "0.1.0"
 dependencies = [
  "aho-corasick",
  "memchr",
- "php-std",
+ "utopia-php-std",
 ]
 
 [[package]]
 name = "utopia-validators"
 version = "0.1.0"
 dependencies = [
- "php-std",
  "serde_json",
  "thiserror 2.0.21",
+ "utopia-php-std",
 ]
 
 [[package]]
@@ -5711,7 +5711,6 @@ dependencies = [
  "getrandom 0.3.4",
  "hmac 0.12.1",
  "openssl",
- "php-std",
  "ring",
  "serde_json",
  "sha1 0.10.7",
@@ -5721,6 +5720,7 @@ dependencies = [
  "utopia-cache",
  "utopia-client",
  "utopia-console",
+ "utopia-php-std",
 ]
 
 [[package]]
@@ -5732,10 +5732,10 @@ dependencies = [
  "http",
  "httparse",
  "indexmap",
- "php-std",
  "thiserror 2.0.21",
  "tokio-tungstenite",
  "utopia-async",
+ "utopia-php-std",
 ]
 
 [[package]]

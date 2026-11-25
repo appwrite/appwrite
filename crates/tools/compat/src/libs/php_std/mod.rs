@@ -1,5 +1,5 @@
 //! Compat adapter for `php-std`: PHP engine functions reimplemented in
-//! `crates/support/php-std`, checked against the real functions.
+//! `crates/utopia/php-std`, checked against the real functions.
 //!
 //! One module per area; each exposes `OPS` and `call`. Operation names are
 //! `<area>.<function>` (`value.is_numeric`, `filter.validate_url`).
