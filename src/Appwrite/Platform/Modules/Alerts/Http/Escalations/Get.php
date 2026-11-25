@@ -36,7 +36,7 @@ class Get extends Base
                 description: <<<EOT
                 Get one of your organization's escalations by its ID.
                 EOT,
-                auth: [AuthType::ADMIN, AuthType::ORGANIZATION],
+                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::ORGANIZATION],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
