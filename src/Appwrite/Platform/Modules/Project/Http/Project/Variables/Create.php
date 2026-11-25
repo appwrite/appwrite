@@ -13,6 +13,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Exception\Unique as UniqueException;
 use Utopia\Database\Id;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -92,8 +93,18 @@ class Create extends Action
 
         try {
             $variable = $dbForProject->createDocument('variables', $variable);
-        } catch (DuplicateException $th) {
-            throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
+        } catch (DuplicateException $exception) {
+            // Unique extends Duplicate. A repeated key (matched without regard
+            // to case when the database does) is the unique index; only a
+            // repeated document ID is a plain duplicate.
+            if ($exception instanceof UniqueException) {
+                throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
+            }
+
+            throw new Exception(
+                Exception::VARIABLE_ALREADY_EXISTS,
+                'Variable with the same ID already exists in this project. Try again with a different ID.'
+            );
         }
 
         foreach (['functions', 'sites'] as $collection) {
