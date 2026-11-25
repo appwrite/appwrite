@@ -2,7 +2,7 @@
 layout: post
 title: "Announcing domain updates for Appwrite Sites and Functions"
 description: Update a custom domain on Appwrite Sites or Functions to serve another branch or redirect somewhere new, without touching its DNS records or its certificate.
-date: 2026-11-27
+date: 2026-11-25
 cover: /images/blog/announcing-domain-updates/cover.avif
 timeToRead: 5
 author: aditya-oberai
@@ -34,7 +34,7 @@ Today, we are announcing **domain updates** for Appwrite Sites and Functions. Yo
 - **Switch between the active deployment and a branch.** Serve a branch while you test a release, then put the domain back on the active deployment.
 - **Change the branch.** Move a staging or preview domain from one branch to another.
 - **Edit a redirect.** Change the destination URL or the status code, for example from a temporary `302` to a permanent `301` once a move is final.
-- **No DNS changes, no new certificate.** The domain keeps its DNS records, verification status, and TLS certificate, so nothing changes at your DNS provider.
+- **Keep your DNS setup.** The domain keeps its DNS records, verification status, and TLS certificate, so there is nothing to change at your DNS provider.
 - **A guard against empty branches.** Appwrite refuses to move a domain to a branch with no successful deployment, so the domain never ends up with nothing to serve.
 - **The same changes from your server.** `updateSiteRule`, `updateFunctionRule`, and `updateRedirectRule` on the Proxy service make the same changes, and can also move a domain to another site or function in the same project.
 
@@ -42,18 +42,26 @@ Today, we are announcing **domain updates** for Appwrite Sites and Functions. Yo
 
 Open your site or function in the Appwrite Console and go to the **Domains** tab. Click the three-dots menu at the end of the domain's row, or right-click the row, and click **Update**.
 
+{% only_dark %}
+![The Domains tab of a site in the Appwrite Console with the row menu open on Update](/images/blog/announcing-domain-updates/dark/domain-menu.avif)
+{% /only_dark %}
+{% only_light %}
 ![The Domains tab of a site in the Appwrite Console with the row menu open on Update](/images/blog/announcing-domain-updates/domain-menu.avif)
+{% /only_light %}
 
 The **Update domain** dialog shows the domain and the same target options you saw when you added it: **Active deployment**, **Branch**, and **Redirect**. Pick the new target and click **Update**. The button stays disabled until you change something, and a redirect URL is checked before anything is sent.
 
+{% only_dark %}
+![The Update domain dialog with Branch selected and the main branch picked](/images/blog/announcing-domain-updates/dark/update-domain-branch.avif)
+{% /only_dark %}
+{% only_light %}
 ![The Update domain dialog with Branch selected and the main branch picked](/images/blog/announcing-domain-updates/update-domain-branch.avif)
+{% /only_light %}
 
 What you can change depends on how the domain was added:
 
-| Domain serves | What you can change |
-| ------------- | ------------------- |
-| Active deployment or a branch | Switch between the active deployment and a branch, or pick a different branch |
-| A redirect | The destination URL and the status code (`301`, `302`, `307`, or `308`) |
+- **A domain that serves the active deployment or a branch** can switch between the two, or move to a different branch.
+- **A redirect domain** can change its destination URL and its status code: `301`, `302`, `307`, or `308`.
 
 A domain can't switch between serving a deployment and redirecting. The option for the other kind stays visible but disabled, and its tooltip explains why. To make that change, delete the domain and add it again.
 
@@ -86,8 +94,6 @@ await proxy.updateSiteRule({
     siteId: '<SITE_ID>',
 });
 ```
-
-`siteId` can also be a different site in the same project, which moves the domain to that site without touching DNS. If the branch has no successful deployment, the call fails with `deployment_not_found` and the domain keeps serving what it served before. Each update fires the `rules.[ruleId].update` event and is recorded in your project's audit logs. The [Proxy API reference](/docs/partners/proxy#rule-updates) covers `updateFunctionRule` and `updateRedirectRule` as well.
 
 # When to update a domain
 
