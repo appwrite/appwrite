@@ -31,7 +31,7 @@ class Delete extends Base
             ->setHttpPath('/v1/organization/escalations/:escalationId')
             ->desc('Delete escalation')
             ->groups(['api', 'organization', 'escalations'])
-            ->label('scope', 'monitors.write')
+            ->label('scope', ['escalations.write', 'monitors.write'])
             ->label('audits.event', 'escalation.delete')
             ->label('audits.resource', 'escalation/{request.escalationId}')
             ->label('sdk', new Method(
@@ -41,7 +41,7 @@ class Delete extends Base
                 description: <<<EOT
                 Delete an escalation. An escalation that a monitor uses cannot be deleted: move the monitor to another escalation or to `notify` roles first. Open alerts keep the steps they started with.
                 EOT,
-                auth: [AuthType::ADMIN, AuthType::ORGANIZATION],
+                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::ORGANIZATION],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_NOCONTENT,

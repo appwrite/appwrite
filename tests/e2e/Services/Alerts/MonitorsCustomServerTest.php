@@ -40,7 +40,7 @@ final class MonitorsCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-        $update = $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $read, ['name' => 'Renamed']);
+        $update = $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $monitorId, $read, ['name' => 'Renamed']);
         $this->assertSame(401, $update['headers']['status-code']);
 
         $none = [
@@ -74,7 +74,7 @@ final class MonitorsCustomServerTest extends Scope
         $this->assertSame(404, $monitor['headers']['status-code']);
         $this->assertSame('monitor_not_found', $monitor['body']['type']);
 
-        $update = $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $headers, ['name' => 'Taken']);
+        $update = $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $monitorId, $headers, ['name' => 'Taken']);
         $this->assertSame(404, $update['headers']['status-code']);
 
         $deleted = $this->client->call(Client::METHOD_DELETE, '/monitors/' . $monitorId, $headers);

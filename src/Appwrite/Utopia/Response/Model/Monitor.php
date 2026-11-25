@@ -7,7 +7,6 @@ use Appwrite\Alert\Status;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Config\Config;
-use Utopia\Database\Document;
 
 class Monitor extends Model
 {
@@ -116,12 +115,6 @@ class Monitor extends Model
                 'enum' => Severity::values(),
                 'enumSDKName' => 'MonitorSeverity',
             ])
-            ->addRule('critical', [
-                'type' => self::TYPE_BOOLEAN,
-                'description' => 'Deprecated: use `severity`. Whether the monitor\'s severity is `critical`.',
-                'default' => false,
-                'example' => false,
-            ])
             ->addRule('status', [
                 'type' => self::TYPE_ENUM,
                 'description' => 'Whether the monitor is firing, as of its last evaluation.',
@@ -167,15 +160,5 @@ class Monitor extends Model
     public function getType(): string
     {
         return Response::MODEL_MONITOR;
-    }
-
-    /**
-     * `critical` predates `severity` and stays for clients that read it.
-     */
-    public function filter(Document $document): Document
-    {
-        $document->setAttribute('critical', $document->getAttribute('severity') === Severity::Critical->value);
-
-        return $document;
     }
 }

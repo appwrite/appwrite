@@ -818,7 +818,17 @@ class V25 extends Migration
             $retired = ['devKeys.read', 'devKeys.write', 'assistant.read'];
             $scopes = $document->getAttribute('scopes', []);
             if (\is_array($scopes) && \array_intersect($scopes, $retired) !== []) {
-                $document->setAttribute('scopes', \array_values(\array_diff($scopes, $retired)));
+                $scopes = \array_values(\array_diff($scopes, $retired));
+                $document->setAttribute('scopes', $scopes);
+            }
+
+            // Organization keys reached escalations through `monitors.*` before escalations had their own scopes.
+            if (\is_array($scopes) && $document->getAttribute('resourceType') === 'teams') {
+                $granted = \array_keys(\array_intersect(['escalations.read' => 'monitors.read', 'escalations.write' => 'monitors.write'], $scopes));
+                $missing = \array_diff($granted, $scopes);
+                if ($missing !== []) {
+                    $document->setAttribute('scopes', \array_values(\array_merge($scopes, $missing)));
+                }
             }
 
             return $document;

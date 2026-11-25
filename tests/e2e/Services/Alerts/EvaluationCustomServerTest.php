@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Alerts;
 
+use Appwrite\Alert\Escalation;
 use Appwrite\Alert\Meter;
 use Appwrite\Alert\Unsubscribe;
 use Appwrite\Bus\Events\ExecutionCompleted;
@@ -121,8 +122,9 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame('firing', $alert['status']);
         // The alert keeps what the monitor was when it fired.
         $this->assertSame('critical', $alert['severity']);
-        $this->assertTrue($alert['critical']);
+        $this->assertArrayNotHasKey('critical', $alert);
         $this->assertSame($monitorId, $alert['monitorId']);
+        $this->assertSame($this->getProject()['$id'], $alert['projectId']);
         $this->assertSame($name, $alert['name']);
         $this->assertSame('usage', $alert['type']);
         $this->assertSame('project', $alert['resourceType']);
@@ -135,6 +137,14 @@ final class EvaluationCustomServerTest extends Scope
             Query::equal('monitorId', [$monitorId])->toString(),
             Query::equal('status', ['firing'])->toString(),
         ])['alerts'], '$id'));
+        $this->assertSame([$firing['alertId']], \array_column($this->listAlerts([
+            Query::equal('monitorId', [$monitorId])->toString(),
+            Query::equal('severity', ['critical'])->toString(),
+        ])['alerts'], '$id'));
+        $this->assertSame([], $this->listAlerts([
+            Query::equal('monitorId', [$monitorId])->toString(),
+            Query::equal('severity', ['warning'])->toString(),
+        ])['alerts']);
 
         // The project's webhook receives the event, signed like every project webhook, with the alert as its payload.
         $delivery = $this->waitForEvent($webhook['path'], $monitorId, 'firing');
@@ -224,6 +234,10 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame('', $undone['acknowledgedBy']);
         $this->assertSame('', $undone['acknowledgedByName']);
         $this->waitForAcknowledgement($acknowledgements['path'], $firing['alertId'], 'unacknowledged');
+        $this->assertSame([], $this->listAlerts([
+            Query::equal('monitorId', [$monitorId])->toString(),
+            Query::isNotNull('acknowledgedAt')->toString(),
+        ])['alerts']);
         $this->assertSame('firing', $this->bellNotifications($name)[0]['status']);
 
         // An API key acknowledges as nobody in particular.
@@ -231,6 +245,10 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertNotNull($byKey['acknowledgedAt']);
         $this->assertSame('', $byKey['acknowledgedBy']);
         $this->assertSame('', $byKey['acknowledgedByName']);
+        $this->assertSame([$firing['alertId']], \array_column($this->listAlerts([
+            Query::equal('monitorId', [$monitorId])->toString(),
+            Query::isNotNull('acknowledgedAt')->toString(),
+        ])['alerts'], '$id'));
         // Two acknowledgements reached the webhook: the member's and the key's, not the repeat in between.
         $event = 'monitors.' . $monitorId . '.alerts.' . $firing['alertId'] . '.acknowledged';
         $deliveries = fn (): int => \count(\array_filter(
@@ -460,7 +478,7 @@ final class EvaluationCustomServerTest extends Scope
         )));
 
         // Listing the owners again notifies them of the next firing.
-        $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $this->headers(), [
+        $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $monitorId, $this->headers(), [
             'notify' => ['owner'],
             'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
         ]);
@@ -503,7 +521,7 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame([], $this->emailSubjects($developer, $name));
 
         // Listing developers too sends them the resolution.
-        $updated = $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $this->headers(), [
+        $updated = $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $monitorId, $this->headers(), [
             'notify' => ['owner', 'developer'],
         ]);
         $this->assertSame(['owner', 'developer'], $updated['body']['notify']);
@@ -564,6 +582,9 @@ final class EvaluationCustomServerTest extends Scope
         });
         $alert = $this->getAlert($firing['alertId']);
         $this->assertSame($escalation['body']['$id'], $alert['escalationId']);
+        $this->assertSame([$firing['alertId']], \array_column($this->listAlerts([
+            Query::equal('escalationId', [$escalation['body']['$id']])->toString(),
+        ])['alerts'], '$id'));
         $this->assertSame(1, $alert['escalationStep']);
         $this->assertNotNull($alert['escalatesAt']);
         $this->assertSame([], $this->emailSubjects($developer, $name));
@@ -580,7 +601,7 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame([], $this->emailSubjects($last, $name));
 
         // Editing the escalation changes the next alert, not this one: it keeps the steps it started with.
-        $edited = $this->client->call(Client::METHOD_PUT, '/organization/escalations/' . $escalation['body']['$id'], $this->organizationHeaders($teamId), [
+        $edited = $this->client->call(Client::METHOD_PATCH, '/organization/escalations/' . $escalation['body']['$id'], $this->organizationHeaders($teamId), [
             'steps' => [['delay' => 0, 'roles' => ['owner']]],
         ]);
         $this->assertSame(200, $edited['headers']['status-code']);
@@ -628,7 +649,7 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame('escalation_in_use', $refused['body']['type']);
         $this->assertSame($escalation['body']['$id'], $this->getMonitorBody($monitorId)['escalationId']);
 
-        $moved = $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $this->headers(), ['escalationId' => '']);
+        $moved = $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $monitorId, $this->headers(), ['escalationId' => '']);
         $this->assertSame(200, $moved['headers']['status-code']);
         $this->assertSame('', $moved['body']['escalationId']);
         $deleted = $this->client->call(Client::METHOD_DELETE, '/organization/escalations/' . $escalation['body']['$id'], $this->organizationHeaders($teamId));
@@ -644,7 +665,7 @@ final class EvaluationCustomServerTest extends Scope
         $created = $this->client->call(Client::METHOD_POST, '/organization/escalations', $headers, [
             'escalationId' => 'unique()',
             'name' => 'Platform',
-            'steps' => [['delay' => 0, 'roles' => ['owner', 'owner']]],
+            'steps' => [['delay' => 0, 'roles' => ['owner']]],
             'repeat' => 2,
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
@@ -661,7 +682,7 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertContains($escalationId, \array_column($listed['body']['escalations'], '$id'));
 
         // An update changes only what it names.
-        $updated = $this->client->call(Client::METHOD_PUT, '/organization/escalations/' . $escalationId, $headers, ['name' => 'Platform on-call']);
+        $updated = $this->client->call(Client::METHOD_PATCH, '/organization/escalations/' . $escalationId, $headers, ['name' => 'Platform on-call']);
         $this->assertSame(200, $updated['headers']['status-code']);
         $this->assertSame('Platform on-call', $updated['body']['name']);
         $this->assertSame(2, $updated['body']['repeat']);
@@ -671,28 +692,75 @@ final class EvaluationCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-        foreach ([
-            'no steps' => [],
-            'nobody to notify' => [['delay' => 0]],
-            'unknown role' => [['delay' => 0, 'roles' => ['admin']]],
-            'negative delay' => [['delay' => -1, 'roles' => ['owner']]],
-            'unknown key' => [['delay' => 0, 'roles' => ['owner'], 'phone' => true]],
-        ] as $case => $steps) {
+        // Every refusal uses one name, so listing it afterwards proves none of them was stored.
+        $refusedName = 'Refused ' . \uniqid();
+        $empty = $this->client->call(Client::METHOD_POST, '/organization/escalations', $headers, [
+            'escalationId' => 'unique()',
+            'name' => $refusedName,
+            'steps' => [],
+        ]);
+        $this->assertSame(400, $empty['headers']['status-code']);
+
+        // Steps are strict: a malformed step is refused whole, naming the step and why, rather than cleaned up and stored.
+        $owner = $this->getRoot()['$id'];
+        $strict = [
+            'nobody to notify' => [[['delay' => 0]], 'notifies nobody'],
+            'unknown role' => [[['delay' => 0, 'roles' => ['admin']]], 'does not have'],
+            'negative delay' => [[['delay' => -1, 'roles' => ['owner']]], 'between 0 and'],
+            'duplicate role' => [[['delay' => 0, 'roles' => ['owner', 'owner']]], 'more than once'],
+            'duplicate member' => [[['delay' => 0, 'userIds' => [$owner, $owner]]], 'more than once'],
+            'delay past the maximum' => [[['delay' => Escalation::MAX_DELAY + 1, 'roles' => ['owner']]], 'between 0 and'],
+            'fractional delay' => [[['delay' => 1.5, 'roles' => ['owner']]], 'between 0 and'],
+            'step not an object' => [[['owner']], 'must be an object'],
+            'unknown key' => [[['delay' => 0, 'roles' => ['owner'], 'phone' => true]], 'unknown keys'],
+            'roles as an object' => [[['delay' => 0, 'roles' => ['a' => 'owner']]], 'roles'],
+        ];
+        foreach ($strict as $case => [$steps, $reason]) {
             $refused = $this->client->call(Client::METHOD_POST, '/organization/escalations', $headers, [
                 'escalationId' => 'unique()',
-                'name' => 'Refused',
+                'name' => $refusedName,
                 'steps' => $steps,
             ]);
             $this->assertSame(400, $refused['headers']['status-code'], $case);
+            $this->assertStringContainsString('`steps[0]`', (string) $refused['body']['message'], $case);
+            $this->assertStringContainsString($reason, (string) $refused['body']['message'], $case);
+
+            $rejected = $this->client->call(Client::METHOD_PATCH, '/organization/escalations/' . $escalationId, $headers, ['steps' => $steps]);
+            $this->assertSame(400, $rejected['headers']['status-code'], $case);
+            $this->assertStringContainsString('`steps[0]`', (string) $rejected['body']['message'], $case);
+            $this->assertStringContainsString($reason, (string) $rejected['body']['message'], $case);
         }
+        $this->assertSame($created['body']['steps'], $this->client->call(Client::METHOD_GET, '/organization/escalations/' . $escalationId, $headers)['body']['steps']);
 
         $stranger = $this->client->call(Client::METHOD_POST, '/organization/escalations', $headers, [
             'escalationId' => 'unique()',
-            'name' => 'Stranger',
+            'name' => $refusedName,
             'steps' => [['delay' => 0, 'userIds' => ['not-a-member']]],
         ]);
         $this->assertSame(400, $stranger['headers']['status-code']);
         $this->assertSame('escalation_member_not_found', $stranger['body']['type']);
+
+        // An invited member who has not accepted yet is not notified, so an escalation cannot name them.
+        $invited = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', $this->consoleHeaders(), [
+            'email' => 'invited-' . \uniqid() . '@localhost.test',
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#title',
+        ]);
+        $this->assertSame(201, $invited['headers']['status-code']);
+        $this->assertFalse($invited['body']['confirm']);
+        $unconfirmed = $this->client->call(Client::METHOD_POST, '/organization/escalations', $headers, [
+            'escalationId' => 'unique()',
+            'name' => $refusedName,
+            'steps' => [['delay' => 0, 'userIds' => [$invited['body']['userId']]]],
+        ]);
+        $this->assertSame(400, $unconfirmed['headers']['status-code']);
+        $this->assertSame('escalation_member_not_found', $unconfirmed['body']['type']);
+
+        $stored = $this->client->call(Client::METHOD_GET, '/organization/escalations', $headers, [
+            'queries' => [Query::equal('name', [$refusedName])->toString()],
+        ]);
+        $this->assertSame(200, $stored['headers']['status-code']);
+        $this->assertSame(0, $stored['body']['total']);
 
         // A monitor may only use an escalation its organization has.
         $monitor = $this->client->call(Client::METHOD_POST, '/monitors/usage', $this->headers(), [
@@ -743,7 +811,7 @@ final class EvaluationCustomServerTest extends Scope
         $token = (string) $query['token'];
 
         // Paused, so only the test evaluates it from here on.
-        $this->assertSame(200, $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $this->headers(), ['enabled' => false])['headers']['status-code']);
+        $this->assertSame(200, $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $monitorId, $this->headers(), ['enabled' => false])['headers']['status-code']);
         \sleep(2);
 
         // One click from the mail client, as RFC 8058 describes it.
@@ -1005,7 +1073,7 @@ final class EvaluationCustomServerTest extends Scope
             $this->assertSame(200, $this->client->call(Client::METHOD_GET, '/monitors', $headers)['headers']['status-code']);
         }
 
-        $resumed = $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $headers, ['enabled' => true]);
+        $resumed = $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $monitorId, $headers, ['enabled' => true]);
         $this->assertSame(200, $resumed['headers']['status-code']);
 
         /**
@@ -1336,7 +1404,7 @@ final class EvaluationCustomServerTest extends Scope
             'steps' => [['delay' => 0, 'roles' => ['owner']]],
         ]);
         $this->assertSame(201, $escalation['headers']['status-code']);
-        $updated = $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $this->headers(), ['escalationId' => $escalation['body']['$id']]);
+        $updated = $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $monitorId, $this->headers(), ['escalationId' => $escalation['body']['$id']]);
         $this->assertSame(200, $updated['headers']['status-code']);
 
         $now = new \DateTimeImmutable();
@@ -1374,7 +1442,7 @@ final class EvaluationCustomServerTest extends Scope
          */
         $evaluated = $this->waitForEvaluation($monitorId, null);
 
-        $paused = $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $this->headers(), ['enabled' => false]);
+        $paused = $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $monitorId, $this->headers(), ['enabled' => false]);
         $this->assertSame(200, $paused['headers']['status-code']);
         // Let an evaluation already queued before the pause finish first.
         \sleep(2);
@@ -1385,7 +1453,7 @@ final class EvaluationCustomServerTest extends Scope
         $monitor = $this->client->call(Client::METHOD_GET, '/monitors/' . $monitorId, $this->headers())['body'];
         $this->assertSame($before, $monitor['evaluatedAt']);
 
-        $resumed = $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $this->headers(), ['enabled' => true]);
+        $resumed = $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $monitorId, $this->headers(), ['enabled' => true]);
         $this->assertSame(200, $resumed['headers']['status-code']);
         $this->assertNotSame($evaluated, $this->waitForEvaluation($monitorId, $monitor['evaluatedAt']));
     }
@@ -2230,7 +2298,7 @@ final class EvaluationCustomServerTest extends Scope
 
     private function setThreshold(string $monitorId, float|int $threshold): void
     {
-        $response = $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $this->headers(), [
+        $response = $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $monitorId, $this->headers(), [
             'rules' => [Query::greaterThan('network.outbound', $threshold)->toString()],
         ]);
         $this->assertSame(200, $response['headers']['status-code']);
