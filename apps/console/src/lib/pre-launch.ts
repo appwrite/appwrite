@@ -26,6 +26,7 @@ const AUTH_ALLOWED_PATHS = new Set([
   '/sign-up',
   '/sign-out',
   '/recovery',
+  '/sso',
   '/reset',
   '/mfa',
   '/verify-email',
@@ -160,7 +161,7 @@ export const PRE_LAUNCH_BOOT_SCRIPT = `(function(){
     // Keep legal pages crawlable for OAuth/app-store reviewers; mirrors LEGAL_ALLOWED_PATHS.
     if (path === '/privacy' || path === '/terms' || path === '/cookies') return;
     var auth = {
-      '/sign-in': 1, '/sign-up': 1, '/sign-out': 1, '/recovery': 1, '/reset': 1,
+      '/sign-in': 1, '/sign-up': 1, '/sign-out': 1, '/recovery': 1, '/sso': 1, '/reset': 1,
       '/mfa': 1, '/verify-email': 1, '/auth/magic-url': 1,
       '/auth/oauth2/success': 1, '/auth/oauth2/failure': 1
     };

@@ -3353,6 +3353,94 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'תוסף Premium Geo DB יוסר בסוף מחזור החיוב הנוכחי',
   'Unable to verify Premium Geo DB addon status. Please retry.':
     'לא ניתן לאמת את סטטוס תוסף Premium Geo DB. נסו שוב.',
+  "With this add-on, your app's users sign in through their company's identity provider. Each team in this project can verify domains, connect identity providers and turn on Require SSO.":
+    'עם התוסף הזה, משתמשי האפליקציה שלכם מתחברים דרך ספק הזהויות של החברה שלהם. כל צוות בפרויקט יכול לאמת דומיינים, לחבר ספקי זהויות ולהפעיל חיוב SSO.',
+  'Starts next cycle': 'מתחיל במחזור הבא',
+  'The add-on starts with your next billing cycle. Single sign-on can be set up from then.':
+    'התוסף מתחיל במחזור החיוב הבא שלכם. מאז אפשר יהיה להגדיר התחברות יחידה (SSO).',
+  '{price}/month, prorated for the current billing cycle.':
+    '{price}/חודש, בחיוב יחסי למחזור החיוב הנוכחי.',
+  'Billed monthly, prorated for the current billing cycle.':
+    'חיוב חודשי, יחסי למחזור החיוב הנוכחי.',
+  'This add-on is not available on your current plan. Upgrade your plan to enable it.':
+    'התוסף הזה אינו זמין בתוכנית הנוכחית שלכם. שדרגו את התוכנית כדי להפעיל אותו.',
+  'This add-on is not available on your current plan.':
+    'התוסף הזה אינו זמין בתוכנית הנוכחית שלכם.',
+  'The add-on will be removed at the end of your current billing cycle.':
+    'התוסף יוסר בסוף מחזור החיוב הנוכחי שלכם.',
+  "This environment has the add-on of its project. Change it in the project's settings.":
+    'לסביבה הזו יש את התוסף של הפרויקט שלה. שנו אותו בהגדרות הפרויקט.',
+  "You don't have permission to manage this project's add-ons.":
+    'אין לכם הרשאה לנהל את התוספים של הפרויקט הזה.',
+  "Couldn't load the add-on's status.": 'לא הצלחנו לטעון את סטטוס התוסף.',
+  'Keep add-on': 'שמירת התוסף',
+  'Disable add-on': 'השבתת התוסף',
+  'Enable the Single sign-on add-on': 'הפעלת תוסף ההתחברות היחידה (SSO)',
+  'Disable the Single sign-on add-on': 'השבתת תוסף ההתחברות היחידה (SSO)',
+  'Single sign-on add-on has been enabled': 'תוסף ההתחברות היחידה (SSO) הופעל',
+  'Single sign-on add-on has been re-enabled':
+    'תוסף ההתחברות היחידה (SSO) הופעל מחדש',
+  'Single sign-on add-on is already active for this project':
+    'תוסף ההתחברות היחידה (SSO) כבר פעיל בפרויקט זה',
+  'Single sign-on add-on will be removed at the end of your current billing cycle':
+    'תוסף ההתחברות היחידה (SSO) יוסר בסוף מחזור החיוב הנוכחי',
+  "Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then nobody signs in to your app through the identity providers of this project's teams, and the teams can no longer verify domains, connect identity providers or turn on Require SSO.":
+    'האם אתם בטוחים שברצונכם להשבית את תוסף ההתחברות היחידה (SSO)? הוא יישאר פעיל עד סוף מחזור החיוב הנוכחי ולא יחודש. אחר כך אף אחד לא יתחבר לאפליקציה שלכם דרך ספקי הזהויות של הצוותים בפרויקט, והצוותים לא יוכלו עוד לאמת דומיינים, לחבר ספקי זהויות או להפעיל חיוב SSO.',
+  'Sign in to Appwrite with your company login':
+    'התחברות ל-Appwrite עם חשבון החברה שלכם',
+  'People on your verified domains sign in to the Console through your identity provider, and join this organization with the roles you choose.':
+    'אנשים בדומיינים המאומתים שלכם מתחברים לקונסולה דרך ספק הזהויות שלכם, ומצטרפים לארגון הזה עם התפקידים שתבחרו.',
+  'Teammates join on their first sign-in':
+    'חברי הצוות מצטרפים בהתחברות הראשונה',
+  'No invites to send. Anyone on your domains gets in with the roles you set.':
+    'אין צורך לשלוח הזמנות. כל מי שבדומיינים שלכם נכנס עם התפקידים שהגדרתם.',
+  'Make it the only way in':
+    'הפכו אותה לדרך היחידה להיכנס',
+  'Require SSO, so people on your domains reach the organization only through your identity provider. Owners always keep access.':
+    'הפעילו חיוב SSO, כך שאנשים בדומיינים שלכם יגיעו לארגון רק דרך ספק הזהויות שלכם. לבעלים תמיד נשארת גישה.',
+  'Bring your identity provider':
+    'הביאו את ספק הזהויות שלכם',
+  'Okta, Microsoft Entra ID, Google Workspace, Keycloak, or anything that speaks OpenID Connect.':
+    'Okta,‏ Microsoft Entra ID,‏ Google Workspace,‏ Keycloak, או כל ספק שתומך ב-OpenID Connect.',
+  'Let your customers sign in with their company login':
+    'תנו ללקוחות שלכם להתחבר עם חשבון החברה שלהם',
+  "Users on a team's verified domains sign in to your app through that team's identity provider, and join the team with its roles.":
+    'משתמשים בדומיינים המאומתים של צוות מתחברים לאפליקציה שלכם דרך ספק הזהויות של אותו צוות, ומצטרפים לצוות עם התפקידים שלו.',
+  'An identity provider for each customer':
+    'ספק זהויות לכל לקוח',
+  'Give every customer a team with its own domains and its own identity provider.':
+    'תנו לכל לקוח צוות עם דומיינים משלו וספק זהויות משלו.',
+  'Users join on their first sign-in':
+    'משתמשים מצטרפים בהתחברות הראשונה',
+  'No invites to send. They land in the team with the roles you chose.':
+    'אין צורך לשלוח הזמנות. הם מגיעים לצוות עם התפקידים שבחרתם.',
+  'Require SSO, team by team':
+    'חיוב SSO, צוות אחר צוות',
+  "Members on a team's domains get its roles only after signing in through its identity provider.":
+    'חברים בדומיינים של צוות מקבלים את התפקידים שלו רק אחרי התחברות דרך ספק הזהויות שלו.',
+  'One add-on covers every team in this project, in each of its environments.':
+    'תוסף אחד מכסה את כל הצוותים בפרויקט הזה, בכל אחת מהסביבות שלו.',
+  'Prorated for the current billing cycle.':
+    'מחושב יחסית למחזור החיוב הנוכחי.',
+  'Your company': 'החברה שלכם',
+  'Your customer': 'הלקוח שלכם',
+  "With this add-on, people on your organization's verified domains sign in to the Console through its identity providers.":
+    'עם התוסף הזה, אנשים בדומיינים המאומתים של הארגון שלכם מתחברים לקונסולה דרך ספקי הזהויות שלו.',
+  'This add-on is available on {plans}. Upgrade your plan to enable it.':
+    'התוסף הזה זמין בתוכניות {plans}. שדרגו את התוכנית כדי להפעיל אותו.',
+  "You don't have permission to manage this organization's add-ons.":
+    'אין לכם הרשאה לנהל את התוספים של הארגון הזה.',
+  'Single sign-on add-on is already active for this organization':
+    'תוסף ההתחברות היחידה (SSO) כבר פעיל בארגון זה',
+  'Set it up for each team on its Single sign-on tab, under Auth.':
+    'מגדירים אותה לכל צוות בלשונית ההתחברות היחידה (SSO) שלו, תחת אימות.',
+  'Go to teams': 'מעבר לצוותים',
+  "Until the add-on is active, nobody signs in through the identity providers of this project's teams and Require SSO has no effect. You can still delete domains and identity providers, and turn Require SSO off.":
+    'עד שהתוסף יהיה פעיל, אף אחד לא מתחבר דרך ספקי הזהויות של הצוותים בפרויקט וחיוב SSO לא חל. עדיין אפשר למחוק דומיינים וספקי זהויות, ולכבות את חיוב ה-SSO.',
+  "Single sign-on in a project needs the Single sign-on add-on. Enable it in the project's settings.":
+    'התחברות יחידה (SSO) בפרויקט דורשת את תוסף ההתחברות היחידה (SSO). הפעילו אותו בהגדרות הפרויקט.',
+  'Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then single sign-on for the organization stops, and people who can only sign in through your identity providers can no longer sign in.':
+    'האם אתם בטוחים שברצונכם להשבית את תוסף ההתחברות היחידה (SSO)? הוא יישאר פעיל עד סוף מחזור החיוב הנוכחי ולא יחודש. אחר כך ההתחברות היחידה (SSO) של הארגון תיפסק, ואנשים שיכולים להתחבר רק דרך ספקי הזהויות שלכם לא יוכלו עוד להתחבר.',
   'Payment could not be authorized. Please try enabling the addon again.':
     'לא ניתן היה לאשר את התשלום. נסו להפעיל את התוסף שוב.',
   'Add a payment method to your organization before enabling this addon.':

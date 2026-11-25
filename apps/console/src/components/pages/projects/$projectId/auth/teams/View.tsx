@@ -5,8 +5,10 @@ import { Loader2 } from 'lucide-react'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
 import { TeamOverview } from './Overview'
 import { TeamMembers } from './Members'
+import { TeamSingleSignOn } from './SingleSignOn'
 import { useTeam } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
 import { Button } from '@/components/ui/button'
 
@@ -17,6 +19,9 @@ export function View() {
   })
   const location = useLocation()
   const navigate = useNavigate()
+  // Single sign-on for the team: on Cloud only, with the rest of it
+  const { features } = useConsoleProfile()
+  const showSSO = features.sso === true
 
   // All hooks must be called unconditionally before any early returns
   const {
@@ -34,14 +39,14 @@ export function View() {
 
     if (teamIndex >= 0 && pathParts[teamIndex + 2]) {
       const tabFromPath = pathParts[teamIndex + 2]
-      if (['members'].includes(tabFromPath)) {
+      if (['members', ...(showSSO ? ['sso'] : [])].includes(tabFromPath)) {
         return tabFromPath
       }
     }
 
     // Default to overview for index route
     return 'overview'
-  }, [location.pathname, teamId])
+  }, [location.pathname, teamId, showSSO])
 
   const tabs: Tab[] = useMemo(
     () => [
@@ -63,8 +68,21 @@ export function View() {
           teamId: teamId as string,
         },
       },
+      ...(showSSO
+        ? [
+            {
+              id: 'sso',
+              label: t('Single sign-on'),
+              to: '/projects/$projectId/auth/teams/$teamId/sso',
+              params: {
+                projectId: projectId as string,
+                teamId: teamId as string,
+              },
+            },
+          ]
+        : []),
     ],
-    [projectId, teamId, t],
+    [projectId, teamId, t, showSSO],
   )
 
   const [membersSearchValue, setMembersSearchValue] = useState('')
@@ -186,10 +204,13 @@ export function View() {
         <div
           className={cn(
             'mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6',
-            activeTab === 'overview' && 'pt-4 sm:pt-6',
+            (activeTab === 'overview' || activeTab === 'sso') && 'pt-4 sm:pt-6',
           )}
         >
           {activeTab === 'overview' && <TeamOverview />}
+          {activeTab === 'sso' && (
+            <TeamSingleSignOn projectId={projectId} teamId={teamId} />
+          )}
           {activeTab === 'members' && (
             <TeamMembers
               searchValue={membersSearchValue}

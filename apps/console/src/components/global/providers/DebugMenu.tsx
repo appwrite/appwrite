@@ -1824,6 +1824,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 features.agent,
                 { category: 'Products' },
               ),
+              createProfileFeatureFlagItem(
+                'Single sign-on',
+                'Org settings Single sign-on tab (/settings/sso): owners verify domains and connect identity providers so people sign in with single sign-on.',
+                'sso',
+                profileId,
+                features.sso,
+                { category: 'Products' },
+              ),
               createCombinedProfileFeatureFlagItem(
                 'Partners platform',
                 'Org settings Partners tab (/settings/partners), partner API keys, and the /docs/partners documentation hub.',
@@ -2150,6 +2158,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.blogDrafts,
     features.orgApiKeys,
     features.partnersDocs,
+    features.sso,
     features.agent,
     features.notifications,
     features.init,
