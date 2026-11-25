@@ -204,6 +204,8 @@ export interface LaunchEventDailyPrize {
   platform: LaunchSchedulePlatform
   href?: string
   prizeDescription: string
+  /** What someone looking at this prize shows as in the online list. */
+  presenceActivity?: string
   visual?: LaunchEventPrizeVisual
 }
 
@@ -217,6 +219,8 @@ export interface LaunchEventGrandPrize {
   sessionTitle?: string
   platform?: LaunchSchedulePlatform
   href?: string
+  /** What someone looking at the grand prize shows as in the online list. */
+  presenceActivity?: string
   visual?: LaunchEventPrizeVisual
 }
 
