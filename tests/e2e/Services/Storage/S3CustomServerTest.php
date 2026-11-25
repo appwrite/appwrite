@@ -154,6 +154,7 @@ final class S3CustomServerTest extends Scope
             $this->assertSame('0', $headOverGet['headers']['content-length'] ?? '0', $case['name']);
             $this->assertSame($size, $headOverGet['headers']['x-amz-meta-content-length'], $case['name']);
             $this->assertSame($object['headers']['etag'], $headOverGet['headers']['etag'], $case['name']);
+            $this->assertStringContainsStringIgnoringCase('x-amz-meta-content-length', $headOverGet['headers']['access-control-expose-headers'] ?? '', $case['name']);
 
             $override = $this->call(Client::METHOD_GET, $path, [
                 'response-content-type' => 'text/html',

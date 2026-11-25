@@ -234,8 +234,9 @@ class Get extends Base
                     } else {
                         // A GET answered as HeadObject (a proxy rewrote the HEAD) sends no
                         // body, so a declared length would leave the client waiting for
-                        // bytes that never come. The length goes in a header of its own.
-                        $response->addHeader('x-amz-meta-content-length', (string) $length);
+                        // bytes that never come. The length goes in a header of its own,
+                        // replacing user metadata of the same name so there is one value.
+                        $response->setHeader('x-amz-meta-content-length', (string) $length);
                     }
                     $response->send('');
                     return;
