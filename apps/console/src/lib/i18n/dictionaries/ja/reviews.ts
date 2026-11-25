@@ -239,6 +239,15 @@ export const jaReviewsDictionary: Record<string, string> = {
   // Performance
   Performance: 'パフォーマンス',
   'Unknown author': '作成者不明',
+  Outcome: '結果',
+  'Still open': '未対応',
+  'Reviews queued before authors were recorded':
+    '作成者の記録開始前にキューに入ったレビュー',
+  Bot: 'ボット',
+  '{rate} first try': '初回で{rate}',
+  '{count} critical': '重大 {count} 件',
+  '{count} fixed': '{count} 件修正',
+  '{count} reviews': '{count} 件のレビュー',
   'Date range': '期間',
   Author: '作成者',
   'Pull requests': 'プルリクエスト',
