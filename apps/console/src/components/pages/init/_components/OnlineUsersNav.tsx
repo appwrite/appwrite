@@ -989,7 +989,7 @@ function OnlineUsersLoginCta({
 function OnlineUsersStorm() {
   return (
     <>
-      <Init5Storm edges="bottom" />
+      <Init5Storm edges="bottom" className="opacity-40" />
       <span aria-hidden className="init5-online-edge" />
     </>
   )
