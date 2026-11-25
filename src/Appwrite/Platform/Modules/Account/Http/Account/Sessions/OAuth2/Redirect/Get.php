@@ -307,6 +307,21 @@ class Get extends Base
             $failureRedirect(Exception::USER_UNAUTHORIZED);
         }
 
+        // Everyone who shares it gets the same provider ID, so each account keeps its own link under an ID scoped to
+        // it. Without that, the first account to connect a Bird workspace blocks everyone else in it. A link made
+        // before the scoping keeps its unscoped ID, so it is refreshed rather than duplicated.
+        if ($oauth2->isLinkOnly()) {
+            $unscoped = $dbForProject->findOne('identities', [
+                Query::equal('userInternalId', [$user->getSequence()]),
+                Query::equal('provider', [$provider]),
+                Query::equal('providerUid', [$oauth2ID]),
+            ]);
+
+            if ($unscoped->isEmpty()) {
+                $oauth2ID = $user->getId() . ':' . $oauth2ID;
+            }
+        }
+
         $name = '';
         $nameOAuth = $oauth2->getUserName($accessToken);
         $userParam = $request->getParam('user');
