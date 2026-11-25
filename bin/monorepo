@@ -9,6 +9,10 @@
  * split history. Releases are made by tagging this repository
  * `<name>/<version>`, which pushes `<version>` to the mirror for Packagist to
  * pick up. See rfc/monorepo.md.
+ *
+ * A Rust crate in crates/utopia/<name> is listed and released
+ * under the name `rs/<name>`: `rs/<name>/<version>` tags it, and crates.yml publishes that
+ * version to crates.io and to the crate's mirror at github.com/utopia-rs/<name>.
  */
 
 chdir(dirname(__DIR__));
@@ -112,6 +116,32 @@ function packages(): array
  * Distribution remote for a package. CI overrides the base with an
  * authenticated HTTPS URL via SPLIT_REMOTE_BASE.
  */
+/**
+ * The Rust crates that are published, each named `rs/<name>`.
+ *
+ * @return string[]
+ */
+function crates(): array
+{
+    $names = array_map(fn (string $manifest) => 'rs/' . basename(dirname($manifest)), glob('crates/utopia/*/Cargo.toml') ?: []);
+    sort($names);
+
+    return $names;
+}
+
+/**
+ * Where a package, or a crate named `rs/<name>`, lives in this repository, or null.
+ */
+function directory(string $name): ?string
+{
+    if (!str_starts_with($name, 'rs/')) {
+        return is_dir("packages/{$name}") ? "packages/{$name}" : null;
+    }
+    $directory = 'crates/utopia/' . substr($name, 3);
+
+    return is_file("{$directory}/Cargo.toml") ? $directory : null;
+}
+
 function remote(string $package): string
 {
     $base = getenv('SPLIT_REMOTE_BASE') ?: 'git@github.com:' . ORG;
@@ -192,11 +222,12 @@ function release_notes(string $package, string $version, string $to): string
     }
 
     $home = 'https://github.com/' . REPOSITORY;
+    $directory = directory($package);
     if ($previous === null) {
-        return "First release cut from [`packages/{$package}`]({$home}/tree/main/packages/{$package}) in " . REPOSITORY . '.';
+        return "First release cut from [`{$directory}`]({$home}/tree/main/{$directory}) in " . REPOSITORY . '.';
     }
 
-    $log = sh("git log {$previous}..{$to} --pretty='- %s' -- packages/{$package}");
+    $log = sh("git log {$previous}..{$to} --pretty='- %s' -- {$directory}");
 
     return ($log !== '' ? $log : '- No changes to this package since ' . $previous . '.')
         . "\n\n**Changes**: {$home}/compare/{$previous}...{$package}/{$version}";
@@ -549,7 +580,7 @@ $arguments = array_values(array_filter($arguments, function (string $argument) u
 
 switch ($command) {
     case 'list':
-        foreach (packages() as $package) {
+        foreach ([...packages(), ...crates()] as $package) {
             $latest = sh("git tag --list '{$package}/*' --sort=-v:refname | head -n 1");
             out(str_pad($package, 24) . ($latest !== '' ? $latest : '(unreleased)'));
         }
@@ -770,9 +801,20 @@ switch ($command) {
     case 'release':
         $package = $arguments[0] ?? fail('usage: monorepo release <package> <version> [--dry-run]');
         $version = $arguments[1] ?? fail('usage: monorepo release <package> <version> [--dry-run]');
-        is_dir("packages/{$package}") || fail("unknown package: {$package}");
+        $directory = directory($package) ?? fail("unknown package: {$package}");
         preg_match('/^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$/', $version)
             || fail("version must be semver (e.g. 2.1.0 or 2.1.0-rc1), got \"{$version}\"");
+        // crates.io publishes the version the manifest states, so the tag has to agree with it.
+        if (str_starts_with($package, 'rs/')) {
+            $metadata = json_decode(sh('cargo metadata --no-deps --format-version 1 --offline'), true);
+            $stated = null;
+            foreach ($metadata['packages'] ?? [] as $crate) {
+                if (dirname($crate['manifest_path']) === getcwd() . '/' . $directory) {
+                    $stated = $crate['version'];
+                }
+            }
+            $stated === $version || fail("{$directory}/Cargo.toml is at version {$stated}, not {$version}: set it there first");
+        }
 
         $tag = "{$package}/{$version}";
         if (sh('git tag --list ' . escapeshellarg($tag)) !== '') {
@@ -1092,7 +1134,7 @@ switch ($command) {
         out(<<<'HELP'
         usage: bin/monorepo <command>
 
-          list                                show packages and their latest release tag
+          list                                show packages and crates (rs/<name>) and their latest release tag
           absorb <name> [url] [branch] [--skip-ruleset]
                                               import (preserving history) + strip hoisted QA + mirror PR redirect + lockdown
           split [name...] [--tag=v] [--branch=main] [--remote=url] [--force] [--dry-run]
