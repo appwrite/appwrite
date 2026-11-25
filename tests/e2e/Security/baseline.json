@@ -679,6 +679,7 @@
         "POST /v1/migrations/json/imports",
         "POST /v1/migrations/nhost",
         "POST /v1/migrations/supabase",
+        "POST /v1/migrations/supabase/projects/:projectRef/credentials",
         "POST /v1/mock/api-key-unprefixed",
         "POST /v1/monitors/usage",
         "POST /v1/organization/escalations",
