@@ -28,7 +28,7 @@ class Get extends Base
             ->setHttpPath('/v1/organization/escalations/:escalationId')
             ->desc('Get escalation')
             ->groups(['api', 'organization', 'escalations'])
-            ->label('scope', 'escalations.read')
+            ->label('scope', ['escalations.read', 'monitors.read'])
             ->label('sdk', new Method(
                 namespace: 'organization',
                 group: 'escalations',

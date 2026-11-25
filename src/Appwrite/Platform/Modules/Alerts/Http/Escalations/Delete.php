@@ -31,7 +31,7 @@ class Delete extends Base
             ->setHttpPath('/v1/organization/escalations/:escalationId')
             ->desc('Delete escalation')
             ->groups(['api', 'organization', 'escalations'])
-            ->label('scope', 'escalations.write')
+            ->label('scope', ['escalations.write', 'monitors.write'])
             ->label('audits.event', 'escalation.delete')
             ->label('audits.resource', 'escalation/{request.escalationId}')
             ->label('sdk', new Method(
