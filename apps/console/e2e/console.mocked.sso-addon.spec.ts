@@ -361,9 +361,7 @@ async function openSettings(page: Page) {
 
 /** The Single sign-on card on the project's settings */
 function ssoCard(page: Page): Locator {
-  return page
-    .getByRole('heading', { name: 'Single sign-on', exact: true })
-    .locator('xpath=ancestor::div[contains(@class, "rounded-xl")][1]')
+  return page.locator('[data-card-id="sso-addon"]')
 }
 
 /**
@@ -399,16 +397,23 @@ test.describe('the Single sign-on project add-on', () => {
     const mock = await mockAppwriteApi(page)
     await openSettings(page)
 
+    // Not on yet: the card is the offer, with what it does and what it costs
     const card = ssoCard(page)
-    await expect(card).toContainText('Not enabled')
+    await expect(
+      card.getByRole('heading', {
+        name: 'Let your customers sign in with their company login',
+      }),
+    ).toBeVisible()
     await expect(card).toContainText(
-      "With this add-on, your app's users sign in through their company's identity provider. Each team in this project can verify domains, connect identity providers and turn on Require SSO.",
+      "Users on a team's verified domains sign in to your app through that team's identity provider, and join the team with its roles.",
     )
+    await expect(card).toContainText('An identity provider for each customer')
+    await expect(card).toContainText('Require SSO, team by team')
     await expect(card).toContainText(
-      '$150.00/month, prorated for the current billing cycle.',
+      'One add-on covers every team in this project, in each of its environments.',
     )
-    // It sells what the API does: the app's users sign in through it
-    await expect(card).toContainText("your app's users sign in")
+    await expect(card).toContainText('$150.00 per month')
+    await expect(card).toContainText('Prorated for the current billing cycle.')
 
     await card.getByRole('button', { name: 'Enable add-on' }).click()
     const dialog = page.getByRole('dialog', {
@@ -555,7 +560,7 @@ test.describe('the Single sign-on project add-on', () => {
     await expect(card).toContainText("Couldn't load the add-on's status.")
     mock.listStatus = 200
     await card.getByRole('button', { name: 'Try again' }).click()
-    await expect(card).toContainText('Not enabled')
+    await expect(card).toContainText('$150.00 per month')
     await expect(
       card.getByRole('button', { name: 'Enable add-on' }),
     ).toBeVisible()

@@ -593,19 +593,21 @@ test.describe("single sign-on and the project's add-on, on a team", () => {
     const mock = await mockAppwriteApi(page, { addon: null })
     await openTeamSso(page)
 
+    // The offer, where the feature lands: what it does, and what it costs
     const addon = addonCard(page)
-    await expect(addon).toContainText('Not enabled')
+    await expect(
+      addon.getByRole('heading', { name: 'Let your customers sign in with their company login' }),
+    ).toBeVisible()
+    await expect(addon).toContainText('Users join on their first sign-in')
     await expect(addon).toContainText(
-      '$150.00/month, prorated for the current billing cycle.',
+      "Members on a team's domains get its roles only after signing in through its identity provider.",
     )
-    // What the team gets, and nothing to set up yet
-    const gets = card(page, 'What this team gets')
-    await expect(gets).toContainText(
-      'Users on a verified domain sign in to your app through them and join this team with the roles you choose.',
+    await expect(addon).toContainText(
+      'One add-on covers every team in this project, in each of its environments.',
     )
-    await expect(gets).toContainText(
-      'The add-on is for the whole project: every team in it, in each of its environments, can use it.',
-    )
+    await expect(addon).toContainText('$150.00 per month')
+    await expect(addon).toContainText('Prorated for the current billing cycle.')
+    // Nothing to set up yet
     await expect(page.getByRole('heading', { name: 'Domains' })).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Add domain' })).toHaveCount(
       0,
@@ -632,8 +634,10 @@ test.describe("single sign-on and the project's add-on, on a team", () => {
     await expect(
       page.getByRole('heading', { name: 'Add sign-in to your app' }),
     ).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'What this team gets' }))
-      .toHaveCount(0)
+    // Enabled: the offer gives way to the card that manages the add-on
+    await expect(
+      page.getByRole('heading', { name: 'Let your customers sign in with their company login' }),
+    ).toHaveCount(0)
     expectProjectRequests(mock)
   })
 
@@ -655,7 +659,7 @@ test.describe("single sign-on and the project's add-on, on a team", () => {
       addon.getByRole('button', { name: 'Enable add-on' }),
     ).toHaveCount(0)
     await expect(
-      page.getByRole('heading', { name: 'What this team gets' }),
+      addon.getByRole('heading', { name: 'Let your customers sign in with their company login' }),
     ).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Domains' })).toHaveCount(0)
     expect(mock.sent.addonCreates).toBe(0)
@@ -683,8 +687,9 @@ test.describe("single sign-on and the project's add-on, on a team", () => {
     await expect(
       page.getByRole('button', { name: 'Add identity provider' }),
     ).toBeDisabled()
+    // What was set up before is a warning to act on, not an offer
     await expect(
-      page.getByRole('heading', { name: 'What this team gets' }),
+      page.getByRole('heading', { name: 'Let your customers sign in with their company login' }),
     ).toHaveCount(0)
 
     // Require SSO can be turned off
@@ -760,7 +765,7 @@ test.describe("single sign-on and the project's add-on, on a team", () => {
     })
 
     const addon = addonCard(page)
-    await expect(addon).toContainText('Not enabled', { timeout: 45_000 })
+    await expect(addon).toContainText('$150.00 per month', { timeout: 45_000 })
     await expect(addon.getByRole('link', { name: 'Go to teams' })).toHaveCount(
       0,
     )

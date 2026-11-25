@@ -32,6 +32,7 @@ import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
 import { EnableSSOAddonDialog } from './EnableSSOAddonDialog'
 import { DisableSSOAddonDialog } from './DisableSSOAddonDialog'
+import { SSOAddonHero } from './SSOAddonHero'
 import {
   SSO_ADDON_CARD_ID,
   toAddonTarget,
@@ -290,6 +291,13 @@ export function SSOAddonCard({
       : t('Billed monthly, prorated for the current billing cycle.')
   })()
 
+  const showPaused = paused && !loading && status !== 'active'
+  // Not on, and nothing in the way of saying what it is: make the offer.
+  // What was set up before the add-on ended is a warning, not an offer.
+  const offered =
+    !loading && !denied && !failed && !showPaused && status !== 'active'
+  const primaryVariant = offered ? 'brandCta' : 'default'
+
   const footerAction = (() => {
     if (loading || denied) return null
     if (failed) {
@@ -309,6 +317,7 @@ export function SSOAddonCard({
     if (status === 'unavailable') {
       return canUpgrade ? (
         <Button
+          variant={primaryVariant}
           size="sm"
           className="h-9 text-[13px]"
           onClick={() => navigateToUpgradeWizard(navigate, orgId)}
@@ -358,6 +367,7 @@ export function SSOAddonCard({
     if (status === 'scheduled') return null
     return (
       <Button
+        variant={primaryVariant}
         size="sm"
         className="h-9 text-[13px]"
         onClick={() => setShowEnable(true)}
@@ -367,7 +377,6 @@ export function SSOAddonCard({
     )
   })()
 
-  const showPaused = paused && !loading && status !== 'active'
   const setupProjectId =
     showSetupLink &&
     target.scope === 'project' &&
@@ -375,6 +384,47 @@ export function SSOAddonCard({
     (status === 'active' || status === 'pending')
       ? target.projectId
       : null
+
+  const dialogs = (
+    <>
+      {!inEnvironment ? (
+        <EnableSSOAddonDialog
+          open={showEnable}
+          onOpenChange={setShowEnable}
+          target={target}
+        />
+      ) : null}
+      {addon && !inEnvironment ? (
+        <DisableSSOAddonDialog
+          open={showDisable}
+          onOpenChange={setShowDisable}
+          target={target}
+          addonId={addon.$id}
+        />
+      ) : null}
+    </>
+  )
+
+  if (offered) {
+    // Ready to enable: the price is the headline, and the badge has nothing to add
+    const enableable = status === 'available' && canManage && !inEnvironment
+    return (
+      <>
+        <SSOAddonHero
+          scope={target.scope}
+          badge={status === 'available' ? null : statusBadge}
+          price={enableable ? monthlyPriceLabel : null}
+          note={
+            enableable && monthlyPriceLabel
+              ? t('Prorated for the current billing cycle.')
+              : statusCopy
+          }
+          action={footerAction}
+        />
+        {dialogs}
+      </>
+    )
+  }
 
   return (
     <>
@@ -462,22 +512,7 @@ export function SSOAddonCard({
           </div>
         ) : null}
       </div>
-
-      {!inEnvironment ? (
-        <EnableSSOAddonDialog
-          open={showEnable}
-          onOpenChange={setShowEnable}
-          target={target}
-        />
-      ) : null}
-      {addon && !inEnvironment ? (
-        <DisableSSOAddonDialog
-          open={showDisable}
-          onOpenChange={setShowDisable}
-          target={target}
-          addonId={addon.$id}
-        />
-      ) : null}
+      {dialogs}
     </>
   )
 }

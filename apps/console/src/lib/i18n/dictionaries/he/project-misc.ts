@@ -3374,6 +3374,44 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'תוסף ההתחברות היחידה (SSO) יוסר בסוף מחזור החיוב הנוכחי',
   "Are you sure you want to disable the Single sign-on add-on? It stays active until the end of your current billing cycle and is not renewed. Then nobody signs in to your app through the identity providers of this project's teams, and the teams can no longer verify domains, connect identity providers or turn on Require SSO.":
     'האם אתם בטוחים שברצונכם להשבית את תוסף ההתחברות היחידה (SSO)? הוא יישאר פעיל עד סוף מחזור החיוב הנוכחי ולא יחודש. אחר כך אף אחד לא יתחבר לאפליקציה שלכם דרך ספקי הזהויות של הצוותים בפרויקט, והצוותים לא יוכלו עוד לאמת דומיינים, לחבר ספקי זהויות או להפעיל חיוב SSO.',
+  'Sign in to Appwrite with your company login':
+    'התחברות ל-Appwrite עם חשבון החברה שלכם',
+  'People on your verified domains sign in to the Console through your identity provider, and join this organization with the roles you choose.':
+    'אנשים בדומיינים המאומתים שלכם מתחברים לקונסולה דרך ספק הזהויות שלכם, ומצטרפים לארגון הזה עם התפקידים שתבחרו.',
+  'Teammates join on their first sign-in':
+    'חברי הצוות מצטרפים בהתחברות הראשונה',
+  'No invites to send. Anyone on your domains gets in with the roles you set.':
+    'אין צורך לשלוח הזמנות. כל מי שבדומיינים שלכם נכנס עם התפקידים שהגדרתם.',
+  'Make it the only way in':
+    'הפכו אותה לדרך היחידה להיכנס',
+  'Require SSO, so people on your domains reach the organization only through your identity provider. Owners always keep access.':
+    'הפעילו חיוב SSO, כך שאנשים בדומיינים שלכם יגיעו לארגון רק דרך ספק הזהויות שלכם. לבעלים תמיד נשארת גישה.',
+  'Bring your identity provider':
+    'הביאו את ספק הזהויות שלכם',
+  'Okta, Microsoft Entra ID, Google Workspace, Keycloak, or anything that speaks OpenID Connect.':
+    'Okta,‏ Microsoft Entra ID,‏ Google Workspace,‏ Keycloak, או כל ספק שתומך ב-OpenID Connect.',
+  'Let your customers sign in with their company login':
+    'תנו ללקוחות שלכם להתחבר עם חשבון החברה שלהם',
+  "Users on a team's verified domains sign in to your app through that team's identity provider, and join the team with its roles.":
+    'משתמשים בדומיינים המאומתים של צוות מתחברים לאפליקציה שלכם דרך ספק הזהויות של אותו צוות, ומצטרפים לצוות עם התפקידים שלו.',
+  'An identity provider for each customer':
+    'ספק זהויות לכל לקוח',
+  'Give every customer a team with its own domains and its own identity provider.':
+    'תנו לכל לקוח צוות עם דומיינים משלו וספק זהויות משלו.',
+  'Users join on their first sign-in':
+    'משתמשים מצטרפים בהתחברות הראשונה',
+  'No invites to send. They land in the team with the roles you chose.':
+    'אין צורך לשלוח הזמנות. הם מגיעים לצוות עם התפקידים שבחרתם.',
+  'Require SSO, team by team':
+    'חיוב SSO, צוות אחר צוות',
+  "Members on a team's domains get its roles only after signing in through its identity provider.":
+    'חברים בדומיינים של צוות מקבלים את התפקידים שלו רק אחרי התחברות דרך ספק הזהויות שלו.',
+  'One add-on covers every team in this project, in each of its environments.':
+    'תוסף אחד מכסה את כל הצוותים בפרויקט הזה, בכל אחת מהסביבות שלו.',
+  'Prorated for the current billing cycle.':
+    'מחושב יחסית למחזור החיוב הנוכחי.',
+  'Appwrite Console':
+    'קונסולת Appwrite',
   "With this add-on, people on your organization's verified domains sign in to the Console through its identity providers.":
     'עם התוסף הזה, אנשים בדומיינים המאומתים של הארגון שלכם מתחברים לקונסולה דרך ספקי הזהויות שלו.',
   'This add-on is available on {plans}. Upgrade your plan to enable it.':

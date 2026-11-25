@@ -1555,15 +1555,22 @@ test.describe("single sign-on and the organization's add-on", () => {
     const mock = await mockAppwriteApi(page, { addon: 'off', domains: [] })
     await page.goto(SSO, { waitUntil: 'domcontentloaded' })
 
+    // Not on yet: the page is the offer, with what it does and what it costs
     const card = addonCard(page)
-    await expect(card).toContainText('Not enabled', { timeout: 45_000 })
+    await expect(
+      card.getByRole('heading', {
+        name: 'Sign in to Appwrite with your company login',
+      }),
+    ).toBeVisible({ timeout: 45_000 })
     await expect(card).toContainText(
-      "With this add-on, people on your organization's verified domains sign in to the Console through its identity providers.",
+      'People on your verified domains sign in to the Console through your identity provider, and join this organization with the roles you choose.',
     )
+    await expect(card).toContainText('Teammates join on their first sign-in')
+    await expect(card).toContainText('Make it the only way in')
+    await expect(card).toContainText('Bring your identity provider')
     // The price is the add-on's, as the API answers it
-    await expect(card).toContainText(
-      '$350.00/month, prorated for the current billing cycle.',
-    )
+    await expect(card).toContainText('$350.00 per month')
+    await expect(card).toContainText('Prorated for the current billing cycle.')
     // Only the add-on: no empty cards, nothing to set up
     await expect(page.getByRole('heading', { name: 'Domains' })).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Add domain' })).toHaveCount(
@@ -1774,9 +1781,9 @@ test.describe("single sign-on and the organization's add-on", () => {
     await mockAppwriteApi(page, { addon: 'off', baa: true, domains: [] })
     await page.goto(SSO, { waitUntil: 'domcontentloaded' })
 
-    await expect(addonCard(page)).toContainText('Not enabled', {
-      timeout: 45_000,
-    })
+    await expect(
+      addonCard(page).getByRole('button', { name: 'Enable add-on' }),
+    ).toBeVisible({ timeout: 45_000 })
     await expect(page.getByRole('heading', { name: 'Domains' })).toHaveCount(0)
     await expect(settingsNav(page)).toContainText('Add-on')
   })
