@@ -2,7 +2,7 @@
 layout: post
 title: "How to add Appwrite Analytics to your website"
 description: Add Appwrite Analytics to your website with the Web SDK. Track pageviews, traffic sources, file downloads, and custom events without cookies.
-date: 2026-10-28
+date: 2026-11-30
 cover: /images/blog/add-appwrite-analytics-to-your-website/cover.avif
 timeToRead: 7
 author: atharva

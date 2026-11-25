@@ -2,7 +2,7 @@
 layout: post
 title: "How to add Appwrite Analytics to your mobile app"
 description: Add Appwrite Analytics to an Android, iOS, React Native, or Flutter app. Track screen views, time in the app, and custom events, and compare iOS and Android on one dashboard.
-date: 2026-10-28
+date: 2026-11-30
 cover: /images/blog/add-appwrite-analytics-to-your-mobile-app/cover.avif
 timeToRead: 10
 author: atharva
