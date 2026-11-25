@@ -45,6 +45,7 @@ import {
 import { useVcsInstallationReconnect } from '@/lib/vcs/use-installation-reconnect'
 import { cn } from '@/lib/utils'
 import { useWizard } from './WizardContext'
+import { VercelImport } from './VercelImport'
 import type { Models } from '@appwrite.io/console'
 import { useT } from '@/lib/i18n/translate'
 import { RefreshButton } from '@/components/global/shared/RefreshButton'
@@ -326,6 +327,7 @@ export function CreateSiteView() {
       repositoryName: repo.name,
       repositoryUrl: repo.url,
       siteName: repo.name,
+      importedFrom: undefined,
     })
 
     navigate({
@@ -344,6 +346,7 @@ export function CreateSiteView() {
       template,
       siteName: template.name,
       framework: getFrameworkString(template.frameworks?.[0]),
+      importedFrom: undefined,
     })
 
     navigate({
@@ -603,6 +606,10 @@ export function CreateSiteView() {
           ) : null}
         </CreateWizardRightColumn>
       </div>
+
+      {projectId ? (
+        <VercelImport projectId={projectId} region={project?.region} />
+      ) : null}
 
       {/* Manual upload footnote */}
       <div className="mt-6 pt-6 border-t border-border">
