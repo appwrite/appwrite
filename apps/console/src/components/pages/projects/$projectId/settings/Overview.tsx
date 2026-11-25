@@ -40,6 +40,8 @@ import {
 import { ConfirmNameDialog } from '@/components/global/shared/ConfirmNameDialog'
 import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
 import { MCPSection } from '@/components/pages/projects/$projectId/shared/MCPSection'
+import { isCloudProfile } from '@/lib/console-profiles'
+import { AppsWithAccessCard } from './AppsWithAccessCard'
 import { RESOURCE_CARD_GRID_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { Button } from '@/components/ui/button'
@@ -1110,6 +1112,13 @@ export function ProjectSettingsOverview({
             projectId={projectId}
             projectName={productionProject?.name ?? project.name}
           />
+
+          {isCloudProfile() && project.teamId && (
+            <AppsWithAccessCard
+              projectId={productionProject?.$id ?? projectId}
+              teamId={project.teamId}
+            />
+          )}
 
           {/* Change Organization Section (cloud multi-tenancy only). An
               environment moves with its project, never on its own. */}

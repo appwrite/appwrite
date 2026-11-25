@@ -28,6 +28,7 @@ import {
   Eye,
   CreditCard,
   Settings,
+  Blocks,
   KeyRound,
   Handshake,
   LockKeyhole,
@@ -104,6 +105,7 @@ import {
   canShowOrgApiKeysSettings,
   canShowOrgSsoSettings,
   canShowOrgOAuthAppsSettings,
+  canShowOrgInstalledAppsSettings,
   getFirstAllowedOrgSettingsPath,
   canInviteOrgMember,
   canCreateProject,
@@ -196,6 +198,7 @@ import { View as DomainsView } from '../domains/View'
 import { useOrganizationDomainsPlanLimit } from '../domains/_components/useOrganizationDomainsPlanLimit'
 import { View as MarketplaceView } from '../marketplace/View'
 import { View as OrgAppsView } from '../apps/View'
+import { InstalledApps } from '../settings/InstalledApps'
 import { Partners } from '../settings/Partners'
 import { SingleSignOn } from '../settings/SingleSignOn'
 import { useSSOAddonGate } from '@/components/global/shared/sso/SSOCardHelpers'
@@ -270,6 +273,7 @@ type OrgRoutePath =
   | '/organizations/$orgId/settings/billing'
   | '/organizations/$orgId/settings/compliance'
   | '/organizations/$orgId/settings/oauth-apps'
+  | '/organizations/$orgId/settings/installations'
   | '/organizations/$orgId/settings/partners'
   | '/organizations/$orgId/settings/sso'
   | '/organizations/$orgId/settings/escalations'
@@ -634,7 +638,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     return 'projects'
   }, [tabProp, resolvedPathname, isDomainDetailRoute, isAppDetailRoute])
 
-  // Settings sub-tab (when on settings): 'overview' | 'members' | 'billing' | 'compliance' | 'oauth-apps' | 'partners' | 'sso'
+  // Settings sub-tab (when on settings): 'overview' | 'members' | 'billing' | 'compliance' | 'oauth-apps' | 'installations' | 'partners' | 'sso'
   const settingsSubTab = useMemo(() => {
     const pathParts = resolvedPathname.split('/').filter(Boolean)
     const orgIndex = pathParts.findIndex((part) => part === 'organizations')
@@ -644,6 +648,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       if (subTab === 'billing') return 'billing'
       if (subTab === 'compliance') return 'compliance'
       if (subTab === 'oauth-apps') return 'oauth-apps'
+      if (subTab === 'installations') return 'installations'
       if (subTab === 'partners') return 'partners'
       if (subTab === 'sso') return 'sso'
       if (subTab === 'escalations') return 'escalations'
@@ -703,6 +708,16 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               keywords: ['oauth', 'sso', 'apps', 'login']},
           ]
         : []),
+      ...(canShowOrgInstalledAppsSettings(access, features)
+        ? [
+            {
+              id: 'installations',
+              label: t('Installed apps'),
+              to: '/organizations/$orgId/settings/installations',
+              icon: Blocks,
+              keywords: ['installed', 'apps', 'installations', 'marketplace', 'uninstall']},
+          ]
+        : []),
       ...(features.orgApiKeys
         ? [
             {
@@ -745,6 +760,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             return canAccessOrgSettingsCompliance(access)
           if (item.id === 'oauth-apps')
             return canShowOrgOAuthAppsSettings(access, features)
+          if (item.id === 'installations')
+            return canShowOrgInstalledAppsSettings(access, features)
           if (item.id === 'partners')
             return canShowOrgApiKeysSettings(access, features)
           if (item.id === 'sso') return canShowOrgSsoSettings(access, features)
@@ -848,6 +865,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       (settingsSubTab === 'compliance' && !features.compliance) ||
       (settingsSubTab === 'oauth-apps' &&
         !canShowOrgOAuthAppsSettings(access, features)) ||
+      (settingsSubTab === 'installations' &&
+        !canShowOrgInstalledAppsSettings(access, features)) ||
       (settingsSubTab === 'partners' && !features.orgApiKeys) ||
       (settingsSubTab === 'sso' && !showSso) ||
       (settingsSubTab === 'escalations' && !features.alerts)
@@ -868,6 +887,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           canAccessOrgSettingsCompliance(access)) ||
         (settingsSubTab === 'oauth-apps' &&
           canShowOrgOAuthAppsSettings(access, features)) ||
+        (settingsSubTab === 'installations' &&
+          canShowOrgInstalledAppsSettings(access, features)) ||
         (settingsSubTab === 'partners' &&
           canShowOrgApiKeysSettings(access, features)) ||
         (settingsSubTab === 'sso' && showSso) ||
@@ -897,6 +918,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         'settings/billing': '/organizations/$orgId/settings/billing',
         'settings/compliance': '/organizations/$orgId/settings/compliance',
         'settings/oauth-apps': '/organizations/$orgId/settings/oauth-apps',
+        'settings/installations': '/organizations/$orgId/settings/installations',
         'settings/partners': '/organizations/$orgId/settings/partners',
         'settings/sso': '/organizations/$orgId/settings/sso',
         'settings/escalations':
@@ -2214,6 +2236,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       billing: '/organizations/$orgId/settings/billing',
       compliance: '/organizations/$orgId/settings/compliance',
       'oauth-apps': '/organizations/$orgId/settings/oauth-apps',
+      installations: '/organizations/$orgId/settings/installations',
       partners: '/organizations/$orgId/settings/partners',
       sso: '/organizations/$orgId/settings/sso',
       'escalations':
@@ -3605,6 +3628,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       <ComplianceTab />
                     ) : settingsSubTab === 'oauth-apps' ? (
                       <OrgAppsView />
+                    ) : settingsSubTab === 'installations' ? (
+                      <InstalledApps />
                     ) : settingsSubTab === 'partners' ? (
                       <Partners />
                     ) : settingsSubTab === 'sso' ? (

@@ -244,6 +244,7 @@ import { Route as PublicOrganizationsOrgIdSettingsBillingRouteImport } from './r
 import { Route as PublicOrganizationsOrgIdSettingsComplianceRouteImport } from './routes/_public/organizations.$orgId.settings.compliance'
 import { Route as PublicOrganizationsOrgIdSettingsDangerZoneRouteImport } from './routes/_public/organizations.$orgId.settings.danger-zone'
 import { Route as PublicOrganizationsOrgIdSettingsEscalationsRouteImport } from './routes/_public/organizations.$orgId.settings.escalations'
+import { Route as PublicOrganizationsOrgIdSettingsInstallationsRouteImport } from './routes/_public/organizations.$orgId.settings.installations'
 import { Route as PublicOrganizationsOrgIdSettingsMembersRouteImport } from './routes/_public/organizations.$orgId.settings.members'
 import { Route as PublicOrganizationsOrgIdSettingsOauthAppsRouteImport } from './routes/_public/organizations.$orgId.settings.oauth-apps'
 import { Route as PublicOrganizationsOrgIdSettingsPartnersRouteImport } from './routes/_public/organizations.$orgId.settings.partners'
@@ -1799,6 +1800,12 @@ const PublicOrganizationsOrgIdSettingsEscalationsRoute =
   PublicOrganizationsOrgIdSettingsEscalationsRouteImport.update({
     id: '/escalations',
     path: '/escalations',
+    getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
+  } as any)
+const PublicOrganizationsOrgIdSettingsInstallationsRoute =
+  PublicOrganizationsOrgIdSettingsInstallationsRouteImport.update({
+    id: '/installations',
+    path: '/installations',
     getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
   } as any)
 const PublicOrganizationsOrgIdSettingsMembersRoute =
@@ -3983,6 +3990,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/settings/compliance': typeof PublicOrganizationsOrgIdSettingsComplianceRoute
   '/organizations/$orgId/settings/danger-zone': typeof PublicOrganizationsOrgIdSettingsDangerZoneRoute
   '/organizations/$orgId/settings/escalations': typeof PublicOrganizationsOrgIdSettingsEscalationsRoute
+  '/organizations/$orgId/settings/installations': typeof PublicOrganizationsOrgIdSettingsInstallationsRoute
   '/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/organizations/$orgId/settings/partners': typeof PublicOrganizationsOrgIdSettingsPartnersRoute
@@ -4474,6 +4482,7 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/settings/compliance': typeof PublicOrganizationsOrgIdSettingsComplianceRoute
   '/organizations/$orgId/settings/danger-zone': typeof PublicOrganizationsOrgIdSettingsDangerZoneRoute
   '/organizations/$orgId/settings/escalations': typeof PublicOrganizationsOrgIdSettingsEscalationsRoute
+  '/organizations/$orgId/settings/installations': typeof PublicOrganizationsOrgIdSettingsInstallationsRoute
   '/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/organizations/$orgId/settings/partners': typeof PublicOrganizationsOrgIdSettingsPartnersRoute
@@ -4972,6 +4981,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/settings/compliance': typeof PublicOrganizationsOrgIdSettingsComplianceRoute
   '/_public/organizations/$orgId/settings/danger-zone': typeof PublicOrganizationsOrgIdSettingsDangerZoneRoute
   '/_public/organizations/$orgId/settings/escalations': typeof PublicOrganizationsOrgIdSettingsEscalationsRoute
+  '/_public/organizations/$orgId/settings/installations': typeof PublicOrganizationsOrgIdSettingsInstallationsRoute
   '/_public/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
   '/_public/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/_public/organizations/$orgId/settings/partners': typeof PublicOrganizationsOrgIdSettingsPartnersRoute
@@ -5494,6 +5504,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/settings/compliance'
     | '/organizations/$orgId/settings/danger-zone'
     | '/organizations/$orgId/settings/escalations'
+    | '/organizations/$orgId/settings/installations'
     | '/organizations/$orgId/settings/members'
     | '/organizations/$orgId/settings/oauth-apps'
     | '/organizations/$orgId/settings/partners'
@@ -5985,6 +5996,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/settings/compliance'
     | '/organizations/$orgId/settings/danger-zone'
     | '/organizations/$orgId/settings/escalations'
+    | '/organizations/$orgId/settings/installations'
     | '/organizations/$orgId/settings/members'
     | '/organizations/$orgId/settings/oauth-apps'
     | '/organizations/$orgId/settings/partners'
@@ -6482,6 +6494,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/settings/compliance'
     | '/_public/organizations/$orgId/settings/danger-zone'
     | '/_public/organizations/$orgId/settings/escalations'
+    | '/_public/organizations/$orgId/settings/installations'
     | '/_public/organizations/$orgId/settings/members'
     | '/_public/organizations/$orgId/settings/oauth-apps'
     | '/_public/organizations/$orgId/settings/partners'
@@ -8482,6 +8495,13 @@ declare module '@tanstack/react-router' {
       path: '/escalations'
       fullPath: '/organizations/$orgId/settings/escalations'
       preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsEscalationsRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
+    }
+    '/_public/organizations/$orgId/settings/installations': {
+      id: '/_public/organizations/$orgId/settings/installations'
+      path: '/installations'
+      fullPath: '/organizations/$orgId/settings/installations'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsInstallationsRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
     }
     '/_public/organizations/$orgId/settings/members': {
@@ -10915,6 +10935,7 @@ interface PublicOrganizationsOrgIdSettingsRouteChildren {
   PublicOrganizationsOrgIdSettingsComplianceRoute: typeof PublicOrganizationsOrgIdSettingsComplianceRoute
   PublicOrganizationsOrgIdSettingsDangerZoneRoute: typeof PublicOrganizationsOrgIdSettingsDangerZoneRoute
   PublicOrganizationsOrgIdSettingsEscalationsRoute: typeof PublicOrganizationsOrgIdSettingsEscalationsRoute
+  PublicOrganizationsOrgIdSettingsInstallationsRoute: typeof PublicOrganizationsOrgIdSettingsInstallationsRoute
   PublicOrganizationsOrgIdSettingsMembersRoute: typeof PublicOrganizationsOrgIdSettingsMembersRoute
   PublicOrganizationsOrgIdSettingsOauthAppsRoute: typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   PublicOrganizationsOrgIdSettingsPartnersRoute: typeof PublicOrganizationsOrgIdSettingsPartnersRoute
@@ -10931,6 +10952,8 @@ const PublicOrganizationsOrgIdSettingsRouteChildren: PublicOrganizationsOrgIdSet
       PublicOrganizationsOrgIdSettingsDangerZoneRoute,
     PublicOrganizationsOrgIdSettingsEscalationsRoute:
       PublicOrganizationsOrgIdSettingsEscalationsRoute,
+    PublicOrganizationsOrgIdSettingsInstallationsRoute:
+      PublicOrganizationsOrgIdSettingsInstallationsRoute,
     PublicOrganizationsOrgIdSettingsMembersRoute:
       PublicOrganizationsOrgIdSettingsMembersRoute,
     PublicOrganizationsOrgIdSettingsOauthAppsRoute:

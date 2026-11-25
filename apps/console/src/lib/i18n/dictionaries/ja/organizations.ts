@@ -381,6 +381,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Import zone file': 'ゾーンファイルをインポート',
   'Initial term': '初回期間',
   'Install app': 'アプリをインストール',
+  '1 install': '1 件のインストール',
+  '{count} installs': '{count} 件のインストール',
   'Invalid Selection': '無効な選択',
   'Invalid email address': '無効なメールアドレスです',
   'Invalid payment method response': '無効な支払い方法の応答です',
