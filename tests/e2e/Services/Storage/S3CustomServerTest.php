@@ -313,6 +313,28 @@ final class S3CustomServerTest extends Scope
     }
 
     #[Group('s3')]
+    public function testCreateBucketGetsTheSamePerFileLimitAsREST(): void
+    {
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        // The REST endpoint's default is the plan's per-file limit, or the platform's without a plan
+        $rest = $this->setupBucket();
+        $restBucket = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $rest, $headers);
+        $this->assertSame(200, $restBucket['headers']['status-code']);
+
+        $bucketId = Id::unique();
+        $create = $this->call(Client::METHOD_PUT, '/' . $bucketId);
+        $this->assertSame(200, $create['headers']['status-code'], (string) $create['body']);
+
+        $s3Bucket = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId, $headers);
+        $this->assertSame(200, $s3Bucket['headers']['status-code']);
+        $this->assertSame($restBucket['body']['maximumFileSize'], $s3Bucket['body']['maximumFileSize']);
+    }
+
+    #[Group('s3')]
     public function testCopyObjectRequiresSignedCopySource(): void
     {
         $bucketId = $this->setupBucket();
