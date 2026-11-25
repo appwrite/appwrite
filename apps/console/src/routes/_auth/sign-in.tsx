@@ -317,7 +317,7 @@ function SignInPage() {
 
   // Runs for everyone: the page cannot know the user yet, and the browser only
   // offers a passkey it already holds for the console.
-  const { features, isCloud } = useConsoleProfile()
+  const { features } = useConsoleProfile()
   const [passkeySupported, setPasskeySupported] = useState(false)
   const [passkeyAutofill, setPasskeyAutofill] = useState(false)
   useEffect(() => {
@@ -373,8 +373,8 @@ function SignInPage() {
             ? handlePasskeySignIn
             : undefined
         }
-        // Everyone on Cloud can sign in with SSO.
-        showSSO={isCloud}
+        // Everyone on Cloud can sign in with SSO; `/sso` is gated the same way.
+        showSSO={features.sso}
         isLoading={signInMutation.isPending || passkeyBusy || isOpeningMfa}
         oauthLoading={oauthLoading}
         redirect={search.redirect}

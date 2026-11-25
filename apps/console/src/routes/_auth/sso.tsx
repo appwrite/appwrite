@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { AppwriteException } from '@appwrite.io/console'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { createFileRoute, Link, useSearch } from '@tanstack/react-router'
+import {
+  createFileRoute,
+  Link,
+  redirect,
+  useSearch,
+} from '@tanstack/react-router'
 import { ArrowLeft, KeyRound } from 'lucide-react'
 import { z } from 'zod'
 import {
@@ -21,6 +26,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { sdk } from '@/lib/appwrite/sdk'
 import type { SSOSignInProvider } from '@/lib/appwrite/team-sso'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { useT } from '@/lib/i18n/translate'
 import { parseOrganizationIdFromPath } from '@/lib/organization-overview-prefetch'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
@@ -57,6 +63,18 @@ const searchSchema = z.object({
 export const Route = createFileRoute('/_auth/sso')({
   component: SingleSignOnPage,
   validateSearch: searchSchema,
+  // Where the Console has no single sign-on (self-hosted), the API has none of
+  // its routes either: the sign-in page is the way in.
+  beforeLoad: ({ search }) => {
+    if (!getActiveProfileFeatures().sso) {
+      const back = ssoReturnPath(search.redirect)
+      throw redirect({
+        to: '/sign-in',
+        search: back ? { redirect: back } : undefined,
+        replace: true,
+      })
+    }
+  },
   head: () => ({ meta: [{ title: pageTitle('Sign in with SSO') }] }),
 })
 
@@ -117,17 +135,15 @@ function SingleSignOnPage() {
     ? teams.some((team) => team.$id !== refusedOrgId)
     : teams.length > 1
 
-  const start = (providerId: string) => {
+  const start = (providerId: string, { replace = false } = {}) => {
     const { success, failure: back } = ssoSignInURLs(
       window.location.origin,
       search.redirect,
     )
     saveEmail(email.trim())
-    window.location.href = sdk.forConsole.teamSSO.signInURL(
-      providerId,
-      success,
-      back,
-    )
+    const url = sdk.forConsole.teamSSO.signInURL(providerId, success, back)
+    if (replace) window.location.replace(url)
+    else window.location.href = url
   }
 
   const lookup = useMutation({
@@ -145,10 +161,12 @@ function SingleSignOnPage() {
 
   const domain = email.includes('@') ? email.trim().split('@').pop() : ''
 
-  // A failed sign-in comes back without `provider`, so this never loops.
+  // A failed sign-in comes back without `provider`, so this never loops. The
+  // identity provider takes this page's place in the history: left there, Back
+  // from the identity provider would start the sign-in again.
   const direct = !failure && !!search.provider
   useEffect(() => {
-    if (direct && search.provider) start(search.provider)
+    if (direct && search.provider) start(search.provider, { replace: true })
     // eslint-disable-next-line react-hooks/exhaustive-deps -- start once per provider
   }, [direct, search.provider])
 

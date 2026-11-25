@@ -948,6 +948,31 @@ test.describe('organization single sign-on', () => {
     ).toBeVisible()
   })
 
+  test('keeps the refused page out of the history, so Back leaves the sign-in', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, {
+      role: 'developer',
+      ssoRequired: true,
+      refuseWithoutSSO: true,
+      providers: [provider('Okta', ['developer'])],
+    })
+
+    await page.goto('/account', { waitUntil: 'domcontentloaded' })
+    await expect(page.getByTestId('account-logout')).toBeVisible({
+      timeout: 45_000,
+    })
+    await page.goto(`/organizations/${ORGANIZATION.$id}`, {
+      waitUntil: 'domcontentloaded',
+    })
+    await expect(page).toHaveURL(/\/sso\?/, { timeout: 45_000 })
+
+    // With the refused page still behind it, Back would be refused again and
+    // land here once more.
+    await page.goBack({ waitUntil: 'domcontentloaded' })
+    await expect(page).toHaveURL(/\/account/)
+  })
+
   test('connects an identity provider with the roles people join with', async ({
     page,
   }) => {
@@ -991,7 +1016,8 @@ test.describe('organization single sign-on', () => {
     const row = page.getByRole('row', { name: /Okta/ })
     await expect(row).toContainText('Developer')
     await expect(row).toContainText('Billing')
-    await expect(row).toContainText('okta-client')
+    // The list names the provider; its client ID is in the update dialog
+    await expect(row).not.toContainText('okta-client')
   })
 
   test('needs a discovery URL or all three endpoints', async ({ page }) => {
@@ -1883,6 +1909,53 @@ test.describe('single sign-on sign-in', () => {
     expect(new URL(started.searchParams.get('failure') ?? '').pathname).toBe(
       '/sso',
     )
+  })
+
+  test('does not start a shared SSO URL again on Back from the identity provider', async ({
+    page,
+  }) => {
+    const mock = await mockAppwriteApi(page, {
+      signedIn: false,
+      providers: [provider('Okta', ['developer'])],
+    })
+    await page.goto('/sign-in', { waitUntil: 'domcontentloaded' })
+    await expect(
+      page.getByRole('link', { name: 'Sign in with SSO' }),
+    ).toBeVisible({ timeout: 45_000 })
+    await page.goto('/sso?provider=provider-okta', {
+      waitUntil: 'domcontentloaded',
+    })
+    await expect(page.getByText('Identity provider login page')).toBeVisible({
+      timeout: 45_000,
+    })
+
+    await page.goBack({ waitUntil: 'domcontentloaded' })
+    await expect(page).toHaveURL(/\/sign-in/)
+    await expect(
+      page.getByRole('link', { name: 'Sign in with SSO' }),
+    ).toBeVisible()
+    expect(mock.sent.signIns).toEqual(['provider-okta'])
+  })
+
+  test('sends /sso to the sign-in page where the Console has no single sign-on', async ({
+    page,
+  }) => {
+    const mock = await mockAppwriteApi(page, {
+      signedIn: false,
+      providers: [provider('Okta', ['developer'])],
+    })
+    await withoutSso(page)
+
+    await page.goto('/sso?provider=provider-okta', {
+      waitUntil: 'domcontentloaded',
+    })
+    await expect(page).toHaveURL(/\/sign-in/, { timeout: 45_000 })
+    await expect(page.getByLabel('Email')).toBeVisible()
+    await expect(
+      page.getByRole('link', { name: 'Sign in with SSO' }),
+    ).toHaveCount(0)
+    expect(mock.sent.signIns).toHaveLength(0)
+    expect(mock.sent.lookups).toHaveLength(0)
   })
 
   test('returns only to pages inside the Console, also after a failed try', async ({

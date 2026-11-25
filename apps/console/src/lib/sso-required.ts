@@ -17,7 +17,9 @@ export function requiredSSOHref(returnPath: string): string {
 
 /**
  * Send the person to the SSO sign-in. `returnPath` is where to come back to,
- * by default the page they are on.
+ * by default the page they are on. The sign-in takes the refused page's place
+ * in the history: left there, Back would open it, be refused and land on the
+ * sign-in again.
  */
 export function redirectToRequiredSSO(returnPath?: string): void {
   if (typeof window === 'undefined' || window.location.pathname === '/sso') {
@@ -25,7 +27,7 @@ export function redirectToRequiredSSO(returnPath?: string): void {
   }
   const back =
     returnPath ?? `${window.location.pathname}${window.location.search}`
-  window.location.assign(requiredSSOHref(back))
+  window.location.replace(requiredSSOHref(back))
 }
 
 /** The organization or project a Console path belongs to, if any. */

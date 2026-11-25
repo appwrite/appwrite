@@ -278,13 +278,6 @@ export function SSOProvidersCard({ target }: { target: SSOTarget }) {
                     >
                       {provider.name}
                     </div>
-                    <div
-                      dir="ltr"
-                      className="w-fit max-w-full truncate font-mono text-[12px] text-muted-foreground"
-                      title={provider.oidcClientId}
-                    >
-                      {provider.oidcClientId}
-                    </div>
                   </TableCell>
                   <TableCell className="hidden px-4 py-3 sm:table-cell">
                     <div className="flex flex-wrap gap-1">

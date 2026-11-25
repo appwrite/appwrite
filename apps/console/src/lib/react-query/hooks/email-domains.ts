@@ -59,20 +59,12 @@ export async function fetchSSODomains(
   return teamSSOFor(target).listDomains(requireTeamId(target))
 }
 
-const UNVERIFIED_DOMAIN_POLL_MS = 30_000
-
 export function ssoDomainsQueryOptions(target: SSOTarget | null) {
   return queryOptions({
     queryKey: ssoQueryKey('emailDomains', target),
     queryFn: () => fetchSSODomains(target!),
     enabled: !!target && !!ssoTargetTeamId(target),
     staleTime: LONG_STALE_TIME,
-    // The server keeps checking unverified domains on its own; pick that up
-    // while someone waits on the page for DNS to propagate.
-    refetchInterval: (query) =>
-      query.state.data?.domains.some((domain) => domain.status !== 'verified')
-        ? UNVERIFIED_DOMAIN_POLL_MS
-        : false,
   })
 }
 
