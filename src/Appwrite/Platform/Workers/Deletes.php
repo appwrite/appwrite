@@ -2802,7 +2802,7 @@ class Deletes extends Action
         $dbForProject = $getProjectDB($project);
         $expired = DateTime::addSeconds(new \DateTime(), -APP_STORAGE_UPLOAD_RETENTION);
 
-        $deleteExpired = function (Document $bucket) use ($project, $dbForProject, $deviceForFiles, $locks, $expired): void {
+        $deleteExpired = function (Document $bucket) use ($project, $dbForProject, $deviceForFiles, $locks, $expired): bool {
             $collection = 'bucket_' . $bucket->getSequence();
 
             // Every chunk updates the document, and its signature stays empty until the upload completes.
@@ -2885,7 +2885,10 @@ class Deletes extends Action
                 });
             } catch (Throwable $th) {
                 Console::error('Failed to delete expired uploads in bucket ' . $bucket->getId() . ': ' . $th->getMessage());
+                return false;
             }
+
+            return true;
         };
 
         // Without a hint, or once per retention period, every bucket is scanned: hints can be lost.
@@ -2902,7 +2905,18 @@ class Deletes extends Action
             Console::info('Delete expired uploads in every bucket');
             $this->listByGroup('buckets', [
                 Query::select(['$id', '$sequence']),
-            ], $dbForProject, $deleteExpired);
+            ], $dbForProject, function (Document $bucket) use ($deleteExpired, $project, $uploads): void {
+                if ($deleteExpired($bucket)) {
+                    return;
+                }
+
+                // The next full scan is days away, so the hourly runs retry this bucket.
+                try {
+                    $uploads?->track($project->getId(), $bucket->getId());
+                } catch (Throwable $th) {
+                    Console::warning('Failed to track bucket ' . $bucket->getId() . ' for retry: ' . $th->getMessage());
+                }
+            });
             return;
         }
 
