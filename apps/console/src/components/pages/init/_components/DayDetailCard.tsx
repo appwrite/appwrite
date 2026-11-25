@@ -190,12 +190,22 @@ function DayFilmCover({
         aria-label={`Play the ${films.map((entry) => entry.label).join(' and ')} launch film`}
       >
         {children}
+        {/* A dimmed cover and a large play button say this cover is a film. */}
         <span
           aria-hidden
-          className="pointer-events-none absolute bottom-3 end-3 flex items-center gap-1.5 rounded-full bg-black/70 px-3 py-1.5 text-[12px] font-medium text-white shadow-sm backdrop-blur-sm transition-colors group-hover/film:bg-[var(--brand-cta)]"
+          className="pointer-events-none absolute inset-0 rounded-lg bg-black/25 transition-colors duration-300 group-hover/film:bg-black/40"
+        />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3"
         >
-          <Play className="size-3.5 fill-current" aria-hidden />
-          Watch the launch
+          <span className="relative flex size-16 items-center justify-center rounded-full bg-[var(--brand-cta)] text-white shadow-[0_0_0_8px_color-mix(in_srgb,var(--brand-cta)_22%,transparent),0_12px_40px_-8px_var(--brand-cta)] transition-transform duration-300 group-hover/film:scale-110 sm:size-[72px]">
+            <span className="absolute inset-0 animate-ping rounded-full bg-[var(--brand-cta)] opacity-25 [animation-duration:2.4s] motion-reduce:hidden" />
+            <Play className="relative ms-1 size-7 fill-current" />
+          </span>
+          <span className="rounded-full bg-black/70 px-3 py-1 text-[12px] font-medium text-white backdrop-blur-sm">
+            {films.length > 1 ? 'Watch the launch films' : 'Watch the launch'}
+          </span>
         </span>
       </button>
       <InitFilmDialog

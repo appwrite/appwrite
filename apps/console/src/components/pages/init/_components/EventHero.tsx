@@ -32,6 +32,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { ChevronRight } from 'lucide-react'
 import { EventCtaButton } from '../shared/EventCtas'
+import { InitRevealCta, resolveInitReveal } from './init5/InitRevealCta'
 import { InitCollapsedDayNav } from './InitCollapsedDayNav'
 import { InitHeroBackground } from './InitHeroBackground'
 import { Init5HeroContent } from './init5/Init5HeroContent'
@@ -360,6 +361,8 @@ export function EventHero({
     setTransientActivity(null)
   }, [setTransientActivity])
 
+  const reveal = useMemo(() => resolveInitReveal(event), [event])
+
   const giveawayDiscordCta = useMemo(() => {
     if (!event.giveaway?.secondaryCtaHref) return null
     return {
@@ -472,7 +475,10 @@ export function EventHero({
             headerAddon={headerAddon}
             reduceMotion={Boolean(reduceMotion)}
             actions={
-              event.isRecapMode ? null : !account ? (
+              reveal ? (
+                // Once a day is revealed, its launch film leads the hero.
+                <InitRevealCta reveal={reveal} />
+              ) : event.isRecapMode ? null : !account ? (
                 <EventCtaButton
                   cta={event.primaryCta}
                   variant="brandCta"
