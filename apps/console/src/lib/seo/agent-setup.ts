@@ -34,15 +34,16 @@ const AI_AGENTS_DOCS = `${AGENT_SETUP_ORIGIN}${AI_AGENTS_DOCS_PATH}/<agent>.md, 
 const CLI_INSTALL_SH = `${AGENT_SETUP_ORIGIN}/cli/install.sh`
 const CLI_INSTALL_PS1 = `${AGENT_SETUP_ORIGIN}/cli/install.ps1`
 
-const CLAUDE_OFFICIAL_MARKETPLACE_REPO = 'anthropics/claude-plugins-official'
-const CLAUDE_PLUGIN_OFFICIAL = 'appwrite@claude-plugins-official'
+export const CLAUDE_OFFICIAL_MARKETPLACE_REPO =
+  'anthropics/claude-plugins-official'
+export const CLAUDE_PLUGIN_OFFICIAL = 'appwrite@claude-plugins-official'
 const CLAUDE_PLUGIN_MARKETPLACE_REPO = 'appwrite/claude-plugin'
 const CLAUDE_PLUGIN_REPO_URL = 'https://github.com/appwrite/claude-plugin'
 const CLAUDE_PLUGIN_PAGE_URL = 'https://claude.com/plugins/appwrite'
-const CURSOR_PLUGIN_PAGE_URL = 'https://cursor.com/marketplace/appwrite'
+export const CURSOR_PLUGIN_PAGE_URL = 'https://cursor.com/marketplace/appwrite'
 
 /** Appwrite's plugin in the OpenAI Curated catalog that ChatGPT and Codex share. */
-const CODEX_PLUGIN_ID =
+export const CODEX_PLUGIN_ID =
   'app-6aa2c33323108191b17b9ccf4233b3ce@openai-curated-remote'
 const CODEX_PLUGIN_CONNECT_URL =
   'https://chatgpt.com/plugins/plugin_asdk_app_6aa2c33323108191b17b9ccf4233b3ce'

@@ -36,6 +36,7 @@ import {
 import { cn } from '@/lib/utils'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { Credits } from './_components/Credits'
+import { Integration } from './_components/Integration'
 import { Learnings } from './_components/Learnings'
 import { Performance } from './_components/Performance'
 import { Repositories } from './_components/Repositories'
@@ -61,7 +62,9 @@ export function View() {
       ? 'learnings'
       : segments.includes('performance')
         ? 'performance'
-        : 'reviews'
+        : segments.includes('integration')
+          ? 'integration'
+          : 'reviews'
 
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
@@ -175,6 +178,12 @@ export function View() {
         id: 'performance',
         label: t('Performance'),
         to: '/projects/$projectId/reviews/performance',
+        params: { projectId },
+      },
+      {
+        id: 'integration',
+        label: t('Integration'),
+        to: '/projects/$projectId/reviews/integration',
         params: { projectId },
       },
     ],
@@ -294,6 +303,8 @@ export function View() {
             chooseDisabled={!canWrite}
             chooseDisabledTooltip={writeTooltip}
           />
+        ) : activeTab === 'integration' ? (
+          <Integration projectId={projectId} />
         ) : activeTab === 'performance' ? (
           <Performance projectId={projectId} />
         ) : activeTab === 'learnings' ? (
