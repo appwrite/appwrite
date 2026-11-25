@@ -1111,7 +1111,7 @@ class GitLab extends Git
                     'headCommitUrl' => $mr['last_commit']['url'] ?? '',
                     'external' => $external,
                     'pullRequestNumber' => $mr['iid'] ?? '',
-                    'pullRequestAuthor' => $this->pullRequestAuthorOf($payloadArray, $mr['author_id'] ?? null),
+                    'pullRequestAuthor' => $this->pullRequestAuthorOf($payloadArray, \is_array($mr) ? ($mr['author_id'] ?? null) : null),
                     'action' => $action,
                 ]];
 
@@ -1156,7 +1156,7 @@ class GitLab extends Git
         $discussionId = \is_scalar($note['discussion_id'] ?? null) ? (string) $note['discussion_id'] : '';
 
         return [[
-            'repositoryId' => \strval($project['id'] ?? ''),
+            'repositoryId' => $this->stringOf($project['id'] ?? null),
             'repositoryName' => $project['name'] ?? '',
             'repositoryUrl' => $project['web_url'] ?? '',
             'owner' => $project['namespace'] ?? '',
@@ -1164,17 +1164,48 @@ class GitLab extends Git
             'pullRequestNumber' => \is_numeric($mergeRequest['iid'] ?? null) ? (int) $mergeRequest['iid'] : 0,
             'pullRequestAuthor' => $this->pullRequestAuthorOf($payload, $mergeRequest['author_id'] ?? null),
             'action' => 'created',
-            'commentId' => \strval($note['id'] ?? ''),
+            'commentId' => $this->stringOf($note['id'] ?? null),
             'commentKind' => $isReview ? 'review' : 'issue',
             'commentThreadId' => $isReview ? $discussionId : '',
             'commentReplyToId' => $isReview ? $discussionId : '',
             'commentBody' => \is_string($note['note'] ?? null) ? $note['note'] : '',
             'commentUrl' => \is_string($note['url'] ?? null) ? $note['url'] : '',
             'commentAuthor' => $user['username'] ?? '',
-            'commentAuthorId' => \strval($user['id'] ?? ''),
+            'commentAuthorId' => $this->stringOf($user['id'] ?? null),
             // GitLab's bot users (project and group access tokens) are members like anyone else.
             'commentAuthorType' => 'User',
         ]];
+    }
+
+    /**
+     * A response's HTTP status code.
+     *
+     * @param array<mixed> $response
+     */
+    private function statusCodeOf(array $response): int
+    {
+        $headers = \is_array($response['headers'] ?? null) ? $response['headers'] : [];
+
+        return \is_int($headers['status-code'] ?? null) ? $headers['status-code'] : 0;
+    }
+
+    /**
+     * A response's decoded JSON body, or an empty array when it has none.
+     *
+     * @param array<mixed> $response
+     * @return array<mixed>
+     */
+    private function bodyOf(array $response): array
+    {
+        return \is_array($response['body'] ?? null) ? $response['body'] : [];
+    }
+
+    /**
+     * A scalar payload value as a string, and empty for anything else.
+     */
+    private function stringOf(mixed $value): string
+    {
+        return \is_scalar($value) ? (string) $value : '';
     }
 
     /**
@@ -1186,7 +1217,8 @@ class GitLab extends Git
     private function pullRequestAuthorOf(array $payload, mixed $authorId): string
     {
         $user = \is_array($payload['user'] ?? null) ? $payload['user'] : [];
-        if ($authorId === null || !isset($user['id']) || \strval($user['id']) !== \strval($authorId)) {
+        $userId = $this->stringOf($user['id'] ?? null);
+        if ($userId === '' || $userId !== $this->stringOf($authorId)) {
             return '';
         }
 
@@ -1206,7 +1238,7 @@ class GitLab extends Git
     {
         $response = $this->call(self::METHOD_GET, '/projects/' . rawurlencode($repositoryId) . '/members/all/' . rawurlencode($userId), ['Authorization' => 'Bearer ' . $this->accessToken]);
 
-        $statusCode = $response['headers']['status-code'] ?? 0;
+        $statusCode = $this->statusCodeOf($response);
         if ($statusCode === 404) {
             return '';
         }
@@ -1214,7 +1246,8 @@ class GitLab extends Git
             throw new Exception("Failed to get member: HTTP {$statusCode}", $statusCode);
         }
 
-        $accessLevel = (int) ($response['body']['access_level'] ?? 0);
+        $accessLevel = $this->bodyOf($response)['access_level'] ?? 0;
+        $accessLevel = \is_int($accessLevel) ? $accessLevel : 0;
 
         return match (true) {
             $accessLevel >= 40 => 'admin',

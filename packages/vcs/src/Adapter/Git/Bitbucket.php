@@ -1710,13 +1710,15 @@ class Bitbucket extends Git
         $user = \is_array($comment['user'] ?? null) ? $comment['user'] : [];
         $parent = \is_array($comment['parent'] ?? null) ? $comment['parent'] : [];
 
+        $content = \is_array($comment['content'] ?? null) ? $comment['content'] : [];
+
         $isReview = \is_array($comment['inline'] ?? null);
-        $parentId = \is_scalar($parent['id'] ?? null) ? (string) $parent['id'] : '';
+        $parentId = $this->stringOf($parent['id'] ?? null);
 
         return [
-            'repositoryId' => (string) ($repository['full_name'] ?? ''),
+            'repositoryId' => $this->stringOf($repository['full_name'] ?? null),
             'repositoryName' => $repository['name'] ?? '',
-            'repositoryUrl' => (string) ($repository['links']['html']['href'] ?? ''),
+            'repositoryUrl' => $this->htmlLinkOf($repository),
             'owner' => $this->workspaceSlugOf($repository),
             'installationId' => '',
             'pullRequestNumber' => \is_numeric($pullRequest['id'] ?? null) ? (int) $pullRequest['id'] : 0,
@@ -1726,13 +1728,57 @@ class Bitbucket extends Git
             'commentKind' => $isReview ? 'review' : 'issue',
             'commentThreadId' => '',
             'commentReplyToId' => $isReview ? $parentId : '',
-            'commentBody' => \is_string($comment['content']['raw'] ?? null) ? $comment['content']['raw'] : '',
-            'commentUrl' => (string) ($comment['links']['html']['href'] ?? ''),
+            'commentBody' => \is_string($content['raw'] ?? null) ? $content['raw'] : '',
+            'commentUrl' => $this->htmlLinkOf($comment),
             'commentAuthor' => $this->usernameOf($user),
-            'commentAuthorId' => (string) ($user['uuid'] ?? ($user['account_id'] ?? '')),
+            'commentAuthorId' => $this->stringOf($user['uuid'] ?? ($user['account_id'] ?? null)),
             // Apps and access tokens act as 'app_user' accounts.
             'commentAuthorType' => ($user['type'] ?? 'user') === 'user' ? 'User' : 'Bot',
         ];
+    }
+
+    /**
+     * The web address of a repository or a comment: its `links.html.href`.
+     *
+     * @param array<mixed> $resource
+     */
+    private function htmlLinkOf(array $resource): string
+    {
+        $links = \is_array($resource['links'] ?? null) ? $resource['links'] : [];
+        $html = \is_array($links['html'] ?? null) ? $links['html'] : [];
+
+        return $this->stringOf($html['href'] ?? null);
+    }
+
+    /**
+     * A response's HTTP status code.
+     *
+     * @param array<mixed> $response
+     */
+    private function statusCodeOf(array $response): int
+    {
+        $headers = \is_array($response['headers'] ?? null) ? $response['headers'] : [];
+
+        return \is_int($headers['status-code'] ?? null) ? $headers['status-code'] : 0;
+    }
+
+    /**
+     * A response's decoded JSON body, or an empty array when it has none.
+     *
+     * @param array<mixed> $response
+     * @return array<mixed>
+     */
+    private function bodyOf(array $response): array
+    {
+        return \is_array($response['body'] ?? null) ? $response['body'] : [];
+    }
+
+    /**
+     * A scalar payload value as a string, and empty for anything else.
+     */
+    private function stringOf(mixed $value): string
+    {
+        return \is_scalar($value) ? (string) $value : '';
     }
 
     /**
@@ -1764,16 +1810,17 @@ class Bitbucket extends Git
         // A thread nested deeper than this is answered at the deepest comment reached.
         for ($depth = 0; $depth < 20; $depth++) {
             $response = $this->call(self::METHOD_GET, "/repositories/{$owner}/{$repositoryName}/pullrequests/{$pullRequestNumber}/comments/" . rawurlencode($id), ['Authorization' => $this->authorizationHeader()]);
-            $statusCode = $response['headers']['status-code'] ?? 0;
+            $statusCode = $this->statusCodeOf($response);
             if ($statusCode >= 400) {
                 throw new Exception("Failed to get comment: HTTP {$statusCode}", $statusCode);
             }
 
-            $parent = $response['body']['parent']['id'] ?? null;
-            if (!\is_scalar($parent) || (string) $parent === '') {
+            $body = $this->bodyOf($response);
+            $parent = $this->stringOf(\is_array($body['parent'] ?? null) ? ($body['parent']['id'] ?? null) : null);
+            if ($parent === '') {
                 break;
             }
-            $id = (string) $parent;
+            $id = $parent;
         }
 
         return $id;
@@ -1791,7 +1838,7 @@ class Bitbucket extends Git
     {
         $response = $this->call(self::METHOD_GET, "/repositories/{$owner}/{$repositoryName}/permissions-config/users/" . rawurlencode($userId), ['Authorization' => $this->authorizationHeader()]);
 
-        $statusCode = $response['headers']['status-code'] ?? 0;
+        $statusCode = $this->statusCodeOf($response);
         if ($statusCode === 403 || $statusCode === 404) {
             return '';
         }
@@ -1799,7 +1846,7 @@ class Bitbucket extends Git
             throw new Exception("Failed to get repository permission: HTTP {$statusCode}", $statusCode);
         }
 
-        return match ($response['body']['permission'] ?? '') {
+        return match ($this->bodyOf($response)['permission'] ?? '') {
             'admin' => 'admin',
             'write' => 'write',
             'read' => 'read',

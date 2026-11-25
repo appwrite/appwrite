@@ -13,11 +13,13 @@ use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
 use Appwrite\Vcs\RepositoryPullRequestCleanup;
 use Utopia\Bus\Bus;
+use Utopia\Config\Config;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\DSN\DSN;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Span\Span;
 use Utopia\System\System;
@@ -385,5 +387,23 @@ class Create extends Action
         $parts = \explode('/', \strval($parsedPayload['repositoryId'] ?? ''), 2);
 
         return [$parts[0], $parts[1] ?? ''];
+    }
+
+    private function isProjectInCurrentRegion(Document $project): bool
+    {
+        try {
+            $dsn = new DSN($project->getAttribute('database'));
+            $databaseName = $dsn->getHost();
+        } catch (\InvalidArgumentException) {
+            $databaseName = $project->getAttribute('database');
+        }
+
+        $databases = Config::getParam('pools-database', []);
+        if (!\in_array($databaseName, $databases)) {
+            Console::warning("Skipping project {$project->getId()}: database '{$databaseName}' is not part of region " . System::getEnv('_APP_REGION'));
+            return false;
+        }
+
+        return true;
     }
 }

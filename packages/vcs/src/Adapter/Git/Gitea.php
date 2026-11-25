@@ -1214,7 +1214,7 @@ class Gitea extends Git
                     'headCommitUrl' => $headCommitUrl,
                     'external' => $external,
                     'pullRequestNumber' => $pullRequestNumber,
-                    'pullRequestAuthor' => $payloadPullRequestUser['login'] ?? '',
+                    'pullRequestAuthor' => \is_array($payloadPullRequestUser) ? ($payloadPullRequestUser['login'] ?? '') : '',
                     'action' => $action,
                 ]];
 
@@ -1249,27 +1249,59 @@ class Gitea extends Git
         }
 
         $pullRequestUser = \is_array($pullRequest['user'] ?? null) ? $pullRequest['user'] : (\is_array($issue['user'] ?? null) ? $issue['user'] : []);
+        $owner = \is_array($repository['owner'] ?? null) ? $repository['owner'] : [];
         $number = $issue['number'] ?? ($pullRequest['number'] ?? 0);
 
         return [[
-            'repositoryId' => \strval($repository['id'] ?? ''),
+            'repositoryId' => $this->stringOf($repository['id'] ?? null),
             'repositoryName' => $repository['name'] ?? '',
             'repositoryUrl' => $repository['html_url'] ?? '',
-            'owner' => $repository['owner']['login'] ?? '',
+            'owner' => $owner['login'] ?? '',
             'installationId' => '',  // Gitea doesn't have installations
             'pullRequestNumber' => \is_numeric($number) ? (int) $number : 0,
             'pullRequestAuthor' => $pullRequestUser['login'] ?? '',
             'action' => 'created',
-            'commentId' => \strval($comment['id'] ?? ''),
+            'commentId' => $this->stringOf($comment['id'] ?? null),
             'commentKind' => 'issue',
             'commentThreadId' => '',
             'commentReplyToId' => '',
             'commentBody' => \is_string($comment['body'] ?? null) ? $comment['body'] : '',
             'commentUrl' => \is_string($comment['html_url'] ?? null) ? $comment['html_url'] : '',
             'commentAuthor' => $user['login'] ?? '',
-            'commentAuthorId' => \strval($user['id'] ?? ''),
+            'commentAuthorId' => $this->stringOf($user['id'] ?? null),
             'commentAuthorType' => 'User',
         ]];
+    }
+
+    /**
+     * A response's HTTP status code.
+     *
+     * @param array<mixed> $response
+     */
+    private function statusCodeOf(array $response): int
+    {
+        $headers = \is_array($response['headers'] ?? null) ? $response['headers'] : [];
+
+        return \is_int($headers['status-code'] ?? null) ? $headers['status-code'] : 0;
+    }
+
+    /**
+     * A response's decoded JSON body, or an empty array when it has none.
+     *
+     * @param array<mixed> $response
+     * @return array<mixed>
+     */
+    private function bodyOf(array $response): array
+    {
+        return \is_array($response['body'] ?? null) ? $response['body'] : [];
+    }
+
+    /**
+     * A scalar payload value as a string, and empty for anything else.
+     */
+    private function stringOf(mixed $value): string
+    {
+        return \is_scalar($value) ? (string) $value : '';
     }
 
     /**
@@ -1286,12 +1318,12 @@ class Gitea extends Git
         $reviews = [];
         foreach (\range(1, 20) as $page) {
             $response = $this->call(self::METHOD_GET, "/repos/{$owner}/{$repositoryName}/pulls/{$pullRequestNumber}/reviews?limit=50&page={$page}", ['Authorization' => "token $this->accessToken"]);
-            $statusCode = $response['headers']['status-code'] ?? 0;
+            $statusCode = $this->statusCodeOf($response);
             if ($statusCode >= 400) {
                 throw new Exception("Failed to list reviews: HTTP {$statusCode}", $statusCode);
             }
 
-            $body = \is_array($response['body'] ?? null) ? $response['body'] : [];
+            $body = $this->bodyOf($response);
             \array_push($reviews, ...$body);
             if (\count($body) < 50) {
                 break;
@@ -1305,19 +1337,19 @@ class Gitea extends Git
                 continue;
             }
 
-            $response = $this->call(self::METHOD_GET, "/repos/{$owner}/{$repositoryName}/pulls/{$pullRequestNumber}/reviews/" . \intval($review['id'] ?? 0) . '/comments', ['Authorization' => "token $this->accessToken"]);
-            $statusCode = $response['headers']['status-code'] ?? 0;
+            $response = $this->call(self::METHOD_GET, "/repos/{$owner}/{$repositoryName}/pulls/{$pullRequestNumber}/reviews/" . rawurlencode($this->stringOf($review['id'] ?? null)) . '/comments', ['Authorization' => "token $this->accessToken"]);
+            $statusCode = $this->statusCodeOf($response);
             if ($statusCode >= 400) {
                 throw new Exception("Failed to list review comments: HTTP {$statusCode}", $statusCode);
             }
 
-            foreach ((\is_array($response['body'] ?? null) ? $response['body'] : []) as $comment) {
+            foreach ($this->bodyOf($response) as $comment) {
                 if (!\is_array($comment)) {
                     continue;
                 }
 
-                $key = ($comment['path'] ?? '') . "\0" . \intval($comment['position'] ?? 0) . "\0" . \intval($comment['original_position'] ?? 0);
-                $id = \intval($comment['id'] ?? 0);
+                $key = $this->stringOf($comment['path'] ?? null) . "\0" . $this->stringOf($comment['position'] ?? null) . "\0" . $this->stringOf($comment['original_position'] ?? null);
+                $id = \is_int($comment['id'] ?? null) ? $comment['id'] : 0;
                 $threads[$key] = isset($threads[$key]) ? \min($threads[$key], $id) : $id;
                 if (\strval($id) === $commentId) {
                     $found = $key;
@@ -1338,7 +1370,7 @@ class Gitea extends Git
     {
         $response = $this->call(self::METHOD_GET, "/repos/{$owner}/{$repositoryName}/collaborators/" . rawurlencode($username) . '/permission', ['Authorization' => "token $this->accessToken"]);
 
-        $statusCode = $response['headers']['status-code'] ?? 0;
+        $statusCode = $this->statusCodeOf($response);
         if ($statusCode === 404 || $statusCode === 403) {
             return '';
         }
@@ -1346,7 +1378,7 @@ class Gitea extends Git
             throw new Exception("Failed to get collaborator permission: HTTP {$statusCode}", $statusCode);
         }
 
-        return match ($response['body']['permission'] ?? '') {
+        return match ($this->bodyOf($response)['permission'] ?? '') {
             'owner', 'admin' => 'admin',
             'write' => 'write',
             'read' => 'read',

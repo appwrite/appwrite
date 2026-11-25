@@ -257,7 +257,9 @@ final class BitbucketTest extends Base
 
         $adapter->createWebhook('o', 'r', 'https://example.com', 'secret');
 
-        $this->assertContains('pullrequest:comment_created', $adapter->sent['events']);
-        $this->assertContains('repo:push', $adapter->sent['events']);
+        $events = $adapter->sent['events'] ?? null;
+        $this->assertIsArray($events);
+        $this->assertContains('pullrequest:comment_created', $events);
+        $this->assertContains('repo:push', $events);
     }
 }
