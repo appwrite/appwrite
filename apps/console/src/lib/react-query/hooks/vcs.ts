@@ -430,7 +430,15 @@ export function vcsInstallationsQueryOptions(
   limit: number = DEFAULT_PAGE_SIZE,
 ) {
   return queryOptions({
-    queryKey: ['vcs', 'installations', projectId, page, limit],
+    // An empty list cached with the experiment off would hide reuse once it is turned on
+    queryKey: [
+      'vcs',
+      'installations',
+      projectId,
+      page,
+      limit,
+      isFeatureEnabled('gitInstallationReuse'),
+    ],
     queryFn: () => fetchVcsInstallations(projectId!, page, limit),
     enabled: !!projectId,
     staleTime: LONG_STALE_TIME,
