@@ -2372,6 +2372,15 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_MIGRATIONS_SUPABASE_CLIENT_SECRET',
+                'description' => 'Supabase OAuth app client secret.',
+                'introduction' => '2.8.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
         ]
     ]
