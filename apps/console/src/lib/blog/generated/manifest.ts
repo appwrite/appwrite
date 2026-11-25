@@ -17,6 +17,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "announcing-domain-updates",
+    "href": "/blog/post/announcing-domain-updates",
+    "title": "Announcing domain updates for Appwrite Sites and Functions",
+    "description": "Update a custom domain on Appwrite Sites or Functions to serve another branch or redirect somewhere new, without touching its DNS records or its certificate.",
+    "date": "2026-11-25",
+    "lastUpdated": "2026-11-25",
+    "timeToRead": 5,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-domain-updates/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-native-request-response",
     "href": "/blog/post/announcing-native-request-response",
     "title": "Announcing native request and response in Appwrite Functions",

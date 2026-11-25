@@ -882,7 +882,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Proxy API",
     "description": "Point custom domains at a customer's Appwrite project API, functions, and sites with the Proxy API, then verify them over DNS.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "partners/quick-start",
@@ -3049,7 +3049,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Domains",
     "description": "Execute Appwrite Functions through domains using standard HTTP GET, POST, or other request methods to serve static, JSON, HTML, or other content.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/functions/email",
@@ -3406,7 +3406,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Domains",
     "description": "Discover how domains can be managed for an Appwrite Site",
     "layout": "article",
-    "readingTimeMinutes": 6
+    "readingTimeMinutes": 7
   },
   {
     "slug": "products/sites/environment-variables",
