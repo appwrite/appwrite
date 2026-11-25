@@ -672,49 +672,44 @@ final class EvaluationCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-        foreach ([
-            'no steps' => [],
-            'nobody to notify' => [['delay' => 0]],
-            'unknown role' => [['delay' => 0, 'roles' => ['admin']]],
-            'negative delay' => [['delay' => -1, 'roles' => ['owner']]],
-        ] as $case => $steps) {
-            $refused = $this->client->call(Client::METHOD_POST, '/organization/escalations', $headers, [
-                'escalationId' => 'unique()',
-                'name' => 'Refused',
-                'steps' => $steps,
-            ]);
-            $this->assertSame(400, $refused['headers']['status-code'], $case);
-        }
+        // Every refusal uses one name, so listing it afterwards proves none of them was stored.
+        $refusedName = 'Refused ' . \uniqid();
+        $empty = $this->client->call(Client::METHOD_POST, '/organization/escalations', $headers, [
+            'escalationId' => 'unique()',
+            'name' => $refusedName,
+            'steps' => [],
+        ]);
+        $this->assertSame(400, $empty['headers']['status-code']);
 
-        // Steps are strict: a malformed step is refused whole, naming the step, rather than cleaned up and stored.
+        // Steps are strict: a malformed step is refused whole, naming the step and why, rather than cleaned up and stored.
         $owner = $this->getRoot()['$id'];
         $strict = [
-            'duplicate role' => [['delay' => 0, 'roles' => ['owner', 'owner']]],
-            'duplicate member' => [['delay' => 0, 'userIds' => [$owner, $owner]]],
-            'delay past the maximum' => [['delay' => Escalation::MAX_DELAY + 1, 'roles' => ['owner']]],
-            'fractional delay' => [['delay' => 1.5, 'roles' => ['owner']]],
-            'step not an object' => [['owner']],
-            'unknown key' => [['delay' => 0, 'roles' => ['owner'], 'phone' => true]],
+            'nobody to notify' => [[['delay' => 0]], 'notifies nobody'],
+            'unknown role' => [[['delay' => 0, 'roles' => ['admin']]], 'does not have'],
+            'negative delay' => [[['delay' => -1, 'roles' => ['owner']]], 'between 0 and'],
+            'duplicate role' => [[['delay' => 0, 'roles' => ['owner', 'owner']]], 'more than once'],
+            'duplicate member' => [[['delay' => 0, 'userIds' => [$owner, $owner]]], 'more than once'],
+            'delay past the maximum' => [[['delay' => Escalation::MAX_DELAY + 1, 'roles' => ['owner']]], 'between 0 and'],
+            'fractional delay' => [[['delay' => 1.5, 'roles' => ['owner']]], 'between 0 and'],
+            'step not an object' => [[['owner']], 'must be an object'],
+            'unknown key' => [[['delay' => 0, 'roles' => ['owner'], 'phone' => true]], 'unknown keys'],
+            'roles as an object' => [[['delay' => 0, 'roles' => ['a' => 'owner']]], 'roles'],
         ];
-        $refusedName = 'Refused ' . \uniqid();
-        foreach ($strict as $case => $steps) {
+        foreach ($strict as $case => [$steps, $reason]) {
             $refused = $this->client->call(Client::METHOD_POST, '/organization/escalations', $headers, [
                 'escalationId' => 'unique()',
                 'name' => $refusedName,
                 'steps' => $steps,
             ]);
             $this->assertSame(400, $refused['headers']['status-code'], $case);
-            $this->assertStringContainsString('Step 0', $refused['body']['message'], $case);
+            $this->assertStringContainsString('`steps[0]`', $refused['body']['message'], $case);
+            $this->assertStringContainsString($reason, $refused['body']['message'], $case);
 
             $rejected = $this->client->call(Client::METHOD_PATCH, '/organization/escalations/' . $escalationId, $headers, ['steps' => $steps]);
             $this->assertSame(400, $rejected['headers']['status-code'], $case);
-            $this->assertStringContainsString('Step 0', $rejected['body']['message'], $case);
+            $this->assertStringContainsString('`steps[0]`', $rejected['body']['message'], $case);
+            $this->assertStringContainsString($reason, $rejected['body']['message'], $case);
         }
-        $stored = $this->client->call(Client::METHOD_GET, '/organization/escalations', $headers, [
-            'queries' => [Query::equal('name', [$refusedName])->toString()],
-        ]);
-        $this->assertSame(200, $stored['headers']['status-code']);
-        $this->assertSame(0, $stored['body']['total']);
         $this->assertSame($created['body']['steps'], $this->client->call(Client::METHOD_GET, '/organization/escalations/' . $escalationId, $headers)['body']['steps']);
 
         // Updates are PATCH only: PUT is not a route, so nothing changes.
@@ -724,11 +719,33 @@ final class EvaluationCustomServerTest extends Scope
 
         $stranger = $this->client->call(Client::METHOD_POST, '/organization/escalations', $headers, [
             'escalationId' => 'unique()',
-            'name' => 'Stranger',
+            'name' => $refusedName,
             'steps' => [['delay' => 0, 'userIds' => ['not-a-member']]],
         ]);
         $this->assertSame(400, $stranger['headers']['status-code']);
         $this->assertSame('escalation_member_not_found', $stranger['body']['type']);
+
+        // An invited member who has not accepted yet is not notified, so an escalation cannot name them.
+        $invited = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', $this->consoleHeaders(), [
+            'email' => 'invited-' . \uniqid() . '@localhost.test',
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#title',
+        ]);
+        $this->assertSame(201, $invited['headers']['status-code']);
+        $this->assertFalse($invited['body']['confirm']);
+        $unconfirmed = $this->client->call(Client::METHOD_POST, '/organization/escalations', $headers, [
+            'escalationId' => 'unique()',
+            'name' => $refusedName,
+            'steps' => [['delay' => 0, 'userIds' => [$invited['body']['userId']]]],
+        ]);
+        $this->assertSame(400, $unconfirmed['headers']['status-code']);
+        $this->assertSame('escalation_member_not_found', $unconfirmed['body']['type']);
+
+        $stored = $this->client->call(Client::METHOD_GET, '/organization/escalations', $headers, [
+            'queries' => [Query::equal('name', [$refusedName])->toString()],
+        ]);
+        $this->assertSame(200, $stored['headers']['status-code']);
+        $this->assertSame(0, $stored['body']['total']);
 
         // A monitor may only use an escalation its organization has.
         $monitor = $this->client->call(Client::METHOD_POST, '/monitors/usage', $this->headers(), [

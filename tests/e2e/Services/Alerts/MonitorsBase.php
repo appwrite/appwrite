@@ -134,6 +134,7 @@ trait MonitorsBase
         $escalation = $this->createMonitor(['escalationId' => '!bad']);
         $this->assertSame(400, $escalation['headers']['status-code']);
         $this->assertSame('general_argument_invalid', $escalation['body']['type']);
+        $this->assertStringContainsString('Valid chars', $escalation['body']['message']);
 
         $this->assertSame($before, $this->listMonitors()['body']['total']);
 
@@ -186,6 +187,16 @@ trait MonitorsBase
         $this->assertSame(900, $monitor['body']['cooldown']);
         $this->assertSame('', $monitor['body']['escalationId']);
 
+        // An explicit null means the same as leaving the field out: the stored value stays.
+        $nulls = $this->updateMonitor($monitorId, ['severity' => null, 'escalationId' => null, 'notify' => null, 'cooldown' => null]);
+        $this->assertSame(200, $nulls['headers']['status-code']);
+        $monitor = $this->getMonitor($monitorId);
+        $this->assertSame('critical', $monitor['body']['severity']);
+        $this->assertSame('', $monitor['body']['escalationId']);
+        $this->assertSame(['owner', 'developer'], $monitor['body']['notify']);
+        $this->assertSame(900, $monitor['body']['cooldown']);
+        $this->assertSame('After ' . $monitorId, $monitor['body']['name']);
+
         $found = $this->listMonitors([Query::search('search', 'After ' . $monitorId)->toString()]);
         $this->assertSame([$monitorId], \array_column($found['body']['monitors'], '$id'));
         $this->assertSame('critical', $found['body']['monitors'][0]['severity']);
@@ -231,6 +242,7 @@ trait MonitorsBase
         $escalation = $this->updateMonitor($monitorId, ['escalationId' => '!bad']);
         $this->assertSame(400, $escalation['headers']['status-code']);
         $this->assertSame('general_argument_invalid', $escalation['body']['type']);
+        $this->assertStringContainsString('Valid chars', $escalation['body']['message']);
         $this->assertSame('', $this->getMonitor($monitorId)['body']['escalationId']);
 
         $silenced = $this->updateMonitor($monitorId, ['notify' => []]);

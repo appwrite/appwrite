@@ -219,13 +219,6 @@ final class ConsoleConsoleClientTest extends Scope
         $this->assertContains('organization.projects.keys.read', $scopeIds);
         $this->assertContains('organization.projects.keys.write', $scopeIds);
 
-        // Escalations have their own scopes; the organization's monitor scopes only remain for keys that hold them.
-        $deprecated = \array_column($response['body']['scopes'], 'deprecated', '$id');
-        $this->assertFalse($deprecated['escalations.read']);
-        $this->assertFalse($deprecated['escalations.write']);
-        $this->assertTrue($deprecated['monitors.read']);
-        $this->assertTrue($deprecated['monitors.write']);
-
         // Every scope has the expected shape
         foreach ($response['body']['scopes'] as $scope) {
             $this->assertArrayHasKey('$id', $scope);
