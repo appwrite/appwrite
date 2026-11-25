@@ -302,6 +302,32 @@ function tokenizeLogfmt(text: string): [string, string][] | null {
   return pairs
 }
 
+/**
+ * The `key=value` pairs of a text line that is made of nothing else, for the
+ * expanded row. Lines without a level or message key stay text on the row, but
+ * their pairs still read better as fields than as one long run.
+ */
+export function logfmtFields(text: string): RuntimeLogField[] | null {
+  if (!text.includes('=') || text.includes('\n')) return null
+  const pairs = tokenizeLogfmt(text.trim())
+  if (!pairs || pairs.length < 2) return null
+  return pairs.map(([key, value]) => ({ key, value }))
+}
+
+/** The whole entry as logged: JSON indented, anything else as it came. */
+export function formatRawLog(text: string): string {
+  const trimmed = text.trim()
+  const json =
+    (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+    (trimmed.startsWith('[') && trimmed.endsWith(']'))
+  if (!json) return text
+  try {
+    return JSON.stringify(JSON.parse(trimmed), null, 2)
+  } catch {
+    return text
+  }
+}
+
 /** Plain text: the level is the first word, when it is a level name or an `...Error:`. */
 function parseText(text: string): RuntimeLogLine {
   return {

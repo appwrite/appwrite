@@ -5,7 +5,7 @@
 // matches against `[[:<class>:]]`, as ranges.
 //
 //   docker run --rm -v "$PWD:/w" -w /w --entrypoint php appwrite-dev \
-//       crates/support/php-std/data/glob_classes.php > crates/support/php-std/src/glob/classes.rs
+//       crates/utopia/php-std/data/glob_classes.php > crates/utopia/php-std/src/glob/classes.rs
 
 $classes = ['alnum', 'alpha', 'blank', 'cntrl', 'digit', 'graph', 'lower', 'print', 'punct', 'space', 'upper', 'xdigit'];
 

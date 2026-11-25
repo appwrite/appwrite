@@ -1105,5 +1105,5 @@ How it behaves inside a Swoole worker:
   encoded an AVIF and then forked left the child waiting forever on its next encode.
 
 
-`crates/support/php-std` here holds only the functions `utopia-image` calls, copied
+`crates/utopia/php-std` here holds only the functions `utopia-image` calls, copied
 unchanged from the full crate on `feat/rust-utopia-conversion`.

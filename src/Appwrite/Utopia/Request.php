@@ -77,38 +77,37 @@ class Request extends UtopiaRequest
     }
 
     /**
-     * The ID of the project the request names: the `project` param, else the
-     * X-Appwrite-Project header, else a `project` query parameter (which a non-GET
-     * request only exposes through the query string, as presigned URLs do).
+     * The ID of the project the request names: a `project` query parameter, else the
+     * X-Appwrite-Project header. The query string stands in for the header where none
+     * can be set, as for a file preview URL, the realtime socket or a presigned URL.
      *
-     * Only a string names a project. A body can carry its own `project` key, such as
-     * the object in a GitLab webhook, and a realtime request can send a query array.
+     * The body never names the project: it can carry a `project` key of its own, such as
+     * the object in a GitLab webhook. Only a string names a project, never a query array.
      */
     public function getProject(): string
     {
-        $project = $this->getParam('project');
+        $project = $this->getQuery('project', '');
 
-        if (!\is_string($project)) {
-            $project = $this->getHeaderLine('x-appwrite-project', '');
+        if (\is_string($project) && $project !== '') {
+            return $project;
         }
 
-        if ($project === '') {
-            $query = $this->getQuery('project', '');
-            $project = \is_string($query) ? $query : '';
-        }
-
-        return $project;
+        return $this->getHeaderLine('x-appwrite-project', '');
     }
 
     /**
-     * The mode the request asks for: the `mode` param, else the X-Appwrite-Mode header.
-     * Only a string asks for a mode; a body can carry its own `mode` key.
+     * The mode the request asks for: a `mode` query parameter, else the X-Appwrite-Mode
+     * header. Like the project, the body never asks for a mode.
      */
     public function getMode(): string
     {
-        $mode = $this->getParam('mode');
+        $mode = $this->getQuery('mode', '');
 
-        return \is_string($mode) ? $mode : $this->getHeaderLine('x-appwrite-mode', APP_MODE_DEFAULT);
+        if (\is_string($mode) && $mode !== '') {
+            return $mode;
+        }
+
+        return $this->getHeaderLine('x-appwrite-mode', APP_MODE_DEFAULT);
     }
 
     /**

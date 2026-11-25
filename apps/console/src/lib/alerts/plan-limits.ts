@@ -12,9 +12,12 @@ type AlertingPlan = Models.BillingPlan & {
   escalations?: number
   escalationSteps?: number
   escalationRepeat?: number | null
+  monitorsAllowProbes?: boolean
 }
 
 export type AlertingLimits = {
+  /** Whether the plan offers synthetic checks at all. */
+  probesAllowed: boolean
   /** Synthetic checks the organization may hold; null when uncapped. */
   probes: number | null
   /** Shortest seconds between two checks of one synthetic check; 0 when the plan sets none. */
@@ -37,6 +40,7 @@ export function alertingLimits(
 ): AlertingLimits {
   const alerting = (plan ?? {}) as Partial<AlertingPlan>
   return {
+    probesAllowed: alerting.monitorsAllowProbes !== false,
     probes: cap(alerting.probes),
     probeInterval: alerting.probeInterval ?? 0,
     escalations: cap(alerting.escalations),
@@ -51,6 +55,8 @@ export type MonitorCaps = {
   usageAtLimit: boolean
   probeLimit: number | null
   probesAtLimit: boolean
+  /** Whether the plan offers synthetic checks at all. */
+  probesAllowed: boolean
   /** Neither type can be added, so creating a monitor is closed. */
   allAtLimit: boolean
 }
@@ -66,7 +72,7 @@ export function monitorCaps(
   probes: number | undefined,
 ): MonitorCaps {
   const usageLimit = getBillingPlanResourceLimit(plan, 'monitors') ?? 0
-  const probeLimit = alertingLimits(plan).probes
+  const { probes: probeLimit, probesAllowed } = alertingLimits(plan)
   const usageAtLimit =
     usageLimit > 0 && usageMonitors !== undefined && usageMonitors >= usageLimit
   const probesAtLimit =
@@ -76,7 +82,8 @@ export function monitorCaps(
     usageAtLimit,
     probeLimit,
     probesAtLimit,
-    allAtLimit: usageAtLimit && probesAtLimit,
+    probesAllowed,
+    allAtLimit: usageAtLimit && (probesAtLimit || !probesAllowed),
   }
 }
 

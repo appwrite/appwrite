@@ -4,7 +4,7 @@
 // columns wide, as ranges.
 //
 //   docker run --rm -v "$PWD:/w" -w /w --entrypoint php appwrite-dev \
-//       crates/support/php-std/data/mb_width.php > crates/support/php-std/src/mb/width.rs
+//       crates/utopia/php-std/data/mb_width.php > crates/utopia/php-std/src/mb/width.rs
 
 $ranges = [];
 $start = null;

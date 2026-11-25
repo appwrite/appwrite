@@ -6,6 +6,7 @@ import { ChevronRight } from 'lucide-react'
 import { CodeSnippetCopyButton } from '@/components/global/shared/CodeSnippetCopyButton'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
+import { formatRawLog, logfmtFields } from '@/lib/runtime-log-line'
 import type { RuntimeLogLevel, RuntimeLogLine } from '@/lib/runtime-log-line'
 
 /** Fields shown inline after the message on a collapsed row. */
@@ -223,26 +224,57 @@ export const RuntimeLogRow = memo(function RuntimeLogRow({
               </Detail>
             )}
           </dl>
-          {line.fields.length > 0 && (
-            <>
-              <div className="my-2 border-t border-border" />
-              <dl className="grid grid-cols-[minmax(80px,max-content)_1fr] gap-x-4 gap-y-0.5">
-                {line.fields.map((field, i) => (
-                  <Detail key={`${field.key}-${i}`} label={field.key}>
-                    {field.value}
-                  </Detail>
-                ))}
-              </dl>
-            </>
-          )}
-          <div className="mt-1 flex justify-end">
-            <CodeSnippetCopyButton content={plain} />
-          </div>
+          <RuntimeLogEntry line={line} plain={plain} />
         </div>
       )}
     </div>
   )
 })
+
+/**
+ * The entry itself under the metadata: its fields, then the whole line as it
+ * was logged, so nothing is hidden behind the parsed view.
+ */
+function RuntimeLogEntry({
+  line,
+  plain,
+}: {
+  line: RuntimeLogLine
+  plain: string
+}) {
+  const t = useT()
+  const fields =
+    line.fields.length > 0
+      ? line.fields
+      : line.format === 'text'
+        ? (logfmtFields(plain) ?? [])
+        : []
+
+  return (
+    <>
+      {fields.length > 0 && (
+        <>
+          <div className="my-2 border-t border-border" />
+          <dl className="grid grid-cols-[minmax(80px,max-content)_1fr] gap-x-4 gap-y-0.5">
+            {fields.map((field, i) => (
+              <Detail key={`${field.key}-${i}`} label={field.key}>
+                {field.value}
+              </Detail>
+            ))}
+          </dl>
+        </>
+      )}
+      <div className="my-2 border-t border-border" />
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-muted-foreground">{t('Raw')}</span>
+        <CodeSnippetCopyButton content={plain} />
+      </div>
+      <pre className="mt-1 max-h-80 overflow-auto whitespace-pre-wrap break-all rounded bg-muted/50 px-2 py-1.5">
+        {formatRawLog(plain)}
+      </pre>
+    </>
+  )
+}
 
 function Detail({ label, children }: { label: string; children: ReactNode }) {
   return (
