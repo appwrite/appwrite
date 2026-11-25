@@ -154,6 +154,23 @@ class Supabase extends OAuth2
     }
 
     /**
+     * Revoke the refresh token and every access token issued with it
+     */
+    public function revokeTokens(string $refreshToken): void
+    {
+        $this->request(
+            'POST',
+            'https://api.supabase.com/v1/oauth/revoke',
+            ['Content-Type: application/json'],
+            (string) \json_encode([
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+                'refresh_token' => $refreshToken,
+            ])
+        );
+    }
+
+    /**
      * @param string $accessToken
      *
      * @return array
