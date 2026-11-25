@@ -180,4 +180,84 @@ final class BitbucketTest extends Base
             $this->assertSame($action, $result['action'], "event '{$event}' should map to '{$action}'");
         }
     }
+
+    /**
+     * @param array<string, mixed> $comment
+     */
+    private function commentPayload(array $comment = []): string
+    {
+        return (string) json_encode([
+            'actor' => ['nickname' => 'octo'],
+            'repository' => [
+                'name' => self::EVENT_REPOSITORY_NAME,
+                'full_name' => self::EVENT_OWNER . '/' . self::EVENT_REPOSITORY_NAME,
+                'workspace' => ['slug' => self::EVENT_OWNER],
+                'links' => ['html' => ['href' => 'https://bitbucket.org/' . self::EVENT_OWNER . '/' . self::EVENT_REPOSITORY_NAME]],
+            ],
+            'pullrequest' => ['id' => self::EVENT_PULL_REQUEST_NUMBER, 'author' => ['nickname' => 'author', 'type' => 'user']],
+            'comment' => [
+                'id' => 501,
+                'content' => ['raw' => '@appwrite review'],
+                'user' => ['nickname' => 'octo', 'uuid' => '{u-1}', 'type' => 'user'],
+                'links' => ['html' => ['href' => 'https://bitbucket.org/c/501']],
+                ...$comment,
+            ],
+        ]);
+    }
+
+    public function testGetEventPullRequestComment(): void
+    {
+        $events = $this->vcsAdapter->getEvents('pullrequest:comment_created', $this->commentPayload());
+
+        $this->assertCount(1, $events);
+        $event = $events[0];
+        $this->assertSame('created', $event['action']);
+        $this->assertSame(self::EVENT_OWNER . '/' . self::EVENT_REPOSITORY_NAME, $event['repositoryId']);
+        $this->assertSame(self::EVENT_OWNER, $event['owner']);
+        $this->assertSame(self::EVENT_PULL_REQUEST_NUMBER, $event['pullRequestNumber']);
+        $this->assertSame('author', $event['pullRequestAuthor']);
+        $this->assertSame('501', $event['commentId']);
+        $this->assertSame('issue', $event['commentKind']);
+        $this->assertSame('', $event['commentReplyToId']);
+        $this->assertSame('@appwrite review', $event['commentBody']);
+        $this->assertSame('https://bitbucket.org/c/501', $event['commentUrl']);
+        $this->assertSame('octo', $event['commentAuthor']);
+        $this->assertSame('{u-1}', $event['commentAuthorId']);
+        $this->assertSame('User', $event['commentAuthorType']);
+    }
+
+    public function testGetEventPullRequestInlineReply(): void
+    {
+        $events = $this->vcsAdapter->getEvents('pullrequest:comment_created', $this->commentPayload([
+            'inline' => ['path' => 'src/index.ts', 'to' => 3],
+            'parent' => ['id' => 500],
+            'user' => ['nickname' => 'agent', 'uuid' => '{a-1}', 'type' => 'app_user'],
+        ]));
+
+        $this->assertSame('review', $events[0]['commentKind']);
+        $this->assertSame('500', $events[0]['commentReplyToId']);
+        $this->assertSame('Bot', $events[0]['commentAuthorType']);
+    }
+
+    public function testCreateWebhookSubscribesToComments(): void
+    {
+        $adapter = new class (new Cache(new None())) extends Bitbucket {
+            /** @var array<mixed> */
+            public array $sent = [];
+
+            #[\Override]
+            protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+            {
+                $this->sent = $params;
+
+                return ['headers' => ['status-code' => 201], 'body' => ['uuid' => '{hook}']];
+            }
+        };
+        $adapter->initializeVariables('', '', null, 'token');
+
+        $adapter->createWebhook('o', 'r', 'https://example.com', 'secret');
+
+        $this->assertContains('pullrequest:comment_created', $adapter->sent['events']);
+        $this->assertContains('repo:push', $adapter->sent['events']);
+    }
 }

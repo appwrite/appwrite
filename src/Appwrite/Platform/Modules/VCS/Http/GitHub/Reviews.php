@@ -7,6 +7,7 @@ use Appwrite\Event\Message\ReviewChat as ReviewChatMessage;
 use Appwrite\Event\Publisher\Review as ReviewPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\InstallationTokens;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -25,20 +26,29 @@ use Utopia\System\System;
 trait Reviews
 {
     /**
-     * The handle comments mention the reviewer by, without the @. Empty turns mentions off.
+     * The namespace of the hidden markers in the reviewer's comments (appwrite/hansi's
+     * MARKER_NAMESPACE), which tells its comments apart whoever they are authored by.
      */
-    abstract protected function getReviewerHandle(): string;
+    private const string REVIEWER_MARKER_NAMESPACE = 'appwrite-hansi';
+
+    /**
+     * The handle comments mention the reviewer by, without the @. Empty turns mentions off. An app
+     * provider's is the app's; where the reviewer posts as the account that connected the
+     * installation, it is that account's.
+     */
+    abstract protected function getReviewerHandle(Document $installation): string;
 
     /**
      * The login the reviewer's own comments are authored by, so it never answers itself.
      */
-    abstract protected function getReviewerLogin(): string;
+    abstract protected function getReviewerLogin(Document $installation): string;
 
     /**
      * The comment author's standing in the repository, as GitHub's author association names it:
-     * OWNER, MEMBER or COLLABORATOR may queue work, anything else may not.
+     * OWNER, MEMBER or COLLABORATOR may queue work, anything else may not. A provider that sends
+     * none asks for the author's permission through the installation.
      */
-    abstract protected function getCommentAuthorAssociation(array $parsedPayload, VcsFactory $vcsFactory): string;
+    abstract protected function getCommentAuthorAssociation(array $parsedPayload, Document $installation, VcsFactory $vcsFactory, InstallationTokens $installationTokens, Database $dbForPlatform): string;
 
     /**
      * Queues a review of the pull request for each project that has code review on for the
@@ -57,7 +67,8 @@ trait Reviews
         // Drafts are queued too: the service decides from the repository's own config.
         $trigger = match ($parsedPayload['action'] ?? '') {
             'opened', 'reopened', 'ready_for_review' => 'opened',
-            'synchronize' => 'synchronize',
+            // Gitea names a push to the pull request synchronized.
+            'synchronize', 'synchronized' => 'synchronize',
             default => null,
         };
         if ($trigger === null) {
@@ -70,7 +81,7 @@ trait Reviews
 
         $repositories = $this->findReviewRepositories($provider, $providerRepositoryId, \strval($parsedPayload['installationId'] ?? ''), $dbForPlatform, $authorization);
 
-        foreach ($repositories as $repository) {
+        foreach ($repositories as ['repository' => $repository]) {
             try {
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $repository->getAttribute('projectId', '')));
                 if ($project->isEmpty() || !$this->isProjectInCurrentRegion($project)) {
@@ -114,6 +125,7 @@ trait Reviews
         string $provider,
         array $parsedPayload,
         VcsFactory $vcsFactory,
+        InstallationTokens $installationTokens,
         Database $dbForPlatform,
         Authorization $authorization,
         callable $getProjectDB,
@@ -129,14 +141,20 @@ trait Reviews
             return;
         }
 
-        $handle = $this->getReviewerHandle();
         $author = \strval($parsedPayload['commentAuthor'] ?? '');
         $authorType = \strval($parsedPayload['commentAuthorType'] ?? '');
+        $body = \strval($parsedPayload['commentBody'] ?? '');
         $repositoryName = ($parsedPayload['owner'] ?? '') . '/' . ($parsedPayload['repositoryName'] ?? '');
         $installationId = \strval($parsedPayload['installationId'] ?? '');
         $providerRepositoryId = \strval($parsedPayload['repositoryId'] ?? '');
         // Each comment that is not answered says why: a dropped reply otherwise leaves no trace.
         $subject = "{$commentKind} comment {$commentId} on pull request {$pullNumber} of repository '{$repositoryName}' by '{$author}' ({$authorType})";
+
+        // The reviewer's own comments carry its hidden markers. Where it posts as the account that
+        // connected the installation, its author is no tell, as that person may comment too.
+        if (\str_contains($body, '<!-- ' . self::REVIEWER_MARKER_NAMESPACE . ':')) {
+            return;
+        }
 
         $repositories = $this->findReviewRepositories($provider, $providerRepositoryId, $installationId, $dbForPlatform, $authorization);
         if (empty($repositories)) {
@@ -144,23 +162,27 @@ trait Reviews
             return;
         }
 
-        // Every answer is a model run the project pays for: trusted humans and other apps may ask, never the reviewer itself.
-        // Checked once code review is known to be on, as a provider may have to be asked who the author is.
-        $association = $this->getCommentAuthorAssociation($parsedPayload, $vcsFactory);
-        if (!$this->canTriggerFromComment($author, $authorType, $association, $this->getReviewerLogin())) {
-            // Other apps may ask, so the only bot refused here is the reviewer itself, whose own
-            // comments arrive on every review. Everyone else refused gets a line.
-            if ($authorType !== 'Bot' && $authorType !== 'App') {
-                Console::info("Ignored {$subject}: the author is not an owner, member or collaborator ({$association})");
-            }
-            return;
-        }
-
-        $intent = $this->getMentionIntent($parsedPayload['commentBody'] ?? '', $handle);
         $isReviewThread = $commentKind === 'review';
+        // Asked once per installation: several projects may review the repository through one.
+        $associations = [];
 
-        foreach ($repositories as $repository) {
+        foreach ($repositories as ['repository' => $repository, 'installation' => $installation]) {
             try {
+                // Every answer is a model run the project pays for: trusted humans and other apps
+                // may ask, never the reviewer itself. Checked once code review is known to be on, as
+                // a provider may have to be asked who the author is.
+                $association = $associations[$installation->getId()] ??= $this->getCommentAuthorAssociation($parsedPayload, $installation, $vcsFactory, $installationTokens, $dbForPlatform);
+                if (!$this->canTriggerFromComment($author, $authorType, $association, $this->getReviewerLogin($installation))) {
+                    // Other apps may ask, so the only bot refused here is the reviewer itself, whose
+                    // own comments arrive on every review. Everyone else refused gets a line.
+                    if ($authorType !== 'Bot' && $authorType !== 'App') {
+                        Console::info("Ignored {$subject} for repository '{$repository->getId()}': the author is not an owner, member or collaborator");
+                    }
+                    continue;
+                }
+
+                $intent = $this->getMentionIntent($body, $this->getReviewerHandle($installation));
+
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $repository->getAttribute('projectId', '')));
                 if ($project->isEmpty()) {
                     Console::info("Ignored {$subject} for repository '{$repository->getId()}': its project is missing");
@@ -424,16 +446,33 @@ trait Reviews
     }
 
     /**
+     * The author association a permission on the repository stands for, on a provider that sends
+     * none: admin counts as an owner, write as a collaborator, anything less as neither.
+     */
+    private function getAssociationFromPermission(string $permission): string
+    {
+        return match ($permission) {
+            'admin' => 'OWNER',
+            'write' => 'COLLABORATOR',
+            default => '',
+        };
+    }
+
+    /**
      * Whether a comment may queue work. Humans need an owner, member or collaborator association;
      * other apps and bots may ask too (an agent answering a finding), but never the reviewer
      * itself, so it does not answer itself in a loop. $self is the login the reviewer comments as.
      */
     private function canTriggerFromComment(string $login, string $type, string $association, string $self): bool
     {
-        if ($type === 'Bot' || $type === 'App') {
-            $name = \str_ends_with(\strtolower($login), '[bot]') ? \substr($login, 0, -\strlen('[bot]')) : $login;
-
-            return $self !== '' && \strtolower($name) !== \strtolower($self);
+        $isBot = $type === 'Bot' || $type === 'App';
+        $name = $isBot && \str_ends_with(\strtolower($login), '[bot]') ? \substr($login, 0, -\strlen('[bot]')) : $login;
+        // Where the reviewer posts as a user account, its comments are a user's too.
+        if ($self === '' ? $isBot : \strtolower($name) === \strtolower($self)) {
+            return false;
+        }
+        if ($isBot) {
+            return true;
         }
 
         return \in_array($association, ['OWNER', 'MEMBER', 'COLLABORATOR'], true);
@@ -546,15 +585,18 @@ trait Reviews
     }
 
     /**
-     * Repositories of every project that has code review on for this provider repository,
-     * connected through the delivery's installation. Every match is returned, because each row is
-     * a separate project that asked for review and none may be skipped.
+     * Repositories of every project that has code review on for this provider repository, each
+     * with the installation it is connected through. An app provider's delivery names its
+     * installation, and only repositories connected through it match; a provider whose
+     * installations are accounts that connected over OAuth names none, and every installation of
+     * the provider matches. Every match is returned, because each row is a separate project that
+     * asked for review and none may be skipped.
      *
-     * @return array<Document>
+     * @return list<array{repository: Document, installation: Document}>
      */
     private function findReviewRepositories(string $provider, string $providerRepositoryId, string $providerInstallationId, Database $dbForPlatform, Authorization $authorization): array
     {
-        if ($providerRepositoryId === '' || $providerInstallationId === '') {
+        if ($providerRepositoryId === '' || ($providerInstallationId === '' && $this->isAppProvider($provider))) {
             return [];
         }
 
@@ -573,14 +615,18 @@ trait Reviews
             $installations = empty($installationIds) ? [] : $authorization->skip(fn () => $dbForPlatform->find('installations', [
                 Query::equal('$id', $installationIds),
                 Query::equal('provider', [$provider]),
-                Query::equal('providerInstallationId', [$providerInstallationId]),
+                ...($providerInstallationId === '' ? [] : [Query::equal('providerInstallationId', [$providerInstallationId])]),
                 Query::limit(\count($installationIds)),
             ]));
-            $installationIds = \array_map(fn (Document $installation) => $installation->getId(), $installations);
+            $installationsById = [];
+            foreach ($installations as $installation) {
+                $installationsById[$installation->getId()] = $installation;
+            }
 
             foreach ($page as $repository) {
-                if (\in_array($repository->getAttribute('installationId', ''), $installationIds, true)) {
-                    $found[] = $repository;
+                $installation = $installationsById[$repository->getAttribute('installationId', '')] ?? null;
+                if ($installation !== null) {
+                    $found[] = ['repository' => $repository, 'installation' => $installation];
                 }
             }
 
@@ -588,6 +634,15 @@ trait Reviews
         } while ($cursor !== null);
 
         return $found;
+    }
+
+    /**
+     * Whether the provider's installations are apps whose deliveries name the installation, as
+     * GitHub's and Origin's do, rather than accounts that connected over OAuth.
+     */
+    private function isAppProvider(string $provider): bool
+    {
+        return \in_array($provider, ['github', 'origin'], true);
     }
 
     /**

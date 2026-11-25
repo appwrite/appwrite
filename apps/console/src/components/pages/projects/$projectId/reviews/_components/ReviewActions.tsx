@@ -35,8 +35,13 @@ import {
 } from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import type { Review } from '@/lib/appwrite/reviews'
-import { fetchReview } from '@/lib/react-query/hooks'
+import { fetchReview, useReviewInstallation } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
+import {
+  getKnownVcsProvider,
+  getProviderReviewUrls,
+  type ProviderReviewUrls,
+} from '@/lib/vcs/providers'
 import {
   buildConsoleUrl,
   copyResourceAsJson,
@@ -45,30 +50,35 @@ import {
   openInNewWindow,
 } from '@/lib/utils/context-menu'
 
-type ReviewLinkFields = Pick<
-  Review,
-  | 'providerRepositoryOwner'
-  | 'providerRepositoryName'
-  | 'providerPullRequestId'
-  | 'providerReviewId'
-  | 'providerCommitHash'
->
-
-/** Where a review lives on GitHub: its repository, pull request and posted review. */
-export function reviewGitHubUrls(review: ReviewLinkFields) {
-  const repository = `https://github.com/${review.providerRepositoryOwner}/${review.providerRepositoryName}`
-  const pullRequest = `${repository}/pull/${review.providerPullRequestId}`
-  return {
-    repository,
-    pullRequest,
-    /** The posted review, or the pull request until one is posted. */
-    review: review.providerReviewId
-      ? `${pullRequest}#pullrequestreview-${review.providerReviewId}`
-      : pullRequest,
-    commit: review.providerCommitHash
-      ? `${repository}/commit/${review.providerCommitHash}`
-      : undefined,
-  }
+/**
+ * Where a review lives on its provider, read from the installation its
+ * repository is connected through, with the provider's name for "Open on"
+ * labels. Null until the installation is loaded, or where no link can be
+ * built.
+ */
+export function useReviewUrls(
+  projectId: string,
+  review: Pick<
+    Review,
+    | 'repositoryId'
+    | 'providerRepositoryOwner'
+    | 'providerRepositoryName'
+    | 'providerPullRequestId'
+    | 'providerReviewId'
+  > | null,
+): { urls: ProviderReviewUrls; label: string } | null {
+  const installation = useReviewInstallation(projectId, review?.repositoryId)
+  const meta = getKnownVcsProvider(installation?.provider)
+  const urls = getProviderReviewUrls({
+    provider: installation?.provider,
+    organizationUrl: (installation as { organizationUrl?: string } | null)
+      ?.organizationUrl,
+    organization: review?.providerRepositoryOwner,
+    repositoryName: review?.providerRepositoryName,
+    pullRequestId: review?.providerPullRequestId,
+    reviewId: review?.providerReviewId,
+  })
+  return urls && meta ? { urls, label: meta.label } : null
 }
 
 type Action = { icon: LucideIcon; label: string; onSelect: () => void }
@@ -83,7 +93,7 @@ function useReviewActions(projectId: string, review: Review) {
   const href = buildConsoleUrl(
     `/projects/${projectId}/reviews/${encodeURIComponent(review.$id)}`,
   )
-  const urls = reviewGitHubUrls(review)
+  const links = useReviewUrls(projectId, review)
 
   const copy: Action[] = [
     {
@@ -116,12 +126,16 @@ function useReviewActions(projectId: string, review: Review) {
     },
   ]
 
-  const links: Action[] = [
-    {
-      icon: ExternalLink,
-      label: t('Open on GitHub'),
-      onSelect: () => openInNewTab(urls.review),
-    },
+  const opens: Action[] = [
+    ...(links
+      ? [
+          {
+            icon: ExternalLink,
+            label: t('Open on {provider}').replace('{provider}', links.label),
+            onSelect: () => openInNewTab(links.urls.review),
+          },
+        ]
+      : []),
     {
       icon: ExternalLink,
       label: t('Open in new tab'),
@@ -134,7 +148,7 @@ function useReviewActions(projectId: string, review: Review) {
     },
   ]
 
-  return { copy, links, copyLabel: t('Copy') }
+  return { copy, links: opens, copyLabel: t('Copy') }
 }
 
 /** Right-click menu of a review row. */

@@ -12,6 +12,7 @@ use Appwrite\Reviews\Strength;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\InstallationTokens;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
@@ -58,6 +59,7 @@ class Create extends Action
             ->inject('deploymentsFactory')
             ->inject('platform')
             ->inject('publisherForReviews')
+            ->inject('installationTokens')
             ->callback($this->action(...));
     }
 
@@ -73,6 +75,7 @@ class Create extends Action
         callable $deploymentsFactory,
         array $platform,
         ReviewPublisher $publisherForReviews,
+        InstallationTokens $installationTokens,
     ) {
         $vcs = $vcsFactory->fromProvider('github');
 
@@ -103,7 +106,7 @@ class Create extends Action
             if (System::getEnv('_APP_REVIEWS_SECRET', '') !== '') {
                 match ($event) {
                     GitHub::EVENT_PULL_REQUEST => $this->queueReviews('github', $parsedPayload, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
-                    GitHub::EVENT_ISSUE_COMMENT, GitHub::EVENT_PULL_REQUEST_REVIEW_COMMENT => $this->queueComment('github', $parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
+                    GitHub::EVENT_ISSUE_COMMENT, GitHub::EVENT_PULL_REQUEST_REVIEW_COMMENT => $this->queueComment('github', $parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
                     GitHub::EVENT_INSTALLATION_REPOSITORIES => $this->createReviewRepositories($parsedPayload, $dbForPlatform, $authorization),
                     default => null,
                 };
@@ -485,7 +488,7 @@ class Create extends Action
         }
     }
 
-    protected function getReviewerHandle(): string
+    protected function getReviewerHandle(Document $installation): string
     {
         return System::getEnv('_APP_VCS_GITHUB_APP_NAME', '');
     }
@@ -493,7 +496,7 @@ class Create extends Action
     /**
      * GitHub names an app's account <slug>[bot]; the suffix is ignored when comparing.
      */
-    protected function getReviewerLogin(): string
+    protected function getReviewerLogin(Document $installation): string
     {
         return System::getEnv('_APP_VCS_GITHUB_APP_NAME', '');
     }
@@ -501,7 +504,7 @@ class Create extends Action
     /**
      * GitHub sends the author's association with each comment.
      */
-    protected function getCommentAuthorAssociation(array $parsedPayload, VcsFactory $vcsFactory): string
+    protected function getCommentAuthorAssociation(array $parsedPayload, Document $installation, VcsFactory $vcsFactory, InstallationTokens $installationTokens, Database $dbForPlatform): string
     {
         return \strval($parsedPayload['commentAuthorAssociation'] ?? '');
     }

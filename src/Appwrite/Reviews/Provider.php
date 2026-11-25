@@ -10,6 +10,9 @@ enum Provider: string
 {
     case GitHub = 'github';
     case Origin = 'origin';
+    case GitLab = 'gitlab';
+    case Gitea = 'gitea';
+    case Bitbucket = 'bitbucket';
 
     /**
      * @return list<string>

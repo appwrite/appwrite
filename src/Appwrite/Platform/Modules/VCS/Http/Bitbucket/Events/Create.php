@@ -2,9 +2,11 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Bitbucket\Events;
 
+use Appwrite\Event\Publisher\Review as ReviewPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
+use Appwrite\Platform\Modules\VCS\Http\GitHub\Reviews;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
@@ -18,12 +20,15 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Span\Span;
+use Utopia\System\System;
 use Utopia\VCS\Adapter\Git;
+use Utopia\VCS\Adapter\Git\Bitbucket as BitbucketAdapter;
 
 class Create extends Action
 {
     use HTTP;
     use Deployment;
+    use Reviews;
 
     public static function getName()
     {
@@ -49,6 +54,7 @@ class Create extends Action
             ->inject('getProjectDB')
             ->inject('deploymentsFactory')
             ->inject('platform')
+            ->inject('publisherForReviews')
             ->callback($this->action(...));
     }
 
@@ -63,7 +69,8 @@ class Create extends Action
         Bus $bus,
         callable $getProjectDB,
         callable $deploymentsFactory,
-        array $platform
+        array $platform,
+        ReviewPublisher $publisherForReviews,
     ) {
         $vcs = $vcsFactory->fromProvider('bitbucket');
 
@@ -85,6 +92,16 @@ class Create extends Action
         $parsedPayloads = $vcs->getEvents($event, $payload);
 
         foreach ($parsedPayloads as $parsedPayload) {
+            // Before the deployments, which may throw; queueing a review never does.
+            // Without the secret no review service runs (optional on self-hosted), so nothing would consume the job.
+            if (System::getEnv('_APP_REVIEWS_SECRET', '') !== '') {
+                match ($event) {
+                    'pullrequest:created', 'pullrequest:updated', 'pullrequest:fulfilled', 'pullrequest:rejected' => $this->queueReviews('bitbucket', $parsedPayload, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
+                    BitbucketAdapter::EVENT_PULL_REQUEST_COMMENT => $this->queueComment('bitbucket', $this->describeComment($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization), $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
+                    default => null,
+                };
+            }
+
             match ($event) {
                 'repo:push' => $this->handlePushEvent($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
                 'pullrequest:created', 'pullrequest:updated', 'pullrequest:fulfilled', 'pullrequest:rejected' => $this->handlePullRequestEvent($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
@@ -272,5 +289,101 @@ class Create extends Action
 
             (new RepositoryPullRequestCleanup())->remove($dbForPlatform, $authorization, 'bitbucket', $providerRepositoryId, $providerPullRequestId);
         }
+    }
+
+    /**
+     * Bitbucket mentions an account by its id, which nobody types, so comments name the reviewer in plain text, as in "@appwrite review".
+     */
+    protected function getReviewerHandle(Document $installation): string
+    {
+        return 'appwrite';
+    }
+
+    /**
+     * The reviewer posts as the account that connected the installation. Its own comments are
+     * told apart by their markers and by its id, see getCommentAuthorAssociation().
+     */
+    protected function getReviewerLogin(Document $installation): string
+    {
+        return $installation->getAttribute('providerInstallationId', '');
+    }
+
+    /**
+     * Bitbucket sends no association with a comment, so the author's permission on the repository is read: admins count as owners, writers as collaborators. Bitbucket shows it to repository admins only, so an installation connected by anyone else leaves every author untrusted. The account the reviewer posts as is never trusted, so it does
+     * not answer itself; a failed read leaves the author untrusted.
+     */
+    protected function getCommentAuthorAssociation(array $parsedPayload, Document $installation, VcsFactory $vcsFactory, InstallationTokens $installationTokens, Database $dbForPlatform): string
+    {
+        $authorId = \strval($parsedPayload['commentAuthorId'] ?? '');
+        if (($parsedPayload['commentAuthorType'] ?? '') !== 'User' || $authorId === '' || $authorId === $installation->getAttribute('providerInstallationId', '')) {
+            return '';
+        }
+
+        try {
+            $installation = $dbForPlatform->getAuthorization()->skip(fn () => $installationTokens->refreshForInstallation($installation, $dbForPlatform, $vcsFactory));
+            $vcs = $vcsFactory->fromInstallation($installation);
+            if (!$vcs instanceof BitbucketAdapter) {
+                return '';
+            }
+
+            [$workspace, $slug] = $this->getRepositoryPath($parsedPayload);
+            $permission = $vcs->getCollaboratorPermission($workspace, $slug, $authorId);
+        } catch (\Throwable $error) {
+            Console::warning("Failed to read the permission of comment author '{$authorId}': " . $error->getMessage());
+
+            return '';
+        }
+
+        return $this->getAssociationFromPermission($permission);
+    }
+
+    /**
+     * A review thread reply with its thread's first comment: Bitbucket names only the comment a
+     * reply answers, which is another reply in a nested thread, so its parents are walked up.
+     * Only comments on repositories some project reviews are looked up, through the first
+     * installation that reaches the repository.
+     */
+    private function describeComment(array $parsedPayload, VcsFactory $vcsFactory, InstallationTokens $installationTokens, Database $dbForPlatform, Authorization $authorization): array
+    {
+        $replyToId = \strval($parsedPayload['commentReplyToId'] ?? '');
+        $pullNumber = (int) ($parsedPayload['pullRequestNumber'] ?? 0);
+        if ($replyToId === '' || $pullNumber <= 0) {
+            return $parsedPayload;
+        }
+
+        $repositories = $this->findReviewRepositories('bitbucket', \strval($parsedPayload['repositoryId'] ?? ''), '', $dbForPlatform, $authorization);
+        if (empty($repositories)) {
+            return $parsedPayload;
+        }
+
+        try {
+            $installation = $authorization->skip(fn () => $installationTokens->refreshForInstallation($repositories[0]['installation'], $dbForPlatform, $vcsFactory));
+            $vcs = $vcsFactory->fromInstallation($installation);
+            if (!$vcs instanceof BitbucketAdapter) {
+                return $parsedPayload;
+            }
+
+            [$workspace, $slug] = $this->getRepositoryPath($parsedPayload);
+            $rootId = $vcs->getCommentThread($workspace, $slug, $pullNumber, $replyToId);
+        } catch (\Throwable $error) {
+            Console::warning("Failed to look up the thread of comment '{$replyToId}': " . $error->getMessage());
+
+            return $parsedPayload;
+        }
+
+        return [...$parsedPayload, 'commentThreadId' => $rootId];
+    }
+
+    /**
+     * The workspace and slug the API addresses a repository by, from its id, which is its full
+     * name: a delivery's repository name is its display name, which may differ from the slug.
+     *
+     * @return array{0: string, 1: string}
+     */
+    private function getRepositoryPath(array $parsedPayload): array
+    {
+        $parts = \explode('/', \strval($parsedPayload['repositoryId'] ?? ''), 2);
+
+        return [$parts[0], $parts[1] ?? ''];
     }
 }

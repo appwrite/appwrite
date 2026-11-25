@@ -47,7 +47,7 @@ class Create extends Base
             ->param('repositoryId', '', new UID(), 'Repository ID.')
             ->param('projectId', '', new UID(), 'Project ID.')
             ->param('pullNumber', 0, new Range(1, PHP_INT_MAX), 'Pull request number.')
-            ->param('commentId', 0, new AnyOf([new Range(1, PHP_INT_MAX), new Text(64)]), 'Provider ID of the comment that was answered: a number on GitHub, a string on Origin.')
+            ->param('commentId', 0, new AnyOf([new Range(1, PHP_INT_MAX), new Text(64)]), 'Provider ID of the comment that was answered: a number, or a string on providers whose IDs are strings.')
             ->param('usage', [], new ArrayList(new Assoc(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Model calls, each with role, provider, model, inputTokens, outputTokens, durationMs and optional cachedInputTokens and reasoningTokens.')
             ->inject('request')
             ->inject('response')

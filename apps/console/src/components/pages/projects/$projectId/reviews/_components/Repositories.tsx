@@ -60,9 +60,8 @@ type RepositoriesProps = {
 
 /**
  * The repositories tab. "Reviewed" pages through the repositories the project
- * reviews; "All" pages through the repositories of a GitHub or Origin
- * installation, so review is turned on with a switch right where the
- * repository is found.
+ * reviews; "All" pages through the repositories of an installation, so
+ * review is turned on with a switch right where the repository is found.
  */
 export function Repositories({
   projectId,
@@ -163,7 +162,7 @@ export function Repositories({
         variant="card"
         title={t('Connect a Git provider to review pull requests')}
         description={t(
-          'Install the GitHub or Origin app on your account or organization, then pick the repositories to review.',
+          'Connect GitHub, GitLab, Gitea, Bitbucket or Origin to the project, then pick the repositories to review.',
         )}
         action={connectButtons}
       />
@@ -257,7 +256,8 @@ export function Repositories({
         )}
       </div>
 
-      {filter === 'all' && installation && (
+      {/* Only a GitHub app hears of repositories added to its installation. */}
+      {filter === 'all' && installation?.provider === 'github' && (
         <NewRepositories
           projectId={projectId}
           installation={installation}
@@ -288,7 +288,7 @@ export function Repositories({
           variant="card"
           title={t('No installation')}
           description={t(
-            'Connect a GitHub or Origin installation to the project to review its repositories.',
+            'Connect a Git provider to the project to review its repositories.',
           )}
           action={connectButtons}
         />

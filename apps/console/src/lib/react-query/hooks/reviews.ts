@@ -15,6 +15,7 @@ import {
   AppwriteException,
   Query,
   VCSDetectionType,
+  type Models,
 } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import type {
@@ -504,14 +505,14 @@ export function useReviewCategories(
 }
 
 /**
- * The provider of the repository a review ran on, such as `github` or
- * `origin`, read from the installation the repository is connected through.
- * Empty until both are loaded, or when the installation is gone.
+ * The installation the repository a review ran on is connected through, which
+ * names its provider and, for a self-hosted one, its host. Null until both are
+ * loaded, or when the installation is gone.
  */
-export function useReviewProvider(
+export function useReviewInstallation(
   projectId: string | null | undefined,
   repositoryId: string | null | undefined,
-): string {
+): Models.Installation | null {
   const { data: repository } = useQuery({
     queryKey: ['reviews', 'repository', projectId, repositoryId],
     queryFn: async () => {
@@ -531,7 +532,7 @@ export function useReviewProvider(
   return (
     installations?.installations.find(
       (installation) => installation.$id === repository?.installationId,
-    )?.provider ?? ''
+    ) ?? null
   )
 }
 

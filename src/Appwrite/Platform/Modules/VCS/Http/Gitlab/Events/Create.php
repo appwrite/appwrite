@@ -2,9 +2,11 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Gitlab\Events;
 
+use Appwrite\Event\Publisher\Review as ReviewPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
+use Appwrite\Platform\Modules\VCS\Http\GitHub\Reviews;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
@@ -18,12 +20,15 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Span\Span;
+use Utopia\System\System;
 use Utopia\VCS\Adapter\Git;
+use Utopia\VCS\Adapter\Git\GitLab;
 
 class Create extends Action
 {
     use HTTP;
     use Deployment;
+    use Reviews;
 
     public static function getName()
     {
@@ -49,6 +54,7 @@ class Create extends Action
             ->inject('getProjectDB')
             ->inject('deploymentsFactory')
             ->inject('platform')
+            ->inject('publisherForReviews')
             ->callback($this->action(...));
     }
 
@@ -63,7 +69,8 @@ class Create extends Action
         Bus $bus,
         callable $getProjectDB,
         callable $deploymentsFactory,
-        array $platform
+        array $platform,
+        ReviewPublisher $publisherForReviews,
     ) {
         $vcs = $vcsFactory->fromProvider('gitlab');
 
@@ -84,6 +91,16 @@ class Create extends Action
         $parsedPayloads = $vcs->getEvents($event, $payload);
 
         foreach ($parsedPayloads as $parsedPayload) {
+            // Before the deployments, which may throw; queueing a review never does.
+            // Without the secret no review service runs (optional on self-hosted), so nothing would consume the job.
+            if (System::getEnv('_APP_REVIEWS_SECRET', '') !== '') {
+                match ($event) {
+                    'Merge Request Hook' => $this->queueReviews('gitlab', $parsedPayload, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
+                    'Note Hook' => $this->queueComment('gitlab', $parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
+                    default => null,
+                };
+            }
+
             match ($event) {
                 'Push Hook' => $this->handlePushEvent($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
                 'Merge Request Hook' => $this->handlePullRequestEvent($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
@@ -271,5 +288,50 @@ class Create extends Action
 
             (new RepositoryPullRequestCleanup())->remove($dbForPlatform, $authorization, 'gitlab', $providerRepositoryId, $providerPullRequestId);
         }
+    }
+
+    /**
+     * Mentions name the account that connected the installation, which the reviewer posts as.
+     */
+    protected function getReviewerHandle(Document $installation): string
+    {
+        return $installation->getAttribute('organization', '');
+    }
+
+    /**
+     * The reviewer posts as the account that connected the installation. Its own comments are
+     * told apart by their markers and by its id, see getCommentAuthorAssociation().
+     */
+    protected function getReviewerLogin(Document $installation): string
+    {
+        return $installation->getAttribute('organization', '');
+    }
+
+    /**
+     * GitLab sends no association with a comment, so the author's access level on the project is read: maintainers and owners count as owners, developers as collaborators. The account the reviewer posts as is never trusted, so it does
+     * not answer itself; a failed read leaves the author untrusted.
+     */
+    protected function getCommentAuthorAssociation(array $parsedPayload, Document $installation, VcsFactory $vcsFactory, InstallationTokens $installationTokens, Database $dbForPlatform): string
+    {
+        $authorId = \strval($parsedPayload['commentAuthorId'] ?? '');
+        if (($parsedPayload['commentAuthorType'] ?? '') !== 'User' || $authorId === '' || $authorId === $installation->getAttribute('providerInstallationId', '')) {
+            return '';
+        }
+
+        try {
+            $installation = $dbForPlatform->getAuthorization()->skip(fn () => $installationTokens->refreshForInstallation($installation, $dbForPlatform, $vcsFactory));
+            $vcs = $vcsFactory->fromInstallation($installation);
+            if (!$vcs instanceof GitLab) {
+                return '';
+            }
+
+            $permission = $vcs->getCollaboratorPermission(\strval($parsedPayload['repositoryId'] ?? ''), $authorId);
+        } catch (\Throwable $error) {
+            Console::warning("Failed to read the permission of comment author '{$authorId}': " . $error->getMessage());
+
+            return '';
+        }
+
+        return $this->getAssociationFromPermission($permission);
     }
 }

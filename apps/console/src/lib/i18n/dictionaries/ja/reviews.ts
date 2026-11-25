@@ -16,12 +16,6 @@ export const jaReviewsDictionary: Record<string, string> = {
 
   // Empty states
   'Review pull requests with AI': 'AI でプルリクエストをレビュー',
-  'Add a GitHub or Origin repository and every pull request gets a review with findings, a verdict, and a merge confidence grade. Mention the app in a comment to ask it anything.':
-    'GitHub または Origin のリポジトリを追加すると、すべてのプルリクエストに指摘事項、判定、マージの信頼度を含むレビューが付きます。コメントでアプリにメンションすると、何でも質問できます。',
-  'Catch bugs and security issues before they merge. Choose the repositories to review, and every pull request in them gets a review on GitHub.':
-    'バグやセキュリティの問題をマージ前に見つけます。レビューするリポジトリを選ぶと、そのリポジトリのすべてのプルリクエストが GitHub 上でレビューされます。',
-  'Install the GitHub app on your account or organization, then turn on review for the repositories you pick.':
-    'アカウントまたは組織に GitHub アプリをインストールし、選んだリポジトリのレビューをオンにします。',
   'Get a review on every pull request': 'すべてのプルリクエストをレビュー',
   'Each new pull request and commit gets a summary, findings on the lines they concern, a verdict, and a merge confidence grade.':
     '新しいプルリクエストとコミットごとに、概要、該当する行への指摘事項、判定、マージの信頼度が付きます。',
@@ -44,10 +38,6 @@ export const jaReviewsDictionary: Record<string, string> = {
   'The review found nothing to flag.':
     'レビューで指摘事項は見つかりませんでした。',
   'View comment': 'コメントを表示',
-  'Open on GitHub': 'GitHub で開く',
-  'Open on Origin': 'Origin で開く',
-  'Compare on GitHub': 'GitHub で比較',
-  'Open commit on GitHub': 'GitHub でコミットを開く',
   'Filter findings by severity': '重要度で指摘事項を絞り込む',
 
   // Statuses and verdicts
@@ -74,8 +64,6 @@ export const jaReviewsDictionary: Record<string, string> = {
     'リポジトリのプルリクエストは、作成時と新しいコミットの追加時にレビューされます。',
   'Pull requests in this repository will no longer be reviewed. Past reviews stay in the project.':
     'このリポジトリのプルリクエストはレビューされなくなります。過去のレビューはプロジェクトに残ります。',
-  'Connect a GitHub or Origin installation to the project to review its repositories.':
-    'リポジトリをレビューするには、GitHub または Origin のインストールをプロジェクトに接続してください。',
   'Code review turned on': 'コードレビューを有効にしました',
   'Code review turned off': 'コードレビューを無効にしました',
   'Failed to turn on code review': 'コードレビューを有効にできませんでした',
@@ -200,8 +188,6 @@ export const jaReviewsDictionary: Record<string, string> = {
   'No installation': 'インストールがありません',
   'Connect a Git provider to review pull requests':
     'Git プロバイダーを接続してプルリクエストをレビュー',
-  'Install the GitHub or Origin app on your account or organization, then pick the repositories to review.':
-    'アカウントまたは組織に GitHub または Origin アプリをインストールし、レビューするリポジトリを選択してください。',
   'Turn on code review for a repository and its pull requests are reviewed when they are opened or get new commits.':
     'リポジトリのコードレビューを有効にすると、プルリクエストの作成時と新しいコミットの追加時にレビューされます。',
   'Turn on code review for every repository in {organization} ({count}).':
@@ -241,7 +227,6 @@ export const jaReviewsDictionary: Record<string, string> = {
   Learning: '学習内容',
   'Asked by': '依頼者',
   'Learning actions': '学習の操作',
-  'Open conversation on GitHub': 'GitHub で会話を開く',
   'Learning has been deleted': '学習を削除しました',
   'Failed to delete learning': '学習を削除できませんでした',
   'No learnings yet': '学習はまだありません',

@@ -12,6 +12,8 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\InstallationTokens;
+use Appwrite\Vcs\RepositoryWebhooks;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -24,6 +26,7 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
+use Utopia\VCS\Adapter\Git;
 
 /**
  * Turns code review on for a repository: from now on its pull requests are queued for review.
@@ -53,7 +56,7 @@ class Create extends Action
                 group: 'repositories',
                 name: 'createRepository',
                 description: <<<EOT
-                Turn on code review for a GitHub or Origin repository connected through one of the project's installations. From then on, its pull requests are reviewed when they are opened or updated. Each project turns on review for a repository once; several projects may review the same repository. The strength sets how hard its pull requests are reviewed, and what each review costs.
+                Turn on code review for a GitHub, GitLab, Gitea, Bitbucket or Origin repository connected through one of the project's installations. From then on, its pull requests are reviewed when they are opened or updated. Each project turns on review for a repository once; several projects may review the same repository. The strength sets how hard its pull requests are reviewed, and what each review costs.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -73,6 +76,8 @@ class Create extends Action
             ->inject('dbForPlatform')
             ->inject('authorization')
             ->inject('vcsFactory')
+            ->inject('installationTokens')
+            ->inject('repositoryWebhooks')
             ->callback($this->action(...));
     }
 
@@ -85,6 +90,8 @@ class Create extends Action
         Database $dbForPlatform,
         Authorization $authorization,
         VcsFactory $vcsFactory,
+        InstallationTokens $installationTokens,
+        RepositoryWebhooks $repositoryWebhooks,
     ): void {
         // Reviews are optional on self-hosted: without the secret no review service is running.
         if (System::getEnv('_APP_REVIEWS_SECRET', '') === '') {
@@ -99,7 +106,7 @@ class Create extends Action
 
         $provider = Provider::tryFrom($installation->getAttribute('provider', ''));
         if ($provider === null) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Code review supports GitHub and Origin repositories only.');
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Code review supports GitHub, GitLab, Gitea, Bitbucket and Origin repositories only.');
         }
 
         // GitHub repository ids are numeric.
@@ -118,11 +125,13 @@ class Create extends Action
         }
 
         // The installation has to reach the repository: a repository id alone would let a
-        // project claim the reviews of another organization's repository.
+        // project claim the reviews of another organization's repository. An installation
+        // connected over OAuth calls the provider with the account's token, refreshed first.
+        $installation = $authorization->skip(fn () => $installationTokens->refreshForInstallation($installation, $dbForPlatform, $vcsFactory));
         $vcs = $vcsFactory->fromInstallation($installation);
 
         try {
-            $vcs->getRepositoryName($providerRepositoryId);
+            [$owner, $repositoryName] = $this->getRepositoryPath($vcs, $installation, $provider, $providerRepositoryId);
         } catch (\Throwable) {
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
@@ -149,9 +158,35 @@ class Create extends Action
             throw new Exception(Exception::REVIEW_REPOSITORY_ALREADY_EXISTS);
         }
 
+        // An app gets every delivery of its installation; any other provider sends the pull
+        // requests and comments reviews need only to a webhook on the repository itself.
+        try {
+            $authorization->skip(fn () => $repositoryWebhooks->ensure($vcs, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName));
+        } catch (\Throwable $error) {
+            $authorization->skip(fn () => $dbForPlatform->deleteDocument('repositories', $repository->getId()));
+            throw $error;
+        }
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($repository, Response::MODEL_REVIEW_REPOSITORY);
+    }
+
+    /**
+     * The repository's owner and name on its provider, read with the installation's credentials,
+     * which fails for a repository the installation cannot reach. Bitbucket's repository id is
+     * its full name, workspace and slug; the account's own workspace is no sure owner.
+     *
+     * @return array{0: string, 1: string}
+     */
+    private function getRepositoryPath(Git $vcs, Document $installation, Provider $provider, string $providerRepositoryId): array
+    {
+        $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
+        $owner = $provider === Provider::Bitbucket
+            ? \explode('/', \rawurldecode($providerRepositoryId), 2)[0]
+            : $vcs->getOwnerName($installation->getAttribute('providerInstallationId', ''), \ctype_digit($providerRepositoryId) ? (int) $providerRepositoryId : null);
+
+        return [$owner, $repositoryName];
     }
 
     /**

@@ -567,7 +567,7 @@ class Gitea extends Git
      * @param array<string> $events Events to trigger the webhook
      * @return int Webhook ID
      */
-    public function createWebhook(string $owner, string $repositoryName, string $url, string $secret, array $events = ['push', 'pull_request']): int
+    public function createWebhook(string $owner, string $repositoryName, string $url, string $secret, array $events = ['push', 'pull_request', 'pull_request_comment']): int
     {
         $response = $this->call(
             self::METHOD_POST,
@@ -1214,11 +1214,144 @@ class Gitea extends Git
                     'headCommitUrl' => $headCommitUrl,
                     'external' => $external,
                     'pullRequestNumber' => $pullRequestNumber,
+                    'pullRequestAuthor' => $payloadPullRequestUser['login'] ?? '',
                     'action' => $action,
                 ]];
+
+            case 'issue_comment':
+                return $this->commentEvents($payload);
         }
 
         return [];
+    }
+
+    /**
+     * A comment created on a pull request, in the shape GitHub's comment
+     * events are reported in. Gitea sends conversation comments and replies
+     * in review threads alike, with nothing to tell them apart, so every one
+     * is an 'issue' comment here; getReviewCommentThread() finds the thread
+     * of one that is a review comment. Comments on issues and edits are left
+     * out.
+     *
+     * @param array<mixed> $payload
+     * @return array<array<mixed>>
+     */
+    private function commentEvents(array $payload): array
+    {
+        $issue = \is_array($payload['issue'] ?? null) ? $payload['issue'] : [];
+        $pullRequest = \is_array($payload['pull_request'] ?? null) ? $payload['pull_request'] : [];
+        $comment = \is_array($payload['comment'] ?? null) ? $payload['comment'] : [];
+        $repository = \is_array($payload['repository'] ?? null) ? $payload['repository'] : [];
+        $user = \is_array($comment['user'] ?? null) ? $comment['user'] : [];
+
+        if (($payload['is_pull'] ?? false) !== true || ($payload['action'] ?? '') !== 'created') {
+            return [];
+        }
+
+        $pullRequestUser = \is_array($pullRequest['user'] ?? null) ? $pullRequest['user'] : (\is_array($issue['user'] ?? null) ? $issue['user'] : []);
+        $number = $issue['number'] ?? ($pullRequest['number'] ?? 0);
+
+        return [[
+            'repositoryId' => \strval($repository['id'] ?? ''),
+            'repositoryName' => $repository['name'] ?? '',
+            'repositoryUrl' => $repository['html_url'] ?? '',
+            'owner' => $repository['owner']['login'] ?? '',
+            'installationId' => '',  // Gitea doesn't have installations
+            'pullRequestNumber' => \is_numeric($number) ? (int) $number : 0,
+            'pullRequestAuthor' => $pullRequestUser['login'] ?? '',
+            'action' => 'created',
+            'commentId' => \strval($comment['id'] ?? ''),
+            'commentKind' => 'issue',
+            'commentThreadId' => '',
+            'commentReplyToId' => '',
+            'commentBody' => \is_string($comment['body'] ?? null) ? $comment['body'] : '',
+            'commentUrl' => \is_string($comment['html_url'] ?? null) ? $comment['html_url'] : '',
+            'commentAuthor' => $user['login'] ?? '',
+            'commentAuthorId' => \strval($user['id'] ?? ''),
+            'commentAuthorType' => 'User',
+        ]];
+    }
+
+    /**
+     * The thread a review comment belongs to, named by its first comment:
+     * Gitea lists a review's comments but not a thread's, so a thread is the
+     * comments of submitted reviews on one line of one file, oldest first.
+     * Empty when the comment is no review comment, as a conversation
+     * comment is not.
+     *
+     * @throws Exception
+     */
+    public function getReviewCommentThread(string $owner, string $repositoryName, int $pullRequestNumber, string $commentId): string
+    {
+        $reviews = [];
+        foreach (\range(1, 20) as $page) {
+            $response = $this->call(self::METHOD_GET, "/repos/{$owner}/{$repositoryName}/pulls/{$pullRequestNumber}/reviews?limit=50&page={$page}", ['Authorization' => "token $this->accessToken"]);
+            $statusCode = $response['headers']['status-code'] ?? 0;
+            if ($statusCode >= 400) {
+                throw new Exception("Failed to list reviews: HTTP {$statusCode}", $statusCode);
+            }
+
+            $body = \is_array($response['body'] ?? null) ? $response['body'] : [];
+            \array_push($reviews, ...$body);
+            if (\count($body) < 50) {
+                break;
+            }
+        }
+
+        $threads = [];
+        $found = null;
+        foreach ($reviews as $review) {
+            if (!\is_array($review) || ($review['state'] ?? '') === 'PENDING' || ($review['comments_count'] ?? 1) === 0) {
+                continue;
+            }
+
+            $response = $this->call(self::METHOD_GET, "/repos/{$owner}/{$repositoryName}/pulls/{$pullRequestNumber}/reviews/" . \intval($review['id'] ?? 0) . '/comments', ['Authorization' => "token $this->accessToken"]);
+            $statusCode = $response['headers']['status-code'] ?? 0;
+            if ($statusCode >= 400) {
+                throw new Exception("Failed to list review comments: HTTP {$statusCode}", $statusCode);
+            }
+
+            foreach ((\is_array($response['body'] ?? null) ? $response['body'] : []) as $comment) {
+                if (!\is_array($comment)) {
+                    continue;
+                }
+
+                $key = ($comment['path'] ?? '') . "\0" . \intval($comment['position'] ?? 0) . "\0" . \intval($comment['original_position'] ?? 0);
+                $id = \intval($comment['id'] ?? 0);
+                $threads[$key] = isset($threads[$key]) ? \min($threads[$key], $id) : $id;
+                if (\strval($id) === $commentId) {
+                    $found = $key;
+                }
+            }
+        }
+
+        return $found === null ? '' : \strval($threads[$found]);
+    }
+
+    /**
+     * A user's permission on a repository: 'admin' for its owner and admins,
+     * 'write', 'read', or empty when they are no collaborator.
+     *
+     * @throws Exception
+     */
+    public function getCollaboratorPermission(string $owner, string $repositoryName, string $username): string
+    {
+        $response = $this->call(self::METHOD_GET, "/repos/{$owner}/{$repositoryName}/collaborators/" . rawurlencode($username) . '/permission', ['Authorization' => "token $this->accessToken"]);
+
+        $statusCode = $response['headers']['status-code'] ?? 0;
+        if ($statusCode === 404 || $statusCode === 403) {
+            return '';
+        }
+        if ($statusCode >= 400) {
+            throw new Exception("Failed to get collaborator permission: HTTP {$statusCode}", $statusCode);
+        }
+
+        return match ($response['body']['permission'] ?? '') {
+            'owner', 'admin' => 'admin',
+            'write' => 'write',
+            'read' => 'read',
+            default => '',
+        };
     }
 
     /**

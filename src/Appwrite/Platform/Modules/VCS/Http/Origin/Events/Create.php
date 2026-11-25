@@ -12,6 +12,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Vcs\DeliveryClaim;
 use Appwrite\Vcs\DeliveryClaims;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\InstallationTokens;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
@@ -63,6 +64,7 @@ class Create extends Action
             ->inject('deploymentsFactory')
             ->inject('platform')
             ->inject('publisherForReviews')
+            ->inject('installationTokens')
             ->callback($this->action(...));
     }
 
@@ -77,6 +79,7 @@ class Create extends Action
         callable $deploymentsFactory,
         array $platform,
         ReviewPublisher $publisherForReviews,
+        InstallationTokens $installationTokens,
     ) {
         /** @var Origin $vcs */
         $vcs = $vcsFactory->fromProvider('origin');
@@ -139,7 +142,7 @@ class Create extends Action
             // Without the secret no review service runs, so nothing would consume the job.
             if (System::getEnv('_APP_REVIEWS_SECRET', '') !== '') {
                 match (true) {
-                    $event === Origin::EVENT_PULL_REQUEST_COMMENT => $this->queueComment('origin', $parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
+                    $event === Origin::EVENT_PULL_REQUEST_COMMENT => $this->queueComment('origin', $parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
                     \str_starts_with($event, Origin::EVENT_PULL_REQUEST . '.') => $this->queueReviews('origin', $parsedPayload, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
                     default => null,
                 };
@@ -194,17 +197,18 @@ class Create extends Action
     }
 
     /**
-     * Origin has no mentions of its own, so comments name the reviewer by a configured handle.
+     * Origin has no mentions of its own, so comments name the reviewer by its product's name, as
+     * in "@appwrite review".
      */
-    protected function getReviewerHandle(): string
+    protected function getReviewerHandle(Document $installation): string
     {
-        return System::getEnv('_APP_VCS_ORIGIN_APP_NAME', '');
+        return 'appwrite';
     }
 
     /**
      * Comments the app posts are authored by the app, which the adapter names by its id.
      */
-    protected function getReviewerLogin(): string
+    protected function getReviewerLogin(Document $installation): string
     {
         return System::getEnv('_APP_VCS_ORIGIN_CLIENT_ID', '');
     }
@@ -215,7 +219,7 @@ class Create extends Action
      * repository:members:read scope; an installation approved without it, or a failed read,
      * leaves the author untrusted.
      */
-    protected function getCommentAuthorAssociation(array $parsedPayload, VcsFactory $vcsFactory): string
+    protected function getCommentAuthorAssociation(array $parsedPayload, Document $installation, VcsFactory $vcsFactory, InstallationTokens $installationTokens, Database $dbForPlatform): string
     {
         $authorId = \strval($parsedPayload['commentAuthorId'] ?? '');
         if (($parsedPayload['commentAuthorType'] ?? '') !== 'User' || $authorId === '') {
@@ -223,10 +227,7 @@ class Create extends Action
         }
 
         try {
-            $vcs = $vcsFactory->fromInstallation(new Document([
-                'provider' => 'origin',
-                'providerInstallationId' => \strval($parsedPayload['installationId'] ?? ''),
-            ]));
+            $vcs = $vcsFactory->fromInstallation($installation);
             if (!$vcs instanceof Origin) {
                 return '';
             }
@@ -238,11 +239,7 @@ class Create extends Action
             return '';
         }
 
-        return match ($permission) {
-            'admin' => 'OWNER',
-            'write' => 'COLLABORATOR',
-            default => '',
-        };
+        return $this->getAssociationFromPermission($permission);
     }
 
     /**

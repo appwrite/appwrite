@@ -363,8 +363,153 @@ export function getProviderRepositoryUrl(params: {
 /** The providers code review runs on (`Appwrite\Reviews\Provider`). */
 export const REVIEW_VCS_PROVIDERS: readonly VcsProviderId[] = [
   'github',
+  'gitlab',
+  'gitea',
+  'bitbucket',
   'origin',
 ]
+
+/** Where a pull request and what a review of it points at live on the provider. */
+export interface ProviderReviewUrls {
+  repository: string
+  pullRequest: string
+  /** The posted review, or the pull request where there is none to link to. */
+  review: string
+  commit: (hash: string) => string
+  /** Two commits compared, or null where the provider has no such page. */
+  compare: (base: string, head: string) => string | null
+  /** A file at a commit, scrolled to its lines where the provider can. */
+  file: (
+    hash: string,
+    path: string,
+    startLine: number,
+    endLine: number,
+  ) => string
+  /** A review comment, or null where the provider has no anchor for one. */
+  comment: (commentId: string) => string | null
+}
+
+/**
+ * Build the links of a review on its provider, or null when the provider is
+ * unknown, its host is not known here, or a path piece is missing. A
+ * self-hosted GitLab or Gitea is reached through the installation's
+ * `organizationUrl`, which the server builds from its configured host.
+ */
+export function getProviderReviewUrls(params: {
+  provider?: string
+  organizationUrl?: string
+  organization?: string
+  repositoryName?: string
+  pullRequestId?: string
+  reviewId?: string
+}): ProviderReviewUrls | null {
+  const meta = getKnownVcsProvider(params.provider)
+  const organization = params.organization?.trim()
+  const repositoryName = params.repositoryName?.trim()
+  const pullRequestId = params.pullRequestId?.trim()
+  if (!meta || !organization || !repositoryName || !pullRequestId) return null
+
+  const path = `${encodeVcsPath(organization)}/${encodeVcsPath(repositoryName)}`
+  const id = encodeURIComponent(pullRequestId)
+  const reviewId = params.reviewId ? encodeURIComponent(params.reviewId) : ''
+  const host = (fallback: string | null) => {
+    if (params.organizationUrl) {
+      try {
+        return new URL(params.organizationUrl).origin
+      } catch {
+        return null
+      }
+    }
+    return fallback
+  }
+  const filePath = (value: string) => encodeVcsPath(value)
+
+  switch (meta.id) {
+    case 'github': {
+      const repository = `https://github.com/${path}`
+      const pullRequest = `${repository}/pull/${id}`
+      return {
+        repository,
+        pullRequest,
+        review: reviewId
+          ? `${pullRequest}#pullrequestreview-${reviewId}`
+          : pullRequest,
+        commit: (hash) => `${repository}/commit/${hash}`,
+        compare: (base, head) => `${repository}/compare/${base}...${head}`,
+        file: (hash, file, start, end) =>
+          `${repository}/blob/${hash}/${filePath(file)}#L${start}${end !== start ? `-L${end}` : ''}`,
+        comment: (commentId) =>
+          `${pullRequest}#discussion_r${encodeURIComponent(commentId)}`,
+      }
+    }
+    case 'gitlab': {
+      const base = host('https://gitlab.com')
+      if (!base) return null
+      const repository = `${base}/${path}`
+      const pullRequest = `${repository}/-/merge_requests/${id}`
+      return {
+        repository,
+        pullRequest,
+        review: pullRequest,
+        commit: (hash) => `${repository}/-/commit/${hash}`,
+        compare: (base, head) => `${repository}/-/compare/${base}...${head}`,
+        file: (hash, file, start, end) =>
+          `${repository}/-/blob/${hash}/${filePath(file)}#L${start}${end !== start ? `-${end}` : ''}`,
+        // A finding's thread is a discussion, which has no anchor of its own
+        comment: () => null,
+      }
+    }
+    case 'gitea': {
+      const base = host(null)
+      if (!base) return null
+      const repository = `${base}/${path}`
+      const pullRequest = `${repository}/pulls/${id}`
+      return {
+        repository,
+        pullRequest,
+        review: pullRequest,
+        commit: (hash) => `${repository}/commit/${hash}`,
+        compare: (base, head) => `${repository}/compare/${base}...${head}`,
+        file: (hash, file, start, end) =>
+          `${repository}/src/commit/${hash}/${filePath(file)}#L${start}${end !== start ? `-L${end}` : ''}`,
+        comment: (commentId) =>
+          `${pullRequest}/files#issuecomment-${encodeURIComponent(commentId)}`,
+      }
+    }
+    case 'bitbucket': {
+      const base = host('https://bitbucket.org')
+      if (!base) return null
+      const repository = `${base}/${path}`
+      const pullRequest = `${repository}/pull-requests/${id}`
+      return {
+        repository,
+        pullRequest,
+        review: pullRequest,
+        commit: (hash) => `${repository}/commits/${hash}`,
+        compare: () => null,
+        file: (hash, file, start, end) =>
+          `${repository}/src/${hash}/${filePath(file)}#lines-${start}${end !== start ? `:${end}` : ''}`,
+        comment: (commentId) =>
+          `${pullRequest}#comment-${encodeURIComponent(commentId)}`,
+      }
+    }
+    case 'origin': {
+      const repository = `https://cursor.com/codebase/${path}`
+      const pullRequest = `${repository}/pull/${id}`
+      return {
+        repository,
+        pullRequest,
+        review: pullRequest,
+        commit: (hash) => `${repository}/commit/${hash}`,
+        compare: () => null,
+        file: (hash, file) => `${repository}/blob/${hash}/${filePath(file)}`,
+        comment: () => null,
+      }
+    }
+    default:
+      return null
+  }
+}
 
 export function isReviewVcsProvider(provider?: string): boolean {
   const id = getKnownVcsProvider(provider)?.id

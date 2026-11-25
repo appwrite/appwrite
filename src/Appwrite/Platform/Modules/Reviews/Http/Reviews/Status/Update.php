@@ -61,7 +61,7 @@ class Update extends Base
             ->param('summary', '', new Text(65535, 0), 'Review summary in Markdown.', true)
             ->param('walkthrough', [], new ArrayList(new Assoc(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'What each changed file does, as path and change.', true)
             ->param('findings', [], new ArrayList(new Assoc(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Findings of the review, posted or dropped.', true)
-            ->param('providerReviewId', 0, new AnyOf([new Range(0, PHP_INT_MAX), new Text(64, 0)]), 'Review ID on the provider: a number on GitHub, a string on Origin.', true)
+            ->param('providerReviewId', 0, new AnyOf([new Range(0, PHP_INT_MAX), new Text(64, 0)]), 'Review ID on the provider: a number, or a string on providers whose IDs are strings.', true)
             ->param('reason', '', new Text(2048, 0), 'Why the review was skipped or failed, shown to the project\'s users.', true)
             ->inject('request')
             ->inject('response')
@@ -229,7 +229,7 @@ class Update extends Base
                 && ($providerCommentId === null || \is_int($providerCommentId) || (\is_string($providerCommentId) && $providerCommentId !== '' && \strlen($providerCommentId) <= 64));
 
             if (!$valid) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Finding {$index} is invalid: it needs path, startLine, endLine (from startLine), severity (" . \implode(', ', self::SEVERITIES) . '), category, title and body, with an optional suggestion, status (posted or dropped), dropReason and providerCommentId (a number on GitHub, a string on Origin).');
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Finding {$index} is invalid: it needs path, startLine, endLine (from startLine), severity (" . \implode(', ', self::SEVERITIES) . '), category, title and body, with an optional suggestion, status (posted or dropped), dropReason and providerCommentId (a number, or a string on providers whose IDs are strings).');
             }
 
             $documents[] = new Document([

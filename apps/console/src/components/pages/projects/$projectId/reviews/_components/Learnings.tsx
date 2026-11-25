@@ -206,7 +206,7 @@ export function Learnings({ projectId, canWrite }: LearningsProps) {
                               rel="noreferrer"
                             >
                               <MenuItemContent icon={ExternalLink}>
-                                {t('Open conversation on GitHub')}
+                                {t('Open conversation')}
                               </MenuItemContent>
                             </a>
                           </DropdownMenuItem>

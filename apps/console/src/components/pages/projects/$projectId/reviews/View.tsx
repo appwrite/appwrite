@@ -245,7 +245,7 @@ export function View() {
         hideToolbar={!hasToolbar}
         {...(activeTab === 'repositories'
           ? {
-              searchPlaceholder: t('Search GitHub repositories...'),
+              searchPlaceholder: t('Search repositories...'),
               searchValue: repositorySearch,
               onSearchChange: setRepositorySearch,
             }
