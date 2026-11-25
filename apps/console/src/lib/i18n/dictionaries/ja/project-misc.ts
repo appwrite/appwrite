@@ -3482,8 +3482,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '1 つのアドオンで、このプロジェクトのすべてのチームと各環境をカバーします。',
   'Prorated for the current billing cycle.':
     '現在の請求サイクルに合わせて日割り計算されます。',
-  'Appwrite Console':
-    'Appwrite コンソール',
+  'Your company': 'あなたの会社',
+  'Your customer': 'あなたの顧客',
   "With this add-on, people on your organization's verified domains sign in to the Console through its identity providers.":
     'このアドオンを使うと、組織の検証済みドメインのユーザーは組織の ID プロバイダー経由でコンソールにサインインします。',
   'This add-on is available on {plans}. Upgrade your plan to enable it.':

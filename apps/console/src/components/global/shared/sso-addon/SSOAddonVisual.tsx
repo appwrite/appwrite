@@ -1,16 +1,17 @@
 import { useId } from 'react'
 import {
   AppWindow,
-  BadgeCheck,
   Building2,
   KeyRound,
-  ShieldCheck,
   User,
   type LucideIcon,
 } from 'lucide-react'
+import { APPWRITE_MARK } from '@/components/global/shared/AppwriteMarkIcon'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
+
+type Scope = 'organization' | 'project'
 
 const WIDTH = 520
 const HEIGHT = 300
@@ -18,25 +19,27 @@ const HEIGHT = 300
 const HEADER = 38
 const ROW = 34
 /** Each person's name, drawn as a bar: nobody in particular. */
-const PEOPLE = [46, 60, 38, 52] as const
+const PEOPLE = [42, 56, 34, 48] as const
 
-const CARD_WIDTH = 172
+const CARD_WIDTH = 160
 const CARD_HEIGHT = HEADER + PEOPLE.length * ROW + 10
 const CARD_Y = (HEIGHT - CARD_HEIGHT) / 2
 
-/** The identity provider: where the people are. */
-const PROVIDER_X = 24
-/** Where they sign in to: the Console, or the customer's app. */
+/** Where the people are: the company that signs in. */
+const COMPANY_X = 24
+/** Where they sign in to: Appwrite Cloud, or the customer's app. */
 const DESTINATION_X = WIDTH - 24 - CARD_WIDTH
 
-/** The sign-in everyone goes through, between the two. */
-const GATE = { x: WIDTH / 2, y: HEIGHT / 2, radius: 22 }
+/** The company's identity provider, which every sign-in goes through. */
+const GATE = { x: WIDTH / 2, y: HEIGHT / 2, radius: 23 }
+/** Its label, level with the cards' headers and clear of the sign-ins. */
+const GATE_LABEL_Y = CARD_Y + HEADER / 2 + 3
 
 const TILE = 20
 const ICON = 12
 const AVATAR = 9
 
-/** How long a sign-in takes to travel from the provider to the other side. */
+/** How long a sign-in takes to travel from the company to the other side. */
 const TRAVEL_SECONDS = 3.2
 
 /**
@@ -45,27 +48,52 @@ const TRAVEL_SECONDS = 3.2
  */
 const CARD_STROKE = 'color-mix(in oklch, var(--foreground) 9%, var(--border))'
 
-/** The accent, for the SVG animation that cannot read CSS. */
-const ACCENT_HEX = '#0ea5e9'
 const NEUTRAL_HEX = '#94a3b8'
 
+/**
+ * The one accent of the drawing. An organization signs in to Appwrite, so it
+ * is Appwrite's own pink; a project's is the blue its teams' screens use.
+ * `--sso-accent` paints, `--sso-ink` writes and draws icons on a tint of it,
+ * and the hex is for the SVG animation, which cannot read CSS.
+ */
+const ACCENT: Record<Scope, { hex: string; variables: string }> = {
+  organization: {
+    hex: '#fd366e',
+    variables:
+      '[--sso-accent:var(--brand-cta)] [--sso-ink:color-mix(in_oklch,var(--brand-cta)_88%,black)] dark:[--sso-ink:color-mix(in_oklch,var(--brand-cta)_70%,white)]',
+  },
+  project: {
+    hex: '#0ea5e9',
+    variables:
+      '[--sso-accent:#0ea5e9] [--sso-ink:#0284c7] dark:[--sso-ink:#7dd3fc]',
+  },
+}
+
 /** The roles people arrive with: an organization's, or a team's own. */
-const ROLES: Record<'organization' | 'project', readonly string[]> = {
+const ROLES: Record<Scope, readonly string[]> = {
   organization: ['developer', 'editor', 'analyst', 'billing'],
   project: ['admin', 'support', 'viewer', 'editor'],
 }
-
-/** A verified domain, over the gate: whose sign-ins it lets through. */
-const DOMAIN = 'acme.com'
-const DOMAIN_CHIP = { width: 86, height: 22 }
-/** Level with the cards' headers, clear of the sign-ins passing under it. */
-const DOMAIN_CHIP_Y = CARD_Y + (HEADER - DOMAIN_CHIP.height) / 2
 
 function rowCenter(index: number) {
   return CARD_Y + HEADER + 5 + ROW / 2 + index * ROW
 }
 
-function HeaderTile({
+function Tile({ x, accent = false }: { x: number; accent?: boolean }) {
+  return (
+    <rect
+      x={x}
+      y={CARD_Y + (HEADER - TILE) / 2}
+      width={TILE}
+      height={TILE}
+      rx={6}
+      fill={accent ? 'var(--sso-accent)' : 'var(--muted)'}
+      fillOpacity={accent ? 0.16 : 1}
+    />
+  )
+}
+
+function TileIcon({
   icon: Icon,
   x,
   accent = false,
@@ -74,28 +102,15 @@ function HeaderTile({
   x: number
   accent?: boolean
 }) {
-  const y = CARD_Y + (HEADER - TILE) / 2
   return (
-    <>
-      <rect
-        x={x}
-        y={y}
-        width={TILE}
-        height={TILE}
-        rx={6}
-        className={accent ? 'fill-sky-500/15' : 'fill-muted'}
-      />
-      <Icon
-        x={x + (TILE - ICON) / 2}
-        y={y + (TILE - ICON) / 2}
-        width={ICON}
-        height={ICON}
-        strokeWidth={2}
-        className={
-          accent ? 'text-sky-600 dark:text-sky-300' : 'text-muted-foreground'
-        }
-      />
-    </>
+    <Icon
+      x={x + (TILE - ICON) / 2}
+      y={CARD_Y + (HEADER - ICON) / 2}
+      width={ICON}
+      height={ICON}
+      strokeWidth={2}
+      color={accent ? 'var(--sso-ink)' : 'var(--muted-foreground)'}
+    />
   )
 }
 
@@ -114,7 +129,8 @@ function Avatar({
         cx={x}
         cy={y}
         r={AVATAR}
-        className={accent ? 'fill-sky-500/15' : 'fill-muted'}
+        fill={accent ? 'var(--sso-accent)' : 'var(--muted)'}
+        fillOpacity={accent ? 0.16 : 1}
       />
       <User
         x={x - 5.5}
@@ -122,25 +138,29 @@ function Avatar({
         width={11}
         height={11}
         strokeWidth={2}
-        className={
-          accent ? 'text-sky-600 dark:text-sky-300' : 'text-muted-foreground'
-        }
+        color={accent ? 'var(--sso-ink)' : 'var(--muted-foreground)'}
       />
     </>
   )
 }
 
 /**
- * The Single sign-on add-on's illustration: the people at an identity provider
- * sign in through one gate and arrive on the other side with their roles. For
- * an organization the other side is the Console; for a project it is the
- * customer's own app.
+ * The Single sign-on add-on's illustration: the people of a company sign in
+ * through its identity provider and arrive on the other side with their roles.
+ *
+ * - An organization's: your company signs in to Appwrite Cloud, in Appwrite's
+ *   pink.
+ * - A project's: your customer signs in to your app, in the blue of the
+ *   project's own screens.
+ *
+ * Nothing in it names a real company, domain or provider: which ones is what
+ * the add-on is set up with.
  */
 export function SSOAddonVisual({
   scope,
   className,
 }: {
-  scope: 'organization' | 'project'
+  scope: Scope
   className?: string
 }) {
   const t = useT()
@@ -149,20 +169,20 @@ export function SSOAddonVisual({
   const flowGlowId = `${id}-flow-glow`
   const gateGlowId = `${id}-gate-glow`
   const destinationGlowId = `${id}-destination-glow`
+  const accent = ACCENT[scope]
 
-  const providerEdge = PROVIDER_X + CARD_WIDTH
+  const companyEdge = COMPANY_X + CARD_WIDTH
   const gateStart = GATE.x - GATE.radius
   const gateEnd = GATE.x + GATE.radius
   const lanes = PEOPLE.map((_, index) => {
     const y = rowCenter(index)
     return {
       y,
-      // In from the provider, through the gate, out to the same row over there
+      // Out of the company, through the identity provider, to the same row
+      // on the other side
       path:
-        `M${providerEdge} ${y} C${providerEdge + 26} ${y} ${gateStart - 24} ${GATE.y} ${gateStart} ${GATE.y}` +
-        ` L${gateEnd} ${GATE.y} C${gateEnd + 24} ${GATE.y} ${DESTINATION_X - 26} ${y} ${DESTINATION_X} ${y}`,
-      inbound: `M${providerEdge} ${y} C${providerEdge + 26} ${y} ${gateStart - 24} ${GATE.y} ${gateStart} ${GATE.y}`,
-      outbound: `M${gateEnd} ${GATE.y} C${gateEnd + 24} ${GATE.y} ${DESTINATION_X - 26} ${y} ${DESTINATION_X} ${y}`,
+        `M${companyEdge} ${y} C${companyEdge + 30} ${y} ${gateStart - 28} ${GATE.y} ${gateStart} ${GATE.y}` +
+        ` L${gateEnd} ${GATE.y} C${gateEnd + 28} ${GATE.y} ${DESTINATION_X - 30} ${y} ${DESTINATION_X} ${y}`,
     }
   })
 
@@ -171,6 +191,7 @@ export function SSOAddonVisual({
       aria-hidden
       className={cn(
         'relative flex items-center justify-center overflow-hidden bg-muted/40 dark:bg-black/25',
+        accent.variables,
         className,
       )}
     >
@@ -198,27 +219,18 @@ export function SSOAddonVisual({
           <linearGradient
             id={flowId}
             gradientUnits="userSpaceOnUse"
-            x1={providerEdge}
+            x1={companyEdge}
             x2={DESTINATION_X}
             y1={0}
             y2={0}
           >
             <stop
               offset="0"
-              stopColor="currentColor"
+              style={{ stopColor: 'var(--muted-foreground)' }}
               stopOpacity={0.35}
-              className="text-muted-foreground"
             />
-            <stop
-              offset="0.5"
-              stopColor="currentColor"
-              className="text-sky-500"
-            />
-            <stop
-              offset="1"
-              stopColor="currentColor"
-              className="text-sky-500"
-            />
+            <stop offset="0.5" style={{ stopColor: 'var(--sso-accent)' }} />
+            <stop offset="1" style={{ stopColor: 'var(--sso-accent)' }} />
           </linearGradient>
           <filter id={flowGlowId} x="-20%" y="-60%" width="140%" height="220%">
             <feGaussianBlur stdDeviation="3.5" />
@@ -226,29 +238,25 @@ export function SSOAddonVisual({
           <radialGradient id={gateGlowId}>
             <stop
               offset="0"
-              stopColor="currentColor"
-              stopOpacity={0.28}
-              className="text-sky-500"
+              style={{ stopColor: 'var(--sso-accent)' }}
+              stopOpacity={0.3}
             />
             <stop
               offset="1"
-              stopColor="currentColor"
+              style={{ stopColor: 'var(--sso-accent)' }}
               stopOpacity={0}
-              className="text-sky-500"
             />
           </radialGradient>
           <radialGradient id={destinationGlowId}>
             <stop
               offset="0"
-              stopColor="currentColor"
+              style={{ stopColor: 'var(--sso-accent)' }}
               stopOpacity={0.16}
-              className="text-sky-500"
             />
             <stop
               offset="1"
-              stopColor="currentColor"
+              style={{ stopColor: 'var(--sso-accent)' }}
               stopOpacity={0}
-              className="text-sky-500"
             />
           </radialGradient>
         </defs>
@@ -260,9 +268,9 @@ export function SSOAddonVisual({
           ry={112}
           fill={`url(#${destinationGlowId})`}
         />
-        <circle cx={GATE.x} cy={GATE.y} r={58} fill={`url(#${gateGlowId})`} />
+        <circle cx={GATE.x} cy={GATE.y} r={62} fill={`url(#${gateGlowId})`} />
 
-        {/* Every sign-in takes the same way: in to the gate, out to a seat */}
+        {/* Every sign-in takes the same way: in to the provider, out to a seat */}
         {lanes.map((lane, index) => (
           <g key={index}>
             <path
@@ -288,12 +296,18 @@ export function SSOAddonVisual({
             const begin = `${(index * TRAVEL_SECONDS) / lanes.length}s`
             return (
               <circle key={index} r={2.75} fill={NEUTRAL_HEX} opacity={0}>
+                {/*
+                  keyPoints go with keyTimes: a path of several segments has
+                  more vertices than the two key times, and without key points
+                  Firefox refuses the motion and leaves the dot at the origin.
+                */}
                 <animateMotion
                   path={lane.path}
                   dur={`${TRAVEL_SECONDS}s`}
                   begin={begin}
                   repeatCount="indefinite"
                   calcMode="spline"
+                  keyPoints="0;1"
                   keyTimes="0;1"
                   keySplines="0.45 0 0.55 1"
                 />
@@ -307,7 +321,7 @@ export function SSOAddonVisual({
                 />
                 <animate
                   attributeName="fill"
-                  values={`${NEUTRAL_HEX};${ACCENT_HEX}`}
+                  values={`${NEUTRAL_HEX};${accent.hex}`}
                   calcMode="discrete"
                   keyTimes="0;0.5"
                   dur={`${TRAVEL_SECONDS}s`}
@@ -319,10 +333,10 @@ export function SSOAddonVisual({
           })}
         </g>
 
-        {/* The identity provider, with the people it knows */}
+        {/* The company, with its people */}
         <g style={{ filter: 'drop-shadow(0 8px 18px rgb(0 0 0 / 0.14))' }}>
           <rect
-            x={PROVIDER_X}
+            x={COMPANY_X}
             y={CARD_Y}
             width={CARD_WIDTH}
             height={CARD_HEIGHT}
@@ -331,19 +345,20 @@ export function SSOAddonVisual({
             stroke={CARD_STROKE}
           />
         </g>
-        <HeaderTile icon={KeyRound} x={PROVIDER_X + 12} />
+        <Tile x={COMPANY_X + 12} />
+        <TileIcon icon={Building2} x={COMPANY_X + 12} />
         <text
-          x={PROVIDER_X + 12 + TILE + 9}
+          x={COMPANY_X + 12 + TILE + 9}
           y={CARD_Y + HEADER / 2 + 4.5}
           fontSize={12.5}
           fontWeight={600}
           fill="var(--foreground)"
         >
-          {t('Identity provider')}
+          {scope === 'organization' ? t('Your company') : t('Your customer')}
         </text>
         <line
-          x1={PROVIDER_X}
-          x2={PROVIDER_X + CARD_WIDTH}
+          x1={COMPANY_X}
+          x2={COMPANY_X + CARD_WIDTH}
           y1={CARD_Y + HEADER}
           y2={CARD_Y + HEADER}
           stroke={CARD_STROKE}
@@ -352,9 +367,9 @@ export function SSOAddonVisual({
           const y = rowCenter(index)
           return (
             <g key={index}>
-              <Avatar x={PROVIDER_X + 12 + AVATAR} y={y} />
+              <Avatar x={COMPANY_X + 12 + AVATAR} y={y} />
               <rect
-                x={PROVIDER_X + 12 + AVATAR * 2 + 9}
+                x={COMPANY_X + 12 + AVATAR * 2 + 9}
                 y={y - 6.5}
                 width={bar}
                 height={5}
@@ -363,7 +378,7 @@ export function SSOAddonVisual({
                 fillOpacity={0.22}
               />
               <rect
-                x={PROVIDER_X + 12 + AVATAR * 2 + 9}
+                x={COMPANY_X + 12 + AVATAR * 2 + 9}
                 y={y + 2.5}
                 width={bar + 22}
                 height={4}
@@ -392,13 +407,25 @@ export function SSOAddonVisual({
           width={CARD_WIDTH}
           height={CARD_HEIGHT}
           rx={10}
-          className="fill-sky-500/[0.06] stroke-sky-500/45"
+          fill="var(--sso-accent)"
+          fillOpacity={0.06}
+          stroke="var(--sso-accent)"
+          strokeOpacity={0.5}
         />
-        <HeaderTile
-          icon={scope === 'organization' ? Building2 : AppWindow}
-          x={DESTINATION_X + 12}
-          accent
-        />
+        <Tile x={DESTINATION_X + 12} accent />
+        {scope === 'organization' ? (
+          // Appwrite's own mark: this is where they sign in to
+          <g
+            transform={`translate(${DESTINATION_X + 12 + (TILE - ICON) / 2} ${CARD_Y + (HEADER - (ICON * APPWRITE_MARK.height) / APPWRITE_MARK.width) / 2}) scale(${ICON / APPWRITE_MARK.width})`}
+            fill="var(--sso-ink)"
+          >
+            {APPWRITE_MARK.paths.map((d) => (
+              <path key={d} d={d} />
+            ))}
+          </g>
+        ) : (
+          <TileIcon icon={AppWindow} x={DESTINATION_X + 12} accent />
+        )}
         <text
           x={DESTINATION_X + 12 + TILE + 9}
           y={CARD_Y + HEADER / 2 + 4.5}
@@ -406,14 +433,15 @@ export function SSOAddonVisual({
           fontWeight={600}
           fill="var(--foreground)"
         >
-          {scope === 'organization' ? t('Appwrite Console') : t('Your app')}
+          {scope === 'organization' ? t('Appwrite Cloud') : t('Your app')}
         </text>
         <line
           x1={DESTINATION_X}
           x2={DESTINATION_X + CARD_WIDTH}
           y1={CARD_Y + HEADER}
           y2={CARD_Y + HEADER}
-          className="stroke-sky-500/25"
+          stroke="var(--sso-accent)"
+          strokeOpacity={0.25}
         />
         {PEOPLE.map((bar, index) => {
           const y = rowCenter(index)
@@ -432,7 +460,7 @@ export function SSOAddonVisual({
               <rect
                 x={DESTINATION_X + 12 + AVATAR * 2 + 9}
                 y={y - 2.5}
-                width={bar - 14}
+                width={bar - 16}
                 height={5}
                 rx={2.5}
                 fill="var(--foreground)"
@@ -444,7 +472,10 @@ export function SSOAddonVisual({
                 width={pill}
                 height={17}
                 rx={8.5}
-                className="fill-sky-500/12 stroke-sky-500/30"
+                fill="var(--sso-accent)"
+                fillOpacity={0.12}
+                stroke="var(--sso-accent)"
+                strokeOpacity={0.32}
               />
               <text
                 x={DESTINATION_X + CARD_WIDTH - 12 - pill / 2}
@@ -452,7 +483,7 @@ export function SSOAddonVisual({
                 fontSize={9.5}
                 fontWeight={500}
                 textAnchor="middle"
-                className="fill-sky-700 dark:fill-sky-200"
+                fill="var(--sso-ink)"
               >
                 {role}
               </text>
@@ -460,47 +491,29 @@ export function SSOAddonVisual({
           )
         })}
 
-        {/* The verified domain decides whose sign-ins the gate lets through */}
+        {/* The identity provider: one sign-in for everyone, whichever it is */}
+        <text
+          x={GATE.x}
+          y={GATE_LABEL_Y}
+          fontSize={9}
+          fontWeight={600}
+          textAnchor="middle"
+          fill="var(--muted-foreground)"
+          style={{ letterSpacing: '0.07em', textTransform: 'uppercase' }}
+        >
+          {t('Identity provider')}
+        </text>
         <line
           x1={GATE.x}
           x2={GATE.x}
-          y1={DOMAIN_CHIP_Y + DOMAIN_CHIP.height}
-          y2={GATE.y - GATE.radius}
-          className="stroke-sky-500/50"
+          y1={GATE_LABEL_Y + 7}
+          y2={GATE.y - GATE.radius - 3}
+          stroke="var(--sso-accent)"
+          strokeOpacity={0.5}
           strokeWidth={1}
           strokeDasharray="1.5 3"
           strokeLinecap="round"
         />
-        <rect
-          x={GATE.x - DOMAIN_CHIP.width / 2}
-          y={DOMAIN_CHIP_Y}
-          width={DOMAIN_CHIP.width}
-          height={DOMAIN_CHIP.height}
-          rx={DOMAIN_CHIP.height / 2}
-          fill="var(--card)"
-          stroke={CARD_STROKE}
-          style={{ filter: 'drop-shadow(0 4px 10px rgb(0 0 0 / 0.14))' }}
-        />
-        <BadgeCheck
-          x={GATE.x - DOMAIN_CHIP.width / 2 + 8}
-          y={DOMAIN_CHIP_Y + (DOMAIN_CHIP.height - 12) / 2}
-          width={12}
-          height={12}
-          strokeWidth={2}
-          className="text-sky-600 dark:text-sky-300"
-        />
-        <text
-          x={GATE.x - DOMAIN_CHIP.width / 2 + 25}
-          y={DOMAIN_CHIP_Y + DOMAIN_CHIP.height / 2 + 3.5}
-          fontSize={10.5}
-          fontWeight={500}
-          fill="var(--foreground)"
-          fillOpacity={0.85}
-        >
-          {DOMAIN}
-        </text>
-
-        {/* The gate: one sign-in for everyone */}
         <circle
           cx={GATE.x}
           cy={GATE.y}
@@ -512,23 +525,26 @@ export function SSOAddonVisual({
           cx={GATE.x}
           cy={GATE.y}
           r={GATE.radius}
-          className="fill-sky-500/10 stroke-sky-500/60"
+          fill="var(--sso-accent)"
+          fillOpacity={0.1}
+          stroke="var(--sso-accent)"
+          strokeOpacity={0.65}
           strokeWidth={1.25}
         />
-        <ShieldCheck
+        <KeyRound
           x={GATE.x - 9}
           y={GATE.y - 9}
           width={18}
           height={18}
           strokeWidth={1.9}
-          className="text-sky-600 dark:text-sky-300"
+          color="var(--sso-ink)"
         />
 
-        {/* Where each sign-in leaves the provider and where it arrives */}
+        {/* Where each sign-in leaves the company and where it arrives */}
         {lanes.map((lane, index) => (
           <g key={index}>
             <circle
-              cx={providerEdge}
+              cx={companyEdge}
               cy={lane.y}
               r={3}
               fill="var(--card)"
@@ -539,8 +555,8 @@ export function SSOAddonVisual({
               cy={lane.y}
               r={3.5}
               fill="var(--card)"
+              stroke="var(--sso-accent)"
               strokeWidth={1.25}
-              className="stroke-sky-500"
             />
           </g>
         ))}

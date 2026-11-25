@@ -3415,8 +3415,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'תוסף אחד מכסה את כל הצוותים בפרויקט הזה, בכל אחת מהסביבות שלו.',
   'Prorated for the current billing cycle.':
     'מחושב יחסית למחזור החיוב הנוכחי.',
-  'Appwrite Console':
-    'קונסולת Appwrite',
+  'Your company': 'החברה שלכם',
+  'Your customer': 'הלקוח שלכם',
   "With this add-on, people on your organization's verified domains sign in to the Console through its identity providers.":
     'עם התוסף הזה, אנשים בדומיינים המאומתים של הארגון שלכם מתחברים לקונסולה דרך ספקי הזהויות שלו.',
   'This add-on is available on {plans}. Upgrade your plan to enable it.':
