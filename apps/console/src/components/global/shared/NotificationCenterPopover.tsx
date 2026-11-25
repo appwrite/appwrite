@@ -12,6 +12,7 @@ import {
   ChevronDown,
   Circle,
   CircleAlert,
+  CircleCheck,
   Clock,
   ExternalLink,
   Info,
@@ -69,6 +70,7 @@ import {
 import type { ConsoleAccountCache } from '@/lib/react-query/hooks/auth'
 import { useT } from '@/lib/i18n/translate'
 import { analyticsAttrs } from '@/lib/analytics-actions'
+import { BeepPromotion } from './BeepPromotion'
 import { formatUntil, NotificationSettings } from './NotificationSettings'
 
 // The changelog ships every entry's text, so it loads only when the tab opens.
@@ -100,6 +102,20 @@ const SEVERITY_GLYPHS: Record<Severity, string> = {
   error: 'text-red-600 dark:text-red-400',
   warning: 'text-amber-600 dark:text-amber-500',
   info: 'text-muted-foreground',
+}
+
+const RESOLVED_GLYPH = 'text-green-600 dark:text-green-500'
+
+/**
+ * Whether the notification is about an alert that stopped firing. Rows stored
+ * before notifications named their alert carry no status, only the
+ * "[Resolved]" the Alerts worker puts at the front of the title.
+ */
+function isResolvedAlert(notification: Models.Notification): boolean {
+  if (notification.subjectType === 'alerts') {
+    return notification.status === 'resolved'
+  }
+  return notification.title.startsWith('[Resolved]')
 }
 
 /** A neutral tile with the icon in the notification's severity color. */
@@ -163,12 +179,15 @@ function HeaderButton({
   label,
   disabled,
   active,
+  concealed,
   onClick,
   children,
 }: {
   label: string
   disabled?: boolean
   active?: boolean
+  /** Hidden, but keeps its place so the other buttons don't move. */
+  concealed?: boolean
   onClick?: () => void
   children: ReactNode
 }) {
@@ -182,8 +201,10 @@ function HeaderButton({
           className={cn(
             'h-8 w-8 text-muted-foreground hover:text-foreground',
             active && 'text-foreground',
+            concealed && 'invisible',
           )}
-          disabled={disabled}
+          disabled={disabled || concealed}
+          aria-hidden={concealed || undefined}
           onClick={onClick}
           aria-label={label}
         >
@@ -215,6 +236,7 @@ function NotificationRow({
   const t = useT()
   const isUnread = !notification.read
   const severity = severityOf(notification.type)
+  const resolved = isResolvedAlert(notification)
   const projectId = notification.projectId?.trim() ?? ''
   const canOpen = getNotificationNavigateTarget(notification) !== null
   const isAlert =
@@ -237,8 +259,8 @@ function NotificationRow({
       {isUnread ? <UnreadDot /> : null}
       <div className="pointer-events-none relative">
         <NotificationIcon
-          icon={SEVERITY_ICONS[severity]}
-          className={SEVERITY_GLYPHS[severity]}
+          icon={resolved ? CircleCheck : SEVERITY_ICONS[severity]}
+          className={resolved ? RESOLVED_GLYPH : SEVERITY_GLYPHS[severity]}
         />
       </div>
       <div className="pointer-events-none relative min-w-0 flex-1 overflow-hidden">
@@ -454,7 +476,7 @@ const TAB_TRIGGER =
 
 function Centered({ children }: { children: ReactNode }) {
   return (
-    <div className="flex items-center justify-center gap-2 px-5 py-12 text-[13px] text-muted-foreground">
+    <div className="flex h-full items-center justify-center gap-2 px-5 py-12 text-[13px] text-muted-foreground">
       {children}
     </div>
   )
@@ -656,7 +678,8 @@ export function NotificationCenterPopover() {
           event.preventDefault()
           ;(event.currentTarget as HTMLElement | null)?.focus()
         }}
-        className="flex w-[min(26rem,calc(100vw-2rem))] flex-col overflow-hidden p-0 outline-none"
+        // One height for every tab and view, so switching never resizes it.
+        className="flex h-[min(38rem,calc(100dvh-5rem))] w-[min(26rem,calc(100vw-2rem))] flex-col overflow-hidden p-0 outline-none"
       >
         {showSettings ? (
           <>
@@ -675,7 +698,7 @@ export function NotificationCenterPopover() {
                 {t('Notification settings')}
               </h3>
             </div>
-            <div className="max-h-[min(30rem,70dvh)] overflow-y-auto overscroll-contain">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
               <NotificationSettings
                 beep={beepPrefs.beep}
                 isSaving={beepPrefs.isPending}
@@ -690,19 +713,18 @@ export function NotificationCenterPopover() {
                 {t('Notifications')}
               </h3>
               <div className="-me-2 flex items-center">
-                {unreadCount > 0 && tab === 'inbox' ? (
-                  <HeaderButton
-                    label={t('Mark all as read')}
-                    disabled={markAllReadMutation.isPending}
-                    onClick={() => void handleMarkAllRead()}
-                  >
-                    {markAllReadMutation.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <CheckCheck className="h-4 w-4" />
-                    )}
-                  </HeaderButton>
-                ) : null}
+                <HeaderButton
+                  label={t('Mark all as read')}
+                  concealed={unreadCount === 0 || tab !== 'inbox'}
+                  disabled={markAllReadMutation.isPending}
+                  onClick={() => void handleMarkAllRead()}
+                >
+                  {markAllReadMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <CheckCheck className="h-4 w-4" />
+                  )}
+                </HeaderButton>
                 <SnoozeMenu
                   snoozedUntil={snooze?.until ?? null}
                   disabled={!account}
@@ -737,9 +759,12 @@ export function NotificationCenterPopover() {
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
-              {tab === 'inbox' ? (
+              <div
+                className={cn(tab !== 'inbox' && 'invisible')}
+                aria-hidden={tab !== 'inbox' || undefined}
+              >
                 <FilterMenu filter={filter} onChange={setFilter} />
-              ) : null}
+              </div>
             </div>
 
             {snooze ? (
@@ -758,7 +783,7 @@ export function NotificationCenterPopover() {
               </div>
             ) : null}
 
-            <div className="max-h-[min(28rem,60dvh)] overflow-x-hidden overflow-y-auto overscroll-contain">
+            <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain">
               {tab === 'updates' ? (
                 <Suspense
                   fallback={
@@ -776,7 +801,7 @@ export function NotificationCenterPopover() {
                   {t('Loading notifications...')}
                 </Centered>
               ) : visible.length === 0 ? (
-                <div className="px-6 py-12 text-center">
+                <div className="flex h-full flex-col items-center justify-center px-6 py-12 text-center">
                   <p className="text-[13px] font-medium text-foreground">
                     {filter === 'unread' && notifications.length > 0
                       ? t('No unread notifications')
@@ -813,6 +838,7 @@ export function NotificationCenterPopover() {
                 ))
               )}
             </div>
+            <BeepPromotion />
           </>
         )}
       </PopoverContent>

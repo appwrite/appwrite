@@ -1,31 +1,17 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { View } from '@/components/pages/projects/$projectId/settings/View'
-import { prefetchFirewallTabData } from '@/lib/react-query/hooks'
-import { isCloudProfile } from '@/lib/console-profiles'
-import { pageTitle } from '@/lib/utils/page-title'
 
+/**
+ * API rules were a project settings tab for a while. Keep those links working
+ * by opening the project Firewall page.
+ */
 export const Route = createFileRoute(
   '/_public/projects/$projectId/settings/firewall',
 )({
-  head: () => ({ meta: [{ title: pageTitle('Firewall', 'Settings') }] }),
   beforeLoad: ({ params }) => {
-    if (!isCloudProfile()) {
-      throw redirect({
-        to: '/projects/$projectId/settings',
-        params,
-        replace: true,
-      })
-    }
-  },
-  loader: async ({ params, context }) => {
-    if (typeof window === 'undefined') return
-    await prefetchFirewallTabData(context.queryClient, params.projectId, {
-      resourceType: 'api',
+    throw redirect({
+      to: '/projects/$projectId/firewall',
+      params,
+      replace: true,
     })
   },
-  component: SettingsFirewallPage,
 })
-
-function SettingsFirewallPage() {
-  return <View />
-}

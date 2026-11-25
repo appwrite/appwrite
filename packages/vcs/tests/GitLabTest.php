@@ -10,9 +10,13 @@ use Utopia\VCS\Adapter\Git\GitLab;
 
 final class GitLabTest extends Base
 {
+    #[\Override]
     protected static string $eventHeader = 'x-gitlab-event';
+    #[\Override]
     protected static string $signatureHeader = 'x-gitlab-token';
+    #[\Override]
     protected static string $pushEventName = 'Push Hook';
+    #[\Override]
     protected static string $pullRequestEventName = 'Merge Request Hook';
 
     protected function createAdapter(): GitLab

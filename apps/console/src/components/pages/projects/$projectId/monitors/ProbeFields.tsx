@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import * as RadioGroupPrimitive from '@radix-ui/react-radio-group'
 import {
   Gauge,
@@ -41,7 +41,8 @@ import {
   probeTarget,
 } from '@/lib/alerts/probes'
 import { useT } from '@/lib/i18n/translate'
-import { useProject } from '@/lib/react-query/hooks'
+import { alertingLimits, defaultProbeInterval } from '@/lib/alerts/plan-limits'
+import { useOrganizationPlan, useProject } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
 import {
   NotifyFields,
@@ -157,8 +158,7 @@ export function probeInputFromForm(form: ProbeForm): ProbeMonitorInput {
     timeout: form.timeout,
     cooldown: form.cooldown,
     notify: form.notify,
-    escalationId:
-      form.recipients === 'escalation' ? form.escalationId : '',
+    escalationId: form.recipients === 'escalation' ? form.escalationId : '',
     severity: form.severity,
   }
   switch (form.type) {
@@ -366,7 +366,16 @@ export function ProbeFields({
 }: ProbeFieldsProps & { projectId: string }) {
   const t = useT()
   const { project } = useProject(projectId)
+  const { plan } = useOrganizationPlan(project?.teamId)
+  const minimum = alertingLimits(plan).probeInterval
   const definition = PROBE_TYPES.find((entry) => entry.value === form.type)
+
+  // The API refuses an interval shorter than the plan's, so start new checks on one it accepts.
+  useEffect(() => {
+    if (!disabled && form.interval < minimum) {
+      onChange({ interval: defaultProbeInterval(minimum) })
+    }
+  }, [disabled, form.interval, minimum, onChange])
 
   return (
     <div className="space-y-7">
@@ -613,7 +622,11 @@ export function ProbeFields({
             </SelectTrigger>
             <SelectContent>
               {durationOptions(INTERVALS, form.interval, t).map((option) => (
-                <SelectItem key={option.value} value={String(option.value)}>
+                <SelectItem
+                  key={option.value}
+                  value={String(option.value)}
+                  disabled={option.value < minimum}
+                >
                   {option.label}
                 </SelectItem>
               ))}
@@ -644,6 +657,16 @@ export function ProbeFields({
             </SelectContent>
           </Select>
         </div>
+        {minimum > INTERVALS[0].value && (
+          <p className="mt-2 text-[12px] text-muted-foreground">
+            {t('Your plan checks at most every {interval}.').replace(
+              '{interval}',
+              durationOptions(INTERVALS, minimum, t).find(
+                (option) => option.value === minimum,
+              )?.label ?? `${minimum}s`,
+            )}
+          </p>
+        )}
       </section>
 
       <NotifyFields

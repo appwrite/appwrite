@@ -440,6 +440,7 @@
         "PATCH /v1/project/oauth2/bitbucket",
         "PATCH /v1/project/oauth2/bitly",
         "PATCH /v1/project/oauth2/box",
+        "PATCH /v1/project/oauth2/clerk",
         "PATCH /v1/project/oauth2/cloudflare",
         "PATCH /v1/project/oauth2/dailymotion",
         "PATCH /v1/project/oauth2/discord",

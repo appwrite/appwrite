@@ -6982,6 +6982,18 @@ parameters:
 			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, Closure\(Throwable\)\: string given\.$#'
 			identifier: argument.type
 			count: 1
+			path: tests/Destinations/AppwriteColumnLimitTest.php
+
+		-
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/Destinations/AppwriteColumnLimitTest.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, Closure\(Throwable\)\: string given\.$#'
+			identifier: argument.type
+			count: 1
 			path: tests/Destinations/AppwriteColumnOverwriteTest.php
 
 		-

@@ -6,7 +6,7 @@ import {
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
 import { ensureQueryDataIfFound } from '@/lib/react-query/ensure-query-data-if-found'
-import { fetchVcsInstallations } from '@/lib/react-query/hooks/vcs'
+import { vcsInstallationsQueryOptions } from '@/lib/react-query/hooks/vcs'
 import { Query } from '@appwrite.io/console'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { listSearchSchema, parseListSearch } from '@/lib/table-filters'
@@ -98,11 +98,9 @@ export const Route = createFileRoute(
             siteDeploymentQueryOptions(projectId, siteId, redeployDeploymentId),
           )
         : Promise.resolve(),
-      queryClient.ensureQueryData({
-        queryKey: ['vcs', 'installations', projectId, 0, 10],
-        queryFn: () => fetchVcsInstallations(projectId, 0, 10),
-        staleTime: 5 * 60 * 1000,
-      }),
+      queryClient.ensureQueryData(
+        vcsInstallationsQueryOptions(projectId, 0, 10),
+      ),
     ])
   },
   component: DeploymentsLayoutPage,

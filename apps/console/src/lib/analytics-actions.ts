@@ -26,6 +26,9 @@ export const ANALYTICS_ACTIONS = {
   'feedback-open': 'Feedback Opened',
   'support-open': 'Support Opened',
   'notifications-open': 'Notifications Opened',
+  'notifications-beep-app-store': 'Notifications Beep App Store Clicked',
+  'notifications-beep-google-play': 'Notifications Beep Google Play Clicked',
+  'notifications-beep-dismiss': 'Notifications Beep Promotion Dismissed',
   'ai-agent-open': 'AI Agent Opened',
   'upgrade-clicked': 'Upgrade Clicked',
   'auth-sign-in': 'Sign In Clicked',
@@ -279,7 +282,6 @@ export const ANALYTICS_ACTIONS = {
   'start-promo-banner-learn-more': 'Start Promo Banner Learn More Clicked',
   'product-hunt-banner-upvote': 'Product Hunt Banner Upvote Clicked',
   'mcp1-launch-banner-try': 'MCP1 Launch Banner Try Clicked',
-  'firewall-moved-banner-open': 'Firewall Moved Banner Open Clicked',
   'init-recap-promo-banner-view-recap':
     'Init Recap Promo Banner View Recap Clicked',
   'native-oauth-promo-banner-open-settings':
