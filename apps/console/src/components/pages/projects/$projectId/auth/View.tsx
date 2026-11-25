@@ -71,7 +71,7 @@ import { TeamsEmptyState } from './_components/TeamsEmptyState'
 import { UsersEmptyState } from './_components/UsersEmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { CopyableId } from '@/components/global/shared/CopyableId'
-import { InitialsAvatar, PhotoAvatar } from '@/components/global/shared/Avatar'
+import { PhotoAvatar, TeamAvatar } from '@/components/global/shared/Avatar'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -2109,7 +2109,9 @@ export function View({
                                   className="block group"
                                 >
                                   <div className="flex items-center gap-3 min-w-0">
-                                    <InitialsAvatar
+                                    <TeamAvatar
+                                      teamId={team.id}
+                                      projectId={projectId}
                                       name={team.name || ''}
                                       size="sm"
                                       className="shrink-0"
