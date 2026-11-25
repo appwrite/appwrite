@@ -23,7 +23,7 @@ publish = true
 
 [workspace.dependencies]
 # The version is what a published crate asks crates.io for; this checkout uses the path.
-php-std = { path = "crates/support/php-std", version = "0.1.0" }
+php-std = { package = "utopia-php-std", path = "crates/support/php-std", version = "0.1.0" }
 utopia-auth = { path = "crates/utopia/auth" }
 utopia-balancer = { path = "crates/utopia/balancer" }
 utopia-compression = { path = "crates/utopia/compression" }
