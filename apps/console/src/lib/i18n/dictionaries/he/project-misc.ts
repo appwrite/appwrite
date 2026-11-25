@@ -2054,6 +2054,13 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'SMS messages': 'הודעות SMS', // pragma: allowlist secret
   'Events sent': 'אירועים שנשלחו',
   'Events failed': 'אירועים שנכשלו',
+  'Streaming bandwidth': 'רוחב פס של סטרימינג',
+  'Renditions encoded': 'גרסאות קידוד שקודדו',
+  'Failed renditions': 'גרסאות קידוד שנכשלו',
+  'Encoding GB-hours': 'GB-hours של קידוד',
+  'Video storage': 'אחסון סרטונים',
+  Endpoints: 'נקודות קצה',
+  'Video ID': 'מזהה סרטון',
   Webhooks: 'Webhooks',
   'Function executions': 'הרצות פונקציות',
   'Site executions': 'הרצות אתרים',

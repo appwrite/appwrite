@@ -134,6 +134,15 @@ import {
   fetchProjectWebhooksEventsSentOverview,
 } from '@/lib/usage/webhooks-usage'
 import {
+  fetchProjectRenditionsOverview,
+  fetchProjectVideosCountOverview,
+  fetchProjectVideosTrafficBreakdown,
+  fetchProjectVideosTrafficOverview,
+  type VideosRenditionsEventMetric,
+  type VideosTrafficBreakdownDimension,
+  type VideosTrafficEventMetric,
+} from '@/lib/usage/videos-usage'
+import {
   appendUsageFiltersToQueryKey,
   mergeUsageFetchOptions,
   type UsageFilterQueries,
@@ -4288,6 +4297,303 @@ export function refetchProjectWebhooksUsageQueries(
         query.queryKey[1] === 'webhooks') ||
         (query.queryKey[0] === 'usage-gauges' &&
           query.queryKey[1] === 'webhooks')),
+  })
+}
+
+function videosTrafficChartQueryOptions(
+  projectId: string | null | undefined,
+  metric: VideosTrafficEventMetric,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
+  logRetentionHours?: number,
+  dateRangePresetId?: string | null,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } =
+    normalizeDateRangeKey(dateRange, { dateRangePresetId, logRetentionHours })
+
+  return queryOptions({
+    queryKey: appendUsageFiltersToQueryKey(
+      [
+        'usage-events',
+        'videos',
+        metric,
+        'chart',
+        'project',
+        projectId,
+        rangeKeyPart,
+        interval,
+      ],
+      filterQueries,
+    ),
+    queryFn: () =>
+      fetchProjectVideosTrafficOverview(
+        projectId!,
+        metric,
+        getBounds(),
+        interval,
+        mergeUsageFetchOptions(undefined, filterQueries, logRetentionHours),
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+function videosTrafficBreakdownQueryOptions(
+  projectId: string | null | undefined,
+  metric: VideosTrafficEventMetric,
+  dimension: VideosTrafficBreakdownDimension,
+  dateRange: DateRange | undefined,
+  filterQueries?: UsageFilterQueries,
+  logRetentionHours?: number,
+  dateRangePresetId?: string | null,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } =
+    normalizeDateRangeKey(dateRange, { dateRangePresetId, logRetentionHours })
+
+  return queryOptions({
+    queryKey: appendUsageFiltersToQueryKey(
+      [
+        'usage-events',
+        'videos',
+        metric,
+        'breakdown',
+        dimension,
+        'project',
+        projectId,
+        rangeKeyPart,
+      ],
+      filterQueries,
+    ),
+    queryFn: () =>
+      fetchProjectVideosTrafficBreakdown(
+        projectId!,
+        metric,
+        getBounds(),
+        dimension,
+        usageBreakdownQueries(filterQueries),
+        logRetentionHours,
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+function renditionsChartQueryOptions(
+  projectId: string | null | undefined,
+  metric: VideosRenditionsEventMetric,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
+  logRetentionHours?: number,
+  dateRangePresetId?: string | null,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } =
+    normalizeDateRangeKey(dateRange, { dateRangePresetId, logRetentionHours })
+
+  return queryOptions({
+    queryKey: appendUsageFiltersToQueryKey(
+      [
+        'usage-events',
+        'videos',
+        metric,
+        'chart',
+        'project',
+        projectId,
+        rangeKeyPart,
+        interval,
+      ],
+      filterQueries,
+    ),
+    queryFn: () =>
+      fetchProjectRenditionsOverview(
+        projectId!,
+        metric,
+        getBounds(),
+        interval,
+        mergeUsageFetchOptions(undefined, filterQueries, logRetentionHours),
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+function videosCountChartQueryOptions(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
+  logRetentionHours?: number,
+  dateRangePresetId?: string | null,
+) {
+  const { rangeKeyPart, getBounds, refetchOnMountRolling } =
+    normalizeDateRangeKey(dateRange, { dateRangePresetId, logRetentionHours })
+
+  return queryOptions({
+    queryKey: appendUsageFiltersToQueryKey(
+      [
+        'usage-gauges',
+        'videos',
+        'count',
+        'chart',
+        'project',
+        projectId,
+        rangeKeyPart,
+        interval,
+      ],
+      filterQueries,
+    ),
+    queryFn: () =>
+      fetchProjectVideosCountOverview(
+        projectId!,
+        getBounds(),
+        interval,
+        mergeUsageFetchOptions(undefined, filterQueries, logRetentionHours),
+      ),
+    enabled: !!projectId,
+    ...usageEventsQueryOptionsBase,
+    placeholderData: keepPreviousUsageChartDataForProject(projectId),
+    refetchOnMount: refetchOnMountRolling
+      ? 'always'
+      : usageEventsQueryOptionsBase.refetchOnMount,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/** Videos API bandwidth (`network.outbound`) or requests over time. */
+export function useProjectVideosTrafficChart(
+  projectId: string | null | undefined,
+  metric: VideosTrafficEventMetric,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { filterQueries, logRetentionHours, dateRangePresetId, usageLogRetentionReady } = useUsageSectionFilterQueries()
+
+  return useQuery({
+    ...videosTrafficChartQueryOptions(
+      projectId,
+      metric,
+      dateRange,
+      interval,
+      filterQueries,
+      logRetentionHours,
+      dateRangePresetId,
+    ),
+    enabled: !!projectId && enabled && usageLogRetentionReady,
+  })
+}
+
+/** Top videos, countries, or endpoints for Videos API traffic. */
+export function useProjectVideosTrafficBreakdown(
+  projectId: string | null | undefined,
+  metric: VideosTrafficEventMetric,
+  dimension: VideosTrafficBreakdownDimension,
+  dateRange: DateRange | undefined,
+  enabled = true,
+) {
+  const { filterQueries, logRetentionHours, dateRangePresetId, usageLogRetentionReady } = useUsageSectionFilterQueries()
+
+  return useQuery({
+    ...videosTrafficBreakdownQueryOptions(
+      projectId,
+      metric,
+      dimension,
+      dateRange,
+      filterQueries,
+      logRetentionHours,
+      dateRangePresetId,
+    ),
+    enabled: !!projectId && enabled && usageLogRetentionReady,
+  })
+}
+
+/** Encoded (`renditions.success`) or failed renditions over time. */
+export function useProjectRenditionsChart(
+  projectId: string | null | undefined,
+  metric: VideosRenditionsEventMetric,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const { filterQueries, logRetentionHours, dateRangePresetId, usageLogRetentionReady } = useUsageSectionFilterQueries()
+
+  return useQuery({
+    ...renditionsChartQueryOptions(
+      projectId,
+      metric,
+      dateRange,
+      interval,
+      filterQueries,
+      logRetentionHours,
+      dateRangePresetId,
+    ),
+    enabled: !!projectId && enabled && usageLogRetentionReady,
+  })
+}
+
+export function useProjectVideosCountChart(
+  projectId: string | null | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+) {
+  const {
+    filterQueries,
+    logRetentionHours,
+    dateRangePresetId,
+    usageLogRetentionReady,
+  } = useUsageSectionFilterQueries('gauges')
+
+  return useQuery({
+    ...videosCountChartQueryOptions(
+      projectId,
+      dateRange,
+      interval,
+      filterQueries,
+      logRetentionHours,
+      dateRangePresetId,
+    ),
+    enabled: !!projectId && enabled && usageLogRetentionReady,
+  })
+}
+
+/**
+ * Refetch the Videos usage page: traffic, renditions, and the video count,
+ * plus the encode compute and storage cards it shares with other pages.
+ */
+export function refetchProjectVideosUsageQueries(
+  queryClient: QueryClient,
+  projectId: string,
+) {
+  return queryClient.refetchQueries({
+    predicate: (query) =>
+      Array.isArray(query.queryKey) &&
+      query.queryKey.includes('project') &&
+      query.queryKey.includes(projectId) &&
+      (((query.queryKey[0] === 'usage-events' ||
+        query.queryKey[0] === 'usage-gauges') &&
+        query.queryKey[1] === 'videos') ||
+        (query.queryKey[0] === 'usage-events' &&
+          query.queryKey[1] === 'video-gb-hours') ||
+        (query.queryKey[0] === 'usage-gauges' &&
+          query.queryKey[1] === 'storage' &&
+          query.queryKey[2] === 'videos')),
   })
 }
 
