@@ -1,8 +1,5 @@
 # Utopia Balancer
 
-> [!IMPORTANT]
-> This repository is a read-only mirror of [`crates/utopia/balancer`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/balancer) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there: please open issues and pull requests in that repository.
-
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
 Choosing between endpoints: options with state, filters, and the First, Last, Random and RoundRobin algorithms.
@@ -13,7 +10,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 
 ```toml
 [dependencies]
-utopia-balancer = { git = "https://github.com/utopia-rs/balancer" }
+utopia-balancer = { git = "https://github.com/appwrite/appwrite" }
 ```
 
 A balancer picks one endpoint out of many: a worker for the next job, a region for the next request. You give it options, filters that rule out the options that cannot serve right now, and an algorithm that chooses among the rest. Options can be any type; `Candidate` is a ready-made one holding named values such as a hostname or a CPU load. This guide covers the common tasks.

@@ -1,8 +1,5 @@
 # Utopia Locale
 
-> [!IMPORTANT]
-> This repository is a read-only mirror of [`crates/utopia/locale`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/locale) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there: please open issues and pull requests in that repository.
-
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
 Translations: languages, default and fallback locales, and placeholders.
@@ -13,7 +10,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 
 ```toml
 [dependencies]
-utopia-locale = { git = "https://github.com/utopia-rs/locale" }
+utopia-locale = { git = "https://github.com/appwrite/appwrite" }
 ```
 
 Utopia Locale keeps an application's translations. You register each language as a set of keys and texts, pick a default language, and look up texts by key, with placeholders and a fallback language for keys that are not translated yet. In Rust the registered languages live in a `Languages` value that you load once and share; each request creates a cheap `Locale` that borrows it. This guide covers the common tasks.

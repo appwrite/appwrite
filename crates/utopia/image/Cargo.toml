@@ -1,11 +1,12 @@
 [package]
 name = "utopia-image"
 description = "Image previews: decode, crop by gravity or focal point, borders, rounded corners, opacity, rotation and background, then encode to JPEG, PNG, GIF, WebP or AVIF."
-version = "0.1.0"
-edition = "2024"
-rust-version = "1.97"
-license = "BSD-3-Clause"
-repository = "https://github.com/utopia-rs/image"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
 
 [features]
 default = ["ravif"]
@@ -19,18 +20,18 @@ libwebp = ["dep:webp"]
 libheif = ["dep:libheif-rs"]
 
 [dependencies]
-fast_image_resize = { version = "6", default-features = false, features = ["std"] }
-gif = "0.14"
-image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "gif", "webp"] }
-image-webp = "0.2"
-jpeg-encoder = "0.7"
-kamadak-exif = "0.6"
-libheif-rs = { version = "3", optional = true, default-features = false, features = ["v1_17"] }
-php-std = { version = "0.1.0", git = "https://github.com/utopia-rs/php-std" }
-png = "0.18"
+fast_image_resize.workspace = true
+gif.workspace = true
+image.workspace = true
+image-webp.workspace = true
+jpeg-encoder.workspace = true
+kamadak-exif.workspace = true
+libheif-rs = { workspace = true, optional = true }
+php-std.workspace = true
+png.workspace = true
 skrifa = "0.50.0"
-thiserror = "2"
-webp = { version = "0.3", optional = true, default-features = false }
+thiserror.workspace = true
+webp = { workspace = true, optional = true }
 zeno = "0.3"
 
 [package.metadata.utopia]

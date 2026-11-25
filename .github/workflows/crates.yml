@@ -1,0 +1,104 @@
+name: Crates
+
+# An `rs/<name>/<version>` tag publishes that crate to crates.io, then pushes
+# exactly what was published to its read-only mirror at utopia-rs/<name>.
+# Cargo writes the published crate's standalone Cargo.toml, so the crates here
+# keep inheriting from the workspace. See rfc/monorepo.md.
+
+on:
+  push:
+    tags: ['rs/*/*']
+
+concurrency:
+  group: crates-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      # rs/query/0.2.0 is crates/utopia/query, the package utopia-query, at 0.2.0.
+      - name: Resolve the crate
+        id: crate
+        run: |
+          name="${GITHUB_REF_NAME#rs/}"
+          version="${name##*/}"
+          name="${name%/*}"
+          for parent in crates/utopia crates/support; do
+            if [ -f "$parent/$name/Cargo.toml" ]; then directory="$parent/$name"; fi
+          done
+          [ -n "${directory:-}" ] || { echo "no crate named $name" >&2; exit 1; }
+          package=$(cargo metadata --no-deps --format-version 1 |
+            jq -r --arg manifest "$PWD/$directory/Cargo.toml" '.packages[] | select(.manifest_path == $manifest) | .name')
+          stated=$(cargo metadata --no-deps --format-version 1 |
+            jq -r --arg manifest "$PWD/$directory/Cargo.toml" '.packages[] | select(.manifest_path == $manifest) | .version')
+          [ "$stated" = "$version" ] || { echo "$directory/Cargo.toml is at $stated, not $version" >&2; exit 1; }
+          {
+            echo "name=$name"
+            echo "version=$version"
+            echo "directory=$directory"
+            echo "package=$package"
+          } >> "$GITHUB_OUTPUT"
+
+      # utopia-image links libheif; the verification build of a publish needs its headers.
+      - name: Install build dependencies
+        run: sudo apt-get update && sudo apt-get install --yes --no-install-recommends libheif-dev
+
+      # A rerun after a publish that succeeded packages the same version again instead of
+      # failing on "already exists", so the mirror step still runs.
+      - name: Publish to crates.io
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          PACKAGE: ${{ steps.crate.outputs.package }}
+          VERSION: ${{ steps.crate.outputs.version }}
+        run: |
+          status=$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            --user-agent 'appwrite/appwrite crates.yml' "https://crates.io/api/v1/crates/$PACKAGE/$VERSION")
+          if [ "$status" = "200" ]; then
+            echo "$PACKAGE $VERSION is already on crates.io"
+            cargo package --package "$PACKAGE" --locked --no-verify
+          else
+            cargo publish --package "$PACKAGE" --locked
+          fi
+
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        id: app-token
+        with:
+          app-id: ${{ vars.SPLIT_RS_APP_ID }}
+          private-key: ${{ secrets.SPLIT_RS_APP_PRIVATE_KEY }}
+          owner: utopia-rs
+          repositories: ${{ steps.crate.outputs.name }}
+          permission-contents: write
+          permission-workflows: write
+
+      # The mirror's tree is the .crate Cargo just built: one commit and one tag per release.
+      - name: Push the release to the mirror
+        env:
+          TOKEN: ${{ steps.app-token.outputs.token }}
+          NAME: ${{ steps.crate.outputs.name }}
+          PACKAGE: ${{ steps.crate.outputs.package }}
+          VERSION: ${{ steps.crate.outputs.version }}
+          DIRECTORY: ${{ steps.crate.outputs.directory }}
+        run: |
+          mirror=$(mktemp -d)
+          git clone --quiet "https://x-access-token:$TOKEN@github.com/utopia-rs/$NAME.git" "$mirror"
+          if git -C "$mirror" rev-parse --quiet --verify "refs/tags/$VERSION" > /dev/null; then
+            echo "utopia-rs/$NAME already has $VERSION"
+            exit 0
+          fi
+          git -C "$mirror" rm --quiet -r --ignore-unmatch .
+          tar --extract --gzip --file "target/package/$PACKAGE-$VERSION.crate" --strip-components 1 --directory "$mirror"
+          git -C "$mirror" add --all
+          git -C "$mirror" \
+            -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+            commit --quiet --message "$VERSION" \
+            --message "Published to crates.io as $PACKAGE $VERSION from $GITHUB_REPOSITORY@$GITHUB_SHA ($DIRECTORY)."
+          git -C "$mirror" tag "$VERSION"
+          git -C "$mirror" push --quiet origin HEAD "refs/tags/$VERSION"

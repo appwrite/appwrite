@@ -1,8 +1,5 @@
 # utopia-validators
 
-> [!IMPORTANT]
-> This repository is a read-only mirror of [`crates/utopia/validators`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/validators) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there: please open issues and pull requests in that repository.
-
 The checks of [`utopia-php/validators`](../../../packages/validators) as PHP runs them: booleans,
 integers, floats, numbers, ranges, ports, hex colors, text, identifiers, white lists, substrings,
 DNS labels, hostnames, domains, hosts, IP addresses, URLs and phone numbers (over `php-std`'s ports of

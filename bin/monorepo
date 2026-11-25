@@ -10,16 +10,14 @@
  * `<name>/<version>`, which pushes `<version>` to the mirror for Packagist to
  * pick up. See rfc/monorepo.md.
  *
- * A Rust crate in crates/utopia/<name> (or crates/support/<name>) is split, listed and
- * released by the same commands under the name `rs/<name>`: its directory goes to
- * github.com/utopia-rs/<name> as it is, and `rs/<name>/<version>` tags a release.
+ * A Rust crate in crates/utopia/<name> or crates/support/<name> is listed and released
+ * under the name `rs/<name>`: `rs/<name>/<version>` tags it, and crates.yml publishes that
+ * version to crates.io and to the crate's mirror at github.com/utopia-rs/<name>.
  */
 
 chdir(dirname(__DIR__));
 
 const ORG = 'utopia-php';
-const CRATES_ORG = 'utopia-rs';
-const CRATE = 'rs/'; // what a crate's name starts with: rs/query
 const REPOSITORY = 'appwrite/appwrite';
 const SPLIT_APP_ID = 4016286; // GitHub App that pushes splits to the mirrors
 const HOISTED = ['laravel/pint', 'phpstan/phpstan', 'rector/rector', 'phpunit/phpunit'];
@@ -119,50 +117,41 @@ function packages(): array
  * authenticated HTTPS URL via SPLIT_REMOTE_BASE.
  */
 /**
- * The Rust crates with a mirror, each named `rs/<name>`.
+ * The Rust crates that are published, each named `rs/<name>`.
  *
  * @return string[]
  */
 function crates(): array
 {
     $manifests = [...(glob('crates/utopia/*/Cargo.toml') ?: []), ...(glob('crates/support/*/Cargo.toml') ?: [])];
-    $names = array_map(fn (string $manifest) => CRATE . basename(dirname($manifest)), $manifests);
+    $names = array_map(fn (string $manifest) => 'rs/' . basename(dirname($manifest)), $manifests);
     sort($names);
 
     return $names;
 }
 
 /**
- * Where a package or a crate lives in this repository, or null when there is none by that name.
+ * Where a package, or a crate named `rs/<name>`, lives in this repository, or null.
  */
 function directory(string $name): ?string
 {
-    if (!str_starts_with($name, CRATE)) {
+    if (!str_starts_with($name, 'rs/')) {
         return is_dir("packages/{$name}") ? "packages/{$name}" : null;
     }
     foreach (['crates/utopia/', 'crates/support/'] as $parent) {
-        if (is_file($parent . substr($name, strlen(CRATE)) . '/Cargo.toml')) {
-            return $parent . substr($name, strlen(CRATE));
+        if (is_file($parent . substr($name, 3) . '/Cargo.toml')) {
+            return $parent . substr($name, 3);
         }
     }
 
     return null;
 }
 
-/**
- * The mirror of a package or a crate, as "<org>/<repository>".
- */
-function mirror(string $name): string
+function remote(string $package): string
 {
-    return str_starts_with($name, CRATE) ? CRATES_ORG . '/' . substr($name, strlen(CRATE)) : ORG . '/' . $name;
-}
+    $base = getenv('SPLIT_REMOTE_BASE') ?: 'git@github.com:' . ORG;
 
-function remote(string $name): string
-{
-    [$org, $repository] = explode('/', mirror($name));
-    $base = getenv($org === CRATES_ORG ? 'SPLIT_CRATES_REMOTE_BASE' : 'SPLIT_REMOTE_BASE') ?: 'git@github.com:' . $org;
-
-    return $base . '/' . $repository . '.git';
+    return $base . '/' . $package . '.git';
 }
 
 function import_package(string $package, ?string $url, ?string $branch): void
@@ -250,7 +239,7 @@ function release_notes(string $package, string $version, string $to): string
 }
 
 /**
- * Compute the split head of a package or a crate: starting from the latest subtree
+ * Compute a package's split head: starting from the latest subtree
  * annotation (an import or rejoin merge), or from the repository root when
  * there is none, re-synthesize one commit per mainline commit that changed
  * the package, copying tree, author, committer and raw message. Deterministic,
@@ -259,12 +248,10 @@ function release_notes(string $package, string $version, string $to): string
  */
 function split_package(string $package): string
 {
-    $directory = directory($package);
-
     // With an annotation present, resume from it; without one — a hand-created
     // package, or one whose import merge a squash-merge flattened — synthesize
     // from the repository root, the first commit landing parentless.
-    $join = sh('git log --format=%H --grep=' . escapeshellarg("^git-subtree-dir: {$directory}\$") . ' -1 HEAD');
+    $join = sh('git log --format=%H --grep=' . escapeshellarg("^git-subtree-dir: packages/{$package}\$") . ' -1 HEAD');
     $tip = null;
     $range = 'HEAD';
     if ($join !== '') {
@@ -275,10 +262,10 @@ function split_package(string $package): string
         $range = "{$mainline[1]}..HEAD";
     }
 
-    $commits = sh("git log --reverse --first-parent --format=%H {$range} -- {$directory}");
+    $commits = sh("git log --reverse --first-parent --format=%H {$range} -- packages/{$package}");
     foreach (array_filter(explode("\n", $commits)) as $commit) {
         unset($tree);
-        exec("git rev-parse -q --verify {$commit}:{$directory} 2>/dev/null", $tree, $missing);
+        exec("git rev-parse -q --verify {$commit}:packages/{$package} 2>/dev/null", $tree, $missing);
         if ($missing !== 0 || ($tip !== null && $tree[0] === sh("git rev-parse {$tip}^{tree}"))) {
             continue;
         }
@@ -291,7 +278,7 @@ function split_package(string $package): string
         $tip = sh("git log -1 --pretty=format:%B {$commit} | {$environment}git commit-tree {$tree[0]} {$parent}");
     }
 
-    $tip !== null || fail("{$directory} has no commits to split");
+    $tip !== null || fail("packages/{$package} has no commits to split");
 
     return $tip;
 }
@@ -747,10 +734,10 @@ switch ($command) {
         break;
 
     case 'split':
-        $targets = $arguments !== [] ? $arguments : [...packages(), ...crates()];
+        $targets = $arguments !== [] ? $arguments : packages();
         $failed = [];
         foreach ($targets as $package) {
-            directory($package) !== null || fail("unknown package: {$package}");
+            is_dir("packages/{$package}") || fail("unknown package: {$package}");
 
             out("splitting {$package}...");
             $sha = split_package($package);
@@ -788,14 +775,14 @@ switch ($command) {
                 // curl with an explicit token: gh's own auth resolution 401s
                 // intermittently (seen with both CI app tokens and the local
                 // keyring), while the same token works fine over plain HTTP.
-                $token = getenv(str_starts_with($package, CRATE) ? 'CRATES_GH_TOKEN' : 'GH_TOKEN') ?: sh('gh auth token');
+                $token = getenv('GH_TOKEN') ?: sh('gh auth token');
                 $authorization = escapeshellarg('Authorization: Bearer ' . $token);
                 foreach ([1, 2] as $attempt) {
                     $response = [];
                     exec('printf %s ' . escapeshellarg($payload)
                         . ' | curl -sS --fail-with-body -X POST -H ' . $authorization
                         . ' -H "Accept: application/vnd.github+json" --data-binary @- '
-                        . 'https://api.github.com/repos/' . mirror($package) . '/releases 2>&1', $response, $code);
+                        . 'https://api.github.com/repos/' . ORG . "/{$package}/releases 2>&1", $response, $code);
                     if ($code === 0 || $attempt === 2) {
                         break;
                     }
@@ -819,9 +806,20 @@ switch ($command) {
     case 'release':
         $package = $arguments[0] ?? fail('usage: monorepo release <package> <version> [--dry-run]');
         $version = $arguments[1] ?? fail('usage: monorepo release <package> <version> [--dry-run]');
-        directory($package) !== null || fail("unknown package: {$package}");
+        $directory = directory($package) ?? fail("unknown package: {$package}");
         preg_match('/^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$/', $version)
             || fail("version must be semver (e.g. 2.1.0 or 2.1.0-rc1), got \"{$version}\"");
+        // crates.io publishes the version the manifest states, so the tag has to agree with it.
+        if (str_starts_with($package, 'rs/')) {
+            $metadata = json_decode(sh('cargo metadata --no-deps --format-version 1 --offline'), true);
+            $stated = null;
+            foreach ($metadata['packages'] ?? [] as $crate) {
+                if (dirname($crate['manifest_path']) === getcwd() . '/' . $directory) {
+                    $stated = $crate['version'];
+                }
+            }
+            $stated === $version || fail("{$directory}/Cargo.toml is at version {$stated}, not {$version}: set it there first");
+        }
 
         $tag = "{$package}/{$version}";
         if (sh('git tag --list ' . escapeshellarg($tag)) !== '') {
@@ -964,28 +962,6 @@ switch ($command) {
         foreach (duplicate_classes($root) as $class => $locations) {
             out("{$class}: loadable from more than one directory (" . implode(', ', $locations) . ')');
             $failures++;
-        }
-        // A crate's directory is its mirror, so its manifest may lean on nothing outside it.
-        foreach (crates() as $crate) {
-            $directory = directory($crate);
-            $toml = (string) file_get_contents("{$directory}/Cargo.toml");
-            $problems = [];
-            if (preg_match('/\bworkspace\s*=\s*true\b/', $toml) === 1) {
-                $problems[] = 'Cargo.toml inherits from the workspace, which the mirror does not have';
-            }
-            if (preg_match('/\bpath\s*=/', $toml) === 1) {
-                $problems[] = 'Cargo.toml names a dependency by path, which the mirror does not have';
-            }
-            if (!str_contains($toml, 'repository = "https://github.com/' . mirror($crate) . '"')) {
-                $problems[] = 'repository must be "https://github.com/' . mirror($crate) . '"';
-            }
-            if (!is_file("{$directory}/.github/workflows/mirror.yml")) {
-                $problems[] = 'missing .github/workflows/mirror.yml, which closes pull requests opened on the mirror';
-            }
-            foreach ($problems as $problem) {
-                out("{$directory}: {$problem}");
-            }
-            $failures += count($problems);
         }
         if (file_get_contents('composer.json') !== root_manifest()) {
             out('composer.json: package autoload entries are stale, run `bin/monorepo autoload`');
@@ -1149,7 +1125,7 @@ switch ($command) {
                                               push package histories to their mirrors
           release <name> <version> [--dry-run]
                                               preview notes, tag <name>/<version> and push it (CI does the rest)
-          validate                            check the package shape, the crate manifests and the root autoload wiring
+          validate                            check the package shape and the root autoload wiring
           autoload                            regenerate the root composer.json autoload entries for packages/
           check [name...] [--fix] [--linked]  run pint, phpstan and rector against packages
                                               (--linked resolves siblings from the local checkout)

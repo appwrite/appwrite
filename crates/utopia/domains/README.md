@@ -1,8 +1,5 @@
 # Utopia Domains
 
-> [!IMPORTANT]
-> This repository is a read-only mirror of [`crates/utopia/domains`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/domains) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there: please open issues and pull requests in that repository.
-
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
 Domain names split against the Public Suffix List.
@@ -13,7 +10,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 
 ```toml
 [dependencies]
-utopia-domains = { git = "https://github.com/utopia-rs/domains" }
+utopia-domains = { git = "https://github.com/appwrite/appwrite" }
 ```
 
 ## Split a domain into its parts

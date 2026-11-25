@@ -1,8 +1,5 @@
 # Utopia Auth
 
-> [!IMPORTANT]
-> This repository is a read-only mirror of [`crates/utopia/auth`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/auth) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there: please open issues and pull requests in that repository.
-
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
 The password hash algorithms of utopia-php/auth that PHP does not ship: the scrypt KDF of the PECL `scrypt` extension, Firebase's modified scrypt and phpass's portable hashes. The rest (`password_hash()`, `password_verify()`, `crypt()`, `hash()`) are PHP's own functions, ported in `php-std`.
@@ -15,7 +12,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 
 ```toml
 [dependencies]
-utopia-auth = { git = "https://github.com/utopia-rs/auth" }
+utopia-auth = { git = "https://github.com/appwrite/appwrite" }
 ```
 
 ## scrypt

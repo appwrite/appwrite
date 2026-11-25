@@ -1,8 +1,5 @@
 # Utopia Image
 
-> [!IMPORTANT]
-> This repository is a read-only mirror of [`crates/utopia/image`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/image) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there: please open issues and pull requests in that repository.
-
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
 Image previews: decode, crop by gravity or focal point, borders, rounded corners, opacity, rotation and background, then encode to JPEG, PNG, GIF, WebP or AVIF.
@@ -13,7 +10,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 
 ```toml
 [dependencies]
-utopia-image = { git = "https://github.com/utopia-rs/image" }
+utopia-image = { git = "https://github.com/appwrite/appwrite" }
 ```
 
 `utopia-image` turns an uploaded image into a preview: decode it, crop it, decorate it, and encode it in the format the client asked for. Everything runs in memory on the calling thread; in async code, run it on the blocking pool.

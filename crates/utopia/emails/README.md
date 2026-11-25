@@ -1,8 +1,5 @@
 # Utopia Emails
 
-> [!IMPORTANT]
-> This repository is a read-only mirror of [`crates/utopia/emails`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/emails) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there: please open issues and pull requests in that repository.
-
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
 Email addresses split, checked and made canonical per provider, and their domains classified as free or disposable.
@@ -13,7 +10,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 
 ```toml
 [dependencies]
-utopia-emails = { git = "https://github.com/utopia-rs/emails" }
+utopia-emails = { git = "https://github.com/appwrite/appwrite" }
 ```
 
 ## Split and check an address

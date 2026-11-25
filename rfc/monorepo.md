@@ -149,15 +149,14 @@ RUN composer dump-autoload --optimize --no-dev --no-scripts --no-plugins
 
 ### Rust crates
 
-A crate in `crates/utopia/<name>` or `crates/support/<name>` has a read-only mirror at `utopia-rs/<name>`, and the same commands handle it under the name `rs/<name>`:
+The crates in `crates/utopia/<name>` and `crates/support/<name>` are published to crates.io, not split. Inside the workspace they inherit their version, edition and dependencies from the root `Cargo.toml`; `cargo publish` writes the standalone manifest a published crate needs, so nothing here does.
 
 ```bash
-bin/monorepo list                        # packages and crates, with their latest release tag
-bin/monorepo split rs/query --dry-run    # the mirror's head, without pushing
-bin/monorepo release rs/query 0.1.0      # tag rs/query/0.1.0; CI pushes 0.1.0 to utopia-rs/query
+bin/monorepo list                      # packages and crates (rs/<name>), with their latest release tag
+bin/monorepo release rs/query 0.2.0    # tag rs/query/0.2.0, once crates/utopia/query/Cargo.toml says 0.2.0
 ```
 
-The split copies the crate's directory as it is, like a package's. That only works if the directory builds outside this repository, so a crate's `Cargo.toml` inherits nothing from the workspace and names no dependency by path. `bin/monorepo validate` checks both. A crate that depends on another names it by its mirror's URL (`php-std = { version = "0.1.0", git = "https://github.com/utopia-rs/php-std" }`), and a `[patch]` section in the root `Cargo.toml` resolves that URL to this checkout.
+`crates.yml` runs on the tag. It publishes the crate to crates.io, then commits the same `.crate` Cargo built to the read-only mirror at `utopia-rs/<name>` and tags it there, so a mirror holds one commit per release and exactly what crates.io serves. A crate that depends on another (all of them on `php-std`) needs that version on crates.io first.
 
 ### History
 

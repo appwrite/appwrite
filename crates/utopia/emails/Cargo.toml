@@ -1,16 +1,17 @@
 [package]
 name = "utopia-emails"
 description = "Email addresses split, checked and made canonical per provider, and their domains classified as free or disposable."
-version = "0.1.0"
-edition = "2024"
-rust-version = "1.97"
-license = "BSD-3-Clause"
-repository = "https://github.com/utopia-rs/emails"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
 
 [dependencies]
-php-std = { version = "0.1.0", git = "https://github.com/utopia-rs/php-std" }
-serde_json = { version = "1", features = ["raw_value", "preserve_order", "float_roundtrip"] }
-thiserror = "2"
+php-std.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
 
 [package.metadata.utopia]
 category = "utilities"
