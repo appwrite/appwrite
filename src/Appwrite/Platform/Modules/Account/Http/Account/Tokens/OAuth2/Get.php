@@ -87,15 +87,7 @@ class Get extends Base
         Client $clientForOAuth2,
         User $user,
     ): void {
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $port = $request->getPort();
-        $callbackBase = $protocol . '://' . $request->getHostname();
-        // An empty port means the host named none, so the scheme's default applies
-        if ($port !== '' && $port !== ($protocol === 'https' ? '443' : '80')) {
-            $callbackBase .= ':' . $port;
-        }
-
-        $callback = $callbackBase . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
+        $callback = $this->getOAuth2Callback($provider, $project, $request);
         $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
 
         if (!$providerEnabled) {
@@ -114,8 +106,7 @@ class Get extends Base
             throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please configure the provider app ID and app secret key from your ' . APP_NAME . ' console to continue.');
         }
 
-        $oAuthProviders = Config::getParam('oAuthProviders') ?? [];
-        $className = $oAuthProviders[$provider]['class'] ?? null;
+        $className = $this->getOAuth2Provider($provider)['class'] ?? null;
         if ($className === null || !\class_exists($className)) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }

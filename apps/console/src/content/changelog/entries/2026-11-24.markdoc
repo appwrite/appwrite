@@ -1,0 +1,27 @@
+---
+layout: changelog
+title: "Use native request and response objects in Appwrite Functions"
+date: 2026-11-24
+cover: /images/blog/announcing-native-request-response/cover.avif
+tags: functions
+---
+
+Function runtimes now pass their web server's request to your code as [`context.req.raw`](/docs/products/functions/develop#native-request). It's a Fetch API `Request` in Node.js 18 and later, Bun, and Deno, an aiohttp `web.Request` in Python, a shelf `Request` in Dart, and the server's own request type in every other runtime. Node.js 18 and later, Bun, Deno, Python, and Dart functions can also [return a native response](/docs/products/functions/develop#native-response) instead of calling a `context.res` method. The deprecated `node-14.5`, `node-16.0`, `dart-2.15`, and `swift-5.5` runtimes support neither.
+
+```js
+export default async ({ req }) => {
+    const form = await req.raw.formData();
+
+    return new Response(`Hello, ${form.get('name')}!`);
+};
+```
+
+Frameworks built on the Fetch API, such as Hono, run in a JavaScript function too: pass `req.raw` to the app and return the response it gives back. Existing functions keep working without changes.
+
+{% arrow_link href="/blog/post/announcing-native-request-response" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/functions/develop#native-request-response" %}
+Use native request and response
+{% /arrow_link %}

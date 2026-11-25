@@ -454,6 +454,7 @@ export function InitTicketSection({
         setTilt: handle.setCaptureTilt,
         resetTilt: handle.resetCaptureTilt,
         usesDarkChrome: ticketAppearance.usesDarkChrome,
+        electricFog: event.id === 'init-nov-2026',
         onProgress: setVideoExportProgress,
         onVisibleCaptureComplete: () => {
           setIsCapturingVideo(false)

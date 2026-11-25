@@ -14,14 +14,22 @@ crate-type = ["cdylib"]
 
 [dependencies]
 ext-php-rs.workspace = true
+foldhash.workspace = true
+mimalloc.workspace = true
 # Not the default `ravif`: libheif writes AVIF as ImageMagick does, and rav1e
 # would bring its thread pool (rayon) into a process that forks.
 php-std.workspace = true
+stacker.workspace = true
 utopia-auth.workspace = true
+utopia-balancer.workspace = true
+utopia-compression.workspace = true
+utopia-database.workspace = true
+utopia-detector.workspace = true
 utopia-domains.workspace = true
 utopia-dsn.workspace = true
 utopia-emails.workspace = true
 utopia-image = { workspace = true, features = ["libwebp", "libheif"] }
 utopia-locale.workspace = true
+utopia-query.workspace = true
 utopia-user-agent.workspace = true
 utopia-validators.workspace = true

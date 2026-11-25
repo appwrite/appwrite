@@ -64,7 +64,7 @@ return [
             ],
             [
                 'name' => '_APP_OPTIONS_FORCE_HTTPS',
-                'description' => 'Controls whether Appwrite generates HTTPS API URLs and enforces HTTPS for incoming API requests. Set to \'enabled\' whenever the public API is served over HTTPS, including when TLS is terminated by a reverse proxy. When enabled, HTTP GET requests are redirected to HTTPS and other HTTP requests are rejected. The default value is \'disabled\' to support local and plain HTTP installations.',
+                'description' => 'Controls whether Appwrite generates HTTPS API URLs and enforces HTTPS for incoming API requests. Set to \'enabled\' whenever the public API is served over HTTPS, including when TLS is terminated by a reverse proxy. When enabled, HTTP GET requests are redirected to HTTPS and other HTTP requests are rejected. Client origins and redirect URLs, such as OAuth2 success URLs and email links, must also use HTTPS, except for localhost. The default value is \'disabled\' to support local and plain HTTP installations.',
                 'introduction' => '',
                 'default' => 'disabled',
                 'required' => false,

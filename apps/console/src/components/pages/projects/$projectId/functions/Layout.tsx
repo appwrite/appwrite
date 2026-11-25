@@ -114,6 +114,7 @@ function FunctionLayoutContent() {
             'overview',
             'deployments',
             'executions',
+            'runtime-logs',
             'domains',
             'usage',
             'firewall',
@@ -157,6 +158,8 @@ function FunctionLayoutContent() {
   const showUsageTab = features.usageStats && canSeeUsageNav(access, features)
   const showFirewallTab =
     isCloudProfile() && canSeeProjectNavItem(access, features, 'firewall')
+  // Cloud only: self-hosted doesn't serve `/v1/logs`, even with the flag on.
+  const showRuntimeLogsTab = isCloudProfile() && features.runtimeLogs
 
   const [filtersOpen, setFiltersOpen] = useState(false)
   const functionFilterMap = useMemo(() => {
@@ -264,6 +267,19 @@ function FunctionLayoutContent() {
           functionId: functionId as string,
         },
       },
+      ...(showRuntimeLogsTab
+        ? [
+            {
+              id: 'runtime-logs' as const,
+              label: t('Logs'),
+              to: '/projects/$projectId/functions/$functionId/runtime-logs',
+              params: {
+                projectId: projectId as string,
+                functionId: functionId as string,
+              },
+            },
+          ]
+        : []),
       ...(showUsageTab
         ? [
             {
@@ -328,6 +344,7 @@ function FunctionLayoutContent() {
     functionId,
     showUsageTab,
     showFirewallTab,
+    showRuntimeLogsTab,
     showSecuritySettings,
     t,
   ])
@@ -560,7 +577,8 @@ function FunctionLayoutContent() {
       </div>
     ) : undefined
 
-  const isExecutionsTabLayout = activeTab === 'executions'
+  const isExecutionsTabLayout =
+    activeTab === 'executions' || activeTab === 'runtime-logs'
 
   return (
     <CreateDeploymentProvider
@@ -599,6 +617,7 @@ function FunctionLayoutContent() {
           fullWidthBorder
           fullWidth={
             activeTab === 'executions' ||
+            activeTab === 'runtime-logs' ||
             activeTab === 'usage' ||
             activeTab === 'firewall'
           }

@@ -943,6 +943,8 @@ export async function fetchAnalyticsLiveVisitors(
   )
   return {
     visitors: response.metrics?.[0]?.visitors ?? 0,
+    /** Of those, the identified ones (signed in, or sent with a user ID). */
+    users: response.metrics?.[0]?.users ?? 0,
     checkedAt: range.endAt,
   }
 }
@@ -971,6 +973,7 @@ export function useAnalyticsLiveVisitors(
 
   return {
     visitors: data?.visitors,
+    users: data?.users,
     checkedAt: data?.checkedAt,
     isLoading,
     isFetching,
@@ -1010,6 +1013,46 @@ export function useAnalyticsLivePages(
   })
 
   return { pages: data ?? [], isLoading }
+}
+
+/**
+ * User IDs active in the live window, most active first. Fetched only while
+ * someone identified is live, for the avatars beside the counter.
+ */
+export function useAnalyticsLiveUsers(
+  projectId: string | null | undefined,
+  propertyId: string | null | undefined,
+  enabled: boolean,
+  limit: number = 20,
+) {
+  const { data, isLoading } = useQuery({
+    queryKey: ['analytics', 'live-users', projectId, propertyId, limit],
+    queryFn: async () => {
+      const range = liveRange()
+      const response = await withReadTimeout(
+        'live users',
+        sdk.forProject(projectId!).analytics.listMetrics({
+          propertyId: propertyId!,
+          dimensions: [AnalyticsDimension.UserId],
+          startAt: range.startAt,
+          endAt: range.endAt,
+          limit,
+        }),
+      )
+      // Every live user is one visitor, so rank by what they're doing.
+      return (response.metrics || [])
+        .filter((row): row is typeof row & { value: string } => !!row.value)
+        .sort((a, b) => b.events - a.events)
+    },
+    enabled: enabled && !!projectId && !!propertyId && isClientQueryEnabled,
+    staleTime: 0,
+    retry: false,
+    refetchInterval: enabled ? ANALYTICS_LIVE_POLL_INTERVAL_MS : false,
+    refetchIntervalInBackground: false,
+    placeholderData: keepPreviousData,
+  })
+
+  return { users: data ?? [], isLoading }
 }
 
 // ─── Breakdowns ─────────────────────────────────────────────────────────────
