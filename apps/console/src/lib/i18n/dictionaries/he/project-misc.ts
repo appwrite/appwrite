@@ -561,6 +561,12 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'החלונות מיושרים לפי התנהגות אנושית. מאפשר פרצים קצרים שנצברו, ומתמלא מחדש לקצב מתמשך.',
   'Redirect location': 'יעד הפניה',
   'Status code': 'קוד סטטוס',
+  'Challenge type': 'סוג אתגר',
+  'Password challenges apply to sites and functions only.':
+    'אתגרי סיסמה חלים על אתרים ופונקציות בלבד.',
+  'Use 8 to 256 characters.': 'השתמשו ב-8 עד 256 תווים.',
+  'Visitors must enter this password before they can continue.':
+    'מבקרים חייבים להזין את הסיסמה הזו לפני שיוכלו להמשיך.',
   'Match requests when all conditions are true.':
     'התאימו בקשות כאשר כל התנאים מתקיימים.',
   'Add condition': 'הוספת תנאי',

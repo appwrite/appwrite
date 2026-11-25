@@ -236,6 +236,12 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'ウィンドウは人間の行動に揃えられます。蓄積された短いバーストを許可し、持続的なペースに向けて補充されます。',
   'Redirect location': 'リダイレクト先',
   'Status code': 'ステータスコード',
+  'Challenge type': 'チャレンジの種類',
+  'Password challenges apply to sites and functions only.':
+    'パスワードチャレンジはサイトと関数にのみ適用されます。',
+  'Use 8 to 256 characters.': '8〜256 文字で入力してください。',
+  'Visitors must enter this password before they can continue.':
+    '訪問者は続行する前にこのパスワードを入力する必要があります。',
   'Match requests when all conditions are true.':
     'すべての条件が真のときにリクエストに一致します。',
   'Add condition': '条件を追加',

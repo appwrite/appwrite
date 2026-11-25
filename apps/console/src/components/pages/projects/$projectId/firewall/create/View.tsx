@@ -22,6 +22,7 @@ import { RuleImpactPreview } from '../_components/RuleImpactPreview'
 import { RuleSchedule } from '../_components/RuleSchedule'
 import { useCreateFirewallRule } from '@/lib/react-query/hooks'
 import {
+  type FirewallChallengeType,
   type FirewallCreatableAction,
   type FirewallRateLimitKey,
   type FirewallRateLimitStrategy,
@@ -37,6 +38,8 @@ import {
   CHALLENGE_TTL_MIN,
   CHALLENGE_TTL_MAX,
   CHALLENGE_TTL_DEFAULT,
+  FIREWALL_CHALLENGE_TYPES,
+  isChallengePasswordValid,
 } from '@/lib/firewall/actions'
 import {
   areFirewallConditionsComplete,
@@ -83,8 +86,10 @@ const DEFAULT_FORM = {
   rateLimitKey: FIREWALL_RATE_LIMIT_KEY_DEFAULT as FirewallRateLimitKey,
   strategy: FIREWALL_RATE_LIMIT_STRATEGY_DEFAULT as FirewallRateLimitStrategy,
   maxBucketSize: 50,
+  challengeType: 'compute' as FirewallChallengeType,
   difficulty: CHALLENGE_DIFFICULTY_DEFAULT,
   ttl: CHALLENGE_TTL_DEFAULT,
+  password: '',
   location: '/',
   statusCode: 302,
 }
@@ -104,6 +109,8 @@ export function View() {
     resourceId: initialResourceId,
   }) ?? { resourceType: 'api' }
   const resourceId = scope.resourceType === 'api' ? undefined : scope.resourceId
+  // Password challenges apply to sites and functions only.
+  const passwordUnavailable = scope.resourceType === 'api'
   const createMutation = useCreateFirewallRule(projectId)
   const [ruleId, setRuleId] = useState<string | undefined>()
   const [form, setForm] = useState(DEFAULT_FORM)
@@ -125,10 +132,13 @@ export function View() {
           (form.maxBucketSize >= MAX_BUCKET_SIZE_MIN &&
             form.maxBucketSize <= MAX_BUCKET_SIZE_MAX)))) &&
     (form.action !== WafRuleAction.Challenge ||
-      (form.difficulty >= CHALLENGE_DIFFICULTY_MIN &&
-        form.difficulty <= CHALLENGE_DIFFICULTY_MAX &&
-        form.ttl >= CHALLENGE_TTL_MIN &&
-        form.ttl <= CHALLENGE_TTL_MAX)) &&
+      (form.ttl >= CHALLENGE_TTL_MIN &&
+        form.ttl <= CHALLENGE_TTL_MAX &&
+        (form.challengeType === 'password'
+          ? !passwordUnavailable &&
+            isChallengePasswordValid(form.password, true)
+          : form.difficulty >= CHALLENGE_DIFFICULTY_MIN &&
+            form.difficulty <= CHALLENGE_DIFFICULTY_MAX))) &&
     (form.action !== WafRuleAction.Redirect ||
       (form.location.trim().length > 0 && form.statusCode > 0)) &&
     isScheduleDraftComplete(schedule)
@@ -155,8 +165,10 @@ export function View() {
         key: form.rateLimitKey,
         strategy: form.strategy,
         maxBucketSize: form.maxBucketSize,
+        challengeType: form.challengeType,
         difficulty: form.difficulty,
         ttl: form.ttl,
+        password: form.password,
         location: form.location.trim(),
         statusCode: form.statusCode,
         schedule: schedulePayload(schedule),
@@ -266,21 +278,82 @@ export function View() {
       </div>
     ) : form.action === WafRuleAction.Challenge ? (
       <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="firewall-difficulty" className="text-[12px]">
-            {t('Difficulty')}
+        <div className="space-y-1.5 sm:col-span-2">
+          <Label htmlFor="firewall-challenge-type" className="text-[12px]">
+            {t('Challenge type')}
           </Label>
-          <NumberInput
-            id="firewall-difficulty"
-            min={CHALLENGE_DIFFICULTY_MIN}
-            max={CHALLENGE_DIFFICULTY_MAX}
-            value={form.difficulty}
-            onValueChange={(difficulty) => setForm({ ...form, difficulty })}
-          />
-          <p className="text-[12px] text-muted-foreground">
-            {t('1 (easiest) to 5 (hardest).')}
-          </p>
+          <Select
+            value={form.challengeType}
+            onValueChange={(value) =>
+              setForm({
+                ...form,
+                challengeType: value as FirewallChallengeType,
+              })
+            }
+          >
+            <SelectTrigger id="firewall-challenge-type" className="h-9 w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {FIREWALL_CHALLENGE_TYPES.map((type) => (
+                <SelectItem
+                  key={type.value}
+                  value={type.value}
+                  disabled={type.value === 'password' && passwordUnavailable}
+                >
+                  {t(type.label)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {passwordUnavailable ? (
+            <p className="text-[12px] text-muted-foreground">
+              {t('Password challenges apply to sites and functions only.')}
+            </p>
+          ) : null}
         </div>
+        {form.challengeType === 'password' ? (
+          <div className="space-y-1.5">
+            <Label htmlFor="firewall-password" className="text-[12px]">
+              {t('Password')}
+            </Label>
+            <Input
+              id="firewall-password"
+              type="password"
+              autoComplete="new-password"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              placeholder={t('At least 8 characters')}
+            />
+            {form.password && !isChallengePasswordValid(form.password, true) ? (
+              <p className="text-[12px] text-destructive">
+                {t('Use 8 to 256 characters.')}
+              </p>
+            ) : (
+              <p className="text-[12px] text-muted-foreground">
+                {t(
+                  'Visitors must enter this password before they can continue.',
+                )}
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-1.5">
+            <Label htmlFor="firewall-difficulty" className="text-[12px]">
+              {t('Difficulty')}
+            </Label>
+            <NumberInput
+              id="firewall-difficulty"
+              min={CHALLENGE_DIFFICULTY_MIN}
+              max={CHALLENGE_DIFFICULTY_MAX}
+              value={form.difficulty}
+              onValueChange={(difficulty) => setForm({ ...form, difficulty })}
+            />
+            <p className="text-[12px] text-muted-foreground">
+              {t('1 (easiest) to 5 (hardest).')}
+            </p>
+          </div>
+        )}
         <div className="space-y-1.5">
           <Label htmlFor="firewall-ttl" className="text-[12px]">
             {t('TTL (seconds)')}
