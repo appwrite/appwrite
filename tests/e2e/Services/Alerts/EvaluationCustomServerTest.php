@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Alerts;
 
+use Appwrite\Alert\Escalation;
 use Appwrite\Alert\Meter;
 use Appwrite\Alert\Unsubscribe;
 use Appwrite\Bus\Events\ExecutionCompleted;
@@ -121,7 +122,7 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame('firing', $alert['status']);
         // The alert keeps what the monitor was when it fired.
         $this->assertSame('critical', $alert['severity']);
-        $this->assertTrue($alert['critical']);
+        $this->assertArrayNotHasKey('critical', $alert);
         $this->assertSame($monitorId, $alert['monitorId']);
         $this->assertSame($name, $alert['name']);
         $this->assertSame('usage', $alert['type']);
@@ -460,7 +461,7 @@ final class EvaluationCustomServerTest extends Scope
         )));
 
         // Listing the owners again notifies them of the next firing.
-        $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $this->headers(), [
+        $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $monitorId, $this->headers(), [
             'notify' => ['owner'],
             'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
         ]);
@@ -503,7 +504,7 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame([], $this->emailSubjects($developer, $name));
 
         // Listing developers too sends them the resolution.
-        $updated = $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $this->headers(), [
+        $updated = $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $monitorId, $this->headers(), [
             'notify' => ['owner', 'developer'],
         ]);
         $this->assertSame(['owner', 'developer'], $updated['body']['notify']);
@@ -580,7 +581,7 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame([], $this->emailSubjects($last, $name));
 
         // Editing the escalation changes the next alert, not this one: it keeps the steps it started with.
-        $edited = $this->client->call(Client::METHOD_PUT, '/organization/escalations/' . $escalation['body']['$id'], $this->organizationHeaders($teamId), [
+        $edited = $this->client->call(Client::METHOD_PATCH, '/organization/escalations/' . $escalation['body']['$id'], $this->organizationHeaders($teamId), [
             'steps' => [['delay' => 0, 'roles' => ['owner']]],
         ]);
         $this->assertSame(200, $edited['headers']['status-code']);
@@ -628,7 +629,7 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame('escalation_in_use', $refused['body']['type']);
         $this->assertSame($escalation['body']['$id'], $this->getMonitorBody($monitorId)['escalationId']);
 
-        $moved = $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $this->headers(), ['escalationId' => '']);
+        $moved = $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $monitorId, $this->headers(), ['escalationId' => '']);
         $this->assertSame(200, $moved['headers']['status-code']);
         $this->assertSame('', $moved['body']['escalationId']);
         $deleted = $this->client->call(Client::METHOD_DELETE, '/organization/escalations/' . $escalation['body']['$id'], $this->organizationHeaders($teamId));
@@ -644,7 +645,7 @@ final class EvaluationCustomServerTest extends Scope
         $created = $this->client->call(Client::METHOD_POST, '/organization/escalations', $headers, [
             'escalationId' => 'unique()',
             'name' => 'Platform',
-            'steps' => [['delay' => 0, 'roles' => ['owner', 'owner']]],
+            'steps' => [['delay' => 0, 'roles' => ['owner']]],
             'repeat' => 2,
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
@@ -661,7 +662,7 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertContains($escalationId, \array_column($listed['body']['escalations'], '$id'));
 
         // An update changes only what it names.
-        $updated = $this->client->call(Client::METHOD_PUT, '/organization/escalations/' . $escalationId, $headers, ['name' => 'Platform on-call']);
+        $updated = $this->client->call(Client::METHOD_PATCH, '/organization/escalations/' . $escalationId, $headers, ['name' => 'Platform on-call']);
         $this->assertSame(200, $updated['headers']['status-code']);
         $this->assertSame('Platform on-call', $updated['body']['name']);
         $this->assertSame(2, $updated['body']['repeat']);
@@ -676,7 +677,6 @@ final class EvaluationCustomServerTest extends Scope
             'nobody to notify' => [['delay' => 0]],
             'unknown role' => [['delay' => 0, 'roles' => ['admin']]],
             'negative delay' => [['delay' => -1, 'roles' => ['owner']]],
-            'unknown key' => [['delay' => 0, 'roles' => ['owner'], 'phone' => true]],
         ] as $case => $steps) {
             $refused = $this->client->call(Client::METHOD_POST, '/organization/escalations', $headers, [
                 'escalationId' => 'unique()',
@@ -685,6 +685,42 @@ final class EvaluationCustomServerTest extends Scope
             ]);
             $this->assertSame(400, $refused['headers']['status-code'], $case);
         }
+
+        // Steps are strict: a malformed step is refused whole, naming the step, rather than cleaned up and stored.
+        $owner = $this->getRoot()['$id'];
+        $strict = [
+            'duplicate role' => [['delay' => 0, 'roles' => ['owner', 'owner']]],
+            'duplicate member' => [['delay' => 0, 'userIds' => [$owner, $owner]]],
+            'delay past the maximum' => [['delay' => Escalation::MAX_DELAY + 1, 'roles' => ['owner']]],
+            'fractional delay' => [['delay' => 1.5, 'roles' => ['owner']]],
+            'step not an object' => [['owner']],
+            'unknown key' => [['delay' => 0, 'roles' => ['owner'], 'phone' => true]],
+        ];
+        $refusedName = 'Refused ' . \uniqid();
+        foreach ($strict as $case => $steps) {
+            $refused = $this->client->call(Client::METHOD_POST, '/organization/escalations', $headers, [
+                'escalationId' => 'unique()',
+                'name' => $refusedName,
+                'steps' => $steps,
+            ]);
+            $this->assertSame(400, $refused['headers']['status-code'], $case);
+            $this->assertStringContainsString('Step 0', $refused['body']['message'], $case);
+
+            $rejected = $this->client->call(Client::METHOD_PATCH, '/organization/escalations/' . $escalationId, $headers, ['steps' => $steps]);
+            $this->assertSame(400, $rejected['headers']['status-code'], $case);
+            $this->assertStringContainsString('Step 0', $rejected['body']['message'], $case);
+        }
+        $stored = $this->client->call(Client::METHOD_GET, '/organization/escalations', $headers, [
+            'queries' => [Query::equal('name', [$refusedName])->toString()],
+        ]);
+        $this->assertSame(200, $stored['headers']['status-code']);
+        $this->assertSame(0, $stored['body']['total']);
+        $this->assertSame($created['body']['steps'], $this->client->call(Client::METHOD_GET, '/organization/escalations/' . $escalationId, $headers)['body']['steps']);
+
+        // Updates are PATCH only: PUT is not a route, so nothing changes.
+        $put = $this->client->call(Client::METHOD_PUT, '/organization/escalations/' . $escalationId, $headers, ['name' => 'Put']);
+        $this->assertSame(404, $put['headers']['status-code']);
+        $this->assertSame('Platform on-call', $this->client->call(Client::METHOD_GET, '/organization/escalations/' . $escalationId, $headers)['body']['name']);
 
         $stranger = $this->client->call(Client::METHOD_POST, '/organization/escalations', $headers, [
             'escalationId' => 'unique()',
@@ -743,7 +779,7 @@ final class EvaluationCustomServerTest extends Scope
         $token = (string) $query['token'];
 
         // Paused, so only the test evaluates it from here on.
-        $this->assertSame(200, $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $this->headers(), ['enabled' => false])['headers']['status-code']);
+        $this->assertSame(200, $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $monitorId, $this->headers(), ['enabled' => false])['headers']['status-code']);
         \sleep(2);
 
         // One click from the mail client, as RFC 8058 describes it.
@@ -1005,7 +1041,7 @@ final class EvaluationCustomServerTest extends Scope
             $this->assertSame(200, $this->client->call(Client::METHOD_GET, '/monitors', $headers)['headers']['status-code']);
         }
 
-        $resumed = $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $headers, ['enabled' => true]);
+        $resumed = $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $monitorId, $headers, ['enabled' => true]);
         $this->assertSame(200, $resumed['headers']['status-code']);
 
         /**
@@ -1336,7 +1372,7 @@ final class EvaluationCustomServerTest extends Scope
             'steps' => [['delay' => 0, 'roles' => ['owner']]],
         ]);
         $this->assertSame(201, $escalation['headers']['status-code']);
-        $updated = $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $this->headers(), ['escalationId' => $escalation['body']['$id']]);
+        $updated = $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $monitorId, $this->headers(), ['escalationId' => $escalation['body']['$id']]);
         $this->assertSame(200, $updated['headers']['status-code']);
 
         $now = new \DateTimeImmutable();
@@ -1374,7 +1410,7 @@ final class EvaluationCustomServerTest extends Scope
          */
         $evaluated = $this->waitForEvaluation($monitorId, null);
 
-        $paused = $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $this->headers(), ['enabled' => false]);
+        $paused = $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $monitorId, $this->headers(), ['enabled' => false]);
         $this->assertSame(200, $paused['headers']['status-code']);
         // Let an evaluation already queued before the pause finish first.
         \sleep(2);
@@ -1385,7 +1421,7 @@ final class EvaluationCustomServerTest extends Scope
         $monitor = $this->client->call(Client::METHOD_GET, '/monitors/' . $monitorId, $this->headers())['body'];
         $this->assertSame($before, $monitor['evaluatedAt']);
 
-        $resumed = $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $this->headers(), ['enabled' => true]);
+        $resumed = $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $monitorId, $this->headers(), ['enabled' => true]);
         $this->assertSame(200, $resumed['headers']['status-code']);
         $this->assertNotSame($evaluated, $this->waitForEvaluation($monitorId, $monitor['evaluatedAt']));
     }
@@ -2230,7 +2266,7 @@ final class EvaluationCustomServerTest extends Scope
 
     private function setThreshold(string $monitorId, float|int $threshold): void
     {
-        $response = $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $this->headers(), [
+        $response = $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $monitorId, $this->headers(), [
             'rules' => [Query::greaterThan('network.outbound', $threshold)->toString()],
         ]);
         $this->assertSame(200, $response['headers']['status-code']);

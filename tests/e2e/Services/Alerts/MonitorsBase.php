@@ -41,7 +41,7 @@ trait MonitorsBase
         $this->assertTrue($monitor['body']['enabled']);
         $this->assertSame(['owner'], $monitor['body']['notify']);
         $this->assertSame('warning', $monitor['body']['severity']);
-        $this->assertFalse($monitor['body']['critical']);
+        $this->assertArrayNotHasKey('critical', $monitor['body']);
         $this->assertSame('ok', $monitor['body']['status']);
         $this->assertSame('', $monitor['body']['alertId']);
         $this->assertNull($monitor['body']['evaluatedAt']);
@@ -131,6 +131,10 @@ trait MonitorsBase
         $casing = $this->createMonitor(['notify' => ['Owner']]);
         $this->assertSame(400, $casing['headers']['status-code']);
 
+        $escalation = $this->createMonitor(['escalationId' => '!bad']);
+        $this->assertSame(400, $escalation['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $escalation['body']['type']);
+
         $this->assertSame($before, $this->listMonitors()['body']['total']);
 
         $first = $this->createMonitor();
@@ -166,17 +170,21 @@ trait MonitorsBase
         $this->assertFalse($monitor['body']['enabled']);
         $this->assertSame(['owner', 'developer'], $monitor['body']['notify']);
         $this->assertSame('critical', $monitor['body']['severity']);
-        // The deprecated flag follows the severity, for clients that still read it.
-        $this->assertTrue($monitor['body']['critical']);
         $this->assertSame('Before', $monitor['body']['name']);
         $this->assertSame(900, $monitor['body']['cooldown']);
 
         $renamed = $this->updateMonitor($monitorId, ['name' => 'After ' . $monitorId]);
         $this->assertSame(200, $renamed['headers']['status-code']);
-        // Rules left out are kept.
-        $this->assertSame([Query::lessThanEqual('files.storage', 42)->toString()], $renamed['body']['rules']);
-        $this->assertSame(['owner', 'developer'], $renamed['body']['notify']);
-        $this->assertSame('critical', $renamed['body']['severity']);
+
+        // A PATCH sending only the name changes the name and keeps every field left out.
+        $monitor = $this->getMonitor($monitorId);
+        $this->assertSame('After ' . $monitorId, $monitor['body']['name']);
+        $this->assertSame([Query::lessThanEqual('files.storage', 42)->toString()], $monitor['body']['rules']);
+        $this->assertFalse($monitor['body']['enabled']);
+        $this->assertSame(['owner', 'developer'], $monitor['body']['notify']);
+        $this->assertSame('critical', $monitor['body']['severity']);
+        $this->assertSame(900, $monitor['body']['cooldown']);
+        $this->assertSame('', $monitor['body']['escalationId']);
 
         $found = $this->listMonitors([Query::search('search', 'After ' . $monitorId)->toString()]);
         $this->assertSame([$monitorId], \array_column($found['body']['monitors'], '$id'));
@@ -214,6 +222,16 @@ trait MonitorsBase
         $this->assertSame(400, $role['headers']['status-code']);
         $this->assertSame('general_argument_invalid', $role['body']['type']);
         $this->assertSame(['owner', 'developer'], $this->getMonitor($monitorId)['body']['notify']);
+
+        // Updates are PATCH only: PUT is not a route, so nothing changes.
+        $put = $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $this->headers(), ['name' => 'Put']);
+        $this->assertSame(404, $put['headers']['status-code']);
+        $this->assertSame('After ' . $monitorId, $this->getMonitor($monitorId)['body']['name']);
+
+        $escalation = $this->updateMonitor($monitorId, ['escalationId' => '!bad']);
+        $this->assertSame(400, $escalation['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $escalation['body']['type']);
+        $this->assertSame('', $this->getMonitor($monitorId)['body']['escalationId']);
 
         $silenced = $this->updateMonitor($monitorId, ['notify' => []]);
         $this->assertSame([], $silenced['body']['notify']);
@@ -322,7 +340,7 @@ trait MonitorsBase
      */
     protected function updateMonitor(string $monitorId, array $params): array
     {
-        return $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $this->headers(), $params);
+        return $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $monitorId, $this->headers(), $params);
     }
 
     /**
