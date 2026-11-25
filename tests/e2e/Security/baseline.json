@@ -35,6 +35,7 @@
         "DELETE /v1/messaging/topics/:topicId",
         "DELETE /v1/messaging/topics/:topicId/subscribers/:subscriberId",
         "DELETE /v1/migrations/:migrationId",
+        "DELETE /v1/migrations/supabase/oauth2",
         "DELETE /v1/monitors/:monitorId",
         "DELETE /v1/organization/escalations/:escalationId",
         "DELETE /v1/organization/projects/:projectId",
