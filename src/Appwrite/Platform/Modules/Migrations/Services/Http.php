@@ -18,6 +18,7 @@ use Appwrite\Platform\Modules\Migrations\Http\Migrations\Supabase\Create as Crea
 use Appwrite\Platform\Modules\Migrations\Http\Migrations\Supabase\OAuth2\Callback\Get as GetSupabaseOAuth2Callback;
 use Appwrite\Platform\Modules\Migrations\Http\Migrations\Supabase\OAuth2\Delete as DeleteSupabaseOAuth2;
 use Appwrite\Platform\Modules\Migrations\Http\Migrations\Supabase\OAuth2\Get as GetSupabaseOAuth2;
+use Appwrite\Platform\Modules\Migrations\Http\Migrations\Supabase\Projects\XList as ListSupabaseProjects;
 use Appwrite\Platform\Modules\Migrations\Http\Migrations\Supabase\Report\Get as GetSupabaseReport;
 use Appwrite\Platform\Modules\Migrations\Http\Migrations\Update as UpdateMigration;
 use Appwrite\Platform\Modules\Migrations\Http\Migrations\XList as ListMigrations;
@@ -49,6 +50,7 @@ class Http extends Service
         $this->addAction('getSupabaseOAuth2', GetSupabaseOAuth2::class);
         $this->addAction('getSupabaseOAuth2Callback', GetSupabaseOAuth2Callback::class);
         $this->addAction('deleteSupabaseOAuth2', DeleteSupabaseOAuth2::class);
+        $this->addAction('listSupabaseProjects', ListSupabaseProjects::class);
 
         // NHost source
         $this->addAction('createNHostMigration', CreateNHostMigration::class);
