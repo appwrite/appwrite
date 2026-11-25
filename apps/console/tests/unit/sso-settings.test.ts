@@ -17,7 +17,7 @@ const owner = deriveAccessFromRolesScopes(
 const developer = deriveAccessFromRolesScopes(['developer'], ['teams.read'])
 
 describe('canShowOrgSsoSettings', () => {
-  test('shows Single sign-on to owners once the experiment is on', () => {
+  test('shows Single sign-on to owners where the Console has it', () => {
     expect(canShowOrgSsoSettings(owner, { orgRoles: true, sso: true })).toBe(
       true,
     )
@@ -29,7 +29,7 @@ describe('canShowOrgSsoSettings', () => {
     ).toBe(false)
   })
 
-  test('hides it while the experiment is off, even from owners', () => {
+  test('hides it where the Console does not have it (self-hosted), even from owners', () => {
     expect(canShowOrgSsoSettings(owner, { orgRoles: true, sso: false })).toBe(
       false,
     )

@@ -3,7 +3,6 @@ import {
   Gauge,
   GitBranch,
   Layers,
-  LockKeyhole,
   type LucideIcon,
 } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
@@ -37,7 +36,6 @@ const EXPERIMENT_ICONS = {
   analytics: ANALYTICS_PRODUCT_ICON,
   gitInstallationReuse: GitBranch,
   projectEnvironments: Layers,
-  sso: LockKeyhole,
   videos: VIDEOS_PRODUCT_ICON,
 } as const satisfies Record<Experiment['flag'], LucideIcon>
 

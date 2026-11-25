@@ -3,7 +3,7 @@ import type { Models } from '@appwrite.io/console'
 import { expect, test } from './fixtures'
 
 /**
- * Organization single sign-on, behind the `sso` experiment, on the Teams API.
+ * Organization single sign-on, on the Teams API. Generally available on Cloud.
  *
  * Settings → Single sign-on lists the organization's SSO domains
  * (`teams.listSSODomains`), claims one (`teams.createSSODomain`), checks its TXT
@@ -704,12 +704,15 @@ async function mockAppwriteApi(
   return mock
 }
 
-/** Turn the experiment on, as the quality team's Previews toggle does. */
-async function enableSso(page: Page) {
+/**
+ * Single sign-on off, as on a self-hosted Console, which has no API for it. On
+ * Cloud, where these specs run, it is on for everyone.
+ */
+async function withoutSso(page: Page) {
   await page.addInitScript(() => {
     window.localStorage.setItem(
       'debug:consoleProfile',
-      JSON.stringify({ id: 'cloud', features: { sso: true } }),
+      JSON.stringify({ id: 'cloud', features: { sso: false } }),
     )
   })
 }
@@ -725,8 +728,11 @@ const settingsNav = (page: Page) =>
   page.getByRole('link', { name: 'Single sign-on' })
 
 test.describe('organization single sign-on', () => {
-  test('stays hidden while the experiment is off', async ({ page }) => {
+  test('stays hidden where the Console has no single sign-on', async ({
+    page,
+  }) => {
     await mockAppwriteApi(page)
+    await withoutSso(page)
 
     await page.goto(SSO, { waitUntil: 'domcontentloaded' })
     await expect(page).not.toHaveURL(/\/settings\/sso/, { timeout: 45_000 })
@@ -735,7 +741,6 @@ test.describe('organization single sign-on', () => {
 
   test('is for owners only', async ({ page }) => {
     const mock = await mockAppwriteApi(page, { role: 'developer' })
-    await enableSso(page)
 
     await page.goto(SSO, { waitUntil: 'domcontentloaded' })
     await expect(page).not.toHaveURL(/\/settings\/sso/, { timeout: 45_000 })
@@ -752,7 +757,6 @@ test.describe('organization single sign-on', () => {
         domain('acme.dev', 'unverified'),
       ],
     })
-    await enableSso(page)
     await openSso(page)
 
     const verified = page.getByRole('row', { name: /acme\.com/ })
@@ -773,7 +777,6 @@ test.describe('organization single sign-on', () => {
     page,
   }) => {
     const mock = await mockAppwriteApi(page)
-    await enableSso(page)
     await openSso(page)
 
     await page.getByRole('button', { name: 'Add domain' }).click()
@@ -824,7 +827,6 @@ test.describe('organization single sign-on', () => {
 
   test('deletes a domain', async ({ page }) => {
     const mock = await mockAppwriteApi(page)
-    await enableSso(page)
     await openSso(page)
 
     await page.getByRole('button', { name: 'Actions for acme.com' }).click()
@@ -845,7 +847,6 @@ test.describe('organization single sign-on', () => {
     const mock = await mockAppwriteApi(page, {
       providers: [provider('Okta', ['developer'])],
     })
-    await enableSso(page)
     await openSso(page)
 
     const required = page.getByRole('switch', {
@@ -899,7 +900,6 @@ test.describe('organization single sign-on', () => {
       domains: [domain('acme.com', 'unverified')],
       providers: [provider('Okta', ['developer'])],
     })
-    await enableSso(page)
     await openSso(page)
 
     // The precondition is the switch's state text
@@ -933,7 +933,6 @@ test.describe('organization single sign-on', () => {
       refuseWithoutSSO: true,
       providers: [provider('Okta', ['developer'])],
     })
-    await enableSso(page)
 
     await page.goto(`/organizations/${ORGANIZATION.$id}`, {
       waitUntil: 'domcontentloaded',
@@ -953,7 +952,6 @@ test.describe('organization single sign-on', () => {
     page,
   }) => {
     const mock = await mockAppwriteApi(page)
-    await enableSso(page)
     await openSso(page)
     await expect(page.getByText('No identity providers yet')).toBeVisible()
 
@@ -998,7 +996,6 @@ test.describe('organization single sign-on', () => {
 
   test('needs a discovery URL or all three endpoints', async ({ page }) => {
     const mock = await mockAppwriteApi(page)
-    await enableSso(page)
     await openSso(page)
 
     await page.getByRole('button', { name: 'Add identity provider' }).click()
@@ -1050,7 +1047,6 @@ test.describe('organization single sign-on', () => {
     const mock = await mockAppwriteApi(page, {
       providers: [provider('Okta', ['developer'])],
     })
-    await enableSso(page)
     await openSso(page)
 
     await page.getByRole('button', { name: 'Actions for Okta' }).click()
@@ -1093,7 +1089,6 @@ test.describe('organization single sign-on', () => {
     page,
   }) => {
     await mockAppwriteApi(page)
-    await enableSso(page)
     await openSso(page)
 
     const savedPrefs = () =>
@@ -1236,7 +1231,6 @@ test.describe('organization single sign-on', () => {
         member('', 'new@acme.dev', ['developer'], false),
       ],
     })
-    await enableSso(page)
     await page.goto(`${SETTINGS}/members`, { waitUntil: 'domcontentloaded' })
 
     const row = (name: string) => page.getByRole('row', { name })
@@ -1261,7 +1255,6 @@ test.describe('organization single sign-on', () => {
         member('Alex Contractor', 'alex@gmail.com', ['developer']),
       ],
     })
-    await enableSso(page)
     await page.goto(`${SETTINGS}/members`, { waitUntil: 'domcontentloaded' })
 
     await expect(
@@ -1309,7 +1302,6 @@ test.describe('organization single sign-on settings', () => {
         domain('acme.dev', 'unverified'),
       ],
     })
-    await enableSso(page)
     await openSso(page)
 
     await page.getByRole('button', { name: 'Actions for acme.com' }).click()
@@ -1335,7 +1327,6 @@ test.describe('organization single sign-on settings', () => {
     await mockAppwriteApi(page, {
       providers: [provider('Okta', ['developer'])],
     })
-    await enableSso(page)
     await openSso(page)
 
     await page.getByRole('button', { name: 'Actions for Okta' }).click()
@@ -1352,7 +1343,6 @@ test.describe('organization single sign-on settings', () => {
       ssoRequired: true,
       providers: [provider('Okta', ['developer'], false)],
     })
-    await enableSso(page)
     await openSso(page)
 
     const required = page.getByRole('switch', {
@@ -1372,7 +1362,6 @@ test.describe('organization single sign-on settings', () => {
       ssoRequired: true,
       providers: [provider('Okta', ['developer'])],
     })
-    await enableSso(page)
     await openSso(page)
 
     await page.getByRole('button', { name: 'Actions for acme.com' }).click()
@@ -1405,7 +1394,6 @@ test.describe('organization single sign-on settings', () => {
     page,
   }) => {
     const mock = await mockAppwriteApi(page)
-    await enableSso(page)
     await openSso(page)
 
     await page.getByRole('button', { name: 'Add identity provider' }).click()
@@ -1435,7 +1423,6 @@ test.describe('organization single sign-on settings', () => {
 
   test('adds a provider once when Add is double-clicked', async ({ page }) => {
     const mock = await mockAppwriteApi(page)
-    await enableSso(page)
     await openSso(page)
 
     await page.getByRole('button', { name: 'Add identity provider' }).click()
@@ -1471,7 +1458,6 @@ test.describe('organization single sign-on settings', () => {
       listsFail: true,
       providers: [provider('Okta', ['developer'])],
     })
-    await enableSso(page)
     await openSso(page)
 
     await expect(page.getByText('Failed to load domains')).toBeVisible()
@@ -1502,7 +1488,6 @@ test.describe('organization single sign-on settings', () => {
       domains: [domain('acme.com', 'verified'), domain('acme.dev', 'verified')],
       providers: [provider('Okta', ['developer'])],
     })
-    await enableSso(page)
     await openSso(page)
 
     // From the keyboard: the row menu, then Delete
@@ -1568,7 +1553,6 @@ test.describe("single sign-on and the organization's add-on", () => {
     page,
   }) => {
     const mock = await mockAppwriteApi(page, { addon: 'off', domains: [] })
-    await enableSso(page)
     await page.goto(SSO, { waitUntil: 'domcontentloaded' })
 
     const card = addonCard(page)
@@ -1614,7 +1598,6 @@ test.describe("single sign-on and the organization's add-on", () => {
       addon: 'off',
       domains: [],
     })
-    await enableSso(page)
     await page.goto(SSO, { waitUntil: 'domcontentloaded' })
 
     const card = addonCard(page)
@@ -1644,7 +1627,6 @@ test.describe("single sign-on and the organization's add-on", () => {
     page,
   }) => {
     const mock = await mockAppwriteApi(page, { addon: 'pending', domains: [] })
-    await enableSso(page)
     await page.goto(SSO, { waitUntil: 'domcontentloaded' })
 
     const card = addonCard(page)
@@ -1667,7 +1649,6 @@ test.describe("single sign-on and the organization's add-on", () => {
     page,
   }) => {
     const mock = await mockAppwriteApi(page)
-    await enableSso(page)
     await openSso(page)
 
     const card = addonCard(page)
@@ -1709,7 +1690,6 @@ test.describe("single sign-on and the organization's add-on", () => {
       ],
       providers: [provider('Okta', ['developer'])],
     })
-    await enableSso(page)
     await openSso(page)
 
     const card = addonCard(page)
@@ -1775,7 +1755,6 @@ test.describe("single sign-on and the organization's add-on", () => {
       addon: 'off',
       providers: [provider('Okta', ['developer'])],
     })
-    await enableSso(page)
     await openSso(page)
 
     const card = addonCard(page)
@@ -1793,7 +1772,6 @@ test.describe("single sign-on and the organization's add-on", () => {
     page,
   }) => {
     await mockAppwriteApi(page, { addon: 'off', baa: true, domains: [] })
-    await enableSso(page)
     await page.goto(SSO, { waitUntil: 'domcontentloaded' })
 
     await expect(addonCard(page)).toContainText('Not enabled', {
@@ -1807,7 +1785,6 @@ test.describe("single sign-on and the organization's add-on", () => {
     page,
   }) => {
     await mockAppwriteApi(page)
-    await enableSso(page)
     await openSso(page)
 
     await expect(addonCard(page)).toContainText('Active')
@@ -1823,7 +1800,6 @@ test.describe("single sign-on and the organization's add-on", () => {
     page,
   }) => {
     await mockAppwriteApi(page, { addonsFail: true })
-    await enableSso(page)
     await openSso(page)
 
     await expect(addonCard(page)).toContainText(
@@ -1839,7 +1815,6 @@ test.describe("single sign-on and the organization's add-on", () => {
     page,
   }) => {
     const mock = await mockAppwriteApi(page, { addonRefuses: true })
-    await enableSso(page)
     await openSso(page)
 
     await page.getByRole('button', { name: 'Add domain' }).click()
@@ -1868,9 +1843,7 @@ test.describe("single sign-on and the organization's add-on", () => {
 })
 
 test.describe('single sign-on sign-in', () => {
-  test('offers Sign in with SSO on the sign-in page without the preview', async ({
-    page,
-  }) => {
+  test('offers Sign in with SSO on the sign-in page', async ({ page }) => {
     await mockAppwriteApi(page, { signedIn: false })
     await page.goto('/sign-in', { waitUntil: 'domcontentloaded' })
 
@@ -2036,7 +2009,6 @@ test.describe('organizations that require single sign-on', () => {
       personal: true,
       prefs: { organization: ORGANIZATION.$id },
     })
-    await enableSso(page)
 
     await page.goto('/', { waitUntil: 'domcontentloaded' })
     await expect(page).toHaveURL(new RegExp(`/organizations/${PERSONAL.$id}`), {
@@ -2076,7 +2048,6 @@ test.describe('organizations that require single sign-on', () => {
       ssoRequired: true,
       refuseWithoutSSO: true,
     })
-    await enableSso(page)
     const target = `/organizations/${ORGANIZATION.$id}/settings/members`
 
     await page.goto(target, { waitUntil: 'domcontentloaded' })
@@ -2103,7 +2074,6 @@ test.describe('organizations that require single sign-on', () => {
       ssoRequired: true,
       refuseWithoutSSO: true,
     })
-    await enableSso(page)
 
     await page.goto('/', { waitUntil: 'domcontentloaded' })
     await expect(page).toHaveURL(/\/sso\?/, { timeout: 45_000 })
@@ -2128,7 +2098,6 @@ test.describe('organizations that require single sign-on', () => {
       personal: true,
       prefs: { organization: PERSONAL.$id },
     })
-    await enableSso(page)
 
     await page.goto(`/organizations/${PERSONAL.$id}`, {
       waitUntil: 'domcontentloaded',
@@ -2164,7 +2133,6 @@ test.describe('organizations that require single sign-on', () => {
         member('Alex Contractor', 'alex@gmail.com', ['developer']),
       ],
     })
-    await enableSso(page)
     await page.goto(`${SETTINGS}/members`, { waitUntil: 'domcontentloaded' })
 
     const rejoin =

@@ -19,7 +19,7 @@ export function View() {
   })
   const location = useLocation()
   const navigate = useNavigate()
-  // Single sign-on for the team, behind the experiment with the rest of it
+  // Single sign-on for the team: on Cloud only, with the rest of it
   const { features } = useConsoleProfile()
   const showSSO = features.sso === true
 

@@ -15,7 +15,6 @@ export type Experiment = {
     | 'analytics'
     | 'gitInstallationReuse'
     | 'projectEnvironments'
-    | 'sso'
     | 'videos'
   name: string
   description: string
@@ -39,13 +38,6 @@ export const EXPERIMENTS: readonly Experiment[] = [
     name: 'Project environments',
     description: 'Switch or clone staging and production.',
     introducedAt: '2026-10-29',
-  },
-  {
-    flag: 'sso',
-    name: 'Single sign-on',
-    description:
-      'Verify your domains and connect identity providers so people sign in with single sign-on.',
-    introducedAt: '2026-11-18',
   },
   {
     flag: 'alerts',

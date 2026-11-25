@@ -333,16 +333,6 @@ async function mockAppwriteApi(
   return mock
 }
 
-/** Turn single sign-on on, as the quality team's Previews toggle does. */
-async function enableSso(page: Page) {
-  await page.addInitScript(() => {
-    window.localStorage.setItem(
-      'debug:consoleProfile',
-      JSON.stringify({ id: 'cloud', features: { sso: true } }),
-    )
-  })
-}
-
 /** Open the Console already inside the environment, as a reload of a tab that was in it does. */
 async function enterEnvironment(page: Page) {
   await page.addInitScript(
@@ -376,9 +366,25 @@ function ssoCard(page: Page): Locator {
     .locator('xpath=ancestor::div[contains(@class, "rounded-xl")][1]')
 }
 
+/**
+ * Single sign-on off, as on a self-hosted Console, which has no API for it. On
+ * Cloud, where these specs run, it is on for everyone.
+ */
+async function withoutSso(page: Page) {
+  await page.addInitScript(() => {
+    window.localStorage.setItem(
+      'debug:consoleProfile',
+      JSON.stringify({ id: 'cloud', features: { sso: false } }),
+    )
+  })
+}
+
 test.describe('the Single sign-on project add-on', () => {
-  test('stays hidden while single sign-on is off', async ({ page }) => {
+  test('stays hidden where the Console has no single sign-on', async ({
+    page,
+  }) => {
     await mockAppwriteApi(page)
+    await withoutSso(page)
     await openSettings(page)
 
     await expect(
@@ -391,7 +397,6 @@ test.describe('the Single sign-on project add-on', () => {
 
   test('says what it is with its price, and enables it', async ({ page }) => {
     const mock = await mockAppwriteApi(page)
-    await enableSso(page)
     await openSettings(page)
 
     const card = ssoCard(page)
@@ -427,7 +432,6 @@ test.describe('the Single sign-on project add-on', () => {
     page,
   }) => {
     const mock = await mockAppwriteApi(page, { addon: ssoAddon('active') })
-    await enableSso(page)
     await openSettings(page)
 
     const card = ssoCard(page)
@@ -454,7 +458,6 @@ test.describe('the Single sign-on project add-on', () => {
 
   test('checks a payment that waits for confirmation', async ({ page }) => {
     const mock = await mockAppwriteApi(page, { addon: ssoAddon('pending') })
-    await enableSso(page)
     await openSettings(page)
 
     const card = ssoCard(page)
@@ -472,7 +475,6 @@ test.describe('the Single sign-on project add-on', () => {
     const mock = await mockAppwriteApi(page, {
       addon: { ...ssoAddon('active', 1), currentValue: 0 },
     })
-    await enableSso(page)
     await openSettings(page)
 
     const card = ssoCard(page)
@@ -493,7 +495,6 @@ test.describe('the Single sign-on project add-on', () => {
     page,
   }) => {
     const mock = await mockAppwriteApi(page, { plan: FREE })
-    await enableSso(page)
     await openSettings(page)
 
     const card = ssoCard(page)
@@ -514,7 +515,6 @@ test.describe('the Single sign-on project add-on', () => {
     page,
   }) => {
     const mock = await mockAppwriteApi(page, { addon: ssoAddon('active') })
-    await enableSso(page)
     await enterEnvironment(page)
     await openSettings(page)
 
@@ -536,7 +536,6 @@ test.describe('the Single sign-on project add-on', () => {
     page,
   }) => {
     await mockAppwriteApi(page, { listStatus: 401 })
-    await enableSso(page)
     await openSettings(page)
 
     const card = ssoCard(page)
@@ -550,7 +549,6 @@ test.describe('the Single sign-on project add-on', () => {
     page,
   }) => {
     const mock = await mockAppwriteApi(page, { listStatus: 500 })
-    await enableSso(page)
     await openSettings(page)
 
     const card = ssoCard(page)

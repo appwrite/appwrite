@@ -75,8 +75,10 @@ export type ConsoleProfileFeatures = {
   /**
    * Organization settings → Single sign-on (Cloud only, owners). Owners verify
    * domains with a DNS record and connect identity providers, so people on
-   * those domains sign in with single sign-on. An experiment, off by
-   * default.
+   * those domains sign in with single sign-on. Also single sign-on for the
+   * teams of a project: the Single sign-on tab of a team and the project's
+   * add-on. Generally available on Cloud; never on self-hosted, which has no
+   * API for it.
    */
   sso: boolean
   /** An experiment, off by default; the quality team turns it on from the header Previews menu. Usage monitors and the alerts they raise: the Usage sidebar's Monitors and Alerts pages, their quick actions, budget monitors in billing, and the alert events in the webhook event picker. */
@@ -208,7 +210,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       gitInstallationReuse: false,
       reviews: false,
       projectEnvironments: false,
-      sso: false,
+      sso: true,
       alerts: false,
       multiRegion: true,
       edgeNetwork: true,

@@ -1793,8 +1793,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'ドメイン(@ より後ろの部分)だけを入力してください。',
   'A domain can be at most 253 characters, and each part between dots at most 63.':
     'ドメインは最大 253 文字、ドット間の各部分は最大 63 文字です。',
-  'Verify your domains and connect identity providers so people sign in with single sign-on.':
-    'ドメインを検証して ID プロバイダーを接続すると、ユーザーがシングルサインオンでサインインできます。',
   'Failed to delete identity provider': 'ID プロバイダーの削除に失敗しました',
   "Single sign-on for an organization needs the Single sign-on add-on. Enable it in the organization's settings.":
     '組織のシングルサインオンにはシングルサインオンアドオンが必要です。組織の設定で有効にしてください。',

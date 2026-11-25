@@ -1770,8 +1770,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'הזינו רק את הדומיין, החלק שאחרי ה-@.',
   'A domain can be at most 253 characters, and each part between dots at most 63.':
     'דומיין יכול להכיל עד 253 תווים, וכל חלק בין הנקודות עד 63 תווים.',
-  'Verify your domains and connect identity providers so people sign in with single sign-on.':
-    'אמתו את הדומיינים שלכם וחברו ספקי זהויות כדי שאנשים יתחברו בהתחברות יחידה (SSO).',
   'Failed to delete identity provider': 'מחיקת ספק הזהויות נכשלה',
   "Single sign-on for an organization needs the Single sign-on add-on. Enable it in the organization's settings.":
     'התחברות יחידה (SSO) לארגון דורשת את תוסף ההתחברות היחידה (SSO). הפעילו אותו בהגדרות הארגון.',

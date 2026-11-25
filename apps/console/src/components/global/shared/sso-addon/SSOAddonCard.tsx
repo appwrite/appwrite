@@ -61,8 +61,8 @@ type SSOAddonCardProps = {
 }
 
 /**
- * A Single sign-on add-on, built like the Premium Geo DB card and behind the
- * single sign-on experiment with the rest of it.
+ * A Single sign-on add-on, built like the Premium Geo DB card. On Cloud only,
+ * with the rest of single sign-on.
  *
  * - A project's (`sso`) lets its teams verify domains, connect identity
  *   providers and turn on Require SSO, each on its Single sign-on tab or

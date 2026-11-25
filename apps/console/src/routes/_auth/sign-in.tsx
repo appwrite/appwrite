@@ -373,7 +373,7 @@ function SignInPage() {
             ? handlePasskeySignIn
             : undefined
         }
-        // Everyone on Cloud can sign in with SSO; the preview only gates its settings.
+        // Everyone on Cloud can sign in with SSO.
         showSSO={isCloud}
         isLoading={signInMutation.isPending || passkeyBusy || isOpeningMfa}
         oauthLoading={oauthLoading}

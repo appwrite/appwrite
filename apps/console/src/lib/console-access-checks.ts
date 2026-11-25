@@ -457,7 +457,7 @@ export function canShowOrgApiKeysSettings(
 }
 
 /**
- * Organization settings → Single sign-on (experiment + owners). Its identity
+ * Organization settings → Single sign-on (Cloud + owners). Its identity
  * providers add the people who sign in through them as members, with the
  * provider's roles, so only owners see it, as only owners can invite.
  */

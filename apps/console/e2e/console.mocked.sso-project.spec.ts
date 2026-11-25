@@ -3,7 +3,7 @@ import type { Models } from '@appwrite.io/console'
 import { expect, test } from './fixtures'
 
 /**
- * Single sign-on for a team of a project, behind the `sso` experiment: Auth →
+ * Single sign-on for a team of a project, generally available on Cloud: Auth →
  * Teams → a team → Single sign-on. The team's domains, identity providers and
  * Require SSO go through the same Teams API routes as an organization's, on
  * the project's client (`X-Appwrite-Project: <projectId>`, admin mode). Setting
@@ -495,18 +495,21 @@ async function mockAppwriteApi(
   return mock
 }
 
-/** Turn single sign-on on, as the quality team's Previews toggle does. */
-async function enableSso(page: Page) {
+const TEAM_PATH = `/projects/${PROJECT.$id}/auth/teams/${TEAM.$id}`
+const SSO_PATH = `${TEAM_PATH}/sso`
+
+/**
+ * Single sign-on off, as on a self-hosted Console, which has no API for it. On
+ * Cloud, where these specs run, it is on for everyone.
+ */
+async function withoutSso(page: Page) {
   await page.addInitScript(() => {
     window.localStorage.setItem(
       'debug:consoleProfile',
-      JSON.stringify({ id: 'cloud', features: { sso: true } }),
+      JSON.stringify({ id: 'cloud', features: { sso: false } }),
     )
   })
 }
-
-const TEAM_PATH = `/projects/${PROJECT.$id}/auth/teams/${TEAM.$id}`
-const SSO_PATH = `${TEAM_PATH}/sso`
 
 async function openTeamSso(page: Page) {
   await page.goto(SSO_PATH, { waitUntil: 'domcontentloaded' })
@@ -537,8 +540,11 @@ function expectProjectRequests(mock: Mock) {
 }
 
 test.describe('single sign-on for a team of a project', () => {
-  test('stays hidden while the experiment is off', async ({ page }) => {
+  test('stays hidden where the Console has no single sign-on', async ({
+    page,
+  }) => {
     const mock = await mockAppwriteApi(page)
+    await withoutSso(page)
 
     await page.goto(TEAM_PATH, { waitUntil: 'domcontentloaded' })
     await expect(page.getByRole('tab', { name: 'Memberships' })).toBeVisible({
@@ -562,7 +568,6 @@ test.describe('single sign-on for a team of a project', () => {
       domains: [domain('acme.com', 'verified')],
       providers: [provider('Okta', ['admin'])],
     })
-    await enableSso(page)
 
     await page.goto(TEAM_PATH, { waitUntil: 'domcontentloaded' })
     const tab = page.getByRole('tab', { name: 'Single sign-on' })
@@ -586,7 +591,6 @@ test.describe("single sign-on and the project's add-on, on a team", () => {
     page,
   }) => {
     const mock = await mockAppwriteApi(page, { addon: null })
-    await enableSso(page)
     await openTeamSso(page)
 
     const addon = addonCard(page)
@@ -637,7 +641,6 @@ test.describe("single sign-on and the project's add-on, on a team", () => {
     page,
   }) => {
     const mock = await mockAppwriteApi(page, { plan: FREE, addon: null })
-    await enableSso(page)
     await openTeamSso(page)
 
     const addon = addonCard(page)
@@ -667,7 +670,6 @@ test.describe("single sign-on and the project's add-on, on a team", () => {
       domains: [domain('acme.com', 'verified')],
       providers: [provider('Okta', ['admin'])],
     })
-    await enableSso(page)
     await openTeamSso(page)
 
     const addon = addonCard(page)
@@ -704,7 +706,6 @@ test.describe("single sign-on and the project's add-on, on a team", () => {
       addonRefuses: true,
       domains: [domain('acme.com', 'verified')],
     })
-    await enableSso(page)
     await openTeamSso(page)
 
     await page.getByRole('button', { name: 'Add domain' }).click()
@@ -735,7 +736,6 @@ test.describe("single sign-on and the project's add-on, on a team", () => {
     page,
   }) => {
     await mockAppwriteApi(page)
-    await enableSso(page)
     await page.goto(`/projects/${PROJECT.$id}/settings`, {
       waitUntil: 'domcontentloaded',
     })
@@ -755,7 +755,6 @@ test.describe("single sign-on and the project's add-on, on a team", () => {
     page,
   }) => {
     await mockAppwriteApi(page, { addon: null })
-    await enableSso(page)
     await page.goto(`/projects/${PROJECT.$id}/settings`, {
       waitUntil: 'domcontentloaded',
     })
@@ -773,7 +772,6 @@ test.describe("setting up a team's single sign-on", () => {
     page,
   }) => {
     const mock = await mockAppwriteApi(page)
-    await enableSso(page)
     await openTeamSso(page)
 
     await expect(card(page, 'Domains')).toContainText(
@@ -820,7 +818,6 @@ test.describe("setting up a team's single sign-on", () => {
     const mock = await mockAppwriteApi(page, {
       domains: [domain('acme.com', 'verified')],
     })
-    await enableSso(page)
     await openTeamSso(page)
 
     await page.getByRole('button', { name: 'Add identity provider' }).click()
@@ -904,7 +901,6 @@ test.describe("setting up a team's single sign-on", () => {
       domains: [domain('acme.com', 'verified')],
       providers: [provider('Okta', ['admin', 'sales'])],
     })
-    await enableSso(page)
     await openTeamSso(page)
 
     await page.getByRole('button', { name: 'Actions for Okta' }).click()
@@ -946,7 +942,6 @@ test.describe("setting up a team's single sign-on", () => {
       domains: [domain('acme.com', 'verified')],
       providers: [provider('Okta', ['admin'])],
     })
-    await enableSso(page)
     await openTeamSso(page)
 
     const required = page.getByRole('switch', {
@@ -993,7 +988,6 @@ test.describe("setting up a team's single sign-on", () => {
 
   test('offers SAML as coming soon', async ({ page }) => {
     await mockAppwriteApi(page)
-    await enableSso(page)
     await openTeamSso(page)
 
     await expect(page.getByText('SAML is coming soon')).toBeVisible()
@@ -1006,7 +1000,6 @@ test.describe("setting up a team's single sign-on", () => {
     const mock = await mockAppwriteApi(page, {
       domains: [domain('acme.com', 'verified')],
     })
-    await enableSso(page)
     await openTeamSso(page)
 
     const app = card(page, 'Add sign-in to your app')
