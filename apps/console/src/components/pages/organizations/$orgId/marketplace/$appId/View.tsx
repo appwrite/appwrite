@@ -46,7 +46,8 @@ export function View({ initialData }: ViewProps = {}) {
 
   const { app: appFromHook, isLoading, isFetching } = useOrganizationApp(appId)
   const app = appFromHook ?? initialData?.app
-  const { installation } = useOrganizationAppInstallation(orgId, appId)
+  const { installation, isResolved: isInstallationResolved } =
+    useOrganizationAppInstallation(orgId, appId)
 
   const teamNamesById = useMemo(
     () =>
@@ -194,6 +195,7 @@ export function View({ initialData }: ViewProps = {}) {
                   </Button>
                 </div>
               ) : (
+                isInstallationResolved &&
                 mapped.installationScopes.length > 0 && (
                   <Button
                     disabled={installMutation.isPending}
