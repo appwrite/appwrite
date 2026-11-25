@@ -162,6 +162,26 @@ export function ImportWizardView() {
   const [supabasePassword, setSupabasePassword] = useState('')
   const [supabasePort, setSupabasePort] = useState('5432')
 
+  // Back from connecting a Supabase account: reopen its credentials step
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    const outcome = url.searchParams.get(SUPABASE_CONNECT_PARAM)
+    if (!outcome) return
+    const reason = url.searchParams.get('error')
+    url.searchParams.delete(SUPABASE_CONNECT_PARAM)
+    url.searchParams.delete('error')
+    window.history.replaceState(window.history.state, '', url.toString())
+    setProvider('Supabase')
+    setStep(2)
+    if (outcome === 'failed') {
+      toast.error(
+        reason === 'already_connected'
+          ? t('This Supabase account is connected to another console user')
+          : t('Supabase did not grant access'),
+      )
+    }
+  }, [t])
+
   const [serviceAccount, setServiceAccount] = useState('')
 
   const [nhostSubdomain, setNhostSubdomain] = useState('')
