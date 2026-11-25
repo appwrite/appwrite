@@ -653,6 +653,7 @@ describe('budget alert recipients', () => {
 describe('alerting plan limits', () => {
   test('reads a missing or zero cap as uncapped, as the API does', () => {
     expect(alertingLimits(undefined)).toEqual({
+      probesAllowed: true,
       probes: null,
       probeInterval: 0,
       escalations: null,
@@ -667,6 +668,7 @@ describe('alerting plan limits', () => {
       escalationRepeat: 0,
     } as unknown as Parameters<typeof alertingLimits>[0]
     expect(alertingLimits(free)).toEqual({
+      probesAllowed: true,
       probes: 1,
       probeInterval: 300,
       escalations: 1,
@@ -694,6 +696,7 @@ describe('alerting plan limits', () => {
       usageAtLimit: true,
       probeLimit: 1,
       probesAtLimit: false,
+      probesAllowed: true,
       allAtLimit: false,
     })
     expect(monitorCaps(free, 3, 1).allAtLimit).toBe(true)
@@ -701,6 +704,23 @@ describe('alerting plan limits', () => {
     // A count not loaded yet never closes creating.
     expect(monitorCaps(free, undefined, undefined).allAtLimit).toBe(false)
     expect(monitorCaps(undefined, 500, 500).allAtLimit).toBe(false)
+  })
+
+  test('closes synthetic checks on a plan without them, keeping usage monitors', () => {
+    const free = {
+      monitors: 3,
+      monitorsAllowProbes: false,
+    } as unknown as Parameters<typeof monitorCaps>[0]
+    expect(monitorCaps(free, 2, 0)).toEqual({
+      usageLimit: 3,
+      usageAtLimit: false,
+      probeLimit: null,
+      probesAtLimit: false,
+      probesAllowed: false,
+      allAtLimit: false,
+    })
+    // With the usage monitors full, nothing is left to create.
+    expect(monitorCaps(free, 3, 0).allAtLimit).toBe(true)
   })
 
   test('starts new checks on a minute, or the plan minimum when longer', () => {

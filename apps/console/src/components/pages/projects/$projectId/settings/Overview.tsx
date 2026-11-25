@@ -72,6 +72,7 @@ import {
 } from '@/lib/project-settings'
 import { GitConfigurationCard } from './GitConfigurationCard'
 import { PremiumGeoDBCard } from './_components/PremiumGeoDBCard'
+import { SSOAddonCard } from '@/components/global/shared/sso-addon/SSOAddonCard'
 import { TransferProjectCard } from './_components/TransferProjectCard'
 import { buildVcsAuthUrl, type VcsProviderId } from '@/lib/vcs/providers'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
@@ -1094,6 +1095,15 @@ export function ProjectSettingsOverview({
 
           {/* An add-on is the project's, and its environments have it with it */}
           {!environmentId && <PremiumGeoDBCard projectId={projectId} />}
+          {/* Inside one it only says whether the project has it */}
+          <SSOAddonCard
+            target={{
+              scope: 'project',
+              projectId,
+              inEnvironment: !!environmentId,
+            }}
+            showSetupLink
+          />
 
           {/* MCP Server Section. Its prompts name a project: inside an
               environment that is the project it belongs to, as no project

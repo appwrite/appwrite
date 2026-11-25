@@ -72,6 +72,10 @@ import { useFunctionWizard } from './WizardContext'
 import { useT } from '@/lib/i18n/translate'
 import { getVcsProvider } from '@/lib/vcs/providers'
 import { validateVariables } from '@/lib/variables'
+import {
+  CreateReviewSwitch,
+  useCreateReview,
+} from '../../reviews/_components/CreateReviewSwitch'
 
 export interface FunctionWizardVariable {
   key: string
@@ -133,6 +137,11 @@ export function RepositoryConfigView({
   const [branch, setBranch] = useState('')
   const [rootDirectory, setRootDirectory] = useState('./')
   const [silentMode, setSilentMode] = useState(false)
+  const review = useCreateReview(
+    projectId,
+    installationId,
+    providerRepositoryId,
+  )
   const [variables, setVariables] = useState<FunctionWizardVariable[]>([])
   const [domain, setDomain] = useState('')
   const [domainValid, setDomainValid] = useState(false)
@@ -290,6 +299,8 @@ export function RepositoryConfigView({
         buildSpecification: specification || undefined,
       })
       created = true
+
+      await review.apply()
 
       await projectSdk.proxy.createFunctionRule({
         domain: domainTrimmed,
@@ -724,6 +735,7 @@ export function RepositoryConfigView({
             </div>
             <Switch checked={silentMode} onCheckedChange={setSilentMode} />
           </div>
+          <CreateReviewSwitch review={review} />
         </div>
       </div>
 

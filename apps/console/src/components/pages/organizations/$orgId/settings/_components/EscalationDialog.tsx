@@ -1,15 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Check, ChevronDown, Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command'
+
 import {
   Dialog,
   DialogContent,
@@ -20,11 +13,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { NumberInput } from '@/components/ui/number-input'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+
 import {
   Select,
   SelectContent,
@@ -37,7 +26,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { roleLabel } from '@/components/pages/projects/$projectId/monitors/RuleFields'
+import { RecipientsField } from '@/components/global/shared/RecipientsField'
 import {
   ESCALATION_ROLES,
   MAX_DELAY,
@@ -46,14 +35,11 @@ import {
 import { alertingLimits } from '@/lib/alerts/plan-limits'
 import type { Escalation, EscalationInput } from '@/lib/appwrite/monitors'
 import { useT } from '@/lib/i18n/translate'
-import { useModalAwarePopover } from '@/lib/layout/modal-portal-host'
 import {
   useCreateEscalation,
-  useEscalationMembers,
   useOrganizationPlan,
   useUpdateEscalation,
 } from '@/lib/react-query/hooks'
-import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 
 /** A step as the form edits it: the wait in seconds. */
@@ -91,119 +77,6 @@ function inputFromForm(form: EscalationForm): EscalationInput {
     })),
     repeat: form.repeat,
   }
-}
-
-/** Members picked from the organization, searchable by name or email. */
-function MemberSelect({
-  organizationId,
-  value,
-  onChange,
-  disabled,
-}: {
-  organizationId: string
-  value: string[]
-  onChange: (userIds: string[]) => void
-  disabled?: boolean
-}) {
-  const t = useT()
-  const [open, setOpen] = useState(false)
-  const { rootRef, portalContainer, modal, handleOpenChange } =
-    useModalAwarePopover()
-  const { members, memberName, isLoading } =
-    useEscalationMembers(organizationId)
-
-  return (
-    <div ref={rootRef} className="contents">
-      <Popover
-        open={open}
-        modal={modal}
-        onOpenChange={(next) => {
-          handleOpenChange(next)
-          setOpen(next)
-        }}
-      >
-        <PopoverTrigger asChild>
-          <Button
-            type="button"
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            aria-label={t('Members')}
-            disabled={disabled}
-            className="h-9 w-full justify-between gap-2 text-[13px] font-normal"
-          >
-            <span
-              className={cn(
-                'truncate',
-                value.length === 0 && 'text-muted-foreground',
-              )}
-            >
-              {value.length === 0
-                ? t('Add members')
-                : value.map(memberName).join(', ')}
-            </span>
-            <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent
-          container={portalContainer}
-          className="max-h-[min(320px,var(--radix-popover-content-available-height))] w-[var(--radix-popover-trigger-width)] overflow-hidden p-0"
-          align="start"
-          onWheelCapture={(event) => event.stopPropagation()}
-          onCloseAutoFocus={(event) => {
-            if (portalContainer) event.preventDefault()
-          }}
-        >
-          <Command>
-            <CommandInput
-              placeholder={t('Search members...')}
-              className="h-9 text-[13px]"
-              onKeyDown={(event) => event.stopPropagation()}
-            />
-            <CommandList className="max-h-[240px] overflow-y-auto overscroll-contain p-1">
-              <CommandEmpty className="py-4 text-center text-[13px] text-muted-foreground">
-                {isLoading ? t('Loading...') : t('No members found')}
-              </CommandEmpty>
-              <CommandGroup>
-                {members.map((member) => {
-                  const selected = value.includes(member.userId)
-                  return (
-                    <CommandItem
-                      key={member.userId}
-                      value={`${member.name} ${member.email} ${member.userId}`}
-                      className="rounded-md px-2 py-2 aria-selected:bg-accent"
-                      onSelect={() =>
-                        onChange(
-                          selected
-                            ? value.filter((entry) => entry !== member.userId)
-                            : [...value, member.userId],
-                        )
-                      }
-                    >
-                      <Check
-                        className={cn(
-                          'me-2 h-4 w-4 shrink-0',
-                          selected ? 'opacity-100' : 'opacity-0',
-                        )}
-                      />
-                      <span className="min-w-0 flex-1 truncate text-[13px]">
-                        {member.name}
-                      </span>
-                      {member.email && member.email !== member.name && (
-                        <span className="ms-2 truncate text-[12px] text-muted-foreground">
-                          {member.email}
-                        </span>
-                      )}
-                    </CommandItem>
-                  )
-                })}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
-    </div>
-  )
 }
 
 interface EscalationDialogProps {
@@ -413,55 +286,21 @@ export function EscalationDialog({
                           : t('seconds after the previous step')}
                       </span>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {ESCALATION_ROLES.map((role) => {
-                        const selected = step.roles.includes(role)
-                        return (
-                          <button
-                            key={role}
-                            type="button"
-                            role="checkbox"
-                            aria-checked={selected}
-                            disabled={isPending}
-                            onClick={() =>
-                              updateStep(index, {
-                                roles: selected
-                                  ? step.roles.filter((entry) => entry !== role)
-                                  : [...step.roles, role],
-                              })
-                            }
-                            className={cn(
-                              'inline-flex h-8 items-center gap-2 rounded-md border px-3 text-[13px] transition-colors disabled:cursor-not-allowed disabled:opacity-60',
-                              selected
-                                ? 'border-foreground text-foreground ring-1 ring-inset ring-foreground'
-                                : 'border-border text-muted-foreground hover:bg-accent/40',
-                            )}
-                          >
-                            <span
-                              aria-hidden
-                              className={cn(
-                                'flex h-3.5 w-3.5 items-center justify-center rounded-[4px] border-[1.5px]',
-                                selected
-                                  ? 'border-foreground bg-foreground text-background'
-                                  : 'border-muted-foreground/60',
-                              )}
-                            >
-                              {selected && (
-                                <Check
-                                  className="h-2.5 w-2.5"
-                                  strokeWidth={3}
-                                />
-                              )}
-                            </span>
-                            {t(roleLabel(role))}
-                          </button>
-                        )
-                      })}
-                    </div>
-                    <MemberSelect
+                    <RecipientsField
                       organizationId={organizationId}
-                      value={step.userIds}
-                      onChange={(userIds) => updateStep(index, { userIds })}
+                      roles={ESCALATION_ROLES}
+                      label={t('Add who step {step} notifies').replace(
+                        '{step}',
+                        String(index + 1),
+                      )}
+                      value={{
+                        roles: step.roles,
+                        userIds: step.userIds,
+                        escalationId: '',
+                      }}
+                      onChange={({ roles, userIds }) =>
+                        updateStep(index, { roles, userIds })
+                      }
                       disabled={isPending}
                     />
                   </li>

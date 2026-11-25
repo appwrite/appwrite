@@ -7,12 +7,15 @@ import {
 } from '@/components/global/shared/settings-search/SettingsCardsList'
 import { GitSettingsCard } from '../GitSettingsCard'
 import { GitSilentModeCard } from '../GitSilentModeCard'
+import { RepositoryReviewCard } from '../../reviews/_components/RepositoryReviewCard'
+import { useReviewsAccess } from '../../reviews/_components/useReviewsAccess'
 import { useT } from '@/lib/i18n/translate'
 
 export function View() {
   const t = useT()
   const { projectId, functionId } = useParams({ strict: false })
   const { data: func, isLoading } = useProjectFunction(projectId, functionId)
+  const { visible: reviewsVisible } = useReviewsAccess(projectId)
 
   const hasRepository = Boolean(
     func?.installationId && func?.providerRepositoryId,
@@ -59,8 +62,25 @@ export function View() {
         node: <GitSilentModeCard func={func} />,
       })
     }
+    if (hasRepository && reviewsVisible && projectId) {
+      items.push({
+        id: 'code-review',
+        search: {
+          title: 'Code review',
+          keywords: ['review', 'reviews', 'pull request', 'strength', 'github'],
+        },
+        node: (
+          <RepositoryReviewCard
+            projectId={projectId}
+            installationId={func.installationId}
+            providerRepositoryId={func.providerRepositoryId}
+            resource={{ type: 'function', id: func.$id }}
+          />
+        ),
+      })
+    }
     return items
-  }, [func, hasRepository])
+  }, [func, hasRepository, reviewsVisible, projectId])
 
   if (isLoading) {
     return (

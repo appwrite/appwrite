@@ -445,7 +445,7 @@ export class Monitors {
       accept: 'application/json',
     }
 
-    const request = this.client.call('put', uri, apiHeaders, apiPayload)
+    const request = this.client.call('patch', uri, apiHeaders, apiPayload)
 
     return request
   }

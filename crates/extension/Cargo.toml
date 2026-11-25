@@ -6,7 +6,8 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-publish.workspace = true
+# A PHP extension, shipped as utopia.so in the appwrite/utopia-extension image.
+publish = false
 
 [lib]
 name = "utopia"

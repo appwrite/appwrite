@@ -382,9 +382,8 @@ export function AlertDrawer({
 
             <Button asChild variant="outline" size="sm">
               <Link
-                to="/projects/$projectId/monitors"
-                params={{ projectId }}
-                search={{ monitor: alert.monitorId }}
+                to="/projects/$projectId/monitors/$monitorId"
+                params={{ projectId, monitorId: alert.monitorId }}
                 onClick={() => onOpenChange(false)}
               >
                 {t('View monitor')}

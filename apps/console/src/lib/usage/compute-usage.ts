@@ -20,8 +20,12 @@ export const COMPUTE_FUNCTION_GB_HOURS_DESCRIPTION =
 export const COMPUTE_SITE_GB_HOURS_DESCRIPTION =
   'Site compute time during the selected period, measured in gigabyte-hours (GBH). Memory allocated to sites multiplied by request handling and build duration.'
 
+export const COMPUTE_VIDEO_GB_HOURS_DESCRIPTION =
+  'Video encoding compute during the selected period, measured in gigabyte-hours (GBH). Encoder memory multiplied by encode duration. Included in GB-hours.'
+
 export const COMPUTE_FUNCTIONS_DOCS_HREF = '/docs/products/functions'
 export const COMPUTE_SITES_DOCS_HREF = '/docs/products/sites'
+export const COMPUTE_VIDEOS_DOCS_HREF = '/docs/products/videos'
 export const COMPUTE_DOCS_HREF = COMPUTE_FUNCTIONS_DOCS_HREF
 
 export const COMPUTE_RESOURCE_TYPES_BREAKDOWN_TITLE = 'Resource types'

@@ -197,6 +197,7 @@ $platformCollections = [
         'name' => 'Monitors',
         'attributes' => [
             Attribute::string(key: 'name', size: 128, required: true, default: ''),
+            Attribute::string(key: 'monitorId', default: ''),
             Attribute::string(key: 'teamId', required: true, default: ''),
             Attribute::id(key: 'teamInternalId', required: true, default: ''),
             Attribute::string(key: 'projectId', default: ''),
@@ -227,6 +228,7 @@ $platformCollections = [
         'indexes' => [
             Index::key(key: '_key_teamInternalId', attributes: ['teamInternalId']),
             Index::key(key: '_key_projectInternalId', attributes: ['projectInternalId']),
+            Index::key(key: '_key_monitorId_project', attributes: ['monitorId', 'projectInternalId']),
             Index::key(key: '_key_resource', attributes: ['resourceType', 'resourceInternalId']),
             Index::key(key: '_key_region_enabled', attributes: ['region', 'enabled']),
             Index::key(key: '_key_escalationId', attributes: ['escalationId']),

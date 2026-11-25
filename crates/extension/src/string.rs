@@ -74,6 +74,33 @@ impl StubLiteral for PhpString<'_> {
     }
 }
 
+/// A PHP string made once and returned by refcount after that, as PHP returns the string a
+/// property holds: no allocation or copy per call.
+pub struct Shared(pub Zval);
+
+impl Shared {
+    pub fn new(bytes: &[u8]) -> Self {
+        let mut zval = Zval::new();
+        zval.set_zend_string(ZendStr::new(bytes, false));
+        Self(zval)
+    }
+
+    /// Another reference to the same string.
+    pub fn share(&self) -> Self {
+        Self(self.0.shallow_clone())
+    }
+}
+
+impl IntoZval for Shared {
+    const TYPE: DataType = DataType::String;
+    const NULLABLE: bool = false;
+
+    fn set_zval(self, zv: &mut Zval, _: bool) -> ext_php_rs::error::Result<()> {
+        *zv = self.0;
+        Ok(())
+    }
+}
+
 /// A property value of any type, shared by refcount.
 pub struct Value(pub Zval);
 

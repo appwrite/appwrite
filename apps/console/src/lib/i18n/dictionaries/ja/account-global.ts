@@ -1461,4 +1461,40 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
     'プロジェクトを組織に引き継げるのは、その組織のオーナーだけです。受け取るには、あなたがオーナーとなる組織を作成してください。',
   'Until the project is claimed, the site opens on any device under a Powered by Appwrite Zero banner.':
     'プロジェクトを引き継ぐまで、サイトはどの端末でも Powered by Appwrite Zero のバナー付きで開けます。',
+  // Single sign-on (/sso)
+  'Sign in with SSO': 'SSO でサインイン',
+  'This organization requires single sign-on. Sign in with SSO to continue.':
+    'この組織ではシングルサインオンが必須です。続行するには SSO でサインインしてください。',
+  'Taking you to your identity provider...':
+    'ID プロバイダーに移動しています...',
+  'Choose how to sign in': 'サインイン方法を選択',
+  'Use a different email': '別のメールアドレスを使用',
+  'Work email': '勤務先のメールアドレス',
+  'Continuing...': '続行しています...',
+  "Single sign-on isn't set up for {domain}.":
+    '{domain} ではシングルサインオンが設定されていません。',
+  'Sign in with email and password': 'メールアドレスとパスワードでサインイン',
+  'Failed to look up single sign-on for this email':
+    'このメールアドレスのシングルサインオンを確認できませんでした',
+  'Back to the Console': 'コンソールに戻る',
+  'Go to your account': 'アカウントに移動',
+  'Signed in as {email}.': '{email} でサインインしています。',
+  "Single sign-on for your organization isn't set up correctly. Contact your administrator.":
+    '組織のシングルサインオンが正しく設定されていません。管理者に連絡してください。',
+  'This sign-in was started in another browser or took too long. Start again.':
+    'このサインインは別のブラウザーで開始されたか、時間がかかりすぎました。最初からやり直してください。',
+  'Single sign-on could not finish. Start again, or contact your administrator if it keeps happening.':
+    'シングルサインオンを完了できませんでした。最初からやり直してください。繰り返し発生する場合は管理者に連絡してください。',
+  'This identity provider is not available.':
+    'この ID プロバイダーは利用できません。',
+  'Single sign-on could not finish. Start again from the sign-in page.':
+    'シングルサインオンを完了できませんでした。サインインページから最初からやり直してください。',
+  'Single sign-on for your organization is not working right now. Contact your administrator.':
+    '組織のシングルサインオンは現在利用できません。管理者に連絡してください。',
+  'Enter your work email to continue with single sign-on.':
+    'シングルサインオンで続行するには、勤務先のメールアドレスを入力してください。',
+  "Your identity provider returned an email that isn't on a domain your organization verified. Sign in with your work email account.":
+    'ID プロバイダーから返されたメールアドレスは、組織が検証したドメインのものではありません。勤務先のメールアカウントでサインインしてください。',
+  "Your identity provider didn't share your email address. Ask your administrator to release the email to Appwrite.":
+    'ID プロバイダーからメールアドレスが共有されませんでした。メールアドレスを Appwrite に提供するよう管理者に依頼してください。',
 }

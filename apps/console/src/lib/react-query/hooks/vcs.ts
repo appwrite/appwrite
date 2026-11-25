@@ -15,6 +15,7 @@ import { Query } from '@appwrite.io/console'
 import { VCSDetectionType } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { isFeatureEnabled } from '@/lib/console-profiles'
 import {
   DEFAULT_STALE_TIME,
   LONG_STALE_TIME,
@@ -55,7 +56,7 @@ export async function fetchVcsInstallations(
   const queries = [Query.limit(limit), Query.offset(page * limit)]
   const list = await projectSdk.vcs.listInstallations({ queries })
 
-  if (page > 0 || list.total > 0) {
+  if (page > 0 || list.total > 0 || !isFeatureEnabled('gitInstallationReuse')) {
     return list
   }
 
@@ -134,6 +135,18 @@ export async function fetchInstallation(
   return await projectSdk.vcs.getInstallation(installationId)
 }
 
+export function installationQueryOptions(
+  projectId: string | null | undefined,
+  installationId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['vcs', 'installation', projectId, installationId],
+    queryFn: () => fetchInstallation(projectId!, installationId!),
+    enabled: !!projectId && !!installationId,
+    staleTime: DEFAULT_STALE_TIME,
+  })
+}
+
 /**
  * Hook to fetch installation details (includes `provider`).
  */
@@ -141,12 +154,7 @@ export function useInstallation(
   projectId: string | null | undefined,
   installationId: string | null | undefined,
 ) {
-  return useQuery({
-    queryKey: ['vcs', 'installation', projectId, installationId],
-    queryFn: () => fetchInstallation(projectId!, installationId!),
-    enabled: !!projectId && !!installationId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  return useQuery(installationQueryOptions(projectId, installationId))
 }
 
 /**
@@ -429,7 +437,15 @@ export function vcsInstallationsQueryOptions(
   limit: number = DEFAULT_PAGE_SIZE,
 ) {
   return queryOptions({
-    queryKey: ['vcs', 'installations', projectId, page, limit],
+    // An empty list cached with the experiment off would hide reuse once it is turned on
+    queryKey: [
+      'vcs',
+      'installations',
+      projectId,
+      page,
+      limit,
+      isFeatureEnabled('gitInstallationReuse'),
+    ],
     queryFn: () => fetchVcsInstallations(projectId!, page, limit),
     enabled: !!projectId,
     staleTime: LONG_STALE_TIME,
@@ -520,7 +536,17 @@ export function useRepository(
   installationId: string | null | undefined,
   providerRepositoryId: string | null | undefined,
 ) {
-  return useQuery({
+  return useQuery(
+    repositoryQueryOptions(projectId, installationId, providerRepositoryId),
+  )
+}
+
+export function repositoryQueryOptions(
+  projectId: string | null | undefined,
+  installationId: string | null | undefined,
+  providerRepositoryId: string | null | undefined,
+) {
+  return queryOptions({
     queryKey: [
       'vcs',
       'repository',

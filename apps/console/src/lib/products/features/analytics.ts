@@ -28,9 +28,17 @@ export const analyticsProductFeatures: ProductFeatureContent[] = [
     id: 'dashboard',
     title: 'Every number that matters, on one page',
     description:
-      'Visitors, visits, pageviews, bounce rate, visit duration, and engagement time over any range, compared with the previous period, with live visitors as they arrive. Break traffic down by page, source, campaign, location, and device, click any value to filter the whole dashboard, and pin notes on the chart for launches and campaigns.',
+      'Visitors, visits, pageviews, bounce rate, visit duration, and engagement time over any range, compared with the previous period, with live visitors as they arrive. Break traffic down by page, source, campaign, location, and device, and click any value to filter the whole dashboard.',
     docsHref: '/docs/products/analytics/dashboard',
     docsLabel: 'Dashboard docs',
+  },
+  {
+    id: 'notes',
+    title: 'Notes that explain the spikes',
+    description:
+      'Mark a release, a campaign, or an incident on the day it happened. Hover the chart and click to add a note, or post one from your deploy pipeline with an API key. Each note shows as a badge on the chart with its text in the tooltip, for everyone in the project, so a jump in traffic always has its reason next to it.',
+    docsHref: '/docs/products/analytics/dashboard#notes',
+    docsLabel: 'Notes docs',
   },
   {
     id: 'privacy',
@@ -53,7 +61,9 @@ export const analyticsProductFeatures: ProductFeatureContent[] = [
       'Pick a property type and the dashboard fits it. Websites get pages and sources. Mobile apps get screens, app versions, installs and updates, and a push funnel from received to opened, with each Appwrite Messaging message by name. Agents get the models and tools they call.',
     docsHref: '/docs/products/analytics/properties',
     docsLabel: 'Properties docs',
-    extraDocsLinks: [{ href: '/docs/products/messaging', label: 'Messaging docs' }],
+    extraDocsLinks: [
+      { href: '/docs/products/messaging', label: 'Messaging docs' },
+    ],
   },
   {
     id: 'ai-traffic',

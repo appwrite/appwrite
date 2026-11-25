@@ -90,6 +90,21 @@ $child->get('requestId'); // "request-2" (child now uses its own local definitio
 $di->get('requestId'); // "request-1" (parent is unchanged)
 ```
 
+A value the parent already resolved was built from the parent's dependencies. When a child overrides one of them, `scope()` rebuilds the values derived from it in the child: it registers the child's own copy of each named factory, and of every factory in the chain that depends on one of them, directly or transitively. The parent keeps its values.
+
+```php
+$di->set('route', fn (): string => '/v1/graphql');
+$di->set('team', fn (string $route): string => "team for {$route}", ['route']);
+$di->get('team'); // "team for /v1/graphql"
+
+$child = new Container($di);
+$child->set('route', fn (): string => '/v1/organization/projects');
+$child->get('team'); // "team for /v1/graphql" (the parent's value)
+
+$child->scope('team');
+$child->get('team'); // "team for /v1/organization/projects"
+```
+
 ## System requirements
 
 Utopia DI requires PHP 8.2 or later. We recommend using the latest PHP version whenever possible.

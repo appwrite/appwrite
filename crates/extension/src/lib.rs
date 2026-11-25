@@ -87,7 +87,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     if stable("emails") {
         module = module.class::<emails::Email>();
     }
-    if enabled("query") {
+    if stable("query") {
         module = module
             .enumeration::<query::classifier::Type>()
             .interface::<query::classifier::PhpInterfaceClassifier>()
@@ -143,7 +143,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
             .class::<query::builder::ClickHouseBuilder>()
             .class::<query::builder::MongoDbBuilder>();
     }
-    module.request_shutdown_function(request_shutdown)
+    module.request_startup_function(request_startup).request_shutdown_function(request_shutdown)
 }
 
 /// Registers the classes built by hand rather than with `#[php_class]`: `Locale`, `UserAgent`, the
@@ -153,6 +153,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
 /// `utopia.libraries`.
 fn startup(_kind: i32, module: i32) -> i32 {
     ext_php_rs::internal::startup_guard(|| {
+        classes::retarget::reset();
         libraries::startup(module);
         if stable("locale") {
             locale::register()?;
@@ -171,7 +172,7 @@ fn startup(_kind: i32, module: i32) -> i32 {
         if stable("auth") {
             auth::register()?;
         }
-        if enabled("query") {
+        if stable("query") {
             query::features::register()?;
         }
         if enabled("detector") {
@@ -190,6 +191,17 @@ fn startup(_kind: i32, module: i32) -> i32 {
     })
 }
 
+/// Points the `#[php_class]` methods that have hand-written handlers at them, once the classes
+/// are registered: the first RINIT after MINIT.
+extern "C" fn request_startup(_kind: i32, _module: i32) -> i32 {
+    classes::retarget::once(|| {
+        if stable("dsn") {
+            dsn::retarget();
+        }
+    });
+    0
+}
+
 /// Forgets what the classes hold for the request when it ends, as PHP frees its static state.
 extern "C" fn request_shutdown(kind: i32, module: i32) -> i32 {
     user_agent::request_shutdown();
@@ -199,5 +211,6 @@ extern "C" fn request_shutdown(kind: i32, module: i32) -> i32 {
     query::builder::request_shutdown();
     balancer::request_shutdown();
     database::request_shutdown();
+    validators::compose::request_shutdown();
     locale::request_shutdown(kind, module)
 }

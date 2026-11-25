@@ -1,5 +1,14 @@
 # Change Log
 
+## 28.5.0
+
+* Added: Atlassian, Instagram, LINE, Linear, Netlify, Patreon, Railway, Reddit, Roblox, Strava, Vercel and VK to `OAuthProvider`
+
+## 28.4.1
+
+* Added: `OAuthProvider.workos`
+* Fixed: creating a `Client` no longer calls platform channels; the cookie jar, package info and device info load on the first request, so a client built before the Flutter engine is ready no longer fails with "No JNI instance is available" in Android release builds
+
 ## 28.4.0
 
 * Added: `Tracking.start()` sends `first_open` once per install and `app_updated` (`previousVersion`, `version`) on the first start after the app's version changes

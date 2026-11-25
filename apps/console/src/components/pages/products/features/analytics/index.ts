@@ -4,6 +4,7 @@ import { AnalyticsAppsVisual } from './AnalyticsAppsVisual'
 import { AnalyticsCustomEventsVisual } from './AnalyticsCustomEventsVisual'
 import { AnalyticsDashboardVisual } from './AnalyticsDashboardVisual'
 import { AnalyticsMcpVisual } from './AnalyticsMcpVisual'
+import { AnalyticsNotesVisual } from './AnalyticsNotesVisual'
 import { AnalyticsPlatformVisual } from './AnalyticsPlatformVisual'
 import { AnalyticsServerSideVisual } from './AnalyticsServerSideVisual'
 import { AnalyticsSitesVisual } from './AnalyticsSitesVisual'
@@ -14,6 +15,7 @@ export const ANALYTICS_FEATURE_VISUALS: Record<string, ComponentType> = {
   sites: AnalyticsSitesVisual,
   users: AnalyticsUsersVisual,
   dashboard: AnalyticsDashboardVisual,
+  notes: AnalyticsNotesVisual,
   apps: AnalyticsAppsVisual,
   'ai-traffic': AnalyticsAiTrafficVisual,
   'custom-events': AnalyticsCustomEventsVisual,

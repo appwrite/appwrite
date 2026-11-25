@@ -32,7 +32,7 @@ Below you can find all the different parameters offered by the preview endpoint 
 | opacity       | Set opacity for the output image. Accepts a float value between `0-1`, where `0` makes it transparent. Only works with output formats supporting alpha channels like `png`. |
 | rotation      | Rotate the output image by a degree. Accepts an integer between `-360` to `360`.                                  |
 | background    | Set a background-color. Accepts any valid hex color value without the leading `#`. Only works with output formats supporting alpha channels like `png`. |
-| output        | Set the output image format. If not provided, will use the original image's format. Supported formats are: `jpg`, `jpeg`, `png`, `gif`, `webp`, `avif`, and `heic` |
+| output        | Set the output image format. If not provided, will use the original image's format. Supported formats are: `jpg`, `jpeg`, `png`, `gif`, `webp`, `avif`, and `heic`. Pass `auto` to get AVIF or WebP when the request's `Accept` header lists them. See [automatic output format](#automatic-output-format). |
 
 # Examples {% #examples %}
 Here are some examples using [Client SDKs](/docs/sdks#client).
@@ -217,3 +217,79 @@ const ImagePreview = () => (
 ```
 
 {% /multicode %}
+
+# Automatic output format {% #automatic-output-format %}
+
+Set `output` to `auto` to serve each client the smallest format it can display, from a single preview URL. Appwrite reads the request's `Accept` header and picks the output format in this order:
+
+1. `avif`, if the header lists `image/avif`.
+2. `webp`, if the header lists `image/webp`.
+3. Otherwise, the format you get without `output`: the original image's format, or `jpg` when Appwrite can't output the original format.
+
+Only types the header names explicitly count. Wildcards such as `image/*` and `*/*` never select AVIF or WebP, and a type with `q=0` is excluded. The order above is Appwrite's preference, so a client that lists both types gets AVIF.
+
+```js
+import { Client, Storage, ImageFormat } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>'); // Your project ID
+
+const storage = new Storage(client);
+
+// Returns a preview URL. The browser's Accept header picks the format.
+const url = storage.getFilePreview({
+    bucketId: 'photos',
+    fileId: 'sunset',
+    width: 800,
+    output: ImageFormat.Auto
+});
+
+document.querySelector('#sunset').src = url;
+```
+
+You can also write the parameter into a preview URL directly, for example in server-rendered HTML:
+
+```html
+<img
+  src="https://<REGION>.cloud.appwrite.io/v1/storage/buckets/photos/files/sunset/preview?project=<PROJECT_ID>&width=800&output=auto"
+  alt="Sunset over the bay"
+/>
+```
+
+## Which clients get AVIF or WebP {% #automatic-output-format-clients %}
+
+Negotiation depends on the `Accept` header the client sends, so `auto` is built for URLs that a browser loads as an image, such as `<img>` elements, `srcset` candidates, and CSS backgrounds. The Web SDK's `getFilePreview()` returns a URL for exactly this. According to MDN's [list of default Accept values](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Content_negotiation/List_of_default_Accept_values), Chrome, Edge, and Firefox list `image/avif` for images, while Safari lists `image/webp` but not `image/avif`, so Safari gets WebP.
+
+Requests that don't name an image type get the default format:
+
+- The Flutter, Apple, Android, and React Native SDKs, and the server SDKs, download preview bytes with `Accept: image/*`. Pass an explicit format, such as `webp`, when you need a specific one.
+- A browser `fetch()` call sends `Accept: */*` unless you set the header yourself.
+
+`ImageFormat.Auto` is available from these SDK versions:
+
+| SDK | First version |
+| --- | --- |
+| Web | 29.3.0 |
+| React Native | 3.3.0 |
+| Flutter | 28.4.0 |
+| Apple | 21.3.0 |
+| Android | 31.3.0 |
+| Unity | 0.13.0 |
+| Node.js | 31.3.0 |
+| Python | 27.3.0 |
+| PHP | 32.4.0 |
+| Ruby | 30.3.0 |
+| Dart | 31.3.0 |
+| .NET | 11.3.0 |
+| Kotlin | 24.3.0 |
+| Swift | 23.4.0 |
+| Rust | 0.24.0 |
+
+The Go SDK takes `output` as a string, so pass `"auto"` to `WithGetFilePreviewOutput`.
+
+## Caching {% #automatic-output-format-caching %}
+
+Responses to `auto` requests include `Vary: Accept` and `Cache-Control: private`, so browsers cache them, but shared caches and CDNs don't. Appwrite's own preview cache stores one entry per negotiated format, and an `auto` request that resolves to AVIF reuses the entry for `output=avif`. Requests with an explicit `output` ignore the `Accept` header and cache exactly as before.
+
+Each format is a transformation of the same file, so it counts as one [origin image](/docs/advanced/billing/image-transformations) however many formats you serve.
