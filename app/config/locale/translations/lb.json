@@ -233,7 +233,7 @@
     "continents.oc": "Ozeanien",
     "continents.sa": "Südamerika",
     "emails.magicSession.optionButton": "Klickt op de Knäppchen hei drënner fir sécher an Äre {{project}} Kont anzeloggen. Et wäert an 1 Stonn oflafen.",
-    "emails.magicSession.buttonText": "Bei {{project}} aloggen",
+    "emails.magicSession.buttonText": "Connectez-vous à {{project}}",
     "emails.magicSession.clientInfo": "Dëse Login gouf duerch {{agentClient}} op {{agentDevice}} {{agentOs}} ugefrot. Wann Dir de Login net gefrot hutt, kënnt Dir dësen E-Mail ouni weideres ignoréieren.",
     "sms.verification.body": "{{secret}}",
     "emails.magicSession.securityPhrase": "D'Sécherheetsphrase fir dësen E-Mail ass {{phrase}}. Dir kënnt dësem E-Mail vertrauen, wann dës Phrase mat der Phrase iwwereneestëmmt, déi beim Umellen ugewise ginn ass.",
