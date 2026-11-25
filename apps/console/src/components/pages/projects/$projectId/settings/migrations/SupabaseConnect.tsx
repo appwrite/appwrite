@@ -52,11 +52,6 @@ export function SupabaseConnect({
   const errorType =
     projects.error instanceof AppwriteException ? projects.error.type : ''
 
-  // The server has no Supabase OAuth app configured, so only manual credentials work
-  if (errorType === 'general_not_implemented') {
-    return null
-  }
-
   const connect = () => {
     const url = new URL(`${getApiEndpoint()}/migrations/supabase/oauth2`)
     url.searchParams.set('success', returnUrl('connected'))
@@ -89,6 +84,12 @@ export function SupabaseConnect({
     void pick(only.projectRef)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [only])
+
+  // The server has no Supabase OAuth app configured, so only manual credentials work.
+  // Returned after every hook, so the hook order never changes between renders
+  if (errorType === 'general_not_implemented') {
+    return null
+  }
 
   return (
     <div className="px-6 py-4 space-y-3">
