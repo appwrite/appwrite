@@ -18,6 +18,7 @@ import {
   type VideoEmbedError,
 } from '@/lib/videos/embed-player-errors'
 import { parseEmbedStartParam } from '@/lib/videos/embed-start-time'
+import { useLongWait } from '@/hooks/use-long-wait'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
@@ -90,24 +91,29 @@ export function View({ videoId, initialData }: EmbedViewProps) {
     publicPlayback?.renditions ??
     []
 
+  const loading =
+    Boolean(projectId) &&
+    ((((!video && videoLoading) ||
+      (!renditionsFromHook && renditionsLoading)) &&
+      !initialData?.video) ||
+      (refused && publicPlaybackLoading))
+  // A quick load stays a black frame; the spinner is for a slow one.
+  const loadingLong = useLongWait(loading)
+
   if (!projectId) {
     return <EmbedErrorScreen error={VIDEO_EMBED_MISSING_PROJECT} />
   }
 
-  const stillLoading =
-    (!video && videoLoading) || (!renditionsFromHook && renditionsLoading)
-
-  if (
-    (stillLoading && !initialData?.video) ||
-    (refused && publicPlaybackLoading)
-  ) {
+  if (loading) {
     return (
       <div
         className="flex h-[100dvh] w-full items-center justify-center bg-black"
         aria-busy
         aria-label={t('Loading video')}
       >
-        <Loader2 className="size-8 animate-spin text-white/60" />
+        {loadingLong ? (
+          <Loader2 className="size-8 animate-spin text-white/60" />
+        ) : null}
       </div>
     )
   }
