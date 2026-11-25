@@ -43,6 +43,12 @@ class Alert extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('projectId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'ID of the project the alert is about. Empty for an alert of the whole organization.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Name of the monitor when the alert fired.',
