@@ -22,6 +22,8 @@
 //! being read (recursive structures) cannot be represented and fail with
 //! [`Error::Unsupported`].
 
+use std::cell::RefCell;
+use std::collections::HashMap;
 use std::fmt;
 
 use indexmap::IndexMap;
@@ -296,6 +298,7 @@ pub fn unserialize(data: &[u8], options: &Options) -> Result<Unserialized, Error
         warnings: Vec::new(),
         opened: None,
         unsupported: None,
+        built: RefCell::new(HashMap::new()),
     };
     // Data without back-references (what `serialize` writes for these
     // values) is built directly; anything else, including every failure,
@@ -366,6 +369,11 @@ struct Unserializer<'a> {
     opened: Option<(i64, bool)>,
     /// Why the value, once read, cannot be returned (an object of another class).
     unsupported: Option<&'static str>,
+    /// The value each finished container materialized to, so that every back-reference
+    /// to it costs one clone (constant time: arrays are copy-on-write) rather than a
+    /// rebuild. A finished container never changes again, except when a duplicate key
+    /// reuses its location, which [`Unserializer::reset`] forgets here.
+    built: RefCell<HashMap<CellId, Value>>,
 }
 
 /// `HT_MAX_SIZE` on 64-bit platforms.
@@ -487,7 +495,13 @@ impl Unserializer<'_> {
     }
 
     fn set(&mut self, cell: CellId, value: Value) {
-        self.cells[cell] = Cell::Value(value);
+        self.reset(cell, Cell::Value(value));
+    }
+
+    /// Replaces what a location holds, and forgets what it materialized to.
+    fn reset(&mut self, cell: CellId, to: Cell) {
+        self.built.get_mut().remove(&cell);
+        self.cells[cell] = to;
     }
 
     /// `php_var_unserialize_internal` with `var_hash`: reads a value into `cell`.
@@ -507,11 +521,12 @@ impl Unserializer<'_> {
                 Ok(true)
             }
             Some(Read::Open { object, elements }) => {
-                self.cells[cell] = if object {
+                let open = if object {
                     Cell::Object { props: IndexMap::new(), done: false }
                 } else {
                     Cell::Array { entries: IndexMap::new(), done: false }
                 };
+                self.reset(cell, open);
                 self.opened = Some((elements, object));
                 Ok(true)
             }
@@ -532,7 +547,7 @@ impl Unserializer<'_> {
                     Ok(snapshot) => self.set(cell, snapshot),
                     Err(Error::Unsupported(what)) => {
                         self.unsupported.get_or_insert(what);
-                        self.cells[cell] = Cell::Recursive(target);
+                        self.reset(cell, Cell::Recursive(target));
                     }
                     Err(e) => return Err(e),
                 }
@@ -1056,7 +1071,7 @@ impl Unserializer<'_> {
         if id == next {
             self.cells.push(Cell::Null);
         } else {
-            self.cells[id] = Cell::Null;
+            self.reset(id, Cell::Null);
         }
         id
     }
@@ -1068,7 +1083,7 @@ impl Unserializer<'_> {
         if id == next {
             self.cells.push(Cell::Null);
         } else {
-            self.cells[id] = Cell::Null;
+            self.reset(id, Cell::Null);
         }
         id
     }
@@ -1095,6 +1110,7 @@ impl Unserializer<'_> {
             Object(Array),
         }
         struct Frame<'c> {
+            cell: CellId,
             partial: Partial,
             children: Vec<(Slot<'c>, CellId)>,
             next: usize,
@@ -1104,22 +1120,28 @@ impl Unserializer<'_> {
         let mut done: Option<Value> = None;
         loop {
             if let Some(cell) = visit.take() {
-                match &self.cells[cell] {
-                    Cell::Null => done = Some(Value::Null),
-                    Cell::Value(v) => done = Some(v.clone()),
-                    Cell::Array { done: false, .. } | Cell::Object { done: false, .. } | Cell::Recursive(_) => {
-                        return Err(Error::Unsupported("reference to a container that is still being read"));
+                if let Some(value) = self.built.borrow().get(&cell) {
+                    done = Some(value.clone());
+                } else {
+                    match &self.cells[cell] {
+                        Cell::Null => done = Some(Value::Null),
+                        Cell::Value(v) => done = Some(v.clone()),
+                        Cell::Array { done: false, .. } | Cell::Object { done: false, .. } | Cell::Recursive(_) => {
+                            return Err(Error::Unsupported("reference to a container that is still being read"));
+                        }
+                        Cell::Array { entries, .. } => stack.push(Frame {
+                            cell,
+                            partial: Partial::Array(Array::with_capacity(entries.len())),
+                            children: entries.iter().map(|(k, &c)| (Slot::Key(k), c)).collect(),
+                            next: 0,
+                        }),
+                        Cell::Object { props, .. } => stack.push(Frame {
+                            cell,
+                            partial: Partial::Object(Array::new()),
+                            children: props.iter().map(|(k, &c)| (Slot::Prop(k), c)).collect(),
+                            next: 0,
+                        }),
                     }
-                    Cell::Array { entries, .. } => stack.push(Frame {
-                        partial: Partial::Array(Array::with_capacity(entries.len())),
-                        children: entries.iter().map(|(k, &c)| (Slot::Key(k), c)).collect(),
-                        next: 0,
-                    }),
-                    Cell::Object { props, .. } => stack.push(Frame {
-                        partial: Partial::Object(Array::new()),
-                        children: props.iter().map(|(k, &c)| (Slot::Prop(k), c)).collect(),
-                        next: 0,
-                    }),
                 }
             }
             let Some(frame) = stack.last_mut() else { return Ok(done.unwrap_or_default()) };
@@ -1138,10 +1160,13 @@ impl Unserializer<'_> {
                 visit = Some(frame.children[frame.next].1);
                 frame.next += 1;
             } else if let Some(frame) = stack.pop() {
-                done = Some(match frame.partial {
+                let value = match frame.partial {
                     Partial::Array(a) => Value::Array(a),
                     Partial::Object(o) => Value::Object(o),
-                });
+                };
+                // Only finished containers get here: an open one is refused above.
+                self.built.borrow_mut().insert(frame.cell, value.clone());
+                done = Some(value);
             }
         }
     }
@@ -1325,5 +1350,46 @@ mod tests {
             }
         }
         assert!(matches!(u("a:1:{i:0;R:1;}"), Err(Error::Unsupported(_))));
+    }
+
+    #[test]
+    fn back_references_read_the_container_once() {
+        // One container of 20,000 entries referenced 20,000 times: rebuilt on every
+        // reference, this is 400 million element copies; reused, it is 20,000 clones.
+        let n = 20_000;
+        let mut s = format!("a:{}:{{i:0;a:{n}:{{", n + 1);
+        for i in 0..n {
+            s.push_str(&format!("i:{i};i:{i};"));
+        }
+        s.push('}');
+        for i in 1..=n {
+            s.push_str(&format!("i:{i};R:2;"));
+        }
+        s.push('}');
+
+        let started = std::time::Instant::now();
+        let Value::Array(outer) = u(&s).unwrap().value else { panic!() };
+        assert!(started.elapsed() < std::time::Duration::from_secs(5), "took {:?}", started.elapsed());
+        assert_eq!(outer.len(), n + 1);
+        let Some(Value::Array(last)) = outer.get(&ArrayKey::Int(n as i64)) else { panic!() };
+        assert_eq!(last.len(), n);
+    }
+
+    #[test]
+    fn back_references_follow_a_location_a_duplicate_key_reused() {
+        // The first R:2 reads [1]; the duplicate key 0 then puts [9] in that location,
+        // which the second R:2 reads.
+        let r = u("a:4:{i:0;a:1:{i:0;i:1;}i:1;R:2;i:0;a:1:{i:0;i:9;}i:2;R:2;}").unwrap().value;
+        assert_eq!(r.to_json(), json!([[9], [1], [9]]));
+
+        let r = u(
+            r#"a:3:{i:0;O:8:"stdClass":3:{s:1:"p";a:1:{i:0;i:1;}s:1:"q";R:3;s:1:"p";a:1:{i:0;i:9;}}i:1;R:3;i:2;R:2;}"#,
+        )
+        .unwrap()
+        .value;
+        assert_eq!(r.to_json(), json!([{"p": [9], "q": [1]}, [9], {"p": [9], "q": [1]}]));
+
+        let r = u(r#"a:2:{i:0;O:8:"stdClass":2:{s:1:"p";a:1:{i:0;i:1;}s:1:"q";R:3;}i:1;R:2;}"#).unwrap().value;
+        assert_eq!(r.to_json(), json!([{"p": [1], "q": [1]}, {"p": [1], "q": [1]}]));
     }
 }
