@@ -1,7 +1,14 @@
 import { useState } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
-import { Blocks, ExternalLink, FolderKey, Loader2, Trash2 } from 'lucide-react'
+import {
+  AlertTriangle,
+  Blocks,
+  ExternalLink,
+  FolderKey,
+  Loader2,
+  Trash2,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -81,6 +88,8 @@ function InstalledAppsCard() {
     loadMore,
     isLoadingMore,
     loadMoreFailed,
+    error,
+    refetch,
   } = useOrganizationInstalledApps(orgId)
   const deleteMutation = useDeleteOrganizationInstalledApp(orgId)
   const [deleteTarget, setDeleteTarget] =
@@ -119,6 +128,23 @@ function InstalledAppsCard() {
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
+          ) : error && installations.length === 0 ? (
+            <EmptyState
+              icon={AlertTriangle}
+              title={t('Failed to load installed apps')}
+              description={getErrorMessage(error, t('Please try again.'))}
+              variant="card"
+              action={
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void refetch()}
+                >
+                  {t('Try again')}
+                </Button>
+              }
+            />
           ) : installations.length === 0 ? (
             <EmptyState
               icon={Blocks}
