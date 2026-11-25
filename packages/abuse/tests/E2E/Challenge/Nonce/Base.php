@@ -34,8 +34,14 @@ abstract class Base extends TestCase
         $nonce = \bin2hex(\random_bytes(16));
 
         $this->assertTrue($nonces->consume($nonce, 1));
-        \sleep(2);
-        $this->assertTrue($nonces->consume($nonce, 1));
+        $this->assertFalse($nonces->consume($nonce, 1));
+
+        // Poll rather than sleep: the claim becomes available once Redis expires it.
+        $deadline = \microtime(true) + 5;
+        while (!$nonces->consume($nonce, 1)) {
+            $this->assertLessThan($deadline, \microtime(true), 'The claim did not expire within 5 seconds');
+            \usleep(50_000);
+        }
     }
 
     public function testEmptyNonceNeverClaims(): void
