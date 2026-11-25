@@ -418,7 +418,8 @@ export function getProviderReviewUrls(params: {
         // Keep the path an instance is served under (https://example.com/gitlab),
         // dropping only the organization the URL ends with.
         const url = new URL(params.organizationUrl)
-        const base = url.pathname.replace(/\/+$/, '')
+        let base = url.pathname
+        while (base.endsWith('/')) base = base.slice(0, -1)
         const tail = `/${encodeVcsPath(organization)}`
         return base.toLowerCase().endsWith(tail.toLowerCase())
           ? url.origin + base.slice(0, -tail.length)
