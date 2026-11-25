@@ -174,8 +174,26 @@ async function mockAppwriteApi(page: Page, { empty = false } = {}) {
       apiPath === `/projects/${PROJECT.$id}/console-access`
     )
       return json(200, PROJECT)
+    // The installation tells the review links which provider to point at.
     if (apiPath === '/vcs/installations')
-      return json(200, { total: 0, installations: [] })
+      return json(
+        200,
+        empty
+          ? { total: 0, installations: [] }
+          : {
+              total: 1,
+              installations: [
+                {
+                  $id: 'installation0001',
+                  $createdAt: NOW,
+                  $updatedAt: NOW,
+                  provider: 'github',
+                  organization: 'acme',
+                  providerInstallationId: '1',
+                },
+              ],
+            },
+      )
 
     if (apiPath === '/reviews') {
       const list = queries(url)

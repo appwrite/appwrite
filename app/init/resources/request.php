@@ -624,7 +624,7 @@ return function (Container $context): void {
     }, ['request', 'utopia']);
 
     /**
-     * The ID of the project the request names: the `project` param or the X-Appwrite-Project
+     * The ID of the project the request names: a `project` query parameter or the X-Appwrite-Project
      * header, else the access key of an S3 request or the path of a deprecated project alias.
      * Empty, or `console`, for the console. Kept apart from the project document so that a
      * comparison with what the client sent never depends on how the document was looked up.

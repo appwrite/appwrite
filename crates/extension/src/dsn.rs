@@ -2,17 +2,21 @@
 //! method takes and returns what it returns. The DSN and its credentials are
 //! `#[\SensitiveParameter]`, as in PHP, so exception traces never hold them.
 
+use ext_php_rs::class::RegisteredClass;
 use ext_php_rs::convert::{FromZval, IntoZval, StubLiteral};
 use ext_php_rs::exception::PhpException;
+use ext_php_rs::ffi::zend_wrong_parameters_count_error;
 use ext_php_rs::flags::DataType;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ArrayKey, ZendHashTable, Zval};
-use ext_php_rs::zend::{ClassEntry, ce};
+use ext_php_rs::zend::{ClassEntry, ExecuteData, ce};
 use php_std::value::{Number, numeric_bytes_ex};
 use utopia_dsn::Error;
 
 use std::cell::OnceCell;
 
+use crate::classes::leaf::FunctionHandler;
+use crate::classes::{engine, retarget};
 use crate::string::{Bytes, PhpString, Shared};
 
 /// What PHP throws for a DSN `parse_url` cannot split. Rust reads the DSN as
@@ -283,5 +287,80 @@ impl Dsn {
     /// `__toString(): string`.
     pub fn __to_string(&self) -> String {
         self.dsn.to_string()
+    }
+}
+
+/// Points the getters at the handlers below, which return the shared string without
+/// ext-php-rs's per-call `setjmp`. Runs once after the classes are registered.
+pub fn retarget() {
+    let ce = Dsn::get_metadata().ce();
+    for (name, handler) in [
+        ("getscheme", get_scheme as FunctionHandler),
+        ("getuser", get_user),
+        ("getpassword", get_password),
+        ("gethost", get_host),
+        ("getport", get_port),
+        ("getpath", get_path),
+        ("getquery", get_query),
+    ] {
+        retarget::method(ce, name, handler);
+    }
+}
+
+/// `$this` of a getter called with no arguments, as ext-php-rs's handler resolves it:
+/// otherwise the same error is thrown and `None` returned.
+fn receiver(ex: &mut ExecuteData) -> Option<&Dsn> {
+    if engine::args_count(ex) != 0 {
+        // SAFETY: called from a method's handler, as `zend_parse_parameters_none()` is.
+        unsafe { zend_wrong_parameters_count_error(0, 0) };
+        return None;
+    }
+    let dsn = ex.get_object::<Dsn>().and_then(|this| this.obj.as_ref());
+    if dsn.is_none() {
+        PhpException::from_message("Failed to retrieve reference to `$this`".into()).throw();
+    }
+    dsn
+}
+
+fn returned(retval: &mut Zval, value: Option<Shared>) {
+    match value {
+        Some(value) => *retval = value.0,
+        None => retval.set_null(),
+    }
+}
+
+extern "C" fn get_scheme(ex: &mut ExecuteData, retval: &mut Zval) {
+    if let Some(dsn) = receiver(ex) {
+        returned(retval, Some(dsn.get_scheme()));
+    }
+}
+extern "C" fn get_user(ex: &mut ExecuteData, retval: &mut Zval) {
+    if let Some(dsn) = receiver(ex) {
+        returned(retval, dsn.get_user());
+    }
+}
+extern "C" fn get_password(ex: &mut ExecuteData, retval: &mut Zval) {
+    if let Some(dsn) = receiver(ex) {
+        returned(retval, dsn.get_password());
+    }
+}
+extern "C" fn get_host(ex: &mut ExecuteData, retval: &mut Zval) {
+    if let Some(dsn) = receiver(ex) {
+        returned(retval, Some(dsn.get_host()));
+    }
+}
+extern "C" fn get_port(ex: &mut ExecuteData, retval: &mut Zval) {
+    if let Some(dsn) = receiver(ex) {
+        returned(retval, dsn.get_port());
+    }
+}
+extern "C" fn get_path(ex: &mut ExecuteData, retval: &mut Zval) {
+    if let Some(dsn) = receiver(ex) {
+        returned(retval, dsn.get_path());
+    }
+}
+extern "C" fn get_query(ex: &mut ExecuteData, retval: &mut Zval) {
+    if let Some(dsn) = receiver(ex) {
+        returned(retval, dsn.get_query());
     }
 }

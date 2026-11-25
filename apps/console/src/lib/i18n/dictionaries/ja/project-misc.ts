@@ -1660,6 +1660,11 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '選択期間中の関数コンピュート時間 (ギガバイト時間 GBH で計測)。Functions に割り当てられたメモリに実行時間とビルド時間を掛けた値。',
   'Site compute time during the selected period, measured in gigabyte-hours (GBH). Memory allocated to sites multiplied by request handling and build duration.':
     '選択期間中のサイトコンピュート時間 (ギガバイト時間 GBH で計測)。サイトに割り当てられたメモリにリクエスト処理時間とビルド時間を掛けた値。',
+  'Video encoding GB-hours': '動画エンコード GB 時間',
+  'Video encoding compute during the selected period, measured in gigabyte-hours (GBH). Encoder memory multiplied by encode duration. Included in GB-hours.':
+    '選択期間中の動画エンコードのコンピュート時間 (ギガバイト時間 GBH で計測)。エンコーダーのメモリにエンコード時間を掛けた値。GB 時間に含まれます。',
+  'Storage used by video renditions, captions, and thumbnail timelines. Counts toward your plan storage limit.':
+    '動画のレンディション、字幕、サムネイルタイムラインが使用するストレージ。プランのストレージ上限に含まれます。',
   'Top storage buckets': 'ストレージバケット上位',
   'Top buckets by origin images': 'オリジン画像別バケット上位',
   'Top executed functions': '実行数上位の関数',
@@ -4495,6 +4500,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '追加のチェックは 1 件あたり月額 {price} です。',
   'Upgrade your plan to add more synthetic checks.':
     'Synthetic チェックを追加するには、プランをアップグレードしてください。',
+  'HTTP, DNS, TCP and SMTP monitors are available on paid plans.':
+    'HTTP、DNS、TCP、SMTP のモニターは有料プランで利用できます。',
   'Escalations: {used} of {limit} allowed on your plan.':
     'エスカレーション: プランの上限 {limit} 件中 {used} 件を使用中です。',
   'On-call responders: {used} of {included} included.':

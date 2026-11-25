@@ -11,6 +11,12 @@ trap 'rm -r "$output"' EXIT
 
 php --ri utopia > /dev/null
 php "$tests/canvas.php" > /dev/null
+# DSN has no PHP left to compare with: its getters (hand-written handlers) against the output
+# they gave through ext-php-rs.
+php "$tests/dsn-getters.php" > "$output/dsn-getters.jsonl"
+diff "$tests/dsn-getters.expected" "$output/dsn-getters.jsonl"
+php -d opcache.enable_cli=1 "$tests/dsn-getters.php" > "$output/dsn-getters.opcache.jsonl"
+diff "$tests/dsn-getters.expected" "$output/dsn-getters.opcache.jsonl"
 vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php packages/image/tests
 
 for library in $libraries; do

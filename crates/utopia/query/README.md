@@ -1,8 +1,5 @@
 # Utopia Query
 
-> [!IMPORTANT]
-> This repository is a read-only mirror of [`crates/utopia/query`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/query) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
-
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
 Queries as data, compiled to SQL (MySQL, MariaDB, PostgreSQL, SQLite, ClickHouse) and MongoDB commands; schema builders; a SQL tokenizer, parser, serializer and statement classifier.
@@ -13,7 +10,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 
 ```toml
 [dependencies]
-utopia-query = { git = "https://github.com/utopia-rs/query" }
+utopia-query = { git = "https://github.com/appwrite/appwrite" }
 ```
 
 Queries are data: a filter, an order, a page or a join is a `Query` you can build in code, receive as JSON from a client, validate, and compile for the database you run. This library turns lists of queries into SQL for MySQL, MariaDB, PostgreSQL, SQLite and ClickHouse, and into MongoDB commands, always with the values as bindings. It also writes DDL, and reads SQL back with a tokenizer, a parser and a classifier.

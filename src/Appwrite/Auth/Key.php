@@ -255,6 +255,14 @@ class Key
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
+                // Keys handed out by the ephemeral key routes name the organization that owned the
+                // project then. Claiming a transfer moves the project to another one, which revokes
+                // them, as it deletes the project's stored keys. Internal keys carry no such claim.
+                $teamInternalId = $payload['teamInternalId'] ?? null;
+                if (!$projectCheckDisabled && $teamInternalId !== null && (string) $teamInternalId !== (string) $project->getAttribute('teamInternalId', '')) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
+                }
+
                 return new Key(
                     $projectId,
                     '',

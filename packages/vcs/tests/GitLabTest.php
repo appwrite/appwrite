@@ -152,6 +152,87 @@ final class GitLabTest extends Base
     }
 
     /**
+     * @param array<string, mixed> $note
+     */
+    private function notePayload(array $note): string
+    {
+        return (string) json_encode([
+            'object_kind' => 'note',
+            'user' => ['id' => 7, 'username' => 'octo'],
+            'project' => [
+                'id' => (int) self::EVENT_REPOSITORY_ID,
+                'name' => self::EVENT_REPOSITORY_NAME,
+                'namespace' => self::EVENT_OWNER,
+                'web_url' => 'http://example.com/' . self::EVENT_OWNER . '/' . self::EVENT_REPOSITORY_NAME,
+            ],
+            'object_attributes' => [
+                'id' => 1244,
+                'note' => '@appwrite review',
+                'noteable_type' => 'MergeRequest',
+                'system' => false,
+                'discussion_id' => 'd0c1e2f3',
+                'type' => null,
+                'action' => 'create',
+                'url' => 'http://example.com/mr/42#note_1244',
+                ...$note,
+            ],
+            'merge_request' => ['iid' => self::EVENT_PULL_REQUEST_NUMBER, 'author_id' => 7],
+        ]);
+    }
+
+    public function testGetEventMergeRequestComment(): void
+    {
+        $events = $this->vcsAdapter->getEvents('Note Hook', $this->notePayload([]));
+
+        $this->assertCount(1, $events);
+        $event = $events[0];
+        $this->assertSame('created', $event['action']);
+        $this->assertSame(self::EVENT_REPOSITORY_ID, $event['repositoryId']);
+        $this->assertSame(self::EVENT_OWNER, $event['owner']);
+        $this->assertSame(self::EVENT_PULL_REQUEST_NUMBER, $event['pullRequestNumber']);
+        $this->assertSame('octo', $event['pullRequestAuthor']);
+        $this->assertSame('1244', $event['commentId']);
+        $this->assertSame('issue', $event['commentKind']);
+        $this->assertSame('', $event['commentThreadId']);
+        $this->assertSame('', $event['commentReplyToId']);
+        $this->assertSame('@appwrite review', $event['commentBody']);
+        $this->assertSame('http://example.com/mr/42#note_1244', $event['commentUrl']);
+        $this->assertSame('octo', $event['commentAuthor']);
+        $this->assertSame('7', $event['commentAuthorId']);
+        $this->assertSame('User', $event['commentAuthorType']);
+    }
+
+    public function testGetEventMergeRequestDiffComment(): void
+    {
+        $events = $this->vcsAdapter->getEvents('Note Hook', $this->notePayload(['type' => 'DiffNote']));
+
+        // GitLab keys a diff thread by its discussion, and does not say which note opened it
+        $this->assertSame('review', $events[0]['commentKind']);
+        $this->assertSame('d0c1e2f3', $events[0]['commentThreadId']);
+        $this->assertSame('d0c1e2f3', $events[0]['commentReplyToId']);
+    }
+
+    public function testGetEventIgnoresOtherNotes(): void
+    {
+        $this->assertSame([], $this->vcsAdapter->getEvents('Note Hook', $this->notePayload(['noteable_type' => 'Issue'])));
+        $this->assertSame([], $this->vcsAdapter->getEvents('Note Hook', $this->notePayload(['system' => true])));
+        $this->assertSame([], $this->vcsAdapter->getEvents('Note Hook', $this->notePayload(['action' => 'update'])));
+    }
+
+    public function testGetEventMergeRequestAuthor(): void
+    {
+        $payload = (string) json_encode([
+            'object_kind' => 'merge_request',
+            'user' => ['id' => 7, 'username' => 'octo'],
+            'project' => ['id' => 1, 'name' => 'r', 'namespace' => 'o', 'web_url' => 'http://example.com/o/r'],
+            'object_attributes' => ['iid' => 1, 'action' => 'update', 'author_id' => 8],
+        ]);
+
+        // The hook names the author by id only, so someone else's update leaves it unknown
+        $this->assertSame('', $this->vcsAdapter->getEvents('Merge Request Hook', $payload)[0]['pullRequestAuthor']);
+    }
+
+    /**
      * @return \Iterator<string, array{string, array<string, mixed>}>
      */
     public static function providerProjectPaths(): \Iterator
@@ -175,6 +256,12 @@ final class GitLabTest extends Base
             'object_kind' => 'merge_request',
             'project' => $project,
             'object_attributes' => ['iid' => 1, 'action' => 'open', 'source_branch' => 'feature', 'target_branch' => 'main'],
+        ]];
+        yield 'note' => ['Note Hook', [
+            'object_kind' => 'note',
+            'project' => $project,
+            'object_attributes' => ['id' => 1, 'note' => '@appwrite review', 'noteable_type' => 'MergeRequest', 'action' => 'create'],
+            'merge_request' => ['iid' => 1],
         ]];
     }
 
