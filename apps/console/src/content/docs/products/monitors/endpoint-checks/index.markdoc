@@ -1,0 +1,45 @@
+---
+layout: article
+title: Endpoint checks
+description: Check the availability of HTTP, DNS, TCP, and SMTP endpoints on a schedule with Appwrite Cloud synthetic monitoring.
+---
+
+Endpoint checks, also called synthetic checks, are available on paid Appwrite Cloud plans. Appwrite connects to your configured target on a schedule and opens an alert when the check fails.
+
+# Create an endpoint check {% #create-an-endpoint-check %}
+
+1. In your project, open **Observe > Monitors**, then click **Create monitor**.
+2. Choose **HTTP**, **DNS**, **TCP**, or **SMTP**. Enter the target and any expectations for that check.
+3. Under **Checks**, set how often to check and how long to wait before a check times out. Your plan sets the shortest available check interval. The timeout must be at most the check interval.
+4. Set the severity, recipients, and cooldown under **Notify**, then click **Create**.
+
+Open a monitor to see the last result and check time. The details vary by type and can include latency, the returned HTTP status, or the certificate expiration date.
+
+# HTTP {% #http %}
+
+Enter an `http://` or `https://` URL and choose a request method. You can add headers and, for methods that send one, a request body. Enter a comma-separated list of **Expected status codes**, or leave it empty to accept any 2xx response.
+
+For an HTTPS URL, use **Certificate expiry warning** to set how many days before expiration to alert. For example, check `https://api.example.com/health` with **GET**, expect status `200`, and set a warning 14 days before the certificate expires.
+
+# DNS {% #dns %}
+
+Enter the domain and select an **A**, **AAAA**, **CNAME**, **MX**, **TXT**, or **NS** record. You can specify a DNS resolver and an expected answer. Leave **Expected answer** empty to accept any answer for the selected record type.
+
+# TCP {% #tcp %}
+
+Enter a host and port. The check succeeds when Appwrite can establish a TCP connection to that port within the timeout. Use an HTTP or SMTP check when you also need to verify how the service responds.
+
+# SMTP {% #smtp %}
+
+Enter the mail server's host and port. Appwrite checks whether the server accepts a session and can complete the configured TLS handshake.
+
+| TLS setting | Behavior |
+| --- | --- |
+| **From the port** | Use implicit TLS on port 465, STARTTLS on port 587, and a plain connection on other ports. |
+| **None** | Connect without TLS. |
+| **Upgrade with STARTTLS** | Open an SMTP session and upgrade it with STARTTLS. |
+| **Implicit TLS** | Start TLS as soon as the connection opens. |
+
+{% arrow_link href="/docs/products/monitors/alerts" %}
+Review alerts from endpoint checks
+{% /arrow_link %}

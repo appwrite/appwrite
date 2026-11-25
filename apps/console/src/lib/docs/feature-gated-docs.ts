@@ -5,6 +5,10 @@ import {
   shouldBlockAnalyticsDocs,
 } from './analytics-docs-feature'
 import {
+  isMonitorsDocsEnabled,
+  isMonitorsDocsSlug,
+} from './monitors-docs-feature'
+import {
   isPartnersDocsEnabled,
   isPartnersDocsSlug,
   shouldBlockPartnersDocs,
@@ -39,5 +43,6 @@ export function isFeatureGatedDocsSlugHidden(
     if (options?.deferVideosOnServer) return shouldBlockVideosDocs()
     return !isVideosDocsEnabled()
   }
+  if (isMonitorsDocsSlug(slug)) return !isMonitorsDocsEnabled()
   return false
 }

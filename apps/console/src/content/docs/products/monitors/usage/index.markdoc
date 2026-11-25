@@ -1,0 +1,71 @@
+---
+layout: article
+title: Usage monitors
+description: Set thresholds on Appwrite usage metrics and monitor your whole project or an individual resource from the Console or REST API.
+---
+
+Usage monitors compare a metric with a threshold. In **Project > Observe > Monitors**, click **Create monitor** and choose **Usage** when the type picker is available. Under **Condition**, choose a metric, a comparator, and a threshold. The Console shows the scopes available for that metric.
+
+# Choose a metric and scope {% #choose-a-metric-and-scope %}
+
+| Scope | Example metrics |
+| --- | --- |
+| Project | Requests, outbound bandwidth, monthly active users, or storage used |
+| Database | Database reads, database writes, or database storage |
+| Bucket | Storage used |
+| Function | Executions or execution GB-hours |
+| Site | Executions or execution GB-hours |
+| Dedicated database on Appwrite Cloud | CPU, memory, or connections |
+
+Choose the whole project for an aggregate metric or select an individual resource when the metric supports it. The available metrics depend on the deployment and resources.
+
+# Set the condition {% #set-the-condition %}
+
+Choose **Greater than**, **Greater than or equal**, **Less than**, or **Less than or equal**. A usage monitor compares one metric with one threshold.
+
+Counters such as requests and outbound bandwidth are summed over the **Window**. An outbound bandwidth monitor with a one-hour window compares the sum over the preceding hour at each evaluation. Gauges such as storage used compare the latest recorded value. For a gauge, the Console omits the window.
+
+If a check has no usage reading, the monitor keeps its existing state. Check the monitor's last reading in the Console before adjusting the threshold.
+
+# Create over REST {% #create-over-rest %}
+
+In your project's **Overview > Integrations > API keys**, create a key with the `monitors.write` scope. The following request creates a monitor that opens an alert when the project's outbound bandwidth exceeds 1 GB in the preceding hour. Set `APPWRITE_ENDPOINT` to your project endpoint, including `/v1`.
+
+```bash
+curl --request POST "$APPWRITE_ENDPOINT/monitors/usage" \
+    --header "X-Appwrite-Project: $APPWRITE_PROJECT_ID" \
+    --header "X-Appwrite-Key: $APPWRITE_API_KEY" \
+    --header 'Content-Type: application/json' \
+    --data '{
+        "monitorId": "outbound-bandwidth",
+        "name": "Outbound bandwidth spike",
+        "rules": [
+            "{\"method\":\"greaterThan\",\"attribute\":\"network.outbound\",\"values\":[1000000000]}"
+        ],
+        "window": 3600,
+        "cooldown": 3600,
+        "notify": ["owner"],
+        "severity": "warning"
+    }'
+```
+
+The response is `201 Created` with the monitor. To create another monitor, choose a different ID.
+
+| Field | Purpose |
+| --- | --- |
+| `rules` | One comparison query. For a resource-specific metric, include `equal` queries for `resourceType` and `resourceId`. Thresholds use the metric's API unit, such as bytes for bandwidth or storage and MB-seconds for execution GB-hours. |
+| `window` | Lookback in seconds for counters, from 60 to 2,592,000. Defaults to 3,600 seconds. |
+| `cooldown` | Minimum time in seconds between firing notifications from this monitor, from 300 to 2,592,000. Defaults to 3,600 seconds. |
+| `notify` | Organization roles to notify. Defaults to `["owner"]`. |
+| `severity` | One of `info`, `warning`, `error`, or `critical`. Defaults to `warning`. |
+| `escalationId` | Optional organization escalation to use in place of `notify`. |
+
+Use `GET /v1/monitors` to list project monitors and `GET /v1/monitors/{monitorId}` to read one. Both require the `monitors.read` scope.
+
+# Organization budget monitors {% #organization-budget-monitors %}
+
+On Appwrite Cloud, your organization can also have monitors for additional usage charges. Open the organization's **Billing** page to configure the **Budget cap** and **Billing alerts**. Those settings determine the thresholds and recipients for the organization. The **Budget monitors** section shows the latest reading and when each threshold notification was last sent.
+
+{% arrow_link href="/docs/products/monitors/alerts" %}
+Configure alert delivery
+{% /arrow_link %}

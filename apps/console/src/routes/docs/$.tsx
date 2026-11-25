@@ -3,8 +3,10 @@ import { NotFoundView } from '@/components/error/NotFound'
 import { View } from '@/components/pages/docs/View'
 import { getDocsMarkdownExport, getDocsPage } from '@/lib/docs/content'
 import { isFeatureGatedDocsSlugHidden } from '@/lib/docs/feature-gated-docs'
+import { isMonitorsDocsSlug } from '@/lib/docs/monitors-docs-feature'
 import { getDocsRedirectTarget } from '@/lib/docs/redirects'
 import { respondWithPrebuiltOrRuntime } from '@/lib/seo/export-response'
+import { NOINDEX_ROBOTS_META } from '@/lib/seo/indexing'
 import { generateDocsLlmsTxt } from '@/lib/seo/llms-content'
 import { trackServerPageview } from '@/lib/server-analytics'
 import { getDocsRouteHead } from '@/lib/docs/route-meta'
@@ -18,7 +20,10 @@ import { stringifyJsonLd } from '@/lib/seo/json-ld'
 const DOCS_LLMS_TXT_SPLAT = 'llms.txt'
 
 export const Route = createFileRoute('/docs/$')({
-  ssr: true,
+  // The Monitors preview flag is browser-local. Load these articles only
+  // after the browser can check the flag.
+  ssr: ({ params }) =>
+    params.status !== 'success' || !isMonitorsDocsSlug(params.value._splat ?? ''),
   notFoundComponent: NotFoundView,
   server: {
     handlers: {
@@ -116,15 +121,19 @@ export const Route = createFileRoute('/docs/$')({
 
     return { page }
   },
-  head: ({ loaderData }) => {
-    if (!loaderData?.page) return {}
+  head: ({ loaderData, params }) => {
+    const isMonitorsPreview = isMonitorsDocsSlug(params._splat ?? '')
+    if (!loaderData?.page) {
+      return isMonitorsPreview ? { meta: [NOINDEX_ROBOTS_META] } : {}
+    }
     const { meta, slug } = { meta: loaderData.page.meta, slug: loaderData.page.meta.slug }
     const seo = getDocsRouteHead({ ...meta, slug })
     return {
       ...seo,
+      meta: isMonitorsPreview ? [...seo.meta, NOINDEX_ROBOTS_META] : seo.meta,
       links: [
         ...seo.links,
-        ...(slug
+        ...(slug && !isMonitorsPreview
           ? [
               {
                 rel: 'alternate',

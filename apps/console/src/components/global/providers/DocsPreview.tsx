@@ -37,6 +37,7 @@ import { DocsPreviewNavigationProvider } from '@/lib/docs/docs-preview-navigatio
 import { getDocsPage } from '@/lib/docs/content'
 import { isAgentDocsSlug } from '@/lib/docs/agent-docs-feature'
 import { isAnalyticsDocsSlug } from '@/lib/docs/analytics-docs-feature'
+import { isMonitorsDocsSlug } from '@/lib/docs/monitors-docs-feature'
 import { isVideosDocsSlug } from '@/lib/docs/videos-docs-feature'
 import {
   isDomainsDocsEnabled,
@@ -74,6 +75,9 @@ export function DocsPreviewContent() {
   const agentDocsEnabled = features.agent
   const analyticsDocsEnabled = features.analytics
   const videosDocsEnabled = features.videos
+  const monitorsDocsEnabled = features.alerts
+  const monitorsDocsHidden =
+    slug !== null && !monitorsDocsEnabled && isMonitorsDocsSlug(slug)
 
   const showMenu =
     slug !== null &&
@@ -85,7 +89,8 @@ export function DocsPreviewContent() {
     (!isFirewallDocsSlug(slug) || firewallDocsEnabled) &&
     (!isAgentDocsSlug(slug) || agentDocsEnabled) &&
     (!isAnalyticsDocsSlug(slug) || analyticsDocsEnabled) &&
-    (!isVideosDocsSlug(slug) || videosDocsEnabled)
+    (!isVideosDocsSlug(slug) || videosDocsEnabled) &&
+    !monitorsDocsHidden
 
   const { data: page, isLoading, isError } = useQuery({
     queryKey: ['docs', 'page', slug],
@@ -101,6 +106,7 @@ export function DocsPreviewContent() {
       (!isAgentDocsSlug(slug!) || agentDocsEnabled) &&
       (!isAnalyticsDocsSlug(slug!) || analyticsDocsEnabled) &&
       (!isVideosDocsSlug(slug!) || videosDocsEnabled) &&
+      !monitorsDocsHidden &&
       isClientQueryEnabled,
     staleTime: 5 * 60 * 1000,
     retry: false,
@@ -136,6 +142,10 @@ export function DocsPreviewContent() {
         openDocsPreview('', { view: 'article' })
         return
       }
+      if (isMonitorsDocsSlug(nextSlug) && !monitorsDocsEnabled) {
+        openDocsPreview('', { view: 'article' })
+        return
+      }
       const resolvedView = resolveDocsPreviewView(nextSlug, nextView)
       if (nextSlug === slug && resolvedView === view) return
       openDocsPreview(nextSlug, { view: nextView })
@@ -145,6 +155,7 @@ export function DocsPreviewContent() {
       analyticsDocsEnabled,
       domainsDocsEnabled,
       firewallDocsEnabled,
+      monitorsDocsEnabled,
       openDocsPreview,
       partnersDocsEnabled,
       slug,
@@ -175,7 +186,7 @@ export function DocsPreviewContent() {
       openDocsPreview('', { view: 'article' })
       return
     }
-    if (!videosDocsEnabled && isVideosDocsSlug(slug)) {
+    if ((!videosDocsEnabled && isVideosDocsSlug(slug)) || monitorsDocsHidden) {
       openDocsPreview('', { view: 'article' })
     }
   }, [
@@ -184,6 +195,7 @@ export function DocsPreviewContent() {
     domainsDocsEnabled,
     firewallDocsEnabled,
     isOpen,
+    monitorsDocsHidden,
     openDocsPreview,
     partnersDocsEnabled,
     slug,
@@ -263,6 +275,8 @@ export function DocsPreviewContent() {
   if (!videosDocsEnabled && isVideosDocsSlug(slug)) {
     return null
   }
+
+  if (monitorsDocsHidden) return null
 
   const isDocsHome = slug === ''
   const isPartnersHome = slug === 'partners' && partnersDocsEnabled

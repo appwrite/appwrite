@@ -4,6 +4,7 @@ import { Copy, ExternalLink } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { isMonitorsDocsSlug } from '@/lib/docs/monitors-docs-feature'
 
 type DocsPageHeaderActionsProps = {
   slug: string
@@ -36,7 +37,7 @@ export function DocsPageHeaderActions({
 
   return (
     <>
-      {showCopyPage ? (
+      {showCopyPage && !isMonitorsDocsSlug(slug) ? (
         <>
           <Button
             variant="outline"

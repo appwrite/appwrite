@@ -1,0 +1,35 @@
+---
+layout: article
+title: Start with Monitors
+description: Enable the Monitors and alerts preview and create a usage monitor for outbound bandwidth in your Appwrite project.
+difficulty: beginner
+readtime: 5
+---
+
+Create a monitor that alerts your team if your Appwrite project sends more than 1 GB of data in an hour.
+
+# Open Monitors {% #open-monitors %}
+
+1. Sign in to the Appwrite Console with an account that has access to previews.
+2. Open **Previews** in the header and turn on **Monitors and alerts**.
+3. Open your project, then select **Monitors** under **Observe** in the sidebar.
+
+# Create a usage monitor {% #create-a-usage-monitor %}
+
+1. Click **Create monitor**. If the Console shows a monitor type picker, choose **Usage**.
+2. Set the **Metric** to **Outbound bandwidth** and the comparator to **Greater than**.
+3. Enter `1` and select **GB** for the threshold. Set the **Window** to **1 hour** and leave the scope set to the whole project.
+4. Under **Notify**, choose the organization roles that should receive the alert. For example, keep **Owner** selected.
+5. Enter a name such as `Outbound bandwidth spike`, then click **Create**.
+
+Choose a threshold that fits your project's normal usage. If the chart shows recent readings, compare those readings with your threshold before saving.
+
+# Check the result {% #check-the-result %}
+
+Find the new monitor on the **Monitors** tab and open it to see its last check. A new monitor can show **Waiting for the first check** until Appwrite evaluates it. If the monitor fires, its alert appears on the **Alerts** tab.
+
+To stop evaluating the condition, open the monitor and click **Pause**. You can resume it from the same place.
+
+{% arrow_link href="/docs/products/monitors/usage#create-over-rest" %}
+Create a usage monitor over REST
+{% /arrow_link %}

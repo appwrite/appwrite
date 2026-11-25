@@ -1,0 +1,47 @@
+---
+layout: article
+title: Monitors
+description: Watch project usage and check endpoint availability with Appwrite Monitors. Configure alerts, choose who to notify, and track recovery in the Console.
+---
+
+Appwrite **Monitors** checks your project usage or an endpoint on a schedule. A monitor opens an alert when a usage condition is met or an endpoint check fails. You can choose who gets notified and review when each alert fired and recovered.
+
+{% info title="Preview" %}
+If your account has access to previews, open **Previews** in the Console header and enable **Monitors and alerts**. The setting applies to this browser. Open your project and select **Observe > Monitors**.
+{% /info %}
+
+# Monitor types {% #monitor-types %}
+
+| Type | What it checks | Where to use it |
+| --- | --- | --- |
+| [Usage](/docs/products/monitors/usage) | A project or resource metric, such as outbound bandwidth, database reads, or storage used. | Appwrite Cloud and self-hosted Appwrite |
+| [HTTP](/docs/products/monitors/endpoint-checks#http) | An HTTP response status or an HTTPS certificate nearing expiration. | Paid Appwrite Cloud plans |
+| [DNS](/docs/products/monitors/endpoint-checks#dns) | Whether a domain resolves and returns the expected answer. | Paid Appwrite Cloud plans |
+| [TCP](/docs/products/monitors/endpoint-checks#tcp) | Whether a host accepts a connection on a port. | Paid Appwrite Cloud plans |
+| [SMTP](/docs/products/monitors/endpoint-checks#smtp) | Whether a mail server accepts an SMTP session and completes the configured TLS handshake. | Paid Appwrite Cloud plans |
+
+# How it works {% #how-it-works %}
+
+1. Create a monitor and define the condition or failed check that should open an alert.
+2. Choose a severity and who should be notified. You can notify organization roles or use an escalation to notify people in steps.
+3. Use the **Monitors** tab to manage checks and see their latest results. Use the **Alerts** tab to review firing and resolved alerts.
+
+On Appwrite Cloud, the plan sets the usage monitor allowance per project and the synthetic check allowance across the organization. The create dialog shows applicable limits and any extra charge for synthetic checks.
+
+# Get started {% #getting-started %}
+
+{% arrow_link href="/docs/products/monitors/quick-start" %}
+Create your first monitor
+{% /arrow_link %}
+
+{% cards %}
+{% cards_item href="/docs/products/monitors/usage" title="Usage monitors" %}
+Watch an Appwrite metric and choose a threshold for your project or resource.
+{% /cards_item %}
+{% cards_item href="/docs/products/monitors/endpoint-checks" title="Endpoint checks" %}
+Check HTTP, DNS, TCP, and SMTP endpoints from Appwrite Cloud.
+{% /cards_item %}
+{% cards_item href="/docs/products/monitors/alerts" title="Alerts and notifications" %}
+Review alerts, set up notifications and escalations, and respond when a check fires.
+{% /cards_item %}
+{% /cards %}

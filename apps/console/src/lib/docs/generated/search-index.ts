@@ -5108,6 +5108,60 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/monitors",
+    "title": "Monitors",
+    "description": "Watch project usage and check endpoint availability with Appwrite Monitors. Configure alerts, choose who to notify, and track recovery in the Console.",
+    "excerpt": "Appwrite **Monitors** checks your project usage or an endpoint on a schedule. A monitor opens an alert when a usage condition is met or an endpoint check fails. You can choose who gets notified and review when each alert fired and recovered. If your account has access to previews, open **Previews** in the Console header and enable **Monitors and alerts**. The setting applies to this browser. Open your project and select **Observe > Monitors**. Monitor types | Type | What…",
+    "breadcrumbs": [
+      "products",
+      "Monitors"
+    ]
+  },
+  {
+    "slug": "products/monitors/alerts",
+    "title": "Alerts and notifications",
+    "description": "Review Appwrite monitor alerts, notify organization members, and use escalations to reach the right people when an alert keeps firing.",
+    "excerpt": "An alert records one period during which a monitor's condition is met or an endpoint check is failing. Appwrite opens the alert as **Firing** and marks it **Resolved** when the monitor recovers. If the monitor fires again after it recovers, Appwrite opens a new alert. Review and acknowledge alerts 1. Open **Monitors > Alerts** in your project. 2. Filter the history or select an alert to see when it started and the usage reading or check result that caused it.…",
+    "breadcrumbs": [
+      "products",
+      "Monitors",
+      "Alerts and notifications"
+    ]
+  },
+  {
+    "slug": "products/monitors/endpoint-checks",
+    "title": "Endpoint checks",
+    "description": "Check the availability of HTTP, DNS, TCP, and SMTP endpoints on a schedule with Appwrite Cloud synthetic monitoring.",
+    "excerpt": "Endpoint checks, also called synthetic checks, are available on paid Appwrite Cloud plans. Appwrite connects to your configured target on a schedule and opens an alert when the check fails. Create an endpoint check 1. In your project, open **Observe > Monitors**, then click **Create monitor**. 2. Choose **HTTP**, **DNS**, **TCP**, or **SMTP**. Enter the target and any expectations for that check. 3. Under **Checks**, set how often to check and how long to wait before a check times out.…",
+    "breadcrumbs": [
+      "products",
+      "Monitors",
+      "Endpoint checks"
+    ]
+  },
+  {
+    "slug": "products/monitors/quick-start",
+    "title": "Start with Monitors",
+    "description": "Enable the Monitors and alerts preview and create a usage monitor for outbound bandwidth in your Appwrite project.",
+    "excerpt": "Create a monitor that alerts your team if your Appwrite project sends more than 1 GB of data in an hour. Open Monitors 1. Sign in to the Appwrite Console with an account that has access to previews. 2. Open **Previews** in the header and turn on **Monitors and alerts**. 3. Open your project, then select **Monitors** under **Observe** in the sidebar. Create a usage monitor 1. Click **Create monitor**. If the Console shows a monitor type picker, choose **Usage**.…",
+    "breadcrumbs": [
+      "products",
+      "Monitors",
+      "Start with Monitors"
+    ]
+  },
+  {
+    "slug": "products/monitors/usage",
+    "title": "Usage monitors",
+    "description": "Set thresholds on Appwrite usage metrics and monitor your whole project or an individual resource from the Console or REST API.",
+    "excerpt": "Usage monitors compare a metric with a threshold. In **Project > Observe > Monitors**, click **Create monitor** and choose **Usage** when the type picker is available. Under **Condition**, choose a metric, a comparator, and a threshold. The Console shows the scopes available for that metric. Choose a metric and scope | Scope | Example metrics | | --- | --- | | Project | Requests, outbound bandwidth, monthly active users, or storage used | | Database | Database reads, database…",
+    "breadcrumbs": [
+      "products",
+      "Monitors",
+      "Usage monitors"
+    ]
+  },
+  {
     "slug": "products/network",
     "title": "Network",
     "description": "Discover Appwrite's network architecture with global regions, edge nodes, and optimized routing. Explore how it ensures low latency, reliable performance, and scalable infrastructure for modern applications.",

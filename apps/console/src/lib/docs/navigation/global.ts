@@ -97,6 +97,12 @@ export const DOCS_GLOBAL_NAV: DocsNavTree = [
         isParent: true,
       },
       {
+        label: 'Monitors',
+        href: '/docs/products/monitors',
+        icon: 'bar-chart-2',
+        isParent: true,
+      },
+      {
         label: 'Firewall',
         href: '/docs/products/firewall',
         icon: 'shield',

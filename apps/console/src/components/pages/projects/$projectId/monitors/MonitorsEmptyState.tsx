@@ -2,6 +2,7 @@ import { Bell, Database, HardDrive, Network, Webhook } from 'lucide-react'
 import type { ComponentType } from 'react'
 import {
   ProductEmptyStateCreateButton,
+  ProductEmptyStateDocsButton,
   ProductEmptyStateHero,
   ProductEmptyStateVisual,
 } from '@/components/global/shared/ProductEmptyState'
@@ -180,7 +181,7 @@ export function MonitorsEmptyState({
   createDisabledTooltip?: string
 }) {
   const t = useT()
-  const { isCloud } = useConsoleProfile()
+  const { isCloud, features } = useConsoleProfile()
   return (
     <div className="mx-auto w-full max-w-4xl py-4 sm:py-6">
       <ProductEmptyStateHero
@@ -191,13 +192,18 @@ export function MonitorsEmptyState({
           'Monitors watch your project usage and your endpoints, and notify you when a metric crosses your threshold or a check fails.',
         )}
         actions={
-          <ProductEmptyStateCreateButton
-            onClick={onCreate}
-            disabled={createDisabled}
-            disabledTooltip={createDisabledTooltip}
-          >
-            {t('Create monitor')}
-          </ProductEmptyStateCreateButton>
+          <>
+            <ProductEmptyStateCreateButton
+              onClick={onCreate}
+              disabled={createDisabled}
+              disabledTooltip={createDisabledTooltip}
+            >
+              {t('Create monitor')}
+            </ProductEmptyStateCreateButton>
+            {features.marketing && (
+              <ProductEmptyStateDocsButton path="/docs/products/monitors" />
+            )}
+          </>
         }
       />
       <div className="mt-8">
