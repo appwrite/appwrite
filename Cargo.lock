@@ -868,6 +868,7 @@ dependencies = [
  "chrono",
  "futures-util",
  "gif",
+ "hex",
  "hmac 0.12.1",
  "http",
  "httparse",
@@ -4927,6 +4928,8 @@ name = "utopia-abuse"
 version = "0.1.0"
 dependencies = [
  "bytes",
+ "hex",
+ "hmac 0.12.1",
  "http-body-util",
  "hyper",
  "hyper-rustls",
@@ -4934,8 +4937,10 @@ dependencies = [
  "php-std",
  "redis",
  "rustls",
+ "sha2 0.10.9",
  "thiserror 2.0.21",
  "utopia-async",
+ "utopia-auth",
  "utopia-database",
 ]
 

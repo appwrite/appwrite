@@ -1,0 +1,415 @@
+{
+  "source": "packages/abuse/tests/Challenge/NonceTest.php",
+  "cases": [
+    {
+      "name": "testFirstClaimSucceedsAndLaterClaimsFail",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "nonce.consume",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            },
+            "nonce": "abc",
+            "ttl": 60
+          },
+          "expect": true
+        },
+        {
+          "op": "nonce.consume",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            },
+            "nonce": "abc",
+            "ttl": 60
+          },
+          "expect": false
+        },
+        {
+          "op": "nonce.consume",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            },
+            "nonce": "def",
+            "ttl": 60
+          },
+          "expect": true
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testEmptyNonceNeverClaims",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "nonce.consume",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            },
+            "nonce": "",
+            "ttl": 60
+          },
+          "expect": false
+        },
+        {
+          "op": "nonce.claimed",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            }
+          },
+          "expect": []
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testKeyPatternIsFilledByParamsAndTheNonceIsAppended",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory",
+            "key": "pow:{project}"
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "nonce.with_param",
+          "args": {
+            "nonces": {
+              "$ref": "m"
+            },
+            "name": "{project}",
+            "value": "p1"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "nonce.key",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            },
+            "nonce": "abc"
+          },
+          "expect": "pow:p1:abc"
+        },
+        {
+          "op": "nonce.consume",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            },
+            "nonce": "abc",
+            "ttl": 60
+          },
+          "expect": true
+        },
+        {
+          "op": "nonce.claimed",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            }
+          },
+          "expect": {
+            "pow:p1:abc": 60
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testParamsSeparateKeySpaces",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory",
+            "key": "pow:{project}"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "nonce.with_param",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            },
+            "name": "{project}",
+            "value": "p1"
+          },
+          "bind": "p1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "nonce.with_param",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            },
+            "name": "{project}",
+            "value": "p2"
+          },
+          "bind": "p2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "nonce.consume",
+          "args": {
+            "nonces": {
+              "$ref": "p1"
+            },
+            "nonce": "abc",
+            "ttl": 60
+          },
+          "expect": true
+        },
+        {
+          "op": "nonce.consume",
+          "args": {
+            "nonces": {
+              "$ref": "p2"
+            },
+            "nonce": "abc",
+            "ttl": 60
+          },
+          "expect": true
+        },
+        {
+          "op": "nonce.consume",
+          "args": {
+            "nonces": {
+              "$ref": "p1"
+            },
+            "nonce": "abc",
+            "ttl": 60
+          },
+          "expect": false
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testWithParamsDoesNotChangeTheOriginal",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory",
+            "key": "pow:{project}"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "nonce.with_param",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            },
+            "name": "{project}",
+            "value": "p1"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "nonce.key",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            },
+            "nonce": "abc"
+          },
+          "expect": "pow:{project}:abc"
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testTtlIsAtLeastOneSecond",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "nonce.consume",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            },
+            "nonce": "abc",
+            "ttl": 0
+          },
+          "expect": true
+        },
+        {
+          "op": "nonce.claimed",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            }
+          },
+          "expect": {
+            "pow:abc": 1
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testNoneClaimsEveryNonEmptyNonce",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "none"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "nonce.consume",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            },
+            "nonce": "abc",
+            "ttl": 60
+          },
+          "expect": true
+        },
+        {
+          "op": "nonce.consume",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            },
+            "nonce": "abc",
+            "ttl": 60
+          },
+          "expect": true
+        },
+        {
+          "op": "nonce.consume",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            },
+            "nonce": "",
+            "ttl": 60
+          },
+          "expect": false
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "None with a key pattern and params",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "none",
+            "key": "pow:{project}",
+            "params": {
+              "{project}": "p9"
+            }
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "nonce.key",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            },
+            "nonce": "abc"
+          },
+          "expect": "pow:p9:abc"
+        },
+        {
+          "op": "nonce.with_params",
+          "args": {
+            "nonces": {
+              "$ref": "n"
+            },
+            "params": {
+              "{project}": "p8",
+              "pow": "x"
+            }
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "nonce.key",
+          "args": {
+            "nonces": {
+              "$ref": "m"
+            },
+            "nonce": "abc"
+          },
+          "expect": "x:p8:abc"
+        }
+      ],
+      "state": []
+    }
+  ]
+}

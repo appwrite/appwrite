@@ -1,0 +1,270 @@
+{
+  "source": "packages/abuse/tests/Challenge/IdentityTest.php",
+  "cases": [
+    {
+      "name": "testIpv4IsCoarsenedToSlash24ByDefault",
+      "steps": [
+        {
+          "op": "identity.ip_prefix",
+          "args": {
+            "ip": "203.0.113.45"
+          },
+          "expect": "203.0.113.0/24"
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testHostsInTheSameSubnetShareThePrefix",
+      "steps": [
+        {
+          "op": "identity.ip_prefix",
+          "args": {
+            "ip": "203.0.113.45"
+          },
+          "expect": "203.0.113.0/24"
+        },
+        {
+          "op": "identity.ip_prefix",
+          "args": {
+            "ip": "203.0.113.200"
+          },
+          "expect": "203.0.113.0/24"
+        },
+        {
+          "op": "identity.ip_prefix",
+          "args": {
+            "ip": "203.0.114.45"
+          },
+          "expect": "203.0.114.0/24"
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testIpv6IsCoarsenedToSlash48ByDefault",
+      "steps": [
+        {
+          "op": "identity.ip_prefix",
+          "args": {
+            "ip": "2001:db8:abcd:1234:5678:9abc:def0:1234"
+          },
+          "expect": "2001:db8:abcd::/48"
+        },
+        {
+          "op": "identity.ip_prefix",
+          "args": {
+            "ip": "2001:db8:abcd:ffff:ffff:ffff:ffff:ffff"
+          },
+          "expect": "2001:db8:abcd::/48"
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testPrefixLengthsAreConfigurable",
+      "steps": [
+        {
+          "op": "identity.ip_prefix",
+          "args": {
+            "ip": "203.0.127.45",
+            "ipv4Bits": 20,
+            "ipv6Bits": 36
+          },
+          "expect": "203.0.112.0/20"
+        },
+        {
+          "op": "identity.ip_prefix",
+          "args": {
+            "ip": "2001:db8:abcd::1",
+            "ipv4Bits": 20,
+            "ipv6Bits": 36
+          },
+          "expect": "2001:db8:a000::/36"
+        },
+        {
+          "op": "identity.ip_prefix",
+          "args": {
+            "ip": "203.0.113.45",
+            "ipv4Bits": 32
+          },
+          "expect": "203.0.113.45/32"
+        },
+        {
+          "op": "identity.ip_prefix",
+          "args": {
+            "ip": "203.0.113.45",
+            "ipv4Bits": 0
+          },
+          "expect": "0.0.0.0/0"
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testEmptyIpReturnsEmpty",
+      "steps": [
+        {
+          "op": "identity.ip_prefix",
+          "args": {
+            "ip": ""
+          },
+          "expect": ""
+        },
+        {
+          "op": "identity.ip_prefix",
+          "args": {
+            "ip": "   "
+          },
+          "expect": ""
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testMalformedIpFallsBackToTheRawValue",
+      "steps": [
+        {
+          "op": "identity.ip_prefix",
+          "args": {
+            "ip": "not-an-ip"
+          },
+          "expect": "not-an-ip"
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testUserAgentHashIsDeterministicAndDistinct",
+      "steps": [
+        {
+          "op": "identity.user_agent_hash",
+          "args": {
+            "ua": "Mozilla/5.0 Chrome/150"
+          }
+        },
+        {
+          "op": "identity.user_agent_hash",
+          "args": {
+            "ua": "Mozilla/5.0 Firefox/130"
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "edges: surrounding whitespace, IPv4-mapped IPv6, a NUL byte",
+      "steps": [
+        {
+          "op": "identity.ip_prefix",
+          "args": {
+            "ip": " 10.1.2.3\n"
+          },
+          "expect": "10.1.2.0/24"
+        },
+        {
+          "op": "identity.ip_prefix",
+          "args": {
+            "ip": "::ffff:192.0.2.1"
+          }
+        },
+        {
+          "op": "identity.ip_prefix",
+          "args": {
+            "ip": "::1"
+          },
+          "expect": "::/48"
+        },
+        {
+          "op": "identity.ip_prefix",
+          "args": {
+            "ip": {
+              "$bytes": "MTAuMC4wLjEAeA=="
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testInvalidPrefixLengthsAreRefused (negative ipv4)",
+      "steps": [
+        {
+          "op": "identity.ip_prefix",
+          "args": {
+            "ip": "203.0.113.45",
+            "ipv4Bits": -1,
+            "ipv6Bits": 48
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "ipv4Bits must be between 0 and 32"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testInvalidPrefixLengthsAreRefused (ipv4 wider than 32)",
+      "steps": [
+        {
+          "op": "identity.ip_prefix",
+          "args": {
+            "ip": "203.0.113.45",
+            "ipv4Bits": 33,
+            "ipv6Bits": 48
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "ipv4Bits must be between 0 and 32"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testInvalidPrefixLengthsAreRefused (negative ipv6)",
+      "steps": [
+        {
+          "op": "identity.ip_prefix",
+          "args": {
+            "ip": "203.0.113.45",
+            "ipv4Bits": 24,
+            "ipv6Bits": -1
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "ipv6Bits must be between 0 and 128"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testInvalidPrefixLengthsAreRefused (ipv6 wider than 128)",
+      "steps": [
+        {
+          "op": "identity.ip_prefix",
+          "args": {
+            "ip": "203.0.113.45",
+            "ipv4Bits": 24,
+            "ipv6Bits": 129
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "ipv6Bits must be between 0 and 128"
+            }
+          }
+        }
+      ],
+      "state": []
+    }
+  ]
+}

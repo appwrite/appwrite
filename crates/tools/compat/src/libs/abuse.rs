@@ -12,6 +12,8 @@ use utopia_abuse::{
 };
 
 use crate::adapter::{Args, Fault, OpResult, Outcome, Session, bytes_value};
+
+mod challenge;
 use crate::libs::database::codec::encode_array;
 
 pub const OPS: &[&str] = &[
@@ -53,6 +55,50 @@ pub const OPS: &[&str] = &[
     "redis.clear",
     "cluster.set",
     "cluster.clear",
+    "identity.ip_prefix",
+    "identity.user_agent_hash",
+    "issuer.new",
+    "issuer.issue",
+    "issuer.verify",
+    "issuer.params_match",
+    "jwt.encode",
+    "jwt.decode",
+    "clearance.new",
+    "clearance.with_params",
+    "clearance.with_param",
+    "clearance.issue",
+    "clearance.verify",
+    "nonce.new",
+    "nonce.with_params",
+    "nonce.with_param",
+    "nonce.key",
+    "nonce.consume",
+    "nonce.claimed",
+    "pow.new",
+    "pow.with_params",
+    "pow.with_param",
+    "pow.issue",
+    "pow.verify",
+    "pow.is_solution",
+    "pow.difficulty_of",
+    "pow.solve",
+    "pow.wrong",
+    "pow.difficulty_of_hex",
+    "password.scrypt",
+    "password.hash",
+    "password.new",
+    "password.with_params",
+    "password.with_param",
+    "password.issue",
+    "password.verify",
+    "password.version",
+    "riddle.new",
+    "riddle.with_params",
+    "riddle.with_param",
+    "riddle.issue",
+    "riddle.verify",
+    "challenge.result",
+    "challenge.token",
 ];
 
 /// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
@@ -901,6 +947,9 @@ async fn wait_until(timestamp: i64) {
 }
 
 pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
+    if challenge::handles(op) {
+        return challenge::call(op, args, session).await;
+    }
     let a = Args(args);
     let limit = |s: &Session| -> Result<AnyLimit, Fault> { s.get::<AnyLimit>(a.value("handle")?).cloned() };
     let result = match op {

@@ -1,0 +1,1114 @@
+{
+  "source": "packages/abuse/tests/Challenge/IssuerTest.php",
+  "cases": [
+    {
+      "name": "testIssueThenVerifyReturnsTheClaims",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "token-secret",
+            "label": "label",
+            "purpose": "purpose",
+            "ttl": 60
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "claims": {
+              "user": "u1",
+              "level": 3
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "issuer.verify",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testTokenForAnotherPurposeIsRejected",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "token-secret",
+            "label": "label",
+            "purpose": "challenge",
+            "ttl": 60
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "token-secret",
+            "label": "label",
+            "purpose": "clearance",
+            "ttl": 60
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "a"
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "issuer.verify",
+          "args": {
+            "issuer": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": null
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testTokenSignedUnderAnotherLabelIsRejected",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "token-secret",
+            "label": "one",
+            "purpose": "purpose",
+            "ttl": 60
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "token-secret",
+            "label": "two",
+            "purpose": "purpose",
+            "ttl": 60
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "a"
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "issuer.verify",
+          "args": {
+            "issuer": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": null
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testSigningKeyIsDerivedNotTheSecretItself",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "token-secret",
+            "label": "label",
+            "purpose": "purpose",
+            "ttl": 60
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "jwt.decode",
+          "args": {
+            "key": "token-secret",
+            "maxAge": 60,
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Ahc\\Jwt\\JWTException",
+              "message": "Invalid token: Signature failed"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testTokenDecodesWithTheLabelDerivedKey",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "token-secret",
+            "label": "my-label",
+            "purpose": "purpose",
+            "ttl": 60
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "claims": {
+              "a": "b"
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "jwt.decode",
+          "args": {
+            "key": "token-secret",
+            "label": "my-label",
+            "maxAge": 60,
+            "token": {
+              "$ref": "t"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testGarbageAndEmptyTokensAreRejected",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "token-secret",
+            "label": "label",
+            "purpose": "purpose",
+            "ttl": 60
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.verify",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "token": ""
+          },
+          "expect": null
+        },
+        {
+          "op": "issuer.verify",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "token": "not.a.jwt"
+          },
+          "expect": null
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testExpiredTokenIsRejected",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "token-secret",
+            "label": "label",
+            "purpose": "purpose",
+            "ttl": 60
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "key": "token-secret",
+            "label": "label",
+            "maxAge": 60,
+            "payload": {
+              "purpose": "purpose",
+              "exp": 0
+            },
+            "times": {
+              "exp": -10
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "issuer.verify",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": null
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testTokenWithoutAnExpiryIsRejected",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "token-secret",
+            "label": "label",
+            "purpose": "purpose",
+            "ttl": 60
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "key": "token-secret",
+            "label": "label",
+            "maxAge": 60,
+            "payload": {
+              "purpose": "purpose",
+              "binding": [],
+              "iat": 0
+            },
+            "times": {
+              "iat": 0
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "jwt.decode",
+          "args": {
+            "key": "token-secret",
+            "label": "label",
+            "maxAge": 60,
+            "token": {
+              "$ref": "t"
+            }
+          }
+        },
+        {
+          "op": "issuer.verify",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": null
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testDefaultTtlSetsTheExpiry",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "token-secret",
+            "label": "label",
+            "purpose": "purpose",
+            "ttl": 120
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "issuer.verify",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testTtlOverrideWins",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "token-secret",
+            "label": "label",
+            "purpose": "purpose",
+            "ttl": 60
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "ttl": 3600
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "issuer.verify",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testTheBindingIsStoredWithItsNames",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "token-secret",
+            "label": "label",
+            "purpose": "purpose",
+            "ttl": 60
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "claims": {
+              "a": "b"
+            },
+            "binding": {
+              "ua": "u",
+              "ip": "i"
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "issuer.verify",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testParamsMatchRequiresTheSameNamesAndValues",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "token-secret",
+            "label": "label",
+            "purpose": "purpose",
+            "ttl": 60
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "binding": {
+              "ip": "i",
+              "ua": "u"
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "issuer.verify",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "bind": "c"
+        },
+        {
+          "op": "issuer.params_match",
+          "args": {
+            "claims": {
+              "$ref": "c"
+            },
+            "binding": {
+              "ua": "u",
+              "ip": "i"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "issuer.params_match",
+          "args": {
+            "claims": {
+              "$ref": "c"
+            },
+            "binding": {
+              "ip": "i"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "issuer.params_match",
+          "args": {
+            "claims": {
+              "$ref": "c"
+            },
+            "binding": []
+          },
+          "expect": false
+        },
+        {
+          "op": "issuer.params_match",
+          "args": {
+            "claims": {
+              "$ref": "c"
+            },
+            "binding": {
+              "ip": "i",
+              "ua": "other"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "issuer.params_match",
+          "args": {
+            "claims": {
+              "$ref": "c"
+            },
+            "binding": {
+              "ip": "i",
+              "ua": "u",
+              "extra": "x"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "claims": {
+              "ip": "i"
+            }
+          },
+          "bind": "t2",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "issuer.verify",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "token": {
+              "$ref": "t2"
+            }
+          },
+          "bind": "c2"
+        },
+        {
+          "op": "issuer.params_match",
+          "args": {
+            "claims": {
+              "$ref": "c2"
+            },
+            "binding": {
+              "ip": "i"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "issuer.params_match",
+          "args": {
+            "claims": {
+              "$ref": "c2"
+            },
+            "binding": []
+          },
+          "expect": true
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testBindingAndClaimsMustNotShareNames",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "token-secret",
+            "label": "label",
+            "purpose": "purpose",
+            "ttl": 60
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "claims": {
+              "ip": "a"
+            },
+            "binding": {
+              "ip": "b"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "binding and claims must not share names"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testReservedClaimsAreRefused (purpose)",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "token-secret",
+            "label": "label",
+            "purpose": "purpose",
+            "ttl": 60
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "claims": {
+              "purpose": "x"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "claim 'purpose' is reserved"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testReservedClaimsAreRefused (exp)",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "token-secret",
+            "label": "label",
+            "purpose": "purpose",
+            "ttl": 60
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "claims": {
+              "exp": "x"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "claim 'exp' is reserved"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testReservedClaimsAreRefused (iat)",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "token-secret",
+            "label": "label",
+            "purpose": "purpose",
+            "ttl": 60
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "claims": {
+              "iat": "x"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "claim 'iat' is reserved"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testReservedClaimsAreRefused (binding)",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "token-secret",
+            "label": "label",
+            "purpose": "purpose",
+            "ttl": 60
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "claims": {
+              "binding": "x"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "claim 'binding' is reserved"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testInvalidConfigurationIsRefused (empty secret)",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "",
+            "label": "label",
+            "purpose": "purpose",
+            "ttl": 60
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "secret must not be empty"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testInvalidConfigurationIsRefused (empty label)",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "secret",
+            "label": "",
+            "purpose": "purpose",
+            "ttl": 60
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "label and purpose must not be empty"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testInvalidConfigurationIsRefused (empty purpose)",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "secret",
+            "label": "label",
+            "purpose": "",
+            "ttl": 60
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "label and purpose must not be empty"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testInvalidConfigurationIsRefused (zero ttl)",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "secret",
+            "label": "label",
+            "purpose": "purpose",
+            "ttl": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "ttl must be greater than 0"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "tampered: the last signature character flipped",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "token-secret",
+            "label": "label",
+            "purpose": "purpose",
+            "ttl": 60
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "jwt.decode",
+          "args": {
+            "key": "token-secret",
+            "label": "label",
+            "maxAge": 60,
+            "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.e30.AAAA"
+          },
+          "expect": {
+            "$error": {
+              "class": "Ahc\\Jwt\\JWTException",
+              "message": "Invalid token: Signature failed"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "integer and numeric names: spread renumbers them, the binding records them as integers",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "token-secret",
+            "label": "label",
+            "purpose": "purpose",
+            "ttl": 60
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "claims": {
+              "7": "seven",
+              "x": "y"
+            },
+            "binding": {
+              "5": "five"
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "issuer.verify",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "bind": "c"
+        },
+        {
+          "op": "issuer.params_match",
+          "args": {
+            "claims": {
+              "$ref": "c"
+            },
+            "binding": {
+              "5": "five"
+            }
+          }
+        }
+      ],
+      "state": []
+    }
+  ]
+}

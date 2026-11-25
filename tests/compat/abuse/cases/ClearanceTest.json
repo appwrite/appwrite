@@ -1,0 +1,2050 @@
+{
+  "source": "packages/abuse/tests/Challenge/ClearanceTest.php",
+  "cases": [
+    {
+      "name": "testIssueThenVerifyRoundTrips",
+      "steps": [
+        {
+          "op": "clearance.new",
+          "args": {
+            "secret": "clearance-secret",
+            "ttl": 1800,
+            "label": "label"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.issue",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            },
+            "difficulty": 18
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "difficulty": 18
+          },
+          "expect": true
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testAnyBindingMismatchIsRejected (another project)",
+      "steps": [
+        {
+          "op": "clearance.new",
+          "args": {
+            "secret": "clearance-secret",
+            "ttl": 1800,
+            "label": "label"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.issue",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p2",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "o"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": false
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testAnyBindingMismatchIsRejected (another resource)",
+      "steps": [
+        {
+          "op": "clearance.new",
+          "args": {
+            "secret": "clearance-secret",
+            "ttl": 1800,
+            "label": "label"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.issue",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "r2",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "o"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": false
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testAnyBindingMismatchIsRejected (another network)",
+      "steps": [
+        {
+          "op": "clearance.new",
+          "args": {
+            "secret": "clearance-secret",
+            "ttl": 1800,
+            "label": "label"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.issue",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "r1",
+              "ip": "198.51.100.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "o"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": false
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testAnyBindingMismatchIsRejected (another user agent)",
+      "steps": [
+        {
+          "op": "clearance.new",
+          "args": {
+            "secret": "clearance-secret",
+            "ttl": 1800,
+            "label": "label"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.issue",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "other"
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "o"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": false
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testAnyBindingMismatchIsRejected (a field it was not bound to)",
+      "steps": [
+        {
+          "op": "clearance.new",
+          "args": {
+            "secret": "clearance-secret",
+            "ttl": 1800,
+            "label": "label"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.issue",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash",
+              "session": "s1"
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "o"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": false
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testVerifyingWithPartOfTheBindingIsRejected",
+      "steps": [
+        {
+          "op": "clearance.new",
+          "args": {
+            "secret": "clearance-secret",
+            "ttl": 1800,
+            "label": "label"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.issue",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "p"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": []
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "e"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": false
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testAnUnboundClearanceOnlyVerifiesWithoutABinding",
+      "steps": [
+        {
+          "op": "clearance.new",
+          "args": {
+            "secret": "clearance-secret",
+            "ttl": 1800,
+            "label": "label"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": []
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.issue",
+          "args": {
+            "clearance": {
+              "$ref": "e"
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "e"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "ip": "203.0.113.0/24"
+            }
+          },
+          "bind": "ip",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "ip"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": false
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testAnEmptyBindingValueOnlyMatchesAnEmptyValue",
+      "steps": [
+        {
+          "op": "clearance.new",
+          "args": {
+            "secret": "clearance-secret",
+            "ttl": 1800,
+            "label": "label"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.issue",
+          "args": {
+            "clearance": {
+              "$ref": "e"
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "e"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": false
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testAClearanceEarnedAtALowerDifficultyIsRejected",
+      "steps": [
+        {
+          "op": "clearance.new",
+          "args": {
+            "secret": "clearance-secret",
+            "ttl": 1800,
+            "label": "label"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.issue",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            },
+            "difficulty": 16
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "difficulty": 14
+          },
+          "expect": true
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "difficulty": 16
+          },
+          "expect": true
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "difficulty": 18
+          },
+          "expect": false
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testMaxAgeLimitsHowOldAClearanceMayBe",
+      "steps": [
+        {
+          "op": "clearance.new",
+          "args": {
+            "secret": "clearance-secret",
+            "ttl": 1800,
+            "label": "label"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "key": "clearance-secret",
+            "label": "label",
+            "maxAge": 1800,
+            "payload": {
+              "purpose": "clearance",
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash",
+              "binding": [
+                "ip",
+                "project",
+                "resource",
+                "ua"
+              ],
+              "difficulty": 18,
+              "issuedAt": 0,
+              "exp": 0
+            },
+            "times": {
+              "issuedAt": -1000,
+              "exp": 3600
+            }
+          },
+          "bind": "old",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "old"
+            },
+            "difficulty": 18,
+            "maxAge": 1800
+          },
+          "expect": true
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "old"
+            },
+            "difficulty": 18,
+            "maxAge": 900
+          },
+          "expect": false
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "old"
+            },
+            "difficulty": 18
+          },
+          "expect": true
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testATokenThatDoesNotRecordItsBindingIsRejected",
+      "steps": [
+        {
+          "op": "clearance.new",
+          "args": {
+            "secret": "clearance-secret",
+            "ttl": 1800,
+            "label": "label"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "key": "clearance-secret",
+            "label": "label",
+            "maxAge": 1800,
+            "payload": {
+              "purpose": "clearance",
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash",
+              "difficulty": 18,
+              "issuedAt": 0,
+              "exp": 0
+            },
+            "times": {
+              "issuedAt": 0,
+              "exp": 1800
+            }
+          },
+          "bind": "legacy",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "legacy"
+            }
+          },
+          "expect": false
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testAClearanceMissingItsDifficultyOrIssueTimeIsRejected",
+      "steps": [
+        {
+          "op": "clearance.new",
+          "args": {
+            "secret": "clearance-secret",
+            "ttl": 1800,
+            "label": "label"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "clearance-secret",
+            "label": "label",
+            "purpose": "clearance",
+            "ttl": 1800
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "claims": {
+              "difficulty": 18
+            },
+            "binding": {
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "t1",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "t1"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "key": "clearance-secret",
+            "label": "label",
+            "maxAge": 1800,
+            "payload": {
+              "purpose": "clearance",
+              "issuedAt": 0,
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash",
+              "binding": [
+                "ip",
+                "project",
+                "resource",
+                "ua"
+              ],
+              "exp": 0
+            },
+            "times": {
+              "issuedAt": 0,
+              "exp": 1800
+            }
+          },
+          "bind": "t2",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "t2"
+            }
+          },
+          "expect": false
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testATokenIssuedForAnotherPurposeIsNotAClearance",
+      "steps": [
+        {
+          "op": "clearance.new",
+          "args": {
+            "secret": "clearance-secret",
+            "ttl": 1800,
+            "label": "label"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "clearance-secret",
+            "label": "label",
+            "purpose": "challenge",
+            "ttl": 1800
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "jwt.encode",
+          "args": {
+            "key": "clearance-secret",
+            "label": "label",
+            "maxAge": 1800,
+            "payload": {
+              "purpose": "challenge",
+              "difficulty": 99,
+              "issuedAt": 0,
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash",
+              "binding": [
+                "ip",
+                "project",
+                "resource",
+                "ua"
+              ],
+              "exp": 0
+            },
+            "times": {
+              "issuedAt": 0,
+              "exp": 1800
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": false
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testTamperedForeignAndEmptyTokensAreRejected",
+      "steps": [
+        {
+          "op": "clearance.new",
+          "args": {
+            "secret": "clearance-secret",
+            "ttl": 1800,
+            "label": "label"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            },
+            "token": ""
+          },
+          "expect": false
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            },
+            "token": "not.a.jwt"
+          },
+          "expect": false
+        },
+        {
+          "op": "clearance.new",
+          "args": {
+            "secret": "other-secret",
+            "ttl": 1800,
+            "label": "label"
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "o"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "ob",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.issue",
+          "args": {
+            "clearance": {
+              "$ref": "ob"
+            }
+          },
+          "bind": "foreign",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "foreign"
+            }
+          },
+          "expect": false
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testWithParamsReturnsACopyAndMerges",
+      "steps": [
+        {
+          "op": "clearance.new",
+          "args": {
+            "secret": "clearance-secret",
+            "ttl": 1800,
+            "label": "label"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "r1"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "a"
+            },
+            "params": {
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "ab",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.issue",
+          "args": {
+            "clearance": {
+              "$ref": "ab"
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": false
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testWithParamAddsOneParam",
+      "steps": [
+        {
+          "op": "clearance.new",
+          "args": {
+            "secret": "clearance-secret",
+            "ttl": 1800,
+            "label": "label"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.with_param",
+          "args": {
+            "clearance": {
+              "$ref": "a"
+            },
+            "name": "ua",
+            "value": "ua-hash"
+          },
+          "bind": "au",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.issue",
+          "args": {
+            "clearance": {
+              "$ref": "au"
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testDefaultLabelsKeepPuzzlesAndClearancesApart",
+      "steps": [
+        {
+          "op": "nonce.new",
+          "args": {
+            "kind": "memory"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.new",
+          "args": {
+            "secret": "clearance-secret",
+            "nonces": {
+              "$ref": "n"
+            },
+            "difficulty": 0
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "pow.issue",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            }
+          },
+          "bind": "puzzle"
+        },
+        {
+          "op": "clearance.new",
+          "args": {
+            "secret": "clearance-secret"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.issue",
+          "args": {
+            "clearance": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "d"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "d"
+            },
+            "token": {
+              "$ref": "puzzle",
+              "path": "/value"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "pow.verify",
+          "args": {
+            "pow": {
+              "$ref": "p"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "answer": "0"
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testTtlSetsTheExpiry",
+      "steps": [
+        {
+          "op": "clearance.new",
+          "args": {
+            "secret": "clearance-secret",
+            "ttl": 1800,
+            "label": "label"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.issue",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            },
+            "ttl": 3600
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "clearance-secret",
+            "label": "label",
+            "purpose": "clearance",
+            "ttl": 1800
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.verify",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          }
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testClaimsAreCarriedButNotChecked",
+      "steps": [
+        {
+          "op": "clearance.new",
+          "args": {
+            "secret": "clearance-secret",
+            "ttl": 1800,
+            "label": "label"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "project": "p1",
+              "resource": "r1",
+              "ip": "203.0.113.0/24",
+              "ua": "ua-hash"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.issue",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            },
+            "claims": {
+              "note": "x"
+            }
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a token carries its expiry (time()) and, for puzzles, a random nonce"
+          }
+        },
+        {
+          "op": "issuer.new",
+          "args": {
+            "secret": "clearance-secret",
+            "label": "label",
+            "purpose": "clearance",
+            "ttl": 1800
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.verify",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          }
+        },
+        {
+          "op": "clearance.verify",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            },
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testABindingThatSharesANameWithAClaimIsRefused",
+      "steps": [
+        {
+          "op": "clearance.new",
+          "args": {
+            "secret": "clearance-secret",
+            "ttl": 1800,
+            "label": "label"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "ip": "a"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.issue",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            },
+            "claims": {
+              "ip": "b"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "binding and claims must not share names"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testReservedNamesAreRefused (difficulty)",
+      "steps": [
+        {
+          "op": "clearance.new",
+          "args": {
+            "secret": "clearance-secret",
+            "ttl": 1800,
+            "label": "label"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "difficulty": "x"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.issue",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "claim 'difficulty' is reserved"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testReservedNamesAreRefused (issuedAt)",
+      "steps": [
+        {
+          "op": "clearance.new",
+          "args": {
+            "secret": "clearance-secret",
+            "ttl": 1800,
+            "label": "label"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "issuedAt": "x"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.issue",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "claim 'issuedAt' is reserved"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testReservedNamesAreRefused (purpose)",
+      "steps": [
+        {
+          "op": "clearance.new",
+          "args": {
+            "secret": "clearance-secret",
+            "ttl": 1800,
+            "label": "label"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.with_params",
+          "args": {
+            "clearance": {
+              "$ref": "c"
+            },
+            "params": {
+              "purpose": "x"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clearance.issue",
+          "args": {
+            "clearance": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "claim 'purpose' is reserved"
+            }
+          }
+        }
+      ],
+      "state": []
+    }
+  ]
+}

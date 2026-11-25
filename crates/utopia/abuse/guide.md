@@ -227,3 +227,56 @@ $recaptcha = new ReCaptcha('site-secret', $google);
 var_dump($recaptcha->verify('token', '203.0.113.7')); // bool(true)
 var_dump($recaptcha->verify('token', '203.0.113.7', 0.9)); // bool(false)
 ```
+
+## Challenge a client, then clear it
+
+A proof-of-work puzzle costs a client a few milliseconds of hashing and a bot fleet a lot more. The token is bound to the client (an IP prefix and a User-Agent hash from `Identity`), and once the answer passes, a `Clearance` lets the client skip the next challenges without touching a store.
+
+```
+use utopia_abuse::challenge::{Challenge, Clearance, Identity, Nonce, ProofOfWork, Status, nonce, params};
+
+utopia_async::Builder::current_thread().build()?.block_on(async {
+    let identity = Identity::default();
+    let client = params([
+        ("ip", identity.ip_prefix(b"203.0.113.7")?),
+        ("ua", identity.user_agent_hash(b"Mozilla/5.0").into_bytes()),
+    ]);
+
+    let pow = ProofOfWork::new("secret", Nonce::new("pow", nonce::None, &params::<&str, &str>([])), 4, 120, false, "challenge", "challenge")?
+        .with_params(&client);
+    let puzzle = pow.issue(&params::<&str, &str>([]), None)?;
+    let answer = (0u64..)
+        .map(|n| n.to_string())
+        .find(|a| ProofOfWork::<nonce::None>::is_solution(puzzle.nonce.as_bytes(), a.as_bytes(), puzzle.difficulty))
+        .unwrap();
+    assert_eq!(pow.verify(puzzle.value.as_bytes(), answer.as_bytes()).await?.status, Status::Valid);
+
+    let clearance = Clearance::new("secret", Clearance::DEFAULT_TTL, "clearance", "clearance")?.with_params(&client);
+    let pass = clearance.issue(puzzle.difficulty, 0, &params::<&str, &str>([]))?;
+    assert!(clearance.verify(pass.as_bytes(), 4, 0));
+    Ok::<_, utopia_abuse::Error>(())
+})?;
+# Ok::<(), Box<dyn std::error::Error>>(())
+```
+
+```php
+use Utopia\Abuse\Challenge\Clearance;
+use Utopia\Abuse\Challenge\Identity;
+use Utopia\Abuse\Challenge\Nonce\None;
+use Utopia\Abuse\Challenge\ProofOfWork;
+
+$identity = new Identity();
+$client = ['ip' => $identity->ipPrefix('203.0.113.7'), 'ua' => $identity->userAgentHash('Mozilla/5.0')];
+
+$pow = new ProofOfWork('secret', new None('pow'), 4)->withParams($client);
+$puzzle = $pow->issue();
+$answer = 0;
+while (!ProofOfWork::isSolution($puzzle->nonce, (string) $answer, $puzzle->difficulty)) {
+    $answer++;
+}
+echo $pow->verify($puzzle->value, (string) $answer)->status->value, "\n"; // valid
+
+$clearance = new Clearance('secret')->withParams($client);
+$pass = $clearance->issue($puzzle->difficulty);
+var_dump($clearance->verify($pass, 4)); // bool(true)
+```

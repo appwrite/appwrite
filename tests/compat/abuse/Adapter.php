@@ -38,6 +38,7 @@ require_once __DIR__ . '/../../../packages/abuse/tests/TimeLimit/Store.php';
 require_once __DIR__ . '/../../../packages/abuse/tests/TimeLimit/Memory.php';
 require_once __DIR__ . '/../../../packages/abuse/tests/TimeLimit/RacingDatabase.php';
 require_once __DIR__ . '/../../../packages/abuse/tests/TokenBucket/Fixed.php';
+require_once __DIR__ . '/Challenges.php';
 
 /**
  * The time a clocked adapter reads; `null` reads the real clock.
@@ -348,6 +349,8 @@ final class FakeTables extends Client
  */
 final class Adapter implements Base, Benchmarks
 {
+    use Challenges;
+
     /** @var array<int, Clock> clocks of clocked adapters, by object id */
     private static array $clocks = [];
 
@@ -385,6 +388,7 @@ final class Adapter implements Base, Benchmarks
     public function operations(): array
     {
         return [
+            ...self::challenges(),
             'limit.new' => fn (array $a, Session $s) => $s->handle(self::create($a, $s)),
             'limit.check' => fn (array $a, Session $s) => self::result(self::clocked($a, $s)->check()),
             'limit.peek' => fn (array $a, Session $s) => self::result(self::clocked($a, $s)->peek()),

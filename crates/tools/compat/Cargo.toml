@@ -21,6 +21,8 @@ base64.workspace = true
 bytes.workspace = true
 futures-util.workspace = true
 gif.workspace = true
+# The challenge cases' hex digests (abuse adapter).
+hex.workspace = true
 hmac.workspace = true
 httparse.workspace = true
 image.workspace = true

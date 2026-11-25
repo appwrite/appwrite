@@ -1,0 +1,408 @@
+{
+  "ops": {
+    "identity.ip_prefix": {
+      "doc": "new Identity(ipv4Bits ?? 24, ipv6Bits ?? 48)->ipPrefix(ip)",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\Identity::__construct",
+        "Utopia\\Abuse\\Challenge\\Identity::ipPrefix"
+      ],
+      "fuzz": [
+        {
+          "name": "addresses",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "ip": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "203.0.113.45",
+                      "2001:db8:abcd:1234:5678:9abc:def0:1234",
+                      "::1",
+                      "::ffff:192.0.2.1",
+                      " 10.0.0.1 ",
+                      "not-an-ip",
+                      "",
+                      ":::"
+                    ]
+                  },
+                  {
+                    "gen": "string",
+                    "tricky": 0.5
+                  }
+                ]
+              },
+              "ipv4Bits": {
+                "gen": "int",
+                "min": -1,
+                "max": 33
+              },
+              "ipv6Bits": {
+                "gen": "int",
+                "min": -1,
+                "max": 129
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "identity.user_agent_hash": {
+      "doc": "new Identity()->userAgentHash(ua)",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\Identity::userAgentHash"
+      ]
+    },
+    "issuer.new": {
+      "doc": "new Issuer(secret, label, purpose, ttl) as a handle",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\Issuer::__construct"
+      ]
+    },
+    "issuer.issue": {
+      "doc": "$issuer->issue(claims ?? [], ttl ?? 0, binding ?? []) (a token: cases mask it on the step, so a refusal stays compared)",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\Issuer::issue"
+      ]
+    },
+    "issuer.verify": {
+      "doc": "$issuer->verify(token): the claims, or null",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\Issuer::verify"
+      ],
+      "mask": {
+        "paths": [
+          "/exp",
+          "/issuedAt",
+          "/iatMs",
+          "/nonce"
+        ],
+        "reason": "the expiry and issue times are the clock's, the nonce random"
+      }
+    },
+    "issuer.params_match": {
+      "doc": "Issuer::paramsMatch(claims, binding)",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\Issuer::paramsMatch"
+      ]
+    },
+    "jwt.encode": {
+      "doc": "fixture: new \\Ahc\\Jwt\\JWT(label ? hash_hmac('sha256', label, key) : key, 'HS256', maxAge ?? 3600, 0)->encode(payload), each claim of `times` set to time() plus its offset (the tests' hand-made tokens) (a token: cases mask it on the step, so a refusal stays compared)"
+    },
+    "jwt.decode": {
+      "doc": "fixture: the same JWT's decode(token)",
+      "mask": {
+        "paths": [
+          "/exp",
+          "/issuedAt",
+          "/iatMs",
+          "/nonce"
+        ],
+        "reason": "the expiry and issue times are the clock's, the nonce random"
+      }
+    },
+    "clearance.new": {
+      "doc": "new Clearance(secret, ttl ?? 1800, label ?? 'clearance', purpose ?? 'clearance') as a handle",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\Clearance::__construct"
+      ]
+    },
+    "clearance.with_params": {
+      "doc": "$clearance->withParams(params) as a handle",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\Clearance::withParams"
+      ]
+    },
+    "clearance.with_param": {
+      "doc": "$clearance->withParam(name, value) as a handle",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\Clearance::withParam"
+      ]
+    },
+    "clearance.issue": {
+      "doc": "$clearance->issue(difficulty ?? 0, ttl ?? 0, claims ?? []) (a token: cases mask it on the step, so a refusal stays compared)",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\Clearance::issue"
+      ]
+    },
+    "clearance.verify": {
+      "doc": "$clearance->verify(token, difficulty ?? 0, maxAge ?? 0)",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\Clearance::verify"
+      ]
+    },
+    "nonce.new": {
+      "doc": "a nonce store as a handle, by `kind`: memory (the tests' Nonce\\Memory(key ?? 'pow'), every claim failing with RuntimeException(error) when set), none (Nonce\\None(key ?? '', params ?? [])), redis, cluster or pool (Nonce\\Redis|RedisCluster|RedisPool(key, the service's connection, params ?? []))",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\Nonce::__construct",
+        "Utopia\\Abuse\\Challenge\\Nonce\\None::__construct",
+        "Utopia\\Abuse\\Challenge\\Nonce\\Redis::__construct",
+        "Utopia\\Abuse\\Challenge\\Nonce\\RedisCluster::__construct",
+        "Utopia\\Abuse\\Challenge\\Nonce\\RedisPool::__construct"
+      ],
+      "services": [
+        "abuse-redis",
+        "abuse-cluster"
+      ],
+      "services_unless": [
+        {
+          "kind": [
+            "memory",
+            "none"
+          ]
+        }
+      ]
+    },
+    "nonce.with_params": {
+      "doc": "$nonces->withParams(params) as a handle",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\Nonce::withParams"
+      ]
+    },
+    "nonce.with_param": {
+      "doc": "$nonces->withParam(name, value) as a handle",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\Nonce::withParam"
+      ]
+    },
+    "nonce.key": {
+      "doc": "$nonces->key(nonce)",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\Nonce::key"
+      ]
+    },
+    "nonce.consume": {
+      "doc": "$nonces->consume(nonce, ttl)",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\Nonce::consume"
+      ]
+    },
+    "nonce.claimed": {
+      "doc": "the claims a Memory store holds: key => ttl"
+    },
+    "pow.new": {
+      "doc": "new ProofOfWork(secret, nonces, difficulty, ttl ?? 120, accept ?? false, label ?? 'challenge', purpose ?? 'challenge') as a handle",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\ProofOfWork::__construct",
+        "Utopia\\Abuse\\Challenge::__construct"
+      ]
+    },
+    "pow.with_params": {
+      "doc": "$pow->withParams(params) as a handle",
+      "covers": [
+        "Utopia\\Abuse\\Challenge::withParams"
+      ]
+    },
+    "pow.with_param": {
+      "doc": "$pow->withParam(name, value) as a handle",
+      "covers": [
+        "Utopia\\Abuse\\Challenge::withParam"
+      ]
+    },
+    "pow.issue": {
+      "doc": "$pow->issue(claims ?? [], difficulty ?? null) as {value, nonce, difficulty}",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\ProofOfWork::issue",
+        "Utopia\\Abuse\\Challenge\\ProofOfWork\\Token::__construct"
+      ],
+      "mask": {
+        "paths": [
+          "/value",
+          "/nonce"
+        ],
+        "reason": "the nonce is random, and the token carries it and the clock"
+      }
+    },
+    "pow.verify": {
+      "doc": "$pow->verify(token, answer) as {status, claims, isValid, difficulty, elapsedMs, error: {class, message}|null}",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\ProofOfWork::verify",
+        "Utopia\\Abuse\\Challenge\\ProofOfWork\\Result::__construct"
+      ],
+      "mask": {
+        "paths": [
+          "/claims/exp",
+          "/claims/issuedAt",
+          "/claims/iatMs",
+          "/claims/nonce",
+          "/elapsedMs"
+        ],
+        "reason": "the expiry and issue times are the clock's, the nonce random, the elapsed time the run's"
+      }
+    },
+    "pow.is_solution": {
+      "doc": "ProofOfWork::isSolution(nonce, answer, difficulty)",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\ProofOfWork::isSolution"
+      ],
+      "fuzz": [
+        {
+          "name": "answers",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "nonce": {
+                "gen": "string",
+                "tricky": 0.3
+              },
+              "answer": {
+                "gen": "string",
+                "tricky": 0.3
+              },
+              "difficulty": {
+                "gen": "int",
+                "min": -2,
+                "max": 12
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "pow.difficulty_of": {
+      "doc": "ProofOfWork::difficultyOf(hash)",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\ProofOfWork::difficultyOf"
+      ],
+      "fuzz": [
+        {
+          "name": "hashes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "hash": {
+                "gen": "bytes",
+                "max": 40
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "pow.solve": {
+      "doc": "fixture: ProofOfWorkTest::solve(), the first counter isSolution() accepts"
+    },
+    "pow.wrong": {
+      "doc": "fixture: ProofOfWorkTest::wrong(), an answer the test's own hex counter says misses the target"
+    },
+    "pow.difficulty_of_hex": {
+      "doc": "fixture: ProofOfWorkTest::difficultyOfHex(hex)"
+    },
+    "password.scrypt": {
+      "doc": "fixture: new \\Utopia\\Auth\\Hashes\\Scrypt() as a handle (its salt is the instance's, so the hash and the proof share it, as PasswordTest does)"
+    },
+    "password.hash": {
+      "doc": "fixture: a hash of `password` by `algorithm`: default (new Proofs\\Password()->hash()), bcrypt, or scrypt with the `hasher` handle",
+      "mask": {
+        "paths": [
+          ""
+        ],
+        "reason": "a new salt every time"
+      }
+    },
+    "password.new": {
+      "doc": "new Password(secret, hash, proof (default, or a Proofs\\Password set to scrypt (the `hasher` handle) or phpass), ttl ?? 600, label ?? 'password', purpose ?? 'password') as a handle",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\Password::__construct"
+      ]
+    },
+    "password.with_params": {
+      "doc": "$password->withParams(params) as a handle"
+    },
+    "password.with_param": {
+      "doc": "$password->withParam(name, value) as a handle"
+    },
+    "password.issue": {
+      "doc": "$password->issue(claims ?? [])->value (a token: cases mask it on the step, so a refusal stays compared)",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\Password::issue",
+        "Utopia\\Abuse\\Challenge\\Token::__construct"
+      ]
+    },
+    "password.verify": {
+      "doc": "$password->verify(token, answer) as {status, claims, isValid, error}",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\Password::verify",
+        "Utopia\\Abuse\\Challenge\\Result::__construct",
+        "Utopia\\Abuse\\Challenge\\Result::isValid"
+      ],
+      "mask": {
+        "paths": [
+          "/claims/exp",
+          "/claims/issuedAt",
+          "/claims/iatMs",
+          "/claims/nonce",
+          "/elapsedMs"
+        ],
+        "reason": "the expiry and issue times are the clock's, the nonce random, the elapsed time the run's"
+      }
+    },
+    "password.version": {
+      "doc": "$password->version()",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\Password::version"
+      ],
+      "mask": {
+        "paths": [
+          ""
+        ],
+        "reason": "of a hash with a random salt"
+      }
+    },
+    "riddle.new": {
+      "doc": "new Riddle(secret, answer): ChallengeTest's smallest kind, built on the shared base (Rust: a Challenge over Tokens)"
+    },
+    "riddle.with_params": {
+      "doc": "$riddle->withParams(params) as a handle"
+    },
+    "riddle.with_param": {
+      "doc": "$riddle->withParam(name, value) as a handle"
+    },
+    "riddle.issue": {
+      "doc": "$riddle->issue(claims ?? [])->value (a token: cases mask it on the step, so a refusal stays compared)"
+    },
+    "riddle.verify": {
+      "doc": "$riddle->verify(token, answer) as {status, claims, isValid, error}",
+      "mask": {
+        "paths": [
+          "/claims/exp",
+          "/claims/issuedAt",
+          "/claims/iatMs",
+          "/claims/nonce",
+          "/elapsedMs"
+        ],
+        "reason": "the expiry and issue times are the clock's, the nonce random, the elapsed time the run's"
+      }
+    },
+    "challenge.result": {
+      "doc": "new Result(Status::from(status), claims ?? []) as {status, claims, isValid, error}",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\Result::__construct",
+        "Utopia\\Abuse\\Challenge\\Result::isValid"
+      ]
+    },
+    "challenge.token": {
+      "doc": "new Token(value)->value",
+      "covers": [
+        "Utopia\\Abuse\\Challenge\\Token::__construct"
+      ]
+    }
+  },
+  "deviations": [
+    {
+      "symbol": "Utopia\\Abuse\\Challenge\\Issuer::verify",
+      "php": "A time claim (exp, iat, nbf) of a token signed with the secret that is a leading-numeric string (\"12abc\") is used up to its digits by the JWT library's arithmetic, with a warning.",
+      "reason": "Rust treats it as not a number, so the token does not verify. Only a token forged with the signing secret can carry one."
+    },
+    {
+      "symbol": "Utopia\\Abuse\\Challenge\\ProofOfWork::verify",
+      "php": "elapsedMs is computed as an int (or a float past the 64-bit range, which ProofOfWork\\Result rejects with a TypeError naming the PHP call site).",
+      "reason": "Rust raises Error::Type with the message up to that PHP source location. Only a token forged with the signing secret can carry such an iatMs."
+    }
+  ]
+}

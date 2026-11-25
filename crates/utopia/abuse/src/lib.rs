@@ -3,7 +3,8 @@
 //! ([`TimeLimit`]), sliding windows ([`SlidingWindow`]) or token buckets
 //! ([`TokenBucket`]), stored in Redis, a Redis Cluster, a pool of
 //! connections, a document store or Appwrite tables. And [`ReCaptcha`], to
-//! tell people from bots.
+//! tell people from bots, and [`challenge`]s (a proof-of-work puzzle, a
+//! password) a client must answer before it gets through.
 //!
 //! Every limit implements [`Adapter`]: [`Adapter::check`] records a request
 //! and says whether it is over the limit, [`Adapter::peek`] says the same
@@ -50,10 +51,12 @@
 //! | `Utopia\Pools\Pool<\Redis\|\RedisCluster>` given to a `RedisPool` | [`Pool`], with [`Stack`] |
 //! | `Utopia\Abuse\ReCaptcha` | [`ReCaptcha`] over a [`recaptcha::Client`] |
 //! | the overridable `now()` | `check_at`, `peek_at`, `reset_at` |
+//! | `Utopia\Abuse\Challenge` and `Challenge\*` | [`challenge`] (see its table) |
 //! | `\InvalidArgumentException`, `\RuntimeException`, ... | [`Error`] |
 
 #![warn(missing_docs)]
 
+pub mod challenge;
 mod error;
 mod key;
 #[cfg(feature = "recaptcha")]

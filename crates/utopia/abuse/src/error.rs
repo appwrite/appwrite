@@ -69,6 +69,24 @@ pub enum Error {
     /// PHP: `Psr\Http\Client\ClientExceptionInterface`.
     #[error("{0}")]
     Client(String),
+    /// A challenge token that is not a valid JSON Web Token, or a payload
+    /// that cannot be encoded as one.
+    ///
+    /// PHP: `Ahc\Jwt\JWTException`.
+    #[error("{0}")]
+    Jwt(String),
+    /// An argument PHP's engine refuses, such as an IP address with a NUL
+    /// byte.
+    ///
+    /// PHP: `\ValueError`.
+    #[error("{0}")]
+    Value(String),
+    /// A password proof failed to check a hash.
+    ///
+    /// PHP: the exception `utopia-php/auth` throws (see
+    /// [`utopia_auth::Error::php_class`]).
+    #[error("{0}")]
+    Auth(utopia_auth::Error),
     /// The Redis connection failed.
     ///
     /// PHP: `\RedisException`.
@@ -101,6 +119,9 @@ impl Error {
             Error::Limit(_) => "Utopia\\Database\\Exception\\Limit",
             Error::Appwrite { .. } => "Appwrite\\AppwriteException",
             Error::Client(_) => "Psr\\Http\\Client\\ClientExceptionInterface",
+            Error::Jwt(_) => "Ahc\\Jwt\\JWTException",
+            Error::Value(_) => "ValueError",
+            Error::Auth(e) => e.php_class(),
             #[cfg(feature = "redis")]
             Error::Redis(_) => "RedisException",
             #[cfg(feature = "redis-cluster")]

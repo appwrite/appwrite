@@ -42,6 +42,22 @@
         "Utopia\\Abuse\\Adapter\\TokenBucket\\Redis::__construct",
         "Utopia\\Abuse\\Adapter\\TokenBucket\\RedisCluster::__construct",
         "Utopia\\Abuse\\Adapter\\TokenBucket\\RedisPool::__construct"
+      ],
+      "services": [
+        "abuse-redis",
+        "abuse-redis-shared",
+        "abuse-cluster"
+      ],
+      "services_unless": [
+        {
+          "store": [
+            "none",
+            "database",
+            "tables",
+            "memory",
+            "fixed"
+          ]
+        }
       ]
     },
     "limit.check": {
@@ -316,6 +332,9 @@
           },
           "iterations": 300
         }
+      ],
+      "services": [
+        "abuse-redis-fuzz"
       ]
     },
     "limit.race": {
@@ -398,22 +417,44 @@
       "doc": "a > b"
     },
     "redis.set": {
-      "doc": "fixture: SET key value on `service` (abuse-redis)"
+      "doc": "fixture: SET key value on `service` (abuse-redis)",
+      "services": [
+        "abuse-redis",
+        "abuse-redis-shared"
+      ]
     },
     "redis.get": {
-      "doc": "fixture: GET key (false when missing)"
+      "doc": "fixture: GET key (false when missing)",
+      "services": [
+        "abuse-redis",
+        "abuse-redis-shared"
+      ]
     },
     "redis.ttl": {
-      "doc": "fixture: whether TTL key is in (max - 3, max]"
+      "doc": "fixture: whether TTL key is in (max - 3, max]",
+      "services": [
+        "abuse-redis",
+        "abuse-redis-shared"
+      ]
     },
     "redis.clear": {
-      "doc": "fixture: DEL every abuse__* key of the database"
+      "doc": "fixture: DEL every abuse__* key of the database",
+      "services": [
+        "abuse-redis",
+        "abuse-redis-shared"
+      ]
     },
     "cluster.set": {
-      "doc": "fixture: SET key value on the cluster"
+      "doc": "fixture: SET key value on the cluster",
+      "services": [
+        "abuse-cluster"
+      ]
     },
     "cluster.clear": {
-      "doc": "fixture: DEL every abuse__* key of every primary"
+      "doc": "fixture: DEL every abuse__* key of every primary",
+      "services": [
+        "abuse-cluster"
+      ]
     }
   },
   "generators": {
