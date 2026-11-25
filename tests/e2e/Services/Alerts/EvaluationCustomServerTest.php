@@ -1627,15 +1627,15 @@ final class EvaluationCustomServerTest extends Scope
                     $later = (new \DateTimeImmutable())->add(new \DateInterval('PT' . ($lag + 1) . 'S'));
 
                     // Usage still inside the lag is not read yet: evaluated as it is written, there is nothing to compare.
-                    $scope = (string) $project->getSequence();
-                    $requests = $platform->getDocument('monitors', Monitors::id($scope, $monitors['lag']));
+                    $projectScope = (string) $project->getSequence();
+                    $requests = $platform->getDocument('monitors', Monitors::id($projectScope, $monitors['lag']));
                     $cases['lag'] = ['early' => $worker->read($requests, $isolated, $dbForProject, $connection, $written), 'late' => $worker->read($requests, $isolated, $dbForProject, $connection, $later)];
 
                     foreach ($cases as $case => &$expectation) {
                         if ($case === 'lag') {
                             continue;
                         }
-                        $monitor = $platform->getDocument('monitors', Monitors::id($scope, $monitors[$case]));
+                        $monitor = $platform->getDocument('monitors', Monitors::id($projectScope, $monitors[$case]));
                         $expectation['measured'] = $worker->read($monitor, $isolated, $dbForProject, $connection, $later);
 
                         if (isset($expectation['wrong'])) {
