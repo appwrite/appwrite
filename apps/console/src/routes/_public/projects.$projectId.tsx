@@ -42,7 +42,6 @@ import {
   resolveProjectTeamIdFromConsole,
   useOrganizationById,
 } from '@/lib/react-query/hooks'
-import { apiExplorerSpecQueryOptions } from '@/lib/react-query/hooks/api-explorer'
 import {
   getActiveProfileFeatures,
   getActiveProfileId,
@@ -347,11 +346,14 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     }
 
     try {
-      // Fresh fetch so we do not reuse a cached org payload that omitted billingLimits
+      // beforeLoad runs on every navigation inside the project, so a cached
+      // organization answers at once and refreshes in the background once it
+      // is 30 seconds old; only a cold cache waits on the request.
       const organization = await context.queryClient
-        .fetchQuery({
+        .ensureQueryData({
           ...organizationQueryOptions(teamId),
           staleTime: 30 * 1000,
+          revalidateIfStale: true,
         })
         .catch(() => null)
 
@@ -449,8 +451,16 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     // Fetch project data (needed for header/sidebar and curtains) - CRITICAL
     try {
       const features = getActiveProfileFeatures()
-      const [projectData] = await Promise.all([
-        queryClient.ensureQueryData(projectQueryOptions(projectId)),
+      // beforeLoad resolved the project, so this reads the cache, and every
+      // input to the project shell below loads together in one round trip.
+      const projectData = await queryClient.ensureQueryData(
+        projectQueryOptions(projectId),
+      )
+
+      registerProjectRegionFromProject(projectData)
+
+      const teamId = projectData?.teamId
+      const shellQueries: Promise<unknown>[] = [
         // Header ProjectSelector uses useOrganizations; prefetch so navigation does not flash skeleton
         queryClient
           .ensureQueryData(organizationsQueryOptions())
@@ -458,13 +468,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
         queryClient
           .ensureQueryData(consoleAccountQueryOptions())
           .catch(() => {}),
-      ])
-
-      registerProjectRegionFromProject(projectData)
-
-      // These inputs to the project shell are independent once its team is known.
-      const teamId = projectData?.teamId
-      const shellQueries: Promise<unknown>[] = []
+      ]
       if (teamId && features.billing) {
         shellQueries.push(
           queryClient
@@ -473,8 +477,13 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
           queryClient
             .ensureQueryData(organizationQueryOptions(teamId))
             .catch(() => {}),
-          prefetchOrganizationInvoiceDataIfAllowed(queryClient, teamId),
         )
+        // Only the unpaid-invoice banners read this, and it takes two requests
+        // in a row: load it alongside the page rather than ahead of it.
+        void prefetchOrganizationInvoiceDataIfAllowed(
+          queryClient,
+          teamId,
+        ).catch(() => {})
       }
       if (teamId && features.orgRoles) {
         shellQueries.push(
@@ -491,16 +500,6 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
         )
       }
       await Promise.all(shellQueries)
-
-      if (!planUsageLimitReached) {
-        // Warm API explorer specs in the background so Explorer opens without a loading state.
-        void queryClient
-          .prefetchQuery(apiExplorerSpecQueryOptions('server'))
-          .catch(() => {})
-        void queryClient
-          .prefetchQuery(apiExplorerSpecQueryOptions('client'))
-          .catch(() => {})
-      }
 
       // Return project for first paint so paused/plan curtains can show immediately
       return projectData

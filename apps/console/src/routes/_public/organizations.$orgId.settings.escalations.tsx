@@ -2,7 +2,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { pageTitle } from '@/lib/utils/page-title'
 import {
   escalationsQueryOptions,
-  fetchOrganizations,
+  organizationsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 
@@ -25,11 +25,7 @@ export const Route = createFileRoute(
     if (typeof window === 'undefined') return
     const { queryClient } = context
     await Promise.all([
-      queryClient.prefetchQuery({
-        queryKey: ['organizations', 'console'],
-        queryFn: fetchOrganizations,
-        staleTime: 5 * 60 * 1000,
-      }),
+      queryClient.ensureQueryData(organizationsQueryOptions()),
       queryClient
         .ensureQueryData(escalationsQueryOptions(params.orgId))
         .catch(() => undefined),
