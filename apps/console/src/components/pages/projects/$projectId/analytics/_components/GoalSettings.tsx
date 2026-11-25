@@ -78,7 +78,7 @@ export function GoalSettings({
                   <p className="truncate font-mono text-[12px] text-muted-foreground">
                     {goal.type === 'event' ? goal.eventName : goal.pagePath}
                     {goal.queries.length > 0
-                      ? ` · ${t('{count} property filters').replace('{count}', String(goal.queries.length))}`
+                      ? ` · ${(goal.queries.length === 1 ? t('{count} property filter') : t('{count} property filters')).replace('{count}', String(goal.queries.length))}`
                       : ''}
                   </p>
                 </div>

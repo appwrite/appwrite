@@ -138,12 +138,14 @@ export async function fetchAnalyticsConversions(
   },
   filters: readonly AnalyticsFilter[] = NO_FILTERS,
 ) {
+  // client.call sends an undefined param as the literal "undefined", so omit it.
+  const queries = analyticsFilterQueries(filters)
   const response = await callAnalytics<{
     metrics: AnalyticsConversionMetric[]
   }>(projectId, 'get', `/analytics/properties/${propertyId}/metrics`, {
     startAt: range.startAt,
     endAt: range.endAt,
-    queries: analyticsFilterQueries(filters),
+    ...(queries ? { queries } : {}),
     ...(params.goalId ? { goalId: params.goalId } : {}),
     ...(params.dimension ? { dimensions: [params.dimension] } : {}),
     ...(params.propKey ? { propKey: params.propKey } : {}),
