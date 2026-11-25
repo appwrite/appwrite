@@ -219,6 +219,10 @@ function getExpandedFooterGroups(
       productFooterLink(footerCopy.expanded.products.storage, '/products/storage', marketing, 'storage'),
       productFooterLink(footerCopy.expanded.products.functions, '/products/functions', marketing, 'functions'),
       productFooterLink(footerCopy.expanded.products.messaging, '/products/messaging', marketing, 'messaging'),
+      // Videos stays out until its flag is on, as in the header's Products menu.
+      ...(videos
+        ? [productFooterLink(footerCopy.expanded.products.videos, '/products/videos', marketing, 'videos')]
+        : []),
       productFooterLink(
         footerCopy.expanded.products.realtime,
         '/products/realtime',

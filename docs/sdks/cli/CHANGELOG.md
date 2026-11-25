@@ -1,5 +1,15 @@
 # Change Log
 
+## 28.16.0
+
+* Breaking: `teams get-photo`, `update-photo` and `delete-photo` removed; team photos moved to the Avatars API
+* Added: `logs list` and `logs get` to read runtime logs
+* Added: `messaging create-bird-email-provider`, `create-bird-sms-provider` and their `update-` commands
+* Added: `--mutable-content` on `messaging create-push` and `update-push`
+* Added: `project update-o-auth-2-bird` and `project update-o-auth-2-supabase`
+* Fixed: `run function` no longer crashes with `No module named 'gunicorn'` after hot-swapping a Python function
+* Fixed: `init function` lists the available specifications when it rejects one
+
 ## 28.15.0
 
 * Added: `zero` creates an Appwrite project with no account or card and links this directory to it

@@ -21,6 +21,13 @@ abstract class Adapter
     public const METHOD_PUT = 'PUT';
     public const METHOD_PATCH = 'PATCH';
     public const METHOD_DELETE = 'DELETE';
+
+    /**
+     * Sent on every provider API call. GitHub requires a User-Agent; it names
+     * this client honestly, since a browser-like one makes Bitbucket apply
+     * its XSRF check to writes.
+     */
+    public const USER_AGENT = 'utopia-php/vcs';
     public const METHOD_HEAD = 'HEAD';
     public const METHOD_OPTIONS = 'OPTIONS';
     public const METHOD_CONNECT = 'CONNECT';
@@ -549,7 +556,7 @@ abstract class Adapter
         $client = new Client(new CurlAdapter(options: [
             CURLOPT_PATH_AS_IS => true,
             CURLOPT_ENCODING => null,
-            CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36',
+            CURLOPT_USERAGENT => self::USER_AGENT,
         ]))
             ->withFollowRedirects($followRedirects)
             ->withConnectTimeout(0)

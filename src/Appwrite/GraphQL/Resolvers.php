@@ -345,6 +345,9 @@ class Resolvers
             $resolverResponse = clone $utopia->context()->get('response');
             $utopia->context()->set('request', static fn () => $request);
             $utopia->context()->set('response', static fn () => $resolverResponse);
+            // The organization comes from the matched route, so resolve it, and the key and
+            // anything else built from it, for this field's route rather than /v1/graphql.
+            $utopia->context()->scope('team');
             $resolverResponse->setContentType(Response::CONTENT_TYPE_NULL);
             $resolverResponse->setSent(false);
 

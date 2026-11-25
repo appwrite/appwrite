@@ -153,7 +153,6 @@ Forwards all traffic from your domain to another URL. This is useful for domain 
 - You can choose from various HTTP status codes for the redirect:
   - 301 Moved permanently
   - 302 Found
-  - 303 See other
   - 307 Temporary redirect
   - 308 Permanent redirect
 
@@ -162,3 +161,54 @@ When you redirect an added domain to another URL, any additional path and querie
 
 For example, if a domain `example.com` is set to redirect to `appwrite.io`, `example.com/docs?id=123` will also redirect to `appwrite.io`.
 {% /info %}
+
+# Update a domain {% #update-a-domain %}
+
+You can change what a domain serves without removing it. The domain keeps its DNS records and TLS certificate, so there is nothing to change at your DNS provider and nothing to verify again.
+
+1. Navigate to your site in the Appwrite Console.
+2. Head to the **Domains** tab.
+3. Click the three-dots menu at the end of the domain's row, or right-click the row, and click **Update**.
+4. Choose what the domain serves and click **Update**.
+
+{% only_dark %}
+![Update domain dialog](/images/docs/sites/dark/update-domain.avif)
+{% /only_dark %}
+{% only_light %}
+![Update domain dialog](/images/docs/sites/update-domain.avif)
+{% /only_light %}
+
+What you can change depends on the domain's [rule type](#domain-rule-types):
+
+| Current rule type | What you can change |
+| ----------------- | ------------------- |
+| Active deployment or Git branch | Switch between the active deployment and a branch, or pick a different branch |
+| Redirect | The destination URL and the status code |
+
+A domain can't switch between serving your site and redirecting. To make that change, delete the domain and add it again with the other rule type.
+
+To serve a branch, the site needs a connected Git repository, and the branch needs at least one successful deployment. If the branch has none, Appwrite refuses the update and the domain keeps serving what it served before.
+
+## Update a domain with the API {% #update-a-domain-with-the-api %}
+
+The `updateSiteRule` and `updateRedirectRule` methods of the Proxy service make the same changes from your server, with an API key that has the `rules.write` scope. Pass the rule ID, which you can find with `listRules`. Leave out `branch` to serve the site's active deployment.
+
+```server-nodejs
+import { Client, Proxy } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const proxy = new Proxy(client);
+
+// Serve the newest successful deployment from the staging branch
+await proxy.updateSiteRule({
+    ruleId: '<RULE_ID>',
+    siteId: '<SITE_ID>',
+    branch: 'staging',
+});
+```
+
+The API can also pass a different site in the same project as `siteId`, which moves the domain to that site. See [Rule updates](/docs/partners/proxy#rule-updates) in the Proxy API reference for every update method.

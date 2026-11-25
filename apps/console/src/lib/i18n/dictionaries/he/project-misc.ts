@@ -4247,6 +4247,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'The note is removed from the chart for everyone.':
     'ההערה תוסר מהגרף עבור כולם.',
   'Former member': 'חבר לשעבר',
+  Notes: 'הערות',
   Escalations: 'הסלמות',
   Escalation: 'הסלמה',
   Escalating: 'בהסלמה',
@@ -4316,6 +4317,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'כל בדיקה נוספת עולה {price} לחודש.',
   'Upgrade your plan to add more synthetic checks.':
     'כדי להוסיף בדיקות סינתטיות, יש לשדרג את התוכנית.',
+  'HTTP, DNS, TCP and SMTP monitors are available on paid plans.':
+    'מוניטורים מסוג HTTP, DNS, TCP ו-SMTP זמינים בתוכניות בתשלום.',
   'Escalations: {used} of {limit} allowed on your plan.':
     'הסלמות: {used} מתוך {limit} שהתוכנית שלך מאפשרת.',
   'On-call responders: {used} of {included} included.':

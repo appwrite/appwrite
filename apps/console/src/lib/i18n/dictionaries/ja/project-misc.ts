@@ -4335,6 +4335,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'The note is removed from the chart for everyone.':
     'このメモは全員のグラフから削除されます。',
   'Former member': '元メンバー',
+  Notes: 'メモ',
   Escalations: 'エスカレーション',
   Escalation: 'エスカレーション',
   Escalating: 'エスカレーション中',
@@ -4407,6 +4408,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '追加のチェックは 1 件あたり月額 {price} です。',
   'Upgrade your plan to add more synthetic checks.':
     'Synthetic チェックを追加するには、プランをアップグレードしてください。',
+  'HTTP, DNS, TCP and SMTP monitors are available on paid plans.':
+    'HTTP、DNS、TCP、SMTP のモニターは有料プランで利用できます。',
   'Escalations: {used} of {limit} allowed on your plan.':
     'エスカレーション: プランの上限 {limit} 件中 {used} 件を使用中です。',
   'On-call responders: {used} of {included} included.':

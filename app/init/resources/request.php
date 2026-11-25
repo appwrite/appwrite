@@ -624,23 +624,13 @@ return function (Container $context): void {
     }, ['request', 'utopia']);
 
     /**
-     * The ID of the project the request names: the `project` param or the X-Appwrite-Project
+     * The ID of the project the request names: a `project` query parameter or the X-Appwrite-Project
      * header, else the access key of an S3 request or the path of a deprecated project alias.
      * Empty, or `console`, for the console. Kept apart from the project document so that a
      * comparison with what the client sent never depends on how the document was looked up.
      */
     $context->set('projectId', function (Request $request, Http $utopia, string $projectIdFromPath): string {
-        $projectId = $request->getParam('project', $request->getHeaderLine('x-appwrite-project', ''));
-        // Realtime channel "project" can send project=Query array
-        if (! \is_string($projectId)) {
-            $projectId = $request->getHeaderLine('x-appwrite-project', '');
-        }
-        // For non-GET requests getParam() reads the body, so a project passed
-        // as a query parameter (e.g. presigned artifact URLs) is only visible
-        // via getQuery().
-        if ($projectId === '') {
-            $projectId = (string) $request->getQuery('project', '');
-        }
+        $projectId = $request->getProject();
 
         $route = $utopia->match($request)?->route;
 
@@ -988,17 +978,8 @@ return function (Container $context): void {
          * - 'default' => Requests for Client and Server Side
          * - 'admin' => Request from the Console on non-console projects
          */
-        $mode = $request->getParam('mode', $request->getHeaderLine('x-appwrite-mode', APP_MODE_DEFAULT));
-        // Request bodies can carry their own 'mode' key
-        if (! \is_string($mode)) {
-            $mode = $request->getHeaderLine('x-appwrite-mode', APP_MODE_DEFAULT);
-        }
-
-        $named = $request->getParam('project', $request->getHeaderLine('x-appwrite-project', ''));
-        // GitLab webhook bodies carry a 'project' object, not a project ID
-        if (! \is_string($named)) {
-            $named = $request->getHeaderLine('x-appwrite-project', '');
-        }
+        $mode = $request->getMode();
+        $named = $request->getProject();
 
         // The request acts on a project other than the one it names, as a deprecated alias
         // under /v1/projects/:projectId does for the console
@@ -1024,16 +1005,24 @@ return function (Container $context): void {
         return $requestTimestamp;
     }, ['request']);
 
-    $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization, string $projectIdFromPath) {
+    /**
+     * The organization the request acts on, from the matched route. A GraphQL field
+     * runs its own route in a child scope and rebuilds this, and everything built from
+     * it, there (see Appwrite\GraphQL\Resolvers), so it must not depend on resources
+     * that stay fixed for the outer request.
+     */
+    $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization) {
         $teamInternalId = '';
         if ($project->getId() !== 'console') {
             $teamInternalId = $project->getAttribute('teamInternalId', '');
         } else {
-            $route = $utopia->match($request)?->route;
+            $match = $utopia->match($request);
+            $route = $match?->route;
             $path = ! empty($route) ? $route->getPath() : $request->getURI();
             $orgHeader = $request->getHeaderLine('x-appwrite-organization', '');
             if (str_starts_with($path, '/v1/projects/:projectId')) {
-                $p = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectIdFromPath));
+                $projectId = (string) ($match->params['projectId'] ?? '');
+                $p = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
                 $teamInternalId = $p->getAttribute('teamInternalId', '');
             } elseif ($path === '/v1/projects') {
                 $teamId = $request->getParam('teamId', '');
@@ -1065,7 +1054,7 @@ return function (Container $context): void {
         });
 
         return $team;
-    }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization', 'projectIdFromPath']);
+    }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization']);
 
     $context->set('previewHostname', function (Request $request, ?Key $apiKey) {
         $host = $request->getQuery('appwrite-hostname', $request->getHeaderLine('x-appwrite-hostname', '')) ?? '';

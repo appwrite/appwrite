@@ -230,7 +230,7 @@ export function buildProductsLlmsSection(origin: string): LlmsSection {
         title: 'Analytics',
         url: `${origin}/products/analytics`,
         description:
-          'Cookieless web and app analytics with custom events, server-side tracking, and bot and AI traffic breakdowns.',
+          'Cookieless web, app, and agent analytics built into Appwrite Sites and Auth: no script on Appwrite Sites, signed-in users by name, custom events, server-side tracking, and bot and AI traffic breakdowns.',
       },
     ],
   }

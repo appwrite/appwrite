@@ -7,6 +7,12 @@ import {
   playbackFatalMessage,
 } from '@/lib/videos/embed-player-errors'
 import {
+  readDownlinkMbps,
+  readSavedBandwidth,
+  saveBandwidth,
+  startBandwidth,
+} from '@/lib/videos/start-bandwidth'
+import {
   applyVideoStreamAccess,
   type VideoStreamAccess,
 } from '@/lib/videos/video-stream-access'
@@ -327,7 +333,19 @@ export function useHlsPlayer(
         return
       }
 
-      hls = new HlsClass(hlsLoaderConfig(access))
+      hls = new HlsClass({
+        ...hlsLoaderConfig(access),
+        // Open at the quality this viewer can sustain rather than the lowest
+        // rendition: start from the last measured bandwidth, skip the test
+        // fragment on the lowest level, and never pick more pixels than the
+        // player shows. Adaptive bitrate still steps down if the network lags.
+        abrEwmaDefaultEstimate: startBandwidth(
+          readSavedBandwidth(),
+          readDownlinkMbps(),
+        ),
+        testBandwidth: false,
+        capLevelToPlayerSize: true,
+      })
       hlsRef.current = hls
       setState((prev) => ({
         ...prev,
@@ -451,6 +469,8 @@ export function useHlsPlayer(
       cancelled = true
       video.removeEventListener('loadeddata', onFirstFrame)
       video.removeEventListener('error', onNativeError)
+      // Remember what this stream measured, so the next one starts there.
+      if (hls && hls.bandwidthEstimate > 0) saveBandwidth(hls.bandwidthEstimate)
       hls?.destroy()
       hlsRef.current = null
       video.removeAttribute('src')

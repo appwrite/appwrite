@@ -125,7 +125,7 @@ export const PRODUCT_REGISTRY: Record<ProductId, ProductRegistryItem> = {
     group: 'deploy',
     path: '/products/analytics',
     icon: ANALYTICS_PRODUCT_ICON,
-    tagline: 'Cookieless web and app analytics, bots and AI included.',
+    tagline: 'Cookieless analytics built into your Sites and Auth.',
     docsPath: '/docs/products/analytics',
   },
   firewall: {

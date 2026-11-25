@@ -36,8 +36,8 @@ interface FirewallProps {
 }
 
 /**
- * Firewall tab of a function, a site, or project settings (API): traffic for
- * the scope, then its rules.
+ * Firewall tab of a function, a site, or the project Firewall page (API):
+ * traffic for the scope, then its rules.
  */
 export function Firewall({ projectId, resourceSelection }: FirewallProps) {
   const t = useT()

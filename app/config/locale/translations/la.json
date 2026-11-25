@@ -244,7 +244,7 @@
     "emails.otpSession.clientInfo": "Hoc signum intra petebatur utendo {{agentClient}} in {{agentDevice}} {{agentOs}}. Si signum intra non petisti, hoc epistulum securus negligere potes.",
     "emails.otpSession.securityPhrase": "Sententia securitatis huius epistulae est {{phrase}}. Epistulae confidere potes si haec sententia cum ea quae ostensa est in signo ingressus convenit.",
     "emails.otpSession.thanks": "Gratias,",
-    "emails.otpSession.signature": "{{project}} team -> {{project}} grex",
+    "emails.otpSession.signature": "{{project}} grex",
     "emails.certificate.subject": "Defectio testimonii pro {{domain}}",
     "emails.certificate.hello": "Salve,",
     "emails.certificate.body": "Certificatum pro dominio tuo '{{domain}}' generari non potuit. Hoc conatus num. {{attempt}} est, et defectus causatus est ab: {{error}}",
