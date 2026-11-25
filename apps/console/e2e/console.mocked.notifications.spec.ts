@@ -6,6 +6,11 @@ const NOW = new Date()
 const hoursAgo = (hours: number) =>
   new Date(NOW.getTime() - hours * 3_600_000).toISOString()
 const daysAgo = (days: number) => hoursAgo(days * 24)
+const sinceMidnight = NOW.getTime() - new Date(NOW).setHours(0, 0, 0, 0)
+const todayHoursAgo = (hours: number) =>
+  new Date(
+    NOW.getTime() - Math.min(hours * 3_600_000, (sinceMidnight * hours) / 24),
+  ).toISOString()
 
 const PROJECT_ID = 'notificationsproj001'
 const ORGANIZATION_ID = 'orgacme00000000001'
@@ -37,8 +42,8 @@ function notification(
 ): Models.Notification {
   return {
     $id: id,
-    $createdAt: hoursAgo(1),
-    $updatedAt: hoursAgo(1),
+    $createdAt: todayHoursAgo(1),
+    $updatedAt: todayHoursAgo(1),
     type: 'info',
     channel: 'console',
     resourceType: 'users',
@@ -95,7 +100,7 @@ const NOTIFICATIONS = [
   notification('alertresolved0000001', {
     type: 'warning',
     title: 'Executions are back under 1,000 on Production',
-    $createdAt: hoursAgo(2),
+    $createdAt: todayHoursAgo(2),
     read: true,
     teamId: ORGANIZATION_ID,
     subjectType: 'alerts',
