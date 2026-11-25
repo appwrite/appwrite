@@ -33,15 +33,17 @@ describe('applyFrameDenyHeaders', () => {
     )
   })
 
-  test('keeps a frame-ancestors directive already set', () => {
-    const headers = new Headers({
-      'Content-Security-Policy': "frame-ancestors 'self'",
-    })
-    applyFrameDenyHeaders(headers, '/mfa')
-    expect(headers.get('Content-Security-Policy')).toBe(
-      "frame-ancestors 'self'",
-    )
-    expect(headers.get('X-Frame-Options')).toBe('DENY')
+  test('replaces a frame-ancestors directive already set, keeping the rest', () => {
+    for (const allowed of ["'self'", '*', 'https://attacker.example']) {
+      const headers = new Headers({
+        'Content-Security-Policy': `default-src 'self'; frame-ancestors ${allowed}; img-src *`,
+      })
+      applyFrameDenyHeaders(headers, '/oauth2/consent')
+      expect(headers.get('Content-Security-Policy')).toBe(
+        "default-src 'self'; img-src *; frame-ancestors 'none'",
+      )
+      expect(headers.get('X-Frame-Options')).toBe('DENY')
+    }
   })
 
   test('leaves other console pages alone', () => {

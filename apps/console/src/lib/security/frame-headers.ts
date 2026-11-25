@@ -38,7 +38,9 @@ export function isAuthScreenPath(pathname: string): boolean {
 
 /**
  * Refuses framing of an auth screen: `X-Frame-Options: DENY` for older browsers,
- * and `frame-ancestors 'none'` added to any policy already set, never replacing it.
+ * and `frame-ancestors 'none'` in the Content-Security-Policy. Browsers obey
+ * `frame-ancestors` over `X-Frame-Options`, so a directive already in the policy
+ * is replaced, whatever it allowed; every other directive is kept.
  */
 export function applyFrameDenyHeaders(
   headers: Headers,
@@ -48,15 +50,17 @@ export function applyFrameDenyHeaders(
 
   headers.set('X-Frame-Options', 'DENY')
 
-  const policy = headers.get('Content-Security-Policy')?.trim() ?? ''
-  if (!/(^|;)\s*frame-ancestors\s/i.test(policy)) {
-    headers.set(
-      'Content-Security-Policy',
-      policy
-        ? `${policy.replace(/;\s*$/, '')}; ${FRAME_ANCESTORS_NONE}`
-        : FRAME_ANCESTORS_NONE,
+  const directives = (headers.get('Content-Security-Policy') ?? '')
+    .split(';')
+    .map((directive) => directive.trim())
+    .filter(
+      (directive) =>
+        directive !== '' && !/^frame-ancestors(\s|$)/i.test(directive),
     )
-  }
+  headers.set(
+    'Content-Security-Policy',
+    [...directives, FRAME_ANCESTORS_NONE].join('; '),
+  )
 
   return headers
 }
