@@ -205,6 +205,28 @@ class Supabase extends OAuth2
     }
 
     /**
+     * The primary database's connection pooler, which unlike the direct host is reachable over IPv4
+     *
+     * @return array<string, mixed>
+     */
+    public function getPooler(string $accessToken, string $projectRef): array
+    {
+        $poolers = \json_decode($this->request(
+            'GET',
+            'https://api.supabase.com/v1/projects/' . \rawurlencode($projectRef) . '/config/database/pooler',
+            ['Authorization: Bearer ' . $accessToken]
+        ), true) ?? [];
+
+        foreach ($poolers as $pooler) {
+            if (($pooler['database_type'] ?? '') === 'PRIMARY') {
+                return $pooler;
+            }
+        }
+
+        return [];
+    }
+
+    /**
      * @param string $accessToken
      *
      * @return array
