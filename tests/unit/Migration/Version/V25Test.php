@@ -697,13 +697,21 @@ final class V25Test extends TestCase
         $database->setValidation(false);
 
         $collections = Config::getParam('collections', [])['console'];
-        foreach (['monitors', 'schedules', 'users'] as $id) {
+        foreach (['monitors', 'schedules'] as $id) {
             $database->createCollection(Collection::create(
                 id: $id,
                 attributes: \array_values($collections[$id]['attributes']),
                 indexes: \array_values($collections[$id]['indexes']),
             ));
         }
+        // Only the opt-outs: the other user attributes read collections this test has no use for.
+        $database->createCollection(Collection::create(
+            id: 'users',
+            attributes: \array_values(\array_filter(
+                $collections['users']['attributes'],
+                static fn (Attribute $attribute): bool => $attribute->key === 'alertsUnsubscribed'
+            )),
+        ));
 
         // A monitor from the previous release, under its global ID, and the schedule the worker stopped
         // while it could not find the monitor.
