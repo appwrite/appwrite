@@ -216,7 +216,8 @@ function duplicateKeyError(error: unknown): string | null {
  * before writing any variable.
  */
 function parseEnvFile(content: string): Record<string, string> {
-  const result: Record<string, string> = {}
+  // No prototype, so a key named `__proto__` is stored instead of being dropped.
+  const result: Record<string, string> = Object.create(null)
   const lines = content.split('\n')
 
   for (const line of lines) {
