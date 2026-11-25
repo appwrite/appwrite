@@ -113,7 +113,7 @@ For a single compromised account, you don't need a project-wide sign out. Delete
 
 # Getting started with force sign out in Appwrite Auth
 
-Force sign out is live on [Appwrite Cloud](/sign-up) and in self-hosted Appwrite 2.7 and later. Make sure your app sends users to sign-in on a `401`, so the button is ready the day you need it.
+Force sign out is live on [Appwrite Cloud](/sign-up) and in self-hosted Appwrite 2.7 and later.
 
 - [Force sign out all users](/docs/products/auth/security#force-sign-out-all-users)
 - [Force password reset](/docs/products/auth/security#force-password-reset)
