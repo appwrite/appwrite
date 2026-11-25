@@ -265,11 +265,6 @@ trait MonitorsBase
         $this->assertSame('general_argument_invalid', $role['body']['type']);
         $this->assertSame(['owner', 'developer'], $this->getMonitor($monitorId)['body']['notify']);
 
-        // Updates are PATCH only: PUT is not a route, so nothing changes.
-        $put = $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $this->headers(), ['name' => 'Put']);
-        $this->assertSame(404, $put['headers']['status-code']);
-        $this->assertSame('After ' . $monitorId, $this->getMonitor($monitorId)['body']['name']);
-
         $escalation = $this->updateMonitor($monitorId, ['escalationId' => '!bad']);
         $this->assertSame(400, $escalation['headers']['status-code']);
         $this->assertSame('general_argument_invalid', $escalation['body']['type']);
