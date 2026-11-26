@@ -2807,6 +2807,24 @@ final class VideosCustomServerTest extends Scope
         $dashProbe = $this->assertDashLadderPlayable((string) $mpd['body']);
         $this->assertGreaterThanOrEqual(2, $dashProbe['video'], 'Expected at least two DASH video representations');
 
+        // Every DASH URL carries the binding the request used: the same project,
+        // and the project environment only when the request named one.
+        $projectId = $this->getProject()['$id'];
+        $this->assertStringNotContainsString('environment=', (string) $mpd['body']);
+
+        $boundMpd = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/dash/master.mpd',
+            $this->headers(),
+            ['project' => $projectId, 'environment' => 'test-env']
+        );
+        $this->assertEquals(200, $boundMpd['headers']['status-code']);
+        $this->assertGreaterThan(0, \substr_count((string) $boundMpd['body'], '?project='));
+        $this->assertSame(
+            \substr_count((string) $boundMpd['body'], '?project='),
+            \substr_count((string) $boundMpd['body'], '?project=' . $projectId . '&amp;environment=test-env&amp;updatedAt=')
+        );
+
         // CMAF: one encode, dual HLS + DASH masters over shared fMP4 segments.
         $cmafCreate = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
             'profileId' => $profile360['$id'],
@@ -2961,7 +2979,6 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(200, $timeline['headers']['status-code']);
         $this->assertStringContainsString('WEBVTT', (string) $timeline['body']);
 
-        $projectId = $this->getProject()['$id'];
         $this->assertStringNotContainsString('sprites/', (string) $timeline['body']);
         $this->assertMatchesRegularExpression(
             '/thumbnails\/[a-zA-Z0-9]+\?project=' . \preg_quote($projectId, '/') . '#xywh=/',
@@ -2999,6 +3016,36 @@ final class VideosCustomServerTest extends Scope
 
         $hlsProbe = $this->assertHlsLadderPlayable((string) $master['body']);
         $this->assertGreaterThanOrEqual(1, $hlsProbe['subtitles']);
+
+        // Players cannot send headers, so nested URLs carry the binding the
+        // request used: the project it named and, only when it named one, the
+        // project environment (X-Appwrite-Environment).
+        $projectId = $this->getProject()['$id'];
+        $this->assertStringNotContainsString('environment=', (string) $master['body']);
+
+        $bound = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/hls/master.m3u8',
+            $this->headers(),
+            ['project' => $projectId, 'environment' => 'test-env']
+        );
+        $this->assertEquals(200, $bound['headers']['status-code']);
+        $this->assertGreaterThan(0, \substr_count((string) $bound['body'], '?project='));
+        $this->assertSame(
+            \substr_count((string) $bound['body'], '?project='),
+            \substr_count((string) $bound['body'], '?project=' . $projectId . '&environment=test-env&updatedAt=')
+        );
+
+        $boundPlaylist = $this->client->call(
+            Client::METHOD_GET,
+            $this->manifestRequestPath($this->subtitleUri((string) $bound['body'], $captionId)),
+            $this->headers()
+        );
+        $this->assertEquals(200, $boundPlaylist['headers']['status-code']);
+        $this->assertStringContainsString(
+            '?project=' . $projectId . '&environment=test-env&updatedAt=',
+            $this->firstPlaylistSegmentUri((string) $boundPlaylist['body'])
+        );
 
         $playlist = $this->client->call(
             Client::METHOD_GET,

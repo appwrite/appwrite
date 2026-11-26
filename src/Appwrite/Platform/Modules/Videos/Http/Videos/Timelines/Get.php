@@ -10,10 +10,10 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Video\Timeline;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
@@ -54,12 +54,12 @@ class Get extends Base
                 ],
                 contentType: ContentType::ANY,
                 type: MethodType::LOCATION,
-                locationAuth: ['Project', 'ImpersonateUserId'],
+                locationAuth: ['Project', 'Environment', 'ImpersonateUserId'],
             ))
             ->param('videoId', '', new UID(), 'Video unique ID.')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('project')
+            ->inject('request')
             ->inject('user')
             ->inject('authorization')
             ->inject('deviceForVideos')
@@ -70,7 +70,7 @@ class Get extends Base
         string $videoId,
         Response $response,
         Database $dbForProject,
-        Document $project,
+        Request $request,
         User $user,
         Authorization $authorization,
         Device $deviceForVideos
@@ -101,7 +101,7 @@ class Get extends Base
         // URL must carry the query. The on-disk VTT is left unchanged.
         $vtt = Timeline::withProjectOnThumbnailCues(
             (string) $deviceForVideos->read($path),
-            $project->getId()
+            $this->binding($request)
         );
 
         $response

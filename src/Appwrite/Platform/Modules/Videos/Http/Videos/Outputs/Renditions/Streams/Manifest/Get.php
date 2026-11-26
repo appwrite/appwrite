@@ -9,9 +9,9 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -54,14 +54,14 @@ class Get extends Base
                 ],
                 contentType: ContentType::ANY,
                 type: MethodType::LOCATION,
-                locationAuth: ['Project', 'ImpersonateUserId'],
+                locationAuth: ['Project', 'Environment', 'ImpersonateUserId'],
             ))
             ->param('videoId', '', new UID(), 'Video unique ID.')
             ->param('renditionId', '', new UID(), 'Rendition unique ID.')
             ->param('streamIndex', 0, new Range(0, 10), 'Stream index within the rendition.')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('project')
+            ->inject('request')
             ->inject('user')
             ->inject('authorization')
             ->callback($this->action(...));
@@ -73,7 +73,7 @@ class Get extends Base
         int $streamIndex,
         Response $response,
         Database $dbForProject,
-        Document $project,
+        Request $request,
         User $user,
         Authorization $authorization
     ): void {
@@ -84,7 +84,7 @@ class Get extends Base
             self::OUTPUT_HLS,
             $response,
             $dbForProject,
-            $project,
+            $request,
             $user,
             $authorization
         );

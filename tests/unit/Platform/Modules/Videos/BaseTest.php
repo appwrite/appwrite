@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Tests\Unit\Platform\Modules\Videos;
 
 use Appwrite\Platform\Modules\Videos\Base;
+use Appwrite\Utopia\Request;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Swoole\Http\Request as SwooleRequest;
 use Utopia\Config\Config;
 
 final class BaseTest extends TestCase
@@ -106,9 +108,9 @@ final class BaseTest extends TestCase
     public function testWithProjectAppendsUpdatedAt(): void
     {
         $base = new class () extends Base {
-            public function expose(string $uri, \Utopia\Database\Document $project, \Utopia\Database\Document $video): string
+            public function expose(string $uri, Request $request, \Utopia\Database\Document $video): string
             {
-                return $this->withProject($uri, $project, $video);
+                return $this->withProject($uri, $request, $video);
             }
 
             public function exposePublic(\Utopia\Database\Document $video): bool
@@ -117,7 +119,9 @@ final class BaseTest extends TestCase
             }
         };
 
-        $project = new \Utopia\Database\Document(['$id' => 'proj1']);
+        $swoole = new SwooleRequest();
+        $swoole->get = ['project' => 'proj1'];
+        $request = new Request($swoole);
         $video = new \Utopia\Database\Document([
             '$id' => 'vid1',
             '$updatedAt' => '2026-01-02T03:04:05.000+00:00',
@@ -126,7 +130,15 @@ final class BaseTest extends TestCase
 
         $this->assertSame(
             '/v1/videos/vid1/outputs/hls/master.m3u8?project=proj1&updatedAt=2026-01-02T03%3A04%3A05.000%2B00%3A00',
-            $base->expose('/v1/videos/vid1/outputs/hls/master.m3u8', $project, $video)
+            $base->expose('/v1/videos/vid1/outputs/hls/master.m3u8', $request, $video)
+        );
+
+        $swoole = new SwooleRequest();
+        $swoole->get = ['project' => 'proj1', 'environment' => 'env1'];
+        $swoole->header = ['x-appwrite-impersonate-user-id' => 'user1'];
+        $this->assertSame(
+            '/v1/videos/vid1/outputs/hls/master.m3u8?project=proj1&environment=env1&impersonateuserid=user1&updatedAt=2026-01-02T03%3A04%3A05.000%2B00%3A00',
+            $base->expose('/v1/videos/vid1/outputs/hls/master.m3u8', new Request($swoole), $video)
         );
         $this->assertTrue($base->exposePublic($video));
         $this->assertFalse($base->exposePublic(new \Utopia\Database\Document([
