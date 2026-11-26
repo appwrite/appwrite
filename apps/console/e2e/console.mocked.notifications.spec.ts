@@ -121,6 +121,26 @@ const NOTIFICATIONS = [
     $createdAt: daysAgo(4),
     read: true,
   }),
+  notification('webhookpaused0000001', {
+    type: 'warning',
+    title: 'Webhook deliveries have been paused',
+    body: 'Webhook "Orders" has been paused after 10 failed delivery attempts.',
+    $createdAt: daysAgo(2),
+    read: true,
+  }),
+  // An organization's budget alert is filed under the console project.
+  notification('budgetcap00000000001', {
+    type: 'error',
+    title: '[Firing] Budget cap reached · Acme',
+    body: 'Acme reached its budget cap.',
+    $createdAt: daysAgo(2),
+    read: true,
+    projectId: 'console',
+    teamId: ORGANIZATION_ID,
+    subjectType: 'alerts',
+    subjectId: 'alertbudget000000001',
+    status: 'firing',
+  }),
 ]
 
 function corsHeaders(route: Route) {
@@ -363,6 +383,18 @@ async function settledBox(locator: Locator) {
   return locator.boundingBox()
 }
 
+async function enableAlertCtas(page: Page) {
+  await page.addInitScript(() => {
+    window.localStorage.setItem(
+      'debug:consoleProfile',
+      JSON.stringify({
+        id: 'cloud',
+        features: { notifications: true, alerts: true, alertCtas: true },
+      }),
+    )
+  })
+}
+
 async function openNotifications(page: Page) {
   await page.goto('/account')
   await page.getByRole('button', { name: 'Notifications', exact: true }).click()
@@ -555,13 +587,85 @@ test.describe('Notification center (mocked API)', () => {
     expect(writes.reads).toEqual([{ id: 'alertwarning00000001', read: true }])
   })
 
+  test('shows no CTA buttons while the alert CTAs flag is off', async ({
+    page,
+  }) => {
+    await mockApi(page)
+    const popover = await openNotifications(page)
+
+    await expect(
+      popover.getByRole('button', { name: 'View alert' }),
+    ).toHaveCount(0)
+  })
+
+  test('opens the alert from its View alert button', async ({ page }) => {
+    await mockApi(page)
+    await enableAlertCtas(page)
+    const popover = await openNotifications(page)
+
+    await popover
+      .locator('.group')
+      .filter({ hasText: 'Bandwidth is over 80%' })
+      .getByRole('button', { name: 'View alert' })
+      .click()
+
+    await expect(page).toHaveURL(
+      new RegExp(`/projects/${PROJECT_ID}/monitors/alerts\\?alert=${ALERT_ID}`),
+    )
+  })
+
+  test('opens webhook settings from a paused webhook', async ({ page }) => {
+    await mockApi(page)
+    await enableAlertCtas(page)
+    const popover = await openNotifications(page)
+
+    await popover.getByRole('button', { name: 'Open webhooks' }).click()
+
+    await expect(page).toHaveURL(
+      new RegExp(`/projects/${PROJECT_ID}/settings/webhooks`),
+    )
+  })
+
+  test('opens the budget cap in billing from a budget alert', async ({
+    page,
+  }) => {
+    await mockApi(page)
+    await enableAlertCtas(page)
+    const popover = await openNotifications(page)
+
+    await popover.getByRole('button', { name: 'Edit budget cap' }).click()
+
+    await expect(page).toHaveURL(
+      new RegExp(
+        `/organizations/${ORGANIZATION_ID}/settings/billing#update-budget`,
+      ),
+    )
+  })
+
+  test('shows no CTA for a notification it does not recognize', async ({
+    page,
+  }) => {
+    await mockApi(page)
+    await enableAlertCtas(page)
+    const popover = await openNotifications(page)
+
+    await expect(
+      popover
+        .locator('.group')
+        .filter({ hasText: 'Build failed for checkout' })
+        .getByRole('button', { name: /^Open|^View|^Edit/ }),
+    ).toHaveCount(0)
+  })
+
   test('acknowledges a firing alert from its menu', async ({ page }) => {
     const writes = await mockApi(page)
     const popover = await openNotifications(page)
 
     // A resolved alert has nothing to acknowledge.
     await openRowMenu(popover, 'Executions are back under 1,000')
-    await expect(page.getByRole('menuitem', { name: 'Open' })).toBeVisible()
+    await expect(
+      page.getByRole('menuitem', { name: 'Open', exact: true }),
+    ).toBeVisible()
     await expect(
       page.getByRole('menuitem', { name: 'Acknowledge' }),
     ).toBeHidden()
@@ -583,7 +687,9 @@ test.describe('Notification center (mocked API)', () => {
       .toEqual([{ id: 'alertwarning00000001', read: true }])
 
     await openRowMenu(popover, 'Bandwidth is over 80%')
-    await expect(page.getByRole('menuitem', { name: 'Open' })).toBeVisible()
+    await expect(
+      page.getByRole('menuitem', { name: 'Open', exact: true }),
+    ).toBeVisible()
     await expect(
       page.getByRole('menuitem', { name: 'Acknowledge' }),
     ).toBeHidden()
@@ -608,7 +714,9 @@ test.describe('Notification center (mocked API)', () => {
     expect(writes.reads).toEqual([])
 
     await openRowMenu(popover, 'Bandwidth is over 80%')
-    await expect(page.getByRole('menuitem', { name: 'Open' })).toBeVisible()
+    await expect(
+      page.getByRole('menuitem', { name: 'Open', exact: true }),
+    ).toBeVisible()
     await expect(
       page.getByRole('menuitem', { name: 'Acknowledge' }),
     ).toBeHidden()
