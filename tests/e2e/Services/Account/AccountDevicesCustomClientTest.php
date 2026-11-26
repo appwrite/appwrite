@@ -81,6 +81,37 @@ final class AccountDevicesCustomClientTest extends Scope
         ]);
     }
 
+    /**
+     * Run the mock OAuth2 session flow as a browser would: the given cookies, plus the ones set when
+     * the flow started, ride along on the Appwrite hops. Returns the final redirect.
+     */
+    private function followMockOAuth2Flow(string $cookie, array $params = []): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = ['x-appwrite-project' => $projectId];
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/mock', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => $cookie,
+        ], \array_merge([
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ], $params), followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        $cookies = \array_filter([$cookie, ...\array_map(fn (string $name, string $value): string => $name . '=' . $value, \array_keys($response['cookies']), $response['cookies'])]);
+        $oauthClient = new Client();
+        $oauthClient->setEndpoint('');
+        for ($hop = 0; $hop < 3; $hop++) {
+            $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $hop === 0 ? $headers : $headers + ['cookie' => \implode('; ', $cookies)], followRedirects: false);
+            $this->assertEquals(301, $response['headers']['status-code']);
+        }
+
+        return $response;
+    }
+
     private function setAccountDevicesPolicy(bool $enabled): void
     {
         $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/account-devices', [
@@ -519,6 +550,98 @@ final class AccountDevicesCustomClientTest extends Scope
                 $this->assertSame('', $session['providerRefreshToken']);
             }
         }
+    }
+
+    public function testDeviceAddsOAuth2AccountWithoutLink(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $deviceKey = 'a_device_' . $projectId;
+        $sessionKey = 'a_session_' . $projectId;
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => 'mock',
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // The mock provider always returns the same identity: signing in with it while signed out finds its owner
+        $response = $this->followMockOAuth2Flow('');
+        $this->assertArrayHasKey($sessionKey, $response['cookies']);
+        $response = $this->client->call(Client::METHOD_GET, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => $sessionKey . '=' . $response['cookies'][$sessionKey],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $ownerId = $response['body']['$id'];
+
+        $email = \uniqid() . 'link@localhost.test';
+        $userId = $this->createUserWithPassword($email, 'password');
+        $device = $this->createDevice();
+        $response = $this->signIn($device['cookie'], $email, 'password');
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $sessionId = $response['body']['$id'];
+        $session = $sessionKey . '=' . $response['cookies'][$sessionKey];
+        $device['cookie'] = $response['cookies'][$deviceKey];
+
+        /**
+         * Test for FAILURE - by default the flow links the provider to the signed-in user, and another user owns it
+         */
+        $response = $this->followMockOAuth2Flow($deviceKey . '=' . $device['cookie'] . '; ' . $session);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/failure?', $response['headers']['location']);
+        $this->assertStringContainsString('user_already_exists', \urldecode($response['headers']['location']));
+        $this->assertArrayNotHasKey($sessionKey, $response['cookies']);
+
+        /**
+         * Test for SUCCESS - without linking, the owner signs in and joins the device next to the signed-in user
+         */
+        $response = $this->followMockOAuth2Flow($deviceKey . '=' . $device['cookie'] . '; ' . $session, ['link' => false]);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success', $response['headers']['location']);
+        $this->assertArrayHasKey($sessionKey, $response['cookies']);
+        $this->assertArrayHasKey($deviceKey, $response['cookies']);
+        $device['cookie'] = $response['cookies'][$deviceKey];
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => $sessionKey . '=' . $response['cookies'][$sessionKey],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($ownerId, $response['body']['userId']);
+        $ownerSessionId = $response['body']['$id'];
+
+        $response = $this->getDevice($device['cookie']);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($ownerSessionId, $response['body']['activeSessionId']);
+        $this->assertEqualsCanonicalizing([$sessionId, $ownerSessionId], \array_column($response['body']['sessions'], '$id'));
+
+        // The user who started the flow is still signed in, with no provider linked to them
+        $response = $this->client->call(Client::METHOD_GET, '/account/identities', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => $session,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => $session,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($userId, $response['body']['$id']);
     }
 
     public function testDeviceDropsSessionsDeletedElsewhere(): void

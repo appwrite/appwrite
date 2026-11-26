@@ -23,6 +23,7 @@ use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -65,6 +66,7 @@ class Get extends Base
             ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
             ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
             ->param('state', '', new Text(256, 0, \array_map(\chr(...), \range(0x20, 0x7E))), 'An opaque value your app generates and keeps, for example in a cookie. It is returned unchanged as the `state` query parameter on the success and failure URLs, so your app can check that the sign-in it receives is one it started. Printable ASCII only (RFC 6749 Appendix A.5). Max length: 256 chars.', true)
+            ->param('link', true, new Boolean(true), 'Link the provider account to the user who is already signed in. Defaults to true only for backwards compatibility; pass false on a sign-in page. With false, the token is for the account that owns the provider identity, or for a new user, the same as without an active session. Exchanging it while a session is active then needs an account switching device, like any other sign-in.', true)
             ->inject('request')
             ->inject('response')
             ->inject('project')
@@ -80,6 +82,7 @@ class Get extends Base
         string $failure,
         array $scopes,
         string $state,
+        bool $link,
         Request $request,
         Response $response,
         Document $project,
@@ -136,6 +139,7 @@ class Get extends Base
             'success' => $success,
             'failure' => $failure,
             'token' => true,
+            'link' => $link,
             'nonce' => $nonce,
             'binding' => \hash_hmac('sha256', $nonce . ':' . $user->getId(), EncryptionKey::current()),
             'state' => $state,

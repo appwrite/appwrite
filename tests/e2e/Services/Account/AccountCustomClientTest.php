@@ -3658,6 +3658,121 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
     }
 
+    public function testCreateOAuth2SessionWithoutLink(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $sessionKey = 'a_session_' . $projectId;
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => 'mock',
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $account = $this->createFreshAccountWithSession();
+        $cookie = ['cookie' => $sessionKey . '=' . $account['session']];
+
+        /**
+         * Test for FAILURE - without linking, a second session needs an account switching device to hold it
+         */
+        $response = $this->followMockOAuth2Flow('/account/sessions/oauth2/mock', $cookie, [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+            'link' => false,
+        ]);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/failure?', $response['headers']['location']);
+        $this->assertStringContainsString('user_session_already_exists', \urldecode($response['headers']['location']));
+        $this->assertArrayNotHasKey($sessionKey, $response['cookies']);
+
+        // The caller stays signed in, with no provider linked
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', \array_merge([
+            'x-appwrite-project' => $projectId,
+        ], $cookie));
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($account['sessionId'], $response['body']['$id']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/identities', \array_merge([
+            'x-appwrite-project' => $projectId,
+        ], $cookie));
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+    }
+
+    public function testCreateOAuth2TokenWithoutLink(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $sessionKey = 'a_session_' . $projectId;
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => 'mock',
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // The mock provider always returns the same identity: signing in with it while signed out finds its owner
+        $response = $this->followMockOAuth2Flow('/account/sessions/oauth2/mock');
+        $this->assertArrayHasKey($sessionKey, $response['cookies']);
+        $response = $this->client->call(Client::METHOD_GET, '/account', [
+            'x-appwrite-project' => $projectId,
+            'cookie' => $sessionKey . '=' . $response['cookies'][$sessionKey],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $ownerId = $response['body']['$id'];
+
+        $account = $this->createFreshAccountWithSession();
+        $cookie = ['cookie' => $sessionKey . '=' . $account['session']];
+
+        /**
+         * Test for FAILURE - by default the flow links the provider to the signed-in user, and another user owns it
+         */
+        $response = $this->followMockOAuth2Flow('/account/tokens/oauth2/mock', $cookie);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/failure?', $response['headers']['location']);
+        $this->assertStringContainsString('user_already_exists', \urldecode($response['headers']['location']));
+
+        /**
+         * Test for SUCCESS - without linking, the token is for the owner of the provider identity
+         */
+        $response = $this->followMockOAuth2Flow('/account/tokens/oauth2/mock', $cookie, [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+            'link' => false,
+        ]);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success?', $response['headers']['location']);
+        $this->assertArrayNotHasKey($sessionKey, $response['cookies']);
+
+        $oauthParams = [];
+        \parse_str(\parse_url($response['headers']['location'], PHP_URL_QUERY), $oauthParams);
+        $this->assertNotEmpty($oauthParams['secret']);
+        $this->assertEquals($ownerId, $oauthParams['userId']);
+
+        // The caller stays signed in, with no provider linked
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', \array_merge([
+            'x-appwrite-project' => $projectId,
+        ], $cookie));
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($account['sessionId'], $response['body']['$id']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/identities', \array_merge([
+            'x-appwrite-project' => $projectId,
+        ], $cookie));
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+    }
+
     public function testCreateOAuth2SessionRejectsPlantedNonceCookie(): void
     {
         $provider = 'mock';

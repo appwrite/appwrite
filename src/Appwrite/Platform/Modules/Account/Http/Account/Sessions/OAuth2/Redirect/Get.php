@@ -259,6 +259,18 @@ class Get extends Base
             $user = new User();
         }
 
+        // `link: false` signs in to the account that owns the provider identity instead of linking it to the
+        // signed-in user: the flow goes on as if signed out and the current session stays. A state from before
+        // `link` existed has no such key and still links. Like every other sign-in, a second session needs an
+        // account switching device to hold it; the token flow leaves that check to the createSession exchange.
+        if (($state['link'] ?? true) === false && !$user->isEmpty()) {
+            if (empty($state['token']) && $authDevice === null) {
+                $failureRedirect(Exception::USER_SESSION_ALREADY_EXISTS);
+            }
+
+            $user = new User();
+        }
+
         if (!empty($error)) {
             $message = 'The ' . $providerName . ' OAuth2 provider returned an error: ' . $error;
             if (!empty($error_description)) {
