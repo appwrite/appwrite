@@ -153,11 +153,11 @@ function CopyableText({
   const displayValue = hideValue && !showValue ? '•'.repeat(20) : value
 
   return (
-    <div className="flex items-center gap-2 group cursor-pointer">
+    <div className="flex min-w-0 max-w-full items-center gap-2 group cursor-pointer">
       <span
         className={cn(
-          'text-[13px] font-mono text-foreground truncate',
-          hideValue && 'w-[200px]',
+          'min-w-0 text-[13px] font-mono text-foreground truncate',
+          hideValue && 'w-[200px] max-w-full',
         )}
         title={value}
       >
@@ -1004,16 +1004,18 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                 />
               ) : (
                 <>
-                  <Table>
+                  {/* Fixed columns: a max-length key truncates instead of
+                      stretching the row and pushing Value off screen. */}
+                  <Table className="table-fixed">
                     <TableHeader>
                       <TableRow className="hover:bg-transparent border-b border-border">
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[200px] max-w-[400px]">
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                           {t('Key')}
                         </TableHead>
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[200px] max-w-[400px]">
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                           {t('Value')}
                         </TableHead>
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[50px]" />
+                        <TableHead className="w-[4.5rem] px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider" />
                       </TableRow>
                     </TableHeader>
                       <TableBody>
@@ -1031,17 +1033,23 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                               <TableRow
                                 className="border-b border-border/50"
                               >
-                                <TableCell className="px-4 py-3">
-                                  <code className="text-[12px] font-mono">
+                                <TableCell className="max-w-0 overflow-hidden px-4 py-3">
+                                  <code
+                                    className="block truncate text-[12px] font-mono"
+                                    title={w.key}
+                                  >
                                     {w.key}
                                   </code>
                                 </TableCell>
-                                <TableCell className="px-4 py-3">
+                                <TableCell className="max-w-0 overflow-hidden px-4 py-3">
                                   {w.secret ? (
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex min-w-0 items-center gap-2">
                                       {showSecrets.has(w.key) ? (
                                         <>
-                                          <code className="text-[12px] font-mono text-muted-foreground">
+                                          <code
+                                            className="min-w-0 truncate text-[12px] font-mono text-muted-foreground"
+                                            title={w.value || undefined}
+                                          >
                                             {w.value || t('(empty)')}
                                           </code>
                                           <Button
@@ -1083,7 +1091,10 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                                       )}
                                     </div>
                                   ) : (
-                                    <code className="text-[12px] font-mono text-muted-foreground">
+                                    <code
+                                      className="block truncate text-[12px] font-mono text-muted-foreground"
+                                      title={w.value || undefined}
+                                    >
                                       {w.value || t('(empty)')}
                                     </code>
                                   )}
@@ -1167,7 +1178,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                               }}
                             >
                             <TableRow>
-                              <TableCell className="px-4 py-3">
+                              <TableCell className="max-w-0 overflow-hidden px-4 py-3">
                                 <div className="flex items-center gap-2 min-w-0">
                                   <CopyableText value={record.key} />
                                   {showProjectKeyWarning && (
@@ -1197,14 +1208,14 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                                   {badge && (
                                     <Badge
                                       variant="secondary"
-                                      className="text-[11px]"
+                                      className="shrink-0 text-[11px]"
                                     >
                                       {t(badge)}
                                     </Badge>
                                   )}
                                 </div>
                               </TableCell>
-                              <TableCell className="px-4 py-3">
+                              <TableCell className="max-w-0 overflow-hidden px-4 py-3">
                                 {record.secret ? (
                                   <Badge
                                     variant="secondary"
