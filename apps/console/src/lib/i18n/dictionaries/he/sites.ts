@@ -699,4 +699,5 @@ export const heSitesDictionary: Record<string, string> = {
   Use: 'שימוש',
   'Connecting...': 'מתחבר...',
   'Install on another account': 'התקנה בחשבון אחר',
+  'Failed to connect GitHub account': 'חיבור חשבון GitHub נכשל',
 }

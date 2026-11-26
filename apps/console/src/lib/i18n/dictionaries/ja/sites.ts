@@ -660,4 +660,5 @@ export const jaSitesDictionary: Record<string, string> = {
   Use: '使用',
   'Connecting...': '接続中...',
   'Install on another account': '別のアカウントにインストール',
+  'Failed to connect GitHub account': 'GitHub アカウントの接続に失敗しました',
 }

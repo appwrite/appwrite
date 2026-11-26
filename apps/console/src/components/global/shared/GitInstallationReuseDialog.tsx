@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react'
 import type { Models } from '@appwrite.io/console'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -72,6 +73,10 @@ export function GitInstallationReuseDialog({
                 onClick={() =>
                   reuse.mutate(installation.$id, {
                     onSuccess: () => onOpenChange(false),
+                    onError: (error) =>
+                      toast.error(
+                        error.message || t('Failed to connect GitHub account'),
+                      ),
                   })
                 }
               >
