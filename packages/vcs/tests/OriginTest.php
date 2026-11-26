@@ -117,7 +117,7 @@ final class OriginTest extends TestCase
      *
      * @return array<string, mixed>
      */
-    protected function pushPayload(string $branch, bool $created = false, bool $deleted = false): array
+    protected function pushPayload(string $branch, bool $created = false, bool $deleted = false, mixed $before = null): array
     {
         return [
             'deliveryId' => 'whd_0123456789',
@@ -135,7 +135,7 @@ final class OriginTest extends TestCase
                     ],
                     'refUpdates' => [[
                         'ref' => 'refs/heads/' . $branch,
-                        'before' => $created ? str_repeat('0', 40) : 'abc123',
+                        'before' => $before ?? ($created ? str_repeat('0', 40) : 'abc123'),
                         'after' => $deleted ? str_repeat('0', 40) : self::COMMIT_HASH,
                         'created' => $created,
                         'deleted' => $deleted,
@@ -314,10 +314,7 @@ final class OriginTest extends TestCase
 
     public function testGetEventPushReadsANonStringBeforeAsEmpty(): void
     {
-        $payload = $this->pushPayload('main');
-        $payload['event']['payload']['refUpdates'][0]['before'] = ['abc123'];
-
-        $events = $this->adapter->getEvents('repository.pushed', (string) json_encode($payload));
+        $events = $this->adapter->getEvents('repository.pushed', (string) json_encode($this->pushPayload('main', before: ['abc123'])));
 
         $this->assertCount(1, $events);
         $this->assertSame('', $events[0]['previousCommitHash']);
