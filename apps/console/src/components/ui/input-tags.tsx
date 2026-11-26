@@ -8,6 +8,7 @@ import { X } from 'lucide-react'
 import { Input } from './input'
 import { Badge } from './badge'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 interface InputTagsProps {
   id?: string
@@ -33,8 +34,6 @@ interface InputTagsProps {
   onPaste?: (event: ClipboardEvent<HTMLInputElement>) => void
   /** Rejects a tag with the returned message, or accepts it when null. */
   validateTag?: (tag: string) => string | null
-  /** Reports text typed but not yet committed, so a form can treat it as a change. */
-  onPendingChange?: (pending: string) => void
 }
 
 export function InputTags({
@@ -52,13 +51,10 @@ export function InputTags({
   onPrefillConsumed,
   onPaste,
   validateTag,
-  onPendingChange,
 }: InputTagsProps) {
   const [inputValue, setInputValue] = useState('')
   const [error, setError] = useState<string | null>(null)
-  useEffect(() => {
-    onPendingChange?.(inputValue.trim())
-  }, [inputValue, onPendingChange])
+  const t = useT()
   // A saved or reset list makes an earlier error stale. Keyed on the joined
   // list so a parent passing a fresh array each render doesn't clear it.
   const valueKey = value.join('\n')
@@ -113,7 +109,7 @@ export function InputTags({
 
     for (const tag of tokens) {
       if (validateEmail && !validateEmailFormat(tag)) {
-        setError('Please enter a valid email address')
+        setError(t('Please enter a valid email address'))
         return
       }
       const tagError = validateTag?.(tag)
@@ -122,7 +118,12 @@ export function InputTags({
         return
       }
       if (maxTagLength !== undefined && tag.length > maxTagLength) {
-        setError(`Values have a maximum length of ${maxTagLength} characters`)
+        setError(
+          t('Values have a maximum length of {count} characters').replace(
+            '{count}',
+            String(maxTagLength),
+          ),
+        )
         return
       }
       if (lockedTags.includes(tag) || next.includes(tag)) continue
@@ -133,8 +134,8 @@ export function InputTags({
     if (!added && tokens.length > 0) {
       setError(
         validateEmail
-          ? 'This email is already added'
-          : 'This value is already added',
+          ? t('This email is already added')
+          : t('This value is already added'),
       )
       return
     }
