@@ -42,7 +42,7 @@ class Get extends Base
                 namespace: 'videos',
                 group: 'playback',
                 name: 'getCmafStreamManifest',
-                // Hidden until videos is generally available; preview SDK builds show it.
+                // Players follow this URL from the manifest; apps never call it directly. Preview SDK builds show it.
                 hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/videos/get-stream-manifest.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
