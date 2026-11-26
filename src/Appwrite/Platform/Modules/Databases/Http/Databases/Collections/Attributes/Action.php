@@ -347,6 +347,7 @@ abstract class Action extends DatabasesAction
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
+        /** @var Database $dbForDatabases */
         $dbForDatabases = $getDatabasesDB($db);
 
         if (in_array($type, [ColumnType::Point->value, ColumnType::Linestring->value, ColumnType::Polygon->value]) && !$this->supportsSpatial($dbForDatabases->getAdapter())) {
@@ -419,6 +420,7 @@ abstract class Action extends DatabasesAction
                     throw new StructureException('Failed to add required spatial column: existing rows present. Make the column optional.');
                 }
             }
+
             $dbForDatabases->checkAttribute('database_' . $db->getSequence() . '_collection_' . $collection->getSequence(), Attribute::fromArray([
                 'key' => $key,
                 'type' => $type,
@@ -431,7 +433,8 @@ abstract class Action extends DatabasesAction
                 'formatOptions' => $formatOptions,
                 'filters' => $filters,
                 'options' => $options !== [] ? $options : null,
-            ]));
+            ]), $this->getPendingAttributes($collection));
+
             $attribute = $dbForProject->createDocument('attributes', $attribute);
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException(), params: [$key]);
@@ -487,7 +490,7 @@ abstract class Action extends DatabasesAction
                     'formatOptions' => $formatOptions,
                     'filters' => $filters,
                     'options' => $options !== [] ? $options : null,
-                ]));
+                ]), $this->getPendingAttributes($dbForProject->getDocument('database_' . $db->getSequence(), $relatedCollection->getId())));
                 $dbForProject->createDocument('attributes', $twoWayAttribute);
             } catch (DuplicateException) {
                 throw new Exception($this->getDuplicateException(), params: [$twoWayKey]);
@@ -584,6 +587,7 @@ abstract class Action extends DatabasesAction
         }
 
         $collectionId = 'database_' . $db->getSequence() . '_collection_' . $collection->getSequence();
+        /** @var Database $dbForDatabases */
         $dbForDatabases = $getDatabasesDB($db);
 
         $attribute
@@ -765,5 +769,39 @@ abstract class Action extends DatabasesAction
             ->setContext($this->getCollectionsEventsContext(), $collection);
 
         return $attribute;
+    }
+
+    /**
+     * Attributes queued for the databases worker are not in the collection schema yet, so the
+     * limit check counts them separately.
+     *
+     * @return list<Attribute>
+     */
+    private function getPendingAttributes(Document $collection): array
+    {
+        $pending = [];
+
+        foreach ($collection->getAttribute('attributes', []) as $attribute) {
+            if ($attribute->getAttribute('status') === 'processing') {
+                $format = $attribute->getAttribute('format', '');
+                $options = $attribute->getAttribute('options', []);
+
+                $pending[] = Attribute::fromArray([
+                    'key' => $attribute->getAttribute('key'),
+                    'type' => $attribute->getAttribute('type'),
+                    'size' => $attribute->getAttribute('size', 0),
+                    'required' => $attribute->getAttribute('required', false),
+                    'signed' => $attribute->getAttribute('signed', true),
+                    'default' => $attribute->getAttribute('default'),
+                    'array' => $attribute->getAttribute('array', false),
+                    'format' => $format !== '' ? $format : null,
+                    'formatOptions' => $attribute->getAttribute('formatOptions', []),
+                    'filters' => $attribute->getAttribute('filters', []),
+                    'options' => $options !== [] ? $options : null,
+                ]);
+            }
+        }
+
+        return $pending;
     }
 }

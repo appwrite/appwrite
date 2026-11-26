@@ -14,10 +14,11 @@ import {
 } from '@/components/ui/popover'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
-import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { InitialsAvatar, TeamAvatar } from '@/components/global/shared/Avatar'
 import {
   useTeams,
   useProject,
+  useProductionProject,
   useProjectsForTeamInfinite,
   useConsoleTeam,
   fetchActiveProjects,
@@ -39,6 +40,7 @@ import { FailedInvoiceWarningIcon } from '@/components/global/shared/FailedInvoi
 import { ProjectBlockedBadge } from '@/components/global/shared/ProjectBlockedBadge'
 import { ProjectSelectorPlanBadge } from '@/components/pages/projects/$projectId/shared/ProjectSelectorPlanBadge'
 import { parsePinnedProjectIds } from '@/lib/team-prefs-keys'
+import { projectEnvironmentId } from '@/lib/project-environments'
 import {
   useQuery,
   useQueryClient,
@@ -61,6 +63,7 @@ import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
 import { useT } from '@/lib/i18n/translate'
 import { useIsZeroAccount } from '@/hooks/use-zero-account'
 import { ClaimToUnlock } from '@/components/global/shared/ClaimToUnlock'
+import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
 import {
   INITIAL_LOADER_SHELL_GATE,
   resetInitialLoaderShellGate,
@@ -294,11 +297,12 @@ export function ProjectSelector({
     isLoading: currentProjectLoading,
     error: currentProjectError,
   } = useProject(projectId)
-  // Inside an environment the open project is the environment. Its production
-  // project is named before it, so the trigger reads
-  // organization / project / environment.
-  const { project: parentProject } = useProject(
-    currentProjectData?.parentId || undefined,
+  // Inside an environment the open project is the environment, under the
+  // project's own ID and with the environment's name. The project itself is
+  // asked for apart, so the trigger reads organization / project / environment
+  // and the list names the project, not the environment.
+  const { project: parentProject } = useProductionProject(
+    projectEnvironmentId(currentProjectData) ? projectId : undefined,
   )
   const projectPaymentRequired = isHttpPaymentRequiredError(currentProjectError)
   const projectAccessFailed = isHttpProjectAccessError(currentProjectError)
@@ -338,9 +342,11 @@ export function ProjectSelector({
   const resolvedProject = useMemo(() => {
     const candidate = selectedProject ?? currentProject ?? null
     if (!candidate || !projectId) return null
-    if (candidate.$id !== projectId) {
-      return currentProject?.$id === projectId ? currentProject : null
-    }
+    // What was fetched for the open project is what is open. Inside an
+    // environment that is the environment, while the row picked from the list
+    // is the project it belongs to, under the same ID.
+    if (currentProject?.$id === projectId) return currentProject
+    if (candidate.$id !== projectId) return null
     return candidate
   }, [selectedProject, currentProject, projectId])
 
@@ -403,7 +409,9 @@ export function ProjectSelector({
       placeholderData: keepPreviousData,
     })
 
-  const projectSearchActive = Boolean(projectSearch.trim())
+  // Search the API once typing pauses, not on every keystroke.
+  const debouncedProjectSearch = useDebouncedValue(projectSearch.trim(), 300)
+  const projectSearchActive = Boolean(debouncedProjectSearch)
   const listExcludePinnedIds = projectSearchActive ? undefined : pinnedIds
 
   const { data: switcherProjectScopeData } = useQuery(
@@ -421,7 +429,7 @@ export function ProjectSelector({
   } = useProjectsForTeamInfinite(
     resolvedTeam?.$id,
     projectsPageSize,
-    projectSearch,
+    debouncedProjectSearch,
     listExcludePinnedIds,
     switcherProjectScope,
   )
@@ -654,11 +662,14 @@ export function ProjectSelector({
       : pinnedProjects.filter((p) => p.$id !== projectId)
 
     if (currentProject && currentProject.teamId === resolvedTeam.$id) {
-      return [currentProject, ...pinnedForList, ...otherProjects]
+      // The list is of projects: inside an environment the current row is the
+      // project the environment belongs to
+      return [parentProject ?? currentProject, ...pinnedForList, ...otherProjects]
     }
     return [...pinnedForList, ...otherProjects]
   }, [
     currentProject,
+    parentProject,
     pinnedProjects,
     paginatedProjects,
     projectId,
@@ -1270,7 +1281,7 @@ function ProjectSelectorContent({
                           : 'hover:bg-accent/50',
                       )}
                     >
-                      <InitialsAvatar name={team.name} size="sm" />
+                      <TeamAvatar teamId={team.$id} name={team.name} size="sm" />
                       <div className="min-w-0 flex flex-1 items-center gap-2">
                         <span className="truncate text-[13px] font-medium text-foreground">
                           {team.name}
@@ -1630,7 +1641,7 @@ function MobileProjectSelectorContent({
                           : 'hover:bg-accent/50',
                       )}
                     >
-                      <InitialsAvatar name={team.name} size="sm" />
+                      <TeamAvatar teamId={team.$id} name={team.name} size="sm" />
                       <div className="min-w-0 flex-1">
                         <span className="block truncate text-[14px] font-medium text-foreground">
                           {team.name}

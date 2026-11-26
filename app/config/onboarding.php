@@ -68,11 +68,13 @@ return [
     'messaging.createResendProvider' => true,
     'messaging.createSmtpProvider' => true,
     'messaging.createSMTPProvider' => true,
+    'messaging.createBirdEmailProvider' => true,
     'messaging.createMsg91Provider' => true,
     'messaging.createTelesignProvider' => true,
     'messaging.createTextmagicProvider' => true,
     'messaging.createTwilioProvider' => true,
     'messaging.createVonageProvider' => true,
+    'messaging.createBirdSMSProvider' => true,
     'messaging.createFcmProvider' => true,
     'messaging.createFCMProvider' => true,
     'messaging.createApnsProvider' => true,
@@ -86,4 +88,17 @@ return [
     'sites.createTemplateDeployment' => true,
     'sites.createVcsDeployment' => true,
     'sites.updateSiteDeployment' => true,
+
+    // Videos
+    'videos.create' => true,
+    'project.createVideoProfile' => true,
+    'videos.createRendition' => true,
+    'videos.createCaption' => true,
+    'videos.getTimeline' => true,
+    // Master-manifest SDK methods; OR them in the UI for a single
+    // "played a video" milestone.
+    'videos.getHlsManifest' => true,
+    'videos.getDashManifest' => true,
+    'videos.getCmafHlsManifest' => true,
+    'videos.getCmafDashManifest' => true,
 ];

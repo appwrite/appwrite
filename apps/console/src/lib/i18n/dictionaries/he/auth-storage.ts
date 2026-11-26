@@ -773,8 +773,7 @@ export const heAuthStorageDictionary: Record<string, string> = {
   Never: 'אף פעם',
   'New password': 'סיסמה חדשה',
   'Next page': 'עמוד הבא',
-  'No OAuth identities linked to this user.':
-    'אין זהויות OAuth מקושרות למשתמש זה.',
+  'No identities linked to this user.': 'אין זהויות מקושרות למשתמש זה.',
   'No OAuth2 apps': 'אין אפליקציות OAuth2',
   'Connect with': 'התחברות עם',
   'Connect with Appwrite': 'התחברות עם Appwrite',
@@ -1341,8 +1340,8 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'User deleted successfully': 'המשתמש נמחק בהצלחה',
   'User has connected an authenticator app for two-factor authentication.':
     'המשתמש חיבר אפליקציית אימות לאימות דו-שלבי.',
-  "User identities are the user's connected OAuth accounts. The user can sign in using these identities.":
-    'זהויות משתמש הן חשבונות ה-OAuth המחוברים של המשתמש. המשתמש יכול להתחבר באמצעות זהויות אלו.',
+  'Identities link this user to accounts they sign in with elsewhere, such as an OAuth2 provider or an LDAP directory.':
+    'זהויות מקשרות את המשתמש הזה לחשבונות שאיתם הוא מתחבר במקומות אחרים, כמו ספק OAuth2 או ספריית LDAP.',
   'User impersonation': 'התחזות למשתמש',
   'User impersonation has been disabled for this account':
     'התחזות למשתמש הושבתה עבור חשבון זה',
@@ -1746,4 +1745,91 @@ export const heAuthStorageDictionary: Record<string, string> = {
     'מדיניות חסימת אורחים ב-Realtime עודכנה',
   'Failed to update deny realtime guests policy':
     'עדכון מדיניות חסימת אורחים ב-Realtime נכשל',
+
+  // Project-wide security actions (force sign out, force password reset)
+  'Security actions': 'פעולות אבטחה',
+  'Apply an action to every user in the project at once, for example when responding to a security incident.':
+    'החילו פעולה על כל המשתמשים בפרויקט בבת אחת, למשל בתגובה לאירוע אבטחה.',
+  'Force password reset': 'איפוס סיסמה בכפייה',
+  'Require every user to set a new password before they can sign in with email and password again. Existing sessions stay active, and users without a password are not affected.':
+    'דרשו מכל המשתמשים להגדיר סיסמה חדשה לפני שיוכלו להתחבר שוב עם אימייל וסיסמה. סשנים קיימים נשארים פעילים, ומשתמשים ללא סיסמה אינם מושפעים.',
+  'Reset all passwords': 'איפוס כל הסיסמאות',
+  'Every user will have to set a new password through password recovery before they can sign in with email and password again. Existing sessions stay active, so sign out all users as well if sessions may be compromised. This action cannot be undone.':
+    'כל משתמש יצטרך להגדיר סיסמה חדשה דרך שחזור סיסמה לפני שיוכל להתחבר שוב עם אימייל וסיסמה. סשנים קיימים נשארים פעילים, לכן נתקו גם את כל המשתמשים אם ייתכן שהסשנים נפרצו. פעולה זו אינה ניתנת לביטול.',
+  'All users must now reset their password.':
+    'כל המשתמשים נדרשים כעת לאפס את הסיסמה שלהם.',
+  'Failed to reset passwords': 'איפוס הסיסמאות נכשל',
+  // Auth overview
+  'The Free plan includes {count} monthly active users.':
+    'תוכנית Free כוללת {count} משתמשים פעילים חודשיים.',
+  'Upgrade for more': 'שדרגו כדי לקבל יותר',
+  '1 social provider': 'ספק OAuth אחד',
+  '{count} social providers': '{count} ספקי OAuth',
+  'Recent users': 'משתמשים אחרונים',
+  'Users will appear here when they sign up': 'משתמשים יופיעו כאן לאחר שיירשמו',
+  'Last sign-up': 'הרשמה אחרונה',
+  '{enabled} of {total}': '{enabled} מתוך {total}',
+  '{enabled} of {total} enabled': '{enabled} מתוך {total} מופעלות',
+  'No social providers enabled': 'לא הופעלו ספקי OAuth',
+  'Configure methods': 'הגדרת שיטות אימות',
+  'Configure providers': 'הגדרת ספקי OAuth',
+  'Configure policies': 'הגדרת כללי מדיניות',
+  'Sessions, passwords and limits': 'סשנים, סיסמאות ומגבלות',
+  'No active users yet': 'עדיין אין משתמשים פעילים',
+  "Couldn't load active users": 'לא ניתן היה לטעון משתמשים פעילים',
+  'No sign-ups yet': 'עדיין אין הרשמות',
+  "Couldn't load sign-ups": 'לא ניתן היה לטעון הרשמות',
+  'sign-ups': 'הרשמות',
+  second: 'שנייה',
+  // Single sign-on for a team of a project
+  "Prove the domains this team owns. The team's identity providers sign in only users with an email on a verified domain.":
+    'הוכיחו אילו דומיינים שייכים לצוות הזה. ספקי הזהויות של הצוות מאפשרים התחברות רק למשתמשים עם אימייל בדומיין מאומת.',
+  "Add the domain of your users' emails, then connect an identity provider so they sign in to your app with single sign-on.":
+    'הוסיפו את הדומיין של כתובות האימייל של המשתמשים שלכם, ואז חברו ספק זהויות כדי שיתחברו לאפליקציה שלכם בהתחברות יחידה (SSO).',
+  "Users with an email on it can no longer sign in through the team's identity providers. Users who already joined stay members.":
+    'משתמשים עם אימייל בדומיין הזה לא יוכלו עוד להתחבר דרך ספקי הזהויות של הצוות. משתמשים שכבר הצטרפו יישארו חברים בצוות.',
+  "Require SSO is on and this is the team's only verified domain: deleting it pauses Require SSO, and members keep the team's roles however they sign in.":
+    'חיוב SSO פעיל וזה הדומיין המאומת היחיד של הצוות: מחיקתו תשהה את חיוב ה-SSO, וחברים ישמרו על תפקידי הצוות בכל דרך שבה יתחברו.',
+  "Prove this team owns this domain with a DNS record. The team's identity providers then sign in users with an email on it.":
+    'הוכיחו באמצעות רשומת DNS שהדומיין הזה שייך לצוות. לאחר מכן ספקי הזהויות של הצוות יאפשרו התחברות למשתמשים עם אימייל בדומיין.',
+  "Users on the team's verified domains sign in to your app through an identity provider, like Okta, Microsoft Entra ID, Google Workspace or Keycloak, and join the team with its roles.":
+    'משתמשים בדומיינים המאומתים של הצוות מתחברים לאפליקציה שלכם דרך ספק זהויות, למשל Okta,‏ Microsoft Entra ID,‏ Google Workspace או Keycloak, ומצטרפים לצוות עם התפקידים שלו.',
+  "Connect an identity provider so users on the team's domains sign in to your app with single sign-on.":
+    'חברו ספק זהויות כדי שמשתמשים בדומיינים של הצוות יתחברו לאפליקציה שלכם בהתחברות יחידה (SSO).',
+  'Users can no longer sign in through it. Users who already joined stay members.':
+    'משתמשים לא יוכלו עוד להתחבר דרכו. משתמשים שכבר הצטרפו יישארו חברים בצוות.',
+  "Require SSO is on and this is the team's only enabled identity provider: deleting it pauses Require SSO, and members keep the team's roles however they sign in.":
+    'חיוב SSO פעיל וזה ספק הזהויות הפעיל היחיד של הצוות: מחיקתו תשהה את חיוב ה-SSO, וחברים ישמרו על תפקידי הצוות בכל דרך שבה יתחברו.',
+  'Your app can show this name when users choose how to sign in.':
+    'האפליקציה שלכם יכולה להציג את השם הזה כשמשתמשים בוחרים איך להתחבר.',
+  'Add at least one role.': 'הוסיפו לפחות תפקיד אחד.',
+  'Roles users get in this team when they sign in through this identity provider.':
+    'התפקידים שמשתמשים מקבלים בצוות הזה כשהם מתחברים דרך ספק הזהויות הזה.',
+  'A role can be at most 36 characters.': 'תפקיד יכול להכיל עד 36 תווים.',
+  'Use letters, numbers, periods, hyphens and underscores, starting with a letter or number.':
+    'השתמשו באותיות, ספרות, נקודות, מקפים וקווים תחתונים, והתחילו באות או בספרה.',
+  "Members with an email on the team's verified domains keep their account, but get the team's roles only after signing in through one of its identity providers. Team owners keep their roles however they sign in, so a broken identity provider never locks the team out. Members on other domains are not affected.":
+    'חברים עם אימייל בדומיינים המאומתים של הצוות שומרים על החשבון שלהם, אבל מקבלים את תפקידי הצוות רק אחרי התחברות דרך אחד מספקי הזהויות שלו. בעלי הצוות שומרים על התפקידים שלהם בכל דרך שבה יתחברו, כך שספק זהויות תקול לעולם לא ינעל את הצוות בחוץ. חברים בדומיינים אחרים לא מושפעים.',
+  "Enabled - members on the team's verified domains get its roles only through single sign-on.":
+    'מופעל - חברים בדומיינים המאומתים של הצוות מקבלים את התפקידים שלו רק דרך התחברות יחידה (SSO).',
+  "Disabled - members get the team's roles however they sign in.":
+    'מושבת - חברים מקבלים את תפקידי הצוות בכל דרך שבה יתחברו.',
+  "Members on the team's verified domains who signed in another way keep their account but lose the team's roles until they sign in through one of its identity providers. Their other teams are not affected. Team owners keep their roles, so a broken identity provider never locks the team out.":
+    'חברים בדומיינים המאומתים של הצוות שהתחברו בדרך אחרת ישמרו על החשבון שלהם, אבל יאבדו את תפקידי הצוות עד שיתחברו דרך אחד מספקי הזהויות שלו. הצוותים האחרים שלהם לא מושפעים. בעלי הצוות שומרים על התפקידים שלהם, כך שספק זהויות תקול לעולם לא ינעל את הצוות בחוץ.',
+  'Add sign-in to your app': 'הוספת התחברות לאפליקציה שלכם',
+  'There is no SDK method for it yet: your app sends these two requests.':
+    'עדיין אין לזה מתודה ב-SDK: האפליקציה שלכם שולחת את שתי הבקשות האלה.',
+  '1. Find the identity providers for an email':
+    '1. מציאת ספקי הזהויות לכתובת אימייל',
+  'It answers with the identity providers that can sign that email in, each with its $id and name.':
+    'התשובה כוללת את ספקי הזהויות שיכולים לחבר את כתובת האימייל הזו, כל אחד עם ה-$id והשם שלו.',
+  '2. Send the browser to the chosen one': '2. שליחת הדפדפן לספק שנבחר',
+  "On success, the browser returns to the success URL with the user's session cookie for this project set.":
+    'בהצלחה, הדפדפן חוזר לכתובת ההצלחה כשעוגיית הסשן של המשתמש בפרויקט הזה כבר מוגדרת.',
+  'Users can sign in through this identity provider.':
+    'משתמשים יכולים להתחבר דרך ספק הזהויות הזה.',
+  'Both URLs must be on the hostname of a web platform added to this project.':
+    'שתי הכתובות חייבות להיות בשם המארח של פלטפורמת ווב שנוספה לפרויקט הזה.',
+  'On failure, it returns to the failure URL with an error query parameter that holds JSON with message, type and code.':
+    'בכישלון, הוא חוזר לכתובת הכישלון עם פרמטר השאילתה error, שמכיל JSON עם message,‏ type ו-code.',
 }

@@ -41,6 +41,7 @@ use Appwrite\Utopia\Request\Filters\V24 as RequestV24;
 use Appwrite\Utopia\Request\Filters\V25 as RequestV25;
 use Appwrite\Utopia\Request\Filters\V26 as RequestV26;
 use Appwrite\Utopia\Request\Filters\V27 as RequestV27;
+use Appwrite\Utopia\Request\Filters\V28 as RequestV28;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
@@ -56,6 +57,7 @@ use Appwrite\Utopia\Response\Filters\V26 as ResponseV26;
 use Appwrite\Utopia\Response\Filters\V27 as ResponseV27;
 use Appwrite\Utopia\Response\Filters\V28 as ResponseV28;
 use Appwrite\Utopia\Response\Filters\V29 as ResponseV29;
+use Appwrite\Utopia\Response\Filters\V30 as ResponseV30;
 use Appwrite\Utopia\View;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
@@ -583,7 +585,8 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $canStreamResponse = !$isPreview
             && System::getEnv('_APP_COMPUTE_STREAMING', 'enabled') === 'enabled';
 
-        $onExecutionPart = !$canStreamResponse ? null : function (string $name, string $chunk, bool $isLast) use (&$streamed, &$streamParts, &$streamBody, $response, $execution, $errorView, $type): void {
+        $isHead = $request->getMethod() === Request::METHOD_HEAD;
+        $onExecutionPart = !$canStreamResponse ? null : function (string $name, string $chunk, bool $isLast) use (&$streamed, &$streamParts, &$streamBody, $isHead, $response, $execution, $errorView, $type): void {
             if ($name !== 'body') {
                 // Only the parts read below, and only while they still can be.
                 if ($streamed === null) {
@@ -604,8 +607,11 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 // A runtime may send header names in any casing.
                 $headers = \array_change_key_case($headers);
 
-                // A failed response may be replaced by a branded page, and a sized one keeps its content-length; both need the whole body.
-                $streamed = $statusCode < 400 && !\array_key_exists('content-length', $headers);
+                // A failed response may be replaced by a branded page, and a small sized one keeps its content-length; both need the whole body. Larger ones stream, except HEAD, which has no body.
+                $declared = $headers['content-length'] ?? null;
+                $declared = \is_array($declared) ? ($declared[0] ?? null) : $declared;
+                $sized = \is_numeric($declared) && ((int) $declared <= MAX_OUTPUT_CHUNK_SIZE || $isHead);
+                $streamed = $statusCode < 400 && !$sized;
 
                 if ($streamed) {
                     $headers[$type === 'function' ? 'x-appwrite-execution-id' : 'x-appwrite-log-id'] = $execution->getId();
@@ -621,7 +627,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                         }
 
                         // Framing describes the buffered response, not the chunked one.
-                        if ($lowercased === 'transfer-encoding') {
+                        if ($lowercased === 'transfer-encoding' || $lowercased === 'content-length') {
                             continue;
                         }
 
@@ -637,6 +643,14 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             }
 
             if (!$streamed) {
+                // A HEAD response is sent without a body.
+                if ($isHead) {
+                    return;
+                }
+                // A runtime may send more than it declared.
+                if (\strlen($streamBody) + \strlen($chunk) > MAX_OUTPUT_CHUNK_SIZE) {
+                    throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Execution response is too large to buffer.', view: $errorView);
+                }
                 $streamBody .= $chunk;
 
                 return;
@@ -834,13 +848,10 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
             $execution
                 ->setAttribute('duration', \microtime(true) - $durationStart)
-                ->setAttribute('responseStatusCode', 500);
+                ->setAttribute('responseStatusCode', 500)
+                ->setAttribute('status', 'failed')
+                ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
 
-            if ($type === 'function') {
-                $execution
-                    ->setAttribute('status', 'failed')
-                    ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
-            }
             Console::error($th->getMessage());
 
             if ($th instanceof AppwriteException) {
@@ -869,6 +880,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $body = $execution['responseBody'];
 
         if ($streamed !== true) {
+            // Swoole frames the body it sends; a runtime's content-length may not match it. A HEAD response sends no body, so it keeps the declared one.
             $contentType = 'text/plain';
             foreach ($executionResponse['headers'] as $name => $values) {
                 if (\strtolower($name) === 'content-type') {
@@ -876,7 +888,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                     continue;
                 }
 
-                if (\strtolower($name) === 'transfer-encoding') {
+                if (\strtolower($name) === 'transfer-encoding' || (\strtolower($name) === 'content-length' && !$isHead)) {
                     continue;
                 }
 
@@ -1100,6 +1112,9 @@ Http::init()
             if (version_compare($requestFormat, '2.0.0', '<')) {
                 $request->addFilter(new RequestV27());
             }
+            if (version_compare($requestFormat, '2.8.0', '<')) {
+                $request->addFilter(new RequestV28());
+            }
         }
 
         $localeParam = (string) $request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', ''));
@@ -1124,6 +1139,9 @@ Http::init()
          */
         $responseFormat = $request->getHeaderLine('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($responseFormat) {
+            if (version_compare($responseFormat, '2.8.0', '<')) {
+                $response->addFilter(new ResponseV30());
+            }
             if (version_compare($responseFormat, '2.4.0', '<')) {
                 $response->addFilter(new ResponseV29());
             }
@@ -1514,6 +1532,7 @@ Http::error()
             case 412: // Error allowed publicly
             case 416: // Error allowed publicly
             case 422: // Error allowed publicly
+            case 424: // Error allowed publicly
             case 429: // Error allowed publicly
             case 451: // Error allowed publicly
             case 501: // Error allowed publicly

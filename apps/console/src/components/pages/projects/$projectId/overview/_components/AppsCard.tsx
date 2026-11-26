@@ -3,6 +3,7 @@ import { PlatformIcon } from '@/components/global/shared/Icon'
 import { McpIcon } from '@/components/global/shared/McpIcon'
 import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
 import { PlatformContextMenu } from '../../apps/_components/PlatformContextMenu'
+import { WildcardWarning } from '../../apps/_components/WildcardWarning'
 import {
   OverviewListCard,
   OverviewListFiller,
@@ -17,6 +18,7 @@ import { useT } from '@/lib/i18n/translate'
 import {
   getPlatformDisplayName,
   getPlatformIdentifier,
+  isWildcardPlatform,
   type ProjectPlatform,
 } from '@/lib/utils/platform'
 
@@ -174,9 +176,12 @@ export function AppsCard({
               title={platform.name || getPlatformDisplayName(type)}
               meta={
                 identifier ? (
-                  <span className="truncate" dir="ltr">
-                    {identifier}
-                  </span>
+                  <>
+                    <span className="truncate" dir="ltr">
+                      {identifier}
+                    </span>
+                    {isWildcardPlatform(platform) && <WildcardWarning />}
+                  </>
                 ) : undefined
               }
               trailing={

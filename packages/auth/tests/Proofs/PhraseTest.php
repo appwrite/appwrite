@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Utopia\Auth\Tests\Proofs;
 
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Auth\Proofs\Phrase;
 
+#[RequiresPhpExtension('utopia')]
 final class PhraseTest extends TestCase
 {
     private Phrase $phrase;

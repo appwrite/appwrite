@@ -3,6 +3,8 @@
 namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Alert\Acknowledgements;
+use Appwrite\Alert\Change;
 use Appwrite\Alert\Unsubscribe;
 use Appwrite\Messaging\PushService;
 use Appwrite\Network\Validator\PublicHostname;
@@ -479,14 +481,23 @@ class Notifications extends Action
             $consoleRecipient['recipientHash'] = $recipientHash;
         }
 
+        // A monitor alert's push names the alert, so the bell keeps one notification per alert that it
+        // can open and acknowledge. Its severity is the notification's type, as the bell draws one icon per type.
+        $data = \array_map('strval', $payload['push']['data'] ?? []);
+        $alert = ($data['type'] ?? '') === 'alert' ? $data : [];
+
         $consoleMessage = new ConsoleMessage(
             recipients: [$consoleRecipient],
             title: $title,
             body: $body,
-            type: $payload['type'] ?? 'info',
+            type: ($alert['severity'] ?? '') !== '' ? $alert['severity'] : ($payload['type'] ?? 'info'),
             messageId: $messageId !== '' ? $messageId : null,
             projectId: $project->getId(),
             projectInternalId: $project->getSequence(),
+            teamId: ($alert['organizationId'] ?? '') !== '' ? $alert['organizationId'] : null,
+            subjectType: ($alert['alertId'] ?? '') !== '' ? RESOURCE_TYPE_ALERTS : '',
+            subjectId: $alert['alertId'] ?? '',
+            status: $alert['status'] ?? '',
         );
 
         $adapter = new ConsoleAdapter($dbForPlatform);
@@ -495,6 +506,16 @@ class Notifications extends Action
         if (($result['deliveredTo'] ?? 0) === 0) {
             $error = $result['results'][0]['error'] ?? 'unknown error';
             throw new Exception('Console alert delivery failed: ' . $error);
+        }
+
+        // An alert acknowledged while its firing notice waited in the queue shows acknowledged. Read after writing, so an
+        // acknowledgement made meanwhile either finds the notification or is seen here. Only ever marks it acknowledged,
+        // as a stale read must not undo an acknowledgement made since.
+        if (($alert['status'] ?? '') === Change::Firing->value) {
+            $firing = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('monitorAlerts', $alert['alertId'] ?? ''));
+            if ($firing->getAttribute('acknowledgedAt') !== null) {
+                (new Acknowledgements($dbForPlatform))->updateNotifications($firing);
+            }
         }
 
         return $alertId;
@@ -543,7 +564,8 @@ class Notifications extends Action
     /**
      * Pushes to every signed-in device of the console user the recipient names: their push
      * targets on the console project that have not expired. The user's `beep` prefs mute
-     * organizations and projects and turn resolved pushes off for all of them. Each device's
+     * organizations and projects, turn resolved pushes off for all of them, and snooze an
+     * organization's pushes, or all of them, until a time. Each device's
      * push is recorded before it is sent, so a redelivered message pushes nothing twice, even
      * after a crash between the send and the record, while a new device still gets it.
      * Each device is pushed through the service its token belongs to; a device whose service is
@@ -576,6 +598,11 @@ class Notifications extends Action
             || ($status === 'resolved' && ($beep['resolved'] ?? true) === false)
         ) {
             Span::add('push.skipped', 'muted');
+            return null;
+        }
+
+        if (self::isSnoozed($beep, $data['organizationId'] ?? '', new \DateTimeImmutable())) {
+            Span::add('push.skipped', 'snoozed');
             return null;
         }
 
@@ -615,18 +642,39 @@ class Notifications extends Action
                 }
             }
 
-            $message = new PushMessage(
-                to: [$token],
-                title: (string) ($push['title'] ?? ''),
-                body: (string) ($push['body'] ?? ''),
-                data: $data === [] ? null : $data,
-                sound: $critical && $service === PushService::APNS ? 'siren.caf' : null,
-                tag: ($push['tag'] ?? '') === '' ? null : (string) $push['tag'],
-                critical: $critical && $service === PushService::APNS ? true : null,
-                priority: Priority::HIGH,
-                // Android rings through Do Not Disturb by the channel, which the app creates.
-                channelId: $service === PushService::FCM ? ($critical ? 'critical' : 'alerts') : null,
-            );
+            $title = (string) ($push['title'] ?? '');
+            $body = (string) ($push['body'] ?? '');
+            $tag = ($push['tag'] ?? '') === '' ? null : (string) $push['tag'];
+
+            $message = $service === PushService::FCM
+                // Data-only: a notification block makes Android draw a background push itself, so the
+                // app never sees it. These are the keys Expo's notification builder reads, so an app
+                // that draws nothing of its own still shows the same title, body, channel (the one
+                // that rings through Do Not Disturb, for critical) and replacing tag.
+                ? new PushMessage(
+                    to: [$token],
+                    data: [
+                        ...$data,
+                        'title' => $title,
+                        'message' => $body,
+                        'channelId' => $critical ? 'critical' : 'alerts',
+                        ...($tag === null ? [] : ['tag' => $tag]),
+                    ],
+                    priority: Priority::HIGH,
+                )
+                // Mutable content runs the app's notification service extension, which can add to the
+                // alert before iOS shows it; without one, iOS shows it unchanged.
+                : new PushMessage(
+                    to: [$token],
+                    title: $title,
+                    body: $body,
+                    data: $data === [] ? null : $data,
+                    sound: $critical ? 'siren.caf' : null,
+                    tag: $tag,
+                    critical: $critical ? true : null,
+                    priority: Priority::HIGH,
+                    mutableContent: true,
+                );
 
             try {
                 $result = $adapter->send($message);
@@ -656,6 +704,52 @@ class Notifications extends Action
 
         if ($failures !== []) {
             throw new Exception('Push delivery failed: ' . \implode(', ', $failures));
+        }
+
+        return null;
+    }
+
+    /**
+     * Whether the user's `beep.snoozes` holds back pushes for the organization at `$now`. Snoozes map
+     * an organization ID, or `*` for every organization, to the ISO 8601 time they end, so a snooze
+     * runs out by itself and needs no write to end. Prefs are user-written: a value that is not a
+     * date reads as no snooze.
+     *
+     * @param array<string, mixed> $beep
+     */
+    public static function isSnoozed(array $beep, string $organizationId, \DateTimeImmutable $now): bool
+    {
+        $snoozes = $beep['snoozes'] ?? null;
+        if (!\is_array($snoozes)) {
+            return false;
+        }
+        foreach ([$organizationId, '*'] as $key) {
+            $until = $snoozes[$key] ?? null;
+            if ($key === '' || !\is_string($until)) {
+                continue;
+            }
+            $end = self::parseInstant($until);
+            if ($end !== null && $end > $now) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Parses exactly an ISO 8601 date and time with its offset, with or without fractional
+     * seconds. Anything else, such as a relative phrase like `+1 day` alone or after a date,
+     * which would never run out, or a time with no offset, is null.
+     */
+    private static function parseInstant(string $value): ?\DateTimeImmutable
+    {
+        foreach (['!Y-m-d\\TH:i:sP', '!Y-m-d\\TH:i:s.uP'] as $format) {
+            $parsed = \DateTimeImmutable::createFromFormat($format, $value);
+            $errors = \DateTimeImmutable::getLastErrors();
+            if ($parsed !== false && ($errors === false || ($errors['warning_count'] === 0 && $errors['error_count'] === 0))) {
+                return $parsed;
+            }
         }
 
         return null;
@@ -830,14 +924,14 @@ class Notifications extends Action
 
     /**
      * Mail the platform writes to a project's console users, such as an alert
-     * rule changing state, goes out through the platform mailer, never through
-     * the SMTP server the project configured for its own users.
+     * rule changing state or a domain going live, goes out through the platform
+     * mailer, never through the SMTP server the project configured for its own users.
      *
      * @param array<string, mixed> $payload
      */
     protected function isPlatformMail(array $payload): bool
     {
-        return ($payload['template'] ?? '') === MAIL_TEMPLATE_ALERT;
+        return \in_array($payload['template'] ?? '', [MAIL_TEMPLATE_ALERT, MAIL_TEMPLATE_DOMAIN_VERIFIED], true);
     }
 
     private function validateConsoleRecipient(array $recipient): void

@@ -774,8 +774,8 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   Never: 'なし',
   'New password': '新しいパスワード',
   'Next page': '次のページ',
-  'No OAuth identities linked to this user.':
-    'このユーザーに連携された OAuth ID はありません。',
+  'No identities linked to this user.':
+    'このユーザーに連携された ID はありません。',
   'No OAuth2 apps': 'OAuth2 アプリはありません',
   'Connect with': '接続先',
   'Connect with Appwrite': 'Appwrite に接続',
@@ -1339,8 +1339,8 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'User deleted successfully': 'ユーザーを削除しました',
   'User has connected an authenticator app for two-factor authentication.':
     'ユーザーは二要素認証用の認証アプリを接続しています。',
-  "User identities are the user's connected OAuth accounts. The user can sign in using these identities.":
-    'ユーザー ID 連携は、ユーザーが接続した OAuth アカウントです。ユーザーはこれらの ID 連携を使ってサインインできます。',
+  'Identities link this user to accounts they sign in with elsewhere, such as an OAuth2 provider or an LDAP directory.':
+    'ID 連携は、OAuth2 プロバイダーや LDAP ディレクトリなど、このユーザーが他の場所でサインインに使うアカウントとの関連付けです。',
   'User impersonation': 'ユーザーなりすまし',
   'User impersonation has been disabled for this account':
     'このアカウントのユーザーなりすましを無効にしました',
@@ -1785,4 +1785,93 @@ export const jaAuthStorageDictionary: Record<string, string> = {
     'リアルタイムのゲスト拒否ポリシーを更新しました',
   'Failed to update deny realtime guests policy':
     'リアルタイムのゲスト拒否ポリシーの更新に失敗しました',
+
+  // Project-wide security actions (force sign out, force password reset)
+  'Security actions': 'セキュリティ操作',
+  'Apply an action to every user in the project at once, for example when responding to a security incident.':
+    'プロジェクト内のすべてのユーザーに一括で操作を適用します。セキュリティインシデントへの対応時などに使用します。',
+  'Force password reset': '強制パスワードリセット',
+  'Require every user to set a new password before they can sign in with email and password again. Existing sessions stay active, and users without a password are not affected.':
+    'メールとパスワードで再度サインインする前に、すべてのユーザーに新しいパスワードの設定を求めます。既存のセッションは有効なままで、パスワードを持たないユーザーには影響しません。',
+  'Reset all passwords': 'すべてのパスワードをリセット',
+  'Every user will have to set a new password through password recovery before they can sign in with email and password again. Existing sessions stay active, so sign out all users as well if sessions may be compromised. This action cannot be undone.':
+    'すべてのユーザーは、メールとパスワードで再度サインインする前に、パスワードリカバリーで新しいパスワードを設定する必要があります。既存のセッションは有効なままのため、セッションが侵害されている可能性がある場合は、すべてのユーザーのサインアウトもあわせて実行してください。この操作は元に戻せません。',
+  'All users must now reset their password.':
+    'すべてのユーザーはパスワードのリセットが必要になりました。',
+  'Failed to reset passwords': 'パスワードのリセットに失敗しました',
+  // Auth overview
+  'The Free plan includes {count} monthly active users.':
+    'Free プランには月間アクティブユーザー {count} 人が含まれます。',
+  'Upgrade for more': 'アップグレードして上限を増やす',
+  '1 social provider': 'OAuth プロバイダー 1 件',
+  '{count} social providers': 'OAuth プロバイダー {count} 件',
+  'Recent users': '最近のユーザー',
+  'Users will appear here when they sign up':
+    'ユーザーがサインアップするとここに表示されます',
+  'Last sign-up': '最終サインアップ',
+  '{enabled} of {total}': '{total} 件中 {enabled} 件',
+  '{enabled} of {total} enabled': '{total} 件中 {enabled} 件が有効',
+  'No social providers enabled': '有効な OAuth プロバイダーはありません',
+  'Configure methods': '認証方法を設定',
+  'Configure providers': 'OAuth プロバイダーを設定',
+  'Configure policies': 'ポリシーを設定',
+  'Sessions, passwords and limits': 'セッション、パスワード、上限',
+  'No active users yet': 'アクティブユーザーはまだいません',
+  "Couldn't load active users": 'アクティブユーザーを読み込めませんでした',
+  'No sign-ups yet': 'サインアップはまだありません',
+  "Couldn't load sign-ups": 'サインアップを読み込めませんでした',
+  'sign-ups': 'サインアップ',
+  second: '秒',
+  // Single sign-on for a team of a project
+  "Prove the domains this team owns. The team's identity providers sign in only users with an email on a verified domain.":
+    'このチームが所有するドメインを証明します。チームの ID プロバイダーは、検証済みドメインのメールアドレスを持つユーザーのみをサインインさせます。',
+  "Add the domain of your users' emails, then connect an identity provider so they sign in to your app with single sign-on.":
+    'ユーザーのメールアドレスのドメインを追加してから ID プロバイダーを接続すると、ユーザーがシングルサインオンでアプリにサインインできます。',
+  "Users with an email on it can no longer sign in through the team's identity providers. Users who already joined stay members.":
+    'このドメインのメールアドレスを持つユーザーは、チームの ID プロバイダー経由でサインインできなくなります。参加済みのユーザーはメンバーのままです。',
+  "Require SSO is on and this is the team's only verified domain: deleting it pauses Require SSO, and members keep the team's roles however they sign in.":
+    'SSO の必須化が有効で、これがチームの唯一の検証済みドメインです。削除すると SSO の必須化が一時停止され、メンバーはどの方法でサインインしてもチームのロールを保持します。',
+  "Prove this team owns this domain with a DNS record. The team's identity providers then sign in users with an email on it.":
+    'DNS レコードで、このドメインがチームのものであることを証明します。その後、チームの ID プロバイダーはこのドメインのメールアドレスを持つユーザーをサインインさせます。',
+  "Users on the team's verified domains sign in to your app through an identity provider, like Okta, Microsoft Entra ID, Google Workspace or Keycloak, and join the team with its roles.":
+    'チームの検証済みドメインのユーザーは、Okta、Microsoft Entra ID、Google Workspace、Keycloak などの ID プロバイダー経由でアプリにサインインし、そのロールでチームに参加します。',
+  "Connect an identity provider so users on the team's domains sign in to your app with single sign-on.":
+    'ID プロバイダーを接続すると、チームのドメインのユーザーがシングルサインオンでアプリにサインインできます。',
+  'Users can no longer sign in through it. Users who already joined stay members.':
+    'このプロバイダーではサインインできなくなります。参加済みのユーザーはメンバーのままです。',
+  "Require SSO is on and this is the team's only enabled identity provider: deleting it pauses Require SSO, and members keep the team's roles however they sign in.":
+    'SSO の必須化が有効で、これがチームの唯一の有効な ID プロバイダーです。削除すると SSO の必須化が一時停止され、メンバーはどの方法でサインインしてもチームのロールを保持します。',
+  'Your app can show this name when users choose how to sign in.':
+    'ユーザーがサインイン方法を選ぶときに、アプリでこの名前を表示できます。',
+  'Add at least one role.': 'ロールを1つ以上追加してください。',
+  'Roles users get in this team when they sign in through this identity provider.':
+    'この ID プロバイダー経由でサインインしたユーザーに、このチームで付与されるロールです。',
+  'A role can be at most 36 characters.': 'ロールは最大 36 文字です。',
+  'Use letters, numbers, periods, hyphens and underscores, starting with a letter or number.':
+    '英字、数字、ピリオド、ハイフン、アンダースコアを使い、先頭は英字か数字にしてください。',
+  "Members with an email on the team's verified domains keep their account, but get the team's roles only after signing in through one of its identity providers. Team owners keep their roles however they sign in, so a broken identity provider never locks the team out. Members on other domains are not affected.":
+    'チームの検証済みドメインのメールアドレスを持つメンバーは、アカウントはそのままですが、チームの ID プロバイダーのいずれかでサインインした後にのみチームのロールを得られます。チームのオーナーはどの方法でサインインしてもロールを保持するため、ID プロバイダーに問題が起きてもチームから締め出されることはありません。他のドメインのメンバーには影響しません。',
+  "Enabled - members on the team's verified domains get its roles only through single sign-on.":
+    '有効 - チームの検証済みドメインのメンバーは、シングルサインオンでのみチームのロールを得られます。',
+  "Disabled - members get the team's roles however they sign in.":
+    '無効 - メンバーはどの方法でサインインしてもチームのロールを得られます。',
+  "Members on the team's verified domains who signed in another way keep their account but lose the team's roles until they sign in through one of its identity providers. Their other teams are not affected. Team owners keep their roles, so a broken identity provider never locks the team out.":
+    '別の方法でサインインしたチームの検証済みドメインのメンバーは、アカウントはそのままですが、チームの ID プロバイダーのいずれかでサインインするまでチームのロールを失います。他のチームには影響しません。チームのオーナーはロールを保持するため、ID プロバイダーに問題が起きてもチームから締め出されることはありません。',
+  'Add sign-in to your app': 'アプリにサインインを追加',
+  'There is no SDK method for it yet: your app sends these two requests.':
+    'まだ SDK のメソッドはありません。アプリから次の 2 つのリクエストを送信します。',
+  '1. Find the identity providers for an email':
+    '1. メールアドレスの ID プロバイダーを調べる',
+  'It answers with the identity providers that can sign that email in, each with its $id and name.':
+    'そのメールアドレスでサインインできる ID プロバイダーが、それぞれの $id と name とともに返されます。',
+  '2. Send the browser to the chosen one':
+    '2. 選んだプロバイダーへブラウザーを送る',
+  "On success, the browser returns to the success URL with the user's session cookie for this project set.":
+    '成功すると、このプロジェクトのユーザーのセッション Cookie が設定された状態で、ブラウザーは success URL に戻ります。',
+  'Users can sign in through this identity provider.':
+    'ユーザーはこの ID プロバイダーでサインインできます。',
+  'Both URLs must be on the hostname of a web platform added to this project.':
+    'どちらの URL も、このプロジェクトに追加した Web プラットフォームのホスト名上にある必要があります。',
+  'On failure, it returns to the failure URL with an error query parameter that holds JSON with message, type and code.':
+    '失敗すると、message、type、code を含む JSON を持つ error クエリパラメーターとともに、failure URL に戻ります。',
 }

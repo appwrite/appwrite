@@ -35,6 +35,9 @@ $member = [
     'targets.write',
     'subscribers.write',
     'subscribers.read',
+    'videos.play',
+    'videos.read',
+    'videos.write',
 ];
 
 $admins = [
@@ -84,8 +87,11 @@ $admins = [
     'mocks.write',
     'project.policies.read',
     'project.policies.write',
+    'project.videos.profiles.read',
+    'project.videos.profiles.write',
     'project.oauth2.read',
     'project.oauth2.write',
+    'project.ldap.write',
     'templates.read',
     'templates.write',
     'projects.write',
@@ -97,6 +103,8 @@ $admins = [
     'webhooks.write',
     'monitors.read',
     'monitors.write',
+    'escalations.read',
+    'escalations.write',
     'alerts.read',
     'alerts.write',
     'project.read',
@@ -140,6 +148,9 @@ $admins = [
     'insights.write',
     'reports.read',
     'reports.write',
+    'videos.play',
+    'videos.read',
+    'videos.write',
     'reviews.read',
     'reviews.write',
 ];
@@ -164,6 +175,7 @@ return [
             'rows.write',
             'files.read',
             'files.write',
+            'videos.play',
             'locale.read',
             'avatars.read',
             'executions.write',

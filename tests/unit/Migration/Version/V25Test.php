@@ -58,6 +58,31 @@ final class V25Test extends TestCase
         $this->assertNull($result->getAttribute('parentResourceInternalId'));
     }
 
+    /**
+     * Monitors and alerts from 2.7 get the severity column with null in it, not its default.
+     */
+    public function testGivesMonitorsAndAlertsWithoutASeverityWarning(): void
+    {
+        $migration = new class () extends V25 {
+            public function __construct()
+            {
+            }
+
+            public function migrate(Document $document): Document
+            {
+                return $this->migrateDocument($document);
+            }
+        };
+
+        foreach (['monitors', 'monitorAlerts'] as $collection) {
+            $missing = $migration->migrate(new Document(['$id' => 'old', '$collection' => $collection, 'severity' => null]));
+            $this->assertSame('warning', $missing->getAttribute('severity'), $collection);
+
+            $critical = $migration->migrate(new Document(['$id' => 'set', '$collection' => $collection, 'severity' => 'critical']));
+            $this->assertSame('critical', $critical->getAttribute('severity'), $collection);
+        }
+    }
+
     public function testRerunResolvesMissingInternalIdsIdempotently(): void
     {
         $migration = new class () extends V25 {
@@ -339,6 +364,91 @@ final class V25Test extends TestCase
         $this->assertContains('connections', $attributes);
     }
 
+    public function testAddsSizeToExistingRenditionSegments(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // A project created before segments stored bytes has the collection without size.
+        $collections = Config::getParam('collections', [])['projects'];
+        foreach ($collections as $id => $collection) {
+            if (($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $attributes = $id === 'videosRenditionsSegments'
+                ? \array_filter($collection['attributes'], static fn (Attribute $attribute): bool => $attribute->key !== 'size')
+                : $collection['attributes'];
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($attributes),
+                indexes: \array_values($collection['indexes']),
+            ));
+        }
+        $database->createCollection(Collection::create(id: 'audit'));
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $migration->execute();
+
+        $attributes = \array_map(
+            fn (Document $attribute) => $attribute->getId(),
+            $database->getCollection('videosRenditionsSegments')->getAttribute('attributes', [])
+        );
+        $this->assertContains('size', $attributes);
+    }
+
+    public function testAddsReviewPerformanceIndexesToExistingCollections(): void
+    {
+        $missing = [
+            'reviews' => '_key_status_createdAt',
+            'reviewFindings' => '_key_reviewInternalId_status',
+        ];
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // A project already on 2.7 has the review collections without the performance indexes.
+        $collections = Config::getParam('collections', [])['projects'];
+        foreach ($collections as $id => $collection) {
+            if (($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $indexes = isset($missing[$id])
+                ? \array_filter($collection['indexes'], static fn (Index $index): bool => $index->key !== $missing[$id])
+                : $collection['indexes'];
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($collection['attributes']),
+                indexes: \array_values($indexes),
+            ));
+        }
+        $database->createCollection(Collection::create(id: 'audit'));
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $migration->execute();
+
+        foreach ($missing as $collection => $key) {
+            $indexes = \array_map(
+                fn (Document $index) => $index->getId(),
+                $database->getCollection($collection)->getAttribute('indexes', [])
+            );
+            $this->assertContains($key, $indexes, $collection);
+        }
+    }
+
     public function testAddsConnectionsToExistingPresenceLogs(): void
     {
         $authorization = new Authorization();
@@ -618,5 +728,90 @@ final class V25Test extends TestCase
         $this->assertNotEmpty($expiry);
         $this->assertEqualsWithDelta(\time() + 20 * 24 * 60 * 60, \strtotime($expiry), 120);
         $this->assertEmpty($database->getDocument('certificates', \md5($gone))->getAttribute('expireDate'));
+    }
+
+    public function testMovesMonitorsToProjectScopedIds(): void
+    {
+        $authorization = new Authorization();
+        $authorization->disable();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+        $database->setValidation(false);
+
+        $collections = Config::getParam('collections', [])['console'];
+        foreach (['monitors', 'schedules'] as $id) {
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($collections[$id]['attributes']),
+                indexes: \array_values($collections[$id]['indexes']),
+            ));
+        }
+        // Only the opt-outs: the other user attributes read collections this test has no use for.
+        $database->createCollection(Collection::create(
+            id: 'users',
+            attributes: \array_values(\array_filter(
+                $collections['users']['attributes'],
+                static fn (Attribute $attribute): bool => $attribute->key === 'alertsUnsubscribed'
+            )),
+        ));
+
+        // A monitor from the previous release, under its global ID, and the schedule the worker stopped
+        // while it could not find the monitor.
+        $database->createDocument('monitors', new Document([
+            '$id' => 'egress',
+            'name' => 'Egress',
+            'teamId' => 'team',
+            'teamInternalId' => '3',
+            'projectId' => 'project',
+            'projectInternalId' => '7',
+            'region' => 'default',
+            'enabled' => true,
+        ]));
+        $database->createDocument('schedules', new Document([
+            '$id' => 'schedule',
+            'region' => 'default',
+            'resourceType' => SCHEDULE_RESOURCE_TYPE_MONITOR,
+            'resourceId' => 'egress',
+            'projectId' => 'project',
+            'active' => false,
+        ]));
+        $database->createDocument('users', new Document([
+            '$id' => 'user',
+            'alertsUnsubscribed' => ['egress', 'type:usage'],
+        ]));
+
+        $migration = new class ($database) extends V25 {
+            public function __construct(Database $database)
+            {
+                $this->dbForProject = $database;
+                $this->project = new Document(['$id' => 'console', '$sequence' => 'console']);
+                $this->collections = ['console' => []];
+            }
+        };
+
+        // A second run finds every step done and changes nothing.
+        \ob_start();
+        try {
+            $migration->execute();
+            $migration->execute();
+        } finally {
+            \ob_end_clean();
+        }
+
+        $stored = \md5('7:egress');
+        $this->assertTrue($database->getDocument('monitors', 'egress')->isEmpty());
+        $monitor = $database->getDocument('monitors', $stored);
+        $this->assertSame('egress', $monitor->getAttribute('monitorId'));
+        $this->assertSame('Egress', $monitor->getAttribute('name'));
+
+        $schedule = $database->getDocument('schedules', 'schedule');
+        $this->assertSame($stored, $schedule->getAttribute('resourceId'));
+        $this->assertTrue($schedule->getAttribute('active'));
+
+        $this->assertSame([$stored, 'type:usage'], $database->getDocument('users', 'user')->getAttribute('alertsUnsubscribed'));
     }
 }

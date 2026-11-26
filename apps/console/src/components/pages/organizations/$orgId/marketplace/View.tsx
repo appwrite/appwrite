@@ -6,10 +6,7 @@ import type {
   MarketplaceApp,
   MarketplaceAppCategory,
 } from '@/lib/marketplace/types'
-import {
-  MARKETPLACE_TOTAL_CAP,
-  formatMarketplaceCount,
-} from '@/lib/marketplace/types'
+import { formatListTotal } from '@/lib/list-total'
 import {
   MARKETPLACE_SIDEBAR_LINKS,
   buildMarketplaceNavGroups,
@@ -80,7 +77,6 @@ export function View() {
 
   const createAppMutation = useCreateOrganizationApp(orgId)
 
-  const navGroups = useMemo(() => buildMarketplaceNavGroups(), [])
   const [activeNavId, setActiveNavId] = useState<MarketplaceNavId>('explore')
   const [searchValue, setSearchValue] = useState('')
   const [page, setPage] = useState(1)
@@ -99,12 +95,29 @@ export function View() {
   // server-searched; My apps paginates and filters client-side.
   const isBrowseNav =
     isExplore || activeNavId === 'catalog' || activeCategory !== undefined
-  const activeItem = getMarketplaceNavItem(activeNavId, navGroups)
 
   const { catalogTotal, categoryTotals } = useMarketplaceNavCounts(
     orgId,
     appliedSearch,
   )
+  // Categories with no apps stay out of the sidebar, unless one is open.
+  const navGroups = useMemo(
+    () =>
+      buildMarketplaceNavGroups().map((group) => ({
+        ...group,
+        items: group.items.filter((item) => {
+          if (!item.id.startsWith('category:') || item.id === activeNavId) {
+            return true
+          }
+          const category = item.id.slice(
+            'category:'.length,
+          ) as MarketplaceAppCategory
+          return categoryTotals?.[category] !== 0
+        }),
+      })),
+    [categoryTotals, activeNavId],
+  )
+  const activeItem = getMarketplaceNavItem(activeNavId, navGroups)
   const {
     apps: browseApps,
     total: browseTotal,
@@ -140,7 +153,16 @@ export function View() {
     [searchActive, ownedApps, searchTerm],
   )
 
-  const listedApps = isBrowseNav ? browseApps : matchingOwnedApps
+  // Guard against a server that ignores the category query: never list an app
+  // under a category it doesn't belong to.
+  const categoryApps = useMemo(
+    () =>
+      activeCategory
+        ? browseApps.filter((app) => app.category === activeCategory)
+        : browseApps,
+    [activeCategory, browseApps],
+  )
+  const listedApps = isBrowseNav ? categoryApps : matchingOwnedApps
 
   // Server pages arrive pre-sliced; My apps is paginated client-side.
   const listedTotal = isBrowseNav ? browseTotal : listedApps.length
@@ -154,13 +176,13 @@ export function View() {
     // Catalog and category counts come from server totals, which honour the
     // search term, so they stay correct beyond the first page of results.
     if (navId === 'explore' || navId === 'catalog') {
-      return formatMarketplaceCount(catalogTotal)
+      return formatListTotal(catalogTotal)
     }
     if (navId === 'my-apps') return String(matchingOwnedApps.length)
     if (navId.startsWith('category:')) {
       const category = navId.slice('category:'.length) as MarketplaceAppCategory
       const total = categoryTotals?.[category]
-      return total === undefined ? '' : formatMarketplaceCount(total)
+      return total === undefined ? '' : formatListTotal(total)
     }
     return ''
   }
@@ -223,8 +245,11 @@ export function View() {
         )
 
   const mainContent = () => {
+    // While a search term waits on its debounce, the list still holds the
+    // previous results; show loading rather than those stale apps.
     const listLoading = isBrowseNav
-      ? browseLoading && browseApps.length === 0
+      ? (browseLoading && browseApps.length === 0) ||
+        searchTerm !== appliedSearch
       : ownedLoading && ownedApps.length === 0
 
     if (listLoading) {
@@ -277,11 +302,6 @@ export function View() {
           <Pagination
             currentPage={page}
             totalItems={listedTotal}
-            totalDisplay={
-              listedTotal >= MARKETPLACE_TOTAL_CAP
-                ? formatMarketplaceCount(listedTotal)
-                : undefined
-            }
             pageSize={MARKETPLACE_PAGE_SIZE}
             onPageChange={setPage}
             onPageSizeChange={() => {}}

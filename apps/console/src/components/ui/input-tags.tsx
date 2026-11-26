@@ -8,6 +8,7 @@ import { X } from 'lucide-react'
 import { Input } from './input'
 import { Badge } from './badge'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 interface InputTagsProps {
   id?: string
@@ -29,6 +30,10 @@ interface InputTagsProps {
    */
   prefillRequest?: { id: number; value: string } | null
   onPrefillConsumed?: () => void
+  /** Runs before the built-in paste handling; call `preventDefault()` to handle the paste instead. */
+  onPaste?: (event: ClipboardEvent<HTMLInputElement>) => void
+  /** Rejects a tag with the returned message, or accepts it when null. */
+  validateTag?: (tag: string) => string | null
 }
 
 export function InputTags({
@@ -44,9 +49,18 @@ export function InputTags({
   maxTagLength,
   prefillRequest,
   onPrefillConsumed,
+  onPaste,
+  validateTag,
 }: InputTagsProps) {
   const [inputValue, setInputValue] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const t = useT()
+  // A saved or reset list makes an earlier error stale. Keyed on the joined
+  // list so a parent passing a fresh array each render doesn't clear it.
+  const valueKey = value.join('\n')
+  useEffect(() => {
+    setError(null)
+  }, [valueKey])
   useEffect(() => {
     if (!prefillRequest?.value) return
     const text = prefillRequest.value
@@ -95,11 +109,21 @@ export function InputTags({
 
     for (const tag of tokens) {
       if (validateEmail && !validateEmailFormat(tag)) {
-        setError('Please enter a valid email address')
+        setError(t('Please enter a valid email address'))
+        return
+      }
+      const tagError = validateTag?.(tag)
+      if (tagError) {
+        setError(tagError)
         return
       }
       if (maxTagLength !== undefined && tag.length > maxTagLength) {
-        setError(`Values have a maximum length of ${maxTagLength} characters`)
+        setError(
+          t('Values have a maximum length of {count} characters').replace(
+            '{count}',
+            String(maxTagLength),
+          ),
+        )
         return
       }
       if (lockedTags.includes(tag) || next.includes(tag)) continue
@@ -110,8 +134,8 @@ export function InputTags({
     if (!added && tokens.length > 0) {
       setError(
         validateEmail
-          ? 'This email is already added'
-          : 'This value is already added',
+          ? t('This email is already added')
+          : t('This value is already added'),
       )
       return
     }
@@ -138,6 +162,8 @@ export function InputTags({
   }
 
   const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
+    onPaste?.(e)
+    if (e.defaultPrevented) return
     if (!validateEmail && !splitOnComma) return
     const text = e.clipboardData.getData('text')
     const hasSeparators = validateEmail
@@ -156,9 +182,17 @@ export function InputTags({
   }
 
   const handleBlur = () => {
-    if (inputValue.trim()) {
-      handleAddMany(inputValue)
+    if (!inputValue.trim()) return
+    // Leaving the field with a value already in the list just drops the text.
+    const tokens = splitTokens(inputValue)
+    if (
+      tokens.every((tag) => lockedTags.includes(tag) || value.includes(tag))
+    ) {
+      setInputValue('')
+      setError(null)
+      return
     }
+    handleAddMany(inputValue)
   }
 
   const handleInputChange = (next: string) => {

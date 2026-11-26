@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Utopia\Auth\Tests\Proofs;
 
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Token;
 
+#[RequiresPhpExtension('utopia')]
 final class TokenTest extends TestCase
 {
     private Token $token;

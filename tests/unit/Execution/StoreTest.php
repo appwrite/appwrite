@@ -170,7 +170,30 @@ final class StoreTest extends TestCase
         $this->assertStringContainsString('argMax(source.deleted, source.version)', $body);
         $this->assertStringContainsString('source.resourceInternalId = {resourceInternalId:String}', $body);
         $this->assertStringContainsString('source.createdAt < {createdBefore:String}', $body);
+        $this->assertStringContainsString('HAVING argMax(source.deleted, source.version) = 0', $body);
         $this->assertStringContainsString('now64(6) + INTERVAL 1209600 SECOND', $body);
+    }
+
+    public function testRetentionDeleteResolvesSnapshotsOnlyForLiveExecutions(): void
+    {
+        $client = new CapturingClient();
+        $store = $this->store($client);
+
+        $store->deleteBefore('project', '2026-08-01T00:00:00.000+00:00');
+
+        $this->assertCount(1, $client->requests);
+        $body = (string) $client->requests[0]->getBody();
+        $this->assertStringContainsString('INSERT INTO `appwrite`.`executions`', $body);
+        // Tombstoned executions are dropped on id, version and deleted alone,
+        // before any snapshot column is aggregated.
+        $this->assertStringContainsString(
+            'source.id IN (SELECT source.id FROM `appwrite`.`executions` AS source WHERE source.projectId = {projectId:String} AND source.createdAt < {createdBefore:String} GROUP BY source.id HAVING argMax(source.deleted, source.version) = 0)',
+            $body,
+        );
+        $live = \substr($body, \strpos($body, 'source.id IN (SELECT'));
+        $live = \substr($live, 0, \strpos($live, ' = 0)'));
+        $this->assertStringNotContainsString('document', $live);
+        $this->assertStringContainsString('WHERE deleted = 0', $body);
     }
 
     public function testTerminalAndDeleteVersionsWinOverLatePendingWrites(): void
@@ -417,6 +440,29 @@ final class StoreTest extends TestCase
         foreach ($client->requests as $request) {
             \parse_str($request->getUri()->getQuery(), $parameters);
             $this->assertSame('0', $parameters['async_insert'] ?? null);
+        }
+    }
+
+    public function testInsertBufferWritesThroughAsyncInsert(): void
+    {
+        $client = new CapturingClient();
+        $store = new Store(
+            dsn: 'http://appwrite:secret@clickhouse:8123/appwrite',
+            client: $client,
+            insertBuffer: 1500,
+        );
+
+        $store->upsert('project', new Document(['$id' => 'first', 'resourceType' => 'functions', 'status' => 'waiting']));
+        $store->delete('project', new Document(['$id' => 'first', 'resourceType' => 'functions']));
+
+        $this->assertCount(2, $client->requests);
+        foreach ($client->requests as $request) {
+            \parse_str($request->getUri()->getQuery(), $parameters);
+            $this->assertSame('1', $parameters['async_insert'] ?? null);
+            // The write must not return before its rows are stored.
+            $this->assertSame('1', $parameters['wait_for_async_insert'] ?? null);
+            $this->assertSame('0', $parameters['async_insert_use_adaptive_busy_timeout'] ?? null);
+            $this->assertSame('1500', $parameters['async_insert_busy_timeout_max_ms'] ?? null);
         }
     }
 

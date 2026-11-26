@@ -6,6 +6,7 @@ namespace Tests\Unit\Utopia\Database\Query;
 
 use Appwrite\Utopia\Database\RuntimeQuery;
 use PHPUnit\Framework\TestCase;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Query\Method;
 
@@ -333,6 +334,33 @@ final class RuntimeQueryTest extends TestCase
         $payload = ['name' => 'John'];
         $result = $this->compileAndFilter([$query], $payload);
         $this->assertNull($result);
+    }
+
+    public function testBetween(): void
+    {
+        $query = Query::between('age', 18, 30);
+        $this->assertSame(['age' => 18], $this->compileAndFilter([$query], ['age' => 18]));
+        $this->assertSame(['age' => 30], $this->compileAndFilter([$query], ['age' => 30]));
+        $this->assertSame(['age' => 24.5], $this->compileAndFilter([$query], ['age' => 24.5]));
+        $this->assertNull($this->compileAndFilter([$query], ['age' => 17]));
+        $this->assertNull($this->compileAndFilter([$query], ['age' => 31]));
+        $this->assertNull($this->compileAndFilter([$query], ['age' => null]));
+        $this->assertNull($this->compileAndFilter([$query], ['name' => 'John']));
+
+        $query = Query::between('date', '2026-01-01', '2026-12-31');
+        $this->assertSame(['date' => '2026-06-15'], $this->compileAndFilter([$query], ['date' => '2026-06-15']));
+        $this->assertNull($this->compileAndFilter([$query], ['date' => '2025-12-31']));
+    }
+
+    public function testNotBetween(): void
+    {
+        $query = Query::notBetween('age', 18, 30);
+        $this->assertSame(['age' => 17], $this->compileAndFilter([$query], ['age' => 17]));
+        $this->assertSame(['age' => 31], $this->compileAndFilter([$query], ['age' => 31]));
+        $this->assertNull($this->compileAndFilter([$query], ['age' => 18]));
+        $this->assertNull($this->compileAndFilter([$query], ['age' => 30]));
+        $this->assertNull($this->compileAndFilter([$query], ['age' => null]));
+        $this->assertNull($this->compileAndFilter([$query], ['name' => 'John']));
     }
 
     // TYPE_AND tests
@@ -668,7 +696,7 @@ final class RuntimeQueryTest extends TestCase
     public function testValidateSelectQueryWithSpecificFields(): void
     {
         $query = Query::select(['name', 'age']);
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(QueryException::class);
         $this->expectExceptionMessage('Only select("*") is allowed in Realtime queries');
         RuntimeQuery::validateSelectQuery($query);
     }
@@ -676,7 +704,7 @@ final class RuntimeQueryTest extends TestCase
     public function testValidateSelectQueryWithSingleField(): void
     {
         $query = Query::select(['name']);
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(QueryException::class);
         $this->expectExceptionMessage('Only select("*") is allowed in Realtime queries');
         RuntimeQuery::validateSelectQuery($query);
     }

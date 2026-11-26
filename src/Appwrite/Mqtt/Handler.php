@@ -4,7 +4,7 @@ namespace Appwrite\Mqtt;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Mqtt;
-use Utopia\Abuse\Adapter\TimeLimit\Redis as TimeLimitRedis;
+use Utopia\Abuse\Adapter\TimeLimit;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -78,13 +78,20 @@ class Handler implements MqttHandler
 
         // Rate-limit CONNECT per user (keyed on project and user until the infra surfaces client IP).
         if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
-            $getRedis = $this->container->get('getRedis');
-            $timeLimit = new TimeLimitRedis('mqtt:connect:{projectId}:{userId}', 128, 60, $getRedis())->withParams([
-                '{projectId}' => (string) ($identity['projectId'] ?? ''),
-                '{userId}' => (string) ($identity['userId'] ?? ''),
-            ]);
+            $isOverLimit = $this->container->get('timelimit')(
+                'mqtt:connect:{projectId}:{userId}',
+                128,
+                60,
+                fn (TimeLimit $timeLimit): bool => $timeLimit
+                    ->withParams([
+                        '{projectId}' => (string) ($identity['projectId'] ?? ''),
+                        '{userId}' => (string) ($identity['userId'] ?? ''),
+                    ])
+                    ->check()
+                    ->limited,
+            );
 
-            if ($timeLimit->check()->limited) {
+            if ($isOverLimit) {
                 Span::add('mqtt.result', 'abuse');
                 $this->mqtt->connectRefused->add(1, ['reason' => 'rate_limited']);
                 return $this->refuseConnect(Connack::QUOTA_EXCEEDED, Exception::GENERAL_RATE_LIMIT_EXCEEDED, $authMethod);
@@ -386,13 +393,18 @@ class Handler implements MqttHandler
             return false;
         }
 
-        $getRedis = $this->container->get('getRedis');
-        $timeLimit = new TimeLimitRedis('mqtt:subscribe:{projectId}:{userId}', 32, 60, $getRedis())->withParams([
-            '{projectId}' => (string) ($connection->identity['projectId'] ?? ''),
-            '{userId}' => (string) ($connection->identity['userId'] ?? ''),
-        ]);
-
-        return $timeLimit->check()->limited;
+        return $this->container->get('timelimit')(
+            'mqtt:subscribe:{projectId}:{userId}',
+            32,
+            60,
+            fn (TimeLimit $timeLimit): bool => $timeLimit
+                ->withParams([
+                    '{projectId}' => (string) ($connection->identity['projectId'] ?? ''),
+                    '{userId}' => (string) ($connection->identity['userId'] ?? ''),
+                ])
+                ->check()
+                ->limited,
+        );
     }
 
     public function onUnsubscribe(Unsubscribe $unsubscribe, Connection $connection): Unsuback
@@ -469,6 +481,7 @@ class Handler implements MqttHandler
         Span::add('mqtt.sequence', $delivery['sequence']);
         $this->mqtt->messagesAcked->add(1);
         $this->mqtt->pubacksReceived->add(1);
+        $this->mqtt->recordAcks($connection->prefix, 1);
 
         $cache = ($this->getCache)();
         $key = $this->cursorKey($connection);

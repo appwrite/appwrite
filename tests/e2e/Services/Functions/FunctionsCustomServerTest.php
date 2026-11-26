@@ -689,6 +689,88 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $variable['headers']['status-code']);
     }
 
+    public function testUpdateFunctionPreservesOmittedSettings(): void
+    {
+        $function = $this->createFunction([
+            'functionId' => Id::unique(),
+            'name' => 'Function Settings Test',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 45,
+            'enabled' => false,
+            'logging' => false,
+            'deploymentRetention' => 7,
+            'commands' => 'npm install',
+            'events' => ['users.*.create'],
+            'schedule' => '0 0 1 1 *',
+            'execute' => ['any'],
+            'scopes' => ['users.read'],
+        ]);
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $functionId = $function['body']['$id'] ?? '';
+        $this->assertEquals(45, $function['body']['timeout']);
+        $this->assertFalse($function['body']['enabled']);
+        $this->assertFalse($function['body']['logging']);
+        $this->assertEquals(7, $function['body']['deploymentRetention']);
+        $this->assertEquals('npm install', $function['body']['commands']);
+        $this->assertEquals(['users.*.create'], $function['body']['events']);
+        $this->assertEquals('0 0 1 1 *', $function['body']['schedule']);
+        $this->assertEquals(['any'], $function['body']['execute']);
+        $this->assertEquals(['users.read'], $function['body']['scopes']);
+
+        // Perform a partial PUT update omitting those fields
+        $updated = $this->updateFunction($functionId, [
+            'name' => 'Function Settings Updated',
+        ]);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertEquals('Function Settings Updated', $updated['body']['name']);
+        $this->assertEquals(45, $updated['body']['timeout']);
+        $this->assertFalse($updated['body']['enabled']);
+        $this->assertFalse($updated['body']['logging']);
+        $this->assertEquals(7, $updated['body']['deploymentRetention']);
+        $this->assertEquals('npm install', $updated['body']['commands']);
+        $this->assertEquals(['users.*.create'], $updated['body']['events']);
+        $this->assertEquals('0 0 1 1 *', $updated['body']['schedule']);
+        $this->assertEquals(['any'], $updated['body']['execute']);
+        $this->assertEquals(['users.read'], $updated['body']['scopes']);
+
+        // Assert values are preserved in the database
+        $fetched = $this->getFunction($functionId);
+        $this->assertEquals(200, $fetched['headers']['status-code']);
+        $this->assertEquals('Function Settings Updated', $fetched['body']['name']);
+        $this->assertEquals(45, $fetched['body']['timeout']);
+        $this->assertFalse($fetched['body']['enabled']);
+        $this->assertFalse($fetched['body']['logging']);
+        $this->assertEquals(7, $fetched['body']['deploymentRetention']);
+        $this->assertEquals('npm install', $fetched['body']['commands']);
+        $this->assertEquals(['users.*.create'], $fetched['body']['events']);
+        $this->assertEquals('0 0 1 1 *', $fetched['body']['schedule']);
+        $this->assertEquals(['any'], $fetched['body']['execute']);
+        $this->assertEquals(['users.read'], $fetched['body']['scopes']);
+
+        // Match the interval update pattern from issue #14401.
+        $updated = $this->updateFunction($functionId, [
+            'name' => 'Function Interval Updated',
+            'interval' => 30,
+        ]);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertEquals(30, $updated['body']['interval']);
+        $this->assertEquals(['users.read'], $updated['body']['scopes']);
+        $this->assertEquals(45, $updated['body']['timeout']);
+        $this->assertEquals(['users.*.create'], $updated['body']['events']);
+
+        $fetched = $this->getFunction($functionId);
+        $this->assertEquals(200, $fetched['headers']['status-code']);
+        $this->assertEquals(30, $fetched['body']['interval']);
+        $this->assertEquals(['users.read'], $fetched['body']['scopes']);
+        $this->assertEquals(45, $fetched['body']['timeout']);
+
+        $this->deleteFunction($functionId);
+    }
+
     public function testUpdateVariableDescription(): void
     {
         $settings = [
@@ -3820,6 +3902,50 @@ final class FunctionsCustomServerTest extends Scope
         $this->cleanupFunction($functionId);
     }
 
+    public function testFunctionsDomainSizedResponse(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => Id::unique(),
+            'name' => 'Test sized responses',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 30,
+            'execute' => ['any']
+        ]);
+
+        try {
+            $domain = $this->setupFunctionDomain($functionId);
+
+            $this->setupDeployment($functionId, [
+                'code' => $this->packageFunction('sized-response'),
+                'activate' => true
+            ]);
+
+            $proxyClient = new Client();
+            $proxyClient->setEndpoint('http://' . $domain);
+
+            // A small sized response is buffered and keeps its length
+            $small = $proxyClient->call(Client::METHOD_GET, '/small', [], [], false);
+            $this->assertSame(200, $small['headers']['status-code']);
+            $this->assertSame('1024', (string) $small['headers']['content-length']);
+            $this->assertSame(\str_repeat('a', 1024), $small['body']);
+
+            // A large one streams instead of being held in the API process whole
+            $large = $proxyClient->call(Client::METHOD_GET, '/large', [], [], false);
+            $this->assertSame(200, $large['headers']['status-code']);
+            $this->assertSame(12 * 1024 * 1024, \strlen($large['body']));
+            $this->assertSame('chunked', $large['headers']['transfer-encoding'] ?? '');
+            $this->assertArrayNotHasKey('content-length', $large['headers']);
+
+            // A HEAD response has no body, so it keeps the declared length
+            $head = $proxyClient->call(Client::METHOD_HEAD, '/large', [], [], false);
+            $this->assertSame(200, $head['headers']['status-code']);
+            $this->assertSame((string) (12 * 1024 * 1024), (string) $head['headers']['content-length']);
+        } finally {
+            $this->cleanupFunction($functionId);
+        }
+    }
+
     public function testFunctionsDomainBinaryRequest()
     {
         $functionId = $this->setupFunction([
@@ -3955,6 +4081,19 @@ final class FunctionsCustomServerTest extends Scope
 
     public function testFunctionLogging()
     {
+        $default = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => Id::unique(),
+            'runtime' => 'node-22',
+            'name' => 'Logging Default Test',
+            'entrypoint' => 'index.js',
+        ]);
+        $this->assertEquals(201, $default['headers']['status-code']);
+        $this->assertFalse($default['body']['logging'], 'Functions are created with logging off unless asked.');
+        $this->cleanupFunction($default['body']['$id']);
+
         $function = $this->createFunction([
             'functionId' => Id::unique(),
             'runtime' => 'node-22',
@@ -4509,11 +4648,11 @@ final class FunctionsCustomServerTest extends Scope
             'name' => 'Test retention function',
         ]);
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(0, $response['body']['deploymentRetention']);
+        $this->assertSame(90, $response['body']['deploymentRetention']);
 
         $response = $this->getFunction($functionIdForUpdate);
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(0, $response['body']['deploymentRetention']);
+        $this->assertSame(90, $response['body']['deploymentRetention']);
 
         // Failed update flow
         $response = $this->updateFunction($functionIdForUpdate, [

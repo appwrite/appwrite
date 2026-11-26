@@ -13,6 +13,8 @@ use Appwrite\Platform\Modules\Project\Http\Project\Keys\Get as GetKey;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\Update as UpdateKey;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\XList as ListKeys;
 use Appwrite\Platform\Modules\Project\Http\Project\Labels\Update as UpdateProjectLabels;
+use Appwrite\Platform\Modules\Project\Http\Project\LDAP\Tests\Create as CreateLDAPTest;
+use Appwrite\Platform\Modules\Project\Http\Project\LDAP\Update as UpdateLDAP;
 use Appwrite\Platform\Modules\Project\Http\Project\MockPhone\Create as CreateMockPhone;
 use Appwrite\Platform\Modules\Project\Http\Project\MockPhone\Delete as DeleteMockPhone;
 use Appwrite\Platform\Modules\Project\Http\Project\MockPhone\Get as GetMockPhone;
@@ -21,12 +23,15 @@ use Appwrite\Platform\Modules\Project\Http\Project\MockPhone\XList as ListMockPh
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Amazon\Update as UpdateOAuth2Amazon;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Apple\Update as UpdateOAuth2Apple;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Appwrite\Update as UpdateOAuth2Appwrite;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Atlassian\Update as UpdateOAuth2Atlassian;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Auth0\Update as UpdateOAuth2Auth0;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Authentik\Update as UpdateOAuth2Authentik;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Autodesk\Update as UpdateOAuth2Autodesk;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Bird\Update as UpdateOAuth2Bird;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Bitbucket\Update as UpdateOAuth2Bitbucket;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Bitly\Update as UpdateOAuth2Bitly;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Box\Update as UpdateOAuth2Box;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Clerk\Update as UpdateOAuth2Clerk;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Cloudflare\Update as UpdateOAuth2Cloudflare;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Dailymotion\Update as UpdateOAuth2Dailymotion;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Discord\Update as UpdateOAuth2Discord;
@@ -41,36 +46,51 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\GitHub\Update as Updat
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Gitlab\Update as UpdateOAuth2Gitlab;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Google\Update as UpdateOAuth2Google;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\HuggingFace\Update as UpdateOAuth2HuggingFace;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Instagram\Update as UpdateOAuth2Instagram;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Kakao\Update as UpdateOAuth2Kakao;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Keycloak\Update as UpdateOAuth2Keycloak;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Kick\Update as UpdateOAuth2Kick;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Line\Update as UpdateOAuth2Line;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Linear\Update as UpdateOAuth2Linear;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Linkedin\Update as UpdateOAuth2Linkedin;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Microsoft\Update as UpdateOAuth2Microsoft;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Naver\Update as UpdateOAuth2Naver;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Netlify\Update as UpdateOAuth2Netlify;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Notion\Update as UpdateOAuth2Notion;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Oidc\Update as UpdateOAuth2Oidc;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Okta\Update as UpdateOAuth2Okta;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Patreon\Update as UpdateOAuth2Patreon;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Paypal\Update as UpdateOAuth2Paypal;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\PaypalSandbox\Update as UpdateOAuth2PaypalSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Podio\Update as UpdateOAuth2Podio;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Railway\Update as UpdateOAuth2Railway;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Reddit\Update as UpdateOAuth2Reddit;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Resend\Update as UpdateOAuth2Resend;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Roblox\Update as UpdateOAuth2Roblox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Salesforce\Update as UpdateOAuth2Salesforce;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Slack\Update as UpdateOAuth2Slack;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Spotify\Update as UpdateOAuth2Spotify;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Strava\Update as UpdateOAuth2Strava;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Stripe\Update as UpdateOAuth2Stripe;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Supabase\Update as UpdateOAuth2Supabase;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TikTok\Update as UpdateOAuth2TikTok;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Tradeshift\Update as UpdateOAuth2Tradeshift;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TradeshiftSandbox\Update as UpdateOAuth2TradeshiftSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Twitch\Update as UpdateOAuth2Twitch;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Vercel\Update as UpdateOAuth2Vercel;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Vipps\Update as UpdateOAuth2Vipps;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\VippsSandbox\Update as UpdateOAuth2VippsSandbox;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\VK\Update as UpdateOAuth2VK;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Webflow\Update as UpdateOAuth2Webflow;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\WordPress\Update as UpdateOAuth2WordPress;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\WorkOS\Update as UpdateOAuth2WorkOS;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\X\Update as UpdateOAuth2X;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\XList as ListOAuth2Providers;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Yahoo\Update as UpdateOAuth2Yahoo;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Yandex\Update as UpdateOAuth2Yandex;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Zoho\Update as UpdateOAuth2Zoho;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Zoom\Update as UpdateOAuth2Zoom;
+use Appwrite\Platform\Modules\Project\Http\Project\Passwords\Delete as DeletePasswords;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Android\Create as CreateAndroidPlatform;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Android\Update as UpdateAndroidPlatform;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Apple\Create as CreateApplePlatform;
@@ -121,6 +141,11 @@ use Appwrite\Platform\Modules\Project\Http\Project\Variables\Delete as DeleteVar
 use Appwrite\Platform\Modules\Project\Http\Project\Variables\Get as GetVariable;
 use Appwrite\Platform\Modules\Project\Http\Project\Variables\Update as UpdateVariable;
 use Appwrite\Platform\Modules\Project\Http\Project\Variables\XList as ListVariables;
+use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\Create as CreateProfile;
+use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\Delete as DeleteProfile;
+use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\Get as GetProfile;
+use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\Update as UpdateProfile;
+use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\XList as ListProfiles;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -150,6 +175,10 @@ class Http extends Service
         $this->addAction('updateProjectSMTP', UpdateSMTP::class);
         $this->addAction('createProjectSMTPTest', CreateSMTPTest::class);
 
+        // LDAP
+        $this->addAction('updateProjectLDAP', UpdateLDAP::class);
+        $this->addAction('createProjectLDAPTest', CreateLDAPTest::class);
+
         // Templates
         $this->addAction('listProjectEmailTemplates', ListTemplates::class);
         $this->addAction('getProjectEmailTemplate', GetTemplate::class);
@@ -170,6 +199,9 @@ class Http extends Service
         $this->addAction('getProjectKey', GetKey::class);
         $this->addAction('deleteProjectKey', DeleteKey::class);
         $this->addAction('updateProjectKey', UpdateKey::class);
+
+        // Passwords
+        $this->addAction('deleteProjectPasswords', DeletePasswords::class);
 
         // Platforms
         $this->addAction('listProjectPlatforms', ListPlatforms::class);
@@ -216,6 +248,13 @@ class Http extends Service
         $this->addAction('updateProjectDenyCorporateEmailPolicy', UpdateDenyCorporateEmailPolicy::class);
         $this->addAction('updateProjectDenyRealtimeGuestsPolicy', UpdateDenyRealtimeGuestsPolicy::class);
         $this->addAction('updateProjectAccountDevicesPolicy', UpdateAccountDevicesPolicy::class);
+
+        // Profiles
+        $this->addAction(CreateProfile::getName(), new CreateProfile());
+        $this->addAction(ListProfiles::getName(), new ListProfiles());
+        $this->addAction(GetProfile::getName(), new GetProfile());
+        $this->addAction(UpdateProfile::getName(), new UpdateProfile());
+        $this->addAction(DeleteProfile::getName(), new DeleteProfile());
 
         // Auth Methods
         $this->addAction('updateProjectAuthMethod', UpdateAuthMethod::class);
@@ -268,9 +307,26 @@ class Http extends Service
         $this->addAction('updateProjectOAuth2Apple', UpdateOAuth2Apple::class);
         $this->addAction('updateProjectOAuth2Microsoft', UpdateOAuth2Microsoft::class);
         $this->addAction('updateProjectOAuth2Hugging Face', UpdateOAuth2HuggingFace::class);
+        $this->addAction('updateProjectOAuth2Instagram', UpdateOAuth2Instagram::class);
+        $this->addAction('updateProjectOAuth2Patreon', UpdateOAuth2Patreon::class);
+        $this->addAction('updateProjectOAuth2Strava', UpdateOAuth2Strava::class);
+        $this->addAction('updateProjectOAuth2VK', UpdateOAuth2VK::class);
+        $this->addAction('updateProjectOAuth2Netlify', UpdateOAuth2Netlify::class);
+        $this->addAction('updateProjectOAuth2Clerk', UpdateOAuth2Clerk::class);
+        $this->addAction('updateProjectOAuth2Supabase', UpdateOAuth2Supabase::class);
+        $this->addAction('updateProjectOAuth2Railway', UpdateOAuth2Railway::class);
+        $this->addAction('updateProjectOAuth2Reddit', UpdateOAuth2Reddit::class);
+        $this->addAction('updateProjectOAuth2Vercel', UpdateOAuth2Vercel::class);
+        $this->addAction('updateProjectOAuth2Atlassian', UpdateOAuth2Atlassian::class);
+        $this->addAction('updateProjectOAuth2LINE', UpdateOAuth2Line::class);
+        $this->addAction('updateProjectOAuth2Linear', UpdateOAuth2Linear::class);
+        $this->addAction('updateProjectOAuth2Roblox', UpdateOAuth2Roblox::class);
+        $this->addAction('updateProjectOAuth2WorkOS', UpdateOAuth2WorkOS::class);
         $this->addAction('updateProjectOAuth2Resend', UpdateOAuth2Resend::class);
+        $this->addAction('updateProjectOAuth2Bird', UpdateOAuth2Bird::class);
         $this->addAction('updateProjectOAuth2TikTok', UpdateOAuth2TikTok::class);
         $this->addAction('updateProjectOAuth2Kakao', UpdateOAuth2Kakao::class);
+        $this->addAction('updateProjectOAuth2Naver', UpdateOAuth2Naver::class);
         $this->addAction('updateProjectOAuth2Cloudflare', UpdateOAuth2Cloudflare::class);
         $this->addAction('updateProjectOAuth2Vipps MobilePay', UpdateOAuth2Vipps::class);
         $this->addAction('updateProjectOAuth2Vipps MobilePay Sandbox', UpdateOAuth2VippsSandbox::class);

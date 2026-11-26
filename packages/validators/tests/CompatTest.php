@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Utopia\Validator\Tests;
 
 use PHPStan\Rules\RestrictedUsage\RestrictedMethodUsageExtension;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use Utopia\Validator\PHPStan\DisallowAssertEqualsExtension;
 use Utopia\Validator\Text;
 use Utopia\Validator\Validator;
 
+#[RequiresPhpExtension('utopia')]
 final class CompatTest extends TestCase
 {
     public function testOldBaseClassNameResolvesToTheMovedClass(): void

@@ -26,6 +26,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             label: 'Manage billing',
             href: '/docs/advanced/billing/payments',
           },
+          {
+            label: 'Project transfers',
+            href: '/docs/advanced/billing/project-transfers',
+          },
         ],
       },
       {
@@ -2099,6 +2103,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/messaging/fcm',
           },
           {
+            label: 'Email with Bird',
+            href: '/docs/products/messaging/bird-email',
+          },
+          {
             label: 'Email with Mailgun',
             href: '/docs/products/messaging/mailgun',
           },
@@ -2117,6 +2125,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'SMS with Twilio',
             href: '/docs/products/messaging/twilio',
+          },
+          {
+            label: 'SMS with Bird',
+            href: '/docs/products/messaging/bird-sms',
           },
           {
             label: 'SMS with MSG91',
@@ -2744,6 +2756,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Generate SDK',
             href: '/docs/tooling/command-line/generate',
+          },
+          {
+            label: 'Terminal',
+            href: '/docs/tooling/command-line/terminal',
           },
         ],
       },

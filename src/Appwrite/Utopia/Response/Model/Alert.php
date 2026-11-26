@@ -3,6 +3,7 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Alert\Comparator;
+use Appwrite\Alert\Severity;
 use Appwrite\Alert\State;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
@@ -39,6 +40,12 @@ class Alert extends Model
             ->addRule('monitorId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'ID of the monitor that raised the alert.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('projectId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'ID of the project the alert is about. Empty for an alert of the whole organization.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
@@ -82,6 +89,31 @@ class Alert extends Model
                 'default' => '',
                 'example' => 'Jane Doe',
             ])
+            ->addRule('escalationId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'ID of the escalation notifying the team of this alert. Empty when the monitor notified its `notify` roles instead.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('escalationStep', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Index of the escalation\'s next step to notify, counting from 0. Equal to the number of steps once the last round has gone out.',
+                'default' => 0,
+                'example' => 1,
+            ])
+            ->addRule('escalationRound', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'How many times the escalation\'s steps have been repeated for this alert.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('escalatesAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'When the next step is notified, in ISO 8601 format. Null when nothing is due: the alert was acknowledged or resolved, or every step has gone out.',
+                'default' => null,
+                'required' => false,
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
             ->addRule('rules', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The monitor\'s rules when the alert fired, as query strings.',
@@ -89,11 +121,13 @@ class Alert extends Model
                 'example' => ['{"method":"greaterThan","attribute":"network.outbound","values":[5000000]}'],
                 'array' => true,
             ])
-            ->addRule('critical', [
-                'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether the monitor was critical when the alert fired.',
-                'default' => false,
-                'example' => false,
+            ->addRule('severity', [
+                'type' => self::TYPE_ENUM,
+                'description' => 'The monitor\'s severity when the alert fired: `info`, `warning`, `error` or `critical`.',
+                'default' => Severity::Warning->value,
+                'example' => Severity::Warning->value,
+                'enum' => Severity::values(),
+                'enumSDKName' => 'MonitorSeverity',
             ])
             ->addRule('metric', [
                 'type' => self::TYPE_ENUM,

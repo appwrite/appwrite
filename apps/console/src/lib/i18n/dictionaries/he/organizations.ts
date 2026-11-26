@@ -114,6 +114,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'כל המשאבים מלבד ניהול הצוות ופעולות כתיבה בחיוב.',
   'Allow OAuth2 Device Authorization Grant (RFC 8628).':
     'אפשרו OAuth2 Device Authorization Grant (RFC 8628).',
+  'Already in this organization': 'כבר נמצא בארגון הזה',
   Amount: 'סכום',
   'Amount due': 'סכום לתשלום',
   'An error occurred': 'אירעה שגיאה',
@@ -461,6 +462,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Enabled: 'מופעל',
   'Enter a coupon code to update your estimated total. Applied credits expire after a set period and do not roll over.':
     'הזינו קוד קופון לעדכון הסכום המשוער. קרדיטים שהוחלו פגים לאחר תקופה מוגדרת ואינם נצברים.',
+  'Enter a domain like example.com': 'הזינו דומיין כמו example.com',
   'Enter a full domain name (e.g. example.com)':
     'הזינו שם דומיין מלא (למשל example.com)',
   'Enter coupon code': 'הזינו קוד קופון',
@@ -475,6 +477,13 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'הזינו את שם הדומיין ללא פרוטוקול (למשל example.com)',
   'Enter the domain name you want to add to your organization.':
     'הזינו את שם הדומיין שברצונכם להוסיף לארגון שלכם.',
+  'Enter the hostname only, without https:// or a path.':
+    'הזינו את שם המארח בלבד, בלי https:// או נתיב.',
+  'Enter the hostname only:': 'הזינו את שם המארח בלבד:',
+  'Remove the spaces.': 'הסירו את הרווחים.',
+  'Remove the trailing dot.': 'הסירו את הנקודה בסוף.',
+  'Wildcard domains are not supported. Enter a specific hostname.':
+    'דומיינים עם תו כללי אינם נתמכים. הזינו שם מארח מסוים.',
   'Enter your card details to add a new payment method.':
     'הזינו את פרטי הכרטיס שלכם להוספת אמצעי תשלום חדש.',
   'Enter your full domain name to load a price quote.':
@@ -525,6 +534,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Failed to load logo files': 'טעינת קובצי הלוגו נכשלה',
   'Failed to load members': 'טעינת החברים נכשלה',
   'Failed to load page': 'טעינת הדף נכשלה',
+  'Failed to load preset records': 'טעינת רשומות ה-DNS של התבנית נכשלה',
   'Failed to load projects': 'טעינת הפרויקטים נכשלה',
   'Failed to load regions': 'טעינת האזורים נכשלה',
   'Failed to mount payment form. Please try again.':
@@ -630,6 +640,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'שבוע Init הסתיים. גלו כל השקה וצפו בהקלטות המפגשים.',
   'Initial term': 'תקופה ראשונית',
   'Install app': 'התקנת אפליקציה',
+  '1 install': 'התקנה אחת',
+  '{count} installs': '{count} התקנות',
   'Invalid Selection': 'בחירה לא תקינה',
   'Invalid email address': 'כתובת אימייל לא תקינה',
   'Invalid payment method response': 'התקבלה תגובה לא תקינה מאמצעי התשלום',
@@ -911,6 +923,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Popular integrations from the marketplace catalog.':
     'אינטגרציות פופולריות מקטלוג המרקטפלייס.',
   Port: 'פורט',
+  'Port is required': 'פורט הוא שדה חובה',
+  'Port must be between 0 and 65535': 'הפורט חייב להיות בין 0 ל-65535',
   'Post-logout redirect URIs': 'כתובות URI להפניה לאחר התנתקות',
   'Postal code': 'מיקוד',
   Premium: 'פרימיום',
@@ -927,6 +941,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Primary payment method updated': 'אמצעי התשלום הראשי עודכן',
   Priority: 'עדיפות',
   'Priority for SRV record': 'עדיפות לרשומת SRV',
+  'Priority is required': 'עדיפות היא שדה חובה',
+  'Priority must be between 0 and 65535': 'העדיפות חייבת להיות בין 0 ל-65535',
   'Privacy policy': 'מדיניות פרטיות',
   Project: 'פרויקט',
   'Project (optional)': 'פרויקט (אופציונלי)',
@@ -936,6 +952,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Project keys': 'מפתחות פרויקט',
   'Project pinned': 'הפרויקט הוצמד',
   'Project unpinned': 'הצמדת הפרויקט בוטלה',
+  'Projects subtotal': 'סכום ביניים של הפרויקטים',
   'Projects that will be deleted:': 'פרויקטים שיימחקו:',
   'Promo code': 'קוד קופון',
   Public: 'ציבורי',
@@ -1138,6 +1155,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'האפליקציה מושבתת ואינה יכולה לאמת משתמשים.',
   'This app may have been deleted or you do not have access.':
     'ייתכן שהאפליקציה נמחקה או שאין לכם גישה.',
+  "This domain can't be transferred. Check the name and try again.":
+    'לא ניתן להעביר את הדומיין הזה. בדקו את השם ונסו שוב.',
   'This entire organization will be deleted, including all of its projects and resources.':
     'כל הארגון הזה יימחק, כולל כל הפרויקטים והמשאבים שלו.',
   'Downgrading to the Free plan is temporarily unavailable here while we refine the experience. You can complete this change in the old console.':
@@ -1151,6 +1170,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'זה בדרך כלל לוקח כמה שניות. השאירו את החלון הזה פתוח.',
   'This usually takes a few seconds to a couple of minutes. Please keep this window open.':
     'זה בדרך כלל לוקח בין כמה שניות לכמה דקות. השאירו את החלון הזה פתוח.',
+  'These DNS records will be added. Records this domain already has are left unchanged. Nothing is created until you confirm.':
+    'רשומות ה-DNS האלה יתווספו. רשומות שכבר קיימות בדומיין נשארות ללא שינוי. לא נוצר שום דבר עד שתאשרו.',
   'This will add': 'פעולה זו תוסיף',
   'This will generate a transfer authorization code for your domain. Keep it private until you use it at the receiving registrar.':
     'פעולה זו תיצור קוד הרשאה להעברת הדומיין שלכם. שמרו אותו בסוד עד לשימוש אצל הרשם הקולט.',
@@ -1280,6 +1301,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   "We've received your request and will get back to you as soon as we can.":
     'קיבלנו את הבקשה שלכם ונחזור אליכם בהקדם האפשרי.',
   Weight: 'משקל',
+  'Weight is required': 'משקל הוא שדה חובה',
+  'Weight must be between 0 and 65535': 'המשקל חייב להיות בין 0 ל-65535',
   'What happens next': 'מה קורה בהמשך',
   "What wasn't working for you? Please share anything that influenced your decision to downgrade. This feedback helps us improve the platform.":
     'מה לא עבד עבורכם? שתפו כל דבר שהשפיע על ההחלטה שלכם לשנמך. המשוב הזה עוזר לנו לשפר את הפלטפורמה.',
@@ -1563,7 +1586,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'לא ניתן היה לטעון אילו מדיניות גיבוי יפסיקו לפעול כשהתוכנית תשתנה.',
   'Could not load which dedicated databases are spun down when your plan changes.':
     'לא ניתן היה לטעון אילו מסדי נתונים ייעודיים יושבתו כשהתוכנית תשתנה.',
-  'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.': 'ארגונים שמתקינים את האפליקציה מעניקים לה את הרשאות הגישה שלמטה. משתמשים חוזרים לכתובת ההפניה אחרי התקנה או עדכון של ההתקנה.',
+  'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.':
+    'ארגונים שמתקינים את האפליקציה מעניקים לה את הרשאות הגישה שלמטה. משתמשים חוזרים לכתובת ההפניה אחרי התקנה או עדכון של ההתקנה.',
   'Installation settings updated': 'הגדרות ההתקנה עודכנו',
   'No installation scopes are available.': 'אין הרשאות גישה להתקנה זמינות.',
   'Choose a new plan': 'בחירת תוכנית חדשה',
@@ -1630,9 +1654,188 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Failed to set up auto-pay': 'הגדרת התשלום האוטומטי נכשלה',
   'The bank asks for an OTP on automatic payments with this card. Set up auto-pay so payments up to $150 go through without one.':
     'הבנק מבקש OTP בתשלומים אוטומטיים בכרטיס הזה. הגדירו תשלום אוטומטי כדי שתשלומים של עד $150 יעברו בלי OTP.',
-  'Only the card owner can set up auto-pay': 'רק בעל הכרטיס יכול להגדיר תשלום אוטומטי',
+  'Only the card owner can set up auto-pay':
+    'רק בעל הכרטיס יכול להגדיר תשלום אוטומטי',
   'Check nameservers': 'בדיקת שרתי שמות',
   'Nameservers changed': 'שרתי השמות השתנו',
   'The nameservers for this domain no longer point to Appwrite. The domain status has been updated.':
     'שרתי השמות של הדומיין הזה כבר לא מפנים ל-Appwrite. סטטוס הדומיין עודכן.',
+  // Single sign-on
+  'Single sign-on': 'התחברות יחידה (SSO)',
+  'Email not on a verified domain': 'אימייל שאינו בדומיין מאומת',
+  'Domain added': 'הדומיין נוסף',
+  'Domain deleted': 'הדומיין נמחק',
+  'Only the domain, without @. Subdomains need their own entry.':
+    'רק הדומיין, בלי @. כל תת-דומיין מוסיפים בנפרד.',
+  'Pick at least one role.': 'בחרו לפחות תפקיד אחד.',
+  'Another organization claimed this domain. Add this TXT record to prove it is yours, then add it again.':
+    'ארגון אחר כבר הוסיף את הדומיין הזה. הוסיפו את רשומת ה-TXT הזו כדי להוכיח שהוא שלכם, ואז הוסיפו אותו שוב.',
+  'Add this TXT record at your DNS provider, then verify. It can take a few minutes to propagate.':
+    'הוסיפו את רשומת ה-TXT הזו אצל ספק ה-DNS ולאחר מכן אמתו. העדכון עשוי להימשך כמה דקות.',
+  'The TXT record was not found yet. DNS changes can take a few minutes to propagate.':
+    'רשומת ה-TXT עדיין לא נמצאה. עדכון שינויי DNS עשוי להימשך כמה דקות.',
+  'Payment authentication is required': 'נדרש אימות תשלום',
+  'They can join again by signing in with single sign-on. To keep them out, remove them at your identity provider too.':
+    'הם יוכלו להצטרף שוב בהתחברות יחידה (SSO). כדי למנוע זאת, הסירו אותם גם אצל ספק הזהויות.',
+  'Prove your organization owns this domain with a DNS record. Your identity providers then sign in people with an email on it.':
+    'הוכיחו באמצעות רשומת DNS שהדומיין הזה שייך לארגון שלכם. לאחר מכן ספקי הזהויות שלכם יאפשרו התחברות למי שיש לו אימייל בדומיין.',
+  'Prove the domains your organization owns. Your identity providers sign in only people with an email on a verified domain.':
+    'הוכיחו אילו דומיינים שייכים לארגון שלכם. ספקי הזהויות שלכם מאפשרים התחברות רק למי שיש לו אימייל בדומיין מאומת.',
+  'Failed to load domains': 'טעינת הדומיינים נכשלה',
+  'Add your company domain, then connect an identity provider so teammates sign in with single sign-on.':
+    'הוסיפו את הדומיין של החברה, ואז חברו ספק זהויות כדי שחברי הצוות יתחברו בהתחברות יחידה (SSO).',
+  'Verify {domain}': 'אימות {domain}',
+  'Are you sure you want to delete "{name}"?':
+    'האם אתם בטוחים שברצונכם למחוק את "{name}"?',
+  'People with an email on it can no longer sign in through your identity providers. People who already joined stay members.':
+    'מי שיש לו אימייל בדומיין הזה לא יוכל עוד להתחבר דרך ספקי הזהויות שלכם. מי שכבר הצטרף יישאר חבר בארגון.',
+  'Require SSO is on and this is your only verified domain: deleting it pauses Require SSO, and members can sign in any way they like.':
+    'חיוב SSO פעיל וזה הדומיין המאומת היחיד שלכם: מחיקתו תשהה את חיוב ה-SSO, וחברים יוכלו להתחבר בכל דרך שירצו.',
+  'Verify a domain to require single sign-on.':
+    'אמתו דומיין כדי לחייב התחברות יחידה (SSO).',
+  'Enable an identity provider to require single sign-on.':
+    'הפעילו ספק זהויות כדי לחייב התחברות יחידה (SSO).',
+  'Single sign-on is now required': 'התחברות יחידה (SSO) נדרשת מעכשיו',
+  'Single sign-on is no longer required': 'התחברות יחידה (SSO) כבר לא נדרשת',
+  'Failed to update single sign-on': 'עדכון ההתחברות היחידה (SSO) נכשל',
+  'Require SSO': 'חיוב SSO',
+  'Members with an email on your verified domains can open this organization only after signing in through your identity provider. Owners can always sign in with any method, so a broken identity provider never locks your organization out. Members on other domains keep their usual sign-in too.':
+    'חברים עם אימייל בדומיינים המאומתים שלכם יכולים לפתוח את הארגון רק אחרי התחברות דרך ספק הזהויות שלכם. בעלים תמיד יכולים להתחבר בכל שיטה, כך שספק זהויות תקול לעולם לא ינעל את הארגון שלכם. גם חברים בדומיינים אחרים ממשיכים להתחבר כרגיל.',
+  'Require single sign-on': 'חיוב התחברות יחידה (SSO)',
+  'Paused - enable an identity provider to require single sign-on again.':
+    'מושהה - הפעילו ספק זהויות כדי לחייב שוב התחברות יחידה (SSO).',
+  'Paused - verify a domain to require single sign-on again.':
+    'מושהה - אמתו דומיין כדי לחייב שוב התחברות יחידה (SSO).',
+  'Enabled - members on your verified domains must use single sign-on.':
+    'מופעל - חברים בדומיינים המאומתים שלכם חייבים להשתמש בהתחברות יחידה (SSO).',
+  'Disabled - members sign in any way they like.':
+    'מושבת - חברים מתחברים בכל דרך שירצו.',
+  'Members on your verified domains who signed in another way lose access to this organization until they sign in through your identity provider. Their other organizations are not affected. Owners keep their usual sign-in, so a broken identity provider never locks you out.':
+    'חברים בדומיינים המאומתים שלכם שהתחברו בדרך אחרת יאבדו את הגישה לארגון עד שיתחברו דרך ספק הזהויות. הארגונים האחרים שלהם לא מושפעים. בעלים ממשיכים להתחבר כרגיל, כך שספק זהויות תקול לעולם לא ינעל אתכם בחוץ.',
+  'Check your connection and try again.': 'בדקו את החיבור ונסו שוב.',
+  'Identity provider enabled': 'ספק הזהויות הופעל',
+  'Identity provider disabled. Require SSO is paused until you enable an identity provider.':
+    'ספק הזהויות הושבת. חיוב ה-SSO מושהה עד שתפעילו ספק זהויות.',
+  'Identity provider disabled': 'ספק הזהויות הושבת',
+  'Failed to update identity provider': 'עדכון ספק הזהויות נכשל',
+  'Identity provider deleted': 'ספק הזהויות נמחק',
+  'Identity providers': 'ספקי זהויות',
+  'People on your verified domains sign in through your identity provider, like Okta, Microsoft Entra ID, Google Workspace or Keycloak, and join with its roles.':
+    'אנשים בדומיינים המאומתים שלכם מתחברים דרך ספק הזהויות שלכם, למשל Okta,‏ Microsoft Entra ID,‏ Google Workspace או Keycloak, ומצטרפים עם התפקידים שלו.',
+  'Nobody can sign in through these identity providers yet. Verify a domain first.':
+    'עדיין אף אחד לא יכול להתחבר דרך ספקי הזהויות האלה. קודם אמתו דומיין.',
+  'Failed to load identity providers': 'טעינת ספקי הזהויות נכשלה',
+  'No identity providers yet': 'אין עדיין ספקי זהויות',
+  'Connect your identity provider so people on your domains sign in with single sign-on.':
+    'חברו את ספק הזהויות שלכם כדי שאנשים בדומיינים שלכם יתחברו בהתחברות יחידה (SSO).',
+  'SSO URL': 'כתובת SSO',
+  'Copy SSO URL': 'העתקת כתובת SSO',
+  'Delete identity provider': 'מחיקת ספק זהויות',
+  'People can no longer sign in through it. People who already joined stay members.':
+    'לא תהיה עוד אפשרות להתחבר דרכו. מי שכבר הצטרף יישאר חבר בארגון.',
+  'Require SSO is on and this is your only enabled identity provider: deleting it pauses Require SSO, and members can sign in any way they like.':
+    'חיוב SSO פעיל וזה ספק הזהויות הפעיל היחיד שלכם: מחיקתו תשהה את חיוב ה-SSO, וחברים יוכלו להתחבר בכל דרך שירצו.',
+  'Use an https:// URL.': 'השתמשו בכתובת שמתחילה ב-https://.',
+  'Enter a full URL, starting with https://':
+    'הזינו כתובת מלאה שמתחילה ב-https://',
+  'Enter the discovery URL, or set all three endpoints manually.':
+    'הזינו את כתובת ה-discovery, או הגדירו ידנית את שלוש נקודות הקצה.',
+  'Identity provider updated': 'ספק הזהויות עודכן',
+  'Identity provider added': 'ספק הזהויות נוסף',
+  'Failed to save identity provider': 'שמירת ספק הזהויות נכשלה',
+  'People can sign in through this identity provider.':
+    'אפשר להתחבר דרך ספק הזהויות הזה.',
+  'Update identity provider': 'עדכון ספק זהויות',
+  'Add identity provider': 'הוספת ספק זהויות',
+  'Change how people sign in through this identity provider. Leave the client secret empty to keep the stored one.':
+    'שנו את אופן ההתחברות דרך ספק הזהויות הזה. כדי לשמור את סוד הלקוח הקיים, השאירו את השדה ריק.',
+  'Create an OpenID Connect application at your identity provider, add the redirect URL there, then fill in its details.':
+    'צרו אפליקציית OpenID Connect אצל ספק הזהויות, הוסיפו שם את כתובת ההפניה, ואז מלאו כאן את הפרטים שלה.',
+  'People see the name when they choose how to sign in.':
+    'השם מוצג לאנשים כשהם בוחרים איך להתחבר.',
+  'Roles people get when they join through this identity provider.':
+    'התפקידים שאנשים מקבלים כשהם מצטרפים דרך ספק הזהויות הזה.',
+  'Client secret': 'סוד לקוח',
+  Unchanged: 'ללא שינוי',
+  'Discovery URL': 'כתובת discovery',
+  'Set the endpoints manually': 'הגדרת נקודות הקצה ידנית',
+  'Override what the discovery URL publishes, or set all three when your identity provider has none.':
+    'עקפו את מה שכתובת ה-discovery מפרסמת, או הגדירו את שלושתן אם לספק הזהויות שלכם אין כתובת כזו.',
+  'Token URL': 'כתובת הטוקן',
+  'User info URL': 'כתובת פרטי המשתמש',
+  'Until the domain is verified, nobody can sign in with single sign-on on it.':
+    'עד שהדומיין יאומת, אף אחד לא יוכל להתחבר דרכו בהתחברות יחידה (SSO).',
+  'Enter only the part after @:': 'הזינו רק את החלק שאחרי ה-@:',
+  'Enter only the domain, the part after @.':
+    'הזינו רק את הדומיין, החלק שאחרי ה-@.',
+  'A domain can be at most 253 characters, and each part between dots at most 63.':
+    'דומיין יכול להכיל עד 253 תווים, וכל חלק בין הנקודות עד 63 תווים.',
+  'Failed to delete identity provider': 'מחיקת ספק הזהויות נכשלה',
+  "Single sign-on for an organization needs the Single sign-on add-on. Enable it in the organization's settings.":
+    'התחברות יחידה (SSO) לארגון דורשת את תוסף ההתחברות היחידה (SSO). הפעילו אותו בהגדרות הארגון.',
+  'Needs the Single sign-on add-on': 'דורש את תוסף ההתחברות היחידה (SSO)',
+  'Enable the Single sign-on add-on to require single sign-on.':
+    'הפעילו את תוסף ההתחברות היחידה (SSO) כדי לחייב התחברות יחידה (SSO).',
+  'Paused - enable the Single sign-on add-on to require single sign-on again.':
+    'מושהה - הפעילו את תוסף ההתחברות היחידה (SSO) כדי לחייב שוב התחברות יחידה (SSO).',
+  'View add-on': 'הצגת התוסף',
+  'Enable add-on': 'הפעלת התוסף',
+  'Until the add-on is active, nobody signs in through your identity providers and Require SSO has no effect. You can still delete domains and identity providers, and turn Require SSO off.':
+    'עד שהתוסף יהיה פעיל, אף אחד לא מתחבר דרך ספקי הזהויות שלכם וחיוב SSO לא חל. עדיין אפשר למחוק דומיינים וספקי זהויות, ולכבות את חיוב ה-SSO.',
+  'Single sign-on is paused': 'ההתחברות היחידה (SSO) מושהית',
+  Later: 'אחר כך',
+  'SAML is coming soon':
+    'SAML יגיע בקרוב',
+  'Get notified when SAML identity providers can be connected.':
+    'קבלו עדכון כשאפשר יהיה לחבר ספקי זהויות SAML.',
+  'Identity providers that sign people in with SAML 2.0, such as Okta or Microsoft Entra ID.':
+    'ספקי זהויות שמכניסים אנשים באמצעות SAML 2.0, כמו Okta או Microsoft Entra ID.',
+  "You'll be notified when SAML is available.":
+    'נודיע לכם כש-SAML יהיה זמין.',
+  "You'll no longer be notified about SAML.":
+    'לא נודיע לכם יותר על SAML.',
+  'Organization photo': 'תמונת הארגון',
+  'Shown next to your organization name across the Console.':
+    'מוצגת לצד שם הארגון שלך בכל הקונסולה.',
+  'PNG, JPEG, or WebP up to 5MB.': 'PNG,\u200f JPEG או WebP עד 5MB.',
+  'Only organization owners can change the photo.':
+    'רק בעלי הארגון יכולים לשנות את התמונה.',
+  'Organization photo updated': 'תמונת הארגון עודכנה',
+  'Failed to update organization photo': 'עדכון תמונת הארגון נכשל',
+  'Organization photo removed': 'תמונת הארגון הוסרה',
+  'Failed to remove organization photo': 'הסרת תמונת הארגון נכשלה',
+  'Remove organization photo': 'הסרת תמונת הארגון',
+  'The photo is replaced with a placeholder. You can upload a new photo at any time.':
+    'התמונה תוחלף בתמונת ברירת מחדל. אפשר להעלות תמונה חדשה בכל עת.',
+  'Synthetic checks': 'בדיקות סינתטיות',
+  Escalations: 'הסלמות',
+  '{current} in use, the selected plan allows {limit}. Delete {excess} to continue.':
+    '{current} בשימוש, והתוכנית שנבחרה מאפשרת {limit}. יש למחוק {excess} כדי להמשיך.',
+  'Additional synthetic checks': 'בדיקות סינתטיות נוספות',
+  'Additional on-call responders': 'כוננים נוספים',
+  'Apps cannot authorize users until the OAuth2 server is enabled in the Server settings.': 'אפליקציות לא יכולות לאשר משתמשים עד ששרת OAuth2 יופעל בהגדרות השרת.',
+  'OAuth2 server is disabled': 'שרת OAuth2 מושבת',
+  'Enter a valid URL, for example https://example.com': 'יש להזין כתובת URL תקינה, לדוגמה https://example.com',
+  "Delete this app's OAuth secrets before switching to a public client.": 'יש למחוק את סודות ה-OAuth של האפליקציה לפני מעבר ללקוח ציבורי.',
+  'Use https, http on localhost, or a reverse-domain scheme like com.example.app:/callback': 'יש להשתמש ב-https, ב-http רק ב-localhost, או בסכמת דומיין הפוכה כמו com.example.app:/callback',
+  'Redirect URIs cannot contain a fragment (#)': 'כתובות הפניה לא יכולות להכיל מקטע (#)',
+  'Enter a valid URL': 'יש להזין כתובת URL תקינה',
+  'Edit app': 'עריכת האפליקציה',
+  'Back to marketplace': 'חזרה ל-Marketplace',
+  'More about the app for your users.': 'מידע נוסף על האפליקציה למשתמשים שלך.',
+  'Optional description of the app': 'תיאור אופציונלי של האפליקציה',
+  'Links and contacts for compliance and support.': 'קישורים ואנשי קשר לתאימות ולתמיכה.',
+  'Where this app is installed and the scopes each installation granted. Removing an installation revokes its access tokens.': 'היכן האפליקציה מותקנת והרשאות הגישה שכל התקנה העניקה. הסרת התקנה מבטלת את טוקני הגישה שלה.',
+  'Installations appear here once someone installs this app.': 'התקנות יופיעו כאן אחרי שמישהו יתקין את האפליקציה.',
+  'The app loses access immediately and its installation tokens stop working. It can be installed again later.': 'האפליקציה מאבדת גישה מיד וטוקני ההתקנה שלה מפסיקים לעבוד. אפשר להתקין אותה שוב מאוחר יותר.',
+  'Search scopes': 'חיפוש הרשאות גישה',
+  'The app is created in your current organization. Switch organizations to create it in another one.': 'האפליקציה נוצרת בארגון הנוכחי. כדי ליצור אותה בארגון אחר, יש לעבור לארגון אחר.',
+  'Store this secret in your deployment environment before continuing.': 'יש לשמור את הסוד בסביבת הפריסה לפני שממשיכים.',
+  'This app has no installation scopes to grant yet.': 'לאפליקציה הזו עדיין אין הרשאות גישה להתקנה.',
+  'App installed': 'האפליקציה הותקנה',
+  'Failed to install app': 'התקנת האפליקציה נכשלה',
+  'Values have a maximum length of {count} characters': 'האורך המרבי של ערך הוא {count} תווים',
+  'This email is already added': 'כתובת האימייל הזו כבר נוספה',
+  'This value is already added': 'הערך הזה כבר נוסף',
+  Organization: 'ארגון',
 }

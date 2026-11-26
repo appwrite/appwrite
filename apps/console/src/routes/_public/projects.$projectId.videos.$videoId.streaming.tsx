@@ -4,7 +4,7 @@ import {
   projectQueryOptions,
   videoQueryOptions,
   videoRenditionsQueryOptions,
-  videoSubtitlesQueryOptions,
+  videoCaptionsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
 
@@ -24,7 +24,7 @@ export const Route = createFileRoute(
         videoRenditionsQueryOptions(projectId, videoId),
       ),
       queryClient.ensureQueryData(
-        videoSubtitlesQueryOptions(projectId, videoId),
+        videoCaptionsQueryOptions(projectId, videoId),
       ),
     ])
   },

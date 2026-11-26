@@ -151,6 +151,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Backup policies have been created': 'כללי מדיניות הגיבוי נוצרו',
   'Backup policies': 'מדיניות גיבויים',
   'backup policies': 'מדיניות גיבויים',
+  'backup policy': 'מדיניות גיבוי',
   'Backup policy has been deleted': 'מדיניות הגיבוי נמחקה',
   'Backups already taken by this policy are kept until their retention expires.': 'גיבויים שכבר נוצרו על ידי מדיניות זו יישמרו עד שתקופת השמירה שלהם תסתיים.',
   'backup selected': 'גיבוי נבחר',
@@ -975,7 +976,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'One Relation column within this table': 'עמודת קשר (Relation) אחת בטבלה זו',
   'One Relation column within this table and another within the related table': 'עמודת קשר (Relation) אחת בטבלה זו ועוד אחת בטבלה המקושרת',
   'One-way relationship': 'קשר חד-כיווני',
-  'Only applicable to string and varchar columns': 'רלוונטי רק לעמודות string ו-varchar',
+  'Only applicable to string, varchar and text columns': 'רלוונטי רק לעמודות string ו-varchar',
   'Only CSV files can be imported': 'ניתן לייבא קובצי CSV בלבד',
   'only if they have collection permissions': 'רק אם יש להם הרשאות אוסף',
   'only if they have table permissions': 'רק אם יש להם הרשאות טבלה',
@@ -1700,8 +1701,6 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Database is pausing': 'מסד הנתונים מושהה',
   'Database is resuming': 'מסד הנתונים חוזר לפעילות',
   'Database is deleting': 'מסד הנתונים נמחק',
-  'A database upgrade is in progress. Some operations may be temporarily unavailable.':
-    'שדרוג מסד נתונים בתהליך. חלק מהפעולות עשויות להיות זמנית לא זמינות.',
   'A database migration is in progress. Some operations may be temporarily unavailable.':
     'מיגרציית מסד נתונים בתהליך. חלק מהפעולות עשויות להיות זמנית לא זמינות.',
   'Starting dedicated migration': 'מתחילים מיגרציה ל-compute ייעודי',
@@ -2284,4 +2283,24 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Keep this database safe': 'שמרו על מסד הנתונים הזה',
   'Back up on a schedule, keep copies for as long as you need, and restore any of them when something goes wrong.':
     'גבו לפי לוח זמנים, שמרו עותקים כמה זמן שצריך, ושחזרו כל אחד מהם כשמשהו משתבש.',
+  'This database runs the latest supported version.':
+    'מסד הנתונים הזה רץ על הגרסה העדכנית ביותר שנתמכת.',
+  'Upgrade to {version}':
+    'שדרוג ל-{version}',
+  'Upgrade to {version} started':
+    'השדרוג ל-{version} התחיל',
+  'Failed to start the upgrade':
+    'הפעלת השדרוג נכשלה',
+  'A version upgrade is in progress. Your database stays online while it runs.':
+    'מתבצע שדרוג גרסה. מסד הנתונים נשאר זמין לאורך כל התהליך.',
+  'Upgrade to a newer {engine} version. Upgrades run online while your database keeps serving traffic. Downgrades are not supported.':
+    'שדרגו לגרסה חדשה יותר של {engine}. השדרוג מתבצע אונליין, ומסד הנתונים ממשיך לשרת תעבורה. אין אפשרות לחזור לגרסה קודמת.',
+  'A new instance is created on the target version and your data is copied over while the database stays online. Traffic switches over once it has caught up.':
+    'נוצר מופע חדש על גרסת היעד והנתונים מועתקים אליו בזמן שמסד הנתונים נשאר זמין. כשהוא מדביק את הפער, התעבורה עוברת אליו.',
+  'At cutover, writes pause for a moment and open connections are closed, so your app needs to reconnect.':
+    'בזמן המעבר הכתיבה נעצרת לרגע והחיבורים הפתוחים נסגרים, כך שהאפליקציה צריכה להתחבר מחדש.',
+  'Check that your installed extensions support the target version.':
+    'ודאו שההרחבות המותקנות תומכות בגרסת היעד.',
+  'You cannot downgrade afterwards.':
+    'לא ניתן לחזור לגרסה קודמת אחר כך.',
 }

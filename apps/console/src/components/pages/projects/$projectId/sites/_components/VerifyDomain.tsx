@@ -14,8 +14,10 @@ import {
   type DomainVerificationError,
 } from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
 import { useT } from '@/lib/i18n/translate'
+import { canRetryRule } from '@/lib/utils/proxy-domains'
 
 interface VerifyDomainProps {
   open: boolean
@@ -65,13 +67,21 @@ export function VerifyDomain({
         updated.status === 'unverified'
       ) {
         setVerificationError(dnsPendingVerificationError(t))
+        toast.info(t('Not verified yet. Appwrite keeps checking.'))
       } else {
         toast.success(t('Verifying...'))
         onOpenChange(false)
         onVerifySuccess()
       }
     } catch (err) {
-      setVerificationError(domainVerificationError(t, err))
+      const error = domainVerificationError(t, err)
+      setVerificationError(error)
+      // The DNS banners hide a pending error, so say what the check found
+      if (error.pending) {
+        toast.info(t('Not verified yet. Appwrite keeps checking.'), {
+          description: getErrorMessage(err),
+        })
+      }
     }
   }
 
@@ -93,22 +103,35 @@ export function VerifyDomain({
             verificationError={verificationError}
           />
         </div>
+        {/* The rule updates live: once DNS passes, there is nothing to verify. */}
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={verifyMutation.isPending}
-          >
-            {t('Cancel')}
-          </Button>
-          <Button
-            type="button"
-            onClick={handleVerify}
-            disabled={verifyMutation.isPending}
-          >
-            {t('Verify')}
-          </Button>
+          {canRetryRule(rule) ? (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={verifyMutation.isPending}
+              >
+                {t('Cancel')}
+              </Button>
+              <Button
+                type="button"
+                onClick={handleVerify}
+                disabled={verifyMutation.isPending}
+              >
+                {t('Verify')}
+              </Button>
+            </>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
+              {t('Close')}
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>

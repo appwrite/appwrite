@@ -17,6 +17,17 @@ const LABELS_KEY = 'console.device.accountLabels'
 /** Set on `/sign-in?addAccount=1` so the sign-in loader renders the form for an operator who is already signed in. */
 export const ADD_ACCOUNT_SEARCH_PARAM = 'addAccount'
 
+/**
+ * Whether a `/sign-in` query is the switcher's add-account link. Route loaders read
+ * the query before validateSearch, and the router keeps plain values as strings
+ * (see router-search.ts), so `?addAccount=1` arrives there as `'1'`.
+ */
+export function isAddAccountSearch(search: unknown): boolean {
+  if (!search || typeof search !== 'object') return false
+  const value = (search as Record<string, unknown>)[ADD_ACCOUNT_SEARCH_PARAM]
+  return String(value) === '1'
+}
+
 export type ConsoleAccountLabel = {
   email: string
   name: string

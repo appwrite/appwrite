@@ -64,6 +64,15 @@ class Get extends Action
         VcsFactory $vcsFactory,
     ) {
         if (empty($installationReceipt)) {
+            // A cancelled or denied install comes back with only the state it
+            // was given; when it is ours, send the user back to the Console
+            $cancelled = State::verify($state, ...EncryptionKey::accepted());
+            if ($cancelled !== null) {
+                $settings = ($platform['consoleUrl'] ?? '') . "/projects/{$cancelled->projectId}/settings";
+                $this->failure($response, $cancelled->failure ?: $settings, 'The Origin installation was cancelled. Please restart the installation from the Appwrite Console.');
+                return;
+            }
+
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing installation receipt. Please restart the installation from the Appwrite Console.');
         }
 
@@ -160,6 +169,21 @@ class Get extends Action
         } catch (Duplicate) {
             $this->failure($response, $redirectFailure, 'This installation request was already used. Please restart the installation from the Appwrite Console.');
             return;
+        }
+
+        // Receipts are single-use too: one replayed within its life must not
+        // attach the installation again. Cursor's receipts need not carry a
+        // jti, so one without names itself by its signed header and claims;
+        // not by the whole token, as its signature segment can be re-encoded.
+        $receiptId = \strval($receiptClaims['jti'] ?? '');
+        $receiptId = $receiptId !== '' ? 'jti:' . $receiptId : 'token:' . \implode('.', \array_slice(\explode('.', $installationReceipt), 0, 2));
+        try {
+            $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document([
+                // Document ids are capped at 36 characters; a digest prefix keeps the claim within it
+                '$id' => 'origin-receipt-' . \substr(\hash('sha256', $receiptId), 0, 21),
+            ])));
+        } catch (Duplicate) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'The installation receipt was already used. Please restart the installation from the Appwrite Console.');
         }
 
         $projectInternalId = $project->getSequence();

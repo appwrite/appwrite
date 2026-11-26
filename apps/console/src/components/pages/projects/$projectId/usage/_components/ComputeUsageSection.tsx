@@ -22,6 +22,8 @@ import {
   COMPUTE_SITE_EXECUTIONS_DESCRIPTION,
   COMPUTE_SITE_GB_HOURS_DESCRIPTION,
   COMPUTE_SITES_DOCS_HREF,
+  COMPUTE_VIDEO_GB_HOURS_DESCRIPTION,
+  COMPUTE_VIDEOS_DOCS_HREF,
   topConsumersToBreakdownItems,
 } from '@/lib/usage/compute-usage'
 import {
@@ -32,9 +34,11 @@ import {
   useProjectGbHoursOverview,
   useProjectSiteExecutionsOverview,
   useProjectSiteGbHoursOverview,
+  useProjectVideoGbHoursOverview,
   useUsageResourceBreakdownLookups,
 } from '@/lib/react-query/hooks'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { GbHoursUnitInfo } from '../../overview/GbHoursUnitInfo'
 import { ComputeMetricBentoCard } from './ComputeMetricBentoCard'
 import { getUsageChartLoadingProps } from '@/lib/usage/usage-chart-loading'
@@ -47,6 +51,8 @@ type ComputeUsageSectionProps = {
   chartInterval: UsageChartInterval
   scope?: ComputeUsageScope
   onDateRangeChange?: (dateRange: DateRange | undefined) => void
+  /** Top consumers under each chart; off when the page shows one resource. */
+  showBreakdown?: boolean
 }
 
 export function ComputeUsageSection({
@@ -55,9 +61,14 @@ export function ComputeUsageSection({
   chartInterval,
   scope = 'combined',
   onDateRangeChange,
+  showBreakdown = true,
 }: ComputeUsageSectionProps) {
   const queryClient = useQueryClient()
   const { registerRefreshHandler, unregisterRefreshHandler } = useRefresh()
+  const { features } = useConsoleProfile()
+  // Video encode compute is already inside the combined GB-hours; this card
+  // shows its share while the Videos product is enabled.
+  const showVideos = scope === 'combined' && Boolean(features.videos)
 
   const combinedExecutionsQuery = useProjectExecutionsOverview(
     projectId,
@@ -94,6 +105,13 @@ export function ComputeUsageSection({
     dateRange,
     scope === 'sites',
     chartInterval,
+  )
+  const videoGbHoursQuery = useProjectVideoGbHoursOverview(
+    projectId,
+    dateRange,
+    showVideos,
+    chartInterval,
+    false,
   )
 
   const executionsQuery =
@@ -157,6 +175,13 @@ export function ComputeUsageSection({
     executionsPoints,
   )
   const gbHoursLoading = getUsageChartLoadingProps(gbHoursQuery, gbHoursPoints)
+  const videoGbHoursPoints = videoGbHoursQuery.isError
+    ? []
+    : (videoGbHoursQuery.data?.chartPoints ?? [])
+  const videoGbHoursLoading = getUsageChartLoadingProps(
+    videoGbHoursQuery,
+    videoGbHoursPoints,
+  )
 
   const executionsTitle =
     scope === 'functions'
@@ -206,7 +231,7 @@ export function ComputeUsageSection({
         queryError={executionsQuery.error}
         formatTotal={formatExecutionsTotal}
         formatValue={formatExecutionsValue}
-        showBreakdown
+        showBreakdown={showBreakdown}
         breakdownItems={
           executionsQuery.isError
             ? []
@@ -238,7 +263,7 @@ export function ComputeUsageSection({
         formatTotal={formatGbHoursTotal}
         formatValue={formatGbHoursValue}
         axisFormat="gbhours"
-        showBreakdown
+        showBreakdown={showBreakdown}
         breakdownItems={
           gbHoursQuery.isError
             ? []
@@ -254,6 +279,34 @@ export function ComputeUsageSection({
         chartInterval={chartInterval}
         onDateRangeChange={onDateRangeChange}
       />
+
+      {showVideos && (
+        <ComputeMetricBentoCard
+          projectId={projectId}
+          title="Video encoding GB-hours"
+          description={COMPUTE_VIDEO_GB_HOURS_DESCRIPTION}
+          unitLabel="GBH"
+          chartGradientId="usage-compute-video-gb-hours-gradient"
+          chartPoints={videoGbHoursPoints}
+          total={sumUsageChartPoints(videoGbHoursPoints)}
+          changePercent={videoGbHoursQuery.data?.changePercent ?? 0}
+          isLoading={videoGbHoursLoading.isLoading}
+          isRefreshing={videoGbHoursLoading.isRefreshing}
+          isError={videoGbHoursQuery.isError}
+          queryError={videoGbHoursQuery.error}
+          formatTotal={formatGbHoursTotal}
+          formatValue={formatGbHoursValue}
+          axisFormat="gbhours"
+          showBreakdown={false}
+          breakdownItems={[]}
+          breakdownLookup={computeLookup}
+          onRetry={handleRetryAll}
+          docsHref={COMPUTE_VIDEOS_DOCS_HREF}
+          dateRange={dateRange}
+          chartInterval={chartInterval}
+          onDateRangeChange={onDateRangeChange}
+        />
+      )}
     </div>
   )
 }

@@ -1,9 +1,9 @@
 import {
   MARKETPLACE_CATEGORY_ICONS,
   MARKETPLACE_CATEGORY_LABELS,
-  formatMarketplaceCount,
   type MarketplaceAppCategory,
 } from '@/lib/marketplace/types'
+import { formatListTotal } from '@/lib/list-total'
 import {
   MARKETPLACE_CATEGORY_ORDER,
   type MarketplaceNavId,
@@ -35,7 +35,9 @@ export function MarketplaceExplore({
         </p>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        {MARKETPLACE_CATEGORY_ORDER.map((category) => {
+        {MARKETPLACE_CATEGORY_ORDER.filter(
+          (category) => categoryCounts?.[category] !== 0,
+        ).map((category) => {
           const Icon = MARKETPLACE_CATEGORY_ICONS[category]
           const count = categoryCounts?.[category]
           return (
@@ -58,7 +60,7 @@ export function MarketplaceExplore({
                 <p className="text-[12px] text-muted-foreground mt-0.5">
                   {count === undefined
                     ? ' '
-                    : `${formatMarketplaceCount(count)} ${count !== 1 ? t('apps') : t('app')}`}
+                    : `${formatListTotal(count)} ${count !== 1 ? t('apps') : t('app')}`}
                 </p>
               </div>
             </button>

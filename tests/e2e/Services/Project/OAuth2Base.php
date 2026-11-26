@@ -27,6 +27,7 @@ trait OAuth2Base
             'github' => ['clientId' => '', 'clientSecret' => '', 'prompt' => [], 'enabled' => false],
             'kakao' => ['clientId' => '', 'clientSecret' => '', 'prompt' => [], 'enabled' => false],
             'microsoft' => ['applicationId' => '', 'applicationSecret' => '', 'tenant' => '', 'prompt' => [], 'enabled' => false],
+            'naver' => ['clientId' => '', 'clientSecret' => '', 'enabled' => false],
             'salesforce' => ['customerKey' => '', 'customerSecret' => '', 'prompt' => [], 'enabled' => false],
             'zoho' => ['clientId' => '', 'clientSecret' => '', 'prompt' => [], 'enabled' => false],
             'dropbox' => ['appKey' => '', 'appSecret' => '', 'enabled' => false],
@@ -34,6 +35,7 @@ trait OAuth2Base
             'authentik' => ['clientId' => '', 'clientSecret' => '', 'endpoint' => '', 'enabled' => false],
             'fusionauth' => ['clientId' => '', 'clientSecret' => '', 'endpoint' => '', 'enabled' => false],
             'keycloak' => ['clientId' => '', 'clientSecret' => '', 'endpoint' => '', 'realmName' => '', 'enabled' => false],
+            'clerk' => ['clientId' => '', 'clientSecret' => '', 'endpoint' => '', 'enabled' => false],
         ];
 
         foreach ($providers as $provider => $payload) {
@@ -468,6 +470,7 @@ trait OAuth2Base
         yield 'auth0 endpoint' => ['auth0', 'clientId', 'clientSecret', ['endpoint' => 'example.us.auth0.com'], ['endpoint' => 'other.us.auth0.com']];
         yield 'gitlab endpoint' => ['gitlab', 'applicationId', 'secret', ['endpoint' => 'https://gitlab.example.com'], ['endpoint' => 'https://other.example.com']];
         yield 'authentik endpoint' => ['authentik', 'clientId', 'clientSecret', ['endpoint' => 'example.authentik.com'], ['endpoint' => 'other.authentik.com']];
+        yield 'clerk endpoint' => ['clerk', 'clientId', 'clientSecret', ['endpoint' => 'clerk.example.com'], ['endpoint' => 'clerk.other.com']];
         yield 'fusionauth endpoint' => ['fusionauth', 'clientId', 'clientSecret', ['endpoint' => 'example.fusionauth.io'], ['endpoint' => 'other.fusionauth.io']];
         yield 'keycloak endpoint' => ['keycloak', 'clientId', 'clientSecret', ['endpoint' => 'keycloak.example.com', 'realmName' => 'appwrite-realm'], ['endpoint' => 'keycloak.other.com']];
         yield 'keycloak realmName' => ['keycloak', 'clientId', 'clientSecret', ['endpoint' => 'keycloak.example.com', 'realmName' => 'appwrite-realm'], ['realmName' => 'other-realm']];
@@ -525,6 +528,34 @@ trait OAuth2Base
         $this->assertTrue($update['body']['enabled']);
     }
 
+    public function testUpdateOAuth2ClerkRoundTrip(): void
+    {
+        $update = $this->updateOAuth2('clerk', [
+            'clientId' => 'clerk-client',
+            'clientSecret' => 'clerk-secret',
+            'endpoint' => 'clerk.example.com',
+            'enabled' => true,
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertSame('clerk-client', $update['body']['clientId']);
+        $this->assertSame('clerk.example.com', $update['body']['endpoint']);
+        $this->assertSame('', $update['body']['clientSecret']);
+        $this->assertTrue($update['body']['enabled']);
+    }
+
+    public function testUpdateOAuth2ClerkEnableRequiresEndpoint(): void
+    {
+        $response = $this->updateOAuth2('clerk', [
+            'clientId' => 'clerk-client',
+            'clientSecret' => 'clerk-secret',
+            'enabled' => true,
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+    }
+
     public function testUpdateOAuth2GoogleRoundTrip(): void
     {
         $update = $this->updateOAuth2('google', [
@@ -540,6 +571,47 @@ trait OAuth2Base
         $this->assertSame(['select_account'], $update['body']['prompt']);
         $this->assertSame('', $update['body']['clientSecret']);
         $this->assertTrue($update['body']['enabled']);
+    }
+
+    public function testUpdateOAuth2NaverRoundTrip(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $update = $this->updateOAuth2('naver', [
+            'clientId' => 'naver-client',
+            'clientSecret' => 'naver-secret',
+            'enabled' => true,
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+        $this->assertSame('naver', $update['body']['$id']);
+        $this->assertSame('naver-client', $update['body']['clientId']);
+        $this->assertSame('', $update['body']['clientSecret']);
+        $this->assertTrue($update['body']['enabled']);
+
+        $get = $this->getOAuth2Provider('naver');
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('naver-client', $get['body']['clientId']);
+        $this->assertSame('', $get['body']['clientSecret']);
+        $this->assertTrue($get['body']['enabled']);
+
+        /**
+         * Test for FAILURE
+         */
+        $update = $this->updateOAuth2('naver', [
+            'clientSecret' => '',
+            'enabled' => true,
+        ]);
+
+        $this->assertSame(400, $update['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $update['body']['type']);
+
+        $update = $this->updateOAuth2('naver', [
+            'enabled' => false,
+        ], authenticated: false);
+
+        $this->assertSame(401, $update['headers']['status-code']);
     }
 
     /**

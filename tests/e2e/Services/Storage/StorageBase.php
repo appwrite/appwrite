@@ -1025,13 +1025,12 @@ trait StorageBase
         $this->assertEquals('image/png', $file3['headers']['content-type']);
         $this->assertNotEmpty($file3['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($file3['body']);
-        $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.png');
+        $image = \getimagesizefromstring($file3['body']);
+        $original = \getimagesize(__DIR__ . '/../../../resources/logo-after.png');
 
-        $this->assertSame($image->getImageWidth(), $original->getImageWidth());
-        $this->assertSame($image->getImageHeight(), $original->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $this->assertSame($image[0], $original[0]);
+        $this->assertSame($image[1], $original[1]);
+        $this->assertSame('image/png', $image['mime']);
 
         $file4 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/preview', array_merge([
             'content-type' => 'application/json',
@@ -1048,13 +1047,12 @@ trait StorageBase
         $this->assertEquals('image/jpeg', $file4['headers']['content-type']);
         $this->assertNotEmpty($file4['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($file4['body']);
-        $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.jpg');
+        $image = \getimagesizefromstring($file4['body']);
+        $original = \getimagesize(__DIR__ . '/../../../resources/logo-after.jpg');
 
-        $this->assertSame($image->getImageWidth(), $original->getImageWidth());
-        $this->assertSame($image->getImageHeight(), $original->getImageHeight());
-        $this->assertSame('JPEG', $image->getImageFormat());
+        $this->assertSame($image[0], $original[0]);
+        $this->assertSame($image[1], $original[1]);
+        $this->assertSame('image/jpeg', $image['mime']);
 
         $file5 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
             'content-type' => 'application/json',
@@ -1215,13 +1213,12 @@ trait StorageBase
         $this->assertEquals('image/png', $file7['headers']['content-type']);
         $this->assertNotEmpty($file7['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($file7['body']);
-        $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.png');
+        $image = \getimagesizefromstring($file7['body']);
+        $original = \getimagesize(__DIR__ . '/../../../resources/logo-after.png');
 
-        $this->assertSame($image->getImageWidth(), $original->getImageWidth());
-        $this->assertSame($image->getImageHeight(), $original->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $this->assertSame($image[0], $original[0]);
+        $this->assertSame($image[1], $original[1]);
+        $this->assertSame('image/png', $image['mime']);
 
         /**
          * Test large files decompress successfully
@@ -1315,10 +1312,9 @@ trait StorageBase
         $this->assertSame(200, $preview['headers']['status-code']);
         $this->assertSame('image/png', $preview['headers']['content-type']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($preview['body']);
-        $this->assertSame(1, $image->getImageWidth());
-        $this->assertSame(1, $image->getImageHeight());
+        $image = \getimagesizefromstring($preview['body']);
+        $this->assertSame(1, $image[0]);
+        $this->assertSame(1, $image[1]);
     }
 
     public function testFileViewSvgIsNotExecutable(): void
@@ -1535,8 +1531,7 @@ trait StorageBase
         $this->assertEquals('image/png', $file3['headers']['content-type']);
         $this->assertNotEmpty($file3['body']);
 
-        $imageBefore = new \Imagick();
-        $imageBefore->readImageBlob($file3['body']);
+        $imageBefore = $this->getImagePixels($file3['body']);
 
         $file = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $data['bucketId'] . '/files/' . $fileId, array_merge([
             'content-type' => 'application/json',
@@ -1546,13 +1541,11 @@ trait StorageBase
         $this->assertEquals(204, $file['headers']['status-code']);
         $this->assertEmpty($file['body']);
 
-        $this->assertEventually(function () use ($data, $fileId) {
-            $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files/' . $fileId, array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()));
-            $this->assertEquals(404, $file['headers']['status-code']);
-        }, 10_000, 500);
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files/' . $fileId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(404, $file['headers']['status-code']);
 
         //upload again using the same ID
         $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
@@ -1570,28 +1563,34 @@ trait StorageBase
         $this->assertEquals(201, $file['headers']['status-code']);
         $this->assertNotEmpty($file['body']['$id']);
 
-        // The delete worker invalidates previews asynchronously.
-        $this->assertEventually(function () use ($bucketId, $fileId, $imageBefore) {
-            $file3 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()), [
-                'width' => 300,
-                'height' => 100,
-                'borderRadius' => '50',
-                'opacity' => '0.5',
-                'output' => 'png',
-                'rotation' => '45',
-            ]);
+        // Straight after the upload, before the deletes worker has purged the deleted file's
+        // entries: the preview must already be the new file's, rendered fresh and cached again.
+        $preview = fn (): array => $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'width' => 300,
+            'height' => 100,
+            'borderRadius' => '50',
+            'opacity' => '0.5',
+            'output' => 'png',
+            'rotation' => '45',
+        ]);
 
-            $this->assertEquals(200, $file3['headers']['status-code']);
-            $this->assertEquals('image/png', $file3['headers']['content-type']);
-            $this->assertNotEmpty($file3['body']);
+        $fresh = $preview();
+        $this->assertEquals(200, $fresh['headers']['status-code']);
+        $this->assertEquals('image/png', $fresh['headers']['content-type']);
+        $this->assertEquals('miss', $fresh['headers']['x-appwrite-cache']);
+        $imageAfter = $this->getImagePixels($fresh['body']);
+        $this->assertNotSame($imageBefore, $imageAfter, 'The preview is still the deleted file\'s.');
 
-            $imageAfter = new \Imagick();
-            $imageAfter->readImageBlob($file3['body']);
-
-            $this->assertNotSame($imageBefore->getImageBlob(), $imageAfter->getImageBlob());
+        // The deletes worker still purges every entry for this file ID when it runs, the new
+        // one included, so the new preview is cached again by the request after that.
+        $this->assertEventually(function () use ($preview, $imageAfter) {
+            $cached = $preview();
+            $this->assertEquals(200, $cached['headers']['status-code']);
+            $this->assertSame($imageAfter, $this->getImagePixels($cached['body']), 'The preview is still the deleted file\'s.');
+            $this->assertSame('hit', $cached['headers']['x-appwrite-cache'], 'The recreated file\'s preview was not cached.');
         }, 10_000, 500);
     }
 
@@ -1786,6 +1785,81 @@ trait StorageBase
         $this->assertEquals(200, $preview['headers']['status-code']);
         $this->assertEquals('image/avif', $preview['headers']['content-type']);
         $this->assertNotEmpty($preview['body']);
+    }
+
+    public function testFilePreviewAutoOutput(): void
+    {
+        $data = $this->setupBucketFile();
+        $bucketId = $data['bucketId'];
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+
+        $path = '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/preview';
+        $params = [
+            'width' => 120,
+            'height' => 60,
+            'output' => 'auto',
+        ];
+        $headers = fn (string $accept) => array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'accept' => $accept,
+        ], $this->getHeaders());
+
+        /**
+         * Test for SUCCESS
+         */
+        $avif = $this->client->call(Client::METHOD_GET, $path, $headers('image/avif,image/webp,image/apng,image/*,*/*;q=0.8'), $params);
+        $this->assertEquals(200, $avif['headers']['status-code']);
+        $this->assertEquals('image/avif', $avif['headers']['content-type']);
+        $this->assertEquals('Accept', $avif['headers']['vary']);
+        $this->assertNotEmpty($avif['body']);
+
+        $webp = $this->client->call(Client::METHOD_GET, $path, $headers('image/webp,*/*'), $params);
+        $this->assertEquals(200, $webp['headers']['status-code']);
+        $this->assertEquals('image/webp', $webp['headers']['content-type']);
+        $this->assertEquals('Accept', $webp['headers']['vary']);
+
+        // AVIF refused with q=0 and only wildcards otherwise: keep the original format
+        $original = $this->client->call(Client::METHOD_GET, $path, $headers('image/avif;q=0,image/*,*/*'), $params);
+        $this->assertEquals(200, $original['headers']['status-code']);
+        $this->assertEquals('image/png', $original['headers']['content-type']);
+        $this->assertEquals('Accept', $original['headers']['vary']);
+
+        // Cached entries are keyed by the negotiated format, never served across Accept headers
+        $this->assertEventually(function () use ($path, $headers, $params) {
+            $cached = $this->client->call(Client::METHOD_GET, $path, $headers('image/avif,image/webp'), $params);
+            $this->assertSame('hit', $cached['headers']['x-appwrite-cache']);
+            $this->assertEquals('image/avif', $cached['headers']['content-type']);
+            $this->assertEquals('Accept', $cached['headers']['vary']);
+
+            $cached = $this->client->call(Client::METHOD_GET, $path, $headers('image/webp'), $params);
+            $this->assertSame('hit', $cached['headers']['x-appwrite-cache']);
+            $this->assertEquals('image/webp', $cached['headers']['content-type']);
+
+            // An explicit output served from the cache does not vary by Accept
+            $cached = $this->client->call(Client::METHOD_GET, $path, $headers('image/avif'), array_merge($params, ['output' => 'webp']));
+            $this->assertSame('hit', $cached['headers']['x-appwrite-cache']);
+            $this->assertEquals('image/webp', $cached['headers']['content-type']);
+            $this->assertArrayNotHasKey('vary', $cached['headers']);
+        });
+
+        /**
+         * Test for FAILURE
+         */
+        $invalid = $this->client->call(Client::METHOD_GET, $path, $headers('image/avif'), [
+            'output' => 'automatic',
+        ]);
+        $this->assertEquals(400, $invalid['headers']['status-code']);
     }
 
     public function testFilePreview(): void

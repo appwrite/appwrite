@@ -3,6 +3,10 @@ import {
   getAnalyticsSurface,
   type AnalyticsSurface,
 } from '@/lib/analytics-route'
+import {
+  trackAppwriteEvent,
+  trackAppwritePageview,
+} from '@/lib/appwrite-analytics'
 import { getAttributionSearchForPlausible } from '@/lib/marketing/utm'
 import { getActiveLanguage, type SupportedLanguage } from '@/lib/i18n/active-language'
 import { getRuntimeConfig } from '@/lib/runtime-config'
@@ -74,6 +78,7 @@ export type AnalyticsEventName =
   | 'View Mode Changed'
   | 'Wizard Opened'
   | 'Wizard Option Selected'
+  | 'WebMCP Tool Called'
 
 export type AnalyticsPropValue = string | number | boolean | null | undefined
 export type AnalyticsProps = Record<string, AnalyticsPropValue>
@@ -233,17 +238,21 @@ const MAX_PENDING_ANALYTICS_EVENTS = 20
 
 let pendingPageviewPath: string | null = null
 
-function sendPageView(routePath: string) {
-  if (!window.plausible) return false
-
-  window.plausible('pageview', {
+function getPageviewOptions(routePath: string): PlausibleOptions {
+  return {
     url: getAnalyticsPageviewUrl(routePath),
     props: normalizeAnalyticsProps({
       route: routePath,
       area: getAnalyticsArea(routePath),
       ...getGlobalAnalyticsProps(routePath),
     }),
-  })
+  }
+}
+
+function sendPageView(routePath: string) {
+  if (!window.plausible) return false
+
+  window.plausible('pageview', getPageviewOptions(routePath))
   hasTrackedPageview = true
   flushPendingAnalyticsEvents()
   return true
@@ -259,7 +268,10 @@ export function flushPendingPageView() {
 }
 
 export function trackPageView(routePath: string) {
-  if (!isAnalyticsAllowed() || typeof window === 'undefined') return
+  if (typeof window === 'undefined') return
+  // Appwrite Analytics runs whether or not Plausible is configured
+  trackAppwritePageview(getPageviewOptions(routePath))
+  if (!isAnalyticsAllowed()) return
   // Plausible's init stub queues until the remote script loads. If the stub is
   // not in the page yet, keep the latest path and send it when the stub lands.
   if (!window.plausible) {
@@ -276,7 +288,7 @@ export function trackEvent(
   props: AnalyticsProps = {},
   options: { routePath?: string; url?: string } = {},
 ) {
-  if (!isAnalyticsAllowed() || typeof window === 'undefined') return
+  if (typeof window === 'undefined') return
 
   const routePath = options.routePath
   const plausibleOptions: PlausibleOptions = {
@@ -291,6 +303,10 @@ export function trackEvent(
       ...getGlobalAnalyticsProps(routePath),
     }),
   }
+
+  // Appwrite Analytics doesn't need a pageview first, so it skips the queue.
+  trackAppwriteEvent(eventName, plausibleOptions)
+  if (!isAnalyticsAllowed()) return
 
   if (!hasTrackedPageview) {
     if (pendingAnalyticsEvents.length < MAX_PENDING_ANALYTICS_EVENTS) {

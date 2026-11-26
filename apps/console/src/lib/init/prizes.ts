@@ -17,6 +17,7 @@ export const INIT_JULY_2026_PRIZES: LaunchEventPrizes = {
       platform: 'youtube',
       href: INIT_YOUTUBE_CHANNEL_HREF,
       prizeDescription: 'Appwrite hoodie and cap',
+      presenceActivity: 'Eyeing day 1 swag',
       visual: {
         imageAlt: 'Day 1 giveaway including an Appwrite hoodie and cap',
         imageSrcLight: '/images/init/prize-day-1-swag-light.jpg',
@@ -31,6 +32,7 @@ export const INIT_JULY_2026_PRIZES: LaunchEventPrizes = {
       platform: 'youtube',
       href: INIT_YOUTUBE_CHANNEL_HREF,
       prizeDescription: 'Light Appwriter keyboard',
+      presenceActivity: 'Keyboard envy',
       visual: {
         imageAlt: 'Day 2 giveaway including a light Appwriter keyboard',
         imageSrcLight: '/images/init/prize-day-2-swag-light.jpg',
@@ -45,6 +47,7 @@ export const INIT_JULY_2026_PRIZES: LaunchEventPrizes = {
       platform: 'youtube',
       href: INIT_YOUTUBE_CHANNEL_HREF,
       prizeDescription: 'Dark Appwriter keyboard',
+      presenceActivity: 'Dark keyboard dreams',
       visual: {
         imageAlt: 'Day 3 giveaway including a dark Appwriter keyboard',
         imageSrcLight: '/images/init/prize-day-3-swag-light.jpg',
@@ -59,6 +62,7 @@ export const INIT_JULY_2026_PRIZES: LaunchEventPrizes = {
       platform: 'youtube',
       href: INIT_YOUTUBE_CHANNEL_HREF,
       prizeDescription: 'RUNTIME bottle and Appwrite tee',
+      presenceActivity: 'Bottle and tee wishlist',
       visual: {
         imageAlt: 'Day 4 giveaway including a RUNTIME water bottle and Appwrite tee',
         imageSrcLight: '/images/init/prize-day-4-swag-light.jpg',

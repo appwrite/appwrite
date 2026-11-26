@@ -36,7 +36,7 @@ class Mqtt extends MessagingAdapter
     public readonly Histogram $replayBacklog;
     public readonly Histogram $ledgerDuration;
 
-    /** @var array<string, array{connections: int, delivered: int}> per-project usage, drained by flushUsage() */
+    /** @var array<string, array{connections?: int, delivered?: int, acked?: int}> per-project usage, drained by flushUsage() */
     private array $usage = [];
 
     public function __construct(Telemetry $telemetry, private readonly PubSub $pubsub)
@@ -146,11 +146,20 @@ class Mqtt extends MessagingAdapter
         $this->usage[$projectId]['delivered'] = ($this->usage[$projectId]['delivered'] ?? 0) + $count;
     }
 
+    /** Accumulate deliveries a device confirmed receiving (QoS 1 PUBACK) for a project, for per-project usage. */
+    public function recordAcks(string $projectId, int $count): void
+    {
+        if ($projectId === '' || $count <= 0) {
+            return;
+        }
+        $this->usage[$projectId]['acked'] = ($this->usage[$projectId]['acked'] ?? 0) + $count;
+    }
+
     /**
      * Drain and reset the accumulated per-project usage so a flush can enqueue it. The broker runs a
      * single worker with cooperative coroutines, so the read-and-reset is atomic (no yield between).
      *
-     * @return array<string, array{connections?: int, delivered?: int}>
+     * @return array<string, array{connections?: int, delivered?: int, acked?: int}>
      */
     public function flushUsage(): array
     {

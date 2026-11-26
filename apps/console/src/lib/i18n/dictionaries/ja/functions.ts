@@ -224,6 +224,10 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'No domains yet': 'ドメインはまだありません',
   'No events configured': 'イベントが設定されていません',
   'No executions yet': '実行はまだありません',
+  'No GB-hours yet': 'GB時間はまだありません',
+  'Invocations will show up here.': '実行はここに表示されます。',
+  'Compute usage will show up here.':
+    'コンピュート使用量はここに表示されます。',
   'No files yet': 'ファイルはまだありません',
   'No functions yet': '関数はまだありません',
   'No headers': 'ヘッダーがありません',
@@ -752,6 +756,7 @@ export const jaFunctionsDictionary: Record<string, string> = {
     'メールはポート 25 で Appwrite に配信されるため、MX レコードはプロキシ経由のホスト名ではなく、上記の値を直接指す必要があります。',
   'This region does not report its mail server yet, so the MX record cannot be shown. Add the TXT record now and come back for the MX record later.':
     'このリージョンはまだメールサーバーを報告していないため、MX レコードを表示できません。先に TXT レコードを追加し、後で MX レコードを確認してください。',
-  "This function's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
-    'この関数の Git インストールからリポジトリにアクセスできなくなったため、プッシュはデプロイされません。リポジトリの接続を解除してから、現在そのリポジトリがあるインストールで接続し直してください。',
+  "This function's Git installation can no longer reach its repository, so pushes can't deploy. If the repository was removed from the installation's repository access, add it back with Update repository access. If it was deleted or moved to another installation, disconnect it and connect it again.":
+    'この関数の Git インストールからリポジトリにアクセスできなくなったため、プッシュはデプロイされません。インストールのリポジトリアクセスから外された場合は、「リポジトリアクセスを更新」で追加し直してください。削除または別のインストールに移動された場合は、接続を解除してから接続し直してください。',
+  'View executions': '実行を表示',
 }

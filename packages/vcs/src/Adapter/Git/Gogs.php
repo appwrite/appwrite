@@ -9,8 +9,10 @@ use Utopia\VCS\Exception\RepositoryNotFound;
 
 class Gogs extends Gitea
 {
+    #[\Override]
     protected string $endpoint = 'http://gogs:3000/api/v1';
 
+    #[\Override]
     protected string $giteaUrl = 'http://gogs:3000';
 
     /**

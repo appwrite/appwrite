@@ -39,6 +39,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { resolveTemplatePlaceholder } from '@/lib/template-placeholders'
+import { isTemplateVariableSecret } from '@/lib/template-variables'
 import {
   getFirstEnabledSpecification,
   isSpecificationAllowedInPlan,
@@ -58,6 +59,10 @@ import type { FunctionWizardVariable } from './RepositoryConfigView'
 import { useT } from '@/lib/i18n/translate'
 import { buildVcsAuthUrl, type VcsProviderId } from '@/lib/vcs/providers'
 import { validateVariables } from '@/lib/variables'
+import {
+  CreateReviewSwitch,
+  useCreateReview,
+} from '../../reviews/_components/CreateReviewSwitch'
 
 interface TemplateConfigViewProps {
   templateId: string
@@ -99,6 +104,11 @@ export function TemplateConfigView({
   const [specification, setSpecification] = useState('')
   const [isDeploying, setIsDeploying] = useState(false)
   const [gitConnection, setGitConnection] = useState<'now' | 'later'>('later')
+  const review = useCreateReview(
+    projectId,
+    formData.installationId,
+    formData.providerRepositoryId,
+  )
 
   const connectRepoValue: ConnectRepositoryValue = useMemo(
     () => ({
@@ -155,6 +165,12 @@ export function TemplateConfigView({
     }
   }, [specifications, specification])
 
+  // Event-driven templates, such as the alert ones, list no `any` permission and
+  // start private, so nobody can call them over HTTP with a forged payload.
+  useEffect(() => {
+    if (template) setIsPublic(template.permissions?.includes('any') ?? true)
+  }, [template])
+
   useEffect(() => {
     if (template) {
       if (!functionName) setFunctionName(template.name)
@@ -169,7 +185,7 @@ export function TemplateConfigView({
         const templateVars = template.variables.map((v) => ({
           key: v.name,
           value: resolveTemplatePlaceholder(v.value || '', context),
-          secret: v.secret || false,
+          secret: isTemplateVariableSecret(v),
         }))
         setVariables(templateVars)
       }
@@ -321,6 +337,10 @@ export function TemplateConfigView({
         buildSpecification: specification || undefined,
       })
       created = true
+
+      if (connectNow) {
+        await review.apply()
+      }
 
       await projectSdk.proxy.createFunctionRule({
         domain: domainTrimmed,
@@ -748,7 +768,9 @@ export function TemplateConfigView({
             'Create and deploy a Function with a connected git repository.',
           )}
           className="mb-6"
-        />
+        >
+          <CreateReviewSwitch review={review} />
+        </ConnectRepositorySection>
       )}
 
       {/* Environment variables – template vars or shared card */}
@@ -779,7 +801,7 @@ export function TemplateConfigView({
                       <span className="text-destructive ms-1">*</span>
                     )}
                   </Label>
-                  {templateVar?.secret && (
+                  {variable.secret && (
                     <span className="text-[10px] text-muted-foreground">
                       {t('Secret')}
                     </span>
@@ -807,7 +829,7 @@ export function TemplateConfigView({
                     templateVar?.placeholder ||
                     `${t('Enter')} ${variable.key}`
                   }
-                  type={templateVar?.secret ? 'password' : 'text'}
+                  type={variable.secret ? 'password' : 'text'}
                   className="h-9 text-[13px] font-mono"
                 />
               </div>

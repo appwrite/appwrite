@@ -1,21 +1,19 @@
 ---
 layout: changelog
-title: "Project environments for development, staging, and QA"
+title: Announcing Appwrite 2.7.2 for self-hosted deployments
 date: 2026-11-12
 cover: /images/changelog/2026-11-12.avif
-tags: console, cli, sdk
+tags: security, infrastructure
 ---
 
-Appwrite Cloud projects now have environments. A project can carry development, staging, and QA backends next to production, each with its own databases, storage, users, functions, sites, and settings, under the same project ID and on the same bill.
+Appwrite 2.7.2 is now available for self-hosting. It is a security patch for the 2.7 line, and we recommend every 2.7 install upgrades.
 
-Create an environment from the new environment switcher in the project sidebar. Start it empty, or as a clone of the project that copies its structure and settings, with rows, files, and users only when you ask for them. Apps, the CLI, and the MCP server reach an environment with the project's ID plus the environment's ID, so the same code runs against production or any environment.
+This release includes:
 
-Free and Pro projects get five environments each, and Enterprise projects get 25 by default. Environments don't count as projects on your plan, and their usage is added to the project's.
+- Security fixes across auth, abuse limits, storage, realtime, messaging, functions, VCS and proxy.
+- Base image `appwrite/base` 2.2.11: patched git, curl, libexpat, perl, rsync and Docker CLI packages, and Go 1.27.4 for `git-remote-entire`.
+- Console 1.2.181.
 
-{% arrow_link href="/blog/post/announcing-project-environments" %}
-Read the announcement
-{% /arrow_link %}
-
-{% arrow_link href="/docs/advanced/environments" %}
-Learn about project environments
+{% arrow_link href="https://github.com/appwrite/appwrite/releases/tag/2.7.2" %}
+View the release notes on GitHub
 {% /arrow_link %}

@@ -1565,4 +1565,229 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Manage records in the Console, next to your projects.': 'プロジェクトと同じ Console でレコードを管理できます。',
   'Connect Sites, Functions, or API domains with certificates issued for you.':
     'サイト、Functions、API ドメインを接続すると、証明書が自動で発行されます。',
+  // Homepage factory hero and Console section.
+  'Your software factory': 'あなたのソフトウェア工場は',
+  'starts here': 'ここから始まる',
+  'An animated software factory where every Appwrite service builds apps on one production line':
+    'Appwrite のすべてのサービスが 1 本の生産ラインでアプリを組み立てる、アニメーションのソフトウェア工場',
+  'The Appwrite Console': 'Appwrite Console',
+  'One control room for the whole factory': '工場全体を、ひとつのコントロールルームで',
+  'Every project, database, function, and deployment in one place. Watch usage, manage keys and teams, and ship without switching tools.':
+    'すべてのプロジェクト、データベース、Functions、デプロイを 1 か所に。使用状況の確認、キーとチームの管理からリリースまで、ツールを切り替えずに行えます。',
+  'Open the Console': 'Console を開く',
+  'Every service in one place': 'すべてのサービスを 1 か所に',
+  'Auth, Databases, Storage, Functions, Messaging, and Sites, side by side in every project.':
+    '認証、データベース、ストレージ、Functions、メッセージング、サイトを、すべてのプロジェクトで並べて使えます。',
+  'Usage at a glance': '使用状況をひと目で',
+  'Requests, bandwidth, storage, and executions for every project and organization.':
+    'すべてのプロジェクトと組織のリクエスト、帯域幅、ストレージ、実行回数を確認できます。',
+  'Keys and roles': 'キーとロール',
+  'Create scoped API keys and give every teammate the right access.':
+    'スコープ付きの API キーを作成し、チームメンバーごとに適切なアクセス権を付与できます。',
+  'Managed PostgreSQL, TablesDB, DocumentsDB, VectorsDB, MySQL.':
+    'マネージド PostgreSQL、TablesDB、DocumentsDB、VectorsDB、MySQL。',
+  'APIs, cron jobs, and event handlers at scale.': 'API、Cron ジョブ、イベントハンドラーを大規模に。',
+  'Live events, channels, and presence.': 'ライブイベント、チャネル、プレゼンス。',
+  'Email, SMS, and push with topics and targets.': 'トピックとターゲットで、メール、SMS、プッシュ通知を配信。',
+  'Project rules to deny, rate limit, and redirect traffic.': 'トラフィックを拒否、レート制限、リダイレクトするプロジェクトルール。',
+  'Projects shipped': 'リリースされたプロジェクト',
+  Prompt: 'プロンプト',
+  // Home factory: the display each machine unfolds.
+  'Sign users in with email, OAuth, or passkeys, plus MFA, teams, and roles':
+    'メール、OAuth、パスキーでサインイン。MFA、チーム、ロールにも対応',
+  'Five databases in one project: Postgres, MySQL, TablesDB, DocumentsDB, and VectorsDB':
+    '1 つのプロジェクトに 5 つのデータベース：Postgres、MySQL、TablesDB、DocumentsDB、VectorsDB',
+  'Upload files, resize images on the fly, and deliver them over a global CDN':
+    'ファイルをアップロードし、画像をその場でリサイズして、グローバル CDN で配信',
+  'Run Node, Python, Go, and more on requests, schedules, or events':
+    'Node、Python、Go などを、リクエスト、スケジュール、イベントで実行',
+  'Push every database, file, and auth change to your clients as it happens':
+    'データベース、ファイル、認証の変更を、発生した瞬間にアプリへ届けます',
+  'Send email, SMS, and push to users or topics, now or on a schedule':
+    'メール、SMS、プッシュ通知を、ユーザーやトピックへ今すぐ、または予約で配信',
+  'Block, rate limit, or redirect traffic before it reaches your app':
+    'アプリに届く前に、トラフィックをブロック、レート制限、リダイレクト',
+  'Deploy any framework from Git, with a live preview for every branch':
+    'あらゆるフレームワークを Git からデプロイ。ブランチごとにライブプレビュー',
+  'Copy agent prompt':
+    'エージェント用プロンプトをコピー',
+  'Your agent':
+    'あなたのエージェント',
+  'Claim link':
+    '引き継ぎリンク',
+  '60 min':
+    '60 分',
+  '24 h':
+    '24 時間',
+  'For agents':
+    'エージェント向け',
+  'Hand it to your agent':
+    'エージェントに任せよう',
+  'Open in':
+    '開くアプリ:',
+  'Agent session':
+    'エージェントのセッション',
+  'Created a Zero project':
+    'Zero プロジェクトを作成しました',
+  'Created the messages table':
+    'messages テーブルを作成しました',
+  'Deployed the site':
+    'サイトをデプロイしました',
+  'Site link':
+    'サイトのリンク',
+  'Build time left': 'ビルドの残り時間',
+  'An hour to build. A day to claim it':
+    'ビルドに 1 時間。引き継ぎに 1 日',
+  'Every service, from minute zero':
+    '0 分目から、すべてのサービス',
+  'A Zero project is a normal Appwrite project on a capped plan. What your agent builds is what you keep, with nothing to migrate.':
+    'Zero プロジェクトは、上限付きプランで動く通常の Appwrite プロジェクトです。エージェントが作ったものがそのまま残り、移行は必要ありません。',
+  'Three ways in':
+    '3 つの始め方',
+  'Nothing to install beyond Node.js. Writes appwrite.config.json and signs the CLI in with the project key, so npx appwrite push deploys straight into it.':
+    'Node.js 以外にインストールするものはありません。appwrite.config.json を書き出し、プロジェクトのキーで CLI にサインインします。npx appwrite push でそのままデプロイできます。',
+  'One public request, no key. The response carries an API key with every project scope until the build window ends.':
+    'キー不要の公開リクエストを 1 回送るだけです。レスポンスには、ビルド期間が終わるまでプロジェクトのすべてのスコープを持つ API キーが含まれます。',
+  'Start the local MCP server without a project or key. It asks for a Zero project and points every other tool at it.':
+    'プロジェクトやキーを指定せずにローカルの MCP サーバーを起動します。Zero プロジェクトを取得し、ほかのツールをすべてそのプロジェクトに向けます。',
+  'Every project scope':
+    'プロジェクトの全スコープ',
+  'Give this to a human':
+    'これは人間に渡す',
+  'Opens preview domains until claimed':
+    '引き継ぐまでプレビュードメインを開くトークン',
+  'End of the build hour':
+    'ビルド時間の終了',
+  'Claim deadline':
+    '引き継ぎ期限',
+  'Do I need an Appwrite account?':
+    'Appwrite のアカウントは必要ですか？',
+  'No. The command gives you the project and its API key straight away. You only sign in when you want to keep it.':
+    'いいえ。コマンドを実行するとすぐにプロジェクトと API キーが手に入ります。サインインが必要なのは、プロジェクトを残したいときだけです。',
+  'Is it really free?':
+    '本当に無料ですか？',
+  'Yes. You never enter a card. An unclaimed project runs on its own Zero plan with hourly caps, so nobody pays for it and it stays free for everyone.':
+    'はい。カードを入力することはありません。引き継がれていないプロジェクトは、1 時間ごとの上限がある専用の Zero プランで動くため、誰にも費用はかからず、誰でも無料で使えます。',
+  'What happens after 60 minutes?':
+    '60 分たつとどうなりますか？',
+  'The project pauses and API calls return zero_expired, but nothing is deleted. You then have 24 hours to claim it from the link you were given. Unclaimed projects are deleted with their data.':
+    'プロジェクトは一時停止し、API 呼び出しは zero_expired を返しますが、何も削除されません。そこから 24 時間以内に、受け取ったリンクから引き継げます。引き継がれなかったプロジェクトはデータごと削除されます。',
+  'What do I keep when I claim it?':
+    '引き継ぐと何が残りますか？',
+  'All of it. The project keeps its ID, API key, data, files and deployments, and moves into an organization you own. Its site and function domains drop the Zero banner.':
+    'すべてです。プロジェクトの ID、API キー、データ、ファイル、デプロイはそのままで、あなたがオーナーの組織に移動します。サイトと Functions のドメインから Zero のバナーが外れます。',
+  'Who can open my site or function domain?':
+    'サイトや Functions のドメインは誰が開けますか？',
+  'Anyone. Until you claim the project, its site and function domains show a Powered by Appwrite Zero banner with the time left and a Claim button. Deployment preview domains open only for you: open a preview\'s owner link once in your browser, or send the accessToken in the X-Appwrite-Zero-Token header from an agent.':
+    '誰でも開けます。プロジェクトを引き継ぐまで、サイトと Functions のドメインには残り時間と引き継ぎボタンを表示する Powered by Appwrite Zero のバナーが付きます。デプロイのプレビュードメインはあなただけが開けます。プレビューのオーナーリンクをブラウザで一度開くか、エージェントから accessToken を X-Appwrite-Zero-Token ヘッダーで送信してください。',
+  'What is limited before I claim it?':
+    '引き継ぐ前は何が制限されますか？',
+  'One project, and 500 function executions and 20 deployments an hour. You cannot create other projects or organizations from it. Everything else follows the Free plan.':
+    'プロジェクトは 1 つ、Functions の実行は 1 時間あたり 500 回、デプロイは 20 回までです。ここから別のプロジェクトや組織は作成できません。それ以外は Free プランと同じです。',
+  'Can my coding agent use it?':
+    'コーディングエージェントでも使えますか？',
+  'Yes, that is what it is for. An agent can run npx appwrite zero, call POST /v1/zero, or start the Appwrite MCP server without credentials. It gets the endpoint, the key and the claim link, and hands the claim link back to you.':
+    'はい、そのためのものです。エージェントは npx appwrite zero を実行するか、POST /v1/zero を呼び出すか、認証情報なしで Appwrite の MCP サーバーを起動できます。エンドポイント、キー、引き継ぎリンクを受け取り、引き継ぎリンクをあなたに渡します。',
+  'What if it says to try again later?':
+    '「後でもう一度お試しください」と表示されたら？',
+  'Each region holds a fixed number of unclaimed projects, and each network can create five a day. If you hit either limit, try again shortly or sign up to keep building.':
+    '各リージョンで保持できる未引き継ぎのプロジェクト数には上限があり、1 つのネットワークから作成できるのは 1 日 5 件までです。どちらかの上限に達した場合は、少し待ってから再試行するか、サインアップして開発を続けてください。',
+  'Start from zero':
+    'ゼロから始めよう',
+  'One command, a real backend and an hour on the clock. Keep it if you like what you built.':
+    'コマンドひとつで、本物のバックエンドと 1 時間の持ち時間。作ったものが気に入ったら、そのまま残せます。',
+  'Sign up for free':
+    '無料でサインアップ',
+  'Zero signup. Full backend':
+    '登録ゼロ。フル機能のバックエンド',
+  'Signup forms':
+    'サインアップフォーム',
+  'Keys to paste':
+    '貼り付けるキー',
+  'To build with every service':
+    'すべてのサービスでビルドできる時間',
+  'To claim it after that':
+    'その後の引き継ぎ期限',
+  'The project is real from the first request. When the hour is up it pauses with every row, file and deployment intact, and waits a day for you to claim it.':
+    'プロジェクトは最初のリクエストから本物です。1 時間が過ぎると、すべての行、ファイル、デプロイを残したまま一時停止し、引き継ぎを 1 日待ちます。',
+  'Project lifecycle':
+    'プロジェクトのライフサイクル',
+  'Each one returns the same project: an endpoint, a project ID, an API key and a claim link.':
+    'どの方法でも同じプロジェクトが返ってきます。エンドポイント、プロジェクト ID、API キー、引き継ぎリンクです。',
+  'CLI docs':
+    'CLI ドキュメント',
+  'REST API docs':
+    'REST API ドキュメント',
+  'Free plan docs':
+    'Free プランのドキュメント',
+  'A real Appwrite project for you or your coding agent, with no account and no card. Build for an hour, then claim it to keep everything.':
+    'あなたやコーディングエージェントのための本物の Appwrite プロジェクトです。アカウントもカードも不要。1 時間ビルドしたら、引き継いですべて残せます。',
+  'Sign in once, to keep it':
+    'サインインは残すときの 1 回だけ',
+  'When there is something worth keeping, open the claim link and move the project into an organization you own. Same ID, same key, same data.':
+    '残したいものができたら、引き継ぎリンクを開いて、あなたがオーナーの組織にプロジェクトを移します。ID もキーもデータもそのままです。',
+  'Type what you want built and send it to your agent. It creates the backend itself, builds on it, and hands you two links. One opens what it built, the other keeps it.':
+    '作りたいものを入力して、エージェントに送りましょう。エージェントはバックエンドを自分で作成して開発し、2 つのリンクを渡してくれます。1 つは作ったものを開くリンク、もう 1 つはそれを残すためのリンクです。',
+  'What should your agent build?':
+    'エージェントに何を作ってもらいますか？',
+  'Build a guestbook':
+    'ゲストブックを作って',
+  'Start a launch waitlist':
+    'ローンチ用のウェイトリストを作って',
+  'Created the signups table':
+    'signups テーブルを作成しました',
+  'Make a photo board':
+    'フォトボードを作って',
+  'Created the photos bucket':
+    'photos バケットを作成しました',
+  'Add sign-in to my app':
+    'アプリにサインインを追加して',
+  'Turned on email sign-in':
+    'メールでのサインインを有効にしました',
+  'Created the tables it needs':
+    '必要なテーブルを作成しました',
+  'It is live. Open the site link to see it, then claim the project to keep it.':
+    '公開しました。サイトのリンクを開いて確認し、その後プロジェクトを引き継いで残してください。',
+  'Send it to':
+    '送信先',
+  '60 minutes':
+    '60 分',
+  'First, build. Every service answers and the API key has every project scope.':
+    'まずはビルド。すべてのサービスが使え、API キーはプロジェクトのすべてのスコープを持ちます。',
+  'Then it pauses. API calls return zero_expired and nothing is deleted.':
+    '次に一時停止します。API 呼び出しは zero_expired を返しますが、何も削除されません。',
+  'After 25 hours, a project nobody claimed is deleted with its data.':
+    '25 時間が過ぎても引き継がれなかったプロジェクトは、データごと削除されます。',
+  'Claim it any time in those 25 hours, even during the build hour. Same project, same ID, same API key, now without an expiry, and its domains drop the Zero banner.':
+    'この 25 時間のうちなら、ビルド時間中でもいつでも引き継げます。プロジェクトも ID も API キーもそのままで有効期限がなくなり、ドメインから Zero のバナーが外れます。',
+  'The times are for a project you start now, in your time zone.':
+    '時刻は、今すぐ始めた場合のプロジェクトをあなたのタイムゾーンで表示しています。',
+  'Before you claim it':
+    '引き継ぐまで',
+  'Email, OAuth, magic links and anonymous sessions':
+    'メール、OAuth、Magic URL、匿名セッション',
+  'Tables, rows, queries, indexes and permissions':
+    'テーブル、行、クエリ、インデックス、権限',
+  'Uploads with image previews and file tokens':
+    '画像プレビューとファイルトークンに対応したアップロード',
+  '1 bucket':
+    'バケット 1 つ',
+  'Code in any runtime':
+    '任意のランタイムで動くコード',
+  '500 runs an hour':
+    '1 時間あたり 500 回の実行',
+  'A frontend on a real domain, with a Zero banner until claimed':
+    '本物のドメインで動くフロントエンド。引き継ぐまでは Zero のバナー付き',
+  '20 deploys an hour':
+    '1 時間あたり 20 回のデプロイ',
+  'Subscriptions over WebSockets':
+    'WebSocket での購読',
+  'Email, SMS and push':
+    'メール、SMS、プッシュ通知',
+  'Questions':
+    'よくある質問',
+  'Personal projects':
+    '個人プロジェクト',
+  'Replay':
+    'もう一度再生',
 }

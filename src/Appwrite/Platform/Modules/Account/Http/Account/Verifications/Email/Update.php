@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Account\Http\Account\Verifications\Email;
 
 use Appwrite\Abuse\Limit;
+use Appwrite\Bus\Events\EmailVerified;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -14,6 +15,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Token as ProofsToken;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Role;
@@ -87,6 +89,8 @@ class Update extends Action
             ->inject('queueForEvents')
             ->inject('proofForToken')
             ->inject('authorization')
+            ->inject('project')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
@@ -99,12 +103,15 @@ class Update extends Action
         Event $queueForEvents,
         ProofsToken $proofForToken,
         Authorization $authorization,
+        Document $project,
+        Bus $bus,
     ): void {
         /** @var User $profile */
         $profile = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
 
+        // An unknown user answers like a wrong secret, so the route can't tell which accounts exist
         if ($profile->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
         $verifiedToken = $profile->tokenVerify(TOKEN_TYPE_VERIFICATION, $secret, $proofForToken);
@@ -118,8 +125,10 @@ class Update extends Action
         $verification = $dbForProject->getDocument('tokens', $verifiedToken->getId());
 
         // Claim the token under the user row lock an email change takes, which deletes tokens sent to the old address
-        $profile = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $profile, $verifiedToken) {
-            $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
+        $wasVerified = false;
+        $profile = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $profile, $verifiedToken, &$wasVerified) {
+            $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
+            $wasVerified = $locked->getAttribute('emailVerification', false);
 
             if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
                 throw new Exception(Exception::USER_INVALID_TOKEN);
@@ -130,6 +139,10 @@ class Update extends Action
 
         $user->setAttributes($profile->getArrayCopy());
         $dbForProject->purgeCachedDocument('users', $profile->getId());
+
+        if (!$wasVerified) {
+            $bus->dispatch(new EmailVerified(user: $user->getArrayCopy(), project: $project->getArrayCopy()));
+        }
 
         $queueForEvents
             ->setParam('userId', $userId)

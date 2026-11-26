@@ -8,9 +8,9 @@
 import { createFileRoute, Outlet, useParams } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import {
+  useVcsInstallations,
   vcsInstallationsQueryOptions,
   siteFrameworksQueryOptions,
-  siteTemplatesQueryOptions,
   fetchProject,
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
@@ -41,14 +41,9 @@ export const Route = createFileRoute(
         staleTime: 5 * 60 * 1000,
       })
 
-      // Prefetch VCS installations, frameworks, and first page of templates in parallel
-      // First page of templates: limit 9, offset 0, no filters (matches CreateSiteView initial request)
       await Promise.all([
         queryClient.ensureQueryData(vcsInstallationsQueryOptions(projectId)),
         queryClient.ensureQueryData(siteFrameworksQueryOptions(projectId)),
-        queryClient.ensureQueryData(
-          siteTemplatesQueryOptions(projectId, undefined, undefined, 9, 0),
-        ),
       ])
 
       return { projectData }
@@ -70,9 +65,7 @@ function CreateSiteLayoutInner() {
   const { setInstallations, setFrameworks, setBaseDomain } = useWizard()
 
   // Fetch installations
-  const { data: installationsData } = useQuery(
-    vcsInstallationsQueryOptions(projectId),
-  )
+  const { data: installationsData } = useVcsInstallations(projectId)
 
   // Fetch frameworks
   const { data: frameworksData } = useQuery(

@@ -2,6 +2,7 @@ import type { QueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
+import { isSSORequiredError } from '@/lib/sso-required'
 import { parsePinnedProjectIds } from '@/lib/team-prefs-keys'
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
@@ -84,6 +85,52 @@ export function resolveFallbackOrganizationIdFromList(
 }
 
 /**
+ * Prefetch what the org header and tabs need on every org page: the
+ * organization, its plan, members and scopes, and the organizations list.
+ * The org layout awaits only this, so opening Settings, Billing or Domains
+ * does not wait on the projects grid.
+ */
+export async function prefetchOrganizationShellData(
+  queryClient: QueryClient,
+  orgId: string,
+): Promise<void> {
+  if (!orgId || typeof window === 'undefined') return
+
+  const features = getActiveProfileFeatures()
+
+  // Failed-invoice banner data is non-critical: fetch in the background so it
+  // never delays first paint (its query is marked skipInitialLoader).
+  if (features.billing) {
+    void prefetchOrganizationInvoiceDataIfAllowed(queryClient, orgId).catch(
+      () => {},
+    )
+  }
+
+  const shell: Promise<unknown>[] = [
+    queryClient.ensureQueryData(consoleVariablesQueryOptions()).catch(() => {}),
+    queryClient.ensureQueryData(organizationsQueryOptions()),
+    queryClient.ensureQueryData(organizationQueryOptions(orgId)),
+    queryClient.ensureQueryData(
+      organizationMembershipsQueryOptions(orgId, 0, GRID_DEFAULT_PAGE_SIZE, ''),
+    ),
+  ]
+
+  if (features.billing) {
+    shell.push(queryClient.ensureQueryData(organizationPlanQueryOptions(orgId)))
+  }
+
+  if (features.orgRoles) {
+    shell.push(
+      queryClient
+        .ensureQueryData(organizationScopesQueryOptions(orgId))
+        .catch(() => {}),
+    )
+  }
+
+  await Promise.all(shell)
+}
+
+/**
  * Prefetch data the org overview layout and projects tab need before first paint.
  * Route loaders and post-auth navigation should await this so the org header and
  * projects grid do not flash empty skeletons.
@@ -99,14 +146,6 @@ export async function prefetchOrganizationOverviewData(
   const projectsPage = options?.projectsPage ?? 0
   const projectsLimit = options?.projectsLimit ?? GRID_DEFAULT_PAGE_SIZE
   const search = options?.search ?? ''
-
-  // Failed-invoice banner data is non-critical: fetch in the background so it
-  // never delays first paint (its query is marked skipInitialLoader).
-  if (features.billing) {
-    void prefetchOrganizationInvoiceDataIfAllowed(queryClient, orgId).catch(
-      () => {},
-    )
-  }
 
   const teamPromise = queryClient.ensureQueryData(
     consoleTeamQueryOptions(orgId),
@@ -154,35 +193,9 @@ export async function prefetchOrganizationOverviewData(
   })()
 
   const parallel: Promise<unknown>[] = [
-    queryClient
-      .ensureQueryData(consoleVariablesQueryOptions())
-      .catch(() => {}),
-    queryClient.ensureQueryData(organizationsQueryOptions()),
-    queryClient.ensureQueryData(organizationQueryOptions(orgId)),
-    queryClient.ensureQueryData(
-      organizationMembershipsQueryOptions(
-        orgId,
-        0,
-        GRID_DEFAULT_PAGE_SIZE,
-        '',
-      ),
-    ),
+    prefetchOrganizationShellData(queryClient, orgId),
     projectsPromise,
   ]
-
-  if (features.billing) {
-    parallel.push(
-      queryClient.ensureQueryData(organizationPlanQueryOptions(orgId)),
-    )
-  }
-
-  if (features.orgRoles) {
-    parallel.push(
-      queryClient
-        .ensureQueryData(organizationScopesQueryOptions(orgId))
-        .catch(() => {}),
-    )
-  }
 
   try {
     await Promise.all(parallel)
@@ -195,9 +208,9 @@ export async function prefetchOrganizationOverviewData(
 
   if (!getActiveProfileFeatures().usageStats) return
 
-  const team = queryClient.getQueryData(consoleTeamQueryOptions(orgId).queryKey) as
-    | { prefs?: Record<string, unknown> }
-    | undefined
+  const team = queryClient.getQueryData(
+    consoleTeamQueryOptions(orgId).queryKey,
+  ) as { prefs?: Record<string, unknown> } | undefined
   const pinnedIds = parsePinnedProjectIds(team?.prefs)
   const projectScope = features.orgRoles
     ? ((queryClient.getQueryData(
@@ -231,11 +244,7 @@ export async function prefetchOrganizationOverviewData(
     const organizationPlan = queryClient.getQueryData(
       organizationPlanQueryOptions(orgId).queryKey,
     ) as Models.BillingPlan | undefined
-    prefetchProjectListRequestsUsage(
-      queryClient,
-      projectIds,
-      organizationPlan,
-    )
+    prefetchProjectListRequestsUsage(queryClient, projectIds, organizationPlan)
   }
 }
 
@@ -243,6 +252,10 @@ export async function prefetchOrganizationOverviewData(
  * Resolve the default organization and prefetch its overview, overlapping the
  * two. When prefs already name an org, overview fetches start immediately
  * instead of waiting to validate that id.
+ *
+ * When every organization requires single sign-on, the one resolved still
+ * refuses: it is returned without its overview, and opening it sends the
+ * person to sign in with SSO.
  */
 export async function resolveAndPrefetchDefaultOrganization(
   queryClient: QueryClient,
@@ -250,28 +263,27 @@ export async function resolveAndPrefetchDefaultOrganization(
 ): Promise<string> {
   const preferredId = preferredOrganizationIdFromAccount(account)
   const resolvePromise = resolvePostAuthOrganizationId(account, queryClient)
+  const prefetch = (orgId: string, pending?: Promise<void>) =>
+    (pending ?? prefetchOrganizationOverviewData(queryClient, orgId)).catch(
+      (error: unknown) => {
+        if (!isSSORequiredError(error)) throw error
+      },
+    )
 
   if (!preferredId) {
     const orgId = await resolvePromise
-    await prefetchOrganizationOverviewData(queryClient, orgId)
+    await prefetch(orgId)
     return orgId
   }
 
   const speculative = prefetchOrganizationOverviewData(queryClient, preferredId)
+  // It can fail before the organization is resolved (one that requires single
+  // sign-on refuses): observe it now, so that is not an unhandled rejection.
+  void speculative.catch(() => {})
 
-  try {
-    const orgId = await resolvePromise
-    if (orgId === preferredId) {
-      await speculative
-      return orgId
-    }
-    void speculative.catch(() => {})
-    await prefetchOrganizationOverviewData(queryClient, orgId)
-    return orgId
-  } catch (error) {
-    void speculative.catch(() => {})
-    throw error
-  }
+  const orgId = await resolvePromise
+  await prefetch(orgId, orgId === preferredId ? speculative : undefined)
+  return orgId
 }
 
 /**

@@ -103,24 +103,6 @@ parameters:
 			path: src/Broker/Background.php
 
 		-
-			message: '#^Method Utopia\\Queue\\Broker\\Nats\:\:fetch\(\) should return list\<Utopia\\NATS\\JetStream\\JetStreamMessage\> but returns list\<mixed\>\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Broker/Nats.php
-
-		-
-			message: '#^Method Utopia\\Queue\\Broker\\Nats\:\:pull\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Broker/Nats.php
-
-		-
-			message: '#^Method Utopia\\Queue\\Broker\\Nats\:\:receive\(\) should return list\<Utopia\\Queue\\Message\> but returns array\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Broker/Nats.php
-
-		-
 			message: '#^Cannot cast mixed to float\.$#'
 			identifier: cast.double
 			count: 1
@@ -273,7 +255,7 @@ parameters:
 		-
 			message: '#^Only iterables can be unpacked, mixed given\.$#'
 			identifier: arrayUnpacking.nonIterable
-			count: 2
+			count: 1
 			path: src/Broker/Redis.php
 
 		-
@@ -1111,19 +1093,7 @@ parameters:
 			path: tests/E2E/RedisReservationTest.php
 
 		-
-			message: '#^Parameter \#1 \$key of method Redis\:\:lLen\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: tests/E2E/RedisReservationTest.php
-
-		-
 			message: '#^Parameter \#1 \$process_id of function posix_kill expects int, int\|false given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/E2E/RedisReservationTest.php
-
-		-
-			message: '#^Parameter \#1 \$status of function pcntl_wifsignaled expects int, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: tests/E2E/RedisReservationTest.php
@@ -1131,12 +1101,6 @@ parameters:
 		-
 			message: '#^Parameter \#2 \$message of method Utopia\\Queue\\Broker\\Redis\:\:reject\(\) expects Utopia\\Queue\\Message, Utopia\\Queue\\Message\|null given\.$#'
 			identifier: argument.type
-			count: 1
-			path: tests/E2E/RedisReservationTest.php
-
-		-
-			message: '#^Property Utopia\\Queue\\Connection\\Redis@anonymous/tests/E2E/RedisReservationTest\.php\:184\:\:\$sizes type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
 			count: 1
 			path: tests/E2E/RedisReservationTest.php
 

@@ -41,6 +41,10 @@ export const FIREWALL_PROMO_BANNER_ID = 'firewall-promo-2026-09'
 export const FIREWALL_SPIDER_PROMO_BANNER_ID = 'firewall-spider-promo-2026-10'
 export const GITHUB_STAR_WIZARD_BANNER_ID = 'github-star-wizard-2026'
 export const MCP1_LAUNCH_BANNER_ID = 'mcp1-launch-2026-11'
+/** Appwrite Beep promotion at the foot of the notifications popover. */
+export const BEEP_PROMO_BANNER_ID = 'beep-promo-2026-11'
+/** GPU compute for video renditions, on a video's Renditions page. */
+export const VIDEOS_GPU_BANNER_ID = 'videos-gpu-renditions-2026-11'
 
 /** Appwrite Start regional promo for the launch countries (IN, NP, NG, PK), inclusive UTC. */
 export const START_PROMO_BANNER_START_MS = Date.UTC(2026, 8, 21, 0, 0, 0, 0)
@@ -177,15 +181,7 @@ export const GITHUB_STAR_WIZARD_END_MS = Date.UTC(2099, 11, 31, 23, 59, 59, 999)
 
 /** MCP1 launch: three days from launch day, 9–11 Nov 2026 (inclusive, UTC). */
 export const MCP1_LAUNCH_BANNER_START_MS = Date.UTC(2026, 10, 9, 0, 0, 0, 0)
-export const MCP1_LAUNCH_BANNER_END_MS = Date.UTC(
-  2026,
-  10,
-  11,
-  23,
-  59,
-  59,
-  999,
-)
+export const MCP1_LAUNCH_BANNER_END_MS = Date.UTC(2026, 10, 11, 23, 59, 59, 999)
 
 /** Registered console promo banners (header strips, floating cards, takeovers). */
 export const CONSOLE_BANNERS: readonly ConsoleBannerDefinition[] = [

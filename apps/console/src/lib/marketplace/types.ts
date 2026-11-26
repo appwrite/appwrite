@@ -57,6 +57,9 @@ export type MarketplaceApp = {
   teamId?: string
   /** Empty when the app does not allow installation. */
   installationScopes: string[]
+  installationRedirectUrl?: string
+  /** Teams that currently have the app installed. */
+  installs: number
 }
 
 export const MARKETPLACE_CATEGORY_LABELS: Record<
@@ -83,16 +86,6 @@ export const MARKETPLACE_CATEGORY_ICONS: Record<
   ai: Sparkles,
   devtools: Wrench,
   messaging: MessageSquare,
-}
-
-/** Appwrite list APIs cap `total` at 5000. */
-export const MARKETPLACE_TOTAL_CAP = 5000
-
-/** Display form of a list total: caps at "5000+". */
-export function formatMarketplaceCount(total: number): string {
-  return total >= MARKETPLACE_TOTAL_CAP
-    ? `${MARKETPLACE_TOTAL_CAP}+`
-    : String(total)
 }
 
 export const MARKETPLACE_CATEGORY_ORDER: MarketplaceAppCategory[] = [

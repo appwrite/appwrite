@@ -11,8 +11,10 @@ trait MonitorsBase
     public function testCreateUsageMonitor(): void
     {
         $name = 'Egress spike ' . \uniqid();
+        $monitorId = 'egress-' . \uniqid();
 
         $created = $this->createMonitor([
+            'monitorId' => $monitorId,
             'name' => $name,
             'rules' => [Query::greaterThan('network.outbound', 2.5e9)->toString()],
             'window' => 600,
@@ -23,13 +25,16 @@ trait MonitorsBase
          * Test for SUCCESS
          */
         $this->assertSame(201, $created['headers']['status-code']);
+        // The ID a project chose is the ID it reads back, whatever the server stores it under.
+        $this->assertSame($monitorId, $created['body']['$id']);
         // A monitor only decides when to fire; delivery is up to project events and the team's notifications.
         $this->assertArrayNotHasKey('channels', $created['body']);
         $this->assertArrayNotHasKey('webhookUrl', $created['body']);
         $this->assertArrayNotHasKey('webhookSecret', $created['body']);
 
-        $monitor = $this->getMonitor($created['body']['$id']);
+        $monitor = $this->getMonitor($monitorId);
         $this->assertSame(200, $monitor['headers']['status-code']);
+        $this->assertSame($monitorId, $monitor['body']['$id']);
         $this->assertSame($name, $monitor['body']['name']);
         $this->assertSame('usage', $monitor['body']['type']);
         $this->assertSame($this->getProject()['$id'], $monitor['body']['projectId']);
@@ -40,7 +45,8 @@ trait MonitorsBase
         $this->assertSame(1800, $monitor['body']['cooldown']);
         $this->assertTrue($monitor['body']['enabled']);
         $this->assertSame(['owner'], $monitor['body']['notify']);
-        $this->assertFalse($monitor['body']['critical']);
+        $this->assertSame('warning', $monitor['body']['severity']);
+        $this->assertArrayNotHasKey('critical', $monitor['body']);
         $this->assertSame('ok', $monitor['body']['status']);
         $this->assertSame('', $monitor['body']['alertId']);
         $this->assertNull($monitor['body']['evaluatedAt']);
@@ -130,14 +136,20 @@ trait MonitorsBase
         $casing = $this->createMonitor(['notify' => ['Owner']]);
         $this->assertSame(400, $casing['headers']['status-code']);
 
+        $escalation = $this->createMonitor(['escalationId' => '!bad']);
+        $this->assertSame(400, $escalation['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $escalation['body']['type']);
+        $this->assertStringContainsString('Valid chars', $escalation['body']['message']);
+
         $this->assertSame($before, $this->listMonitors()['body']['total']);
 
         $first = $this->createMonitor();
         $this->assertSame(201, $first['headers']['status-code']);
 
-        $duplicate = $this->createMonitor(['monitorId' => $first['body']['$id']]);
+        $duplicate = $this->createMonitor(['monitorId' => $first['body']['$id'], 'name' => 'Duplicate']);
         $this->assertSame(409, $duplicate['headers']['status-code']);
         $this->assertSame('monitor_already_exists', $duplicate['body']['type']);
+        $this->assertSame($first['body']['name'], $this->getMonitor($first['body']['$id'])['body']['name']);
 
         $this->assertSame($before + 1, $this->listMonitors()['body']['total']);
     }
@@ -152,7 +164,7 @@ trait MonitorsBase
             'rules' => [Query::lessThanEqual('files.storage', 42)->toString()],
             'enabled' => false,
             'notify' => ['owner', 'developer'],
-            'critical' => true,
+            'severity' => 'critical',
         ]);
 
         /**
@@ -164,25 +176,71 @@ trait MonitorsBase
         $this->assertSame([Query::lessThanEqual('files.storage', 42)->toString()], $monitor['body']['rules']);
         $this->assertFalse($monitor['body']['enabled']);
         $this->assertSame(['owner', 'developer'], $monitor['body']['notify']);
-        $this->assertTrue($monitor['body']['critical']);
+        $this->assertSame('critical', $monitor['body']['severity']);
         $this->assertSame('Before', $monitor['body']['name']);
         $this->assertSame(900, $monitor['body']['cooldown']);
 
         $renamed = $this->updateMonitor($monitorId, ['name' => 'After ' . $monitorId]);
         $this->assertSame(200, $renamed['headers']['status-code']);
-        // Rules left out are kept.
-        $this->assertSame([Query::lessThanEqual('files.storage', 42)->toString()], $renamed['body']['rules']);
-        $this->assertSame(['owner', 'developer'], $renamed['body']['notify']);
-        $this->assertTrue($renamed['body']['critical']);
+
+        // A PATCH sending only the name changes the name and keeps every field left out.
+        $monitor = $this->getMonitor($monitorId);
+        $this->assertSame('After ' . $monitorId, $monitor['body']['name']);
+        $this->assertSame([Query::lessThanEqual('files.storage', 42)->toString()], $monitor['body']['rules']);
+        $this->assertFalse($monitor['body']['enabled']);
+        $this->assertSame(['owner', 'developer'], $monitor['body']['notify']);
+        $this->assertSame('critical', $monitor['body']['severity']);
+        $this->assertSame(900, $monitor['body']['cooldown']);
+        $this->assertSame('', $monitor['body']['escalationId']);
+
+        // An explicit null means the same as leaving the field out: the stored value stays.
+        $nulls = $this->updateMonitor($monitorId, ['severity' => null, 'escalationId' => null, 'notify' => null, 'cooldown' => null]);
+        $this->assertSame(200, $nulls['headers']['status-code']);
+        $monitor = $this->getMonitor($monitorId);
+        $this->assertSame('critical', $monitor['body']['severity']);
+        $this->assertSame('', $monitor['body']['escalationId']);
+        $this->assertSame(['owner', 'developer'], $monitor['body']['notify']);
+        $this->assertSame(900, $monitor['body']['cooldown']);
+        $this->assertSame('After ' . $monitorId, $monitor['body']['name']);
 
         $found = $this->listMonitors([Query::search('search', 'After ' . $monitorId)->toString()]);
         $this->assertSame([$monitorId], \array_column($found['body']['monitors'], '$id'));
-        $this->assertTrue($found['body']['monitors'][0]['critical']);
+        $this->assertSame('critical', $found['body']['monitors'][0]['severity']);
         $critical = $this->listMonitors([
             Query::search('search', 'After ' . $monitorId)->toString(),
-            Query::equal('critical', [false])->toString(),
+            Query::equal('severity', ['critical'])->toString(),
         ]);
-        $this->assertSame([], $critical['body']['monitors']);
+        $this->assertSame([$monitorId], \array_column($critical['body']['monitors'], '$id'));
+        $warning = $this->listMonitors([
+            Query::search('search', 'After ' . $monitorId)->toString(),
+            Query::equal('severity', ['warning'])->toString(),
+        ]);
+        $this->assertSame([], $warning['body']['monitors']);
+
+        // Clients on 2.7.x still send and read the `critical` flag `severity` replaced.
+        $legacy = \array_merge($this->headers(), ['x-appwrite-response-format' => '2.7.0']);
+        $older = $this->client->call(Client::METHOD_POST, '/monitors/usage', $legacy, [
+            'monitorId' => 'unique()',
+            'name' => 'Legacy ' . \uniqid(),
+            'rules' => [Query::greaterThan('network.outbound', 1000000)->toString()],
+            'critical' => true,
+        ]);
+        $this->assertSame(201, $older['headers']['status-code']);
+        $this->assertTrue($older['body']['critical']);
+        $this->assertSame('critical', $this->getMonitor($older['body']['$id'])['body']['severity']);
+
+        // Any `critical` other than true is dropped, so an older client cannot downgrade the severity.
+        $kept = $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $older['body']['$id'], $legacy, ['critical' => false]);
+        $this->assertSame(200, $kept['headers']['status-code']);
+        $this->assertTrue($kept['body']['critical']);
+        $this->assertSame('critical', $this->getMonitor($older['body']['$id'])['body']['severity']);
+
+        $raised = $this->createMonitor(['severity' => 'info']);
+        $this->assertFalse($this->client->call(Client::METHOD_GET, '/monitors/' . $raised['body']['$id'], $legacy)['body']['critical']);
+        $raised = $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $raised['body']['$id'], $legacy, ['critical' => true]);
+        $this->assertSame(200, $raised['headers']['status-code']);
+        $this->assertTrue($raised['body']['critical']);
+        $this->assertSame('critical', $this->getMonitor($raised['body']['$id'])['body']['severity']);
 
         /**
          * Test for FAILURE
@@ -206,6 +264,12 @@ trait MonitorsBase
         $this->assertSame(400, $role['headers']['status-code']);
         $this->assertSame('general_argument_invalid', $role['body']['type']);
         $this->assertSame(['owner', 'developer'], $this->getMonitor($monitorId)['body']['notify']);
+
+        $escalation = $this->updateMonitor($monitorId, ['escalationId' => '!bad']);
+        $this->assertSame(400, $escalation['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $escalation['body']['type']);
+        $this->assertStringContainsString('Valid chars', $escalation['body']['message']);
+        $this->assertSame('', $this->getMonitor($monitorId)['body']['escalationId']);
 
         $silenced = $this->updateMonitor($monitorId, ['notify' => []]);
         $this->assertSame([], $silenced['body']['notify']);
@@ -242,10 +306,12 @@ trait MonitorsBase
     public function testListMonitors(): void
     {
         $name = 'Listed ' . \uniqid();
-        $first = $this->createMonitor(['name' => $name . ' one']);
-        $second = $this->createMonitor(['name' => $name . ' two', 'rules' => [Query::greaterThan('files.storage', 1)->toString()]]);
+        $firstId = 'listed-' . \uniqid();
+        $first = $this->createMonitor(['monitorId' => $firstId, 'name' => $name . ' one']);
+        $second = $this->createMonitor(['name' => $name . ' two', 'rules' => [Query::greaterThan('files.storage', 1)->toString()], 'enabled' => false]);
         $this->assertSame(201, $first['headers']['status-code']);
         $this->assertSame(201, $second['headers']['status-code']);
+        $this->assertSame($firstId, $first['body']['$id']);
 
         /**
          * Test for SUCCESS
@@ -256,7 +322,7 @@ trait MonitorsBase
 
         $filtered = $this->listMonitors([
             Query::search('search', $name)->toString(),
-            Query::equal('metric', ['files.storage'])->toString(),
+            Query::equal('enabled', [false])->toString(),
         ]);
         $this->assertSame([$second['body']['$id']], \array_column($filtered['body']['monitors'], '$id'));
 
@@ -266,6 +332,20 @@ trait MonitorsBase
             Query::cursorAfter(new Document(['$id' => $first['body']['$id']]))->toString(),
         ]);
         $this->assertSame([$second['body']['$id']], \array_column($paged['body']['monitors'], '$id'));
+
+        // Filters and cursors take the chosen ID, not the one the server stores it under.
+        $byId = $this->listMonitors([Query::equal('$id', [$firstId])->toString()]);
+        $this->assertSame(200, $byId['headers']['status-code']);
+        $this->assertSame(1, $byId['body']['total']);
+        $this->assertSame([$firstId], \array_column($byId['body']['monitors'], '$id'));
+        $this->assertSame($name . ' one', $byId['body']['monitors'][0]['name']);
+
+        $after = $this->listMonitors([
+            Query::search('search', $name)->toString(),
+            Query::cursorAfter(new Document(['$id' => $firstId]))->toString(),
+        ]);
+        $this->assertSame(200, $after['headers']['status-code']);
+        $this->assertSame([$second['body']['$id']], \array_column($after['body']['monitors'], '$id'));
 
         $untotaled = $this->client->call(Client::METHOD_GET, '/monitors', $this->headers(), [
             'queries' => [Query::search('search', $name)->toString()],
@@ -279,6 +359,12 @@ trait MonitorsBase
          */
         $unknown = $this->listMonitors([Query::equal('channels', ['email'])->toString()]);
         $this->assertSame(400, $unknown['headers']['status-code']);
+
+        // A monitor's metric lives in its rules, so it is not a filter.
+        $metric = $this->listMonitors([Query::equal('metric', ['network.outbound'])->toString()]);
+        $this->assertSame(400, $metric['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $metric['body']['type']);
+        $this->assertStringContainsString('metric', (string) $metric['body']['message']);
 
         $cursor = $this->listMonitors([Query::cursorAfter(new Document(['$id' => 'missing']))->toString()]);
         $this->assertSame(400, $cursor['headers']['status-code']);
@@ -314,7 +400,7 @@ trait MonitorsBase
      */
     protected function updateMonitor(string $monitorId, array $params): array
     {
-        return $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $this->headers(), $params);
+        return $this->client->call(Client::METHOD_PATCH, '/monitors/usage/' . $monitorId, $this->headers(), $params);
     }
 
     /**

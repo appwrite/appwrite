@@ -901,7 +901,7 @@ class Messaging extends Action
         do {
             $queries = [
                 Query::equal('topicInternalId', $topicInternalIds),
-                Query::equal('userId', \array_keys($pending)),
+                Query::equal('userId', \array_map(strval(...), \array_keys($pending))),
                 Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
                 Query::select(['$sequence', 'targetInternalId']),
                 Query::orderAsc('$sequence'),
@@ -984,7 +984,7 @@ class Messaging extends Action
 
         do {
             $queries = [
-                Query::equal('userId', \array_keys($mqttUsers)),
+                Query::equal('userId', \array_map(strval(...), \array_keys($mqttUsers))),
                 Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
                 Query::select(['$sequence', 'providerId', 'identifier', 'expired']),
                 Query::orderAsc('$sequence'),
@@ -1630,6 +1630,7 @@ class Messaging extends Action
         $critical = $message['data']['critical'] ?? null;
         $priority = $message['data']['priority'] ?? null;
         $channelId = $message['data']['channelId'] ?? null;
+        $mutableContent = $message['data']['mutableContent'] ?? null;
 
         if ($title === '') {
             $title = null;
@@ -1658,7 +1659,8 @@ class Messaging extends Action
             $contentAvailable,
             $critical,
             $priority,
-            $channelId
+            $channelId,
+            mutableContent: $mutableContent,
         );
     }
 

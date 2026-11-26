@@ -45,6 +45,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
 import { resolveTemplatePlaceholder } from '@/lib/template-placeholders'
+import { isTemplateVariableSecret } from '@/lib/template-variables'
 import { useWizard } from './WizardContext'
 import { DomainInput } from './DomainInput'
 import {
@@ -54,9 +55,15 @@ import {
 import { VCSDetectionType, ID } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { AnalyticsToggle } from './AnalyticsToggle'
 import { buildVcsAuthUrl, type VcsProviderId } from '@/lib/vcs/providers'
 import { getSiteTemplateScreenshotUrl } from '@/lib/sites/site-template-wizard'
 import { validateVariables } from '@/lib/variables'
+import {
+  CreateReviewSwitch,
+  useCreateReview,
+} from '../../reviews/_components/CreateReviewSwitch'
 
 // Fade-in image component
 function FadeImage({
@@ -106,6 +113,8 @@ interface TemplateConfigViewProps {
 
 export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
   const t = useT()
+  const { features } = useConsoleProfile()
+  const [analytics, setAnalytics] = useState(true)
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -133,6 +142,11 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
   const [siteId, setSiteId] = useState<string | undefined>(formData.siteId)
   const [framework, setFramework] = useState(formData.framework || '')
   const [gitConnection, setGitConnection] = useState<'now' | 'later'>('later')
+  const review = useCreateReview(
+    projectId,
+    formData.installationId,
+    formData.providerRepositoryId,
+  )
   const [variables, setVariables] = useState(formData.variables || [])
   const [domain, setDomain] = useState(formData.domain || '')
   // Domain follows the site name until the user edits it
@@ -204,7 +218,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         const templateVars = template.variables.map((v) => ({
           key: v.name,
           value: resolveTemplatePlaceholder(v.value || '', context),
-          secret: v.secret || false,
+          secret: isTemplateVariableSecret(v),
         }))
         setVariables(templateVars)
       }
@@ -316,8 +330,13 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
           providerRootDirectory: connectRootDir || undefined,
           providerSilentMode: false,
         }),
+        analytics: features.analytics && analytics,
       })
       createdSiteId = site.$id
+
+      if (connectNow) {
+        await review.apply()
+      }
 
       // 2. Create domain rule
       if (domain) {
@@ -673,6 +692,13 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
             />
           </div>
 
+          {features.analytics && (
+            <AnalyticsToggle
+              checked={analytics}
+              onCheckedChange={setAnalytics}
+            />
+          )}
+
           {/* Framework (if template supports multiple) */}
           {template.frameworks && template.frameworks.length > 1 && (
             <div className="space-y-2">
@@ -821,7 +847,9 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
           emptyStateDescription={t(
             'Create and deploy a Site with a connected git repository.',
           )}
-        />
+        >
+          <CreateReviewSwitch review={review} />
+        </ConnectRepositorySection>
       )}
 
       {/* Template variables section */}
@@ -853,7 +881,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
                       <span className="text-destructive ms-1">*</span>
                     )}
                   </Label>
-                  {templateVar?.secret && (
+                  {variable.secret && (
                     <span className="text-[10px] text-muted-foreground">
                       {t('Secret')}
                     </span>
@@ -880,7 +908,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
                   placeholder={
                     templateVar?.placeholder || `Enter ${variable.key}`
                   }
-                  type={templateVar?.secret ? 'password' : 'text'}
+                  type={variable.secret ? 'password' : 'text'}
                   className="h-9 text-[13px] font-mono"
                 />
               </div>

@@ -1,5 +1,70 @@
 # Change log
 
+## 3.4.0
+
+* Added: Atlassian, Instagram, LINE, Linear, Netlify, Patreon, Railway, Reddit, Roblox, Strava, Vercel, VK and WorkOS to `OAuthProvider`
+
+## 3.3.0
+
+* Added: `Tracking` and `trackNavigation` send app, screen and push analytics through `Analytics`; `start()` sends `first_open` once per install and `app_updated` after a version change
+* Added: `Push.setTracking` sends `push_received` and `push_opened` with the message's `messageId`
+* Added: `messageId` on opened push notifications
+* Added: `Account.createDevice`, `getDevice`, `deleteDevice` and `updateDeviceSession`, and the `Device` model
+* Added: `Account.createLDAPSession`
+* Added: `Session.userName`
+* Added: `ImageFormat.Auto` on `Storage.getFilePreview` and the avatar endpoints, serving avif or webp when the `Accept` header supports it
+* Added: `OAuthProvider.Naver` and `OAuthProvider.VippsSandbox`
+* Updated: the SDK no longer declares `FOREGROUND_SERVICE` and `FOREGROUND_SERVICE_REMOTE_MESSAGING` on Android; apps that call `push.setForeground(true)` declare them
+* Fixed: Android background push keeps waking up on phones that hold back expedited jobs
+* Updated: requests send `X-Appwrite-Response-Format: 2.7.2`
+
+## 3.2.0
+
+* Added: `Client.setEnvironment` to act in a project environment; realtime, avatar and storage URLs carry it
+* Added: optional `interactive` param on `Analytics.createEvent` to mark an event as telemetry that does not end a bounce
+* Added: `OAuthProvider.Vipps`
+* Fixed: Android background push reconnects inside the system's network windows instead of minutes later
+* Updated: requests send `X-Appwrite-Response-Format: 2.7.0`; the SDK targets Appwrite 2.7.x
+
+## 3.1.1
+
+* Fixed: `Push` on Android verifies the push server's TLS hostname before sending credentials
+
+## 3.1.0
+
+* Updated: requests send `X-Appwrite-Response-Format: 2.6.2`; the SDK targets Appwrite 2.6.x
+* Updated: `mqtt` dependency to `5.16.1` and `readable-stream` to `4.8.0`
+* Fixed: `Push` reconnects after the broker rejects a connection or the native socket closes
+* Fixed: path parameters `.` and `..` throw `AppwriteException` instead of changing the request URL
+* Fixed: examples leave unset optional params `undefined` instead of passing empty strings
+
+## 3.0.0
+
+* Breaking: `expo-file-system` is a peer dependency (`>=18.0.0`); install it in your app
+* Breaking: `expo` peer dependency requires `>=52.0.0`
+* Added: `createQuery` on `databases`, `documentsDB` and `tablesDB` to send list queries in the request body
+* Added: `account.listMemberships`
+* Added: `bundleId` and `environment` on `account.createPushTarget` and `account.updatePushTarget` for APNs routing
+* Fixed: uploads on Expo SDK 54 and later use `expo-file-system/legacy` instead of crashing
+* Fixed: Android upload chunks are deleted from the cache once their request completes
+* Updated: `package.json` declares `engines.node` `>=20.0.0`
+
+## 2.0.0
+
+* Breaking: requests send `X-Appwrite-Response-Format: 2.5.0`; responses follow the 2.5 shapes
+* Breaking: missing response fields are filled with their documented defaults
+* Breaking: nullable model fields are typed `T | null`, such as `Locale.city` and `Presence.status`
+* Breaking: the package ships native Android and iOS modules, so apps need a native rebuild and do not run in Expo Go
+* Added: `Apps` service to manage apps, installations, keys and secrets
+* Added: `Oauth2` service for the OAuth2 authorize, token, device and grant flows
+* Added: `Push` service, with optional peers `expo-notifications`, `react-native-background-actions` and `react-native-tcp-socket`
+* Added: `Topic` helper
+* Added: Android push code ships under `io.appwrite.reactnative`, so apps can also depend on `sdk-for-android`; set the notification icon with the `io.appwrite.reactnative.push.notification_icon` meta-data
+* Added: `Query` aggregates (`count`, `countDistinct`, `sum`, `avg`, `min`, `max` and more), `groupBy`, `having`, `distinct`, joins, `relationship`, `covers`, `spatialEquals` and `page`
+* Added: `Query.builder()` to chain queries; realtime subscriptions accept a builder for `queries`
+* Added: `ExecutionTrigger.Email`
+* Fixed: list and object defaults filled into a response are copied per model, and object defaults are `{}` instead of `[]`
+
 ## 1.3.0
 
 * Added: `analytics.createEvent` in a new `Analytics` service to send tracking events

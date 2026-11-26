@@ -99,6 +99,9 @@ return [
             Attribute::string(key: 'providerBranch'),
             Attribute::string(key: 'providerRootDirectory'),
             Attribute::boolean(key: 'providerSilentMode', default: false),
+            Attribute::boolean(key: 'providerComments', default: true),
+            Attribute::boolean(key: 'providerDeployments', default: true),
+            Attribute::boolean(key: 'providerStatuses', default: true),
             Attribute::boolean(key: 'logging', required: true),
             Attribute::string(key: 'runtime', size: 2048),
             Attribute::integer(key: 'deploymentRetention', default: 0),
@@ -161,6 +164,9 @@ return [
             Attribute::string(key: 'providerBranch'),
             Attribute::string(key: 'providerRootDirectory'),
             Attribute::boolean(key: 'providerSilentMode', default: false),
+            Attribute::boolean(key: 'providerComments', default: true),
+            Attribute::boolean(key: 'providerDeployments', default: true),
+            Attribute::boolean(key: 'providerStatuses', default: true),
             Attribute::boolean(key: 'logging', required: true),
             Attribute::string(key: 'framework', size: 2048),
             Attribute::string(key: 'outputDirectory', size: 16384),
@@ -517,6 +523,8 @@ return [
             Attribute::string(key: 'duration'),
             Attribute::integer(key: 'streamId', signed: false, default: 0),
             Attribute::integer(key: 'isInit', signed: false, default: 0),
+            // Bytes of this segment on the videos device.
+            Attribute::integer(key: 'size', width: IntegerWidth::Bits64, signed: false, default: 0),
         ],
         'indexes' => [
             Index::key(key: '_key_renditionId', attributes: ['renditionId']),
@@ -602,6 +610,8 @@ return [
             Attribute::string(key: 'providerRepositoryOwner'),
             Attribute::string(key: 'providerRepositoryName'),
             Attribute::string(key: 'providerPullRequestId', required: true),
+            // GitHub login of who opened the pull request. Empty for reviews queued before it was kept.
+            Attribute::string(key: 'providerPullRequestAuthor'),
             // The head the review was queued for, replaced by the head it actually reviews. Empty
             // for a mention until it starts: it reviews whatever the head is then.
             Attribute::string(key: 'providerCommitHash', size: 64),
@@ -621,6 +631,8 @@ return [
             // Why a review was skipped or failed, shown to the project's users.
             Attribute::string(key: 'reason', size: 2048),
             Attribute::string(key: 'providerReviewId'),
+            // The repository's strength when the review was queued: what it runs and is billed at.
+            Attribute::string(key: 'strength', size: 16, default: 'normal'),
             Attribute::datetime(key: 'startedAt'),
             Attribute::datetime(key: 'completedAt'),
         ],
@@ -629,6 +641,8 @@ return [
             // Public filters go by the repository's public id, not its internal one.
             Index::key(key: '_key_repositoryId_pullRequest', attributes: ['repositoryId', 'providerPullRequestId']),
             Index::key(key: '_key_status', attributes: ['status']),
+            // Completed reviews of a range, newest first: what review performance is computed from.
+            Index::key(key: '_key_status_createdAt', attributes: ['status', '$createdAt']),
         ],
     ],
 
@@ -659,6 +673,8 @@ return [
         ],
         'indexes' => [
             Index::key(key: '_key_reviewInternalId', attributes: ['reviewInternalId']),
+            // The findings of many reviews but the dropped ones, for review performance.
+            Index::key(key: '_key_reviewInternalId_status', attributes: ['reviewInternalId', 'status']),
         ],
     ],
 

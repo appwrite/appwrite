@@ -31,6 +31,7 @@ class Exception extends \Exception
      * - Keys
      * - Platform
      * - Domain
+     * * Video
      * - GraphQL
      * - Migrations
      */
@@ -50,6 +51,8 @@ class Exception extends \Exception
     public const string GENERAL_PHONE_DISABLED = 'general_phone_disabled';
     public const string GENERAL_PWNED_PASSWORDS_UNAVAILABLE = 'general_pwned_passwords_unavailable';
     public const string GENERAL_CACHE_UNAVAILABLE = 'general_cache_unavailable';
+    public const string GENERAL_EMBEDDING_UNAVAILABLE = 'general_embedding_unavailable';
+    public const string GENERAL_EMBEDDING_TEXT_TOO_LONG = 'general_embedding_text_too_long';
     public const string GENERAL_ARGUMENT_INVALID = 'general_argument_invalid';
     public const string GENERAL_COLUMN_QUERY_LIMIT_EXCEEDED = 'general_column_query_limit_exceeded';
     public const string GENERAL_ATTRIBUTE_QUERY_LIMIT_EXCEEDED = 'general_attribute_query_limit_exceeded';
@@ -107,6 +110,7 @@ class Exception extends \Exception
     public const string USER_MORE_FACTORS_REQUIRED = 'user_more_factors_required';
     public const string USER_AUTHENTICATOR_NOT_FOUND = 'user_authenticator_not_found';
     public const string USER_AUTHENTICATOR_ALREADY_VERIFIED = 'user_authenticator_already_verified';
+    public const string USER_AUTHENTICATOR_LAST_FACTOR = 'user_authenticator_last_factor';
     public const string USER_REAUTHENTICATION_REQUIRED = 'user_reauthentication_required';
     public const string USER_PASSKEY_NOT_FOUND = 'user_passkey_not_found';
     public const string USER_PASSKEY_ALREADY_EXISTS = 'user_passkey_already_exists';
@@ -120,6 +124,7 @@ class Exception extends \Exception
     public const string USER_OAUTH2_TOKEN_INVALID = 'user_oauth2_token_invalid';
     public const string USER_OAUTH2_STATE_INVALID = 'user_oauth2_state_invalid';
     public const string USER_OAUTH2_PROVIDER_ERROR = 'user_oauth2_provider_error';
+    public const string USER_LDAP_DIRECTORY_ERROR = 'user_ldap_directory_error';
     public const string USER_OAUTH2_PROVIDER_FAILURE = 'user_oauth2_provider_failure';
     public const string USER_EMAIL_ALREADY_VERIFIED = 'user_email_already_verified';
     public const string USER_PHONE_ALREADY_VERIFIED = 'user_phone_already_verified';
@@ -237,12 +242,10 @@ class Exception extends \Exception
     /** Collections */
     public const string COLLECTION_NOT_FOUND = 'collection_not_found';
     public const string COLLECTION_ALREADY_EXISTS = 'collection_already_exists';
-    public const string COLLECTION_LIMIT_EXCEEDED = 'collection_limit_exceeded';
 
     /** Tables */
     public const string TABLE_NOT_FOUND = 'table_not_found';
     public const string TABLE_ALREADY_EXISTS = 'table_already_exists';
-    public const string TABLE_LIMIT_EXCEEDED = 'table_limit_exceeded';
 
     /** Documents */
     public const string DOCUMENT_NOT_FOUND = 'document_not_found';
@@ -338,6 +341,7 @@ class Exception extends \Exception
     public const string ACCOUNT_KEY_EXPIRED = 'account_key_expired';
 
     public const string PROJECT_SMTP_CONFIG_INVALID = 'project_smtp_config_invalid';
+    public const string PROJECT_LDAP_CONFIG_INVALID = 'project_ldap_config_invalid';
 
     public const string PROJECT_TEMPLATE_DEFAULT_DELETION = 'project_template_default_deletion';
 
@@ -358,6 +362,12 @@ class Exception extends \Exception
     /** Alerts */
     public const string ALERT_NOT_FOUND = 'alert_not_found';
     public const string ALERT_RESOLVED = 'alert_resolved';
+
+    /** Escalations */
+    public const string ESCALATION_NOT_FOUND = 'escalation_not_found';
+    public const string ESCALATION_ALREADY_EXISTS = 'escalation_already_exists';
+    public const string ESCALATION_IN_USE = 'escalation_in_use';
+    public const string ESCALATION_MEMBER_NOT_FOUND = 'escalation_member_not_found';
 
     /** Router */
     public const string ROUTER_HOST_NOT_FOUND = 'router_host_not_found';
@@ -384,6 +394,26 @@ class Exception extends \Exception
     public const string PLATFORM_NOT_FOUND = 'platform_not_found';
     public const string PLATFORM_METHOD_UNSUPPORTED = 'platform_method_unsupported';
     public const string PLATFORM_ALREADY_EXISTS = 'platform_already_exists';
+
+    /** Video */
+    public const string VIDEO_NOT_FOUND = 'video_not_found';
+    public const string VIDEO_ALREADY_EXISTS = 'video_already_exists';
+    public const string VIDEO_NOT_VALID = 'video_not_valid';
+    public const string VIDEO_PROFILE_NOT_FOUND = 'video_profile_not_found';
+    public const string VIDEO_PROFILE_ALREADY_EXISTS = 'video_profile_already_exists';
+    public const string VIDEO_CODEC_DISABLED = 'video_codec_disabled';
+    public const string VIDEO_CODEC_OUTPUT_UNSUPPORTED = 'video_codec_output_unsupported';
+    public const string VIDEO_RENDITION_NOT_FOUND = 'video_rendition_not_found';
+    public const string VIDEO_RENDITION_ALREADY_EXISTS = 'video_rendition_already_exists';
+    public const string VIDEO_RENDITION_IN_PROGRESS = 'video_rendition_in_progress';
+    public const string VIDEO_RENDITION_SEGMENT_NOT_FOUND = 'video_rendition_segment_not_found';
+    public const string VIDEO_CAPTION_NOT_FOUND = 'video_caption_not_found';
+    public const string VIDEO_CAPTION_NOT_VALID = 'video_caption_not_valid';
+    public const string VIDEO_CAPTION_IN_PROGRESS = 'video_caption_in_progress';
+    public const string VIDEO_CAPTION_SEGMENT_NOT_FOUND = 'video_caption_segment_not_found';
+    public const string VIDEO_THUMBNAIL_NOT_FOUND = 'video_thumbnail_not_found';
+    public const string VIDEO_TIMELINES_NOT_FOUND = 'video_timelines_not_found';
+    public const string VIDEO_TIMELINE_IN_PROGRESS = 'video_timeline_in_progress';
 
     /** GraphqQL */
     public const string GRAPHQL_NO_QUERY = 'graphql_no_query';
@@ -466,6 +496,7 @@ class Exception extends \Exception
     /** Reviews */
     public const string REVIEW_NOT_FOUND = 'review_not_found';
     public const string REVIEW_CHAT_NOT_FOUND = 'review_chat_not_found';
+    public const string REVIEW_LEARNING_NOT_FOUND = 'review_learning_not_found';
     public const string REVIEW_STATUS_INVALID = 'review_status_invalid';
     public const string REVIEW_REPOSITORY_ALREADY_EXISTS = 'review_repository_already_exists';
 

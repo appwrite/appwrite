@@ -3,9 +3,11 @@
 namespace Utopia\Emails\Tests;
 
 use Exception;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Emails\Email;
 
+#[RequiresPhpExtension('utopia')]
 class EmailTest extends TestCase
 {
     public function test_valid_email(): void

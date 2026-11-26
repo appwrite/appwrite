@@ -2,6 +2,7 @@
 
 namespace Appwrite\Network\Validator;
 
+use Swoole\Coroutine;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\DNS\Message\Record;
 use Utopia\DNS\Validator\DNS as BaseDNS;
@@ -32,27 +33,47 @@ class DNS extends BaseDNS
      */
     public function isValid(mixed $value): bool
     {
+        // Every record below is checked by agreement between the resolvers, so with
+        // none of them nothing is checked. Reporting success on that would accept
+        // every domain this validator is ever asked about.
+        if ($this->dnsServers === []) {
+            $this->reason = 'DNS verification failed as no DNS resolver is configured.';
+
+            return false;
+        }
+
         $wg = new WaitGroup();
         $failedValidator = null;
+        // Outside a coroutine (CLI, tests) go() would leave a reactor running, so query in turn
+        $parallel = Coroutine::getCid() > 0;
 
         foreach ($this->dnsServers as $dnsServer) {
+            $check = function () use ($value, $dnsServer, &$failedValidator): void {
+                $validator = new BaseDNS($this->target, $this->type, $dnsServer);
+
+                if (!$validator->isValid($value)) {
+                    self::retainFailure($validator, $failedValidator);
+                }
+            };
+
+            if (!$parallel) {
+                $check();
+                continue;
+            }
+
             $wg->add();
-
-            \go(function () use ($value, $dnsServer, $wg, &$failedValidator) {
+            \go(function () use ($check, $wg) {
                 try {
-                    $validator = new BaseDNS($this->target, $this->type, $dnsServer);
-                    $isValid = $validator->isValid($value);
-
-                    if (!$isValid) {
-                        $failedValidator = $validator;
-                    }
+                    $check();
                 } finally {
                     $wg->done();
                 }
             });
         }
 
-        $wg->wait();
+        if ($parallel) {
+            $wg->wait();
+        }
 
         if (!\is_null($failedValidator)) {
             $this->count = $failedValidator->count;
@@ -63,5 +84,26 @@ class DNS extends BaseDNS
         }
 
         return true;
+    }
+
+    /**
+     * Keep the failure that best describes why the multi-resolver check lost.
+     *
+     * Prefer a resolver that could not answer over one that answered with no or
+     * wrong records. resolveOwnership() reads an empty reason as "no proof", so a
+     * NODATA response must not overwrite a lookup error from another resolver and
+     * let a rule verify during a partial outage. Among answered failures, prefer
+     * the one that saw records, so a mismatch is not lost to a NODATA peer.
+     */
+    public static function retainFailure(BaseDNS $validator, ?BaseDNS &$failedValidator): void
+    {
+        if (
+            $failedValidator === null
+            || ($validator->reason !== '' && $failedValidator->reason === '')
+            // Past the clauses above, both reasons are empty: prefer the failure that saw records.
+            || ($failedValidator->reason === '' && $validator->count > $failedValidator->count)
+        ) {
+            $failedValidator = $validator;
+        }
     }
 }

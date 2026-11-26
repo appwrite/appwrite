@@ -401,7 +401,7 @@ final class RequestsTest extends TestCase
         $this->respond($fake);
         $refused = 0;
         $connection->requestBatch([new Request(subject: 'work')], function () use ($connection, &$refused): void {
-            foreach ([fn (): \Utopia\NATS\Message => $connection->request('work'), $connection->processMessage(...), fn (): array => $connection->requestMany('work'), fn () => $connection->wait(1), $connection->flush(...), $connection->tick(...), $connection->drain(...), fn () => $connection->requestBatch([], static fn () => null)] as $read) {
+            foreach ([fn (): \Utopia\NATS\Message => $connection->request('work'), $connection->processMessage(...), fn (): array => $connection->requestMany('work'), fn () => $connection->wait(1), $connection->flush(...), $connection->tick(...), $connection->drain(...), $connection->settle(...), fn () => $connection->requestBatch([], static fn () => null)] as $read) {
                 try {
                     $read();
                     self::fail('Nested read must be refused');
@@ -410,7 +410,7 @@ final class RequestsTest extends TestCase
                 }
             }
         });
-        $this->assertSame(8, $refused);
+        $this->assertSame(9, $refused);
         $this->assertSame('ok', $connection->request('work')->data);
         $connection->close();
     }

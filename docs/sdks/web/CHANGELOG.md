@@ -1,5 +1,56 @@
 # Change Log
 
+## 29.4.0
+
+* Added: Atlassian, Instagram, LINE, Linear, Netlify, Patreon, Railway, Reddit, Roblox, Strava, Vercel, VK and WorkOS to `OAuthProvider`
+
+## 29.3.1
+
+* Fixed: `Tracking` records `outbound_link` and `file_download` events on the current page; the destination stays in the `hostname` and `href` props
+* Fixed: `Tracking` and `tracker.js` send no events from automated browsers (`navigator.webdriver`, PhantomJS, Nightmare, Cypress)
+
+## 29.3.0
+
+* Added: `Account.createDevice`, `getDevice`, `deleteDevice` and `updateDeviceSession`, and the `Device` model
+* Added: `Account.createLDAPSession`
+* Added: `Session.userName`
+* Added: `ImageFormat.Auto` on `Storage.getFilePreview` and the avatar endpoints, serving avif or webp when the `Accept` header supports it
+* Added: `OAuthProvider.Naver`, `OAuthProvider.Vipps` and `OAuthProvider.VippsSandbox`
+* Added: optional `interactive` param on `analytics.createEvent` to mark an event as telemetry that does not end a bounce
+* Updated: the tracker sends `scroll_depth` and `engagement_time` with `interactive: false`
+* Added: `client.setEnvironment` to act in a project environment; realtime, file and avatar URLs carry it
+* Updated: requests send `X-Appwrite-Response-Format: 2.7.2`
+
+## 29.2.0
+
+* Updated: requests send `X-Appwrite-Response-Format: 2.6.2`; the SDK targets Appwrite 2.6.x
+* Updated: `mqtt` dependency to `5.16.1`; `Push` keeps reconnecting after the broker rejects a connection
+* Fixed: path parameters `.` and `..` throw `AppwriteException` instead of changing the request URL
+* Fixed: examples leave unset optional params `undefined` instead of passing empty strings
+
+## 29.1.0
+
+* Added: `account.listMemberships` to list the current user's team memberships
+* Added: `createQuery` on `databases`, `tablesDB` and `documentsDB` to send list queries in the request body
+* Added: optional `bundleId` and `environment` on `account.createPushTarget` to route APNs tokens
+* Added: per-service ES modules and a minified script on `sdk.appwrite.io/web/<version>/`
+* Updated: `dist/iife/sdk.js` is minified, so CDN script tags load about half the bytes
+* Updated: requires Node.js 20 or later to build
+
+## 29.0.0
+
+* Breaking: requests send `X-Appwrite-Response-Format: 2.5.0`; responses follow the 2.5 shapes
+* Breaking: missing response fields are filled with their documented defaults
+* Breaking: `oauth2` `resource` params now take `string[]` on `authorize`, `authorizePost`, `createDeviceAuthorization`, `createPAR` and `createToken`
+* Breaking: nullable model fields are typed `T | null`, such as `Locale.city`, `Presence.status` and `Execution.scheduledAt`
+* Added: `Push` service with `subscribe`, `unsubscribe`, `onNotificationOpened` and `close` for web push
+* Added: `Topic` helper
+* Added: `Query` aggregates (`count`, `countDistinct`, `sum`, `avg`, `min`, `max` and more), `groupBy`, `having`, `distinct`, joins, `relationship`, `covers`, `spatialEquals` and `page`
+* Added: `Query.builder()` to chain queries; realtime subscriptions accept a builder for `queries`
+* Added: `ExecutionTrigger.Email`
+* Updated: nullable request params accept `null`, such as `account.createEmailPasswordSession` `duration`
+* Fixed: list and object defaults filled into a response are copied per model, and object defaults are `{}` instead of `[]`
+
 ## 28.3.0
 
 * Added: `analytics.createEvent` in a new `Analytics` service to send tracking events

@@ -166,13 +166,22 @@ class Create extends Action
             throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
         }
 
+        // A project-wide password reset refuses every password set before it
+        $passwordsInvalidatedAt = $project->getAttribute('auths', [])['passwordsInvalidatedAt'] ?? null;
+        if (
+            $passwordsInvalidatedAt !== null
+            && new \DateTime($profile->getAttribute('passwordUpdate')) <= new \DateTime($passwordsInvalidatedAt)
+        ) {
+            throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
+        }
+
         $user->setAttributes($profile->getArrayCopy());
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $secret = $proofForToken->generate();
-        $geoRecord = $geo->get($request->getIP());
+        $geoRecord = $geo->get($request->getClientIP());
         $session = new Document(array_merge(
             [
                 '$id' => Id::unique(),
@@ -185,7 +194,7 @@ class Create extends Action
                 'providerUid' => $email,
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
-                'ip' => $request->getIP(),
+                'ip' => $request->getClientIP(),
                 'factors' => ['password'],
                 'countryCode' => \strtolower($geoRecord->getCountryCode()),
                 'continentCode' => $geoRecord->getContinentCode() === '--' ? null : $geoRecord->getContinentCode(),

@@ -15,6 +15,8 @@ use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\System\System;
+use WebSocket\Client as WebSocketClient;
+use WebSocket\ConnectionException;
 
 final class AbuseTest extends Scope
 {
@@ -647,6 +649,73 @@ final class AbuseTest extends Scope
     }
 
     #[Group('abuseEnabled')]
+    public function testAbuseRecoveryOtpGuesses(): void
+    {
+        // A recovery OTP is six digits and nothing records a failed attempt on the token, so this limit is the
+        // only cap on guessing it. A key is trusted with throughput, not with the inbox the code was sent to.
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => Id::unique(),
+            'email' => 'recovery.' . \bin2hex(\random_bytes(8)) . '@example.com',
+            'password' => 'password-' . \bin2hex(\random_bytes(4)),
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+
+        $guess = [
+            'userId' => $user['body']['$id'],
+            'secret' => '000000',
+            'password' => 'password-' . \bin2hex(\random_bytes(4)),
+        ];
+
+        $this->startCountingInOneWindow(3600);
+        for ($i = 0; $i < 10; $i++) {
+            $response = $this->client->call(Client::METHOD_PUT, '/account/recovery/otp', $server, $guess);
+            $this->assertSame(401, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery/otp', $server, $guess);
+        $this->assertSame(429, $response['headers']['status-code'], 'A key past the limit is throttled');
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseTokenSessionGuesses(): void
+    {
+        // The same six digit code logs the account in through this route, and a wrong guess costs the caller
+        // nothing, so its per account failure limits must count the key too.
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => Id::unique(),
+            'email' => 'token.' . \bin2hex(\random_bytes(8)) . '@example.com',
+            'password' => 'password-' . \bin2hex(\random_bytes(4)),
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+
+        $guess = [
+            'userId' => $user['body']['$id'],
+            'secret' => '000000',
+        ];
+
+        $this->startCountingInOneWindow(3600);
+        for ($i = 0; $i < 10; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', $server, $guess);
+            $this->assertSame(401, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', $server, $guess);
+        $this->assertSame(429, $response['headers']['status-code'], 'A key past the limit is throttled');
+    }
+
+    #[Group('abuseEnabled')]
     public function testAbuseEmailSessionLimitPerProjectAccount(): void
     {
         $email = 'login.' . \bin2hex(\random_bytes(8)) . '@example.com';
@@ -1116,6 +1185,43 @@ final class AbuseTest extends Scope
             $this->assertStringContainsString('Max query complexity', (string) $response['body']['errors'][0]['message']);
             $this->assertArrayNotHasKey('data', $response['body']);
         }
+    }
+
+    #[Group('abuseEnabled')]
+    public function testRealtimeMessageLimitClosesConnection(): void
+    {
+        $client = new WebSocketClient('ws://appwrite.test/v1/realtime?' . \http_build_query([
+            'project' => $this->getProject()['$id'],
+            'channels' => ['documents'],
+        ]), [
+            'headers' => ['origin' => 'http://localhost'],
+            'timeout' => 2,
+        ]);
+        $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+
+        /**
+         * Test for SUCCESS
+         */
+        $this->startCountingInOneWindow(60);
+        for ($i = 0; $i < APP_LIMIT_REALTIME_MESSAGES; $i++) {
+            $client->send(\json_encode(['type' => 'ping']));
+            $this->assertSame('pong', \json_decode($client->receive(), true)['type'] ?? null, 'Message ' . ($i + 1) . ' is within the limit');
+        }
+
+        /**
+         * Test for FAILURE
+         */
+        $client->send(\json_encode(['type' => 'ping']));
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('error', $response['type'] ?? null);
+        $this->assertSame(1013, $response['data']['code'] ?? null);
+        $this->assertSame('Too many messages.', $response['data']['message'] ?? null);
+
+        try {
+            $client->receive();
+        } catch (ConnectionException) {
+        }
+        $this->assertFalse($client->isConnected(), 'A connection past the message limit is closed');
     }
 
     /**

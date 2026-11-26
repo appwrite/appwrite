@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from '@tanstack/react-router'
-import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   refetchProjectBandwidthUsageQueries,
   refetchProjectDatabaseUsageQueries,
@@ -12,6 +12,7 @@ import {
   refetchProjectRealtimeUsageQueries,
   refetchProjectRequestsUsageQueries,
   refetchProjectStorageUsageQueries,
+  useCountryLookups,
 } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
@@ -33,11 +34,10 @@ import {
   Menu,
   Globe,
   Shield,
-  Bell,
-  Gauge,
   Plus,
   type LucideIcon,
 } from '@/lib/icons'
+import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -67,8 +67,6 @@ import { categorySupportsChartInterval } from './category-filter-state'
 import { useUsageChartFilters } from '@/hooks/use-usage-chart-filters'
 import { useUsageHistoryLimitAlertState } from '@/hooks/use-usage-history-limit-alert'
 import {
-  alertsInfiniteQueryOptions,
-  useMonitors,
   useProject,
   useOrganizationPlan,
   useOrganizationScopes,
@@ -93,10 +91,12 @@ import {
 } from './usage-nav'
 import { UsageFiltersProvider } from './usage-filters-context'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
+import { ActiveFilterChips } from '@/components/global/shared/ActiveFilterChips'
 import {
   buildFilterQueryString,
   mapToQueryParam,
   queryParamToMap,
+  withFilter,
   type CompactFilterKey,
 } from '@/lib/table-filters'
 import {
@@ -141,6 +141,7 @@ const iconMap: Record<string, LucideIcon> = {
   UserCircle,
   Webhook,
   Globe,
+  Video: VIDEOS_PRODUCT_ICON,
 }
 
 interface UsageLayoutProps {
@@ -195,8 +196,6 @@ interface CategoryNavigationProps {
   projectId: string
   navGroups: UsageNavGroup[]
   activeCategoryId: string
-  /** Monitors currently firing, flagged on the Alerts link; null hides Monitoring (alerts preview off). */
-  firingAlerts: number | null
   className?: string
 }
 
@@ -216,61 +215,6 @@ const ALERT_METRIC_BY_CATEGORY: Record<string, string> = {
   avatars: 'avatars.screenshotsGenerated',
 }
 
-/** The two pages under Monitoring: what is watched, and what it raised. */
-const MONITORING_PAGES = {
-  monitors: { label: 'Monitors', icon: Gauge },
-  alerts: { label: 'Alerts', icon: Bell },
-} as const
-
-type MonitoringPage = keyof typeof MONITORING_PAGES
-
-function isMonitoringPage(id: string): id is MonitoringPage {
-  return id in MONITORING_PAGES
-}
-
-function MonitoringNavLink({
-  projectId,
-  page,
-  isActive,
-  firing,
-}: {
-  projectId: string
-  page: MonitoringPage
-  isActive: boolean
-  firing: number
-}) {
-  const t = useT()
-  const { label, icon: Icon } = MONITORING_PAGES[page]
-  return (
-    <Link
-      to={
-        page === 'monitors'
-          ? '/projects/$projectId/usage/monitors'
-          : '/projects/$projectId/usage/alerts'
-      }
-      params={{ projectId }}
-      search={{}}
-      className={cn(
-        secondarySidebarNavLinkClassName(isActive),
-        SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
-      )}
-    >
-      <div className="relative shrink-0">
-        <Icon className="h-4 w-4 shrink-0" />
-        {firing > 0 ? (
-          <span className="absolute -end-1 -top-1 h-2 w-2 rounded-full bg-red-500" />
-        ) : null}
-      </div>
-      <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{t(label)}</span>
-      {firing > 0 ? (
-        <span className="ms-auto rounded-full bg-red-500/10 px-1.5 text-[11px] font-medium tabular-nums text-red-600 dark:text-red-400">
-          {firing}
-        </span>
-      ) : null}
-    </Link>
-  )
-}
-
 function UsageNavGroupHeading({ label }: { label: string }) {
   const t = useT()
   return <p className={SECONDARY_SIDEBAR_GROUP_HEADING_CLASS}>{t(label)}</p>
@@ -280,7 +224,6 @@ function CategoryNavigation({
   projectId,
   navGroups,
   activeCategoryId,
-  firingAlerts,
   className,
 }: CategoryNavigationProps) {
   const t = useT()
@@ -290,23 +233,6 @@ function CategoryNavigation({
       role="navigation"
       aria-label={t('Usage categories')}
     >
-      {firingAlerts === null ? null : (
-        <div className="space-y-0.5">
-          <UsageNavGroupHeading label="Monitoring" />
-          <MonitoringNavLink
-            projectId={projectId}
-            page="monitors"
-            isActive={activeCategoryId === 'monitors'}
-            firing={0}
-          />
-          <MonitoringNavLink
-            projectId={projectId}
-            page="alerts"
-            isActive={activeCategoryId === 'alerts'}
-            firing={firingAlerts}
-          />
-        </div>
-      )}
       {navGroups.map((group) => (
         <div key={group.id} className="space-y-0.5">
           <UsageNavGroupHeading label={group.label} />
@@ -330,14 +256,12 @@ interface MobileCategoryDrawerProps {
   projectId: string
   navGroups: UsageNavGroup[]
   activeCategoryId: string
-  firingAlerts: number | null
 }
 
 function MobileCategoryDrawer({
   projectId,
   navGroups,
   activeCategoryId,
-  firingAlerts,
 }: MobileCategoryDrawerProps) {
   const t = useT()
   const [open, setOpen] = useState(false)
@@ -352,11 +276,9 @@ function MobileCategoryDrawer({
   }, [location.pathname])
 
   const activeCategory = categories.find((c) => c.id === activeCategoryId)
-  const activeLabel = isMonitoringPage(activeCategoryId)
-    ? t(MONITORING_PAGES[activeCategoryId].label)
-    : activeCategory?.label
-      ? t(activeCategory.label)
-      : t('Select category')
+  const activeLabel = activeCategory?.label
+    ? t(activeCategory.label)
+    : t('Select category')
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -384,7 +306,6 @@ function MobileCategoryDrawer({
               projectId={projectId}
               navGroups={navGroups}
               activeCategoryId={activeCategoryId}
-              firingAlerts={firingAlerts}
             />
           </div>
         </div>
@@ -495,35 +416,11 @@ function UsageLayoutContent({
   const t = useT()
   const location = useLocation()
   const navigate = useNavigate()
-  const pathCategory = getUsageCategoryIdFromPathname(location.pathname)
-  const monitoringPage =
-    pathCategory && isMonitoringPage(pathCategory) ? pathCategory : null
   const categoryId = resolveUsageCategoryId(
     getUsageCategoryIdFromPathname(location.pathname),
     plan,
   )
   const { features, isCloud, isSelfHosted } = useConsoleProfile()
-  const { monitors } = useMonitors(features.alerts ? projectId : null)
-  // An acknowledged alert has someone on it, so it leaves the count while it keeps firing.
-  const { data: firing } = useInfiniteQuery(
-    alertsInfiniteQueryOptions(features.alerts ? projectId : null, {
-      status: 'firing',
-    }),
-  )
-  const acknowledged = new Set(
-    firing?.pages
-      .flatMap((page) => page.alerts)
-      .filter((alert) => alert.acknowledgedAt)
-      .map((alert) => alert.$id),
-  )
-  const firingAlerts = features.alerts
-    ? monitors.filter(
-        (monitor) =>
-          monitor.enabled &&
-          monitor.status === 'firing' &&
-          !acknowledged.has(monitor.alertId),
-      ).length
-    : null
   const alertMetric = features.alerts
     ? ALERT_METRIC_BY_CATEGORY[categoryId]
     : undefined
@@ -553,6 +450,7 @@ function UsageLayoutContent({
     () => getUsageFilterColumnsForCategory(categoryId, filterAvailability),
     [categoryId, filterAvailability],
   )
+  const { lookups: countryLookups } = useCountryLookups()
   const usageEventFilterQueries = useMemo(
     () =>
       getUsageFilterQueriesForSurface(
@@ -629,9 +527,7 @@ function UsageLayoutContent({
         )
       )
         return
-      const newMap = new Map(usageFilterMap)
-      if (replaceKey) newMap.delete(replaceKey)
-      newMap.set(key, queryStr)
+      const newMap = withFilter(usageFilterMap, key, queryStr, replaceKey)
       navigateUsageFilters(
         mapToQueryParam(
           sanitizeUsageFilterMap(newMap, categoryId, filterAvailability),
@@ -767,7 +663,11 @@ function UsageLayoutContent({
   const { triggerRefresh, hasRefreshHandler, isRefreshing } = useRefresh()
 
   const categories = useMemo(() => getUsageCategories(plan), [plan])
-  const navGroups = useMemo(() => getUsageNavGroups(plan), [plan])
+  const showVideos = Boolean(features.videos)
+  const navGroups = useMemo(
+    () => getUsageNavGroups(plan, { videos: showVideos }),
+    [plan, showVideos],
+  )
   const activeCategoryData = findUsageCategory(categories, categoryId)
   const isRequestsCategory = categoryId === 'requests'
   const isBandwidthCategory = categoryId === 'bandwidth'
@@ -870,94 +770,101 @@ function UsageLayoutContent({
                 {t('Usage')}
               </h1>
 
-              {monitoringPage ? null : (
-                <div className="flex flex-wrap items-center justify-end gap-3">
-                  {showUsageFilters ? (
-                    <FiltersPopover
-                      open={filtersOpen}
-                      onOpenChange={setFiltersOpen}
-                      columns={usageFilterColumns}
-                      filterMap={usageFilterMap}
-                      onRemoveFilter={removeUsageFilter}
-                      onClearAll={clearAllUsageFilters}
-                      onApplyFilter={applyUsageFilter}
-                      resourceLabel="usage metrics"
-                      filterScope={usageFilterScope}
-                      onApplyQuery={applySavedUsageFilterQuery}
-                    />
-                  ) : null}
-                  {canApplyFiltersAsFirewallRule ? (
-                    canWriteFirewallRules ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-9 border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground"
-                        onClick={applyFiltersAsFirewallRule}
-                      >
-                        <Shield className="mr-1.5 h-3.5 w-3.5 shrink-0" />
-                        {t('Apply as firewall rule')}
-                      </Button>
-                    ) : (
-                      <TooltipProvider delayDuration={0}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                disabled
-                                className="h-9 border-border bg-transparent text-[13px] text-muted-foreground"
-                              >
-                                <Shield className="mr-1.5 h-3.5 w-3.5 shrink-0" />
-                                {t('Apply as firewall rule')}
-                              </Button>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent side="bottom">
-                            <p>
-                              {t(
-                                "You don't have permission to create firewall rules.",
-                              )}
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )
-                  ) : null}
-                  {showChartIntervalToggle ? (
-                    <UsageChartIntervalToggle
-                      value={chartInterval}
-                      onValueChange={setChartInterval}
-                      dateRange={usageDateRange}
-                      allowedIntervals={planChartIntervals}
-                      className="h-9"
-                    />
-                  ) : null}
-                  <DateRangePicker
+              <div className="flex flex-wrap items-center justify-end gap-3">
+                {showUsageFilters ? (
+                  <FiltersPopover
+                    open={filtersOpen}
+                    onOpenChange={setFiltersOpen}
+                    columns={usageFilterColumns}
+                    filterMap={usageFilterMap}
+                    onRemoveFilter={removeUsageFilter}
+                    onClearAll={clearAllUsageFilters}
+                    onApplyFilter={applyUsageFilter}
+                    resourceLabel="usage metrics"
+                    filterScope={usageFilterScope}
+                    onApplyQuery={applySavedUsageFilterQuery}
+                  />
+                ) : null}
+                {canApplyFiltersAsFirewallRule ? (
+                  canWriteFirewallRules ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-9 border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground"
+                      onClick={applyFiltersAsFirewallRule}
+                    >
+                      <Shield className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+                      {t('Apply as firewall rule')}
+                    </Button>
+                  ) : (
+                    <TooltipProvider delayDuration={0}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled
+                              className="h-9 border-border bg-transparent text-[13px] text-muted-foreground"
+                            >
+                              <Shield className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+                              {t('Apply as firewall rule')}
+                            </Button>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          <p>
+                            {t(
+                              "You don't have permission to create firewall rules.",
+                            )}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )
+                ) : null}
+                {showChartIntervalToggle ? (
+                  <UsageChartIntervalToggle
+                    value={chartInterval}
+                    onValueChange={setChartInterval}
                     dateRange={usageDateRange}
-                    onDateRangeChange={setUsageDateRange}
-                    presetId={dateRangePresetId}
+                    allowedIntervals={planChartIntervals}
                     className="h-9"
-                    retentionHours={
-                      hasFiniteUsageLogRetention(organizationPlan)
-                        ? usageLogRetentionHours
-                        : null
-                    }
                   />
+                ) : null}
+                <DateRangePicker
+                  dateRange={usageDateRange}
+                  onDateRangeChange={setUsageDateRange}
+                  presetId={dateRangePresetId}
+                  className="h-9"
+                  retentionHours={
+                    hasFiniteUsageLogRetention(organizationPlan)
+                      ? usageLogRetentionHours
+                      : null
+                  }
+                />
 
-                  <RefreshButton
-                    onClick={handleRefresh}
-                    isRefreshing={isRefreshing}
-                  />
-                </div>
-              )}
+                <RefreshButton
+                  onClick={handleRefresh}
+                  isRefreshing={isRefreshing}
+                />
+              </div>
             </div>
           </div>
         </div>
-        {!monitoringPage &&
-        showUsageHistoryLimitAlert &&
+        {showUsageFilters ? (
+          <ActiveFilterChips
+            filterMap={usageFilterMap}
+            columns={usageFilterColumns}
+            countryLookups={countryLookups}
+            onApplyFilter={applyUsageFilter}
+            onRemoveFilter={removeUsageFilter}
+            onClearAllFilters={clearAllUsageFilters}
+          />
+        ) : null}
+        {showUsageHistoryLimitAlert &&
         hasFiniteUsageLogRetention(organizationPlan) ? (
           <UsageLogRetentionAlert
             retentionDays={usageLogRetentionDays}
@@ -977,8 +884,7 @@ function UsageLayoutContent({
               <CategoryNavigation
                 projectId={projectId}
                 navGroups={navGroups}
-                activeCategoryId={monitoringPage ?? categoryId}
-                firingAlerts={firingAlerts}
+                activeCategoryId={categoryId}
               />
             </div>
           </div>
@@ -990,30 +896,11 @@ function UsageLayoutContent({
               <MobileCategoryDrawer
                 projectId={projectId}
                 navGroups={navGroups}
-                activeCategoryId={monitoringPage ?? categoryId}
-                firingAlerts={firingAlerts}
+                activeCategoryId={categoryId}
               />
             </div>
 
-            {monitoringPage ? (
-              <>
-                <div className="mb-6">
-                  <h2 className="text-[16px] font-semibold text-foreground">
-                    {t(MONITORING_PAGES[monitoringPage].label)}
-                  </h2>
-                  <p className="mt-1 text-[13px] text-muted-foreground">
-                    {monitoringPage === 'monitors'
-                      ? t(
-                          'Get notified when usage crosses a threshold, and again when it recovers.',
-                        )
-                      : t(
-                          'Every time a monitor fired: when, how far over its threshold, and when it recovered.',
-                        )}
-                  </p>
-                </div>
-                <Outlet />
-              </>
-            ) : activeCategoryData ? (
+            {activeCategoryData ? (
               <>
                 <div className="mb-6 flex items-start justify-between gap-4">
                   <div>
@@ -1032,7 +919,7 @@ function UsageLayoutContent({
                       className="h-8 shrink-0 text-[13px]"
                     >
                       <Link
-                        to="/projects/$projectId/usage/monitors"
+                        to="/projects/$projectId/monitors"
                         params={{ projectId }}
                         search={{ metric: alertMetric }}
                       >

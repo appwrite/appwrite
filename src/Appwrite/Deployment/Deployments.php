@@ -585,7 +585,7 @@ readonly class Deployments
             $base = "{$endpoint}/v1/{$resource->getCollection()}/{$resource->getId()}/deployments/{$deploymentId}";
             $sourceUrl = "{$base}/download?" . \http_build_query([
                 'type' => Token::TYPE_SOURCE,
-                'project' => $projectId,
+                ...static::query($project),
                 'token' => Token::sign($deploymentId, Token::TYPE_SOURCE, $ttl),
             ]);
             $sourceArtifacts = [
@@ -666,11 +666,28 @@ readonly class Deployments
             'artifacts' => [...$sourceArtifacts, ...$manifestArtifacts, ...$output['artifacts']],
             'volumes' => $output['volumes'],
             'callback' => new Callback(
-                url: "{$endpoint}/v1/jobs/event?" . \http_build_query(['project' => $projectId]),
+                // No project in the URL: the route acts on the project named in the signed
+                // job meta. A query parameter would name the project the request acts in,
+                // and a platform whose projects are not all reached by their own ID refuses
+                // some of them.
+                url: "{$endpoint}/v1/jobs/event",
                 events: $events,
                 key: System::getEnv('_APP_JOBS_SECRET', ''),
             ),
         ];
+    }
+
+    /**
+     * The query parameters that name the project in a link the build requests, such as the
+     * one it downloads its uploaded source from. A platform whose projects are not all
+     * reached by their own ID overrides this: storage paths and job ids keep the project's
+     * own ID, but a link has to name the project the way a request reaches it.
+     *
+     * @return array<string, string>
+     */
+    protected static function query(Document $project): array
+    {
+        return ['project' => $project->getId()];
     }
 
     /**

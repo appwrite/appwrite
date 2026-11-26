@@ -1,5 +1,118 @@
 # Change Log
 
+## v7.24.0
+
+* Added: `password`, `attempts` and `attemptsInterval` options on `waf.CreateChallengeRule` and `waf.UpdateChallengeRule`
+
+## v7.23.0
+
+* Added: `monitors` service to create, list, get, update and delete HTTP, DNS, TCP, SMTP and usage monitors
+* Added: `alerts` service to list and get alerts, and acknowledge them with `alerts.update`
+* Added: `organization.listEscalations`, `createEscalation`, `getEscalation`, `updateEscalation` and `deleteEscalation`
+* Added: `Monitor`, `Alert`, `Escalation` and `EscalationStep` models and their list models
+
+## v7.22.0
+
+* Breaking: `Teams.GetPhoto`, `UpdatePhoto` and `DeletePhoto` moved to `Avatars.GetTeamPhoto`, `UpdateTeamPhoto` and `DeleteTeamPhoto`
+* Added: `Logs` service with `List` and `Get`, and the `RuntimeLog` and `RuntimeLogList` models
+* Added: Bird email and SMS providers on `Messaging`, created and updated with `CreateBirdEmailProvider` and its siblings
+* Added: `MutableContent` option on `Messaging.CreatePush` and `Messaging.UpdatePush`
+* Added: `Project.UpdateOAuth2Bird` and `Project.UpdateOAuth2Supabase`, with the `OAuth2Bird` and `OAuth2Supabase` models
+* Added: `WithForwardedIP` client option to forward the end user's IP address
+* Added: `Records` on `ProxyRule`, `Installs` on `App`, and review credit and monitoring limits on billing models
+
+## v7.21.0
+
+* Added: `ProviderComments`, `ProviderDeployments` and `ProviderStatuses` options on function and site create and update, and fields on `Function` and `Site`
+* Added: `Teams.GetPhoto`, `Teams.UpdatePhoto` and `Teams.DeletePhoto`
+* Added: `Analytics` annotation methods to list, create, get, update and delete annotations
+* Added: `Project` OAuth2 settings for Atlassian, Instagram, LINE, Linear, Netlify, Patreon, Railway, Reddit, Roblox, Strava, Vercel, VK and WorkOS
+
+## v7.20.0
+
+* Added: `Account.CreateLDAPSession` for LDAP sign-in
+* Added: `Project.UpdateLDAP` and `Project.CreateLDAPTest` to configure and test a project's LDAP directory, and `Ldap*` fields on `Project`
+* Added: `Sites.UpdateAnalytics` and `AnalyticsEnabled` and `AnalyticsPropertyId` on `Site`
+* Added: `Reason` on `DomainPrice`, set when a domain was not priced for the requested registration type
+
+## v7.19.0
+
+* Added: `Project.UpdateOAuth2Naver` and the `OAuth2Naver` model
+* Added: `Project.DeletePasswords` to force every user to reset their password
+* Added: `auto` output on `Storage.GetFilePreview` and the avatar endpoints, serving avif or webp when the `Accept` header supports it
+* Fixed: `Avatars.GetScreenshot` sends `Accept: image/*`, so `output` `auto` can return avif or webp
+* Updated: requests send `X-Appwrite-Response-Format: 2.7.2`
+
+## v7.18.0
+
+* Added: `Account.CreateDevice`, `GetDevice`, `DeleteDevice` and `UpdateDeviceSession`, and the `Device` model
+* Added: `Project.UpdateAccountDevicesPolicy` and the `PolicyAccountDevices` model
+* Added: `UserName` on the `Session` model
+
+## v7.17.0
+
+* Added: `Project.UpdateOAuth2Vipps` and `UpdateOAuth2VippsSandbox`
+* Added: `Project.GetPrefs` and `UpdatePrefs`
+* Added: `Proxy.UpdateFunctionRule`, `UpdateRedirectRule` and `UpdateSiteRule`
+* Added: `Schedule` option on `Waf` rule create and update methods
+* Added: `Type` and `IdentifyUsers` on analytics properties, `Interactive` on events, `PropKey` on metrics
+* Updated: `Project.ListEnvironments`, `CreateEnvironment`, `GetEnvironment` and `UpdateEnvironment` return `Environment` models
+* Updated: requests send response format `2.7.1`
+* Fixed: `Project.GetOAuth2Provider` resolves `paypal`, `tradeshift` and `vipps`, not only their sandbox IDs
+
+## v7.16.0
+
+* Breaking: removed `Migrations.GetAppwriteReport`
+* Breaking: `BillingPlan.DeploymentRetention`, `DeploymentRetentionMax` and `DeploymentsRetentionCount` are now `*int`
+* Added: `Project.UpdateDenyRealtimeGuestsPolicy` and the `PolicyDenyRealtimeGuests` model
+* Added: `Project.DeleteSessions` to sign out every user in the project
+* Updated: requests send response format `2.6.2`
+* Updated: the default HTTP client no longer follows redirects; a 3xx returns an `AppwriteError` naming the `Location`
+* Updated: the default HTTP client no longer keeps cookies between requests
+* Updated: `AnalyticsMetric.Pageviews` counts screen views and is returned on time-series rows
+* Fixed: `Client.String()` lists header names only, so `%v` no longer prints API keys or sessions
+* Fixed: path parameters `.` and `..` return an error instead of changing the request URL
+* Fixed: the chunked-upload resume lookup percent-encodes the upload ID
+
+## v7.15.0
+
+* Added: `Migrations` service for provider reports, imports, exports, retries, and migration management
+* Added: `BillingPlan.DeploymentRetention`, `DeploymentRetentionMax` and `DeploymentsRetentionCount`
+* Fixed: CSV and JSON export column selections accepted string slices
+* Updated: required patched Go `1.26.10` when building from source
+* Updated: requests sent response format `2.6.1`
+* Updated: WAF documentation covered request content and session age conditions
+
+## v7.14.0
+
+* Added: `Description` options on create and update for databases, collections, tables, attributes, columns, indexes, buckets, functions, sites, variables, topics, webhooks and keys
+* Added: `Description` on the matching models
+* Added: `Account.ListMemberships`
+* Added: `WithUpdatePasswordDictionaryPolicyDenyList`, `WithUpdatePasswordPersonalDataPolicyDenyList` and `DenyList` on their policy models
+* Added: `BillingPlan.FunctionsAllowCron`
+* Added: `WithCreateBucketStripMetadata`, `WithUpdateBucketStripMetadata` and `StripMetadata` on the `Bucket` model
+
+## v7.13.0
+
+* Added: `CreateQuery` on `Databases`, `DocumentsDB` and `TablesDB` to send list queries in the request body
+* Added: `Total` list options on `Activities`, `Analytics`, `Backups`, `Domains`, `Mongo`, `Mysql` and `Postgresql`
+* Added: `WithCreateEmailEmails` and `WithUpdateEmailEmails` to email addresses without an Appwrite target
+
+## v7.12.0
+
+* Breaking: removed `AnalyticsProperty.Public` and the `WithCreatePropertyPublic` and `WithUpdatePropertyPublic` options
+* Breaking: requests send response format `2.5.0`
+* Breaking: removed the `topic.Any`, `topic.All`, `Topic.Any` and `Topic.All` wildcard builders and `ResolvedTopic`; build topics with `topic.Path`
+* Added: `Mongo`, `Mysql` and `Postgresql` `PromoteRestoration`, the `WithCreateRestorationRestoreMode`, `WithCreateRestorationTargetName` and `WithCreateRestorationAutoPromote` options, and `DedicatedDatabaseRestoration.RestoreMode`
+* Added: `Proxy.CreateSMTPRule` and `ProxyRule.Protocol`
+* Added: `WithUpdateEmailEnabled` on `Functions.Update` and `Function.EmailEnabled`
+* Added: `query` aggregates (`Count`, `CountDistinct`, `Sum`, `Avg`, `Min`, `Max` and more), `GroupBy`, `Having`, `Distinct`, joins, `Relationship`, `Covers`, `SpatialEquals` and `Page`
+* Added: `query.NewBuilder` to chain queries; `Build()` returns the query list
+* Updated: models fill fields missing from a response with their documented defaults
+* Updated: index docs list the `spatial` and `trigram` types
+* Updated: `topic.Path` rejects levels containing a NUL character
+* Fixed: models decode each response into a fresh value, so fields from an earlier response no longer carry over
+
 ## v7.11.0
 
 * Added: project environments with `Project.CreateEnvironment`, `GetEnvironment`, `ListEnvironments`, `UpdateEnvironment` and `DeleteEnvironment`

@@ -79,6 +79,16 @@ return [
         'description' => "The cache could not confirm the request's changes, so they may or may not have been applied. Read the affected resources back before retrying.",
         'code' => 503,
     ],
+    Exception::GENERAL_EMBEDDING_UNAVAILABLE => [
+        'name' => Exception::GENERAL_EMBEDDING_UNAVAILABLE,
+        'description' => 'The embedding service could not generate embeddings for this request. Please try again later.',
+        'code' => 503,
+    ],
+    Exception::GENERAL_EMBEDDING_TEXT_TOO_LONG => [
+        'name' => Exception::GENERAL_EMBEDDING_TEXT_TOO_LONG,
+        'description' => 'A text is longer than the selected embedding model can process. Split it into smaller chunks and try again.',
+        'code' => 400,
+    ],
     Exception::GENERAL_ARGUMENT_INVALID => [
         'name' => Exception::GENERAL_ARGUMENT_INVALID,
         'description' => 'The request contains one or more invalid arguments. Please refer to the endpoint documentation.',
@@ -367,6 +377,11 @@ return [
         'description' => 'This authenticator is already verified on the current user.',
         'code' => 409,
     ],
+    Exception::USER_AUTHENTICATOR_LAST_FACTOR => [
+        'name' => Exception::USER_AUTHENTICATOR_LAST_FACTOR,
+        'description' => 'This authenticator is the last verified factor of a user with MFA enabled. Disable MFA before deleting it.',
+        'code' => 400,
+    ],
     Exception::USER_PHONE_NOT_FOUND => [
         'name' => Exception::USER_PHONE_NOT_FOUND,
         'description' => 'The current user does not have a phone number associated with their account.',
@@ -410,6 +425,11 @@ return [
     Exception::USER_OAUTH2_PROVIDER_ERROR => [
         'name' => Exception::USER_OAUTH2_PROVIDER_ERROR,
         'description' => 'OAuth2 provider returned some error.',
+        'code' => 424,
+    ],
+    Exception::USER_LDAP_DIRECTORY_ERROR => [
+        'name' => Exception::USER_LDAP_DIRECTORY_ERROR,
+        'description' => 'The LDAP directory could not be reached or refused the service account.',
         'code' => 424,
     ],
     Exception::USER_OAUTH2_PROVIDER_FAILURE => [
@@ -880,11 +900,6 @@ return [
         'description' => 'A collection with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
-    Exception::COLLECTION_LIMIT_EXCEEDED => [
-        'name' => Exception::COLLECTION_LIMIT_EXCEEDED,
-        'description' => 'The maximum number of collections for database \'%s\' has been reached.',
-        'code' => 400,
-    ],
 
     /** Tables */
     Exception::TABLE_NOT_FOUND => [
@@ -896,11 +911,6 @@ return [
         'name' => Exception::TABLE_ALREADY_EXISTS,
         'description' => 'A table with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
-    ],
-    Exception::TABLE_LIMIT_EXCEEDED => [
-        'name' => Exception::TABLE_LIMIT_EXCEEDED,
-        'description' => 'The maximum number of tables for database \'%s\' has been reached.',
-        'code' => 400,
     ],
 
     /** Documents */
@@ -1311,6 +1321,11 @@ return [
         'description' => 'Provided SMTP config is invalid. Please check the configured values and try again.',
         'code' => 400,
     ],
+    Exception::PROJECT_LDAP_CONFIG_INVALID => [
+        'name' => Exception::PROJECT_LDAP_CONFIG_INVALID,
+        'description' => 'Provided LDAP config is invalid. Please check the configured values and try again.',
+        'code' => 400,
+    ],
     Exception::PROJECT_TEMPLATE_DEFAULT_DELETION => [
         'name' => Exception::PROJECT_TEMPLATE_DEFAULT_DELETION,
         'description' => 'You can\'t delete default template. If you are trying to reset your template changes, you can ignore this error as it\'s already been reset.',
@@ -1370,6 +1385,26 @@ return [
     Exception::ALERT_RESOLVED => [
         'name' => Exception::ALERT_RESOLVED,
         'description' => 'The alert has resolved. Only a firing alert can be acknowledged.',
+        'code' => 400,
+    ],
+    Exception::ESCALATION_NOT_FOUND => [
+        'name' => Exception::ESCALATION_NOT_FOUND,
+        'description' => 'Escalation with the requested ID could not be found in this organization.',
+        'code' => 404,
+    ],
+    Exception::ESCALATION_ALREADY_EXISTS => [
+        'name' => Exception::ESCALATION_ALREADY_EXISTS,
+        'description' => 'Escalation with the same ID already exists. Try again with a different ID.',
+        'code' => 409,
+    ],
+    Exception::ESCALATION_IN_USE => [
+        'name' => Exception::ESCALATION_IN_USE,
+        'description' => 'The escalation is used by a monitor. Move its monitors to another escalation or to `notify` roles first.',
+        'code' => 409,
+    ],
+    Exception::ESCALATION_MEMBER_NOT_FOUND => [
+        'name' => Exception::ESCALATION_MEMBER_NOT_FOUND,
+        'description' => 'A step names a user who is not a member of the organization.',
         'code' => 400,
     ],
     Exception::KEY_NOT_FOUND => [
@@ -1701,10 +1736,107 @@ return [
         'code' => 409,
     ],
 
+    /** Videos */
+    Exception::VIDEO_NOT_FOUND => [
+        'name' => Exception::VIDEO_NOT_FOUND,
+        'description' => 'Video with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::VIDEO_ALREADY_EXISTS => [
+        'name' => Exception::VIDEO_ALREADY_EXISTS,
+        'description' => 'A video with the same ID already exists in this project.',
+        'code' => 409,
+    ],
+    Exception::VIDEO_NOT_VALID => [
+        'name' => Exception::VIDEO_NOT_VALID,
+        'description' => 'The requested file is not a valid video or audio file.',
+        'code' => 400,
+    ],
+    Exception::VIDEO_PROFILE_NOT_FOUND => [
+        'name' => Exception::VIDEO_PROFILE_NOT_FOUND,
+        'description' => 'Video profile with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::VIDEO_PROFILE_ALREADY_EXISTS => [
+        'name' => Exception::VIDEO_PROFILE_ALREADY_EXISTS,
+        'description' => 'A video profile with the same ID, or the same width, height, bitrates, and codec, already exists.',
+        'code' => 409,
+    ],
+    Exception::VIDEO_CODEC_DISABLED => [
+        'name' => Exception::VIDEO_CODEC_DISABLED,
+        'description' => 'The requested video codec is not enabled on this instance.',
+        'code' => 400,
+    ],
+    Exception::VIDEO_CODEC_OUTPUT_UNSUPPORTED => [
+        'name' => Exception::VIDEO_CODEC_OUTPUT_UNSUPPORTED,
+        'description' => 'The requested output format is not supported for this video codec.',
+        'code' => 400,
+    ],
+    Exception::VIDEO_RENDITION_NOT_FOUND => [
+        'name' => Exception::VIDEO_RENDITION_NOT_FOUND,
+        'description' => 'Video rendition with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::VIDEO_RENDITION_ALREADY_EXISTS => [
+        'name' => Exception::VIDEO_RENDITION_ALREADY_EXISTS,
+        'description' => 'A rendition with the same profile and output already exists for this video. Delete it before creating again.',
+        'code' => 409,
+    ],
+    Exception::VIDEO_RENDITION_IN_PROGRESS => [
+        'name' => Exception::VIDEO_RENDITION_IN_PROGRESS,
+        'description' => 'Cannot delete a video or rendition while a rendition is still being encoded. Wait for the job to finish, or wait until a stuck rendition is older than the retention window.',
+        'code' => 409,
+    ],
+    Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND => [
+        'name' => Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND,
+        'description' => 'Video rendition segment with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::VIDEO_CAPTION_NOT_FOUND => [
+        'name' => Exception::VIDEO_CAPTION_NOT_FOUND,
+        'description' => 'Video caption with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::VIDEO_CAPTION_NOT_VALID => [
+        'name' => Exception::VIDEO_CAPTION_NOT_VALID,
+        'description' => 'The requested file is not a valid caption file.',
+        'code' => 400,
+    ],
+    Exception::VIDEO_CAPTION_IN_PROGRESS => [
+        'name' => Exception::VIDEO_CAPTION_IN_PROGRESS,
+        'description' => 'Cannot delete a caption while it is processing. Wait for the job to finish, or wait until a stuck caption is older than the retention window.',
+        'code' => 409,
+    ],
+    Exception::VIDEO_CAPTION_SEGMENT_NOT_FOUND => [
+        'name' => Exception::VIDEO_CAPTION_SEGMENT_NOT_FOUND,
+        'description' => 'Video caption segment with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::VIDEO_THUMBNAIL_NOT_FOUND => [
+        'name' => Exception::VIDEO_THUMBNAIL_NOT_FOUND,
+        'description' => 'Video thumbnail with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::VIDEO_TIMELINES_NOT_FOUND => [
+        'name' => Exception::VIDEO_TIMELINES_NOT_FOUND,
+        'description' => 'Video timeline could not be found. The video may still be processing.',
+        'code' => 404,
+    ],
+    Exception::VIDEO_TIMELINE_IN_PROGRESS => [
+        'name' => Exception::VIDEO_TIMELINE_IN_PROGRESS,
+        'description' => 'Cannot delete a video while its timeline is being generated. Wait for the job to finish, or wait until a stuck timeline is older than the retention window.',
+        'code' => 409,
+    ],
+
     /** Reviews */
     Exception::REVIEW_NOT_FOUND => [
         'name' => Exception::REVIEW_NOT_FOUND,
         'description' => 'Review with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::REVIEW_LEARNING_NOT_FOUND => [
+        'name' => Exception::REVIEW_LEARNING_NOT_FOUND,
+        'description' => 'Learning with the requested ID could not be found.',
         'code' => 404,
     ],
     Exception::REVIEW_CHAT_NOT_FOUND => [

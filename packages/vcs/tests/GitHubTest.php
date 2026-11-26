@@ -14,9 +14,12 @@ use Utopia\VCS\Exception\RepositoryNotFound;
 final class GitHubTest extends Base
 {
     /** @var array<string> */
+    #[\Override]
     protected static array $supportedWebhookScopes = [GitHub::WEBHOOK_SCOPE_INSTALLATION, GitHub::WEBHOOK_SCOPE_REPOSITORY];
 
+    #[\Override]
     protected static string $eventHeader = 'x-github-event';
+    #[\Override]
     protected static string $signatureHeader = 'x-hub-signature-256';
 
     protected function createAdapter(): GitHub
@@ -122,6 +125,48 @@ final class GitHubTest extends Base
         $this->assertSame('1234', $result['installationId']);
     }
 
+    public function testGetEventInstallationRepositories(): void
+    {
+        $payload = (string) json_encode([
+            'action' => 'added',
+            'installation' => [
+                'id' => 1234,
+                'account' => ['login' => 'appwrite'],
+            ],
+            'repository_selection' => 'all',
+            'repositories_added' => [
+                ['id' => 583127841, 'name' => 'appwrite', 'full_name' => 'appwrite/appwrite'],
+                ['id' => '943139433', 'name' => 'console'],
+                ['name' => 'no-id'],
+                'not-a-repository',
+            ],
+            'repositories_removed' => [],
+        ]);
+
+        $events = $this->vcsAdapter->getEvents(GitHub::EVENT_INSTALLATION_REPOSITORIES, $payload);
+
+        $this->assertSame([[
+            'action' => 'added',
+            'installationId' => '1234',
+            'userName' => 'appwrite',
+            'repositoriesAdded' => ['583127841', '943139433'],
+            'repositoriesRemoved' => [],
+        ]], $events);
+    }
+
+    public function testGetEventInstallationHasNoRepositories(): void
+    {
+        $payload = (string) json_encode([
+            'action' => 'deleted',
+            'installation' => ['id' => 1234, 'account' => ['login' => 'appwrite']],
+        ]);
+
+        $events = $this->vcsAdapter->getEvents(GitHub::EVENT_INSTALLATION, $payload);
+
+        $this->assertSame([], $events[0]['repositoriesAdded']);
+        $this->assertSame([], $events[0]['repositoriesRemoved']);
+    }
+
     public function testGetEventIssueCommentOnPullRequest(): void
     {
         $events = $this->vcsAdapter->getEvents(GitHub::EVENT_ISSUE_COMMENT, $this->commentPayload(GitHub::EVENT_ISSUE_COMMENT));
@@ -132,6 +177,7 @@ final class GitHubTest extends Base
             'owner' => self::EVENT_OWNER,
             'installationId' => '9876',
             'pullRequestNumber' => 42,
+            'pullRequestAuthor' => 'hubot',
             'action' => 'created',
             'commentId' => 1001,
             'commentKind' => 'issue',
@@ -159,6 +205,32 @@ final class GitHubTest extends Base
         $this->assertSame('review', $events[0]['commentKind']);
         $this->assertSame(42, $events[0]['pullRequestNumber']);
         $this->assertSame(900, $events[0]['commentReplyToId']);
+        $this->assertSame('hubot', $events[0]['pullRequestAuthor']);
+    }
+
+    public function testGetEventPullRequestAuthor(): void
+    {
+        $payload = (string) json_encode([
+            'action' => 'opened',
+            'number' => 42,
+            'pull_request' => [
+                'user' => ['login' => 'hubot', 'avatar_url' => 'https://avatars.githubusercontent.com/u/1'],
+                'head' => ['ref' => 'feature', 'sha' => 'abc', 'user' => ['login' => self::EVENT_OWNER]],
+                'base' => ['user' => ['login' => self::EVENT_OWNER]],
+            ],
+            'sender' => ['html_url' => 'https://github.com/octocat'],
+            'repository' => [
+                'id' => (int) self::EVENT_REPOSITORY_ID,
+                'name' => self::EVENT_REPOSITORY_NAME,
+                'owner' => ['login' => self::EVENT_OWNER],
+            ],
+            'installation' => ['id' => 9876],
+        ]);
+
+        $events = $this->vcsAdapter->getEvents(GitHub::EVENT_PULL_REQUEST, $payload);
+
+        $this->assertCount(1, $events);
+        $this->assertSame('hubot', $events[0]['pullRequestAuthor']);
     }
 
     private function commentPayload(string $event, bool $pullRequest = true, ?int $replyTo = null): string
@@ -186,15 +258,86 @@ final class GitHubTest extends Base
         ];
 
         if ($event === GitHub::EVENT_ISSUE_COMMENT) {
-            $payload['issue'] = ['number' => 42] + ($pullRequest ? ['pull_request' => ['url' => 'https://api.github.com/pulls/42']] : []);
+            $payload['issue'] = ['number' => 42, 'user' => ['login' => 'hubot']] + ($pullRequest ? ['pull_request' => ['url' => 'https://api.github.com/pulls/42']] : []);
         } else {
-            $payload['pull_request'] = ['number' => 42];
+            $payload['pull_request'] = ['number' => 42, 'user' => ['login' => 'hubot']];
         }
 
         return (string) json_encode($payload);
     }
 
-    public function testUpdateCheckNamesTheStatusAfterItsSuite(): void
+    public function testUpdateCheckReportsACheckRun(): void
+    {
+        $adapter = new class (new Cache(new None())) extends GitHub {
+            /** @var list<array{method: string, path: string, params: array<mixed>}> */
+            public array $captured = [];
+
+            protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+            {
+                $this->captured[] = ['method' => $method, 'path' => $path, 'params' => $params];
+
+                return [
+                    'body' => $method === self::METHOD_GET ? ['check_runs' => [['id' => 7, 'external_id' => 'project/functions/billing']]] : [],
+                    'headers' => ['status-code' => 200],
+                ];
+            }
+        };
+
+        $adapter->updateCheck('owner', 'repo', 'abc123', 'pending', 'Billing', 'Building...', '- Function Billing', 'https://cloud.appwrite.io', 'Atlas Production', 'project/functions/billing');
+
+        $this->assertSame('/repos/owner/repo/check-runs/7', $adapter->captured[1]['path']);
+        $this->assertSame('in_progress', $adapter->captured[1]['params']['status']);
+    }
+
+    public function testUpdateCheckStartsANewRunOnRebuild(): void
+    {
+        $adapter = new class (new Cache(new None())) extends GitHub {
+            /** @var list<array{method: string, path: string}> */
+            public array $captured = [];
+
+            protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+            {
+                $this->captured[] = ['method' => $method, 'path' => $path];
+
+                return [
+                    'body' => $method === self::METHOD_GET ? ['check_runs' => [['id' => 7, 'status' => 'completed', 'external_id' => 'project/functions/billing']]] : [],
+                    'headers' => ['status-code' => 200],
+                ];
+            }
+        };
+
+        $adapter->updateCheck('owner', 'repo', 'abc123', 'queued', 'Billing', 'Starting...', key: 'project/functions/billing');
+
+        $this->assertSame(['method' => 'POST', 'path' => '/repos/owner/repo/check-runs'], $adapter->captured[1]);
+    }
+
+    public function testUpdateCheckFailsWhenRunsCannotBeListed(): void
+    {
+        $adapter = new class (new Cache(new None())) extends GitHub {
+            /** @var list<string> */
+            public array $methods = [];
+
+            protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+            {
+                $this->methods[] = $method;
+
+                return [
+                    'body' => [],
+                    'headers' => ['status-code' => 500],
+                ];
+            }
+        };
+
+        try {
+            $adapter->updateCheck('owner', 'repo', 'abc123', 'queued', 'Billing', 'Starting...');
+            $this->fail('Expected the failed listing to throw');
+        } catch (\Exception) {
+        }
+
+        $this->assertSame(['GET'], $adapter->methods);
+    }
+
+    public function testUpdateCheckFallsBackToAStatusWithoutChecks(): void
     {
         $adapter = new class (new Cache(new None())) extends GitHub {
             /** @var list<array{path: string, params: array<mixed>}> */
@@ -206,18 +349,14 @@ final class GitHubTest extends Base
 
                 return [
                     'body' => [],
-                    'headers' => ['status-code' => 201],
+                    'headers' => ['status-code' => $method === self::METHOD_GET ? 403 : 201],
                 ];
             }
         };
 
         $adapter->updateCheck('owner', 'repo', 'abc123', 'queued', 'Billing', 'Starting...', '- Function Billing', 'https://cloud.appwrite.io', 'Atlas Production');
-        $adapter->updateCheck('owner', 'repo', 'abc123', 'success', 'Billing', 'Build succeeded.');
 
-        // A commit status has no suite, so the project stays in its context
-        $this->assertSame('/repos/owner/repo/statuses/abc123', $adapter->captured[0]['path']);
-        $this->assertSame(['state' => 'pending', 'target_url' => 'https://cloud.appwrite.io', 'description' => 'Starting...', 'context' => 'Billing (Atlas Production)'], $adapter->captured[0]['params']);
-        $this->assertSame('Billing', $adapter->captured[1]['params']['context']);
+        $this->assertSame(['state' => 'pending', 'target_url' => 'https://cloud.appwrite.io', 'description' => 'Starting...', 'context' => 'Billing (Atlas Production)'], $adapter->captured[1]['params']);
     }
 
     public function testInitializeVariablesSignsJwtWithPemString(): void
@@ -442,19 +581,19 @@ final class GitHubTest extends Base
         $this->assertSame('appwrite', $adapter->getOwnerName('1234'));
     }
 
-    public function testCreateAccessTokenLimitsItToTheRepositories(): void
+    public function testCreateAccessTokenLimitsItToTheRepositoriesAndPermissions(): void
     {
         $captured = new \stdClass();
         $adapter = $this->accessTokenResponse(201, ['token' => 'ghs_scoped', 'expires_at' => '2026-10-27T16:00:00Z'], $captured);
 
-        $token = $adapter->createAccessToken([42]);
+        $token = $adapter->createAccessToken([42], ['contents' => 'read', 'pull_requests' => 'write']);
 
         $this->assertSame(['token' => 'ghs_scoped', 'expiresAt' => '2026-10-27T16:00:00Z'], $token);
         $this->assertSame([
             'method' => 'POST',
             'path' => '/app/installations/1234/access_tokens',
             'headers' => ['Authorization' => 'Bearer app-token'],
-            'params' => ['repository_ids' => [42]],
+            'params' => ['repository_ids' => [42], 'permissions' => ['contents' => 'read', 'pull_requests' => 'write']],
         ], $captured->request);
     }
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { isKnownLaunchEventId } from '@/lib/init/init-event-catalog'
 import {
   getInitMockCurrentDayDefault,
   isValidInitMockCurrentDay,
@@ -7,10 +8,7 @@ import {
   type InitTicketTypeId,
   isInitTicketTypeId,
 } from '@/lib/init/ticket-types'
-import {
-  USER_OS_VALUES,
-  type UserOsOverride,
-} from '@/lib/user-os'
+import { USER_OS_VALUES, type UserOsOverride } from '@/lib/user-os'
 import { clearLegacyPreLaunchDebugOverride } from '@/lib/pre-launch'
 import { syncMockLocaleCountryCookie } from '@/lib/locale/visitor-country'
 
@@ -26,6 +24,8 @@ export const DEBUG_OVERRIDE_KEYS = {
   showProjectAgents: 'debug:showProjectAgents',
   showConstruction: 'debug:showConstruction',
   mockInitCurrentDay: 'debug:mockInitCurrentDay',
+  /** When set, `/init` uses this launch event instead of the featured one. */
+  mockInitActiveEventId: 'debug:mockInitActiveEventId',
   mockInitTicketType: 'debug:mockInitTicketType',
   previewInitReactionConfetti: 'debug:previewInitReactionConfetti',
   initLowPowerAnimations: 'debug:initLowPowerAnimations',
@@ -100,6 +100,11 @@ export type DebugOverrides = {
    * never follows the calendar. Defaults to before-event.
    */
   mockInitCurrentDay: number
+  /**
+   * Force a specific Init launch event in this browser. Null uses production
+   * resolution (featured event, Init 4 by default).
+   */
+  mockInitActiveEventId: string | null
   /** Mock Init ticket tier on /init. Null uses account rules (gold, silver, standard). */
   mockInitTicketType: InitTicketTypeId | null
   /** When true, Init reaction confetti triggers with a single online user. */
@@ -181,7 +186,17 @@ function readInitDayFromStorage(key: string): number {
   return parsed
 }
 
-function readNullableInitTicketTypeFromStorage(key: string): InitTicketTypeId | null {
+function readNullableInitActiveEventIdFromStorage(key: string): string | null {
+  const storage = getStorage()
+  if (!storage) return null
+  const raw = storage.getItem(key)
+  if (raw === null || raw === 'auto') return null
+  return isKnownLaunchEventId(raw) ? raw : null
+}
+
+function readNullableInitTicketTypeFromStorage(
+  key: string,
+): InitTicketTypeId | null {
   const storage = getStorage()
   if (!storage) return null
   const raw = storage.getItem(key)
@@ -265,6 +280,9 @@ export function loadDebugOverrides(): DebugOverrides {
     ),
     mockInitCurrentDay: readInitDayFromStorage(
       DEBUG_OVERRIDE_KEYS.mockInitCurrentDay,
+    ),
+    mockInitActiveEventId: readNullableInitActiveEventIdFromStorage(
+      DEBUG_OVERRIDE_KEYS.mockInitActiveEventId,
     ),
     mockInitTicketType: readNullableInitTicketTypeFromStorage(
       DEBUG_OVERRIDE_KEYS.mockInitTicketType,
@@ -402,6 +420,7 @@ export function resetFeatureFlagsMenuDebugOverrides() {
 
 /** Keys toggled from Debug → Settings → Init (not other debug sections). */
 export const INIT_MENU_DEBUG_KEYS = [
+  'mockInitActiveEventId',
   'mockInitCurrentDay',
   'mockInitTicketType',
   'previewInitReactionConfetti',
@@ -421,7 +440,9 @@ export function resetInitMenuDebugOverrides() {
 }
 
 /** Reset a single debug override from the Feature flags submenu to its default. */
-export function resetFeatureFlagsMenuDebugOverride(key: FeatureFlagsMenuDebugKey) {
+export function resetFeatureFlagsMenuDebugOverride(
+  key: FeatureFlagsMenuDebugKey,
+) {
   const storage = getStorage()
   if (!storage) return
   storage.removeItem(DEBUG_OVERRIDE_KEYS[key])
@@ -459,6 +480,7 @@ export function getDefaultDebugOverrides(): DebugOverrides {
     showProjectAgents: false,
     showConstruction: getShowConstructionDefault(),
     mockInitCurrentDay: getInitMockCurrentDayDefault(),
+    mockInitActiveEventId: null,
     mockInitTicketType: null,
     previewInitReactionConfetti: false,
     initLowPowerAnimations: 'auto',

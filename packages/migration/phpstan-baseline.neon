@@ -43,6 +43,12 @@ parameters:
 			path: src/Destinations/Appwrite.php
 
 		-
+			message: '#^Cannot access offset ''accountDevices''\|''canonicalEmails''\|''corporateEmails''\|''disposableEmails''\|''freeEmails''\|''membershipsUserAccessedAt''\|''mfaFactors''\|''passkeyRpId''\|''passwordPwned''\|''passwordRotation''\|''passwordStrength''\|''realtimeGuests'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Destinations/Appwrite.php
+
+		-
 			message: '#^Cannot access offset ''anonymous'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
@@ -50,12 +56,6 @@ parameters:
 
 		-
 			message: '#^Cannot access offset ''array'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/Destinations/Appwrite.php
-
-		-
-			message: '#^Cannot access offset ''canonicalEmails''\|''corporateEmails''\|''disposableEmails''\|''freeEmails''\|''membershipsUserAccessedAt''\|''mfaFactors''\|''passkeyRpId''\|''passwordPwned''\|''passwordRotation''\|''passwordStrength''\|''realtimeGuests'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: src/Destinations/Appwrite.php
@@ -1346,6 +1346,12 @@ parameters:
 
 		-
 			message: '#^Parameter \#21 \$denyCorporateEmail of class Utopia\\Migration\\Resources\\Auth\\Policies constructor expects bool\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Resources/Auth/Policies.php
+
+		-
+			message: '#^Parameter \$accountDevices of class Utopia\\Migration\\Resources\\Auth\\Policies constructor expects bool\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Resources/Auth/Policies.php
@@ -2971,55 +2977,55 @@ parameters:
 			path: src/Resources/Templates/EmailTemplate.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$duration\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyAccountDevices\|Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$duration\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$enabled\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyAccountDevices\|Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$enabled\.$#'
 			identifier: property.notFound
 			count: 4
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$total\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyAccountDevices\|Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$total\.$#'
 			identifier: property.notFound
 			count: 3
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userAccessedAt\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyAccountDevices\|Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userAccessedAt\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userEmail\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyAccountDevices\|Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userEmail\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userId\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyAccountDevices\|Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userId\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userMFA\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyAccountDevices\|Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userMFA\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userName\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyAccountDevices\|Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userName\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userPhone\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyAccountDevices\|Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userPhone\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Sources/Appwrite.php
@@ -5263,7 +5269,7 @@ parameters:
 			path: src/Sources/Appwrite/Reader/Database.php
 
 		-
-			message: '#^Parameter \#1 \$attributes of static method Utopia\\Query\\Query\:\:select\(\) expects array\<string\>, array given\.$#'
+			message: '#^Parameter \#1 \$attributes of static method Utopia\\Query\\NativeQuery\:\:select\(\) expects array\<string\>, array given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Sources/Appwrite/Reader/Database.php
@@ -5305,13 +5311,13 @@ parameters:
 			path: src/Sources/Appwrite/Reader/Database.php
 
 		-
-			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array given\.$#'
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Sources/Appwrite/Reader/Database.php
 
 		-
-			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: src/Sources/Appwrite/Reader/Database.php
@@ -6943,7 +6949,7 @@ parameters:
 			path: tests/Destinations/AppwriteBigIntSpellingTest.php
 
 		-
-			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: tests/Destinations/AppwriteBigIntSpellingTest.php
@@ -6967,7 +6973,7 @@ parameters:
 			path: tests/Destinations/AppwriteCheckAttributeTest.php
 
 		-
-			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: tests/Destinations/AppwriteCheckAttributeTest.php
@@ -6976,10 +6982,22 @@ parameters:
 			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, Closure\(Throwable\)\: string given\.$#'
 			identifier: argument.type
 			count: 1
+			path: tests/Destinations/AppwriteColumnLimitTest.php
+
+		-
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/Destinations/AppwriteColumnLimitTest.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, Closure\(Throwable\)\: string given\.$#'
+			identifier: argument.type
+			count: 1
 			path: tests/Destinations/AppwriteColumnOverwriteTest.php
 
 		-
-			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: tests/Destinations/AppwriteColumnOverwriteTest.php
@@ -7033,7 +7051,7 @@ parameters:
 			path: tests/Destinations/AppwriteIndexLengthsTest.php
 
 		-
-			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: tests/Destinations/AppwriteIndexLengthsTest.php
@@ -7051,7 +7069,7 @@ parameters:
 			path: tests/Destinations/AppwriteLegacyAttributeMetadataTest.php
 
 		-
-			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: tests/Destinations/AppwriteLegacyAttributeMetadataTest.php
@@ -7069,7 +7087,7 @@ parameters:
 			path: tests/Destinations/AppwriteLegacyIndexMetadataTest.php
 
 		-
-			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: tests/Destinations/AppwriteLegacyIndexMetadataTest.php
@@ -7105,13 +7123,13 @@ parameters:
 			path: tests/Destinations/AppwriteRelationshipOnDeleteTest.php
 
 		-
-			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: tests/Destinations/AppwriteRelationshipOnDeleteTest.php
 
 		-
-			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: tests/Destinations/AppwriteRowImportTest.php
@@ -7135,7 +7153,7 @@ parameters:
 			path: tests/Destinations/AppwriteRunCompletionTest.php
 
 		-
-			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: tests/Destinations/AppwriteRunCompletionTest.php
@@ -7153,7 +7171,7 @@ parameters:
 			path: tests/Destinations/AppwriteSpatialIndexTest.php
 
 		-
-			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\Query\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
+			message: '#^Parameter \#2 \$values of static method Utopia\\Query\\NativeQuery\:\:equal\(\) expects array\<array\<mixed\>\|bool\|float\|int\|string\|null\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: tests/Destinations/AppwriteSpatialIndexTest.php

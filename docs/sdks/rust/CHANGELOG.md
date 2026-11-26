@@ -1,5 +1,104 @@
 # Change Log
 
+## 0.26.0
+
+* Added: `monitors` service to create, list, get, update and delete HTTP, DNS, TCP, SMTP and usage monitors
+* Added: `alerts` service to list and get alerts, and acknowledge them with `alerts.update`
+* Added: `organization.listEscalations`, `createEscalation`, `getEscalation`, `updateEscalation` and `deleteEscalation`
+* Added: `Monitor`, `Alert`, `Escalation` and `EscalationStep` models, their list models, and the `Monitor*` and `Alert*` enums
+
+## 0.25.0
+
+* Added: `messaging.create_bird_email_provider`, `update_bird_email_provider`, `create_bird_sms_provider` and `update_bird_sms_provider` for the Bird email and SMS providers
+* Added: Atlassian, Instagram, LINE, Linear, Netlify, Patreon, Railway, Reddit, Roblox, Strava, Vercel, VK and WorkOS to `OAuthProvider`
+* Added: `project` OAuth2 settings and models for Atlassian, Instagram, LINE, Linear, Netlify, Patreon, Railway, Reddit, Roblox, Strava, Vercel, VK and WorkOS
+
+## 0.24.0
+
+* Added: `account.create_ldap_session` for LDAP sign-in
+* Added: `project.update_ldap` and `project.create_ldap_test` to configure and test a project's LDAP directory, the `ProjectLDAPEncryption` enum and `ldap*` fields on `Project`
+* Added: `project.update_o_auth2_naver`, the `OAuth2Naver` model and `OAuthProvider::Naver`
+* Added: `project.delete_passwords` to force every user to reset their password
+* Added: `sites.update_analytics` and `analyticsEnabled` and `analyticsPropertyId` on `Site`
+* Added: `reason` on `DomainPrice`, set when a domain was not priced for the requested registration type
+* Added: `ImageFormat::Auto` on `Storage.getFilePreview` and the avatar endpoints, serving avif or webp when the `Accept` header supports it
+* Updated: requests send `X-Appwrite-Response-Format: 2.7.2`
+
+## 0.23.0
+
+* Updated: `project.list_environments`, `project.create_environment`, `project.get_environment`, `project.update_environment` return `Environment` models instead of `Project`
+* Added: `account.create_device`, `account.get_device`, `account.delete_device` and `account.update_device_session`, and the `Device` model
+* Added: `project.update_account_devices_policy`, `ProjectPolicyId::AccountDevices` and the `PolicyAccountDevices` model
+* Added: `project.update_o_auth2_vipps`, `project.update_o_auth2_vipps_sandbox` and the `OAuth2Vipps` model
+* Added: `OAuthProvider::Vipps` and `OAuthProvider::VippsSandbox`
+* Added: `proxy.update_function_rule`, `proxy.update_redirect_rule` and `proxy.update_site_rule`
+* Added: optional `schedule` on `waf` rule create and update methods and on `WafRule*` models
+* Added: `project.get_prefs` and `project.update_prefs` for project preferences
+* Added: `Client::set_environment` to act in a project environment
+* Added: `AppwriteMigrationResource::ProjectPreferences` to migrate project preferences
+* Added: `monitors.read`, `monitors.write`, `alerts.read`, `alerts.write`, `reviews.read` and `reviews.write` to `ProjectKeyScopes`
+* Added: `Organization.budget_notify`, `budget_critical` and `education_expires_at`
+* Added: `Project.environment_id`, `Session.user_name` and `ActivityEvent.reason`
+* Added: `ProxyRule.expire_at` and `certificate_status`
+* Updated: requests send response format `2.7.1`; README targets Appwrite 2.7.x
+
+## 0.22.0
+
+* Updated: requests send response format `2.6.2`
+* Updated: redirects are no longer followed; a 3xx response returns an `AppwriteError` naming its `Location`
+* Fixed: a `.` or `..` path segment returns an `AppwriteError` before the request is sent
+* Added: `migrations` service with `list`, `get`, `retry`, `delete`, Appwrite, Firebase, NHost and Supabase migrations, and CSV and JSON imports and exports
+* Added: `AppwriteMigrationResource`, `FirebaseMigrationResource`, `NHostMigrationResource`, `SupabaseMigrationResource` and `OnDuplicate` enums
+* Added: `Migration`, `MigrationList` and `MigrationReport` models
+* Added: `project.update_deny_realtime_guests_policy`, `ProjectPolicyId::DenyRealtimeGuests` and the `PolicyDenyRealtimeGuests` model
+* Added: `project.delete_sessions` to sign out every session in the project
+* Added: `deployment_retention`, `deployment_retention_max` and `deployments_retention_count` on `BillingPlan`
+* Added: `Python315`, `Deno29`, `Go127` and `Rust199` on `Runtime` and `BuildRuntime`
+* Fixed: path parameters and upload IDs are percent-encoded as one segment, so `/`, `?` and `#` stay in the value
+
+## 0.21.1
+
+* Fixed: decimals in responses, such as stddev and variance aggregates, parse exactly instead of sometimes losing their last digit
+
+## 0.21.0
+
+* Breaking: create and update methods for databases, collections, tables, attributes, columns, indexes, buckets, functions, sites, variables, topics, webhooks and keys take `description`
+* Breaking: `tables_db`, `documents_db` and `vectors_db` `create` and `update` take `description` before `specification`
+* Breaking: list methods in `activities`, `backups`, `domains`, `mongo`, `mysql` and `postgresql` take `total`
+* Breaking: `messaging.create_email` and `messaging.update_email` take `emails`
+* Breaking: `project.update_password_dictionary_policy` and `update_password_personal_data_policy` take `deny_list`
+* Breaking: the minimum supported Rust is 1.85
+* Breaking: `storage.create_bucket` and `update_bucket` take `strip_metadata` after `description`
+* Added: `create_query` on `databases`, `documents_db` and `tables_db` to send list queries in the request body
+* Added: `account.list_memberships`
+* Added: `description` on the matching models, `deny_list` on the policy models and `BillingPlan.functions_allow_cron`
+* Added: `join_on`, `right_join_on` and `full_outer_join_on` on the query builder
+* Added: `strip_metadata` on the `Bucket` model
+
+## 0.20.0
+
+* Breaking: requests send response format `2.5.0`; `Project.dev_keys` was removed
+* Breaking: removed `account.list_logs` and `users.list_logs` with the `Log` and `LogList` models
+* Breaking: removed `organization.create_key`, `get_key`, `list_keys`, `update_key` and `delete_key`, and `OrganizationKeyScopes`; use `organization.list_project_keys`, `get_project_key`, `update_project_key` and `delete_project_key` instead
+* Breaking: removed `BillingPlanGroup::Starter`; use `BillingPlanGroup::Free`
+* Breaking: `project.update_o_auth2_kakao` takes `enabled` before `prompt`
+* Breaking: `ExecutionMethod::default()` is now `POST`, the spec default, instead of `GET`
+* Breaking: removed `Block` fields `project_name`, `region`, `organization_name`, `organization_id`, `billing_plan` and `reason`
+* Breaking: `list_specifications` returns each specification's prices and overage rates on the row itself. Removed the list-level `pricing` field and the `DedicatedDatabaseSpecificationPricing` model
+* Breaking: `BackupRestoration.options` is a `serde_json::Value`, not a `String`
+* Breaking: billing, backup, restoration and dedicated database fields the API can omit are `Option`
+* Breaking: `prompt`, `native_client_ids`, `native_enabled`, `fingerprints` and similar fields are no longer `Option`
+* Breaking: `functions.update` takes `email_enabled`
+* Breaking: `mongo`, `mysql` and `postgresql` `create_restoration` take `restore_mode`, `target_name` and `auto_promote` after `target_time`
+* Added: `Client::single_upload` for endpoints that take a file in one request
+* Added: `Topic` helper to build MQTT topics for push messages
+* Added: `mongo`, `mysql` and `postgresql` `promote_restoration`, and `DedicatedDatabaseRestoration.restore_mode`
+* Added: `proxy.create_smtp_rule`, the `ProxyRuleProtocol` enum and `ProxyRule.protocol`
+* Added: `Function.email_enabled` and `ExecutionTrigger::Email`
+* Added: `Query` aggregates (`count`, `count_distinct`, `sum`, `avg`, `min`, `max` and more), `group_by`, `having`, `distinct`, joins, `relationship`, `covers`, `spatial_equals` and `page`
+* Added: `Query::builder()` to chain queries into a list
+* Updated: models fill fields missing from a response with their documented defaults
+
 ## 0.19.0
 
 * Breaking: new optional parameters are appended to existing methods (e.g. `delete_sessions`, the `total` lists, OAuth2 `prompt`); new enum variants and model fields break exhaustive matches and struct literals

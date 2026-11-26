@@ -18,13 +18,16 @@ const DISPLAY_NAME_OVERRIDES: Record<string, string> = {
   [OAuthProvider.PaypalSandbox]: 'PayPal Sandbox',
   [OAuthProvider.Tiktok]: 'TikTok',
   [OAuthProvider.TradeshiftBox]: 'Tradeshift Sandbox',
+  [OAuthProvider.Vk]: 'VK',
   [OAuthProvider.Vipps]: 'Vipps MobilePay',
   [OAuthProvider.VippsSandbox]: 'Vipps MobilePay Sandbox',
   [OAuthProvider.Oidc]: 'OpenID Connect',
   [OAuthProvider.Fusionauth]: 'FusionAuth',
   [OAuthProvider.Huggingface]: 'Hugging Face',
   [OAuthProvider.Keycloak]: 'Keycloak',
+  [OAuthProvider.Line]: 'LINE',
   [OAuthProvider.Wordpress]: 'WordPress',
+  [OAuthProvider.Workos]: 'WorkOS',
 }
 
 export function getOAuth2ProviderDisplayName(providerId: string): string {
@@ -63,13 +66,30 @@ export const OAUTH2_NEW_BADGE_DAYS = 45
  */
 export const OAUTH2_NEW_PROVIDER_LAUNCH_DATES: Partial<Record<string, string>> =
   {
+    [OAuthProvider.Atlassian]: '2026-11-18',
+    [OAuthProvider.Bird]: '2026-11-19',
+    [OAuthProvider.Clerk]: '2026-11-26',
     [OAuthProvider.Cloudflare]: '2026-09-08',
     [OAuthProvider.Huggingface]: '2026-08-26',
+    [OAuthProvider.Instagram]: '2026-11-18',
     [OAuthProvider.Kakao]: '2026-09-08',
+    [OAuthProvider.Line]: '2026-11-18',
+    [OAuthProvider.Linear]: '2026-11-18',
+    [OAuthProvider.Naver]: '2026-11-12',
+    [OAuthProvider.Netlify]: '2026-11-18',
+    [OAuthProvider.Patreon]: '2026-11-18',
+    [OAuthProvider.Railway]: '2026-11-18',
+    [OAuthProvider.Reddit]: '2026-11-18',
     [OAuthProvider.Resend]: '2026-09-08',
+    [OAuthProvider.Roblox]: '2026-11-18',
+    [OAuthProvider.Strava]: '2026-11-18',
+    [OAuthProvider.Supabase]: '2026-11-23',
     [OAuthProvider.Tiktok]: '2026-09-08',
+    [OAuthProvider.Vercel]: '2026-11-18',
     [OAuthProvider.Vipps]: '2026-11-04',
+    [OAuthProvider.Vk]: '2026-11-18',
     [OAuthProvider.Webflow]: '2026-09-29',
+    [OAuthProvider.Workos]: '2026-11-17',
   }
 
 function parseUtcDate(isoDate: string): Date {

@@ -14,6 +14,7 @@ import {
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import {
+  AppwriteException,
   Query,
   ID,
   Status,
@@ -29,7 +30,10 @@ import {
 import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
 import { fetchProjectById } from '@/lib/project-settings'
 import { registerProjectRegionsFromProjects } from '@/lib/project-region'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import {
+  getActiveProfileFeatures,
+  isCloudProfile,
+} from '@/lib/console-profiles'
 import {
   fetchAllVariables,
   getVariableValueError,
@@ -38,6 +42,7 @@ import {
 import {
   ensureFingerprintServerTimeSynced,
   generateFingerprintToken,
+  resetFingerprintCache,
 } from '@/lib/fingerprint'
 import {
   DEFAULT_STALE_TIME,
@@ -151,26 +156,24 @@ function getProjectStatusQueries(): string[] {
 }
 
 /**
- * Legacy console project list search: fulltext on the `search` attribute OR
- * substring match on `labels` (e.g. finding a project by ID used as a label).
+ * Project list search: fulltext on the `search` attribute OR substring match on
+ * `labels`, plus an exact `$id` match when the term could be a project ID, so a
+ * pasted ID resolves in the same request.
  * Prefer this over the list endpoint's `search` param, which does not mirror that OR.
  */
 function projectListSearchOrQuery(trimmedSearch: string): string {
   return Query.or([
     Query.search('search', trimmedSearch),
     Query.contains('labels', trimmedSearch),
+    ...(isProbableConsoleProjectId(trimmedSearch)
+      ? [Query.equal('$id', trimmedSearch)]
+      : []),
   ])
 }
 
 /** Console project custom ID rules (a–z, 0–9, hyphen; max 36; no leading special char). */
 function isProbableConsoleProjectId(value: string): boolean {
   return /^[a-z0-9][a-z0-9-]{0,35}$/i.test(value)
-}
-
-function projectMatchesActiveListStatus(project: Models.Project): boolean {
-  if (!getActiveProfileFeatures().billing) return true
-  const status = project.status
-  return status == null || status !== 'archived'
 }
 
 // ============================================================================
@@ -187,6 +190,23 @@ function projectMatchesActiveListStatus(project: Models.Project): boolean {
  */
 export async function fetchProject(projectId: string) {
   return fetchProjectById(projectId)
+}
+
+/**
+ * Query function to fetch the project itself, whatever environment the Console
+ * is in for it
+ *
+ * Inside an environment `fetchProject` answers as the environment: same ID,
+ * the environment's name. This one leaves the environment, for what belongs to
+ * the project and not to any of its environments, starting with its name.
+ *
+ * @param projectId - The project ID
+ * @returns Project data from the API
+ */
+export async function fetchProductionProject(projectId: string) {
+  return sdk
+    .forProject(projectId, undefined, { environment: null })
+    .project.get()
 }
 
 /**
@@ -224,7 +244,6 @@ export async function fetchActiveProjects(
   if (isRestricted && allowedIds.length === 0) {
     return { projects: [], total: 0 }
   }
-  const allowedIdSet = new Set(allowedIds)
   const restrictQueries = isRestricted
     ? [
         allowedIds.length === 1
@@ -234,7 +253,8 @@ export async function fetchActiveProjects(
     : []
 
   // Environments are reached through their project's switcher, not listed beside it.
-  const hideEnvironments = getActiveProfileFeatures().projectEnvironments
+  // Cloud only: self-hosted has no environments and rejects `parentId` in project list queries.
+  const hideEnvironments = isCloudProfile()
   const statusQueries = [
     ...getProjectStatusQueries(),
     ...(hideEnvironments ? [Query.isNull('parentId')] : []),
@@ -260,29 +280,6 @@ export async function fetchActiveProjects(
     excludeProjectIds.every((id) => typeof id === 'string' && id.length > 0)
       ? excludeProjectIds
       : []
-
-  // `projects.list` only documents filters on name/teamId/labels/search - not `$id`.
-  // Pasting a project ID never hits fulltext/labels, so resolve ID-shaped terms via get.
-  if (trimmedSearch && isProbableConsoleProjectId(trimmedSearch)) {
-    try {
-      const direct = await fetchProjectById(trimmedSearch)
-      if (
-        !excludeIds.includes(direct.$id) &&
-        direct.teamId === teamId &&
-        // Pasting an id must not reveal a project outside the member's scope.
-        (!isRestricted || allowedIdSet.has(direct.$id)) &&
-        projectMatchesActiveListStatus(direct) &&
-        !(hideEnvironments && direct.parentId)
-      ) {
-        return {
-          projects: page === 0 ? [direct] : [],
-          total: 1,
-        }
-      }
-    } catch {
-      // Not found, wrong console, or no access - fall through to list search.
-    }
-  }
 
   const queries =
     excludeIds.length > 0
@@ -341,9 +338,7 @@ export async function fetchProjectsByIds(
       Query.select(getProjectListSelect()),
       Query.equal('teamId', teamId),
       ...getProjectStatusQueries(),
-      ...(getActiveProfileFeatures().projectEnvironments
-        ? [Query.isNull('parentId')]
-        : []),
+      ...(isCloudProfile() ? [Query.isNull('parentId')] : []),
       idQuery,
       Query.limit(validIds.length),
     ],
@@ -631,7 +626,7 @@ export function projectsForTeamInfiniteQueryKey(
     search,
     excludeKey,
     projectRestrictionKey(restrictToProjectIds),
-    getActiveProfileFeatures().projectEnvironments,
+    isCloudProfile(),
   ]
 }
 
@@ -651,7 +646,7 @@ export function activeProjectsTotalQueryOptions(
       'total',
       orgId,
       restrictKey,
-      getActiveProfileFeatures().projectEnvironments,
+      isCloudProfile(),
     ],
     queryFn: () =>
       fetchActiveProjects(orgId!, 0, 1, '', undefined, restrictToProjectIds),
@@ -688,7 +683,7 @@ export function activeProjectsQueryOptions(
       search,
       excludeKey,
       restrictKey,
-      getActiveProfileFeatures().projectEnvironments,
+      isCloudProfile(),
     ],
     queryFn: () =>
       fetchActiveProjects(
@@ -722,13 +717,7 @@ export function pinnedProjectsQueryOptions(
   const idsKey =
     projectIds.length > 0 ? projectIds.slice().sort().join(',') : ''
   return queryOptions({
-    queryKey: [
-      'projects',
-      'pinned',
-      orgId,
-      idsKey,
-      getActiveProfileFeatures().projectEnvironments,
-    ],
+    queryKey: ['projects', 'pinned', orgId, idsKey, isCloudProfile()],
     queryFn: () => fetchProjectsByIds(orgId!, projectIds),
     enabled: !!orgId,
     staleTime: DEFAULT_STALE_TIME,
@@ -752,13 +741,7 @@ export function projectsByIdsQueryOptions(
   const idsKey =
     projectIds.length > 0 ? projectIds.slice().sort().join(',') : ''
   return queryOptions({
-    queryKey: [
-      'projects',
-      'by-ids',
-      orgId,
-      idsKey,
-      getActiveProfileFeatures().projectEnvironments,
-    ],
+    queryKey: ['projects', 'by-ids', orgId, idsKey, isCloudProfile()],
     queryFn: () => fetchProjectsByIds(orgId!, projectIds),
     enabled: !!orgId && projectIds.length > 0,
     staleTime: DEFAULT_STALE_TIME,
@@ -796,6 +779,28 @@ export function projectQueryOptions(projectId: string | null | undefined) {
   return queryOptions({
     queryKey: ['project', projectId],
     queryFn: () => fetchProject(projectId!),
+    enabled: !!projectId,
+    staleTime: LONG_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for the project itself, whatever environment the Console is in
+ *
+ * Keyed under the project's own query so renaming the project refreshes both,
+ * and apart from it so the environment's answer never stands in for it.
+ */
+export function productionProjectQueryOptions(
+  projectId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['project', projectId, 'production'],
+    queryFn: () => fetchProductionProject(projectId!),
     enabled: !!projectId,
     staleTime: LONG_STALE_TIME,
     retry: false,
@@ -854,6 +859,38 @@ export function useProject(projectId: string | undefined) {
   }
 }
 
+/**
+ * Hook to fetch the project an environment belongs to
+ *
+ * Inside an environment `useProject` is the environment, under the project's
+ * ID. This is the project itself, for where the two are told apart: the
+ * breadcrumb, the project list, what a destructive action names.
+ *
+ * @param projectId - The project ID, or undefined outside an environment so no request is made
+ * @returns The project with loading state
+ */
+export function useProductionProject(projectId: string | undefined) {
+  const { data: projectData, isLoading } = useQuery(
+    productionProjectQueryOptions(projectId),
+  )
+
+  const project = useMemo(() => {
+    if (!projectData) return null
+
+    return {
+      $id: projectData.$id,
+      name: projectData.name,
+      teamId: projectData.teamId,
+      region: projectData.region || 'unknown',
+      createdAt: projectData.$createdAt || new Date().toISOString(),
+      icon: projectData.name.charAt(0).toUpperCase(),
+      archived: projectData.status === 'archived',
+    } as Project
+  }, [projectData])
+
+  return { project, projectData, isLoading }
+}
+
 const CONSOLE_FINGERPRINT_HEADER = 'X-Appwrite-Console-Fingerprint'
 
 function normalizeProjectRegion(region?: string | null): string | undefined {
@@ -895,20 +932,35 @@ export function useResumeProject(projectId: string | undefined) {
         headers?: Record<string, string>
         config?: { endpoint?: string; project?: string }
       }
-      await ensureFingerprintServerTimeSynced(
-        client.config?.endpoint ?? '',
-        client.config?.project ?? 'console',
-      )
-      const fingerprint = await generateFingerprintToken()
-      if (client.headers)
-        client.headers[CONSOLE_FINGERPRINT_HEADER] = fingerprint
+      const resume = async () => {
+        await ensureFingerprintServerTimeSynced(
+          client.config?.endpoint ?? '',
+          client.config?.project ?? 'console',
+        )
+        const fingerprint = await generateFingerprintToken()
+        if (client.headers)
+          client.headers[CONSOLE_FINGERPRINT_HEADER] = fingerprint
+        try {
+          await sdk.forConsole.projects.updateStatus({
+            projectId,
+            status: Status.Active,
+          })
+        } finally {
+          if (client.headers) delete client.headers[CONSOLE_FINGERPRINT_HEADER]
+        }
+      }
       try {
-        await sdk.forConsole.projects.updateStatus({
-          projectId,
-          status: Status.Active,
-        })
-      } finally {
-        if (client.headers) delete client.headers[CONSOLE_FINGERPRINT_HEADER]
+        await resume()
+      } catch (error) {
+        if (
+          !(error instanceof AppwriteException) ||
+          error.code !== 401 ||
+          error.message !== 'Invalid console fingerprint'
+        )
+          throw error
+        // Re-sync the clock and re-collect signals, as a page reload would.
+        resetFingerprintCache()
+        await resume()
       }
     },
     onSuccess: async () => {
@@ -964,7 +1016,7 @@ export function useProjectsForTeam(
       page,
       limit,
       search,
-      getActiveProfileFeatures().projectEnvironments,
+      isCloudProfile(),
     ],
     queryFn: () => fetchActiveProjects(teamId!, page, limit, search),
     enabled: !!teamId,

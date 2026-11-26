@@ -6,10 +6,13 @@
  *
  * Objects merge key by key and this branch wins on values both define. Lists merge
  * by identity (a parameter's name and location, a $ref, a tag or enum value's name),
- * so Cloud-only parameters, properties and enum values survive. Removals and
- * renames are not carried.
+ * so Cloud-only parameters, properties and enum values survive. An operation this
+ * branch moved to another path or method replaces the pinned one; removals are not carried.
  *
- * Needs PHP with swoole and `composer install` at the repository root.
+ * Runs the Appwrite CLI in the `appwrite` Compose service's image (`appwrite-dev`):
+ * Appwrite boots only with the utopia extension, which a host PHP does not load.
+ * Build the image first (`docker compose build appwrite` at the repository root); no
+ * service needs to run.
  *
  * Usage:
  *   bun run sdk:preview               build and install it into node_modules
@@ -95,8 +98,46 @@ const merge = (base: unknown, overlay: unknown): unknown => {
   return overlay
 }
 
+const operations = (spec: Spec): Map<string, string> => {
+  const found = new Map<string, string>()
+  for (const [path, item] of Object.entries(spec.paths ?? {})) {
+    if (!isObject(item)) {
+      continue
+    }
+    for (const [method, operation] of Object.entries(item)) {
+      if (isObject(operation) && typeof operation.operationId === 'string') {
+        found.set(operation.operationId, `${path} ${method}`)
+      }
+    }
+  }
+  return found
+}
+
+// An operation this branch moved to another path or HTTP method replaces the pinned one,
+// or the SDK would generate its method twice.
+const withoutMoved = (base: Spec, overlay: Spec): Spec => {
+  const moved = operations(overlay)
+  const paths: Record<string, unknown> = {}
+  for (const [path, item] of Object.entries(base.paths ?? {})) {
+    if (!isObject(item)) {
+      paths[path] = item
+      continue
+    }
+    paths[path] = Object.fromEntries(
+      Object.entries(item).filter(([method, operation]) => {
+        if (!isObject(operation) || typeof operation.operationId !== 'string') {
+          return true
+        }
+        const location = moved.get(operation.operationId)
+        return location === undefined || location === `${path} ${method}`
+      }),
+    )
+  }
+  return { ...base, paths }
+}
+
 const mergeSpecs = (base: Spec, overlay: Spec): Spec => ({
-  ...(merge(base, overlay) as Spec),
+  ...(merge(withoutMoved(base, overlay), overlay) as Spec),
   info: base.info,
   servers: base.servers,
 })
@@ -116,6 +157,32 @@ const run = (command: string[], cwd: string) => {
   }
 }
 
+// The CLI in a throwaway container of the `appwrite` service's image, as this user, so
+// the specs and SDK it writes stay writable here. Only the directories it reads or
+// writes are mounted, with no network and no Docker socket: this runs a branch's code.
+const MOUNTS = ['app', 'src', 'packages', 'docs', 'public']
+
+const cli = (args: string[]) =>
+  run(
+    [
+      'docker',
+      'run',
+      '--rm',
+      '--network=none',
+      `--user=${process.getuid?.()}:${process.getgid?.()}`,
+      '--env-file=.env',
+      '--env=_APP_SDK_PREVIEW=enabled',
+      ...MOUNTS.map(
+        (path) => `--volume=${join(REPOSITORY, path)}:/usr/src/code/${path}`,
+      ),
+      '--entrypoint=php',
+      'appwrite-dev',
+      'app/cli.php',
+      ...args,
+    ],
+    REPOSITORY,
+  )
+
 const readSpec = (path: string): Spec => JSON.parse(readFileSync(path, 'utf8'))
 
 function main() {
@@ -126,17 +193,7 @@ function main() {
     )
   }
 
-  run(
-    [
-      'php',
-      'app/cli.php',
-      'specs',
-      '--version=latest',
-      '--mode=normal',
-      '--git=no',
-    ],
-    REPOSITORY,
-  )
+  cli(['specs', '--version=latest', '--mode=normal', '--git=no'])
 
   const base = readSpec(pinned)
   const branch = readSpec(join(SPECS, 'open-api3-latest-console.json'))
@@ -150,18 +207,13 @@ function main() {
   console.log(`This branch: ${count(branch)}`)
   console.log(`Preview: ${count(preview)}`)
 
-  run(
-    [
-      'php',
-      'app/cli.php',
-      'sdks',
-      '--platform=console',
-      '--sdk=web',
-      `--version=${VERSION}`,
-      '--git=no',
-    ],
-    REPOSITORY,
-  )
+  cli([
+    'sdks',
+    '--platform=console',
+    '--sdk=web',
+    `--version=${VERSION}`,
+    '--git=no',
+  ])
   run(['npm', 'install', '--no-audit', '--no-fund'], SDK)
   run(['npm', 'run', 'build'], SDK)
 

@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Utopia\Validator\Tests\JSON;
 
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Validator\JSON\ObjectValidator;
 use Utopia\Validator\Validator;
 
+#[RequiresPhpExtension('utopia')]
 final class ObjectValidatorTest extends TestCase
 {
     public function testAcceptsDecodedObjects(): void

@@ -394,21 +394,21 @@ final class AvatarsCustomClientTest extends Scope
     {
         $this->assertNotEmpty($blob);
 
-        $image = new \Imagick();
-        $image->readImageBlob($blob);
+        $image = \imagecreatefromstring($blob);
+        $this->assertNotFalse($image);
 
         $samples = [
             [0, 0],
-            [$image->getImageWidth() - 1, $image->getImageHeight() - 1],
-            [\intdiv($image->getImageWidth(), 2), \intdiv($image->getImageHeight(), 2)],
+            [\imagesx($image) - 1, \imagesy($image) - 1],
+            [\intdiv(\imagesx($image), 2), \intdiv(\imagesy($image), 2)],
         ];
 
         foreach ($samples as [$x, $y]) {
-            $color = $image->getImagePixelColor($x, $y)->getColor();
+            $color = \imagecolorsforindex($image, (int) \imagecolorat($image, $x, $y));
 
             $this->assertSame(
                 self::OAUTH2_PHOTO_COLOR,
-                ['r' => $color['r'], 'g' => $color['g'], 'b' => $color['b']],
+                ['r' => $color['red'], 'g' => $color['green'], 'b' => $color['blue']],
                 "Pixel at {$x},{$y} is not the OAuth2 provider photo — the avatar chain fell through to another provider."
             );
         }
@@ -605,10 +605,9 @@ final class AvatarsCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertPhotoFallback($response['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($response['body']);
+        $image = \getimagesizefromstring($response['body']);
 
-        $this->assertSame([100, 100], [$image->getImageWidth(), $image->getImageHeight()]);
+        $this->assertSame([100, 100], [$image[0], $image[1]]);
 
         /**
          * Test for SUCCESS — a photo can be set again after deletion
@@ -617,6 +616,44 @@ final class AvatarsCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertSamePhoto($red, $this->getPhoto($headers));
+    }
+
+    public function testUpdatePhotoOtherUser(): void
+    {
+        $attacker = $this->createPhotoUser();
+        $victim = $this->createPhotoUser();
+        $victimId = $this->getPhotoUserId($victim);
+        $red = $this->createImage('#FF0000', 'png');
+        $blue = $this->createImage('#0000FF', 'png');
+
+        $response = $this->uploadPhoto($victim, $red, 'photo.png');
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE — a session cannot upload over another user's photo
+         */
+        $response = $this->uploadPhoto($attacker, $blue, 'photo.png', params: ['userId' => $victimId]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals(Exception::GENERAL_UNAUTHORIZED_SCOPE, $response['body']['type']);
+        $this->assertSamePhoto($red, $this->getPhoto($victim));
+
+        /**
+         * Test for FAILURE — nor delete it
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/avatars/photo', \array_merge($attacker, ['content-type' => 'application/json']), ['userId' => $victimId]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals(Exception::GENERAL_UNAUTHORIZED_SCOPE, $response['body']['type']);
+        $this->assertSamePhoto($red, $this->getPhoto($victim));
+
+        /**
+         * Test for SUCCESS — passing your own ID changes your own photo
+         */
+        $response = $this->uploadPhoto($victim, $blue, 'photo.png', params: ['userId' => $victimId]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSamePhoto($blue, $this->getPhoto($victim));
     }
 
     public function testDeletePhotoOverridesIdentityPhoto(): void

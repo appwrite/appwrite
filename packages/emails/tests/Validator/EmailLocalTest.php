@@ -2,9 +2,11 @@
 
 namespace Utopia\Emails\Tests\Validator;
 
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Emails\Validator\EmailLocal;
 
+#[RequiresPhpExtension('utopia')]
 class EmailLocalTest extends TestCase
 {
     public function test_valid_email_local(): void

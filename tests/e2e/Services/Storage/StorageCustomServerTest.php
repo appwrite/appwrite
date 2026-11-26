@@ -84,12 +84,15 @@ final class StorageCustomServerTest extends Scope
         if ($source === false) {
             $this->fail('Failed to create a temporary image');
         }
-        $subject = new \Imagick(__DIR__ . '/../../../resources/disk-a/kitten-1.jpg');
-        $subject->resizeImage(900, 0, \Imagick::FILTER_LANCZOS, 1);
-        $canvas = new \Imagick();
-        $canvas->newImage(2400, 1920, 'white', 'png');
-        $canvas->compositeImage($subject, \Imagick::COMPOSITE_OVER, 1450, 0);
-        $canvas->writeImage($source);
+        $subject = \imagecreatefromjpeg(__DIR__ . '/../../../resources/disk-a/kitten-1.jpg');
+        $this->assertNotFalse($subject);
+        $subject = \imagescale($subject, 900);
+        $this->assertNotFalse($subject);
+        $canvas = \imagecreatetruecolor(2400, 1920);
+        $this->assertNotFalse($canvas);
+        \imagefill($canvas, 0, 0, 0xFFFFFF);
+        \imagecopy($canvas, $subject, 1450, 0, 0, 0, \imagesx($subject), \imagesy($subject));
+        \imagepng($canvas, $source);
 
         $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
             'content-type' => 'multipart/form-data',
@@ -132,24 +135,20 @@ final class StorageCustomServerTest extends Scope
         $this->assertEquals('miss', $preview['headers']['x-appwrite-cache']);
         $this->assertNotEmpty($preview['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($preview['body']);
-        $this->assertSame(120, $image->getImageWidth());
-        $this->assertSame(320, $image->getImageHeight());
+        $size = \getimagesizefromstring($preview['body']);
+        $this->assertSame(120, $size[0]);
+        $this->assertSame(320, $size[1]);
+        $image = $this->getImageSignature($preview['body']);
 
         $center = $this->client->call(Client::METHOD_GET, $path, $headers, [...$params, 'gravity' => 'center']);
-        $centerImage = new \Imagick();
-        $centerImage->readImageBlob($center['body']);
-        $this->assertNotSame($centerImage->getImageSignature(), $image->getImageSignature());
+        $this->assertNotSame($this->getImageSignature($center['body']), $image);
 
         $cached = [];
         $this->assertEventually(function () use (&$cached, $path, $headers, $params, $image): void {
             $cached = $this->client->call(Client::METHOD_GET, $path, $headers, $params);
 
             $this->assertSame('hit', $cached['headers']['x-appwrite-cache']);
-            $cachedImage = new \Imagick();
-            $cachedImage->readImageBlob($cached['body']);
-            $this->assertSame($image->getImageSignature(), $cachedImage->getImageSignature());
+            $this->assertSame($image, $this->getImageSignature($cached['body']));
         });
 
         $this->assertEquals(200, $cached['headers']['status-code']);
@@ -433,13 +432,30 @@ final class StorageCustomServerTest extends Scope
 
         [$headers, $filesystem] = $this->getCacheFixture();
         $path = $this->createPreviewFile($headers);
-        foreach (\range(20, 31) as $width) {
-            $preview = $this->client->call(Client::METHOD_GET, $path, $headers, ['width' => $width, 'output' => 'png']);
-            $this->assertSame(200, $preview['headers']['status-code']);
-        }
 
         // The first row's filesystem entry goes before its device purge fails, so it takes a second to tell.
-        $this->assertEventually(fn () => $this->assertGreaterThanOrEqual(2, \count($this->getCacheKeys($filesystem))));
+        // A key's store is picked by its hash, half each way, so a fixed run of sizes can leave fewer than two
+        // on the filesystem (13 runs in 4096 for twelve sizes): add sizes until two have landed there.
+        $width = 20;
+        $this->assertEventually(function () use (&$width, $path, $headers, $filesystem): void {
+            if (\count($this->getCacheKeys($filesystem)) < 2 && $width < 60) {
+                $preview = $this->client->call(Client::METHOD_GET, $path, $headers, ['width' => $width++, 'output' => 'png']);
+                $this->assertSame(200, $preview['headers']['status-code']);
+            }
+            $this->assertGreaterThanOrEqual(2, \count($this->getCacheKeys($filesystem)));
+        }, 240_000, 100);
+
+        // A preview's cache row and file are written in the shutdown hook, after its response, so
+        // the bucket DELETE could list rows before the last ones exist and orphan their files. Nothing
+        // reports a finished hook; the filesystem holding the same keys across two reads does.
+        /** @var list<string>|null $previous the closure updates it by reference */
+        $previous = null;
+        $this->assertEventually(function () use (&$previous, $filesystem): void {
+            $keys = $this->getCacheKeys($filesystem);
+            $settled = $keys === $previous;
+            $previous = $keys;
+            $this->assertTrue($settled, 'the filesystem cache is still being written');
+        }, 30_000, 1000);
 
         $delete = $this->client->call(Client::METHOD_DELETE, \dirname($path), $headers);
         $this->assertSame(204, $delete['headers']['status-code']);
@@ -572,10 +588,7 @@ final class StorageCustomServerTest extends Scope
      */
     private function getImageSignature(string $body): string
     {
-        $image = new \Imagick();
-        $image->readImageBlob($body);
-
-        return $image->getImageSignature();
+        return \hash('sha256', $this->getImagePixels($body));
     }
 
     private function copyCacheEntryToFilesystem(Device $filesystem, Device $device, string $key): void
@@ -1350,40 +1363,98 @@ final class StorageCustomServerTest extends Scope
     {
         $path = \sys_get_temp_dir() . '/strip-photo-' . \uniqid() . '.jpg';
 
-        $image = new \Imagick();
-        $image->newImage($width, $height, new \ImagickPixel('skyblue'));
+        $image = \imagecreatetruecolor($width, $height);
+        $this->assertNotFalse($image);
+        \imagefill($image, 0, 0, 0x87CEEB);
         if ($noise) {
-            $image->addNoiseImage(\Imagick::NOISE_RANDOM);
-            $image->setImageCompressionQuality(100);
+            for ($y = 0; $y < $height; $y++) {
+                for ($x = 0; $x < $width; $x++) {
+                    \imagesetpixel($image, $x, $y, \mt_rand(0, 0xFFFFFF));
+                }
+            }
         }
-        $image->setImageFormat('jpeg');
+        \ob_start();
+        \imagejpeg($image, null, $noise ? 100 : -1);
+        $photo = (string) \ob_get_clean();
 
         // tagged.jpg carries a location, camera, capture time, orientation, and XMP and IPTC creators.
-        $tagged = new \Imagick(__DIR__ . '/../../../resources/disk-a/tagged.jpg');
-        foreach ($tagged->getImageProfiles('*', true) as $name => $profile) {
-            $image->profileImage($name, $profile);
+        $metadata = '';
+        foreach ($this->readSegments((string) \file_get_contents(__DIR__ . '/../../../resources/disk-a/tagged.jpg')) as [$marker, $segment]) {
+            if ($marker === 0xE1 || $marker === 0xED) {
+                $metadata .= "\xFF" . \chr($marker) . \pack('n', \strlen($segment) + 2) . $segment;
+            }
         }
-        // Imagick writes the orientation from its own setting, not from the copied EXIF.
-        $image->setImageOrientation($tagged->getImageOrientation());
-        $image->writeImage($path);
+        // They go after the JFIF header, which is the first thing GD writes.
+        $header = 4 + \unpack('n', $photo, 4)[1];
+        \file_put_contents($path, \substr($photo, 0, $header) . $metadata . \substr($photo, $header));
 
         return $path;
     }
 
     /**
-     * @return array<string, string> EXIF tags by name, plus XMP and IPTC when those blocks are present
+     * @return array<array{int, string}> The marker and contents of each JPEG segment before the image data
+     */
+    private function readSegments(string $jpeg): array
+    {
+        $segments = [];
+        $offset = 2;
+        while ($offset + 4 <= \strlen($jpeg) && $jpeg[$offset] === "\xFF" && $jpeg[$offset + 1] !== "\xDA") {
+            $length = \unpack('n', $jpeg, $offset + 2)[1];
+            $segments[] = [\ord($jpeg[$offset + 1]), \substr($jpeg, $offset + 4, $length - 2)];
+            $offset += 2 + $length;
+        }
+
+        return $segments;
+    }
+
+    /**
+     * @return array<string, string> The EXIF tags the tests look for by name, plus XMP and IPTC when those blocks are present.
+     *                               A tag's value is read only when it is a number, as Orientation is.
      */
     private function readTags(string $contents): array
     {
-        $image = new \Imagick();
-        $image->readImageBlob($contents);
+        $tags = [];
+        foreach ($this->readSegments($contents) as [$marker, $segment]) {
+            if ($marker === 0xE1 && \str_starts_with($segment, 'http://ns.adobe.com/xap/1.0/')) {
+                $tags['XMP'] = 'xmp';
+            } elseif ($marker === 0xED && \str_contains($segment, "8BIM\x04\x04")) {
+                $tags['IPTC'] = 'iptc';
+            } elseif ($marker === 0xE1 && \str_starts_with($segment, "Exif\0\0")) {
+                $tags += $this->readExif(\substr($segment, 6));
+            }
+        }
+
+        return $tags;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function readExif(string $tiff): array
+    {
+        [$short, $long] = $tiff[0] === 'I' ? ['v', 'V'] : ['n', 'N'];
+        $names = [
+            'main' => [0x010F => 'Make', 0x0110 => 'Model', 0x0112 => 'Orientation', 0x9003 => 'DateTimeOriginal'],
+            'gps' => [0x0002 => 'GPSLatitude', 0x0004 => 'GPSLongitude'],
+        ];
 
         $tags = [];
-        foreach ($image->getImageProperties('exif:*') as $name => $value) {
-            $tags[\substr($name, \strlen('exif:'))] = $value;
-        }
-        foreach ($image->getImageProfiles('*', false) as $name) {
-            $tags[\strtoupper($name)] = $name;
+        // The first directory points to the Exif and GPS ones.
+        $directories = [[\unpack($long, $tiff, 4)[1], 'main']];
+        for ($i = 0; $i < \count($directories); $i++) {
+            [$offset, $kind] = $directories[$i];
+            $count = \unpack($short, $tiff, $offset)[1];
+            for ($entry = $offset + 2; $entry < $offset + 2 + 12 * $count; $entry += 12) {
+                $tag = \unpack($short, $tiff, $entry)[1];
+                $isShort = \unpack($short, $tiff, $entry + 2)[1] === 3;
+                $value = \unpack($isShort ? $short : $long, $tiff, $entry + 8)[1];
+
+                if ($kind === 'main' && ($tag === 0x8769 || $tag === 0x8825)) {
+                    $directories[] = [$value, $tag === 0x8825 ? 'gps' : 'main'];
+                } elseif (isset($names[$kind][$tag])) {
+                    $tags[$names[$kind][$tag]] = $isShort ? (string) $value : '';
+                }
+            }
         }
 
         return $tags;
@@ -1621,6 +1692,53 @@ final class StorageCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
         $this->assertEquals(404, $file['headers']['status-code']);
+
+        $binary = \tempnam(\sys_get_temp_dir(), 'binary');
+        \file_put_contents($binary, \random_bytes(1024));
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile($binary, 'image/png', 'binary.png'),
+        ]);
+        \unlink($binary);
+        $this->assertEquals(400, $file['headers']['status-code']);
+        $this->assertEquals('storage_file_type_unsupported', $file['body']['type']);
+
+        // A resent first chunk replaces the stored bytes along with the type checked against the bucket.
+        $chunkSize = 5 * 1024 * 1024;
+        $totalSize = $chunkSize + 1024;
+        $png = \file_get_contents(realpath(__DIR__ . '/../../../resources/logo.png'));
+        $pdf = \file_get_contents(realpath(__DIR__ . '/../../../resources/document.pdf'));
+        $fileId = Id::unique();
+        $upload = function (string $range, string $body) use ($bucketId, $fileId): array {
+            $chunk = \tempnam(\sys_get_temp_dir(), 'chunk');
+            \file_put_contents($chunk, $body);
+            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'content-range' => $range,
+                'x-appwrite-id' => $fileId,
+            ], $this->getHeaders()), [
+                'fileId' => $fileId,
+                'file' => new CURLFile($chunk, 'image/png', 'resent.png'),
+            ]);
+            \unlink($chunk);
+
+            return $file;
+        };
+
+        $first = 'bytes 0-' . ($chunkSize - 1) . '/' . $totalSize;
+        $file = $upload($first, \str_pad($pdf, $chunkSize, "\0"));
+        $this->assertSame(201, $file['headers']['status-code']);
+        $file = $upload($first, \str_pad($png, $chunkSize, "\0"));
+        $this->assertSame(201, $file['headers']['status-code']);
+        $file = $upload('bytes ' . $chunkSize . '-' . ($totalSize - 1) . '/' . $totalSize, \str_repeat("\0", 1024));
+        $this->assertSame(201, $file['headers']['status-code']);
+        $this->assertSame('image/png', $file['body']['mimeType']);
+
+        $this->assertSame(\substr($png, 0, 8), \substr($this->downloadFile($bucketId, $fileId), 0, 8));
     }
 
     public function testIdleChunkedUploadDeletedByMaintenance(): void
@@ -1648,39 +1766,78 @@ final class StorageCustomServerTest extends Scope
             $this->assertEquals(1, $file['body']['chunksUploaded']);
         }
 
-        $this->withFactory(function ($factory) use ($bucketId, $idleId): void {
-            $dbForProject = $factory->project($factory->platform()->getDocument('projects', $this->getProject()['$id']));
-            $bucket = $dbForProject->getDocument('buckets', $bucketId);
+        $projectId = $this->getProject()['$id'];
+        $pendingKey = 'uploads:pending:' . $projectId;
+        $scannedKey = 'uploads:scanned:' . $projectId;
 
-            $dbForProject->withPreserveDates(true, fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $idleId, new Document([
-                '$updatedAt' => DateTime::addSeconds(new \DateTime(), -APP_STORAGE_UPLOAD_RETENTION - 3600),
-            ])));
+        $idle = function (string $fileId) use ($bucketId): void {
+            $this->withFactory(function ($factory) use ($bucketId, $fileId): void {
+                $dbForProject = $factory->project($factory->platform()->getDocument('projects', $this->getProject()['$id']));
+                $bucket = $dbForProject->getDocument('buckets', $bucketId);
+
+                $dbForProject->withPreserveDates(true, fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, new Document([
+                    '$updatedAt' => DateTime::addSeconds(new \DateTime(), -APP_STORAGE_UPLOAD_RETENTION - 3600),
+                ])));
+            });
+        };
+
+        $maintain = function (string $fileId) use ($bucketId): void {
+            $stdout = '';
+            $stderr = '';
+            $code = Console::execute((new Command('docker'))->argument('exec')->argument('appwrite')->argument('maintenance')->argument('--type=trigger'), '', $stdout, $stderr);
+            $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
+
+            $this->assertEventually(function () use ($bucketId, $fileId) {
+                $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders()));
+                $this->assertEquals(404, $file['headers']['status-code']);
+            }, 30000, 1000);
+        };
+
+        // The upload tracked its bucket, and with the full scan already claimed only tracked buckets are checked.
+        $this->withRedis(function (\Redis $redis) use ($bucketId, $pendingKey, $scannedKey): void {
+            $this->assertContains($bucketId, $redis->sMembers($pendingKey));
+            $redis->set($scannedKey, '1', ['ex' => APP_STORAGE_UPLOAD_RETENTION]);
         });
-
-        $stdout = '';
-        $stderr = '';
-        $code = Console::execute((new Command('docker'))->argument('exec')->argument('appwrite')->argument('maintenance')->argument('--type=trigger'), '', $stdout, $stderr);
-        $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
-
-        $this->assertEventually(function () use ($bucketId, $idleId) {
-            $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $idleId, array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()));
-            $this->assertEquals(404, $file['headers']['status-code']);
-        }, 30000, 1000);
+        $idle($idleId);
+        $maintain($idleId);
 
         $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $activeId, array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $projectId,
         ], $this->getHeaders()));
         $this->assertEquals(200, $file['headers']['status-code']);
         $this->assertEquals(1, $file['body']['chunksUploaded']);
+        $this->withRedis(fn (\Redis $redis) => $this->assertContains($bucketId, $redis->sMembers($pendingKey), 'a bucket with an upload in progress stays tracked'));
+
+        // A lost hint is caught by the full scan once its claim lapses.
+        $this->withRedis(fn (\Redis $redis) => $redis->del($pendingKey, $scannedKey));
+        $idle($activeId);
+        $maintain($activeId);
 
         // The aborted upload starts over from its first chunk under the same ID.
         $file = $upload($idleId);
         $this->assertEquals(201, $file['headers']['status-code']);
         $this->assertEquals(1, $file['body']['chunksUploaded']);
+    }
+
+    /**
+     * @param callable(\Redis): mixed $callback
+     */
+    private function withRedis(callable $callback): void
+    {
+        $run = function () use ($callback): void {
+            global $register;
+            $register->get('pools')->get('lock')->use($callback);
+        };
+
+        if (Coroutine::getCid() >= 0) {
+            $run();
+        } else {
+            run($run);
+        }
     }
 
     /**

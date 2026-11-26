@@ -4,6 +4,7 @@ import {
   useLocation,
   Outlet,
   useNavigate,
+  useRouterState,
 } from '@tanstack/react-router'
 import { useMutation, useQueryClient, useIsFetching } from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
@@ -18,7 +19,12 @@ import {
   useOrganizationScopes,
 } from '@/lib/react-query/hooks'
 import { sdk } from '@/lib/appwrite/sdk'
-import { canShowFunctionSecuritySettings } from '@/lib/console-access-checks'
+import {
+  canSeeProjectNavItem,
+  canSeeUsageNav,
+  canShowFunctionSecuritySettings,
+} from '@/lib/console-access-checks'
+import { isCloudProfile } from '@/lib/console-profiles'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { AlertCircle, ArrowLeft, Info } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
@@ -48,6 +54,7 @@ import {
 import type { CompactFilterKey } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 import { CreateExecutionDrawer } from './CreateExecutionDrawer'
+import { useReviewsAccess } from '../reviews/_components/useReviewsAccess'
 import { CreateDeploymentDropdown } from '../shared/CreateDeploymentDropdown'
 import { CreateGitDeploymentModal } from '../shared/CreateGitDeploymentModal'
 import { CreateCliDeploymentModal } from '../shared/CreateCliDeploymentModal'
@@ -80,6 +87,9 @@ function FunctionLayoutContent() {
   const t = useT()
   const { projectId, functionId } = useParams({ strict: false })
   const location = useLocation()
+  const resolvedPathname = useRouterState({
+    select: (s) => s.resolvedLocation?.pathname ?? s.location.pathname,
+  })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { triggerRefresh, hasRefreshHandler } = useRefresh()
@@ -89,7 +99,7 @@ function FunctionLayoutContent() {
     }) > 0
 
   const activeTab = useMemo(() => {
-    const pathParts = location.pathname.split('/').filter(Boolean)
+    const pathParts = resolvedPathname.split('/').filter(Boolean)
     const functionIndex = pathParts.findIndex(
       (part, idx) =>
         part === 'functions' &&
@@ -102,9 +112,14 @@ function FunctionLayoutContent() {
         const tabFromPath = pathParts[functionIndex + 2]
         if (
           [
+            'overview',
             'deployments',
+            'reviews',
             'executions',
+            'runtime-logs',
             'domains',
+            'usage',
+            'firewall',
             'variables',
             'security',
             'settings',
@@ -115,8 +130,8 @@ function FunctionLayoutContent() {
       }
     }
 
-    return 'deployments'
-  }, [location.pathname])
+    return 'overview'
+  }, [resolvedPathname])
 
   const { data: func, isLoading } = useProjectFunction(projectId, functionId)
   const activeDeploymentId = getRedeploySourceDeploymentId(func)
@@ -142,16 +157,12 @@ function FunctionLayoutContent() {
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const showSecuritySettings = canShowFunctionSecuritySettings(access, features)
-
-  // Get search value from URL (location.search may be string or parsed object in TanStack Router)
-  const domainsSearchValue = (() => {
-    const search = location.search
-    if (typeof search === 'object' && search !== null && 'search' in search) {
-      return (search as { search?: string }).search ?? ''
-    }
-    const params = new URLSearchParams(typeof search === 'string' ? search : '')
-    return params.get('search') || ''
-  })()
+  const showUsageTab = features.usageStats && canSeeUsageNav(access, features)
+  const showFirewallTab =
+    isCloudProfile() && canSeeProjectNavItem(access, features, 'firewall')
+  // Cloud only: self-hosted doesn't serve `/v1/logs`, even with the flag on.
+  const showRuntimeLogsTab = isCloudProfile() && features.runtimeLogs
+  const { visible: showReviewsTab } = useReviewsAccess(projectId)
 
   const [filtersOpen, setFiltersOpen] = useState(false)
   const functionFilterMap = useMemo(() => {
@@ -224,14 +235,36 @@ function FunctionLayoutContent() {
   const tabs: Tab[] = useMemo(() => {
     const base: Tab[] = [
       {
-        id: 'deployments',
-        label: t('Deployments'),
+        id: 'overview',
+        label: t('Overview'),
         to: '/projects/$projectId/functions/$functionId',
         params: {
           projectId: projectId as string,
           functionId: functionId as string,
         },
       },
+      {
+        id: 'deployments',
+        label: t('Deployments'),
+        to: '/projects/$projectId/functions/$functionId/deployments',
+        params: {
+          projectId: projectId as string,
+          functionId: functionId as string,
+        },
+      },
+      ...(showReviewsTab
+        ? [
+            {
+              id: 'reviews' as const,
+              label: t('Reviews'),
+              to: '/projects/$projectId/functions/$functionId/reviews',
+              params: {
+                projectId: projectId as string,
+                functionId: functionId as string,
+              },
+            },
+          ]
+        : []),
       {
         id: 'domains',
         label: t('Domains'),
@@ -250,6 +283,45 @@ function FunctionLayoutContent() {
           functionId: functionId as string,
         },
       },
+      ...(showRuntimeLogsTab
+        ? [
+            {
+              id: 'runtime-logs' as const,
+              label: t('Logs'),
+              to: '/projects/$projectId/functions/$functionId/runtime-logs',
+              params: {
+                projectId: projectId as string,
+                functionId: functionId as string,
+              },
+            },
+          ]
+        : []),
+      ...(showUsageTab
+        ? [
+            {
+              id: 'usage' as const,
+              label: t('Usage'),
+              to: '/projects/$projectId/functions/$functionId/usage',
+              params: {
+                projectId: projectId as string,
+                functionId: functionId as string,
+              },
+            },
+          ]
+        : []),
+      ...(showFirewallTab
+        ? [
+            {
+              id: 'firewall' as const,
+              label: t('Firewall'),
+              to: '/projects/$projectId/functions/$functionId/firewall',
+              params: {
+                projectId: projectId as string,
+                functionId: functionId as string,
+              },
+            },
+          ]
+        : []),
       ...(showSecuritySettings
         ? [
             {
@@ -283,7 +355,16 @@ function FunctionLayoutContent() {
         : []),
     ]
     return base
-  }, [projectId, functionId, showSecuritySettings, t])
+  }, [
+    projectId,
+    functionId,
+    showUsageTab,
+    showFirewallTab,
+    showRuntimeLogsTab,
+    showReviewsTab,
+    showSecuritySettings,
+    t,
+  ])
 
   // Redirect from variables/security/settings when user lacks permission
   useEffect(() => {
@@ -300,17 +381,6 @@ function FunctionLayoutContent() {
       })
     }
   }, [showSecuritySettings, activeTab, projectId, functionId, navigate])
-
-  const handleDomainsSearchChange = (value: string) => {
-    navigate({
-      to: location.pathname,
-      search: (prev) => ({
-        ...prev,
-        search: value || undefined,
-      }),
-      replace: true,
-    })
-  }
 
   const [gitDeployOpen, setGitDeployOpen] = useState(false)
   const [cliDeployOpen, setCliDeployOpen] = useState(false)
@@ -524,7 +594,8 @@ function FunctionLayoutContent() {
       </div>
     ) : undefined
 
-  const isExecutionsTabLayout = activeTab === 'executions'
+  const isExecutionsTabLayout =
+    activeTab === 'executions' || activeTab === 'runtime-logs'
 
   return (
     <CreateDeploymentProvider
@@ -561,15 +632,13 @@ function FunctionLayoutContent() {
           tabs={tabs}
           activeTab={activeTab}
           fullWidthBorder
-          fullWidth={activeTab === 'executions'}
+          fullWidth={
+            activeTab === 'executions' ||
+            activeTab === 'runtime-logs' ||
+            activeTab === 'usage' ||
+            activeTab === 'firewall'
+          }
           showToolbarBottomBorder={isExecutionsTabLayout}
-          searchPlaceholder={
-            activeTab === 'domains' ? t('Search domain...') : undefined
-          }
-          searchValue={activeTab === 'domains' ? domainsSearchValue : undefined}
-          onSearchChange={
-            activeTab === 'domains' ? handleDomainsSearchChange : undefined
-          }
           showFilters={activeTab === 'executions' || activeTab === 'domains'}
           filterTrigger={
             activeTab === 'executions' || activeTab === 'domains' ? (
@@ -647,40 +716,38 @@ function FunctionLayoutContent() {
         >
           <DeploymentsToolbarContext.Provider
             value={
-              activeTab === 'deployments' ? (
-                <>
-                  <FiltersPopover
-                    open={filtersOpen}
-                    onOpenChange={setFiltersOpen}
-                    columns={functionFilterColumns}
-                    filterMap={functionFilterMap}
-                    onRemoveFilter={removeFunctionFilter}
-                    onClearAll={clearAllFunctionFilters}
-                    onApplyFilter={applyFunctionFilter}
-                    resourceLabel="deployments"
-                    filterScope="functions.deployments"
-                    onApplyQuery={(queryParam) => {
-                      navigate({
-                        to: location.pathname,
-                        search: (prev) => ({
-                          ...(typeof prev === 'object' && prev !== null
-                            ? prev
-                            : {}),
-                          query: queryParam ?? undefined,
-                          page: 1,
-                        }),
-                        replace: true,
-                      })
-                    }}
-                    teamId={project?.teamId}
-                  />
-                  <CreateDeploymentDropdown
-                    onSelectGit={() => setGitDeployOpen(true)}
-                    onSelectCli={() => setCliDeployOpen(true)}
-                    onSelectManual={() => setManualDeployOpen(true)}
-                  />
-                </>
-              ) : null
+              <>
+                <FiltersPopover
+                  open={filtersOpen}
+                  onOpenChange={setFiltersOpen}
+                  columns={deploymentsFilterColumns}
+                  filterMap={functionFilterMap}
+                  onRemoveFilter={removeFunctionFilter}
+                  onClearAll={clearAllFunctionFilters}
+                  onApplyFilter={applyFunctionFilter}
+                  resourceLabel="deployments"
+                  filterScope="functions.deployments"
+                  onApplyQuery={(queryParam) => {
+                    navigate({
+                      to: location.pathname,
+                      search: (prev) => ({
+                        ...(typeof prev === 'object' && prev !== null
+                          ? prev
+                          : {}),
+                        query: queryParam ?? undefined,
+                        page: 1,
+                      }),
+                      replace: true,
+                    })
+                  }}
+                  teamId={project?.teamId}
+                />
+                <CreateDeploymentDropdown
+                  onSelectGit={() => setGitDeployOpen(true)}
+                  onSelectCli={() => setCliDeployOpen(true)}
+                  onSelectManual={() => setManualDeployOpen(true)}
+                />
+              </>
             }
           >
             <Outlet />

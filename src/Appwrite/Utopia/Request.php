@@ -16,6 +16,11 @@ use Utopia\System\System;
 class Request extends UtopiaRequest
 {
     /**
+     * Value of a param listed in the route's `cache.negotiate` label that asks the server to pick it from the Accept header.
+     */
+    public const string NEGOTIATE_AUTO = 'auto';
+
+    /**
      * @var array<Filter>
      */
     private array $filters = [];
@@ -69,6 +74,40 @@ class Request extends UtopiaRequest
         }
 
         return $remoteAddr;
+    }
+
+    /**
+     * The ID of the project the request names: a `project` query parameter, else the
+     * X-Appwrite-Project header. The query string stands in for the header where none
+     * can be set, as for a file preview URL, the realtime socket or a presigned URL.
+     *
+     * The body never names the project: it can carry a `project` key of its own, such as
+     * the object in a GitLab webhook. Only a string names a project, never a query array.
+     */
+    public function getProject(): string
+    {
+        $project = $this->getQuery('project', '');
+
+        if (\is_string($project) && $project !== '') {
+            return $project;
+        }
+
+        return $this->getHeaderLine('x-appwrite-project', '');
+    }
+
+    /**
+     * The mode the request asks for: a `mode` query parameter, else the X-Appwrite-Mode
+     * header. Like the project, the body never asks for a mode.
+     */
+    public function getMode(): string
+    {
+        $mode = $this->getQuery('mode', '');
+
+        if (\is_string($mode) && $mode !== '') {
+            return $mode;
+        }
+
+        return $this->getHeaderLine('x-appwrite-mode', APP_MODE_DEFAULT);
     }
 
     /**
@@ -271,6 +310,29 @@ class Request extends UtopiaRequest
     }
 
     /**
+     * Get Client IP
+     *
+     * Method for getting the IP of the end user the request is made for. Preferring forwarded IP for privileged users; otherwise returns getIP().
+     * Use it for what is recorded about the user, such as sessions and tokens. Rate limits and network rules stay on getIP(), which a caller cannot choose.
+     *
+     * @return string
+     */
+    public function getClientIP(): string
+    {
+        $forwardedIP = \trim($this->getHeaderLine('x-forwarded-ip'));
+        if (\filter_var($forwardedIP, FILTER_VALIDATE_IP) !== false) {
+            $roles = $this->authorization?->getRoles() ?? [];
+            $isAppUser = $this->user?->isKey($roles) ?? false;
+
+            if ($isAppUser) {
+                return $forwardedIP;
+            }
+        }
+
+        return $this->getIP();
+    }
+
+    /**
      * Index of the chunk this range starts in, for chunks of the given size. 0 without a valid range.
      */
     public function getContentRangeChunk(int $size): int
@@ -301,14 +363,83 @@ class Request extends UtopiaRequest
     }
 
     /**
+     * Returns the first of the given MIME types the client lists in its Accept header with a non-zero quality.
+     * Only exact entries count: wildcard ranges (`image/*`, any type) do not promise the client decodes a given format.
+     *
+     * @param array<string> $types MIME types in server preference order
+     */
+    public function getAcceptedType(array $types): ?string
+    {
+        $accepted = [];
+        foreach (\explode(',', $this->getHeaderLine('accept')) as $entry) {
+            $parts = \explode(';', $entry);
+            $type = \strtolower(\trim($parts[0]));
+            $quality = 1.0;
+            foreach (\array_slice($parts, 1) as $parameter) {
+                [$name, $value] = \array_pad(\explode('=', $parameter, 2), 2, '');
+                if (\strtolower(\trim($name)) === 'q') {
+                    $quality = (float) \trim($value);
+                }
+            }
+            if ($type !== '' && $quality > 0) {
+                $accepted[$type] = true;
+            }
+        }
+
+        foreach ($types as $type) {
+            if (isset($accepted[\strtolower($type)])) {
+                return $type;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Resolves params set to `auto` that the route negotiates from the Accept header.
+     *
+     * The route's `cache.negotiate` label maps a param to `[value => MIME type]` in preference order.
+     * An `auto` param resolves to the first value whose type the client accepts, or to an empty string when none is.
+     *
+     * @return array<string, string> resolved values keyed by param, only for params set to `auto`
+     */
+    public function getNegotiatedParams(): array
+    {
+        $negotiate = $this->getRoute()?->getLabel('cache.negotiate', []) ?? [];
+        $params = $this->getParams();
+        $resolved = [];
+        foreach ($negotiate as $param => $types) {
+            if (($params[$param] ?? null) !== self::NEGOTIATE_AUTO) {
+                continue;
+            }
+            $type = $this->getAcceptedType(\array_values($types));
+            $resolved[$param] = $type === null ? '' : (string) \array_search($type, $types, true);
+        }
+
+        return $resolved;
+    }
+
+    /**
      * Creates a unique stable cache identifier for this GET request.
      * Stable-sorts query params, use `serialize` to ensure key&value are part of cache keys.
+     * Negotiated `auto` params are keyed by their resolved value, so they share entries with explicit requests.
+     * A route that picks its format from the Accept header lists the media
+     * types it can upgrade to in `cache.accept`; the key carries the type the
+     * client gets, not the raw header, so every browser that accepts webp
+     * shares one entry. `cache.vary` only names the headers repeated as Vary.
      *
      * @return string
      */
     public function cacheIdentifier(): string
     {
         $params = $this->getParams();
+        foreach ($this->getNegotiatedParams() as $param => $value) {
+            if ($value === '') {
+                unset($params[$param]);
+            } else {
+                $params[$param] = $value;
+            }
+        }
         $allowedParams = $this->getRoute()?->getLabel('cache.params', null);
         if ($allowedParams !== null) {
             $params = array_intersect_key($params, array_flip($allowedParams));
@@ -316,8 +447,22 @@ class Request extends UtopiaRequest
         if (!isset($params['project'])) {
             $params['project'] = $this->getHeaderLine('x-appwrite-project', '');
         }
+        foreach ($this->getRoute()?->getLabel('cache.accept', []) ?? [] as $type) {
+            if ($this->accepts($type)) {
+                $params['$accept'] = $type;
+                break;
+            }
+        }
         ksort($params);
         return md5($this->getURI() . '*' . serialize($params) . '*' . APP_CACHE_BUSTER);
+    }
+
+    /**
+     * Whether the client lists this media type in its Accept header.
+     */
+    public function accepts(string $type): bool
+    {
+        return str_contains(strtolower($this->getHeaderLine('accept', '')), strtolower($type));
     }
 
     private ?Authorization $authorization = null;

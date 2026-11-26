@@ -1,5 +1,104 @@
 # Change Log
 
+## 11.5.0
+
+* Added: `monitors` service to create, list, get, update and delete HTTP, DNS, TCP, SMTP and usage monitors
+* Added: `alerts` service to list and get alerts, and acknowledge them with `alerts.update`
+* Added: `organization.listEscalations`, `createEscalation`, `getEscalation`, `updateEscalation` and `deleteEscalation`
+* Added: `Monitor`, `Alert`, `Escalation` and `EscalationStep` models, their list models, and the `Monitor*` and `Alert*` enums
+
+## 11.4.0
+
+* Added: `Messaging.CreateBirdEmailProvider`, `UpdateBirdEmailProvider`, `CreateBirdSMSProvider` and `UpdateBirdSMSProvider` for the Bird email and SMS providers
+* Added: Atlassian, Instagram, LINE, Linear, Netlify, Patreon, Railway, Reddit, Roblox, Strava, Vercel, VK and WorkOS to `OAuthProvider`
+* Added: `project` OAuth2 settings and models for Atlassian, Instagram, LINE, Linear, Netlify, Patreon, Railway, Reddit, Roblox, Strava, Vercel, VK and WorkOS
+
+## 11.3.0
+
+* Added: `Account.CreateLDAPSession` for LDAP sign-in
+* Added: `Project.UpdateLDAP` and `Project.CreateLDAPTest` to configure and test a project's LDAP directory, the `ProjectLDAPEncryption` enum and `ldap*` fields on `Project`
+* Added: `Project.UpdateOAuth2Naver`, the `OAuth2Naver` model and `OAuthProvider.Naver`
+* Added: `Project.DeletePasswords` to force every user to reset their password
+* Added: `Sites.UpdateAnalytics` and `analyticsEnabled` and `analyticsPropertyId` on `Site`
+* Added: `reason` on `DomainPrice`, set when a domain was not priced for the requested registration type
+* Added: `ImageFormat.Auto` on `Storage.getFilePreview` and the avatar endpoints, serving avif or webp when the `Accept` header supports it
+* Updated: requests send `X-Appwrite-Response-Format: 2.7.2`
+
+## 11.2.0
+
+* Updated: `Project.ListEnvironments`, `Project.CreateEnvironment`, `Project.GetEnvironment`, `Project.UpdateEnvironment` return `Environment` models instead of `Project`
+* Added: `Account.CreateDevice`, `Account.GetDevice`, `Account.DeleteDevice` and `Account.UpdateDeviceSession`, and the `Device` model
+* Added: `Project.UpdateAccountDevicesPolicy`, `ProjectPolicyId.AccountDevices` and the `PolicyAccountDevices` model
+* Added: `Project.UpdateOAuth2Vipps`, `Project.UpdateOAuth2VippsSandbox` and the `OAuth2Vipps` model
+* Added: `OAuthProvider.Vipps` and `OAuthProvider.VippsSandbox`
+* Added: `Proxy.UpdateFunctionRule`, `Proxy.UpdateRedirectRule` and `Proxy.UpdateSiteRule`
+* Added: optional `schedule` on `waf` rule create and update methods and on `WafRule*` models
+* Added: `Project.GetPrefs` and `Project.UpdatePrefs` for project preferences
+* Added: `Client.SetEnvironment` to act in a project environment
+* Added: `AppwriteMigrationResource.ProjectPreferences` to migrate project preferences
+* Added: `monitors.read`, `monitors.write`, `alerts.read`, `alerts.write`, `reviews.read` and `reviews.write` to `ProjectKeyScopes`
+* Added: `Organization.BudgetNotify`, `BudgetCritical` and `EducationExpiresAt`
+* Added: `Project.EnvironmentId`, `Session.UserName` and `ActivityEvent.Reason`
+* Added: `ProxyRule.ExpireAt` and `CertificateStatus`
+* Updated: requests send response format `2.7.1`; README targets Appwrite 2.7.x
+
+## 11.1.0
+
+* Updated: requests send response format `2.6.2`
+* Updated: redirects are no longer followed; a 3xx response throws `AppwriteException` naming its `Location`
+* Updated: the client no longer keeps cookies between requests
+* Fixed: a `.` or `..` path parameter throws `AppwriteException` before the request is sent
+* Added: `Migrations` service with `List`, `Get`, `Retry`, `Delete`, Appwrite, Firebase, NHost and Supabase migrations, and CSV and JSON imports and exports
+* Added: `AppwriteMigrationResource`, `FirebaseMigrationResource`, `NHostMigrationResource`, `SupabaseMigrationResource` and `OnDuplicate` enums
+* Added: `Migration`, `MigrationList` and `MigrationReport` models
+* Added: `Project.UpdateDenyRealtimeGuestsPolicy`, `ProjectPolicyId.DenyRealtimeGuests` and the `PolicyDenyRealtimeGuests` model
+* Added: `Project.DeleteSessions` to sign out every session in the project
+* Added: `DeploymentRetention`, `DeploymentRetentionMax` and `DeploymentsRetentionCount` on `BillingPlan`
+* Added: `Python315`, `Deno29`, `Go127` and `Rust199` on `Runtime` and `BuildRuntime`
+* Fixed: path parameters and upload IDs are percent-encoded as one segment, so `/`, `?` and `#` stay in the value
+
+## 11.0.0
+
+* Breaking: date-like strings in `Data` and other dynamic values stay `string` instead of being converted to `DateTime`
+* Fixed: `CreatedAt`, `UpdatedAt` and other datetime properties keep the server's exact ISO 8601 text, with milliseconds and offset, under any culture
+
+## 10.0.0
+
+* Breaking: `TablesDB`, `DocumentsDB` and `VectorsDB` `Create` and `Update` take `description` before `specification`
+* Breaking: `Functions.Update` takes `description` before `emailEnabled`
+* Added: `CreateQuery` on `Databases`, `DocumentsDB` and `TablesDB` to send list queries in the request body
+* Added: `Account.ListMemberships`
+* Added: optional `description` on create and update for databases, collections, tables, attributes, columns, indexes, buckets, functions, sites, variables, topics, webhooks and keys
+* Added: `Description` on the matching models
+* Added: `total` on list methods in `Activities`, `Backups`, `Domains`, `Mongo`, `Mysql` and `Postgresql`
+* Added: `emails` on `Messaging.CreateEmail` and `Messaging.UpdateEmail`
+* Added: `denyList` on `Project.UpdatePasswordDictionaryPolicy`, `UpdatePasswordPersonalDataPolicy` and their policy models
+* Added: `BillingPlan.FunctionsAllowCron`
+* Added: `stripMetadata` on `Storage.CreateBucket`, `UpdateBucket` and the `Bucket` model
+
+## 9.0.0
+
+* Breaking: requests send response format `2.5.0`
+* Breaking: removed `Client.SetDevKey`, the `DevKey` model and `Project.DevKeys`
+* Breaking: removed `Account.ListLogs` and `Users.ListLogs` with the `Log` and `LogList` models
+* Breaking: removed `Organization.CreateKey`, `GetKey`, `ListKeys`, `UpdateKey` and `DeleteKey`, and `OrganizationKeyScopes`; use `Organization.ListProjectKeys`, `GetProjectKey`, `UpdateProjectKey` and `DeleteProjectKey` instead
+* Breaking: removed `BillingPlanGroup.Starter`; use `BillingPlanGroup.Free`
+* Breaking: `Project.UpdateOAuth2Kakao` takes `enabled` before `prompt`
+* Breaking: removed `Block` fields `ProjectName`, `Region`, `OrganizationName`, `OrganizationId`, `BillingPlan` and `Reason`
+* Breaking: `ListSpecifications` returns each specification's prices and overage rates on the row itself. Removed the list-level `Pricing` field and the `DedicatedDatabaseSpecificationPricing` model
+* Breaking: `BackupRestoration.Options` is an `object`, not a `string`
+* Breaking: billing, backup, restoration and dedicated database fields the API can omit are nullable
+* Breaking: model constructors follow API field order without default arguments
+* Added: `Topic` helper to build MQTT topics for push messages
+* Added: `Mongo`, `Mysql` and `Postgresql` `PromoteRestoration`, `restoreMode`, `targetName` and `autoPromote` on `CreateRestoration`, and `DedicatedDatabaseRestoration.RestoreMode`
+* Added: `Proxy.CreateSMTPRule`, the `ProxyRuleProtocol` enum and `ProxyRule.Protocol`
+* Added: `emailEnabled` on `Functions.Update` and `Function`, and `ExecutionTrigger.Email`
+* Added: `Query` aggregates (`Count`, `CountDistinct`, `Sum`, `Avg`, `Min`, `Max` and more), `GroupBy`, `Having`, `Distinct`, joins, `Relationship`, `Covers`, `SpatialEquals` and `Page`
+* Added: `Query.Builder` to chain queries; `Build()` returns the query list
+* Updated: `Prompt`, `NativeClientIds`, `NativeEnabled`, `Fingerprints` and similar fields are no longer nullable
+* Updated: models fill fields missing from a response with their documented defaults
+* Fixed: query strings escape parameter names and values
+
 ## 8.4.0
 
 * Added: `domains` service to manage domains, DNS records, email presets, prices, transfer status and zones

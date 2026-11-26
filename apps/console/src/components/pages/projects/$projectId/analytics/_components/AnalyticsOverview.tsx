@@ -1,15 +1,25 @@
-import { useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
+import {
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react'
 import { useQueries } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import type { DateRange } from 'react-day-picker'
 import {
   Area,
   CartesianGrid,
   ComposedChart,
   Line,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
 } from 'recharts'
 import { AnalyticsPropertyType, type Models } from '@appwrite.io/console'
+import { BellRing, MessageSquarePlus, MessageSquareText } from 'lucide-react'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { createCompactCountAxisTickFormatter } from '@/lib/usage/format-metric'
@@ -23,6 +33,8 @@ import {
 } from '@/components/global/shared/ChartXAxis'
 import { ChartSeriesDot } from '@/components/global/shared/ChartSeriesDot'
 import { AnimatedCounter } from '@/components/global/shared/AnimatedCounter'
+import { ConfirmActionDialog } from '@/components/global/shared/ConfirmActionDialog'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip as UiTooltip,
@@ -39,7 +51,11 @@ import {
 } from '../../overview/chart-panel'
 import {
   analyticsStatsQueryOptions,
+  useAnalyticsAnnotationAuthors,
+  useAnalyticsAnnotations,
   useAnalyticsEventMetrics,
+  useDeleteAnalyticsAnnotation,
+  useProject,
   useAnalyticsStats,
   type AnalyticsChartInterval,
   type AnalyticsCompareMode,
@@ -48,14 +64,23 @@ import {
 import { compareModeLabel, formatAnalyticsRangeLabel } from './CompareControl'
 import { MetricInfo, type AnalyticsMetricInfoKey } from './MetricInfo'
 import { useAnalyticsFilters } from './analytics-filters-context'
-import { ActiveFilterChips } from './ActiveFilterChips'
+import { AnalyticsFilterChips } from './AnalyticsFilterChips'
 import { ChangeBadge } from './ChangeBadge'
+import {
+  ANNOTATION_LANE_HEIGHT,
+  ANNOTATION_LINE_PROPS,
+  AnnotationCursor,
+  AnnotationMarker,
+} from './AnnotationMarker'
+import { SaveAnnotation } from './SaveAnnotation'
 import { ANALYTICS_FILTER_UNSUPPORTED_MESSAGE } from '@/lib/analytics/analytics-filters'
 import { useT } from '@/lib/i18n/translate'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   analyticsChangePercent,
   buildAnalyticsChartPoints,
   buildBucketWindows,
+  groupAnnotationsByBucket,
   type AnalyticsBucketWindow,
   type AnalyticsChartPoint,
 } from './chart-series'
@@ -72,8 +97,19 @@ const CURRENT_COLOR = 'var(--chart-brand)'
 const PREVIOUS_COLOR = 'var(--muted-foreground)'
 const GRADIENT_ID = 'analyticsOverviewGradient'
 const SKELETON_GRADIENT_ID = 'analyticsOverviewSkeletonGradient'
-const SKELETON_CHART_STROKE = 'hsl(var(--muted-foreground) / 0.4)'
-const SKELETON_CHART_FILL = 'hsl(var(--muted-foreground))'
+const SKELETON_CHART_STROKE = 'var(--muted-foreground)'
+const SKELETON_CHART_STROKE_OPACITY = 0.4
+const SKELETON_CHART_FILL = 'var(--muted-foreground)'
+/** Y-axis room above the highest point. */
+const Y_HEADROOM = 1.08
+/** Keeps the top of the ~200px plot clear for the notes lane. */
+const Y_HEADROOM_WITH_NOTES = 1.22
+/** Notes the chart tooltip lists before "+N more". */
+const TOOLTIP_NOTES_LIMIT = 3
+const CHART_MARGIN = { top: 8, right: 12, left: 0, bottom: 4 }
+/** Small outlined actions above the chart, matching the toolbar's buttons. */
+const CHART_ACTION_CLASS_NAME =
+  'h-7 gap-1.5 border-border bg-transparent px-2.5 text-[12px] text-muted-foreground shadow-none hover:bg-accent hover:text-foreground'
 const SKELETON_WAVE = [
   0.42, 0.58, 0.51, 0.68, 0.59, 0.72, 0.64, 0.7, 0.55, 0.74, 0.62, 0.69,
 ] as const
@@ -113,15 +149,79 @@ const OVERVIEW_METRICS: {
   /** Lower is better: flip the change colouring. */
   invert?: boolean
 }[] = [
-  { key: 'visitors', label: 'Unique visitors', info: 'uniqueVisitors', format: formatNumber, source: 'series', axis: 'count' },
-  { key: 'visits', label: 'Visits', info: 'visits', format: formatNumber, source: 'series', axis: 'count' },
-  { key: 'pageviews', label: 'Pageviews', info: 'pageviews', format: formatNumber, source: 'series', axis: 'count' },
-  { key: 'events', label: 'Events', info: 'events', format: formatNumber, source: 'series', axis: 'count' },
-  { key: 'users', label: 'Users', info: 'users', format: formatNumber, source: 'series', axis: 'count' },
-  { key: 'viewsPerVisit', label: 'Views per visit', info: 'viewsPerVisit', format: formatRatio, source: 'aggregate', axis: 'ratio' },
-  { key: 'bounceRate', label: 'Bounce rate', info: 'bounceRate', format: formatPercent, source: 'aggregate', axis: 'percent', invert: true },
-  { key: 'visitDuration', label: 'Visit duration', info: 'visitDuration', format: formatDuration, source: 'aggregate', axis: 'duration' },
-  { key: 'engagementTime', label: 'Engagement time', info: 'engagementTime', format: formatDuration, source: 'aggregate', axis: 'duration' },
+  {
+    key: 'visitors',
+    label: 'Unique visitors',
+    info: 'uniqueVisitors',
+    format: formatNumber,
+    source: 'series',
+    axis: 'count',
+  },
+  {
+    key: 'visits',
+    label: 'Visits',
+    info: 'visits',
+    format: formatNumber,
+    source: 'series',
+    axis: 'count',
+  },
+  {
+    key: 'pageviews',
+    label: 'Pageviews',
+    info: 'pageviews',
+    format: formatNumber,
+    source: 'series',
+    axis: 'count',
+  },
+  {
+    key: 'events',
+    label: 'Events',
+    info: 'events',
+    format: formatNumber,
+    source: 'series',
+    axis: 'count',
+  },
+  {
+    key: 'users',
+    label: 'Users',
+    info: 'users',
+    format: formatNumber,
+    source: 'series',
+    axis: 'count',
+  },
+  {
+    key: 'viewsPerVisit',
+    label: 'Views per visit',
+    info: 'viewsPerVisit',
+    format: formatRatio,
+    source: 'aggregate',
+    axis: 'ratio',
+  },
+  {
+    key: 'bounceRate',
+    label: 'Bounce rate',
+    info: 'bounceRate',
+    format: formatPercent,
+    source: 'aggregate',
+    axis: 'percent',
+    invert: true,
+  },
+  {
+    key: 'visitDuration',
+    label: 'Visit duration',
+    info: 'visitDuration',
+    format: formatDuration,
+    source: 'aggregate',
+    axis: 'duration',
+  },
+  {
+    key: 'engagementTime',
+    label: 'Engagement time',
+    info: 'engagementTime',
+    format: formatDuration,
+    source: 'aggregate',
+    axis: 'duration',
+  },
 ]
 
 // In display order; the first leads the chart. Flutter's lifecycle events
@@ -145,6 +245,18 @@ const METRICS_BY_TYPE: Record<
   [AnalyticsPropertyType.Agent]: ['events', 'visits', 'users', 'visitDuration'],
 }
 
+// Apps have users, sessions and screens rather than visitors, visits and pages.
+const MOBILE_TERMS: Partial<
+  Record<AnalyticsChartMetric, { label: string; info: AnalyticsMetricInfoKey }>
+> = {
+  visitors: { label: 'Active users', info: 'activeUsers' },
+  visits: { label: 'Sessions', info: 'visits' },
+  pageviews: { label: 'Screen views', info: 'screenViews' },
+  users: { label: 'Signed-in users', info: 'users' },
+  viewsPerVisit: { label: 'Screens/session', info: 'screensPerSession' },
+  visitDuration: { label: 'Session length', info: 'visitDuration' },
+}
+
 /** Value of a series-backed metric for one bucket. */
 function bucketValue(
   metric: SeriesMetric,
@@ -163,7 +275,8 @@ function axisFormatter(
 ): (value: number) => string {
   if (axis === 'percent') return (value) => `${Math.round(value)}%`
   if (axis === 'duration') return (value) => formatDuration(value)
-  if (axis === 'ratio') return (value) => (Math.round(value * 10) / 10).toString()
+  if (axis === 'ratio')
+    return (value) => (Math.round(value * 10) / 10).toString()
   return createCompactCountAxisTickFormatter(max)
 }
 
@@ -194,11 +307,14 @@ function MetricTab({
   value,
   format,
   exact,
+  previousExact,
+  compareLabel,
   change,
   invert,
   isActive,
   unavailable,
   hint,
+  detail,
   onClick,
 }: {
   label: string
@@ -207,21 +323,41 @@ function MetricTab({
   format: (value: number) => string
   /** Exact digits shown on hover when the displayed value is compact (1.2K). */
   exact?: string
+  /** Comparison-window value, formatted for the tooltip. */
+  previousExact?: string
+  /** "Previous period" / "Same period last year" / custom label. */
+  compareLabel?: string
   change: number | undefined
   invert?: boolean
   isActive: boolean
   unavailable: boolean
   /** Shown on hover when the value can't be computed (e.g. filters). */
   hint?: string
+  /** Extra tooltip line, e.g. the signed-in share on Users. */
+  detail?: string
   /** Omitted for aggregate-only metrics: the tab shows a value, no plot. */
   onClick?: () => void
 }) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [infoHovered, setInfoHovered] = useState(false)
   const interactive = !!onClick
-  // Card-owned tooltip: exact count, or why the figure is unavailable.
-  // Not on the value itself so hover works anywhere on the metric.
-  const tooltip = hint ?? exact
+  // Card-owned tooltip: exact count, the comparison-window number, or why
+  // the figure is unavailable. Not on the value itself so hover works
+  // anywhere on the metric.
+  const comparison =
+    previousExact !== undefined && compareLabel
+      ? `${t('vs')} ${previousExact} · ${compareLabel}`
+      : undefined
+  // Compact counts already have an exact line. When comparing, always show
+  // the current figure too so the tooltip is a pair, not just the baseline.
+  const currentLabel =
+    exact ?? (value !== undefined && comparison ? format(value) : undefined)
+  const tooltip =
+    hint ??
+    (currentLabel || comparison || detail
+      ? { exact: currentLabel, comparison, detail }
+      : undefined)
   const card = (
     <div
       // A div with button semantics, because the info hint inside it is
@@ -297,7 +433,31 @@ function MetricTab({
         side="top"
         className={cn('text-[12px]', !hint && 'tabular-nums')}
       >
-        {tooltip}
+        {typeof tooltip === 'string' ? (
+          tooltip
+        ) : (
+          <span className="flex flex-col gap-0.5">
+            {tooltip.exact ? <span>{tooltip.exact}</span> : null}
+            {tooltip.comparison ? (
+              <span
+                className={tooltip.exact ? 'text-background/70' : undefined}
+              >
+                {tooltip.comparison}
+              </span>
+            ) : null}
+            {tooltip.detail ? (
+              <span
+                className={
+                  tooltip.exact || tooltip.comparison
+                    ? 'text-background/70'
+                    : undefined
+                }
+              >
+                {tooltip.detail}
+              </span>
+            ) : null}
+          </span>
+        )}
       </TooltipContent>
     </UiTooltip>
   )
@@ -341,6 +501,8 @@ type AnalyticsOverviewProps = {
   /** Include the Users tab (see useShowUsersPanel). */
   showUsers: boolean
   type: AnalyticsPropertyType
+  /** Add, edit and delete chart notes. */
+  canAnnotate: boolean
 }
 
 /**
@@ -367,10 +529,12 @@ export function AnalyticsOverview({
   onRefresh,
   showUsers,
   type,
+  canAnnotate,
 }: AnalyticsOverviewProps) {
   const t = useT()
   const [hasRevealed, setHasRevealed] = useState(false)
   const isComparing = comparisonRange !== null
+  const { features, isCloud } = useConsoleProfile()
   // Hooks can't be conditional: with comparison off, pass a null property ID
   // so the comparison queries stay disabled, and any range as a placeholder.
   const comparePropertyId = isComparing ? propertyId : null
@@ -430,6 +594,11 @@ export function AnalyticsOverview({
   const metrics = METRICS_BY_TYPE[type]
     .filter((key) => showUsers || key !== 'users')
     .map((key) => OVERVIEW_METRICS.find((metric) => metric.key === key)!)
+    .map((metric) =>
+      type === AnalyticsPropertyType.Mobile
+        ? { ...metric, ...MOBILE_TERMS[metric.key] }
+        : metric,
+    )
 
   // Aggregate metrics can't be read with some filters, so while one is
   // active the chart falls back to the first tab (the tab explains why).
@@ -439,11 +608,43 @@ export function AnalyticsOverview({
     requestedMetric.source === 'aggregate' && statsUnsupported
       ? metrics[0]
       : requestedMetric
+  // Monitors read the project's metered analytics usage, which only Cloud records.
+  const alertMetric =
+    isCloud &&
+    features.alerts &&
+    (activeMetric.key === 'pageviews' || activeMetric.key === 'events')
+      ? (`analytics.${activeMetric.key}` as const)
+      : undefined
 
   const chartPoints = useMemo(
     () => buildAnalyticsChartPoints(seriesData?.points ?? [], range, interval),
     [seriesData, range, interval],
   )
+  const { annotations } = useAnalyticsAnnotations(projectId, propertyId, range)
+  const annotationBuckets = useMemo(
+    () => groupAnnotationsByBucket(chartPoints, annotations, interval),
+    [chartPoints, annotations, interval],
+  )
+  const { project } = useProject(projectId)
+  const authorIds = useMemo(
+    () =>
+      [
+        ...new Set(annotations.map((note) => note.userId).filter(Boolean)),
+      ].sort(),
+    [annotations],
+  )
+  const { authors } = useAnalyticsAnnotationAuthors(project?.teamId, authorIds)
+  const showNotesLane = canAnnotate || annotationBuckets.size > 0
+  const [noteDraft, setNoteDraft] = useState<{
+    annotation?: Models.AnalyticsAnnotation
+    date: string
+  } | null>(null)
+  const [deletingNote, setDeletingNote] =
+    useState<Models.AnalyticsAnnotation | null>(null)
+  const deleteNote = useDeleteAnalyticsAnnotation(projectId, propertyId)
+  // A drag that zooms the range also ends in a click, which must not add a note.
+  const brushCommitted = useRef(false)
+
   const previousPoints = useMemo(
     () =>
       previousSeriesData && comparisonRange
@@ -468,11 +669,17 @@ export function AnalyticsOverview({
   // The comparison grid is built from the range alone (no data needed), so
   // its windows exist before the comparison series loads.
   const comparisonGrid = useMemo(
-    () => (comparisonRange ? buildAnalyticsChartPoints([], comparisonRange, interval) : []),
+    () =>
+      comparisonRange
+        ? buildAnalyticsChartPoints([], comparisonRange, interval)
+        : [],
     [comparisonRange, interval],
   )
   const comparisonWindows = useMemo(
-    () => (comparisonRange ? buildBucketWindows(comparisonGrid, comparisonRange) : []),
+    () =>
+      comparisonRange
+        ? buildBucketWindows(comparisonGrid, comparisonRange)
+        : [],
     [comparisonGrid, comparisonRange],
   )
   const windowResults = useQueries({
@@ -496,7 +703,9 @@ export function AnalyticsOverview({
     ),
   })
   const windowData = windowResults.map((result) => result.data)
-  const comparisonWindowData = comparisonWindowResults.map((result) => result.data)
+  const comparisonWindowData = comparisonWindowResults.map(
+    (result) => result.data,
+  )
   const windowsSettled =
     windowResults.length > 0 &&
     windowResults.every((result) => result.data !== undefined || result.isError)
@@ -540,7 +749,12 @@ export function AnalyticsOverview({
   const metricKey = activeMetric.key
   const currentValues: (number | null)[] =
     activeMetric.source === 'aggregate'
-      ? windowValues(chartPoints.length, windows, windowData, metricKey as AggregateMetric)
+      ? windowValues(
+          chartPoints.length,
+          windows,
+          windowData,
+          metricKey as AggregateMetric,
+        )
       : chartPoints.map(
           (point) => bucketValue(metricKey as SeriesMetric, point) ?? 0,
         )
@@ -562,7 +776,8 @@ export function AnalyticsOverview({
       ? SKELETON_WAVE[index % SKELETON_WAVE.length]
       : (currentValues[index] ?? null),
     previous: showComparisonLine ? (previousValues[index] ?? null) : undefined,
-    previousFullDate: (previousPoints[index] ?? comparisonGrid[index])?.fullDate,
+    previousFullDate: (previousPoints[index] ?? comparisonGrid[index])
+      ?.fullDate,
   }))
 
   // Tab numbers come from the property-wide flat aggregate, which
@@ -605,7 +820,10 @@ export function AnalyticsOverview({
   } = useUsageChartBrushSelect({
     points: brushPoints,
     chartInterval: interval,
-    onDateRangeChange,
+    onDateRangeChange: (next) => {
+      brushCommitted.current = true
+      onDateRangeChange(next)
+    },
   })
 
   const axisMax = chartData.reduce(
@@ -613,6 +831,17 @@ export function AnalyticsOverview({
     0,
   )
   const yAxisTickFormatter = axisFormatter(activeMetric.axis, axisMax)
+
+  // Ingestion derives a signed-in visitor's ID from the user ID, so users per
+  // visitor approximates the signed-in share. Aggregate only: no filtered fallback.
+  const signedInShare =
+    showUsers && stats && !statsUnsupported && stats.visitors > 0
+      ? Math.min(100, ((stats.users ?? 0) / stats.visitors) * 100)
+      : undefined
+  const signedInDetail =
+    signedInShare === undefined
+      ? undefined
+      : `${formatPercent(signedInShare)} ${t('of visitors signed in')}`
 
   const activeSeriesLabel = t(activeMetric.label)
 
@@ -641,6 +870,7 @@ export function AnalyticsOverview({
     return {
       ...metric,
       value,
+      previous,
       change: isComparing ? analyticsChangePercent(value, previous) : undefined,
       unavailable: value === undefined,
       hint:
@@ -654,7 +884,7 @@ export function AnalyticsOverview({
   return (
     <div className="w-full">
       {/* Active filters, removable in place. Hidden when none. */}
-      <ActiveFilterChips />
+      <AnalyticsFilterChips />
 
       {/* Series totals. Filters, interval, date range, comparison and
           refresh live in the standard ServiceHeader toolbar above. */}
@@ -678,13 +908,24 @@ export function AnalyticsOverview({
                   ? formatExactNumber(tab.value)
                   : undefined
               }
+              previousExact={
+                tab.previous === undefined
+                  ? undefined
+                  : tab.axis === 'count'
+                    ? formatExactNumber(tab.previous)
+                    : tab.format(tab.previous)
+              }
+              compareLabel={isComparing ? compareLabel : undefined}
               change={tab.change}
               invert={tab.invert}
               isActive={activeMetric.key === tab.key}
               unavailable={tab.unavailable}
               hint={tab.hint}
+              detail={tab.key === 'users' ? signedInDetail : undefined}
               onClick={
-                tab.blockedByFilter ? undefined : () => onActiveSeriesChange(tab.key)
+                tab.blockedByFilter
+                  ? undefined
+                  : () => onActiveSeriesChange(tab.key)
               }
             />
           ))}
@@ -702,6 +943,12 @@ export function AnalyticsOverview({
               />
               <span className="text-[12px] text-muted-foreground">
                 {activeSeriesLabel}
+                {activeMetric.key === 'users' && signedInDetail ? (
+                  <span className="text-muted-foreground/70">
+                    {' '}
+                    · {signedInDetail}
+                  </span>
+                ) : null}
               </span>
             </div>
             {showComparisonLine ? (
@@ -720,6 +967,52 @@ export function AnalyticsOverview({
                   ) : null}
                 </span>
               </div>
+            ) : null}
+            {annotationBuckets.size > 0 ? (
+              <div className="flex items-center gap-1.5">
+                <span className="flex size-4 items-center justify-center rounded-full border border-foreground/20 bg-background text-foreground">
+                  <MessageSquareText className="size-2.5" aria-hidden />
+                </span>
+                <span className="text-[12px] text-muted-foreground">
+                  {t('Notes')}
+                </span>
+              </div>
+            ) : null}
+          </div>
+          <div className="flex items-center gap-1">
+            {canAnnotate ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className={CHART_ACTION_CLASS_NAME}
+                onClick={() =>
+                  setNoteDraft({
+                    date: new Date(
+                      Math.min(Date.now(), new Date(range.endAt).getTime()),
+                    ).toISOString(),
+                  })
+                }
+              >
+                <MessageSquarePlus className="size-3.5" />
+                {t('Add note')}
+              </Button>
+            ) : null}
+            {alertMetric ? (
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className={CHART_ACTION_CLASS_NAME}
+              >
+                <Link
+                  to="/projects/$projectId/monitors"
+                  params={{ projectId }}
+                  search={{ metric: alertMetric }}
+                >
+                  <BellRing className="size-3.5" />
+                  {t('Alert me')}
+                </Link>
+              </Button>
             ) : null}
           </div>
         </div>
@@ -745,10 +1038,15 @@ export function AnalyticsOverview({
               className={cn(
                 surfaceClassName,
                 'relative',
+                // While the "Add note" chip shows, a click adds the note.
+                'has-[[data-annotation-add]]:cursor-pointer',
                 showSkeleton && 'pointer-events-none',
                 !showSkeleton && USAGE_CHART_FADE_IN_CLASS_NAME,
               )}
               aria-busy={showSkeleton || undefined}
+              onPointerDownCapture={() => {
+                brushCommitted.current = false
+              }}
               aria-label={
                 showSkeleton
                   ? t('Loading analytics data')
@@ -763,8 +1061,21 @@ export function AnalyticsOverview({
               >
                 <ComposedChart
                   data={chartData}
-                  margin={{ top: 8, right: 12, left: 0, bottom: 4 }}
+                  margin={CHART_MARGIN}
+                  // Recharts defaults its wrapper to `cursor: default`; take the
+                  // surface's resize or add-note pointer instead.
+                  style={{ cursor: 'inherit' }}
                   {...chartProps}
+                  onClick={
+                    canAnnotate && !showSkeleton
+                      ? (state) => {
+                          const point =
+                            chartPoints[Number(state.activeTooltipIndex)]
+                          if (!point || brushCommitted.current) return
+                          setNoteDraft({ date: point.day.toISOString() })
+                        }
+                      : undefined
+                  }
                 >
                   <defs>
                     {showSkeleton ? (
@@ -822,13 +1133,34 @@ export function AnalyticsOverview({
                     allowDecimals={activeMetric.axis !== 'count'}
                     domain={[
                       0,
-                      (dataMax: number) => Math.ceil(dataMax * 1.08) || 1,
+                      (dataMax: number) =>
+                        Math.ceil(
+                          dataMax *
+                            (showNotesLane
+                              ? Y_HEADROOM_WITH_NOTES
+                              : Y_HEADROOM),
+                        ) || 1,
                     ]}
                   />
                   <Tooltip
                     {...CHART_ANIMATION_DISABLED}
-                    cursor={!showSkeleton && !isSelecting}
-                    content={({ active, payload }) => {
+                    // Below the notes lane, so it never covers a badge or the add chip.
+                    position={
+                      showNotesLane
+                        ? { y: CHART_MARGIN.top + ANNOTATION_LANE_HEIGHT }
+                        : undefined
+                    }
+                    cursor={
+                      !showSkeleton && !isSelecting ? (
+                        <AnnotationCursor
+                          notedIndexes={annotationBuckets}
+                          canAdd={canAnnotate}
+                        />
+                      ) : (
+                        false
+                      )
+                    }
+                    content={({ active, payload, label }) => {
                       if (
                         showSkeleton ||
                         isSelecting ||
@@ -841,8 +1173,9 @@ export function AnalyticsOverview({
                         | (typeof chartData)[number]
                         | undefined
                       if (!point) return null
+                      const notes = annotationBuckets.get(Number(label)) ?? []
                       return (
-                        <div className="min-w-[180px] rounded-md border border-border bg-popover px-3 py-2">
+                        <div className="min-w-[180px] max-w-[280px] rounded-md border border-border bg-popover px-3 py-2">
                           <p className="mb-1.5 text-[11px] text-muted-foreground">
                             {point.fullDate}
                           </p>
@@ -852,7 +1185,9 @@ export function AnalyticsOverview({
                               {activeSeriesLabel}
                             </span>
                             <span className="text-[13px] font-medium tabular-nums text-foreground">
-                              {point.value == null ? '–' : activeMetric.format(point.value)}
+                              {point.value == null
+                                ? '–'
+                                : activeMetric.format(point.value)}
                             </span>
                           </div>
                           {showComparisonLine && point.previous != null ? (
@@ -880,6 +1215,34 @@ export function AnalyticsOverview({
                               </div>
                             </>
                           ) : null}
+                          {notes.length > 0 ? (
+                            <div className="mt-2 space-y-1.5 border-t border-border pt-2">
+                              {notes
+                                .slice(0, TOOLTIP_NOTES_LIMIT)
+                                .map((note) => (
+                                  <p
+                                    key={note.$id}
+                                    className="flex gap-1.5 text-[12px] text-foreground"
+                                  >
+                                    <MessageSquareText
+                                      className="mt-0.5 size-3 shrink-0 text-muted-foreground"
+                                      aria-hidden
+                                    />
+                                    <span className="line-clamp-2 min-w-0 break-words">
+                                      {note.content}
+                                    </span>
+                                  </p>
+                                ))}
+                              {notes.length > TOOLTIP_NOTES_LIMIT ? (
+                                <p className="ps-[18px] text-[11px] text-muted-foreground">
+                                  {t('+{count} more').replace(
+                                    '{count}',
+                                    String(notes.length - TOOLTIP_NOTES_LIMIT),
+                                  )}
+                                </p>
+                              ) : null}
+                            </div>
+                          ) : null}
                         </div>
                       )
                     }}
@@ -903,7 +1266,12 @@ export function AnalyticsOverview({
                     dataKey="value"
                     // Grouped aggregate windows leave gaps between points.
                     connectNulls
-                    stroke={showSkeleton ? SKELETON_CHART_STROKE : CURRENT_COLOR}
+                    stroke={
+                      showSkeleton ? SKELETON_CHART_STROKE : CURRENT_COLOR
+                    }
+                    strokeOpacity={
+                      showSkeleton ? SKELETON_CHART_STROKE_OPACITY : undefined
+                    }
                     strokeWidth={2}
                     fill={
                       showSkeleton
@@ -923,6 +1291,47 @@ export function AnalyticsOverview({
                     }
                     {...CHART_ANIMATION_DISABLED}
                   />
+                  {showSkeleton
+                    ? null
+                    : [...annotationBuckets].map(([index, notes]) => (
+                        <ReferenceLine
+                          key={notes[0].$id}
+                          x={index}
+                          {...ANNOTATION_LINE_PROPS}
+                          label={{
+                            content: ({ viewBox }) => {
+                              const { x = 0, y = 0 } = (viewBox ?? {}) as {
+                                x?: number
+                                y?: number
+                              }
+                              return (
+                                <AnnotationMarker
+                                  x={x}
+                                  y={y}
+                                  annotations={notes}
+                                  authors={authors}
+                                  canWrite={canAnnotate}
+                                  onEdit={(annotation) =>
+                                    setNoteDraft({
+                                      annotation,
+                                      date: annotation.date,
+                                    })
+                                  }
+                                  onDelete={setDeletingNote}
+                                  onAdd={() => {
+                                    const point = chartPoints[index]
+                                    if (point) {
+                                      setNoteDraft({
+                                        date: point.day.toISOString(),
+                                      })
+                                    }
+                                  }}
+                                />
+                              )
+                            },
+                          }}
+                        />
+                      ))}
                   <UsageChartBrushReferenceArea
                     left={brushLeft}
                     right={brushRight}
@@ -943,6 +1352,42 @@ export function AnalyticsOverview({
           )}
         </ChartArea>
       </div>
+
+      {canAnnotate ? (
+        <>
+          <SaveAnnotation
+            open={noteDraft !== null}
+            onOpenChange={(open) => {
+              if (!open) setNoteDraft(null)
+            }}
+            projectId={projectId}
+            propertyId={propertyId}
+            annotation={noteDraft?.annotation}
+            date={noteDraft?.date ?? range.endAt}
+          />
+          <ConfirmActionDialog
+            open={deletingNote !== null}
+            onOpenChange={(open) => {
+              if (!open) setDeletingNote(null)
+            }}
+            title={t('Delete note')}
+            description={t('The note is removed from the chart for everyone.')}
+            confirmLabel={t('Delete')}
+            confirmVariant="destructive"
+            isConfirming={deleteNote.isPending}
+            onConfirm={() => {
+              if (!deletingNote) return
+              deleteNote.mutate(deletingNote.$id, {
+                onSuccess: () => {
+                  toast.success(t('Note deleted'))
+                  setDeletingNote(null)
+                },
+                onError: (error) => toast.error(getErrorMessage(error)),
+              })
+            }}
+          />
+        </>
+      ) : null}
     </div>
   )
 }

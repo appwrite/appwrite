@@ -304,6 +304,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Failed to load logo files': 'ロゴファイルの読み込みに失敗しました',
   'Failed to load members': 'メンバーの読み込みに失敗しました',
   'Failed to load page': 'ページの読み込みに失敗しました',
+  'Failed to load preset records':
+    'プリセットの DNS レコードの読み込みに失敗しました',
   'Failed to load projects': 'プロジェクトの読み込みに失敗しました',
   'Failed to load regions': 'リージョンの読み込みに失敗しました',
   'Failed to read file. Please try again.':
@@ -379,6 +381,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Import zone file': 'ゾーンファイルをインポート',
   'Initial term': '初回期間',
   'Install app': 'アプリをインストール',
+  '1 install': '1 件のインストール',
+  '{count} installs': '{count} 件のインストール',
   'Invalid Selection': '無効な選択',
   'Invalid email address': '無効なメールアドレスです',
   'Invalid payment method response': '無効な支払い方法の応答です',
@@ -544,6 +548,9 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Please select a state': '州を選択してください',
   'Please select exactly': '正確に選択してください',
   'Please try again.': 'もう一度お試しください。',
+  'Port is required': 'ポートは必須です',
+  'Port must be between 0 and 65535':
+    'ポートは 0 から 65535 の範囲で指定してください',
   'Post-logout redirect URIs': 'ログアウト後のリダイレクト URI',
   'Postal code': '郵便番号',
   'Preparing your organization dashboard.': '組織ダッシュボードを準備中です。',
@@ -551,6 +558,9 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Previous projects page': '前のプロジェクトページ',
   'Primary payment method updated': '主要な支払い方法を更新しました',
   'Priority for SRV record': 'SRV レコードの優先度',
+  'Priority is required': '優先度は必須です',
+  'Priority must be between 0 and 65535':
+    '優先度は 0 から 65535 の範囲で指定してください',
   'Privacy policy': 'プライバシーポリシー',
   'Project (optional)': 'プロジェクト (任意)',
   'Project ID': 'プロジェクト ID',
@@ -559,6 +569,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Project keys': 'プロジェクトキー',
   'Project pinned': 'プロジェクトをピン留めしました',
   'Project unpinned': 'プロジェクトのピン留めを解除しました',
+  'Projects subtotal': 'プロジェクト小計',
   'Projects that will be deleted:': '削除されるプロジェクト:',
   'Promo code': 'プロモコード',
   'Public client': 'パブリッククライアント',
@@ -659,6 +670,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'このアプリは無効で、ユーザーを認可できません。',
   'This organization has no projects.':
     'この組織にはプロジェクトがありません。',
+  'These DNS records will be added. Records this domain already has are left unchanged. Nothing is created until you confirm.':
+    'これらの DNS レコードが追加されます。このドメインに既にあるレコードは変更されません。確認するまで何も作成されません。',
   'This will add': 'これにより次が追加されます',
   'Ticket submitted': 'チケットを送信しました',
   'Total due': '合計支払額',
@@ -709,6 +722,9 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'View recap': 'まとめを見る',
   'View charges breakdown': '料金内訳を表示',
   'View detailed pricing': '詳細な料金を表示',
+  'Weight is required': '重みは必須です',
+  'Weight must be between 0 and 65535':
+    '重みは 0 から 65535 の範囲で指定してください',
   'View invoice': '請求書を表示',
   'View members': 'メンバーを表示',
   'View project': 'プロジェクトを表示',
@@ -821,6 +837,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'チーム管理と請求の書き込みを除くすべてのリソース。',
   'Allow OAuth2 Device Authorization Grant (RFC 8628).':
     'OAuth2 Device Authorization Grant (RFC 8628) を許可します。',
+  'Already in this organization': 'すでにこの組織にあります',
   'Apply Appwrite credits to your organization. Credits expire after a set period and do not roll over.':
     '組織に Appwrite クレジットを適用します。クレジットは一定期間後に失効し、繰り越されません。',
   'Apps published by your organization.': '組織が公開しているアプリ。',
@@ -915,6 +932,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'プランの上限を超えた追加使用による予期しない課金を防ぐには、予算上限を有効にしてください。支出上限に達すると、サービスは自動的に一時停止されます。',
   'Enter a coupon code to update your estimated total. Applied credits expire after a set period and do not roll over.':
     'クーポンコードを入力すると見積合計が更新されます。適用したクレジットは一定期間後に失効し、繰り越されません。',
+  'Enter a domain like example.com':
+    'example.com のようにドメインを入力してください',
   'Enter a full domain name (e.g. example.com)':
     'ドメイン名をすべて入力してください (例: example.com)',
   'Enter tax ID (e.g., VAT, GST, EIN)':
@@ -923,6 +942,13 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'プロトコルを除いたドメイン名を入力してください (例: example.com)',
   'Enter the domain name you want to add to your organization.':
     '組織に追加したいドメイン名を入力してください。',
+  'Enter the hostname only, without https:// or a path.':
+    'https:// やパスを含めず、ホスト名のみを入力してください。',
+  'Enter the hostname only:': 'ホスト名のみを入力してください:',
+  'Remove the spaces.': 'スペースを削除してください。',
+  'Remove the trailing dot.': '末尾のドットを削除してください。',
+  'Wildcard domains are not supported. Enter a specific hostname.':
+    'ワイルドカードドメインには対応していません。特定のホスト名を入力してください。',
   'Enter your card details to add a new payment method.':
     '新しい支払い方法を追加するには、カード情報を入力してください。',
   'Enter your full domain name to load a price quote.':
@@ -1113,6 +1139,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'この組織に参加できなくなります。',
   'This app may have been deleted or you do not have access.':
     'このアプリは削除されたか、アクセス権がない可能性があります。',
+  "This domain can't be transferred. Check the name and try again.":
+    'このドメインは移管できません。名前を確認して、もう一度お試しください。',
   'This entire organization will be deleted, including all of its projects and resources.':
     'この組織全体と、そのすべてのプロジェクトおよびリソースが削除されます。',
   'This invoice is missing authentication details.':
@@ -1577,9 +1605,11 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'プラン変更時にどのバックアップポリシーが停止するかを読み込めませんでした。',
   'Could not load which dedicated databases are spun down when your plan changes.':
     'プラン変更時にどの専用データベースが停止されるかを読み込めませんでした。',
-  'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.': 'このアプリをインストールした組織は、以下のスコープをアプリに付与します。インストールの作成または更新後、ユーザーはリダイレクト URL に戻ります。',
+  'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.':
+    'このアプリをインストールした組織は、以下のスコープをアプリに付与します。インストールの作成または更新後、ユーザーはリダイレクト URL に戻ります。',
   'Installation settings updated': 'インストール設定を更新しました',
-  'No installation scopes are available.': '利用できるインストールスコープはありません。',
+  'No installation scopes are available.':
+    '利用できるインストールスコープはありません。',
   'Choose a new plan': '新しいプランを選択',
   'Plans could not be loaded. Refresh and try again.':
     'プランを読み込めませんでした。更新してやり直してください。',
@@ -1645,9 +1675,190 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Failed to set up auto-pay': '自動支払いの設定に失敗しました',
   'The bank asks for an OTP on automatic payments with this card. Set up auto-pay so payments up to $150 go through without one.':
     'このカードでは、自動支払いのたびに銀行が OTP を求めます。自動支払いを設定すると、$150 までの支払いは OTP なしで処理されます。',
-  'Only the card owner can set up auto-pay': 'カードの所有者のみが自動支払いを設定できます',
+  'Only the card owner can set up auto-pay':
+    'カードの所有者のみが自動支払いを設定できます',
   'Check nameservers': 'ネームサーバーを確認',
   'Nameservers changed': 'ネームサーバーが変更されました',
   'The nameservers for this domain no longer point to Appwrite. The domain status has been updated.':
     'このドメインのネームサーバーは Appwrite を指していません。ドメインのステータスを更新しました。',
+  // Single sign-on
+  'Single sign-on': 'シングルサインオン',
+  'Email not on a verified domain': '検証済みドメイン外のメール',
+  'Domain added': 'ドメインを追加しました',
+  'Domain deleted': 'ドメインを削除しました',
+  'Only the domain, without @. Subdomains need their own entry.':
+    '@を付けずにドメインのみを入力してください。サブドメインは個別に追加します。',
+  'Pick at least one role.': 'ロールを1つ以上選択してください。',
+  'Another organization claimed this domain. Add this TXT record to prove it is yours, then add it again.':
+    'このドメインは別の組織が登録しています。このTXTレコードを追加して所有権を証明してから、もう一度追加してください。',
+  'Add this TXT record at your DNS provider, then verify. It can take a few minutes to propagate.':
+    'このTXTレコードをDNSプロバイダーに追加してから検証してください。反映まで数分かかる場合があります。',
+  'The TXT record was not found yet. DNS changes can take a few minutes to propagate.':
+    'TXTレコードがまだ見つかりません。DNSの変更が反映されるまで数分かかる場合があります。',
+  'Payment authentication is required': '支払いの認証が必要です',
+  'They can join again by signing in with single sign-on. To keep them out, remove them at your identity provider too.':
+    'シングルサインオンでサインインすると、再び参加できます。参加させないようにするには、ID プロバイダーでも削除してください。',
+  'Prove your organization owns this domain with a DNS record. Your identity providers then sign in people with an email on it.':
+    'DNS レコードで、このドメインが組織のものであることを証明します。その後、ID プロバイダーはこのドメインのメールアドレスを持つユーザーをサインインさせます。',
+  'Prove the domains your organization owns. Your identity providers sign in only people with an email on a verified domain.':
+    '組織が所有するドメインを証明します。ID プロバイダーは、検証済みドメインのメールアドレスを持つユーザーのみをサインインさせます。',
+  'Failed to load domains': 'ドメインを読み込めませんでした',
+  'Add your company domain, then connect an identity provider so teammates sign in with single sign-on.':
+    '会社のドメインを追加してから ID プロバイダーを接続すると、チームメンバーがシングルサインオンでサインインできます。',
+  'Verify {domain}': '{domain} を検証',
+  'Are you sure you want to delete "{name}"?':
+    '"{name}" を削除してもよろしいですか?',
+  'People with an email on it can no longer sign in through your identity providers. People who already joined stay members.':
+    'このドメインのメールアドレスを持つユーザーは、ID プロバイダー経由でサインインできなくなります。参加済みのユーザーはメンバーのままです。',
+  'Require SSO is on and this is your only verified domain: deleting it pauses Require SSO, and members can sign in any way they like.':
+    'SSO の必須化が有効で、これが唯一の検証済みドメインです。削除すると SSO の必須化が一時停止され、メンバーは任意の方法でサインインできるようになります。',
+  'Verify a domain to require single sign-on.':
+    'シングルサインオンを必須にするには、ドメインを検証してください。',
+  'Enable an identity provider to require single sign-on.':
+    'シングルサインオンを必須にするには、ID プロバイダーを有効にしてください。',
+  'Single sign-on is now required': 'シングルサインオンが必須になりました',
+  'Single sign-on is no longer required':
+    'シングルサインオンは必須ではなくなりました',
+  'Failed to update single sign-on': 'シングルサインオンの更新に失敗しました',
+  'Require SSO': 'SSO の必須化',
+  'Members with an email on your verified domains can open this organization only after signing in through your identity provider. Owners can always sign in with any method, so a broken identity provider never locks your organization out. Members on other domains keep their usual sign-in too.':
+    '検証済みドメインのメールアドレスを持つメンバーは、ID プロバイダー経由でサインインした後にのみこの組織を開けます。オーナーは常に任意の方法でサインインできるため、ID プロバイダーに問題が起きても組織から締め出されることはありません。他のドメインのメンバーも、これまでどおりの方法でサインインできます。',
+  'Require single sign-on': 'シングルサインオンを必須にする',
+  'Paused - enable an identity provider to require single sign-on again.':
+    '一時停止中 - シングルサインオンを再び必須にするには、ID プロバイダーを有効にしてください。',
+  'Paused - verify a domain to require single sign-on again.':
+    '一時停止中 - シングルサインオンを再び必須にするには、ドメインを検証してください。',
+  'Enabled - members on your verified domains must use single sign-on.':
+    '有効 - 検証済みドメインのメンバーはシングルサインオンでサインインする必要があります。',
+  'Disabled - members sign in any way they like.':
+    '無効 - メンバーは任意の方法でサインインできます。',
+  'Members on your verified domains who signed in another way lose access to this organization until they sign in through your identity provider. Their other organizations are not affected. Owners keep their usual sign-in, so a broken identity provider never locks you out.':
+    '別の方法でサインインした検証済みドメインのメンバーは、ID プロバイダー経由でサインインするまでこの組織にアクセスできなくなります。他の組織には影響しません。オーナーはこれまでどおりサインインできるため、ID プロバイダーに問題が起きても締め出されることはありません。',
+  'Check your connection and try again.':
+    '接続を確認して、もう一度お試しください。',
+  'Identity provider enabled': 'ID プロバイダーを有効にしました',
+  'Identity provider disabled. Require SSO is paused until you enable an identity provider.':
+    'ID プロバイダーを無効にしました。ID プロバイダーを有効にするまで、SSO の必須化は一時停止されます。',
+  'Identity provider disabled': 'ID プロバイダーを無効にしました',
+  'Failed to update identity provider': 'ID プロバイダーの更新に失敗しました',
+  'Identity provider deleted': 'ID プロバイダーを削除しました',
+  'Identity providers': 'ID プロバイダー',
+  'People on your verified domains sign in through your identity provider, like Okta, Microsoft Entra ID, Google Workspace or Keycloak, and join with its roles.':
+    '検証済みドメインのユーザーは、Okta、Microsoft Entra ID、Google Workspace、Keycloak などの ID プロバイダー経由でサインインし、そのロールで参加します。',
+  'Nobody can sign in through these identity providers yet. Verify a domain first.':
+    'これらの ID プロバイダーでは、まだ誰もサインインできません。先にドメインを検証してください。',
+  'Failed to load identity providers': 'ID プロバイダーを読み込めませんでした',
+  'No identity providers yet': 'ID プロバイダーはまだありません',
+  'Connect your identity provider so people on your domains sign in with single sign-on.':
+    'ID プロバイダーを接続すると、ドメインのユーザーがシングルサインオンでサインインできます。',
+  'SSO URL': 'SSO URL',
+  'Copy SSO URL': 'SSO URL をコピー',
+  'Delete identity provider': 'ID プロバイダーを削除',
+  'People can no longer sign in through it. People who already joined stay members.':
+    'このプロバイダーではサインインできなくなります。参加済みのユーザーはメンバーのままです。',
+  'Require SSO is on and this is your only enabled identity provider: deleting it pauses Require SSO, and members can sign in any way they like.':
+    'SSO の必須化が有効で、これが唯一の有効な ID プロバイダーです。削除すると SSO の必須化が一時停止され、メンバーは任意の方法でサインインできるようになります。',
+  'Use an https:// URL.': 'https:// で始まる URL を使用してください。',
+  'Enter a full URL, starting with https://':
+    'https:// で始まる完全な URL を入力してください',
+  'Enter the discovery URL, or set all three endpoints manually.':
+    'ディスカバリー URL を入力するか、3 つのエンドポイントをすべて手動で設定してください。',
+  'Identity provider updated': 'ID プロバイダーを更新しました',
+  'Identity provider added': 'ID プロバイダーを追加しました',
+  'Failed to save identity provider': 'ID プロバイダーの保存に失敗しました',
+  'People can sign in through this identity provider.':
+    'この ID プロバイダーでサインインできます。',
+  'Update identity provider': 'ID プロバイダーを更新',
+  'Add identity provider': 'ID プロバイダーを追加',
+  'Change how people sign in through this identity provider. Leave the client secret empty to keep the stored one.':
+    'この ID プロバイダーでのサインイン方法を変更します。保存済みのクライアントシークレットを使い続けるには、空欄のままにしてください。',
+  'Create an OpenID Connect application at your identity provider, add the redirect URL there, then fill in its details.':
+    'ID プロバイダーで OpenID Connect アプリケーションを作成し、そこにリダイレクト URL を追加してから、詳細を入力してください。',
+  'People see the name when they choose how to sign in.':
+    'サインイン方法を選ぶときに、この名前が表示されます。',
+  'Roles people get when they join through this identity provider.':
+    'この ID プロバイダー経由で参加したユーザーに付与されるロールです。',
+  'Client secret': 'クライアントシークレット',
+  Unchanged: '変更なし',
+  'Discovery URL': 'ディスカバリー URL',
+  'Set the endpoints manually': 'エンドポイントを手動で設定',
+  'Override what the discovery URL publishes, or set all three when your identity provider has none.':
+    'ディスカバリー URL の内容を上書きするか、ID プロバイダーにディスカバリー URL がない場合は 3 つすべてを設定してください。',
+  'Token URL': 'トークン URL',
+  'User info URL': 'ユーザー情報 URL',
+  'Until the domain is verified, nobody can sign in with single sign-on on it.':
+    'ドメインが検証されるまで、このドメインでは誰もシングルサインオンでサインインできません。',
+  'Enter only the part after @:': '@ より後ろの部分だけを入力してください:',
+  'Enter only the domain, the part after @.':
+    'ドメイン(@ より後ろの部分)だけを入力してください。',
+  'A domain can be at most 253 characters, and each part between dots at most 63.':
+    'ドメインは最大 253 文字、ドット間の各部分は最大 63 文字です。',
+  'Failed to delete identity provider': 'ID プロバイダーの削除に失敗しました',
+  "Single sign-on for an organization needs the Single sign-on add-on. Enable it in the organization's settings.":
+    '組織のシングルサインオンにはシングルサインオンアドオンが必要です。組織の設定で有効にしてください。',
+  'Needs the Single sign-on add-on': 'シングルサインオンアドオンが必要です',
+  'Enable the Single sign-on add-on to require single sign-on.':
+    'シングルサインオンを必須にするには、シングルサインオンアドオンを有効にしてください。',
+  'Paused - enable the Single sign-on add-on to require single sign-on again.':
+    '一時停止中 - シングルサインオンを再び必須にするには、シングルサインオンアドオンを有効にしてください。',
+  'View add-on': 'アドオンを表示',
+  'Enable add-on': 'アドオンを有効にする',
+  'Until the add-on is active, nobody signs in through your identity providers and Require SSO has no effect. You can still delete domains and identity providers, and turn Require SSO off.':
+    'アドオンが有効になるまで、ID プロバイダー経由でサインインするユーザーはおらず、SSO の必須化も適用されません。ドメインと ID プロバイダーの削除、および SSO の必須化をオフにすることは引き続き可能です。',
+  'Single sign-on is paused': 'シングルサインオンは一時停止中です',
+  Later: '後で',
+  'SAML is coming soon':
+    'SAML は近日公開です',
+  'Get notified when SAML identity providers can be connected.':
+    'SAML の ID プロバイダーを接続できるようになったらお知らせします。',
+  'Identity providers that sign people in with SAML 2.0, such as Okta or Microsoft Entra ID.':
+    'Okta や Microsoft Entra ID など、SAML 2.0 でサインインする ID プロバイダーです。',
+  "You'll be notified when SAML is available.":
+    'SAML が利用可能になったらお知らせします。',
+  "You'll no longer be notified about SAML.":
+    'SAML については今後通知しません。',
+  'Organization photo': '組織の写真',
+  'Shown next to your organization name across the Console.':
+    'コンソール全体で組織名の横に表示されます。',
+  'PNG, JPEG, or WebP up to 5MB.': 'PNG、JPEG、WebP(5MBまで)。',
+  'Only organization owners can change the photo.':
+    '写真を変更できるのは組織のオーナーのみです。',
+  'Organization photo updated': '組織の写真を更新しました',
+  'Failed to update organization photo': '組織の写真の更新に失敗しました',
+  'Organization photo removed': '組織の写真を削除しました',
+  'Failed to remove organization photo': '組織の写真の削除に失敗しました',
+  'Remove organization photo': '組織の写真を削除',
+  'The photo is replaced with a placeholder. You can upload a new photo at any time.':
+    '写真はプレースホルダーに置き換えられます。新しい写真はいつでもアップロードできます。',
+  'Synthetic checks': 'Synthetic チェック',
+  Escalations: 'エスカレーション',
+  '{current} in use, the selected plan allows {limit}. Delete {excess} to continue.':
+    '{current} 件を使用中ですが、選択したプランの上限は {limit} 件です。続行するには {excess} 件を削除してください。',
+  'Additional synthetic checks': '追加の Synthetic チェック',
+  'Additional on-call responders': '追加のオンコール対応者',
+  'Apps cannot authorize users until the OAuth2 server is enabled in the Server settings.': 'サーバー設定で OAuth2 サーバーを有効にするまで、アプリはユーザーを認可できません。',
+  'OAuth2 server is disabled': 'OAuth2 サーバーは無効です',
+  'Enter a valid URL, for example https://example.com': '有効な URL を入力してください（例: https://example.com）',
+  "Delete this app's OAuth secrets before switching to a public client.": 'パブリッククライアントに切り替える前に、このアプリの OAuth シークレットを削除してください。',
+  'Use https, http on localhost, or a reverse-domain scheme like com.example.app:/callback': 'https、localhost の http、または com.example.app:/callback のような逆ドメイン形式のスキームを使用してください',
+  'Redirect URIs cannot contain a fragment (#)': 'リダイレクト URI にフラグメント (#) は含められません',
+  'Enter a valid URL': '有効な URL を入力してください',
+  'Edit app': 'アプリを編集',
+  'Back to marketplace': 'Marketplace に戻る',
+  'More about the app for your users.': 'ユーザー向けのアプリの詳細です。',
+  'Optional description of the app': 'アプリの説明（任意）',
+  'Links and contacts for compliance and support.': 'コンプライアンスとサポートのためのリンクと連絡先です。',
+  'Where this app is installed and the scopes each installation granted. Removing an installation revokes its access tokens.': 'このアプリのインストール先と、各インストールで付与されたスコープです。インストールを削除すると、そのアクセストークンは失効します。',
+  'Installations appear here once someone installs this app.': '誰かがこのアプリをインストールすると、ここに表示されます。',
+  'The app loses access immediately and its installation tokens stop working. It can be installed again later.': 'アプリは直ちにアクセスを失い、インストールトークンは使えなくなります。後で再インストールできます。',
+  'Search scopes': 'スコープを検索',
+  'The app is created in your current organization. Switch organizations to create it in another one.': 'アプリは現在の組織に作成されます。別の組織に作成するには、組織を切り替えてください。',
+  'Store this secret in your deployment environment before continuing.': '続行する前に、このシークレットをデプロイ環境に保存してください。',
+  'This app has no installation scopes to grant yet.': 'このアプリには、まだ付与できるインストールスコープがありません。',
+  'App installed': 'アプリをインストールしました',
+  'Failed to install app': 'アプリのインストールに失敗しました',
+  'Values have a maximum length of {count} characters': '値の最大長は {count} 文字です',
+  'This email is already added': 'このメールアドレスは既に追加されています',
+  'This value is already added': 'この値は既に追加されています',
+  Organization: '組織',
 }

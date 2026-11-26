@@ -12,6 +12,7 @@ import {
   Users,
   Zap,
 } from 'lucide-react'
+import { ZERO_PRODUCT_ICON } from '@/lib/zero/product-icon'
 import { PostgresElephantIcon } from '@/components/pages/projects/$projectId/databases/_components/database-mascot-icons'
 import type {
   ProductId,
@@ -19,6 +20,7 @@ import type {
   ProductNavItemId,
   ProductRegistryItem,
 } from '@/lib/products/types'
+import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 
 export const PRODUCT_IDS = [
   'auth',
@@ -27,6 +29,7 @@ export const PRODUCT_IDS = [
   'storage',
   'functions',
   'messaging',
+  'videos',
   'realtime',
   'sites',
   'analytics',
@@ -88,6 +91,15 @@ export const PRODUCT_REGISTRY: Record<ProductId, ProductRegistryItem> = {
     tagline: 'Email, SMS, and push with topics and targets.',
     docsPath: '/docs/products/messaging',
   },
+  videos: {
+    id: 'videos',
+    name: 'Videos',
+    group: 'build',
+    path: '/products/videos',
+    icon: VIDEOS_PRODUCT_ICON,
+    tagline: 'Adaptive HLS, DASH, and CMAF streams with subtitles.',
+    docsPath: '/docs/products/videos',
+  },
   realtime: {
     id: 'realtime',
     name: 'Realtime',
@@ -113,7 +125,7 @@ export const PRODUCT_REGISTRY: Record<ProductId, ProductRegistryItem> = {
     group: 'deploy',
     path: '/products/analytics',
     icon: ANALYTICS_PRODUCT_ICON,
-    tagline: 'Cookieless web and app analytics, bots and AI included.',
+    tagline: 'Cookieless analytics built into your Sites and Auth.',
     docsPath: '/docs/products/analytics',
   },
   firewall: {
@@ -142,8 +154,10 @@ export const PRODUCT_NAV_ITEM_IDS = [
   'storage',
   'functions',
   'messaging',
+  'videos',
   'realtime',
   'agent',
+  'zero',
   'sites',
   'domains',
   'analytics',
@@ -200,6 +214,14 @@ export const PRODUCT_NAV_REGISTRY: Record<ProductNavItemId, ProductNavItem> = {
     icon: PRODUCT_REGISTRY.messaging.icon,
     tagline: PRODUCT_REGISTRY.messaging.tagline,
   },
+  videos: {
+    id: 'videos',
+    name: PRODUCT_REGISTRY.videos.name,
+    group: 'build',
+    href: PRODUCT_REGISTRY.videos.path,
+    icon: PRODUCT_REGISTRY.videos.icon,
+    tagline: PRODUCT_REGISTRY.videos.tagline,
+  },
   realtime: {
     id: 'realtime',
     name: PRODUCT_REGISTRY.realtime.name,
@@ -215,6 +237,14 @@ export const PRODUCT_NAV_REGISTRY: Record<ProductNavItemId, ProductNavItem> = {
     href: '/docs/products/agent',
     icon: BotMessageSquare,
     tagline: 'Chat to inspect your project and take approved actions.',
+  },
+  zero: {
+    id: 'zero',
+    name: 'Zero',
+    group: 'build',
+    href: '/zero',
+    icon: ZERO_PRODUCT_ICON,
+    tagline: 'A real project for you or your agent, no signup.',
   },
   sites: {
     id: 'sites',
@@ -350,6 +380,7 @@ export const PRODUCT_PAGE_EXPLORE_NAV_ITEM_IDS = [
   'storage',
   'functions',
   'messaging',
+  'videos',
   'realtime',
   'sites',
   'domains',

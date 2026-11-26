@@ -22,7 +22,6 @@ import {
 } from '@/lib/react-query/hooks'
 import { Lock, ExternalLink, Loader2, X } from 'lucide-react'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
-import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPicker'
 import { RepositoryPicker } from '@/components/global/shared/RepositoryPicker'
 import { VcsInstallationErrorAlert } from '@/components/global/shared/VcsInstallationError'
@@ -47,9 +46,6 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
   const [disconnectDialogOpen, setDisconnectDialogOpen] = useState(false)
 
   // Form state
-  const [selectedBranch, setSelectedBranch] = useState(
-    func.providerBranch || '',
-  )
   const [selectedDir, setSelectedDir] = useState(
     func.providerRootDirectory || '',
   )
@@ -84,6 +80,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
     provider: installationProvider,
     organization: installationOrganization,
     reconnectUrl,
+    accessUrl,
   } = useVcsInstallationReconnect(projectId, func.installationId)
 
   // Fetch installations for connect modal
@@ -125,10 +122,8 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
 
   // Keep form in sync when server function changes (e.g. after connect or refetch)
   useEffect(() => {
-    setSelectedBranch(func.providerBranch || '')
     setSelectedDir(func.providerRootDirectory || '')
   }, [
-    func.providerBranch,
     func.providerRootDirectory,
     func.installationId,
     func.providerRepositoryId,
@@ -201,6 +196,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
           installationId: selectedInstallationId,
           providerRepositoryId: selectedRepositoryId,
           providerBranch,
+          providerSilentMode: false,
         }),
       )
     },
@@ -236,7 +232,6 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
     onSuccess: (updated) => {
       toast.success(t('Repository disconnected successfully'))
       setDisconnectDialogOpen(false)
-      setSelectedBranch('')
       setSelectedDir('')
       queryClient.setQueryData(
         ['function', 'project', projectId, func.$id],
@@ -249,9 +244,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
   })
 
   const handleSaveConfiguration = () => {
-    const hasChanges =
-      selectedBranch !== func.providerBranch ||
-      selectedDir !== (func.providerRootDirectory || '')
+    const hasChanges = selectedDir !== (func.providerRootDirectory || '')
 
     if (!hasChanges) {
       toast.info(t('No changes to save'))
@@ -259,7 +252,6 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
     }
 
     updateFunctionMutation.mutate({
-      providerBranch: selectedBranch || undefined,
       providerRootDirectory: selectedDir || undefined,
     })
   }
@@ -277,11 +269,8 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
   }
 
   const hasChanges = useMemo(() => {
-    return (
-      selectedBranch !== func.providerBranch ||
-      selectedDir !== (func.providerRootDirectory || '')
-    )
-  }, [selectedBranch, selectedDir, func])
+    return selectedDir !== (func.providerRootDirectory || '')
+  }, [selectedDir, func])
 
   // Null while the repository is unreachable: only the provider knows its
   // owner and name, so the affected rows fall back to generic wording.
@@ -326,12 +315,13 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                 provider={installationProvider}
                 organization={installationOrganization}
                 reconnectUrl={reconnectUrl}
+                accessUrl={accessUrl}
                 onRetry={() => refetchRepository()}
                 isRetrying={repositoryFetching}
               >
                 {repositoryErrorKind === 'missing'
                   ? t(
-                      "This function's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.",
+                      "This function's Git installation can no longer reach its repository, so pushes can't deploy. If the repository was removed from the installation's repository access, add it back with Update repository access. If it was deleted or moved to another installation, disconnect it and connect it again.",
                     )
                   : t(
                       'This function is still connected to its repository, but the repository details could not be loaded.',
@@ -436,36 +426,18 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
               </div>
             ) : null}
 
-            <fieldset className="rounded-lg border border-border p-4 space-y-4">
-              <legend className="text-[13px] font-medium text-foreground px-2">
-                {t('Branch Settings')}
-              </legend>
-
-              {/* Branch selector */}
-              <BranchSelector
-                projectId={projectId}
-                installationId={func.installationId}
-                providerRepositoryId={func.providerRepositoryId}
-                value={selectedBranch}
-                onChange={setSelectedBranch}
-                label={t('Production branch')}
-                suppressInstallationError={!!repositoryErrorKind}
-              />
-
-              {/* Root directory selector */}
-              <RootDirectoryPicker
-                projectId={projectId}
-                installationId={func.installationId}
-                providerRepositoryId={func.providerRepositoryId}
-                branch={selectedBranch || 'main'}
-                value={selectedDir}
-                onChange={setSelectedDir}
-                label={t('Root directory')}
-                description={t(
-                  'Choose the directory containing your function code',
-                )}
-              />
-            </fieldset>
+            <RootDirectoryPicker
+              projectId={projectId}
+              installationId={func.installationId}
+              providerRepositoryId={func.providerRepositoryId}
+              branch={func.providerBranch || 'main'}
+              value={selectedDir}
+              onChange={setSelectedDir}
+              label={t('Root directory')}
+              description={t(
+                'Choose the directory containing your function code',
+              )}
+            />
           </div>
         )}
       </div>

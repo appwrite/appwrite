@@ -112,10 +112,15 @@ class Store
     /** @var array<int, int> */
     private array $lastVersions = [];
 
+    /**
+     * @param int $insertBuffer Milliseconds ClickHouse may hold snapshots to
+     *                          write them together. 0 writes each insert at once.
+     */
     public function __construct(
         private readonly string $dsn,
         private readonly ?ClientInterface $client,
         private readonly int $retention = 1_209_600,
+        private readonly int $insertBuffer = 0,
     ) {
         $this->requestFactory = new RequestFactory();
     }
@@ -442,8 +447,7 @@ class Store
         $statement = (new ClickHouseBuilder())
             ->from($table)
             ->bulkInsert(Format::JSONEachRow, $rows, $columns);
-        // Async inserts wait up to 200ms for a flush that batches almost nothing for one-row snapshots.
-        $url = $this->url() . '?' . \http_build_query(['query' => $statement->query, 'async_insert' => 0]);
+        $url = $this->url() . '?' . \http_build_query(['query' => $statement->query] + $this->insertSettings());
         $body = $statement->body;
         $request = $this->requestFactory->body(Method::POST, $url, $body, 'application/x-ndjson', $this->headers());
 
@@ -456,6 +460,35 @@ class Store
         if ($response->getStatusCode() !== 200) {
             throw new \RuntimeException('ClickHouse execution insert failed with HTTP ' . $response->getStatusCode() . ': ' . (string) $response->getBody());
         }
+    }
+
+    /**
+     * Every snapshot is its own insert, and ClickHouse writes one part per
+     * insert and partition. By default the insert bypasses the async insert
+     * buffer: at a few writes a second the buffer has almost nothing to batch
+     * and only delays the snapshot.
+     *
+     * At a high write rate that many parts outrun the merges, on a replicated
+     * table in particular, where merges are assigned through Keeper. With an
+     * insert buffer the server collects the snapshots of every writer for a
+     * fixed window and writes them together. The insert still returns only
+     * once its rows are stored, so each write takes up to the window and holds
+     * a pooled connection for that long.
+     *
+     * @return array<string, int>
+     */
+    private function insertSettings(): array
+    {
+        if ($this->insertBuffer <= 0) {
+            return ['async_insert' => 0];
+        }
+
+        return [
+            'async_insert' => 1,
+            'wait_for_async_insert' => 1,
+            'async_insert_use_adaptive_busy_timeout' => 0,
+            'async_insert_busy_timeout_max_ms' => $this->insertBuffer,
+        ];
     }
 
     private function deleteWhere(
@@ -479,7 +512,16 @@ class Store
             $conditions[] = 'source.createdAt < {createdBefore:String}';
         }
 
-        $latest = $this->latestSql(\implode(' AND ', $conditions));
+        // Most executions in the window were tombstoned by an earlier run, and
+        // their tombstones stay until the TTL drops them. Resolving the latest
+        // snapshot reads every column, the document included, so pick the
+        // executions still live from the id, version and deleted columns
+        // first and resolve snapshots only for those.
+        $where = \implode(' AND ', $conditions);
+        $live = 'SELECT source.id FROM ' . $this->table()
+            . " AS source WHERE {$where} GROUP BY source.id"
+            . ' HAVING argMax(source.deleted, source.version) = 0';
+        $latest = $this->latestSql("{$where} AND source.id IN ({$live})");
         $columns = \implode(', ', \array_filter(
             self::COLUMNS,
             fn (string $column) => !\in_array($column, ['expiresAt', 'deleted', 'version'], true)

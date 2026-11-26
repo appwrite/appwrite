@@ -2,10 +2,12 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use Appwrite\Alert\Severity;
 use Appwrite\Alert\Status;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Config\Config;
+use Utopia\Database\Document;
 
 class Monitor extends Model
 {
@@ -95,16 +97,24 @@ class Monitor extends Model
             ])
             ->addRule('notify', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Organization roles whose confirmed members get an email and a console notification when the monitor fires and resolves. Empty when the alert events are the only delivery.',
+                'description' => 'Organization roles whose confirmed members get an email and a console notification when the monitor fires and resolves. Empty when the alert events are the only delivery. Not used while `escalationId` is set.',
                 'default' => ['owner'],
                 'example' => ['owner'],
                 'array' => true,
             ])
-            ->addRule('critical', [
-                'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether the monitor is critical: its alerts may be delivered with higher urgency by the notification channels that support it.',
-                'default' => false,
-                'example' => false,
+            ->addRule('escalationId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'ID of the organization\'s escalation that notifies the team of this monitor\'s alerts, step by step until one is acknowledged. When set, `notify` is not used. Empty to notify the `notify` roles once.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('severity', [
+                'type' => self::TYPE_ENUM,
+                'description' => 'How urgent the monitor\'s alerts are: `info`, `warning`, `error` or `critical`. Critical alerts may be delivered with higher urgency by the notification channels that support it.',
+                'default' => Severity::Warning->value,
+                'example' => Severity::Warning->value,
+                'enum' => Severity::values(),
+                'enumSDKName' => 'MonitorSeverity',
             ])
             ->addRule('status', [
                 'type' => self::TYPE_ENUM,
@@ -141,6 +151,19 @@ class Monitor extends Model
                 'required' => false,
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ]);
+    }
+
+    /**
+     * The ID the monitor was created with, not the project-scoped one it is stored under.
+     */
+    public function filter(Document $document): Document
+    {
+        $monitorId = (string) $document->getAttribute('monitorId', '');
+        if ($monitorId !== '') {
+            $document->setAttribute('$id', $monitorId);
+        }
+
+        return $document;
     }
 
     public function getName(): string

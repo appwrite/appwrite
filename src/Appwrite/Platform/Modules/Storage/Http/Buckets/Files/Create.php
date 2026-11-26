@@ -14,6 +14,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Storage\Encryption;
+use Appwrite\Storage\Uploads;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Filename;
@@ -129,6 +130,7 @@ class Create extends Action
             ->inject('authorization')
             ->inject('locks')
             ->inject('exiftool')
+            ->inject('uploads')
             ->callback($this->action(...));
     }
 
@@ -151,7 +153,8 @@ class Create extends Action
         Device $deviceForLocal,
         Authorization $authorization,
         callable $locks,
-        ExiftoolClient $exiftool
+        ExiftoolClient $exiftool,
+        Uploads $uploads
     ): ?Document {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -326,7 +329,7 @@ class Create extends Action
             return $merged;
         };
 
-        $prepareUpload = function () use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $folder, $path, $permissions, $response, &$completed, $user): void {
+        $prepareUpload = function () use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $folder, $path, $permissions, $project, $response, &$completed, $uploads, $user): void {
             $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
             if (!$file->isEmpty()) {
                 $chunks = $file->getAttribute('chunksTotal', 1);
@@ -386,6 +389,13 @@ class Create extends Action
                         throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
                     } catch (NotFoundException) {
                         throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+                    }
+
+                    // Maintenance only checks tracked buckets hourly; a lost hint waits for its periodic full scan.
+                    try {
+                        $uploads->track($project->getId(), $bucket->getId());
+                    } catch (\Throwable $th) {
+                        Console::warning('Failed to track upload ' . $fileId . ': ' . $th->getMessage());
                     }
                 }
             }
@@ -497,14 +507,14 @@ class Create extends Action
                     }
                 }
 
-                // The stored bytes of an encrypted file say nothing about its type, so use the first chunk's.
-                $mimeType = $cipher === null ? ($info->mimeType ?? $deviceForFiles->getFileMimeType($path)) : ($metadata['content_type'] ?? '');
+                // Use chunk 1's type: encrypted bytes say nothing, and S3 keeps the type of whichever chunk arrived first.
+                $mimeType = $cipher === null ? (($metadata['content_type'] ?? '') ?: ($info->mimeType ?? $deviceForFiles->getFileMimeType($path))) : ($metadata['content_type'] ?? '');
                 $formats = Config::getParam('storage-formats');
 
                 $allowed = $bucket->getAttribute('allowedFileExtensions', []);
                 $signed = isset($formats['signatures'][\strtolower(\pathinfo($fileName, PATHINFO_EXTENSION))]);
                 $types = \array_merge(...\array_map(fn (string $extension): array => $formats['signatures'][\strtolower($extension)] ?? [], $allowed));
-                if (!empty($allowed) && $signed && !\in_array($mimeType, $formats['ambiguous'], true) && !\in_array($mimeType, $types, true)) {
+                if (!empty($allowed) && $signed && !\in_array($mimeType, $types, true)) {
                     $removed = $deviceForFiles->delete($path);
 
                     if ($removed && !$file->isEmpty() && !$authorization->skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId))) {

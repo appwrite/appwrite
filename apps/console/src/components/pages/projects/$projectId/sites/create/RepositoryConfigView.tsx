@@ -63,11 +63,17 @@ import { BuildSettings } from './BuildSettings'
 import { VariablesSettingsCard } from '@/components/global/shared/VariablesSettingsCard'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { AnalyticsToggle } from './AnalyticsToggle'
 import { getVcsProvider } from '@/lib/vcs/providers'
 import { getVcsInstallationErrorKind } from '@/lib/utils/error-formatting'
 import { useVcsInstallationReconnect } from '@/lib/vcs/use-installation-reconnect'
 import { cn } from '@/lib/utils'
 import { validateVariables } from '@/lib/variables'
+import {
+  CreateReviewSwitch,
+  useCreateReview,
+} from '../../reviews/_components/CreateReviewSwitch'
 
 interface RepositoryConfigViewProps {
   installationId: string
@@ -79,6 +85,8 @@ export function RepositoryConfigView({
   providerRepositoryId: providerRepositoryIdFromUrl,
 }: RepositoryConfigViewProps) {
   const t = useT()
+  const { features } = useConsoleProfile()
+  const [analytics, setAnalytics] = useState(true)
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -93,6 +101,11 @@ export function RepositoryConfigView({
   // Use URL params as source of truth so detection works after refresh
   const installationId = installationIdFromUrl
   const providerRepositoryId = providerRepositoryIdFromUrl
+  const review = useCreateReview(
+    projectId,
+    installationId,
+    providerRepositoryId,
+  )
 
   // Sync URL params to formData on mount so rest of flow has them
   useEffect(() => {
@@ -329,14 +342,17 @@ export function RepositoryConfigView({
         outputDirectory: outputDirectory || undefined,
         adapter: defaults.adapter || undefined,
         fallbackFile:
-          defaults.adapter === 'static' ? fallbackFile || undefined : undefined,
+          defaults.adapter !== 'ssr' ? fallbackFile || undefined : undefined,
         installationId,
         providerRepositoryId,
         providerBranch: branch,
         providerSilentMode: silentMode,
         providerRootDirectory: rootDirectory || undefined,
+        analytics: features.analytics && analytics,
       })
       createdSiteId = site.$id
+
+      await review.apply()
 
       // 2. Create domain rule
       if (domain) {
@@ -685,6 +701,15 @@ export function RepositoryConfigView({
               placeholder={t('Auto-generated')}
             />
           </div>
+
+          {features.analytics && (
+            <AnalyticsToggle
+              checked={analytics}
+              onCheckedChange={setAnalytics}
+            />
+          )}
+
+          <CreateReviewSwitch review={review} />
 
           {/* Framework selector */}
           <div className="space-y-2">

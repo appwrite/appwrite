@@ -37,6 +37,8 @@ class Get extends Action
         'repository:pull_requests:reviews:write',
         'repository:checks:read',
         'repository:checks:write',
+        // Code review reads a comment author's permission before answering them.
+        'repository:members:read',
     ];
 
     public static function getName()
@@ -51,7 +53,7 @@ class Get extends Action
             ->setHttpPath('/v1/vcs/origin/authorize')
             ->desc('Create Origin app installation')
             ->groups(['api', 'vcs'])
-            ->label('scope', 'vcs.read')
+            ->label('scope', 'vcs.write')
             ->label('error', APP_VIEWS_DIR . '/general/error.phtml')
             ->label('sdk', new Method(
                 namespace: 'vcs',

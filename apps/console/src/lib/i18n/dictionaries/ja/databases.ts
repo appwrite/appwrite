@@ -151,6 +151,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Backup policies have been created': 'バックアップポリシーを作成しました',
   'Backup policies': 'バックアップポリシー',
   'backup policies': 'バックアップポリシー',
+  'backup policy': 'バックアップポリシー',
   'Backup policy has been deleted': 'バックアップポリシーを削除しました',
   'Backups already taken by this policy are kept until their retention expires.': 'このポリシーで既に取得されたバックアップは、保持期間が満了するまで保持されます。',
   'backup selected': 'バックアップを選択',
@@ -931,7 +932,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'One Relation column within this table': 'このテーブル内の 1 つのリレーション列',
   'One Relation column within this table and another within the related table': 'このテーブル内の 1 つのリレーション列と、関連テーブル内の別のリレーション列',
   'One-way relationship': '一方向リレーション',
-  'Only applicable to string and varchar columns': 'string 列と varchar 列にのみ適用可能',
+  'Only applicable to string, varchar and text columns': 'string 列と varchar 列にのみ適用可能',
   'Only CSV files can be imported': 'インポートできるのは CSV ファイルのみです',
   'only if they have collection permissions': 'コレクション権限を持っている場合のみ',
   'only if they have table permissions': 'テーブル権限を持っている場合のみ',
@@ -1567,8 +1568,6 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Database is pausing': 'データベースを一時停止しています',
   'Database is resuming': 'データベースを再開しています',
   'Database is deleting': 'データベースを削除しています',
-  'A database upgrade is in progress. Some operations may be temporarily unavailable.':
-    'データベースのアップグレード進行中です。一部の操作は一時的に利用できない場合があります。',
   'A database migration is in progress. Some operations may be temporarily unavailable.':
     'データベースの移行進行中です。一部の操作は一時的に利用できない場合があります。',
   'Starting dedicated migration': '専用コンピュートへの移行を開始しています',
@@ -2219,4 +2218,24 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Keep this database safe': 'このデータベースを安全に保つ',
   'Back up on a schedule, keep copies for as long as you need, and restore any of them when something goes wrong.':
     'スケジュールに沿ってバックアップし、必要な期間だけコピーを保持して、問題が起きたときにはいつでも復元できます。',
+  'This database runs the latest supported version.':
+    'このデータベースはサポートされている最新バージョンで稼働しています。',
+  'Upgrade to {version}':
+    '{version} にアップグレード',
+  'Upgrade to {version} started':
+    '{version} へのアップグレードを開始しました',
+  'Failed to start the upgrade':
+    'アップグレードを開始できませんでした',
+  'A version upgrade is in progress. Your database stays online while it runs.':
+    'バージョンのアップグレードを実行中です。実行中もデータベースはオンラインのままです。',
+  'Upgrade to a newer {engine} version. Upgrades run online while your database keeps serving traffic. Downgrades are not supported.':
+    '{engine} の新しいバージョンにアップグレードします。アップグレードはオンラインで実行され、データベースはトラフィックを処理し続けます。ダウングレードはできません。',
+  'A new instance is created on the target version and your data is copied over while the database stays online. Traffic switches over once it has caught up.':
+    '対象バージョンで新しいインスタンスが作成され、データベースがオンラインのままデータがコピーされます。同期が完了するとトラフィックが切り替わります。',
+  'At cutover, writes pause for a moment and open connections are closed, so your app needs to reconnect.':
+    '切り替え時に書き込みが一時的に停止し、開いている接続は閉じられるため、アプリの再接続が必要です。',
+  'Check that your installed extensions support the target version.':
+    'インストール済みの拡張機能が対象バージョンに対応しているか確認してください。',
+  'You cannot downgrade afterwards.':
+    'アップグレード後にダウングレードすることはできません。',
 }

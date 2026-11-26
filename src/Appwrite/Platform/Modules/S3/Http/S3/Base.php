@@ -78,6 +78,7 @@ abstract class Base extends Action
             ->inject('publisherForFunctions')
             ->inject('queueForWebhooks')
             ->inject('eventProcessor')
+            ->inject('plan')
             ->callback($this->action(...));
     }
 
@@ -98,9 +99,10 @@ abstract class Base extends Action
         FunctionPublisher $publisherForFunctions,
         Event $queueForWebhooks,
         EventProcessor $eventProcessor,
+        array $plan,
     ): void {
         try {
-            $this->route($request, $response, $dbForProject, $project, $team, $user, $deviceForFiles, $locks, $cache, $queueForEvents, $publisherForDeletes, $publisherForAudits, $queueForRealtime, $publisherForFunctions, $queueForWebhooks, $eventProcessor);
+            $this->route($request, $response, $dbForProject, $project, $team, $user, $deviceForFiles, $locks, $cache, $queueForEvents, $publisherForDeletes, $publisherForAudits, $queueForRealtime, $publisherForFunctions, $queueForWebhooks, $eventProcessor, $plan);
         } catch (Contention $error) {
             $this->sendError($response, 'SlowDown', 'The object is busy. Please retry.', $request->getURI(), Response::STATUS_CODE_SERVICE_UNAVAILABLE);
         } catch (AppwriteException $error) {
@@ -110,7 +112,7 @@ abstract class Base extends Action
         }
     }
 
-    abstract protected function route(Request $request, Response $response, Database $dbForProject, Document $project, Document $team, User $user, Device $deviceForFiles, callable $locks, Cache $cache, Event $queueForEvents, DeletePublisher $publisherForDeletes, AuditPublisher $publisherForAudits, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, EventProcessor $eventProcessor): void;
+    abstract protected function route(Request $request, Response $response, Database $dbForProject, Document $project, Document $team, User $user, Device $deviceForFiles, callable $locks, Cache $cache, Event $queueForEvents, DeletePublisher $publisherForDeletes, AuditPublisher $publisherForAudits, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, EventProcessor $eventProcessor, array $plan): void;
 
     protected function authorize(Request $request, Document $project, Document $team, User $user, array $scopes): void
     {
@@ -301,6 +303,10 @@ abstract class Base extends Action
             }
         }
         $this->validateFileConstraints($bucket, (string) ($upload['name'] ?? $upload['key'] ?? ''), $size);
+        // Completion requires part 1 and a retry must resend the same bytes, so part 1 decides the type.
+        if ($partNumber === 1) {
+            $this->validateContent($bucket, (string) ($upload['name'] ?? $upload['key'] ?? ''), $body);
+        }
 
         $metadata = $upload['metadata'] ?? [];
         $deviceMetadata = $metadata['device'] ?? [];
@@ -455,6 +461,24 @@ abstract class Base extends Action
     }
 
     /**
+     * Same rule as the REST upload: a signed extension must sniff as one of the bucket's allowed formats.
+     */
+    protected function validateContent(Document $bucket, string $name, string $body): void
+    {
+        $allowed = $bucket->getAttribute('allowedFileExtensions', []);
+        $formats = Config::getParam('storage-formats');
+        if (empty($allowed) || !isset($formats['signatures'][\strtolower(\pathinfo($name, PATHINFO_EXTENSION))])) {
+            return;
+        }
+
+        $mimeType = (new \finfo(FILEINFO_MIME_TYPE))->buffer($body);
+        $types = \array_merge(...\array_map(fn (string $extension): array => $formats['signatures'][\strtolower(\ltrim($extension, '.'))] ?? [], $allowed));
+        if (!\in_array($mimeType, $types, true)) {
+            throw new AppwriteException(AppwriteException::STORAGE_FILE_TYPE_UNSUPPORTED, 'File content type not allowed');
+        }
+    }
+
+    /**
      * The gateway does not scan objects, so it refuses writes the REST upload would scan.
      */
     protected function validateAntivirus(Document $bucket, Device $deviceForFiles, int $size): void
@@ -583,7 +607,25 @@ abstract class Base extends Action
         ));
     }
 
-    protected function createBucket(Database $dbForProject, string $bucketId): void
+    /**
+     * The per-file limit a new bucket gets, as the REST endpoint gives it: the plan's fileSize
+     * (in MB), or the platform's storage limit where the plan sets none.
+     *
+     * @param array<string, mixed> $plan
+     */
+    public static function maximumFileSize(array $plan): int
+    {
+        if (empty($plan['fileSize'])) {
+            return (int) System::getEnv('_APP_STORAGE_LIMIT', 0);
+        }
+
+        return (int) $plan['fileSize'] * 1000 * 1000;
+    }
+
+    /**
+     * @param array<string, mixed> $plan The organization's plan, which caps each file
+     */
+    protected function createBucket(Database $dbForProject, string $bucketId, array $plan): void
     {
         $validator = new UID();
         if (!$validator->isValid($bucketId)) {
@@ -606,7 +648,7 @@ abstract class Base extends Action
                 '$collection' => 'buckets',
                 '$permissions' => $permissions,
                 'name' => $bucketId,
-                'maximumFileSize' => (int) System::getEnv('_APP_STORAGE_LIMIT', 0),
+                'maximumFileSize' => self::maximumFileSize($plan),
                 'allowedFileExtensions' => [],
                 'fileSecurity' => false,
                 'enabled' => true,
@@ -649,6 +691,7 @@ abstract class Base extends Action
         $folder = $object['folder'];
         $name = $object['name'];
         $this->validateFileConstraints($bucket, $name, \strlen($body));
+        $this->validateContent($bucket, $name, $body);
         $previousPath = $existing?->getAttribute('path', '') ?? '';
         $path = $existing === null
             ? $this->path($deviceForFiles, $bucket, $fileId, $name)

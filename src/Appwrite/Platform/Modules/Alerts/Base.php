@@ -2,8 +2,10 @@
 
 namespace Appwrite\Platform\Modules\Alerts;
 
+use Appwrite\Alert\Monitors;
 use Appwrite\Alert\Rules;
 use Appwrite\Alert\Schedules;
+use Appwrite\Alert\Severity;
 use Appwrite\Alert\Status;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -24,7 +26,7 @@ class Base extends Action
 {
     protected function getMonitor(Database $dbForPlatform, Authorization $authorization, Document $project, string $monitorId): Document
     {
-        $monitor = $authorization->skip(fn () => $dbForPlatform->getDocument('monitors', $monitorId));
+        $monitor = $authorization->skip(fn () => $dbForPlatform->getDocument('monitors', Monitors::id((string) $project->getSequence(), $monitorId)));
 
         if ($monitor->isEmpty() || $monitor->getAttribute('projectInternalId') !== (string) $project->getSequence()) {
             throw new Exception(Exception::MONITOR_NOT_FOUND);
@@ -62,17 +64,19 @@ class Base extends Action
         Database $dbForPlatform,
         Database $dbForProject,
         Authorization $authorization,
-        bool $critical = false,
+        Severity $severity = Severity::Warning,
+        string $escalationId = '',
     ): void {
         $parsed = $this->parseRules($rules);
+        $this->checkEscalation($dbForPlatform, $authorization, $project, $escalationId);
 
         [$resourceId, $resourceInternalId] = $this->resolveResource($parsed, $project, $dbForProject, $authorization);
 
         $monitorId = $monitorId === 'unique()' ? Id::unique() : $monitorId;
 
         $monitor = new Document([
-            '$id' => $monitorId,
             '$permissions' => [],
+            'monitorId' => $monitorId,
             'name' => $name,
             'teamId' => (string) $project->getAttribute('teamId', ''),
             'teamInternalId' => (string) $project->getAttribute('teamInternalId', ''),
@@ -84,11 +88,13 @@ class Base extends Action
             'window' => $window,
             'cooldown' => $cooldown,
             'notify' => \array_values(\array_unique($notify)),
-            'critical' => $critical,
+            'escalationId' => $escalationId,
+            'severity' => $severity->value,
             'enabled' => $enabled,
             'status' => Status::Ok->value,
             'search' => $this->search($monitorId, $name, $parsed->metric, $parsed->resourceType, $resourceId),
         ]);
+        $monitor->setAttribute('$id', Monitors::id(Monitors::scope($monitor), $monitorId));
 
         try {
             $monitor = $authorization->skip(fn () => $dbForPlatform->createDocument('monitors', $monitor));
@@ -123,9 +129,13 @@ class Base extends Action
         Database $dbForPlatform,
         Database $dbForProject,
         Authorization $authorization,
-        ?bool $critical = null,
+        ?Severity $severity = null,
+        ?string $escalationId = null,
     ): void {
         $monitor = $this->getMonitor($dbForPlatform, $authorization, $project, $monitorId);
+        if ($escalationId !== null) {
+            $this->checkEscalation($dbForPlatform, $authorization, $project, $escalationId);
+        }
 
         if ($monitor->getAttribute('type') !== $type) {
             throw new Exception(Exception::MONITOR_TYPE_MISMATCH, "Monitor '{$monitorId}' is a {$monitor->getAttribute('type')} monitor, not a {$type} monitor.");
@@ -147,7 +157,8 @@ class Base extends Action
             'cooldown' => $cooldown,
             'enabled' => $enabled,
             'notify' => $notify === null ? null : \array_values(\array_unique($notify)),
-            'critical' => $critical,
+            'severity' => $severity?->value,
+            'escalationId' => $escalationId,
         ] as $key => $value) {
             if ($value !== null) {
                 $changes->setAttribute($key, $value);
@@ -156,7 +167,7 @@ class Base extends Action
 
         if (!$changes->isEmpty()) {
             $changes->setAttribute('search', $this->search(
-                $monitor->getId(),
+                (string) $monitor->getAttribute('monitorId'),
                 (string) $changes->getAttribute('name', $monitor->getAttribute('name')),
                 (string) $changes->getAttribute('metric', $monitor->getAttribute('metric')),
                 (string) $changes->getAttribute('resourceType', $monitor->getAttribute('resourceType')),
@@ -168,6 +179,21 @@ class Base extends Action
         }
 
         $response->dynamic($monitor, Response::MODEL_MONITOR);
+    }
+
+    /**
+     * A monitor may only use an escalation of its project's organization.
+     */
+    protected function checkEscalation(Database $dbForPlatform, Authorization $authorization, Document $project, string $escalationId): void
+    {
+        if ($escalationId === '') {
+            return;
+        }
+
+        $escalation = $authorization->skip(fn () => $dbForPlatform->getDocument('escalations', $escalationId));
+        if ($escalation->isEmpty() || $escalation->getAttribute('teamInternalId') !== (string) $project->getAttribute('teamInternalId', '')) {
+            throw new Exception(Exception::ESCALATION_NOT_FOUND);
+        }
     }
 
     /**

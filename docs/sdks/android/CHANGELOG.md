@@ -1,5 +1,41 @@
 # Change Log
 
+## 31.4.0
+
+* Added: Atlassian, Instagram, LINE, Linear, Netlify, Patreon, Railway, Reddit, Roblox, Strava, Vercel, VK and WorkOS to `OAuthProvider`
+
+## 31.3.0
+
+* Added: `Tracking` sends app, screen and push analytics through `Analytics`; `start()` sends `first_open` once per install and `app_updated` after a version change
+* Added: `Push.setTracking` sends `push_received` and `push_opened` with the message's `messageId`
+* Added: `PushNotificationOpened.messageId`
+* Added: `Account.createDevice`, `getDevice`, `deleteDevice` and `updateDeviceSession`, and the `Device` model
+* Added: `Account.createLDAPSession`
+* Added: `Session.userName`
+* Added: `ImageFormat.AUTO` on `Storage.getFilePreview` and the avatar endpoints, serving avif or webp when the `Accept` header supports it
+* Added: `OAuthProvider.NAVER` and `OAuthProvider.VIPPSSANDBOX`
+* Updated: the SDK no longer declares `FOREGROUND_SERVICE` and `FOREGROUND_SERVICE_REMOTE_MESSAGING`; apps that call `Push.setForeground(true)` declare them
+* Fixed: background push keeps waking up on phones that hold back expedited jobs
+* Updated: requests send `X-Appwrite-Response-Format: 2.7.2`
+
+## 31.2.0
+
+* Added: `Client.setEnvironment` to act in a project environment; realtime connections carry it
+* Added: optional `interactive` param on `Analytics.createEvent` to mark an event as telemetry that does not end a bounce
+* Added: `OAuthProvider.VIPPS`
+* Fixed: background push reconnects inside Android's network windows instead of minutes later
+* Updated: requests send `X-Appwrite-Response-Format: 2.7.0`; the SDK targets Appwrite 2.7.x
+* Updated: `gson` dependency to `2.15.0`
+
+## 31.1.0
+
+* Updated: requests send `x-appwrite-response-format: 2.6.2`
+* Fixed: path parameters are percent-encoded as one segment; `.` and `..` throw `AppwriteException`
+* Fixed: a chunked upload with a new file ID starts uploading instead of failing on the resume lookup
+* Fixed: chunked upload resume lookups percent-encode the file ID
+* Fixed: cookie store errors no longer log cookie values
+* Updated: README adds install instructions and explains realtime client ownership
+
 ## 31.0.1
 
 * Fixed: realtime connections, subscriptions, presence and reconnect state are isolated between clients

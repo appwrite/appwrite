@@ -68,7 +68,23 @@ class Get extends Action
                             Response::MODEL_OAUTH2_SALESFORCE,
                             Response::MODEL_OAUTH2_YAHOO,
                             Response::MODEL_OAUTH2_HUGGINGFACE,
+                            Response::MODEL_OAUTH2_INSTAGRAM,
+                            Response::MODEL_OAUTH2_PATREON,
+                            Response::MODEL_OAUTH2_STRAVA,
+                            Response::MODEL_OAUTH2_VK,
+                            Response::MODEL_OAUTH2_NETLIFY,
+                            Response::MODEL_OAUTH2_CLERK,
+                            Response::MODEL_OAUTH2_SUPABASE,
+                            Response::MODEL_OAUTH2_RAILWAY,
+                            Response::MODEL_OAUTH2_REDDIT,
+                            Response::MODEL_OAUTH2_VERCEL,
+                            Response::MODEL_OAUTH2_ATLASSIAN,
+                            Response::MODEL_OAUTH2_LINE,
+                            Response::MODEL_OAUTH2_LINEAR,
+                            Response::MODEL_OAUTH2_ROBLOX,
+                            Response::MODEL_OAUTH2_WORKOS,
                             Response::MODEL_OAUTH2_RESEND,
+                            Response::MODEL_OAUTH2_BIRD,
                             Response::MODEL_OAUTH2_CLOUDFLARE,
                             Response::MODEL_OAUTH2_LINKEDIN,
                             Response::MODEL_OAUTH2_DISQUS,
@@ -89,12 +105,13 @@ class Get extends Action
                             Response::MODEL_OAUTH2_MICROSOFT,
                             Response::MODEL_OAUTH2_TIKTOK,
                             Response::MODEL_OAUTH2_KAKAO,
+                            Response::MODEL_OAUTH2_NAVER,
                             Response::MODEL_OAUTH2_VIPPS,
                         ],
                     )
                 ]
             ))
-            ->param('providerId', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders', [])), true), 'OAuth2 provider key. For example: github, google, apple.', aliases: ['provider'], enum: new Enum(name: 'ProjectOAuthProviderId', exclude: ['mock', 'mock-unverified', 'mock-no-email']))
+            ->param('providerId', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders', [])), true), 'OAuth2 provider key. For example: github, google, apple.', aliases: ['provider'], enum: new Enum(name: 'ProjectOAuthProviderId', exclude: ['mock', 'mock-unverified', 'mock-no-email', 'mock-link-only']))
             ->inject('response')
             ->inject('project')
             ->callback($this->action(...));

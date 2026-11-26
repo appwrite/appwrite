@@ -26,6 +26,15 @@ export const ANALYTICS_ACTIONS = {
   'feedback-open': 'Feedback Opened',
   'support-open': 'Support Opened',
   'notifications-open': 'Notifications Opened',
+  'notifications-beep-app-store': 'Notifications Beep App Store Clicked',
+  'notifications-beep-google-play': 'Notifications Beep Google Play Clicked',
+  'notifications-beep-dismiss': 'Notifications Beep Promotion Dismissed',
+  'monitors-beep-app-store': 'Monitors Beep App Store Clicked',
+  'monitors-beep-google-play': 'Monitors Beep Google Play Clicked',
+  'monitors-beep-dismiss': 'Monitors Beep Promotion Dismissed',
+  'create-monitor-beep-app-store': 'Create Monitor Beep App Store Clicked',
+  'create-monitor-beep-google-play': 'Create Monitor Beep Google Play Clicked',
+  'create-monitor-beep-dismiss': 'Create Monitor Beep Promotion Dismissed',
   'ai-agent-open': 'AI Agent Opened',
   'upgrade-clicked': 'Upgrade Clicked',
   'auth-sign-in': 'Sign In Clicked',
@@ -75,6 +84,8 @@ export const ANALYTICS_ACTIONS = {
   'marketing-view-pricing': 'Marketing View Pricing Clicked',
   'home-start-project': 'Home Start Project Clicked',
   'home-view-docs': 'Home View Docs Clicked',
+  'home-console-open': 'Home Console Open Clicked',
+  'home-factory-station': 'Home Factory Station Clicked',
   'home-start-building': 'Home Start Building Clicked',
   'home-view-pricing': 'Home View Pricing Clicked',
   'home-join-init': 'Home Join Init Clicked',
@@ -120,6 +131,11 @@ export const ANALYTICS_ACTIONS = {
   'for-agents-install-skills': 'For Agents Install Skills Clicked',
   'for-agents-connect-mcp': 'For Agents Connect MCP Clicked',
   'for-agents-view-docs': 'For Agents View Docs Clicked',
+  'zero-copy-command': 'Zero Copy Command Clicked',
+  'zero-copy-entry': 'Zero Copy Entry Clicked',
+  'zero-copy-prompt': 'Zero Copy Prompt Clicked',
+  'zero-open-agent': 'Zero Open Agent Clicked',
+  'zero-sign-up': 'Zero Sign Up Clicked',
 
   // Pricing page CTAs
   'pricing-start-free': 'Pricing Start Free Clicked',
@@ -167,9 +183,12 @@ export const ANALYTICS_ACTIONS = {
   'members-contact-sales': 'Members Contact Sales Clicked',
   'backups-contact-sales': 'Backups Contact Sales Clicked',
   'activity-contact-sales': 'Activity Contact Sales Clicked',
+  'videos-contact-sales': 'Videos Contact Sales Clicked',
+  'videos-gpu-dismiss': 'Videos GPU Upsell Dismissed',
   'specs-contact-sales': 'Specifications Contact Sales Clicked',
   'replicas-contact-sales': 'Replicas Contact Sales Clicked',
   'compliance-contact-sales': 'Compliance Contact Sales Clicked',
+  'preview-domains-contact-sales': 'Preview Domains Contact Sales Clicked',
   'support-contact-sales': 'Support Contact Sales Clicked',
   'support-ticket-contact-sales': 'Support Ticket Contact Sales Clicked',
 
@@ -227,6 +246,7 @@ export const ANALYTICS_ACTIONS = {
   'marketing-product-storage': 'Marketing Product Storage Clicked',
   'marketing-product-functions': 'Marketing Product Functions Clicked',
   'marketing-product-messaging': 'Marketing Product Messaging Clicked',
+  'marketing-product-videos': 'Marketing Product Videos Clicked',
   'marketing-product-realtime': 'Marketing Product Realtime Clicked',
   'marketing-product-sites': 'Marketing Product Sites Clicked',
   'marketing-product-domains': 'Marketing Product Domains Clicked',
@@ -234,6 +254,7 @@ export const ANALYTICS_ACTIONS = {
   'marketing-product-firewall': 'Marketing Product Firewall Clicked',
   'marketing-product-advisor': 'Marketing Product Advisor Clicked',
   'marketing-product-agent': 'Marketing Product Agent Clicked',
+  'marketing-product-zero': 'Marketing Product Zero Clicked',
 
   // Docs nav
   'docs-audience-developers': 'Docs Audience Developers Clicked',
@@ -252,11 +273,14 @@ export const ANALYTICS_ACTIONS = {
 
   // Project settings
   'smtp-quick-setup-resend': 'SMTP One-Click Setup Resend Clicked',
+  'smtp-quick-setup-bird': 'SMTP One-Click Setup Bird Clicked',
   'smtp-quick-setup-mailgun': 'SMTP One-Click Setup Mailgun Clicked',
-  'smtp-quick-setup-sendgrid': 'SMTP One-Click Setup SendGrid Clicked',
 
   // Messaging
   'messaging-quick-setup-resend': 'Messaging One-Click Setup Resend Clicked',
+  'messaging-quick-setup-bird': 'Messaging One-Click Setup Bird Clicked',
+  'messaging-quick-setup-bird-sms':
+    'Messaging One-Click Setup Bird SMS Clicked',
 
   // Resource creation
   'create-project': 'Create Project Clicked',
@@ -314,6 +338,11 @@ export const ANALYTICS_ACTIONS = {
   'add-subscriber': 'Add Subscriber Clicked',
   'create-api-key': 'Create API Key Clicked',
   'create-org-api-key': 'Create Org API Key Clicked',
+  'create-email-domain': 'Create Email Domain Clicked',
+  'create-sso-provider': 'Create SSO Provider Clicked',
+  'require-sso': 'Require SSO Clicked',
+  'notify-sso-saml': 'Notify SSO SAML Clicked',
+  'open-team-sso-setup': 'Team SSO Setup Link Clicked',
   'create-webhook': 'Create Webhook Clicked',
   'add-project-domain': 'Add Project Domain Clicked',
   'add-platform': 'Add Platform Clicked',
@@ -363,6 +392,7 @@ const MARKETING_PRODUCT_ACTIONS: Record<string, AnalyticsActionId> = {
   storage: 'marketing-product-storage',
   functions: 'marketing-product-functions',
   messaging: 'marketing-product-messaging',
+  videos: 'marketing-product-videos',
   realtime: 'marketing-product-realtime',
   sites: 'marketing-product-sites',
   domains: 'marketing-product-domains',
@@ -370,6 +400,7 @@ const MARKETING_PRODUCT_ACTIONS: Record<string, AnalyticsActionId> = {
   firewall: 'marketing-product-firewall',
   advisor: 'marketing-product-advisor',
   agent: 'marketing-product-agent',
+  zero: 'marketing-product-zero',
 }
 
 const ORG_TAB_ACTIONS: Record<string, AnalyticsActionId> = {
@@ -412,9 +443,11 @@ const CONTACT_SALES_ACTIONS: Record<SalesSource, AnalyticsActionId> = {
   specs: 'specs-contact-sales',
   replicas: 'replicas-contact-sales',
   compliance: 'compliance-contact-sales',
+  'preview-domains': 'preview-domains-contact-sales',
   support: 'support-contact-sales',
   'support-ticket': 'support-ticket-contact-sales',
   'plan-picker': 'upgrade-contact-sales',
+  videos: 'videos-contact-sales',
 }
 
 /** Exact docs global-nav hrefs → curated actions (top-level section entries only). */

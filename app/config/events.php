@@ -672,17 +672,11 @@ return [
             '$model' => Response::MODEL_ALERT,
             '$resource' => true,
             '$description' => 'This event triggers on any alert event.',
-            'firing' => [
+            'create' => [
                 '$description' => 'This event triggers when a monitor starts firing and opens an alert.',
             ],
-            'resolved' => [
-                '$description' => 'This event triggers when a monitor recovers and its alert resolves.',
-            ],
-            'acknowledged' => [
-                '$description' => 'This event triggers when a member acknowledges a firing alert.',
-            ],
-            'unacknowledged' => [
-                '$description' => 'This event triggers when a firing alert\'s acknowledgement is undone.',
+            'update' => [
+                '$description' => 'This event triggers when an alert resolves, is acknowledged, or its acknowledgement is undone. The alert\'s status and acknowledgedAt tell which.',
             ],
         ],
     ],
@@ -711,6 +705,74 @@ return [
             ],
             'delete' => [
                 '$description' => 'This event triggers when an insight is deleted.',
+            ],
+        ],
+    ],
+    'videos' => [
+        '$model' => Response::MODEL_VIDEO,
+        '$resource' => true,
+        '$description' => 'This event triggers on any videos event.',
+        'renditions' => [
+            '$model' => Response::MODEL_VIDEO_RENDITION,
+            '$resource' => true,
+            '$description' => 'This event triggers on any renditions event.',
+            'create' => [
+                '$description' => 'This event triggers when a rendition is created.',
+            ],
+            'update' => [
+                '$description' => 'This event triggers when a rendition is updated.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when a rendition is deleted.',
+            ],
+        ],
+        'captions' => [
+            '$model' => Response::MODEL_VIDEO_CAPTION,
+            '$resource' => true,
+            '$description' => 'This event triggers on any captions event.',
+            'create' => [
+                '$description' => 'This event triggers when a caption is created.',
+            ],
+            'update' => [
+                '$description' => 'This event triggers when a caption is updated.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when a caption is deleted.',
+            ],
+        ],
+        'timelines' => [
+            '$model' => Response::MODEL_VIDEO,
+            '$description' => 'This event triggers when a video timeline job updates.',
+            'update' => [
+                '$description' => 'This event triggers when a video timeline job updates.',
+            ],
+        ],
+        'create' => [
+            '$description' => 'This event triggers when a video is created.',
+        ],
+        'update' => [
+            '$description' => 'This event triggers when a video is updated.',
+        ],
+        'delete' => [
+            '$description' => 'This event triggers when a video is deleted.',
+        ],
+    ],
+    'projects' => [
+        '$model' => Response::MODEL_PROJECT,
+        '$resource' => true,
+        '$description' => 'This event triggers on any project event.',
+        'profiles' => [
+            '$model' => Response::MODEL_VIDEO_PROFILE,
+            '$resource' => true,
+            '$description' => 'This event triggers on any project video profile event.',
+            'create' => [
+                '$description' => 'This event triggers when a video profile is created.',
+            ],
+            'update' => [
+                '$description' => 'This event triggers when a video profile is updated.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when a video profile is deleted.',
             ],
         ],
     ],

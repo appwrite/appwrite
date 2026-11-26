@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react'
 import { Ghost } from 'lucide-react'
 
 import { sdk } from '@/lib/appwrite/sdk'
@@ -8,6 +14,11 @@ import {
   resolveScreenshotModeUserPhotoSrc,
   subscribeScreenshotMode,
 } from '@/lib/screenshot-mode'
+import {
+  getTeamPhotoVersion,
+  subscribeTeamPhotoVersion,
+  withTeamPhotoVersion,
+} from '@/lib/team-photo'
 import {
   getUserPhotoVersion,
   subscribeUserPhotoVersion,
@@ -55,6 +66,20 @@ interface PhotoAvatarProps {
    * or a plain surface. A photo that fails to load falls back to `email`
    * (Gravatar) when provided, otherwise initials.
    */
+  placeholder?: 'initials' | 'blank'
+  size?: AvatarSize
+  className?: string
+}
+
+interface TeamAvatarProps {
+  teamId: string
+  /**
+   * Resolve `teamId` against this project's teams (`sdk.forProject`) instead
+   * of the console's organizations.
+   */
+  projectId?: string
+  /** Used for the initials shown while the photo loads or when it fails. */
+  name?: string
   placeholder?: 'initials' | 'blank'
   size?: AvatarSize
   className?: string
@@ -204,7 +229,10 @@ export function PhotoAvatar({
         height: pixels,
         userId: trimmedUserId,
       })
-      return isSelf ? withUserPhotoVersion(url, photoVersion) : url
+      // Project users change through the project's user photo card, which bumps the same version
+      return isSelf || !consoleScoped
+        ? withUserPhotoVersion(url, photoVersion)
+        : url
     }
 
     if (useCurrentUser && consoleScoped) {
@@ -292,6 +320,71 @@ export function PhotoAvatar({
           'transition-opacity duration-300 ease-out',
           loaded ? 'opacity-100' : 'opacity-0',
         )}
+      />
+    </span>
+  )
+}
+
+/**
+ * Team photo via `avatars.getTeamPhoto`: an organization, or a project's team
+ * with `projectId`. The API falls back to the team's initials, then a
+ * placeholder, when no photo was uploaded.
+ */
+export function TeamAvatar({
+  teamId,
+  projectId,
+  name,
+  placeholder = 'initials',
+  size = 'md',
+  className,
+}: TeamAvatarProps) {
+  const version = useSyncExternalStore(
+    subscribeTeamPhotoVersion,
+    getTeamPhotoVersion,
+    getTeamPhotoVersion,
+  )
+  const pixels = sizePixels[size]
+  const trimmedProjectId = projectId?.trim() || ''
+  const src = useMemo(() => {
+    const avatars = trimmedProjectId
+      ? sdk.forProject(trimmedProjectId).avatars
+      : sdk.forConsole.avatars
+    const url = avatars.getTeamPhoto({
+      teamId,
+      width: pixels,
+      height: pixels,
+    })
+    return withTeamPhotoVersion(url, version)
+  }, [teamId, trimmedProjectId, pixels, version])
+  const [failedSrc, setFailedSrc] = useState<string | null>(null)
+
+  if (failedSrc === src) {
+    return <InitialsAvatar name={name} size={size} className={className} />
+  }
+
+  return (
+    <span
+      className={cn(
+        'relative flex shrink-0 overflow-hidden rounded-full bg-zinc-200 dark:bg-accent',
+        sizeClasses[size],
+        className,
+      )}
+    >
+      {placeholder === 'initials' ? (
+        <InitialsAvatar
+          name={name}
+          size={size}
+          className="pointer-events-none absolute inset-0 h-full w-full"
+        />
+      ) : null}
+      <img
+        src={src}
+        alt=""
+        width={pixels}
+        height={pixels}
+        decoding="async"
+        onError={() => setFailedSrc(src)}
+        className="relative z-[1] h-full w-full rounded-full object-cover"
       />
     </span>
   )

@@ -8,6 +8,7 @@ use Appwrite\Auth\Validator\PasswordHistory;
 use Appwrite\Auth\Validator\PasswordPwned;
 use Appwrite\Auth\Validator\PasswordStrength;
 use Appwrite\Auth\Validator\PersonalData;
+use Appwrite\Bus\Events\EmailVerified;
 use Appwrite\Event\Event;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
@@ -23,6 +24,7 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
 use Utopia\Auth\Proofs\Token as ProofsToken;
+use Utopia\Bus\Bus;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -70,7 +72,7 @@ class Update extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->label('abuse', [Limit::attempts(['projectId', 'url', 'param.userId'], 10)])
+            ->label('abuse', [Limit::attempts(['projectId', 'url', 'param.userId'], 10, everyone: true)])
             ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID.', false, ['dbForProject'])
             ->param('secret', '', new Text(256), 'Valid reset token.')
             ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordFormat(new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, denyList: $project->getAttribute('auths', [])['passwordDictionaryDenyList'] ?? [])], Validator::TYPE_STRING)), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
@@ -86,6 +88,7 @@ class Update extends Action
             ->inject('pwnedPasswords')
             ->inject('mqtt')
             ->inject('queueForRealtime')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
@@ -105,12 +108,14 @@ class Update extends Action
         PasswordPwned $pwnedPasswords,
         Mqtt $mqtt,
         Realtime $queueForRealtime,
+        Bus $bus,
     ): void {
         /** @var User $profile */
         $profile = $dbForProject->getDocument('users', $userId);
 
+        // An unknown user answers like a wrong secret, so the route can't tell which accounts exist
         if ($profile->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
         $verifiedToken = $profile->tokenVerify(TOKEN_TYPE_RECOVERY, $secret, $proofForToken);
@@ -209,6 +214,11 @@ class Update extends Action
         }
 
         $dbForProject->purgeCachedDocument('users', $profile->getId());
+
+        // A claimed account is one whose unverified email this recovery just verified
+        if ($claimed) {
+            $bus->dispatch(new EmailVerified(user: $user->getArrayCopy(), project: $project->getArrayCopy()));
+        }
 
         try {
             $mqtt->revoke($project->getId(), $profile->getId());

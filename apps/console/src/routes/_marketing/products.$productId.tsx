@@ -1,5 +1,7 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
 import { ProductPageLayout } from '@/components/pages/products/ProductPageLayout'
+import { isProductReleased } from '@/lib/products/availability'
+import { getProductPageFeatures } from '@/lib/products/availability-ssr'
 import { getProductContent } from '@/lib/products/content'
 import { isProductId, PRODUCT_REGISTRY } from '@/lib/products/registry'
 import {
@@ -23,16 +25,45 @@ export const Route = createFileRoute('/_marketing/products/$productId')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   beforeLoad: ({ params }) => {
-    if (!isProductId(params.productId)) {
+    if (
+      !isProductId(params.productId) ||
+      !isProductReleased(params.productId, getProductPageFeatures())
+    ) {
       throw notFound()
     }
   },
-  head: ({ params }) => {
-    if (!isProductId(params.productId)) {
+  loader: async ({ params, context }) => {
+    if (!isProductId(params.productId)) throw notFound()
+    // What `head` needs from the page content. Read here rather than in
+    // `head`: the loader ships with the page, while `head` loads with the
+    // route tree on every page.
+    const { metaTitle, metaDescription, faq } = getProductContent(
+      params.productId,
+    )
+    const head = { metaTitle, metaDescription, faq }
+
+    if (typeof window !== 'undefined' && params.productId === 'sites') {
+      const { queryClient } = context
+      await Promise.all([
+        queryClient
+          .ensureQueryData(
+            siteFrameworksQueryOptions(MARKETING_SITE_TEMPLATES_PROJECT_ID),
+          )
+          .catch(() => {}),
+        queryClient.ensureQueryData(marketingSiteTemplatesQueryOptions()).catch(
+          () => {},
+        ),
+      ])
+    }
+
+    return { head }
+  },
+  head: ({ params, loaderData }) => {
+    const content = loaderData?.head
+    if (!isProductId(params.productId) || !content) {
       return { meta: [{ title: pageTitle('Product') }] }
     }
 
-    const content = getProductContent(params.productId)
     const product = PRODUCT_REGISTRY[params.productId]
     const pageName = content.metaTitle
       ? translate(content.metaTitle)
@@ -53,22 +84,6 @@ export const Route = createFileRoute('/_marketing/products/$productId')({
         ogImageSubtitle,
       }),
       scripts: content.faq.length ? [getMarketingFaqScript(content.faq)] : [],
-    }
-  },
-  loader: async ({ params, context }) => {
-
-    if (typeof window !== 'undefined' && params.productId === 'sites') {
-      const { queryClient } = context
-      await Promise.all([
-        queryClient
-          .ensureQueryData(
-            siteFrameworksQueryOptions(MARKETING_SITE_TEMPLATES_PROJECT_ID),
-          )
-          .catch(() => {}),
-        queryClient.ensureQueryData(marketingSiteTemplatesQueryOptions()).catch(
-          () => {},
-        ),
-      ])
     }
   },
   component: ProductPage,

@@ -1,5 +1,5 @@
+import { VideoOutput } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { VideoOutput } from '@/lib/appwrite/videos'
 
 export type VideoMasterManifestKind = 'hls' | 'dash' | 'cmaf-hls' | 'cmaf-dash'
 
@@ -59,33 +59,50 @@ export function getVideoRenditionPlaylistUrl(
   videoId: string,
   renditionId: string,
   output: string,
-  streamId = 0,
+  streamIndex = 0,
 ): string | null {
   const videos = sdk.forProject(projectId).videos
   if (output === 'hls') {
     return withoutEmptyParams(
-      videos.getStreamManifest({ videoId, renditionId, streamId }),
+      videos.getStreamManifest({ videoId, renditionId, streamIndex }),
     )
   }
   if (output === 'cmaf') {
     return withoutEmptyParams(
-      videos.getCmafStreamManifest({ videoId, renditionId, streamId }),
+      videos.getCmafStreamManifest({ videoId, renditionId, streamIndex }),
     )
   }
   return null
 }
 
-export function getVideoSubtitleManifestUrl(
+export function getVideoCaptionManifestUrl(
   projectId: string,
   videoId: string,
-  subtitleId: string,
+  captionId: string,
   output: string,
 ): string {
   return withoutEmptyParams(
-    sdk.forProject(projectId).videos.getSubtitleManifest({
+    sdk.forProject(projectId).videos.getCaptionManifest({
       videoId,
-      subtitleId,
       output: output as VideoOutput,
+      captionId,
+    }),
+  )
+}
+
+export function getVideoCaptionSegmentUrl(
+  projectId: string,
+  videoId: string,
+  captionId: string,
+  output: VideoOutput,
+  segmentId: string,
+): string {
+  return withoutEmptyParams(
+    sdk.forProject(projectId).videos.getCaptionSegment({
+      videoId,
+      output,
+      captionId,
+      segmentId,
     }),
   )
 }

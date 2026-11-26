@@ -531,6 +531,26 @@ final class FunctionsCustomClientTest extends Scope
 
         $this->assertContains('node-22', array_column($templates['body']['templates'][0]['runtimes'], 'name'));
 
+        // Alert templates subscribe to the alert events and stay private
+        $templates = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'useCases' => ['monitoring'],
+        ]);
+        $this->assertSame(200, $templates['headers']['status-code']);
+        $alertTemplates = \array_column($templates['body']['templates'], null, 'id');
+        $this->assertArrayHasKey('alerts-to-chat', $alertTemplates);
+        $this->assertArrayHasKey('pause-on-usage-spike', $alertTemplates);
+        foreach ($alertTemplates as $template) {
+            $this->assertSame(['monitoring'], $template['useCases']);
+            $this->assertSame([], $template['permissions']);
+            $this->assertContains('monitors.*.alerts.*.create', $template['events']);
+        }
+        $this->assertSame(['monitors.*.alerts.*.create', 'monitors.*.alerts.*.update'], $alertTemplates['alerts-to-chat']['events']);
+        $this->assertSame([], $alertTemplates['alerts-to-chat']['scopes']);
+        $this->assertSame(['functions.read', 'functions.write', 'sites.read', 'sites.write'], $alertTemplates['pause-on-usage-spike']['scopes']);
+
         /**
          * Test for FAILURE
          */

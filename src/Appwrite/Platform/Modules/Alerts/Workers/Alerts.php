@@ -2,13 +2,18 @@
 
 namespace Appwrite\Platform\Modules\Alerts\Workers;
 
+use Appwrite\Alert\Audience;
 use Appwrite\Alert\Change;
 use Appwrite\Alert\Comparator;
 use Appwrite\Alert\Email;
+use Appwrite\Alert\Escalation;
+use Appwrite\Alert\Escalations;
 use Appwrite\Alert\Events;
 use Appwrite\Alert\Meter;
+use Appwrite\Alert\Monitors;
 use Appwrite\Alert\Quantity;
 use Appwrite\Alert\Schedules;
+use Appwrite\Alert\Severity;
 use Appwrite\Alert\State;
 use Appwrite\Alert\Status;
 use Appwrite\Alert\Unsubscribe;
@@ -37,10 +42,12 @@ use Utopia\Usage\Tenant;
 /**
  * Measures one monitor, compares it with its threshold and records the result
  * on the monitor and on the alert it opens while firing. Every change of state
- * fires a project event (`monitors.[monitorId].alerts.[alertId].firing` or
- * `.resolved`) for webhooks, functions and realtime. The organization's members
+ * fires a project event (`monitors.[monitorId].alerts.[alertId].create` or
+ * `.update`) for webhooks, functions and realtime. The organization's members
  * holding a role its `notify` names are notified by email, by push and in the console:
- * on entering `firing` (at most once per cooldown) and on returning to `ok`.
+ * on entering `firing` (at most once per cooldown) and on returning to `ok`. A monitor
+ * with an escalation notifies the escalation's steps instead, one after another
+ * until a member acknowledges the alert or it resolves.
  */
 class Alerts extends Action
 {
@@ -83,7 +90,15 @@ class Alerts extends Action
         Realtime $queueForRealtime,
         array $platform,
     ): void {
-        $monitorId = AlertMessage::fromArray($message->getPayload())->monitorId;
+        $payload = AlertMessage::fromArray($message->getPayload());
+        if ($payload->alertId !== '') {
+            Span::add('alert.id', $payload->alertId);
+            $this->escalation($payload->alertId, $project, $dbForProject, $dbForPlatform, $publisherForNotifications, $platform);
+
+            return;
+        }
+
+        $monitorId = $payload->monitorId;
         Span::add('monitor.id', $monitorId);
 
         // The project was deleted after the evaluation was scheduled; its monitors go with it.
@@ -102,6 +117,7 @@ class Alerts extends Action
 
             return;
         }
+        Span::add('monitor.id', $monitor->getAttribute('monitorId') ?: $monitor->getId());
         if (!$monitor->getAttribute('enabled', false) || $monitor->getAttribute('projectInternalId') !== (string) $project->getSequence()) {
             return;
         }
@@ -177,7 +193,7 @@ class Alerts extends Action
 
         $notify = false;
         // A monitor that notifies no role announces nothing, so it starts no cooldown; its events still fire.
-        $silent = $monitor->getAttribute('notify', [User::ROLE_OWNER]) === [];
+        $silent = $monitor->getAttribute('escalationId', '') === '' && $monitor->getAttribute('notify', [User::ROLE_OWNER]) === [];
         if ($status === Status::Firing && !$announced && !$silent) {
             // Cooldown counts from the last announced firing, so a monitor flapping
             // around its threshold is reported once per cooldown, and a firing
@@ -224,7 +240,21 @@ class Alerts extends Action
         // still sees the transition instead of finding it already recorded.
         if ($notify) {
             Span::add('monitor.notified', true);
-            $this->notify($monitor, $alert, $project, $status, $value, $evaluatedAt, $dbForPlatform, $publisherForNotifications, $platform, $dbForProject);
+            $escalations = new Escalations($dbForPlatform);
+            $escalation = $escalations->escalation((string) $monitor->getAttribute('escalationId', ''), (string) $project->getAttribute('teamInternalId', ''));
+            if ($status === Status::Firing && !$escalation->isEmpty()) {
+                // The escalation's first step is notified now or after its delay, and the rest follow on their timers.
+                $alert = $escalations->start($alert, $escalation, $now);
+                $alert = $this->escalate($monitor, $alert, $project, $value, $now, $dbForPlatform, $publisherForNotifications, $platform, $dbForProject);
+            } elseif ($alert->getAttribute('escalationId', '') !== '') {
+                // The resolution goes to everyone the escalation reached, who may be nobody yet.
+                $audience = new Audience([], $alert->getAttribute('escalationUserIds', []));
+                if (!$audience->isEmpty()) {
+                    $this->notify($monitor, $alert, $project, $status, $value, $evaluatedAt, $dbForPlatform, $publisherForNotifications, $platform, $dbForProject, $audience);
+                }
+            } else {
+                $this->notify($monitor, $alert, $project, $status, $value, $evaluatedAt, $dbForPlatform, $publisherForNotifications, $platform, $dbForProject);
+            }
         }
 
         // Every change of state is an event, whatever the cooldown holds back from the team.
@@ -245,7 +275,12 @@ class Alerts extends Action
         }
 
         if (!$reading->isEmpty()) {
-            $dbForPlatform->updateDocument('monitorAlerts', $alert->getId(), $reading);
+            $alert = $dbForPlatform->updateDocument('monitorAlerts', $alert->getId(), $reading);
+        }
+
+        // A resolved alert escalates no further.
+        if ($status === Status::Ok && !$alert->isEmpty()) {
+            (new Escalations($dbForPlatform))->stop($alert);
         }
 
         $dbForPlatform->updateDocument('monitors', $monitor->getId(), $changes);
@@ -272,7 +307,7 @@ class Alerts extends Action
                 '$id' => $alertId,
                 '$permissions' => [],
                 'name' => (string) $monitor->getAttribute('name'),
-                'monitorId' => $monitor->getId(),
+                'monitorId' => $monitor->getAttribute('monitorId') ?: $monitor->getId(),
                 'monitorInternalId' => (string) $monitor->getSequence(),
                 'teamId' => (string) $project->getAttribute('teamId', ''),
                 'teamInternalId' => (string) $project->getAttribute('teamInternalId', ''),
@@ -282,7 +317,7 @@ class Alerts extends Action
                 'region' => (string) $monitor->getAttribute('region', ''),
                 'status' => State::Firing->value,
                 'rules' => $monitor->getAttribute('rules', []),
-                'critical' => (bool) $monitor->getAttribute('critical', false),
+                'severity' => $monitor->getAttribute('severity') ?: Severity::Warning->value,
                 'type' => (string) $monitor->getAttribute('type'),
                 'resourceType' => (string) $monitor->getAttribute('resourceType'),
                 'resourceId' => (string) $monitor->getAttribute('resourceId'),
@@ -292,7 +327,7 @@ class Alerts extends Action
                 'value' => $value,
                 'peak' => $value,
                 'notifications' => 0,
-                'search' => \implode(' ', \array_filter([$alertId, $monitor->getId(), (string) $monitor->getAttribute('name'), (string) $monitor->getAttribute('metric')])),
+                'search' => \implode(' ', \array_filter([$alertId, $monitor->getAttribute('monitorId') ?: $monitor->getId(), (string) $monitor->getAttribute('name'), (string) $monitor->getAttribute('metric')])),
             ]));
         } catch (Duplicate) {
             return $dbForPlatform->getDocument('monitorAlerts', $alertId);
@@ -328,8 +363,8 @@ class Alerts extends Action
     }
 
     /**
-     * Fires the alert's project event, `monitors.[monitorId].alerts.[alertId].firing`
-     * or `.resolved`, with the alert as its payload: to the project's webhooks,
+     * Fires the alert's project event, `monitors.[monitorId].alerts.[alertId].create`
+     * when it opens or `.update` when it resolves, with the alert as its payload: to the project's webhooks,
      * the functions that listen to it, and realtime. A monitor outside a project,
      * which has no webhooks or functions, fires none.
      */
@@ -370,6 +405,21 @@ class Alerts extends Action
     }
 
     /**
+     * A push's title, which a locked screen shows first: how urgent a firing alert is, or that it
+     * resolved, then the monitor and where it fired, as `[Warning] Requests spike on Pulse`. A
+     * severity from before severities reads as the console's default, warning; an empty place is
+     * left out.
+     */
+    protected static function pushTitle(Status $status, string $severity, string $rule, string $place): string
+    {
+        $label = $status === Status::Firing
+            ? (Severity::tryFrom($severity) ?? Severity::Warning)->name
+            : 'Resolved';
+
+        return '[' . $label . '] ' . $rule . ($place === '' ? '' : ' on ' . $place);
+    }
+
+    /**
      * Console path of the project's usage pages; the notification links to its alerts and monitors pages.
      */
     protected function path(Document $project): string
@@ -389,7 +439,11 @@ class Alerts extends Action
      * changed, so an at-least-once redelivery of the same evaluation sends
      * nothing twice while the next transition always gets through.
      *
+     * An escalation names its own `$audience`, a step of its escalation, and the key
+     * of that step; without one the monitor's `notify` roles are notified.
+     *
      * @param array<string, mixed> $platform
+     * @return list<string> IDs of members notified
      */
     protected function notify(
         Document $monitor,
@@ -402,17 +456,20 @@ class Alerts extends Action
         NotificationPublisher $publisherForNotifications,
         array $platform,
         ?Database $dbForProject = null,
-    ): void {
+        ?Audience $audience = null,
+    ): array {
+        $audience ??= new Audience($monitor->getAttribute('notify', [User::ROLE_OWNER]));
+
         // The project's organization, not the one stored on the monitor: a transferred
         // project's alerts go to the members of the organization it moved to.
-        $members = $this->members($dbForPlatform, (string) $project->getAttribute('teamInternalId', ''), $monitor->getAttribute('notify', [User::ROLE_OWNER]));
+        $members = $this->members($dbForPlatform, (string) $project->getAttribute('teamInternalId', ''), $audience->roles, $audience->userIds);
         if ($members === []) {
-            return;
+            return [];
         }
 
         // Named after the evaluation the decision was made against, so a retried
         // evaluation of the same state reuses the key instead of sending twice.
-        $deduplicationKey = 'monitor:' . $monitor->getId() . ':' . $status->value . ':' . ($monitor->getAttribute('evaluatedAt') ?? $monitor->getCreatedAt());
+        $deduplicationKey = $audience->key !== '' ? $audience->key : 'monitor:' . $monitor->getId() . ':' . $status->value . ':' . ($monitor->getAttribute('evaluatedAt') ?? $monitor->getCreatedAt());
         $metric = (string) $monitor->getAttribute('metric');
         $parent = [
             'parentResourceType' => RESOURCE_TYPE_PROJECTS,
@@ -454,7 +511,7 @@ class Alerts extends Action
             'since' => $alert->isEmpty() ? null : new \DateTimeImmutable($alert->getCreatedAt()),
             'cooldown' => (int) $monitor->getAttribute('cooldown', 0),
             // The monitor's drawer, which pauses it from its header.
-            'pauseUrl' => $consoleUrl . $this->path($project) . '/monitors?monitor=' . $monitor->getId(),
+            'pauseUrl' => $consoleUrl . $this->path($project) . '/monitors?monitor=' . ($monitor->getAttribute('monitorId') ?: $monitor->getId()),
         ];
 
         foreach ($members as [$user]) {
@@ -479,7 +536,7 @@ class Alerts extends Action
                 $recipients[] = ['address' => (string) $user->getAttribute('email'), 'channel' => NOTIFICATION_TYPE_EMAIL, ...$resource];
             }
 
-            $token = $unsubscribe->token($user->getId(), $monitor->getId(), $type);
+            $token = $unsubscribe->token($user->getId(), $monitor->getAttribute('monitorId') ?: $monitor->getId(), $type, Monitors::scope($monitor));
             $email = new Email(...$notice, timeZone: $this->timeZone($user));
 
             $this->publish($publisherForNotifications, new NotificationMessage(
@@ -510,15 +567,18 @@ class Alerts extends Action
                 ],
                 // What the member's devices show; the resolved push replaces the firing one by its tag.
                 push: [
-                    'title' => ($status === Status::Firing ? 'Firing: ' : 'Resolved: ') . (string) $monitor->getAttribute('name'),
+                    'title' => static::pushTitle($status, (string) $alert->getAttribute('severity'), (string) $monitor->getAttribute('name'), $projectName),
                     'body' => \implode(' ', \array_filter([$email->summary(), $notice['location']])),
                     'tag' => 'alert:' . $alert->getId(),
-                    'critical' => (bool) $monitor->getAttribute('critical', false),
+                    // The severity the alert opened with, so editing the monitor later
+                    // does not change how this alert's pushes are delivered.
+                    'critical' => $alert->getAttribute('severity') === Severity::Critical->value,
                     'data' => [
                         'type' => 'alert',
+                        'severity' => $alert->getAttribute('severity') ?: Severity::Warning->value,
                         'status' => $status === Status::Firing ? State::Firing->value : State::Resolved->value,
                         'alertId' => $alert->getId(),
-                        'monitorId' => $monitor->getId(),
+                        'monitorId' => $monitor->getAttribute('monitorId') ?: $monitor->getId(),
                         'organizationId' => (string) $project->getAttribute('teamId', ''),
                         'projectId' => $project->getId(),
                         'url' => $notice['url'],
@@ -527,6 +587,106 @@ class Alerts extends Action
                 ],
             ));
         }
+
+        return \array_map(fn (array $member): string => $member[0]->getId(), $members);
+    }
+
+    /**
+     * One due step of an alert's escalation, fired by the alert's timer. An
+     * alert that resolved, was acknowledged, or lost its monitor
+     * escalates no further.
+     *
+     * @param array<string, mixed> $platform
+     */
+    protected function escalation(
+        string $alertId,
+        Document $project,
+        Database $dbForProject,
+        Database $dbForPlatform,
+        NotificationPublisher $publisherForNotifications,
+        array $platform,
+    ): void {
+        $escalations = new Escalations($dbForPlatform);
+        $alert = $dbForPlatform->getDocument('monitorAlerts', $alertId);
+
+        if ($project->isEmpty() || $alert->isEmpty() || $alert->getAttribute('projectInternalId') !== (string) $project->getSequence()) {
+            $escalations->forget($alertId);
+
+            return;
+        }
+
+        $monitor = $dbForPlatform->findOne('monitors', [
+            Query::equal('$sequence', [(string) $alert->getAttribute('monitorInternalId')]),
+        ]);
+        if ($alert->getAttribute('status') !== State::Firing->value || $alert->getAttribute('acknowledgedAt') !== null || $monitor->isEmpty()) {
+            $escalations->stop($alert);
+
+            return;
+        }
+
+        $this->escalate($monitor, $alert, $project, (float) $alert->getAttribute('value', 0), new \DateTimeImmutable(), $dbForPlatform, $publisherForNotifications, $platform, $dbForProject);
+    }
+
+    /**
+     * Notifies every step of the alert's escalation that is due, each moving the
+     * escalation on to the next, so steps without a delay go out together. A
+     * step is notified before the escalation moves past it: a retry notifies it
+     * again under the same key, which sends nothing twice.
+     *
+     * @param array<string, mixed> $platform
+     */
+    protected function escalate(
+        Document $monitor,
+        Document $alert,
+        Document $project,
+        float $value,
+        \DateTimeImmutable $now,
+        Database $dbForPlatform,
+        NotificationPublisher $publisherForNotifications,
+        array $platform,
+        ?Database $dbForProject = null,
+    ): Document {
+        $escalations = new Escalations($dbForPlatform);
+        // The steps the alert started with, whatever its escalation holds now.
+        $escalation = Escalation::fromAlert($alert);
+        $notified = false;
+
+        while ($alert->getAttribute('acknowledgedAt') === null && ($due = $alert->getAttribute('escalatesAt')) !== null && new \DateTimeImmutable($due) <= $now) {
+            $index = (int) $alert->getAttribute('escalationStep', 0);
+            $round = (int) $alert->getAttribute('escalationRound', 0);
+            $step = $escalation->steps[$index] ?? null;
+            if ($step === null) {
+                return $escalations->stop($alert);
+            }
+
+            Span::add('alert.escalation.step', $index);
+            Span::add('alert.escalation.round', $round);
+
+            $userIds = $this->notify(
+                $monitor,
+                $alert,
+                $project,
+                Status::Firing,
+                $value,
+                $alert->getCreatedAt(),
+                $dbForPlatform,
+                $publisherForNotifications,
+                $platform,
+                $dbForProject,
+                new Audience($step->roles, $step->userIds, 'escalation:' . $alert->getId() . ':' . $round . ':' . $index),
+            );
+
+            $now = new \DateTimeImmutable();
+            $alert = $escalations->advance($alert, $escalation, (int) $monitor->getAttribute('cooldown', 0), $now, $userIds);
+            $notified = true;
+        }
+
+        // A timer that fired early is armed again for the time the alert holds.
+        if (!$notified && $alert->getAttribute('escalatesAt') !== null) {
+            $escalations->arm($alert);
+        }
+
+        return $alert;
     }
 
     /**
@@ -566,15 +726,16 @@ class Alerts extends Action
     }
 
     /**
-     * The organization's confirmed members holding any of `$roles`, each with
-     * the first of those roles they hold.
+     * The organization's confirmed members holding any of `$roles` or named in
+     * `$userIds`, each with the first of those roles they hold, or none.
      *
      * @param array<string> $roles
+     * @param array<string> $userIds
      * @return list<array{0: Document, 1: string}>
      */
-    protected function members(Database $dbForPlatform, string $teamInternalId, array $roles): array
+    protected function members(Database $dbForPlatform, string $teamInternalId, array $roles, array $userIds = []): array
     {
-        if ($roles === []) {
+        if ($roles === [] && $userIds === []) {
             return [];
         }
 
@@ -593,9 +754,12 @@ class Alerts extends Action
 
             $memberships = $dbForPlatform->find('memberships', $queries);
             foreach ($memberships as $membership) {
+                $userId = (string) $membership->getAttribute('userId');
                 $held = \array_values(\array_intersect($roles, $membership->getAttribute('roles', [])));
                 if ($held !== []) {
-                    $memberRoles[(string) $membership->getAttribute('userId')] ??= $held[0];
+                    $memberRoles[$userId] ??= $held[0];
+                } elseif (\in_array($userId, $userIds, true)) {
+                    $memberRoles[$userId] ??= '';
                 }
             }
 

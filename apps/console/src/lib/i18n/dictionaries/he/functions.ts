@@ -402,6 +402,9 @@ export const heFunctionsDictionary: Record<string, string> = {
   'No domains yet': 'אין דומיינים עדיין',
   'No events configured': 'לא הוגדרו אירועים',
   'No executions yet': 'אין הרצות עדיין',
+  'No GB-hours yet': 'אין GB-hours עדיין',
+  'Invocations will show up here.': 'הרצות יופיעו כאן.',
+  'Compute usage will show up here.': 'שימוש במחשוב יופיע כאן.',
   'No files yet': 'אין קבצים עדיין',
   'No functions yet': 'אין פונקציות עדיין',
   'No headers': 'אין Headers',
@@ -752,6 +755,7 @@ export const heFunctionsDictionary: Record<string, string> = {
     'הדואר נמסר אל Appwrite בפורט 25, ולכן רשומת ה-MX חייבת להצביע ישירות לערך שלמעלה ולא לשם מארח שעובר דרך פרוקסי.',
   'This region does not report its mail server yet, so the MX record cannot be shown. Add the TXT record now and come back for the MX record later.':
     'האזור הזה עדיין לא מדווח על שרת הדואר שלו, ולכן לא ניתן להציג את רשומת ה-MX. הוסיפו עכשיו את רשומת ה-TXT וחזרו מאוחר יותר לרשומת ה-MX.',
-  "This function's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
-    'התקנת ה-Git של הפונקציה הזו כבר לא מגיעה ל-repo שלה, ולכן Push חדש לא ייפרס. נתקו את ה-repo ואז חברו אותו מחדש דרך ההתקנה שבה הוא נמצא עכשיו.',
+  "This function's Git installation can no longer reach its repository, so pushes can't deploy. If the repository was removed from the installation's repository access, add it back with Update repository access. If it was deleted or moved to another installation, disconnect it and connect it again.":
+    'התקנת ה-Git של הפונקציה הזו כבר לא מגיעה ל-repo שלה, ולכן Push חדש לא ייפרס. אם ה-repo הוסר מהרשאות הגישה של ההתקנה, הוסיפו אותו חזרה דרך עדכון הגישה ל-repos. אם הוא נמחק או הועבר להתקנה אחרת, נתקו אותו וחברו אותו מחדש.',
+  'View executions': 'הצגת הרצות',
 }
