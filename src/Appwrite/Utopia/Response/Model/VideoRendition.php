@@ -92,7 +92,7 @@ class VideoRendition extends Model
             ->addRule('status', [
                 'type' => self::TYPE_ENUM,
                 'description' => 'Transcoding status: one of `pending`, `started`, `ended`, `ready`, `error` or `aborted`.',
-                'default' => '',
+                'default' => 'pending',
                 'example' => 'ready',
                 'enum' => ['pending', 'started', 'ended', 'ready', 'error', 'aborted'],
                 'enumSDKName' => 'VideoRenditionStatus',
@@ -112,7 +112,7 @@ class VideoRendition extends Model
             ->addRule('output', [
                 'type' => self::TYPE_ENUM,
                 'description' => 'Streaming output format: `hls`, `dash`, or `cmaf`.',
-                'default' => '',
+                'default' => 'hls',
                 'example' => 'hls',
                 'enum' => ['hls', 'dash', 'cmaf'],
                 'enumSDKName' => 'VideoOutput',

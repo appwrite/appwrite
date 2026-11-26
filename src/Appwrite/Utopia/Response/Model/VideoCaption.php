@@ -90,7 +90,7 @@ class VideoCaption extends Model
             ->addRule('status', [
                 'type' => self::TYPE_ENUM,
                 'description' => 'Packaging status: one of `pending`, `started`, `ready`, `error` or `aborted`.',
-                'default' => '',
+                'default' => 'pending',
                 'example' => 'ready',
                 'enum' => ['pending', 'started', 'ready', 'error', 'aborted'],
                 'enumSDKName' => 'VideoCaptionStatus',
