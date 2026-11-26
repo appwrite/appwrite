@@ -1,7 +1,7 @@
 name: Crates
 
 # An `rs/<name>/<version>` tag publishes that crate to crates.io, then pushes
-# exactly what was published to its read-only mirror at utopia-rs/<name>.
+# the published files to its read-only mirror at utopia-rs/<name>.
 # Cargo writes the published crate's standalone Cargo.toml, so the crates here
 # keep inheriting from the workspace. See rfc/monorepo.md.
 
@@ -95,7 +95,8 @@ jobs:
           permission-contents: write
           permission-workflows: write
 
-      # The mirror's tree is the .crate Cargo just built: one commit and one tag per release.
+      # The mirror's tree is the .crate Cargo built, less what the crate's own .gitignore names
+      # (the Cargo.lock that packaging generates): one commit and one tag per release.
       - name: Push the release to the mirror
         env:
           TOKEN: ${{ steps.app-token.outputs.token }}

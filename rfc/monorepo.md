@@ -156,7 +156,7 @@ bin/monorepo list                      # packages and crates (rs/<name>), with t
 bin/monorepo release rs/query 0.2.0    # tag rs/query/0.2.0, once crates/utopia/query/Cargo.toml says 0.2.0
 ```
 
-`crates.yml` runs on the tag. It publishes the crate to crates.io, then commits the same `.crate` Cargo built to the read-only mirror at `utopia-rs/<name>` and tags it there, so a mirror holds one commit per release and exactly what crates.io serves. A crate that depends on another (all of them on `php-std`) needs that version on crates.io first.
+`crates.yml` runs on the tag. It publishes the crate to crates.io, then commits the same `.crate` Cargo built to the read-only mirror at `utopia-rs/<name>` and tags it there, so a mirror holds one commit per release and the files crates.io serves, less the generated `Cargo.lock`, which each crate's `.gitignore` leaves out. A crate that depends on another (all of them on `php-std`) needs that version on crates.io first.
 
 ### History
 
