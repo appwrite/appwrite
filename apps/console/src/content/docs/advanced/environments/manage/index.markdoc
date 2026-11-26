@@ -6,7 +6,21 @@ description: Rename, reorder, and delete Appwrite project environments, and lear
 
 Environments are managed from the environment switcher in the project sidebar. Production, the project itself, is always first and can't be renamed or deleted from the switcher.
 
+{% only_dark %}
+![Environment switcher open inside the Staging environment, with a drag handle on Dev and the Rename environment and Delete environment options](/images/docs/environments/dark/manage.avif)
+{% /only_dark %}
+{% only_light %}
+![Environment switcher open inside the Staging environment, with a drag handle on Dev and the Rename environment and Delete environment options](/images/docs/environments/manage.avif)
+{% /only_light %}
+
 # Rename an environment {% #rename %}
+
+{% only_dark %}
+![Rename environment dialog with a new name entered](/images/docs/environments/dark/rename.avif)
+{% /only_dark %}
+{% only_light %}
+![Rename environment dialog with a new name entered](/images/docs/environments/rename.avif)
+{% /only_light %}
 
 1. Switch to the environment.
 2. Open the environment switcher and click **Rename environment**.
@@ -21,6 +35,13 @@ With two or more environments, hover over an environment in the switcher and dra
 Production stays first. The order is saved on the project, so everyone who opens it sees the same order.
 
 # Delete an environment {% #delete %}
+
+{% only_dark %}
+![Delete environment dialog with the environment's name typed to confirm](/images/docs/environments/dark/delete.avif)
+{% /only_dark %}
+{% only_light %}
+![Delete environment dialog with the environment's name typed to confirm](/images/docs/environments/delete.avif)
+{% /only_light %}
 
 1. Switch to the environment.
 2. Open the environment switcher and click **Delete environment**.
