@@ -78,8 +78,9 @@ final class EventValidatorTest extends TestCase
         $this->assertTrue($this->object->isValid('tablesdb.books'));
         $this->assertTrue($this->object->isValid('tablesdb.books.tables.chapters'));
         $this->assertTrue($this->object->isValid('tablesdb.books.tables.*'));
-        $this->assertTrue($this->object->isValid('monitors.*.alerts.*.firing'));
-        $this->assertTrue($this->object->isValid('monitors.*.alerts.*.resolved'));
+        $this->assertTrue($this->object->isValid('monitors.*.alerts.*.create'));
+        $this->assertTrue($this->object->isValid('monitors.*.alerts.*.update'));
+        $this->assertFalse($this->object->isValid('monitors.*.alerts.*.firing'));
         $this->assertTrue($this->object->isValid('monitors.egress.alerts.*'));
         $this->assertTrue($this->object->isValid('monitors.*'));
         $this->assertTrue($this->object->isValid('tablesdb.books.tables.chapters.columns.name.create'));

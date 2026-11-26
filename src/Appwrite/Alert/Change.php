@@ -3,8 +3,8 @@
 namespace Appwrite\Alert;
 
 /**
- * What happened to an alert, named as its project event:
- * `monitors.[monitorId].alerts.[alertId].<change>`.
+ * What happened to an alert. Firing opens it and fires its `create` event;
+ * every other change fires `update`, with the alert's new status in the payload.
  */
 enum Change: string
 {

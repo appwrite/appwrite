@@ -48,7 +48,7 @@ class Create extends Base
                 group: null,
                 name: 'createUsageMonitor',
                 description: <<<EOT
-                Create a usage monitor. It reads a usage metric of the project, or of one of its databases, buckets, functions or sites, on a schedule, and opens an alert when all its rules hold. Each alert fires the `monitors.[monitorId].alerts.[alertId].firing` event when it opens and `.resolved` when usage recovers, for project webhooks, functions and realtime, and notifies the confirmed members of the `notify` roles by email and in the console, or the steps of the escalation set by `escalationId`.
+                Create a usage monitor. It reads a usage metric of the project, or of one of its databases, buckets, functions or sites, on a schedule, and opens an alert when all its rules hold. Each alert fires the `monitors.[monitorId].alerts.[alertId].create` event when it opens and `.update` when usage recovers, for project webhooks, functions and realtime, and notifies the confirmed members of the `notify` roles by email and in the console, or the steps of the escalation set by `escalationId`.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
