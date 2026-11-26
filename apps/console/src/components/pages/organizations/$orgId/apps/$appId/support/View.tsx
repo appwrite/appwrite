@@ -28,9 +28,6 @@ function SupportSettings({ orgId, app }: { orgId: string; app: Models.App }) {
   const { submit, isUpdating } = useOrgAppUpdate(orgId, app)
   const [supportUrl, setSupportUrl] = useState(app.supportUrl ?? '')
   const [contacts, setContacts] = useState(app.contacts ?? [])
-  // An email typed but not yet added still counts as an edit; leaving the
-  // field (for example by clicking Update) adds it.
-  const [pendingContact, setPendingContact] = useState('')
 
   const syncedAppRef = useRef(app)
 
@@ -41,10 +38,11 @@ function SupportSettings({ orgId, app }: { orgId: string; app: Models.App }) {
     setContacts(app.contacts ?? [])
   }, [app])
 
+  const supportUrlError = urlFieldError(supportUrl)
+
   const supportDirty =
     trimOrEmpty(supportUrl) !== (app.supportUrl ?? '') ||
-    !listsEqual(nonEmptyList(contacts), app.contacts ?? []) ||
-    pendingContact !== ''
+    !listsEqual(nonEmptyList(contacts), app.contacts ?? [])
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -61,13 +59,13 @@ function SupportSettings({ orgId, app }: { orgId: string; app: Models.App }) {
           <Input
             id="app-support-url"
             value={supportUrl}
-            aria-invalid={urlFieldError(supportUrl) !== null}
+            aria-invalid={supportUrlError !== null}
             onChange={(e) => setSupportUrl(e.target.value)}
             placeholder="https://example.com/support"
           />
-          {urlFieldError(supportUrl) ? (
+          {supportUrlError ? (
             <p className="text-[12px] text-destructive">
-              {t(urlFieldError(supportUrl)!)}
+              {supportUrlError}
             </p>
           ) : null}
         </div>
@@ -76,7 +74,6 @@ function SupportSettings({ orgId, app }: { orgId: string; app: Models.App }) {
           <InputTags
             value={contacts}
             onChange={setContacts}
-            onPendingChange={setPendingContact}
             validateEmail
             splitOnComma
             placeholder={t('Add email and press Enter')}
@@ -88,7 +85,7 @@ function SupportSettings({ orgId, app }: { orgId: string; app: Models.App }) {
           size="sm"
           className="h-9 text-[13px]"
           disabled={
-            isUpdating || !supportDirty || urlFieldError(supportUrl) !== null
+            isUpdating || !supportDirty || supportUrlError !== null
           }
           onClick={() =>
             submit({
