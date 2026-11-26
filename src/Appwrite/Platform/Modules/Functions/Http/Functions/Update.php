@@ -234,7 +234,13 @@ class Update extends Base
             if (!\in_array($runtime, $configFramework['runtimes'], true)) {
                 throw new Exception(Exception::FUNCTION_RUNTIME_UNSUPPORTED, $configFramework['name'] . ' does not support runtime "' . $runtime . '".');
             }
+
+            // Like create: a function switched to a framework without its own
+            // entrypoint or build command gets the framework's.
+            $entrypoint = $entrypoint !== '' ? $entrypoint : $configFramework['entrypoint'];
+            $commands = $commands !== '' ? $commands : $configFramework['installCommand'];
         }
+
         $deploymentRetention ??= $function->getAttribute('deploymentRetention', 0);
         $description ??= $function->getAttribute('description', '');
         $buildSpecification ??= $function->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT);

@@ -23,6 +23,7 @@ use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\System\System;
 
 final class FunctionsCustomServerTest extends Scope
 {
@@ -3681,6 +3682,38 @@ final class FunctionsCustomServerTest extends Scope
         $this->cleanupFunction($functionId);
     }
 
+    public function testListFunctionFrameworks(): void
+    {
+        // Test for SUCCESS: Express, with only the runtimes this server enables
+        $frameworks = $this->client->call(Client::METHOD_GET, '/functions/frameworks', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertSame(200, $frameworks['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $frameworks['body']['total']);
+
+        $express = \array_values(\array_filter($frameworks['body']['frameworks'], fn (array $framework): bool => $framework['key'] === 'express'))[0] ?? null;
+        $this->assertNotNull($express);
+        $this->assertSame('Express', $express['name']);
+        $this->assertSame('server.js', $express['entrypoint']);
+        $this->assertSame('npm install', $express['installCommand']);
+        $enabled = \array_filter(\explode(',', (string) System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
+        foreach ($express['runtimes'] as $runtime) {
+            $this->assertStringStartsWith('node-', $runtime);
+            if ($enabled !== []) {
+                $this->assertContains($runtime, $enabled);
+            }
+        }
+
+        // Test for SUCCESS: the total can be skipped
+        $frameworks = $this->client->call(Client::METHOD_GET, '/functions/frameworks', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), ['total' => false]);
+        $this->assertSame(0, $frameworks['body']['total']);
+        $this->assertNotEmpty($frameworks['body']['frameworks']);
+    }
+
     public function testExpressFunction(): void
     {
         // Test for SUCCESS: an Express app needs only the framework; the entrypoint and
@@ -3764,6 +3797,22 @@ final class FunctionsCustomServerTest extends Scope
         $classic = $this->updateFunction($functionId, ['name' => 'Express app', 'framework' => '']);
         $this->assertSame(200, $classic['headers']['status-code'], \json_encode($classic['body']));
         $this->assertSame('', $classic['body']['framework']);
+
+        // Test for SUCCESS: a function without an entrypoint or build command,
+        // switched to Express, gets the framework's
+        $plain = $this->createFunction([
+            'functionId' => Id::unique(),
+            'name' => 'Plain function',
+            'runtime' => 'node-22',
+        ]);
+        $this->assertSame(201, $plain['headers']['status-code'], \json_encode($plain['body']));
+        $this->assertSame('', $plain['body']['entrypoint']);
+        $switched = $this->updateFunction($plain['body']['$id'], ['name' => 'Plain function', 'framework' => 'express']);
+        $this->assertSame(200, $switched['headers']['status-code'], \json_encode($switched['body']));
+        $this->assertSame('express', $switched['body']['framework']);
+        $this->assertSame('server.js', $switched['body']['entrypoint']);
+        $this->assertSame('npm install', $switched['body']['commands']);
+        $this->cleanupFunction($plain['body']['$id']);
 
         // Test for FAILURE: an unknown framework
         $unknown = $this->createFunction([

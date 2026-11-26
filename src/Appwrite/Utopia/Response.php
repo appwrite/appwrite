@@ -228,6 +228,8 @@ class Response extends SwooleResponse
     public const MODEL_FRAMEWORK = 'framework';
     public const MODEL_FRAMEWORK_LIST = 'frameworkList';
     public const MODEL_FRAMEWORK_ADAPTER = 'frameworkAdapter';
+    public const MODEL_FUNCTION_FRAMEWORK = 'functionFramework';
+    public const MODEL_FUNCTION_FRAMEWORK_LIST = 'functionFrameworkList';
     public const MODEL_TEMPLATE_SITE = 'templateSite';
     public const MODEL_TEMPLATE_SITE_LIST = 'templateSiteList';
     public const MODEL_TEMPLATE_FRAMEWORK = 'templateFramework';
