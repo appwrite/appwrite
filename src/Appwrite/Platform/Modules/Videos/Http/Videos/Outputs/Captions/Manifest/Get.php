@@ -13,7 +13,6 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
@@ -56,7 +55,7 @@ class Get extends Base
                 ],
                 contentType: ContentType::ANY,
                 type: MethodType::LOCATION,
-                locationAuth: ['Project', 'ImpersonateUserId'],
+                locationAuth: ['Project', 'Environment', 'ImpersonateUserId'],
             ))
             ->param('videoId', '', new UID(), 'Video unique ID.')
             ->param('output', '', new WhiteList(self::OUTPUTS, true), 'Streaming output format.', enum: new Enum(name: 'VideoOutput'))
@@ -64,7 +63,6 @@ class Get extends Base
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('project')
             ->inject('user')
             ->inject('authorization')
             ->inject('deviceForVideos')
@@ -78,7 +76,6 @@ class Get extends Base
         Request $request,
         Response $response,
         Database $dbForProject,
-        Document $project,
         User $user,
         Authorization $authorization,
         Device $deviceForVideos
@@ -131,7 +128,7 @@ class Get extends Base
         foreach ($segments as $segment) {
             $entries[] = [
                 'duration' => $segment->getAttribute('duration', 0),
-                'url' => $this->withProject($baseUri . $segment->getId(), $project, $video),
+                'url' => $this->withProject($baseUri . $segment->getId(), $request, $video),
             ];
         }
 

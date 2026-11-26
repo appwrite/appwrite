@@ -9,9 +9,9 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -50,7 +50,7 @@ class Get extends Base
                 ],
                 contentType: ContentType::ANY,
                 type: MethodType::LOCATION,
-                locationAuth: ['Project', 'ImpersonateUserId'],
+                locationAuth: ['Project', 'Environment', 'ImpersonateUserId'],
             ))
             ->param('videoId', '', new UID(), 'Video unique ID.')
             ->inject('response')
@@ -65,10 +65,10 @@ class Get extends Base
         string $videoId,
         Response $response,
         Database $dbForProject,
-        Document $project,
+        Request $request,
         User $user,
         Authorization $authorization
     ): void {
-        $this->sendDashMaster($videoId, self::OUTPUT_CMAF, $response, $dbForProject, $project, $user, $authorization);
+        $this->sendDashMaster($videoId, self::OUTPUT_CMAF, $response, $dbForProject, $request, $user, $authorization);
     }
 }
