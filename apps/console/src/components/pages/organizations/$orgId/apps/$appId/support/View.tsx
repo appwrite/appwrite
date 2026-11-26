@@ -10,6 +10,7 @@ import {
   listsEqual,
   nonEmptyList,
   trimOrEmpty,
+  urlFieldError,
   useOrgAppUpdate,
 } from '../_components/useOrgAppUpdate'
 import { useT } from '@/lib/i18n/translate'
@@ -27,6 +28,9 @@ function SupportSettings({ orgId, app }: { orgId: string; app: Models.App }) {
   const { submit, isUpdating } = useOrgAppUpdate(orgId, app)
   const [supportUrl, setSupportUrl] = useState(app.supportUrl ?? '')
   const [contacts, setContacts] = useState(app.contacts ?? [])
+  // An email typed but not yet added still counts as an edit; leaving the
+  // field (for example by clicking Update) adds it.
+  const [pendingContact, setPendingContact] = useState('')
 
   const syncedAppRef = useRef(app)
 
@@ -39,7 +43,8 @@ function SupportSettings({ orgId, app }: { orgId: string; app: Models.App }) {
 
   const supportDirty =
     trimOrEmpty(supportUrl) !== (app.supportUrl ?? '') ||
-    !listsEqual(nonEmptyList(contacts), app.contacts ?? [])
+    !listsEqual(nonEmptyList(contacts), app.contacts ?? []) ||
+    pendingContact !== ''
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -56,15 +61,22 @@ function SupportSettings({ orgId, app }: { orgId: string; app: Models.App }) {
           <Input
             id="app-support-url"
             value={supportUrl}
+            aria-invalid={urlFieldError(supportUrl) !== null}
             onChange={(e) => setSupportUrl(e.target.value)}
             placeholder="https://example.com/support"
           />
+          {urlFieldError(supportUrl) ? (
+            <p className="text-[12px] text-destructive">
+              {t(urlFieldError(supportUrl)!)}
+            </p>
+          ) : null}
         </div>
         <div className="space-y-2">
           <Label>{t('Contact emails')}</Label>
           <InputTags
             value={contacts}
             onChange={setContacts}
+            onPendingChange={setPendingContact}
             validateEmail
             splitOnComma
             placeholder={t('Add email and press Enter')}
@@ -75,7 +87,9 @@ function SupportSettings({ orgId, app }: { orgId: string; app: Models.App }) {
         <Button
           size="sm"
           className="h-9 text-[13px]"
-          disabled={isUpdating || !supportDirty}
+          disabled={
+            isUpdating || !supportDirty || urlFieldError(supportUrl) !== null
+          }
           onClick={() =>
             submit({
               supportUrl: trimOrEmpty(supportUrl),
