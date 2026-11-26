@@ -1,5 +1,14 @@
 # Change Log
 
+## v7.25.0
+
+* Added: `videos` service to create, list, get, update and delete videos from files in Storage
+* Added: `videos.createRendition`, `listRenditions`, `getRendition` and `deleteRendition` to transcode a video into HLS, DASH or CMAF
+* Added: `videos.createCaption`, `listCaptions`, `updateCaption` and `deleteCaption` for subtitle tracks
+* Added: `getHlsManifest`, `getDashManifest`, `getCmafHlsManifest`, `getCmafDashManifest`, `getCaptionManifest`, `getThumbnail` and `getTimeline` playback URLs, and `listCodecs`
+* Added: `project.listVideoProfiles`, `createVideoProfile`, `getVideoProfile`, `updateVideoProfile` and `deleteVideoProfile`
+* Added: `Video`, `VideoCodec`, `VideoProfile`, `VideoRendition` and `VideoCaption` models and their list models
+
 ## v7.24.0
 
 * Added: `password`, `attempts` and `attemptsInterval` options on `waf.CreateChallengeRule` and `waf.UpdateChallengeRule`

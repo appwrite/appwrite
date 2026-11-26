@@ -5,7 +5,7 @@
 Use Python 3.10 or later with SDK 28.2.0. Create and activate a virtual environment with that interpreter, then install the SDK:
 
 ```sh
-python -m pip install --upgrade "appwrite==28.2.0"
+python -m pip install --upgrade "appwrite==28.3.0"
 ```
 
 SDK 28.2.0 requires `requests>=2.34.2,<3` and `urllib3>=2.8.0,<3`. Update application pins or constraints that exclude these versions. Python 3.9 is no longer supported.

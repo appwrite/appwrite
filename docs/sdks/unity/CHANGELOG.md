@@ -1,5 +1,13 @@
 # Change Log
 
+## 0.14.0
+
+* Added: `videos` service to create, list, get, update and delete videos from files in Storage
+* Added: `videos.listRenditions`, `getRendition` and `deleteRendition`; renditions are created from a server SDK or the Console
+* Added: `videos.createCaption`, `listCaptions`, `updateCaption` and `deleteCaption` for subtitle tracks
+* Added: `getHlsManifest`, `getDashManifest`, `getCmafHlsManifest`, `getCmafDashManifest`, `getCaptionManifest`, `getThumbnail` and `getTimeline` playback URLs, and `listCodecs`
+* Added: `Video`, `VideoCodec`, `VideoRendition` and `VideoCaption` models, their list models, and the `VideoCodecId`, `VideoOutput`, `VideoRenditionStatus`, `VideoCaptionStatus` and `VideoTimelineStatus` enums
+
 ## 0.13.0
 
 * Added: `Account.CreateDevice`, `GetDevice`, `DeleteDevice` and `UpdateDeviceSession`, and the `Device` model
