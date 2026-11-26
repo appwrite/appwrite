@@ -1081,6 +1081,7 @@ class Origin extends Git
                 'installationId' => $installationId,
                 'commitHash' => $commitHash,
                 'previousCommitHash' => \strval($refUpdate['before'] ?? ''),
+                'forced' => (bool) ($refUpdate['forced'] ?? false),
                 'owner' => $owner,
                 'authorUrl' => '',
                 'authorAvatarUrl' => '',
@@ -1091,7 +1092,7 @@ class Origin extends Git
                 'external' => false,
                 'pullRequestNumber' => '',
                 'action' => '',
-                // Origin push deliveries carry no per-commit file lists; the consumer compares commits
+                // Origin push deliveries carry no per-commit file lists
                 'affectedFiles' => [],
             ];
         }
@@ -2536,6 +2537,37 @@ class Origin extends Git
         }
 
         return \is_array($response['body'] ?? null) ? $response['body'] : [];
+    }
+
+    /**
+     * The files that differ between two commits, in the shape
+     * getPullRequestFiles() reports: filename, status and, for a rename,
+     * previous_filename. Like compareCommits(), refs containing '/' must be
+     * passed as their SHA.
+     *
+     * @return array<array<string, string>>
+     */
+    public function compareFiles(string $owner, string $repositoryName, string $base, string $head): array
+    {
+        $files = $this->collectPages(
+            $this->repositoryPath($owner, $repositoryName) . '/compare/' . rawurlencode($base) . '...' . rawurlencode($head) . '/files',
+            'files',
+        );
+
+        $normalized = [];
+        foreach ($files as $file) {
+            if (!\is_array($file)) {
+                continue;
+            }
+
+            $normalized[] = [
+                'filename' => \strval($file['filename'] ?? ''),
+                'status' => \strval($file['status'] ?? ''),
+                'previous_filename' => \strval($file['previousFilename'] ?? ''),
+            ];
+        }
+
+        return $normalized;
     }
 
     /**
