@@ -174,6 +174,7 @@ pub const OPS: &[&str] = &[
     "vcs.get_check_suite",
     "vcs.get_collaborator_permission",
     "vcs.get_comment",
+    "vcs.get_comment_thread",
     "vcs.get_commit",
     "vcs.get_commit_statuses",
     "vcs.get_commit_url",
@@ -202,6 +203,7 @@ pub const OPS: &[&str] = &[
     "vcs.get_repository_presigned_url_headers",
     "vcs.get_repository_tree",
     "vcs.get_repository_url",
+    "vcs.get_review_comment_thread",
     "vcs.get_signature_header_name",
     "vcs.get_signing_keys",
     "vcs.get_supported_webhook_scopes",
@@ -952,7 +954,7 @@ async fn invoke(any: &mut Any, method: &str, a: &Map<String, Value>) -> Result<V
             value
         ),
         "createWebhook" => {
-            let events = strings(a, "events", &["push", "pull_request"])?;
+            let events = strings(a, "events", any.git().default_webhook_events())?;
             let events: Vec<&str> = events.iter().map(String::as_str).collect();
             ok!(
                 any.git().create_webhook(owner()?, repo()?, required(a, "url")?, required(a, "secret")?, &events).await,
@@ -1026,12 +1028,56 @@ async fn invoke(any: &mut Any, method: &str, a: &Map<String, Value>) -> Result<V
                     "expiresAt": t.expires_at,
                 }))
             }
+            Any::Origin(g) => {
+                let ids = strings(a, "repositoryIds", &[])?;
+                let scopes = strings(a, "scopes", &[])?;
+                let ids: Vec<&str> = ids.iter().map(String::as_str).collect();
+                let scopes: Vec<&str> = scopes.iter().map(String::as_str).collect();
+                ok!(g.create_access_token(&ids, &scopes).await, |t: utopia_vcs::AccessToken| json!({
+                    "token": t.token,
+                    "expiresAt": t.expires_at,
+                }))
+            }
             other => undefined(other.class(), method),
         },
         "getCollaboratorPermission" => match any {
             Any::GitHub(g) => {
                 ok!(g.collaborator_permission(owner()?, repo()?, required(a, "username")?).await, |v: String| json!(v))
             }
+            Any::Gitea(g) => {
+                ok!(g.collaborator_permission(owner()?, repo()?, required(a, "username")?).await, |v: String| json!(v))
+            }
+            Any::Bitbucket(g) => {
+                ok!(g.collaborator_permission(owner()?, repo()?, required(a, "userId")?).await, |v: String| json!(v))
+            }
+            Any::GitLab(g) => ok!(
+                g.collaborator_permission(required(a, "repositoryId")?, required(a, "userId")?).await,
+                |v: String| json!(v)
+            ),
+            Any::Origin(g) => {
+                ok!(g.collaborator_permission(owner()?, repo()?, required(a, "userId")?).await, |v: String| json!(v))
+            }
+            other => undefined(other.class(), method),
+        },
+        "getCommentThread" => match any {
+            Any::Bitbucket(g) => ok!(
+                g.comment_thread(owner()?, repo()?, int(a, "pullRequestNumber", None)?, required(a, "commentId")?)
+                    .await,
+                |v: String| json!(v)
+            ),
+            other => undefined(other.class(), method),
+        },
+        "getReviewCommentThread" => match any {
+            Any::Gitea(g) => ok!(
+                g.review_comment_thread(
+                    owner()?,
+                    repo()?,
+                    int(a, "pullRequestNumber", None)?,
+                    required(a, "commentId")?
+                )
+                .await,
+                |v: String| json!(v)
+            ),
             other => undefined(other.class(), method),
         },
         "createOrganization" => match any {
@@ -1144,6 +1190,12 @@ async fn origin_method(origin: &mut Origin, method: &str, a: &Map<String, Value>
         "listCommitFiles" => ok!(origin.list_commit_files(owner()?, repo()?, required(a, "sha")?).await, value),
         "compareCommits" => {
             ok!(origin.compare_commits(owner()?, repo()?, required(a, "base")?, required(a, "head")?).await, value)
+        }
+        "compareFiles" => {
+            ok!(origin.compare_files(owner()?, repo()?, required(a, "base")?, required(a, "head")?).await, list)
+        }
+        "getPullRequestUrl" => {
+            json!(origin.pull_request_url(owner()?, repo()?, int(a, "pullRequestNumber", None)?))
         }
         "getBlob" => ok!(origin.blob(owner()?, repo()?, required(a, "sha")?).await, value),
         "batchGetRepositoryContents" => {

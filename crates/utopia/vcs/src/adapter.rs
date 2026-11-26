@@ -550,7 +550,18 @@ pub trait Git: Adapter {
         body: &str,
     ) -> Result<Value>;
 
-    /// Registers a webhook (PHP's default events: `push`, `pull_request`).
+    /// The events [`Git::create_webhook`] registers when the caller names
+    /// none: `push` and `pull_request`, plus the provider's pull request
+    /// comments where it reviews them (`comment` on Bitbucket and GitLab,
+    /// `pull_request_comment` on Gitea and its forks).
+    ///
+    /// PHP: the default of `createWebhook()`'s `$events`.
+    fn default_webhook_events(&self) -> &'static [&'static str] {
+        &["push", "pull_request"]
+    }
+
+    /// Registers a webhook for `events` ([`Git::default_webhook_events`]
+    /// when the caller has none of its own).
     ///
     /// PHP: `createWebhook()`.
     async fn create_webhook(

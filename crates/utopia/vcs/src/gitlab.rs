@@ -73,6 +73,36 @@ impl GitLab {
         self.call(Call::get(path)).await
     }
 
+    /// A user's permission on a repository, from their access level
+    /// including the one inherited from its groups: `admin` for maintainers
+    /// and owners, `write` for developers, `read` below that, and empty when
+    /// they are no member. The repository is named by its project id, as
+    /// hooks name its namespace by display name rather than by path.
+    ///
+    /// PHP: `getCollaboratorPermission()`.
+    pub async fn collaborator_permission(&self, repository_id: &str, user_id: &str) -> Result<String> {
+        let response = self
+            .get(format!("/projects/{}/members/all/{}", php::rawurlencode(repository_id), php::rawurlencode(user_id)))
+            .await?;
+        if response.status == 404 {
+            return Ok(String::new());
+        }
+        if response.status >= 400 {
+            return Err(Error::exception(format!("Failed to get member: HTTP {}", response.status), response.status));
+        }
+        let level = match at(&php::array_or_empty(response.body), "access_level") {
+            Value::Int(level) => level,
+            _ => 0,
+        };
+        Ok(match level {
+            40.. => "admin",
+            30.. => "write",
+            1.. => "read",
+            _ => "",
+        }
+        .to_owned())
+    }
+
     /// Creates a public group and returns it as `"<id>:<path>"`.
     ///
     /// PHP: `createOrganization()`.
@@ -609,9 +639,17 @@ impl Adapter for GitLab {
                     ("headCommitUrl", or(path(&mr, &["last_commit", "url"]), "")),
                     ("external", Value::Bool(external)),
                     ("pullRequestNumber", or(at(&mr, "iid"), "")),
+                    (
+                        "pullRequestAuthor",
+                        pull_request_author_of(
+                            &payload,
+                            &if php::is_array(&mr) { at(&mr, "author_id") } else { Value::Null },
+                        ),
+                    ),
                     ("action", s(action)),
                 ])])
             }
+            "Note Hook" => Ok(comment_events(&payload)),
             _ => Ok(Vec::new()),
         }
     }
@@ -995,6 +1033,10 @@ impl Git for GitLab {
         Ok(or(response.body, Value::Array(Array::new())))
     }
 
+    fn default_webhook_events(&self) -> &'static [&'static str] {
+        &["push", "pull_request", "comment"]
+    }
+
     async fn create_webhook(
         &self,
         owner: &str,
@@ -1010,6 +1052,7 @@ impl Git for GitLab {
                 ("enable_ssl_verification", Value::Bool(false)),
                 ("push_events", Value::Bool(events.iter().any(|e| loose_is(e, "push")))),
                 ("merge_requests_events", Value::Bool(events.iter().any(|e| loose_is(e, "pull_request")))),
+                ("note_events", Value::Bool(events.iter().any(|e| loose_is(e, "comment")))),
             ])))
             .await?;
         if response.status >= 400 {
@@ -1119,6 +1162,65 @@ impl Git for GitLab {
 /// compare as numbers).
 fn loose_is(event: &str, name: &str) -> bool {
     s(event).loose_eq(&s(name))
+}
+
+/// A merge request's author, which a hook names by id only: known when the
+/// user who triggered the hook is the author, empty otherwise.
+fn pull_request_author_of(payload: &Value, author_id: &Value) -> Value {
+    let user = php::array_or_empty(at(payload, "user"));
+    let user_id = php::scalar_string(&at(&user, "id"));
+    if php::is_str(&user_id, "") || !php::identical(&user_id, &php::scalar_string(author_id)) {
+        return s("");
+    }
+    php::string_or_empty(at(&user, "username"))
+}
+
+/// A comment created on a merge request, in the shape GitHub's comment
+/// events are reported in. A note on a diff opens or continues a discussion
+/// on a line, a `review` comment whose thread is that discussion; GitLab does
+/// not say which note opened it, so every diff note names the discussion as
+/// the one it replies to. Any other note is an `issue` comment on the
+/// conversation. Comments on commits, issues and snippets, system notes and
+/// edits are left out.
+fn comment_events(payload: &Value) -> Vec<Value> {
+    let note = php::array_or_empty(at(payload, "object_attributes"));
+    let merge_request = php::array_or_empty(at(payload, "merge_request"));
+    let project = php::array_or_empty(at(payload, "project"));
+    let user = php::array_or_empty(at(payload, "user"));
+
+    if !php::is_str(&or(at(&note, "noteable_type"), ""), "MergeRequest")
+        || php::identical(&or(at(&note, "system"), false), &Value::Bool(true))
+    {
+        return Vec::new();
+    }
+    // Older GitLab releases send no action; a note they report is a new one.
+    if !php::is_str(&or(at(&note, "action"), "create"), "create") {
+        return Vec::new();
+    }
+
+    let is_review = php::is_str(&at(&note, "type"), "DiffNote");
+    let discussion_id = php::scalar_string(&at(&note, "discussion_id"));
+    let (owner, repository_name) = project_path(&project);
+    vec![object([
+        ("repositoryId", php::scalar_string(&at(&project, "id"))),
+        ("repositoryName", repository_name),
+        ("repositoryUrl", or(at(&project, "web_url"), "")),
+        ("owner", owner),
+        ("installationId", s("")),
+        ("pullRequestNumber", php::numeric_int(&at(&merge_request, "iid"))),
+        ("pullRequestAuthor", pull_request_author_of(payload, &at(&merge_request, "author_id"))),
+        ("action", s("created")),
+        ("commentId", php::scalar_string(&at(&note, "id"))),
+        ("commentKind", s(if is_review { "review" } else { "issue" })),
+        ("commentThreadId", if is_review { discussion_id.clone() } else { s("") }),
+        ("commentReplyToId", if is_review { discussion_id } else { s("") }),
+        ("commentBody", php::string_or_empty(at(&note, "note"))),
+        ("commentUrl", php::string_or_empty(at(&note, "url"))),
+        ("commentAuthor", or(at(&user, "username"), "")),
+        ("commentAuthorId", php::scalar_string(&at(&user, "id"))),
+        // GitLab's bot users (project and group access tokens) are members like anyone else.
+        ("commentAuthorType", s("User")),
+    ])]
 }
 
 /// A webhook project's owner and repository paths (`getProjectPath()`): its

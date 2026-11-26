@@ -111,7 +111,7 @@
                   "<body>"
                 ]
               ],
-              "body": "{\"type\":\"gitea\",\"active\":true,\"events\":[\"push\",\"pull_request\"],\"config\":{\"url\":\"https:\\/\\/example.com\\/hook\",\"content_type\":\"json\",\"secret\":\"webhook-secret\"}}"
+              "body": "{\"type\":\"gitea\",\"active\":true,\"events\":[\"push\",\"pull_request\",\"pull_request_comment\"],\"config\":{\"url\":\"https:\\/\\/example.com\\/hook\",\"content_type\":\"json\",\"secret\":\"webhook-secret\"}}"
             }
           ]
         }

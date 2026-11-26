@@ -365,6 +365,12 @@
         "vcs-https"
       ]
     },
+    "vcs.get_comment_thread": {
+      "doc": "$adapter->getCommentThread(...named args): its result, or {\"$error\": {class, message, code}}. ${vcs}/${vcs-tls} in args and results stand for the fixture server.",
+      "covers": [
+        "Utopia\\VCS\\Adapter\\Git\\Bitbucket::getCommentThread"
+      ]
+    },
     "vcs.get_commit": {
       "doc": "$adapter->getCommit(...named args): its result, a Command as its string, or {\"$error\": {class, message, code}}. ${vcs}/${vcs-tls} in args and results stand for the fixture server.",
       "covers": [
@@ -931,6 +937,12 @@
           },
           "iterations": 1500
         }
+      ]
+    },
+    "vcs.get_review_comment_thread": {
+      "doc": "$adapter->getReviewCommentThread(...named args): its result, or {\"$error\": {class, message, code}}. ${vcs}/${vcs-tls} in args and results stand for the fixture server.",
+      "covers": [
+        "Utopia\\VCS\\Adapter\\Git\\Gitea::getReviewCommentThread"
       ]
     },
     "vcs.get_signature_header_name": {
@@ -1883,7 +1895,8 @@
     "vcs.compare_files": {
       "doc": "$adapter->compareFiles(...named args): its result, a Command as its string, or {\"$error\": {class, message, code}}. ${vcs}/${vcs-tls} in args and results stand for the fixture server.",
       "covers": [
-        "Utopia\\VCS\\Adapter\\Git\\Entire::compareFiles"
+        "Utopia\\VCS\\Adapter\\Git\\Entire::compareFiles",
+        "Utopia\\VCS\\Adapter\\Git\\Origin::compareFiles"
       ],
       "services": [
         "vcs-http",
@@ -1926,7 +1939,8 @@
     "vcs.get_pull_request_url": {
       "doc": "$adapter->getPullRequestUrl(...named args): its result, a Command as its string, or {\"$error\": {class, message, code}}. ${vcs}/${vcs-tls} in args and results stand for the fixture server.",
       "covers": [
-        "Utopia\\VCS\\Adapter\\Git\\Entire::getPullRequestUrl"
+        "Utopia\\VCS\\Adapter\\Git\\Entire::getPullRequestUrl",
+        "Utopia\\VCS\\Adapter\\Git\\Origin::getPullRequestUrl"
       ],
       "services": [
         "vcs-http",
@@ -1988,7 +2002,8 @@
     "vcs.create_access_token": {
       "doc": "$adapter->createAccessToken(...named args): its result, or {\"$error\": {class, message, code}}. ${vcs}/${vcs-tls} in args and results stand for the fixture server.",
       "covers": [
-        "Utopia\\VCS\\Adapter\\Git\\GitHub::createAccessToken"
+        "Utopia\\VCS\\Adapter\\Git\\GitHub::createAccessToken",
+        "Utopia\\VCS\\Adapter\\Git\\Origin::createAccessToken"
       ],
       "services": [
         "vcs-http",
@@ -1998,7 +2013,11 @@
     "vcs.get_collaborator_permission": {
       "doc": "$adapter->getCollaboratorPermission(...named args): its result, or {\"$error\": {class, message, code}}. ${vcs}/${vcs-tls} in args and results stand for the fixture server.",
       "covers": [
-        "Utopia\\VCS\\Adapter\\Git\\GitHub::getCollaboratorPermission"
+        "Utopia\\VCS\\Adapter\\Git\\GitHub::getCollaboratorPermission",
+        "Utopia\\VCS\\Adapter\\Git\\Bitbucket::getCollaboratorPermission",
+        "Utopia\\VCS\\Adapter\\Git\\GitLab::getCollaboratorPermission",
+        "Utopia\\VCS\\Adapter\\Git\\Gitea::getCollaboratorPermission",
+        "Utopia\\VCS\\Adapter\\Git\\Origin::getCollaboratorPermission"
       ],
       "services": [
         "vcs-http",

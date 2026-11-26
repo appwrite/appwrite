@@ -51,6 +51,11 @@ const CHECK_RUN_CONCLUSION_MAP: [(&str, &str); 7] = [
 ];
 
 /// Pull request event keys as the verbs consumers key off of.
+/// The event key of a comment created on a pull request.
+///
+/// PHP: `Bitbucket::EVENT_PULL_REQUEST_COMMENT`.
+pub const EVENT_PULL_REQUEST_COMMENT: &str = "pullrequest:comment_created";
+
 const PULL_REQUEST_ACTION_MAP: [(&str, &str); 4] = [
     ("pullrequest:created", "opened"),
     ("pullrequest:updated", "synchronize"),
@@ -150,6 +155,75 @@ impl Bitbucket {
             _ => s(""),
         };
         Ok(if empty(&hash) { reference.to_owned() } else { php::text(&php::string(&hash)) })
+    }
+
+    /// The first comment of the thread a pull request comment is in, found
+    /// by walking up its parents: the comment itself when it replies to
+    /// nothing. A thread nested deeper than 20 is answered at the deepest
+    /// comment reached.
+    ///
+    /// PHP: `getCommentThread()`.
+    pub async fn comment_thread(
+        &self,
+        owner: &str,
+        repository_name: &str,
+        pull_request_number: i64,
+        comment_id: &str,
+    ) -> Result<String> {
+        let mut id = comment_id.to_owned();
+        for _ in 0..20 {
+            let response = self
+                .get(format!(
+                    "/repositories/{owner}/{repository_name}/pullrequests/{pull_request_number}/comments/{}",
+                    php::rawurlencode(&id)
+                ))
+                .await?;
+            if response.status >= 400 {
+                return Err(Error::exception(
+                    format!("Failed to get comment: HTTP {}", response.status),
+                    response.status,
+                ));
+            }
+            let body = php::array_or_empty(response.body);
+            let parent = match at(&body, "parent") {
+                parent @ Value::Array(_) => php::scalar_string(&at(&parent, "id")),
+                _ => s(""),
+            };
+            if php::is_str(&parent, "") {
+                break;
+            }
+            id = php::text(&php::string(&parent));
+        }
+        Ok(id)
+    }
+
+    /// A user's permission on a repository: `admin`, `write`, `read`, or
+    /// empty when they have none. Bitbucket shows it to repository admins
+    /// only, so for anyone else's token it is empty too. `user_id` is the
+    /// user's UUID or Atlassian account id.
+    ///
+    /// PHP: `getCollaboratorPermission()`.
+    pub async fn collaborator_permission(&self, owner: &str, repository_name: &str, user_id: &str) -> Result<String> {
+        let response = self
+            .get(format!(
+                "/repositories/{owner}/{repository_name}/permissions-config/users/{}",
+                php::rawurlencode(user_id)
+            ))
+            .await?;
+        if response.status == 403 || response.status == 404 {
+            return Ok(String::new());
+        }
+        if response.status >= 400 {
+            return Err(Error::exception(
+                format!("Failed to get repository permission: HTTP {}", response.status),
+                response.status,
+            ));
+        }
+        let permission = at(&php::array_or_empty(response.body), "permission");
+        Ok(match permission {
+            Value::Str(p) if matches!(p.as_bytes(), b"admin" | b"write" | b"read") => php::text(p.as_bytes()),
+            _ => String::new(),
+        })
     }
 
     /// The main branch's name, or `""` before the first commit.
@@ -401,6 +475,67 @@ fn workspace_slug_of(repository: &Value) -> Vec<u8> {
     } else {
         Vec::new()
     }
+}
+
+/// The web address of a repository or a comment: its `links.html.href`.
+fn html_link_of(resource: &Value) -> Value {
+    let links = php::array_or_empty(at(resource, "links"));
+    let html = php::array_or_empty(at(&links, "html"));
+    php::scalar_string(&at(&html, "href"))
+}
+
+/// The name a user is known by, as the review service names them: the
+/// nickname, falling back to the display name and the ids.
+fn username_of(user: &Value) -> Value {
+    for key in ["nickname", "display_name", "account_id", "uuid"] {
+        if let Value::Str(name) = at(user, key)
+            && !name.is_empty()
+        {
+            return Value::Str(name);
+        }
+    }
+    s("")
+}
+
+/// A comment created on a pull request, in the shape GitHub's comment events
+/// are reported in. One on a line or a file, or a reply in such a thread
+/// (Bitbucket copies the anchor onto replies), is a `review` comment; any
+/// other is an `issue` comment on the conversation. A reply names its parent,
+/// which is its thread's first comment unless it answers another reply:
+/// [`Bitbucket::comment_thread`] walks up to the first one.
+fn comment_event(payload: &Value, repository: &Value) -> Value {
+    let pull_request = php::array_or_empty(at(payload, "pullrequest"));
+    let comment = php::array_or_empty(at(payload, "comment"));
+    let user = php::array_or_empty(at(&comment, "user"));
+    let parent = php::array_or_empty(at(&comment, "parent"));
+    let content = php::array_or_empty(at(&comment, "content"));
+    let is_review = php::is_array(&at(&comment, "inline"));
+    let parent_id = php::scalar_string(&at(&parent, "id"));
+    let author_id = match at(&user, "uuid") {
+        Value::Null => at(&user, "account_id"),
+        uuid => uuid,
+    };
+    // Apps and access tokens act as 'app_user' accounts.
+    let author_type = if php::is_str(&or(at(&user, "type"), "user"), "user") { "User" } else { "Bot" };
+    object([
+        ("repositoryId", php::scalar_string(&at(repository, "full_name"))),
+        ("repositoryName", or(at(repository, "name"), "")),
+        ("repositoryUrl", html_link_of(repository)),
+        ("owner", s(workspace_slug_of(repository))),
+        ("installationId", s("")),
+        ("pullRequestNumber", php::numeric_int(&at(&pull_request, "id"))),
+        ("pullRequestAuthor", username_of(&php::array_or_empty(at(&pull_request, "author")))),
+        ("action", s("created")),
+        ("commentId", php::scalar_string(&at(&comment, "id"))),
+        ("commentKind", s(if is_review { "review" } else { "issue" })),
+        ("commentThreadId", s("")),
+        ("commentReplyToId", if is_review { parent_id } else { s("") }),
+        ("commentBody", php::string_or_empty(at(&content, "raw"))),
+        ("commentUrl", html_link_of(&comment)),
+        ("commentAuthor", username_of(&user)),
+        ("commentAuthorId", php::scalar_string(&author_id)),
+        ("commentAuthorType", s(author_type)),
+    ])
 }
 
 /// A repository with the keys the other adapters report: `id`
@@ -972,9 +1107,11 @@ impl Adapter for Bitbucket {
                     ("headCommitUrl", head_commit_url),
                     ("external", Value::Bool(external)),
                     ("pullRequestNumber", or(at(&pull_request, "id"), "")),
+                    ("pullRequestAuthor", username_of(&php::array_or_empty(at(&pull_request, "author")))),
                     ("action", s(action)),
                 ])])
             }
+            EVENT_PULL_REQUEST_COMMENT => Ok(vec![comment_event(&payload, &repository)]),
             _ => Ok(Vec::new()),
         }
     }
@@ -1424,6 +1561,10 @@ impl Git for Bitbucket {
         Ok(body)
     }
 
+    fn default_webhook_events(&self) -> &'static [&'static str] {
+        &["push", "pull_request", "comment"]
+    }
+
     async fn create_webhook(
         &self,
         owner: &str,
@@ -1441,6 +1582,7 @@ impl Git for Bitbucket {
             match *event {
                 "push" => keys.push("repo:push".into()),
                 "pull_request" => keys.extend(PULL_REQUEST_ACTION_MAP.iter().map(|(k, _)| (*k).to_owned())),
+                "comment" => keys.push(EVENT_PULL_REQUEST_COMMENT.into()),
                 _ => {}
             }
         }

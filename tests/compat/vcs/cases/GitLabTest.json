@@ -383,6 +383,7 @@
               "headCommitUrl": "http://example.com/commit/def456",
               "external": false,
               "pullRequestNumber": 42,
+              "pullRequestAuthor": "",
               "action": "opened"
             }
           ]
@@ -431,6 +432,7 @@
               "headCommitUrl": "http://example.com/commit/def456",
               "external": true,
               "pullRequestNumber": 42,
+              "pullRequestAuthor": "",
               "action": "opened"
             }
           ]
@@ -724,6 +726,7 @@
               "headCommitUrl": "",
               "external": false,
               "pullRequestNumber": 1,
+              "pullRequestAuthor": "",
               "action": "opened"
             }
           ]
@@ -752,6 +755,7 @@
               "headCommitUrl": "",
               "external": false,
               "pullRequestNumber": 1,
+              "pullRequestAuthor": "",
               "action": "reopened"
             }
           ]
@@ -780,6 +784,7 @@
               "headCommitUrl": "",
               "external": false,
               "pullRequestNumber": 1,
+              "pullRequestAuthor": "",
               "action": "synchronize"
             }
           ]
@@ -808,6 +813,7 @@
               "headCommitUrl": "",
               "external": false,
               "pullRequestNumber": 1,
+              "pullRequestAuthor": "",
               "action": "closed"
             }
           ]
@@ -836,6 +842,7 @@
               "headCommitUrl": "",
               "external": false,
               "pullRequestNumber": 1,
+              "pullRequestAuthor": "",
               "action": "closed"
             }
           ]
@@ -844,6 +851,226 @@
           "op": "fixture.requests",
           "args": {},
           "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventMergeRequestComment",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Note Hook",
+            "payload": "{\"object_kind\":\"note\",\"user\":{\"id\":7,\"username\":\"octo\"},\"project\":{\"id\":123,\"name\":\"test-repo\",\"namespace\":\"test-owner\",\"web_url\":\"http:\\/\\/example.com\\/test-owner\\/test-repo\"},\"object_attributes\":{\"id\":1244,\"note\":\"@appwrite review\",\"noteable_type\":\"MergeRequest\",\"system\":false,\"discussion_id\":\"d0c1e2f3\",\"type\":null,\"action\":\"create\",\"url\":\"http:\\/\\/example.com\\/mr\\/42#note_1244\"},\"merge_request\":{\"iid\":42,\"author_id\":7}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testGetEventMergeRequestDiffComment",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Note Hook",
+            "payload": "{\"object_kind\":\"note\",\"user\":{\"id\":7,\"username\":\"octo\"},\"project\":{\"id\":123,\"name\":\"test-repo\",\"namespace\":\"test-owner\",\"web_url\":\"http:\\/\\/example.com\\/test-owner\\/test-repo\"},\"object_attributes\":{\"id\":1244,\"note\":\"@appwrite review\",\"noteable_type\":\"MergeRequest\",\"system\":false,\"discussion_id\":\"d0c1e2f3\",\"type\":\"DiffNote\",\"action\":\"create\",\"url\":\"http:\\/\\/example.com\\/mr\\/42#note_1244\"},\"merge_request\":{\"iid\":42,\"author_id\":7}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testGetEventIgnoresOtherNotes",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Note Hook",
+            "payload": "{\"object_kind\":\"note\",\"user\":{\"id\":7,\"username\":\"octo\"},\"project\":{\"id\":123,\"name\":\"test-repo\",\"namespace\":\"test-owner\",\"web_url\":\"http:\\/\\/example.com\\/test-owner\\/test-repo\"},\"object_attributes\":{\"id\":1244,\"note\":\"@appwrite review\",\"noteable_type\":\"Issue\",\"system\":false,\"discussion_id\":\"d0c1e2f3\",\"type\":null,\"action\":\"create\",\"url\":\"http:\\/\\/example.com\\/mr\\/42#note_1244\"},\"merge_request\":{\"iid\":42,\"author_id\":7}}"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Note Hook",
+            "payload": "{\"object_kind\":\"note\",\"user\":{\"id\":7,\"username\":\"octo\"},\"project\":{\"id\":123,\"name\":\"test-repo\",\"namespace\":\"test-owner\",\"web_url\":\"http:\\/\\/example.com\\/test-owner\\/test-repo\"},\"object_attributes\":{\"id\":1244,\"note\":\"@appwrite review\",\"noteable_type\":\"MergeRequest\",\"system\":true,\"discussion_id\":\"d0c1e2f3\",\"type\":null,\"action\":\"create\",\"url\":\"http:\\/\\/example.com\\/mr\\/42#note_1244\"},\"merge_request\":{\"iid\":42,\"author_id\":7}}"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Note Hook",
+            "payload": "{\"object_kind\":\"note\",\"user\":{\"id\":7,\"username\":\"octo\"},\"project\":{\"id\":123,\"name\":\"test-repo\",\"namespace\":\"test-owner\",\"web_url\":\"http:\\/\\/example.com\\/test-owner\\/test-repo\"},\"object_attributes\":{\"id\":1244,\"note\":\"@appwrite review\",\"noteable_type\":\"MergeRequest\",\"system\":false,\"discussion_id\":\"d0c1e2f3\",\"type\":null,\"action\":\"update\",\"url\":\"http:\\/\\/example.com\\/mr\\/42#note_1244\"},\"merge_request\":{\"iid\":42,\"author_id\":7}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testGetEventMergeRequestAuthor",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Merge Request Hook",
+            "payload": "{\"object_kind\":\"merge_request\",\"user\":{\"id\":7,\"username\":\"octo\"},\"project\":{\"id\":1,\"name\":\"r\",\"namespace\":\"o\",\"web_url\":\"http:\\/\\/example.com\\/o\\/r\"},\"object_attributes\":{\"iid\":1,\"action\":\"update\",\"author_id\":8}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testGetEventProjectPaths (push)",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Push Hook",
+            "payload": "{\"object_kind\":\"push\",\"ref\":\"refs\\/heads\\/main\",\"checkout_sha\":\"abc123\",\"project\":{\"id\":89442539,\"name\":\"Magic Portfolio\",\"namespace\":\"Jane Doe\",\"path_with_namespace\":\"jane-doe\\/magic-portfolio\",\"web_url\":\"https:\\/\\/gitlab.com\\/jane-doe\\/magic-portfolio\"},\"commits\":[]}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testGetEventProjectPaths (merge request)",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Merge Request Hook",
+            "payload": "{\"object_kind\":\"merge_request\",\"project\":{\"id\":89442539,\"name\":\"Magic Portfolio\",\"namespace\":\"Jane Doe\",\"path_with_namespace\":\"jane-doe\\/magic-portfolio\",\"web_url\":\"https:\\/\\/gitlab.com\\/jane-doe\\/magic-portfolio\"},\"object_attributes\":{\"iid\":1,\"action\":\"open\",\"source_branch\":\"feature\",\"target_branch\":\"main\"}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testGetEventProjectPaths (note)",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Note Hook",
+            "payload": "{\"object_kind\":\"note\",\"project\":{\"id\":89442539,\"name\":\"Magic Portfolio\",\"namespace\":\"Jane Doe\",\"path_with_namespace\":\"jane-doe\\/magic-portfolio\",\"web_url\":\"https:\\/\\/gitlab.com\\/jane-doe\\/magic-portfolio\"},\"object_attributes\":{\"id\":1,\"note\":\"@appwrite review\",\"noteable_type\":\"MergeRequest\",\"action\":\"create\"},\"merge_request\":{\"iid\":1}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testGetEventSubgroupProjectPath",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitlab"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "Merge Request Hook",
+            "payload": "{\"object_kind\":\"merge_request\",\"project\":{\"id\":1,\"name\":\"App\",\"namespace\":\"Sub\",\"path_with_namespace\":\"group\\/sub\\/app\"},\"object_attributes\":{\"iid\":1,\"action\":\"open\",\"source_branch\":\"feature\",\"target_branch\":\"main\"}}"
+          }
         }
       ]
     }

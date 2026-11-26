@@ -18438,6 +18438,7 @@
               "headCommitUrl": "${vcs}/~${ns}/forgejo/test-org-06a0000000075/test-webhook-pr-06a0000000076/commit/b348939e5e561010a52005519b3a2af8452f7056",
               "external": false,
               "pullRequestNumber": 1,
+              "pullRequestAuthor": "utopia",
               "action": "opened"
             }
           ]

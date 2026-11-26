@@ -139,6 +139,110 @@ impl Gitea {
         self.flavor == Flavor::Gogs
     }
 
+    /// The thread a review comment belongs to, named by its first comment:
+    /// Gitea lists a review's comments but not a thread's, so a thread is the
+    /// comments of submitted reviews on one line of one file, oldest first.
+    /// Empty when the comment is no review comment, as a conversation comment
+    /// is not.
+    ///
+    /// PHP: `getReviewCommentThread()`.
+    pub async fn review_comment_thread(
+        &self,
+        owner: &str,
+        repository_name: &str,
+        pull_request_number: i64,
+        comment_id: &str,
+    ) -> Result<String> {
+        let base = format!("/repos/{owner}/{repository_name}/pulls/{pull_request_number}/reviews");
+        let mut reviews: Vec<Value> = Vec::new();
+        for page in 1..=20 {
+            let response = self.get(format!("{base}?limit=50&page={page}")).await?;
+            if response.status >= 400 {
+                return Err(Error::exception(
+                    format!("Failed to list reviews: HTTP {}", response.status),
+                    response.status,
+                ));
+            }
+            let body = each(&php::array_or_empty(response.body));
+            let count = body.len();
+            reviews.extend(body);
+            if count < 50 {
+                break;
+            }
+        }
+
+        // The first (lowest) comment id of each thread, keyed by its anchor.
+        let mut threads: Vec<(Vec<u8>, i64)> = Vec::new();
+        let mut found: Option<Vec<u8>> = None;
+        for review in reviews {
+            if !php::is_array(&review)
+                || php::is_str(&or(at(&review, "state"), ""), "PENDING")
+                || php::identical(&or(at(&review, "comments_count"), Value::Int(1)), &Value::Int(0))
+            {
+                continue;
+            }
+            let id = php::text(&php::string(&php::scalar_string(&at(&review, "id"))));
+            let response = self.get(format!("{base}/{}/comments", php::rawurlencode(&id))).await?;
+            if response.status >= 400 {
+                return Err(Error::exception(
+                    format!("Failed to list review comments: HTTP {}", response.status),
+                    response.status,
+                ));
+            }
+            for comment in each(&php::array_or_empty(response.body)) {
+                if !php::is_array(&comment) {
+                    continue;
+                }
+                let mut key = php::string(&php::scalar_string(&at(&comment, "path"))).to_vec();
+                key.push(0);
+                key.extend_from_slice(&php::string(&php::scalar_string(&at(&comment, "position"))));
+                key.push(0);
+                key.extend_from_slice(&php::string(&php::scalar_string(&at(&comment, "original_position"))));
+                let comment_id_value = match at(&comment, "id") {
+                    Value::Int(id) => id,
+                    _ => 0,
+                };
+                match threads.iter_mut().find(|(k, _)| *k == key) {
+                    Some((_, first)) => *first = (*first).min(comment_id_value),
+                    None => threads.push((key.clone(), comment_id_value)),
+                }
+                if comment_id_value.to_string() == comment_id {
+                    found = Some(key);
+                }
+            }
+        }
+        Ok(match found {
+            Some(key) => threads.iter().find(|(k, _)| *k == key).map(|(_, id)| id.to_string()).unwrap_or_default(),
+            None => String::new(),
+        })
+    }
+
+    /// A user's permission on a repository: `admin` for its owner and
+    /// admins, `write`, `read`, or empty when they are no collaborator.
+    ///
+    /// PHP: `getCollaboratorPermission()`.
+    pub async fn collaborator_permission(&self, owner: &str, repository_name: &str, username: &str) -> Result<String> {
+        let response = self
+            .get(format!("/repos/{owner}/{repository_name}/collaborators/{}/permission", php::rawurlencode(username)))
+            .await?;
+        if response.status == 404 || response.status == 403 {
+            return Ok(String::new());
+        }
+        if response.status >= 400 {
+            return Err(Error::exception(
+                format!("Failed to get collaborator permission: HTTP {}", response.status),
+                response.status,
+            ));
+        }
+        Ok(match at(&php::array_or_empty(response.body), "permission") {
+            Value::Str(p) if matches!(p.as_bytes(), b"owner" | b"admin") => "admin",
+            Value::Str(p) if p.as_bytes() == b"write" => "write",
+            Value::Str(p) if p.as_bytes() == b"read" => "read",
+            _ => "",
+        }
+        .to_owned())
+    }
+
     /// Creates an organization and returns its name.
     ///
     /// PHP: `createOrganization()` (Gogs: `POST /user/orgs`).
@@ -827,9 +931,11 @@ impl Adapter for Gitea {
                     ("headCommitUrl", head_commit_url),
                     ("external", Value::Bool(external)),
                     ("pullRequestNumber", or(at(&payload, "number"), "")),
+                    ("pullRequestAuthor", if php::is_array(&user) { or(at(&user, "login"), "") } else { s("") }),
                     ("action", or(at(&payload, "action"), "")),
                 ])])
             }
+            "issue_comment" => Ok(comment_events(&payload)),
             _ => Ok(Vec::new()),
         }
     }
@@ -1264,6 +1370,10 @@ impl Git for Gitea {
         Ok(or(response.body, Value::Array(Array::new())))
     }
 
+    fn default_webhook_events(&self) -> &'static [&'static str] {
+        &["push", "pull_request", "pull_request_comment"]
+    }
+
     async fn create_webhook(
         &self,
         owner: &str,
@@ -1366,4 +1476,49 @@ impl Git for Gitea {
 #[allow(dead_code)]
 fn class_of(flavor: Flavor) -> &'static str {
     flavor.class()
+}
+
+/// A comment created on a pull request, in the shape GitHub's comment events
+/// are reported in. Gitea sends conversation comments and replies in review
+/// threads alike, with nothing to tell them apart, so every one is an `issue`
+/// comment here; [`Gitea::review_comment_thread`] finds the thread of one
+/// that is a review comment. Comments on issues and edits are left out.
+fn comment_events(payload: &Value) -> Vec<Value> {
+    let issue = php::array_or_empty(at(payload, "issue"));
+    let pull_request = php::array_or_empty(at(payload, "pull_request"));
+    let comment = php::array_or_empty(at(payload, "comment"));
+    let repository = php::array_or_empty(at(payload, "repository"));
+    let user = php::array_or_empty(at(&comment, "user"));
+
+    if !php::identical(&or(at(payload, "is_pull"), false), &Value::Bool(true))
+        || !php::is_str(&or(at(payload, "action"), ""), "created")
+    {
+        return Vec::new();
+    }
+
+    let pull_request_user = match at(&pull_request, "user") {
+        user @ Value::Array(_) => user,
+        _ => php::array_or_empty(at(&issue, "user")),
+    };
+    let owner = php::array_or_empty(at(&repository, "owner"));
+    let number = or(at(&issue, "number"), or(at(&pull_request, "number"), Value::Int(0)));
+    vec![object([
+        ("repositoryId", php::scalar_string(&at(&repository, "id"))),
+        ("repositoryName", or(at(&repository, "name"), "")),
+        ("repositoryUrl", or(at(&repository, "html_url"), "")),
+        ("owner", or(at(&owner, "login"), "")),
+        ("installationId", s("")),
+        ("pullRequestNumber", php::numeric_int(&number)),
+        ("pullRequestAuthor", or(at(&pull_request_user, "login"), "")),
+        ("action", s("created")),
+        ("commentId", php::scalar_string(&at(&comment, "id"))),
+        ("commentKind", s("issue")),
+        ("commentThreadId", s("")),
+        ("commentReplyToId", s("")),
+        ("commentBody", php::string_or_empty(at(&comment, "body"))),
+        ("commentUrl", php::string_or_empty(at(&comment, "html_url"))),
+        ("commentAuthor", or(at(&user, "login"), "")),
+        ("commentAuthorId", php::scalar_string(&at(&user, "id"))),
+        ("commentAuthorType", s("User")),
+    ])]
 }

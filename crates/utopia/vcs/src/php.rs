@@ -99,6 +99,39 @@ pub(crate) fn string(value: &Value) -> Str {
     value.to_php_string().unwrap_or(Str::from_static("Object"))
 }
 
+/// `\is_scalar($value) ? (string) $value : ''`.
+pub(crate) fn scalar_string(value: &Value) -> Value {
+    match value {
+        Value::Bool(_) | Value::Int(_) | Value::Float(_) | Value::Str(_) => Value::Str(string(value)),
+        _ => s(""),
+    }
+}
+
+/// `\is_array($value) ? $value : []`.
+pub(crate) fn array_or_empty(value: Value) -> Value {
+    if is_array(&value) { value } else { Value::Array(php_std::Array::new()) }
+}
+
+/// `\is_string($value) ? $value : ''`.
+pub(crate) fn string_or_empty(value: Value) -> Value {
+    if matches!(value, Value::Str(_)) { value } else { s("") }
+}
+
+/// `\is_numeric($value) ? (int) $value : 0`.
+pub(crate) fn numeric_int(value: &Value) -> Value {
+    let numeric = match value {
+        Value::Int(_) | Value::Float(_) => true,
+        Value::Str(text) => php_std::value::numeric_bytes_ex(text.as_bytes()).is_some(),
+        _ => false,
+    };
+    Value::Int(if numeric { int(value) } else { 0 })
+}
+
+/// `rawurlencode($text)`.
+pub(crate) fn rawurlencode(text: &str) -> String {
+    php_std::encoding::rawurlencode(text.as_bytes())
+}
+
 /// `(int) $value`.
 pub(crate) fn int(value: &Value) -> i64 {
     match value {

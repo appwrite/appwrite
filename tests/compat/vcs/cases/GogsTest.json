@@ -383,6 +383,7 @@
               "headCommitUrl": "http://gitea:3000/test-owner/test-repo/commit/def456",
               "external": false,
               "pullRequestNumber": 42,
+              "pullRequestAuthor": "test-owner",
               "action": "opened"
             }
           ]
@@ -431,6 +432,7 @@
               "headCommitUrl": "http://gitea:3000/test-owner/test-repo/commit/def456",
               "external": true,
               "pullRequestNumber": 42,
+              "pullRequestAuthor": "test-owner",
               "action": "opened"
             }
           ]
@@ -884,6 +886,68 @@
         {
           "op": "fixture.requests",
           "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPullRequestComment",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gogs"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "issue_comment",
+            "payload": "{\"action\":\"created\",\"is_pull\":true,\"issue\":{\"number\":42,\"user\":{\"login\":\"author\"}},\"pull_request\":{\"number\":42,\"user\":{\"login\":\"author\"}},\"comment\":{\"id\":99,\"body\":\"@appwrite review\",\"html_url\":\"http:\\/\\/gitea:3000\\/o\\/r\\/pulls\\/42#issuecomment-99\",\"user\":{\"id\":5,\"login\":\"octo\"}},\"repository\":{\"id\":123,\"name\":\"test-repo\",\"html_url\":\"http:\\/\\/gitea:3000\\/test-owner\\/test-repo\",\"owner\":{\"login\":\"test-owner\"}}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testGetEventIgnoresOtherComments",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gogs"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "issue_comment",
+            "payload": "{\"action\":\"created\",\"is_pull\":false,\"issue\":{\"number\":42,\"user\":{\"login\":\"author\"}},\"pull_request\":{\"number\":42,\"user\":{\"login\":\"author\"}},\"comment\":{\"id\":99,\"body\":\"@appwrite review\",\"html_url\":\"http:\\/\\/gitea:3000\\/o\\/r\\/pulls\\/42#issuecomment-99\",\"user\":{\"id\":5,\"login\":\"octo\"}},\"repository\":{\"id\":123,\"name\":\"test-repo\",\"html_url\":\"http:\\/\\/gitea:3000\\/test-owner\\/test-repo\",\"owner\":{\"login\":\"test-owner\"}}}"
+          },
+          "expect": []
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "issue_comment",
+            "payload": "{\"action\":\"edited\",\"is_pull\":true,\"issue\":{\"number\":42,\"user\":{\"login\":\"author\"}},\"pull_request\":{\"number\":42,\"user\":{\"login\":\"author\"}},\"comment\":{\"id\":99,\"body\":\"@appwrite review\",\"html_url\":\"http:\\/\\/gitea:3000\\/o\\/r\\/pulls\\/42#issuecomment-99\",\"user\":{\"id\":5,\"login\":\"octo\"}},\"repository\":{\"id\":123,\"name\":\"test-repo\",\"html_url\":\"http:\\/\\/gitea:3000\\/test-owner\\/test-repo\",\"owner\":{\"login\":\"test-owner\"}}}"
+          },
           "expect": []
         }
       ]

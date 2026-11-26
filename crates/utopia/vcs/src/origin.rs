@@ -25,6 +25,11 @@ pub const APP_JWT_EXPIRY: i64 = 60 * 5;
 /// PHP: `Origin::EVENT_PUSH`.
 pub const EVENT_PUSH: &str = "repository.pushed";
 
+/// The webhook event type of a comment created on a pull request.
+///
+/// PHP: `Origin::EVENT_PULL_REQUEST_COMMENT`.
+pub const EVENT_PULL_REQUEST_COMMENT: &str = "pull_request.comment.created";
+
 /// Origin's pull request lifecycle events as the GitHub-style actions
 /// consumers switch on (a merge closes the pull request).
 const PULL_REQUEST_ACTIONS: [(&str, &str); 8] = [
@@ -890,6 +895,62 @@ impl Origin {
         Ok(array_or_empty(response.body))
     }
 
+    /// The web address of a pull request.
+    ///
+    /// PHP: `getPullRequestUrl()`.
+    pub fn pull_request_url(&self, owner: &str, repository_name: &str, pull_request_number: i64) -> String {
+        format!("{}/pull/{pull_request_number}", self.repository_url(owner, repository_name))
+    }
+
+    /// A user's permission on a repository, combined from their direct and
+    /// inherited grants: `read`, `write`, `admin` or `custom`. Empty when the
+    /// user has no access, which Origin does not tell apart from an unknown
+    /// user or repository. Needs the `repository:members:read` scope.
+    ///
+    /// PHP: `getCollaboratorPermission()`.
+    pub async fn collaborator_permission(&self, owner: &str, repository_name: &str, user_id: &str) -> Result<String> {
+        let response = self
+            .get(
+                format!("{}/collaborators/{}/permission", Self::repository_path(owner, repository_name), raw(user_id)),
+                None,
+            )
+            .await?;
+        if response.status == 404 {
+            return Ok(String::new());
+        }
+        if response.status >= 400 {
+            return Err(request_failed("Failed to get collaborator permission", &response));
+        }
+        Ok(text(&at(&array_or_empty(response.body), "permission")))
+    }
+
+    /// Mints an installation access token attenuated to `repository_ids` and
+    /// `scopes`, for a client that acts on them without the app's key. Empty
+    /// lists inherit the installation's whole grant. The token expires within
+    /// 15 minutes.
+    ///
+    /// PHP: `createAccessToken()`.
+    pub async fn create_access_token(&self, repository_ids: &[&str], scopes: &[&str]) -> Result<crate::AccessToken> {
+        let response = self
+            .transport
+            .call(
+                Call::post(format!("/app/installations/{}/access_tokens", raw(&self.installation_id)))
+                    .auth(self.app_bearer())
+                    .params(object([
+                        ("scopes", php::list(scopes.iter().map(s).collect())),
+                        ("repositoryIds", php::list(repository_ids.iter().map(s).collect())),
+                    ])),
+            )
+            .await?;
+        match (&response.body, at(&response.body, "token"), at(&response.body, "expiresAt")) {
+            (Value::Array(_), Value::Str(token), Value::Str(expires_at)) => Ok(crate::AccessToken {
+                token: php::text(token.as_bytes()),
+                expires_at: php::text(expires_at.as_bytes()),
+            }),
+            _ => Err(request_failed("Failed to create access token", &response)),
+        }
+    }
+
     /// The files that differ between two commits, in the shape
     /// `pull_request_files` reports: `filename`, `status` and, for a rename,
     /// `previous_filename`. As with [`Self::compare_commits`], refs containing
@@ -1266,6 +1327,11 @@ impl Origin {
         }
         Ok(response.status == 200)
     }
+}
+
+/// `\is_scalar($value) ? (string) $value : ''`.
+fn text(value: &Value) -> String {
+    php::text(&php::string(&php::scalar_string(value)))
 }
 
 /// `rawurlencode()`.
@@ -1745,6 +1811,9 @@ impl Adapter for Origin {
             && let Some((_, action)) = PULL_REQUEST_ACTIONS.iter().find(|(name, _)| name.as_bytes() == k.as_bytes())
         {
             return Ok(vec![self.pull_request_event(action, &body, &installation_id)]);
+        }
+        if kind == *EVENT_PULL_REQUEST_COMMENT.as_bytes() {
+            return Ok(vec![self.comment_event(&body, &installation_id)]);
         }
         if let Some(action) = kind.strip_prefix(b"installation.") {
             let installation = array_or_empty(at(&body, "installation"));
@@ -2260,6 +2329,76 @@ impl Origin {
             ]));
         }
         events
+    }
+
+    /// A comment created on a pull request, in the shape GitHub's comment
+    /// events are reported in. Every Origin comment belongs to a thread: one
+    /// that opens an inline or file thread is a `review` comment whose thread
+    /// is its own, one that opens a general-discussion thread is an `issue`
+    /// comment, and a reply carries only its thread's id, so it is a `review`
+    /// comment in that thread, whichever kind the thread is.
+    fn comment_event(&self, body: &Value, installation_id: &[u8]) -> Value {
+        let pull_request = array_or_empty(at(body, "pullRequest"));
+        let repository = array_or_empty(at(&pull_request, "repository"));
+        let repository_owner = array_or_empty(at(&repository, "owner"));
+        let comment = array_or_empty(at(body, "comment"));
+        let thread = array_or_empty(at(&comment, "thread"));
+        let author = array_or_empty(at(&comment, "author"));
+        let user = array_or_empty(at(&author, "user"));
+        let app = array_or_empty(at(&author, "app"));
+        let service_account = array_or_empty(at(&author, "serviceAccount"));
+
+        let owner = text(&or(at(&repository_owner, "slug"), ""));
+        let repository_name = text(&or(at(&repository, "name"), ""));
+        let pull_request_number = php::int(&php::numeric_int(&at(&pull_request, "number")));
+        let thread_id = text(&or(at(&thread, "id"), ""));
+
+        // An opening comment carries its thread's anchor or timestamps; a reply only the thread's id.
+        let is_reply = match &thread {
+            Value::Array(keys) => keys.keys().all(|k| matches!(k, php_std::types::KeyRef::Str(b"id"))),
+            _ => true,
+        };
+        let is_inline = !text(&or(at(&thread, "path"), "")).is_empty();
+        let kind = if is_reply || is_inline { "review" } else { "issue" };
+        let filled = |value: &Value| matches!(value, Value::Array(a) if !a.is_empty());
+        let author_type = if filled(&app) {
+            "App"
+        } else if filled(&service_account) {
+            "Bot"
+        } else {
+            "User"
+        };
+        let first = |candidates: [Value; 4]| {
+            candidates.into_iter().find(|v| !matches!(v, Value::Null)).unwrap_or_else(|| s(""))
+        };
+        let comment_url = if !owner.is_empty() && !repository_name.is_empty() && pull_request_number > 0 {
+            self.pull_request_url(&owner, &repository_name, pull_request_number)
+        } else {
+            String::new()
+        };
+        object([
+            ("repositoryId", s(text(&or(at(&repository, "id"), "")))),
+            ("repositoryName", s(&repository_name)),
+            ("owner", s(&owner)),
+            ("installationId", s(installation_id)),
+            ("pullRequestNumber", Value::Int(pull_request_number)),
+            ("action", s("created")),
+            ("commentId", s(text(&or(at(&comment, "id"), "")))),
+            ("commentKind", s(kind)),
+            ("commentThreadId", s(if kind == "review" { thread_id.as_str() } else { "" })),
+            ("commentReplyToId", s(if is_reply { thread_id.as_str() } else { "" })),
+            ("commentBody", s(text(&or(at(&comment, "body"), "")))),
+            ("commentUrl", s(comment_url)),
+            (
+                "commentAuthor",
+                s(text(&first([at(&user, "handle"), at(&user, "id"), at(&app, "id"), at(&service_account, "id")]))),
+            ),
+            (
+                "commentAuthorId",
+                s(text(&first([at(&user, "id"), at(&app, "id"), at(&service_account, "id"), Value::Null]))),
+            ),
+            ("commentAuthorType", s(author_type)),
+        ])
     }
 
     fn pull_request_event(&self, action: &str, body: &Value, installation_id: &[u8]) -> Value {

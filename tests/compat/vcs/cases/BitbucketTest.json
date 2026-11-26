@@ -467,6 +467,7 @@
               "headCommitUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/commits/def456",
               "external": false,
               "pullRequestNumber": 42,
+              "pullRequestAuthor": "",
               "action": "opened"
             }
           ]
@@ -526,6 +527,7 @@
               "headCommitUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/commits/def456",
               "external": true,
               "pullRequestNumber": 42,
+              "pullRequestAuthor": "",
               "action": "opened"
             }
           ]
@@ -994,6 +996,7 @@
               "headCommitUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/commits/def456",
               "external": false,
               "pullRequestNumber": 42,
+              "pullRequestAuthor": "",
               "action": "opened"
             }
           ]
@@ -1022,6 +1025,7 @@
               "headCommitUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/commits/def456",
               "external": false,
               "pullRequestNumber": 42,
+              "pullRequestAuthor": "",
               "action": "synchronize"
             }
           ]
@@ -1050,6 +1054,7 @@
               "headCommitUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/commits/def456",
               "external": false,
               "pullRequestNumber": 42,
+              "pullRequestAuthor": "",
               "action": "closed"
             }
           ]
@@ -1078,6 +1083,7 @@
               "headCommitUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/commits/def456",
               "external": false,
               "pullRequestNumber": 42,
+              "pullRequestAuthor": "",
               "action": "closed"
             }
           ]
@@ -1086,6 +1092,56 @@
           "op": "fixture.requests",
           "args": {},
           "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPullRequestComment",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "bitbucket"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pullrequest:comment_created",
+            "payload": "{\"actor\":{\"nickname\":\"octo\"},\"repository\":{\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"workspace\":{\"slug\":\"test-owner\"},\"links\":{\"html\":{\"href\":\"https:\\/\\/bitbucket.org\\/test-owner\\/test-repo\"}}},\"pullrequest\":{\"id\":42,\"author\":{\"nickname\":\"author\",\"type\":\"user\"}},\"comment\":{\"id\":501,\"content\":{\"raw\":\"@appwrite review\"},\"user\":{\"nickname\":\"octo\",\"uuid\":\"{u-1}\",\"type\":\"user\"},\"links\":{\"html\":{\"href\":\"https:\\/\\/bitbucket.org\\/c\\/501\"}}}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPullRequestInlineReply",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "bitbucket"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pullrequest:comment_created",
+            "payload": "{\"actor\":{\"nickname\":\"octo\"},\"repository\":{\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"workspace\":{\"slug\":\"test-owner\"},\"links\":{\"html\":{\"href\":\"https:\\/\\/bitbucket.org\\/test-owner\\/test-repo\"}}},\"pullrequest\":{\"id\":42,\"author\":{\"nickname\":\"author\",\"type\":\"user\"}},\"comment\":{\"id\":501,\"content\":{\"raw\":\"@appwrite review\"},\"user\":{\"nickname\":\"agent\",\"uuid\":\"{a-1}\",\"type\":\"app_user\"},\"links\":{\"html\":{\"href\":\"https:\\/\\/bitbucket.org\\/c\\/501\"}},\"inline\":{\"path\":\"src\\/index.ts\",\"to\":3},\"parent\":{\"id\":500}}}"
+          }
         }
       ]
     }

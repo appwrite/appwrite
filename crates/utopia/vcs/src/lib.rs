@@ -92,6 +92,8 @@ pub use gitlab::GitLab;
 pub use origin::{BatchCheckRun, Origin};
 pub use php_std::Value;
 
+/// Bitbucket's event key of a comment created on a pull request.
+pub use bitbucket::EVENT_PULL_REQUEST_COMMENT as BITBUCKET_EVENT_PULL_REQUEST_COMMENT;
 /// GitHub's app JWT lifetime in seconds.
 pub use github::APP_JWT_EXPIRY as GITHUB_APP_JWT_EXPIRY;
 /// GitHub's event type of repositories joining or leaving an installation.
@@ -102,6 +104,8 @@ pub use github::EVENT_ISSUE_COMMENT as GITHUB_EVENT_ISSUE_COMMENT;
 pub use github::EVENT_PULL_REQUEST_REVIEW_COMMENT as GITHUB_EVENT_PULL_REQUEST_REVIEW_COMMENT;
 /// Origin's app JWT lifetime in seconds.
 pub use origin::APP_JWT_EXPIRY as ORIGIN_APP_JWT_EXPIRY;
+/// Origin's event type of a comment created on a pull request.
+pub use origin::EVENT_PULL_REQUEST_COMMENT as ORIGIN_EVENT_PULL_REQUEST_COMMENT;
 /// Origin's push event type.
 pub use origin::EVENT_PUSH as ORIGIN_EVENT_PUSH;
 

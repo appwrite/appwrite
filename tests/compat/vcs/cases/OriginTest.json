@@ -748,8 +748,8 @@
             "adapter": {
               "$ref": "a1"
             },
-            "event": "pull_request.comment.created",
-            "payload": "{\"deliveryId\":\"whd_0123456789\",\"appId\":\"app_0123456789\",\"installationId\":\"i_0123456789\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"pull_request.comment.created\",\"eventTime\":\"2026-08-18T10:00:00Z\",\"payload\":{\"pullRequest\":{\"id\":\"pr_0123456789\",\"number\":\"42\",\"state\":\"open\",\"draft\":false,\"merged\":false,\"title\":\"Test PR\",\"body\":\"\",\"head\":{\"ref\":\"refs\\/heads\\/feature-branch\",\"sha\":\"def4567890def4567890def4567890def4567890\"},\"base\":{\"ref\":\"refs\\/heads\\/main\",\"sha\":\"abc123\"},\"author\":{\"user\":{\"id\":\"user_0123456789\",\"email\":\"author@example.com\"}}},\"repository\":{\"id\":\"repo_0123456789\",\"name\":\"test-repo\",\"owner\":{\"slug\":\"test-owner\",\"id\":\"ns_0123456789\"}}}}}"
+            "event": "pull_request.review.submitted",
+            "payload": "{\"deliveryId\":\"whd_0123456789\",\"appId\":\"app_0123456789\",\"installationId\":\"i_0123456789\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"pull_request.review.submitted\",\"eventTime\":\"2026-08-18T10:00:00Z\",\"payload\":{\"pullRequest\":{\"id\":\"pr_0123456789\",\"number\":\"42\",\"state\":\"open\",\"draft\":false,\"merged\":false,\"title\":\"Test PR\",\"body\":\"\",\"head\":{\"ref\":\"refs\\/heads\\/feature-branch\",\"sha\":\"def4567890def4567890def4567890def4567890\"},\"base\":{\"ref\":\"refs\\/heads\\/main\",\"sha\":\"abc123\"},\"author\":{\"user\":{\"id\":\"user_0123456789\",\"email\":\"author@example.com\"}}},\"repository\":{\"id\":\"repo_0123456789\",\"name\":\"test-repo\",\"owner\":{\"slug\":\"test-owner\",\"id\":\"ns_0123456789\"}}}}}"
           },
           "expect": []
         },
@@ -948,6 +948,106 @@
           "op": "fixture.requests",
           "args": {},
           "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventCommentOpeningAGeneralThread",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pull_request.comment.created",
+            "payload": "{\"deliveryId\":\"whd_0123456789\",\"appId\":\"app_0123456789\",\"installationId\":\"i_0123456789\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"pull_request.comment.created\",\"eventTime\":\"2026-08-18T10:00:00Z\",\"payload\":{\"pullRequest\":{\"id\":\"pr_0123456789\",\"number\":\"42\",\"repository\":{\"id\":\"repo_0123456789\",\"name\":\"test-repo\",\"owner\":{\"slug\":\"test-owner\",\"id\":\"ns_0123456789\",\"type\":\"team\"}}},\"comment\":{\"id\":\"cmt_0123456789\",\"thread\":{\"id\":\"cth_0123456789\",\"createdAt\":\"2026-08-18T10:00:00Z\",\"updatedAt\":\"2026-08-18T10:00:00Z\"},\"body\":\"@appwrite review\",\"author\":{\"user\":{\"id\":\"user_0123456789\",\"handle\":\"octo\"}},\"createdAt\":\"2026-08-18T10:00:00Z\",\"updatedAt\":\"2026-08-18T10:00:00Z\",\"reactions\":[]}}}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testGetEventCommentOpeningAnInlineThread",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pull_request.comment.created",
+            "payload": "{\"deliveryId\":\"whd_0123456789\",\"appId\":\"app_0123456789\",\"installationId\":\"i_0123456789\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"pull_request.comment.created\",\"eventTime\":\"2026-08-18T10:00:00Z\",\"payload\":{\"pullRequest\":{\"id\":\"pr_0123456789\",\"number\":\"42\",\"repository\":{\"id\":\"repo_0123456789\",\"name\":\"test-repo\",\"owner\":{\"slug\":\"test-owner\",\"id\":\"ns_0123456789\",\"type\":\"team\"}}},\"comment\":{\"id\":\"cmt_0123456789\",\"thread\":{\"id\":\"cth_0123456789\",\"version\":{\"number\":\"1\",\"headSha\":\"def4567890def4567890def4567890def4567890\",\"baseSha\":\"def4567890def4567890def4567890def4567890\"},\"path\":\"src\\/index.ts\",\"side\":\"right\",\"startLine\":3},\"body\":\"@appwrite review\",\"author\":{\"user\":{\"id\":\"user_0123456789\"}},\"createdAt\":\"2026-08-18T10:00:00Z\",\"updatedAt\":\"2026-08-18T10:00:00Z\",\"reactions\":[]}}}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testGetEventCommentReplyingInAThread",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pull_request.comment.created",
+            "payload": "{\"deliveryId\":\"whd_0123456789\",\"appId\":\"app_0123456789\",\"installationId\":\"i_0123456789\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"pull_request.comment.created\",\"eventTime\":\"2026-08-18T10:00:00Z\",\"payload\":{\"pullRequest\":{\"id\":\"pr_0123456789\",\"number\":\"42\",\"repository\":{\"id\":\"repo_0123456789\",\"name\":\"test-repo\",\"owner\":{\"slug\":\"test-owner\",\"id\":\"ns_0123456789\",\"type\":\"team\"}}},\"comment\":{\"id\":\"cmt_0123456789\",\"thread\":{\"id\":\"cth_0123456789\"},\"body\":\"@appwrite review\",\"author\":{\"app\":{\"id\":\"app_0123456789\",\"displayName\":\"Reviewer\"}},\"createdAt\":\"2026-08-18T10:00:00Z\",\"updatedAt\":\"2026-08-18T10:00:00Z\",\"reactions\":[]}}}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testGetEventCommentByServiceAccount",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "origin"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pull_request.comment.created",
+            "payload": "{\"deliveryId\":\"whd_0123456789\",\"appId\":\"app_0123456789\",\"installationId\":\"i_0123456789\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"pull_request.comment.created\",\"eventTime\":\"2026-08-18T10:00:00Z\",\"payload\":{\"pullRequest\":{\"id\":\"pr_0123456789\",\"number\":\"42\",\"repository\":{\"id\":\"repo_0123456789\",\"name\":\"test-repo\",\"owner\":{\"slug\":\"test-owner\",\"id\":\"ns_0123456789\",\"type\":\"team\"}}},\"comment\":{\"id\":\"cmt_0123456789\",\"thread\":{\"id\":\"cth_0123456789\"},\"body\":\"@appwrite review\",\"author\":{\"serviceAccount\":{\"id\":\"sa_0123456789\",\"type\":\"bugbot\"}},\"createdAt\":\"2026-08-18T10:00:00Z\",\"updatedAt\":\"2026-08-18T10:00:00Z\",\"reactions\":[]}}}}"
+          }
         }
       ]
     }
