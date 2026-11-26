@@ -1660,6 +1660,20 @@ final class VideosCustomClientTest extends Scope
                 $response = $this->client->call(Client::METHOD_GET, $path, $headers);
                 $this->assertEquals(200, $response['headers']['status-code'], $path);
                 $this->assertStringContainsString($this->playbackNeedle($path), (string) $response['body'], $path);
+                if (\str_contains($path, '/captions/') && \str_contains($path, '/segments/')) {
+                    $projectId = $this->getProject()['$id'];
+                    $this->assertSame(
+                        'public, max-age=31536000, immutable',
+                        $response['headers']['cache-control'] ?? null,
+                        $path
+                    );
+                    $this->assertSame('Origin', $response['headers']['vary'] ?? null, $path);
+                    $this->assertSame(
+                        'video-' . \strtolower($projectId) . '-' . \strtolower($videoId),
+                        $response['headers']['surrogate-key'] ?? null,
+                        $path
+                    );
+                }
             }
         }
     }

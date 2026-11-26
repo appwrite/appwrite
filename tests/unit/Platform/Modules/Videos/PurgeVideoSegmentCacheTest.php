@@ -9,7 +9,7 @@ use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Delete;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\Delete as DeleteRendition;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Update;
-use Utopia\Query\NativeQuery;
+use Appwrite\Platform\Modules\Videos\SegmentCache;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -19,6 +19,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Query\NativeQuery;
 
 /**
  * Update, delete-video and delete-rendition must each invoke the injected
@@ -67,7 +68,7 @@ final class PurgeVideoSegmentCacheTest extends TestCase
             ->with('videos', 'vid1', $this->isInstanceOf(Document::class))
             ->willReturn($updated);
 
-        $seen = [];
+        $cache = new RecordingSegmentCache();
         // Skip Action::__construct — it builds an SDK Method that needs Swoole.
         $action = new class () extends Update {
             public function __construct()
@@ -84,12 +85,10 @@ final class PurgeVideoSegmentCacheTest extends TestCase
             $this->apiKeyAuthorization(),
             new Document(['$id' => 'proj1']),
             $this->events(),
-            static function (string $projectId, string $videoId) use (&$seen): void {
-                $seen[] = [$projectId, $videoId];
-            },
+            $cache,
         );
 
-        $this->assertSame([['proj1', 'vid1']], $seen);
+        $this->assertSame([['proj1', 'vid1']], $cache->calls);
     }
 
     public function testDeleteVideoPurges(): void
@@ -123,7 +122,7 @@ final class PurgeVideoSegmentCacheTest extends TestCase
             ->willReturn(['$id' => 'vid1']);
         $response->expects($this->once())->method('noContent');
 
-        $seen = [];
+        $cache = new RecordingSegmentCache();
         $action = new class () extends Delete {
             public function __construct()
             {
@@ -138,12 +137,57 @@ final class PurgeVideoSegmentCacheTest extends TestCase
             new Document(['$id' => 'proj1']),
             $this->events(withPayload: true),
             $publisher,
-            static function (string $projectId, string $videoId) use (&$seen): void {
-                $seen[] = [$projectId, $videoId];
-            },
+            $cache,
         );
 
-        $this->assertSame([['proj1', 'vid1']], $seen);
+        $this->assertSame([['proj1', 'vid1']], $cache->calls);
+    }
+
+    public function testDeleteVideoEnqueuesWhenPurgeThrows(): void
+    {
+        if (!\class_exists(NativeQuery::class)) {
+            $this->markTestSkipped('Requires utopia extension NativeQuery (Query::equal on delete).');
+        }
+
+        $video = $this->video();
+
+        $db = $this->createStub(Database::class);
+        $db->method('getDocument')->willReturn($video);
+        $db->method('count')->willReturn(0);
+        $db->method('deleteDocument')->willReturn(true);
+
+        $publisher = $this->createMock(DeletePublisher::class);
+        $publisher->expects($this->once())->method('enqueue');
+
+        $response = $this->createMock(Response::class);
+        $response->expects($this->once())->method('output')->willReturn(['$id' => 'vid1']);
+        $response->expects($this->never())->method('noContent');
+
+        $cache = new RecordingSegmentCache(fail: true);
+        $action = new class () extends Delete {
+            public function __construct()
+            {
+            }
+        };
+
+        try {
+            $action->action(
+                'vid1',
+                $response,
+                $db,
+                new User(),
+                $this->apiKeyAuthorization(),
+                new Document(['$id' => 'proj1']),
+                $this->events(withPayload: true),
+                $publisher,
+                $cache,
+            );
+            $this->fail('A purge error must surface after cleanup is queued');
+        } catch (\RuntimeException $e) {
+            $this->assertSame('purge failed', $e->getMessage());
+        }
+
+        $this->assertSame([['proj1', 'vid1']], $cache->calls);
     }
 
     public function testDeleteRenditionPurges(): void
@@ -179,7 +223,7 @@ final class PurgeVideoSegmentCacheTest extends TestCase
             ->willReturn(['$id' => 'ren1']);
         $response->expects($this->once())->method('noContent');
 
-        $seen = [];
+        $cache = new RecordingSegmentCache();
         $action = new class () extends DeleteRendition {
             public function __construct()
             {
@@ -195,12 +239,10 @@ final class PurgeVideoSegmentCacheTest extends TestCase
             new Document(['$id' => 'proj1']),
             $this->events(withPayload: true),
             $publisher,
-            static function (string $projectId, string $videoId) use (&$seen): void {
-                $seen[] = [$projectId, $videoId];
-            },
+            $cache,
         );
 
-        $this->assertSame([['proj1', 'vid1']], $seen);
+        $this->assertSame([['proj1', 'vid1']], $cache->calls);
     }
 
     /**
@@ -254,5 +296,27 @@ final class PurgeVideoSegmentCacheTest extends TestCase
         }
 
         return $events;
+    }
+}
+
+/**
+ * Records purge calls. `fail` throws after the call is recorded, so a test
+ * can see that cleanup was queued before the error left the action.
+ */
+final class RecordingSegmentCache extends SegmentCache
+{
+    /** @var list<array{0: string, 1: string}> */
+    public array $calls = [];
+
+    public function __construct(private readonly bool $fail = false)
+    {
+    }
+
+    public function purge(string $projectId, string $videoId): void
+    {
+        $this->calls[] = [$projectId, $videoId];
+        if ($this->fail) {
+            throw new \RuntimeException('purge failed');
+        }
     }
 }

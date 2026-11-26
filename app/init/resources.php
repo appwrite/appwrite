@@ -37,6 +37,7 @@ use Appwrite\Network\Validator\DeploymentHostname;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
+use Appwrite\Platform\Modules\Videos\SegmentCache;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
 use Appwrite\Storage\Uploads;
@@ -443,9 +444,9 @@ $container->set('cache', function (Registry $register, Telemetry $telemetry) {
 
 $container->set('cacheControlForStorage', fn () => fn (StorageCacheControl $config): string => \sprintf('private, max-age=%d', $config->maxAge));
 
-// Cloud overrides this with utopia-php/cdn purgeKeys for the API Fastly service.
-// Self-hosted has no CDN in front of playback, so the default is a no-op.
-$container->set('purgeVideoSegmentCache', fn () => function (string $projectId, string $videoId): void {});
+// Cloud replaces this with a Fastly purge of the video Surrogate-Key.
+// Self-hosted has no CDN in front of playback, so the default does nothing.
+$container->set('purgeVideoSegmentCache', fn () => new SegmentCache());
 
 
 $container->set('locks', fn (Group $pools) => Locks::using($pools), ['pools']);

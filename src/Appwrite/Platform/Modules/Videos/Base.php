@@ -362,6 +362,32 @@ abstract class Base extends Action
     }
 
     /**
+     * Cache policy for a playback segment whose URL carries the video's updatedAt.
+     *
+     * A world-readable video may sit at a shared cache; the Surrogate-Key is
+     * what one purge uses to drop every copy, including older updatedAt URLs.
+     * Anything else stays private so that cache cannot keep serving the URL
+     * after access is revoked.
+     */
+    protected function cachePlaybackSegment(Response $response, Document $project, Document $video): void
+    {
+        $public = $this->isPublicRead($video);
+        $response->addHeader(
+            'Cache-Control',
+            $public
+                ? 'public, max-age=31536000, immutable'
+                : 'private, max-age=31536000, immutable'
+        );
+        if ($public) {
+            // CORS echoes Origin with credentials; without Vary, Fastly would
+            // reuse the first viewer's origin for every later site.
+            $response
+                ->addHeader('Vary', 'Origin')
+                ->addHeader('Surrogate-Key', self::videoSurrogateKey($project->getId(), $video->getId()));
+        }
+    }
+
+    /**
      * Loads a video enforcing document `$permissions` for sessions.
      *
      * Privileged users and API keys skip authorization. Empty → VIDEO_NOT_FOUND.

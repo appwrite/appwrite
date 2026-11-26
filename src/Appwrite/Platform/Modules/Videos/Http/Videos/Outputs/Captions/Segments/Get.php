@@ -10,9 +10,9 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
-use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -63,9 +63,9 @@ class Get extends Base
             ->param('output', '', new WhiteList(self::OUTPUTS, true), 'Streaming output format.', enum: new Enum(name: 'VideoOutput'))
             ->param('captionId', '', new UID(), 'Caption unique ID.')
             ->param('segmentId', '', new UID(), 'Segment unique ID.')
-            ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('project')
             ->inject('user')
             ->inject('authorization')
             ->inject('deviceForVideos')
@@ -77,9 +77,9 @@ class Get extends Base
         string $output,
         string $captionId,
         string $segmentId,
-        Request $request,
         Response $response,
         Database $dbForProject,
+        Document $project,
         User $user,
         Authorization $authorization,
         Device $deviceForVideos
@@ -104,12 +104,11 @@ class Get extends Base
             throw new Exception(Exception::VIDEO_CAPTION_SEGMENT_NOT_FOUND);
         }
 
-        if ($this->captionBytesNotModified($request, $response, $caption)) {
-            return;
-        }
-
-        $response
-            ->setContentType('text/vtt')
-            ->send((string) $deviceForVideos->read($path));
+        // The playlist puts updatedAt on this URL, so it can use the same
+        // public cache and Surrogate-Key as a rendition segment. The stable
+        // WebVTT path (DASH) stays on the short private policy.
+        $response->setContentType('text/vtt');
+        $this->cachePlaybackSegment($response, $project, $video);
+        $response->send((string) $deviceForVideos->read($path));
     }
 }

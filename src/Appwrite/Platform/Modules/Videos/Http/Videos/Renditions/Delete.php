@@ -6,6 +6,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Base;
+use Appwrite\Platform\Modules\Videos\SegmentCache;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -82,7 +83,7 @@ class Delete extends Base
         Document $project,
         Event $queueForEvents,
         DeletePublisher $publisherForDeletes,
-        callable $purgeVideoSegmentCache
+        SegmentCache $segmentCache
     ): void {
         $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
         $this->assertCanUpdateVideo($authorization, $user, $video);
@@ -118,7 +119,7 @@ class Delete extends Base
         // Deleting a rendition does not bump the video's $updatedAt, so the
         // video key is what takes the cached segments down. The other
         // qualities share that key and are re-fetched on the next miss.
-        $purgeVideoSegmentCache($project->getId(), $video->getId());
+        $segmentCache->purge($project->getId(), $video->getId());
 
         $queueForEvents
             ->setParam('videoId', $video->getId())

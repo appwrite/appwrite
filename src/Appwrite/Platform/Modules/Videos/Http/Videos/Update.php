@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Videos\Http\Videos;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Base;
+use Appwrite\Platform\Modules\Videos\SegmentCache;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -84,7 +85,7 @@ class Update extends Base
         Authorization $authorization,
         Document $project,
         Event $queueForEvents,
-        callable $purgeVideoSegmentCache
+        SegmentCache $segmentCache
     ): void {
         $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
 
@@ -135,7 +136,7 @@ class Update extends Base
 
         // Drop Fastly's public segment copies for this video (old updatedAt URLs
         // share the Surrogate-Key). Rename and permission changes both land here.
-        $purgeVideoSegmentCache($project->getId(), $video->getId());
+        $segmentCache->purge($project->getId(), $video->getId());
 
         $queueForEvents->setParam('videoId', $video->getId());
 

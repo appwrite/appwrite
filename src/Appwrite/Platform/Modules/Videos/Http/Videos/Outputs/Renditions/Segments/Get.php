@@ -129,27 +129,9 @@ class Get extends Base
             throw new Exception(Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND);
         }
 
-        // World-readable videos may sit at Fastly. Anything else stays private
-        // so a shared cache cannot serve the URL after access is revoked.
-        $public = $this->isPublicRead($video);
         $response
-            ->setContentType($contentType)
-            ->addHeader(
-                'Cache-Control',
-                $public
-                    ? 'public, max-age=31536000, immutable'
-                    : 'private, max-age=31536000, immutable'
-            );
-        if ($public) {
-            // CORS echoes Origin with credentials; without Vary, Fastly would
-            // reuse the first viewer's origin for every later site.
-            $response
-                ->addHeader('Vary', 'Origin')
-                ->addHeader(
-                    'Surrogate-Key',
-                    self::videoSurrogateKey($project->getId(), $video->getId())
-                );
-        }
+            ->setContentType($contentType);
+        $this->cachePlaybackSegment($response, $project, $video);
         $response
             ->addHeader('Accept-Ranges', 'bytes')
             ->addHeader('X-Peak', \memory_get_peak_usage());

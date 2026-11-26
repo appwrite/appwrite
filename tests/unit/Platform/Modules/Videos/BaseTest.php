@@ -105,7 +105,7 @@ final class BaseTest extends TestCase
 
     public function testWithProjectAppendsUpdatedAt(): void
     {
-        $base = new class extends Base {
+        $base = new class () extends Base {
             public function expose(string $uri, \Utopia\Database\Document $project, \Utopia\Database\Document $video): string
             {
                 return $this->withProject($uri, $project, $video);
