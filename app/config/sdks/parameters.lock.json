@@ -913,7 +913,7 @@
             "bucketId",
             "fileId",
             "name",
-            "code",
+            "language",
             "default"
         ],
         "videos.delete": [
@@ -950,7 +950,7 @@
         "videos.getCmafStreamManifest": [
             "videoId",
             "renditionId",
-            "streamId"
+            "streamIndex"
         ],
         "videos.getDashManifest": [
             "videoId"
@@ -971,7 +971,7 @@
         "videos.getStreamManifest": [
             "videoId",
             "renditionId",
-            "streamId"
+            "streamIndex"
         ],
         "videos.getThumbnail": [
             "videoId",
@@ -980,7 +980,7 @@
             "height",
             "output"
         ],
-        "videos.getTimelines": [
+        "videos.getTimeline": [
             "videoId"
         ],
         "videos.list": [
@@ -1009,7 +1009,7 @@
             "bucketId",
             "fileId",
             "name",
-            "code",
+            "language",
             "default"
         ],
         "account.createDevice": [],
@@ -5503,7 +5503,7 @@
             "bucketId",
             "fileId",
             "name",
-            "code",
+            "language",
             "default"
         ],
         "videos.createRendition": [
@@ -5545,7 +5545,7 @@
         "videos.getCmafStreamManifest": [
             "videoId",
             "renditionId",
-            "streamId"
+            "streamIndex"
         ],
         "videos.getDashManifest": [
             "videoId"
@@ -5566,7 +5566,7 @@
         "videos.getStreamManifest": [
             "videoId",
             "renditionId",
-            "streamId"
+            "streamIndex"
         ],
         "videos.getThumbnail": [
             "videoId",
@@ -5575,7 +5575,7 @@
             "height",
             "output"
         ],
-        "videos.getTimelines": [
+        "videos.getTimeline": [
             "videoId"
         ],
         "videos.list": [
@@ -5604,7 +5604,7 @@
             "bucketId",
             "fileId",
             "name",
-            "code",
+            "language",
             "default"
         ],
         "webhooks.create": [
@@ -9930,7 +9930,7 @@
             "bucketId",
             "fileId",
             "name",
-            "code",
+            "language",
             "default"
         ],
         "videos.createRendition": [
@@ -9972,7 +9972,7 @@
         "videos.getCmafStreamManifest": [
             "videoId",
             "renditionId",
-            "streamId"
+            "streamIndex"
         ],
         "videos.getDashManifest": [
             "videoId"
@@ -9993,7 +9993,7 @@
         "videos.getStreamManifest": [
             "videoId",
             "renditionId",
-            "streamId"
+            "streamIndex"
         ],
         "videos.getThumbnail": [
             "videoId",
@@ -10002,7 +10002,7 @@
             "height",
             "output"
         ],
-        "videos.getTimelines": [
+        "videos.getTimeline": [
             "videoId"
         ],
         "videos.list": [
@@ -10031,7 +10031,7 @@
             "bucketId",
             "fileId",
             "name",
-            "code",
+            "language",
             "default"
         ],
         "webhooks.create": [

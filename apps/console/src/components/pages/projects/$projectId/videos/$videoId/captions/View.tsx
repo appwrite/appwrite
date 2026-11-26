@@ -209,7 +209,7 @@ function CaptionRow({
   menu: ReactNode
 }) {
   const t = useT()
-  const language = getVideoSubtitleLanguage(caption.code)
+  const language = getVideoSubtitleLanguage(caption.language)
   const languageLabel =
     language && language.name !== caption.name ? language.name : null
   const native =
@@ -234,7 +234,7 @@ function CaptionRow({
         aria-hidden
         className="flex h-10 w-11 shrink-0 items-center justify-center rounded-md bg-muted font-mono text-[11px] font-semibold uppercase text-muted-foreground"
       >
-        <span className="truncate px-1">{caption.code || '-'}</span>
+        <span className="truncate px-1">{caption.language || '-'}</span>
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-1.5">

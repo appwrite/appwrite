@@ -966,7 +966,7 @@ trait VideoCustom
         $response = [];
 
         while (\time() < $deadline) {
-            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', \array_merge([
+            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timeline', \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
@@ -1025,7 +1025,7 @@ trait VideoCustom
         $response = [];
 
         while (\time() < $deadline) {
-            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', \array_merge([
+            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timeline', \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));

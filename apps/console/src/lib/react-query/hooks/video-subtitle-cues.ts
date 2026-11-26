@@ -132,13 +132,13 @@ export function useDownloadVideoCaption(
 ) {
   const queryClient = useQueryClient()
   return async (
-    caption: CaptionSource & Pick<Models.VideoCaption, 'name' | 'code'>,
+    caption: CaptionSource & Pick<Models.VideoCaption, 'name' | 'language'>,
     format: SubtitleDownloadFormat,
   ) => {
     const cues = await queryClient.fetchQuery(
       videoCaptionCuesQueryOptions(projectId, videoId, caption),
     )
-    downloadSubtitleCues(cues, caption.name, caption.code, format)
+    downloadSubtitleCues(cues, caption.name, caption.language, format)
   }
 }
 
@@ -185,7 +185,7 @@ export function useSaveVideoCaptionCues(
         bucketId: input.bucketId,
         fileId: uploaded.$id,
         name: input.name,
-        code: input.code,
+        language: input.code,
         xdefault: input.isDefault,
       }
       return input.captionId

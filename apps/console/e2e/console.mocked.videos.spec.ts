@@ -185,7 +185,7 @@ const CAPTIONS = [
     bucketId: 'media',
     fileId: 'file000000000000000002',
     name: 'English',
-    code: 'eng',
+    language: 'eng',
     default: true,
     embedded: false,
     targetDuration: 6,
@@ -201,7 +201,7 @@ const CAPTIONS = [
     bucketId: 'media',
     fileId: 'file000000000000000003',
     name: 'Hebrew',
-    code: 'heb',
+    language: 'heb',
     default: false,
     embedded: false,
     targetDuration: 6,
@@ -343,7 +343,8 @@ async function mockAppwriteApi(
       calls.videoUpdates.push(body)
       video = {
         ...video,
-        name: String(body.name),
+        // PATCH: only the passed fields change.
+        name: body.name === undefined ? video.name : String(body.name),
         $permissions: (body.permissions as string[]) ?? video.$permissions,
       }
       return json(200, video)
@@ -355,7 +356,7 @@ async function mockAppwriteApi(
     if (apiPath === `/videos/${VIDEO_ID}/captions`) {
       return json(200, { total: CAPTIONS.length, captions: CAPTIONS })
     }
-    if (apiPath === `/videos/${VIDEO_ID}/timelines`) {
+    if (apiPath === `/videos/${VIDEO_ID}/timeline`) {
       if (video.timelineStatus !== 'ready') {
         return json(404, {
           message: 'Video timelines not found.',
@@ -860,9 +861,9 @@ test.describe('videos (mocked API)', () => {
 
     await expect(toggle).toBeChecked()
     await expect(warning).toHaveCount(0)
+    // A sparse PATCH: the name is not resent.
     expect(calls.videoUpdates).toEqual([
       {
-        name: VIDEO.name,
         permissions: ['read("users")', 'update("users")', 'read("any")'],
       },
     ])

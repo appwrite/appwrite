@@ -10,7 +10,8 @@ class VideoCaption extends Model
 {
     /**
      * `embedded` is derived, not stored: extracted tracks are the rows with no
-     * backing storage file. Target duration is stored as a string.
+     * backing storage file. The language is stored as `code`, and target
+     * duration as a string.
      */
     public function filter(Document $document): Document
     {
@@ -18,6 +19,7 @@ class VideoCaption extends Model
 
         return $document
             ->setAttribute('embedded', empty($document->getAttribute('fileId', '')))
+            ->setAttribute('language', $document->getAttribute('code', ''))
             ->setAttribute('targetDuration', \is_numeric($targetDuration) ? (float) $targetDuration : 0.0);
     }
 
@@ -67,7 +69,7 @@ class VideoCaption extends Model
                 'example' => 'English',
             ])
             // ISO 639-2 three-letter code, validated against the locale-languages config.
-            ->addRule('code', [
+            ->addRule('language', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Caption ISO 639-2 language code.',
                 'default' => '',

@@ -433,7 +433,7 @@ class Videos extends Action
                     'image/jpeg'
                 );
 
-                // Relative to /v1/videos/{videoId}/timelines so the player resolves
+                // Relative to /v1/videos/{videoId}/timeline so the player resolves
                 // to /v1/videos/{videoId}/thumbnails/{thumbnailId}.
                 $urls[$fileName] = 'thumbnails/' . $thumbnail->getId();
             }

@@ -6,7 +6,7 @@ class VideoCaptions extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
         'name',
-        'code',
+        'language',
         'default',
         'status',
         'size',

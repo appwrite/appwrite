@@ -16,7 +16,6 @@ import {
   keepPreviousData,
 } from '@tanstack/react-query'
 import {
-  AppwriteException,
   ID,
   Query,
   VideoCodecId,
@@ -314,13 +313,7 @@ export function getVideoTimelineUrl(
   projectId: string,
   videoId: string,
 ): string {
-  const endpoint = sdk.forProject(projectId).client.config.endpoint
-  const url = new URL(
-    `${endpoint}/videos/${encodeURIComponent(videoId)}/timelines`,
-  )
-  url.searchParams.set('project', projectId)
-  url.searchParams.set('mode', 'admin')
-  return url.toString()
+  return sdk.forProject(projectId).videos.getTimeline({ videoId })
 }
 
 /** `null` while no timeline exists (`video_timelines_not_found`). */
@@ -329,13 +322,14 @@ export async function fetchVideoTimeline(
   videoId: string,
 ): Promise<{ url: string; vtt: string; cues: VideoTimelineCue[] } | null> {
   const url = getVideoTimelineUrl(projectId, videoId)
-  try {
-    const vtt = await sdk.forProject(projectId).videos.getTimelines({ videoId })
-    return { url, vtt, cues: parseVideoTimelineVtt(vtt, url, projectId) }
-  } catch (error) {
-    if (error instanceof AppwriteException && error.code === 404) return null
-    throw error
+  // A location method: load it with the Console session, like the thumbnails it lists.
+  const response = await fetch(url, { credentials: 'include' })
+  if (response.status === 404) return null
+  if (!response.ok) {
+    throw new Error(`Timeline request failed (HTTP ${response.status})`)
   }
+  const vtt = await response.text()
+  return { url, vtt, cues: parseVideoTimelineVtt(vtt, url, projectId) }
 }
 
 // ---------------------------------------------------------------------------
@@ -733,7 +727,7 @@ export function useCreateVideoCaption(
         bucketId: input.bucketId,
         fileId: input.fileId,
         name: input.name,
-        code: input.code,
+        language: input.code,
         xdefault: input.isDefault,
       }),
     onSuccess: async () => {
@@ -764,7 +758,7 @@ export function useUpdateVideoCaption(
         bucketId: input.bucketId,
         fileId: input.fileId,
         name: input.name,
-        code: input.code,
+        language: input.code,
         xdefault: input.isDefault,
       }),
     onSuccess: async () => {
