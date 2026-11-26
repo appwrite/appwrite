@@ -126,7 +126,7 @@ export function OAuth2AppInstallationsCard({
             )}
           >
             {t(
-              'Teams that installed this app and the scopes they granted. Removing an installation revokes its access tokens.',
+              'Where this app is installed and the scopes each installation granted. Removing an installation revokes its access tokens.',
             )}
           </p>
         </div>
@@ -141,7 +141,7 @@ export function OAuth2AppInstallationsCard({
               icon={Blocks}
               title={t('No installations')}
               description={t(
-                'Installations appear here once a team installs this app.',
+                'Installations appear here once someone installs this app.',
               )}
               variant="card"
             />
@@ -164,8 +164,8 @@ export function OAuth2AppInstallationsCard({
                         <CopyableId
                           id={installation.teamId}
                           size="xs"
-                          copyLabel="Team ID"
-                          copyToastLabel="Team ID"
+                          copyLabel={`${teamLabel} ID`}
+                          copyToastLabel={`${teamLabel} ID`}
                         />
                       </div>
                       <div className="flex flex-wrap items-center gap-1">
@@ -273,7 +273,7 @@ export function OAuth2AppInstallationsCard({
             <DialogTitle>{t('Remove installation')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               {t(
-                'The app loses access to this team immediately and its installation tokens stop working. The team can install the app again later.',
+                'The app loses access immediately and its installation tokens stop working. It can be installed again later.',
               )}
             </DialogDescription>
           </DialogHeader>
