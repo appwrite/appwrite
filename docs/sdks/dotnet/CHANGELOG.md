@@ -1,5 +1,12 @@
 # Change Log
 
+## 11.5.0
+
+* Added: `monitors` service to create, list, get, update and delete HTTP, DNS, TCP, SMTP and usage monitors
+* Added: `alerts` service to list and get alerts, and acknowledge them with `alerts.update`
+* Added: `organization.listEscalations`, `createEscalation`, `getEscalation`, `updateEscalation` and `deleteEscalation`
+* Added: `Monitor`, `Alert`, `Escalation` and `EscalationStep` models, their list models, and the `Monitor*` and `Alert*` enums
+
 ## 11.4.0
 
 * Added: `Messaging.CreateBirdEmailProvider`, `UpdateBirdEmailProvider`, `CreateBirdSMSProvider` and `UpdateBirdSMSProvider` for the Bird email and SMS providers
