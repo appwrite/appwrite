@@ -55,7 +55,7 @@ class Get extends Base
                         model: Response::MODEL_NONE,
                     )
                 ],
-                contentType: ContentType::TEXT,
+                contentType: ContentType::ANY,
                 type: MethodType::LOCATION,
                 locationAuth: ['Project', 'ImpersonateUserId'],
             ))
