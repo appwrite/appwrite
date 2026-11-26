@@ -565,6 +565,135 @@ test.describe('reviews', () => {
       .toBe(true)
   })
 
+  test('Performance pages, searches and sorts hundreds of authors and repositories', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page)
+    // dev-000 is the busiest author and acme/service-000 the busiest repository.
+    const figures = (index: number, count: number) => ({
+      pulls: count - index,
+      reviews: count - index + 1,
+      approved: Math.floor((count - index) / 2),
+      approvedFirst: Math.floor((count - index) / 3),
+      findings: 4,
+      critical: index % 3 === 0 ? 1 : 0,
+      major: 1,
+      resolved: 2,
+      dismissed: 1,
+      lastReviewAt: NOW,
+    })
+    const authors = Array.from({ length: 240 }, (_, index) => ({
+      author: `dev-${String(index).padStart(3, '0')}`,
+      tier: 'A',
+      ...figures(index, 240),
+    }))
+    const repositories = Array.from({ length: 130 }, (_, index) => ({
+      repositoryId: `repository${String(index).padStart(4, '0')}`,
+      providerRepositoryOwner: 'acme',
+      providerRepositoryName: `service-${String(index).padStart(3, '0')}`,
+      ...figures(index, 130),
+    }))
+    const period = {
+      start: NOW,
+      end: NOW,
+      pulls: 500,
+      reviews: 600,
+      approved: 300,
+      approvedFirst: 200,
+      findings: 900,
+      critical: 10,
+      major: 40,
+      minor: 600,
+      info: 250,
+      resolved: 400,
+      dismissed: 100,
+      duration: 90_000,
+    }
+    await page.route('**/v1/reviews/summary**', (route) =>
+      fulfillJson(route, {
+        periods: [period, period],
+        days: [],
+        repositories,
+      }),
+    )
+    await page.route('**/v1/reviews/authors**', (route) =>
+      fulfillJson(route, { total: authors.length, authors }),
+    )
+    await page.route('**/v1/reviews/categories**', (route) =>
+      fulfillJson(route, { total: 0, categories: [] }),
+    )
+    const nameLookups: string[] = []
+    page.on('request', (request) => {
+      if (request.url().includes('/providerRepositories/')) {
+        nameLookups.push(request.url())
+      }
+    })
+
+    await page.goto(`/projects/${PROJECT.$id}/reviews/performance`, {
+      waitUntil: 'domcontentloaded',
+    })
+
+    // Ten of the 240 authors, the busiest first.
+    const authorsCard = page.getByRole('region', { name: 'Authors' })
+    const authorRows = authorsCard.getByRole('row')
+    await expect(authorRows.filter({ hasText: 'dev-000' })).toBeVisible({
+      timeout: 30_000,
+    })
+    await expect(authorRows).toHaveCount(11)
+    await expect(authorsCard.getByText('1-10 of 240')).toBeVisible()
+
+    // The next page carries on from the eleventh.
+    await authorsCard.getByRole('button', { name: 'Go to next page' }).click()
+    await expect(authorRows.filter({ hasText: 'dev-010' })).toBeVisible()
+    await expect(authorRows.filter({ hasText: 'dev-000' })).toHaveCount(0)
+
+    // Sorting covers every author, not only the page, and starts over.
+    await authorsCard
+      .getByRole('columnheader', { name: 'Pull requests' })
+      .getByRole('button')
+      .click()
+    await expect(authorRows.nth(1)).toContainText('dev-239')
+    await expect(authorsCard.getByText('1-10 of 240')).toBeVisible()
+
+    // The search finds an author on any page.
+    await authorsCard
+      .getByRole('textbox', { name: 'Search authors...' })
+      .fill('dev-123')
+    await expect(authorRows).toHaveCount(2)
+    await expect(authorRows.nth(1)).toContainText('dev-123')
+    await authorsCard
+      .getByRole('textbox', { name: 'Search authors...' })
+      .fill('nobody')
+    await expect(
+      authorsCard.getByText('No authors match your search'),
+    ).toBeVisible()
+
+    // The repositories page and search the same way.
+    const repositoriesCard = page.getByRole('region', { name: 'Repositories' })
+    const repositoryRows = repositoriesCard.getByRole('row')
+    await expect(repositoryRows).toHaveCount(11)
+    await expect(repositoriesCard.getByText('1-10 of 130')).toBeVisible()
+    await repositoriesCard
+      .getByRole('textbox', { name: 'Search repositories...' })
+      .fill('service-129')
+    await expect(repositoryRows).toHaveCount(2)
+    await expect(repositoryRows.nth(1)).toContainText('acme/service-129')
+
+    // The picker lists every repository of the range, named by its reviews.
+    await page.getByRole('combobox', { name: 'Repository' }).click()
+    await expect(page.getByRole('option')).toHaveCount(131)
+    await page
+      .getByRole('dialog')
+      .getByPlaceholder('Search repositories...')
+      .fill('service-129')
+    await page.getByRole('option', { name: /acme\/service-129/ }).click()
+    await expect(page).toHaveURL(/repositoryId=repository0129/)
+    await expect(
+      page.getByRole('combobox', { name: 'Repository' }),
+    ).toContainText('acme/service-129')
+    expect(nameLookups).toEqual([])
+  })
+
   test('status tabs count the reviews and filter the list', async ({
     page,
   }) => {
