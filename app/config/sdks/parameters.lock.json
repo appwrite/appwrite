@@ -3347,7 +3347,6 @@
         ],
         "project.listVideoProfiles": [
             "queries",
-            "codec",
             "total"
         ],
         "project.updateAndroidPlatform": [
@@ -7895,7 +7894,6 @@
         ],
         "project.listVideoProfiles": [
             "queries",
-            "codec",
             "total"
         ],
         "project.updateAndroidPlatform": [

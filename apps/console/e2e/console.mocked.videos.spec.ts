@@ -6,7 +6,7 @@ import { expect, test } from './fixtures'
 
 /**
  * The Videos pages against the Videos API as the server returns it: profiles
- * listed one codec at a time, codecs with the outputs they support, captions
+ * listed across codecs, codecs with the outputs they support, captions
  * with a processing status, and a thumbnail timeline whose cues point at
  * `thumbnails/{id}`. The Appwrite API is mocked at the network layer and the
  * real console pages are asserted.
@@ -286,9 +286,16 @@ async function mockAppwriteApi(
     }
     if (apiPath === '/project/videos/profiles' && method === 'GET') {
       calls.profileLists.push(url)
-      // The API lists one codec per request and defaults to h264.
-      const codec = url.searchParams.get('codec') || 'h264'
-      const listed = profileStore.filter((profile) => profile.codec === codec)
+      // The API lists every codec; the Console filters with `Query.equal('codec', [...])`.
+      const codecs = url.searchParams
+        .getAll('queries[]')
+        .map((query) => JSON.parse(query))
+        .find(
+          (query) => query.method === 'equal' && query.attribute === 'codec',
+        )?.values as string[] | undefined
+      const listed = codecs
+        ? profileStore.filter((profile) => codecs.includes(profile.codec))
+        : profileStore
       return json(200, { total: listed.length, profiles: listed })
     }
     if (apiPath === '/project/videos/profiles' && method === 'POST') {
@@ -481,11 +488,21 @@ test.describe('videos (mocked API)', () => {
     await expect(
       profileRow(page, '720p').getByRole('cell', { name: 'h264', exact: true }),
     ).toBeVisible()
+    // Every enabled codec is filtered through queries, not the removed `codec` param.
     await expect
       .poll(() =>
-        calls.profileLists.map((url) => url.searchParams.get('codec')).sort(),
+        calls.profileLists.map((url) => ({
+          codec: url.searchParams.get('codec'),
+          codecs: url.searchParams
+            .getAll('queries[]')
+            .map((query) => JSON.parse(query))
+            .find(
+              (query) =>
+                query.method === 'equal' && query.attribute === 'codec',
+            )?.values,
+        })),
       )
-      .toEqual(expect.arrayContaining(['h264', 'vp9']))
+      .toContainEqual({ codec: null, codecs: ['h264', 'vp9'] })
 
     await screenshot(page, 'videos-profiles.png')
   })
