@@ -2468,7 +2468,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.6.0',
+        'providerVersion' => '1.6.1',
         'variables' => [
             [
                 'name' => 'CHAT_WEBHOOK_URL',
@@ -2508,7 +2508,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.6.0',
+        'providerVersion' => '1.6.1',
         'variables' => [
             [
                 'name' => 'MIN_SEVERITY',
