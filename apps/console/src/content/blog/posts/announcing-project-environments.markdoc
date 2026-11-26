@@ -95,7 +95,15 @@ Leave `setEnvironment` out and the same code talks to production. Reading the en
 
 # Promote changes from dev to staging to production
 
-The Appwrite CLI reads the environment from `appwrite.config.json` or from the `APPWRITE_ENVIRONMENT_ID` variable. That makes a release pipeline a matter of running the same deploy with a different environment ID and key:
+The Appwrite CLI stores the environment in `appwrite.config.json` as `environmentId`, next to the project ID. Link your repository to the `dev` environment, then pull and push as usual. The CLI asks which resources to push and shows the changes before it applies them:
+
+```sh
+appwrite init project --project-id "<PROJECT_ID>" --environment-id dev
+appwrite pull all
+appwrite push all
+```
+
+In CI, the `APPWRITE_ENVIRONMENT_ID` variable picks the environment and takes precedence over the config file. There's no one to answer the CLI's questions there, so `--all` selects every resource and `--force` approves the changes:
 
 ```sh
 export APPWRITE_PROJECT_ID="<PROJECT_ID>"

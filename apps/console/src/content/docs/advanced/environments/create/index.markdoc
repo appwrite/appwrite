@@ -74,23 +74,274 @@ Open the environment switcher and pick **Production** or another environment. Th
 
 The Console keeps you on the same project URL and remembers the environment you picked for each project in the current browser tab. A different tab can work in a different environment of the same project.
 
-# Create environments with the API {% #api %}
+# Create environments with a server SDK {% #sdk %}
 
-Environments can also be created with an API key that has the `project.write` scope. Send a `POST` request to `/v1/project/environments` with the project's ID in the `X-Appwrite-Project` header:
+Environments can also be created from a server SDK, with an API key created in the project that has the `project.write` scope. Call `createEnvironment` on the `Project` service with the environment's ID, its name, and the [resource types to copy](/docs/advanced/environments/copy#sdk):
 
-```bash
-curl -X POST https://<REGION>.cloud.appwrite.io/v1/project/environments \
-    -H "X-Appwrite-Project: <PROJECT_ID>" \
-    -H "X-Appwrite-Key: <API_KEY>" \
-    -H "Content-Type: application/json" \
-    -d '{
-        "environmentId": "staging",
-        "name": "Staging",
-        "resources": ["database", "table", "column", "index", "bucket", "function", "environment-variable"]
-    }'
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const project = new sdk.Project(client);
+
+const environment = await project.createEnvironment({
+    environmentId: 'staging',
+    name: 'Staging',
+    resources: [
+        sdk.EnvironmentResource.Database,
+        sdk.EnvironmentResource.Table,
+        sdk.EnvironmentResource.Column,
+        sdk.EnvironmentResource.Index,
+        sdk.EnvironmentResource.Bucket,
+        sdk.EnvironmentResource.Function,
+        sdk.EnvironmentResource.EnvironmentVariable,
+    ],
+});
 ```
+```server-python
+from appwrite.client import Client
+from appwrite.services.project import Project
+from appwrite.enums.environment_resource import EnvironmentResource
 
-Leave out `resources` to create an empty environment. The same route lists environments with `GET`, and `/v1/project/environments/<ENVIRONMENT_ID>` gets, renames (`PATCH` with a new `name`), or deletes one.
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+project = Project(client)
+
+environment = project.create_environment(
+    environment_id = 'staging',
+    name = 'Staging',
+    resources = [
+        EnvironmentResource.DATABASE,
+        EnvironmentResource.TABLE,
+        EnvironmentResource.COLUMN,
+        EnvironmentResource.INDEX,
+        EnvironmentResource.BUCKET,
+        EnvironmentResource.FUNCTION,
+        EnvironmentResource.ENVIRONMENT_VARIABLE,
+    ]
+)
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Project;
+use Appwrite\Enums\EnvironmentResource;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<API_KEY>');
+
+$project = new Project($client);
+
+$environment = $project->createEnvironment(
+    environmentId: 'staging',
+    name: 'Staging',
+    resources: [
+        EnvironmentResource::DATABASE(),
+        EnvironmentResource::TABLE(),
+        EnvironmentResource::COLUMN(),
+        EnvironmentResource::INDEX(),
+        EnvironmentResource::BUCKET(),
+        EnvironmentResource::FUNCTION(),
+        EnvironmentResource::ENVIRONMENTVARIABLE(),
+    ]
+);
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+include Appwrite::Enums
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<API_KEY>')
+
+project = Project.new(client)
+
+environment = project.create_environment(
+    environment_id: 'staging',
+    name: 'Staging',
+    resources: [
+        EnvironmentResource::DATABASE,
+        EnvironmentResource::TABLE,
+        EnvironmentResource::COLUMN,
+        EnvironmentResource::INDEX,
+        EnvironmentResource::BUCKET,
+        EnvironmentResource::FUNCTION,
+        EnvironmentResource::ENVIRONMENT_VARIABLE
+    ]
+)
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart' as enums;
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+Project project = Project(client);
+
+final environment = await project.createEnvironment(
+    environmentId: 'staging',
+    name: 'Staging',
+    resources: [
+        enums.EnvironmentResource.database,
+        enums.EnvironmentResource.table,
+        enums.EnvironmentResource.column,
+        enums.EnvironmentResource.xIndex,
+        enums.EnvironmentResource.bucket,
+        enums.EnvironmentResource.function,
+        enums.EnvironmentResource.environmentVariable,
+    ],
+);
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Enums;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<API_KEY>");
+
+Project project = new Project(client);
+
+Appwrite.Models.Environment environment = await project.CreateEnvironment(
+    environmentId: "staging",
+    name: "Staging",
+    resources: new List<EnvironmentResource> {
+        EnvironmentResource.Database,
+        EnvironmentResource.Table,
+        EnvironmentResource.Column,
+        EnvironmentResource.Index,
+        EnvironmentResource.Bucket,
+        EnvironmentResource.Function,
+        EnvironmentResource.EnvironmentVariable
+    }
+);
+```
+```server-go
+package main
+
+import (
+    "fmt"
+
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/project"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<API_KEY>"),
+    )
+
+    service := project.New(client)
+
+    environment, err := service.CreateEnvironment(
+        "staging",
+        "Staging",
+        service.WithCreateEnvironmentResources([]string{
+            "database", "table", "column", "index",
+            "bucket", "function", "environment-variable",
+        }),
+    )
+    fmt.Println(environment, err)
+}
+```
+```server-swift
+import Appwrite
+import AppwriteEnums
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+let project = Project(client)
+
+let environment = try await project.createEnvironment(
+    environmentId: "staging",
+    name: "Staging",
+    resources: [.database, .table, .column, .index, .bucket, .function, .environmentVariable]
+)
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Project
+import io.appwrite.enums.EnvironmentResource
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+val project = Project(client)
+
+val environment = project.createEnvironment(
+    environmentId = "staging",
+    name = "Staging",
+    resources = listOf(
+        EnvironmentResource.DATABASE,
+        EnvironmentResource.TABLE,
+        EnvironmentResource.COLUMN,
+        EnvironmentResource.INDEX,
+        EnvironmentResource.BUCKET,
+        EnvironmentResource.FUNCTION,
+        EnvironmentResource.ENVIRONMENT_VARIABLE
+    )
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::enums::EnvironmentResource;
+use appwrite::services::Project;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let project = Project::new(&client);
+
+    let environment = project.create_environment(
+        "staging",
+        "Staging",
+        Some(vec![
+            EnvironmentResource::Database,
+            EnvironmentResource::Table,
+            EnvironmentResource::Column,
+            EnvironmentResource::Index,
+            EnvironmentResource::Bucket,
+            EnvironmentResource::Function,
+            EnvironmentResource::EnvironmentVariable,
+        ]),
+    ).await?;
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+Leave out `resources` to create an empty environment. The `Project` service also lists environments with `listEnvironments`, and gets, renames, or deletes one with `getEnvironment`, `updateEnvironment`, and `deleteEnvironment`.
 
 # Next steps {% #next-steps %}
 

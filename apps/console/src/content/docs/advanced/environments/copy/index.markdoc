@@ -42,9 +42,9 @@ The environment is created right away, and the copy runs in the background as a 
 
 A copy can't be repeated on an existing environment. To start over from production, [delete the environment](/docs/advanced/environments/manage#delete) and create it again.
 
-# Copy with the API {% #api %}
+# Copy with a server SDK {% #sdk %}
 
-Pass the resource types to copy in `resources` when you [create the environment with the API](/docs/advanced/environments/create#api). A structural type such as `database`, `table`, `column`, `index`, `bucket`, `team`, `function`, or `site` copies the structure and its settings. Add `row`, `document`, `file`, `user`, `membership`, `deployment`, or `site-deployment` to copy what it holds.
+Pass the resource types to copy in `resources` when you [create the environment with a server SDK](/docs/advanced/environments/create#sdk). SDKs take them as values of the `EnvironmentResource` enum. A structural type such as `database`, `table`, `column`, `index`, `bucket`, `team`, `function`, or `site` copies the structure and its settings. Add `row`, `document`, `file`, `user`, `membership`, `deployment`, or `site-deployment` to copy what it holds.
 
 | Group | Structure types | Data types |
 |---|---|---|

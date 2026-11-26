@@ -93,7 +93,7 @@ jobs:
         run: appwrite push all --all --force
 ```
 
-When `APPWRITE_ENVIRONMENT_ID` is empty, the CLI acts on the project itself, so the production job needs no special case. `APPWRITE_REASON` records the commit next to every change in the environment's **Activity** tab. [Learn more about the CLI in CI](/docs/tooling/command-line/non-interactive).
+CI has no one to answer the CLI's questions, so `--all` selects every resource in the config and `--force` approves the changes, which `appwrite push all` asks about when you run it yourself. When `APPWRITE_ENVIRONMENT_ID` is empty, the CLI acts on the project itself, so the production job needs no special case. `APPWRITE_REASON` records the commit next to every change in the environment's **Activity** tab. [Learn more about the CLI in CI](/docs/tooling/command-line/non-interactive).
 
 {% info title="Settings are pushed to production separately" %}
 `appwrite push all` skips project settings in an environment. Change auth methods, SMTP, and other project settings in each environment from the Console, or push them to production from a job without an environment ID.
