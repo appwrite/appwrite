@@ -480,7 +480,11 @@ function NotificationRow({
                     variant="outline"
                     size="sm"
                     className="h-7 px-2.5 text-[12px]"
-                    onClick={() => onOpen(notification, link.target)}
+                    onClick={() =>
+                      'href' in link
+                        ? openInNewTab(link.href)
+                        : onOpen(notification, link.target)
+                    }
                   >
                     {t(link.label)}
                   </Button>
