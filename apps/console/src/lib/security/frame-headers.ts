@@ -1,6 +1,6 @@
 /**
  * Pages that must never render inside another site's frame: every screen of
- * the `_auth` layout (sign-in, sign-up, MFA, recovery, verification, invites,
+ * the `_auth` layout (sign-in, sign-up, MFA, SSO, recovery, verification, invites,
  * OAuth2 consent and device approval). A framed consent screen lets a hidden
  * overlay supply the one click that approves an attacker's OAuth2 client.
  *
@@ -11,6 +11,7 @@ const AUTH_SCREEN_PATHS = new Set([
   '/sign-up',
   '/sign-out',
   '/mfa',
+  '/sso',
   '/recovery',
   '/verify-email',
   '/join',
