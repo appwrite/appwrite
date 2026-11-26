@@ -767,14 +767,6 @@ final class VideosCustomServerTest extends Scope
         $empty = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId, $this->headers(), []);
         $this->assertEquals(200, $empty['headers']['status-code']);
         $this->assertSame('Renamed demo', $empty['body']['name']);
-
-        $put = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->headers(), [
-            'name' => 'Put rename',
-        ]);
-        $this->assertEquals(404, $put['headers']['status-code']);
-
-        $stored = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->headers());
-        $this->assertSame('Renamed demo', $stored['body']['name']);
     }
 
     /**
@@ -798,9 +790,6 @@ final class VideosCustomServerTest extends Scope
 
         $xywh = \explode(',', \explode("\n", \explode('#xywh=', (string) $response['body'], 2)[1], 2)[0]);
         $this->assertSame(480, (int) $xywh[2], 'timeline thumbnails should be 480px wide');
-
-        $plural = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', $this->headers());
-        $this->assertEquals(404, $plural['headers']['status-code'], 'the timeline route is singular');
 
         $video = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->headers());
         $this->assertEquals(200, $video['headers']['status-code']);

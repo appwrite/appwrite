@@ -57,6 +57,7 @@ class Get extends Base
                 ],
                 contentType: ContentType::TEXT,
                 type: MethodType::LOCATION,
+                locationAuth: ['Project', 'ImpersonateUserId'],
             ))
             ->param('videoId', '', new UID(), 'Video unique ID.')
             ->inject('response')
