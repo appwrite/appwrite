@@ -39,7 +39,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "description": "See the people and the AI agents that visit your websites and apps, track the events that matter to your product, and block unwanted traffic with Firewall, all without cookies.",
     "date": "2026-11-30",
     "lastUpdated": "2026-11-30",
-    "timeToRead": 7,
+    "timeToRead": 8,
     "author": "atharva",
     "category": "announcements",
     "featured": false,
