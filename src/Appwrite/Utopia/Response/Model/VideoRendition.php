@@ -4,9 +4,33 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Document;
 
 class VideoRendition extends Model
 {
+    /**
+     * Bitrates are stored in kilobits per second, the unit encoders take, and
+     * returned in bits per second like the probed bitrates on a video. Progress
+     * and target duration are stored as strings and returned as numbers.
+     */
+    public function filter(Document $document): Document
+    {
+        foreach (['videoBitRate', 'audioBitRate'] as $attribute) {
+            $value = $document->getAttribute($attribute);
+            if (\is_int($value)) {
+                $document->setAttribute($attribute, $value * 1000);
+            }
+        }
+
+        $progress = $document->getAttribute('progress');
+        $document->setAttribute('progress', \is_numeric($progress) ? (int) $progress : 0);
+
+        $targetDuration = $document->getAttribute('targetDuration');
+        $document->setAttribute('targetDuration', \is_numeric($targetDuration) ? (float) $targetDuration : 0.0);
+
+        return $document;
+    }
+
     public function __construct()
     {
         $this
@@ -73,28 +97,29 @@ class VideoRendition extends Model
             ])
             ->addRule('videoBitRate', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Video bitrate in kilobits per second.',
+                'description' => 'Video bitrate in bits per second.',
                 'default' => 0,
-                'example' => 3551,
+                'example' => 3551000,
             ])
             ->addRule('audioBitRate', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Audio bitrate in kilobits per second.',
+                'description' => 'Audio bitrate in bits per second.',
                 'default' => 0,
-                'example' => 128,
+                'example' => 128000,
             ])
             ->addRule('targetDuration', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_FLOAT,
                 'description' => 'Longest segment duration in seconds.',
-                'default' => '',
-                'example' => '6',
+                'default' => 0,
+                'example' => 6.006,
             ])
             ->addRule('status', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'Transcoding status: one of `pending`, `started`, `ended`, `ready`, `error` or `aborted`.',
-                'default' => '',
+                'default' => 'pending',
                 'example' => 'ready',
                 'enum' => ['pending', 'started', 'ended', 'ready', 'error', 'aborted'],
+                'enumSDKName' => 'VideoRenditionStatus',
             ])
             ->addRule('error', [
                 'type' => self::TYPE_STRING,
@@ -103,23 +128,32 @@ class VideoRendition extends Model
                 'example' => 'The requested file is not a valid video or audio file (ffprobe: Invalid data found when processing input)',
             ])
             ->addRule('progress', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Transcoding progress as a percentage.',
-                'default' => '',
-                'example' => '88',
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Transcoding progress as a percentage, from 0 to 100.',
+                'default' => 0,
+                'example' => 88,
             ])
             ->addRule('output', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'Streaming output format: `hls`, `dash`, or `cmaf`.',
-                'default' => '',
+                'default' => 'hls',
                 'example' => 'hls',
+                'enum' => ['hls', 'dash', 'cmaf'],
+                'enumSDKName' => 'VideoOutput',
             ])
             ->addRule('codec', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'Video encode codec snapshotted from the profile at create time: one of `h264`, `hevc`, or `vp9`.',
                 'default' => 'h264',
                 'example' => 'h264',
                 'enum' => ['h264', 'hevc', 'vp9'],
+                'enumSDKName' => 'VideoCodecId',
+            ])
+            ->addRule('size', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Stored rendition size in bytes.',
+                'default' => 0,
+                'example' => 18350080,
             ])
         ;
     }

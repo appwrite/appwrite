@@ -7,6 +7,7 @@ use Appwrite\Platform\Modules\Videos\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
+use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
@@ -27,15 +28,15 @@ class Get extends Base
 
     public static function getName()
     {
-        return 'getTimelines';
+        return 'getTimeline';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/videos/:videoId/timelines')
-            ->desc('Get timelines')
+            ->setHttpPath('/v1/videos/:videoId/timeline')
+            ->desc('Get timeline')
             ->groups(['api', 'videos'])
             ->label('scope', ['videos.play', 'videos.read'])
             ->label('resourceType', RESOURCE_TYPE_VIDEOS)
@@ -43,10 +44,10 @@ class Get extends Base
             ->label('sdk', new Method(
                 namespace: 'videos',
                 group: 'videos',
-                name: 'getTimelines',
+                name: 'getTimeline',
                 // Hidden until videos is generally available; preview SDK builds show it.
                 hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
-                description: '/docs/references/videos/get-timelines.md',
+                description: '/docs/references/videos/get-timeline.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
@@ -54,7 +55,9 @@ class Get extends Base
                         model: Response::MODEL_NONE,
                     )
                 ],
-                contentType: ContentType::TEXT,
+                contentType: ContentType::ANY,
+                type: MethodType::LOCATION,
+                locationAuth: ['Project', 'ImpersonateUserId'],
             ))
             ->param('videoId', '', new UID(), 'Video unique ID.')
             ->inject('response')
@@ -96,7 +99,7 @@ class Get extends Base
         }
 
         // Disk may still store bare `previews/{id}` or `sprites/{id}` cues from
-        // older jobs. Players resolve relative cues from /timelines to
+        // older jobs. Players resolve relative cues from /timeline to
         // /thumbnails/{id}, and cannot send the project header, so every cue
         // URL must carry the query. The on-disk VTT is left unchanged.
         $vtt = Timeline::withProjectOnThumbnailCues(

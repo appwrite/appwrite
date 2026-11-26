@@ -5,7 +5,9 @@
 // compression.expected.jsonl, what it printed on the PHP classes (appwrite/appwrite main 8739256)
 // before they were removed: every line must match.
 //
-// Reading what PHP's own functions wrote needs PECL zstd, brotli, lz4 and snappy (appwrite/base 2.5).
+// What PECL zstd, lz4 and snappy wrote, and which of the classes' bytes they read back, is stored
+// in fixtures/compression/pecl.json (written by pecl.php there, on appwrite/base 2.5), so the
+// corpus runs without them; PECL brotli, which appwrite/base keeps, is called.
 //
 // Stored files are a wire format, so most of it is bytes: what each algorithm writes (as a hash,
 // so a byte that differs fails the diff), what it reads back, and what PHP's own functions
@@ -97,50 +99,36 @@ function emit(string $case, mixed $result): void
     echo json_encode([$case, $result], JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR), "\n";
 }
 
-/** `$size` bytes of text: words of a fixed vocabulary in a seeded random order. */
-function text(int $size, int $seed = 42): string
+require __DIR__ . '/fixtures/compression/inputs.php';
+require __DIR__ . '/fixtures/compression/delta.php';
+
+/** What PECL zstd, lz4 and snappy wrote and read (fixtures/compression/pecl.php). */
+$pecl = json_decode((string) file_get_contents(__DIR__ . '/fixtures/compression/pecl.json'), true, flags: JSON_THROW_ON_ERROR);
+
+/**
+ * What a PECL function wrote for `$input`, `$call` naming the function, its level and the input:
+ * the bytes of `$counterpart`, which writes the same, or those of a delta in pecl.json. Throws
+ * unless they hash to what PECL wrote.
+ */
+function pecl(string $call, string $input, Compression $counterpart): string
 {
-    $randomizer = new Random\Randomizer(new Random\Engine\Xoshiro256StarStar($seed));
-    $words = [];
-    for ($i = 0; $i < 2000; $i++) {
-        $words[] = bin2hex($randomizer->getBytes(1 + $i % 5));
+    global $pecl;
+    $entry = $pecl['wrote'][$call] ?? throw new LogicException("fixtures/compression/pecl.json has no $call");
+    [$sha1, $base, $delta] = is_array($entry) ? $entry : [$entry, 'class', null];
+    $bytes = match ($base) {
+        'class' => $counterpart->compress($input),
+        'input' => $input,
+        'none' => '',
+    };
+    if ($delta !== null) {
+        $bytes = patched($bytes, (string) gzinflate(base64_decode($delta)));
     }
-    $parts = [];
-    $length = 0;
-    while ($length < $size) {
-        $word = $words[$randomizer->getInt(0, 1999)] . ($randomizer->getInt(0, 9) === 0 ? ",\n" : ' ');
-        $parts[] = $word;
-        $length += strlen($word);
+    if (sha1($bytes) !== $sha1) {
+        throw new LogicException("$call is not what PECL wrote");
     }
 
-    return substr(implode('', $parts), 0, $size);
+    return $bytes;
 }
-
-function random(int $size, int $seed = 7): string
-{
-    return $size === 0 ? '' : (new Random\Randomizer(new Random\Engine\Xoshiro256StarStar($seed)))->getBytes($size);
-}
-
-$resources = __DIR__ . '/../../../packages/compression/tests/resources';
-$inputs = [
-    'empty' => '',
-    'one byte' => 'a',
-    'nul' => "\0",
-    'short' => 'This is a demo string',
-    'all bytes' => implode('', array_map(chr(...), range(0, 255))),
-    'utf-8' => "日本語 é",
-    'text 4 KB' => text(4096),
-    'text 64 KB + 1' => text(65537),
-    'random 4 KB' => random(4096),
-    'zeros 256 KB' => str_repeat("\0", 256 << 10),
-    'text 1 MB' => text(1 << 20),
-    'random 1 MB' => random(1 << 20),
-    'lorem' => file_get_contents($resources . '/disk-a/lorem.txt'),
-    'jpg' => file_get_contents($resources . '/disk-a/kitten-1.jpg'),
-    'png' => file_get_contents($resources . '/disk-b/kitten-1.png'),
-];
-/** The inputs small enough to run every level on. */
-$small = array_filter($inputs, fn (string $input): bool => strlen($input) <= 65537);
 
 /** The level-taking algorithms, at `$level`. */
 function brotli(int $level): Brotli
@@ -166,18 +154,28 @@ foreach ([-5, -1, 0, ...range(1, 22)] as $level) {
     $configurations["Zstd $level"] = [fn () => new Zstd($level), true, in_array($level, [-5, 1, 3, 9, 19, 22], true)];
 }
 
-/** The PHP function that reads what `$name` wrote, to check PHP reads the class's bytes. */
-function reader(string $name): ?callable
+/**
+ * The PHP function that reads what `$name` wrote, to check PHP reads the class's bytes, or
+ * 'pecl.json' for PECL zstd, lz4 and snappy: what they answered when it was written.
+ */
+function reader(string $name): callable|string|null
 {
     return match (true) {
         str_starts_with($name, 'Brotli') => function_exists('brotli_uncompress') ? brotli_uncompress(...) : null,
         $name === 'Deflate' => gzinflate(...),
         $name === 'GZIP' => gzdecode(...),
-        str_starts_with($name, 'LZ4') => function_exists('lz4_uncompress') ? lz4_uncompress(...) : null,
-        $name === 'Snappy' => function_exists('snappy_uncompress') ? snappy_uncompress(...) : null,
-        str_starts_with($name, 'Zstd') => function_exists('zstd_uncompress') ? zstd_uncompress(...) : null,
+        str_starts_with($name, 'LZ4'), $name === 'Snappy', str_starts_with($name, 'Zstd') => 'pecl.json',
         default => null,
     };
+}
+
+/** What PECL's function answered for the case `$case`, provided `$compressed` are the bytes it read. */
+function answered(string $case, string $compressed): mixed
+{
+    global $pecl;
+    [$sha1, $answer] = $pecl['read'][$case] ?? [null, null];
+
+    return $sha1 === sha1($compressed) ? $answer : ['throws' => LogicException::class, 'message' => 'not the bytes pecl.json has the answer for'];
 }
 
 // 1. What each algorithm writes, at every level, and what reads it back -----------------------
@@ -195,7 +193,9 @@ foreach ($configurations as $name => [$make, $onSmall, $onLarge]) {
         }));
         emit("$name round trip $label", outcome(fn () => $algorithm->decompress($compressed) === $input));
         $read = reader($name);
-        if ($read !== null) {
+        if ($read === 'pecl.json') {
+            emit("$name read by PHP $label", answered("$name read by PHP $label", $compressed));
+        } elseif ($read !== null) {
             emit("$name read by PHP $label", outcome(fn () => @$read($compressed) === $input));
         }
     }
@@ -233,20 +233,12 @@ $writers['deflate_add raw, full flush'] = [Deflate::class, function (string $in)
 
     return $out . deflate_add($context, '', ZLIB_FINISH);
 }];
-if (function_exists('zstd_compress')) {
-    foreach ([-131072, -5, -1, 0, ...range(1, 22)] as $level) {
-        $writers["zstd_compress level $level"] = [Zstd::class, fn (string $in) => zstd_compress($in, $level)];
-    }
-    $writers['zstd_compress_add, unknown size'] = [Zstd::class, function (string $in) {
-        $context = zstd_compress_init(3);
-        $out = '';
-        foreach (str_split($in, 100_000) as $chunk) {
-            $out .= zstd_compress_add($context, $chunk, false);
-        }
-
-        return $out . zstd_compress_add($context, '', true);
-    }];
+// What PECL zstd, lz4 and snappy wrote is pecl.json's (zstd_compress_add() was given 100,000 bytes
+// at a time at level 3, then the end).
+foreach ([-131072, -5, -1, 0, ...range(1, 22)] as $level) {
+    $writers["zstd_compress level $level"] = [Zstd::class, fn (string $in, string $label) => pecl("zstd_compress level $level, $label", $in, new Zstd($level))];
 }
+$writers['zstd_compress_add, unknown size'] = [Zstd::class, fn (string $in, string $label) => pecl("zstd_compress_add, unknown size, $label", $in, new Zstd(3))];
 if (function_exists('brotli_compress')) {
     foreach (range(0, 11) as $level) {
         foreach ([BROTLI_GENERIC, BROTLI_TEXT, BROTLI_FONT] as $mode) {
@@ -263,14 +255,10 @@ if (function_exists('brotli_compress')) {
         return $out . brotli_compress_add($context, '', BROTLI_FINISH);
     }];
 }
-if (function_exists('lz4_compress')) {
-    foreach (range(0, 12) as $level) {
-        $writers["lz4_compress level $level"] = [LZ4::class, fn (string $in) => lz4_compress($in, $level)];
-    }
+foreach (range(0, 12) as $level) {
+    $writers["lz4_compress level $level"] = [LZ4::class, fn (string $in, string $label) => pecl("lz4_compress level $level, $label", $in, new LZ4($level))];
 }
-if (function_exists('snappy_compress')) {
-    $writers['snappy_compress'] = [Snappy::class, fn (string $in) => snappy_compress($in)];
-}
+$writers['snappy_compress'] = [Snappy::class, fn (string $in, string $label) => pecl("snappy_compress, $label", $in, new Snappy())];
 foreach ($writers as $name => [$class, $write]) {
     // The slowest levels run on the small inputs only.
     $slow = preg_match('/^(brotli_compress level (10|11)|zstd_compress level (19|2[0-2])) /', $name) === 1;
@@ -278,7 +266,7 @@ foreach ($writers as $name => [$class, $write]) {
         if ($slow && !isset($small[$label])) {
             continue;
         }
-        $bytes = $write($input);
+        $bytes = $write($input, $label);
         $algorithm = new $class();
         emit("$class reads $name, $label", outcome(fn () => [strlen($bytes), $algorithm->decompress($bytes) === $input]));
     }
@@ -339,30 +327,28 @@ $streams = [
     'Deflate highly compressed' => [new Deflate(), gzdeflate(str_repeat('a', 10 << 20), 9)],
     'GZIP highly compressed' => [new GZIP(), gzencode(str_repeat("\0", 20 << 20), 9)],
 ];
-if (function_exists('zstd_compress')) {
-    $frame = zstd_compress($text);
-    $skippable = pack('V', 0x184D2A50) . pack('V', 4) . 'skip';
-    $streams += [
-        'Zstd two frames' => [new Zstd(), zstd_compress('first') . zstd_compress('second')],
-        'Zstd frame then garbage' => [new Zstd(), $frame . 'garbage'],
-        'Zstd skippable frame' => [new Zstd(), $skippable],
-        'Zstd skippable then frame' => [new Zstd(), $skippable . $frame],
-        'Zstd frame then skippable' => [new Zstd(), $frame . $skippable],
-        'Zstd empty frame' => [new Zstd(), zstd_compress('')],
-        'Zstd magic only' => [new Zstd(), "\x28\xb5\x2f\xfd"],
-        'Zstd header only' => [new Zstd(), substr($frame, 0, 6)],
-        'Zstd wrong magic' => [new Zstd(), "\x29" . substr($frame, 1)],
-        'Zstd frame claiming more' => [new Zstd(), substr_replace($frame, pack('v', 5000), 5, 2)],
-        'Zstd v0.1 magic' => [new Zstd(), pack('V', 0x1EB52FFD) . substr($frame, 4)],
-        'Zstd v0.2 magic' => [new Zstd(), pack('V', 0xFD2FB522) . substr($frame, 4)],
-        'Zstd v0.3 magic' => [new Zstd(), pack('V', 0xFD2FB523) . substr($frame, 4)],
-        'Zstd v0.4 magic' => [new Zstd(), pack('V', 0xFD2FB524) . substr($frame, 4)],
-    ];
-    // Frames without a content size, from the incremental API: small, and larger than one window.
-    foreach (['small' => 'stream', 'large' => $inputs['text 1 MB'] . $inputs['text 1 MB'] . $inputs['zeros 256 KB']] as $label => $input) {
-        $context = zstd_compress_init(1);
-        $streams["Zstd streamed frame, $label"] = [new Zstd(), zstd_compress_add($context, $input, true)];
-    }
+$frame = pecl('zstd_compress level 3, text 4 KB', $text, new Zstd());
+$skippable = pack('V', 0x184D2A50) . pack('V', 4) . 'skip';
+$streams += [
+    'Zstd two frames' => [new Zstd(), pecl('zstd_compress level 3, first', 'first', new Zstd()) . pecl('zstd_compress level 3, second', 'second', new Zstd())],
+    'Zstd frame then garbage' => [new Zstd(), $frame . 'garbage'],
+    'Zstd skippable frame' => [new Zstd(), $skippable],
+    'Zstd skippable then frame' => [new Zstd(), $skippable . $frame],
+    'Zstd frame then skippable' => [new Zstd(), $frame . $skippable],
+    'Zstd empty frame' => [new Zstd(), pecl('zstd_compress level 3, empty', '', new Zstd())],
+    'Zstd magic only' => [new Zstd(), "\x28\xb5\x2f\xfd"],
+    'Zstd header only' => [new Zstd(), substr($frame, 0, 6)],
+    'Zstd wrong magic' => [new Zstd(), "\x29" . substr($frame, 1)],
+    'Zstd frame claiming more' => [new Zstd(), substr_replace($frame, pack('v', 5000), 5, 2)],
+    'Zstd v0.1 magic' => [new Zstd(), pack('V', 0x1EB52FFD) . substr($frame, 4)],
+    'Zstd v0.2 magic' => [new Zstd(), pack('V', 0xFD2FB522) . substr($frame, 4)],
+    'Zstd v0.3 magic' => [new Zstd(), pack('V', 0xFD2FB523) . substr($frame, 4)],
+    'Zstd v0.4 magic' => [new Zstd(), pack('V', 0xFD2FB524) . substr($frame, 4)],
+];
+// Frames without a content size, from the incremental API (zstd_compress_add() given it all and
+// the end): small, and larger than one window.
+foreach (['small' => 'stream', 'large' => $inputs['text 1 MB'] . $inputs['text 1 MB'] . $inputs['zeros 256 KB']] as $label => $input) {
+    $streams["Zstd streamed frame, $label"] = [new Zstd(), pecl("zstd_compress_add level 1, $label", $input, new Zstd(1))];
 }
 // Legacy frames (v0.4 to v0.7), written by those versions of the zstd tool.
 foreach (glob(__DIR__ . '/fixtures/compression/zstd-v0.*.zst') ?: [] as $fixture) {
@@ -378,37 +364,33 @@ if (function_exists('brotli_compress')) {
         'Brotli large output' => [new Brotli(), brotli_compress(str_repeat('a', 3 << 20), 9)],
     ];
 }
-if (function_exists('lz4_compress')) {
-    $block = lz4_compress($text);
-    $streams += [
-        'LZ4 larger prefix' => [new LZ4(), pack('V', strlen($text) + 100) . substr($block, 4)],
-        'LZ4 smaller prefix' => [new LZ4(), pack('V', strlen($text) - 1) . substr($block, 4)],
-        'LZ4 huge prefix' => [new LZ4(), pack('V', 0x7fffffff) . substr($block, 4)],
-        'LZ4 negative prefix' => [new LZ4(), pack('V', 0x80000000) . substr($block, 4)],
-        'LZ4 zero prefix' => [new LZ4(), pack('V', 0) . substr($block, 4)],
-        'LZ4 prefix only' => [new LZ4(), pack('V', 10)],
-        'LZ4 short' => [new LZ4(), "\x01\x00\x00"],
-        'LZ4 block then garbage' => [new LZ4(), $block . 'garbage'],
-        'LZ4 empty input block' => [new LZ4(), lz4_compress('')],
-    ];
-}
-if (function_exists('snappy_compress')) {
-    $snapped = snappy_compress($text);
-    $streams += [
-        'Snappy longer length' => [new Snappy(), "\xff\x7f" . substr($snapped, 2)],
-        'Snappy shorter length' => [new Snappy(), "\xfe\x1f" . substr($snapped, 2)],
-        'Snappy unterminated length' => [new Snappy(), "\xff\xff\xff\xff\xff"],
-        'Snappy length too long' => [new Snappy(), "\xff\xff\xff\xff\x10"],
-        'Snappy empty' => [new Snappy(), snappy_compress('')],
-        'Snappy then garbage' => [new Snappy(), $snapped . 'garbage'],
-        'Snappy zero offset' => [new Snappy(), "\x08\x00a\x01\x00"],
-        'Snappy offset past start' => [new Snappy(), "\x08\x00a\x05\x05"],
-        'Snappy 4-byte offset copy' => [new Snappy(), "\x0a\x04ab\x0f\x02\x00\x00\x00\x0b\x02\x00\x00\x00"],
-        'Snappy long literal' => [new Snappy(), "\x05\xf0\x04\x00abcde"],
-        'Snappy literal past input' => [new Snappy(), "\x05\x10ab"],
-        'Snappy huge length' => [new Snappy(), "\xff\xff\xff\xff\x0f\x00a"],
-    ];
-}
+$block = pecl('lz4_compress level 0, text 4 KB', $text, new LZ4());
+$streams += [
+    'LZ4 larger prefix' => [new LZ4(), pack('V', strlen($text) + 100) . substr($block, 4)],
+    'LZ4 smaller prefix' => [new LZ4(), pack('V', strlen($text) - 1) . substr($block, 4)],
+    'LZ4 huge prefix' => [new LZ4(), pack('V', 0x7fffffff) . substr($block, 4)],
+    'LZ4 negative prefix' => [new LZ4(), pack('V', 0x80000000) . substr($block, 4)],
+    'LZ4 zero prefix' => [new LZ4(), pack('V', 0) . substr($block, 4)],
+    'LZ4 prefix only' => [new LZ4(), pack('V', 10)],
+    'LZ4 short' => [new LZ4(), "\x01\x00\x00"],
+    'LZ4 block then garbage' => [new LZ4(), $block . 'garbage'],
+    'LZ4 empty input block' => [new LZ4(), pecl('lz4_compress level 0, empty', '', new LZ4())],
+];
+$snapped = pecl('snappy_compress, text 4 KB', $text, new Snappy());
+$streams += [
+    'Snappy longer length' => [new Snappy(), "\xff\x7f" . substr($snapped, 2)],
+    'Snappy shorter length' => [new Snappy(), "\xfe\x1f" . substr($snapped, 2)],
+    'Snappy unterminated length' => [new Snappy(), "\xff\xff\xff\xff\xff"],
+    'Snappy length too long' => [new Snappy(), "\xff\xff\xff\xff\x10"],
+    'Snappy empty' => [new Snappy(), pecl('snappy_compress, empty', '', new Snappy())],
+    'Snappy then garbage' => [new Snappy(), $snapped . 'garbage'],
+    'Snappy zero offset' => [new Snappy(), "\x08\x00a\x01\x00"],
+    'Snappy offset past start' => [new Snappy(), "\x08\x00a\x05\x05"],
+    'Snappy 4-byte offset copy' => [new Snappy(), "\x0a\x04ab\x0f\x02\x00\x00\x00\x0b\x02\x00\x00\x00"],
+    'Snappy long literal' => [new Snappy(), "\x05\xf0\x04\x00abcde"],
+    'Snappy literal past input' => [new Snappy(), "\x05\x10ab"],
+    'Snappy huge length' => [new Snappy(), "\xff\xff\xff\xff\x0f\x00a"],
+];
 foreach ($streams as $name => [$algorithm, $bytes]) {
     emit("stream $name", outcome(fn () => $algorithm->decompress($bytes)));
 }
@@ -487,31 +469,27 @@ foreach ([new Brotli(), new Deflate(), new GZIP(), new LZ4(), new Snappy(), new 
 
 // 5. 64 MB and more, both ways ----------------------------------------------------------------
 
-$large = text(64 << 20, 11) . random(1 << 20, 12);
+$large = large();
 foreach (['GZIP' => new GZIP(), 'Deflate' => new Deflate(), 'Zstd 3' => new Zstd(), 'Zstd 9' => new Zstd(9), 'Brotli 4' => brotli(4), 'LZ4' => new LZ4(), 'Snappy' => new Snappy()] as $name => $algorithm) {
     $compressed = $algorithm->compress($large);
     emit("$name compress 65 MB", show($compressed));
     emit("$name round trip 65 MB", sha1($algorithm->decompress($compressed)) === sha1($large));
     $read = reader($name);
-    if ($read !== null) {
+    if ($read === 'pecl.json') {
+        emit("$name read by PHP 65 MB", answered("$name read by PHP 65 MB", $compressed));
+    } elseif ($read !== null) {
         emit("$name read by PHP 65 MB", sha1($read($compressed)) === sha1($large));
     }
     unset($compressed);
 }
 $largeWriters = ['gzencode' => [new GZIP(), fn () => gzencode($large)], 'gzdeflate' => [new Deflate(), fn () => gzdeflate($large)]];
-if (function_exists('zstd_compress')) {
-    $largeWriters['zstd_compress'] = [new Zstd(), fn () => zstd_compress($large)];
-    $largeWriters['zstd_compress_add'] = [new Zstd(), fn () => zstd_compress_add(zstd_compress_init(), $large, true)];
-}
+$largeWriters['zstd_compress'] = [new Zstd(), fn () => pecl('zstd_compress level 3, 65 MB', $large, new Zstd())];
+$largeWriters['zstd_compress_add'] = [new Zstd(), fn () => pecl('zstd_compress_add level 3, 65 MB', $large, new Zstd())];
 if (function_exists('brotli_compress')) {
     $largeWriters['brotli_compress level 2'] = [new Brotli(), fn () => brotli_compress($large, 2)];
 }
-if (function_exists('lz4_compress')) {
-    $largeWriters['lz4_compress'] = [new LZ4(), fn () => lz4_compress($large)];
-}
-if (function_exists('snappy_compress')) {
-    $largeWriters['snappy_compress'] = [new Snappy(), fn () => snappy_compress($large)];
-}
+$largeWriters['lz4_compress'] = [new LZ4(), fn () => pecl('lz4_compress level 0, 65 MB', $large, new LZ4())];
+$largeWriters['snappy_compress'] = [new Snappy(), fn () => pecl('snappy_compress, 65 MB', $large, new Snappy())];
 foreach ($largeWriters as $name => [$algorithm, $write]) {
     $bytes = $write();
     emit("reads $name 65 MB", sha1($algorithm->decompress($bytes)) === sha1($large));
@@ -849,7 +827,7 @@ emit('FiveZstd', outcome(function () use ($text) {
 emit('UnconstructedZstd compress', outcome(fn () => (new UnconstructedZstd())->compress('x')));
 emit('UnconstructedZstd getLevel', outcome(fn () => (new UnconstructedZstd())->getLevel()));
 emit('UnconstructedZstd print_r', outcome(fn () => print_r(new UnconstructedZstd(), true)));
-emit('UnconstructedZstd decompress', outcome(fn () => (new UnconstructedZstd())->decompress(zstd_compress('x'))));
+emit('UnconstructedZstd decompress', outcome(fn () => (new UnconstructedZstd())->decompress(pecl('zstd_compress level 3, x', 'x', new Zstd()))));
 emit('LooseLZ4 level 20', outcome(function () use ($text) {
     $lz4 = new LooseLZ4();
     $lz4->setLevel(20);
@@ -901,9 +879,9 @@ function contained(string $code): string
     return (string) preg_replace('/ in .+ on line \d+$/', ' in (file) on line (line)', $first);
 }
 $fatal = [
-    'Zstd frame claiming 1 GB' => '(new Utopia\Compression\Algorithms\Zstd())->decompress(base64_decode(' . var_export(base64_encode(substr_replace(zstd_compress('x'), "\xe0" . pack('P', 1 << 30), 4, 2)), true) . '));',
+    'Zstd frame claiming 1 GB' => '(new Utopia\Compression\Algorithms\Zstd())->decompress(base64_decode(' . var_export(base64_encode(substr_replace(pecl('zstd_compress level 3, x', 'x', new Zstd()), "\xe0" . pack('P', 1 << 30), 4, 2)), true) . '));',
     'Snappy length of 1 GB' => '(new Utopia\Compression\Algorithms\Snappy())->decompress("\x80\x80\x80\x80\x04abc");',
-    'Zstd within the limit' => 'echo strlen((new Utopia\Compression\Algorithms\Zstd())->decompress(zstd_compress(str_repeat("a", 16 << 20))));',
+    'Zstd within the limit' => 'echo strlen((new Utopia\Compression\Algorithms\Zstd())->decompress(base64_decode(' . var_export(base64_encode(pecl('zstd_compress level 3, 16 MB of a', str_repeat('a', 16 << 20), new Zstd())), true) . ')));',
     'LZ4 prefix of 1 GB' => 'var_dump(@(new Utopia\Compression\Algorithms\LZ4())->decompress(pack("V", 1 << 30) . "\x10abcd"));',
 ];
 foreach ($fatal as $case => $code) {
