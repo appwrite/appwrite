@@ -18,23 +18,6 @@
   "ops": {
     "compress": {
       "doc": "algorithm(args)->compress(data): {value, warning} (value as {length, sha256} with digest; warning: the first warning the extension emitted). algorithm is {class, level? (constructor), set_level? (setLevel), mode? (generic|text|font)}; data is `data` or `file` (a path from the checkout root)",
-      "covers": [
-        "Utopia\\Compression\\Algorithms\\Brotli::compress",
-        "Utopia\\Compression\\Algorithms\\Brotli::setLevel",
-        "Utopia\\Compression\\Algorithms\\Brotli::useGenericMode",
-        "Utopia\\Compression\\Algorithms\\Brotli::useTextMode",
-        "Utopia\\Compression\\Algorithms\\Brotli::useFontMode",
-        "Utopia\\Compression\\Algorithms\\Deflate::compress",
-        "Utopia\\Compression\\Algorithms\\GZIP::compress",
-        "Utopia\\Compression\\Algorithms\\LZ4::__construct",
-        "Utopia\\Compression\\Algorithms\\LZ4::compress",
-        "Utopia\\Compression\\Algorithms\\LZ4::setLevel",
-        "Utopia\\Compression\\Algorithms\\Snappy::compress",
-        "Utopia\\Compression\\Algorithms\\XZ::compress",
-        "Utopia\\Compression\\Algorithms\\Zstd::__construct",
-        "Utopia\\Compression\\Algorithms\\Zstd::compress",
-        "Utopia\\Compression\\Algorithms\\Zstd::setLevel"
-      ],
       "fuzz": [
         {
           "name": "exact algorithms on random bytes",
@@ -75,15 +58,6 @@
     },
     "decompress": {
       "doc": "algorithm(args)->decompress(data): {value, warning}",
-      "covers": [
-        "Utopia\\Compression\\Algorithms\\Brotli::decompress",
-        "Utopia\\Compression\\Algorithms\\Deflate::decompress",
-        "Utopia\\Compression\\Algorithms\\GZIP::decompress",
-        "Utopia\\Compression\\Algorithms\\LZ4::decompress",
-        "Utopia\\Compression\\Algorithms\\Snappy::decompress",
-        "Utopia\\Compression\\Algorithms\\XZ::decompress",
-        "Utopia\\Compression\\Algorithms\\Zstd::decompress"
-      ],
       "fuzz": [
         {
           "name": "random bytes",
@@ -536,36 +510,13 @@
       ]
     },
     "describe": {
-      "doc": "{class (short name), name: getName(), encoding: getContentEncoding(), supported: isSupported(), level: getLevel() where it exists} of algorithm(args)",
-      "covers": [
-        "Utopia\\Compression\\Algorithms\\Brotli::getName",
-        "Utopia\\Compression\\Algorithms\\Brotli::getContentEncoding",
-        "Utopia\\Compression\\Algorithms\\Brotli::getLevel",
-        "Utopia\\Compression\\Algorithms\\Brotli::isSupported",
-        "Utopia\\Compression\\Algorithms\\Deflate::getName",
-        "Utopia\\Compression\\Algorithms\\Deflate::isSupported",
-        "Utopia\\Compression\\Algorithms\\GZIP::getName",
-        "Utopia\\Compression\\Algorithms\\GZIP::isSupported",
-        "Utopia\\Compression\\Algorithms\\LZ4::getName",
-        "Utopia\\Compression\\Algorithms\\LZ4::getLevel",
-        "Utopia\\Compression\\Algorithms\\LZ4::isSupported",
-        "Utopia\\Compression\\Algorithms\\Snappy::getName",
-        "Utopia\\Compression\\Algorithms\\Snappy::isSupported",
-        "Utopia\\Compression\\Algorithms\\XZ::getName",
-        "Utopia\\Compression\\Algorithms\\XZ::isSupported",
-        "Utopia\\Compression\\Algorithms\\Zstd::getName",
-        "Utopia\\Compression\\Algorithms\\Zstd::getLevel",
-        "Utopia\\Compression\\Algorithms\\Zstd::isSupported"
-      ]
+      "doc": "{class (short name), name: getName(), encoding: getContentEncoding(), supported: isSupported(), level: getLevel() where it exists} of algorithm(args)"
     },
     "is_supported": {
       "doc": "Algorithms\\<class>::isSupported(), statically"
     },
     "from_name": {
       "doc": "describe(Compression::fromName(name)), null for none",
-      "covers": [
-        "Utopia\\Compression\\Compression::fromName"
-      ],
       "fuzz": [
         {
           "name": "names",
@@ -617,9 +568,6 @@
     },
     "from_accept_encoding": {
       "doc": "describe(Compression::fromAcceptEncoding(accept, supported?)); supported is a list of names or a name => bool map",
-      "covers": [
-        "Utopia\\Compression\\Compression::fromAcceptEncoding"
-      ],
       "fuzz": [
         {
           "name": "headers",
@@ -660,9 +608,6 @@
     },
     "custom": {
       "doc": "A user-defined Compression subclass named `name`: {name: getName(), encoding: getContentEncoding()} (the inherited strtolower)",
-      "covers": [
-        "Utopia\\Compression\\Compression::getContentEncoding"
-      ],
       "fuzz": [
         {
           "name": "names",
