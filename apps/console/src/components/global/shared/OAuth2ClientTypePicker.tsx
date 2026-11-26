@@ -13,7 +13,8 @@ const CLIENT_TYPE_OPTIONS: Array<{
   {
     value: 'confidential',
     title: 'Confidential',
-    description: 'Backend or SSR apps that can keep a client secret (Node, Next.js, Nuxt).',
+    description:
+      'Backend or SSR apps that can keep a client secret (Node, Next.js, Nuxt).',
   },
   {
     value: 'public',
@@ -81,7 +82,7 @@ export function OAuth2ClientTypePicker({
                 </p>
                 {reason ? (
                   <p className="mt-1 text-[12px] leading-snug text-amber-600 dark:text-amber-400">
-                    {t(reason)}
+                    {reason}
                   </p>
                 ) : null}
               </div>
