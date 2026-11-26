@@ -480,11 +480,7 @@ class Create extends Action
         // compare takes branch names containing '/' only as their SHA;
         // anything else with its previous tip
         $providerBaseCommitHash = $providerPreviousCommitHash;
-        if ($parsedPayload['forced'] ?? false) {
-            // A rewritten history can move a branch back to commits it already
-            // had, which a comparison reports as no change, so it deploys whatever it touched
-            $providerBaseCommitHash = '';
-        } elseif ($providerBranchCreated) {
+        if ($providerBranchCreated) {
             $providerBaseCommitHash = '';
             try {
                 $providerDefaultBranch = \strval($vcs->getRepository($providerRepositoryOwner, $providerRepositoryName)['defaultBranch'] ?? '');
@@ -508,6 +504,16 @@ class Create extends Action
                 }
 
                 $files = $vcs->compareFiles($providerRepositoryOwner, $providerRepositoryName, $providerBaseCommitHash, $providerCommitHash);
+
+                // Compare diffs from the merge base, so a rewritten history also
+                // needs what the old tip had beyond it; a rollback has only that
+                if ($parsedPayload['forced'] ?? false) {
+                    $files = [
+                        ...$files,
+                        ...$vcs->compareFiles($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash, $providerBaseCommitHash),
+                    ];
+                }
+
                 $providerAffectedFiles = [
                     ...\array_column($files, 'filename'),
                     // Only renamed files carry a previous filename; skip missing values from other file changes.
