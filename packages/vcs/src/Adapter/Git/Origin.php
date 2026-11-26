@@ -1081,6 +1081,7 @@ class Origin extends Git
                 'installationId' => $installationId,
                 'commitHash' => $commitHash,
                 'previousCommitHash' => \strval($refUpdate['before'] ?? ''),
+                'defaultBranch' => \strval($repository['defaultBranch'] ?? ''),
                 'owner' => $owner,
                 'authorUrl' => '',
                 'authorAvatarUrl' => '',
