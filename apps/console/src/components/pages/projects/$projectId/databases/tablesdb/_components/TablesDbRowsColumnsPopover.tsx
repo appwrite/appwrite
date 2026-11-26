@@ -542,7 +542,7 @@ export function TablesDbRowsColumnsPopover({
                   <Fragment key={key}>
                     {showInsertBefore ? (
                       <div
-                        className="h-0.5 shrink-0 rounded-full bg-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.35)]"
+                        className="h-0.5 shrink-0 rounded-full bg-primary shadow-[0_0_0_1px_color-mix(in_oklab,var(--primary)_35%,transparent)]"
                         role="presentation"
                         aria-hidden
                       />
@@ -594,7 +594,7 @@ export function TablesDbRowsColumnsPopover({
                     </div>
                     {showInsertAfter ? (
                       <div
-                        className="h-0.5 shrink-0 rounded-full bg-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.35)]"
+                        className="h-0.5 shrink-0 rounded-full bg-primary shadow-[0_0_0_1px_color-mix(in_oklab,var(--primary)_35%,transparent)]"
                         role="presentation"
                         aria-hidden
                       />
