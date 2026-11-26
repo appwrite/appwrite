@@ -50,7 +50,7 @@ export function GitInstallationReuseDialog({
             )}
           </DialogDescription>
         </DialogHeader>
-        <div className="divide-y divide-border rounded-lg border border-border">
+        <div className="max-h-[50vh] divide-y divide-border overflow-y-auto rounded-lg border border-border">
           {installations.map((installation) => (
             <div
               key={installation.$id}
