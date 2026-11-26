@@ -77,9 +77,9 @@ import {
 import { copyToClipboard } from '@/lib/utils/context-menu'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
+import { redirectUriError } from '@/lib/oauth2/redirect'
 import { useT } from '@/lib/i18n/translate'
 import { AppLogoFilePicker } from '@/components/pages/organizations/$orgId/apps/_components/AppLogoFilePicker'
-import { AppImagesPicker } from '@/components/pages/organizations/$orgId/apps/_components/AppImagesPicker'
 
 /** Nested dialogs must stack above the drawer overlay. */
 const NESTED_DIALOG_CLASS = 'z-[130]'
@@ -234,10 +234,17 @@ export function ProjectOAuth2AppDrawer({
   const [dataDeletionUrl, setDataDeletionUrl] = useState('')
   const [supportUrl, setSupportUrl] = useState('')
   const [contacts, setContacts] = useState<string[]>([])
+  // Typed but not yet added as tags; counts as an edit so Update enables.
+  const [pendingRedirectUri, setPendingRedirectUri] = useState('')
+  const [pendingPostLogoutUri, setPendingPostLogoutUri] = useState('')
+  const [pendingContact, setPendingContact] = useState('')
   const [newSecretPlaintext, setNewSecretPlaintext] = useState<string | null>(
     null,
   )
   const [newSecretClientId, setNewSecretClientId] = useState('')
+  // The one-time secret shown right after creating the app, not for an
+  // extra secret on an existing app.
+  const [newSecretForNewApp, setNewSecretForNewApp] = useState(false)
   const [copiedNewSecret, setCopiedNewSecret] = useState(false)
   const [copiedClientId, setCopiedClientId] = useState(false)
   const [deleteSecretId, setDeleteSecretId] = useState<string | null>(null)
@@ -331,10 +338,66 @@ export function ProjectOAuth2AppDrawer({
     if (!isPending) onOpenChange(next)
   }
 
+  const withPending = (list: string[], pending: string) =>
+    nonEmptyList(
+      pending && !redirectUriError(pending) && !list.includes(pending)
+        ? [...list, pending]
+        : list,
+    )
+  const nextRedirectUris = withPending(redirectUris, pendingRedirectUri)
+  const nextPostLogoutUris = withPending(
+    postLogoutRedirectUris,
+    pendingPostLogoutUri,
+  )
+
+  // Update only enables once a field differs from the saved app.
+  const isDirty =
+    !isEditing ||
+    !source ||
+    pendingContact !== '' ||
+    JSON.stringify([
+      name.trim(),
+      tagline.trim(),
+      description.trim(),
+      enabled,
+      clientType,
+      deviceFlow,
+      nextRedirectUris,
+      nextPostLogoutUris,
+      [...installationScopes].sort(),
+      installationRedirectUrl.trim(),
+      clientUri.trim(),
+      logoUri.trim(),
+      privacyPolicyUrl.trim(),
+      termsUrl.trim(),
+      dataDeletionUrl.trim(),
+      supportUrl.trim(),
+      nonEmptyList(contacts),
+    ]) !==
+      JSON.stringify([
+        source.name || '',
+        source.tagline ?? '',
+        source.description ?? '',
+        source.enabled ?? true,
+        source.type || 'confidential',
+        source.deviceFlow ?? false,
+        source.redirectUris ?? [],
+        source.postLogoutRedirectUris ?? [],
+        [...(source.installationScopes ?? [])].sort(),
+        source.installationRedirectUrl ?? '',
+        source.clientUri ?? '',
+        source.logoUri ?? '',
+        source.privacyPolicyUrl ?? '',
+        source.termsUrl ?? '',
+        source.dataDeletionUrl ?? '',
+        source.supportUrl ?? '',
+        source.contacts ?? [],
+      ])
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
-    const uris = nonEmptyList(redirectUris)
-    if (!name.trim() || isPending || readOnly) return
+    const uris = nextRedirectUris
+    if (!name.trim() || uris.length === 0 || isPending || readOnly) return
 
     const consentPayload = {
       tagline: tagline.trim(),
@@ -344,7 +407,7 @@ export function ProjectOAuth2AppDrawer({
       type: clientType,
       deviceFlow,
       redirectUris: uris,
-      postLogoutRedirectUris: nonEmptyList(postLogoutRedirectUris),
+      postLogoutRedirectUris: nextPostLogoutUris,
       clientUri: clientUri.trim(),
       logoUri: logoUri.trim(),
       images: nonEmptyList(images),
@@ -396,6 +459,7 @@ export function ProjectOAuth2AppDrawer({
           onOpenChange(false)
           window.setTimeout(() => {
             setNewSecretClientId(created.$id)
+            setNewSecretForNewApp(true)
             setNewSecretPlaintext(secret.secret)
           }, 0)
           return
@@ -423,6 +487,7 @@ export function ProjectOAuth2AppDrawer({
     try {
       const created = await createSecretMutation.mutateAsync(source.$id)
       setNewSecretClientId(source.$id)
+      setNewSecretForNewApp(false)
       setNewSecretPlaintext(created.secret)
       toast.success(t('OAuth secret created'))
     } catch (error) {
@@ -461,7 +526,9 @@ export function ProjectOAuth2AppDrawer({
     window.setTimeout(() => onDelete(source), 0)
   }
 
-  const canSubmit = !!name.trim() && !readOnly
+  const canSubmit =
+    !!name.trim() && nextRedirectUris.length > 0 && isDirty && !readOnly
+  const serverDisabled = projectData?.oAuth2ServerEnabled === false
   const fieldsDisabled = isPending || readOnly
 
   const deviceFlowSwitch = (
@@ -481,9 +548,7 @@ export function ProjectOAuth2AppDrawer({
         title={isEditing ? t('Update app') : t('Create OAuth2 app')}
         description={
           isEditing
-            ? t(
-                'OAuth2 client settings, consent screen, and marketplace details.',
-              )
+            ? t('OAuth2 client settings and consent screen details.')
             : t(
                 "Register a client that can authenticate users through this project's OAuth2 server.",
               )
@@ -499,6 +564,20 @@ export function ProjectOAuth2AppDrawer({
             <div className="min-h-0 flex-1 overflow-y-auto">
               <div className="space-y-5 px-6 py-6">
                 <div className="space-y-4">
+                  {serverDisabled ? (
+                    <Alert className="border-amber-500/20 bg-amber-500/10 text-foreground">
+                      <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                      <AlertTitle className="text-[12px] font-medium">
+                        {t('OAuth2 server is disabled')}
+                      </AlertTitle>
+                      <AlertDescription className="text-[12px] text-muted-foreground">
+                        {t(
+                          'Apps cannot authorize users until the OAuth2 server is enabled in the Server settings.',
+                        )}
+                      </AlertDescription>
+                    </Alert>
+                  ) : null}
+
                   {readOnly ? (
                     <Alert className="border-border bg-muted/30">
                       <ShieldCheck className="h-4 w-4 text-muted-foreground" />
@@ -512,6 +591,23 @@ export function ProjectOAuth2AppDrawer({
                       </AlertDescription>
                     </Alert>
                   ) : null}
+
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="oauth2-app-name"
+                      className="text-[12px] font-medium"
+                    >
+                      {t('Name')} <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="oauth2-app-name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder={t('My application')}
+                      className="h-9 text-[13px]"
+                      disabled={fieldsDisabled}
+                    />
+                  </div>
 
                   {isEditing && source ? (
                     <div className="space-y-2">
@@ -551,15 +647,26 @@ export function ProjectOAuth2AppDrawer({
                     value={clientType}
                     onChange={setClientType}
                     disabled={fieldsDisabled}
+                    unavailable={
+                      isEditing && secrets.length > 0
+                        ? {
+                            public:
+                              "Delete this app's OAuth secrets before switching to a public client.",
+                          }
+                        : undefined
+                    }
                   />
 
                   <div className="space-y-2">
                     <Label className="text-[12px] font-medium">
-                      {t('Redirect URIs')}
+                      {t('Redirect URIs')}{' '}
+                      <span className="text-destructive">*</span>
                     </Label>
                     <InputTags
                       value={redirectUris}
                       onChange={setRedirectUris}
+                      validateTag={redirectUriError}
+                      onPendingChange={setPendingRedirectUri}
                       splitOnComma
                       placeholder={t('Add redirect URI and press Enter')}
                       disabled={fieldsDisabled}
@@ -573,6 +680,8 @@ export function ProjectOAuth2AppDrawer({
                     <InputTags
                       value={postLogoutRedirectUris}
                       onChange={setPostLogoutRedirectUris}
+                      validateTag={redirectUriError}
+                      onPendingChange={setPendingPostLogoutUri}
                       splitOnComma
                       placeholder={t('Add post-logout URI and press Enter')}
                       disabled={fieldsDisabled}
@@ -894,23 +1003,6 @@ export function ProjectOAuth2AppDrawer({
                   description={t('May appear on the OAuth2 consent screen.')}
                 >
                   <div className="space-y-2">
-                    <Label
-                      htmlFor="oauth2-app-name"
-                      className="text-[12px] font-medium"
-                    >
-                      {t('Name')} <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="oauth2-app-name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder={t('My application')}
-                      className="h-9 text-[13px]"
-                      disabled={fieldsDisabled}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
                     <Label className="text-[12px] font-medium">
                       {t('Logo')}
                     </Label>
@@ -952,10 +1044,8 @@ export function ProjectOAuth2AppDrawer({
                 </DrawerSection>
 
                 <DrawerSection
-                  title={t('Marketplace')}
-                  description={t(
-                    'Additional listing details for the marketplace.',
-                  )}
+                  title={t('Details')}
+                  description={t('More about the app for your users.')}
                 >
                   <div className="space-y-2">
                     <Label
@@ -968,9 +1058,7 @@ export function ProjectOAuth2AppDrawer({
                       id="oauth2-app-description"
                       value={description}
                       onChange={setDescription}
-                      placeholder={t(
-                        'Optional description for the marketplace listing',
-                      )}
+                      placeholder={t('Optional description of the app')}
                       disabled={fieldsDisabled}
                       rows={5}
                     />
@@ -988,49 +1076,12 @@ export function ProjectOAuth2AppDrawer({
                       disabled={fieldsDisabled}
                     />
                   </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-[12px] font-medium">
-                      {t('Tags')}
-                    </Label>
-                    <InputTags
-                      value={tags}
-                      onChange={setTags}
-                      splitOnComma
-                      placeholder={t('Add tag and press Enter')}
-                      disabled={fieldsDisabled}
-                    />
-                    <p className="text-[12px] text-muted-foreground">
-                      {t('Optional labels for marketplace discovery.')}
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-[12px] font-medium">
-                      {t('Images')}
-                    </Label>
-                    {teamId ? (
-                      <AppImagesPicker
-                        teamId={teamId}
-                        region={region ?? project?.region}
-                        value={images}
-                        onChange={setImages}
-                        disabled={fieldsDisabled}
-                      />
-                    ) : (
-                      <p className="text-[12px] text-muted-foreground">
-                        {t(
-                          'Optional screenshots shown on the marketplace listing.',
-                        )}
-                      </p>
-                    )}
-                  </div>
                 </DrawerSection>
 
                 <DrawerSection
                   title={t('Privacy and support')}
                   description={t(
-                    'Links and contacts for marketplace, compliance, and support.',
+                    'Links and contacts for compliance and support.',
                   )}
                 >
                   <div className="space-y-2">
@@ -1088,6 +1139,7 @@ export function ProjectOAuth2AppDrawer({
                     <InputTags
                       value={contacts}
                       onChange={setContacts}
+                      onPendingChange={setPendingContact}
                       validateEmail
                       splitOnComma
                       placeholder={t('Add email and press Enter')}
@@ -1147,9 +1199,16 @@ export function ProjectOAuth2AppDrawer({
             NESTED_DIALOG_CLASS,
           )}
           overlayClassName={NESTED_DIALOG_CLASS}
+          // The secret is shown once; only Done closes it.
+          onEscapeKeyDown={(event) => event.preventDefault()}
+          onInteractOutside={(event) => event.preventDefault()}
         >
           <DialogHeader className="shrink-0 px-6 pt-6 pb-4 text-start">
-            <DialogTitle>{t('OAuth secret created')}</DialogTitle>
+            <DialogTitle>
+              {newSecretForNewApp
+                ? t('App created')
+                : t('OAuth secret created')}
+            </DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               {t(
                 'Copy this value now. For security, the full secret cannot be retrieved after you close this dialog.',
@@ -1164,9 +1223,13 @@ export function ProjectOAuth2AppDrawer({
                 {t('One-time display')}
               </AlertTitle>
               <AlertDescription className="text-[12px] text-muted-foreground">
-                {t(
-                  'Store this secret in your deployment environment before continuing. Active sessions using a deleted secret will fail token refresh immediately.',
-                )}
+                {newSecretForNewApp
+                  ? t(
+                      'Store this secret in your deployment environment before continuing.',
+                    )
+                  : t(
+                      'Store this secret in your deployment environment before continuing. Active sessions using a deleted secret will fail token refresh immediately.',
+                    )}
               </AlertDescription>
             </Alert>
             <div className="min-w-0 overflow-hidden rounded-lg border border-border bg-muted/20">
