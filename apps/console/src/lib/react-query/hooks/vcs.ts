@@ -80,19 +80,22 @@ export async function fetchReusableVcsInstallations(
       ) as Promise<Models.InstallationList>,
       projectSdk.vcs.listInstallations({ queries: [Query.limit(100)] }),
     ])
-    // Installation IDs are only unique within a provider, and only GitHub ones are shared
+    // Only GitHub installations are shared. One account can be installed from several
+    // projects under different IDs, so accounts are matched by name.
+    const account = (i: Models.Installation) => i.organization.toLowerCase()
     const linked = new Set(
-      own.installations
-        .filter((i) => i.provider === 'github')
-        .map((i) => i.providerInstallationId),
+      own.installations.filter((i) => i.provider === 'github').map(account),
     )
+    // Personal accounts stay out: installations keep no owner, so the list would offer
+    // accounts of people who connected them once, including ones no longer on the team.
     return [
       ...new Map(
         shared.installations
-          .filter((i) => !linked.has(i.providerInstallationId))
-          .map((i) => [i.providerInstallationId, i]),
+          .filter((i) => !(i as { personal?: boolean }).personal)
+          .filter((i) => !linked.has(account(i)))
+          .map((i) => [account(i), i]),
       ).values(),
-    ]
+    ].sort((a, b) => account(a).localeCompare(account(b)))
   } catch {
     // Servers without installation reuse reject the shared param
     return []
