@@ -100,6 +100,15 @@ const VIDEO = {
   timelineError: '',
 } satisfies Models.Video
 
+/** Values of a `Query.equal('codec', [...])`; the SDK sends `queries[0]`, `queries[1]`, … */
+function codecFilter(url: URL): string[] | undefined {
+  return [...url.searchParams]
+    .filter(([key]) => key.startsWith('queries['))
+    .map(([, query]) => JSON.parse(query))
+    .find((query) => query.method === 'equal' && query.attribute === 'codec')
+    ?.values
+}
+
 const CODECS = [
   { $id: 'h264', name: 'H.264', outputs: ['hls', 'dash', 'cmaf'] },
   { $id: 'vp9', name: 'VP9', outputs: ['dash'] },
@@ -287,12 +296,7 @@ async function mockAppwriteApi(
     if (apiPath === '/project/videos/profiles' && method === 'GET') {
       calls.profileLists.push(url)
       // The API lists every codec; the Console filters with `Query.equal('codec', [...])`.
-      const codecs = url.searchParams
-        .getAll('queries[]')
-        .map((query) => JSON.parse(query))
-        .find(
-          (query) => query.method === 'equal' && query.attribute === 'codec',
-        )?.values as string[] | undefined
+      const codecs = codecFilter(url)
       const listed = codecs
         ? profileStore.filter((profile) => codecs.includes(profile.codec))
         : profileStore
@@ -493,13 +497,7 @@ test.describe('videos (mocked API)', () => {
       .poll(() =>
         calls.profileLists.map((url) => ({
           codec: url.searchParams.get('codec'),
-          codecs: url.searchParams
-            .getAll('queries[]')
-            .map((query) => JSON.parse(query))
-            .find(
-              (query) =>
-                query.method === 'equal' && query.attribute === 'codec',
-            )?.values,
+          codecs: codecFilter(url),
         })),
       )
       .toContainEqual({ codec: null, codecs: ['h264', 'vp9'] })
