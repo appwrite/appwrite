@@ -812,10 +812,11 @@ final class EvaluationCustomServerTest extends Scope
         $member = $this->createMember($to);
 
         // Fired, so the move has an alert to carry along too.
-        $platform = $this->platform();
-        $this->evaluateMonitor($platform, $monitorId, 100, projectId: $project['$id']);
-        $alerts = $platform->find('monitorAlerts', [Query::equal('projectInternalId', [$projectInternalId])]);
-        $this->assertNotEmpty($alerts);
+        $this->inCoroutine(function () use ($monitorId, $project, $projectInternalId): void {
+            $platform = $this->platform();
+            $this->evaluateMonitor($platform, $monitorId, 100, projectId: $project['$id']);
+            $this->assertNotEmpty($platform->find('monitorAlerts', [Query::equal('projectInternalId', [$projectInternalId])]));
+        });
 
         $moved = $this->client->call(Client::METHOD_PATCH, '/projects/' . $project['$id'] . '/team', $this->consoleHeaders(), [
             'teamId' => $to,
@@ -826,15 +827,20 @@ final class EvaluationCustomServerTest extends Scope
          * Test for SUCCESS
          */
         // The monitor and its alerts name the organization the project moved to.
-        $team = $platform->getDocument('teams', $to);
-        $monitor = $platform->getDocument('monitors', Monitors::id($projectInternalId, $monitorId));
-        $this->assertFalse($monitor->isEmpty());
-        $this->assertSame($to, $monitor->getAttribute('teamId'));
-        $this->assertSame((string) $team->getSequence(), $monitor->getAttribute('teamInternalId'));
-        foreach ($platform->find('monitorAlerts', [Query::equal('projectInternalId', [$projectInternalId])]) as $alert) {
-            $this->assertSame($to, $alert->getAttribute('teamId'));
-            $this->assertSame((string) $team->getSequence(), $alert->getAttribute('teamInternalId'));
-        }
+        $this->inCoroutine(function () use ($to, $monitorId, $projectInternalId): void {
+            $platform = $this->platform();
+            $team = $platform->getDocument('teams', $to);
+            $monitor = $platform->getDocument('monitors', Monitors::id($projectInternalId, $monitorId));
+            $this->assertFalse($monitor->isEmpty());
+            $this->assertSame($to, $monitor->getAttribute('teamId'));
+            $this->assertSame((string) $team->getSequence(), $monitor->getAttribute('teamInternalId'));
+            $alerts = $platform->find('monitorAlerts', [Query::equal('projectInternalId', [$projectInternalId])]);
+            $this->assertNotEmpty($alerts);
+            foreach ($alerts as $alert) {
+                $this->assertSame($to, $alert->getAttribute('teamId'));
+                $this->assertSame((string) $team->getSequence(), $alert->getAttribute('teamInternalId'));
+            }
+        });
 
         // A member of the new organization unsubscribes from the monitor with their link.
         $unsubscribe = new Unsubscribe([System::getEnv('_APP_OPENSSL_KEY_V1')]);
@@ -857,7 +863,7 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame('', $page['body']['projectName']);
         $this->assertSame(204, $this->unsubscribe(Client::METHOD_POST, $formerToken)['headers']['status-code']);
         $this->assertFalse($this->unsubscribe(Client::METHOD_GET, $formerToken)['body']['monitor']);
-        $this->assertNotContains(Monitors::id($projectInternalId, $monitorId), $platform->getDocument('users', $former['$id'])->getAttribute('alertsUnsubscribed', []));
+        $this->inCoroutine(fn () => $this->assertNotContains(Monitors::id($projectInternalId, $monitorId), $this->platform()->getDocument('users', $former['$id'])->getAttribute('alertsUnsubscribed', [])));
     }
 
     public function testAlertEmailsCanBeUnsubscribed(): void
