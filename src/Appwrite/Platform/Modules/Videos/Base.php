@@ -14,6 +14,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\PermissionType;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 
@@ -324,11 +325,66 @@ abstract class Base extends Action
      * Playback routes authenticate via a `project` query parameter (see the
      * `locationAuth` on each SDK method), so every URL a player follows out of a
      * manifest or timeline has to carry it forward or the next request has no
-     * project context.
+     * project context. `updatedAt` is the video document's last write: a fresh
+     * playlist emits a new value and Fastly treats those segment addresses as
+     * new objects. Copies that still carry an older time share the video's
+     * Surrogate-Key and are dropped by purgeVideoSegmentCache.
      */
-    protected function withProject(string $uri, Document $project): string
+    protected function withProject(string $uri, Document $project, Document $video): string
     {
-        return $uri . (\str_contains($uri, '?') ? '&' : '?') . 'project=' . \urlencode($project->getId());
+        $query = 'project=' . \urlencode($project->getId())
+            . '&updatedAt=' . \urlencode($video->getUpdatedAt());
+
+        return $uri . (\str_contains($uri, '?') ? '&' : '?') . $query;
+    }
+
+    /**
+     * True when the video is world-readable. Shared caches may store a segment
+     * only then: the same URL is 200 for every caller.
+     */
+    protected function isPublicRead(Document $video): bool
+    {
+        return \in_array(
+            Role::any()->toString(),
+            \array_map('strval', $video->getPermissionsByType(PermissionType::Read)),
+            true
+        );
+    }
+
+    /**
+     * Surrogate-Key Fastly stores with every public segment of this video.
+     * One purge of this name drops the whole ladder, including URLs that still
+     * carry an older updatedAt.
+     */
+    public static function videoSurrogateKey(string $projectId, string $videoId): string
+    {
+        return \strtolower('video-' . $projectId . '-' . $videoId);
+    }
+
+    /**
+     * Cache policy for a playback segment whose URL carries the video's updatedAt.
+     *
+     * A world-readable video may sit at a shared cache; the Surrogate-Key is
+     * what one purge uses to drop every copy, including older updatedAt URLs.
+     * Anything else stays private so that cache cannot keep serving the URL
+     * after access is revoked.
+     */
+    protected function cachePlaybackSegment(Response $response, Document $project, Document $video): void
+    {
+        $public = $this->isPublicRead($video);
+        $response->addHeader(
+            'Cache-Control',
+            $public
+                ? 'public, max-age=31536000, immutable'
+                : 'private, max-age=31536000, immutable'
+        );
+        if ($public) {
+            // CORS echoes Origin with credentials; without Vary, Fastly would
+            // reuse the first viewer's origin for every later site.
+            $response
+                ->addHeader('Vary', 'Origin')
+                ->addHeader('Surrogate-Key', self::videoSurrogateKey($project->getId(), $video->getId()));
+        }
     }
 
     /**
