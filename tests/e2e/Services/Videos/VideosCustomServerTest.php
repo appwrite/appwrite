@@ -168,6 +168,46 @@ final class VideosCustomServerTest extends Scope
             $response = $this->client->call(Client::METHOD_POST, '/project/videos/profiles', $this->headers(), \array_merge(['name' => 'bad'], $params));
             $this->assertEquals(400, $response['headers']['status-code']);
         }
+
+        // Odd dimensions cannot be encoded as 4:2:0, so they are refused up front
+        // instead of failing every later encode.
+        $odd = [
+            ['width' => 641, 'height' => 360],
+            ['width' => 640, 'height' => 361],
+        ];
+
+        foreach ($odd as $dimensions) {
+            $response = $this->client->call(Client::METHOD_POST, '/project/videos/profiles', $this->headers(), \array_merge([
+                'name' => 'e2e-odd',
+                'videoBitRate' => 2105,
+                'audioBitRate' => 64,
+            ], $dimensions));
+            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals('general_argument_invalid', $response['body']['type']);
+        }
+
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers());
+        $this->assertEquals(200, $profiles['headers']['status-code']);
+        $this->assertNotContains('e2e-odd', \array_column($profiles['body']['profiles'], 'name'), 'Odd-dimension profile was stored');
+
+        $profileId = $this->createProfile('e2e-odd-update', 2106);
+
+        foreach ($odd as $dimensions) {
+            $response = $this->client->call(Client::METHOD_PATCH, '/project/videos/profiles/' . $profileId, $this->headers(), \array_merge([
+                'name' => 'e2e-odd-update',
+                'videoBitRate' => 2106,
+                'audioBitRate' => 64,
+            ], $dimensions));
+            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals('general_argument_invalid', $response['body']['type']);
+        }
+
+        $stored = $this->client->call(Client::METHOD_GET, '/project/videos/profiles/' . $profileId, $this->headers());
+        $this->assertEquals(200, $stored['headers']['status-code']);
+        $this->assertSame(854, $stored['body']['width']);
+        $this->assertSame(480, $stored['body']['height']);
+
+        $this->client->call(Client::METHOD_DELETE, '/project/videos/profiles/' . $profileId, $this->headers());
     }
 
     public function testDeleteProfile(): void
@@ -715,7 +755,7 @@ final class VideosCustomServerTest extends Scope
 
         $body = $this->waitForCaptionTerminalState($videoId, $captionId);
         $this->assertEquals('error', $body['status'], 'Malformed SubRip did not fail the caption');
-        $this->assertStringStartsWith('Caption is not a proper .srt file', $body['error']);
+        $this->assertStringStartsWith('Caption is not a valid SubRip (.srt) or WebVTT (.vtt) file', $body['error']);
         $this->assertStringNotContainsString('/storage', (string) $body['error']);
 
         $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', $this->headers());
@@ -3081,6 +3121,19 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(200, $timeline['headers']['status-code']);
         $this->assertStringContainsString('text/vtt', (string) ($timeline['headers']['content-type'] ?? ''));
         $this->assertSame('no-store, no-cache, must-revalidate', $timeline['headers']['cache-control'] ?? null);
+
+        // Without a project the request resolves to the console, which holds no
+        // videos: a player that drops the project gets a 404, not a server error.
+        foreach ([
+            '/videos/' . $videoId . '/outputs/hls/master.m3u8',
+            '/videos/' . $videoId . '/outputs/dash/master.mpd',
+            '/videos/' . $videoId . '/timelines',
+            '/videos/' . $videoId . '/thumbnails/' . $this->playlistToken((string) $timeline['body'], 'thumbnails/', '?project=', 'Timeline did not reference a thumbnail'),
+        ] as $path) {
+            $response = $this->client->call(Client::METHOD_GET, $path);
+            $this->assertEquals(404, $response['headers']['status-code'], $path);
+            $this->assertEquals('video_not_found', $response['body']['type'] ?? null, $path);
+        }
     }
 
     /**
@@ -3241,6 +3294,37 @@ final class VideosCustomServerTest extends Scope
         $plain = $this->client->call(Client::METHOD_GET, $path, \array_merge($this->headers(), ['accept' => 'image/jpeg']));
         $this->assertEquals(200, $plain['headers']['status-code']);
         $this->assertEquals('image/jpeg', $plain['headers']['content-type'] ?? '');
+
+        // A miss and the hit after it send one and the same Cache-Control. The e2e
+        // client keeps only the last value of a repeated header, so read them raw.
+        $requestHeaders = [];
+        foreach ($this->headers() as $name => $value) {
+            $requestHeaders[] = $name . ': ' . $value;
+        }
+        foreach (['miss', 'hit'] as $expected) {
+            $received = [];
+            $handle = \curl_init($this->client->getEndpoint() . $path . '?' . \http_build_query(['width' => 66, 'height' => 34]));
+            \curl_setopt_array($handle, [
+                CURLOPT_HTTPHEADER => $requestHeaders,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT => 30,
+                CURLOPT_HEADERFUNCTION => function ($curl, string $line) use (&$received): int {
+                    $parts = \explode(':', $line, 2);
+                    if (\count($parts) === 2) {
+                        $received[\strtolower(\trim($parts[0]))][] = \trim($parts[1]);
+                    }
+                    return \strlen($line);
+                },
+            ]);
+            \curl_exec($handle);
+            $status = \curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
+            \curl_close($handle);
+
+            $this->assertSame(200, $status, $expected);
+            $this->assertSame([$expected], $received['x-appwrite-cache'] ?? null, $expected);
+            $this->assertSame(['private, max-age=15552000'], $received['cache-control'] ?? null, $expected);
+            $this->assertArrayNotHasKey('pragma', $received, $expected);
+        }
 
         $missing = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/thumbnails/nope', $this->headers());
         $this->assertEquals(404, $missing['headers']['status-code']);
@@ -4202,6 +4286,29 @@ final class VideosCustomServerTest extends Scope
 
         $dash = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/cmaf/master.mpd', $this->headers());
         $this->assertEquals(200, $dash['headers']['status-code']);
+
+        // AdaptationSet@id is an unsignedInt unique within the Period, and every
+        // Representation needs @id and @bandwidth, caption sets included.
+        $document = new \DOMDocument();
+        $this->assertNotFalse(@$document->loadXML((string) $dash['body']), 'MPD is not valid XML');
+        $adaptationIds = [];
+        $captionSets = 0;
+        foreach ($document->getElementsByTagName('AdaptationSet') as $set) {
+            $adaptationId = $set->getAttribute('id');
+            $this->assertTrue(\ctype_digit($adaptationId), 'AdaptationSet@id is not numeric');
+            $adaptationIds[] = $adaptationId;
+
+            if ($set->getAttribute('mimeType') !== 'text/vtt') {
+                continue;
+            }
+            $captionSets++;
+            foreach ($set->getElementsByTagName('Representation') as $representation) {
+                $this->assertNotSame('', $representation->getAttribute('id'), 'Caption Representation is missing @id');
+                $this->assertTrue(\ctype_digit($representation->getAttribute('bandwidth')), 'Caption Representation is missing @bandwidth');
+            }
+        }
+        $this->assertGreaterThanOrEqual(1, $captionSets, 'MPD has no caption AdaptationSet');
+        $this->assertSame(\array_unique($adaptationIds), $adaptationIds, 'AdaptationSet ids repeat within the Period');
 
         $vttUri = $this->subtitleBaseUrl((string) $dash['body'], $captionId);
         $vtt = $this->client->call(Client::METHOD_GET, $this->manifestRequestPath($vttUri), $this->headers());

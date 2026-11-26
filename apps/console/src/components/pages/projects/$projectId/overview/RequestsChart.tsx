@@ -1,5 +1,11 @@
 import { memo, useMemo, type ReactNode } from 'react'
-import { Area, AreaChart, ResponsiveContainer, Tooltip } from 'recharts'
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+} from 'recharts'
 import { useParams } from '@tanstack/react-router'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
@@ -435,6 +441,11 @@ export const RequestsChart = memo(function RequestsChart({
                   minHeight={OVERVIEW_CHART_HEIGHT}
                 >
                   <AreaChart data={activeChartData} margin={USAGE_CHART_MARGIN}>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="var(--border)"
+                      vertical={false}
+                    />
                     <defs>
                       {isSkeleton ? (
                         <linearGradient
