@@ -371,7 +371,7 @@ function DayAnnouncementColumn({
       {announcement.resources.length > 0 ? (
         <ul className="divide-y divide-border border-t border-border">
           {announcement.resources.map((resource) => (
-            <DayResourceRow key={resource.id} resource={resource} />
+            <DayResourceRow key={resource.id} resource={resource} alignTop />
           ))}
         </ul>
       ) : null}
@@ -391,7 +391,14 @@ interface DayDetailCardProps {
   isRecapMode?: boolean
 }
 
-function DayResourceRow({ resource }: { resource: LaunchEventDayResource }) {
+function DayResourceRow({
+  resource,
+  alignTop = false,
+}: {
+  resource: LaunchEventDayResource
+  /** Narrow columns wrap the title: keep the badge and action level with its first line. */
+  alignTop?: boolean
+}) {
   const type = resource.typeLabel.toLowerCase()
   const ResourceIcon =
     type === 'docs' ? BookOpen : type === 'product' ? Package : FileText
@@ -400,8 +407,10 @@ function DayResourceRow({ resource }: { resource: LaunchEventDayResource }) {
   const resolved = useInitHref(resource.href)
   // Phones give the title its own full-width line and drop the badge + action
   // below it; three inline columns left the title ~80px and shredded it.
-  const rowClassName =
-    'group flex flex-wrap items-center gap-x-4 gap-y-2 px-6 py-3.5 transition-colors hover:bg-accent/30 sm:flex-nowrap'
+  const rowClassName = cn(
+    'group flex flex-wrap gap-x-4 gap-y-2 px-6 py-3.5 transition-colors hover:bg-accent/30 sm:flex-nowrap',
+    alignTop ? 'items-start' : 'items-center',
+  )
   const rowContent = (
     <>
       <span className="order-2 flex shrink-0 sm:order-none sm:w-[92px]">
