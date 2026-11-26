@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Response\Filters;
 
+use Appwrite\Alert\Severity;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filter;
 
@@ -13,6 +14,10 @@ class V30 extends Filter
         return match ($model) {
             Response::MODEL_PROJECT => $this->parseProject($content),
             Response::MODEL_PROJECT_LIST => $this->handleList($content, 'projects', fn ($item) => $this->parseProject($item)),
+            Response::MODEL_MONITOR,
+            Response::MODEL_ALERT => $this->parseSeverity($content),
+            Response::MODEL_MONITOR_LIST => $this->handleList($content, 'monitors', fn ($item) => $this->parseSeverity($item)),
+            Response::MODEL_ALERT_LIST => $this->handleList($content, 'alerts', fn ($item) => $this->parseSeverity($item)),
             default => $content,
         };
     }
@@ -26,6 +31,14 @@ class V30 extends Filter
                 fn ($method) => ($method['$id'] ?? '') !== 'ldap',
             ));
         }
+
+        return $content;
+    }
+
+    // `severity` replaced the `critical` flag older SDKs still read
+    protected function parseSeverity(array $content): array
+    {
+        $content['critical'] = ($content['severity'] ?? '') === Severity::Critical->value;
 
         return $content;
     }

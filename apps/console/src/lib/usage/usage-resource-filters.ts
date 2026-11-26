@@ -81,6 +81,7 @@ export function formatUsageResourceTypeLabel(value: string): string {
     return translate('Dedicated database')
   }
   if (trimmed === 'project') return translate('Project')
+  if (trimmed === 'video') return translate('Video')
 
   const tableMatch = /^database\/([^/]+)\/table$/.exec(trimmed)
   if (tableMatch) {
@@ -117,6 +118,20 @@ export function resolveUsageResourceBreakdownItem(
     return {
       typeLabel: formatUsageResourceTypeLabel('project'),
       name: '',
+    }
+  }
+
+  // Video rows arrive with the video name already in `label` (the Videos
+  // usage page resolves names itself); a label still equal to the ID means
+  // the video no longer exists.
+  if (resourceType === 'video') {
+    const label = item.label.trim()
+    return {
+      typeLabel: formatUsageResourceTypeLabel('video'),
+      name:
+        label && label !== resourceId
+          ? label
+          : breakdownUnresolvedName(resourceNamesResolved),
     }
   }
 

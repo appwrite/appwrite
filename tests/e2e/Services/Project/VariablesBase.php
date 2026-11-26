@@ -978,7 +978,7 @@ trait VariablesBase
     protected function packageCode(string $type, string $name): CURLFile
     {
         $folderPath = realpath(__DIR__ . '/../../../resources/' . $type) . "/$name";
-        $tarPath = "$folderPath/code.tar.gz";
+        $tarPath = \sys_get_temp_dir() . '/appwrite-' . $type . '-' . $name . '-' . \getmypid() . '-' . \uniqid('', true) . '.tar.gz';
 
         $tar = (new Command('tar'))
             ->option('--exclude', 'code.tar.gz')
@@ -992,6 +992,12 @@ trait VariablesBase
         if (filesize($tarPath) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');
         }
+
+        register_shutdown_function(static function () use ($tarPath) {
+            if (\is_file($tarPath)) {
+                @\unlink($tarPath);
+            }
+        });
 
         return new CURLFile($tarPath, 'application/x-gzip', \basename($tarPath));
     }

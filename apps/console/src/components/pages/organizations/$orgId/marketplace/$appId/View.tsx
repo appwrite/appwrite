@@ -195,15 +195,23 @@ export function View({ initialData }: ViewProps = {}) {
                   </Button>
                 </div>
               ) : (
-                isInstallationResolved &&
-                mapped.installationScopes.length > 0 && (
-                  <Button
-                    disabled={installMutation.isPending}
-                    onClick={() => installMutation.mutate()}
-                  >
-                    {t('Install app')}
-                  </Button>
-                )
+                <Button
+                  disabled={
+                    !isInstallationResolved ||
+                    mapped.installationScopes.length === 0 ||
+                    installMutation.isPending
+                  }
+                  title={
+                    !isInstallationResolved
+                      ? t('Checking installation…')
+                      : mapped.installationScopes.length === 0
+                        ? t('This app has no installation scopes to grant yet.')
+                        : undefined
+                  }
+                  onClick={() => installMutation.mutate()}
+                >
+                  {t('Install app')}
+                </Button>
               )}
             </div>
           </div>

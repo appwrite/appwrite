@@ -139,6 +139,18 @@ export async function fetchInstallation(
   return await projectSdk.vcs.getInstallation(installationId)
 }
 
+export function installationQueryOptions(
+  projectId: string | null | undefined,
+  installationId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['vcs', 'installation', projectId, installationId],
+    queryFn: () => fetchInstallation(projectId!, installationId!),
+    enabled: !!projectId && !!installationId,
+    staleTime: DEFAULT_STALE_TIME,
+  })
+}
+
 /**
  * Hook to fetch installation details (includes `provider`).
  */
@@ -146,12 +158,7 @@ export function useInstallation(
   projectId: string | null | undefined,
   installationId: string | null | undefined,
 ) {
-  return useQuery({
-    queryKey: ['vcs', 'installation', projectId, installationId],
-    queryFn: () => fetchInstallation(projectId!, installationId!),
-    enabled: !!projectId && !!installationId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  return useQuery(installationQueryOptions(projectId, installationId))
 }
 
 /**
@@ -539,7 +546,17 @@ export function useRepository(
   installationId: string | null | undefined,
   providerRepositoryId: string | null | undefined,
 ) {
-  return useQuery({
+  return useQuery(
+    repositoryQueryOptions(projectId, installationId, providerRepositoryId),
+  )
+}
+
+export function repositoryQueryOptions(
+  projectId: string | null | undefined,
+  installationId: string | null | undefined,
+  providerRepositoryId: string | null | undefined,
+) {
+  return queryOptions({
     queryKey: [
       'vcs',
       'repository',

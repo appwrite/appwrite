@@ -2,13 +2,8 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { WizardLayout } from '@/components/global/shared/WizardLayout'
+import { BeepCallout } from '@/components/global/shared/BeepPromotion'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -32,7 +27,6 @@ import {
 import { getErrorMessage, isPlanLimitError } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { PROBE_TYPES } from '@/lib/alerts/probes'
 import type { ProbeType } from '@/lib/appwrite/monitors'
 import { PlanAllowance } from './_components/PlanAllowance'
 import {
@@ -45,6 +39,7 @@ import {
 } from './ProbeFields'
 import {
   RuleFields,
+  SectionHeading,
   emptyRuleForm,
   ruleFormError,
   monitorInputFromForm,
@@ -83,11 +78,9 @@ export function CreateMonitor({
     ...organizationProbeCountQueryOptions(organizationId),
     enabled: open && isCloud && !!organizationId,
   })
-  const { usageLimit, usageAtLimit, probeLimit, probesAtLimit } = monitorCaps(
-    plan,
-    usageCount,
-    probeCount,
-  )
+  const { usageLimit, usageAtLimit, probeLimit, probesAtLimit, probesAllowed } =
+    monitorCaps(plan, usageCount, probeCount)
+  const probesLocked = isCloud && !probesAllowed
   const [type, setType] = useState<'usage' | ProbeType>(initialType)
   const [form, setForm] = useState<RuleForm>(emptyRuleForm)
   const [probe, setProbe] = useState<ProbeForm>(() => emptyProbeForm('http'))
@@ -95,8 +88,9 @@ export function CreateMonitor({
   useEffect(() => {
     if (!open) return
     // With no usage monitor left on the plan, a blank form starts on a synthetic check.
-    const start =
-      initialType === 'usage' && usageAtLimit && !initial && isCloud
+    const start = probesLocked
+      ? 'usage'
+      : initialType === 'usage' && usageAtLimit && !initial && isCloud
         ? 'http'
         : initialType
     setType(start)
@@ -105,6 +99,11 @@ export function CreateMonitor({
     // Only when the form opens; the cap may load later without resetting typed fields.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initial, initialType])
+
+  useEffect(() => {
+    // A plan that loads after the form opened can still take synthetic checks away.
+    if (probesLocked && type !== 'usage') setType('usage')
+  }, [probesLocked, type])
 
   const handleTypeChange = (next: 'usage' | ProbeType) => {
     setType(next)
@@ -153,14 +152,17 @@ export function CreateMonitor({
               )}`
             : null
 
-  const error =
+  const limitError =
     type === 'usage'
       ? usageAtLimit
         ? t('Upgrade your plan to add more usage monitors.')
-        : ruleFormError(form, t)
+        : undefined
       : probesAtLimit
         ? t('Upgrade your plan to add more synthetic checks.')
-        : probeFormError(probe, t)
+        : undefined
+  const error =
+    limitError ??
+    (type === 'usage' ? ruleFormError(form, t) : probeFormError(probe, t))
   const isPending = createMutation.isPending
 
   const handleOpenChange = (next: boolean) => {
@@ -197,92 +199,102 @@ export function CreateMonitor({
     })
   }
 
+  if (!open) return null
+
   return (
-    <>
-      <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="sm:max-w-3xl p-0 max-h-[90dvh] flex flex-col">
-          <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>{t('Create monitor')}</DialogTitle>
-            <DialogDescription className="text-[13px] mt-2">
-              {type === 'usage'
-                ? t(
-                    'Get notified when a usage metric crosses a threshold, and again when it recovers.',
-                  )
-                : t(
-                    PROBE_TYPES.find((entry) => entry.value === type)
-                      ?.description ?? '',
-                  )}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="border-t border-border" />
-          <form
-            onSubmit={handleCreate}
-            className="flex min-h-0 flex-1 flex-col"
+    <WizardLayout
+      title={t('Create monitor')}
+      fullscreen
+      onClose={() => handleOpenChange(false)}
+      useSidebar={false}
+      maxWidth="max-w-3xl"
+      footerAlign="right"
+      footer={
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => handleOpenChange(false)}
+            disabled={isPending}
           >
-            <div className="min-h-0 flex-1 space-y-7 overflow-y-auto px-6 py-5">
-              {isCloud && (
-                <MonitorTypePicker
-                  value={type}
-                  onChange={handleTypeChange}
-                  disabled={isPending}
-                />
-              )}
-              {allowance && organizationId && (
-                <PlanAllowance
-                  message={allowance}
-                  organizationId={organizationId}
-                  upgrade={type === 'usage' ? usageAtLimit : probesAtLimit}
-                />
-              )}
-              {type === 'usage' ? (
-                <RuleFields
-                  projectId={projectId}
-                  form={form}
-                  onChange={(changes) =>
-                    setForm((current) => ({ ...current, ...changes }))
-                  }
-                  disabled={isPending}
-                />
-              ) : (
-                <ProbeFields
-                  projectId={projectId}
-                  form={probe}
-                  onChange={(changes) =>
-                    setProbe((current) => ({ ...current, ...changes }))
-                  }
-                  disabled={isPending}
-                />
-              )}
-            </div>
-            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleOpenChange(false)}
-                disabled={isPending}
-              >
-                {t('Cancel')}
-              </Button>
-              {error ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="inline-flex">
-                      <Button type="submit" disabled className="w-full">
-                        {t('Create')}
-                      </Button>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">{error}</TooltipContent>
-                </Tooltip>
-              ) : (
-                <Button type="submit" disabled={isPending}>
-                  {t('Create')}
-                </Button>
-              )}
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </>
+            {t('Cancel')}
+          </Button>
+          {error ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex">
+                  <Button
+                    type="submit"
+                    form={FORM_ID}
+                    disabled
+                    className="w-full"
+                  >
+                    {t('Create')}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top">{error}</TooltipContent>
+            </Tooltip>
+          ) : (
+            <Button type="submit" form={FORM_ID} disabled={isPending}>
+              {t('Create')}
+            </Button>
+          )}
+        </>
+      }
+    >
+      <form id={FORM_ID} onSubmit={handleCreate} className="space-y-10">
+        {isCloud && (
+          <section>
+            <SectionHeading title={t('Type')} />
+            <MonitorTypePicker
+              value={type}
+              onChange={handleTypeChange}
+              disabled={isPending}
+              probesLocked={probesLocked}
+            />
+          </section>
+        )}
+        {probesLocked && organizationId && (
+          <PlanAllowance
+            message={t(
+              'HTTP, DNS, TCP and SMTP monitors are available on paid plans.',
+            )}
+            organizationId={organizationId}
+            upgrade
+          />
+        )}
+        {allowance && organizationId && (
+          <PlanAllowance
+            message={allowance}
+            organizationId={organizationId}
+            upgrade={type === 'usage' ? usageAtLimit : probesAtLimit}
+          />
+        )}
+        {type === 'usage' ? (
+          <RuleFields
+            projectId={projectId}
+            form={form}
+            onChange={(changes) =>
+              setForm((current) => ({ ...current, ...changes }))
+            }
+            disabled={isPending}
+            suggestThreshold={initial?.threshold === undefined}
+          />
+        ) : (
+          <ProbeFields
+            projectId={projectId}
+            form={probe}
+            onChange={(changes) =>
+              setProbe((current) => ({ ...current, ...changes }))
+            }
+            disabled={isPending}
+          />
+        )}
+        <BeepCallout source="create-monitor" />
+      </form>
+    </WizardLayout>
   )
 }
+
+const FORM_ID = 'create-monitor'

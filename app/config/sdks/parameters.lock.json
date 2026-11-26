@@ -7663,10 +7663,19 @@
             "scopes",
             "duration"
         ],
+        "organization.createEscalation": [
+            "escalationId",
+            "name",
+            "steps",
+            "repeat"
+        ],
         "organization.createProject": [
             "projectId",
             "name",
             "region"
+        ],
+        "organization.deleteEscalation": [
+            "escalationId"
         ],
         "organization.deleteProject": [
             "projectId"
@@ -7675,12 +7684,19 @@
             "projectId",
             "keyId"
         ],
+        "organization.getEscalation": [
+            "escalationId"
+        ],
         "organization.getProject": [
             "projectId"
         ],
         "organization.getProjectKey": [
             "projectId",
             "keyId"
+        ],
+        "organization.listEscalations": [
+            "queries",
+            "total"
         ],
         "organization.listProjectKeys": [
             "projectId",
@@ -7691,6 +7707,12 @@
             "queries",
             "search",
             "total"
+        ],
+        "organization.updateEscalation": [
+            "escalationId",
+            "name",
+            "steps",
+            "repeat"
         ],
         "organization.updateProject": [
             "projectId",

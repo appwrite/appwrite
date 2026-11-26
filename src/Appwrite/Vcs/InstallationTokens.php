@@ -13,6 +13,11 @@ use Utopia\Database\Document;
 class InstallationTokens
 {
     /**
+     * Seconds before its expiry from which a token is refreshed.
+     */
+    public const int EXPIRY_MARGIN = 300;
+
+    /**
      * Refreshes an installation's token, resolving the OAuth2 client for its provider.
      */
     public function refreshForInstallation(Document $installation, Database $dbForPlatform, Factory $vcsFactory): Document
@@ -164,6 +169,10 @@ class InstallationTokens
         ]));
     }
 
+    /**
+     * Whether a token is expired or about to: one handed out must last for the work it is handed
+     * out for, such as a review that renews its token only once it is close to expiring.
+     */
     protected function isExpired(?string $expiry): bool
     {
         if (empty($expiry)) {
@@ -171,7 +180,7 @@ class InstallationTokens
         }
 
         try {
-            return new \DateTime($expiry) < new \DateTime('now');
+            return new \DateTime($expiry) < new \DateTime('+' . self::EXPIRY_MARGIN . ' seconds');
         } catch (\Throwable) {
             return false;
         }
