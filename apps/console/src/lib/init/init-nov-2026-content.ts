@@ -176,7 +176,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
           imageAlt:
             'Project updates arriving on a phone as pushes from Appwrite Beep: a triggered monitor, a failed SSL certificate and an Appwrite launch',
         },
-        films: [film('6b06b9bb1fe47403a7a5', 'Appwrite Beep')],
+        films: [film('6b0823090857b823a173', 'Appwrite Beep')],
         resources: [
           {
             id: 'init5-day4-beep-announce',

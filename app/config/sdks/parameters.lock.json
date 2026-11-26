@@ -3998,6 +3998,10 @@
         "reviews.get": [
             "reviewId"
         ],
+        "reviews.getSummary": [
+            "range",
+            "repositoryId"
+        ],
         "reviews.list": [
             "queries",
             "total"
@@ -8514,6 +8518,10 @@
         ],
         "reviews.get": [
             "reviewId"
+        ],
+        "reviews.getSummary": [
+            "range",
+            "repositoryId"
         ],
         "reviews.list": [
             "queries",
