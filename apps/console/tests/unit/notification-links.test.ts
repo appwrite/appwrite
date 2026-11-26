@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'bun:test'
 import type { Models } from '@appwrite.io/console'
-import { getNotificationNavigateTarget } from '../../src/lib/notifications/notification-links'
+import {
+  getNotificationLinks,
+  getNotificationNavigateTarget,
+} from '../../src/lib/notifications/notification-links'
 
 function notification(
   fields: Partial<Models.Notification>,
@@ -87,5 +90,23 @@ describe('getNotificationNavigateTarget', () => {
     expect(
       getNotificationNavigateTarget(notification({ projectId: 'console' })),
     ).toBeNull()
+  })
+})
+
+describe('getNotificationLinks', () => {
+  test('links a live domain to the domain itself', () => {
+    expect(
+      getNotificationLinks(
+        notification({ title: 'Your domain shop.example.com is live' }),
+      ),
+    ).toEqual([{ label: 'Visit domain', href: 'https://shop.example.com' }])
+  })
+
+  test('shows no button for a certificate failure', () => {
+    expect(
+      getNotificationLinks(
+        notification({ title: 'Certificate failure for api.example.com' }),
+      ),
+    ).toEqual([])
   })
 })

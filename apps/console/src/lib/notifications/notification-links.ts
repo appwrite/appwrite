@@ -129,10 +129,12 @@ export function getNotificationNavigateTarget(
   }
 }
 
-export type NotificationLink = {
-  label: string
-  target: NotificationNavigateTarget
-}
+export type NotificationLink =
+  | { label: string; target: NotificationNavigateTarget }
+  | { label: string; href: string }
+
+const DOMAIN_LIVE_PREFIX = 'Your domain '
+const DOMAIN_LIVE_SUFFIX = ' is live'
 
 /**
  * Notifications other than alerts carry no subject, so the page they link to
@@ -148,16 +150,6 @@ const TITLE_LINKS: {
     prefix: 'Webhook deliveries have been paused',
     label: 'Open webhooks',
     to: '/projects/$projectId/settings/webhooks',
-  },
-  {
-    prefix: 'Your domain ',
-    label: 'Open domain settings',
-    to: '/projects/$projectId/settings/domains',
-  },
-  {
-    prefix: 'Certificate failure for ',
-    label: 'Open domain settings',
-    to: '/projects/$projectId/settings/domains',
   },
   {
     prefix: 'Your scheduled database backup is failing',
@@ -188,6 +180,21 @@ export function getNotificationLinks(
       ]
     }
     return [{ label: 'View alert', target }]
+  }
+
+  // The notification doesn't say whether the domain belongs to a site, a
+  // function or the project's API, so it links to the domain itself.
+  const title = notification.title
+  if (
+    title.startsWith(DOMAIN_LIVE_PREFIX) &&
+    title.endsWith(DOMAIN_LIVE_SUFFIX)
+  ) {
+    const domain = title.slice(
+      DOMAIN_LIVE_PREFIX.length,
+      -DOMAIN_LIVE_SUFFIX.length,
+    )
+    if (!domain || domain.includes(' ') || domain.includes('/')) return []
+    return [{ label: 'Visit domain', href: `https://${domain}` }]
   }
 
   const projectId = notification.projectId?.trim() ?? ''
