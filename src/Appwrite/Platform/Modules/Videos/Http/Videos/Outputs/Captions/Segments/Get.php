@@ -20,6 +20,7 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
+use Utopia\System\System;
 use Utopia\Validator\WhiteList;
 
 class Get extends Base
@@ -45,8 +46,8 @@ class Get extends Base
                 namespace: 'videos',
                 group: 'playback',
                 name: 'getCaptionSegment',
-                // Players follow this URL from the manifest; apps never call it directly.
-                hide: true,
+                // Players follow this URL from the manifest; apps never call it directly. Preview SDK builds show it.
+                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/videos/get-caption-segment.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
