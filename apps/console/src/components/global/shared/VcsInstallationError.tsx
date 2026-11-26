@@ -35,6 +35,8 @@ export interface VcsInstallationErrorProps {
    * full-page redirect to the provider, so this is an anchor, never a fetch.
    */
   reconnectUrl?: string
+  /** The installation's repository access settings on the provider, preferred for a missing repository. */
+  accessUrl?: string
   /** Retry the failed request. Shown as the primary action for transient kinds. */
   onRetry?: () => void
   isRetrying?: boolean
@@ -132,19 +134,22 @@ function VcsInstallationIdentity({
 function VcsInstallationErrorActions({
   kind,
   reconnectUrl,
+  accessUrl,
   onRetry,
   isRetrying,
 }: Pick<
   VcsInstallationErrorProps,
-  'kind' | 'reconnectUrl' | 'onRetry' | 'isRetrying'
+  'kind' | 'reconnectUrl' | 'accessUrl' | 'onRetry' | 'isRetrying'
 >) {
   const t = useT()
   const reconnectIsPrimary = leadsWithProvider(kind)
 
   // A locked installation is healthy, it is just mid-refresh. Offering a
   // reconnect there would send the user to re-authorize for no reason.
+  const providerUrl =
+    kind === 'missing' ? (accessUrl ?? reconnectUrl) : reconnectUrl
   const reconnect =
-    reconnectUrl && kind !== 'locked' ? (
+    providerUrl && kind !== 'locked' ? (
       <Button
         key="reconnect"
         asChild
@@ -152,7 +157,7 @@ function VcsInstallationErrorActions({
         variant={reconnectIsPrimary ? 'default' : 'outline'}
         className="text-[13px]"
       >
-        <a href={reconnectUrl}>
+        <a href={providerUrl}>
           <PlugZap className="me-1.5 h-3.5 w-3.5" />
           {kind === 'missing'
             ? t('Update repository access')
@@ -196,6 +201,7 @@ export function VcsInstallationErrorState({
   provider,
   organization,
   reconnectUrl,
+  accessUrl,
   onRetry,
   isRetrying,
   className,
@@ -218,6 +224,7 @@ export function VcsInstallationErrorState({
             <VcsInstallationErrorActions
               kind={kind}
               reconnectUrl={reconnectUrl}
+              accessUrl={accessUrl}
               onRetry={onRetry}
               isRetrying={isRetrying}
             />
@@ -237,6 +244,7 @@ export function VcsInstallationErrorAlert({
   provider,
   organization,
   reconnectUrl,
+  accessUrl,
   onRetry,
   isRetrying,
   className,
@@ -258,6 +266,7 @@ export function VcsInstallationErrorAlert({
         <VcsInstallationErrorActions
           kind={kind}
           reconnectUrl={reconnectUrl}
+          accessUrl={accessUrl}
           onRetry={onRetry}
           isRetrying={isRetrying}
         />

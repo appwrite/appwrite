@@ -89,6 +89,7 @@ export function GitRepositoryCard({
     provider: installationProvider,
     organization: installationOrganization,
     reconnectUrl,
+    accessUrl,
   } = useVcsInstallationReconnect(projectId, site?.installationId)
 
   // Fetch installations for connect modal
@@ -435,6 +436,7 @@ export function GitRepositoryCard({
                 provider={installationProvider}
                 organization={installationOrganization}
                 reconnectUrl={reconnectUrl}
+                accessUrl={accessUrl}
                 onRetry={() => refetchRepository()}
                 isRetrying={repositoryFetching}
               >

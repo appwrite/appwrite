@@ -80,6 +80,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
     provider: installationProvider,
     organization: installationOrganization,
     reconnectUrl,
+    accessUrl,
   } = useVcsInstallationReconnect(projectId, func.installationId)
 
   // Fetch installations for connect modal
@@ -314,6 +315,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                 provider={installationProvider}
                 organization={installationOrganization}
                 reconnectUrl={reconnectUrl}
+                accessUrl={accessUrl}
                 onRetry={() => refetchRepository()}
                 isRetrying={repositoryFetching}
               >
