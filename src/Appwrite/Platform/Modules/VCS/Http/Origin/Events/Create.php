@@ -476,45 +476,45 @@ class Create extends Action
         $providerPreviousCommitHash = $parsedPayload['previousCommitHash'] ?? '';
         $providerBranchCreated = ($parsedPayload['branchCreated'] ?? false) || \trim($providerPreviousCommitHash, '0') === '';
 
-        // A rewritten history can move a branch back to commits it already
-        // had, which a comparison reports as no change, so it deploys whatever it touched
-        $providerAffectedFiles = [];
-        if (!($parsedPayload['forced'] ?? false)) {
-            // A new branch is compared with the default branch, as HEAD since
-            // compare takes branch names containing '/' only as their SHA;
-            // anything else with its previous tip
-            $providerBaseCommitHash = $providerPreviousCommitHash;
-            if ($providerBranchCreated) {
-                $providerBaseCommitHash = '';
-                try {
-                    $providerDefaultBranch = \strval($vcs->getRepository($providerRepositoryOwner, $providerRepositoryName)['defaultBranch'] ?? '');
-                    if ($providerDefaultBranch !== '' && $providerDefaultBranch !== $providerBranch) {
-                        $providerBaseCommitHash = 'HEAD';
-                    }
-                } catch (\Throwable $e) {
-                    Console::warning("Failed to fetch the default branch of '{$providerRepositoryName}': " . $e->getMessage());
+        // A new branch is compared with the default branch, as HEAD since
+        // compare takes branch names containing '/' only as their SHA;
+        // anything else with its previous tip
+        $providerBaseCommitHash = $providerPreviousCommitHash;
+        if ($parsedPayload['forced'] ?? false) {
+            // A rewritten history can move a branch back to commits it already
+            // had, which a comparison reports as no change, so it deploys whatever it touched
+            $providerBaseCommitHash = '';
+        } elseif ($providerBranchCreated) {
+            $providerBaseCommitHash = '';
+            try {
+                $providerDefaultBranch = \strval($vcs->getRepository($providerRepositoryOwner, $providerRepositoryName)['defaultBranch'] ?? '');
+                if ($providerDefaultBranch !== '' && $providerDefaultBranch !== $providerBranch) {
+                    $providerBaseCommitHash = 'HEAD';
                 }
+            } catch (\Throwable $e) {
+                Console::warning("Failed to fetch the default branch of '{$providerRepositoryName}': " . $e->getMessage());
             }
+        }
 
-            if ($providerBaseCommitHash !== '') {
-                try {
-                    // A branch created where the default branch already is holds nothing new to deploy
-                    if ($providerBranchCreated) {
-                        $comparison = $vcs->compareCommits($providerRepositoryOwner, $providerRepositoryName, $providerBaseCommitHash, $providerCommitHash);
-                        if (isset($comparison['aheadBy']) && (int) $comparison['aheadBy'] === 0) {
-                            return;
-                        }
+        $providerAffectedFiles = [];
+        if ($providerBaseCommitHash !== '') {
+            try {
+                // A branch created where the default branch already is holds nothing new to deploy
+                if ($providerBranchCreated) {
+                    $comparison = $vcs->compareCommits($providerRepositoryOwner, $providerRepositoryName, $providerBaseCommitHash, $providerCommitHash);
+                    if (isset($comparison['aheadBy']) && (int) $comparison['aheadBy'] === 0) {
+                        return;
                     }
-
-                    $files = $vcs->compareFiles($providerRepositoryOwner, $providerRepositoryName, $providerBaseCommitHash, $providerCommitHash);
-                    $providerAffectedFiles = [
-                        ...\array_column($files, 'filename'),
-                        // Only renamed files carry a previous filename; skip missing values from other file changes.
-                        ...\array_filter(\array_column($files, 'previous_filename')),
-                    ];
-                } catch (\Throwable $e) {
-                    Console::warning("Failed to compare '{$providerBaseCommitHash}' with '{$providerCommitHash}': " . $e->getMessage());
                 }
+
+                $files = $vcs->compareFiles($providerRepositoryOwner, $providerRepositoryName, $providerBaseCommitHash, $providerCommitHash);
+                $providerAffectedFiles = [
+                    ...\array_column($files, 'filename'),
+                    // Only renamed files carry a previous filename; skip missing values from other file changes.
+                    ...\array_filter(\array_column($files, 'previous_filename')),
+                ];
+            } catch (\Throwable $e) {
+                Console::warning("Failed to compare '{$providerBaseCommitHash}' with '{$providerCommitHash}': " . $e->getMessage());
             }
         }
 
