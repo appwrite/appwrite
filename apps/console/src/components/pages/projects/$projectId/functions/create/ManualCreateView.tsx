@@ -30,7 +30,9 @@ import {
   useProject,
   useProjectRuntimes,
   useFunctionSpecifications,
+  useFunctionFrameworks,
 } from '@/lib/react-query/hooks'
+import { FrameworkSelect, NO_FRAMEWORK } from './_components/FrameworkSelect'
 import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
 import {
   getFirstEnabledSpecification,
@@ -67,6 +69,7 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
   const [functionName, setFunctionName] = useState('')
   const [functionId, setFunctionId] = useState<string | undefined>()
   const [runtime, setRuntime] = useState(runtimeFromSearch || '')
+  const [framework, setFramework] = useState(NO_FRAMEWORK)
   const [entrypoint, setEntrypoint] = useState('')
   const [commands, setCommands] = useState('')
   const [domain, setDomain] = useState('')
@@ -120,7 +123,30 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
     projectId,
     SpecificationType.Builds,
   )
-  const runtimes = runtimesData?.runtimes ?? []
+  const { frameworks } = useFunctionFrameworks(projectId)
+  const selectedFramework = frameworks.find((f) => f.key === framework)
+  const allRuntimes = runtimesData?.runtimes ?? []
+  // A framework runs on some runtimes only (Express: Node.js 18+).
+  const runtimes = selectedFramework
+    ? allRuntimes.filter((r) =>
+        selectedFramework.runtimes.includes(r.$id || r.key),
+      )
+    : allRuntimes
+
+  const chooseFramework = (key: string) => {
+    setFramework(key)
+    const chosen = frameworks.find((f) => f.key === key)
+    if (!chosen) return
+    if (!chosen.runtimes.includes(runtime)) {
+      const allowed = allRuntimes.find((r) =>
+        chosen.runtimes.includes(r.$id || r.key),
+      )
+      setRuntime(allowed ? allowed.$id || allowed.key : '')
+    }
+    // Fill in the framework's defaults, keeping what the owner already typed.
+    if (!entrypoint.trim()) setEntrypoint(chosen.entrypoint)
+    if (!commands.trim()) setCommands(chosen.installCommand)
+  }
   const specifications = useMemo(
     () => specificationsData?.specifications ?? [],
     [specificationsData],
@@ -187,6 +213,7 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
         entrypoint: entrypoint.trim() || undefined,
         commands: commands.trim() || undefined,
         buildSpecification: specification || undefined,
+        framework: selectedFramework?.key,
       })
       created = true
 
@@ -325,6 +352,11 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
               placeholder={t('Auto-generated')}
             />
           </div>
+          <FrameworkSelect
+            frameworks={frameworks}
+            value={framework}
+            onChange={chooseFramework}
+          />
           <div className="space-y-2">
             <Label className="text-[13px]">{t('Runtime')}</Label>
             <Select value={runtime} onValueChange={setRuntime}>

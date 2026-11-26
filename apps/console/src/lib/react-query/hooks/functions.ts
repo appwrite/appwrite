@@ -1485,6 +1485,33 @@ export function useProjectRuntimes(projectId: string | null | undefined) {
 }
 
 /**
+ * The web frameworks functions can run on this server (Express, …), with the
+ * runtimes each one supports.
+ */
+export function functionFrameworksQueryOptions(
+  projectId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['functionFrameworks', 'project', projectId],
+    queryFn: () => sdk.forProject(projectId!).functions.listFrameworks(),
+    enabled: !!projectId,
+    staleTime: LONG_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useFunctionFrameworks(projectId: string | null | undefined) {
+  const { data, isLoading } = useQuery(
+    functionFrameworksQueryOptions(projectId),
+  )
+  return { frameworks: data?.frameworks ?? [], isLoading }
+}
+
+/**
  * Hook to fetch function specifications
  */
 export function useFunctionSpecifications(

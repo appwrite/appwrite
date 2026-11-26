@@ -20,6 +20,7 @@ import {
 import { SpecificationsUpgradeNote } from '@/components/global/shared/SpecificationsUpgradeNote'
 import { SpecificationTableCard } from '../../shared/SpecificationTableCard'
 import { FunctionImageCard } from './FunctionImageCard'
+import { FunctionFrameworkCard } from './FunctionFrameworkCard'
 import { FunctionTimeoutCard } from './FunctionTimeoutCard'
 import { FunctionLoggingCard } from './FunctionLoggingCard'
 import { FunctionRuntimeEnterpriseOfferingNote } from './_components/FunctionAlwaysOnEnterpriseNote'
@@ -106,6 +107,20 @@ export function View() {
       search: { title: 'Image', keywords: ['runtime', 'docker', 'container'] },
       node: (
         <FunctionImageCard
+          projectId={projectId}
+          functionId={functionId}
+          func={func}
+        />
+      ),
+    },
+    {
+      id: 'framework',
+      search: {
+        title: 'Framework',
+        keywords: ['express', 'web framework', 'server', 'app'],
+      },
+      node: (
+        <FunctionFrameworkCard
           projectId={projectId}
           functionId={functionId}
           func={func}
