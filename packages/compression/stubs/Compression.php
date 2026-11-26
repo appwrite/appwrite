@@ -66,7 +66,7 @@ abstract class Compression
      * The algorithm the header prefers most among those supported, or null for none.
      *
      * @param  string  $acceptEncoding  <encoding>[;q=<weight>], <encoding>[;q=<weight>], ...
-     * @param  array<int|string, bool|string>  $supported  names, or names to whether each is supported; empty for zstd, br, gzip, deflate, none and identity
+     * @param  array<mixed>  $supported  names, or names to whether each is supported; empty for zstd, br, gzip, deflate, none and identity
      */
     public static function fromAcceptEncoding(string $acceptEncoding, array $supported = []): ?Compression
     {
