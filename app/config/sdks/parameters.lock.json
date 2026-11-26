@@ -263,6 +263,13 @@
         "avatars.deleteTeamPhoto": [
             "teamId"
         ],
+        "avatars.updateUserPhoto": [
+            "userId",
+            "file"
+        ],
+        "avatars.deleteUserPhoto": [
+            "userId"
+        ],
         "avatars.getBrowser": [
             "code",
             "width",
@@ -1315,6 +1322,13 @@
         ],
         "avatars.deleteTeamPhoto": [
             "teamId"
+        ],
+        "avatars.updateUserPhoto": [
+            "userId",
+            "file"
+        ],
+        "avatars.deleteUserPhoto": [
+            "userId"
         ],
         "avatars.getBrowser": [
             "code",
@@ -5926,6 +5940,13 @@
         ],
         "avatars.deleteTeamPhoto": [
             "teamId"
+        ],
+        "avatars.updateUserPhoto": [
+            "userId",
+            "file"
+        ],
+        "avatars.deleteUserPhoto": [
+            "userId"
         ],
         "avatars.getBrowser": [
             "code",
