@@ -61,8 +61,8 @@ class Update extends Base
             ->param('name', null, new Nullable(new Text(128)), 'Video profile name.', true)
             ->param('videoBitRate', null, new Nullable(new Range(self::MIN_VIDEO_BITRATE * 1000, self::MAX_VIDEO_BITRATE * 1000)), 'Target video bitrate in bits per second. Must be a multiple of 1000.', true)
             ->param('audioBitRate', null, new Nullable(new Range(self::MIN_AUDIO_BITRATE * 1000, self::MAX_AUDIO_BITRATE * 1000)), 'Target audio bitrate in bits per second. Must be a multiple of 1000.', true)
-            ->param('width', null, new Nullable(new Range(self::MIN_DIMENSION, self::MAX_DIMENSION)), 'Target video width in pixels.', true)
-            ->param('height', null, new Nullable(new Range(self::MIN_DIMENSION, self::MAX_DIMENSION)), 'Target video height in pixels.', true)
+            ->param('width', null, new Nullable(new Range(self::MIN_DIMENSION, self::MAX_DIMENSION)), 'Target video width in pixels. Must be an even number.', true)
+            ->param('height', null, new Nullable(new Range(self::MIN_DIMENSION, self::MAX_DIMENSION)), 'Target video height in pixels. Must be an even number.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
@@ -84,6 +84,14 @@ class Update extends Base
         Authorization $authorization,
         Event $queueForEvents
     ): void {
+        // Renditions are encoded with 4:2:0 chroma, which needs even dimensions;
+        // an odd profile would fail every encode that uses it.
+        foreach (['width' => $width, 'height' => $height] as $param => $value) {
+            if ($value !== null && $value % 2 !== 0) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `' . $param . '` param: Value must be an even number.');
+            }
+        }
+
         $profile = $authorization->skip(fn () => $dbForProject->getDocument('videosProfiles', $profileId));
 
         if ($profile->isEmpty()) {

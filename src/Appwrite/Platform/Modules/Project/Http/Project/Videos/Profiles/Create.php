@@ -63,8 +63,8 @@ class Create extends Base
             ->param('name', '', new Text(128), 'Video profile name.')
             ->param('videoBitRate', null, new Range(self::MIN_VIDEO_BITRATE * 1000, self::MAX_VIDEO_BITRATE * 1000), 'Target video bitrate in bits per second. Must be a multiple of 1000.')
             ->param('audioBitRate', null, new Range(self::MIN_AUDIO_BITRATE * 1000, self::MAX_AUDIO_BITRATE * 1000), 'Target audio bitrate in bits per second. Must be a multiple of 1000.')
-            ->param('width', null, new Range(self::MIN_DIMENSION, self::MAX_DIMENSION), 'Target video width in pixels.')
-            ->param('height', null, new Range(self::MIN_DIMENSION, self::MAX_DIMENSION), 'Target video height in pixels.')
+            ->param('width', null, new Range(self::MIN_DIMENSION, self::MAX_DIMENSION), 'Target video width in pixels. Must be an even number.')
+            ->param('height', null, new Range(self::MIN_DIMENSION, self::MAX_DIMENSION), 'Target video height in pixels. Must be an even number.')
             ->param('codec', self::CODEC_H264, new WhiteList(self::codecIds(), true), 'Video encode codec. Codecs not enabled on this instance are rejected. Defaults to `h264`.', true, enum: new Enum(name: 'VideoCodecId'))
             ->inject('response')
             ->inject('dbForProject')
@@ -88,6 +88,14 @@ class Create extends Base
         Authorization $authorization,
         Event $queueForEvents
     ): void {
+        // Renditions are encoded with 4:2:0 chroma, which needs even dimensions;
+        // an odd profile would fail every encode that uses it.
+        foreach (['width' => $width, 'height' => $height] as $param => $value) {
+            if ($value % 2 !== 0) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `' . $param . '` param: Value must be an even number.');
+            }
+        }
+
         $codec = self::normalizeCodec($codec);
         $this->assertCodecEnabled($codec);
         $profileId = $profileId === 'unique()' ? Id::unique() : $profileId;
