@@ -1,7 +1,7 @@
 <?php
 
-// Parity corpus for utopia-php/database's Id, Role, Permission and DateTime: diff its stdout on PHP
-// and on the extension (_APP_EXTENSION_LIBRARIES=database).
+// Parity corpus for utopia-php/database's Id, Role, Permission and DateTime: diff its stdout on the
+// extension (the default) and on the PHP classes in vendor/ (utopia.libraries without database).
 
 require __DIR__ . '/../../../vendor/autoload.php';
 
@@ -17,9 +17,10 @@ const CLASSES = [Id::class, Role::class, Permission::class, DateTime::class];
 $internal = (new ReflectionClass(Role::class))->isInternal();
 fwrite(STDERR, 'Utopia\\Database: ' . ($internal ? 'utopia extension' : 'PHP') . PHP_EOL);
 // A run meant for the extension that gets the PHP classes would compare PHP with PHP and pass.
-$requested = in_array('database', array_map(trim(...), explode(',', getenv('_APP_EXTENSION_LIBRARIES') ?: '')), true);
+$libraries = array_filter(array_map(trim(...), explode(',', (string) ini_get('utopia.libraries'))), fn (string $name): bool => $name !== '');
+$requested = $libraries === [] || in_array('database', $libraries, true);
 if ($internal !== $requested) {
-    fwrite(STDERR, '_APP_EXTENSION_LIBRARIES ' . ($requested ? 'names' : 'does not name') . ' database, but the other implementation loaded' . PHP_EOL);
+    fwrite(STDERR, 'utopia.libraries ' . ($requested ? 'is unset or names' : 'does not name') . ' database, but the other implementation loaded' . PHP_EOL);
     exit(1);
 }
 foreach (CLASSES as $class) {

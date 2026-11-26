@@ -28,11 +28,7 @@ vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php packages/i
 for library in $libraries; do
     echo "== $library" >&2
     [ -f "$tests/$library.php" ] || { echo "missing parity corpus $tests/$library.php" >&2; exit 1; }
-    # database is utopia-php/database in vendor/: the unit tests of the classes the extension serves.
-    suite="packages/$library/tests"
-    [ "$library" = database ] && suite=$(printf 'vendor/utopia-php/database/tests/unit/%sTest.php ' Id Role Permission DateTime)
-    # shellcheck disable=SC2086
-    _APP_EXTENSION_LIBRARIES=$library vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php $suite
+    _APP_EXTENSION_LIBRARIES=$library vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php "packages/$library/tests"
     _APP_EXTENSION_LIBRARIES= php "$tests/$library.php" > "$output/$library.php.jsonl"
     _APP_EXTENSION_LIBRARIES=$library php "$tests/$library.php" > "$output/$library.rust.jsonl"
     diff "$output/$library.php.jsonl" "$output/$library.rust.jsonl"
@@ -120,6 +116,19 @@ for package in user-agent domains emails validators auth detector; do
     echo "== $package (no PHP)" >&2
     vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php "packages/$package/tests"
 done
+# Database's four classes are the extension's by default, but utopia-php/database still ships them in
+# vendor/: its unit tests of them on the extension, and the corpus against the PHP classes, which
+# utopia.libraries without database brings back.
+echo "== database (against vendor/)" >&2
+# shellcheck disable=SC2046
+vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php \
+    $(printf 'vendor/utopia-php/database/tests/unit/%sTest.php ' Id Role Permission DateTime)
+php -d utopia.libraries="$(echo "$every" | sed 's/,database//')" "$tests/database.php" > "$output/database.php.jsonl"
+php "$tests/database.php" > "$output/database.rust.jsonl"
+_APP_EXTENSION_LIBRARIES=$all php "$tests/database.php" > "$output/database.all.jsonl"
+diff "$output/database.php.jsonl" "$output/database.rust.jsonl"
+diff "$output/database.php.jsonl" "$output/database.all.jsonl"
+[ -s "$output/database.rust.jsonl" ] || { echo "database corpus printed nothing" >&2; exit 1; }
 # packages/query/tests/E2E needs MySQL, PostgreSQL, ClickHouse and MongoDB servers.
 echo "== query (no PHP)" >&2
 vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php --exclude-filter '\\E2E\\' packages/query/tests
