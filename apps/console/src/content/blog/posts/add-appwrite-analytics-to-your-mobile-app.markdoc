@@ -377,6 +377,10 @@ The **Screens** card lists your screens by path. **Top screens** ranks all scree
 
 The **Platforms** tab of the **Technology** card splits your traffic by platform, such as iOS and Android. Select a row to filter the whole dashboard to one platform.
 
+# Conclusion
+
+Your app is reporting its first sessions and screen views. We'd love to hear what turns up, so share your dashboard or ask a question on [Discord](https://appwrite.io/discord).
+
 # Resources
 
 - [Appwrite Analytics documentation](/docs/products/analytics)

@@ -127,6 +127,10 @@ Select a metric in the top row, such as **Pageviews**, to plot it on the chart a
 
 **Humans vs bots** and **AI agents and crawlers** show the automated traffic, such as GPTBot. Select any row to filter the whole dashboard by it, and use **Export** to download the current view as a PDF report or as CSV files.
 
+# Conclusion
+
+That's your first tracked visit and signup. We'd love to see what turns up on your dashboard, so share it or ask a question on [Discord](https://appwrite.io/discord).
+
 # Resources
 
 - [Appwrite Analytics documentation](/docs/products/analytics)

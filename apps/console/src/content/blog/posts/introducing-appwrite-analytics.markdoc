@@ -715,7 +715,13 @@ curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPER
 
 Then open the property's dashboard and select the event in the **Custom events** card.
 
-## Learn more
+# Conclusion
+
+Knowing who visits, what they do, and which AI agents read your pages used to take another tool and another account. Appwrite Analytics keeps that data in the same project as your users, your sites, and your Firewall rules, so a jump in traffic leads straight to the people behind it, or to the bot worth blocking.
+
+We'd love to hear what turns up on your dashboard, so share it or ask a question on [Discord](https://appwrite.io/discord).
+
+# Resources
 
 - [Appwrite Analytics documentation](/docs/products/analytics)
 - [Quick start](/docs/products/analytics/quick-start)
