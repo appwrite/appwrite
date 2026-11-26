@@ -60,13 +60,13 @@ export async function fetchVcsInstallations(
   const queries = [Query.limit(limit), Query.offset(page * limit)]
   const list = await projectSdk.vcs.listInstallations({ queries })
 
-  if (page > 0 || list.total > 0 || !isFeatureEnabled('gitInstallationReuse')) {
+  if (page > 0 || !isFeatureEnabled('gitInstallationReuse')) {
     return list
   }
 
-  // A project with no installation reuses the GitHub organizations the
-  // organization's other projects already connected, instead of sending the
-  // user through GitHub's install flow again.
+  // The project reuses the GitHub organizations the organization's other
+  // projects already connected, instead of sending the user through GitHub's
+  // install flow again. Organizations it already has are left alone.
   const { client } = projectSdk
   const endpoint = `${client.config.endpoint}/vcs/installations`
   try {
@@ -76,9 +76,20 @@ export async function fetchVcsInstallations(
       {},
       { shared: true, queries: [Query.limit(100)] },
     )) as Models.InstallationList
+    const own =
+      list.total > list.installations.length
+        ? (
+            await projectSdk.vcs.listInstallations({
+              queries: [Query.limit(100)],
+            })
+          ).installations
+        : list.installations
+    const linked = new Set(own.map((i) => i.providerInstallationId))
     const unique = [
       ...new Map(
-        shared.installations.map((i) => [i.providerInstallationId, i]),
+        shared.installations
+          .filter((i) => !linked.has(i.providerInstallationId))
+          .map((i) => [i.providerInstallationId, i]),
       ).values(),
     ]
     if (unique.length === 0) {
@@ -96,7 +107,7 @@ export async function fetchVcsInstallations(
       ),
     )
   } catch {
-    // Servers without installation reuse reject the shared param; keep the empty list.
+    // Servers without installation reuse reject the shared param; keep the list as is.
     return list
   }
 
