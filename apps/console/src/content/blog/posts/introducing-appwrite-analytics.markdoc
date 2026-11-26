@@ -22,7 +22,7 @@ faqs:
   - question: "Can I block a bot that I see in Appwrite Analytics?"
     answer: "Yes, for sites hosted on Appwrite Sites. Right-click the bot on the dashboard and select Create firewall rule. The rule opens with Deny selected and shows its estimated impact before it's created."
   - question: "How much does Appwrite Analytics cost?"
-    answer: "The Free plan includes 50K events per month with 30 days of retention. The Pro plan includes 100K events per month, then $3 per 100K events, with 90 days of retention. Traffic from datacenter networks and Firebase Test Lab devices does not count toward the limit."
+    answer: "The Free plan includes 50K events per month for the organization, with 30 days of retention. The Start and Pro plans include 50K and 100K events per month for each project, then $3 per 100K events, with 90 days of retention. Traffic from datacenter networks and Firebase Test Lab devices does not count toward the limit."
 ---
 
 Your websites and apps get two kinds of visitors: people, and the bots and AI agents that read your pages. Appwrite Analytics shows you both. It counts the people who visit, where they come from, and what they do, and it names the crawlers and assistants that fetch your pages, from GPTBot to ChatGPT User.
@@ -416,14 +416,14 @@ By default, the Web SDK sends no events for visitors who turn on Do Not Track in
 
 # Pricing and limits
 
-| | Free | Pro | Enterprise |
-| --- | --- | --- | --- |
-| Events | 50K per month | 100K per month | Custom |
-| Additional events | Not available | $3 per 100K events | Custom |
-| Properties | 1 per project | 5 per project | Unlimited |
-| Data retention | 30 days | 90 days | Custom |
+| | Free | Start | Pro | Enterprise |
+| --- | --- | --- | --- | --- |
+| Events | 50K per month per organization | 50K per month per project | 100K per month per project | Custom |
+| Additional events | Not available | $3 per 100K events | $3 per 100K events | Custom |
+| Properties | 1 per project | 5 per project | 5 per project | Unlimited |
+| Data retention | 30 days | 90 days | 90 days | Custom |
 
-The events limit covers every property in the organization, including the automatic events that `Tracking` sends. Traffic from datacenter networks and Firebase Test Lab devices doesn't count toward it. For the full details, see [Limits and retention](/docs/products/analytics/limits).
+On the Free plan, the events limit covers every property in the organization. On Start and Pro, each project has its own limit. Every limit includes the automatic events that `Tracking` sends, and traffic from datacenter networks and Firebase Test Lab devices doesn't count toward it. For the full details, see [Limits and retention](/docs/products/analytics/limits).
 
 # Get started
 

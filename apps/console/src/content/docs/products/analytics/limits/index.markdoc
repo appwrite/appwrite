@@ -8,20 +8,20 @@ This page lists how many events Appwrite Analytics accepts on each plan, how lon
 
 # Plan limits {% #plans %}
 
-| | Free | Pro | Enterprise |
-| --- | --- | --- | --- |
-| Events | 50K per month | 100K per month | Custom |
-| Additional events | Not available | $3 per 100K events | Custom |
-| Properties | 1 per project | 5 per project | Unlimited |
-| Data retention | 30 days | 90 days | Custom |
+| | Free | Start | Pro | Enterprise |
+| --- | --- | --- | --- | --- |
+| Events | 50K per month per organization | 50K per month per project | 100K per month per project | Custom |
+| Additional events | Not available | $3 per 100K events | $3 per 100K events | Custom |
+| Properties | 1 per project | 5 per project | 5 per project | Unlimited |
+| Data retention | 30 days | 90 days | 90 days | Custom |
 
-The events limit covers every property in the organization. It counts every accepted event, including automatic events such as `scroll_depth` and `engagement_time`, and bots that name themselves in their user agent. Events labeled as datacenter traffic or Firebase Test Lab devices don't count, unless your server sent them with an `ip`. See [Bots and AI traffic](/docs/products/analytics/bots#billing).
+On the Free plan, the events limit covers every property in the organization. On Start and Pro, each project has its own limit, which covers every property in that project. The limit counts every accepted event, including automatic events such as `scroll_depth` and `engagement_time`, and bots that name themselves in their user agent. Events labeled as datacenter traffic or Firebase Test Lab devices don't count, unless your server sent them with an `ip`. See [Bots and AI traffic](/docs/products/analytics/bots#billing).
 
-On the Start plan, the events limit is 50K per month, and the other analytics limits match Pro. For the rest of each plan, see [Pricing](/pricing).
+For the rest of each plan, see [Pricing](/pricing).
 
 # At the limit {% #at-the-limit %}
 
-- **Events**: on the Free plan, once the organization reaches its monthly events limit, Appwrite rejects new events with a `402` `limit_analytics_events_exceeded` error until the next billing cycle. On Pro, events past the limit are billed as additional events. The dashboard and `listMetrics` keep working either way.
+- **Events**: on the Free plan, once the organization reaches its monthly events limit, Appwrite rejects new events with a `402` `limit_analytics_events_exceeded` error until the next billing cycle. On Start and Pro, events past a project's limit are billed as additional events. The dashboard and `listMetrics` keep working either way.
 - **Properties**: once a project has as many properties as the plan allows, **Create property** is unavailable, and the API rejects new properties with a `402` `analytics_property_limit_exceeded` error.
 - **Rate limit**: Appwrite accepts up to 1,000 events a minute from one IP address for each property. Server-side events sent with an `analytics.write` key share a limit of 10,000 a minute for each property. Events past the limit are dropped.
 
