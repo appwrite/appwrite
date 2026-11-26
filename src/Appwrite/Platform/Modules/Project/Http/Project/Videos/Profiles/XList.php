@@ -76,6 +76,8 @@ class XList extends Base
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        $this->toStoredBitRates($queries);
+
         if (\count(Query::getByType($queries, [QueryMethod::OrderAsc, QueryMethod::OrderDesc])) === 0) {
             $queries[] = Query::orderAsc('height');
         }

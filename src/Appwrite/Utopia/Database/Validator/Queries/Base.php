@@ -20,9 +20,10 @@ class Base extends Queries
      *
      * @param string $collection
      * @param string[] $allowedAttributes
+     * @param array<string, string> $aliases Public attribute name to the stored one; the action maps queries back.
      * @throws \Exception
      */
-    public function __construct(string $collection, array $allowedAttributes)
+    public function __construct(string $collection, array $allowedAttributes, array $aliases = [])
     {
         $config = Config::getParam('collections', []);
 
@@ -49,6 +50,12 @@ class Base extends Queries
 
             if (isset($allowedAttributesLookup[$attribute->key])) {
                 $attributes[] = $document;
+            }
+
+            foreach (\array_keys($aliases, $attribute->key, true) as $alias) {
+                if (isset($allowedAttributesLookup[$alias])) {
+                    $attributes[] = (clone $document)->setAttribute('key', $alias);
+                }
             }
         }
 

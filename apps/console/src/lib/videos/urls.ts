@@ -59,17 +59,17 @@ export function getVideoRenditionPlaylistUrl(
   videoId: string,
   renditionId: string,
   output: string,
-  streamId = 0,
+  streamIndex = 0,
 ): string | null {
   const videos = sdk.forProject(projectId).videos
   if (output === 'hls') {
     return withoutEmptyParams(
-      videos.getStreamManifest({ videoId, renditionId, streamId }),
+      videos.getStreamManifest({ videoId, renditionId, streamIndex }),
     )
   }
   if (output === 'cmaf') {
     return withoutEmptyParams(
-      videos.getCmafStreamManifest({ videoId, renditionId, streamId }),
+      videos.getCmafStreamManifest({ videoId, renditionId, streamIndex }),
     )
   }
   return null

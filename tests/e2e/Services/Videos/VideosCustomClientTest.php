@@ -93,6 +93,7 @@ final class VideosCustomClientTest extends Scope
         ]);
 
         $created = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
+            'videoId' => Id::unique(),
             'bucketId' => $bucket['body']['$id'],
             'fileId' => $file['$id'],
             'permissions' => [],
@@ -108,6 +109,7 @@ final class VideosCustomClientTest extends Scope
     private function createPublicVideo(): string
     {
         $created = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
+            'videoId' => Id::unique(),
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getVideoFile()['$id'],
             'permissions' => [
@@ -136,7 +138,7 @@ final class VideosCustomClientTest extends Scope
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getCaptionFile()['$id'],
             'name' => 'English',
-            'code' => 'eng',
+            'language' => 'eng',
             'default' => true,
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -276,7 +278,7 @@ final class VideosCustomClientTest extends Scope
     public function testGuestPlayUnknownVideoNotFound(): void
     {
         foreach ([
-            '/videos/doesnotexist/timelines',
+            '/videos/doesnotexist/timeline',
             '/videos/doesnotexist/outputs/hls/master.m3u8',
         ] as $path) {
             $response = $this->client->call(Client::METHOD_GET, $path, $this->anonymousHeaders());
@@ -289,15 +291,17 @@ final class VideosCustomClientTest extends Scope
     public function testGuestsCannotWriteVideos(): void
     {
         $response = $this->client->call(Client::METHOD_POST, '/videos', $this->anonymousHeaders(), [
+            'videoId' => Id::unique(),
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getVideoFile()['$id'],
         ]);
         $this->assertEquals(401, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/project/videos/profiles', $this->anonymousHeaders(), [
+            'profileId' => Id::unique(),
             'name' => 'guest',
-            'videoBitRate' => 1000,
-            'audioBitRate' => 64,
+            'videoBitRate' => 1000000,
+            'audioBitRate' => 64000,
             'width' => 640,
             'height' => 360,
         ]);
@@ -311,6 +315,7 @@ final class VideosCustomClientTest extends Scope
     {
         $userId = $this->getUser()['$id'];
         $created = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
+            'videoId' => Id::unique(),
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getVideoFile()['$id'],
             'permissions' => [
@@ -341,6 +346,7 @@ final class VideosCustomClientTest extends Scope
         $userId = $this->getUser()['$id'];
 
         $readable = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
+            'videoId' => Id::unique(),
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getVideoFile()['$id'],
             'name' => 'session-readable-' . Id::unique(),
@@ -352,6 +358,7 @@ final class VideosCustomClientTest extends Scope
         $readableId = $readable['body']['$id'];
 
         $private = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
+            'videoId' => Id::unique(),
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getVideoFile()['$id'],
             'name' => 'session-private-' . Id::unique(),
@@ -385,7 +392,7 @@ final class VideosCustomClientTest extends Scope
             '/videos/' . $videoId,
             '/videos/' . $videoId . '/captions',
             '/videos/' . $videoId . '/renditions',
-            '/videos/' . $videoId . '/timelines',
+            '/videos/' . $videoId . '/timeline',
             '/videos/' . $videoId . '/outputs/hls/master.m3u8',
         ] as $path) {
             $response = $this->client->call(Client::METHOD_GET, $path, $this->sessionHeaders());
@@ -399,7 +406,7 @@ final class VideosCustomClientTest extends Scope
         $videoId = $this->createRestrictedVideo();
 
         foreach ([
-            '/videos/' . $videoId . '/timelines',
+            '/videos/' . $videoId . '/timeline',
             '/videos/' . $videoId . '/outputs/hls/master.m3u8',
         ] as $path) {
             $response = $this->client->call(Client::METHOD_GET, $path, $this->anonymousHeaders());
@@ -430,6 +437,7 @@ final class VideosCustomClientTest extends Scope
         ]);
 
         $created = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
+            'videoId' => Id::unique(),
             'bucketId' => $bucket['body']['$id'],
             'fileId' => $file['$id'],
             'permissions' => [
@@ -452,9 +460,10 @@ final class VideosCustomClientTest extends Scope
     public function testSessionCannotManageProfiles(): void
     {
         $payload = [
+            'profileId' => Id::unique(),
             'name' => 'from-session',
-            'videoBitRate' => 1000,
-            'audioBitRate' => 64,
+            'videoBitRate' => 1000000,
+            'audioBitRate' => 64000,
             'width' => 640,
             'height' => 360,
         ];
@@ -513,6 +522,7 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals('connected', $connected['type'] ?? '');
 
         $created = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
+            'videoId' => Id::unique(),
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getVideoFile()['$id'],
             'permissions' => [
@@ -559,7 +569,7 @@ final class VideosCustomClientTest extends Scope
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getCaptionFile()['$id'],
             'name' => 'English',
-            'code' => 'eng',
+            'language' => 'eng',
         ]);
         $this->assertEquals(201, $caption['headers']['status-code']);
         $captionId = $caption['body']['$id'];
@@ -594,6 +604,7 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals('connected', $connected['type'] ?? '');
 
         $created = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
+            'videoId' => Id::unique(),
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getVideoFile()['$id'],
             'permissions' => [],
@@ -617,7 +628,7 @@ final class VideosCustomClientTest extends Scope
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getCaptionFile()['$id'],
             'name' => 'English',
-            'code' => 'eng',
+            'language' => 'eng',
         ]);
         $this->assertEquals(201, $caption['headers']['status-code']);
         $captionId = $caption['body']['$id'];
@@ -755,7 +766,7 @@ final class VideosCustomClientTest extends Scope
         }
         $this->assertNotNull($beforeUpdatedAt, 'Variant playlist did not carry updatedAt');
 
-        $renamed = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->serverHeaders(), [
+        $renamed = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId, $this->serverHeaders(), [
             'name' => 'guest-play-renamed-' . Id::unique(),
         ]);
         $this->assertEquals(200, $renamed['headers']['status-code']);
@@ -776,7 +787,7 @@ final class VideosCustomClientTest extends Scope
             (string) $variantAfter['body']
         );
 
-        $guestTimeline = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', $this->anonymousHeaders());
+        $guestTimeline = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timeline', $this->anonymousHeaders());
         $this->assertEquals(200, $guestTimeline['headers']['status-code']);
         $this->assertStringContainsString('WEBVTT', (string) $guestTimeline['body']);
 
@@ -813,6 +824,7 @@ final class VideosCustomClientTest extends Scope
         $userId = $this->getUser()['$id'];
 
         $created = $this->client->call(Client::METHOD_POST, '/videos', $this->sessionHeaders(), [
+            'videoId' => Id::unique(),
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getVideoFile()['$id'],
             'name' => 'member-public-' . Id::unique(),
@@ -824,12 +836,12 @@ final class VideosCustomClientTest extends Scope
 
         $denied = $this->client->call(
             Client::METHOD_GET,
-            '/videos/' . $videoId . '/timelines',
+            '/videos/' . $videoId . '/timeline',
             $this->anonymousHeaders()
         );
         $this->assertEquals(404, $denied['headers']['status-code']);
 
-        $published = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->serverHeaders(), [
+        $published = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId, $this->serverHeaders(), [
             'name' => $created['body']['name'],
             'permissions' => [
                 Permission::read(Role::any()),
@@ -903,7 +915,7 @@ final class VideosCustomClientTest extends Scope
 
         $guestTimeline = $this->client->call(
             Client::METHOD_GET,
-            '/videos/' . $videoId . '/timelines',
+            '/videos/' . $videoId . '/timeline',
             $this->anonymousHeaders()
         );
         $this->assertEquals(200, $guestTimeline['headers']['status-code']);
@@ -962,12 +974,12 @@ final class VideosCustomClientTest extends Scope
                 'bucketId' => $this->getVideoBucket()['$id'],
                 'fileId' => $this->getCaptionFile()['$id'],
                 'name' => 'Guest',
-                'code' => 'eng',
+                'language' => 'eng',
             ]
         );
         $this->assertEquals(401, $caption['headers']['status-code']);
 
-        $update = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->anonymousHeaders(), [
+        $update = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId, $this->anonymousHeaders(), [
             'name' => 'hijacked',
         ]);
         $this->assertEquals(401, $update['headers']['status-code']);
@@ -975,7 +987,7 @@ final class VideosCustomClientTest extends Scope
         $delete = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->anonymousHeaders());
         $this->assertEquals(401, $delete['headers']['status-code']);
 
-        $timeline = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', $this->anonymousHeaders());
+        $timeline = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timeline', $this->anonymousHeaders());
         $this->assertEquals(200, $timeline['headers']['status-code']);
     }
 
@@ -984,7 +996,7 @@ final class VideosCustomClientTest extends Scope
         $videoId = $this->createPublicVideo();
         $renditionId = $this->createReadyRendition($videoId, 'hls');
 
-        $timeline = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', $this->sessionHeaders());
+        $timeline = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timeline', $this->sessionHeaders());
         $this->assertEquals(200, $timeline['headers']['status-code']);
         $this->assertStringContainsString('WEBVTT', (string) $timeline['body']);
 
@@ -1015,7 +1027,7 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals(200, $list['headers']['status-code']);
         $this->assertContains($videoId, \array_column($list['body']['videos'], '$id'));
 
-        $update = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->sessionHeaders(), [
+        $update = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId, $this->sessionHeaders(), [
             'name' => 'nope',
         ]);
         $this->assertEquals(401, $update['headers']['status-code']);
@@ -1058,7 +1070,7 @@ final class VideosCustomClientTest extends Scope
                 'bucketId' => $this->getVideoBucket()['$id'],
                 'fileId' => $this->getCaptionFile()['$id'],
                 'name' => 'Hijack',
-                'code' => 'eng',
+                'language' => 'eng',
             ]
         );
         $this->assertEquals(401, $createCaption['headers']['status-code']);
@@ -1091,7 +1103,7 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals(200, $stillThere['headers']['status-code']);
         $this->assertEquals($renditionId, $stillThere['body']['$id']);
 
-        $timeline = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', $this->sessionHeaders());
+        $timeline = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timeline', $this->sessionHeaders());
         $this->assertEquals(200, $timeline['headers']['status-code']);
     }
 
@@ -1136,6 +1148,7 @@ final class VideosCustomClientTest extends Scope
         $userId = $this->getUser()['$id'];
 
         $created = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
+            'videoId' => Id::unique(),
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getVideoFile()['$id'],
             'name' => 'guest-then-private-' . Id::unique(),
@@ -1196,7 +1209,7 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals(200, $segment['headers']['status-code']);
         $this->assertNotEmpty($segment['body']);
 
-        $timelinePath = '/videos/' . $videoId . '/timelines';
+        $timelinePath = '/videos/' . $videoId . '/timeline';
         $timeline = $this->client->call(Client::METHOD_GET, $timelinePath, $this->anonymousHeaders());
         $this->assertEquals(200, $timeline['headers']['status-code']);
         $this->assertStringContainsString('WEBVTT', (string) $timeline['body']);
@@ -1212,7 +1225,7 @@ final class VideosCustomClientTest extends Scope
             $this->assertStringContainsString($this->playbackNeedle($path), (string) $playable['body'], $path);
         }
 
-        $restricted = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->serverHeaders(), [
+        $restricted = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId, $this->serverHeaders(), [
             'name' => $created['body']['name'],
             'permissions' => [
                 Permission::read(Role::user($userId)),
@@ -1244,6 +1257,7 @@ final class VideosCustomClientTest extends Scope
         $userId = $this->getUser()['$id'];
 
         $created = $this->client->call(Client::METHOD_POST, '/videos', $this->sessionHeaders(), [
+            'videoId' => Id::unique(),
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getVideoFile()['$id'],
             'name' => 'owned-' . Id::unique(),
@@ -1254,7 +1268,7 @@ final class VideosCustomClientTest extends Scope
         $this->assertContains((string) Permission::update(Role::user($userId)), $created['body']['$permissions']);
         $this->assertContains((string) Permission::delete(Role::user($userId)), $created['body']['$permissions']);
 
-        $updated = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->sessionHeaders(), [
+        $updated = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId, $this->sessionHeaders(), [
             'name' => 'renamed-owned',
             'permissions' => [
                 Permission::read(Role::user($userId)),
@@ -1313,7 +1327,7 @@ final class VideosCustomClientTest extends Scope
                 'bucketId' => $this->getVideoBucket()['$id'],
                 'fileId' => $this->getCaptionFile()['$id'],
                 'name' => 'Owned',
-                'code' => 'eng',
+                'language' => 'eng',
             ]
         );
         $this->assertEquals(201, $caption['headers']['status-code']);
@@ -1337,7 +1351,7 @@ final class VideosCustomClientTest extends Scope
         );
         $this->assertEquals(204, $deleteCaption['headers']['status-code']);
 
-        $deniedRole = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->sessionHeaders(), [
+        $deniedRole = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId, $this->sessionHeaders(), [
             'name' => 'bad-role',
             'permissions' => [
                 Permission::read(Role::user('someoneelse')),
@@ -1346,6 +1360,7 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals(401, $deniedRole['headers']['status-code']);
 
         $readOnly = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
+            'videoId' => Id::unique(),
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getVideoFile()['$id'],
             'name' => 'read-only-' . Id::unique(),
@@ -1356,7 +1371,7 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals(201, $readOnly['headers']['status-code']);
         $readOnlyId = $readOnly['body']['$id'];
 
-        $cannotUpdate = $this->client->call(Client::METHOD_PUT, '/videos/' . $readOnlyId, $this->sessionHeaders(), [
+        $cannotUpdate = $this->client->call(Client::METHOD_PATCH, '/videos/' . $readOnlyId, $this->sessionHeaders(), [
             'name' => 'should-fail',
         ]);
         $this->assertContains($cannotUpdate['headers']['status-code'], [401, 404]);
@@ -1384,6 +1399,7 @@ final class VideosCustomClientTest extends Scope
         $this->assertNotEmpty($other['session']);
 
         $created = $this->client->call(Client::METHOD_POST, '/videos', $this->sessionHeaders(), [
+            'videoId' => Id::unique(),
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getVideoFile()['$id'],
             'name' => 'owner-only-' . Id::unique(),
@@ -1398,7 +1414,7 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals(404, $get['headers']['status-code']);
         $this->assertEquals('video_not_found', $get['body']['type']);
 
-        $update = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $headers, [
+        $update = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId, $headers, [
             'name' => 'taken-over',
         ]);
         $this->assertEquals(404, $update['headers']['status-code']);
@@ -1433,6 +1449,7 @@ final class VideosCustomClientTest extends Scope
         $this->assertNotEmpty($membership['membership']);
 
         $created = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
+            'videoId' => Id::unique(),
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getVideoFile()['$id'],
             'name' => 'team-readable-' . Id::unique(),
@@ -1470,6 +1487,7 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals(201, $private['headers']['status-code']);
 
         $denied = $this->client->call(Client::METHOD_POST, '/videos', $this->sessionHeaders(), [
+            'videoId' => Id::unique(),
             'bucketId' => $private['body']['$id'],
             'fileId' => Id::unique(),
         ]);
@@ -1490,6 +1508,7 @@ final class VideosCustomClientTest extends Scope
         ]);
 
         $missing = $this->client->call(Client::METHOD_POST, '/videos', $this->sessionHeaders(), [
+            'videoId' => Id::unique(),
             'bucketId' => $bucketId,
             'fileId' => $file['$id'],
         ]);
@@ -1506,6 +1525,7 @@ final class VideosCustomClientTest extends Scope
         $this->assertContains((string) Permission::read(Role::user($userId)), $granted['body']['$permissions']);
 
         $created = $this->client->call(Client::METHOD_POST, '/videos', $this->sessionHeaders(), [
+            'videoId' => Id::unique(),
             'bucketId' => $bucketId,
             'fileId' => $file['$id'],
             'name' => 'from-granted-file-' . Id::unique(),
@@ -1531,6 +1551,7 @@ final class VideosCustomClientTest extends Scope
         $foreign = Permission::read(Role::user($otherId));
 
         $created = $this->client->call(Client::METHOD_POST, '/videos', $this->sessionHeaders(), [
+            'videoId' => Id::unique(),
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getVideoFile()['$id'],
             'name' => 'foreign-create-' . Id::unique(),
@@ -1542,6 +1563,7 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals('user_unauthorized', $created['body']['type']);
 
         $owned = $this->client->call(Client::METHOD_POST, '/videos', $this->sessionHeaders(), [
+            'videoId' => Id::unique(),
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getVideoFile()['$id'],
             'name' => 'foreign-update-' . Id::unique(),
@@ -1549,7 +1571,7 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals(201, $owned['headers']['status-code']);
         $videoId = $owned['body']['$id'];
 
-        $updated = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->sessionHeaders(), [
+        $updated = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId, $this->sessionHeaders(), [
             'name' => 'foreign-update-rejected',
             'permissions' => [
                 $foreign,
@@ -1577,6 +1599,7 @@ final class VideosCustomClientTest extends Scope
         ];
 
         $created = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
+            'videoId' => Id::unique(),
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getVideoFile()['$id'],
             'name' => 'keeps-permissions-' . Id::unique(),
@@ -1589,18 +1612,18 @@ final class VideosCustomClientTest extends Scope
         $timeline = $this->waitForTimeline($videoId);
         $this->assertEquals(200, $timeline['headers']['status-code']);
 
-        $guest = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', $this->anonymousHeaders());
+        $guest = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timeline', $this->anonymousHeaders());
         $this->assertEquals(200, $guest['headers']['status-code']);
         $this->assertStringContainsString('WEBVTT', (string) $guest['body']);
 
-        $updated = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->sessionHeaders(), [
+        $updated = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId, $this->sessionHeaders(), [
             'name' => 'renamed-keeps-permissions',
         ]);
         $this->assertEquals(200, $updated['headers']['status-code']);
         $this->assertEquals('renamed-keeps-permissions', $updated['body']['name']);
         $this->assertEqualsCanonicalizing($created['body']['$permissions'], $updated['body']['$permissions']);
 
-        $guestAfter = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', $this->anonymousHeaders());
+        $guestAfter = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timeline', $this->anonymousHeaders());
         $this->assertEquals(200, $guestAfter['headers']['status-code']);
         $this->assertStringContainsString('WEBVTT', (string) $guestAfter['body']);
     }
@@ -1615,7 +1638,7 @@ final class VideosCustomClientTest extends Scope
         $userId = $this->getUser()['$id'];
         $videoId = $this->createPublicVideo();
 
-        $timeline = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', $this->anonymousHeaders());
+        $timeline = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timeline', $this->anonymousHeaders());
         $this->assertEquals(200, $timeline['headers']['status-code']);
         $previewIds = $this->timelinePreviewIds((string) $timeline['body']);
         $this->assertNotEmpty($previewIds);
@@ -1644,7 +1667,7 @@ final class VideosCustomClientTest extends Scope
         $video = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->serverHeaders());
         $this->assertEquals(200, $video['headers']['status-code']);
 
-        $restricted = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->serverHeaders(), [
+        $restricted = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId, $this->serverHeaders(), [
             'name' => $video['body']['name'],
             'permissions' => [
                 Permission::read(Role::user($userId)),

@@ -85,6 +85,8 @@ class XList extends Base
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        $this->toStoredBitRates($queries);
+
         $queries[] = Query::equal('videoInternalId', [$video->getSequence()]);
 
         if (\count(Query::getByType($queries, [QueryMethod::Limit])) === 0) {
