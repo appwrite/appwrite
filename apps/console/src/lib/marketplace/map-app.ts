@@ -70,7 +70,8 @@ export function mapAppToMarketplaceApp(
     $id: app.$id,
     name: app.name,
     slug: app.$id,
-    description: app.description?.trim() || app.tagline?.trim() || app.name,
+    // Empty when the app has none, so the tagline isn't shown twice.
+    description: app.description?.trim() ?? '',
     shortDescription: app.tagline?.trim() || app.description?.trim() || app.name,
     category: resolveCategory(tags),
     author,
