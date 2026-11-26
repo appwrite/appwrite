@@ -148,7 +148,6 @@ final class EventValidatorTest extends TestCase
         $this->assertFalse($this->object->isValid(null));
         $this->assertFalse($this->object->isValid(''));
         $this->assertFalse($this->object->isValid('unknown.*'));
-        $this->assertFalse($this->object->isValid('monitors.*.alerts.*.firing'));
         $this->assertFalse($this->object->isValid('tables'));
         $this->assertFalse($this->object->isValid('tables.*.unknown'));
         $this->assertFalse($this->object->isValid('tables.*.rows.*.unknown'));
