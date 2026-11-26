@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { Search, X } from 'lucide-react'
 import type {
   MarketplaceLinkItem,
@@ -41,10 +41,19 @@ function SidebarSearch({
   onChange: (value: string) => void
 }) {
   const t = useT()
+  const inputRef = useRef<HTMLInputElement>(null)
+  // Text typed into the server-rendered field before hydration would be
+  // replaced by the empty controlled value; adopt it instead.
+  useEffect(() => {
+    const typed = inputRef.current?.value ?? ''
+    if (typed && typed !== value) onChange(typed)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   return (
     <div className="relative w-full mb-2">
       <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
       <Input
+        ref={inputRef}
         placeholder={t('Search apps...')}
         value={value}
         onChange={(e) => onChange(e.target.value)}
