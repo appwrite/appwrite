@@ -109,6 +109,12 @@ class Create extends Action
             // Without its own tokens the installation acts through the caller's GitHub account, which only
             // matches the installation when the caller owns it (a personal installation reused from another project)
             if ($identity !== null && \method_exists($oauth2, 'getUserSlug') && \strcasecmp($oauth2->getUserSlug($accessToken), $installation->getAttribute('organization', '')) !== 0) {
+                // A refresh above may have stored the caller's pair on the installation; later requests would use it without this check
+                $dbForPlatform->updateDocument('installations', $installation->getId(), new Document([
+                    'personalAccessToken' => null,
+                    'personalRefreshToken' => null,
+                    'personalAccessTokenExpiry' => null,
+                ]));
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This installation belongs to the GitHub account ' . $installation->getAttribute('organization', '') . '. Sign in to Appwrite with that GitHub account to create repositories through it, or connect your own account.');
             }
 
