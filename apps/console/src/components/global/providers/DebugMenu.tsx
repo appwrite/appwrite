@@ -1841,6 +1841,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Products' },
               ),
               createProfileFeatureFlagItem(
+                'Git installation reuse',
+                "Projects without a Git installation reuse the GitHub organizations connected in the organization's other projects.",
+                'gitInstallationReuse',
+                profileId,
+                features.gitInstallationReuse,
+                { category: 'Products' },
+              ),
+              createProfileFeatureFlagItem(
                 'Database PITR restore',
                 'Restore PITR button on backups and the restore card in dedicated DB PITR settings.',
                 'databasePitrRestore',
@@ -1894,6 +1902,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 'notifications',
                 profileId,
                 features.notifications,
+                { category: 'UI & tools' },
+              ),
+              createProfileFeatureFlagItem(
+                'Alert CTAs',
+                'Link buttons on notification rows that open the Console page an alert acts on.',
+                'alertCtas',
+                profileId,
+                features.alertCtas,
                 { category: 'UI & tools' },
               ),
               createDebugFeatureFlagItem(
@@ -2161,6 +2177,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.sso,
     features.agent,
     features.notifications,
+    features.alertCtas,
+    features.gitInstallationReuse,
     features.init,
     endpointPreset,
     endpointCustomUrl,

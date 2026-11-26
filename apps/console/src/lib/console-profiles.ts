@@ -61,9 +61,9 @@ export type ConsoleProfileFeatures = {
   nativeDbsMongo: boolean
   /** An experiment, off by default; the quality team turns it on from the header Previews menu. Videos product (transcoding, renditions, subtitles, HLS/DASH playback) via the `videos` SDK service. */
   videos: boolean
-  /** An experiment, off by default; the quality team turns it on from the header Previews menu. A project without a Git installation reuses the GitHub organization installations of the organization's other projects. */
+  /** Internal only, switched on from the debug menu. A project without a Git installation reuses the GitHub organization installations of the organization's other projects. */
   gitInstallationReuse: boolean
-  /** An experiment, off by default; the quality team turns it on from the header Previews menu. Link buttons on notification rows that open the Console page an alert acts on. */
+  /** Internal only, switched on from the debug menu. Link buttons on notification rows that open the Console page an alert acts on. */
   alertCtas: boolean
   /**
    * Internal only, switched on from the debug menu. Review product (AI code
