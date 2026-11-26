@@ -8,7 +8,7 @@ import {
   useSearch,
 } from '@tanstack/react-router'
 import { ArrowLeft, KeyRound } from 'lucide-react'
-import { z } from 'zod'
+import { toast } from 'sonner'
 import {
   AuthFlowDescription,
   AuthFlowIllustrationCard,
@@ -38,31 +38,14 @@ import {
   ssoReturnPath,
   ssoSignInURLs,
 } from '@/lib/sso-sign-in'
+import { ssoSearchSchema, ssoSharedProvider } from '@/lib/sso-shared-url'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { pageTitle } from '@/lib/utils/page-title'
 
-const searchSchema = z.object({
-  /**
-   * Set by the server when a sign-in fails: `{"message": …, "type": …}` as JSON,
-   * which the router already parses into an object. Only its type picks what
-   * the page says (see `ssoFailureMessage`).
-   */
-  error: z.unknown().optional(),
-  /** Console path to return to after signing in; checked by `ssoReturnPath`. */
-  redirect: z.string().optional().catch(undefined),
-  /**
-   * A provider's shared SSO URL (Settings → Single sign-on → Copy SSO URL):
-   * the sign-in starts at once, with no email to type and nothing to pick.
-   */
-  provider: z.coerce.string().optional(),
-  /** Set when an organization that requires single sign-on sent the member here. */
-  required: z.stringbool().optional(),
-})
-
 export const Route = createFileRoute('/_auth/sso')({
   component: SingleSignOnPage,
-  validateSearch: searchSchema,
+  validateSearch: ssoSearchSchema,
   // Where the Console has no single sign-on (self-hosted), the API has none of
   // its routes either: the sign-in page is the way in.
   beforeLoad: ({ search }) => {
@@ -96,6 +79,9 @@ function saveEmail(value: string): void {
     // Storage is unavailable: the person types it again.
   }
 }
+
+/** One notice about the trip to the identity provider, however often it starts. */
+const REDIRECT_TOAST_ID = 'sso-redirect'
 
 // `--destructive` is a background shade in the dark theme; its text red is
 // `--destructive-foreground` (other themes keep `text-destructive`).
@@ -146,13 +132,28 @@ function SingleSignOnPage() {
     else window.location.href = url
   }
 
+  // The identity provider takes a moment to answer. Until then this page stays,
+  // with its form ready again: say that the sign-in is on its way.
+  const startWith = (provider: SSOSignInProvider) => {
+    toast.success(
+      t('Taking you to {provider}...').replace('{provider}', provider.name),
+      {
+        id: REDIRECT_TOAST_ID,
+        description: t('Finish signing in with your identity provider.'),
+        // Stays for as long as a slow identity provider takes to load
+        duration: 10_000,
+      },
+    )
+    start(provider.$id)
+  }
+
   const lookup = useMutation({
     mutationFn: (value: string) =>
       sdk.forConsole.teamSSO.listSignInProviders(value.trim().toLowerCase()),
     onSuccess: (result) => {
       // One way in: go straight to it. Several: let the person choose.
       if (result.providers.length === 1) {
-        start(result.providers[0].$id)
+        startWith(result.providers[0])
         return
       }
       setProviders(result.providers)
@@ -161,14 +162,26 @@ function SingleSignOnPage() {
 
   const domain = email.includes('@') ? email.trim().split('@').pop() : ''
 
-  // A failed sign-in comes back without `provider`, so this never loops. The
-  // identity provider takes this page's place in the history: left there, Back
-  // from the identity provider would start the sign-in again.
-  const direct = !failure && !!search.provider
+  // A shared SSO URL. The server sends a browser's navigation straight to the
+  // identity provider (`ssoSharedURLMiddleware`); this is for a visit it left
+  // to the page. The identity provider takes this page's place in the history:
+  // left there, Back from the identity provider would start the sign-in again.
+  const sharedProvider = ssoSharedProvider(search)
+  const direct = !!sharedProvider
   useEffect(() => {
-    if (direct && search.provider) start(search.provider, { replace: true })
+    if (sharedProvider) start(sharedProvider, { replace: true })
     // eslint-disable-next-line react-hooks/exhaustive-deps -- start once per provider
-  }, [direct, search.provider])
+  }, [sharedProvider])
+
+  // Back from the identity provider can restore this page as it was left, with
+  // the notice still up: nobody is being taken anywhere now.
+  useEffect(() => {
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) toast.dismiss(REDIRECT_TOAST_ID)
+    }
+    window.addEventListener('pageshow', onPageShow)
+    return () => window.removeEventListener('pageshow', onPageShow)
+  }, [])
 
   // The chooser replaces the form: move focus to the first way in, and back to
   // the email field when the person leaves it.
@@ -243,8 +256,8 @@ function SingleSignOnPage() {
         {t('Sign out')}
       </Link>
     </>
-  ) : choosing ? (
-    // The chooser has no Continue button to click.
+  ) : choosing || direct ? (
+    // Neither the chooser nor a shared SSO URL has a Continue button to click.
     <p className={cn(authFlowShellFooterClassName, 'mt-0')}>
       {t('By continuing, you agree to our')}{' '}
       <MarketingSiteLink className="link-neutral" href="/terms">
@@ -263,11 +276,15 @@ function SingleSignOnPage() {
       <AuthFlowIllustrationCard illustration={<AuthFlowIllustrationColumn />}>
         <div className="space-y-6">
           <div className="space-y-2">
-            {backLink}
+            {/* On the way to the identity provider there is no email to
+                enter, and no reason to go back. */}
+            {direct ? null : backLink}
             <AuthFlowTitle>{t('Sign in with SSO')}</AuthFlowTitle>
-            <AuthFlowDescription>
-              {t('Enter your work email to continue with single sign-on.')}
-            </AuthFlowDescription>
+            {direct ? null : (
+              <AuthFlowDescription>
+                {t('Enter your work email to continue with single sign-on.')}
+              </AuthFlowDescription>
+            )}
           </div>
 
           {search.required && !failure ? (
@@ -318,7 +335,7 @@ function SingleSignOnPage() {
                   type="button"
                   variant="outline"
                   className="h-9 w-full"
-                  onClick={() => start(provider.$id)}
+                  onClick={() => startWith(provider)}
                 >
                   <KeyRound className="size-4" />
                   {provider.name}

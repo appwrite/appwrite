@@ -14,6 +14,7 @@ import { serverFnGuardMiddleware } from '@/server/middleware/server-fn-guard'
 import { marketingDisabledMiddleware } from '@/server/middleware/marketing-disabled'
 import { preLaunchMiddleware } from '@/server/middleware/pre-launch'
 import { selfHostedRoutesMiddleware } from '@/server/middleware/self-hosted-routes'
+import { ssoSharedURLMiddleware } from '@/server/middleware/sso-shared-url'
 
 export const startInstance = createStart(() => ({
   defaultSsr: true,
@@ -36,6 +37,8 @@ export const startInstance = createStart(() => ({
     preLaunchMiddleware,
     marketingDisabledMiddleware,
     selfHostedRoutesMiddleware,
+    // After the gates above, so a locked or self-hosted Console answers first.
+    ssoSharedURLMiddleware,
     markdownNegotiationMiddleware,
     rootGuestRedirectMiddleware,
   ],
