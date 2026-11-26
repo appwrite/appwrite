@@ -70,8 +70,9 @@ const STORAGE_SERIES = [
   },
 ]
 
-const SKELETON_CHART_STROKE = 'hsl(var(--muted-foreground) / 0.4)'
-const SKELETON_CHART_FILL = 'hsl(var(--muted-foreground))'
+const SKELETON_CHART_STROKE = 'var(--muted-foreground)'
+const SKELETON_CHART_STROKE_OPACITY = 0.4
+const SKELETON_CHART_FILL = 'var(--muted-foreground)'
 const SKELETON_WAVE = [
   0.42, 0.58, 0.51, 0.68, 0.59, 0.72, 0.64, 0.7, 0.55, 0.74, 0.62, 0.69,
 ] as const
@@ -353,6 +354,7 @@ export const OverviewStorageChart = memo(function OverviewStorageChart({
                         type="monotone"
                         dataKey="total"
                         stroke={SKELETON_CHART_STROKE}
+                        strokeOpacity={SKELETON_CHART_STROKE_OPACITY}
                         fill="url(#overview-storage-skeleton-gradient)"
                         strokeWidth={1.5}
                         isAnimationActive={!CHART_ANIMATION_DISABLED}

@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { ArrowDown, Play } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
+  getLaunchEventDayFilms,
   isFilmPlayerRevealed,
   isLaunchEventDayLocked,
   type InitDisplayEvent,
@@ -34,7 +35,7 @@ interface Reveal {
 export function resolveInitReveal(event: InitDisplayEvent): Reveal | null {
   const revealed = event.days.filter(
     (day): day is LaunchEventDay =>
-      !isLaunchEventDayLocked(day) && Boolean(day.films?.length),
+      !isLaunchEventDayLocked(day) && getLaunchEventDayFilms(day).length > 0,
   )
   if (revealed.length === 0) return null
 
@@ -43,7 +44,7 @@ export function resolveInitReveal(event: InitDisplayEvent): Reveal | null {
     return {
       label: 'Watch the launches',
       title: `${INIT_EVENT_CATALOG[event.id]?.editionLabel ?? 'Init'} launches`,
-      films: revealed.flatMap((day) => day.films ?? []),
+      films: revealed.flatMap(getLaunchEventDayFilms),
       poweredBy: isFilmPlayerRevealed(event),
       day: revealed[0]!.day,
       dayLabel: 'Browse the launches',
@@ -51,7 +52,7 @@ export function resolveInitReveal(event: InitDisplayEvent): Reveal | null {
   }
 
   const latest = revealed[revealed.length - 1]!
-  const films = latest.films ?? []
+  const films = getLaunchEventDayFilms(latest)
   return {
     label:
       latest.day === event.currentDay

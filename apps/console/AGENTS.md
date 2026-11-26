@@ -504,6 +504,7 @@ Checklist (in this order):
 - **Button icon spacing**: Use `mr-1.5` or `gap-1.5`, not `mr-2` or larger
 - **Date tooltips**: Always include when showing dates for timezone clarity
 - **Wizard headers are title-only**: Never pass a description, subtitle, or helper line to `WizardLayout`. The header is the title (and close/back). Put explanation in the page body, on a field, or omit it.
+- **Theme colors in code**: Tokens such as `--border` and `--muted` are complete oklch colors. Use `var(--border)` in SVG props and inline styles, and `color-mix(in oklab, var(--muted) 30%, transparent)` for transparency (`color-mix(in_oklab,var(--primary)_35%,transparent)` inside Tailwind arbitrary values). Never wrap a token in `hsl()`: `hsl(var(--border))` computes to no color, so the grid line, border or fill disappears.
 
 ### Date and time (Appwrite datetimes)
 
@@ -1173,7 +1174,6 @@ These flags do not grant backend permissions. Curl cannot call this browser API.
 - `VITE_CONSOLE_USER_VERIFICATION` – `true`/`false` to force post-signup email verification
 - `VITE_CONSOLE_COOKIE_BANNER` – `true`/`false` to enable/disable the cookie consent banner logic (GDPR prompt)
 - `VITE_CONSOLE_BLOG_DRAFTS` – `true`/`false` to show draft blog posts (off in both profiles by default)
-- `VITE_CONSOLE_PROJECT_ENVIRONMENTS` – `true`/`false` to show the project environments switcher and leave environments out of organization project lists. Off by default; ignored on self-hosted, which has no environments API.
 
 **Pre-launch mode** (not a profile feature; unset = off):
 

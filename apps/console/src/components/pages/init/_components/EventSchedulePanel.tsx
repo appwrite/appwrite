@@ -10,8 +10,7 @@ import { InitScheduleRow } from './InitScheduleRow'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const CARD_SHELL =
-  'rounded-xl border border-border bg-card/50 overflow-hidden'
+const CARD_SHELL = 'rounded-xl border border-border bg-card/50 overflow-hidden'
 
 interface EventSchedulePanelProps {
   event: InitDisplayEvent
@@ -83,6 +82,12 @@ export function EventSchedulePanel({
   const amaCount = event.schedule.filter(
     (item) => item.platform === 'reddit',
   ).length
+  // Init 4 streamed on YouTube; Init 5 holds its launches as Discord events.
+  const sessionsLabel = event.schedule.some(
+    (item) => item.platform === 'youtube',
+  )
+    ? 'YouTube streams'
+    : 'Discord events'
 
   const selectedTitle =
     selectedDayInfo && !isLaunchEventDayLocked(selectedDayInfo)
@@ -117,9 +122,7 @@ export function EventSchedulePanel({
                 ? 'Session replays and community hangouts'
                 : isCalendarToday
                   ? "Today's sessions"
-                  : amaCount === 1
-                    ? 'YouTube streams and a Reddit AMA'
-                    : 'YouTube streams and Reddit AMAs'}
+                  : `${sessionsLabel} and ${amaCount === 1 ? 'a Reddit AMA' : 'Reddit AMAs'}`}
             </p>
           </div>
           {scheduleDays.length > 1 ? (

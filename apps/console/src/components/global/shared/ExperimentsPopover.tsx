@@ -2,7 +2,7 @@ import {
   FlaskConical,
   Gauge,
   GitBranch,
-  Layers,
+  MousePointerClick,
   type LucideIcon,
 } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
@@ -32,10 +32,10 @@ import { parseExperimentsSeenAt, type UserPrefs } from '@/lib/user-prefs-keys'
 import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 
 const EXPERIMENT_ICONS = {
+  alertCtas: MousePointerClick,
   alerts: Gauge,
   analytics: ANALYTICS_PRODUCT_ICON,
   gitInstallationReuse: GitBranch,
-  projectEnvironments: Layers,
   videos: VIDEOS_PRODUCT_ICON,
 } as const satisfies Record<Experiment['flag'], LucideIcon>
 
