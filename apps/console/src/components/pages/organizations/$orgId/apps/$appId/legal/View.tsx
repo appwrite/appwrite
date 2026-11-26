@@ -5,7 +5,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useOrganizationApp } from '@/lib/react-query/hooks'
-import { trimOrEmpty, useOrgAppUpdate } from '../_components/useOrgAppUpdate'
+import {
+  trimOrEmpty,
+  urlFieldError,
+  useOrgAppUpdate,
+} from '../_components/useOrgAppUpdate'
 import { useT } from '@/lib/i18n/translate'
 
 export function View() {
@@ -57,34 +61,58 @@ function LegalSettings({ orgId, app }: { orgId: string; app: Models.App }) {
           <Input
             id="app-legal-privacy"
             value={privacyPolicyUrl}
+            aria-invalid={urlFieldError(privacyPolicyUrl) !== null}
             onChange={(e) => setPrivacyPolicyUrl(e.target.value)}
             placeholder="https://example.com/privacy"
           />
+          {urlFieldError(privacyPolicyUrl) ? (
+            <p className="text-[12px] text-destructive">
+              {t(urlFieldError(privacyPolicyUrl)!)}
+            </p>
+          ) : null}
         </div>
         <div className="space-y-2">
           <Label htmlFor="app-legal-terms">{t('Terms of service')}</Label>
           <Input
             id="app-legal-terms"
             value={termsUrl}
+            aria-invalid={urlFieldError(termsUrl) !== null}
             onChange={(e) => setTermsUrl(e.target.value)}
             placeholder="https://example.com/terms"
           />
+          {urlFieldError(termsUrl) ? (
+            <p className="text-[12px] text-destructive">
+              {t(urlFieldError(termsUrl)!)}
+            </p>
+          ) : null}
         </div>
         <div className="space-y-2">
           <Label htmlFor="app-legal-deletion">{t('Data deletion')}</Label>
           <Input
             id="app-legal-deletion"
             value={dataDeletionUrl}
+            aria-invalid={urlFieldError(dataDeletionUrl) !== null}
             onChange={(e) => setDataDeletionUrl(e.target.value)}
             placeholder="https://example.com/delete-data"
           />
+          {urlFieldError(dataDeletionUrl) ? (
+            <p className="text-[12px] text-destructive">
+              {t(urlFieldError(dataDeletionUrl)!)}
+            </p>
+          ) : null}
         </div>
       </div>
       <div className="px-6 py-4 border-t border-border bg-muted/30">
         <Button
           size="sm"
           className="h-9 text-[13px]"
-          disabled={isUpdating || !legalDirty}
+          disabled={
+            isUpdating ||
+            !legalDirty ||
+            [privacyPolicyUrl, termsUrl, dataDeletionUrl].some(
+              (url) => urlFieldError(url) !== null,
+            )
+          }
           onClick={() =>
             submit({
               privacyPolicyUrl: trimOrEmpty(privacyPolicyUrl),
