@@ -1,10 +1,4 @@
-import {
-  FlaskConical,
-  Gauge,
-  GitBranch,
-  Layers,
-  type LucideIcon,
-} from 'lucide-react'
+import { FlaskConical, Gauge, GitBranch, type LucideIcon } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { Button } from '@/components/ui/button'
 import {
@@ -35,7 +29,6 @@ const EXPERIMENT_ICONS = {
   alerts: Gauge,
   analytics: ANALYTICS_PRODUCT_ICON,
   gitInstallationReuse: GitBranch,
-  projectEnvironments: Layers,
   videos: VIDEOS_PRODUCT_ICON,
 } as const satisfies Record<Experiment['flag'], LucideIcon>
 

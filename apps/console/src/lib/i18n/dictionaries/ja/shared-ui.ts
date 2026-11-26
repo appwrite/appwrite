@@ -1418,9 +1418,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Appwrite Videos': 'Appwrite Videos',
   'Transcode, stream, and caption videos.':
     '動画のトランスコード、配信、字幕付けを行います。',
-  'Project environments': 'プロジェクト環境',
-  'Switch or clone staging and production.':
-    'ステージングと本番を切り替え、複製します。',
   'Repository not available': 'リポジトリを利用できません',
   "This Git installation can no longer reach the repository. If it was removed from the installation's repository access, add it back with Update repository access. If it was deleted or moved, connect it again.":
     'この Git インストールからリポジトリにアクセスできなくなりました。インストールのリポジトリアクセスから外された場合は、「リポジトリアクセスを更新」で追加し直してください。削除または移動された場合は、接続し直してください。',

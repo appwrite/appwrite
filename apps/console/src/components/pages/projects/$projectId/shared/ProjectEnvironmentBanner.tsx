@@ -2,7 +2,7 @@
  * Shown on every page of a project environment: a purple bar naming the
  * environment, so work meant for production is not done here by mistake, with
  * the way back to production, which is the project with no environment named.
- * Cloud only, behind the projectEnvironments feature like the switcher.
+ * Cloud only: a self-hosted project is never an environment.
  */
 
 import { useNavigate } from '@tanstack/react-router'
@@ -11,7 +11,6 @@ import {
   HeaderAlertBar,
   headerAlertOutlineButtonClass,
 } from '@/components/global/shared/HeaderAlertBar'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useProject } from '@/lib/react-query/hooks'
 import { setActiveEnvironment } from '@/lib/active-environment'
 import { projectEnvironmentId } from '@/lib/project-environments'
@@ -20,11 +19,10 @@ import { useT } from '@/lib/i18n/translate'
 export function ProjectEnvironmentBanner({ projectId }: { projectId: string }) {
   const t = useT()
   const navigate = useNavigate()
-  const { features } = useConsoleProfile()
   const { projectData } = useProject(projectId)
   const environmentId = projectEnvironmentId(projectData)
 
-  if (!features.projectEnvironments || !projectData || !environmentId) {
+  if (!projectData || !environmentId) {
     return null
   }
 
