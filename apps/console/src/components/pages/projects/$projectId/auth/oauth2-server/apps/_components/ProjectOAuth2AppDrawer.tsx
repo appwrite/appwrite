@@ -929,6 +929,7 @@ export function ProjectOAuth2AppDrawer({
                         }
                         isDeleting={deleteInstallationMutation.isPending}
                         teamLabel={t('Team')}
+                        teamIdLabel={t('Team ID')}
                       />
                     </>
                   ) : null}

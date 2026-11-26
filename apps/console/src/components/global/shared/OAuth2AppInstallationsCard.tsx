@@ -39,6 +39,8 @@ type OAuth2AppInstallationsCardProps = {
   loadMoreFailed?: boolean
   /** Label for the installing team ("Organization" for console apps, "Team" in projects). */
   teamLabel: string
+  /** Copy label for the installing team ID ("Organization ID" or "Team ID"). */
+  teamIdLabel: string
   /** Compact paddings for use inside drawers. */
   embedded?: boolean
   /** Extra classes for the nested dialog, e.g. a z-index above a drawer. */
@@ -70,6 +72,7 @@ export function OAuth2AppInstallationsCard({
   isLoadingMore = false,
   loadMoreFailed = false,
   teamLabel,
+  teamIdLabel,
   embedded = false,
   dialogClassName,
 }: OAuth2AppInstallationsCardProps) {
@@ -164,8 +167,8 @@ export function OAuth2AppInstallationsCard({
                         <CopyableId
                           id={installation.teamId}
                           size="xs"
-                          copyLabel={`${teamLabel} ID`}
-                          copyToastLabel={`${teamLabel} ID`}
+                          copyLabel={teamIdLabel}
+                          copyToastLabel={teamIdLabel}
                         />
                       </div>
                       <div className="flex flex-wrap items-center gap-1">
