@@ -1072,6 +1072,22 @@ if (class_exists(\Utopia\Database\DateTime::class)) {
     }
 }
 
+if (class_exists(\Utopia\Database\Validator\Key::class)) {
+    class ExtendsUtopiaDatabaseValidatorKey extends \Utopia\Database\Validator\Key
+    {
+    }
+}
+if (class_exists(\Utopia\Database\Validator\Label::class)) {
+    class ExtendsUtopiaDatabaseValidatorLabel extends \Utopia\Database\Validator\Label
+    {
+    }
+}
+if (class_exists(\Utopia\Database\Validator\UID::class)) {
+    class ExtendsUtopiaDatabaseValidatorUID extends \Utopia\Database\Validator\UID
+    {
+    }
+}
+
 $extended = [];
 foreach ((new ReflectionExtension('utopia'))->getClassNames() as $name) {
     $class = new ReflectionClass($name);
