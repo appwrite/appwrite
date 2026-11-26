@@ -110,9 +110,6 @@ class Executor
      * @param string $runtimeEntrypoint
      * @param bool $logging
      * @param string $responseFormat
-     * @param \Closure|null $onPart Receives each part of a streamed response as it arrives
-     * @param int|null $maxBufferedSize The most bytes of the response held in memory at once; a
-     *                                  response that needs more is refused instead of buffered
      *
      * @return array
      */
@@ -135,8 +132,7 @@ class Executor
         string $runtimeEntrypoint = '',
         ?int $requestTimeout = null,
         string $responseFormat = self::RESPONSE_FORMAT_OBJECT_HEADERS,
-        ?\Closure $onPart = null,
-        ?int $maxBufferedSize = null
+        ?\Closure $onPart = null
     ) {
         $runtimeId = self::runtimeId($projectId, $deploymentId);
         $route = '/runtimes/' . $runtimeId . '/executions';
@@ -186,24 +182,15 @@ class Executor
         $reader = null;
         $onData = null;
 
-        if ($onPart !== null || $maxBufferedSize !== null) {
-            $onData = function (string $data) use (&$parts, &$buffered, &$reader, $onPart, $maxBufferedSize): void {
+        if ($onPart !== null) {
+            $onData = function (string $data) use (&$parts, &$buffered, &$reader, $onPart): void {
                 if ($reader !== null) {
                     $reader->feed($data);
 
                     return;
                 }
 
-                if ($maxBufferedSize !== null && \strlen($buffered) + \strlen($data) > $maxBufferedSize) {
-                    throw new ExecutorException('Execution response is too large to buffer.', 500);
-                }
-
                 $buffered .= $data;
-
-                // Without a part handler the whole response is buffered, then decoded below.
-                if ($onPart === null) {
-                    return;
-                }
 
                 // Response headers only arrive once the transfer ends, so the first part's headers
                 // tell the formats apart: only the streaming one marks its parts chunked.
@@ -230,7 +217,7 @@ class Executor
 
         $response = $this->call($this->endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId, 'content-type' => 'multipart/form-data', 'accept' => 'multipart/form-data', 'x-executor-response-format' => $responseFormat ], $params, true, $requestTimeout, $onData);
 
-        if ($onData !== null) {
+        if ($onPart !== null) {
             if ($reader === null) {
                 // call() skips decoding for a callback, and executor failures arrive as JSON.
                 $contentType = $response['headers']['content-type'] ?? '';
