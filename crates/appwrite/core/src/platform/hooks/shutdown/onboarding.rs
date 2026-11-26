@@ -75,7 +75,7 @@ const ONBOARDING: &[&str] = &[
     "project.createVideoProfile",
     "videos.createRendition",
     "videos.createCaption",
-    "videos.getTimelines",
+    "videos.getTimeline",
     "videos.getHlsManifest",
     "videos.getDashManifest",
     "videos.getCmafHlsManifest",
