@@ -186,6 +186,8 @@ export function useSaveVideoCaptionCues(
         fileId: uploaded.$id,
         name: input.name,
         language: input.code,
+        // The preview SDK still lists the removed `code` param (previews keep pinned params); the API ignores it.
+        code: input.code,
         xdefault: input.isDefault,
       }
       return input.captionId
