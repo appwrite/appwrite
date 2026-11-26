@@ -336,6 +336,7 @@ final class OriginTest extends TestCase
         $this->assertSame(self::OWNER, $event['owner']);
         $this->assertSame('i_0123456789', $event['installationId']);
         $this->assertSame(self::COMMIT_HASH, $event['commitHash']);
+        $this->assertSame('abc123', $event['previousCommitHash']);
         $this->assertSame(self::COMMIT_MESSAGE, $event['headCommitMessage']);
         $this->assertSame(self::AUTHOR_NAME, $event['headCommitAuthorName']);
         $this->assertSame(self::AUTHOR_EMAIL, $event['headCommitAuthorEmail']);
