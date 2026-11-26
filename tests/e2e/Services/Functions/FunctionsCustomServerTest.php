@@ -3705,6 +3705,13 @@ final class FunctionsCustomServerTest extends Scope
             }
         }
 
+        // Test for SUCCESS: NestJS, built to dist/ before it starts
+        $nestjs = \array_values(\array_filter($frameworks['body']['frameworks'], fn (array $framework): bool => $framework['key'] === 'nestjs'))[0] ?? null;
+        $this->assertNotNull($nestjs);
+        $this->assertSame('NestJS', $nestjs['name']);
+        $this->assertSame('dist/main.js', $nestjs['entrypoint']);
+        $this->assertSame('npm install && npm run build', $nestjs['installCommand']);
+
         // Test for SUCCESS: the total can be skipped
         $frameworks = $this->client->call(Client::METHOD_GET, '/functions/frameworks', array_merge([
             'content-type' => 'application/json',
@@ -3823,6 +3830,81 @@ final class FunctionsCustomServerTest extends Scope
         ]);
         $this->assertSame(400, $unknown['headers']['status-code']);
         $this->assertSame(400, $this->updateFunction($functionId, ['name' => 'Express app', 'framework' => 'not-a-framework'])['headers']['status-code']);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testNestJSFunction(): void
+    {
+        // Test for SUCCESS: a NestJS app needs only the framework; it's built to dist/
+        // by the default build command and started from there.
+        $function = $this->createFunction([
+            'functionId' => Id::unique(),
+            'name' => 'NestJS app',
+            'runtime' => 'node-22',
+            'framework' => 'nestjs',
+            'events' => ['users.*.create'],
+            'timeout' => 15,
+            'logging' => true,
+        ]);
+        $this->assertSame(201, $function['headers']['status-code'], \json_encode($function['body']));
+        $this->assertSame('nestjs', $function['body']['framework']);
+        $this->assertSame('dist/main.js', $function['body']['entrypoint']);
+        $this->assertSame('npm install && npm run build', $function['body']['commands']);
+        $functionId = $function['body']['$id'];
+
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('nestjs'),
+            'activate' => true,
+        ]);
+
+        // Routing, method and JSON response, served by NestJS itself
+        $execution = $this->createExecution($functionId, ['async' => 'false', 'path' => '/', 'method' => 'GET']);
+        $this->assertSame(201, $execution['headers']['status-code']);
+        $this->assertSame(['framework' => 'nestjs', 'method' => 'GET', 'path' => '/'], $this->executionOutput($execution));
+
+        // JSON body, request header, status code and response header
+        $execution = $this->createExecution($functionId, [
+            'async' => 'false',
+            'path' => '/echo',
+            'method' => 'POST',
+            'body' => \json_encode(['hello' => 'world']),
+            'headers' => ['content-type' => 'application/json', 'x-test' => 'from-test'],
+        ]);
+        $this->assertSame(201, $execution['body']['responseStatusCode']);
+        $this->assertSame(['body' => ['hello' => 'world'], 'header' => 'from-test'], $this->executionOutput($execution));
+        $this->assertContains(['name' => 'x-echo', 'value' => 'yes'], $execution['body']['responseHeaders']);
+
+        // The function's variables and the port the app listens on; its logs reach the execution
+        $execution = $this->createExecution($functionId, ['async' => 'false', 'path' => '/env', 'method' => 'GET']);
+        $this->assertSame(['functionId' => $functionId, 'port' => '3000'], $this->executionOutput($execution));
+        $this->assertStringContainsString('nestjs log line', (string) $execution['body']['logs']);
+
+        // Events reach the app as POST /, told apart by x-appwrite-trigger and x-appwrite-event
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => Id::unique(),
+            'name' => 'NestJS event user',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        $this->assertEventually(function () use ($functionId, $userId) {
+            $executions = $this->listExecutions($functionId);
+            $events = \array_values(\array_filter($executions['body']['executions'], fn (array $execution): bool => $execution['trigger'] === 'event'));
+            $this->assertNotEmpty($events);
+            $this->assertSame('completed', $events[0]['status']);
+            $this->assertSame(200, $events[0]['responseStatusCode']);
+            $this->assertStringContainsString('trigger=event event=users.' . $userId . '.create', (string) $events[0]['logs']);
+        }, 20000, 500);
+
+        $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
 
         $this->cleanupFunction($functionId);
     }

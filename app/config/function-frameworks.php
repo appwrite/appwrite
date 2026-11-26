@@ -25,4 +25,16 @@ return [
         'installCommand' => 'npm install',
         'startCommand' => 'bash helpers/express/server.sh',
     ],
+    'nestjs' => [
+        'key' => 'nestjs',
+        'name' => 'NestJS',
+        // NestJS needs Node 20+; on older versions the app fails at start, as with Express.
+        'runtimes' => $templateRuntimes['NODE'],
+        // Built to dist/ (`nest build` or tsc); the app listens on process.env.PORT.
+        'entrypoint' => 'dist/main.js',
+        'installCommand' => 'npm install && npm run build',
+        // The Express helper starts any Node HTTP server: it runs the entrypoint with
+        // PORT and HOST set, and drains the server listening on PORT on shutdown.
+        'startCommand' => 'bash helpers/express/server.sh',
+    ],
 ];
