@@ -2341,8 +2341,7 @@ fn tail(bytes: &[u8]) -> u64 {
 fn murmur3_x86_32(data: &[u8]) -> u32 {
     let (c1, c2) = (0xcc9e_2d51u32, 0x1b87_3593u32);
     let mut h = 0u32;
-    let blocks = data.chunks_exact(4);
-    let rest = blocks.remainder();
+    let (blocks, rest) = data.as_chunks::<4>();
     for b in blocks {
         let k = u32::from_le_bytes([b[0], b[1], b[2], b[3]]).wrapping_mul(c1).rotate_left(15).wrapping_mul(c2);
         h = (h ^ k).rotate_left(13).wrapping_mul(5).wrapping_add(0xe654_6b64);
@@ -2360,8 +2359,7 @@ fn murmur3_x86_128(data: &[u8]) -> [u32; 4] {
     let hrot = [19u32, 17, 15, 13];
     let add = [0x561c_cd1bu32, 0x0bca_a747, 0x96cd_1c35, 0x32ac_3b17];
     let mut h = [0u32; 4];
-    let blocks = data.chunks_exact(16);
-    let rest = blocks.remainder();
+    let (blocks, rest) = data.as_chunks::<16>();
     for b in blocks {
         let k: Vec<u32> = b.chunks(4).map(|w| u32::from_le_bytes([w[0], w[1], w[2], w[3]])).collect();
         for i in 0..4 {
@@ -2399,8 +2397,7 @@ fn murmur3_x86_128(data: &[u8]) -> [u32; 4] {
 fn murmur3_x64_128(data: &[u8]) -> [u64; 2] {
     let (c1, c2) = (0x87c3_7b91_1142_53d5u64, 0x4cf5_ad43_2745_937fu64);
     let (mut h1, mut h2) = (0u64, 0u64);
-    let blocks = data.chunks_exact(16);
-    let rest = blocks.remainder();
+    let (blocks, rest) = data.as_chunks::<16>();
     for b in blocks {
         let k1 = u64::from_le_bytes(b[0..8].try_into().unwrap_or_default());
         let k2 = u64::from_le_bytes(b[8..16].try_into().unwrap_or_default());

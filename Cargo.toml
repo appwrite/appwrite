@@ -15,7 +15,7 @@ members = ["crates/utopia/*", "crates/extension"]
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.97"
+rust-version = "1.100"
 license = "BSD-3-Clause"
 repository = "https://github.com/appwrite/appwrite"
 # The crates under crates/utopia are published to crates.io. See rfc/monorepo.md.
@@ -57,8 +57,6 @@ getrandom = "0.3"
 gost94 = "0.10"
 hex = "0.4"
 hashbrown = { version = "0.17", default-features = false }
-icu_normalizer = { version = "2.3", default-features = false, features = ["compiled_data"] }
-icu_properties = { version = "2.3", default-features = false, features = ["compiled_data"] }
 indexmap = "2"
 md-5 = "0.10"
 md2 = "0.10"
