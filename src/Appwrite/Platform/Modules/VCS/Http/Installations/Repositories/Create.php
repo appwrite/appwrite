@@ -107,12 +107,14 @@ class Create extends Action
 
                 $accessToken = null;
                 foreach ($identities as $identity) {
+                    // The client caches the first user it looks up, so each identity gets its own
+                    $client = $vcsFactory->oauth2FromProvider($provider);
                     try {
-                        $token = $installationTokens->refreshIdentity($identity, $dbForPlatform, $oauth2);
+                        $token = $installationTokens->refreshIdentity($identity, $dbForPlatform, $client);
                     } catch (Exception) {
                         continue;
                     }
-                    if (!\method_exists($oauth2, 'getUserSlug') || \strcasecmp($oauth2->getUserSlug($token), $installation->getAttribute('organization', '')) === 0) {
+                    if (!\method_exists($client, 'getUserSlug') || \strcasecmp($client->getUserSlug($token), $installation->getAttribute('organization', '')) === 0) {
                         $accessToken = $token;
                         break;
                     }
