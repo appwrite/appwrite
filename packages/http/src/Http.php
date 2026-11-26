@@ -716,6 +716,7 @@ class Http
     protected function getArguments(Hook $hook, array $values, array $requestParams, ?Route $route = null): array
     {
         $arguments = [];
+        /** @var array<string, mixed> $param */
         foreach ($hook->getParams() as $key => $param) { // Get value from route or request object
             $requestKey = $key;
             if (!\array_key_exists($key, $requestParams) && !empty($param['aliases'])) {
