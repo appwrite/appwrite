@@ -26,19 +26,17 @@ describe('hasQualityLabel', () => {
 })
 
 describe('experiments catalog', () => {
-  test('lists Appwrite Analytics, project environments, alerts, Videos and Git installation reuse', () => {
+  test('lists Appwrite Analytics, alerts, Videos and Git installation reuse', () => {
     expect(EXPERIMENTS.map((experiment) => experiment.flag)).toEqual([
       'analytics',
-      'projectEnvironments',
       'alerts',
       'videos',
       'gitInstallationReuse',
     ])
     expect(EXPERIMENTS[0]?.name).toBe('Appwrite Analytics')
-    expect(EXPERIMENTS[1]?.name).toBe('Project environments')
-    expect(EXPERIMENTS[2]?.name).toBe('Monitors and alerts')
-    expect(EXPERIMENTS[3]?.name).toBe('Appwrite Videos')
-    expect(EXPERIMENTS[4]?.name).toBe('Git installation reuse')
+    expect(EXPERIMENTS[1]?.name).toBe('Monitors and alerts')
+    expect(EXPERIMENTS[2]?.name).toBe('Appwrite Videos')
+    expect(EXPERIMENTS[3]?.name).toBe('Git installation reuse')
     for (const experiment of EXPERIMENTS) {
       expect(experiment.description.length).toBeGreaterThan(0)
     }
@@ -51,6 +49,17 @@ describe('experiments catalog', () => {
     expect(
       EXPERIMENTS.some(
         (experiment) => (experiment.flag as string) === 'vcsOrigin',
+      ),
+    ).toBe(false)
+  })
+
+  test('Project environments are generally available: no feature flag and not in the previews menu', () => {
+    for (const profile of Object.values(CONSOLE_PROFILES)) {
+      expect(profile.features).not.toHaveProperty('projectEnvironments')
+    }
+    expect(
+      EXPERIMENTS.some(
+        (experiment) => (experiment.flag as string) === 'projectEnvironments',
       ),
     ).toBe(false)
   })
@@ -117,6 +126,44 @@ describe('Origin flag removal', () => {
     const overrides = getDebugProfileFeatureOverrides()
     expect('vcsOrigin' in overrides).toBe(false)
     expect('extraVcsOAuth' in overrides).toBe(false)
+  })
+})
+
+describe('project environments flag removal', () => {
+  const globals = globalThis as { window?: unknown; localStorage?: unknown }
+  const originalWindow = globals.window
+  const originalLocalStorage = globals.localStorage
+
+  afterEach(() => {
+    globals.window = originalWindow
+    globals.localStorage = originalLocalStorage
+  })
+
+  test('an environments override saved in the browser is dropped', () => {
+    const storage = new Map<string, string>([
+      [
+        'debug:consoleProfile',
+        JSON.stringify({
+          id: 'cloud',
+          features: { projectEnvironments: false },
+        }),
+      ],
+    ])
+    const localStorage = {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => void storage.set(key, value),
+      removeItem: (key: string) => void storage.delete(key),
+    }
+    globals.localStorage = localStorage
+    globals.window = {
+      localStorage,
+      location: new URL('https://cloud.appwrite.io/console'),
+      dispatchEvent: () => true,
+    }
+
+    expect('projectEnvironments' in getDebugProfileFeatureOverrides()).toBe(
+      false,
+    )
   })
 })
 

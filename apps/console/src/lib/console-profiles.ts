@@ -70,8 +70,6 @@ export type ConsoleProfileFeatures = {
    * self-hosted instances run the review service only when they opt in.
    */
   reviews: boolean
-  /** Project environments switcher in the project sidebar (`/project/environments`, Cloud only). */
-  projectEnvironments: boolean
   /**
    * Organization settings → Single sign-on (Cloud only, owners). Owners verify
    * domains with a DNS record and connect identity providers, so people on
@@ -151,7 +149,6 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   videos: 'Videos',
   gitInstallationReuse: 'Git installation reuse',
   reviews: 'Review',
-  projectEnvironments: 'Project environments',
   sso: 'Single sign-on',
   alerts: 'Alerts',
   multiRegion: 'Multi-region',
@@ -209,7 +206,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       videos: false,
       gitInstallationReuse: false,
       reviews: false,
-      projectEnvironments: false,
       sso: true,
       alerts: false,
       multiRegion: true,
@@ -257,7 +253,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       videos: false,
       gitInstallationReuse: false,
       reviews: false,
-      projectEnvironments: false,
       sso: false,
       alerts: false,
       multiRegion: false,
@@ -379,6 +374,7 @@ const REMOVED_PROFILE_FEATURE_KEYS = [
   'projectTransfers',
   'extraVcsOAuth',
   'vcsOrigin',
+  'projectEnvironments',
 ] as const
 
 function migrateStoredProfileFeatures(
@@ -548,7 +544,6 @@ function applyCloudOnlyFeatureGates(
       init: false,
       marketing: false,
       multiTenancy: false,
-      projectEnvironments: false,
       sso: false,
       zero: false,
     }
@@ -570,7 +565,7 @@ function parseEnvFeatureOverride(value: string): boolean | null {
  * Per-feature overrides from runtime env vars (e.g.
  * VITE_CONSOLE_USER_VERIFICATION, VITE_CONSOLE_COOKIE_BANNER,
  * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_DATABASE_PITR_RESTORE,
- * VITE_CONSOLE_PROJECT_ENVIRONMENTS, VITE_CONSOLE_BROWSER_ALERTS), applied on top
+ * VITE_CONSOLE_BROWSER_ALERTS), applied on top
  * of the canonical profile. A stored debug override still wins.
  */
 function applyEnvFeatureOverrides(
@@ -596,13 +591,6 @@ function applyEnvFeatureOverrides(
   )
   if (databasePitrRestore !== null) {
     next = { ...next, databasePitrRestore }
-  }
-  // Self-hosted has no `/project/environments` and rejects `parentId` in project list queries.
-  const projectEnvironments = parseEnvFeatureOverride(
-    config.projectEnvironments,
-  )
-  if (projectEnvironments !== null && profileId === 'cloud') {
-    next = { ...next, projectEnvironments }
   }
   const browserAlerts = parseEnvFeatureOverride(config.browserAlerts)
   if (browserAlerts !== null) {

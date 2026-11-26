@@ -347,19 +347,6 @@ async function enterEnvironment(page: Page) {
   )
 }
 
-/**
- * Turn the environments experiment on, as the quality team's experiments
- * toggle does: the sidebar switcher and the create page sit behind it.
- */
-async function enableEnvironmentsExperiment(page: Page) {
-  await page.addInitScript(() => {
-    window.localStorage.setItem(
-      'debug:consoleProfile',
-      JSON.stringify({ id: 'cloud', features: { projectEnvironments: true } }),
-    )
-  })
-}
-
 async function openSettings(page: Page) {
   await page.goto(`/projects/${PROJECT.$id}/settings`, {
     waitUntil: 'domcontentloaded',
@@ -555,7 +542,6 @@ test.describe('creating an environment on the plan', () => {
     const mock = await mockAppwriteApi(page)
     mock.plan = FREE
     mock.environments = []
-    await enableEnvironmentsExperiment(page)
     await openSettings(page)
 
     // The feature stays in view, marked Beta, with creating marked Pro
@@ -596,7 +582,6 @@ test.describe('creating an environment on the plan', () => {
       $id,
       name: $id,
     }))
-    await enableEnvironmentsExperiment(page)
     await openSettings(page)
 
     await page.getByRole('button', { name: 'Switch environment' }).click()
@@ -623,7 +608,6 @@ test.describe('creating an environment on the plan', () => {
   }) => {
     const mock = await mockAppwriteApi(page)
     mock.plan = null
-    await enableEnvironmentsExperiment(page)
     await page.goto(`/projects/${PROJECT.$id}/environments/create`, {
       waitUntil: 'domcontentloaded',
     })
@@ -642,7 +626,6 @@ test.describe('creating an environment on the plan', () => {
 
   test('on Pro with room an environment is created', async ({ page }) => {
     const mock = await mockAppwriteApi(page)
-    await enableEnvironmentsExperiment(page)
     await page.goto(`/projects/${PROJECT.$id}/environments/create`, {
       waitUntil: 'domcontentloaded',
     })
