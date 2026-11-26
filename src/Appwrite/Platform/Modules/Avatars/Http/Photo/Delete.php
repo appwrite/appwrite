@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Avatars\Http\Photo;
 
 use Appwrite\Abuse\Limit;
 use Appwrite\AvatarPhotos\Providers\Fallback;
+use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -41,7 +42,6 @@ class Delete extends Base
             ->label('scope', ['avatars.write', 'users.write'])
             ->label('event', 'users.[userId].update.avatar')
             ->label('audits.event', 'user.update')
-            ->label('audits.resource', 'user/{user.$id}')
             ->label('audits.userId', '{user.$id}')
             ->label('usage.resource', 'user/{user.$id}')
             ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
@@ -68,6 +68,7 @@ class Delete extends Base
             ->inject('user')
             ->inject('queueForEvents')
             ->inject('deviceForFiles')
+            ->inject('auditContext')
             ->callback($this->action(...));
     }
 
@@ -79,6 +80,7 @@ class Delete extends Base
         User $user,
         Event $queueForEvents,
         Device $deviceForFiles,
+        AuditContext $auditContext,
     ): void {
         $user = $this->getTarget($userId, $user, $request, $dbForProject);
 
@@ -88,6 +90,9 @@ class Delete extends Base
         $this->replacePhoto($user, new Stream($photo), \strlen($photo), 'image/png', $dbForProject, $deviceForFiles);
 
         $queueForEvents->setParam('userId', $user->getId());
+
+        // A 204 has no body for an audits.resource label to read, and the user may not be the caller
+        $auditContext->resource = 'user/' . $user->getId();
 
         $response->noContent();
     }
