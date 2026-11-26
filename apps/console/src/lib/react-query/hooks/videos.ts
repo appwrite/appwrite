@@ -89,11 +89,7 @@ export function getVideoEncodingStatus(
  * report an empty status; treat those as possibly ready.
  */
 export type VideoTimelineState =
-  | 'processing'
-  | 'ready'
-  | 'skipped'
-  | 'error'
-  | 'unknown'
+  'processing' | 'ready' | 'skipped' | 'error' | 'unknown'
 
 export function getVideoTimelineState(
   video: Pick<Models.Video, 'timelineStatus'> | null | undefined,
@@ -215,37 +211,33 @@ export async function fetchVideoCodecs(
 const VIDEO_PROFILES_LIMIT = 100
 
 /**
- * Profiles belong to one codec and the API lists one codec at a time
- * (`h264` when none is given), so list every enabled codec and merge.
+ * Profiles of every enabled codec, filtered with `Query.equal('codec', ...)`
+ * so profiles left over from a codec the instance has since disabled stay out
+ * of the pickers.
  */
 export async function fetchVideoProfiles(
   projectId: string,
 ): Promise<Models.VideoProfileList> {
   const codecs = await fetchVideoCodecs(projectId)
   const ids = codecs.length
-    ? codecs.map((codec) => codec.$id as VideoCodec)
+    ? codecs.map((codec) => codec.$id)
     : [VideoCodec.H264]
   const project = sdk.forProject(projectId).project
-  // Page through each codec: the pickers and the profiles page list them all.
-  const listCodec = async (codec: VideoCodec) => {
-    const profiles: Models.VideoProfile[] = []
-    for (;;) {
-      const page = await project.listVideoProfiles({
-        codec,
-        queries: [
-          Query.limit(VIDEO_PROFILES_LIMIT),
-          Query.offset(profiles.length),
-        ],
-      })
-      const batch = page.profiles ?? []
-      profiles.push(...batch)
-      if (batch.length < VIDEO_PROFILES_LIMIT || profiles.length >= page.total)
-        return profiles
-    }
+  // Page through every profile: the pickers and the profiles page list them all.
+  const profiles: Models.VideoProfile[] = []
+  for (;;) {
+    const page = await project.listVideoProfiles({
+      queries: [
+        Query.equal('codec', ids),
+        Query.limit(VIDEO_PROFILES_LIMIT),
+        Query.offset(profiles.length),
+      ],
+    })
+    const batch = page.profiles ?? []
+    profiles.push(...batch)
+    if (batch.length < VIDEO_PROFILES_LIMIT || profiles.length >= page.total)
+      return { total: profiles.length, profiles }
   }
-  const lists = await Promise.all(ids.map(listCodec))
-  const profiles = lists.flat()
-  return { total: profiles.length, profiles }
 }
 
 /** Whether a profile's codec can be packaged as `output` on this instance. */
