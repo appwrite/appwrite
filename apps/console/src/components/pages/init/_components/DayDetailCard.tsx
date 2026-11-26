@@ -397,8 +397,8 @@ function DayResourceRow({
 }: {
   resource: LaunchEventDayResource
   /**
-   * Half-width columns: the badge and action share the first line and the
-   * title gets the full width below, instead of wrapping in a narrow slot.
+   * Half-width columns: one line with the label as its icon, the title, and
+   * an arrow for the link, so the title never wraps in a narrow slot.
    */
   stacked?: boolean
 }) {
@@ -411,25 +411,27 @@ function DayResourceRow({
   // Phones give the title its own full-width line and drop the badge + action
   // below it; three inline columns left the title ~80px and shredded it.
   const rowClassName = stacked
-    ? 'group grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1.5 px-6 py-3.5 transition-colors hover:bg-accent/30'
+    ? 'group flex items-center gap-3 px-6 py-3.5 transition-colors hover:bg-accent/30'
     : 'group flex flex-wrap items-center gap-x-4 gap-y-2 px-6 py-3.5 transition-colors hover:bg-accent/30 sm:flex-nowrap'
   const rowContent = stacked ? (
+    // One line: the label as its icon, the title, and the link as an arrow.
     <>
-      <span className="flex">
-        <Badge
-          variant="secondary"
-          className="gap-1.5 rounded-md bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
-        >
-          <ResourceIcon className="size-3 text-muted-foreground" aria-hidden />
-          {resource.typeLabel}
-        </Badge>
+      <span
+        className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground"
+        title={resource.typeLabel}
+      >
+        <ResourceIcon className="size-3.5" aria-hidden />
+        <span className="sr-only">{resource.typeLabel}</span>
       </span>
-      <span className="flex items-center gap-1 text-[12px] text-muted-foreground transition-colors group-hover:text-foreground">
-        {resource.actionLabel}
-        <ArrowUpRight className="size-3.5" aria-hidden />
-      </span>
-      <span className="col-span-2 min-w-0 text-[13px] font-medium text-foreground">
+      <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground">
         {resource.title}
+      </span>
+      <span
+        className="shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"
+        title={resource.actionLabel}
+      >
+        <ArrowUpRight className="size-4" aria-hidden />
+        <span className="sr-only">{resource.actionLabel}</span>
       </span>
     </>
   ) : (
