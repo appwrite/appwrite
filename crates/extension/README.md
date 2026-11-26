@@ -233,18 +233,20 @@ defines a reset stream as a new one); zstd's contexts and brotli's coders are cr
 per call, as PHP does, but zstd's and the brotli encoder's small blocks come from PHP's allocator
 rather than `malloc()`. A kept zstd context changed which error a corrupt frame reports, so none is kept.
 
-`packages/compression/tests` run on the extension. While both existed, `tests/compression.php`
-(5,702 lines) was identical on both; it went with the PHP classes, since there is nothing left to
-compare against. It covered what every algorithm writes at every level (Brotli 0 to 11, LZ4 0 to 12, Zstd -5
+`packages/compression/tests` run on the extension, and so does `tests/compression.php` (5,702
+lines), diffed against `tests/compression.expected.jsonl`: what it printed on the PHP classes
+before they were removed (it was identical on both). It covers what every algorithm writes at every level (Brotli 0 to 11, LZ4 0 to 12, Zstd -5
 to 22) for 15 inputs up to 3 MB, read back by the class and by PHP's own function; what PHP's
 functions wrote (gzencode and gzdeflate at every level, zstd_compress at every level,
 brotli_compress at every level and mode, lz4_compress, snappy_compress, and their incremental forms)
 read by the classes; concatenated gzip members, gzip headers PHP never writes, trailing bytes,
-skippable and legacy zstd frames (written by zstd 0.4.7 to 0.7.5);
+skippable and legacy zstd frames (`tests/fixtures/compression`, written by zstd 0.4.7 to 0.7.5);
 every algorithm's output truncated and corrupted at a dozen places; 65 MB both ways; levels,
 constructors and argument coercion; `fromName()` and 1,342 `fromAcceptEncoding()` cases (61 headers
 against 22 `$supported` lists); reflection of every class; PHP subclasses; and, in processes of
-their own, frames claiming more than `memory_limit`, and asserted the differences below at its end.
+their own, frames claiming more than `memory_limit`. The differences below are asserted at its
+end. The cases that read what PHP's functions wrote call PECL `zstd`, `brotli`, `lz4` and `snappy`,
+so the corpus needs them loaded.
 Nothing in Appwrite or Cloud subclasses a compression class.
 
 Known differences from the PHP classes:
@@ -261,7 +263,8 @@ Known differences from the PHP classes:
   runs, where `malloc()` did not; near the limit, blocks come from `malloc()` again.
 
 The classes need none of PECL `brotli`, `zstd`, `lz4` and `snappy`. `zstd`, `lz4` and `snappy` can
-leave `appwrite/base`; `brotli` stays while `packages/http`'s `Response` streams with
+leave `appwrite/base` once the corpus reads stored streams instead of writing them with those
+extensions; `brotli` stays while `packages/http`'s `Response` streams with
 `brotli_compress_init()` (without it, a streamed response falls back to gzip).
 
 ## Utopia\Balancer
