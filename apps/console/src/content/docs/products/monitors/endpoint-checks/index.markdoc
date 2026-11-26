@@ -8,12 +8,13 @@ Endpoint checks, also called synthetic checks, are available on paid Appwrite Cl
 
 # Create an endpoint check {% #create-an-endpoint-check %}
 
-1. In your project, open **Observe > Monitors**, then click **Create monitor**.
-2. Choose **HTTP**, **DNS**, **TCP**, or **SMTP**. Enter the target and any expectations for that check.
-3. Under **Checks**, set how often to check and how long to wait before a check times out. Your plan sets the shortest available check interval. The timeout must be at most the check interval.
-4. Set the severity, recipients, and cooldown under **Notify**, then click **Create**.
+1. In your project, open **Observe** > **Monitors**, then click **Create monitor**.
+2. Choose **HTTP**, **DNS**, **TCP**, or **SMTP** as the type. Under **Target**, enter what to check and any expectations for that type.
+3. Under **Checks**, set how often to check, from 30 seconds to 1 hour, and how long a check may take before it times out, from 5 seconds to 1 minute. Your plan sets the shortest interval you can choose, and the timeout can't be longer than the interval.
+4. Choose recipients under **Notify** and pick a **Severity**. To set a name or change the cooldown, expand **Name, cooldown**.
+5. Click **Create**.
 
-Open a monitor to see the last result and check time. The details vary by type and can include latency, the returned HTTP status, or the certificate expiration date.
+The **Monitors** list shows the latest result, latency, and time of each check. Open a monitor to see its status, target, last result or latency, and when it last fired.
 
 # HTTP {% #http %}
 
@@ -23,7 +24,7 @@ For an HTTPS URL, use **Certificate expiry warning** to set how many days before
 
 # DNS {% #dns %}
 
-Enter the domain and select an **A**, **AAAA**, **CNAME**, **MX**, **TXT**, or **NS** record. You can specify a DNS resolver and an expected answer. Leave **Expected answer** empty to accept any answer for the selected record type.
+Enter the domain and select an **A**, **AAAA**, **CNAME**, **MX**, **TXT**, or **NS** record. You can set a **Resolver** to query and an **Expected answer**. Leave **Expected answer** empty to accept any answer for the selected record type.
 
 # TCP {% #tcp %}
 
@@ -39,6 +40,351 @@ Enter the mail server's host and port. Appwrite checks whether the server accept
 | **None** | Connect without TLS. |
 | **Upgrade with STARTTLS** | Open an SMTP session and upgrade it with STARTTLS. |
 | **Implicit TLS** | Start TLS as soon as the connection opens. |
+
+# Create with a server SDK {% #create-with-a-server-sdk %}
+
+Each type has its own method: `createHttpMonitor`, `createDnsMonitor`, `createTcpMonitor`, and `createSmtpMonitor`. Create an [API key](/docs/advanced/platform/api-keys) with the `monitors.write` scope to call them. This example checks `https://api.example.com/health` every minute, expects status `200`, and fails 14 days before the certificate expires.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const monitors = new sdk.Monitors(client);
+
+const monitor = await monitors.createHttpMonitor({
+    monitorId: 'api-health',
+    name: 'API health',
+    url: 'https://api.example.com/health',
+    statusCodes: [200], // optional
+    certificateDays: 14, // optional
+    interval: 60, // optional
+    timeout: 10 // optional
+});
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.monitors import Monitors
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+monitors = Monitors(client)
+
+monitor = monitors.create_http_monitor(
+    monitor_id = 'api-health',
+    name = 'API health',
+    url = 'https://api.example.com/health',
+    status_codes = [200], # optional
+    certificate_days = 14, # optional
+    interval = 60, # optional
+    timeout = 10 # optional
+)
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+Monitors monitors = Monitors(client);
+
+final monitor = await monitors.createHttpMonitor(
+    monitorId: 'api-health',
+    name: 'API health',
+    url: 'https://api.example.com/health',
+    statusCodes: [200], // (optional)
+    certificateDays: 14, // (optional)
+    interval: 60, // (optional)
+    timeout: 10, // (optional)
+);
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Monitors;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<API_KEY>');
+
+$monitors = new Monitors($client);
+
+$monitor = $monitors->createHttpMonitor(
+    monitorId: 'api-health',
+    name: 'API health',
+    url: 'https://api.example.com/health',
+    statusCodes: [200], // optional
+    certificateDays: 14, // optional
+    interval: 60, // optional
+    timeout: 10 // optional
+);
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<API_KEY>')
+
+monitors = Monitors.new(client)
+
+monitor = monitors.create_http_monitor(
+    monitor_id: 'api-health',
+    name: 'API health',
+    url: 'https://api.example.com/health',
+    status_codes: [200], # optional
+    certificate_days: 14, # optional
+    interval: 60, # optional
+    timeout: 10 # optional
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<API_KEY>");
+
+Monitors monitors = new Monitors(client);
+
+// Fully qualified, since System.Threading also has a Monitor class.
+Appwrite.Models.Monitor monitor = await monitors.CreateHttpMonitor(
+    monitorId: "api-health",
+    name: "API health",
+    url: "https://api.example.com/health",
+    statusCodes: new List<long> { 200 }, // optional
+    certificateDays: 14, // optional
+    interval: 60, // optional
+    timeout: 10 // optional
+);
+```
+
+```server-deno
+import { Client, Monitors } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const monitors = new Monitors(client);
+
+const monitor = await monitors.createHttpMonitor({
+    monitorId: 'api-health',
+    name: 'API health',
+    url: 'https://api.example.com/health',
+    statusCodes: [200], // optional
+    certificateDays: 14, // optional
+    interval: 60, // optional
+    timeout: 10 // optional
+});
+```
+
+```server-go
+package main
+
+import (
+	"fmt"
+
+	"github.com/appwrite/sdk-for-go/v7/appwrite"
+	"github.com/appwrite/sdk-for-go/v7/monitors"
+)
+
+func main() {
+	client := appwrite.NewClient(
+		appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+		appwrite.WithProject("<PROJECT_ID>"),
+		appwrite.WithKey("<API_KEY>"),
+	)
+
+	service := monitors.New(client)
+
+	monitor, err := service.CreateHttpMonitor(
+		"api-health",
+		"API health",
+		"https://api.example.com/health",
+		service.WithCreateHttpMonitorStatusCodes([]int{200}),
+		service.WithCreateHttpMonitorCertificateDays(14),
+		service.WithCreateHttpMonitorInterval(60),
+		service.WithCreateHttpMonitorTimeout(10),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(monitor)
+}
+```
+
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+let monitors = Monitors(client)
+
+let monitor = try await monitors.createHttpMonitor(
+    monitorId: "api-health",
+    name: "API health",
+    url: "https://api.example.com/health",
+    statusCodes: [200], // optional
+    certificateDays: 14, // optional
+    interval: 60, // optional
+    timeout: 10 // optional
+)
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Monitors
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+val monitors = Monitors(client)
+
+val monitor = monitors.createHttpMonitor(
+    monitorId = "api-health",
+    name = "API health",
+    url = "https://api.example.com/health",
+    statusCodes = listOf(200), // optional
+    certificateDays = 14, // optional
+    interval = 60, // optional
+    timeout = 10 // optional
+)
+```
+
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.exceptions.AppwriteException;
+import io.appwrite.services.Monitors;
+import java.util.List;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>");
+
+Monitors monitors = new Monitors(client);
+
+try {
+    monitors.createHttpMonitor(
+        "api-health", // monitorId
+        "API health", // name
+        "https://api.example.com/health", // url
+        null, // method (optional)
+        null, // headers (optional)
+        null, // body (optional)
+        List.of(200), // statusCodes (optional)
+        14, // certificateDays (optional)
+        60, // interval (optional)
+        10, // timeout (optional)
+        new CoroutineCallback<>((result, error) -> {
+            if (error != null) {
+                error.printStackTrace();
+                return;
+            }
+
+            System.out.println(result);
+        })
+    );
+} catch (AppwriteException e) {
+    e.printStackTrace();
+}
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::services::Monitors;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let monitors = Monitors::new(&client);
+
+    let monitor = monitors.create_http_monitor(
+        "api-health",
+        "API health",
+        "https://api.example.com/health",
+        None, // method
+        None, // headers
+        None, // body
+        Some(vec![200]), // statusCodes
+        Some(14), // certificateDays
+        Some(60), // interval
+        Some(10), // timeout
+        None, // cooldown
+        None, // enabled
+        None, // notify
+        None // severity
+    ).await?;
+
+    println!("{:?}", monitor);
+
+    Ok(())
+}
+```
+
+```http
+POST /v1/monitors/http HTTP/1.1
+Content-Type: application/json
+X-Appwrite-Project: <PROJECT_ID>
+X-Appwrite-Key: <API_KEY>
+
+{
+  "monitorId": "api-health",
+  "name": "API health",
+  "url": "https://api.example.com/health",
+  "statusCodes": [200],
+  "certificateDays": 14,
+  "interval": 60,
+  "timeout": 10
+}
+```
+{% /multicode %}
+
+The other types take their own target parameters in place of `url`:
+
+| Method | Target parameters |
+| --- | --- |
+| `createHttpMonitor` | `url`, plus optional `method` (defaults to `GET`), `headers`, `body`, `statusCodes`, and `certificateDays` (1 to 398, or `0` to only check that the certificate is valid) |
+| `createDnsMonitor` | `domain`, plus optional `record`, `resolver` (an IP address with an optional port, such as `1.1.1.1`), and `answer` |
+| `createTcpMonitor` | `host` and `port` |
+| `createSmtpMonitor` | `host` and `port`, plus optional `tlsMode`: `none`, `starttls`, or `implicit`. Leave it out to choose from the port. |
+
+All four also take `interval` and `timeout` in seconds, and the `cooldown`, `enabled`, `notify`, and `severity` parameters that [usage monitors](/docs/products/monitors/usage#create-with-a-server-sdk) use. Each type has a matching update method, such as `updateHttpMonitor`.
 
 {% arrow_link href="/docs/products/monitors/alerts" %}
 Review alerts from endpoint checks

@@ -6,15 +6,13 @@ description: Watch project usage and check endpoint availability with Appwrite M
 
 Appwrite **Monitors** checks your project usage or an endpoint on a schedule. A monitor opens an alert when a usage condition is met or an endpoint check fails. You can choose who gets notified and review when each alert fired and recovered.
 
-{% info title="Preview" %}
-If your account has access to previews, open **Previews** in the Console header and enable **Monitors and alerts**. The setting applies to this browser. Open your project and select **Observe > Monitors**.
-{% /info %}
+You manage monitors and their alerts under **Observe** > **Monitors** in your project.
 
 {% only_dark %}
-![The Monitors tab lists each monitor and the result of its last check.](/images/docs/products/monitors/dark/monitors.avif)
+![Monitors tab listing each monitor with the result of its last check](/images/docs/monitors/dark/monitors.avif)
 {% /only_dark %}
 {% only_light %}
-![The Monitors tab lists each monitor and the result of its last check.](/images/docs/products/monitors/monitors.avif)
+![Monitors tab listing each monitor with the result of its last check](/images/docs/monitors/monitors.avif)
 {% /only_light %}
 
 # Monitor types {% #monitor-types %}
@@ -33,13 +31,19 @@ If your account has access to previews, open **Previews** in the Console header 
 2. Choose a severity and who should be notified. You can notify organization roles or use an escalation to notify people in steps.
 3. Use the **Monitors** tab to manage checks and see their latest results. Use the **Alerts** tab to review firing and resolved alerts.
 
-On Appwrite Cloud, the plan sets the usage monitor allowance per project and the synthetic check allowance across the organization. The create dialog shows applicable limits and any extra charge for synthetic checks.
+On Appwrite Cloud, the plan sets the usage monitor allowance per project and the synthetic check allowance across the organization. The **Create monitor** page shows plan limits once they apply, and any extra charge for synthetic checks.
 
 # Get started {% #getting-started %}
 
+Create a usage monitor for outbound bandwidth and see its first check.
+
 {% arrow_link href="/docs/products/monitors/quick-start" %}
-Create your first monitor
+Quick start
 {% /arrow_link %}
+
+# Guides {% #guides %}
+
+Set up each type of monitor and decide who hears about its alerts.
 
 {% cards %}
 {% cards_item href="/docs/products/monitors/usage" title="Usage monitors" %}

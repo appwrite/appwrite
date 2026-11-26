@@ -3287,26 +3287,26 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Alerts and notifications",
     "description": "Review Appwrite monitor alerts, notify organization members, and use escalations to reach the right people when an alert keeps firing.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/monitors/endpoint-checks",
     "title": "Endpoint checks",
     "description": "Check the availability of HTTP, DNS, TCP, and SMTP endpoints on a schedule with Appwrite Cloud synthetic monitoring.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/monitors/quick-start",
     "title": "Start with Monitors",
-    "description": "Enable the Monitors and alerts preview and create a usage monitor for outbound bandwidth in your Appwrite project.",
+    "description": "Create your first Appwrite usage monitor, get alerted when outbound bandwidth spikes, and check its first reading in the Console.",
     "layout": "article",
     "readingTimeMinutes": 2
   },
   {
     "slug": "products/monitors/usage",
     "title": "Usage monitors",
-    "description": "Set thresholds on Appwrite usage metrics and monitor your whole project or an individual resource from the Console or REST API.",
+    "description": "Set thresholds on Appwrite usage metrics and monitor your whole project or an individual resource from the Console or a server SDK.",
     "layout": "article",
     "readingTimeMinutes": 3
   },

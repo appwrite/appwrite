@@ -8,30 +8,296 @@ An alert records one period during which a monitor's condition is met or an endp
 
 # Review and acknowledge alerts {% #review-and-acknowledge-alerts %}
 
-1. Open **Monitors > Alerts** in your project.
-2. Filter the history or select an alert to see when it started and the usage reading or check result that caused it. For a resolved alert, you can also see the recovery time.
-3. For a firing alert, click **Acknowledge** to show your team that someone is handling it. The alert keeps firing until the monitor recovers. Acknowledging also stops pending escalation steps.
+1. In your project, open **Observe** > **Monitors** and select the **Alerts** tab.
+2. Filter by **All**, **Firing**, or **Resolved**, then select an alert to see when it started and the usage reading or check result that opened it. For a resolved alert, you also see when it recovered.
+3. For a firing alert, click **Acknowledge** to show your team that someone is handling it. The alert keeps firing until the monitor recovers. Acknowledging also stops any pending escalation steps.
 
 {% only_dark %}
-![The Alerts tab shows firing and resolved alerts grouped by date.](/images/docs/products/monitors/dark/alert-history.avif)
+![Alerts tab with one firing alert and two resolved alerts, grouped by date](/images/docs/monitors/dark/alert-history.avif)
 {% /only_dark %}
 {% only_light %}
-![The Alerts tab shows firing and resolved alerts grouped by date.](/images/docs/products/monitors/alert-history.avif)
+![Alerts tab with one firing alert and two resolved alerts, grouped by date](/images/docs/monitors/alert-history.avif)
 {% /only_light %}
+
+You can also acknowledge an alert by right-clicking it in the list, or from the **Open alerts** card on the monitor's page. To revert, use **Undo acknowledgement**. The count on the **Alerts** tab only includes firing alerts that nobody has acknowledged.
 
 # Choose who gets notified {% #choose-who-gets-notified %}
 
-When you create or edit a monitor, use **Notify** to choose organization roles or an escalation. Confirmed members in selected roles receive email and Console notifications. Appwrite can also send push notifications to members with a registered device. Choose **Nobody, only its events** to keep the alert in the Console and use its project events without notifying members directly.
+Choose recipients under **Notify** when you create a monitor. To change them later, open the monitor and go to **Settings** > **Notifications** > **Recipients**. You can pick the **Owners** and **Developers** roles of your organization, or an [escalation](#escalate-an-alert).
 
-Each monitor has a severity of **Info**, **Warning**, **Error**, or **Critical**. Critical push notifications can use higher urgency on supported devices. **Cooldown** sets the minimum time between firing notifications from the same monitor. Alerts still appear in the history when notifications are subject to cooldown.
+Confirmed members in the selected roles receive an email and a Console notification when the monitor fires and again when it resolves. Members with a registered device can also get a push notification. Remove every recipient to keep alerts in the Console and use their [project events](#use-project-events) without notifying anyone directly.
+
+Each monitor has a **Severity** of **Info**, **Warning**, **Error**, or **Critical**. Critical push notifications can use higher urgency on supported devices.
+
+**Cooldown** sets the minimum time between two firing notifications from the same monitor. Set it under **Name, cooldown** when you create a monitor, or in **Settings** > **Notifications** later. Alerts are still recorded while the cooldown holds back notifications.
 
 # Escalate an alert {% #escalate-an-alert %}
 
-1. In your organization, open **Settings > Escalations** and create an escalation.
-2. Add steps with the members or roles to notify and how long to wait before each step.
-3. Edit the monitor, switch its recipients to an **Escalation**, and select the one you created.
+1. In your organization, open **Settings** > **Escalations** and click **Create escalation**.
+2. Add steps with the roles or members to notify, and how long to **Wait** before each step.
+3. Open the monitor and go to **Settings** > **Notifications**. In **Recipients**, click **Add**, select the escalation under **Escalations**, and click **Update**. An escalation replaces the roles the monitor notified before.
 
-Appwrite follows the steps while the alert is firing. The escalation stops when someone acknowledges the alert or the monitor recovers. If the alert keeps firing and you undo the acknowledgement, the escalation can continue from its next step.
+You can also pick an escalation under **Notify** when you create a monitor.
+
+Appwrite follows the steps while the alert is firing. The escalation stops when someone acknowledges the alert or the monitor recovers. If the alert keeps firing and you undo the acknowledgement, the escalation continues from its next step.
+
+# Acknowledge with a server SDK {% #acknowledge-with-a-server-sdk %}
+
+To acknowledge alerts from your own tools, such as a chat command or an on-call integration, create an [API key](/docs/advanced/platform/api-keys) with the `alerts.write` scope and call `update`. Pass `acknowledged: false` to undo an acknowledgement.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const alerts = new sdk.Alerts(client);
+
+const alert = await alerts.update({
+    alertId: '<ALERT_ID>',
+    acknowledged: true
+});
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.alerts import Alerts
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+alerts = Alerts(client)
+
+alert = alerts.update(
+    alert_id = '<ALERT_ID>',
+    acknowledged = True
+)
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+Alerts alerts = Alerts(client);
+
+final alert = await alerts.update(
+    alertId: '<ALERT_ID>',
+    acknowledged: true,
+);
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Alerts;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<API_KEY>');
+
+$alerts = new Alerts($client);
+
+$alert = $alerts->update(
+    alertId: '<ALERT_ID>',
+    acknowledged: true
+);
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<API_KEY>')
+
+alerts = Alerts.new(client)
+
+alert = alerts.update(
+    alert_id: '<ALERT_ID>',
+    acknowledged: true
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<API_KEY>");
+
+Alerts alerts = new Alerts(client);
+
+Alert alert = await alerts.Update(
+    alertId: "<ALERT_ID>",
+    acknowledged: true
+);
+```
+
+```server-deno
+import { Client, Alerts } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const alerts = new Alerts(client);
+
+const alert = await alerts.update({
+    alertId: '<ALERT_ID>',
+    acknowledged: true
+});
+```
+
+```server-go
+package main
+
+import (
+	"fmt"
+
+	"github.com/appwrite/sdk-for-go/v7/alerts"
+	"github.com/appwrite/sdk-for-go/v7/appwrite"
+)
+
+func main() {
+	client := appwrite.NewClient(
+		appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+		appwrite.WithProject("<PROJECT_ID>"),
+		appwrite.WithKey("<API_KEY>"),
+	)
+
+	service := alerts.New(client)
+
+	alert, err := service.Update(
+		"<ALERT_ID>",
+		true,
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(alert)
+}
+```
+
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+let alerts = Alerts(client)
+
+let alert = try await alerts.update(
+    alertId: "<ALERT_ID>",
+    acknowledged: true
+)
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Alerts
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+val alerts = Alerts(client)
+
+val alert = alerts.update(
+    alertId = "<ALERT_ID>",
+    acknowledged = true
+)
+```
+
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.exceptions.AppwriteException;
+import io.appwrite.services.Alerts;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>");
+
+Alerts alerts = new Alerts(client);
+
+try {
+    alerts.update(
+        "<ALERT_ID>", // alertId
+        true, // acknowledged
+        new CoroutineCallback<>((result, error) -> {
+            if (error != null) {
+                error.printStackTrace();
+                return;
+            }
+
+            System.out.println(result);
+        })
+    );
+} catch (AppwriteException e) {
+    e.printStackTrace();
+}
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::services::Alerts;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let alerts = Alerts::new(&client);
+
+    let alert = alerts.update(
+        "<ALERT_ID>",
+        true
+    ).await?;
+
+    println!("{:?}", alert);
+
+    Ok(())
+}
+```
+
+```http
+PATCH /v1/alerts/<ALERT_ID> HTTP/1.1
+Content-Type: application/json
+X-Appwrite-Project: <PROJECT_ID>
+X-Appwrite-Key: <API_KEY>
+
+{
+  "acknowledged": true
+}
+```
+{% /multicode %}
+
+To read alerts, call `list` with [queries](/docs/products/databases/tablesdb/queries) or `get` with an alert ID. Both need the `alerts.read` scope.
 
 # Use project events {% #use-project-events %}
 
@@ -39,7 +305,7 @@ For project monitors, use alert events to integrate with [webhooks](/docs/apis/w
 
 | Event | When it fires |
 | --- | --- |
-| `monitors.[monitorId].alerts.[alertId].firing` | The monitor opens an alert. |
-| `monitors.[monitorId].alerts.[alertId].resolved` | The monitor recovers and resolves the alert. |
+| `monitors.[monitorId].alerts.[alertId].create` | The monitor starts firing and opens an alert. |
+| `monitors.[monitorId].alerts.[alertId].update` | The alert resolves, is acknowledged, or has its acknowledgement undone. |
 
-The cooldown applies to team notifications. Project events still fire on each transition.
+To tell the `update` cases apart, check the alert's `status` and `acknowledgedAt` in the payload. The cooldown only applies to team notifications. Project events fire on every change.
