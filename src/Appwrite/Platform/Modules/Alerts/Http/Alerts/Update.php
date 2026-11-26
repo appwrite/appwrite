@@ -77,7 +77,7 @@ class Update extends Base
         $change = Acknowledgements::change($alert, $updated);
         if ($change !== null) {
             $queueForEvents
-                ->setEvent('monitors.[monitorId].alerts.[alertId].update')
+                ->setEvent('monitors.[monitorId].alerts.[alertId].' . $change->event())
                 ->setParam('monitorId', (string) $updated->getAttribute('monitorId'))
                 ->setParam('alertId', $updated->getId());
         }

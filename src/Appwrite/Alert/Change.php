@@ -3,8 +3,7 @@
 namespace Appwrite\Alert;
 
 /**
- * What happened to an alert. Firing opens it and fires its `create` event;
- * every other change fires `update`, with the alert's new status in the payload.
+ * What happened to an alert.
  */
 enum Change: string
 {
@@ -12,4 +11,16 @@ enum Change: string
     case Resolved = 'resolved';
     case Acknowledged = 'acknowledged';
     case Unacknowledged = 'unacknowledged';
+
+    /**
+     * The action of its project event, `monitors.[monitorId].alerts.[alertId].<action>`.
+     */
+    public function event(): string
+    {
+        return match ($this) {
+            self::Firing => 'create',
+            self::Resolved => 'update.status',
+            self::Acknowledged, self::Unacknowledged => 'update.acknowledgement',
+        };
+    }
 }

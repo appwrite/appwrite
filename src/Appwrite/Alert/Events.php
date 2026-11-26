@@ -13,7 +13,8 @@ use Utopia\Database\Document;
 
 /**
  * Fires an alert's project event, `monitors.[monitorId].alerts.[alertId].create`
- * when it opens and `.update` on every later change, with the alert as its payload: to the project's webhooks, the functions that
+ * when it opens, `.update.status` when it resolves and `.update.acknowledgement`
+ * when it is acknowledged or that is undone, with the alert as its payload: to the project's webhooks, the functions that
  * listen to it, and realtime. For callers outside the project's own request,
  * such as the evaluator or an organization route; a project route fires it
  * through the request's event instead.
@@ -43,7 +44,7 @@ readonly class Events
 
         $this->queueForEvents
             ->setProject($project)
-            ->setEvent('monitors.[monitorId].alerts.[alertId].' . ($change === Change::Firing ? 'create' : 'update'))
+            ->setEvent('monitors.[monitorId].alerts.[alertId].' . $change->event())
             ->setParam('monitorId', (string) $alert->getAttribute('monitorId'))
             ->setParam('alertId', $alert->getId())
             ->setPayload($this->model->payload($alert));

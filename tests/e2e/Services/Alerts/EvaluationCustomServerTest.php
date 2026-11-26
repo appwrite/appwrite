@@ -213,7 +213,7 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertNotSame('', $push['data']['unsubscribeToken']);
 
         // A member acknowledges the alert for everyone who can read it; it keeps firing.
-        $acknowledgements = $this->createAlertWebhook(['monitors.*.alerts.*.update']);
+        $acknowledgements = $this->createAlertWebhook(['monitors.*.alerts.*.update.acknowledgement']);
         $member = \array_merge($this->consoleHeaders(), ['x-appwrite-project' => $this->getProject()['$id'], 'x-appwrite-mode' => 'admin']);
         $acknowledged = $this->updateAlert($firing['alertId'], true, $member);
         $this->assertSame('firing', $acknowledged['status']);
@@ -254,7 +254,7 @@ final class EvaluationCustomServerTest extends Scope
             Query::isNotNull('acknowledgedAt')->toString(),
         ])['alerts'], '$id'));
         // Two acknowledgements reached the webhook: the member's and the key's, not the repeat in between.
-        $event = 'monitors.' . $monitorId . '.alerts.' . $firing['alertId'] . '.update';
+        $event = 'monitors.' . $monitorId . '.alerts.' . $firing['alertId'] . '.update.acknowledgement';
         $deliveries = fn (): int => \count(\array_filter(
             \json_decode((string) \file_get_contents('http://request-catcher-webhook:5000/__find_request__?url=' . \urlencode($acknowledgements['path'])), true) ?: [],
             fn (array $request): bool => \in_array($event, \explode(',', (string) ($request['headers']['X-Appwrite-Webhook-Events'] ?? '')), true)
@@ -286,7 +286,7 @@ final class EvaluationCustomServerTest extends Scope
         ])['alerts']);
 
         $delivery = $this->waitForEvent($webhook['path'], $monitorId, 'resolved');
-        $this->assertContains('monitors.' . $monitorId . '.alerts.' . $firing['alertId'] . '.update', \explode(',', $delivery['headers']['X-Appwrite-Webhook-Events']));
+        $this->assertContains('monitors.' . $monitorId . '.alerts.' . $firing['alertId'] . '.update.status', \explode(',', $delivery['headers']['X-Appwrite-Webhook-Events']));
         $this->assertSame('resolved', $delivery['data']['status']);
         $this->assertSame($firing['alertId'], $delivery['data']['$id']);
         $this->assertNotNull($delivery['data']['resolvedAt']);
@@ -2746,7 +2746,7 @@ final class EvaluationCustomServerTest extends Scope
      * @param list<string> $events
      * @return array{path: string, url: string, secret: string}
      */
-    private function createAlertWebhook(array $events = ['monitors.*.alerts.*.create', 'monitors.*.alerts.*.update']): array
+    private function createAlertWebhook(array $events = ['monitors.*.alerts.*.create', 'monitors.*.alerts.*.update.status']): array
     {
         $path = '/alerts/' . \uniqid();
         $url = 'http://request-catcher-webhook:5000' . $path;
@@ -2811,7 +2811,7 @@ final class EvaluationCustomServerTest extends Scope
             1_000,
             function (array $request) use ($alertId, $acknowledged) {
                 $this->assertSame($alertId, $request['data']['$id'] ?? null);
-                $this->assertContains('monitors.*.alerts.*.update', \explode(',', (string) ($request['headers']['X-Appwrite-Webhook-Events'] ?? '')));
+                $this->assertContains('monitors.*.alerts.*.update.acknowledgement', \explode(',', (string) ($request['headers']['X-Appwrite-Webhook-Events'] ?? '')));
                 $this->assertSame($acknowledged, ($request['data']['acknowledgedAt'] ?? null) !== null);
             },
         );
