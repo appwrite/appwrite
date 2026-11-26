@@ -781,6 +781,76 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame(401, $this->client->call(Client::METHOD_GET, '/organization/escalations', $this->headers())['headers']['status-code']);
     }
 
+    public function testMovedProjectMonitorsFollowTheOrganization(): void
+    {
+        $name = 'Moved ' . \uniqid();
+        $project = $this->getProject(true);
+        $projectInternalId = $this->projectInternalId($project['$id']);
+        $from = $this->client->call(Client::METHOD_GET, '/projects/' . $project['$id'], $this->consoleHeaders())['body']['teamId'];
+
+        $created = $this->client->call(Client::METHOD_POST, '/monitors/usage', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ], [
+            'monitorId' => 'unique()',
+            'name' => $name,
+            'rules' => [Query::greaterThan('network.outbound', 10)->toString()],
+            'enabled' => false,
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+        $monitorId = $created['body']['$id'];
+
+        $to = $this->createTeamFixture($this->consoleHeaders(), [
+            'teamId' => 'unique()',
+            'name' => 'Moved To ' . \uniqid(),
+        ]);
+        $this->assertSame(200, $to['headers']['status-code']);
+        $to = $to['body']['$id'];
+
+        $former = $this->createMember($from);
+        $member = $this->createMember($to);
+
+        $moved = $this->client->call(Client::METHOD_PATCH, '/projects/' . $project['$id'] . '/team', $this->consoleHeaders(), [
+            'teamId' => $to,
+        ]);
+        $this->assertSame(200, $moved['headers']['status-code'], \json_encode($moved['body']));
+
+        /**
+         * Test for SUCCESS
+         */
+        // The monitor names the organization the project moved to.
+        $platform = $this->platform();
+        $team = $platform->getDocument('teams', $to);
+        $monitor = $platform->getDocument('monitors', Monitors::id($projectInternalId, $monitorId));
+        $this->assertFalse($monitor->isEmpty());
+        $this->assertSame($to, $monitor->getAttribute('teamId'));
+        $this->assertSame((string) $team->getSequence(), $monitor->getAttribute('teamInternalId'));
+
+        // A member of the new organization unsubscribes from the monitor with their link.
+        $unsubscribe = new Unsubscribe([System::getEnv('_APP_OPENSSL_KEY_V1')]);
+        $token = $unsubscribe->token($member['$id'], $monitorId, 'usage', $projectInternalId);
+        $page = $this->unsubscribe(Client::METHOD_GET, $token);
+        $this->assertSame(200, $page['headers']['status-code']);
+        $this->assertSame($name, $page['body']['monitorName']);
+        $this->assertSame($project['name'], $page['body']['projectName']);
+        $this->assertSame(204, $this->unsubscribe(Client::METHOD_POST, $token)['headers']['status-code']);
+        $this->assertTrue($this->unsubscribe(Client::METHOD_GET, $token)['body']['monitor']);
+
+        /**
+         * Test for FAILURE
+         */
+        // A member of the organization the project left reads neither the monitor's nor the project's name, and changes nothing.
+        $formerToken = $unsubscribe->token($former['$id'], $monitorId, 'usage', $projectInternalId);
+        $page = $this->unsubscribe(Client::METHOD_GET, $formerToken);
+        $this->assertSame(200, $page['headers']['status-code']);
+        $this->assertSame('', $page['body']['monitorName']);
+        $this->assertSame('', $page['body']['projectName']);
+        $this->assertSame(204, $this->unsubscribe(Client::METHOD_POST, $formerToken)['headers']['status-code']);
+        $this->assertFalse($this->unsubscribe(Client::METHOD_GET, $formerToken)['body']['monitor']);
+        $this->assertNotContains(Monitors::id($projectInternalId, $monitorId), $platform->getDocument('users', $former['$id'])->getAttribute('alertsUnsubscribed', []));
+    }
+
     public function testAlertEmailsCanBeUnsubscribed(): void
     {
         $name = 'Unsubscribe ' . \uniqid();
