@@ -706,15 +706,36 @@ async function mockAppwriteApi(
 
 /**
  * Single sign-on off, as on a self-hosted Console, which has no API for it. On
- * Cloud, where these specs run, it is on for everyone.
+ * Cloud, where these specs run, it is on for everyone. The cookie is the debug
+ * profile's mirror, which the server reads: it and the page then agree.
  */
 async function withoutSso(page: Page) {
-  await page.addInitScript(() => {
-    window.localStorage.setItem(
-      'debug:consoleProfile',
-      JSON.stringify({ id: 'cloud', features: { sso: false } }),
-    )
-  })
+  const profile = JSON.stringify({ id: 'cloud', features: { sso: false } })
+  await page.context().addCookies([
+    {
+      name: 'debug_console_profile',
+      value: encodeURIComponent(profile),
+      url: String(test.info().project.use.baseURL),
+    },
+  ])
+  await page.addInitScript((value) => {
+    window.localStorage.setItem('debug:consoleProfile', value)
+  }, profile)
+}
+
+/**
+ * Leaves a shared SSO URL to the page, as the server does for a request that
+ * is not a browser's navigation. A navigation it redirects itself, before the
+ * page loads, to an API host these specs cannot answer for.
+ */
+async function leaveSharedURLToThePage(page: Page) {
+  await page.route(
+    (url) => url.pathname === '/sso' && url.searchParams.has('provider'),
+    async (route) => {
+      const response = await route.fetch({ headers: { accept: '*/*' } })
+      await route.fulfill({ response })
+    },
+  )
 }
 
 async function openSso(page: Page) {
@@ -1930,13 +1951,70 @@ test.describe('single sign-on sign-in', () => {
     await expect(page.getByLabel('Work email')).toBeVisible()
   })
 
-  test('starts the sign-in from a shared SSO URL without typing', async ({
+  test('sends a shared SSO URL to the identity provider before the Console loads', async ({
+    page,
+    baseURL,
+  }) => {
+    const mock = await mockAppwriteApi(page, {
+      signedIn: false,
+      providers: [provider('Okta', ['developer'])],
+    })
+    const shared = '/sso?provider=provider-okta'
+    const navigation = { 'sec-fetch-dest': 'document' }
+
+    // The server answers a browser's navigation with the sign-in itself
+    const response = await page.request.get(shared, {
+      maxRedirects: 0,
+      headers: navigation,
+    })
+    expect(response.status()).toBe(302)
+    expect(response.headers()['cache-control']).toContain('no-store')
+    const started = new URL(response.headers()['location'])
+    expect(started.pathname).toMatch(/\/account\/sessions\/sso$/)
+    expect(started.searchParams.get('project')).toBe('console')
+    expect(started.searchParams.get('providerId')).toBe('provider-okta')
+    // Without a page to return to, the API picks the provider's organization
+    expect(started.searchParams.has('success')).toBe(false)
+    expect(started.searchParams.get('failure')).toBe(
+      new URL('/sso', baseURL).href,
+    )
+
+    // The page answers a failed sign-in, a page to return to, and anything
+    // that is not a navigation, such as a link preview
+    const failed = encodeURIComponent(
+      JSON.stringify({ type: 'user_oauth2_provider_failure' }),
+    )
+    const back = encodeURIComponent(`/organizations/${ORGANIZATION.$id}`)
+    for (const [path, headers] of [
+      [`${shared}&error=${failed}`, navigation],
+      [`${shared}&redirect=${back}`, navigation],
+      ['/sso', navigation],
+      [shared, { accept: '*/*' }],
+    ] as const) {
+      const answer = await page.request.get(path, { maxRedirects: 0, headers })
+      expect(answer.status(), path).toBe(200)
+    }
+
+    // In the browser, the server's redirect is all the Console is asked for
+    const hop = page.waitForRequest((request) =>
+      new URL(request.url()).pathname.endsWith('/account/sessions/sso'),
+    )
+    // The mocked API has no host to load: only where the browser went matters
+    await page.goto(shared).catch(() => {})
+    expect((await hop).redirectedFrom()?.url()).toBe(
+      new URL(shared, baseURL).href,
+    )
+    expect(mock.sent.lookups).toHaveLength(0)
+  })
+
+  test('starts a shared SSO URL from the page where the server left it to the page', async ({
     page,
   }) => {
     const mock = await mockAppwriteApi(page, {
       signedIn: false,
       providers: [provider('Okta', ['developer'])],
     })
+    await leaveSharedURLToThePage(page)
     await page.goto('/sso?provider=provider-okta', {
       waitUntil: 'domcontentloaded',
     })
@@ -1954,6 +2032,39 @@ test.describe('single sign-on sign-in', () => {
     )
   })
 
+  test('says only where a shared SSO URL is going while the identity provider loads', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, {
+      signedIn: false,
+      providers: [provider('Okta', ['developer'])],
+    })
+    await leaveSharedURLToThePage(page)
+    // No answer from the identity provider yet: the browser stays on this page
+    await page.route(
+      (url) => url.pathname === '/v1/account/sessions/sso',
+      (route) => route.fulfill({ status: 204 }),
+    )
+    await page.goto('/sso?provider=provider-okta', {
+      waitUntil: 'domcontentloaded',
+    })
+
+    await expect(
+      page.getByText('Taking you to your identity provider...'),
+    ).toBeVisible({ timeout: 45_000 })
+    await expect(
+      page.getByRole('heading', { name: 'Sign in with SSO' }),
+    ).toBeVisible()
+    // Nothing to enter, click or go back to on the way there
+    await expect(page.getByText(/Enter your work email/)).toHaveCount(0)
+    await expect(page.getByText(/By clicking continue/)).toHaveCount(0)
+    await expect(page.getByText(/By continuing, you agree/)).toBeVisible()
+    await expect(page.getByLabel('Work email')).toHaveCount(0)
+    await expect(
+      page.getByRole('link', { name: 'Back to sign in' }),
+    ).toHaveCount(0)
+  })
+
   test('does not start a shared SSO URL again on Back from the identity provider', async ({
     page,
   }) => {
@@ -1961,6 +2072,7 @@ test.describe('single sign-on sign-in', () => {
       signedIn: false,
       providers: [provider('Okta', ['developer'])],
     })
+    await leaveSharedURLToThePage(page)
     await page.goto('/sign-in', { waitUntil: 'domcontentloaded' })
     await expect(
       page.getByRole('link', { name: 'Sign in with SSO' }),
