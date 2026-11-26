@@ -358,8 +358,8 @@ Media metadata is empty right after you create a video. The first rendition or t
 | `format` | Container format as the probe reports it, such as `mov,mp4,m4a,3gp,3g2,mj2` for MP4 and MOV files, or `mp3` |
 | `duration` | Duration in milliseconds |
 | `width`, `height`, `aspectRatio` | Picture size in pixels, and its ratio such as `16:9`. Zero and empty for audio-only sources |
-| `videoCodec`, `videoBitRate`, `videoFrameRate` | Video stream details. Bitrate is in bits per second |
-| `audioCodec`, `audioBitRate`, `audioSampleRate` | Audio stream details. Empty when the source has no audio |
+| `videoCodec`, `videoBitRate`, `videoFrameRate` | Video stream details. Bitrate is in bits per second, frame rate in frames per second |
+| `audioCodec`, `audioBitRate`, `audioSampleRate` | Audio stream details. Sample rate is in hertz. Empty or `0` when the source has no audio |
 | `timelineStatus` | Progress of the [timeline](/docs/products/videos/timeline#generation) job: `pending`, `started`, `ready`, `skipped`, or `error` |
 | `timelineError` | Why the timeline job failed. Empty unless `timelineStatus` is `error` |
 | `$permissions` | Who can watch and manage the video. See [Permissions](/docs/products/videos/permissions) |

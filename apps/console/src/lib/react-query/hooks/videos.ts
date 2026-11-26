@@ -56,8 +56,11 @@ export function isVideoRenditionActive(status: string | undefined): boolean {
 }
 
 /** Rendition progress arrives as a string percentage (`"42"`, `"42.5"`). */
-export function parseVideoProgress(progress: string | undefined): number {
-  const value = Number.parseFloat(progress ?? '')
+export function parseVideoProgress(
+  progress: number | string | undefined,
+): number {
+  const value =
+    typeof progress === 'number' ? progress : Number.parseFloat(progress ?? '')
   if (!Number.isFinite(value)) return 0
   return Math.min(100, Math.max(0, value))
 }

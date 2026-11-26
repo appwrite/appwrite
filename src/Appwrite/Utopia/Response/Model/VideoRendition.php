@@ -9,8 +9,9 @@ use Utopia\Database\Document;
 class VideoRendition extends Model
 {
     /**
-     * Stored in kilobits per second, the unit encoders take; returned in bits
-     * per second like the probed bitrates on a video.
+     * Bitrates are stored in kilobits per second, the unit encoders take, and
+     * returned in bits per second like the probed bitrates on a video. Progress
+     * and target duration are stored as strings and returned as numbers.
      */
     public function filter(Document $document): Document
     {
@@ -20,6 +21,12 @@ class VideoRendition extends Model
                 $document->setAttribute($attribute, $value * 1000);
             }
         }
+
+        $progress = $document->getAttribute('progress');
+        $document->setAttribute('progress', \is_numeric($progress) ? (int) $progress : 0);
+
+        $targetDuration = $document->getAttribute('targetDuration');
+        $document->setAttribute('targetDuration', \is_numeric($targetDuration) ? (float) $targetDuration : 0.0);
 
         return $document;
     }
@@ -101,10 +108,10 @@ class VideoRendition extends Model
                 'example' => 128000,
             ])
             ->addRule('targetDuration', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_FLOAT,
                 'description' => 'Longest segment duration in seconds.',
-                'default' => '',
-                'example' => '6',
+                'default' => 0,
+                'example' => 6.006,
             ])
             ->addRule('status', [
                 'type' => self::TYPE_ENUM,
@@ -121,10 +128,10 @@ class VideoRendition extends Model
                 'example' => 'The requested file is not a valid video or audio file (ffprobe: Invalid data found when processing input)',
             ])
             ->addRule('progress', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Transcoding progress as a percentage.',
-                'default' => '',
-                'example' => '88',
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Transcoding progress as a percentage, from 0 to 100.',
+                'default' => 0,
+                'example' => 88,
             ])
             ->addRule('output', [
                 'type' => self::TYPE_ENUM,

@@ -10,11 +10,15 @@ class VideoCaption extends Model
 {
     /**
      * `embedded` is derived, not stored: extracted tracks are the rows with no
-     * backing storage file.
+     * backing storage file. Target duration is stored as a string.
      */
     public function filter(Document $document): Document
     {
-        return $document->setAttribute('embedded', empty($document->getAttribute('fileId', '')));
+        $targetDuration = $document->getAttribute('targetDuration');
+
+        return $document
+            ->setAttribute('embedded', empty($document->getAttribute('fileId', '')))
+            ->setAttribute('targetDuration', \is_numeric($targetDuration) ? (float) $targetDuration : 0.0);
     }
 
     public function __construct()
@@ -82,10 +86,10 @@ class VideoCaption extends Model
                 'example' => false,
             ])
             ->addRule('targetDuration', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_FLOAT,
                 'description' => 'Longest segment duration in seconds.',
-                'default' => '',
-                'example' => '93',
+                'default' => 0,
+                'example' => 93,
             ])
             ->addRule('status', [
                 'type' => self::TYPE_ENUM,

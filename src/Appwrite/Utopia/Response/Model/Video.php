@@ -4,9 +4,38 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Document;
 
 class Video extends Model
 {
+    /**
+     * The probe stores frame and sample rates as strings: a frame rate may be a
+     * fraction such as `30000/1001`, and older probes wrote sample rates such as
+     * `48.0 kHz`. Both are returned as numbers.
+     */
+    public function filter(Document $document): Document
+    {
+        $frameRate = (string) $document->getAttribute('videoFrameRate', '');
+        $fps = 0.0;
+        if (\preg_match('/^\s*([\d.]+)\s*\/\s*([\d.]+)\s*$/', $frameRate, $parts) && (float) $parts[2] > 0) {
+            $fps = (float) $parts[1] / (float) $parts[2];
+        } elseif (\is_numeric($frameRate)) {
+            $fps = (float) $frameRate;
+        }
+
+        $sampleRate = (string) $document->getAttribute('audioSampleRate', '');
+        $hertz = 0;
+        if (\is_numeric($sampleRate)) {
+            $hertz = (int) \round((float) $sampleRate);
+        } elseif (\preg_match('/^\s*([\d.]+)\s*kHz\s*$/i', $sampleRate, $parts)) {
+            $hertz = (int) \round((float) $parts[1] * 1000);
+        }
+
+        return $document
+            ->setAttribute('videoFrameRate', \round($fps, 3))
+            ->setAttribute('audioSampleRate', $hertz);
+    }
+
     public function __construct()
     {
         $this
@@ -115,10 +144,10 @@ class Video extends Model
                 'example' => 564790,
             ])
             ->addRule('videoFrameRate', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Video frame rate.',
-                'default' => '',
-                'example' => '25.000',
+                'type' => self::TYPE_FLOAT,
+                'description' => 'Video frame rate in frames per second.',
+                'default' => 0,
+                'example' => 29.97,
             ])
             ->addRule('videoFrameRateMode', [
                 'type' => self::TYPE_STRING,
@@ -144,12 +173,11 @@ class Video extends Model
                 'default' => 0,
                 'example' => 127999,
             ])
-            // Stored as a string because mediainfo reports values such as "48.0 kHz".
             ->addRule('audioSampleRate', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Audio sample rate.',
-                'default' => '',
-                'example' => '48000',
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Audio sample rate in hertz.',
+                'default' => 0,
+                'example' => 48000,
             ])
             ->addRule('timelineStatus', [
                 'type' => self::TYPE_ENUM,

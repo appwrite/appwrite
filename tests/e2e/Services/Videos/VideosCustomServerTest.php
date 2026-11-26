@@ -524,6 +524,9 @@ final class VideosCustomServerTest extends Scope
 
         $this->assertGreaterThan(0, $body['duration'], 'Video was not probed by the timeline job');
         $this->assertGreaterThan(0, $body['width']);
+        $this->assertIsFloat($body['videoFrameRate']);
+        $this->assertGreaterThan(0, $body['videoFrameRate']);
+        $this->assertIsInt($body['audioSampleRate']);
         // Probe runs mid-timeline; jobs/ cleanup is asserted after the job ends
         // (testTmpSourceRemovedAfterTimeline, rendition tests).
     }
@@ -855,6 +858,12 @@ final class VideosCustomServerTest extends Scope
         $this->assertSame('', $ready['error']);
         $this->assertIsInt($ready['size']);
         $this->assertGreaterThan(0, $ready['size']);
+        $this->assertIsFloat($ready['targetDuration']);
+        $this->assertGreaterThan(0, $ready['targetDuration']);
+
+        $fetched = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions/' . $captionId, $this->headers());
+        $this->assertEquals(200, $fetched['headers']['status-code']);
+        $this->assertSame($ready['targetDuration'], $fetched['body']['targetDuration']);
     }
 
     public function testListCaptions(): void
@@ -1143,7 +1152,7 @@ final class VideosCustomServerTest extends Scope
 
         $body = $this->waitForRenditionTerminalState($video['$id'], $rendition['body']['$id']);
         $this->assertEquals('ready', $body['status'], 'Short silence rendition did not finish');
-        $this->assertEquals('100', $body['progress']);
+        $this->assertSame(100, $body['progress']);
     }
 
     /**
@@ -2320,9 +2329,22 @@ final class VideosCustomServerTest extends Scope
         $this->assertNotEmpty($body['startedAt']);
         $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T/', $body['startedAt']);
         $this->assertNotEmpty($body['endedAt']);
-        $this->assertEquals('100', $body['progress']);
+        $this->assertSame(100, $body['progress']);
         $this->assertIsInt($body['size']);
         $this->assertGreaterThan(0, $body['size']);
+        $this->assertIsFloat($body['targetDuration']);
+        $this->assertGreaterThan(0, $body['targetDuration']);
+
+        $listed = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers());
+        $this->assertEquals(200, $listed['headers']['status-code']);
+        $byId = \array_column($listed['body']['renditions'], null, '$id');
+        $this->assertSame(100, $byId[$renditionId]['progress']);
+        $this->assertIsFloat($byId[$renditionId]['targetDuration']);
+
+        $rejected = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'queries' => [Query::greaterThan('progress', 50)->toString()],
+        ]);
+        $this->assertEquals(400, $rejected['headers']['status-code'], 'progress is stored as text, so numeric filters on it are not offered');
     }
 
     public function testListRenditions(): void
@@ -3925,7 +3947,7 @@ final class VideosCustomServerTest extends Scope
 
         $body = $this->waitForRenditionTerminalState($video['$id'], $rendition['body']['$id']);
         $this->assertEquals('ready', $body['status'], 'Audio-only rendition did not finish');
-        $this->assertEquals('100', $body['progress']);
+        $this->assertSame(100, $body['progress']);
         $this->assertEquals('hls', $body['output']);
 
         $master = $this->client->call(Client::METHOD_GET, '/videos/' . $video['$id'] . '/outputs/hls/master.m3u8', $this->headers());

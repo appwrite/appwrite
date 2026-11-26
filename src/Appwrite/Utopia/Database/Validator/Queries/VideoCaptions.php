@@ -12,7 +12,6 @@ class VideoCaptions extends Base
         'size',
         'bucketId',
         'fileId',
-        'targetDuration',
     ];
 
     /**

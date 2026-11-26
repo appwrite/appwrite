@@ -15,6 +15,8 @@ use Appwrite\Platform\Modules\Videos\Base;
 use Appwrite\Storage\Encryption;
 use Appwrite\Usage\Context;
 use Appwrite\Usage\Video as VideoUsage;
+use Appwrite\Utopia\Response\Model\Video as VideoModel;
+use Appwrite\Utopia\Response\Model\VideoCaption as VideoCaptionModel;
 use Appwrite\Utopia\Response\Model\VideoRendition as VideoRenditionModel;
 use Appwrite\Video\Dash as DashManifest;
 use Appwrite\Video\Uploader;
@@ -2848,9 +2850,15 @@ class Videos extends Action
         array $params,
         array $permissions
     ): void {
-        // Realtime sends the stored document, so renditions need the same bitrate unit as the API.
-        if ($document->getCollection() === 'videosRenditions') {
-            $document = (new VideoRenditionModel())->filter(clone $document);
+        // Realtime sends the stored document, so apply the response model's unit and type conversions.
+        $model = match ($document->getCollection()) {
+            'videos' => new VideoModel(),
+            'videosRenditions' => new VideoRenditionModel(),
+            'videosCaptions' => new VideoCaptionModel(),
+            default => null,
+        };
+        if ($model !== null) {
+            $document = $model->filter(clone $document);
         }
 
         $payload = $document->getArrayCopy();
