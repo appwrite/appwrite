@@ -1,17 +1,40 @@
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
-import { getDocsSlugFromPath } from './docs-slug'
-
-const MONITORS_DOCS_SLUG = 'products/monitors'
 
 export function isMonitorsDocsSlug(slug: string): boolean {
-  return slug === MONITORS_DOCS_SLUG || slug.startsWith(`${MONITORS_DOCS_SLUG}/`)
+  return slug === 'products/monitors' || slug.startsWith('products/monitors/')
+}
+
+export function isMonitorsDocsPathname(pathname: string): boolean {
+  const normalized = pathname.replace(/\/+$/, '') || '/'
+  return (
+    normalized === '/docs/products/monitors' ||
+    normalized.startsWith('/docs/products/monitors/')
+  )
 }
 
 export function isMonitorsDocsHref(href: string): boolean {
-  const [pathname] = href.split(/[?#]/, 1)
-  return isMonitorsDocsSlug(getDocsSlugFromPath(pathname))
+  const path = href.split(/[?#]/, 2)[0] ?? href
+  return (
+    path === '/docs/products/monitors' ||
+    path.startsWith('/docs/products/monitors/')
+  )
 }
 
+/** Monitors docs follow the `alerts` flag, which the quality team turns on from the header Previews menu as Monitors and alerts. */
 export function isMonitorsDocsEnabled(): boolean {
   return getActiveProfileFeatures().alerts
+}
+
+/**
+ * Whether monitors docs should be treated as unavailable for route guards.
+ *
+ * The `alerts` flag defaults to off and is turned on through a debug profile
+ * override, which lives in localStorage and isn't visible to SSR. On the
+ * server, do not block so a reload doesn't bounce to /docs before the client
+ * can apply the override. The docs sidebar still enforces the real flag.
+ */
+export function shouldBlockMonitorsDocs(): boolean {
+  if (isMonitorsDocsEnabled()) return false
+  if (typeof window === 'undefined') return false
+  return true
 }

@@ -3,10 +3,8 @@ import { NotFoundView } from '@/components/error/NotFound'
 import { View } from '@/components/pages/docs/View'
 import { getDocsMarkdownExport, getDocsPage } from '@/lib/docs/content'
 import { isFeatureGatedDocsSlugHidden } from '@/lib/docs/feature-gated-docs'
-import { isMonitorsDocsSlug } from '@/lib/docs/monitors-docs-feature'
 import { getDocsRedirectTarget } from '@/lib/docs/redirects'
 import { respondWithPrebuiltOrRuntime } from '@/lib/seo/export-response'
-import { NOINDEX_ROBOTS_META } from '@/lib/seo/indexing'
 import { generateDocsLlmsTxt } from '@/lib/seo/llms-content'
 import { trackServerPageview } from '@/lib/server-analytics'
 import { getDocsRouteHead } from '@/lib/docs/route-meta'
@@ -20,10 +18,7 @@ import { stringifyJsonLd } from '@/lib/seo/json-ld'
 const DOCS_LLMS_TXT_SPLAT = 'llms.txt'
 
 export const Route = createFileRoute('/docs/$')({
-  // The Monitors preview flag is browser-local. Load these articles only
-  // after the browser can check the flag.
-  ssr: ({ params }) =>
-    params.status !== 'success' || !isMonitorsDocsSlug(params.value._splat ?? ''),
+  ssr: true,
   notFoundComponent: NotFoundView,
   server: {
     handlers: {
@@ -44,7 +39,7 @@ export const Route = createFileRoute('/docs/$')({
         }
 
         const slug = splat.slice(0, -3)
-        // Match the HTML route: partners, analytics, and videos docs stay available on
+        // Match the HTML route: partners, analytics, videos, and monitors docs stay available on
         // the server until the client can apply a local override. A hard 404
         // here made `/docs/partners/...md` fail while the page itself rendered.
         if (
@@ -52,6 +47,7 @@ export const Route = createFileRoute('/docs/$')({
             deferPartnersOnServer: true,
             deferAnalyticsOnServer: true,
             deferVideosOnServer: true,
+            deferMonitorsOnServer: true,
           })
         ) {
           return new Response('Not found', { status: 404 })
@@ -82,6 +78,7 @@ export const Route = createFileRoute('/docs/$')({
         deferPartnersOnServer: true,
         deferAnalyticsOnServer: true,
         deferVideosOnServer: true,
+        deferMonitorsOnServer: true,
       })
     ) {
       throw redirect({ to: '/docs', replace: true })
@@ -103,6 +100,7 @@ export const Route = createFileRoute('/docs/$')({
           deferPartnersOnServer: true,
           deferAnalyticsOnServer: true,
           deferVideosOnServer: true,
+          deferMonitorsOnServer: true,
         })
       ) {
         throw redirect({ to: '/docs', replace: true })
@@ -121,19 +119,15 @@ export const Route = createFileRoute('/docs/$')({
 
     return { page }
   },
-  head: ({ loaderData, params }) => {
-    const isMonitorsPreview = isMonitorsDocsSlug(params._splat ?? '')
-    if (!loaderData?.page) {
-      return isMonitorsPreview ? { meta: [NOINDEX_ROBOTS_META] } : {}
-    }
+  head: ({ loaderData }) => {
+    if (!loaderData?.page) return {}
     const { meta, slug } = { meta: loaderData.page.meta, slug: loaderData.page.meta.slug }
     const seo = getDocsRouteHead({ ...meta, slug })
     return {
       ...seo,
-      meta: isMonitorsPreview ? [...seo.meta, NOINDEX_ROBOTS_META] : seo.meta,
       links: [
         ...seo.links,
-        ...(slug && !isMonitorsPreview
+        ...(slug
           ? [
               {
                 rel: 'alternate',

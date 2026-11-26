@@ -7,6 +7,7 @@ import {
 import {
   isMonitorsDocsEnabled,
   isMonitorsDocsSlug,
+  shouldBlockMonitorsDocs,
 } from './monitors-docs-feature'
 import {
   isPartnersDocsEnabled,
@@ -28,6 +29,7 @@ export function isFeatureGatedDocsSlugHidden(
     deferPartnersOnServer?: boolean
     deferAnalyticsOnServer?: boolean
     deferVideosOnServer?: boolean
+    deferMonitorsOnServer?: boolean
   },
 ): boolean {
   if (isPartnersDocsSlug(slug)) {
@@ -43,6 +45,9 @@ export function isFeatureGatedDocsSlugHidden(
     if (options?.deferVideosOnServer) return shouldBlockVideosDocs()
     return !isVideosDocsEnabled()
   }
-  if (isMonitorsDocsSlug(slug)) return !isMonitorsDocsEnabled()
+  if (isMonitorsDocsSlug(slug)) {
+    if (options?.deferMonitorsOnServer) return shouldBlockMonitorsDocs()
+    return !isMonitorsDocsEnabled()
+  }
   return false
 }

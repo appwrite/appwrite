@@ -1,6 +1,6 @@
 import { isAgentDocsEnabled, isAgentDocsHref } from '../agent-docs-feature'
 import { isAnalyticsDocsEnabled } from '../analytics-docs-feature'
-import { isMonitorsDocsEnabled, isMonitorsDocsSlug } from '../monitors-docs-feature'
+import { isMonitorsDocsEnabled } from '../monitors-docs-feature'
 import { isVideosDocsEnabled } from '../videos-docs-feature'
 import type { DocsNavGroup, DocsNavTree } from '../types'
 import { DOCS_LOCAL_SECTION_NAVS } from './local-sections'
@@ -57,7 +57,7 @@ export function getAllDocsSectionNavs(): DocsSectionNavConfig[] {
     configs = configs.filter((config) => config.prefix !== 'products/videos')
   }
   if (!isMonitorsDocsEnabled()) {
-    configs = configs.filter((config) => !isMonitorsDocsSlug(config.prefix))
+    configs = configs.filter((config) => config.prefix !== 'products/monitors')
   }
 
   return configs

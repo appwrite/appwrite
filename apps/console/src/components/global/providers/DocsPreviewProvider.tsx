@@ -13,7 +13,22 @@ import {
   type DocsPreviewView,
 } from '@/lib/docs/docs-preview-menu'
 import { isConsoleDocsPreviewPath } from '@/lib/docs/docs-preview-context'
-import { isFeatureGatedDocsSlugHidden } from '@/lib/docs/feature-gated-docs'
+import {
+  isAgentDocsEnabled,
+  isAgentDocsSlug,
+} from '@/lib/docs/agent-docs-feature'
+import {
+  isAnalyticsDocsEnabled,
+  isAnalyticsDocsSlug,
+} from '@/lib/docs/analytics-docs-feature'
+import {
+  isVideosDocsEnabled,
+  isVideosDocsSlug,
+} from '@/lib/docs/videos-docs-feature'
+import {
+  isMonitorsDocsEnabled,
+  isMonitorsDocsSlug,
+} from '@/lib/docs/monitors-docs-feature'
 import {
   isDomainsDocsEnabled,
   isDomainsDocsSlug,
@@ -22,6 +37,10 @@ import {
   isFirewallDocsEnabled,
   isFirewallDocsSlug,
 } from '@/lib/docs/firewall-docs-feature'
+import {
+  isPartnersDocsEnabled,
+  isPartnersDocsSlug,
+} from '@/lib/docs/partners-docs-feature'
 import { useConsoleRightPane } from './ConsoleRightPaneContext'
 import {
   DocsPreviewContext,
@@ -64,9 +83,13 @@ export function DocsPreviewProvider({ children }: { children: ReactNode }) {
   const openDocsPreview = useCallback(
     (nextSlug: string, options?: DocsPreviewOpenOptions) => {
       if (!isPreviewAllowed) return
-      if (isFeatureGatedDocsSlugHidden(nextSlug)) return
+      if (isPartnersDocsSlug(nextSlug) && !isPartnersDocsEnabled()) return
       if (isDomainsDocsSlug(nextSlug) && !isDomainsDocsEnabled()) return
       if (isFirewallDocsSlug(nextSlug) && !isFirewallDocsEnabled()) return
+      if (isAgentDocsSlug(nextSlug) && !isAgentDocsEnabled()) return
+      if (isAnalyticsDocsSlug(nextSlug) && !isAnalyticsDocsEnabled()) return
+      if (isVideosDocsSlug(nextSlug) && !isVideosDocsEnabled()) return
+      if (isMonitorsDocsSlug(nextSlug) && !isMonitorsDocsEnabled()) return
       showDocs()
       setSlug(nextSlug)
       setView(resolveDocsPreviewView(nextSlug, options?.view))
