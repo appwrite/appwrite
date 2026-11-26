@@ -137,7 +137,16 @@ export function View() {
     [searchActive, ownedApps, searchTerm],
   )
 
-  const listedApps = isBrowseNav ? browseApps : matchingOwnedApps
+  // Guard against a server that ignores the category query: never list an app
+  // under a category it doesn't belong to.
+  const categoryApps = useMemo(
+    () =>
+      activeCategory
+        ? browseApps.filter((app) => app.category === activeCategory)
+        : browseApps,
+    [activeCategory, browseApps],
+  )
+  const listedApps = isBrowseNav ? categoryApps : matchingOwnedApps
 
   // Server pages arrive pre-sliced; My apps is paginated client-side.
   const listedTotal = isBrowseNav ? browseTotal : listedApps.length

@@ -154,20 +154,6 @@ function OAuthClientSettings({
             onChange={setClientType}
             disabled={isUpdating}
           />
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <Label htmlFor="app-oauth-device-flow">{t('Device flow')}</Label>
-              <p className="text-[12px] text-muted-foreground mt-1">
-                {t(OAUTH2_DEVICE_FLOW_DESCRIPTION)}
-              </p>
-            </div>
-            <Switch
-              id="app-oauth-device-flow"
-              checked={deviceFlow}
-              disabled={isUpdating}
-              onCheckedChange={setDeviceFlow}
-            />
-          </div>
           <div className="space-y-2">
             <Label>{t('Redirect URIs')}</Label>
             <InputTags
@@ -182,6 +168,20 @@ function OAuthClientSettings({
               value={postLogoutRedirectUris}
               onChange={setPostLogoutRedirectUris}
               placeholder={t('Add post-logout URI and press Enter')}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <Label htmlFor="app-oauth-device-flow">{t('Device flow')}</Label>
+              <p className="text-[12px] text-muted-foreground mt-1">
+                {t(OAUTH2_DEVICE_FLOW_DESCRIPTION)}
+              </p>
+            </div>
+            <Switch
+              id="app-oauth-device-flow"
+              checked={deviceFlow}
+              disabled={isUpdating}
+              onCheckedChange={setDeviceFlow}
             />
           </div>
         </div>

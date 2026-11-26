@@ -54,7 +54,7 @@ export function OAuth2ClientTypePicker({
               key={option.value}
               htmlFor={id}
               className={cn(
-                'flex cursor-pointer items-start gap-2.5 rounded-lg border px-3 py-2.5 transition-colors',
+                'flex min-w-0 cursor-pointer items-start gap-2.5 rounded-lg border px-3 py-2.5 transition-colors',
                 isSelected
                   ? 'border-primary bg-primary/5'
                   : 'border-border bg-card/50 hover:bg-muted/20',
