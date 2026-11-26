@@ -5,22 +5,17 @@ import {
   type UpdateOrganizationAppInput,
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { translate } from '@/lib/i18n/translate'
 
 export function trimOrEmpty(value: string): string {
   return value.trim()
 }
 
-/** Why a link field would be rejected, or null when it is empty or a web URL. */
+/** Why a link field would be rejected, or null when it is empty or a URL. */
 export function urlFieldError(value: string): string | null {
   const trimmed = value.trim()
-  if (!trimmed) return null
-  try {
-    const { protocol } = new URL(trimmed)
-    if (protocol === 'https:' || protocol === 'http:') return null
-  } catch {
-    // fall through
-  }
-  return 'Enter a full URL starting with https://'
+  if (!trimmed || URL.canParse(trimmed)) return null
+  return translate('Enter a valid URL, for example https://example.com')
 }
 
 export function nonEmptyList(values: string[]): string[] {
