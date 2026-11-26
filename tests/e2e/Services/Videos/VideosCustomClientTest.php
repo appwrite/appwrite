@@ -1710,6 +1710,12 @@ final class VideosCustomClientTest extends Scope
             ]
         );
         $this->assertEquals(200, $replaced['headers']['status-code']);
+
+        // The old segment row is gone before this response returns, so the URL
+        // cannot be refilled with the previous cue while the new file is written.
+        $dropped = $this->client->call(Client::METHOD_GET, $previous, $this->anonymousHeaders());
+        $this->assertEquals(404, $dropped['headers']['status-code']);
+
         $ready = $this->waitForCaptionTerminalState($videoId, $captionId);
         $this->assertEquals('ready', $ready['status']);
 

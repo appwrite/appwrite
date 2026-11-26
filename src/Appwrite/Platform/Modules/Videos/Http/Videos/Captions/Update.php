@@ -201,6 +201,14 @@ class Update extends Base
         }
 
         if ($sourceChanged) {
+            // The old segment row still serves the previous VTT, and this write
+            // does not change its URL. Drop the row before the job and the purge:
+            // a refetch would store those bytes again, and the worker replaces
+            // this row, so a later delete would remove the new segment.
+            $authorization->skip(fn () => $dbForProject->deleteDocuments('videosCaptionsSegments', [
+                Query::equal('captionInternalId', [$caption->getSequence()]),
+            ]));
+
             $publisherForVideos->enqueue(new VideoMessage(
                 project: $project,
                 action: VideoAction::Caption,
