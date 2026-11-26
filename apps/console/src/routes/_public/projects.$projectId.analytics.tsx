@@ -42,7 +42,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/analytics')({
     })
 
     // The rest is the list's data. The add form and property pages load their
-    // own, and the add form stays disabled until the plan limit is known.
+    // own, so they do not wait for a list they do not show.
     const listPath = `/projects/${projectId}/analytics`
     if (
       location.pathname !== listPath &&
