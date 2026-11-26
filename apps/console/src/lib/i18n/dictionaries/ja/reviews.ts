@@ -258,24 +258,46 @@ export const jaReviewsDictionary: Record<string, string> = {
   'Last review': '最新のレビュー',
   'Pull requests reviewed': 'レビューしたプルリクエスト',
   '{count} authors': '{count} 人の作成者',
-  'Approval rate': '承認率',
   '{rate} approved by the first review': '{rate} が初回のレビューで承認',
   'Findings per pull request': 'プルリクエストあたりの指摘',
   '{critical} critical, {major} major': '重大 {critical} 件、重要 {major} 件',
-  'Fix rate': '修正率',
   '{count} findings fixed by a later commit':
     '{count} 件の指摘が後のコミットで修正',
   'No completed reviews in this range':
     'この期間に完了したレビューはありません',
   'Performance shows how the authors of your pull requests fare in review once reviews complete. Try a longer range or another repository.':
     'レビューが完了すると、プルリクエストの作成者ごとのレビュー結果がここに表示されます。より長い期間か別のリポジトリをお試しください。',
-  'Counts completed reviews in the range. Approval and confidence go by each pull request’s latest review; fixed counts findings resolved by a later commit.':
-    '期間内に完了したレビューを集計します。承認と信頼度は各プルリクエストの最新のレビューに基づき、修正済みは後のコミットで解決された指摘を数えます。',
+
+  // Performance: trends, comparison and charts
+  'Compared with the {count} days before': '直前の {count} 日間との比較',
+  'Review time': 'レビュー時間',
+  median: '中央値',
+  Authors: '作成者',
+  'How each author’s pull requests fared in review. Select an author to see their reviews.':
+    '作成者ごとのプルリクエストのレビュー結果です。作成者を選択すると、その作成者のレビューを表示します。',
+  'Author actions': '作成者の操作',
+  'Ranges are whole days in UTC, today included, and changes compare each figure with the same number of days before.':
+    '期間は今日を含む UTC の日単位で、増減は各数値を直前の同じ日数と比較したものです。',
+  'Approval and confidence go by each pull request’s latest review; fixed counts findings resolved by a later commit.':
+    '承認と信頼度は各プルリクエストの最新のレビューに基づき、修正済みは後のコミットで解決された指摘を数えます。',
+  'Review time is the median from a review being queued to it completing.':
+    'レビュー時間は、レビューがキューに入ってから完了するまでの時間の中央値です。',
+  '{resolved} fixed, {open} open, {dismissed} dismissed':
+    '修正 {resolved} 件、未対応 {open} 件、却下 {dismissed} 件',
+  Noisy: '却下が多い',
+  'Most settled findings in this category were dismissed. A learning can tell the reviewer to flag fewer of them.':
+    'このカテゴリで決着した指摘の大半が却下されました。学習で、この種の指摘を控えるようレビュアーに伝えられます。',
+  'Completed reviews per week, by verdict': '週ごとの完了したレビュー (判定別)',
+  'Completed reviews per day, by verdict': '日ごとの完了したレビュー (判定別)',
+  'Findings posted per week, by severity': '週ごとの投稿された指摘 (重要度別)',
+  'Findings posted per day, by severity': '日ごとの投稿された指摘 (重要度別)',
+  Chart: 'グラフ',
+  'No findings in this range': 'この期間に指摘はありません',
+  'Critical and major': '重大・高',
+  'Minor and info': '低・情報',
 
   // Finding outcomes
   'Useful findings': '有用な指摘',
-  '{resolved} fixed, {dismissed} dismissed':
-    '修正 {resolved} 件、却下 {dismissed} 件',
   Useful: '有用',
   Dismissed: '却下',
   'Findings by category': 'カテゴリ別の指摘',
@@ -322,6 +344,48 @@ export const jaReviewsDictionary: Record<string, string> = {
     'プルリクエストが作成されるか、新しいコミットが追加されると、ここにレビューが表示されます。',
   'No reviews of this directory among the latest ones.':
     '最新のレビューの中に、このディレクトリのレビューはありません。',
+
+  // Tabs: repositories, learnings, findings and credits
+  'How each repository’s pull requests fared in review. Select a repository to narrow the tab to it.':
+    'リポジトリごとのプルリクエストのレビュー結果です。リポジトリを選択すると、このタブをそのリポジトリに絞り込みます。',
+  '{count} repositories': '{count} 件のリポジトリ',
+  'Repository actions': 'リポジトリの操作',
+  'Reviewed repositories': 'レビュー対象のリポジトリ',
+  'Pull requests reviewed in the last 30 days. Select a repository to see its reviews.':
+    '過去 30 日間にレビューしたプルリクエストです。リポジトリを選択するとそのレビューを表示します。',
+  'Turn on code review for a repository right where you find it. Reviewed ones show their last 30 days.':
+    '見つけたリポジトリでそのままコードレビューを有効にできます。レビュー対象のリポジトリには過去 30 日間の結果を表示します。',
+  'Connect GitHub, GitLab, Gitea, Bitbucket or Origin to the project, then pick the repositories to review.':
+    'GitHub、GitLab、Gitea、Bitbucket、Origin のいずれかをプロジェクトに接続し、レビューするリポジトリを選択してください。',
+  'Connect a Git provider to the project to review its repositories.':
+    'リポジトリをレビューするには、Git プロバイダーをプロジェクトに接続してください。',
+  'No learnings for this repository': 'このリポジトリの学習はありません',
+  'Ask the reviewer to remember a preference in one of its pull requests, and it shows up here.':
+    'このリポジトリのプルリクエストでレビュアーに好みを覚えるよう依頼すると、ここに表示されます。',
+  'Show all repositories': 'すべてのリポジトリを表示',
+  'What the reviewer was asked to remember in pull request conversations. Later reviews and answers of the repository follow them.':
+    'プルリクエストの会話でレビュアーに覚えるよう依頼した内容です。以降のリポジトリのレビューと回答はこれに従います。',
+  'Show this repository only': 'このリポジトリのみ表示',
+  'Open conversation': '会話を開く',
+  'Open on {provider}': '{provider} で開く',
+  'Most severe: {severity}': '最も重大: {severity}',
+  'Review credits this cycle (this project)':
+    '今期のレビュークレジット (このプロジェクト)',
+  'Review credits this cycle': '今期のレビュークレジット',
+  'All included credits are used. New pull requests are not reviewed until the next billing cycle.':
+    '含まれるクレジットをすべて使用しました。次の請求サイクルまで新しいプルリクエストはレビューされません。',
+  'All included credits are used. New pull requests are not reviewed until the next billing cycle or an upgrade.':
+    '含まれるクレジットをすべて使用しました。次の請求サイクルまたはアップグレードまで、新しいプルリクエストはレビューされません。',
+  '{extra} extra credits so far, about ${cost} on your next invoice.':
+    'これまでの追加クレジットは {extra}、次回の請求書で約 ${cost} です。',
+  'Extra credits past the allowance are billed with your usage, up to your budget cap.':
+    '上限を超えた追加クレジットは、予算の上限まで使用量とともに請求されます。',
+  'Reviews stop when the included credits are used, so you are never billed for extra credits.':
+    '含まれるクレジットを使い切るとレビューが停止するため、追加クレジットが請求されることはありません。',
+  'A normal review costs 50 credits. Answers to comments are free.':
+    '通常のレビューは 50 クレジットです。コメントへの回答は無料です。',
+  'Manage budget': '予算を管理',
+  'Upgrade for more credits': 'アップグレードしてクレジットを追加',
 
   // Row menus
   'Copy text': 'テキストをコピー',

@@ -78,7 +78,7 @@ export function Credits({ projectId, organizationId }: CreditsProps) {
   return (
     <div
       className={cn(
-        'mb-4 flex flex-col gap-3 rounded-lg border bg-card px-4 py-3 sm:flex-row sm:items-center sm:gap-6',
+        'mb-6 flex flex-col gap-3 rounded-xl border bg-card/50 px-6 py-4 sm:flex-row sm:items-center sm:gap-6',
         blocked ? 'border-destructive/50' : 'border-border',
       )}
     >
@@ -93,7 +93,11 @@ export function Credits({ projectId, organizationId }: CreditsProps) {
                 ? t('Review credits this cycle (this project)')
                 : t('Review credits this cycle')}
             </p>
-            <p className="shrink-0 text-[12px] tabular-nums text-muted-foreground">
+            {/* Spent before allowance in every language. */}
+            <p
+              dir="ltr"
+              className="shrink-0 text-[12px] tabular-nums text-muted-foreground"
+            >
               {format(Math.min(spent, allowance))} / {format(allowance)}
             </p>
           </div>
