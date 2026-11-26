@@ -8,6 +8,7 @@ use Appwrite\Event\Message\VideoAction;
 use Appwrite\Event\Publisher\Video as VideoPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Base;
+use Appwrite\Platform\Modules\Videos\SegmentCache;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -82,6 +83,7 @@ class Update extends Base
             ->inject('timelimit')
             ->inject('queueForEvents')
             ->inject('publisherForVideos')
+            ->inject('purgeVideoSegmentCache')
             ->callback($this->action(...));
     }
 
@@ -100,7 +102,8 @@ class Update extends Base
         Authorization $authorization,
         callable $timelimit,
         Event $queueForEvents,
-        VideoPublisher $publisherForVideos
+        VideoPublisher $publisherForVideos,
+        SegmentCache $segmentCache
     ): void {
         $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
         $this->assertCanUpdateVideo($authorization, $user, $video);
@@ -205,6 +208,11 @@ class Update extends Base
                 caption: $caption,
             ));
         }
+
+        // Public caption segments share the video Surrogate-Key and the video's
+        // updatedAt, so this write does not change their URL. A replaced source
+        // is rewritten later; the worker purges again once the new bytes are stored.
+        $segmentCache->purge($project->getId(), $video->getId());
 
         $queueForEvents
             ->setParam('videoId', $video->getId())

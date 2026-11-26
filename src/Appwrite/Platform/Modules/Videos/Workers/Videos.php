@@ -12,6 +12,7 @@ use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Platform\Modules\Videos\Base;
+use Appwrite\Platform\Modules\Videos\SegmentCache;
 use Appwrite\Storage\Encryption;
 use Appwrite\Usage\Context;
 use Appwrite\Usage\Video as VideoUsage;
@@ -141,6 +142,8 @@ class Videos extends Action
     /** Encode speed buckets as a multiple of realtime. */
     private const SPEED_BUCKETS = [0.1, 0.25, 0.5, 1, 2, 4, 8, 16, 32];
 
+    private SegmentCache $segmentCache;
+
     /**
      * Must be exactly 'videos': app/worker.php derives the queue name
      * (`v1-videos`) and looks the action up by this key.
@@ -164,6 +167,7 @@ class Videos extends Action
             ->inject('usage')
             ->inject('publisherForUsage')
             ->inject('telemetry')
+            ->inject('purgeVideoSegmentCache')
             ->callback($this->action(...));
     }
 
@@ -178,7 +182,9 @@ class Videos extends Action
         Context $usage,
         UsagePublisher $publisherForUsage,
         Telemetry $telemetry,
+        SegmentCache $segmentCache,
     ): void {
+        $this->segmentCache = $segmentCache;
         $payload = $message->getPayload();
 
         if (empty($payload)) {
@@ -1436,7 +1442,7 @@ class Videos extends Action
         Document $project,
         array $permissions
     ): Document {
-        $dbForProject->deleteDocuments('videosCaptionsSegments', [
+        $removed = $dbForProject->deleteDocuments('videosCaptionsSegments', [
             Query::equal('captionInternalId', [$caption->getSequence()]),
         ]);
 
@@ -1488,6 +1494,16 @@ class Videos extends Action
             ],
             $permissions
         );
+
+        // A first encode has nothing cached. A replacement leaves the previous
+        // segment URL on Fastly, because the video's updatedAt did not change.
+        if ($removed > 0) {
+            try {
+                $this->segmentCache->purge($project->getId(), $video->getId());
+            } catch (\Throwable $th) {
+                $this->log('Videos worker: failed to purge caption cache for video ' . $video->getId() . ': ' . $th->getMessage(), 'error');
+            }
+        }
 
         return $caption;
     }
