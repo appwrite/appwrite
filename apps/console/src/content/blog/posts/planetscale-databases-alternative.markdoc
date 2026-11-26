@@ -1,135 +1,160 @@
 ---
 layout: post
 title: How Appwrite Databases can replace your PlanetScale database
-description: Compare PlanetScale Databases to Appwrite Databases so you can understand whether Appwrite is a viable alternative to PlanetScale's free-tier.
+description: Compare PlanetScale to Appwrite Databases, with managed PostgreSQL and MySQL, serverless TablesDB on the Free plan, and a full backend in the same project.
 date: 2024-03-10
-lastUpdated: 2026-06-29
+lastUpdated: 2026-11-26
 cover: /images/blog/planetscale-databases-alternative/cover.avif
 timeToRead: 7
 author: aditya-oberai
 category: products
 faqs:
   - question: "Is Appwrite a like for like replacement for PlanetScale?"
-    answer: "Not exactly. PlanetScale is a managed MySQL database that you query directly with SQL. [Appwrite Databases](/docs/products/databases) wraps a MariaDB engine in an API and SDKs, plus bundles auth, storage, functions, and messaging. It is a backend platform with a database, not a pure database service."
-  - question: "Can I run raw SQL queries on Appwrite Databases?"
-    answer: "No. Appwrite exposes a query API and SDKs instead of direct SQL access. You can model tables, indexes, and relationships, and run filtered, paginated queries, but the underlying SQL layer is not exposed to users."
+    answer: "For the database, yes. Appwrite runs managed [PostgreSQL](/docs/products/databases/postgresql) and [MySQL](/docs/products/databases/mysql) on dedicated compute, which you query with SQL from any standard client, just like PlanetScale. Both are in beta. Appwrite also adds TablesDB, DocumentsDB, and VectorsDB, plus auth, storage, functions, messaging, and hosting in the same project."
+  - question: "Can I run raw SQL queries on Appwrite?"
+    answer: "Yes. Managed PostgreSQL and MySQL give you full SQL access with psql, mysql, or any driver and ORM. TablesDB, DocumentsDB, and VectorsDB use a query API and SDKs instead, so you can work with your data without writing SQL."
   - question: "How do permissions work in Appwrite Databases?"
-    answer: "You set permissions at the database, table, and row level using roles like `any`, `users`, `team`, or specific user IDs. This means access control lives next to the data rather than in a separate rules engine."
+    answer: "In TablesDB, DocumentsDB, and VectorsDB, you set [permissions](/docs/advanced/security/permissions) on tables and rows using roles like `any`, `users`, `team`, or specific user IDs, so access control lives next to the data. Managed PostgreSQL and MySQL use the database's own users, roles, and grants."
   - question: "Does Appwrite handle backups automatically?"
-    answer: "Yes. Appwrite Cloud takes automated backups, and there is a manual database backup feature for on demand snapshots. You can restore from backups without downtime, including on the free plan."
+    answer: "Yes, on paid plans. Appwrite Pro takes daily backups with 7 days of retention, and dedicated databases add point-in-time recovery with a restore window of 1 to 35 days."
   - question: "Can I self-host Appwrite Databases?"
-    answer: "Yes. The whole Appwrite stack, Databases included, runs as a Docker Compose deployment on your own infrastructure for free. The self-hosted version uses the same APIs and SDKs as Appwrite Cloud."
+    answer: "Yes. The whole Appwrite stack runs on your own infrastructure with one Docker install, for free. Self-hosted Appwrite 2.0 runs on PostgreSQL by default, and you can choose MariaDB or MongoDB instead. It uses the same APIs and SDKs as Appwrite Cloud."
   - question: "Is there a free tier?"
-    answer: "Yes. Appwrite Cloud has a free plan that includes Databases, Auth, Storage, Functions, and Messaging within usage limits. Self-hosting is free with no usage caps beyond what your hardware can handle."
+    answer: "Yes. PlanetScale removed its free tier in 2024. Appwrite Free includes a serverless TablesDB database, auth for 75,000 monthly active users, storage, functions, and hosting. Pro starts at $25/mo and adds managed PostgreSQL and MySQL with $10/mo in compute credits."
+  - question: "How do I migrate from PlanetScale?"
+    answer: "For PostgreSQL, run pg_dump against PlanetScale and pg_restore into Appwrite. For MySQL, use mysqldump and import into an Appwrite MySQL database. Any standard client works, so there is no Appwrite-specific tooling to learn."
 ---
 
-On March 6th, 2024, PlanetScale announced their plan to sunset their free tier, impacting developers and their projects worldwide. Many devs are now forced to migrate away and find a new database solution. As an open-source backend-as-a-service platform, Appwrite can be the solution to finding a PlanetScale alternative. In this article, we compare PlanetScale Databases to Appwrite Databases so you can understand whether Appwrite’s free-tier Databases are a feasible option.
+Updated on November 26, 2026
+
+On March 6th, 2024, PlanetScale announced it would sunset its free tier, and developers worldwide had to find a new home for their projects. Today PlanetScale offers both MySQL, through Vitess, and PostgreSQL, but still no free plan. In this article, we compare PlanetScale to Appwrite Databases so you can decide whether Appwrite fits your project.
+
+For a side-by-side table of every feature and price, see [Appwrite as a PlanetScale alternative](/alternative-to/planetscale).
 
 # How Appwrite can help
 
-When comparing PlanetScale with Appwrite, it's essential to understand that they serve somewhat different purposes. PlanetScale is known to be a highly scalable, MySQL-compatible database service, focusing on providing a robust solution for scaling relational databases horizontally. Appwrite, on the other hand, offers a more comprehensive set of products for your backend, including Databases, Authentication, Functions, Storage, and Messaging. If PlanetScale is a great screwdriver set, Appwrite is a Swiss Army Knife for the developer.
+PlanetScale and Appwrite serve somewhat different purposes. PlanetScale is a highly scalable database service, known for horizontal sharding and for branching with deploy requests. Appwrite runs the database too, and adds the rest of your backend around it: authentication, storage, functions, messaging, realtime, and web hosting. If PlanetScale is a great screwdriver set, Appwrite is a Swiss Army knife for the developer.
+
+## Five database models in one project
+
+[Appwrite Databases](/products/databases) gives you five database models in two categories, all in the same Console:
+
+- **Appwrite databases with SDKs:** [TablesDB](/docs/products/databases) for relational tables, DocumentsDB for flexible JSON documents, and VectorsDB for embeddings and similarity search. You work with them through APIs and SDKs, with permissions built in, so you need no SQL. TablesDB runs on serverless compute, including on the Free plan, or on dedicated compute.
+- **Native SQL databases:** managed [PostgreSQL](/docs/products/databases/postgresql) and [MySQL](/docs/products/databases/mysql) on dedicated compute. You connect with psql, mysql, or any driver and ORM, the same way you connect to PlanetScale.
+
+DocumentsDB, VectorsDB, PostgreSQL, and MySQL are in beta.
+
+## Managed PostgreSQL and MySQL
+
+If you're moving off PlanetScale, the native databases are the closest match. [Managed PostgreSQL](/products/postgres) runs PostgreSQL 18 (or 17), and both engines come with the operations work handled for you:
+
+- **Dedicated compute:** fixed monthly tiers with reserved CPU, memory, and connections, starting at $10/mo.
+- **High availability:** up to five replicas with async, sync, or quorum replication and automatic failover.
+- **Point-in-time recovery:** restore to any moment within a window of 1 to 35 days, for 20% of the compute tier.
+- **Connection pooling:** serve many short-lived clients, such as serverless functions, from a small pool.
+- **Branches:** create short-lived snapshot branches to test changes against real data.
+- **Extensions:** up to 50 PostgreSQL extensions, including pgvector and PostGIS.
+
+Migration uses standard tools. For PostgreSQL, run `pg_dump` against PlanetScale and `pg_restore` into Appwrite. For MySQL, use `mysqldump` and import the dump into an Appwrite MySQL database.
 
 ## An all-in-one package
 
-Appwrite is an open-source, all-in-one cloud development platform. Use built-in backend infrastructure and web hosting, all from a single place. 
+Appwrite is an open-source, all-in-one development platform. Next to your database, the same project gives you:
 
-Here are the core products Appwrite offers:
+- **Authentication:** user registration, login, MFA, teams, and 40+ OAuth providers.
+- **Storage:** secure file storage with previews and image transformations.
+- **Functions:** custom code in 13+ runtimes, without managing servers.
+- **Messaging:** push notifications, email, and SMS through 12 providers.
+- **Realtime:** live updates for rows, files, function executions, sessions, and teams.
+- **Sites:** hosting for static and server-side rendered frontends.
 
-- **Authentication:** Manage user registration, login, and account functionalities. It supports multiple sign-in methods as well as two-factor authentication.
-- **Database:** Create and manage databases to store and query your application's data.
-- **Storage:** Securely store and manage files used within your application. Appwrite also allows for file previews and image manipulations.
-- **Functions:** Execute custom code within a secure environment to implement specific application logic without managing servers.
-- **Messaging:** Communicate with your users through push notifications, emails, and SMS text messages.
-- **Realtime:** Enable real-time updates and synchronization within your application for features like chat or collaborative editing.
-
-[Signing up for Appwrite Cloud](https://cloud.appwrite.io/register) or self-hosting it on your server doesn't just give you access to one of these, but all of these.
-
-Let’s delve further into some of our developer experience and more database-oriented benefits.
+[Signing up for Appwrite Cloud](https://cloud.appwrite.io/register) or self-hosting it on your server gives you access to all of them, not just one.
 
 ## API-first approach
 
-A major difference that Appwrite has from other database-as-a-service offerings like PlanetScale is that instead of directly querying the underlying database, we offer APIs to interact with the product.
+For TablesDB, DocumentsDB, and VectorsDB, Appwrite offers APIs to interact with your data instead of direct database access. This approach offers several advantages:
 
-This approach offers several advantages:
+- **Simpler interactions with data:** perform CRUD actions through straightforward HTTP requests or SDK calls, with no SQL required.
+- **Works with any language:** any language or platform that can make HTTP requests can use Appwrite Databases.
+- **Built-in security:** permissions on tables and rows ensure data is only accessible to authorized users, across the REST API, Realtime, and every SDK.
+- **Easier onboarding:** detailed API documentation and SDKs for many languages make it easy to get started.
 
-- **Simpler interactions with data:** Developers can perform CRUD actions easily through straightforward HTTP requests. Knowledge of SQL isn’t mandatory anymore.
-- **Works with any language**: Any programming language or platform capable of making HTTP requests can consume Appwrite Databases, making it highly versatile.
-- **Additional security**: Integrated authentication and access control ensure that data is only accessible to authorized users, keeping your application secure.
-- **Easier education:** Detailed API documentation and SDKs for various languages offer a smooth developer experience, making it easy to get started and efficient to use.
-
-Leveraging an API-first approach, we have built a lot of abstractions to interact with the underlying MariaDB database in Appwrite and not just to perform CRUD actions on the tables but also to handle the creation and management of databases, tables, columns, indexes, and relationships. This experience extends beyond Appwrite Databases to all other Appwrite products.
+The same API-first approach covers creating and managing databases, tables, columns, indexes, and relationships, and it extends to every other Appwrite product. When you need full SQL control, use managed PostgreSQL or MySQL instead.
 
 ## SDKs and developer tooling
 
-To decrease the friction in building for all developers and complement our API-first approach, Appwrite offers over 10 SDKs across languages such as JavaScript, Python, Dart, and Kotlin, as well as a CLI that works on Linux, MacOS, and Windows-based systems.
+To complement the API-first approach, Appwrite offers SDKs for languages such as JavaScript, Python, Dart, Kotlin, Swift, and Go, as well as a CLI for Linux, macOS, and Windows, and an MCP server for AI agents.
 
-- **Simplicity:**&nbsp;SDKs eliminate the need for developers to write code from scratch to interact with Appwrite's API, saving them time and effort.
-- **Consistency and reliability**: SDKs and the CLI ensure that applications use Appwrite’s API correctly and efficiently while retaining type safety, reducing the risk of errors.
-- **Enhanced productivity:** By automating and simplifying tasks, SDKs and CLI help developers accomplish more in less time, boosting productivity. They make integrating Appwrite’s features, test applications, and deploy updates easier.
-
-This way, any developer transitioning to Appwrite can get started with our stack quickly and easily.
+- **Simplicity:** SDKs remove the need to write code from scratch to call Appwrite's API.
+- **Consistency and reliability:** SDKs and the CLI use Appwrite's API correctly while keeping type safety, which reduces errors.
+- **Enhanced productivity:** the SDKs and CLI automate routine tasks, so you can integrate features, test, and deploy faster.
 
 ## Self-hosting Appwrite
 
-Since Appwrite is open-source, we have simplified the process to self-host it. This has several benefits:
+Since Appwrite is open source, you can run the whole platform on your own servers. This has several benefits:
 
-- **Control**: You gain complete authority over your server environment and configurations.
-- **Privacy and security**: You can keep all data in-house for enhanced security and compliance with data protection laws.
-- **Cost efficiency**: You might potentially lower expenses over time by optimizing resources and avoiding third-party fees.
-- **Reduced latency:** Hosting closer to your clients may help improve application performance.
-- **Avoid vendor lock-in**: You're not tied to the services, pricing, and terms of a specific cloud provider.
+- **Control:** you have complete authority over your server environment and configuration.
+- **Privacy and security:** you can keep all data in-house for compliance with data protection laws.
+- **Cost efficiency:** you can lower expenses over time by optimizing resources and avoiding third-party fees.
+- **Reduced latency:** hosting closer to your users can improve performance.
+- **No vendor lock-in:** you're not tied to the services, pricing, and terms of a specific provider.
 
-Currently, Appwrite uses Docker Compose to deliver all the necessary services and components necessary for the platform. We provide a single installation command to set up an Appwrite instance on any system with Docker.
+Self-hosted Appwrite runs on PostgreSQL by default, and you can choose MariaDB or MongoDB instead. A single command sets up an instance on any system with Docker:
 
 ```bash
 docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:1.8.1
+    appwrite/appwrite:2.5.0 \
+    --database=postgresql
 ```
 
-We have a dedicated [self-hosting guide](/docs/advanced/self-hosting) in our docs for more info.
+See the [self-hosting guide](/docs/advanced/self-hosting) in our docs for more info.
 
 ## Managed databases on Appwrite Cloud
 
-With Appwrite Cloud, our Database offering is fully managed. This means that our team handles any administrative tasks associated with running the underlying database. This carries several key benefits:
+On Appwrite Cloud, our team handles the administrative work of running your databases:
 
-- **Automated backups**: Regular snapshots of the database are taken automatically to ensure data can be restored in case of loss.
-- **Scaling**: Resources (CPU, memory, storage) are adjusted by our team according to demand, often with minimal or no downtime.
-- **Monitoring and alerts**: There is continuous monitoring of database performance and health, with alerts for any issues, which are team takes care of.
-- **Maintenance and updates**: We handle updates to the database software and operating system, applying patches and security fixes as needed.
-- **Enhanced security:**&nbsp;We maintain robust security measures to protect your data.
-
-One of the biggest advantages of Appwrite Cloud is that these benefits are not just restricted to paid customers but also available to consumers of our free tier.
+- **Automated backups:** Pro takes daily backups with 7 days of retention, and dedicated databases add point-in-time recovery.
+- **Scaling:** move a dedicated database to a larger compute tier as your load grows.
+- **Monitoring:** track database performance and health from the Console.
+- **Maintenance and updates:** we apply database software updates, patches, and security fixes.
+- **Enhanced security:** network controls and encryption protect your data.
 
 ## Pricing plans
 
-With Appwrite Cloud, we have mindfully designed our pricing plans to be accessible to most developers. Right now, we offer two [pricing plans on Appwrite Cloud](/pricing).
+Appwrite Cloud pricing is designed to be accessible to most developers. See the [pricing page](/pricing) for every plan and limit.
 
 - **Free plan**
-  - A free tier for every developer working on a side project or SaaS product that can thrive on our Free plan limits.
-  - Free of cost
+  - For side projects and early products that fit within the Free plan limits.
+  - Includes a serverless TablesDB database, auth for 75,000 monthly active users, storage, functions, and hosting.
 - **Pro plan**
-  - A plan that supports your ambitions to scale your production project and allows you to grow.
-  - Comes with flexible budget control tools to ensure you never get a surprise bill.
-  - $15, per month, per member.
+  - For production projects that need to scale.
+  - Starts at $25/mo, with budget caps so you never get a surprise bill.
+  - Includes $10/mo in compute credits for dedicated databases, including managed PostgreSQL and MySQL.
 
-![Appwrite pricing overview](/images/blog/planetscale-databases-alternative/pricing.avif)
+For databases, here are the main differences between both plans:
 
-For databases, here are the differences between both plans:
-
-| Category            | Free plan           | Pro plan            |
-| ------------------- | ------------------- | ------------------- |
-| Databases           | 1 per project       | Unlimited           |
-| Documents           | Unlimited           | Unlimited           |
-| Reads & Writes      | Unlimited           | Unlimited           |
-| Dedicated databases | No                  | Yes                 |
+| Category            | Free plan           | Pro plan                   |
+| ------------------- | ------------------- | -------------------------- |
+| Databases           | 1 per project       | Unlimited                  |
+| Backups             | No                  | Daily, 7 days retention    |
+| Dedicated databases | No                  | From $10/mo                |
+| PostgreSQL and MySQL | No                 | Yes, on dedicated compute  |
 
 You can also look at PlanetScale [pricing](https://planetscale.com/pricing) to understand how Appwrite compares.
 
+# When PlanetScale might still fit
+
+PlanetScale builds excellent databases, and it may still suit you if:
+
+- You need horizontal sharding for a very large MySQL or PostgreSQL workload today.
+- Branching with deploy requests is central to how your team ships schema changes.
+- You only need a database, and the rest of your backend already lives elsewhere.
+
 # Moving forward
 
-There is no denying that PlanetScale has done a fantastic job developing a scalable and robust database offering. They are a massive inspiration in the database space and the larger developer tooling ecosystem. That being said, there are gaps in the developer community that PlanetScale chooses not to prioritize due to their business growth plans, which we can help with. Free users have formed an influential part of the Appwrite community and have made a difference not just as consumers but also as builders, public speakers, contributors, etc., who have constantly criticized and shared feedback, added ideas and suggestions, and made Appwrite a much better platform. We hope we will see more such developers give us a shot in the days to come.
+There is no denying that PlanetScale has done a fantastic job building a scalable and robust database offering, and it remains an inspiration in the database space. Still, there are developers PlanetScale chooses not to prioritize, starting with those who need a free plan, and that is where Appwrite can help. Free users have formed an influential part of the Appwrite community. They have made a difference not just as users but also as builders, speakers, and contributors, and their feedback has made Appwrite a much better platform. We hope more developers give us a shot in the days to come.
 
 Learn more about Appwrite by visiting our [docs](/docs) and joining our [Discord community](https://appwrite.io/discord).
