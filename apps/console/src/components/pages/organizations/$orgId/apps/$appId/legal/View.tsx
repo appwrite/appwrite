@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { Models } from '@appwrite.io/console'
 import { useParams } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,11 +9,15 @@ import { trimOrEmpty, useOrgAppUpdate } from '../_components/useOrgAppUpdate'
 import { useT } from '@/lib/i18n/translate'
 
 export function View() {
-  const t = useT()
   const { orgId, appId } = useParams({ strict: false })
   const { app } = useOrganizationApp(appId)
   if (!app || !orgId) return null
 
+  return <LegalSettings orgId={orgId} app={app} />
+}
+
+function LegalSettings({ orgId, app }: { orgId: string; app: Models.App }) {
+  const t = useT()
   const { submit, isUpdating } = useOrgAppUpdate(orgId, app)
   const [privacyPolicyUrl, setPrivacyPolicyUrl] = useState(
     app.privacyPolicyUrl ?? '',
@@ -22,7 +27,11 @@ export function View() {
     app.dataDeletionUrl ?? '',
   )
 
+  const syncedAppRef = useRef(app)
+
   useEffect(() => {
+    if (syncedAppRef.current.$id === app.$id) return
+    syncedAppRef.current = app
     setPrivacyPolicyUrl(app.privacyPolicyUrl ?? '')
     setTermsUrl(app.termsUrl ?? '')
     setDataDeletionUrl(app.dataDeletionUrl ?? '')
@@ -81,6 +90,8 @@ export function View() {
               privacyPolicyUrl: trimOrEmpty(privacyPolicyUrl),
               termsUrl: trimOrEmpty(termsUrl),
               dataDeletionUrl: trimOrEmpty(dataDeletionUrl),
+            }).catch(() => {
+              // toast handled in submit
             })
           }
         >

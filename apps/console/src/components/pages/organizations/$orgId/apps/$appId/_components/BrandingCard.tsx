@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Models } from '@appwrite.io/console'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
+  listsEqual,
   nonEmptyList,
   trimOrEmpty,
   useOrgAppUpdate,
@@ -24,11 +25,20 @@ export function BrandingCard({ orgId, app }: BrandingCardProps) {
   const [logoUri, setLogoUri] = useState(app.logoUri ?? '')
   const [images, setImages] = useState(app.images ?? [])
 
+  const syncedAppRef = useRef(app)
+
   useEffect(() => {
+    if (syncedAppRef.current.$id === app.$id) return
+    syncedAppRef.current = app
     setClientUri(app.clientUri ?? '')
     setLogoUri(app.logoUri ?? '')
     setImages(app.images ?? [])
   }, [app])
+
+  const brandingDirty =
+    trimOrEmpty(clientUri) !== (app.clientUri ?? '') ||
+    trimOrEmpty(logoUri) !== (app.logoUri ?? '') ||
+    !listsEqual(nonEmptyList(images), app.images ?? [])
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -74,12 +84,14 @@ export function BrandingCard({ orgId, app }: BrandingCardProps) {
         <Button
           size="sm"
           className="h-9 text-[13px]"
-          disabled={isUpdating}
+          disabled={isUpdating || !brandingDirty}
           onClick={() =>
             submit({
               clientUri: trimOrEmpty(clientUri),
               logoUri: trimOrEmpty(logoUri),
               images: nonEmptyList(images),
+            }).catch(() => {
+              // toast handled in submit
             })
           }
         >
