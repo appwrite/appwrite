@@ -66,7 +66,8 @@ function wrote(string $key, string $bytes, string $input, ?Compression $counterp
             $best = [sha1($bytes), $base, $delta];
         }
     }
-    if (patched(match ($best[1]) { 'class' => $class, 'input' => $input, 'none' => '' }, gzinflate($best[2])) !== $bytes) {
+    $bases = ['class' => $class, 'input' => $input, 'none' => ''];
+    if (patched($bases[$best[1]], gzinflate($best[2])) !== $bytes) {
         throw new LogicException("the delta of $key does not rebuild it");
     }
     $best[2] = base64_encode($best[2]);
