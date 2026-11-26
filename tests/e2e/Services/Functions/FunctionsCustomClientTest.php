@@ -547,7 +547,7 @@ final class FunctionsCustomClientTest extends Scope
             $this->assertSame([], $template['permissions']);
             $this->assertContains('monitors.*.alerts.*.create', $template['events']);
         }
-        $this->assertSame(['monitors.*.alerts.*.create', 'monitors.*.alerts.*.update.status'], $alertTemplates['alerts-to-chat']['events']);
+        $this->assertSame(['monitors.*.alerts.*.create', 'monitors.*.alerts.*.update'], $alertTemplates['alerts-to-chat']['events']);
         $this->assertSame([], $alertTemplates['alerts-to-chat']['scopes']);
         $this->assertSame(['functions.read', 'functions.write', 'sites.read', 'sites.write'], $alertTemplates['pause-on-usage-spike']['scopes']);
 
