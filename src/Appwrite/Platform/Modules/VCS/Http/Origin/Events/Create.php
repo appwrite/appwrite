@@ -477,11 +477,18 @@ class Create extends Action
         // anything else with its previous tip
         $providerPreviousCommitHash = $parsedPayload['previousCommitHash'] ?? '';
         $providerBaseCommitHash = $providerPreviousCommitHash;
-        if (($parsedPayload['branchCreated'] ?? false) || \trim($providerBaseCommitHash, '0') === '') {
+        $providerBranchCreated = ($parsedPayload['branchCreated'] ?? false) || \trim($providerBaseCommitHash, '0') === '';
+        if ($providerBranchCreated) {
             $providerBaseCommitHash = '';
-            $providerDefaultBranch = $parsedPayload['defaultBranch'] ?? '';
-            if ($providerDefaultBranch !== '' && $providerDefaultBranch !== $providerBranch) {
-                $providerBaseCommitHash = $providerDefaultBranch;
+            try {
+                // Push deliveries do not name the default branch, and compare
+                // takes refs containing '/' only as their SHA
+                $providerDefaultBranch = \strval($vcs->getRepository($providerRepositoryOwner, $providerRepositoryName)['defaultBranch'] ?? '');
+                if ($providerDefaultBranch !== '' && $providerDefaultBranch !== $providerBranch) {
+                    $providerBaseCommitHash = $vcs->getLatestCommit($providerRepositoryOwner, $providerRepositoryName, $providerDefaultBranch)['commitHash'] ?? '';
+                }
+            } catch (\Throwable $e) {
+                Console::warning("Failed to resolve the default branch of '{$providerRepositoryName}': " . $e->getMessage());
             }
         }
 
@@ -493,8 +500,9 @@ class Create extends Action
                 $comparison = $vcs->compareCommits($providerRepositoryOwner, $providerRepositoryName, $providerBaseCommitHash, $providerCommitHash);
                 $aheadBy = (int) ($comparison['aheadBy'] ?? -1);
 
-                // A branch created where the default branch already is holds nothing new to deploy
-                if ($aheadBy === 0) {
+                // A branch created where the default branch already is holds nothing
+                // new to deploy; a force-push back to an older commit still deploys
+                if ($providerBranchCreated && $aheadBy === 0) {
                     return;
                 }
 
