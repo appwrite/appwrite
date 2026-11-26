@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
-import { useMutation } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { ArrowLeft, Loader2, Store } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -12,12 +11,12 @@ import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { OrganizationBillingHeaderBanners } from '@/components/global/shared/OrganizationBillingHeaderBanners'
 import { resolveAppLogoDisplayUrl } from '@/lib/appwrite/apps-logo'
 import { mapAppToMarketplaceApp } from '@/lib/marketplace/map-app'
-import { startMarketplaceAppInstall } from '@/lib/marketplace/install-app'
 import {
   MARKETPLACE_CATEGORY_LABELS,
   MARKETPLACE_CATEGORY_ICONS,
 } from '@/lib/marketplace/types'
 import {
+  useCreateOrganizationAppInstallation,
   useOrganizationApp,
   useOrganizationAppInstallation,
   useOrganizations,
@@ -65,15 +64,24 @@ export function View({ initialData }: ViewProps = {}) {
     })
   }, [app, orgId, teamNamesById])
 
-  const installMutation = useMutation({
-    mutationFn: () => {
-      if (!mapped) throw new Error('App not loaded')
-      return startMarketplaceAppInstall(mapped)
-    },
-    onError: (error) => {
-      toast.error(getErrorMessage(error, t('Failed to start installation')))
-    },
-  })
+  const installMutation = useCreateOrganizationAppInstallation(orgId)
+
+  const handleInstall = async () => {
+    if (!mapped) return
+    try {
+      await installMutation.mutateAsync(mapped.$id)
+    } catch (error) {
+      toast.error(getErrorMessage(error, t('Failed to install app')))
+      return
+    }
+    // The app finishes its own setup on its installation redirect page;
+    // without one, the page switches to its Installed state.
+    if (mapped.installationRedirectUrl) {
+      window.location.assign(mapped.installationRedirectUrl)
+      return
+    }
+    toast.success(t('App installed'))
+  }
 
   if (!app && !initialData?.app && !isLoading) {
     return (
@@ -129,7 +137,9 @@ export function View({ initialData }: ViewProps = {}) {
 
   return (
     <ConsoleLayout
-      headerBanner={<OrganizationBillingHeaderBanners organizationId={orgId} />}
+      headerBanner={
+        <OrganizationBillingHeaderBanners organizationId={orgId} />
+      }
     >
       <div className="flex h-full flex-col">
         <div className="border-b border-border bg-background">
@@ -174,9 +184,7 @@ export function View({ initialData }: ViewProps = {}) {
                     <Badge variant="inactive" className="text-[10px] shrink-0">
                       {t(MARKETPLACE_CATEGORY_LABELS[mapped.category])}
                     </Badge>
-                    <span>
-                      {t('by')} {mapped.author}
-                    </span>
+                    <span>{t('by')} {mapped.author}</span>
                     {mapped.installs > 0 ? (
                       <>
                         <span>·</span>
@@ -237,7 +245,7 @@ export function View({ initialData }: ViewProps = {}) {
                             )
                           : undefined
                     }
-                    onClick={() => installMutation.mutate()}
+                    onClick={() => void handleInstall()}
                   >
                     {t('Install app')}
                   </Button>
@@ -259,9 +267,9 @@ export function View({ initialData }: ViewProps = {}) {
               appName={mapped.name}
             />
             <div className="space-y-4 rounded-xl border border-border bg-card/50 p-6">
-              {app.description?.trim() ? (
+              {mapped.description ? (
                 <MarkdownContent
-                  content={app.description}
+                  content={mapped.description}
                   className="text-[13px] leading-relaxed text-muted-foreground"
                 />
               ) : null}
