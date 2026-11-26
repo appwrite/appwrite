@@ -38,8 +38,11 @@ class XList extends Action
 
     private const int PAGE = 1000;
 
-    /** Reviews whose findings are read in one query: at most 100 findings each. */
-    private const int FINDINGS_CHUNK = 50;
+    /**
+     * Reviews whose findings are read in one query: as many as one query may name, with at most
+     * APP_LIMIT_ARRAY_PARAMS_SIZE findings each.
+     */
+    private const int FINDINGS_CHUNK = APP_DATABASE_QUERY_MAX_VALUES;
 
     public static function getName()
     {
