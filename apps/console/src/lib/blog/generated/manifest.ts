@@ -40,7 +40,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "date": "2026-11-30",
     "lastUpdated": "2026-11-30",
     "timeToRead": 8,
-    "author": "atharva",
+    "author": "damodar-lohani",
     "category": "announcements",
     "featured": false,
     "draft": true,
