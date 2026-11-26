@@ -86,14 +86,14 @@ const profile = await project.createVideoProfile({
     audioBitRate: 128000,
     width: 1280,
     height: 720,
-    codec: sdk.VideoCodec.H264 // optional
+    codec: sdk.VideoCodecId.H264 // optional
 });
 ```
 
 ```server-python
 from appwrite.client import Client
 from appwrite.services.project import Project
-from appwrite.enums.video_codec import VideoCodec
+from appwrite.enums.video_codec_id import VideoCodecId
 
 client = Client()
 client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
@@ -109,7 +109,7 @@ profile = project.create_video_profile(
     audio_bit_rate = 128000,
     width = 1280,
     height = 720,
-    codec = VideoCodec.H264 # optional
+    codec = VideoCodecId.H264 # optional
 )
 ```
 
@@ -131,7 +131,7 @@ final profile = await project.createVideoProfile(
     audioBitRate: 128000,
     width: 1280,
     height: 720,
-    codec: enums.VideoCodec.h264, // (optional)
+    codec: enums.VideoCodecId.h264, // (optional)
 );
 ```
 
@@ -140,7 +140,7 @@ final profile = await project.createVideoProfile(
 
 use Appwrite\Client;
 use Appwrite\Services\Project;
-use Appwrite\Enums\VideoCodec;
+use Appwrite\Enums\VideoCodecId;
 
 $client = (new Client())
     ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
@@ -156,7 +156,7 @@ $profile = $project->createVideoProfile(
     audioBitRate: 128000,
     width: 1280,
     height: 720,
-    codec: VideoCodec::H264() // optional
+    codec: VideoCodecId::H264() // optional
 );
 ```
 
@@ -180,7 +180,7 @@ profile = project.create_video_profile(
     audio_bit_rate: 128000,
     width: 1280,
     height: 720,
-    codec: VideoCodec::H264 # optional
+    codec: VideoCodecId::H264 # optional
 )
 ```
 
@@ -204,12 +204,12 @@ VideoProfile profile = await project.CreateVideoProfile(
     audioBitRate: 128000,
     width: 1280,
     height: 720,
-    codec: VideoCodec.H264 // optional
+    codec: VideoCodecId.H264 // optional
 );
 ```
 
 ```server-deno
-import { Client, Project, VideoCodec } from "npm:node-appwrite";
+import { Client, Project, VideoCodecId } from "npm:node-appwrite";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
@@ -225,7 +225,7 @@ const profile = await project.createVideoProfile({
     audioBitRate: 128000,
     width: 1280,
     height: 720,
-    codec: VideoCodec.H264 // optional
+    codec: VideoCodecId.H264 // optional
 });
 ```
 
@@ -289,7 +289,7 @@ let profile = try await project.createVideoProfile(
 
 ```server-kotlin
 import io.appwrite.Client
-import io.appwrite.enums.VideoCodec
+import io.appwrite.enums.VideoCodecId
 import io.appwrite.services.Project
 
 val client = Client()
@@ -306,7 +306,7 @@ val profile = project.createVideoProfile(
     audioBitRate = 128000,
     width = 1280,
     height = 720,
-    codec = VideoCodec.H264 // optional
+    codec = VideoCodecId.H264 // optional
 )
 ```
 
@@ -314,7 +314,7 @@ val profile = project.createVideoProfile(
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.exceptions.AppwriteException;
-import io.appwrite.enums.VideoCodec;
+import io.appwrite.enums.VideoCodecId;
 import io.appwrite.services.Project;
 
 Client client = new Client()
@@ -332,7 +332,7 @@ try {
         128000L, // audioBitRate
         1280L, // width
         720L, // height
-        VideoCodec.H264, // codec (optional)
+        VideoCodecId.H264, // codec (optional)
         new CoroutineCallback<>((result, error) -> {
             if (error != null) {
                 error.printStackTrace();
@@ -349,7 +349,7 @@ try {
 
 ```server-rust
 use appwrite::Client;
-use appwrite::enums::VideoCodec;
+use appwrite::enums::VideoCodecId;
 use appwrite::services::Project;
 
 #[tokio::main]
@@ -368,7 +368,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         128000,
         1280,
         720,
-        Some(VideoCodec::H264) // codec
+        Some(VideoCodecId::H264) // codec
     ).await?;
 
     println!("{:?}", profile);

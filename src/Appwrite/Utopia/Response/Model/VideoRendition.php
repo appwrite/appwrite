@@ -140,7 +140,7 @@ class VideoRendition extends Model
                 'default' => 'h264',
                 'example' => 'h264',
                 'enum' => ['h264', 'hevc', 'vp9'],
-                'enumSDKName' => 'VideoCodec',
+                'enumSDKName' => 'VideoCodecId',
             ])
             ->addRule('size', [
                 'type' => self::TYPE_INTEGER,

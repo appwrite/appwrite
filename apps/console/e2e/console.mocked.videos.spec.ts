@@ -1,7 +1,14 @@
 import { readFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
 import type { Locator, Page, Request, Route } from '@playwright/test'
-import type { Models } from '@appwrite.io/console'
+import {
+  VideoCaptionStatus,
+  VideoCodecId,
+  VideoOutput,
+  VideoRenditionStatus,
+  VideoTimelineStatus,
+  type Models,
+} from '@appwrite.io/console'
 import { expect, test } from './fixtures'
 
 /**
@@ -96,13 +103,17 @@ const VIDEO = {
   audioFormat: 'AAC',
   audioBitRate: 128,
   audioSampleRate: '48000',
-  timelineStatus: 'ready',
+  timelineStatus: VideoTimelineStatus.Ready,
   timelineError: '',
 } satisfies Models.Video
 
 const CODECS = [
-  { $id: 'h264', name: 'H.264', outputs: ['hls', 'dash', 'cmaf'] },
-  { $id: 'vp9', name: 'VP9', outputs: ['dash'] },
+  {
+    $id: 'h264',
+    name: 'H.264',
+    outputs: [VideoOutput.Hls, VideoOutput.Dash, VideoOutput.Cmaf],
+  },
+  { $id: 'vp9', name: 'VP9', outputs: [VideoOutput.Dash] },
 ] satisfies Models.VideoCodec[]
 
 const PROFILES = [
@@ -111,22 +122,22 @@ const PROFILES = [
     $createdAt: NOW,
     $updatedAt: NOW,
     name: '720p',
-    codec: 'h264',
+    codec: VideoCodecId.H264,
     width: 1280,
     height: 720,
-    videoBitRate: 2500,
-    audioBitRate: 128,
+    videoBitRate: 2500000,
+    audioBitRate: 128000,
   },
   {
     $id: 'profile00000000000000002',
     $createdAt: NOW,
     $updatedAt: NOW,
     name: 'Archive VP9',
-    codec: 'vp9',
+    codec: VideoCodecId.Vp9,
     width: 1920,
     height: 1080,
-    videoBitRate: 4000,
-    audioBitRate: 128,
+    videoBitRate: 4000000,
+    audioBitRate: 128000,
   },
 ] satisfies Models.VideoProfile[]
 
@@ -142,14 +153,15 @@ const RENDITIONS = [
     endedAt: NOW,
     width: 1280,
     height: 720,
-    videoBitRate: 2500,
-    audioBitRate: 128,
+    videoBitRate: 2500000,
+    audioBitRate: 128000,
     targetDuration: '6',
-    status: 'ready',
+    status: VideoRenditionStatus.Ready,
     error: '',
     progress: '100',
-    output: 'cmaf',
-    codec: 'h264',
+    output: VideoOutput.Cmaf,
+    codec: VideoCodecId.H264,
+    size: 0,
   },
 ] satisfies Models.VideoRendition[]
 
@@ -168,8 +180,9 @@ const CAPTIONS = [
     default: true,
     embedded: false,
     targetDuration: '6',
-    status: 'ready',
+    status: VideoCaptionStatus.Ready,
     error: '',
+    size: 0,
   },
   {
     $id: 'caption00000000000000002',
@@ -183,8 +196,9 @@ const CAPTIONS = [
     default: false,
     embedded: false,
     targetDuration: '6',
-    status: 'error',
+    status: VideoCaptionStatus.Error,
     error: CAPTION_ERROR,
+    size: 0,
   },
 ] satisfies Models.VideoCaption[]
 
@@ -556,7 +570,12 @@ test.describe('videos (mocked API)', () => {
   test('locks the player until a rendition is ready', async ({ page }) => {
     await enableVideos(page)
     const calls = await mockAppwriteApi(page, VIDEO, [
-      { ...RENDITIONS[0], status: 'started', progress: '40', endedAt: '' },
+      {
+        ...RENDITIONS[0],
+        status: VideoRenditionStatus.Started,
+        progress: '40',
+        endedAt: '',
+      },
     ])
     await open(page, `/${VIDEO_ID}`, (page) =>
       page.locator('[data-player-state="locked"]'),
@@ -641,7 +660,12 @@ test.describe('videos (mocked API)', () => {
   test('shows encoding progress on every video tab', async ({ page }) => {
     await enableVideos(page)
     await mockAppwriteApi(page, VIDEO, [
-      { ...RENDITIONS[0], status: 'started', progress: '40', endedAt: '' },
+      {
+        ...RENDITIONS[0],
+        status: VideoRenditionStatus.Started,
+        progress: '40',
+        endedAt: '',
+      },
       {
         ...RENDITIONS[0],
         $id: 'rendition000000000000002',
@@ -1030,7 +1054,7 @@ test.describe('videos (mocked API)', () => {
     await enableVideos(page)
     await mockAppwriteApi(page, {
       ...VIDEO,
-      timelineStatus: 'error',
+      timelineStatus: VideoTimelineStatus.Error,
       timelineError: 'ffmpeg exited with code 1',
     })
     await open(page, `/${VIDEO_ID}/timeline`, (page) =>
@@ -1049,7 +1073,7 @@ test.describe('videos (mocked API)', () => {
       width: 0,
       height: 0,
       videoCodec: '',
-      timelineStatus: 'skipped',
+      timelineStatus: VideoTimelineStatus.Skipped,
     })
     await open(page, `/${VIDEO_ID}/timeline`, (page) =>
       page.getByText('No timeline for this video', { exact: true }),

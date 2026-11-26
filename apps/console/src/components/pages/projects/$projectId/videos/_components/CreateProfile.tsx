@@ -1,4 +1,4 @@
-import { VideoCodec, type Models } from '@appwrite.io/console'
+import { VideoCodecId, type Models } from '@appwrite.io/console'
 import { useEffect, useState } from 'react'
 import { ArrowLeft, SlidersHorizontal } from 'lucide-react'
 import { toast } from 'sonner'
@@ -103,7 +103,7 @@ export function CreateProfile({
   const [presets, setPresets] = useState<Set<string>>(
     () => new Set([DEFAULT_PROFILE_PRESET.name]),
   )
-  const [codec, setCodec] = useState<string>(VideoCodec.H264)
+  const [codec, setCodec] = useState<string>(VideoCodecId.H264)
   const saveMutation = useSaveVideoProfile(projectId)
   const createMutation = useCreateVideoProfiles(projectId)
   const pending = saveMutation.isPending || createMutation.isPending
@@ -118,7 +118,7 @@ export function CreateProfile({
   const presetExists = (item: ProfilePreset) =>
     existingProfiles.some(
       (existing) =>
-        (existing.codec || VideoCodec.H264) === codec &&
+        (existing.codec || VideoCodecId.H264) === codec &&
         isSameSpec(existing, item),
     )
   // A preset that already exists for the codec cannot be added again.
@@ -138,7 +138,7 @@ export function CreateProfile({
     setForm(toForm(profile))
     setMode('preset')
     setPresets(new Set([DEFAULT_PROFILE_PRESET.name]))
-    setCodec(profile?.codec || VideoCodec.H264)
+    setCodec(profile?.codec || VideoCodecId.H264)
   }, [open, profile])
 
   const openCustom = () => {
@@ -170,7 +170,7 @@ export function CreateProfile({
         height: item.height,
         videoBitRate: item.videoBitRate,
         audioBitRate: item.audioBitRate,
-        codec: codec as VideoCodec,
+        codec: codec as VideoCodecId,
       })),
       {
         onSuccess: (failures) => {
@@ -213,7 +213,7 @@ export function CreateProfile({
         height: Number(form.height),
         videoBitRate: Number(form.videoBitRate) * 1000,
         audioBitRate: Number(form.audioBitRate) * 1000,
-        codec: codec as VideoCodec,
+        codec: codec as VideoCodecId,
       },
       {
         onSuccess: () => {
@@ -310,7 +310,7 @@ export function CreateProfile({
                   </Label>
                   <Input
                     id="video-profile-codec"
-                    value={codecName(profile?.codec || VideoCodec.H264)}
+                    value={codecName(profile?.codec || VideoCodecId.H264)}
                     disabled
                     readOnly
                   />

@@ -19,7 +19,7 @@ import {
   AppwriteException,
   ID,
   Query,
-  VideoCodec,
+  VideoCodecId,
   VideoOutput,
   type Models,
 } from '@appwrite.io/console'
@@ -224,11 +224,11 @@ export async function fetchVideoProfiles(
 ): Promise<Models.VideoProfileList> {
   const codecs = await fetchVideoCodecs(projectId)
   const ids = codecs.length
-    ? codecs.map((codec) => codec.$id as VideoCodec)
-    : [VideoCodec.H264]
+    ? codecs.map((codec) => codec.$id as VideoCodecId)
+    : [VideoCodecId.H264]
   const project = sdk.forProject(projectId).project
   // Page through each codec: the pickers and the profiles page list them all.
-  const listCodec = async (codec: VideoCodec) => {
+  const listCodec = async (codec: VideoCodecId) => {
     const profiles: Models.VideoProfile[] = []
     for (;;) {
       const page = await project.listVideoProfiles({
@@ -807,7 +807,7 @@ export type VideoProfileInput = {
   videoBitRate: number
   audioBitRate: number
   /** Set on create only; a profile keeps its codec. */
-  codec?: VideoCodec
+  codec?: VideoCodecId
 }
 
 /** True when probe metadata includes an audio stream (after prepare / encode probe). */

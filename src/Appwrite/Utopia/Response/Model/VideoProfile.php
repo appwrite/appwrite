@@ -57,7 +57,7 @@ class VideoProfile extends Model
                 'default' => 'h264',
                 'example' => 'h264',
                 'enum' => ['h264', 'hevc', 'vp9'],
-                'enumSDKName' => 'VideoCodec',
+                'enumSDKName' => 'VideoCodecId',
             ])
             ->addRule('videoBitRate', [
                 'type' => self::TYPE_INTEGER,

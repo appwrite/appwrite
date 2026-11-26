@@ -1,4 +1,10 @@
-import type { Models } from '@appwrite.io/console'
+import {
+  VideoOutput,
+  VideoRenditionStatus,
+  type Models,
+  type VideoCodecId,
+  type VideoTimelineStatus,
+} from '@appwrite.io/console'
 
 /**
  * Playback for a visitor who may not read the video document.
@@ -104,7 +110,8 @@ export function publicHlsPlayback(
     audioFormat: '',
     audioBitRate: 0,
     audioSampleRate: '',
-    timelineStatus: '',
+    // Unknown for a public manifest; the timeline state reads empty as unknown.
+    timelineStatus: '' as VideoTimelineStatus,
     timelineError: '',
   }
 
@@ -122,11 +129,12 @@ export function publicHlsPlayback(
     videoBitRate: 0,
     audioBitRate: 0,
     targetDuration: '',
-    status: 'ready',
+    status: VideoRenditionStatus.Ready,
     error: '',
     progress: '100',
-    output: 'hls',
-    codec: '',
+    output: VideoOutput.Hls,
+    codec: '' as VideoCodecId,
+    size: 0,
   }))
 
   return { video, renditions }
