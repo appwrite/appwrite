@@ -269,9 +269,11 @@ export function RepositoryConfigView({
     runFrameworkDetection()
   }, [refetchRepository, runFrameworkDetection])
 
-  // Run VCS framework detection when we have URL params (repo selected) or root directory changes
+  // Run VCS framework detection when we have URL params (repo selected) or root directory changes.
+  // Imported settings already name the framework and commands, so detection stays a manual action
   useEffect(() => {
     if (!installationId || !providerRepositoryId || !projectId) return
+    if (formData.importedFrom) return
     detectFrameworkMutation.mutate({
       installationId,
       providerRepositoryId,

@@ -228,3 +228,6 @@ If running in production, it might be easier to use a 3rd party SMTP server as i
 |-------------------------------------------------|---------------------------------------------------------------------------------------------------------|
 | `_APP_MIGRATIONS_FIREBASE_CLIENT_ID`            | **version >= 1.4.0** - Google OAuth client ID. You can find it in your GCP application settings.        |
 | `_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET`        | **version >= 1.4.0** - Google OAuth client secret. You can generate secrets in your GCP application settings. |
+| `_APP_MIGRATIONS_VERCEL_INTEGRATION`            | **version >= 2.8.0** - URL slug of the Vercel integration used to import Vercel projects as sites. Create the integration in the Vercel Integration Console with Read access to Projects and Read/Write access to Global Project Environment Variables, and set its Redirect URL to `https://<your-domain>/v1/migrations/vercel/oauth2/callback`. |
+| `_APP_MIGRATIONS_VERCEL_CLIENT_ID`              | **version >= 2.8.0** - Vercel integration client ID. |
+| `_APP_MIGRATIONS_VERCEL_CLIENT_SECRET`          | **version >= 2.8.0** - Vercel integration client secret. |
