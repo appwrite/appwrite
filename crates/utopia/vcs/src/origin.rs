@@ -890,6 +890,39 @@ impl Origin {
         Ok(array_or_empty(response.body))
     }
 
+    /// The files that differ between two commits, in the shape
+    /// `pull_request_files` reports: `filename`, `status` and, for a rename,
+    /// `previous_filename`. As with [`Self::compare_commits`], refs containing
+    /// `/` must be passed as their SHA.
+    ///
+    /// PHP: `compareFiles()`.
+    pub async fn compare_files(
+        &self,
+        owner: &str,
+        repository_name: &str,
+        base: &str,
+        head: &str,
+    ) -> Result<Vec<Value>> {
+        let path =
+            format!("{}/compare/{}...{}/files", Self::repository_path(owner, repository_name), raw(base), raw(head));
+        let files = self.collect_pages(&path, "files", Vec::new(), None).await?;
+        let string = |file: &Value, key: &str| match at(file, key) {
+            text @ Value::Str(_) => text,
+            _ => s(""),
+        };
+        Ok(each(&files)
+            .iter()
+            .filter(|file| php::is_array(file))
+            .map(|file| {
+                object([
+                    ("filename", string(file, "filename")),
+                    ("status", string(file, "status")),
+                    ("previous_filename", string(file, "previousFilename")),
+                ])
+            })
+            .collect())
+    }
+
     /// A Git blob, decoded, as `{sha, size, content}`.
     ///
     /// PHP: `getBlob()`.
@@ -2198,6 +2231,14 @@ impl Origin {
                 ("repositoryUrl", s(&repository_url)),
                 ("installationId", s(installation_id)),
                 ("commitHash", s(&commit_hash)),
+                (
+                    "previousCommitHash",
+                    match at(&update, "before") {
+                        before @ Value::Str(_) => before,
+                        _ => s(""),
+                    },
+                ),
+                ("forced", Value::Bool(or(at(&update, "forced"), false).truthy())),
                 ("owner", s(&owner)),
                 ("authorUrl", s("")),
                 ("authorAvatarUrl", s("")),

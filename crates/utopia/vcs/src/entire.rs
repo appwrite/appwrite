@@ -1207,7 +1207,12 @@ impl Entire {
         if response.status >= 400 {
             return Err(request_failed("Failed to compare commits", &response));
         }
-        Ok(each(&nested(&body(&response), "files"))
+        let response_body = body(&response);
+        // A cut-short list could leave out a watched file, so it is no answer at all.
+        if matches!(at(&response_body, "truncated"), Value::Bool(true)) {
+            return Err(Error::exception("The comparison has too many changed files to list.", 0));
+        }
+        Ok(each(&nested(&response_body, "files"))
             .iter()
             .filter(|file| php::is_array(file))
             .map(|file| {
