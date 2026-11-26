@@ -219,7 +219,6 @@ export function View() {
                         </span>
                         <CopyableId
                           id={secret.$id}
-                          copyLabel="Secret ID"
                           copyToastLabel="Secret ID"
                           variant="inline"
                           size="xs"
