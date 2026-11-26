@@ -30,6 +30,7 @@ parameters:
     - vendor/swoole/ide-helper
     - packages/query/stubs
     - packages/detector/stubs
+    - packages/compression/stubs
   excludePaths:
     - tests/resources
     # Written against utopia-php/agents before its redesign (models, tools and a

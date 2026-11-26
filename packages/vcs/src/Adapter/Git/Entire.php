@@ -1892,6 +1892,11 @@ class Entire extends Git
 
         $responseBody = $this->body($response);
 
+        // A cut-short list could leave out a watched file, so it is no answer at all
+        if (($responseBody['truncated'] ?? false) === true) {
+            throw new Exception('The comparison has too many changed files to list.');
+        }
+
         $files = [];
         foreach ($this->nested($responseBody, 'files') as $file) {
             if (!\is_array($file)) {

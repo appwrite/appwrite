@@ -1467,6 +1467,9 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
     'この組織ではシングルサインオンが必須です。続行するには SSO でサインインしてください。',
   'Taking you to your identity provider...':
     'ID プロバイダーに移動しています...',
+  'Taking you to {provider}...': '{provider} に移動しています...',
+  'Finish signing in with your identity provider.':
+    'ID プロバイダーでサインインを完了してください。',
   'Choose how to sign in': 'サインイン方法を選択',
   'Use a different email': '別のメールアドレスを使用',
   'Work email': '勤務先のメールアドレス',

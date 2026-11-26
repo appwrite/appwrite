@@ -1200,7 +1200,9 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
     return (
       <div
         className="relative h-full w-full overflow-hidden"
-        style={{ backgroundColor: 'hsl(var(--muted) / 0.3)' }}
+        style={{
+          backgroundColor: 'color-mix(in oklab, var(--muted) 30%, transparent)',
+        }}
       >
         {/* Blueprint dot pattern */}
         <svg
@@ -1286,7 +1288,9 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   return (
     <div
       className="relative h-full w-full overflow-hidden"
-      style={{ backgroundColor: 'hsl(var(--muted) / 0.3)' }}
+      style={{
+        backgroundColor: 'color-mix(in oklab, var(--muted) 30%, transparent)',
+      }}
     >
       {/* Top controls - Left side */}
       <div className="absolute top-4 start-4 z-10 flex items-center gap-2">
@@ -1509,7 +1513,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                 refY="3"
                 orient="auto"
               >
-                <polygon points="0 0, 10 3, 0 6" fill="hsl(var(--border))" />
+                <polygon points="0 0, 10 3, 0 6" fill="var(--border)" />
               </marker>
             </defs>
             <g>
@@ -1524,7 +1528,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                     y1={fromPoint.y}
                     x2={toPoint.x}
                     y2={toPoint.y}
-                    stroke="hsl(var(--border))"
+                    stroke="var(--border)"
                     strokeWidth="2"
                     markerEnd="url(#arrowhead)"
                   />

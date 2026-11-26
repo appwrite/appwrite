@@ -89,12 +89,12 @@ export function UsageChart({ className }: UsageChartProps) {
                 >
                   <stop
                     offset="0%"
-                    stopColor="hsl(var(--foreground))"
+                    stopColor="var(--foreground)"
                     stopOpacity={0.08}
                   />
                   <stop
                     offset="100%"
-                    stopColor="hsl(var(--foreground))"
+                    stopColor="var(--foreground)"
                     stopOpacity={0}
                   />
                 </linearGradient>
@@ -103,19 +103,19 @@ export function UsageChart({ className }: UsageChartProps) {
               <UsageChartYAxis tickFormatter={yAxisTickFormatter} />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'hsl(var(--popover))',
-                  border: '1px solid hsl(var(--border))',
+                  backgroundColor: 'var(--popover)',
+                  border: '1px solid var(--border)',
                   borderRadius: '6px',
                   boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
                   padding: '8px 12px',
                 }}
                 labelStyle={{
-                  color: 'hsl(var(--muted-foreground))',
+                  color: 'var(--muted-foreground)',
                   fontSize: '11px',
                   marginBottom: '4px',
                 }}
                 itemStyle={{
-                  color: 'hsl(var(--foreground))',
+                  color: 'var(--foreground)',
                   fontSize: '12px',
                 }}
               />
@@ -130,7 +130,7 @@ export function UsageChart({ className }: UsageChartProps) {
               <Area
                 type="monotone"
                 dataKey="bandwidth"
-                stroke="hsl(var(--muted-foreground))"
+                stroke="var(--muted-foreground)"
                 strokeWidth={1.5}
                 fill="url(#bandwidthGradient)"
                 name={t('Bandwidth (MB)')}

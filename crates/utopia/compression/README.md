@@ -131,27 +131,7 @@ cargo fmt --all --check
 
 ### Compare with PHP
 
-Replay the results PHP recorded for every case against Rust, without PHP:
-
-```bash
-COMPAT_LIB=compression cargo test -p compat
-```
-
-Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):
-
-```bash
-bin/compat run compression
-bin/compat fuzz compression
-bin/compat check compression
-```
-
-### Benchmark
-
-```bash
-bin/compat bench compression
-```
-
-This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`tests/compat/compression/bench.json`](https://github.com/appwrite/appwrite/blob/main/tests/compat/compression/bench.json). Run it on a quiet machine, one library at a time.
+The utopia PHP extension serves this crate as every class of `Utopia\Compression`, which no longer has a PHP implementation. `crates/extension/tests/run.sh` runs `packages/compression/tests` on it in the development image.
 
 ## License
 

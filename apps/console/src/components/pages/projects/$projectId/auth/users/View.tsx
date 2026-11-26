@@ -49,6 +49,7 @@ import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { decodeIdTokenClaims } from '@/lib/oauth2/id-token'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
 import { PhotoAvatar, TeamAvatar } from '@/components/global/shared/Avatar'
+import { UserPhoto } from './_components/UserPhoto'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
 import { Button } from '@/components/ui/button'
@@ -619,6 +620,7 @@ function OverviewTab({
         userId={userId}
         displayName={displayName}
       />
+      <UserPhoto projectId={projectId} userId={userId} name={displayName} />
       <div id="user-details">
         <UpdateNameSection user={user} projectId={projectId} userId={userId} />
       </div>

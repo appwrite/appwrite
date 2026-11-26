@@ -9,6 +9,7 @@
 
 import type { Client, Models } from '@appwrite.io/console'
 
+import { ssoSignInURL } from '@/lib/sso-shared-url'
 import type {
   OidcProviderParams,
   SSODomain,
@@ -172,12 +173,13 @@ export class TeamSSO {
     success: string | undefined,
     failure: string,
   ): string {
-    const url = new URL(this.client.config.endpoint + '/account/sessions/sso')
-    url.searchParams.set('project', this.client.config.project)
-    url.searchParams.set('providerId', providerId)
-    if (success) url.searchParams.set('success', success)
-    url.searchParams.set('failure', failure)
-    return url.toString()
+    return ssoSignInURL(
+      this.client.config.endpoint,
+      this.client.config.project,
+      providerId,
+      success,
+      failure,
+    )
   }
 
   private id(value: string): string {

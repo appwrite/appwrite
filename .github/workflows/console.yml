@@ -153,7 +153,7 @@ jobs:
             runner: gcrunner=${{ github.run_id }}-console-e2e-website/runner=e2e
           - project: console-mocked
             args: --project=console-mocked
-            timeout: 15
+            timeout: 20
             runner: gcrunner=${{ github.run_id }}-console-e2e-mocked/runner=e2e
           - project: console
             args: --project=console

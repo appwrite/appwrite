@@ -403,6 +403,52 @@ final class V25Test extends TestCase
         $this->assertContains('size', $attributes);
     }
 
+    public function testAddsReviewPerformanceIndexesToExistingCollections(): void
+    {
+        $missing = [
+            'reviews' => '_key_status_createdAt',
+            'reviewFindings' => '_key_reviewInternalId_status',
+        ];
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // A project already on 2.7 has the review collections without the performance indexes.
+        $collections = Config::getParam('collections', [])['projects'];
+        foreach ($collections as $id => $collection) {
+            if (($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $indexes = isset($missing[$id])
+                ? \array_filter($collection['indexes'], static fn (Index $index): bool => $index->key !== $missing[$id])
+                : $collection['indexes'];
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($collection['attributes']),
+                indexes: \array_values($indexes),
+            ));
+        }
+        $database->createCollection(Collection::create(id: 'audit'));
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $migration->execute();
+
+        foreach ($missing as $collection => $key) {
+            $indexes = \array_map(
+                fn (Document $index) => $index->getId(),
+                $database->getCollection($collection)->getAttribute('indexes', [])
+            );
+            $this->assertContains($key, $indexes, $collection);
+        }
+    }
+
     public function testAddsConnectionsToExistingPresenceLogs(): void
     {
         $authorization = new Authorization();
