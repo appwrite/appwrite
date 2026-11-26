@@ -7,15 +7,15 @@
 //! `Utopia\Emails\Email`, the validators of `utopia-php/validators` (`Utopia\Validator\Validator`
 //! and its leaves), the password hashes of `utopia-php/auth` (`Utopia\Auth\Hash` and
 //! `Hashes\*`), the classes of `utopia-php/query` it serves and every class of
-//! `utopia-php/detector` (`Utopia\Detector\*`) are registered by default
+//! `utopia-php/detector` (`Utopia\Detector\*`) and `utopia-php/compression`
+//! (`Utopia\Compression\*`) are registered by default
 //! (`if stable("<package>")`): they have no PHP implementation. So are `Utopia\Database\Id`,
 //! `Role`, `Permission` and `DateTime`: utopia-php/database still ships them in `vendor/`, where
 //! Composer loads them only when `utopia.libraries` leaves `database` out.
 //!
 //! A library that still has one registers its classes only when `_APP_EXTENSION_LIBRARIES` names
 //! its package (`if enabled("<package>")` in [`startup`] or [`get_module`]), so it can be canaried
-//! and switched back to PHP with a restart, not a deploy: `compression` (`Utopia\Compression\*`)
-//! and `balancer` (`Utopia\Balancer\*`).
+//! and switched back to PHP with a restart, not a deploy: `balancer` (`Utopia\Balancer\*`).
 //!
 //! The `utopia.libraries` php.ini setting, when set, replaces both: only the libraries it names
 //! register (see [`libraries`]).
@@ -148,8 +148,8 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
 }
 
 /// Registers the classes built by hand rather than with `#[php_class]`: `Locale`, `UserAgent`, the
-/// validators, the password hashes, the detector, the four database classes and, when switched on,
-/// compression and balancer.
+/// validators, the password hashes, the detector, compression, the four database classes and,
+/// when switched on, balancer.
 /// Runs in MINIT, before the `#[php_class]` classes are registered. Also registers
 /// `utopia.libraries`.
 fn startup(_kind: i32, module: i32) -> i32 {
@@ -179,7 +179,7 @@ fn startup(_kind: i32, module: i32) -> i32 {
         if stable("detector") {
             detector::register()?;
         }
-        if enabled("compression") {
+        if stable("compression") {
             compression::register()?;
         }
         if enabled("balancer") {

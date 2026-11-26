@@ -38,6 +38,7 @@ final class XZTest extends TestCase
     public function testCompressDecompressWithJPGImage(): void
     {
         $demo = file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg');
+        \assert(\is_string($demo));
         $demoSize = mb_strlen($demo, '8bit');
 
         $data = $this->object->compress($demo);
@@ -56,6 +57,7 @@ final class XZTest extends TestCase
     public function testCompressDecompressWithPNGImage(): void
     {
         $demo = file_get_contents(__DIR__ . '/../resources/disk-b/kitten-1.png');
+        \assert(\is_string($demo));
         $demoSize = mb_strlen($demo, '8bit');
 
         $data = $this->object->compress($demo);

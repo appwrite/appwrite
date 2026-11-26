@@ -112,7 +112,7 @@ echo "$warnings" | grep -q 'utopia.libraries: unknown library "bogus" ignored' |
 echo "$warnings" | grep -q '^ok$'
 
 # Classes with no PHP implementation left: their packages' own tests, on the extension.
-for package in user-agent domains emails validators auth detector; do
+for package in user-agent domains emails validators auth detector compression; do
     echo "== $package (no PHP)" >&2
     vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php "packages/$package/tests"
 done
@@ -132,6 +132,14 @@ diff "$output/database.php.jsonl" "$output/database.all.jsonl"
 # packages/query/tests/E2E needs MySQL, PostgreSQL, ClickHouse and MongoDB servers.
 echo "== query (no PHP)" >&2
 vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php --exclude-filter '\\E2E\\' packages/query/tests
+
+# Compression likewise: its corpus (malformed, truncated and concatenated frames, every level's
+# bytes, 64 MB inputs, reflection and subclasses) against the output pinned from the PHP classes.
+echo "== compression (pinned PHP output)" >&2
+php "$tests/compression.php" > "$output/compression.jsonl"
+diff "$tests/compression.expected.jsonl" "$output/compression.jsonl"
+php -d opcache.enable_cli=1 "$tests/compression.php" > "$output/compression.opcache.jsonl"
+diff "$tests/compression.expected.jsonl" "$output/compression.opcache.jsonl"
 
 # Locale has no package to test, so its corpus is checked against the output pinned from the PHP
 # class it replaced (utopia-php/locale).
