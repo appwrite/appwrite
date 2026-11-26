@@ -445,7 +445,9 @@ The Console then shows the install steps, with your endpoint, project ID, and pr
 
 ## Add tracking
 
-On a website, one script tag tracks pageviews, outbound links, scroll depth, and engagement time. Add it to the `<head>` of every page:
+A site on Appwrite Sites needs no script tag or SDK. Turn on **Web analytics** in the site's **Settings** tab, and Appwrite adds the tracker to every page on the site's production domains.
+
+On any other website, one script tag tracks pageviews, outbound links, scroll depth, and engagement time. Add it to the `<head>` of every page:
 
 ```html
 <script defer src="https://sdk.appwrite.io/web/29.4.0/tracker.js"
