@@ -69,6 +69,12 @@ function show(mixed $value): mixed
     return $value;
 }
 
+/** A message without the corpus's own path and line, so the pinned output survives edits to it. */
+function unplaced(string $message): string
+{
+    return (string) preg_replace('/ in \S+\.php on line \d+/', ' in (file) on line (line)', $message);
+}
+
 /** What `$run` returns or throws, with the warnings it raised. */
 function outcome(callable $run): array
 {
@@ -77,10 +83,10 @@ function outcome(callable $run): array
     try {
         $result = ['value' => show($run())];
     } catch (Throwable $e) {
-        $result = ['throws' => get_class($e), 'message' => $e->getMessage()];
+        $result = ['throws' => get_class($e), 'message' => unplaced($e->getMessage())];
     }
     if ($warnings !== []) {
-        $result['warnings'] = $warnings;
+        $result['warnings'] = array_map(fn (array $warning): array => [$warning[0], unplaced($warning[1])], $warnings);
     }
 
     return $result;
