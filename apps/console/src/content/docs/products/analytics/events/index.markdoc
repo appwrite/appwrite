@@ -10,7 +10,7 @@ Each event has a name and the URL it happened on. It can also carry a referrer, 
 
 # Automatic events {% #automatic %}
 
-The tracking helpers in the Web and Flutter SDKs send these events for you.
+The tracking helpers in the Appwrite SDKs send these events for you. "Mobile" means the Android, Apple, Flutter, and React Native SDKs.
 
 | Event | Sent by | When |
 | --- | --- | --- |
@@ -19,26 +19,32 @@ The tracking helpers in the Web and Flutter SDKs send these events for you.
 | `file_download` | Web | A visitor clicks a link to a file, once download tracking is on |
 | `scroll_depth` | Web | The visitor leaves a page or changes route after scrolling, with how far they scrolled |
 | `engagement_time` | Web | The tab is hidden, the route changes, or the page unloads, with the seconds the page was visible |
-| `screen_view` | Flutter | A named route is pushed, popped back to, replaced, or removed |
-| `app_backgrounded` | Flutter | The app moves to the background, with the seconds it was in the foreground |
-| `app_foregrounded` | Flutter | The app returns to the foreground |
+| `screen_view` | Mobile | A screen is shown, from your navigation or a `screenView()` call |
+| `first_open` | Mobile | The app starts for the first time after it's installed |
+| `app_updated` | Mobile | The app starts for the first time after an update, with `previousVersion` and `version` |
+| `app_backgrounded` | Mobile | The app moves to the background, with the seconds it was in the foreground |
+| `app_foregrounded` | Mobile | The app returns to the foreground |
+| `push_received` | Mobile | Your code calls `pushReceived()` when a push notification arrives |
+| `push_opened` | Mobile | Your code calls `pushOpened()` when someone taps a push notification |
 
-For each helper's options, see [Track a website](/docs/products/analytics/web) and [Track a Flutter app](/docs/products/analytics/flutter).
+`push_received` is billed like any event, but it never counts toward visitors or visits, because a push can arrive while the app is closed.
+
+For each helper's options, see [Track a website](/docs/products/analytics/web) and [Track a mobile app](/docs/products/analytics/mobile).
 
 # Custom events {% #custom %}
 
 Any event with a name of your own is a custom event, such as `signup_completed` or `invite_sent`. The **Custom events** card on the dashboard lists them, separate from the automatic events. See [Track custom events](/docs/products/analytics/custom-events).
 
-`pageview` and Flutter's `screen_view` are the two names Appwrite treats differently. Both count as views: they count toward **Pageviews**, **Views per visit**, and **Bounce rate**, and set each visit's entry and exit pages. Every other event counts toward visitors, visits, and events, but not pageviews. See [What a visit records](/docs/products/analytics/visitors#visit-metrics).
+`pageview` and `screen_view` are the two names Appwrite treats differently. Both count as views: they count toward **Pageviews** and **Views per visit**, and set each visit's entry and exit pages. Every other event counts toward visitors, visits, and events, but not pageviews. A custom event also counts as an interaction that ends a bounce, unless it's sent with `interactive: false`. See [What a visit records](/docs/products/analytics/visitors#visit-metrics).
 
 # Where events come from {% #sources %}
 
-- **A website**: the Web SDK's `Tracking` helper sends events from the browser. See [Track a website](/docs/products/analytics/web).
-- **A Flutter app**: the Flutter SDK's `Tracking` helper and `TrackingObserver` send events from the app. See [Track a Flutter app](/docs/products/analytics/flutter).
+- **A website**: the Web SDK's `Tracking` helper sends events from the browser. On Appwrite Sites, turning on analytics adds it with no code. See [Track a website](/docs/products/analytics/web).
+- **A mobile app**: the `Tracking` helper in the Android, Apple, Flutter, and React Native SDKs sends events from the app. See [Track a mobile app](/docs/products/analytics/mobile).
 - **Any other client**: sends one HTTP request per event. See [Send events over REST](/docs/products/analytics/rest).
-- **Your server**: calls `createEvent` with an API key, on behalf of a visitor. See [Track events from your server](/docs/products/analytics/server-side).
+- **Your server**: sends events with an API key, on behalf of a visitor. See [Track events from your server](/docs/products/analytics/server-side).
 
-Events from browsers and apps need no API key. Appwrite accepts one only when its origin passes two checks: it matches a Web app's hostname or a Flutter app's platform under **Apps** in your project, and the property's [allowed origins](/docs/products/analytics/properties#allowed-origins) include it.
+Events from browsers and apps need no API key. Appwrite accepts one only when its origin passes two checks: it matches a Web app's hostname or a mobile app's package name or bundle ID under **Apps** in your project, and the property's [allowed origins](/docs/products/analytics/properties#allowed-origins) include it.
 
 # What Appwrite adds {% #enrichment %}
 
@@ -50,5 +56,6 @@ When an event arrives, Appwrite adds details it works out from the request and t
 - **Technology**: browser, operating system, and device from the user agent, and a screen size category from the viewport width.
 - **Bot details**: whether a bot sent the event, and which one. See [Bots and AI traffic](/docs/products/analytics/bots).
 - **Visitor and visit**: which visitor sent the event, and which visit it belongs to. See [Visitors and sessions](/docs/products/analytics/visitors).
+- **User**: the signed-in user's ID, when the property's **Identify signed-in users** setting is on. See [Properties](/docs/products/analytics/properties#user-identification).
 
 Events usually appear on the dashboard within a few seconds.

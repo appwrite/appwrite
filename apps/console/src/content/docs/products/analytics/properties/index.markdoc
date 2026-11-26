@@ -4,42 +4,43 @@ title: Properties
 description: A property collects Appwrite Analytics events for one website or app. Create properties, control which origins can send events, link a property to a site, and turn off or delete a property.
 ---
 
-A property is one website or app you track. Every event belongs to a property, and each property has its own dashboard, settings, and property ID. A project can hold several properties, for example one for your marketing site and one for your mobile app.
+A property is one website, mobile app, or AI agent you track. Every event belongs to a property, and each property has its own dashboard, settings, and property ID. A project can hold several properties, for example one for your marketing site and one for your mobile app.
 
 Your tracking code and the Analytics API identify a property by its property ID. The Console shows it next to the property name, with a button to copy it.
 
 # Properties in a project {% #list %}
 
 {% only_dark %}
-![Analytics page listing three properties with their visitors, pageviews, visit duration, and bounce rate](/images/docs/analytics/dark/properties.avif)
+![Analytics page listing four properties with their type, visitors, pageviews, visit duration, and bounce rate](/images/docs/analytics/dark/properties.avif)
 {% /only_dark %}
 {% only_light %}
-![Analytics page listing three properties with their visitors, pageviews, visit duration, and bounce rate](/images/docs/analytics/properties.avif)
+![Analytics page listing four properties with their type, visitors, pageviews, visit duration, and bounce rate](/images/docs/analytics/properties.avif)
 {% /only_light %}
 
-Open **Analytics** in your project to see every property. Each card shows how many visitors are online and the last 30 days of visitors, pageviews, visit duration, and bounce rate, compared with the 30 days before. Click a property to open its dashboard.
+Open **Analytics** in your project to see every property. Each card shows the property's type, how many visitors are online, and the last 30 days of visitors, pageviews, visit duration, and bounce rate, compared with the 30 days before. Click a property to open its dashboard.
 
-How many properties a project can hold depends on your plan. See [Limits and retention](/docs/products/analytics/limits#plans).
+How many properties a project can hold depends on your plan. Near the limit, the page shows how many are left, and at the limit **Create property** is unavailable. See [Limits and retention](/docs/products/analytics/limits#plans).
 
 # Create a property {% #create %}
 
 1. In your project, open **Analytics** and click **Create property**.
 2. Enter a **Name**, such as the name of your site or app.
-3. Enter the **Domain** your site runs on, such as `example.com`. It's optional, and native apps can leave it empty.
-4. Choose a **Platform**: **Web**, **Flutter**, or **REST**. The platform only decides which install instructions you see next, so you can track the property from any platform later.
-5. Click **Create property**.
+3. Choose a **Type**: **Web** for websites and browser apps, **Mobile** for iOS and Android apps, or **Agent** for AI agents and backend services. The type sets which metrics and cards the dashboard shows, and you can change it later.
+4. Enter the **Domain** your site runs on, such as `example.com`. It's optional, and apps and agents can leave it empty.
+5. Choose an **SDK**. It only decides which install instructions you see next: **Web** or **REST** for a Web property, **Flutter** or **REST** for a Mobile property, and **REST** for an Agent property.
+6. Click **Create property**.
 
 Appwrite generates the property ID. To choose your own, set **Property ID** before you create the property. It can't be changed afterwards.
 
-The Console then shows the install code for the platform you chose, with your endpoint, project ID, and property ID filled in. It waits on the same screen until the first event arrives. For each platform, see [Track a website](/docs/products/analytics/web), [Track a Flutter app](/docs/products/analytics/flutter), or [Send events over REST](/docs/products/analytics/rest).
+The Console then shows the install code for the SDK you chose, with your endpoint, project ID, and property ID filled in. It waits on the same screen until the first event arrives. For each platform, see [Track a website](/docs/products/analytics/web), [Track a mobile app](/docs/products/analytics/mobile), or [Send events over REST](/docs/products/analytics/rest). Android, Apple, and React Native apps use their SDK's own `Tracking` helper, described in [Track a mobile app](/docs/products/analytics/mobile).
 
 # Settings {% #settings %}
 
 {% only_dark %}
-![Settings tab of a property with the Details, Integration, and Ad blockers cards](/images/docs/analytics/dark/settings.avif)
+![Settings tab of a property with the Details, Integration, Ad blockers, Name, and Type cards](/images/docs/analytics/dark/settings.avif)
 {% /only_dark %}
 {% only_light %}
-![Settings tab of a property with the Details, Integration, and Ad blockers cards](/images/docs/analytics/settings.avif)
+![Settings tab of a property with the Details, Integration, Ad blockers, Name, and Type cards](/images/docs/analytics/settings.avif)
 {% /only_light %}
 
 Open a property and select the **Settings** tab to manage it.
@@ -47,14 +48,14 @@ Open a property and select the **Settings** tab to manage it.
 - **Details** shows the property ID and when the property was created and last updated.
 - **Integration** opens the install code again with **Install**.
 - **Ad blockers** links to the two ways to send events through a domain you own. See [Serve tracking from your domain](/docs/products/analytics/own-domain).
-- **Name**, **Domain**, **Allowed origins**, and **Tracking** update the property.
+- **Name**, **Type**, **Tracking**, **User identification**, **Domain**, and **Allowed origins** update the property.
 - **Delete property** removes it with all of its data.
 
 ## Domain {% #domain %}
 
 The domain is the main hostname you track, such as `example.com`. Appwrite uses it to link the property to a site you host on Appwrite. See [Sites](#sites).
 
-The domain doesn't filter events. A property counts events from every hostname that sends them, and the **Hostnames** tab on the dashboard lists each one.
+The domain doesn't filter events. A property counts events from every hostname that sends them, and the **Hostnames** tab of the **Pages** card lists each one.
 
 ## Allowed origins {% #allowed-origins %}
 
@@ -62,13 +63,21 @@ Allowed origins control which sites and apps can send events to the property wit
 
 To accept events only from your own sites, replace `*` with each origin, such as `https://example.com` and `https://www.example.com`. An origin must match exactly, including the scheme and any port, so add `http://localhost:5173` separately for local development. A property can list up to 64 origins.
 
-Flutter apps on Android, iOS, macOS, Windows, and Linux send an origin made of `appwrite-`, the platform, and the app's package name or bundle ID, such as `appwrite-android://com.example.shop`. Add these origins to accept events from your apps.
+The Android, Apple, Flutter, and React Native SDKs send an origin made of `appwrite-`, the platform, and the app's package name or bundle ID, such as `appwrite-android://com.example.shop`. Add these origins to accept events from your apps.
 
 Appwrite rejects events from any other origin with a `401` `general_access_forbidden` error. While the list doesn't contain `*`, events sent without an `Origin` header are rejected too, such as events sent with cURL from a server.
 
 Events sent with an API key that has the `analytics.write` scope skip this check. A property with no allowed origins only accepts those events, which suits a property you track entirely from your server. See [Track events from your server](/docs/products/analytics/server-side).
 
-Allowed origins add to the rule that browsers and apps must belong to one of your project's apps. An origin on this list still needs a Web app for its hostname, or a Flutter app for its platform, under **Apps**.
+Allowed origins add to the rule that browsers and apps must belong to one of your project's apps. An origin on this list still needs a Web app for its hostname, or an app for its package name or bundle ID, under **Apps**.
+
+When a site on Appwrite Sites has analytics turned on, the site manages the property's allowed origins: they're the site's production domains.
+
+## User identification {% #user-identification %}
+
+Turn on **Identify signed-in users** to record the user ID of a signed-in Appwrite session on each event the property receives from a client. Anonymous visitors aren't affected, and events carry user IDs, never email addresses or names. Turn it on only if your privacy policy covers linking analytics to user accounts.
+
+With user IDs, one user counts as one visitor across devices that day, the **Users** metric and card show who your signed-in users are, and each user in **Auth** gets an **Analytics** tab with their activity. Your server can also send user IDs with an API key. See [Track events from your server](/docs/products/analytics/server-side#visitor).
 
 ## Turn tracking off {% #tracking %}
 
@@ -76,19 +85,25 @@ Turn off **Tracking** to stop collecting events without losing data. While track
 
 ## Delete a property {% #delete %}
 
-Click **Delete** under **Delete property** and enter the property name to confirm. Appwrite permanently deletes the property and every event and visit collected for it. This can't be undone.
+Click **Delete** under **Delete property** and enter the property name to confirm. Appwrite permanently deletes the property and every event and visit collected for it, and turns off analytics on any site linked to it. This can't be undone.
 
 # Sites {% #sites %}
 
 {% only_dark %}
-![Analytics card on a site's Deployments page with the last 24 hours of visitors, pageviews, bounce rate, and top sources](/images/docs/analytics/dark/site-card.avif)
+![Analytics card on a site's Overview tab with the last 24 hours of visitors, pageviews, bounce rate, and top sources](/images/docs/analytics/dark/site-card.avif)
 {% /only_dark %}
 {% only_light %}
-![Analytics card on a site's Deployments page with the last 24 hours of visitors, pageviews, bounce rate, and top sources](/images/docs/analytics/site-card.avif)
+![Analytics card on a site's Overview tab with the last 24 hours of visitors, pageviews, bounce rate, and top sources](/images/docs/analytics/site-card.avif)
 {% /only_light %}
 
-When a property's domain is one of the domains of a site you host on [Appwrite Sites](/docs/products/sites), the two are linked. The site's **Deployments** page shows an **Analytics** card with the last 24 hours of visitors, pageviews, bounce rate, visit duration, and top sources, and a button to open the dashboard.
+A site you host on [Appwrite Sites](/docs/products/sites) can track its visitors with no code. Turn on **Enable analytics** when you create the site, or **Web analytics** in the site's **Settings** tab. Appwrite then:
 
-A site without a linked property shows **Add analytics** on the same card. It opens the property wizard with the site's name and domain filled in.
+- Links a Web property named after the site, creating one the first time, and sets its allowed origins to the site's production domains.
+- Adds the tracker to every page served on the site's production domains. Preview deployments aren't tracked.
+- Sends the tracker's events through the site's own domain, so ad blockers that block requests to Appwrite don't drop them.
+
+Turning analytics off stops adding the tracker and keeps the property and its data. Events from the tracker count toward your plan like any other.
+
+The site's **Overview** tab shows an **Analytics** card with the last 24 hours of visitors, pageviews, bounce rate, visit duration, and top sources, and a button to open the dashboard. A property whose domain is one of the site's domains is linked to the site in the same way.
 
 A linked site also lets you create [Firewall](/docs/products/firewall) rules for the site from the dashboard. See [Block traffic with Firewall](/docs/products/analytics/firewall).

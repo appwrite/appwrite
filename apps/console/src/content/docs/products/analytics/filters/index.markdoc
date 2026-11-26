@@ -9,13 +9,13 @@ Filters narrow the whole dashboard to traffic that matches, such as visitors fro
 # Filter from a card {% #from-a-card %}
 
 {% only_dark %}
-![Dashboard filtered to the search channel, with a Channel equal search filter below the toolbar](/images/docs/analytics/dark/filtered.avif)
+![Dashboard filtered to the search channel, with Channel equal search under Filtered by below the toolbar](/images/docs/analytics/dark/filtered.avif)
 {% /only_dark %}
 {% only_light %}
-![Dashboard filtered to the search channel, with a Channel equal search filter below the toolbar](/images/docs/analytics/filtered.avif)
+![Dashboard filtered to the search channel, with Channel equal search under Filtered by below the toolbar](/images/docs/analytics/filtered.avif)
 {% /only_light %}
 
-The quickest way to filter is from a card. Click a row, such as `search` on the **Channels** tab of **Traffic sources**, and every metric, the chart, and the other cards update to that traffic. The filter appears below the toolbar.
+The quickest way to filter is from a card. Click a row, such as `search` on the **Channels** tab of **Traffic sources**, and every metric, the chart, and the other cards update to that traffic. The filter appears under **Filtered by**, below the toolbar.
 
 Click the same row again to remove the filter. Clicking another value of the same kind, such as a second country, switches the filter to it. Rows on the **Entry pages** and **Exit pages** tabs can't be used as filters.
 
@@ -39,13 +39,15 @@ For values that aren't in a card, or for partial matches, add a filter yourself.
 
 Add more filters the same way. Traffic must match every filter to be counted. For example, **Page** starts with `/blog` and **Country** equal `DE` shows German visitors reading your blog.
 
-Columns cover locations, technology, sources and campaigns, pages and hostnames, bots, and event names. Values are case-sensitive, and they're the values listed in [Breakdowns](/docs/products/analytics/metrics#breakdowns), which aren't always the labels on the cards. For example, a **Country** filter takes the two-letter code `DE`, not the country name the **Countries** tab shows.
+Columns cover locations, technology and versions, sources and campaigns, pages and hostnames, traffic type and bots, event names, and users. Values are case-sensitive, and they're the values listed in [Breakdowns](/docs/products/analytics/metrics#breakdowns), which aren't always the labels on the cards. For example, a **Country** filter takes the two-letter code `DE`, not the country name the **Countries** tab shows. **Traffic** takes `human` or `bot`.
 
-To remove a filter, click the **x** next to it in the **Filters** popover. **Clear all** removes every filter.
+To filter by an event property, such as `plan` equal `pro`, click its value on the **Event properties** card.
+
+Under **Filtered by**, click a filter's operator or value to change it, or click **x** to remove it. **Clear all** removes every filter.
 
 ## Page and event filters {% #page-and-event-filters %}
 
-A **Page** or **Event** filter matches single events rather than whole visits. With one of them active, **Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time** show `-`, because they describe whole visits. **Unique visitors** and **Visits** add up the chart's points, so a visitor who returns on several days counts once for each day. The **Entry pages** and **Exit pages** tabs aren't available either. See [Metrics](/docs/products/analytics/metrics#dashboard-metrics).
+A **Page**, **Event**, **User**, or event property filter matches single events rather than whole visits. With one of them active, **Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time** show `-`, because they describe whole visits. **Unique visitors** and **Visits** add up the chart's points, so a visitor who returns on several days counts once for each day. The **Entry pages** and **Exit pages** tabs aren't available either. See [Metrics](/docs/products/analytics/metrics#dashboard-metrics).
 
 # Save a filter {% #save %}
 
@@ -56,7 +58,7 @@ Save filters you use often, so you can apply them again with one click.
 3. Choose **For me** to keep the filter to yourself, or **For team** to share it with your organization.
 4. Enter a name and click **+**.
 
-To apply a saved filter, open **Filters**, select the **Saved** tab, and click **Apply** next to it. You can also edit and delete saved filters there.
+To apply a saved filter, open **Filters**, select the **Saved** tab, and click **Apply** next to it. You can also rename, delete, and drag saved filters into a new order there.
 
 # Share a filtered view {% #share %}
 

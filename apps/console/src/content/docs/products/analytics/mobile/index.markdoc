@@ -1,0 +1,295 @@
+---
+layout: article
+title: Track a mobile app
+description: Add Appwrite Analytics to an Android, Apple, Flutter, or React Native app. Track installs, updates, screen views, push notifications, time in the app, and your own events.
+---
+
+The Android, Apple, Flutter, and React Native SDKs each include a `Tracking` helper. One call to `start()` records installs, updates, and when the app goes to the background and comes back. Hook it into your navigation to record screen views, and call it from your push handler to see which notifications people open.
+
+# Before you start {% #before-you-start %}
+
+You need a **Mobile** [analytics property](/docs/products/analytics/properties) and its property ID, which the Console shows next to the property name.
+
+Your app also needs to be registered in the same project. The SDK sends your app's package name or bundle ID with every request, and Appwrite rejects events from an app the project doesn't know, with a `403` `general_unknown_origin` error.
+
+1. In your project, open **Apps** and click **Add app**.
+2. Choose your platform, such as **Android**, **Apple**, **Flutter**, or **React Native**.
+3. Enter the package name or bundle ID, and finish the wizard.
+
+Repeat for each platform you ship. To accept events only from your own app, also add its origin to the property's [allowed origins](/docs/products/analytics/properties#allowed-origins).
+
+# Install the SDK {% #install %}
+
+{% tabs %}
+{% tabsitem #flutter title="Flutter" %}
+
+```sh
+flutter pub add appwrite
+```
+
+{% /tabsitem %}
+
+{% tabsitem #android title="Android" %}
+
+Add the SDK to `app/build.gradle.kts`.
+
+```kotlin
+dependencies {
+    implementation("io.appwrite:sdk-for-android:31.4.0")
+}
+```
+
+{% /tabsitem %}
+
+{% tabsitem #apple title="Apple" %}
+
+In Xcode, select **File** > **Add Package Dependencies**, enter the package URL, and add the **Appwrite** library to your app target.
+
+```text
+https://github.com/appwrite/sdk-for-apple
+```
+
+{% /tabsitem %}
+
+{% tabsitem #react-native title="React Native" %}
+
+```sh
+npx expo install react-native-appwrite expo-file-system react-native-url-polyfill
+```
+
+Import `react-native-url-polyfill/auto` once, before any other SDK code runs.
+
+{% /tabsitem %}
+{% /tabs %}
+
+# Start tracking {% #start-tracking %}
+
+Create one `Tracking` instance for the whole app with your endpoint, project ID, and property ID, and call `start()` when the app launches.
+
+{% multicode %}
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final tracking = Tracking(Analytics(client), '<PROPERTY_ID>');
+
+void main() {
+  tracking.start();
+  runApp(const MyApp());
+}
+```
+```client-android-kotlin
+import android.app.Application
+import io.appwrite.Client
+import io.appwrite.Tracking
+import io.appwrite.services.Analytics
+
+class MyApp : Application() {
+    lateinit var tracking: Tracking
+
+    override fun onCreate() {
+        super.onCreate()
+
+        val client = Client(this)
+            .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+            .setProject("<PROJECT_ID>")
+
+        tracking = Tracking(Analytics(client), "<PROPERTY_ID>")
+        tracking.start()
+    }
+}
+```
+```client-apple
+import Appwrite
+import SwiftUI
+
+let tracking: Tracking = {
+    let client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    return Tracking(Analytics(client), propertyId: "<PROPERTY_ID>")
+}()
+
+@main
+struct MyApp: App {
+    init() {
+        tracking.start()
+    }
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}
+```
+```client-react-native
+import 'react-native-url-polyfill/auto';
+import { Analytics, Client, Tracking } from 'react-native-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setPlatform('<PACKAGE_NAME_OR_BUNDLE_ID>');
+
+export const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>');
+
+tracking.start();
+```
+{% /multicode %}
+
+On Android, register the `Application` class in `AndroidManifest.xml` with `android:name=".MyApp"` on the `<application>` element. In React Native, `setPlatform()` takes the package name or bundle ID registered under **Apps**.
+
+`start()` sends `first_open` the first time the app runs after an install, and `app_updated` the first time it runs after an update. It also turns on `app_backgrounded` and `app_foregrounded`, which measure time in the app. Run the app, then open the property in the Console to see the first events arrive.
+
+# Track screen views {% #screen-views %}
+
+Send a `screen_view` each time a screen opens. Hook it into your navigation so new screens are tracked with no extra code.
+
+{% multicode %}
+```client-flutter
+MaterialApp(
+  navigatorObservers: [TrackingObserver(tracking)],
+  routes: {
+    '/': (context) => const HomeScreen(),
+    '/product': (context) => const ProductScreen(),
+  },
+);
+```
+```client-android-kotlin
+val navController = rememberNavController()
+
+LaunchedEffect(navController) {
+    navController.currentBackStackEntryFlow.collect { entry ->
+        entry.destination.route?.let { tracking.screenView(it) }
+    }
+}
+```
+```client-apple
+struct ProductView: View {
+    var body: some View {
+        Text("Canvas backpack")
+            .onAppear { tracking.screenView("product") }
+    }
+}
+```
+```client-react-native
+import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
+import { trackNavigation } from 'react-native-appwrite';
+
+export default function App() {
+    const navigationRef = useNavigationContainerRef();
+
+    return (
+        <NavigationContainer ref={navigationRef} {...trackNavigation(tracking, navigationRef)}>
+            {/* your navigators */}
+        </NavigationContainer>
+    );
+}
+```
+{% /multicode %}
+
+Each screen view records the screen name as the page path, so `product` appears as `/product` on the **Screens** card. A `screen_view` counts as a view, the same as a `pageview` on the web: it fills **Screen views** and **Screens/session**, and the first and last screens of each session appear as entry and exit screens.
+
+To track a screen that isn't part of your navigation, such as a tab or a sheet, call `screenView()` yourself. In a React Native app that uses Expo Router, call `tracking.screenView(pathname)` when the value of `usePathname()` changes.
+
+## Flutter route names {% #flutter-routes %}
+
+`TrackingObserver` reads each route's `RouteSettings.name` and skips routes without a name, such as most dialogs and bottom sheets. If you push routes with `MaterialPageRoute`, give them a name.
+
+```client-flutter
+Navigator.push(
+  context,
+  MaterialPageRoute(
+    settings: const RouteSettings(name: '/settings'),
+    builder: (context) => const SettingsScreen(),
+  ),
+);
+```
+
+To name screens another way, pass a `nameExtractor` to `TrackingObserver`, and return `null` for any route you don't want to track.
+
+# Track push notifications {% #push %}
+
+Call `pushReceived()` when a notification arrives and `pushOpened()` when someone taps it. Pass the Appwrite Messaging message ID, and the **Push notifications** card lists each message with how many were received and opened.
+
+{% multicode %}
+```client-flutter
+tracking.pushReceived(messageId: '<MESSAGE_ID>');
+tracking.pushOpened(messageId: '<MESSAGE_ID>');
+```
+```client-android-kotlin
+tracking.pushReceived(messageId = "<MESSAGE_ID>")
+tracking.pushOpened(messageId = "<MESSAGE_ID>")
+```
+```client-apple
+tracking.pushReceived(messageId: "<MESSAGE_ID>")
+tracking.pushOpened(messageId: "<MESSAGE_ID>")
+```
+```client-react-native
+tracking.pushReceived({ messageId: '<MESSAGE_ID>' });
+tracking.pushOpened({ messageId: '<MESSAGE_ID>' });
+```
+{% /multicode %}
+
+For a push sent from another service, pass `campaign` instead of `messageId`. `push_opened` starts a session, but `push_received` doesn't, because a push can arrive while the app is closed. On iOS, and on Android while the app isn't running, your code may not run when a notification arrives, so **Received** can be lower than the number of pushes delivered.
+
+# Track custom events {% #custom-events %}
+
+Send your own events with the screen they belong to as `url`, so each event is recorded under that path.
+
+{% multicode %}
+```client-flutter
+tracking.event(
+  'add_to_cart',
+  url: '/product',
+  props: {'product': 'canvas-backpack'},
+);
+```
+```client-android-kotlin
+tracking.event(
+    "add_to_cart",
+    url = "/product",
+    props = mapOf("product" to "canvas-backpack"),
+)
+```
+```client-apple
+tracking.event("add_to_cart", url: "/product", props: ["product": "canvas-backpack"])
+```
+```client-react-native
+tracking.track('add_to_cart', {
+    url: '/product',
+    props: { product: 'canvas-backpack' },
+});
+```
+{% /multicode %}
+
+Prop values can be any type and are stored as text. For naming and limits, see [Track custom events](/docs/products/analytics/custom-events).
+
+# Automatic events {% #automatic-events %}
+
+| Event | When it's sent | Extra data |
+| --- | --- | --- |
+| `first_open` | The first time the app runs after an install | None |
+| `app_updated` | The first time the app runs after an update | `previousVersion` and `version` props |
+| `app_backgrounded` | The app moves to the background | The seconds the app was in the foreground |
+| `app_foregrounded` | The app returns to the foreground | None |
+| `screen_view` | A screen opens, from your navigation or `screenView()` | `screen` prop, and `screenClass` when you pass one |
+
+To spot installs and updates, each SDK keeps a small marker with the app's version on the device. It holds no identifier. Reinstalling the app, or clearing its data, counts as a new install.
+
+# Event URLs {% #event-urls %}
+
+Analytics records every event against a URL. In an app, `Tracking` uses `app://` and the platform name, such as `app://android` or `app://ios`, so a screen view of `product` on Android is recorded as `app://android/product`. The platform becomes the hostname, which the **Platforms** tab of the **Technology** card uses to split your traffic. Events without a screen, such as `first_open` and the lifecycle events, are recorded under `/`.
+
+To record events under your own base URL, pass `url` when you create `Tracking`. On Flutter web and React Native web, `Tracking` uses the page's origin.
+
+# Errors {% #errors %}
+
+`Tracking` never throws and never interrupts your app. When an event fails, it's dropped, except `first_open` and `app_updated`, which are sent again on the next launch. To check your setup, call `createEvent` on the `Analytics` service once and print the error.
+
+A `403` `general_unknown_origin` error names the package or bundle ID that needs an app under **Apps**. A `404` `analytics_property_not_found` error means the property ID is wrong or the property is turned off.

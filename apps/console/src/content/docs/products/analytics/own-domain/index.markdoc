@@ -6,7 +6,9 @@ description: Send Appwrite Analytics events through a domain you own, with a cus
 
 The tracking helpers send events to your project's Appwrite endpoint, such as `<REGION>.cloud.appwrite.io`. Ad blockers and privacy extensions decide what to block from filter lists, which name tracking hosts and URL patterns. When your events go to a domain you own, list entries written for third-party hosts don't apply to them.
 
-The **Ad blockers** card in a property's **Settings** tab offers two ways to do this.
+A site on Appwrite Sites with analytics turned on needs neither: Appwrite already sends its events through the site's own domain. See [Properties](/docs/products/analytics/properties#sites).
+
+For any other site, the **Ad blockers** card in a property's **Settings** tab offers two ways to do this.
 
 | | Custom domain | Proxy |
 | --- | --- | --- |
@@ -108,6 +110,7 @@ export async function POST(
             scrollDepth: event.scrollDepth,
             engagementTime: event.engagementTime,
             props: event.props,
+            interactive: event.interactive,
             // The visitor's address and browser, not this server's
             ip: request.headers.get('x-forwarded-for')?.split(',').at(-1)?.trim(),
             userAgent: request.headers.get('user-agent') ?? undefined,
@@ -153,6 +156,7 @@ export default {
                 scrollDepth: event.scrollDepth,
                 engagementTime: event.engagementTime,
                 props: event.props,
+                interactive: event.interactive,
                 // The visitor's address and browser, not this Worker's
                 ip: request.headers.get('cf-connecting-ip') ?? undefined,
                 userAgent: request.headers.get('user-agent') ?? undefined,
@@ -201,6 +205,7 @@ app.post(`/relay/analytics/properties/${PROPERTY_ID}/events`, express.json(), as
                 scrollDepth: event.scrollDepth,
                 engagementTime: event.engagementTime,
                 props: event.props,
+                interactive: event.interactive,
                 // The visitor's address and browser, not this server's
                 ip: req.ip,
                 userAgent: req.get('user-agent'),
@@ -227,4 +232,4 @@ Appwrite counts visitors by IP address, user agent, and hostname. Without the `i
 
 The proxy copies only the event fields it knows, so a visitor can't set `userId`, `ip`, or anything else your API key would allow. It forwards only to your property, at one path.
 
-Because the proxy uses an API key, the property's allowed origins don't apply to proxied events, and your site doesn't need a Web app for tracking.
+Because the proxy uses an API key, the property's allowed origins don't apply to proxied events, and your site doesn't need a Web app for tracking. Proxied events also arrive without the visitor's Appwrite session, so [Identify signed-in users](/docs/products/analytics/properties#user-identification) doesn't apply to them.

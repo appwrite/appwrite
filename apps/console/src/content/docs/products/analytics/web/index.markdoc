@@ -6,7 +6,7 @@ description: Add Appwrite Analytics to a website or web app with one script tag 
 
 The Appwrite Web SDK includes a `Tracking` helper that records visits from the browser. A call to `start()` tracks pageviews, outbound link clicks, scroll depth, and engagement time. File downloads and your own events each take one more line.
 
-On a site without a build step, such as a static site or a CMS theme, the tracker script sets up `Tracking` from one script tag. In an app with a build step, install the SDK from npm instead.
+On a site without a build step, such as a static site or a CMS theme, the tracker script sets up `Tracking` from one script tag. In an app with a build step, install the SDK from npm instead. A site hosted on Appwrite Sites needs neither: turn on **Web analytics** in the site's settings. See [Properties](/docs/products/analytics/properties#sites).
 
 # Before you start {% #before-you-start %}
 
@@ -25,7 +25,7 @@ Add one app for each hostname your site runs on, including `localhost` while you
 Add the tracker script to the `<head>` of every page. It loads the Web SDK, creates a `Tracking` instance, and calls `start()`, so it needs no other code.
 
 ```html
-<script defer src="https://sdk.appwrite.io/web/29.2.0/tracker.js"
+<script defer src="https://sdk.appwrite.io/web/29.4.0/tracker.js"
         data-endpoint="https://<REGION>.cloud.appwrite.io/v1"
         data-project="<PROJECT_ID>"
         data-property="<PROPERTY_ID>"></script>
@@ -59,6 +59,8 @@ The script stores its `Tracking` instance on `window.__appwriteTracker`, so you 
 
 Code that runs later, such as a click handler, can use `window.__appwriteTracker` directly.
 
+If your site sets a Content Security Policy, allow `https://sdk.appwrite.io` in `script-src` and your Appwrite endpoint in `connect-src`.
+
 The script tag tracks one property. To also send events to a second property, call `Appwrite.startTracking()`. It takes `endpoint`, `project`, and `property`, and the optional `respectDoNotTrack` and `trackDownloads`, and returns the started `Tracking` instance.
 
 ```html
@@ -75,11 +77,11 @@ The script tag tracks one property. To also send events to a second property, ca
 
 ## Check the file's integrity {% #script-tag-integrity %}
 
-To have the browser check that the file is unchanged, add its hash as the `integrity` attribute, together with `crossorigin="anonymous"`. Each release lists the hash of every file in `integrity.json`, such as `https://sdk.appwrite.io/web/29.2.0/integrity.json`.
+To have the browser check that the file is unchanged, add its hash as the `integrity` attribute, together with `crossorigin="anonymous"`. Each release lists the hash of every file in `integrity.json`, such as `https://sdk.appwrite.io/web/29.4.0/integrity.json`.
 
 ```html
-<script defer src="https://sdk.appwrite.io/web/29.2.0/tracker.js"
-        integrity="sha384-M1DbhtkbnViz6JLD9On/0rc2MkZAXRrfr9I25PJKwZY5uUxON3dukLPp73l0fodH"
+<script defer src="https://sdk.appwrite.io/web/29.4.0/tracker.js"
+        integrity="sha384-UOR1Izx43rnvaoxivMnLvuhrKaTEZamoZUBHbmJvcrDy/IT5znyE5SGoj2XwohzW"
         crossorigin="anonymous"
         data-endpoint="https://<REGION>.cloud.appwrite.io/v1"
         data-project="<PROJECT_ID>"
@@ -181,6 +183,8 @@ const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>', {
 });
 ```
 
+`Tracking` also sends nothing from automated browsers, such as test runs with Playwright, Puppeteer, Selenium, or Cypress, so your end-to-end tests don't show up as visits. This check can't be turned off.
+
 For what Appwrite stores about each visitor, see [Privacy](/docs/products/analytics/privacy).
 
 # Troubleshooting {% #troubleshooting %}
@@ -190,7 +194,7 @@ For what Appwrite stores about each visitor, see [Privacy](/docs/products/analyt
 - **`403` with `general_unknown_origin`**: The page's hostname isn't an app in your project. Add it under **Apps**.
 - **`401` with `general_access_forbidden`**: The property limits which origins may send events, and this page's origin isn't on the list. See [Properties](/docs/products/analytics/properties).
 - **`404` with `analytics_property_not_found`**: The property ID is wrong, or the property is turned off.
-- **Nothing in the network panel**: Do Not Track is on in your browser.
+- **Nothing in the network panel**: Do Not Track is on in your browser, or the browser is automated, such as one driven by Playwright.
 - **Requests marked as blocked in the network panel**: an extension, such as an ad blocker, blocks them. See [Serve tracking from your domain](/docs/products/analytics/own-domain).
 
 The tracker script logs its own warnings when it can't start:

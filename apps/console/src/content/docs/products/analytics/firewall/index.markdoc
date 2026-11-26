@@ -41,20 +41,21 @@ The bot condition uses the name the dashboard shows. When that name has a space,
 # Review and create the rule {% #create %}
 
 {% only_dark %}
-![Create firewall rule page with the Storefront site, a Country equals United States condition, the Deny action, and the estimated impact](/images/docs/analytics/dark/firewall-rule.avif)
+![Create firewall rule page with a Country equals United States condition, the Deny action, and the estimated impact](/images/docs/analytics/dark/firewall-rule.avif)
 {% /only_dark %}
 {% only_light %}
-![Create firewall rule page with the Storefront site, a Country equals United States condition, the Deny action, and the estimated impact](/images/docs/analytics/firewall-rule.avif)
+![Create firewall rule page with a Country equals United States condition, the Deny action, and the estimated impact](/images/docs/analytics/firewall-rule.avif)
 {% /only_light %}
 
-The **Create firewall rule** page opens with **Sites**, the linked site, the condition, and the **Deny** action filled in.
+The **Create firewall rule** page opens for the linked site, with the condition and the **Deny** action filled in.
 
 1. Enter a **Rule name**, such as `Block GPTBot`.
 2. Check **Estimated impact**, which shows how many of the site's recent requests the rule would have matched, and their share of its traffic.
 3. Change the action if you need to. For example, **Challenge** checks that a visitor is a person instead of denying every request. See [Actions](/docs/products/firewall/actions).
-4. Click **Create rule**.
+4. To apply the rule only on certain days or at certain times, turn on **Schedule**.
+5. Click **Create rule**.
 
-The rule applies to the site from then on. To manage it later, open **Firewall** in your project. See [Rules](/docs/products/firewall/rules).
+The rule applies to the site from then on, and appears on the site's **Firewall** tab. To manage it later, open the site's **Firewall** tab, or open **Firewall** in your project and select the site on the **Sites** tab. See [Rules](/docs/products/firewall/rules).
 
 # Analytics and Firewall numbers {% #numbers %}
 

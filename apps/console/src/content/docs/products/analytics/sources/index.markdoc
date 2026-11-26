@@ -48,6 +48,8 @@ The source is the referrer's hostname, without a leading `www.`, such as `google
 
 A referrer on the same hostname as the event, with or without `www.`, is a visitor moving around your own site. It has no source and counts as `direct`.
 
+A referrer on a known spam domain marks the visit as [referrer spam](/docs/products/analytics/bots#categories), a kind of bot traffic, so it shows in the bot cards rather than among your human visitors.
+
 # Campaigns {% #campaigns %}
 
 UTM parameters are tags you add to links in newsletters, ads, and posts. Appwrite reads five of them from the event URL:

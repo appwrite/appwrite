@@ -8,7 +8,7 @@ Appwrite Analytics works without cookies and doesn't store IP addresses. This pa
 
 # No cookies or device storage {% #no-cookies %}
 
-Appwrite doesn't set cookies for analytics, and the tracking helpers in the Web and Flutter SDKs don't keep identifiers on the device. In the browser, the Web helper doesn't write to `localStorage`, `sessionStorage`, or any other storage. Each event is a single request that carries the event's details.
+Appwrite doesn't set cookies for analytics, and the tracking helpers in the Appwrite SDKs don't keep identifiers on the device. In the browser, the Web helper doesn't write to `localStorage`, `sessionStorage`, or any other storage. Each event is a single request that carries the event's details.
 
 Appwrite identifies visitors from the request instead. See [Visitor IDs](#visitor-ids).
 
@@ -22,26 +22,28 @@ For each event, Appwrite stores:
 - **The location**: country, region, and city, derived from the IP address.
 - **The device**: the full user agent, and the browser, operating system, and device type derived from it. Also the screen size category from the viewport width.
 - **Engagement**: scroll depth and engagement time, when the client reports them.
-- **Identifiers**: a visitor ID and a session ID, which are hashes, and the `userId` your server sends, if any.
+- **Identifiers**: a visitor ID and a session ID, which are hashes, and a user ID, when the event has one.
 - **Bot details**: whether the client is a bot, and its name and category.
 
 Appwrite uses the IP address to look up the location and to compute the visitor ID, then discards it. The IP address isn't stored with the event.
 
 # Visitor IDs {% #visitor-ids %}
 
-A visitor ID is a one-way hash of the IP address, the user agent, and the hostname of the event. The hash uses a fixed salt, so the same visitor on the same network and browser keeps the same ID over time. That's what lets **Unique visitors** count a returning visitor once.
+A visitor ID is a one-way hash of a daily salt, the IP address and user agent, the hostname of the event, and the property ID. When the event has a user ID, the user ID takes the place of the IP address and user agent. The salt changes every day at midnight UTC, so the same visitor gets a new ID each day, and Appwrite can't follow a visitor from one day to the next. Each day's salt is deleted two days later.
 
-Appwrite doesn't store the IP address, and visitor IDs don't appear on the dashboard, in exports, or in API responses. An ID changes when any of the three inputs change, for example when a phone switches networks. For how IDs shape your numbers, see [Visitors and sessions](/docs/products/analytics/visitors).
+Appwrite doesn't store the IP address, and visitor IDs don't appear on the dashboard, in exports, or in API responses. For how IDs shape your numbers, see [Visitors and sessions](/docs/products/analytics/visitors).
 
 # Data you send {% #data-you-send %}
 
 You decide what goes into event names, props, URLs, and user IDs. Keep personal data such as names, email addresses, and phone numbers out of them. In URLs, that includes query parameters: Appwrite drops the query string from the stored path, but it keeps the full URL of a referrer.
 
-User IDs are only accepted from requests with an API key, so a browser can't attach one. See [Track events from your server](/docs/products/analytics/server-side).
+Events carry user IDs in two cases only: your server sends one with an API key, or the property's **Identify signed-in users** setting is on and the event comes from a signed-in session. The setting is off by default. Turn it on only if your privacy policy covers linking analytics to user accounts. See [Properties](/docs/products/analytics/properties#user-identification).
 
 # Do Not Track {% #do-not-track %}
 
-The Web helper sends no events for visitors who have Do Not Track turned on in their browser. It checks the Do Not Track setting only, not Global Privacy Control. You can turn this off with the `respectDoNotTrack` option, or with the `data-respect-dnt` attribute of the script tag. See [Track a website](/docs/products/analytics/web#do-not-track).
+The Web helper sends no events for visitors who have Do Not Track turned on in their browser. It checks the Do Not Track setting only, not Global Privacy Control. To count these visitors too, set the `respectDoNotTrack` option to `false`, or the `data-respect-dnt` attribute of the script tag to `"false"`.
+
+The Web helper also sends nothing from automated browsers, such as test runs with Playwright, Puppeteer, Selenium, or Cypress. This check can't be turned off. See [Track a website](/docs/products/analytics/web#do-not-track).
 
 When you send events over REST or from your server, it's up to your code to honor the visitor's choices.
 
