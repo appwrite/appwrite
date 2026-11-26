@@ -98,7 +98,7 @@ class Create extends Action
             // Without the secret no review service runs (optional on self-hosted), so nothing would consume the job.
             if (System::getEnv('_APP_REVIEWS_SECRET', '') !== '') {
                 match ($event) {
-                    'pullrequest:created', 'pullrequest:updated', 'pullrequest:fulfilled', 'pullrequest:rejected' => $this->queueReviews('bitbucket', $parsedPayload, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
+                    'pullrequest:created', 'pullrequest:updated', 'pullrequest:fulfilled', 'pullrequest:rejected' => $this->queueReviews('bitbucket', $parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
                     BitbucketAdapter::EVENT_PULL_REQUEST_COMMENT => $this->queueComment('bitbucket', $this->describeComment($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization), $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
                     default => null,
                 };

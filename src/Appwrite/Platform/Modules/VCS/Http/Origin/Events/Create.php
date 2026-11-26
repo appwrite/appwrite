@@ -143,7 +143,7 @@ class Create extends Action
             if (System::getEnv('_APP_REVIEWS_SECRET', '') !== '') {
                 match (true) {
                     $event === Origin::EVENT_PULL_REQUEST_COMMENT => $this->queueComment('origin', $parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
-                    \str_starts_with($event, Origin::EVENT_PULL_REQUEST . '.') => $this->queueReviews('origin', $parsedPayload, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
+                    \str_starts_with($event, Origin::EVENT_PULL_REQUEST . '.') => $this->queueReviews('origin', $parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
                     default => null,
                 };
             }

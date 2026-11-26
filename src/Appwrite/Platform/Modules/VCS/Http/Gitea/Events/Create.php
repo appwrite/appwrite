@@ -96,7 +96,7 @@ class Create extends Action
             // Without the secret no review service runs (optional on self-hosted), so nothing would consume the job.
             if (System::getEnv('_APP_REVIEWS_SECRET', '') !== '') {
                 match ($event) {
-                    'pull_request' => $this->queueReviews('gitea', $parsedPayload, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
+                    'pull_request' => $this->queueReviews('gitea', $parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
                     'issue_comment' => $this->queueComment('gitea', $this->describeComment($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization), $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
                     default => null,
                 };
