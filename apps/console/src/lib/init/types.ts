@@ -223,6 +223,8 @@ export interface LaunchEventHeaderNavCtaConfig {
 export interface LaunchEventLiveBanner {
   title: string
   href?: string
+  /** The banner's button; defaults to "Watch" (a stream). */
+  actionLabel?: string
   /**
    * Set by visibility: `startingSoon` within 1h of the livestream start,
    * `live` after it begins. Omitted on authored event data.
@@ -257,6 +259,8 @@ export interface LaunchEventDailyPrize {
   platform: LaunchSchedulePlatform
   href?: string
   prizeDescription: string
+  /** What someone looking at this prize shows as in the online list. */
+  presenceActivity?: string
   visual?: LaunchEventPrizeVisual
 }
 
@@ -270,6 +274,8 @@ export interface LaunchEventGrandPrize {
   sessionTitle?: string
   platform?: LaunchSchedulePlatform
   href?: string
+  /** What someone looking at the grand prize shows as in the online list. */
+  presenceActivity?: string
   visual?: LaunchEventPrizeVisual
 }
 
