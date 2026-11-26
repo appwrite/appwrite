@@ -83,7 +83,7 @@ Track installs, screens, push notifications, and app lifecycle events with the A
 Send events from any client with one HTTP request each.
 {% /cards_item %}
 {% cards_item href="/docs/products/analytics/server-side" title="Track events from your server" %}
-Send events on behalf of your visitors with an API key.
+Send events on behalf of your visitors with a server SDK and an API key.
 {% /cards_item %}
 {% cards_item href="/docs/products/analytics/custom-events" title="Track custom events" %}
 Record signups, purchases, and other actions with props.

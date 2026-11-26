@@ -1980,7 +1980,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/analytics/server-side",
     "title": "Track events from your server",
     "description": "Send Appwrite Analytics events from your backend with an API key, and attach server-side actions such as purchases to the visitor who made them.",
-    "excerpt": "Some events happen on your server: an order that completes, a subscription that renews, a job that finishes. Send them from your backend with an API key, over REST, with the Go SDK, or with the Appwrite CLI. To join the visitor's browser visit, pass their IP address and user agent with a URL on the same hostname. To count the event toward a signed-in user, pass their user ID. That event starts a visit of its own. Create an…",
+    "excerpt": "Some events happen on your server: an order that completes, a subscription that renews, a job that finishes. Send them from your backend with a server SDK and an API key. To join the visitor's browser visit, pass their IP address and user agent with a URL on the same hostname. To count the event toward a signed-in user, pass their user ID. That event starts a visit of its own. Create an API key Server-side events use an API…",
     "breadcrumbs": [
       "products",
       "Analytics",

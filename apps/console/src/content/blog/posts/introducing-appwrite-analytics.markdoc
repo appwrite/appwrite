@@ -18,7 +18,7 @@ faqs:
   - question: "How does Appwrite Analytics detect AI agents and bots?"
     answer: "Appwrite labels bots by their user agent, their referrer, and the network they come from, and records each bot's name and category, such as AI crawler or AI assistant. People who follow a link from an AI assistant to your site are not bots: they count as visitors in the ai channel."
   - question: "Which platforms does Appwrite Analytics support?"
-    answer: "Use the tracker script on websites, the Web analytics switch on Appwrite Sites, or the Tracking class in the Web, Flutter, Android, Apple, and React Native SDKs. Servers send events with an API key over the REST API, the Go SDK, or the Appwrite CLI."
+    answer: "Use the tracker script on websites, the Web analytics switch on Appwrite Sites, or the Tracking class in the Web, Flutter, Android, Apple, and React Native SDKs. Servers send events with a server SDK and an API key."
   - question: "Can I block a bot that I see in Appwrite Analytics?"
     answer: "Yes, for sites hosted on Appwrite Sites. Right-click the bot on the dashboard and select Create firewall rule. The rule opens with Deny selected and shows its estimated impact before it's created."
   - question: "How much does Appwrite Analytics cost?"
@@ -35,7 +35,7 @@ Analytics often lives in a separate tool, with its own script and its own accoun
 
 Appwrite Analytics brings that data into your project. A visitor on the dashboard can be a signed-in user in Auth, a page served by Appwrite Sites, or a bot that one Firewall rule can block. The goal is one place to see who uses your product, what they do there, and what reads your pages.
 
-# What Analytics answers
+# Properties and dashboards
 
 Each website, app, or AI agent that you track is a **property** with its own dashboard. The dashboard answers questions such as:
 
@@ -87,7 +87,7 @@ Each user in **Auth** also gets an **Analytics** tab, with their events per day,
 
 ![The Analytics card on a site's Overview tab with the last 24 hours of visitors, pageviews, bounce rate, visit duration, and top sources](/images/blog/introducing-appwrite-analytics/site-card.avif)
 
-A site on Appwrite Sites needs no tracking code. Turn on **Enable analytics** when creating the site, or **Web analytics** in its settings, and Appwrite adds the tracker to every page on the site's production domains. The tracker sends its events through the site's own domain, so ad blockers that block the Appwrite endpoint let them through.
+A site on Appwrite Sites needs no tracking code. Turn on **Enable analytics** when creating the site, or **Web analytics** in its settings, and Appwrite adds the tracker to every page on the site's production domains. The tracker sends its events through the site's own domain.
 
 The site's **Overview** tab then shows an **Analytics** card with the last 24 hours of visitors, pageviews, bounce rate, visit duration, and top sources, with a link to the full dashboard.
 
@@ -108,13 +108,215 @@ The rule opens for the site, with the condition and the **Deny** action filled i
 `listMetrics` returns the numbers behind the dashboard: totals, a time series, or a breakdown by one dimension. Use it to build reports, send weekly summaries, or show statistics in your own app. This example lists the five countries with the most visitors in the last seven days, with an API key that has the `analytics.read` scope:
 
 {% multicode %}
-```curl
-curl -G 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPERTY_ID>/metrics' \
-    -H 'X-Appwrite-Project: <PROJECT_ID>' \
-    -H 'X-Appwrite-Key: <API_KEY>' \
-    --data-urlencode 'dimensions[]=country' \
-    --data-urlencode 'dateRange=7d' \
-    --data-urlencode 'limit=5'
+```server-nodejs
+import { Client, Analytics, AnalyticsDimension } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const analytics = new Analytics(client);
+
+const countries = await analytics.listMetrics({
+    propertyId: '<PROPERTY_ID>',
+    dimensions: [AnalyticsDimension.Country],
+    dateRange: '7d',
+    limit: 5,
+});
+
+for (const row of countries.metrics) {
+    console.log(row.value, row.visitors);
+}
+```
+```server-deno
+import { Client, Analytics, AnalyticsDimension } from 'npm:node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const analytics = new Analytics(client);
+
+const countries = await analytics.listMetrics({
+    propertyId: '<PROPERTY_ID>',
+    dimensions: [AnalyticsDimension.Country],
+    dateRange: '7d',
+    limit: 5,
+});
+
+for (const row of countries.metrics) {
+    console.log(row.value, row.visitors);
+}
+```
+```server-php
+<?php
+
+require 'vendor/autoload.php';
+
+use Appwrite\Client;
+use Appwrite\Enums\AnalyticsDimension;
+use Appwrite\Services\Analytics;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<API_KEY>');
+
+$analytics = new Analytics($client);
+
+$countries = $analytics->listMetrics(
+    propertyId: '<PROPERTY_ID>',
+    dimensions: [AnalyticsDimension::COUNTRY()],
+    dateRange: '7d',
+    limit: 5,
+);
+
+foreach ($countries->metrics as $row) {
+    echo $row->value, ' ', $row->visitors, PHP_EOL;
+}
+```
+```server-python
+from appwrite.client import Client
+from appwrite.enums.analytics_dimension import AnalyticsDimension
+from appwrite.services.analytics import Analytics
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+
+analytics = Analytics(client)
+
+countries = analytics.list_metrics(
+    property_id='<PROPERTY_ID>',
+    dimensions=[AnalyticsDimension.COUNTRY],
+    date_range='7d',
+    limit=5,
+)
+
+for row in countries.metrics:
+    print(row.value, row.visitors)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+include Appwrite::Enums
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<API_KEY>')
+
+analytics = Analytics.new(client)
+
+countries = analytics.list_metrics(
+    property_id: '<PROPERTY_ID>',
+    dimensions: [AnalyticsDimension::COUNTRY],
+    date_range: '7d',
+    limit: 5
+)
+
+countries.metrics.each do |row|
+    puts "#{row.value} #{row.visitors}"
+end
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Enums;
+using Appwrite.Services;
+
+var client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<API_KEY>");
+
+var analytics = new Analytics(client);
+
+var countries = await analytics.ListMetrics(
+    propertyId: "<PROPERTY_ID>",
+    dimensions: new List<AnalyticsDimension> { AnalyticsDimension.Country },
+    dateRange: "7d",
+    limit: 5
+);
+
+foreach (var row in countries.Metrics)
+{
+    Console.WriteLine($"{row.Value} {row.Visitors}");
+}
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart' as enums;
+
+Future<void> main() async {
+  final client = Client()
+      .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+      .setProject('<PROJECT_ID>')
+      .setKey('<API_KEY>');
+
+  final analytics = Analytics(client);
+
+  final countries = await analytics.listMetrics(
+    propertyId: '<PROPERTY_ID>',
+    dimensions: [enums.AnalyticsDimension.country],
+    dateRange: '7d',
+    limit: 5,
+  );
+
+  for (final row in countries.metrics) {
+    print('${row.value} ${row.visitors}');
+  }
+}
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.enums.AnalyticsDimension
+import io.appwrite.services.Analytics
+
+suspend fun main() {
+    val client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+        .setKey("<API_KEY>")
+
+    val analytics = Analytics(client)
+
+    val countries = analytics.listMetrics(
+        propertyId = "<PROPERTY_ID>",
+        dimensions = listOf(AnalyticsDimension.COUNTRY),
+        dateRange = "7d",
+        limit = 5,
+    )
+
+    for (row in countries.metrics) {
+        println("${row.value} ${row.visitors}")
+    }
+}
+```
+```server-swift
+import Appwrite
+import AppwriteEnums
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
+
+let analytics = Analytics(client)
+
+let countries = try await analytics.listMetrics(
+    propertyId: "<PROPERTY_ID>",
+    dimensions: [.country],
+    dateRange: "7d",
+    limit: 5
+)
+
+for row in countries.metrics {
+    print(row.value ?? "", row.visitors)
+}
 ```
 ```server-go
 package main
@@ -150,6 +352,40 @@ func main() {
     }
 }
 ```
+```server-rust
+use appwrite::Client;
+use appwrite::enums::AnalyticsDimension;
+use appwrite::services::Analytics;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1");
+    client.set_project("<PROJECT_ID>");
+    client.set_key("<API_KEY>");
+
+    let analytics = Analytics::new(&client);
+
+    let countries = analytics.list_metrics(
+        "<PROPERTY_ID>",
+        None, // queries
+        None, // interval
+        Some(vec![AnalyticsDimension::Country]),
+        None, // prop_key
+        Some("7d"),
+        None, // start_at
+        None, // end_at
+        Some(5),
+        None, // total
+    ).await?;
+
+    for row in countries.metrics {
+        println!("{} {}", row.value.unwrap_or_default(), row.visitors);
+    }
+
+    Ok(())
+}
+```
 ```bash
 appwrite client \
     --endpoint https://<REGION>.cloud.appwrite.io/v1 \
@@ -161,6 +397,14 @@ appwrite analytics list-metrics \
     --dimensions country \
     --date-range 7d \
     --limit 5
+```
+```curl
+curl -G 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPERTY_ID>/metrics' \
+    -H 'X-Appwrite-Project: <PROJECT_ID>' \
+    -H 'X-Appwrite-Key: <API_KEY>' \
+    --data-urlencode 'dimensions[]=country' \
+    --data-urlencode 'dateRange=7d' \
+    --data-urlencode 'limit=5'
 ```
 {% /multicode %}
 
@@ -322,18 +566,95 @@ tracking.track('signup_completed', {
     props: { plan: 'pro', source: 'pricing_page' },
 });
 ```
-```curl
-curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPERTY_ID>/events' \
-    -H 'Content-Type: application/json' \
-    -H 'X-Appwrite-Project: <PROJECT_ID>' \
-    -H 'X-Appwrite-Key: <API_KEY>' \
-    -d '{
-        "name": "signup_completed",
-        "url": "https://example.com/signup",
-        "ip": "<VISITOR_IP>",
-        "userAgent": "<VISITOR_USER_AGENT>",
-        "props": ["plan", "pro", "source", "pricing_page"]
-    }'
+```server-nodejs
+await analytics.createEvent({
+    propertyId: '<PROPERTY_ID>',
+    name: 'signup_completed',
+    url: 'https://example.com/signup',
+    ip: '<VISITOR_IP>',
+    userAgent: '<VISITOR_USER_AGENT>',
+    props: ['plan', 'pro', 'source', 'pricing_page'],
+});
+```
+```server-deno
+await analytics.createEvent({
+    propertyId: '<PROPERTY_ID>',
+    name: 'signup_completed',
+    url: 'https://example.com/signup',
+    ip: '<VISITOR_IP>',
+    userAgent: '<VISITOR_USER_AGENT>',
+    props: ['plan', 'pro', 'source', 'pricing_page'],
+});
+```
+```server-php
+$analytics->createEvent(
+    propertyId: '<PROPERTY_ID>',
+    name: 'signup_completed',
+    url: 'https://example.com/signup',
+    ip: '<VISITOR_IP>',
+    userAgent: '<VISITOR_USER_AGENT>',
+    props: ['plan', 'pro', 'source', 'pricing_page'],
+);
+```
+```server-python
+analytics.create_event(
+    property_id='<PROPERTY_ID>',
+    name='signup_completed',
+    url='https://example.com/signup',
+    ip='<VISITOR_IP>',
+    user_agent='<VISITOR_USER_AGENT>',
+    props=['plan', 'pro', 'source', 'pricing_page'],
+)
+```
+```server-ruby
+analytics.create_event(
+    property_id: '<PROPERTY_ID>',
+    name: 'signup_completed',
+    url: 'https://example.com/signup',
+    ip: '<VISITOR_IP>',
+    user_agent: '<VISITOR_USER_AGENT>',
+    props: ['plan', 'pro', 'source', 'pricing_page']
+)
+```
+```server-dotnet
+await analytics.CreateEvent(
+    propertyId: "<PROPERTY_ID>",
+    name: "signup_completed",
+    url: "https://example.com/signup",
+    ip: "<VISITOR_IP>",
+    userAgent: "<VISITOR_USER_AGENT>",
+    props: new List<string> { "plan", "pro", "source", "pricing_page" }
+);
+```
+```server-dart
+await analytics.createEvent(
+  propertyId: '<PROPERTY_ID>',
+  name: 'signup_completed',
+  url: 'https://example.com/signup',
+  ip: '<VISITOR_IP>',
+  userAgent: '<VISITOR_USER_AGENT>',
+  props: ['plan', 'pro', 'source', 'pricing_page'],
+);
+```
+```server-kotlin
+analytics.createEvent(
+    propertyId = "<PROPERTY_ID>",
+    name = "signup_completed",
+    url = "https://example.com/signup",
+    ip = "<VISITOR_IP>",
+    userAgent = "<VISITOR_USER_AGENT>",
+    props = listOf("plan", "pro", "source", "pricing_page"),
+)
+```
+```server-swift
+_ = try await analytics.createEvent(
+    propertyId: "<PROPERTY_ID>",
+    name: "signup_completed",
+    url: "https://example.com/signup",
+    props: ["plan", "pro", "source", "pricing_page"],
+    ip: "<VISITOR_IP>",
+    userAgent: "<VISITOR_USER_AGENT>"
+)
 ```
 ```server-go
 _, err := analytics.CreateEvent(
@@ -348,6 +669,24 @@ if err != nil {
     log.Fatal(err)
 }
 ```
+```server-rust
+analytics.create_event(
+    "<PROPERTY_ID>",
+    "signup_completed",
+    "https://example.com/signup",
+    None, // domain
+    None, // referrer
+    None, // screen_width
+    None, // session_hash
+    None, // scroll_depth
+    None, // engagement_time
+    Some(vec!["plan".into(), "pro".into(), "source".into(), "pricing_page".into()]),
+    None, // user_id
+    Some("<VISITOR_IP>"),
+    Some("<VISITOR_USER_AGENT>"),
+    None, // interactive
+).await?;
+```
 ```bash
 appwrite analytics create-event \
     --property-id '<PROPERTY_ID>' \
@@ -356,6 +695,19 @@ appwrite analytics create-event \
     --ip '<VISITOR_IP>' \
     --user-agent '<VISITOR_USER_AGENT>' \
     --props plan --props pro --props source --props pricing_page
+```
+```curl
+curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPERTY_ID>/events' \
+    -H 'Content-Type: application/json' \
+    -H 'X-Appwrite-Project: <PROJECT_ID>' \
+    -H 'X-Appwrite-Key: <API_KEY>' \
+    -d '{
+        "name": "signup_completed",
+        "url": "https://example.com/signup",
+        "ip": "<VISITOR_IP>",
+        "userAgent": "<VISITOR_USER_AGENT>",
+        "props": ["plan", "pro", "source", "pricing_page"]
+    }'
 ```
 {% /multicode %}
 

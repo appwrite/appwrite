@@ -39,15 +39,77 @@ tracking.track('signup_completed', {
     props: { plan: 'pro', source: 'pricing_page' },
 });
 ```
-```curl
-curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPERTY_ID>/events' \
-    -H 'Content-Type: application/json' \
-    -H 'X-Appwrite-Project: <PROJECT_ID>' \
-    -d '{
-        "name": "signup_completed",
-        "url": "https://example.com/signup",
-        "props": ["plan", "pro", "source", "pricing_page"]
-    }'
+```server-nodejs
+await analytics.createEvent({
+    propertyId: '<PROPERTY_ID>',
+    name: 'signup_completed',
+    url: 'https://example.com/signup',
+    props: ['plan', 'pro', 'source', 'pricing_page'],
+});
+```
+```server-deno
+await analytics.createEvent({
+    propertyId: '<PROPERTY_ID>',
+    name: 'signup_completed',
+    url: 'https://example.com/signup',
+    props: ['plan', 'pro', 'source', 'pricing_page'],
+});
+```
+```server-php
+$analytics->createEvent(
+    propertyId: '<PROPERTY_ID>',
+    name: 'signup_completed',
+    url: 'https://example.com/signup',
+    props: ['plan', 'pro', 'source', 'pricing_page'],
+);
+```
+```server-python
+analytics.create_event(
+    property_id='<PROPERTY_ID>',
+    name='signup_completed',
+    url='https://example.com/signup',
+    props=['plan', 'pro', 'source', 'pricing_page'],
+)
+```
+```server-ruby
+analytics.create_event(
+    property_id: '<PROPERTY_ID>',
+    name: 'signup_completed',
+    url: 'https://example.com/signup',
+    props: ['plan', 'pro', 'source', 'pricing_page']
+)
+```
+```server-dotnet
+await analytics.CreateEvent(
+    propertyId: "<PROPERTY_ID>",
+    name: "signup_completed",
+    url: "https://example.com/signup",
+    props: new List<string> { "plan", "pro", "source", "pricing_page" }
+);
+```
+```server-dart
+await analytics.createEvent(
+  propertyId: '<PROPERTY_ID>',
+  name: 'signup_completed',
+  url: 'https://example.com/signup',
+  props: ['plan', 'pro', 'source', 'pricing_page'],
+);
+```
+```server-kotlin
+analytics.createEvent(
+    propertyId = "<PROPERTY_ID>",
+    name = "signup_completed",
+    url = "https://example.com/signup",
+    props = listOf("plan", "pro", "source", "pricing_page"),
+)
+```
+```server-swift
+_ = try await analytics.createEvent(
+    propertyId: "<PROPERTY_ID>",
+    name: "signup_completed",
+    url: "https://example.com/signup",
+    props: ["plan", "pro", "source", "pricing_page"]
+)
 ```
 ```server-go
 _, err := analytics.CreateEvent(
@@ -60,12 +122,40 @@ if err != nil {
     log.Fatal(err)
 }
 ```
+```server-rust
+analytics.create_event(
+    "<PROPERTY_ID>",
+    "signup_completed",
+    "https://example.com/signup",
+    None, // domain
+    None, // referrer
+    None, // screen_width
+    None, // session_hash
+    None, // scroll_depth
+    None, // engagement_time
+    Some(vec!["plan".into(), "pro".into(), "source".into(), "pricing_page".into()]),
+    None, // user_id
+    None, // ip
+    None, // user_agent
+    None, // interactive
+).await?;
+```
 ```bash
 appwrite analytics create-event \
     --property-id '<PROPERTY_ID>' \
     --name signup_completed \
     --url https://example.com/signup \
     --props plan --props pro --props source --props pricing_page
+```
+```curl
+curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPERTY_ID>/events' \
+    -H 'Content-Type: application/json' \
+    -H 'X-Appwrite-Project: <PROJECT_ID>' \
+    -d '{
+        "name": "signup_completed",
+        "url": "https://example.com/signup",
+        "props": ["plan", "pro", "source", "pricing_page"]
+    }'
 ```
 {% /multicode %}
 
@@ -98,7 +188,7 @@ A custom event counts as an interaction, so a visit with one isn't a [bounce](/d
 
 Props add detail to an event, such as the plan someone chose or the button they clicked. Each event takes up to 16 props. Keys and values are text up to 255 characters each.
 
-The `Tracking` class takes props as a map and turns each value into text. REST, the Go SDK, and the CLI take a flat list that alternates keys and values. A key without a value at the end of the list is dropped.
+The `Tracking` class takes props as a map and turns each value into text. `createEvent` and REST take a flat list that alternates keys and values. A key without a value at the end of the list is dropped.
 
 Appwrite stores props with the event. Don't put personal data such as email addresses or names in props.
 
@@ -111,17 +201,14 @@ On an **Agent** property, send one event per model call and one per tool call. T
 | `model_called` | `model`, such as `claude-sonnet-5-5`. Optionally `provider`. |
 | `tool_called` | `tool`, such as `web_search`. |
 
-```curl
-curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPERTY_ID>/events' \
-    -H 'Content-Type: application/json' \
-    -H 'X-Appwrite-Project: <PROJECT_ID>' \
-    -H 'X-Appwrite-Key: <API_KEY>' \
-    -d '{
-        "name": "model_called",
-        "url": "https://agent.example.com/run",
-        "userId": "<USER_ID>",
-        "props": ["model", "claude-sonnet-5-5", "provider", "anthropic"]
-    }'
+```server-nodejs
+await analytics.createEvent({
+    propertyId: '<PROPERTY_ID>',
+    name: 'model_called',
+    url: 'https://agent.example.com/run',
+    props: ['model', 'claude-sonnet-5-5', 'provider', 'anthropic'],
+    userId: '<USER_ID>',
+});
 ```
 
 The **Models and tools** card appears after the property receives an event with a `model` or `tool` prop. Click a model or tool to filter the whole dashboard to it. Props are stored as text, so the dashboard can't add up values such as token counts.
