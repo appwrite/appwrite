@@ -445,6 +445,9 @@ return [
             Attribute::integer(key: 'audioBitRate', width: IntegerWidth::Bits64, signed: false),
             Attribute::string(key: 'audioSampleRate'),
             Attribute::string(key: 'search', size: 16384),
+            // Populated when the video is read. The filter queries the child rows; nothing is stored.
+            Attribute::text(key: 'renditions', size: 65535, filters: ['subQueryRenditions']),
+            Attribute::text(key: 'captions', size: 65535, filters: ['subQueryCaptions']),
         ],
         'indexes' => [
             Index::key(key: '_key_bucket_file', attributes: ['bucketId', 'fileId']),
@@ -502,6 +505,8 @@ return [
             // Bytes of this rendition on the videos device. StatsResources
             // sums it into the videos.storage gauge.
             Attribute::integer(key: 'size', width: IntegerWidth::Bits64, signed: false, default: 0),
+            // Populated when the rendition is read, ordered by $sequence. Nothing is stored.
+            Attribute::text(key: 'segments', size: 65535, filters: ['subQuerySegments']),
         ],
         'indexes' => [
             Index::unique(key: '_key_video_output_profile', attributes: ['videoId', 'output', 'profileId']),
@@ -570,6 +575,8 @@ return [
             Attribute::string(key: 'status'),
             Attribute::string(key: 'error', size: 2048),
             Attribute::integer(key: 'size', width: IntegerWidth::Bits64, signed: false, default: 0),
+            // Populated when the caption is read, ordered by $sequence. Nothing is stored.
+            Attribute::text(key: 'segments', size: 65535, filters: ['subQueryCaptionSegments']),
         ],
         'indexes' => [
             Index::key(key: '_key_videoId', attributes: ['videoId']),

@@ -18,6 +18,7 @@ class Action extends UtopiaAction
         ...APP_TEAMS_SUBQUERIES, // Teams
         ...APP_TOPICS_SUBQUERIES, // Topics
         ...APP_FUNCTIONS_SUBQUERIES, // Sites / Functions
+        ...APP_VIDEOS_SUBQUERIES, // Videos
     ];
 
     /**
