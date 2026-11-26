@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Announcing project environments: dev, staging, and QA for every Appwrite project"
+title: "Announcing project environments: dev, staging, and QA for Appwrite projects"
 description: "Appwrite Cloud projects now have environments: dev, staging, and QA backends with their own data and users, under the same project ID and on the same bill."
 date: 2026-11-26
 cover: /images/blog/announcing-project-environments/cover.avif

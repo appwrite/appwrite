@@ -19,7 +19,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
   {
     "slug": "announcing-project-environments",
     "href": "/blog/post/announcing-project-environments",
-    "title": "Announcing project environments: dev, staging, and QA for every Appwrite project",
+    "title": "Announcing project environments: dev, staging, and QA for Appwrite projects",
     "description": "Appwrite Cloud projects now have environments: dev, staging, and QA backends with their own data and users, under the same project ID and on the same bill.",
     "date": "2026-11-26",
     "lastUpdated": "2026-11-26",
