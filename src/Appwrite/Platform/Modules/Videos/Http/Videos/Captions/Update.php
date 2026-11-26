@@ -207,6 +207,13 @@ class Update extends Base
                 video: $video,
                 caption: $caption,
             ));
+
+            // The old segment row still serves the previous VTT, and this write
+            // does not change its URL. Drop the row before the purge so a refetch
+            // cannot store those bytes again while the worker writes the new file.
+            $authorization->skip(fn () => $dbForProject->deleteDocuments('videosCaptionsSegments', [
+                Query::equal('captionInternalId', [$caption->getSequence()]),
+            ]));
         }
 
         // Public caption segments share the video Surrogate-Key and the video's
