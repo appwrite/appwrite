@@ -32,6 +32,8 @@ export type InitDayMockVisualId =
   | 'videos'
   | 'zero'
   | 'monitors-beep'
+  | 'monitors'
+  | 'beep'
   | 'reviews'
 
 export interface LaunchEventDayVisual {
@@ -49,6 +51,19 @@ export interface LaunchEventDayFilm {
   label: string
 }
 
+/**
+ * One launch on a day that has several (Monitors and Beep): its own title,
+ * copy, cover, film and links, drawn as its own section of the day's card.
+ */
+export interface LaunchEventDayAnnouncement {
+  id: string
+  title: string
+  longDescription: string
+  visual?: LaunchEventDayVisual
+  films?: LaunchEventDayFilm[]
+  resources: LaunchEventDayResource[]
+}
+
 export interface LaunchEventDay {
   day: number
   dateLabel: string
@@ -61,6 +76,12 @@ export interface LaunchEventDay {
   visual?: LaunchEventDayVisual
   /** Launch films for the day, in order; the cover plays the first. */
   films?: LaunchEventDayFilm[]
+  /**
+   * A day with several launches lists each; the card draws one section per
+   * announcement, and the day's own title, copy and films stand for them all
+   * elsewhere (day nav, hero, presence).
+   */
+  announcements?: LaunchEventDayAnnouncement[]
   /**
    * This day launches the player the films play in: once it is revealed, the
    * films say they are powered by Appwrite Videos.
@@ -83,6 +104,15 @@ export interface LaunchEventDayLocked {
 }
 
 export type LaunchEventDayView = LaunchEventDay | LaunchEventDayLocked
+
+/** Every launch film of a day: its own, or each announcement's in order. */
+export function getLaunchEventDayFilms(
+  day: LaunchEventDay,
+): LaunchEventDayFilm[] {
+  return day.announcements?.length
+    ? day.announcements.flatMap((announcement) => announcement.films ?? [])
+    : (day.films ?? [])
+}
 
 /** True once the day that launches the films' player has been revealed. */
 export function isFilmPlayerRevealed(event: InitDisplayEvent): boolean {
