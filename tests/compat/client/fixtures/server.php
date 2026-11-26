@@ -165,7 +165,9 @@ function compress(string $encoding, string $payload): string
         'gzip' => gzencode($payload),
         'deflate' => gzcompress($payload),
         'br' => brotli_compress($payload),
-        'zstd' => zstd_compress($payload),
+        // appwrite/base 2.6 dropped the zstd PECL extension; Utopia\Compression's Zstd
+        // (the utopia extension) compresses at the same default level.
+        'zstd' => \function_exists('zstd_compress') ? zstd_compress($payload) : (new \Utopia\Compression\Algorithms\Zstd())->compress($payload),
         default => $payload,
     };
 }

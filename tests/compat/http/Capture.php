@@ -28,7 +28,8 @@ final class Capture extends Response
             'gzip' => gzdecode($wire['body']),
             'deflate' => gzinflate($wire['body']),
             'br' => brotli_uncompress($wire['body']),
-            'zstd' => zstd_uncompress($wire['body']),
+            // appwrite/base 2.6 dropped the zstd PECL extension; the utopia extension's Zstd decodes the same frames.
+            'zstd' => \function_exists('zstd_uncompress') ? zstd_uncompress($wire['body']) : (new \Utopia\Compression\Algorithms\Zstd())->decompress($wire['body']),
             default => null,
         };
         if ($decoded !== null) {
