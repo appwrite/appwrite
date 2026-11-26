@@ -6,9 +6,8 @@
  * its own ID in `X-Appwrite-Environment`, and the environment routes list it by
  * that ID. The routes act on the project itself, never inside one of its
  * environments, so every call here passes `environment: null` to leave the
- * environment the Console may be in. Cloud only, so callers gate on the
- * `projectEnvironments` profile feature and the queries stay quiet (no retry)
- * where the routes are absent.
+ * environment the Console may be in. Cloud only, so callers gate on the Cloud
+ * profile and the queries stay quiet (no retry) where the routes are absent.
  */
 
 import {

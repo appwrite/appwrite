@@ -113,9 +113,10 @@ of `packages/validators`, the password hashes of `packages/auth`, every class of
 `packages/user-agent/stubs/`, `packages/domains/stubs/`, `packages/emails/stubs/`,
 `packages/validators/stubs/`, `packages/auth/stubs/`, `packages/query/stubs/` and `packages/detector/stubs/` for PHPStan, which runs without the
 extension. A library that still has a PHP implementation is registered only when
-`_APP_EXTENSION_LIBRARIES` names its package; today those are `compression`,
-`balancer` and `database` (four classes of `utopia-php/database`, from `vendor/`). Otherwise
-Composer loads the package's PHP class as before:
+`_APP_EXTENSION_LIBRARIES` names its package; today those are `compression` and `balancer`.
+Otherwise Composer loads the package's PHP class as before. (`Id`, `Role`, `Permission` and
+`DateTime` of `utopia-php/database` are registered by default too, but their PHP stays in
+`vendor/`: see [Utopia\Database](#utopiadatabase-id-role-permission-and-datetime).)
 
 ```sh
 _APP_EXTENSION_LIBRARIES=<package>,<package>   # those packages' classes from the extension
@@ -320,10 +321,12 @@ Known differences from the PHP classes:
 ## Utopia\Database: Id, Role, Permission and DateTime
 
 Over `crates/utopia/database` (the modules without I/O: `id`, `role`, `permission`, `datetime` and
-`error`), registered when `_APP_EXTENSION_LIBRARIES` names `database`: `Utopia\Database\Id`,
-`Role`, `Permission` and `DateTime` of `utopia-php/database` 10.2 (in `vendor/`), so Composer never
-loads those four files. The rest of the package, `PermissionType` and `Utopia\Database\Exception`
-included, stays PHP. Off by default.
+`error`), always registered: `Utopia\Database\Id`, `Role`, `Permission` and `DateTime` of
+`utopia-php/database` 10.2 (in `vendor/`), so Composer never loads those four files. The rest of
+the package, `PermissionType` and `Utopia\Database\Exception` included, stays PHP. The default
+since it ran in every Cloud region (2026-11-25). Unlike the packages in `packages/`, the PHP classes
+cannot be deleted here: they are utopia-php/database's, so `utopia.libraries` without `database`
+still brings them back, and the corpus below still runs against them.
 
 Built by hand like the balancer, in `src/database.rs`: the same names, signatures, static methods,
 private promoted properties (`Role`'s `$role`, `$identifier` and `$dimension`, `Permission`'s
@@ -348,7 +351,8 @@ make the same `\DateTime`, `\DateTimeZone` and `\DateInterval` calls the PHP cla
 `addSeconds()` always does, to change the caller's `\DateTime` exactly as PHP's `add()` does.
 
 The package's own `IdTest`, `RoleTest`, `PermissionTest` and `DateTimeTest` run on the extension,
-and `tests/database.php` (6,779 cases) is identical on both: reflection of every class; `Id::custom()`
+and `tests/database.php` (6,779 cases) is identical on both (`run.sh`, "database (against
+vendor/)"): reflection of every class; `Id::custom()`
 and `Id::unique()` (length, hex, time order, uniqueness and spread of the padding, for 14 paddings
 and 7 coercions); `Role::parse()` of 59 strings and every factory with 15 argument lists, `"0"`
 identifiers and dimensions, bytes that are not UTF-8; `Permission::parse()` of 54 strings and of
