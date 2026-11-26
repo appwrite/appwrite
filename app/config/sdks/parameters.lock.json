@@ -902,6 +902,7 @@
             "transactionId"
         ],
         "videos.create": [
+            "videoId",
             "bucketId",
             "fileId",
             "name",
@@ -3255,6 +3256,7 @@
             "description"
         ],
         "project.createVideoProfile": [
+            "profileId",
             "name",
             "videoBitRate",
             "audioBitRate",
@@ -5492,6 +5494,7 @@
             "transactionId"
         ],
         "videos.create": [
+            "videoId",
             "bucketId",
             "fileId",
             "name",
@@ -7803,6 +7806,7 @@
             "description"
         ],
         "project.createVideoProfile": [
+            "profileId",
             "name",
             "videoBitRate",
             "audioBitRate",
@@ -9914,6 +9918,7 @@
             "transactionId"
         ],
         "videos.create": [
+            "videoId",
             "bucketId",
             "fileId",
             "name",

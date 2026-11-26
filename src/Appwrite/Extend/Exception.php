@@ -396,6 +396,7 @@ class Exception extends \Exception
 
     /** Video */
     public const string VIDEO_NOT_FOUND = 'video_not_found';
+    public const string VIDEO_ALREADY_EXISTS = 'video_already_exists';
     public const string VIDEO_NOT_VALID = 'video_not_valid';
     public const string VIDEO_PROFILE_NOT_FOUND = 'video_profile_not_found';
     public const string VIDEO_PROFILE_ALREADY_EXISTS = 'video_profile_already_exists';

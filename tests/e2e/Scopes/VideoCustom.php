@@ -3,6 +3,7 @@
 namespace Tests\E2E\Scopes;
 
 use Tests\E2E\Client;
+use Utopia\Database\Id;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 
@@ -107,7 +108,7 @@ trait VideoCustom
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $project['$id'],
                 'x-appwrite-key' => $project['apiKey'],
-            ], $profile);
+            ], ['profileId' => Id::unique(), ...$profile]);
             $this->assertEquals(201, $response['headers']['status-code'], 'Failed to create profile ' . $profile['name']);
         }
 
@@ -671,6 +672,7 @@ trait VideoCustom
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
+            'videoId' => Id::unique(),
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => ($file ?? $this->getVideoFile())['$id'],
         ]);
@@ -731,6 +733,7 @@ trait VideoCustom
     {
         $file ??= $this->getVideoFile();
         $payload = [
+            'videoId' => Id::unique(),
             // A file uploaded to another bucket names it; the default fixtures do not.
             'bucketId' => $file['bucketId'] ?? $this->getVideoBucket()['$id'],
             'fileId' => $file['$id'],

@@ -8,6 +8,7 @@ use Appwrite\Platform\Modules\Videos\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -58,6 +59,7 @@ class Create extends Base
                     )
                 ]
             ))
+            ->param('profileId', '', new CustomId(), 'Video profile ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
             ->param('name', '', new Text(128), 'Video profile name.')
             ->param('videoBitRate', null, new Range(self::MIN_VIDEO_BITRATE, self::MAX_VIDEO_BITRATE), 'Target video bitrate in kilobits per second.')
             ->param('audioBitRate', null, new Range(self::MIN_AUDIO_BITRATE, self::MAX_AUDIO_BITRATE), 'Target audio bitrate in kilobits per second.')
@@ -73,6 +75,7 @@ class Create extends Base
     }
 
     public function action(
+        string $profileId,
         string $name,
         int $videoBitRate,
         int $audioBitRate,
@@ -87,10 +90,11 @@ class Create extends Base
     ): void {
         $codec = self::normalizeCodec($codec);
         $this->assertCodecEnabled($codec);
+        $profileId = $profileId === 'unique()' ? Id::unique() : $profileId;
 
         try {
             $profile = $authorization->skip(fn () => $dbForProject->createDocument('videosProfiles', new Document([
-                '$id' => Id::unique(),
+                '$id' => $profileId,
                 'name' => $name,
                 'codec' => $codec,
                 'videoBitRate' => $videoBitRate,

@@ -1737,6 +1737,11 @@ return [
         'description' => 'Video with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::VIDEO_ALREADY_EXISTS => [
+        'name' => Exception::VIDEO_ALREADY_EXISTS,
+        'description' => 'A video with the same ID already exists in this project.',
+        'code' => 409,
+    ],
     Exception::VIDEO_NOT_VALID => [
         'name' => Exception::VIDEO_NOT_VALID,
         'description' => 'The requested file is not a valid video or audio file.',
@@ -1749,7 +1754,7 @@ return [
     ],
     Exception::VIDEO_PROFILE_ALREADY_EXISTS => [
         'name' => Exception::VIDEO_PROFILE_ALREADY_EXISTS,
-        'description' => 'A video profile with the same width, height, bitrates, and codec already exists.',
+        'description' => 'A video profile with the same ID, or the same width, height, bitrates, and codec, already exists.',
         'code' => 409,
     ],
     Exception::VIDEO_CODEC_DISABLED => [
