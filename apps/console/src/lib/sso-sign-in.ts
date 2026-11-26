@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { resolvePostAuthRedirect } from '@/lib/post-auth-navigation'
+import { hasSSOError } from '@/lib/sso-shared-url'
 
 /**
  * Where `/sso` returns the person after signing in: a Console path from its
@@ -67,7 +68,7 @@ const KNOWN_SERVER_MESSAGES = [
 function parseFailure(
   error: unknown,
 ): { type?: string; message?: string } | null {
-  if (error === undefined || error === null || error === '') return null
+  if (!hasSSOError(error)) return null
   let value: unknown = error
   if (typeof value === 'string') {
     try {
