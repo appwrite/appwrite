@@ -43,7 +43,6 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     startDate: '2026-08-31',
     endDate: '2026-09-04',
     status: 'active',
-    featured: true,
     presenceEnabled: true,
     tickets: INIT_JULY_2026_TICKET_CONFIG,
     primaryCta: {
@@ -211,6 +210,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     endDate: '2026-12-04',
     // 'active' lets the status follow the dates: upcoming, then live, then past.
     status: 'active',
+    featured: true,
     presenceEnabled: true,
     tickets: INIT_NOV_2026_TICKET_CONFIG,
     primaryCta: {
