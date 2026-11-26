@@ -221,7 +221,7 @@ export function View() {
                         </span>
                         <CopyableId
                           id={secret.$id}
-                          copyLabel="Copy ID"
+                          copyLabel={t('Copy ID')}
                           showCopyOnHover={false}
                           copyToastLabel="Secret ID"
                           variant="inline"
