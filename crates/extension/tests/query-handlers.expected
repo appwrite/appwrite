@@ -1,0 +1,142 @@
+Utopia\Query\Query new => ["Equal","status",["active","pending"],""]
+Utopia\Query\Query new by value => ["GreaterThan","age",[18],""]
+Utopia\Query\Query new defaults => ["Limit","",[],""]
+Utopia\Query\Query new int attribute => ["Equal","42",[1],""]
+Utopia\Query\Query new join alias => ["Join","users",[],"users"]
+Utopia\Query\Query new empty alias => ["Join","",[],""]
+Utopia\Query\Query factory => ["Equal","name",["x"],""]
+Utopia\Query\Query parsed => ["LessThan","time",[5],""]
+Utopia\Query\Query unserialized => ["Equal","a",["b"],"c"]
+Utopia\Query\Query nested => ["And","",[{},{}],""]
+SubQuery new => ["Equal","status",["active","pending"],""]
+SubQuery new by value => ["GreaterThan","age",[18],""]
+SubQuery new defaults => ["Limit","",[],""]
+SubQuery new int attribute => ["Equal","42",[1],""]
+SubQuery new join alias => ["Join","users",[],"users"]
+SubQuery new empty alias => ["Join","",[],""]
+SubQuery factory => ["Equal","name",["x"],""]
+SubQuery parsed => ["LessThan","time",[5],""]
+SubQuery unserialized => ["Equal","a",["b"],"c"]
+SubQuery nested => ["And","",[{},{}],""]
+OverQuery new => ["Equal","over:status",["active","pending"],""]
+OverQuery new by value => ["GreaterThan","over:age",[18],""]
+OverQuery new defaults => ["Limit","over:",[],""]
+OverQuery new int attribute => ["Equal","over:42",[1],""]
+OverQuery new join alias => ["Join","over:users",[],"users"]
+OverQuery new empty alias => ["Join","over:",[],""]
+OverQuery factory => ["Equal","over:name",["x"],""]
+OverQuery parsed => ["LessThan","over:time",[5],""]
+OverQuery unserialized => ["Equal","over:a",["b"],"c"]
+OverQuery nested => ["And","over:",[{},{}],""]
+getAttribute extra arg !! ArgumentCountError: Utopia\Query\NativeQuery::getAttribute() expects exactly 0 arguments, 1 given
+getMethod extra args !! ArgumentCountError: Utopia\Query\NativeQuery::getMethod() expects exactly 0 arguments, 2 given
+getValues named arg !! Error: Unknown named parameter $x
+getAlias by reflection => "alias"
+getValues first-class callable => ["active"]
+getMethod on uninitialized => "Utopia\\Query\\Method::Equal"
+getAttribute through call_user_func => "status"
+constructor bad method !! ValueError: "nope" is not a valid backing value for enum Utopia\Query\Method
+constructor array attribute !! TypeError: Invalid value given for argument `attribute`.
+constructor null values !! TypeError: Argument `$values` must not be null
+constructor too many !! ArgumentCountError: Utopia\Query\NativeQuery::__construct() expects at most 4 arguments, 5 given
+constructor none !! ArgumentCountError: Utopia\Query\NativeQuery::__construct() expects at least 1 argument, 0 given
+own constructor => ["mine",[1,2],"own","set first"]
+constructor again => ["Limit","second",[2],"al"]
+constructor again by value => ["LessThan","second",[],""]
+constructor named => {"method":"equal","alias":"x","values":[3]}
+constructor named skipping => ["",[],"users",false]
+constructor spread => {"method":"equal","attribute":"a","values":["b"]}
+case object is the case => [true,true,true]
+case after setMethod => ["NotEqual","LessThan","LessThan"]
+constructor in a loop keeps each => [["a0",[0],"a"],["b1",[1],"b"],["c2",[2],"c"]]
+kept getters => ["status",["active","changed"],"renamed",["other"]]
+constructor keeps its strings => ["builtname","builtname","builtnamechanged"]
+constructor keeps its array => ["x","y"]
+flat clone => [["Equal","a",["x","y"],"al",false],["Equal","b",["changed"],"al",false]]
+nested clone => [{"method":"and","values":[{"method":"equal","attribute":"c","values":[1]},{"method":"or","values":[{"method":"isNull","attribute":"d","values":[]}]}]},{"method":"and","values":[{"method":"equal","attribute":"changed","values":[1]},{"method":"or","values":[{"method":"isNull","attribute":"d","values":[]}]}]},"c"]
+mixed clone => [{"method":"and","values":[{"method":"equal","attribute":"e","values":[1]},"plain",7]},{"method":"and","values":[{"method":"equal","attribute":"e","values":[2]},"plain",7]}]
+deep clone !! Utopia\Query\Exception: Invalid Json: Maximum stack depth exceeded
+getByType clones => [{"method":"limit","values":[9]},{"method":"offset","values":[1]}]
+serialized clone => {"method":"and","values":[{"method":"equal","attribute":"e","values":[1]},"plain",7]}
+Utopia\Query\Classifier\MySQL mysql select => "Utopia\\Query\\Type::Read"
+Utopia\Query\Classifier\MySQL mysql execute => "Utopia\\Query\\Type::Write"
+Utopia\Query\Classifier\MySQL postgres select => "Utopia\\Query\\Type::Unknown"
+Utopia\Query\Classifier\MySQL empty => "Utopia\\Query\\Type::Unknown"
+Utopia\Query\Classifier\MySQL int => "Utopia\\Query\\Type::Unknown"
+Utopia\Query\Classifier\MySQL float => "Utopia\\Query\\Type::Unknown"
+Utopia\Query\Classifier\MySQL bool => "Utopia\\Query\\Type::Unknown"
+Utopia\Query\Classifier\MySQL Stringable => "Utopia\\Query\\Type::Unknown"
+Utopia\Query\Classifier\MySQL null !! TypeError: Invalid value given for argument `data`.
+Utopia\Query\Classifier\MySQL array !! TypeError: Invalid value given for argument `data`.
+Utopia\Query\Classifier\MySQL none !! ArgumentCountError: Utopia\Query\Classifier\MySQL::classify() expects exactly 1 argument, 0 given
+Utopia\Query\Classifier\MySQL two !! ArgumentCountError: Utopia\Query\Classifier\MySQL::classify() expects exactly 1 argument, 2 given
+Utopia\Query\Classifier\MySQL named => "Utopia\\Query\\Type::Unknown"
+Utopia\Query\Classifier\MySQL wrong name !! Error: Unknown named parameter $other
+Utopia\Query\Classifier\MySQL by reflection => "Utopia\\Query\\Type::TransactionBegin"
+SubMySQL mysql select => "Utopia\\Query\\Type::Read"
+SubMySQL mysql execute => "Utopia\\Query\\Type::Write"
+SubMySQL postgres select => "Utopia\\Query\\Type::Unknown"
+SubMySQL empty => "Utopia\\Query\\Type::Unknown"
+SubMySQL int => "Utopia\\Query\\Type::Unknown"
+SubMySQL float => "Utopia\\Query\\Type::Unknown"
+SubMySQL bool => "Utopia\\Query\\Type::Unknown"
+SubMySQL Stringable => "Utopia\\Query\\Type::Unknown"
+SubMySQL null !! TypeError: Invalid value given for argument `data`.
+SubMySQL array !! TypeError: Invalid value given for argument `data`.
+SubMySQL none !! ArgumentCountError: Utopia\Query\Classifier\MySQL::classify() expects exactly 1 argument, 0 given
+SubMySQL two !! ArgumentCountError: Utopia\Query\Classifier\MySQL::classify() expects exactly 1 argument, 2 given
+SubMySQL named => "Utopia\\Query\\Type::Unknown"
+SubMySQL wrong name !! Error: Unknown named parameter $other
+SubMySQL by reflection => "Utopia\\Query\\Type::TransactionBegin"
+Utopia\Query\Classifier\PostgreSQL mysql select => "Utopia\\Query\\Type::Unknown"
+Utopia\Query\Classifier\PostgreSQL mysql execute => "Utopia\\Query\\Type::Unknown"
+Utopia\Query\Classifier\PostgreSQL postgres select => "Utopia\\Query\\Type::Read"
+Utopia\Query\Classifier\PostgreSQL empty => "Utopia\\Query\\Type::Unknown"
+Utopia\Query\Classifier\PostgreSQL int => "Utopia\\Query\\Type::Unknown"
+Utopia\Query\Classifier\PostgreSQL float => "Utopia\\Query\\Type::Unknown"
+Utopia\Query\Classifier\PostgreSQL bool => "Utopia\\Query\\Type::Unknown"
+Utopia\Query\Classifier\PostgreSQL Stringable => "Utopia\\Query\\Type::Unknown"
+Utopia\Query\Classifier\PostgreSQL null !! TypeError: Invalid value given for argument `data`.
+Utopia\Query\Classifier\PostgreSQL array !! TypeError: Invalid value given for argument `data`.
+Utopia\Query\Classifier\PostgreSQL none !! ArgumentCountError: Utopia\Query\Classifier\PostgreSQL::classify() expects exactly 1 argument, 0 given
+Utopia\Query\Classifier\PostgreSQL two !! ArgumentCountError: Utopia\Query\Classifier\PostgreSQL::classify() expects exactly 1 argument, 2 given
+Utopia\Query\Classifier\PostgreSQL named => "Utopia\\Query\\Type::Unknown"
+Utopia\Query\Classifier\PostgreSQL wrong name !! Error: Unknown named parameter $other
+Utopia\Query\Classifier\PostgreSQL by reflection => "Utopia\\Query\\Type::Unknown"
+OverPostgreSQL mysql select => "Utopia\\Query\\Type::Unknown"
+OverPostgreSQL mysql execute => "Utopia\\Query\\Type::Unknown"
+OverPostgreSQL postgres select => "Utopia\\Query\\Type::Read"
+OverPostgreSQL empty => "Utopia\\Query\\Type::Unknown"
+OverPostgreSQL int => "Utopia\\Query\\Type::Unknown"
+OverPostgreSQL float => "Utopia\\Query\\Type::Unknown"
+OverPostgreSQL bool => "Utopia\\Query\\Type::Unknown"
+OverPostgreSQL Stringable => "Utopia\\Query\\Type::Unknown"
+OverPostgreSQL null !! TypeError: OverPostgreSQL::classify(): Argument #1 ($data) must be of type string, null given, called in query-handlers.php on line 202
+OverPostgreSQL array !! TypeError: OverPostgreSQL::classify(): Argument #1 ($data) must be of type string, array given, called in query-handlers.php on line 203
+OverPostgreSQL none !! ArgumentCountError: Too few arguments to function OverPostgreSQL::classify(), 0 passed in query-handlers.php on line 204 and exactly 1 expected
+OverPostgreSQL two => "Utopia\\Query\\Type::Unknown"
+OverPostgreSQL named => "Utopia\\Query\\Type::Unknown"
+OverPostgreSQL wrong name !! Error: Unknown named parameter $other
+OverPostgreSQL by reflection => "Utopia\\Query\\Type::Unknown"
+Utopia\Query\Classifier\MongoDB mysql select => "Utopia\\Query\\Type::Unknown"
+Utopia\Query\Classifier\MongoDB mysql execute => "Utopia\\Query\\Type::Unknown"
+Utopia\Query\Classifier\MongoDB postgres select => "Utopia\\Query\\Type::Unknown"
+Utopia\Query\Classifier\MongoDB empty => "Utopia\\Query\\Type::Unknown"
+Utopia\Query\Classifier\MongoDB int => "Utopia\\Query\\Type::Unknown"
+Utopia\Query\Classifier\MongoDB float => "Utopia\\Query\\Type::Unknown"
+Utopia\Query\Classifier\MongoDB bool => "Utopia\\Query\\Type::Unknown"
+Utopia\Query\Classifier\MongoDB Stringable => "Utopia\\Query\\Type::Unknown"
+Utopia\Query\Classifier\MongoDB null !! TypeError: Invalid value given for argument `data`.
+Utopia\Query\Classifier\MongoDB array !! TypeError: Invalid value given for argument `data`.
+Utopia\Query\Classifier\MongoDB none !! ArgumentCountError: Utopia\Query\Classifier\MongoDB::classify() expects exactly 1 argument, 0 given
+Utopia\Query\Classifier\MongoDB two !! ArgumentCountError: Utopia\Query\Classifier\MongoDB::classify() expects exactly 1 argument, 2 given
+Utopia\Query\Classifier\MongoDB named => "Utopia\\Query\\Type::Unknown"
+Utopia\Query\Classifier\MongoDB wrong name !! Error: Unknown named parameter $other
+Utopia\Query\Classifier\MongoDB by reflection => "Utopia\\Query\\Type::Unknown"
+same case object => true
+serialize 20 ORs => [253,"bf800e9137db9fe9a902f8a561735a19",true]
+serialize 40 ORs => [473,"e60cd8cfc6e73af19317f364fdd3e3c7",true]
+serialize 150 ORs => [1683,"c30bc139f03a120168efe7ab911028c8",true]
+serialize 400 ORs => [4433,"25c6726b4deb3766dbb54882d84880e4",true]
+serialize too deep !! Utopia\Query\Exception\ValidationException: Expression nesting too deep
+serialize while serializing => ["9f56ecfedc71cd9a5e768da7fd0566b1",false]

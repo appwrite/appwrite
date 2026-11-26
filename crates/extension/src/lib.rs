@@ -198,6 +198,10 @@ extern "C" fn request_startup(_kind: i32, _module: i32) -> i32 {
         if stable("dsn") {
             dsn::retarget();
         }
+        if stable("query") {
+            query::value::retarget();
+            query::classifier::retarget();
+        }
     });
     0
 }
@@ -206,6 +210,7 @@ extern "C" fn request_startup(_kind: i32, _module: i32) -> i32 {
 extern "C" fn request_shutdown(kind: i32, module: i32) -> i32 {
     user_agent::request_shutdown();
     query::value::request_shutdown();
+    query::classifier::request_shutdown();
     query::ast::request_shutdown();
     query::schema::request_shutdown();
     query::builder::request_shutdown();

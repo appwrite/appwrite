@@ -87,9 +87,9 @@ unsafe extern "C" {
     fn zend_release_fcall_info_cache(fcc: *mut c_void);
 }
 
-/// The engine's executor globals (`EG`).
+/// The engine's executor globals (`EG`), read without ext-php-rs's guard.
 #[inline]
-fn executor_globals() -> *mut ext_php_rs::ffi::zend_executor_globals {
+pub fn executor_globals() -> *mut ext_php_rs::ffi::zend_executor_globals {
     // SAFETY: the engine's own globals, alive for the process.
     unsafe { ext_php_rs::ffi::ext_php_rs_executor_globals() }
 }
@@ -726,6 +726,17 @@ unsafe fn slot(ht: &ZendHashTable, i: usize) -> *mut Zval {
             (&raw mut (*ht.__bindgen_anon_1.arData.add(i)).val).cast::<Zval>()
         }
     }
+}
+
+/// [`values`], to change in place: `ht` must be separated (the caller's own).
+pub fn values_mut(ht: &mut ZendHashTable) -> impl Iterator<Item = &mut Zval> {
+    let ht: &ZendHashTable = ht;
+    (0..ht.nNumUsed as usize).filter_map(move |i| {
+        // SAFETY: within the used slots of a table the caller holds alone; each slot is
+        // handed out once.
+        let value = unsafe { &mut *slot(ht, i) };
+        (unsafe { value.u1.type_info } != 0).then_some(value)
+    })
 }
 
 /// `ht`'s values in order, read straight from its slots (packed or not), skipping the holes
