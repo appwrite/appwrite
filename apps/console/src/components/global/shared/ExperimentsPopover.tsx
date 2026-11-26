@@ -1,4 +1,10 @@
-import { FlaskConical, Gauge, GitBranch, type LucideIcon } from 'lucide-react'
+import {
+  FlaskConical,
+  Gauge,
+  GitBranch,
+  MousePointerClick,
+  type LucideIcon,
+} from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { Button } from '@/components/ui/button'
 import {
@@ -26,6 +32,7 @@ import { parseExperimentsSeenAt, type UserPrefs } from '@/lib/user-prefs-keys'
 import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 
 const EXPERIMENT_ICONS = {
+  alertCtas: MousePointerClick,
   alerts: Gauge,
   analytics: ANALYTICS_PRODUCT_ICON,
   gitInstallationReuse: GitBranch,
