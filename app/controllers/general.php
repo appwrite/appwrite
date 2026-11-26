@@ -584,7 +584,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $canStreamResponse = !$isPreview
             && System::getEnv('_APP_COMPUTE_STREAMING', 'enabled') === 'enabled';
 
-        $onExecutionPart = !$canStreamResponse ? null : function (string $name, string $chunk, bool $isLast) use (&$streamed, &$streamParts, &$streamBody, $response, $execution, $errorView, $type): void {
+        $onExecutionPart = !$canStreamResponse ? null : function (string $name, string $chunk, bool $isLast) use (&$streamed, &$streamParts, &$streamBody, $request, $response, $execution, $errorView, $type): void {
             if ($name !== 'body') {
                 // Only the parts read below, and only while they still can be.
                 if ($streamed === null) {
@@ -605,12 +605,10 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 // A runtime may send header names in any casing.
                 $headers = \array_change_key_case($headers);
 
-                // A failed response may be replaced by a branded page, and a small sized one keeps its
-                // content-length; both need the whole body. A declared length is only a hint for that
-                // choice: a larger one streams, so the body never has to fit in this process at once.
+                // A failed response may be replaced by a branded page, and a small sized one keeps its content-length; both need the whole body. Larger ones stream, except HEAD, which has no body.
                 $declared = $headers['content-length'] ?? null;
                 $declared = \is_array($declared) ? ($declared[0] ?? null) : $declared;
-                $sized = \is_numeric($declared) && (int) $declared <= MAX_OUTPUT_CHUNK_SIZE;
+                $sized = \is_numeric($declared) && ((int) $declared <= MAX_OUTPUT_CHUNK_SIZE || $request->getMethod() === Request::METHOD_HEAD);
                 $streamed = $statusCode < 400 && !$sized;
 
                 if ($streamed) {
@@ -643,7 +641,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             }
 
             if (!$streamed) {
-                // Bounded whatever the runtime declared: a runtime may send more than it announced.
+                // A runtime may send more than it declared.
                 if (\strlen($streamBody) + \strlen($chunk) > MAX_OUTPUT_CHUNK_SIZE) {
                     throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Execution response is too large to buffer.', view: $errorView);
                 }
@@ -717,9 +715,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                     // synchronous executions until cold starts are addressed.
                     requestTimeout: 60,
                     responseFormat: $canStreamResponse ? Executor::RESPONSE_FORMAT_STREAM : Executor::RESPONSE_FORMAT_ARRAY_HEADERS,
-                    onPart: $onExecutionPart,
-                    // Previews and disabled streaming buffer the whole response: bound it there too.
-                    maxBufferedSize: MAX_OUTPUT_CHUNK_SIZE
+                    onPart: $onExecutionPart
                 );
             } catch (ExecutorTimeout $th) {
                 throw new AppwriteException(AppwriteException::FUNCTION_SYNCHRONOUS_TIMEOUT, previous: $th);
@@ -783,24 +779,6 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 $headerOverrides['x-appwrite-execution-id'] = $execution->getId();
             } elseif ($deployment->getAttribute('resourceType') === 'sites') {
                 $headerOverrides['x-appwrite-log-id'] = $execution->getId();
-            }
-
-            // A buffered response is framed by the bytes sent, never by the length the runtime
-            // declared: a mismatch would leave the connection out of step with the body. HEAD and
-            // 304 responses carry no body, so the representation length they declare cannot do
-            // that; 1xx and 204 responses must not declare one at all, whatever the method.
-            $responseStatus = $executionResponse['statusCode'];
-            $lengthForbidden = $responseStatus < 200 || $responseStatus === 204;
-            $declaredKept = $request->getMethod() === Request::METHOD_HEAD || $responseStatus === 304;
-            if ($streamed !== true && ($lengthForbidden || !$declaredKept)) {
-                foreach (\array_keys($executionResponse['headers']) as $name) {
-                    if (\strtolower((string) $name) === 'content-length') {
-                        unset($executionResponse['headers'][$name]);
-                    }
-                }
-                if (!$lengthForbidden) {
-                    $headerOverrides['content-length'] = \strlen($executionResponse['body']);
-                }
             }
 
             // Headers that must have single values (RFC 7230)
@@ -896,6 +874,8 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $body = $execution['responseBody'];
 
         if ($streamed !== true) {
+            // Swoole frames the body it sends; a runtime's content-length may not match it. A HEAD response sends no body, so it keeps the declared one.
+            $keepLength = $request->getMethod() === Request::METHOD_HEAD;
             $contentType = 'text/plain';
             foreach ($executionResponse['headers'] as $name => $values) {
                 if (\strtolower($name) === 'content-type') {
@@ -903,7 +883,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                     continue;
                 }
 
-                if (\strtolower($name) === 'transfer-encoding') {
+                if (\strtolower($name) === 'transfer-encoding' || (\strtolower($name) === 'content-length' && !$keepLength)) {
                     continue;
                 }
 
