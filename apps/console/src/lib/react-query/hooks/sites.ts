@@ -848,7 +848,8 @@ export function useSiteLogs(
 
 /**
  * Hook to fetch site variables.
- * When `limit` is omitted, returns the full list. Otherwise slices client-side by `page`/`limit`.
+ * When `limit` is omitted, `variables` is the full list. Otherwise it is the
+ * current page. `allVariables` is always the full list.
  */
 export function useSiteVariables(
   projectId: string | null | undefined,
@@ -876,6 +877,7 @@ export function useSiteVariables(
 
   return {
     variables,
+    allVariables: all,
     total,
     isLoading,
     error,
