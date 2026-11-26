@@ -63,6 +63,8 @@ export type ConsoleProfileFeatures = {
   videos: boolean
   /** An experiment, off by default; the quality team turns it on from the header Previews menu. A project without a Git installation reuses the GitHub organization installations of the organization's other projects. */
   gitInstallationReuse: boolean
+  /** An experiment, off by default; the quality team turns it on from the header Previews menu. Link buttons on notification rows that open the Console page an alert acts on. */
+  alertCtas: boolean
   /**
    * Internal only, switched on from the debug menu. Review product (AI code
    * review of GitHub pull requests) via the `reviews` service. Even when on, it
@@ -148,6 +150,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   nativeDbsMongo: 'Native DBs: MongoDB',
   videos: 'Videos',
   gitInstallationReuse: 'Git installation reuse',
+  alertCtas: 'Alert CTAs',
   reviews: 'Review',
   sso: 'Single sign-on',
   alerts: 'Alerts',
@@ -205,6 +208,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       nativeDbsMongo: false,
       videos: false,
       gitInstallationReuse: false,
+      alertCtas: false,
       reviews: false,
       sso: true,
       alerts: false,
@@ -252,6 +256,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       nativeDbsMongo: false,
       videos: false,
       gitInstallationReuse: false,
+      alertCtas: false,
       reviews: false,
       sso: false,
       alerts: false,

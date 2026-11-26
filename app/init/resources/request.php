@@ -268,9 +268,10 @@ return function (Container $context): void {
     }, ['databaseFactory', 'dbForPlatform']);
 
     /**
-     * List of allowed request hostnames for the request.
+     * Hostnames the request may come from or redirect to. Native platforms' app IDs are trusted
+     * as origins only, see Platform::getHostnames().
      */
-    $context->set('allowedHostnames', function (array $platform, Document $project, Document $rule, Request $request, string $mode) {
+    $hostnamesFor = function (array $platform, Document $project, Document $rule, Request $request, string $mode, bool $appIds): array {
         $allowed = [...($platform['hostnames'] ?? [])];
 
         /* Add the console host, the default OAuth2 redirects land on it even when _APP_CONSOLE_URL points elsewhere */
@@ -282,7 +283,7 @@ return function (Container $context): void {
         /* Add platform configured hostnames, admin mode carries the console session so only console hosts may use it */
         if (! $project->isEmpty() && $project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
             $platforms = $project->getAttribute('platforms', []);
-            $hostnames = Platform::getHostnames($platforms);
+            $hostnames = Platform::getHostnames($platforms, $appIds);
             $allowed = [...$allowed, ...$hostnames];
         }
 
@@ -307,7 +308,17 @@ return function (Container $context): void {
         }
 
         return array_unique($allowed);
-    }, ['platform', 'project', 'rule', 'request', 'mode']);
+    };
+
+    /**
+     * List of allowed request hostnames for the request.
+     */
+    $context->set('allowedHostnames', fn (array $platform, Document $project, Document $rule, Request $request, string $mode) => $hostnamesFor($platform, $project, $rule, $request, $mode, true), ['platform', 'project', 'rule', 'request', 'mode']);
+
+    /**
+     * List of hostnames the request may redirect to: the allowed hostnames without native app IDs.
+     */
+    $context->set('allowedRedirectHostnames', fn (array $platform, Document $project, Document $rule, Request $request, string $mode) => $hostnamesFor($platform, $project, $rule, $request, $mode, false), ['platform', 'project', 'rule', 'request', 'mode']);
 
     /**
      * List of allowed request schemes for the request.
@@ -448,8 +459,8 @@ return function (Container $context): void {
 
     $context->set(
         'redirectValidator',
-        fn (array $allowedHostnames, array $allowedSchemes) => new Redirect($allowedHostnames, $allowedSchemes, System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled'),
-        ['allowedHostnames', 'allowedSchemes']
+        fn (array $allowedRedirectHostnames, array $allowedSchemes) => new Redirect($allowedRedirectHostnames, $allowedSchemes, System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled'),
+        ['allowedRedirectHostnames', 'allowedSchemes']
     );
 
     $context->set('user', function (string $mode, Project $project, Project $console, Request $request, Response $response, Database $dbForProject, Database $dbForPlatform, Store $store, Token $proofForToken, $authorization) {

@@ -5584,6 +5584,49 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $login['headers']['status-code']);
     }
 
+    public function testNativeAppIdIsNoRedirectHost(): void
+    {
+        $project = $this->getProject(true);
+        // Read as a DNS name, an app ID is a public domain someone else may register.
+        $applicationId = 'com.acme' . \bin2hex(\random_bytes(4)) . '.app';
+
+        $platform = $this->client->call(Client::METHOD_POST, '/project/platforms/android', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ], [
+            'platformId' => Id::unique(),
+            'name' => 'Android',
+            'applicationId' => $applicationId,
+        ]);
+        $this->assertSame(201, $platform['headers']['status-code'], \json_encode($platform['body']));
+
+        $magicUrl = fn (string $origin, string $url) => $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', [
+            'origin' => $origin,
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+        ], [
+            'userId' => Id::unique(),
+            'email' => 'native-' . \uniqid() . '@appwrite.io',
+            'url' => $url,
+        ]);
+
+        /**
+         * Test for SUCCESS
+         */
+        // The app ID still passes as an origin's host, as before.
+        $response = $magicUrl('https://' . $applicationId, 'http://localhost/magic');
+        $this->assertSame(201, $response['headers']['status-code'], \json_encode($response['body']));
+
+        /**
+         * Test for FAILURE
+         */
+        // But a link carrying the secret is never sent to it.
+        $response = $magicUrl('http://localhost', 'https://' . $applicationId . '/magic');
+        $this->assertSame(400, $response['headers']['status-code'], \json_encode($response['body']));
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+    }
+
     public function testCreateMagicURLSessionRevokesUnverifiedAccountCredentials(): void
     {
         $data = $this->createFreshAccountWithSession();

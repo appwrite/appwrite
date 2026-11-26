@@ -777,7 +777,7 @@ export function CreateTable({
                         <Fragment key={column.id}>
                           {showInsertBefore ? (
                             <div
-                              className="mx-3 h-1 shrink-0 rounded-full bg-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.35)]"
+                              className="mx-3 h-1 shrink-0 rounded-full bg-primary shadow-[0_0_0_1px_color-mix(in_oklab,var(--primary)_35%,transparent)]"
                               role="presentation"
                               aria-hidden
                             />
@@ -787,7 +787,7 @@ export function CreateTable({
                             className={cn(
                               'grid grid-cols-[28px_minmax(140px,1.2fr)_minmax(140px,1fr)_minmax(260px,1.6fr)_44px_72px] items-center gap-2 border-b border-border px-3 py-2 transition-[opacity,background-color,box-shadow]',
                               isDragging && 'opacity-35',
-                              isDropTarget && 'bg-primary/5 shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.25)]',
+                              isDropTarget && 'bg-primary/5 shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--primary)_25%,transparent)]',
                             )}
                           >
                             <div
@@ -912,7 +912,7 @@ export function CreateTable({
                           </div>
                           {showInsertAfter ? (
                             <div
-                              className="mx-3 h-1 shrink-0 rounded-full bg-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.35)]"
+                              className="mx-3 h-1 shrink-0 rounded-full bg-primary shadow-[0_0_0_1px_color-mix(in_oklab,var(--primary)_35%,transparent)]"
                               role="presentation"
                               aria-hidden
                             />

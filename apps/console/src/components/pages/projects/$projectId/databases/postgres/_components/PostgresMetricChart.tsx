@@ -459,7 +459,7 @@ export function PostgresMetricChart({
                 </defs>
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  stroke="hsl(var(--border))"
+                  stroke="var(--border)"
                   vertical={false}
                 />
                 <SeriesChartXAxis
@@ -488,7 +488,8 @@ export function PostgresMetricChart({
                 {showUsageQuotaSummary ? (
                   <ReferenceLine
                     y={usageQuota!}
-                    stroke="hsl(var(--muted-foreground) / 0.45)"
+                    stroke="var(--muted-foreground)"
+                    strokeOpacity={0.45}
                     strokeDasharray="4 4"
                     ifOverflow="extendDomain"
                   />

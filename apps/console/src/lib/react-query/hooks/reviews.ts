@@ -32,7 +32,9 @@ import type {
   ReviewList,
   ReviewRepository,
   ReviewRepositoryList,
+  ReviewStatus,
   ReviewStrength,
+  ReviewSummary,
 } from '@/lib/appwrite/reviews'
 import { isReviewVcsProvider } from '@/lib/vcs/providers'
 import { DEFAULT_PAGE_SIZE, DEFAULT_STALE_TIME } from './constants'
@@ -94,6 +96,43 @@ export async function fetchReviews(
       Query.offset(page * limit),
     ],
   })
+}
+
+/** Statuses the reviews list counts in its tabs, each as the filter its tab applies. */
+export const REVIEW_STATUS_GROUPS = {
+  inProgress: ['queued', 'processing'],
+  completed: ['completed'],
+  failed: ['failed'],
+  skipped: ['skipped'],
+} as const satisfies Record<string, readonly ReviewStatus[]>
+
+export type ReviewStatusGroup = keyof typeof REVIEW_STATUS_GROUPS
+
+export type ReviewStatusCounts = Record<'all' | ReviewStatusGroup, number>
+
+/**
+ * Query function to count the project's reviews in each status group, within
+ * the list's other filters.
+ */
+export async function fetchReviewStatusCounts(
+  projectId: string,
+  filterQueries?: string[],
+): Promise<ReviewStatusCounts> {
+  const count = async (status?: readonly ReviewStatus[]) =>
+    (
+      await fetchReviews(projectId, 0, 1, [
+        ...(filterQueries ?? []),
+        ...(status ? [Query.equal('status', [...status])] : []),
+      ])
+    ).total
+  const [all, inProgress, completed, failed, skipped] = await Promise.all([
+    count(),
+    count(REVIEW_STATUS_GROUPS.inProgress),
+    count(REVIEW_STATUS_GROUPS.completed),
+    count(REVIEW_STATUS_GROUPS.failed),
+    count(REVIEW_STATUS_GROUPS.skipped),
+  ])
+  return { all, inProgress, completed, failed, skipped }
 }
 
 /**
@@ -213,6 +252,7 @@ export async function fetchReviewLearnings(
   projectId: string,
   page: number,
   limit: number,
+  repositoryId: string = '',
 ): Promise<ReviewLearningList> {
   if (!projectId) {
     return { learnings: [], total: 0 }
@@ -220,6 +260,7 @@ export async function fetchReviewLearnings(
 
   return await sdk.forProject(projectId).reviews.listLearnings({
     queries: [
+      ...(repositoryId ? [Query.equal('repositoryId', [repositoryId])] : []),
       Query.orderDesc('$createdAt'),
       Query.limit(limit),
       Query.offset(page * limit),
@@ -263,9 +304,49 @@ export async function fetchReviewCategories(
     .reviews.listCategories({ range, repositoryId: repositoryId || undefined })
 }
 
+/**
+ * Query function to fetch how the project's pull requests fared in review over
+ * a range and the same length of time before it, with each day of the range.
+ */
+export async function fetchReviewSummary(
+  projectId: string,
+  range: ReviewAuthorRange,
+  repositoryId: string,
+): Promise<ReviewSummary> {
+  if (!projectId) {
+    return { periods: [], days: [], repositories: [] }
+  }
+
+  return await sdk
+    .forProject(projectId)
+    .reviews.getSummary({ range, repositoryId: repositoryId || undefined })
+}
+
 // ============================================================================
 // QUERY OPTIONS
 // ============================================================================
+
+export function reviewStatusCountsQueryOptions(
+  projectId: string | null | undefined,
+  filterQueries?: string[],
+) {
+  return queryOptions({
+    // Under the list's key, so refreshing the list refreshes the counts.
+    queryKey: ['reviews', 'project', projectId, 'counts', filterQueries],
+    queryFn: () => fetchReviewStatusCounts(projectId!, filterQueries),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
+    // Running reviews move between tabs as they finish.
+    refetchInterval: (query) =>
+      (query.state.data?.inProgress ?? 0) > 0 ? REVIEW_POLL_INTERVAL : false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
 
 export function reviewsQueryOptions(
   projectId: string | null | undefined,
@@ -377,10 +458,18 @@ export function reviewLearningsQueryOptions(
   projectId: string | null | undefined,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
+  repositoryId: string = '',
 ) {
   return queryOptions({
-    queryKey: ['review-learnings', 'project', projectId, page, limit],
-    queryFn: () => fetchReviewLearnings(projectId!, page, limit),
+    queryKey: [
+      'review-learnings',
+      'project',
+      projectId,
+      page,
+      limit,
+      repositoryId,
+    ],
+    queryFn: () => fetchReviewLearnings(projectId!, page, limit, repositoryId),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -400,6 +489,23 @@ export function reviewAuthorsQueryOptions(
   return queryOptions({
     queryKey: ['review-authors', 'project', projectId, range, repositoryId],
     queryFn: () => fetchReviewAuthors(projectId!, range, repositoryId),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnWindowFocus: false,
+    placeholderData: keepPreviousData,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function reviewSummaryQueryOptions(
+  projectId: string | null | undefined,
+  range: ReviewAuthorRange = '30d',
+  repositoryId: string = '',
+) {
+  return queryOptions({
+    queryKey: ['review-summary', 'project', projectId, range, repositoryId],
+    queryFn: () => fetchReviewSummary(projectId!, range, repositoryId),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -507,6 +613,18 @@ export function useReviews(
   }
 }
 
+/** How many reviews each status tab holds, within the list's other filters. */
+export function useReviewStatusCounts(
+  projectId: string | null | undefined,
+  filterQueries?: string[],
+) {
+  const { data, isLoading } = useQuery(
+    reviewStatusCountsQueryOptions(projectId, filterQueries),
+  )
+
+  return { counts: data, isLoading }
+}
+
 /**
  * One reviewed repository's reviews, newest first, with `loadMore` for the
  * next page.
@@ -592,9 +710,10 @@ export function useReviewLearnings(
   projectId: string | null | undefined,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
+  repositoryId: string = '',
 ) {
   const { data, isLoading, isFetching, isPlaceholderData, error } = useQuery(
-    reviewLearningsQueryOptions(projectId, page, limit),
+    reviewLearningsQueryOptions(projectId, page, limit, repositoryId),
   )
 
   return {
@@ -619,6 +738,27 @@ export function useReviewAuthors(
   return {
     authors: data?.authors ?? [],
     total: data?.total ?? 0,
+    isLoading,
+    isFetching,
+    error,
+  }
+}
+
+export function useReviewSummary(
+  projectId: string | null | undefined,
+  range: ReviewAuthorRange = '30d',
+  repositoryId: string = '',
+) {
+  const { data, isLoading, isFetching, error } = useQuery(
+    reviewSummaryQueryOptions(projectId, range, repositoryId),
+  )
+
+  return {
+    current: data?.periods[0],
+    previous: data?.periods[1],
+    days: data?.days ?? [],
+    // An API that predates the breakdown leaves it out.
+    repositories: data?.repositories ?? [],
     isLoading,
     isFetching,
     error,

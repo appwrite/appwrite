@@ -346,7 +346,7 @@ function BandwidthChartCard({
                   </defs>
                   <CartesianGrid
                     strokeDasharray="3 3"
-                    stroke="hsl(var(--border))"
+                    stroke="var(--border)"
                     vertical={false}
                   />
                   <UsageChartXAxis

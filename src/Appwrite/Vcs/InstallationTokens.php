@@ -114,6 +114,71 @@ class InstallationTokens
         }
     }
 
+    /**
+     * The caller's own GitHub access token, for an installation without tokens of its own. A
+     * refreshed pair goes back on the identity it came from, never on the shared installation.
+     */
+    public function refreshIdentity(Document $identity, Database $dbForPlatform, OAuth2 $oauth2): string
+    {
+        $accessToken = $identity->getAttribute('providerAccessToken', '');
+
+        if (!$this->isExpired($identity->getAttribute('providerAccessTokenExpiry'))) {
+            return $accessToken;
+        }
+
+        // Same rotation race as installations: one exchange per identity at a time.
+        $lock = 'identity-' . $identity->getId();
+        $authorization = $dbForPlatform->getAuthorization();
+        $acquired = false;
+
+        for ($retries = 0; $retries < 9; $retries++) {
+            try {
+                $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document(['$id' => $lock])));
+                $acquired = true;
+                break;
+            } catch (\Throwable) {
+                \sleep(1);
+            }
+        }
+
+        // The holder outlasted our wait or already refreshed: use what it stored, never replay ours.
+        $current = $authorization->skip(fn () => $dbForPlatform->getDocument('identities', $identity->getId()));
+        if (!$this->isExpired($current->getAttribute('providerAccessTokenExpiry'))) {
+            if ($acquired) {
+                $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $lock));
+            }
+
+            return $current->getAttribute('providerAccessToken', '');
+        }
+
+        if (!$acquired) {
+            throw new Exception(Exception::GENERAL_RESOURCE_LOCKED);
+        }
+
+        try {
+            try {
+                $oauth2->refreshTokens($current->getAttribute('providerRefreshToken', ''));
+            } catch (\Throwable) {
+                throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to refresh OAuth2 access token. Please sign in with GitHub again.');
+            }
+
+            $accessToken = $oauth2->getAccessToken('');
+            if (empty($accessToken)) {
+                throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to refresh OAuth2 access token. Please sign in with GitHub again.');
+            }
+
+            $dbForPlatform->updateDocument('identities', $identity->getId(), new Document([
+                'providerAccessToken' => $accessToken,
+                'providerRefreshToken' => $oauth2->getRefreshToken(''),
+                'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')),
+            ]));
+
+            return $accessToken;
+        } finally {
+            $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $lock));
+        }
+    }
+
     protected function exchange(Document $installation, Database $dbForPlatform, OAuth2 $oauth2): Document
     {
         try {
