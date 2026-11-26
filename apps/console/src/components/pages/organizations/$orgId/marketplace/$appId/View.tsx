@@ -147,6 +147,7 @@ export function View({ initialData }: ViewProps = {}) {
               <div className="flex items-start gap-4 min-w-0">
                 {logoUrl ? (
                   <MarketplaceAppLogo
+                    alt={mapped.name}
                     src={logoUrl}
                     size="lg"
                     monochrome={mapped.isOfficial}
@@ -176,15 +177,19 @@ export function View({ initialData }: ViewProps = {}) {
                     <span>
                       {t('by')} {mapped.author}
                     </span>
-                    <span>·</span>
-                    <span>
-                      {mapped.installs === 1
-                        ? t('1 install')
-                        : t('{count} installs').replace(
-                            '{count}',
-                            mapped.installs.toLocaleString(),
-                          )}
-                    </span>
+                    {mapped.installs > 0 ? (
+                      <>
+                        <span>·</span>
+                        <span>
+                          {mapped.installs === 1
+                            ? t('1 install')
+                            : t('{count} installs').replace(
+                                '{count}',
+                                mapped.installs.toLocaleString(),
+                              )}
+                        </span>
+                      </>
+                    ) : null}
                     <span>·</span>
                     <DateTooltip date={mapped.$createdAt} />
                   </div>
