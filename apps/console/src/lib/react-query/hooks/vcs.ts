@@ -84,7 +84,12 @@ export async function fetchVcsInstallations(
             })
           ).installations
         : list.installations
-    const linked = new Set(own.map((i) => i.providerInstallationId))
+    // Installation IDs are only unique within a provider, and only GitHub ones are shared
+    const linked = new Set(
+      own
+        .filter((i) => i.provider === 'github')
+        .map((i) => i.providerInstallationId),
+    )
     const unique = [
       ...new Map(
         shared.installations
