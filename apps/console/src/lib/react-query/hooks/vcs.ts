@@ -86,8 +86,7 @@ export async function fetchReusableVcsInstallations(
     const linked = new Set(
       own.installations.filter((i) => i.provider === 'github').map(account),
     )
-    // Personal accounts stay out: installations keep no owner, so the list would offer
-    // accounts of people who connected them once, including ones no longer on the team.
+    // Only organization installations are offered for reuse.
     // A reinstalled app leaves the old row behind with a dead ID. GitHub IDs only grow, so
     // the highest one per account is the live installation.
     const latest = new Map<string, Models.Installation>()
