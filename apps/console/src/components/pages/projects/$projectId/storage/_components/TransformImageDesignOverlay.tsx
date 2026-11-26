@@ -579,7 +579,7 @@ export function TransformImageDesignOverlay({
       ? `${state.borderWidth}px solid ${
           state.borderColor.trim()
             ? `#${state.borderColor.replace(/^#/, '').slice(0, 12)}`
-            : 'hsl(var(--border))'
+            : 'var(--border)'
         }`
       : undefined
 
