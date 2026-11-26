@@ -1,5 +1,11 @@
 # Change Log
 
+## 28.17.0
+
+* Added: `monitors` commands to create, list, get, update and delete HTTP, DNS, TCP, SMTP and usage monitors
+* Added: `alerts list`, `alerts get` and `alerts update` to read and acknowledge alerts
+* Added: `organization list-escalations`, `create-escalation`, `get-escalation`, `update-escalation` and `delete-escalation`
+
 ## 28.16.0
 
 * Breaking: `teams get-photo`, `update-photo` and `delete-photo` removed; team photos moved to the Avatars API
