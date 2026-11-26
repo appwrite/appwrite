@@ -17,7 +17,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -47,8 +46,6 @@ class Create extends Base
                 namespace: 'project',
                 group: 'profiles',
                 name: 'createVideoProfile',
-                // Hidden until videos is generally available; preview SDK builds show it.
-                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/project/create-video-profile.md',
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [

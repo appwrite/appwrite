@@ -21,7 +21,6 @@ use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
 use Utopia\Storage\Exception\NotFoundException;
-use Utopia\System\System;
 use Utopia\Validator\WhiteList;
 
 class Get extends Base
@@ -47,8 +46,8 @@ class Get extends Base
                 namespace: 'videos',
                 group: 'playback',
                 name: 'getSegment',
-                // Hidden until videos is generally available; preview SDK builds show it.
-                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
+                // Players follow this URL from the manifest; apps never call it directly.
+                hide: true,
                 description: '/docs/references/videos/get-segment.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [

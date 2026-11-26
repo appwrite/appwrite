@@ -55,8 +55,6 @@ class Create extends Base
                 namespace: 'videos',
                 group: 'videos',
                 name: 'create',
-                // Hidden until videos is generally available; preview SDK builds show it.
-                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/videos/create-video.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
