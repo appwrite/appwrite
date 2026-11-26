@@ -2,18 +2,23 @@ import { sdk } from '@/lib/appwrite/sdk'
 import type { MarketplaceApp } from './types'
 
 export async function startMarketplaceAppInstall(app: MarketplaceApp) {
-  const redirectUri = app.redirectUris?.[0]?.trim()
+  const redirectUri =
+    app.installationRedirectUrl?.trim() || app.redirectUris?.[0]?.trim()
   if (!redirectUri) {
     throw new Error(
       'This app has no redirect URI configured. Ask the publisher to add one before installing.',
     )
+  }
+  if (app.installationScopes.length === 0) {
+    throw new Error('This app has no installation scopes to grant yet.')
   }
 
   const result = await sdk.forConsole.oauth2.authorize({
     clientId: app.$id,
     redirectUri,
     responseType: 'code',
-    scope: 'openid profile email',
+    scope: app.installationScopes.join(' '),
+    state: crypto.randomUUID(),
     prompt: 'consent',
   })
 
