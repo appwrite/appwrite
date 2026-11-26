@@ -10,6 +10,7 @@ import {
   listsEqual,
   nonEmptyList,
   trimOrEmpty,
+  urlFieldError,
   useOrgAppUpdate,
 } from '../_components/useOrgAppUpdate'
 import { useT } from '@/lib/i18n/translate'
@@ -37,6 +38,8 @@ function SupportSettings({ orgId, app }: { orgId: string; app: Models.App }) {
     setContacts(app.contacts ?? [])
   }, [app])
 
+  const supportUrlError = urlFieldError(supportUrl)
+
   const supportDirty =
     trimOrEmpty(supportUrl) !== (app.supportUrl ?? '') ||
     !listsEqual(nonEmptyList(contacts), app.contacts ?? [])
@@ -56,9 +59,15 @@ function SupportSettings({ orgId, app }: { orgId: string; app: Models.App }) {
           <Input
             id="app-support-url"
             value={supportUrl}
+            aria-invalid={supportUrlError !== null}
             onChange={(e) => setSupportUrl(e.target.value)}
             placeholder="https://example.com/support"
           />
+          {supportUrlError ? (
+            <p className="text-[12px] text-destructive">
+              {supportUrlError}
+            </p>
+          ) : null}
         </div>
         <div className="space-y-2">
           <Label>{t('Contact emails')}</Label>
@@ -75,7 +84,9 @@ function SupportSettings({ orgId, app }: { orgId: string; app: Models.App }) {
         <Button
           size="sm"
           className="h-9 text-[13px]"
-          disabled={isUpdating || !supportDirty}
+          disabled={
+            isUpdating || !supportDirty || supportUrlError !== null
+          }
           onClick={() =>
             submit({
               supportUrl: trimOrEmpty(supportUrl),

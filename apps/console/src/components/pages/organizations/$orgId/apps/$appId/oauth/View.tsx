@@ -22,6 +22,7 @@ import {
   setsEqual,
   useOrgAppUpdate,
 } from '../_components/useOrgAppUpdate'
+import { redirectUriError } from '@/lib/oauth2/redirect'
 import { useT } from '@/lib/i18n/translate'
 
 export function View() {
@@ -159,6 +160,7 @@ function OAuthClientSettings({
             <InputTags
               value={redirectUris}
               onChange={setRedirectUris}
+              validateTag={redirectUriError}
               placeholder={t('Add redirect URI and press Enter')}
             />
           </div>
@@ -167,6 +169,7 @@ function OAuthClientSettings({
             <InputTags
               value={postLogoutRedirectUris}
               onChange={setPostLogoutRedirectUris}
+              validateTag={redirectUriError}
               placeholder={t('Add post-logout URI and press Enter')}
             />
           </div>

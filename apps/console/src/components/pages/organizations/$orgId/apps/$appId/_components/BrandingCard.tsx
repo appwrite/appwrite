@@ -7,6 +7,7 @@ import {
   listsEqual,
   nonEmptyList,
   trimOrEmpty,
+  urlFieldError,
   useOrgAppUpdate,
 } from './useOrgAppUpdate'
 import { AppLogoFilePicker } from '../../_components/AppLogoFilePicker'
@@ -35,6 +36,8 @@ export function BrandingCard({ orgId, app }: BrandingCardProps) {
     setImages(app.images ?? [])
   }, [app])
 
+  const clientUriError = urlFieldError(clientUri)
+
   const brandingDirty =
     trimOrEmpty(clientUri) !== (app.clientUri ?? '') ||
     trimOrEmpty(logoUri) !== (app.logoUri ?? '') ||
@@ -59,7 +62,13 @@ export function BrandingCard({ orgId, app }: BrandingCardProps) {
             value={clientUri}
             onChange={(e) => setClientUri(e.target.value)}
             placeholder="https://example.com"
+            aria-invalid={clientUriError !== null}
           />
+          {clientUriError ? (
+            <p className="text-[12px] text-destructive">
+              {clientUriError}
+            </p>
+          ) : null}
         </div>
         <div className="space-y-2">
           <Label>{t('Logo')}</Label>
@@ -84,7 +93,9 @@ export function BrandingCard({ orgId, app }: BrandingCardProps) {
         <Button
           size="sm"
           className="h-9 text-[13px]"
-          disabled={isUpdating || !brandingDirty}
+          disabled={
+            isUpdating || !brandingDirty || clientUriError !== null
+          }
           onClick={() =>
             submit({
               clientUri: trimOrEmpty(clientUri),
