@@ -654,4 +654,10 @@ export const jaSitesDictionary: Record<string, string> = {
   'Current preview domain:': '現在のプレビュードメイン:',
   'Serve previews from a domain you own so every preview link matches your brand. Custom preview domains are available on Enterprise plans.':
     '所有するドメインからプレビューを配信すると、すべてのプレビューリンクをブランドに合わせられます。カスタムプレビュードメインは Enterprise プランで利用できます。',
+  'Use an account already connected in another project of this organization, or install the app on a new one.':
+    'この組織の別のプロジェクトで接続済みのアカウントを使うか、新しいアカウントにアプリをインストールしてください。',
+  Personal: '個人',
+  Use: '使用',
+  'Connecting...': '接続中...',
+  'Install on another account': '別のアカウントにインストール',
 }

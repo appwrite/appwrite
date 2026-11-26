@@ -693,4 +693,10 @@ export const heSitesDictionary: Record<string, string> = {
   'Current preview domain:': 'הדומיין הנוכחי לתצוגות מקדימות:',
   'Serve previews from a domain you own so every preview link matches your brand. Custom preview domains are available on Enterprise plans.':
     'השתמשו בדומיין משלכם לתצוגות מקדימות, כך שכל קישור לתצוגה מקדימה יתאים למותג שלכם. דומיין מותאם אישית לתצוגות מקדימות זמין בתוכניות Enterprise.',
+  'Use an account already connected in another project of this organization, or install the app on a new one.':
+    'השתמשו בחשבון שכבר מחובר בפרויקט אחר בארגון הזה, או התקינו את האפליקציה בחשבון חדש.',
+  Personal: 'אישי',
+  Use: 'שימוש',
+  'Connecting...': 'מתחבר...',
+  'Install on another account': 'התקנה בחשבון אחר',
 }
