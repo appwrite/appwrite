@@ -1080,6 +1080,7 @@ class Origin extends Git
                 'repositoryUrl' => $repositoryUrl,
                 'installationId' => $installationId,
                 'commitHash' => $commitHash,
+                'previousCommitHash' => \strval($refUpdate['before'] ?? ''),
                 'owner' => $owner,
                 'authorUrl' => '',
                 'authorAvatarUrl' => '',
@@ -1090,7 +1091,7 @@ class Origin extends Git
                 'external' => false,
                 'pullRequestNumber' => '',
                 'action' => '',
-                // Origin push deliveries carry no per-commit file lists
+                // Origin push deliveries carry no per-commit file lists; the consumer compares commits
                 'affectedFiles' => [],
             ];
         }
