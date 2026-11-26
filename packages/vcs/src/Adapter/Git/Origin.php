@@ -1080,7 +1080,7 @@ class Origin extends Git
                 'repositoryUrl' => $repositoryUrl,
                 'installationId' => $installationId,
                 'commitHash' => $commitHash,
-                'previousCommitHash' => \strval($refUpdate['before'] ?? ''),
+                'previousCommitHash' => \is_string($refUpdate['before'] ?? null) ? $refUpdate['before'] : '',
                 'forced' => (bool) ($refUpdate['forced'] ?? false),
                 'owner' => $owner,
                 'authorUrl' => '',
@@ -2561,9 +2561,9 @@ class Origin extends Git
             }
 
             $normalized[] = [
-                'filename' => \strval($file['filename'] ?? ''),
-                'status' => \strval($file['status'] ?? ''),
-                'previous_filename' => \strval($file['previousFilename'] ?? ''),
+                'filename' => \is_string($file['filename'] ?? null) ? $file['filename'] : '',
+                'status' => \is_string($file['status'] ?? null) ? $file['status'] : '',
+                'previous_filename' => \is_string($file['previousFilename'] ?? null) ? $file['previousFilename'] : '',
             ];
         }
 
