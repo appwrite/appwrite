@@ -479,13 +479,9 @@ class Create extends Action
         $providerBaseCommitHash = $providerPreviousCommitHash;
         if (($parsedPayload['branchCreated'] ?? false) || \trim($providerBaseCommitHash, '0') === '') {
             $providerBaseCommitHash = '';
-            try {
-                $providerDefaultBranch = \strval($vcs->getRepository($providerRepositoryOwner, $providerRepositoryName)['defaultBranch'] ?? '');
-                if ($providerDefaultBranch !== '' && $providerDefaultBranch !== $providerBranch) {
-                    $providerBaseCommitHash = $providerDefaultBranch;
-                }
-            } catch (\Throwable $e) {
-                Console::warning("Failed to fetch the default branch of '{$providerRepositoryName}': " . $e->getMessage());
+            $providerDefaultBranch = $parsedPayload['defaultBranch'] ?? '';
+            if ($providerDefaultBranch !== '' && $providerDefaultBranch !== $providerBranch) {
+                $providerBaseCommitHash = $providerDefaultBranch;
             }
         }
 
