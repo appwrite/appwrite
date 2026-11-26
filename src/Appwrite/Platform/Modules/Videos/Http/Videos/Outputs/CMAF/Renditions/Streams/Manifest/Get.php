@@ -31,7 +31,7 @@ class Get extends Base
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/videos/:videoId/outputs/cmaf/renditions/:renditionId/streams/:streamId/playlist.m3u8')
+            ->setHttpPath('/v1/videos/:videoId/outputs/cmaf/renditions/:renditionId/streams/:streamIndex/playlist.m3u8')
             ->desc('Get CMAF stream manifest')
             ->groups(['api', 'videos'])
             ->label('scope', ['videos.play', 'videos.read'])
@@ -57,7 +57,7 @@ class Get extends Base
             ))
             ->param('videoId', '', new UID(), 'Video unique ID.')
             ->param('renditionId', '', new UID(), 'Rendition unique ID.')
-            ->param('streamId', 0, new Range(0, 10), 'Stream index within the rendition.')
+            ->param('streamIndex', 0, new Range(0, 10), 'Stream index within the rendition.')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
@@ -69,7 +69,7 @@ class Get extends Base
     public function action(
         string $videoId,
         string $renditionId,
-        int $streamId,
+        int $streamIndex,
         Response $response,
         Database $dbForProject,
         Document $project,
@@ -79,7 +79,7 @@ class Get extends Base
         $this->sendStreamPlaylist(
             $videoId,
             $renditionId,
-            $streamId,
+            $streamIndex,
             self::OUTPUT_CMAF,
             $response,
             $dbForProject,

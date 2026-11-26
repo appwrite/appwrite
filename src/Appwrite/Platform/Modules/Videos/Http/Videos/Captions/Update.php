@@ -66,12 +66,12 @@ class Update extends Base
             ))
             ->param('videoId', '', new UID(), 'Video unique ID.')
             ->param('captionId', '', new UID(), 'Caption unique ID.')
-            ->param('bucketId', '', new UID(), 'Storage bucket unique ID holding the caption file. Omit together with fileId to only update name, code, or default.', true)
-            ->param('fileId', '', new UID(), 'Caption file unique ID. Omit together with bucketId to only update name, code, or default.', true)
+            ->param('bucketId', '', new UID(), 'Storage bucket unique ID holding the caption file. Omit together with fileId to only update name, language, or default.', true)
+            ->param('fileId', '', new UID(), 'Caption file unique ID. Omit together with bucketId to only update name, language, or default.', true)
             // The name is rendered into HLS/DASH manifests, which are quote- and
             // line-delimited; the allowlist keeps structural characters out at the door.
             ->param('name', '', new Text(128, allowList: [...Text::ALPHABET_UPPER, ...Text::ALPHABET_LOWER, ...Text::NUMBERS, ' ', '-', '.', ',', '(', ')', '_', '\'']), 'Caption display name. Allowed characters: a-z, A-Z, 0-9, space, and - . , ( ) _ \'', true)
-            ->param('code', '', new WhiteList(\array_column(Config::getParam('locale-languages'), 'code2')), 'Caption ISO 639-2 three-letter language code (for example `heb` for Hebrew).', true)
+            ->param('language', '', new WhiteList(\array_column(Config::getParam('locale-languages'), 'code2')), 'Caption ISO 639-2 three-letter language code (for example `heb` for Hebrew).', true)
             ->param('default', null, new Nullable(new Boolean()), 'Make this the default caption track for the video. Omit to leave unchanged.', true)
             ->inject('response')
             ->inject('dbForProject')
@@ -91,7 +91,7 @@ class Update extends Base
         string $bucketId,
         string $fileId,
         string $name,
-        string $code,
+        string $language,
         ?bool $default,
         Response $response,
         Database $dbForProject,
@@ -163,7 +163,7 @@ class Update extends Base
             }
         }
 
-        $nextCode = $code !== '' ? $code : (string) $caption->getAttribute('code', '');
+        $nextCode = $language !== '' ? $language : (string) $caption->getAttribute('code', '');
 
         $updates = [
             'name' => $name !== '' ? $name : $caption->getAttribute('name'),

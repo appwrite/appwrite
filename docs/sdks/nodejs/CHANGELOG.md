@@ -1,5 +1,10 @@
 # Change Log
 
+## 32.3.0
+
+* Added: `client.setRequest(request)` forwards the end user's user agent, and on Appwrite Functions and Sites their IP address, from the request your server is handling
+* Added: `client.setForwardedIP(ip)` to forward the end user's IP address
+
 ## 32.2.0
 
 * Added: `monitors` service to create, list, get, update and delete HTTP, DNS, TCP, SMTP and usage monitors

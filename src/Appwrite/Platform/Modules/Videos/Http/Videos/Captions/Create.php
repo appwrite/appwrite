@@ -69,7 +69,7 @@ class Create extends Base
             // The name is rendered into HLS/DASH manifests, which are quote- and
             // line-delimited; the allowlist keeps structural characters out at the door.
             ->param('name', '', new Text(128, allowList: [...Text::ALPHABET_UPPER, ...Text::ALPHABET_LOWER, ...Text::NUMBERS, ' ', '-', '.', ',', '(', ')', '_', '\'']), 'Caption display name. Allowed characters: a-z, A-Z, 0-9, space, and - . , ( ) _ \'')
-            ->param('code', '', new WhiteList(\array_column(Config::getParam('locale-languages'), 'code2')), 'Caption ISO 639-2 three-letter language code.')
+            ->param('language', '', new WhiteList(\array_column(Config::getParam('locale-languages'), 'code2')), 'Caption ISO 639-2 three-letter language code.')
             ->param('default', false, new Boolean(true), 'Make this the default caption track for the video.', true)
             ->inject('response')
             ->inject('dbForProject')
@@ -87,7 +87,7 @@ class Create extends Base
         string $bucketId,
         string $fileId,
         string $name,
-        string $code,
+        string $language,
         bool $default,
         Response $response,
         Database $dbForProject,
@@ -141,7 +141,7 @@ class Create extends Base
             'fileId' => $file->getId(),
             'fileInternalId' => $file->getSequence(),
             'name' => $name,
-            'code' => $code,
+            'code' => $language,
             'default' => $default,
             'status' => self::STATUS_PENDING,
         ])));

@@ -1,5 +1,9 @@
 # Change Log
 
+## v7.24.0
+
+* Added: `password`, `attempts` and `attemptsInterval` options on `waf.CreateChallengeRule` and `waf.UpdateChallengeRule`
+
 ## v7.23.0
 
 * Added: `monitors` service to create, list, get, update and delete HTTP, DNS, TCP, SMTP and usage monitors

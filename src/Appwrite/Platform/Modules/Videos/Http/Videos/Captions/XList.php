@@ -82,6 +82,8 @@ class XList extends Base
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        $this->toStoredAttributes($queries);
+
         $queries[] = Query::equal('videoInternalId', [$video->getSequence()]);
 
         if (\count(Query::getByType($queries, [QueryMethod::Limit])) === 0) {
@@ -124,5 +126,25 @@ class XList extends Base
             'captions' => $captions,
             'total' => $total,
         ]), Response::MODEL_VIDEO_CAPTION_LIST);
+    }
+
+    /**
+     * The API calls the caption language `language`; the column is `code`.
+     * Logical queries hold their children in their values.
+     *
+     * @param array<Query> $queries
+     */
+    private function toStoredAttributes(array $queries): void
+    {
+        foreach ($queries as $query) {
+            if (\in_array($query->getMethod(), [QueryMethod::And, QueryMethod::Or], true)) {
+                $this->toStoredAttributes($query->getValues());
+                continue;
+            }
+
+            if ($query->getAttribute() === 'language') {
+                $query->setAttribute('code');
+            }
+        }
     }
 }

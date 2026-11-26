@@ -36,7 +36,7 @@ class Update extends Base
     public function __construct()
     {
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT)
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/videos/:videoId')
             ->desc('Update video')
             ->groups(['api', 'videos'])
@@ -60,7 +60,7 @@ class Update extends Base
                 ]
             ))
             ->param('videoId', '', new UID(), 'Video unique ID.')
-            ->param('name', '', new Text(2048), 'Video name. Max length: 2048 chars.')
+            ->param('name', null, new Nullable(new Text(2048)), 'Video name. Max length: 2048 chars.', true)
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [PermissionType::Read, PermissionType::Update, PermissionType::Delete, PermissionType::Write])), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->inject('response')
             ->inject('dbForProject')
@@ -74,7 +74,7 @@ class Update extends Base
 
     public function action(
         string $videoId,
-        string $name,
+        ?string $name,
         ?array $permissions,
         Response $response,
         Database $dbForProject,
@@ -115,15 +115,16 @@ class Update extends Base
             }
         }
 
-        if (\is_null($permissions)) {
-            $permissions = $video->getPermissions();
+        $updates = [];
+        if ($name !== null) {
+            $updates['name'] = $name;
+            $updates['search'] = \implode(' ', [$video->getAttribute('fileId', ''), $name]);
+        }
+        if ($permissions !== null) {
+            $updates['$permissions'] = $permissions;
         }
 
-        $data = new Document([
-            'name' => $name,
-            'search' => \implode(' ', [$video->getAttribute('fileId', ''), $name]),
-            '$permissions' => $permissions,
-        ]);
+        $data = new Document($updates);
 
         if ($isAPIKey || $isPrivilegedUser) {
             $video = $authorization->skip(fn () => $dbForProject->updateDocument('videos', $video->getId(), $data));
