@@ -1,5 +1,14 @@
 # Change Log
 
+## 0.27.0
+
+* Added: `videos` service to create, list, get, update and delete videos from files in Storage
+* Added: `videos.createRendition`, `listRenditions`, `getRendition` and `deleteRendition` to transcode a video into HLS, DASH or CMAF
+* Added: `videos.createCaption`, `listCaptions`, `updateCaption` and `deleteCaption` for subtitle tracks
+* Added: `getHlsManifest`, `getDashManifest`, `getCmafHlsManifest`, `getCmafDashManifest`, `getCaptionManifest`, `getThumbnail` and `getTimeline` playback URLs, and `listCodecs`
+* Added: `project.listVideoProfiles`, `createVideoProfile`, `getVideoProfile`, `updateVideoProfile` and `deleteVideoProfile`
+* Added: `Video`, `VideoCodec`, `VideoProfile`, `VideoRendition` and `VideoCaption` models, their list models, and the `VideoCodecId`, `VideoOutput`, `VideoRenditionStatus`, `VideoCaptionStatus` and `VideoTimelineStatus` enums
+
 ## 0.26.0
 
 * Added: `monitors` service to create, list, get, update and delete HTTP, DNS, TCP, SMTP and usage monitors
