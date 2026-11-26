@@ -146,6 +146,12 @@ final class VideosCustomServerTest extends Scope
         $this->assertSame('e2e-custom-id', $stored['body']['name']);
         $this->assertSame(2105000, $stored['body']['videoBitRate']);
 
+        $byRate = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
+            'queries' => [Query::equal('videoBitRate', [2105000])->toString()],
+        ]);
+        $this->assertEquals(200, $byRate['headers']['status-code']);
+        $this->assertSame([$profileId], \array_column($byRate['body']['profiles'], '$id'));
+
         $this->client->call(Client::METHOD_DELETE, '/project/videos/profiles/' . $profileId, $this->headers());
     }
 
