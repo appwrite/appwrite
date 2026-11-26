@@ -1841,6 +1841,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Products' },
               ),
               createProfileFeatureFlagItem(
+                'Git installation reuse',
+                'Connect GitHub offers accounts already connected in other projects of the organization.',
+                'gitInstallationReuse',
+                profileId,
+                features.gitInstallationReuse,
+                { category: 'Products' },
+              ),
+              createProfileFeatureFlagItem(
                 'Database PITR restore',
                 'Restore PITR button on backups and the restore card in dedicated DB PITR settings.',
                 'databasePitrRestore',
@@ -1898,18 +1906,10 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               ),
               createProfileFeatureFlagItem(
                 'Alert CTAs',
-                'Buttons on notifications that open the page to act on.',
+                'Link buttons on notification rows that open the Console page an alert acts on.',
                 'alertCtas',
                 profileId,
                 features.alertCtas,
-                { category: 'UI & tools' },
-              ),
-              createProfileFeatureFlagItem(
-                'Git installation reuse',
-                'Connect GitHub offers accounts already connected in other projects of the organization.',
-                'gitInstallationReuse',
-                profileId,
-                features.gitInstallationReuse,
                 { category: 'UI & tools' },
               ),
               createDebugFeatureFlagItem(
