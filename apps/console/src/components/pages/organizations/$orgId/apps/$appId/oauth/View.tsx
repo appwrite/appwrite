@@ -22,6 +22,7 @@ import {
   setsEqual,
   useOrgAppUpdate,
 } from '../_components/useOrgAppUpdate'
+import { redirectUriError } from '@/lib/oauth2/redirect'
 import { useT } from '@/lib/i18n/translate'
 
 export function View() {
@@ -52,6 +53,10 @@ function OAuthClientSettings({
   const [postLogoutRedirectUris, setPostLogoutRedirectUris] = useState(
     app.postLogoutRedirectUris ?? [],
   )
+  // Text typed in a URI field but not yet added as a tag still counts as an
+  // edit, so Update enables and the save picks it up.
+  const [pendingRedirectUri, setPendingRedirectUri] = useState('')
+  const [pendingPostLogoutUri, setPendingPostLogoutUri] = useState('')
   const [installationScopes, setInstallationScopes] = useState(
     app.installationScopes ?? [],
   )
@@ -92,14 +97,23 @@ function OAuthClientSettings({
     [installationScopeCatalog],
   )
 
+  const withPending = (list: string[], pending: string) =>
+    nonEmptyList(
+      pending && !redirectUriError(pending) && !list.includes(pending)
+        ? [...list, pending]
+        : list,
+    )
+  const nextRedirectUris = withPending(redirectUris, pendingRedirectUri)
+  const nextPostLogoutUris = withPending(
+    postLogoutRedirectUris,
+    pendingPostLogoutUri,
+  )
+
   const oauthDirty =
     clientType !== (app.type || 'confidential') ||
     deviceFlow !== (app.deviceFlow ?? false) ||
-    !listsEqual(nonEmptyList(redirectUris), app.redirectUris ?? []) ||
-    !listsEqual(
-      nonEmptyList(postLogoutRedirectUris),
-      app.postLogoutRedirectUris ?? [],
-    )
+    !listsEqual(nextRedirectUris, app.redirectUris ?? []) ||
+    !listsEqual(nextPostLogoutUris, app.postLogoutRedirectUris ?? [])
 
   const installationsDirty =
     !setsEqual(installationScopes, app.installationScopes ?? []) ||
@@ -111,8 +125,8 @@ function OAuthClientSettings({
       await submit({
         type: clientType,
         deviceFlow,
-        redirectUris: nonEmptyList(redirectUris),
-        postLogoutRedirectUris: nonEmptyList(postLogoutRedirectUris),
+        redirectUris: nextRedirectUris,
+        postLogoutRedirectUris: nextPostLogoutUris,
       })
     } catch {
       // submit() already reported the error; nothing was saved.
@@ -159,6 +173,8 @@ function OAuthClientSettings({
             <InputTags
               value={redirectUris}
               onChange={setRedirectUris}
+              validateTag={redirectUriError}
+              onPendingChange={setPendingRedirectUri}
               placeholder={t('Add redirect URI and press Enter')}
             />
           </div>
@@ -167,6 +183,8 @@ function OAuthClientSettings({
             <InputTags
               value={postLogoutRedirectUris}
               onChange={setPostLogoutRedirectUris}
+              validateTag={redirectUriError}
+              onPendingChange={setPendingPostLogoutUri}
               placeholder={t('Add post-logout URI and press Enter')}
             />
           </div>
