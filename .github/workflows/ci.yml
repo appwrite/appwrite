@@ -565,8 +565,9 @@ jobs:
 
       # kache (https://github.com/kunobi-ninja/kache) caches each crate's compiled output, so
       # clippy and the tests rebuild only the crates a change touches instead of all 340. Its
-      # store is restored from main's latest and saved only by pushes to main, once a week per
-      # Cargo.lock, so pull requests read it and never write it.
+      # store is restored from main's and saved only by pushes to main, once per Cargo.lock and
+      # toolchain, so pull requests read it and never write it. Line tables instead of full
+      # debug info keep the store small enough for the repository's Actions cache.
       - name: Install kache
         env:
           KACHE_VERSION: v2.3.1
@@ -577,17 +578,13 @@ jobs:
           echo "${KACHE_SHA256}  $RUNNER_TEMP/kache.tar.gz" | sha256sum -c -
           mkdir -p "$RUNNER_TEMP/kache-bin" "$RUNNER_TEMP/kache"
           tar -xzf "$RUNNER_TEMP/kache.tar.gz" -C "$RUNNER_TEMP/kache-bin" kache kache-engine
-          echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
-        id: kache
 
       - name: Restore the kache store
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/kache
-          key: kache-extension-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}-${{ steps.kache.outputs.week }}
-          restore-keys: |
-            kache-extension-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}-
-            kache-extension-
+          key: kache-extension-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}
+          restore-keys: kache-extension-
 
       - name: Check crates
         run: |
@@ -595,7 +592,8 @@ jobs:
             --env RUSTDOCFLAGS="-C target-feature=-crt-static" \
             --volume "$RUNNER_TEMP/kache-bin:/opt/kache:ro" --volume "$RUNNER_TEMP/kache:/kache" \
             --env RUSTC_WRAPPER=/opt/kache/kache --env KACHE_CACHE_DIR=/kache --env KACHE_LOCAL_ONLY=true \
-            --env KACHE_DEFERRED_DURABILITY=0 utopia-extension-build sh -c '
+            --env KACHE_DEFERRED_DURABILITY=0 --env CARGO_PROFILE_DEV_DEBUG=line-tables-only \
+            --env CARGO_PROFILE_TEST_DEBUG=line-tables-only utopia-extension-build sh -c '
             . "$HOME/.cargo/env" &&
             rustup component add clippy rustfmt &&
             cargo fmt --all --check &&
@@ -613,7 +611,7 @@ jobs:
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/kache
-          key: kache-extension-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}-${{ steps.kache.outputs.week }}
+          key: kache-extension-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}
 
       - name: Build the image
         run: docker build --target development --tag appwrite-utopia --build-arg TESTING=true .
