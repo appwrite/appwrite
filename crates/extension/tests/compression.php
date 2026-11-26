@@ -72,7 +72,7 @@ function show(mixed $value): mixed
 /** A message without the corpus's own path and line, so the pinned output survives edits to it. */
 function unplaced(string $message): string
 {
-    return (string) preg_replace('/ in \S+\.php on line \d+/', ' in (file) on line (line)', $message);
+    return (string) preg_replace('/ in \(file\) on line \d+/', ' in (file) on line (line)', str_replace(' in ' . __FILE__ . ' ', ' in (file) ', $message));
 }
 
 /** What `$run` returns or throws, with the warnings it raised. */
