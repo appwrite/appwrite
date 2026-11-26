@@ -154,6 +154,7 @@
         "GET /v1/functions/:functionId/executions/:executionId",
         "GET /v1/functions/:functionId/variables",
         "GET /v1/functions/:functionId/variables/:variableId",
+        "GET /v1/functions/frameworks",
         "GET /v1/functions/runtimes",
         "GET /v1/functions/specifications",
         "GET /v1/functions/templates",
