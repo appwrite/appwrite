@@ -7,10 +7,12 @@ use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Reviews;
+use Appwrite\Reviews\Provider;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
+use Appwrite\Vcs\RepositoryPath;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
@@ -380,7 +382,10 @@ class Create extends Action
                 return $parsedPayload;
             }
 
-            $rootId = $vcs->getReviewCommentThread(\strval($parsedPayload['owner'] ?? ''), \strval($parsedPayload['repositoryName'] ?? ''), $pullNumber, $commentId);
+            // The delivery's names are not trusted with this credential: the webhook secret is
+            // instance-wide, so the repository is the one connected under the id it matched.
+            [$owner, $repositoryName] = RepositoryPath::read($vcs, Provider::Gitea, \strval($installation->getAttribute('providerInstallationId', '')), \strval($repositories[0]['repository']->getAttribute('providerRepositoryId', '')));
+            $rootId = $vcs->getReviewCommentThread($owner, $repositoryName, $pullNumber, $commentId);
         } catch (\Throwable $error) {
             Console::warning("Failed to look up the thread of comment '{$commentId}': " . $error->getMessage());
 

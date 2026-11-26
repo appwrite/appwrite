@@ -6,8 +6,10 @@ use Appwrite\Event\Message\Review as ReviewMessage;
 use Appwrite\Event\Message\ReviewChat as ReviewChatMessage;
 use Appwrite\Event\Publisher\Review as ReviewPublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Reviews\Provider;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
+use Appwrite\Vcs\RepositoryPath;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -579,15 +581,7 @@ trait Reviews
         $installation = $authorization->skip(fn () => $installationTokens->refreshForInstallation($installation, $dbForPlatform, $vcsFactory));
         $vcs = $vcsFactory->fromInstallation($installation);
 
-        $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
-        // Bitbucket's repository id is its full name, workspace and slug; the account's own workspace is no sure owner.
-        $owner = $provider === 'bitbucket'
-            ? \explode('/', \rawurldecode($providerRepositoryId), 2)[0]
-            : $vcs->getOwnerName($providerInstallationId, \ctype_digit($providerRepositoryId) ? (int) $providerRepositoryId : null);
-
-        if ($owner === '' || $repositoryName === '') {
-            throw new \Exception("The provider did not name repository '{$providerRepositoryId}'.");
-        }
+        [$owner, $repositoryName] = RepositoryPath::read($vcs, Provider::from($provider), $providerInstallationId, $providerRepositoryId);
 
         if (($parsedPayload['owner'] ?? '') !== $owner || ($parsedPayload['repositoryName'] ?? '') !== $repositoryName) {
             Console::warning("Delivery named repository '{$providerRepositoryId}' as '" . ($parsedPayload['owner'] ?? '') . '/' . ($parsedPayload['repositoryName'] ?? '') . "', the provider names it '{$owner}/{$repositoryName}'");

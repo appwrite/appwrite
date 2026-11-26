@@ -13,6 +13,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
+use Appwrite\Vcs\RepositoryPath;
 use Appwrite\Vcs\RepositoryWebhooks;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -26,7 +27,6 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git;
 
 /**
  * Turns code review on for a repository: from now on its pull requests are queued for review.
@@ -131,7 +131,7 @@ class Create extends Action
         $vcs = $vcsFactory->fromInstallation($installation);
 
         try {
-            [$owner, $repositoryName] = $this->getRepositoryPath($vcs, $installation, $provider, $providerRepositoryId);
+            [$owner, $repositoryName] = RepositoryPath::read($vcs, $provider, $installation->getAttribute('providerInstallationId', ''), $providerRepositoryId);
         } catch (\Throwable) {
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
@@ -170,23 +170,6 @@ class Create extends Action
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($repository, Response::MODEL_REVIEW_REPOSITORY);
-    }
-
-    /**
-     * The repository's owner and name on its provider, read with the installation's credentials,
-     * which fails for a repository the installation cannot reach. Bitbucket's repository id is
-     * its full name, workspace and slug; the account's own workspace is no sure owner.
-     *
-     * @return array{0: string, 1: string}
-     */
-    private function getRepositoryPath(Git $vcs, Document $installation, Provider $provider, string $providerRepositoryId): array
-    {
-        $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
-        $owner = $provider === Provider::Bitbucket
-            ? \explode('/', \rawurldecode($providerRepositoryId), 2)[0]
-            : $vcs->getOwnerName($installation->getAttribute('providerInstallationId', ''), \ctype_digit($providerRepositoryId) ? (int) $providerRepositoryId : null);
-
-        return [$owner, $repositoryName];
     }
 
     /**
