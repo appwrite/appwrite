@@ -35,7 +35,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
   {
     "slug": "introducing-appwrite-analytics",
     "href": "/blog/post/introducing-appwrite-analytics",
-    "title": "Introducing Appwrite Analytics",
+    "title": "Introducing Appwrite Analytics for your websites, apps, and AI agents",
     "description": "See the people and the AI agents that visit your websites and apps, track the events that matter to your product, and block unwanted traffic with Firewall, all without cookies.",
     "date": "2026-11-30",
     "lastUpdated": "2026-11-30",
