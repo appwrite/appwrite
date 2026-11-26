@@ -70,7 +70,7 @@ class Update extends Base
             ->inject('authorization')
             ->inject('project')
             ->inject('queueForEvents')
-            ->inject('purgeVideoCache')
+            ->inject('purgeVideoSegmentCache')
             ->callback($this->action(...));
     }
 
@@ -84,10 +84,9 @@ class Update extends Base
         Authorization $authorization,
         Document $project,
         Event $queueForEvents,
-        callable $purgeVideoCache
+        callable $purgeVideoSegmentCache
     ): void {
         $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
-        $wasPublic = $this->isPublicRead($video);
 
         $roles = $authorization->getRoles();
         $isAPIKey = $user->isKey($roles);
@@ -134,11 +133,9 @@ class Update extends Base
             $video = $dbForProject->updateDocument('videos', $video->getId(), $data);
         }
 
-        // A rename leaves read("any") as it was and does not purge. Adding or
-        // removing world-read drops every cached segment for this video.
-        if ($wasPublic !== $this->isPublicRead($video)) {
-            $purgeVideoCache($project->getId(), $video->getId());
-        }
+        // Drop Fastly's public segment copies for this video (old updatedAt URLs
+        // share the Surrogate-Key). Rename and permission changes both land here.
+        $purgeVideoSegmentCache($project->getId(), $video->getId());
 
         $queueForEvents->setParam('videoId', $video->getId());
 

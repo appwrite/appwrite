@@ -735,12 +735,51 @@ final class VideosCustomClientTest extends Scope
         );
         $this->assertEquals(200, $segment['headers']['status-code']);
         $this->assertNotEmpty($segment['body']);
+        // World-readable segments may sit at Fastly; private videos stay
+        // browser-private so a shared cache cannot keep serving after revoke.
+        $projectId = $this->getProject()['$id'];
+        $this->assertSame(
+            'public, max-age=31536000, immutable',
+            $segment['headers']['cache-control'] ?? null
+        );
+        $this->assertSame('Origin', $segment['headers']['vary'] ?? null);
+        $this->assertSame(
+            'video-' . \strtolower($projectId) . '-' . \strtolower($videoId),
+            $segment['headers']['surrogate-key'] ?? null
+        );
+        $this->assertStringContainsString('updatedAt=', (string) $variant['body']);
+
+        $beforeUpdatedAt = null;
+        if (\preg_match('/updatedAt=([^&\s]+)/', (string) $variant['body'], $match) === 1) {
+            $beforeUpdatedAt = \urldecode($match[1]);
+        }
+        $this->assertNotNull($beforeUpdatedAt, 'Variant playlist did not carry updatedAt');
+
+        $renamed = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->serverHeaders(), [
+            'name' => 'guest-play-renamed-' . Id::unique(),
+        ]);
+        $this->assertEquals(200, $renamed['headers']['status-code']);
+        $this->assertNotSame($beforeUpdatedAt, $renamed['body']['$updatedAt'] ?? null);
+
+        $variantAfter = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/hls/renditions/' . $renditionId . '/streams/' . $streamId . '/playlist.m3u8',
+            $this->anonymousHeaders()
+        );
+        $this->assertEquals(200, $variantAfter['headers']['status-code']);
+        $this->assertStringContainsString(
+            'updatedAt=' . \rawurlencode((string) $renamed['body']['$updatedAt']),
+            (string) $variantAfter['body']
+        );
+        $this->assertStringNotContainsString(
+            'updatedAt=' . \rawurlencode($beforeUpdatedAt),
+            (string) $variantAfter['body']
+        );
 
         $guestTimeline = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', $this->anonymousHeaders());
         $this->assertEquals(200, $guestTimeline['headers']['status-code']);
         $this->assertStringContainsString('WEBVTT', (string) $guestTimeline['body']);
 
-        $projectId = $this->getProject()['$id'];
         $this->assertStringNotContainsString('sprites/', (string) $guestTimeline['body']);
         $this->assertMatchesRegularExpression(
             '/thumbnails\/[a-zA-Z0-9]+\?project=' . \preg_quote($projectId, '/') . '#xywh=/',

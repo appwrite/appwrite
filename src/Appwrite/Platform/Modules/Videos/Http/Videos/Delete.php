@@ -69,7 +69,7 @@ class Delete extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('publisherForDeletes')
-            ->inject('purgeVideoCache')
+            ->inject('purgeVideoSegmentCache')
             ->callback($this->action(...));
     }
 
@@ -82,7 +82,7 @@ class Delete extends Base
         Document $project,
         Event $queueForEvents,
         DeletePublisher $publisherForDeletes,
-        callable $purgeVideoCache
+        callable $purgeVideoSegmentCache
     ): void {
         $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
         // ACL before the in-progress gate — otherwise a session with only read
@@ -129,7 +129,7 @@ class Delete extends Base
 
         // Drop every cached segment before returning. The deletes worker still
         // removes the files; this is the matching sweep for Fastly.
-        $purgeVideoCache($project->getId(), $video->getId());
+        $purgeVideoSegmentCache($project->getId(), $video->getId());
 
         // The pre-merge controller built this event but never triggered it, so the
         // cascade never ran and renditions/captions/segments were orphaned.

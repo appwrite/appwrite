@@ -68,7 +68,7 @@ class Delete extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('publisherForDeletes')
-            ->inject('purgeVideoCache')
+            ->inject('purgeVideoSegmentCache')
             ->callback($this->action(...));
     }
 
@@ -82,7 +82,7 @@ class Delete extends Base
         Document $project,
         Event $queueForEvents,
         DeletePublisher $publisherForDeletes,
-        callable $purgeVideoCache
+        callable $purgeVideoSegmentCache
     ): void {
         $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
         $this->assertCanUpdateVideo($authorization, $user, $video);
@@ -118,7 +118,7 @@ class Delete extends Base
         // Deleting a rendition does not bump the video's $updatedAt, so the
         // video key is what takes the cached segments down. The other
         // qualities share that key and are re-fetched on the next miss.
-        $purgeVideoCache($project->getId(), $video->getId());
+        $purgeVideoSegmentCache($project->getId(), $video->getId());
 
         $queueForEvents
             ->setParam('videoId', $video->getId())

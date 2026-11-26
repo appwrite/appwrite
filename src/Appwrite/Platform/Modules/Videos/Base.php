@@ -328,7 +328,7 @@ abstract class Base extends Action
      * project context. `updatedAt` is the video document's last write: a fresh
      * playlist emits a new value and Fastly treats those segment addresses as
      * new objects. Copies that still carry an older time share the video's
-     * Surrogate-Key and are dropped by purgeVideoCache.
+     * Surrogate-Key and are dropped by purgeVideoSegmentCache.
      */
     protected function withProject(string $uri, Document $project, Document $video): string
     {

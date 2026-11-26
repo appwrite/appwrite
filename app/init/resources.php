@@ -445,7 +445,7 @@ $container->set('cacheControlForStorage', fn () => fn (StorageCacheControl $conf
 
 // Cloud overrides this with utopia-php/cdn purgeKeys for the API Fastly service.
 // Self-hosted has no CDN in front of playback, so the default is a no-op.
-$container->set('purgeVideoCache', fn () => function (string $projectId, string $videoId): void {});
+$container->set('purgeVideoSegmentCache', fn () => function (string $projectId, string $videoId): void {});
 
 
 $container->set('locks', fn (Group $pools) => Locks::using($pools), ['pools']);
