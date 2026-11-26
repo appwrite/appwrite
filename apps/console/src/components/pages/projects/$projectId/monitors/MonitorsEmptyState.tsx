@@ -200,6 +200,9 @@ export function MonitorsEmptyState({
             >
               {t('Create monitor')}
             </ProductEmptyStateCreateButton>
+            {/* Without marketing pages the button opens appwrite.io, where the
+                Monitors docs stay hidden behind a preview flag this browser
+                hasn't set there. */}
             {features.marketing && (
               <ProductEmptyStateDocsButton path="/docs/products/monitors" />
             )}

@@ -3308,7 +3308,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Usage monitors",
     "description": "Set thresholds on Appwrite usage metrics and monitor your whole project or an individual resource from the Console or a server SDK.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/network",

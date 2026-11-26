@@ -34,6 +34,8 @@ Counters such as requests and outbound bandwidth are summed over the period in *
 
 If a check has no usage reading, the monitor keeps its existing state. Check the monitor's last reading in the Console before adjusting the threshold.
 
+On self-hosted Appwrite, usage monitors read the usage stats that the [`_APP_USAGE_STATS`](/docs/advanced/self-hosting/configuration/environment-variables) variable turns on. It's enabled by default. If you set it to `disabled`, Appwrite never checks your usage monitors.
+
 # Create with a server SDK {% #create-with-a-server-sdk %}
 
 Create an [API key](/docs/advanced/platform/api-keys) with the `monitors.write` scope, then call `createUsageMonitor`. This monitor opens an alert when the project sends more than 1 GB of outbound bandwidth in an hour, and notifies owners and developers at **Error** severity.
