@@ -811,6 +811,12 @@ final class EvaluationCustomServerTest extends Scope
         $former = $this->createMember($from);
         $member = $this->createMember($to);
 
+        // Fired, so the move has an alert to carry along too.
+        $platform = $this->platform();
+        $this->evaluateMonitor($platform, $monitorId, 100, projectId: $project['$id']);
+        $alerts = $platform->find('monitorAlerts', [Query::equal('projectInternalId', [$projectInternalId])]);
+        $this->assertNotEmpty($alerts);
+
         $moved = $this->client->call(Client::METHOD_PATCH, '/projects/' . $project['$id'] . '/team', $this->consoleHeaders(), [
             'teamId' => $to,
         ]);
@@ -819,13 +825,16 @@ final class EvaluationCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        // The monitor names the organization the project moved to.
-        $platform = $this->platform();
+        // The monitor and its alerts name the organization the project moved to.
         $team = $platform->getDocument('teams', $to);
         $monitor = $platform->getDocument('monitors', Monitors::id($projectInternalId, $monitorId));
         $this->assertFalse($monitor->isEmpty());
         $this->assertSame($to, $monitor->getAttribute('teamId'));
         $this->assertSame((string) $team->getSequence(), $monitor->getAttribute('teamInternalId'));
+        foreach ($platform->find('monitorAlerts', [Query::equal('projectInternalId', [$projectInternalId])]) as $alert) {
+            $this->assertSame($to, $alert->getAttribute('teamId'));
+            $this->assertSame((string) $team->getSequence(), $alert->getAttribute('teamInternalId'));
+        }
 
         // A member of the new organization unsubscribes from the monitor with their link.
         $unsubscribe = new Unsubscribe([System::getEnv('_APP_OPENSSL_KEY_V1')]);
@@ -2354,8 +2363,9 @@ final class EvaluationCustomServerTest extends Scope
      */
     /**
      * @param list<NotificationMessage> $messages receives what the evaluation published
+     * @param string|null $projectId the monitor's project, the test project when null
      */
-    private function evaluateMonitor(Database $dbForPlatform, string $monitorId, float $value, bool $accepted = true, array &$messages = [], ?\DateTimeImmutable $now = null, ?Database $dbForProject = null): void
+    private function evaluateMonitor(Database $dbForPlatform, string $monitorId, float $value, bool $accepted = true, array &$messages = [], ?\DateTimeImmutable $now = null, ?Database $dbForProject = null, ?string $projectId = null): void
     {
         $publisher = $this->createStub(NotificationPublisher::class);
         $publisher->method('enqueue')->willReturnCallback(function (NotificationMessage $message) use ($accepted, &$messages): bool {
@@ -2379,7 +2389,7 @@ final class EvaluationCustomServerTest extends Scope
             }
         };
 
-        $project = $dbForPlatform->getDocument('projects', $this->getProject()['$id']);
+        $project = $dbForPlatform->getDocument('projects', $projectId ?? $this->getProject()['$id']);
         $evaluator->evaluateNow(
             $dbForPlatform->getDocument('monitors', Monitors::id((string) $project->getSequence(), $monitorId)),
             $project,
