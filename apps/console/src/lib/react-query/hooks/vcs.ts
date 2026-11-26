@@ -11,11 +11,15 @@ import {
   useQueryClient,
   queryOptions,
 } from '@tanstack/react-query'
+import { useSyncExternalStore } from 'react'
 import { Query } from '@appwrite.io/console'
 import { VCSDetectionType } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { isFeatureEnabled } from '@/lib/console-profiles'
+import {
+  isFeatureEnabled,
+  subscribeToProfileChange,
+} from '@/lib/console-profiles'
 import {
   DEFAULT_STALE_TIME,
   LONG_STALE_TIME,
@@ -56,13 +60,13 @@ export async function fetchVcsInstallations(
   const queries = [Query.limit(limit), Query.offset(page * limit)]
   const list = await projectSdk.vcs.listInstallations({ queries })
 
-  if (page > 0 || list.total > 0 || !isFeatureEnabled('gitInstallationReuse')) {
+  if (page > 0 || !isFeatureEnabled('gitInstallationReuse')) {
     return list
   }
 
-  // A project with no installation reuses the GitHub organizations the
-  // organization's other projects already connected, instead of sending the
-  // user through GitHub's install flow again.
+  // The project reuses the GitHub organizations the organization's other
+  // projects already connected, instead of sending the user through GitHub's
+  // install flow again. Organizations it already has are left alone.
   const { client } = projectSdk
   const endpoint = `${client.config.endpoint}/vcs/installations`
   try {
@@ -72,9 +76,25 @@ export async function fetchVcsInstallations(
       {},
       { shared: true, queries: [Query.limit(100)] },
     )) as Models.InstallationList
+    const own =
+      list.total > list.installations.length
+        ? (
+            await projectSdk.vcs.listInstallations({
+              queries: [Query.limit(100)],
+            })
+          ).installations
+        : list.installations
+    // Installation IDs are only unique within a provider, and only GitHub ones are shared
+    const linked = new Set(
+      own
+        .filter((i) => i.provider === 'github')
+        .map((i) => i.providerInstallationId),
+    )
     const unique = [
       ...new Map(
-        shared.installations.map((i) => [i.providerInstallationId, i]),
+        shared.installations
+          .filter((i) => !linked.has(i.providerInstallationId))
+          .map((i) => [i.providerInstallationId, i]),
       ).values(),
     ]
     if (unique.length === 0) {
@@ -92,7 +112,7 @@ export async function fetchVcsInstallations(
       ),
     )
   } catch {
-    // Servers without installation reuse reject the shared param; keep the empty list.
+    // Servers without installation reuse reject the shared param; keep the list as is.
     return list
   }
 
@@ -135,6 +155,18 @@ export async function fetchInstallation(
   return await projectSdk.vcs.getInstallation(installationId)
 }
 
+export function installationQueryOptions(
+  projectId: string | null | undefined,
+  installationId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['vcs', 'installation', projectId, installationId],
+    queryFn: () => fetchInstallation(projectId!, installationId!),
+    enabled: !!projectId && !!installationId,
+    staleTime: DEFAULT_STALE_TIME,
+  })
+}
+
 /**
  * Hook to fetch installation details (includes `provider`).
  */
@@ -142,12 +174,7 @@ export function useInstallation(
   projectId: string | null | undefined,
   installationId: string | null | undefined,
 ) {
-  return useQuery({
-    queryKey: ['vcs', 'installation', projectId, installationId],
-    queryFn: () => fetchInstallation(projectId!, installationId!),
-    enabled: !!projectId && !!installationId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  return useQuery(installationQueryOptions(projectId, installationId))
 }
 
 /**
@@ -462,6 +489,12 @@ export function useVcsInstallations(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
 ) {
+  // Re-render when the reuse experiment is toggled, so the list is fetched under the new key
+  useSyncExternalStore(
+    subscribeToProfileChange,
+    () => isFeatureEnabled('gitInstallationReuse'),
+    () => false,
+  )
   return useQuery(vcsInstallationsQueryOptions(projectId, page, limit))
 }
 
@@ -529,7 +562,17 @@ export function useRepository(
   installationId: string | null | undefined,
   providerRepositoryId: string | null | undefined,
 ) {
-  return useQuery({
+  return useQuery(
+    repositoryQueryOptions(projectId, installationId, providerRepositoryId),
+  )
+}
+
+export function repositoryQueryOptions(
+  projectId: string | null | undefined,
+  installationId: string | null | undefined,
+  providerRepositoryId: string | null | undefined,
+) {
+  return queryOptions({
     queryKey: [
       'vcs',
       'repository',

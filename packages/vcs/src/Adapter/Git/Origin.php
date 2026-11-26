@@ -27,6 +27,8 @@ class Origin extends Git
 
     public const EVENT_PULL_REQUEST = 'pull_request';
 
+    public const EVENT_PULL_REQUEST_COMMENT = 'pull_request.comment.created';
+
     public const EVENT_INSTALLATION = 'installation';
 
     public const CONTENTS_DIRECTORY = 'dir';
@@ -1030,6 +1032,10 @@ class Origin extends Git
             return $this->pullRequestEvents($type, $eventPayload, $installationId);
         }
 
+        if ($type === self::EVENT_PULL_REQUEST_COMMENT) {
+            return $this->commentEvents($eventPayload, $installationId);
+        }
+
         if (str_starts_with($type, 'installation.')) {
             return $this->installationEvents($type, $eventPayload, $installationId);
         }
@@ -1074,6 +1080,8 @@ class Origin extends Git
                 'repositoryUrl' => $repositoryUrl,
                 'installationId' => $installationId,
                 'commitHash' => $commitHash,
+                'previousCommitHash' => \is_string($refUpdate['before'] ?? null) ? $refUpdate['before'] : '',
+                'forced' => (bool) ($refUpdate['forced'] ?? false),
                 'owner' => $owner,
                 'authorUrl' => '',
                 'authorAvatarUrl' => '',
@@ -1149,6 +1157,64 @@ class Origin extends Git
         ]];
     }
 
+    /**
+     * A comment created on a pull request, in the shape GitHub's comment
+     * events are reported in. Every Origin comment belongs to a thread: one
+     * that opens an inline or file thread is a 'review' comment whose thread
+     * is its own, one that opens a general-discussion thread is an 'issue'
+     * comment, and a reply carries only its thread's id, so it is a 'review'
+     * comment in that thread, whichever kind the thread is.
+     *
+     * @param array<mixed> $payload
+     * @return array<array<mixed>>
+     */
+    protected function commentEvents(array $payload, string $installationId): array
+    {
+        $pullRequest = \is_array($payload['pullRequest'] ?? null) ? $payload['pullRequest'] : [];
+        $repository = \is_array($pullRequest['repository'] ?? null) ? $pullRequest['repository'] : [];
+        $repositoryOwner = \is_array($repository['owner'] ?? null) ? $repository['owner'] : [];
+        $comment = \is_array($payload['comment'] ?? null) ? $payload['comment'] : [];
+        $thread = \is_array($comment['thread'] ?? null) ? $comment['thread'] : [];
+        $author = \is_array($comment['author'] ?? null) ? $comment['author'] : [];
+        $user = \is_array($author['user'] ?? null) ? $author['user'] : [];
+        $app = \is_array($author['app'] ?? null) ? $author['app'] : [];
+        $serviceAccount = \is_array($author['serviceAccount'] ?? null) ? $author['serviceAccount'] : [];
+
+        $owner = $this->text($repositoryOwner['slug'] ?? '');
+        $repositoryName = $this->text($repository['name'] ?? '');
+        $pullRequestNumber = \is_numeric($pullRequest['number'] ?? null) ? (int) $pullRequest['number'] : 0;
+        $threadId = $this->text($thread['id'] ?? '');
+
+        // An opening comment carries its thread's anchor or timestamps; a reply only the thread's id.
+        $isReply = \array_diff(\array_keys($thread), ['id']) === [];
+        $isInline = $this->text($thread['path'] ?? '') !== '';
+        $kind = $isReply || $isInline ? 'review' : 'issue';
+
+        $authorType = match (true) {
+            $app !== [] => 'App',
+            $serviceAccount !== [] => 'Bot',
+            default => 'User',
+        };
+
+        return [[
+            'repositoryId' => $this->text($repository['id'] ?? ''),
+            'repositoryName' => $repositoryName,
+            'owner' => $owner,
+            'installationId' => $installationId,
+            'pullRequestNumber' => $pullRequestNumber,
+            'action' => 'created',
+            'commentId' => $this->text($comment['id'] ?? ''),
+            'commentKind' => $kind,
+            'commentThreadId' => $kind === 'review' ? $threadId : '',
+            'commentReplyToId' => $isReply ? $threadId : '',
+            'commentBody' => $this->text($comment['body'] ?? ''),
+            'commentUrl' => $owner !== '' && $repositoryName !== '' && $pullRequestNumber > 0 ? $this->getPullRequestUrl($owner, $repositoryName, $pullRequestNumber) : '',
+            'commentAuthor' => $this->text($user['handle'] ?? $user['id'] ?? $app['id'] ?? $serviceAccount['id'] ?? ''),
+            'commentAuthorId' => $this->text($user['id'] ?? $app['id'] ?? $serviceAccount['id'] ?? ''),
+            'commentAuthorType' => $authorType,
+        ]];
+    }
+
     public function getEventHeaderName(): string
     {
         return 'webhook-event-type';
@@ -1178,6 +1244,11 @@ class Origin extends Git
     public function getRepositoryUrl(string $owner, string $repositoryName): string
     {
         return "{$this->webEndpoint}/{$owner}/{$repositoryName}";
+    }
+
+    public function getPullRequestUrl(string $owner, string $repositoryName, int $pullRequestNumber): string
+    {
+        return $this->getRepositoryUrl($owner, $repositoryName) . "/pull/{$pullRequestNumber}";
     }
 
     public function getOrganizationUrl(string $owner): string
@@ -2296,6 +2367,74 @@ class Origin extends Git
     }
 
     /**
+     * A user's permission on a repository, combined from their direct and
+     * inherited grants: 'read', 'write', 'admin' or 'custom'. Empty when the
+     * user has no access, which Origin does not tell apart from an unknown
+     * user or repository. Needs the repository:members:read scope.
+     *
+     * @throws Exception
+     */
+    public function getCollaboratorPermission(string $owner, string $repositoryName, string $userId): string
+    {
+        $response = $this->call(
+            self::METHOD_GET,
+            $this->repositoryPath($owner, $repositoryName) . '/collaborators/' . rawurlencode($userId) . '/permission',
+            ['Authorization' => "Bearer {$this->accessToken}"],
+        );
+
+        $headers = \is_array($response['headers'] ?? null) ? $response['headers'] : [];
+        $statusCode = \is_int($headers['status-code'] ?? null) ? $headers['status-code'] : 0;
+        if ($statusCode === 404) {
+            return '';
+        }
+        if ($statusCode >= 400) {
+            throw $this->requestFailed('Failed to get collaborator permission', $response);
+        }
+
+        $body = \is_array($response['body'] ?? null) ? $response['body'] : [];
+
+        return $this->text($body['permission'] ?? '');
+    }
+
+    /** A scalar from a decoded payload as a string; anything else is empty. */
+    private function text(mixed $value): string
+    {
+        return \is_scalar($value) ? (string) $value : '';
+    }
+
+    /**
+     * Mints an installation access token attenuated to these repositories and
+     * scopes, for a client that acts on them without the app's key. Empty
+     * lists inherit the installation's whole grant. The token expires within
+     * 15 minutes.
+     *
+     * @param array<string> $repositoryIds
+     * @param array<string> $scopes
+     * @return array{token: string, expiresAt: string}
+     *
+     * @throws Exception
+     */
+    public function createAccessToken(array $repositoryIds = [], array $scopes = []): array
+    {
+        $response = $this->call(
+            self::METHOD_POST,
+            '/app/installations/' . rawurlencode($this->installationId) . '/access_tokens',
+            ['Authorization' => 'Bearer ' . $this->jwtToken],
+            ['scopes' => \array_values($scopes), 'repositoryIds' => \array_values($repositoryIds)],
+        );
+
+        $body = $response['body'] ?? null;
+        if (!\is_array($body) || !\is_string($body['token'] ?? null) || !\is_string($body['expiresAt'] ?? null)) {
+            throw $this->requestFailed('Failed to create access token', $response);
+        }
+
+        return [
+            'token' => $body['token'],
+            'expiresAt' => $body['expiresAt'],
+        ];
+    }
+
+    /**
      * Dismiss a submitted approve/request_changes review so its verdict no
      * longer counts. The review stays listed with `dismissal` set.
      *
@@ -2398,6 +2537,37 @@ class Origin extends Git
         }
 
         return \is_array($response['body'] ?? null) ? $response['body'] : [];
+    }
+
+    /**
+     * The files that differ between two commits, in the shape
+     * getPullRequestFiles() reports: filename, status and, for a rename,
+     * previous_filename. Like compareCommits(), refs containing '/' must be
+     * passed as their SHA.
+     *
+     * @return array<array<string, string>>
+     */
+    public function compareFiles(string $owner, string $repositoryName, string $base, string $head): array
+    {
+        $files = $this->collectPages(
+            $this->repositoryPath($owner, $repositoryName) . '/compare/' . rawurlencode($base) . '...' . rawurlencode($head) . '/files',
+            'files',
+        );
+
+        $normalized = [];
+        foreach ($files as $file) {
+            if (!\is_array($file)) {
+                continue;
+            }
+
+            $normalized[] = [
+                'filename' => \is_string($file['filename'] ?? null) ? $file['filename'] : '',
+                'status' => \is_string($file['status'] ?? null) ? $file['status'] : '',
+                'previous_filename' => \is_string($file['previousFilename'] ?? null) ? $file['previousFilename'] : '',
+            ];
+        }
+
+        return $normalized;
     }
 
     /**

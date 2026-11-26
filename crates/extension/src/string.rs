@@ -89,6 +89,49 @@ impl Shared {
     pub fn share(&self) -> Self {
         Self(self.0.shallow_clone())
     }
+
+    /// `''`: the engine's interned empty string, as PHP's `''` literal is, so no allocation.
+    pub fn empty() -> Self {
+        unsafe extern "C" {
+            static zend_empty_string: *mut ext_php_rs::ffi::zend_string;
+        }
+        let mut zval = Zval::new();
+        // SAFETY: the engine sets `zend_empty_string` at startup and never frees it; an
+        // interned string is not refcounted, so the zval holds no reference to release.
+        unsafe {
+            zval.value.str_ = zend_empty_string;
+        }
+        zval.u1.type_info = ext_php_rs::flags::ZvalTypeFlags::InternedStringEx.bits();
+        Self(zval)
+    }
+
+    /// The string `bytes`, or [`Self::empty`] for none.
+    pub fn of(bytes: &[u8]) -> Self {
+        if bytes.is_empty() { Self::empty() } else { Self::new(bytes) }
+    }
+
+    /// The string a string `zval` holds, by refcount as PHP assigns it; `None` for any other value.
+    pub fn held(zval: &Zval) -> Option<Self> {
+        zval.is_string().then(|| Self(zval.shallow_clone()))
+    }
+
+    pub fn bytes(&self) -> &[u8] {
+        self.0.zend_str().map_or(&[], ZendStr::as_bytes)
+    }
+}
+
+impl Clone for Shared {
+    fn clone(&self) -> Self {
+        self.share()
+    }
+}
+
+impl std::ops::Deref for Shared {
+    type Target = [u8];
+
+    fn deref(&self) -> &[u8] {
+        self.bytes()
+    }
 }
 
 impl IntoZval for Shared {

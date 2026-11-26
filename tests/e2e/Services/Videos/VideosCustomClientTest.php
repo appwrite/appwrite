@@ -735,12 +735,51 @@ final class VideosCustomClientTest extends Scope
         );
         $this->assertEquals(200, $segment['headers']['status-code']);
         $this->assertNotEmpty($segment['body']);
+        // World-readable segments may sit at Fastly; private videos stay
+        // browser-private so a shared cache cannot keep serving after revoke.
+        $projectId = $this->getProject()['$id'];
+        $this->assertSame(
+            'public, max-age=31536000, immutable',
+            $segment['headers']['cache-control'] ?? null
+        );
+        $this->assertSame('Origin', $segment['headers']['vary'] ?? null);
+        $this->assertSame(
+            'video-' . \strtolower($projectId) . '-' . \strtolower($videoId),
+            $segment['headers']['surrogate-key'] ?? null
+        );
+        $this->assertStringContainsString('updatedAt=', (string) $variant['body']);
+
+        $beforeUpdatedAt = null;
+        if (\preg_match('/updatedAt=([^&\s]+)/', (string) $variant['body'], $match) === 1) {
+            $beforeUpdatedAt = \urldecode($match[1]);
+        }
+        $this->assertNotNull($beforeUpdatedAt, 'Variant playlist did not carry updatedAt');
+
+        $renamed = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->serverHeaders(), [
+            'name' => 'guest-play-renamed-' . Id::unique(),
+        ]);
+        $this->assertEquals(200, $renamed['headers']['status-code']);
+        $this->assertNotSame($beforeUpdatedAt, $renamed['body']['$updatedAt'] ?? null);
+
+        $variantAfter = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/hls/renditions/' . $renditionId . '/streams/' . $streamId . '/playlist.m3u8',
+            $this->anonymousHeaders()
+        );
+        $this->assertEquals(200, $variantAfter['headers']['status-code']);
+        $this->assertStringContainsString(
+            'updatedAt=' . \rawurlencode((string) $renamed['body']['$updatedAt']),
+            (string) $variantAfter['body']
+        );
+        $this->assertStringNotContainsString(
+            'updatedAt=' . \rawurlencode($beforeUpdatedAt),
+            (string) $variantAfter['body']
+        );
 
         $guestTimeline = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', $this->anonymousHeaders());
         $this->assertEquals(200, $guestTimeline['headers']['status-code']);
         $this->assertStringContainsString('WEBVTT', (string) $guestTimeline['body']);
 
-        $projectId = $this->getProject()['$id'];
         $this->assertStringNotContainsString('sprites/', (string) $guestTimeline['body']);
         $this->assertMatchesRegularExpression(
             '/thumbnails\/[a-zA-Z0-9]+\?project=' . \preg_quote($projectId, '/') . '#xywh=/',
@@ -1621,7 +1660,88 @@ final class VideosCustomClientTest extends Scope
                 $response = $this->client->call(Client::METHOD_GET, $path, $headers);
                 $this->assertEquals(200, $response['headers']['status-code'], $path);
                 $this->assertStringContainsString($this->playbackNeedle($path), (string) $response['body'], $path);
+                if (\str_contains($path, '/captions/') && \str_contains($path, '/segments/')) {
+                    $projectId = $this->getProject()['$id'];
+                    $this->assertSame(
+                        'public, max-age=31536000, immutable',
+                        $response['headers']['cache-control'] ?? null,
+                        $path
+                    );
+                    $this->assertSame('Origin', $response['headers']['vary'] ?? null, $path);
+                    $this->assertSame(
+                        'video-' . \strtolower($projectId) . '-' . \strtolower($videoId),
+                        $response['headers']['surrogate-key'] ?? null,
+                        $path
+                    );
+                }
             }
         }
+    }
+
+    /**
+     * Replacing a public caption publishes a new segment URL with the new cue,
+     * and the URL the player had stops being served. Deleting the caption does
+     * the same for the replacement. Those are the URLs a shared cache would
+     * otherwise keep for a year.
+     */
+    public function testPublicCaptionReplacementAndDeleteDropTheOldSegment(): void
+    {
+        $videoId = $this->createPublicVideo();
+        $captionId = $this->createReadyCaption($videoId);
+        $projectId = $this->getProject()['$id'];
+        $previous = $this->hlsCaptionSegmentPath($videoId, $captionId);
+
+        $segment = $this->client->call(Client::METHOD_GET, $previous, $this->anonymousHeaders());
+        $this->assertEquals(200, $segment['headers']['status-code']);
+        $this->assertStringContainsString('Good evening, have a good week.', (string) $segment['body']);
+        $this->assertSame('public, max-age=31536000, immutable', $segment['headers']['cache-control'] ?? null);
+        $this->assertSame(
+            'video-' . \strtolower($projectId) . '-' . \strtolower($videoId),
+            $segment['headers']['surrogate-key'] ?? null
+        );
+
+        $replaced = $this->client->call(
+            Client::METHOD_PATCH,
+            '/videos/' . $videoId . '/captions/' . $captionId,
+            $this->serverHeaders(),
+            [
+                'bucketId' => $this->getVideoBucket()['$id'],
+                'fileId' => $this->getOverrideCaptionFile()['$id'],
+            ]
+        );
+        $this->assertEquals(200, $replaced['headers']['status-code']);
+
+        // The old segment row is gone before this response returns, so the URL
+        // cannot be refilled with the previous cue while the new file is written.
+        $dropped = $this->client->call(Client::METHOD_GET, $previous, $this->anonymousHeaders());
+        $this->assertEquals(404, $dropped['headers']['status-code']);
+
+        $ready = $this->waitForCaptionTerminalState($videoId, $captionId);
+        $this->assertEquals('ready', $ready['status']);
+
+        $current = $this->hlsCaptionSegmentPath($videoId, $captionId);
+        $this->assertNotSame($previous, $current);
+
+        $fresh = $this->client->call(Client::METHOD_GET, $current, $this->anonymousHeaders());
+        $this->assertEquals(200, $fresh['headers']['status-code']);
+        $this->assertStringContainsString('OVERRIDE CUE', (string) $fresh['body']);
+        $this->assertSame('public, max-age=31536000, immutable', $fresh['headers']['cache-control'] ?? null);
+        $this->assertSame(
+            'video-' . \strtolower($projectId) . '-' . \strtolower($videoId),
+            $fresh['headers']['surrogate-key'] ?? null
+        );
+
+        $stale = $this->client->call(Client::METHOD_GET, $previous, $this->anonymousHeaders());
+        $this->assertEquals(404, $stale['headers']['status-code']);
+
+        $deleted = $this->client->call(
+            Client::METHOD_DELETE,
+            '/videos/' . $videoId . '/captions/' . $captionId,
+            $this->serverHeaders()
+        );
+        $this->assertEquals(204, $deleted['headers']['status-code']);
+
+        $gone = $this->client->call(Client::METHOD_GET, $current, $this->anonymousHeaders());
+        $this->assertEquals(404, $gone['headers']['status-code']);
     }
 }

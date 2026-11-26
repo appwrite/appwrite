@@ -1742,37 +1742,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220"
 
 [[package]]
-name = "php-std"
-version = "0.1.0"
-dependencies = [
- "argon2",
- "blake2",
- "blowfish",
- "bytes",
- "cc",
- "foldhash",
- "getrandom 0.3.4",
- "gost94",
- "hashbrown",
- "icu_normalizer",
- "icu_properties",
- "indexmap",
- "md-5",
- "md2",
- "ripemd",
- "rustix",
- "ryu",
- "serde_json",
- "sha1 0.10.7",
- "sha2 0.10.9",
- "sha3",
- "unsafe-libyaml",
- "whirlpool",
- "xxhash-rust",
- "zeroize",
-]
-
-[[package]]
 name = "pin-project-lite"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2650,8 +2619,8 @@ dependencies = [
  "aes 0.8.4",
  "getrandom 0.3.4",
  "md-5",
- "php-std",
  "sha2 0.10.9",
+ "utopia-php-std",
  "zeroize",
 ]
 
@@ -2659,8 +2628,8 @@ dependencies = [
 name = "utopia-balancer"
 version = "0.1.0"
 dependencies = [
- "php-std",
  "thiserror 2.0.21",
+ "utopia-php-std",
 ]
 
 [[package]]
@@ -2671,8 +2640,8 @@ dependencies = [
  "libz-sys",
  "lz4-sys",
  "lzma-rust2 0.22.0",
- "php-std",
  "thiserror 2.0.21",
+ "utopia-php-std",
  "zstd-safe",
 ]
 
@@ -2682,7 +2651,7 @@ version = "0.1.0"
 dependencies = [
  "getrandom 0.3.4",
  "hex",
- "php-std",
+ "utopia-php-std",
 ]
 
 [[package]]
@@ -2690,33 +2659,33 @@ name = "utopia-detector"
 version = "0.1.0"
 dependencies = [
  "memchr",
- "php-std",
  "thiserror 2.0.21",
+ "utopia-php-std",
 ]
 
 [[package]]
 name = "utopia-domains"
 version = "0.1.0"
 dependencies = [
- "php-std",
  "thiserror 2.0.21",
+ "utopia-php-std",
 ]
 
 [[package]]
 name = "utopia-dsn"
 version = "0.1.0"
 dependencies = [
- "php-std",
  "thiserror 2.0.21",
+ "utopia-php-std",
 ]
 
 [[package]]
 name = "utopia-emails"
 version = "0.1.0"
 dependencies = [
- "php-std",
  "serde_json",
  "thiserror 2.0.21",
+ "utopia-php-std",
 ]
 
 [[package]]
@@ -2725,8 +2694,9 @@ version = "0.1.0"
 dependencies = [
  "ext-php-rs",
  "foldhash",
+ "libc",
  "mimalloc",
- "php-std",
+ "psm",
  "stacker",
  "utopia-auth",
  "utopia-balancer",
@@ -2738,6 +2708,7 @@ dependencies = [
  "utopia-emails",
  "utopia-image",
  "utopia-locale",
+ "utopia-php-std",
  "utopia-query",
  "utopia-user-agent",
  "utopia-validators",
@@ -2754,10 +2725,10 @@ dependencies = [
  "jpeg-encoder",
  "kamadak-exif",
  "libheif-rs",
- "php-std",
  "png",
  "skrifa",
  "thiserror 2.0.21",
+ "utopia-php-std",
  "webp",
  "zeno",
 ]
@@ -2768,10 +2739,41 @@ version = "0.1.0"
 dependencies = [
  "foldhash",
  "indexmap",
- "php-std",
  "serde",
  "serde_json",
  "thiserror 2.0.21",
+ "utopia-php-std",
+]
+
+[[package]]
+name = "utopia-php-std"
+version = "0.1.0"
+dependencies = [
+ "argon2",
+ "blake2",
+ "blowfish",
+ "bytes",
+ "cc",
+ "foldhash",
+ "getrandom 0.3.4",
+ "gost94",
+ "hashbrown",
+ "icu_normalizer",
+ "icu_properties",
+ "indexmap",
+ "md-5",
+ "md2",
+ "ripemd",
+ "rustix",
+ "ryu",
+ "serde_json",
+ "sha1 0.10.7",
+ "sha2 0.10.9",
+ "sha3",
+ "unsafe-libyaml",
+ "whirlpool",
+ "xxhash-rust",
+ "zeroize",
 ]
 
 [[package]]
@@ -2779,8 +2781,8 @@ name = "utopia-query"
 version = "0.1.0"
 dependencies = [
  "md-5",
- "php-std",
  "thiserror 2.0.21",
+ "utopia-php-std",
 ]
 
 [[package]]
@@ -2789,14 +2791,14 @@ version = "0.1.0"
 dependencies = [
  "aho-corasick",
  "memchr",
- "php-std",
+ "utopia-php-std",
 ]
 
 [[package]]
 name = "utopia-validators"
 version = "0.1.0"
 dependencies = [
- "php-std",
+ "utopia-php-std",
 ]
 
 [[package]]

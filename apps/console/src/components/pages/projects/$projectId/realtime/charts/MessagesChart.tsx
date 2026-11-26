@@ -258,7 +258,7 @@ export function RealtimeMessagesChart({
               </defs>
               <CartesianGrid
                 strokeDasharray="3 3"
-                stroke="hsl(var(--border))"
+                stroke="var(--border)"
                 vertical={false}
               />
               <SeriesChartXAxis pointCount={chartData.length} />

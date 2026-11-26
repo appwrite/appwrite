@@ -161,8 +161,8 @@ final class AvatarsCustomServerTest extends Scope
     public function testUpdatePhotoUnauthorized(): void
     {
         /**
-         * Test for FAILURE — API keys carry no user identity, so they can
-         * never upload or delete a photo
+         * Test for FAILURE — API keys carry no user identity, so without a
+         * userId there is no photo to upload or delete
          */
         $response = $this->client->call(Client::METHOD_PUT, '/avatars/photo', [
             'content-type' => 'multipart/form-data',
@@ -180,6 +180,90 @@ final class AvatarsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
+    }
+
+    public function testUpdatePhotoByUserId(): void
+    {
+        $user = $this->createPhotoUser();
+        $userId = $this->getPhotoUserId($user);
+        $key = [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $red = $this->createImage('#FF0000', 'png');
+
+        /**
+         * Test for SUCCESS — a key with users.write sets another user's photo
+         */
+        $response = $this->uploadPhoto($key, $red, 'photo.png', params: ['userId' => $userId]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($userId, $response['body']['$id']);
+        $this->assertSamePhoto($red, $this->getPhoto($user));
+
+        /**
+         * Test for FAILURE — a key without users.write cannot
+         */
+        $blue = $this->createImage('#0000FF', 'png');
+        $response = $this->uploadPhoto([
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['avatars.write']),
+        ], $blue, 'photo.png', params: ['userId' => $userId]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals(Exception::GENERAL_UNAUTHORIZED_SCOPE, $response['body']['type']);
+        $this->assertSamePhoto($red, $this->getPhoto($user));
+
+        /**
+         * Test for FAILURE — unknown user
+         */
+        $response = $this->uploadPhoto($key, $blue, 'photo.png', params: ['userId' => Id::unique()]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(Exception::USER_NOT_FOUND, $response['body']['type']);
+    }
+
+    public function testDeletePhotoByUserId(): void
+    {
+        $user = $this->createPhotoUser();
+        $userId = $this->getPhotoUserId($user);
+        $key = [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $red = $this->createImage('#FF0000', 'png');
+
+        $response = $this->uploadPhoto($user, $red, 'photo.png');
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE — a key without users.write cannot delete another user's photo
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/avatars/photo', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['avatars.write']),
+        ], ['userId' => $userId]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals(Exception::GENERAL_UNAUTHORIZED_SCOPE, $response['body']['type']);
+        $this->assertSamePhoto($red, $this->getPhoto($user));
+
+        /**
+         * Test for SUCCESS — a key with users.write replaces it with the placeholder
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/avatars/photo', \array_merge($key, ['content-type' => 'application/json']), ['userId' => $userId]);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertPhotoFallback($this->getPhoto($user));
+
+        /**
+         * Test for FAILURE — unknown user
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/avatars/photo', \array_merge($key, ['content-type' => 'application/json']), ['userId' => Id::unique()]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(Exception::USER_NOT_FOUND, $response['body']['type']);
     }
 
     /**

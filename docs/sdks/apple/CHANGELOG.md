@@ -1,5 +1,9 @@
 # Change Log
 
+## 21.4.0
+
+* Added: Atlassian, Instagram, LINE, Linear, Netlify, Patreon, Railway, Reddit, Roblox, Strava, Vercel, VK and WorkOS to `OAuthProvider`
+
 ## 21.3.0
 
 * Added: `Tracking` sends app, screen and push analytics through `Analytics`; `start()` sends `first_open` once per install and `app_updated` after a version change

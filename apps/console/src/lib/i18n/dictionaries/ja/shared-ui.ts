@@ -1418,12 +1418,10 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Appwrite Videos': 'Appwrite Videos',
   'Transcode, stream, and caption videos.':
     '動画のトランスコード、配信、字幕付けを行います。',
-  'Project environments': 'プロジェクト環境',
-  'Switch or clone staging and production.':
-    'ステージングと本番を切り替え、複製します。',
   'Repository not available': 'リポジトリを利用できません',
-  'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
-    'この Git インストールからリポジトリにアクセスできなくなりました。削除された、インストールから外された、または別のインストールに移された可能性があります。デプロイを続けるには、リポジトリを接続し直してください。',
+  "This Git installation can no longer reach the repository. If it was removed from the installation's repository access, add it back with Update repository access. If it was deleted or moved, connect it again.":
+    'この Git インストールからリポジトリにアクセスできなくなりました。インストールのリポジトリアクセスから外された場合は、「リポジトリアクセスを更新」で追加し直してください。削除または移動された場合は、接続し直してください。',
+  'Update repository access': 'リポジトリアクセスを更新',
   // Halloween caution tape
   Caution: '注意',
   'Spooky zone': '恐怖ゾーン',

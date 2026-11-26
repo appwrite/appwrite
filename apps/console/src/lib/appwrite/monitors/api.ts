@@ -62,13 +62,6 @@ export enum MonitorSeverity {
   Critical = 'critical',
 }
 
-export enum AlertSeverity {
-  Info = 'info',
-  Warning = 'warning',
-  Error = 'error',
-  Critical = 'critical',
-}
-
 export enum MonitorStatus {
   Ok = 'ok',
   Firing = 'firing',
@@ -164,11 +157,7 @@ export type Alert = {
   /**
    * The monitor's severity when the alert fired: `info`, `warning`, `error` or `critical`.
    */
-  severity: AlertSeverity
-  /**
-   * Deprecated: use `severity`. Whether the monitor was critical when the alert fired.
-   */
-  critical: boolean
+  severity: MonitorSeverity
   /**
    * Metric the alert fired on. Null for a probe monitor's alert.
    */
@@ -381,10 +370,6 @@ export type Monitor = {
    * How urgent the monitor's alerts are: `info`, `warning`, `error` or `critical`. Critical alerts may be delivered with higher urgency by the notification channels that support it.
    */
   severity: MonitorSeverity
-  /**
-   * Deprecated: use `severity`. Whether the monitor's severity is `critical`.
-   */
-  critical: boolean
   /**
    * Whether the monitor is firing, as of its last evaluation.
    */

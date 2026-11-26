@@ -75,7 +75,6 @@
         },
         "files": [
             "packages/console/src/compat.php",
-            "packages/query/src/extension.php",
             "packages/validators/src/compat.php"
         ]
     },

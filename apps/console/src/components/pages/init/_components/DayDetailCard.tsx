@@ -2,10 +2,14 @@ import { useState, type ReactNode } from 'react'
 import type {
   LaunchEventDay,
   LaunchEventDayFilm,
+  LaunchEventDayAnnouncement,
   LaunchEventDayResource,
+  LaunchEventDayVisual,
   LaunchEventScheduleItem,
   InitDisplayEvent,
 } from '@/lib/init/types'
+import type { ProductIcon } from '@/lib/products/types'
+import { isFilmPlayerRevealed } from '@/lib/init/types'
 import { useInitPresenceActivity } from '@/lib/init/init-presence-context'
 import { buildInitDayPreviewActivity } from '@/lib/init/init-presence-day-activity'
 import { getInitDayCardId } from '@/lib/init/scroll-to-day-card'
@@ -71,14 +75,18 @@ function VideoThumbnail({
   return <div>{inner}</div>
 }
 
-function DayVisual({ day }: { day: LaunchEventDay }) {
-  const Icon = day.icon
-
-  if (day.visual) {
+function DayVisual({
+  visual,
+  icon: Icon,
+}: {
+  visual?: LaunchEventDayVisual
+  icon: ProductIcon
+}) {
+  if (visual) {
     return (
       <InitDayMockVisual
-        mockVisualId={day.visual.mockVisualId}
-        label={day.visual.imageAlt}
+        mockVisualId={visual.mockVisualId}
+        label={visual.imageAlt}
       />
     )
   }
@@ -98,10 +106,16 @@ function DayVisual({ day }: { day: LaunchEventDay }) {
   )
 }
 
-const TITLE_CLASS =
-  'font-aeonik-pro text-[clamp(32px,4.5vw,42px)] font-normal leading-none tracking-tight'
+const TITLE_CLASS = 'font-aeonik-pro font-normal leading-none tracking-tight'
 
-function DayTitle({ title }: { title: string }) {
+function DayTitle({
+  title,
+  compact = false,
+}: {
+  title: string
+  /** Half-width columns, when a day shows its announcements side by side. */
+  compact?: boolean
+}) {
   // "Introducing" gets its own line, with the product name below it.
   const introducing = title.startsWith('Introducing ')
   const name = introducing ? title.slice('Introducing '.length) : title
@@ -110,7 +124,15 @@ function DayTitle({ title }: { title: string }) {
   const lastWord = lastSpace === -1 ? name : name.slice(lastSpace + 1)
 
   return (
-    <h3 className={cn(TITLE_CLASS, 'text-balance text-foreground')}>
+    <h3
+      className={cn(
+        TITLE_CLASS,
+        compact
+          ? 'text-[clamp(28px,3.2vw,34px)]'
+          : 'text-[clamp(32px,4.5vw,42px)]',
+        'text-balance text-foreground',
+      )}
+    >
       {introducing ? <span className="block">Introducing</span> : null}
       {leading ? <span>{leading}</span> : null}
       <span className="whitespace-nowrap">
@@ -167,12 +189,14 @@ function DayPrimaryLink({
  * player. Pointing at the cover warms the player and the film's playlist.
  */
 function DayFilmCover({
-  day,
+  title,
   films,
+  poweredBy,
   children,
 }: {
-  day: LaunchEventDay
+  title: string
   films: LaunchEventDayFilm[]
+  poweredBy: boolean
   children: ReactNode
 }) {
   const [open, setOpen] = useState(false)
@@ -209,13 +233,154 @@ function DayFilmCover({
         </span>
       </button>
       <InitFilmDialog
-        title={day.title}
+        title={title}
         films={films}
+        poweredBy={poweredBy}
         open={open}
         onOpenChange={setOpen}
       />
     </>
   )
+}
+
+/**
+ * One launch in a day card: its copy (linking to its blog post) beside its
+ * cover, which plays its launch film or opens the post.
+ */
+function DayLaunchSection({
+  title,
+  longDescription,
+  visual,
+  icon,
+  films,
+  articleHref,
+  poweredBy,
+}: {
+  title: string
+  longDescription: string
+  visual?: LaunchEventDayVisual
+  icon: ProductIcon
+  films?: LaunchEventDayFilm[]
+  articleHref?: string
+  poweredBy: boolean
+}) {
+  const copyBlock = (
+    <div>
+      <DayTitle title={title} />
+      <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground transition-colors group-hover:text-foreground/80">
+        {longDescription}
+      </p>
+    </div>
+  )
+  const visualBlock = <DayVisual visual={visual} icon={icon} />
+
+  return (
+    <div className="grid lg:grid-cols-2">
+      <div className="space-y-5 border-b border-border px-6 py-6 lg:border-b-0 lg:border-e">
+        {articleHref ? (
+          <DayPrimaryLink
+            href={articleHref}
+            className="group block transition-opacity hover:opacity-90"
+          >
+            {copyBlock}
+          </DayPrimaryLink>
+        ) : (
+          copyBlock
+        )}
+      </div>
+
+      <div className="flex items-center p-6">
+        {films?.length ? (
+          <DayFilmCover title={title} films={films} poweredBy={poweredBy}>
+            {visualBlock}
+          </DayFilmCover>
+        ) : articleHref ? (
+          <DayPrimaryLink
+            href={articleHref}
+            className="block w-full transition-opacity hover:opacity-90"
+          >
+            {visualBlock}
+          </DayPrimaryLink>
+        ) : (
+          visualBlock
+        )}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * One of several launches on a day, as a column beside the others: its copy
+ * (linking to its blog post), its cover playing its launch film, and its
+ * links along the bottom, level with its neighbours'.
+ */
+function DayAnnouncementColumn({
+  announcement,
+  icon,
+  poweredBy,
+}: {
+  announcement: LaunchEventDayAnnouncement
+  icon: ProductIcon
+  poweredBy: boolean
+}) {
+  const articleHref = announcement.resources.find(isBlogResource)?.href
+  const copyBlock = (
+    <div>
+      <DayTitle title={announcement.title} compact />
+      <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground transition-colors group-hover:text-foreground/80">
+        {announcement.longDescription}
+      </p>
+    </div>
+  )
+  const visualBlock = <DayVisual visual={announcement.visual} icon={icon} />
+
+  return (
+    <section aria-label={announcement.title} className="flex flex-col">
+      <div className="flex flex-1 flex-col gap-6 px-6 py-6">
+        {articleHref ? (
+          <DayPrimaryLink
+            href={articleHref}
+            className="group block transition-opacity hover:opacity-90"
+          >
+            {copyBlock}
+          </DayPrimaryLink>
+        ) : (
+          copyBlock
+        )}
+        <div className="mt-auto">
+          {announcement.films?.length ? (
+            <DayFilmCover
+              title={announcement.title}
+              films={announcement.films}
+              poweredBy={poweredBy}
+            >
+              {visualBlock}
+            </DayFilmCover>
+          ) : articleHref ? (
+            <DayPrimaryLink
+              href={articleHref}
+              className="block w-full transition-opacity hover:opacity-90"
+            >
+              {visualBlock}
+            </DayPrimaryLink>
+          ) : (
+            visualBlock
+          )}
+        </div>
+      </div>
+      {announcement.resources.length > 0 ? (
+        <ul className="divide-y divide-border border-t border-border">
+          {announcement.resources.map((resource) => (
+            <DayResourceRow key={resource.id} resource={resource} alignTop />
+          ))}
+        </ul>
+      ) : null}
+    </section>
+  )
+}
+
+function isBlogResource(resource: LaunchEventDayResource) {
+  return resource.typeLabel.toLowerCase() === 'blog'
 }
 
 interface DayDetailCardProps {
@@ -226,7 +391,14 @@ interface DayDetailCardProps {
   isRecapMode?: boolean
 }
 
-function DayResourceRow({ resource }: { resource: LaunchEventDayResource }) {
+function DayResourceRow({
+  resource,
+  alignTop = false,
+}: {
+  resource: LaunchEventDayResource
+  /** Narrow columns wrap the title: keep the badge and action level with its first line. */
+  alignTop?: boolean
+}) {
   const type = resource.typeLabel.toLowerCase()
   const ResourceIcon =
     type === 'docs' ? BookOpen : type === 'product' ? Package : FileText
@@ -235,8 +407,10 @@ function DayResourceRow({ resource }: { resource: LaunchEventDayResource }) {
   const resolved = useInitHref(resource.href)
   // Phones give the title its own full-width line and drop the badge + action
   // below it; three inline columns left the title ~80px and shredded it.
-  const rowClassName =
-    'group flex flex-wrap items-center gap-x-4 gap-y-2 px-6 py-3.5 transition-colors hover:bg-accent/30 sm:flex-nowrap'
+  const rowClassName = cn(
+    'group flex flex-wrap gap-x-4 gap-y-2 px-6 py-3.5 transition-colors hover:bg-accent/30 sm:flex-nowrap',
+    alignTop ? 'items-start' : 'items-center',
+  )
   const rowContent = (
     <>
       <span className="order-2 flex shrink-0 sm:order-none sm:w-[92px]">
@@ -301,28 +475,17 @@ export function DayDetailCard({
   isRecapMode = false,
 }: DayDetailCardProps) {
   const { setTransientActivity } = useInitPresenceActivity()
-  const blogResources = day.resources.filter(
-    (resource) => resource.typeLabel.toLowerCase() === 'blog',
-  )
+  const poweredBy = isFilmPlayerRevealed(event)
+  const announcements = day.announcements ?? []
+  const blogResources = day.resources.filter(isBlogResource)
   const otherResources = day.resources.filter(
-    (resource) => resource.typeLabel.toLowerCase() !== 'blog',
+    (resource) => !isBlogResource(resource),
   )
-  const primaryArticleHref = blogResources[0]?.href
   const hasListContent =
     blogResources.length > 0 ||
     scheduleItems.length > 0 ||
     otherResources.length > 0
   const footerVideos = day.footerVideos ?? []
-
-  const copyBlock = (
-    <div>
-      <DayTitle title={day.title} />
-      <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground transition-colors group-hover:text-foreground/80">
-        {day.longDescription}
-      </p>
-    </div>
-  )
-  const visualBlock = <DayVisual day={day} />
 
   return (
     <article
@@ -348,37 +511,29 @@ export function DayDetailCard({
         </div>
       </header>
 
-      <div className="grid lg:grid-cols-2">
-        <div className="space-y-5 border-b border-border px-6 py-6 lg:border-b-0 lg:border-e">
-          {primaryArticleHref ? (
-            <DayPrimaryLink
-              href={primaryArticleHref}
-              className="group block transition-opacity hover:opacity-90"
-            >
-              {copyBlock}
-            </DayPrimaryLink>
-          ) : (
-            copyBlock
-          )}
+      {announcements.length > 0 ? (
+        // A day with several launches shows them side by side.
+        <div className="grid divide-y divide-border lg:grid-cols-2 lg:divide-x lg:divide-y-0">
+          {announcements.map((announcement) => (
+            <DayAnnouncementColumn
+              key={announcement.id}
+              announcement={announcement}
+              icon={day.icon}
+              poweredBy={poweredBy}
+            />
+          ))}
         </div>
-
-        <div className="flex items-center p-6">
-          {day.films?.length ? (
-            <DayFilmCover day={day} films={day.films}>
-              {visualBlock}
-            </DayFilmCover>
-          ) : primaryArticleHref ? (
-            <DayPrimaryLink
-              href={primaryArticleHref}
-              className="block w-full transition-opacity hover:opacity-90"
-            >
-              {visualBlock}
-            </DayPrimaryLink>
-          ) : (
-            visualBlock
-          )}
-        </div>
-      </div>
+      ) : (
+        <DayLaunchSection
+          title={day.title}
+          longDescription={day.longDescription}
+          visual={day.visual}
+          icon={day.icon}
+          films={day.films}
+          articleHref={blogResources[0]?.href}
+          poweredBy={poweredBy}
+        />
+      )}
 
       {hasListContent ? (
         <ul className="divide-y divide-border border-t border-border">

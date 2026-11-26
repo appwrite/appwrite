@@ -13,6 +13,7 @@ import {
   getDefaultAnalyticsRange,
   DEFAULT_PAGE_SIZE,
   fetchProject,
+  organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute('/_public/projects/$projectId/analytics')({
@@ -34,18 +35,31 @@ export const Route = createFileRoute('/_public/projects/$projectId/analytics')({
     if (!projectId) return
 
     // Project first so the SDK has the project's region cached.
-    await queryClient.ensureQueryData({
+    const project = await queryClient.ensureQueryData({
       queryKey: ['project', projectId],
       queryFn: () => fetchProject(projectId),
       staleTime: 5 * 60 * 1000,
     })
 
     // Same page/limit/search defaults as the View so the query keys match.
-    const propertiesData = await queryClient
-      .ensureQueryData(
-        analyticsPropertiesQueryOptions(projectId, 0, DEFAULT_PAGE_SIZE, ''),
-      )
-      .catch(() => undefined)
+    // The plan and the one-row count feed the plan limit warning under the
+    // header (useAnalyticsPropertiesPlanLimit); loading them here keeps it
+    // from appearing after the page and pushing the list down.
+    const [propertiesData] = await Promise.all([
+      queryClient
+        .ensureQueryData(
+          analyticsPropertiesQueryOptions(projectId, 0, DEFAULT_PAGE_SIZE, ''),
+        )
+        .catch(() => undefined),
+      queryClient
+        .ensureQueryData(analyticsPropertiesQueryOptions(projectId, 0, 1))
+        .catch(() => undefined),
+      project?.teamId
+        ? queryClient
+            .ensureQueryData(organizationPlanQueryOptions(project.teamId))
+            .catch(() => undefined)
+        : undefined,
+    ])
 
     // Stats are fetched per property (listProperties does not embed metrics).
     // Prefetch them all so the list renders without layout shift; a failing

@@ -2271,7 +2271,9 @@ final class AccountCustomClientTest extends Scope
             'secret' => $verification,
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        // An unknown user answers like a wrong secret, so the route doesn't reveal which accounts exist
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertSame('user_invalid_token', $response['body']['type']);
 
         $response = $this->client->call(Client::METHOD_PUT, '/account/verification', array_merge([
             'origin' => 'http://localhost',
@@ -2803,7 +2805,9 @@ final class AccountCustomClientTest extends Scope
             'password' => $newPassword,
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        // An unknown user answers like a wrong secret, so the route doesn't reveal which accounts exist
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertSame('user_invalid_token', $response['body']['type']);
 
         $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
             'origin' => 'http://localhost',
@@ -5580,6 +5584,49 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $login['headers']['status-code']);
     }
 
+    public function testNativeAppIdIsNoRedirectHost(): void
+    {
+        $project = $this->getProject(true);
+        // Read as a DNS name, an app ID is a public domain someone else may register.
+        $applicationId = 'com.acme' . \bin2hex(\random_bytes(4)) . '.app';
+
+        $platform = $this->client->call(Client::METHOD_POST, '/project/platforms/android', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ], [
+            'platformId' => Id::unique(),
+            'name' => 'Android',
+            'applicationId' => $applicationId,
+        ]);
+        $this->assertSame(201, $platform['headers']['status-code'], \json_encode($platform['body']));
+
+        $magicUrl = fn (string $origin, string $url) => $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', [
+            'origin' => $origin,
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+        ], [
+            'userId' => Id::unique(),
+            'email' => 'native-' . \uniqid() . '@appwrite.io',
+            'url' => $url,
+        ]);
+
+        /**
+         * Test for SUCCESS
+         */
+        // The app ID still passes as an origin's host, as before.
+        $response = $magicUrl('https://' . $applicationId, 'http://localhost/magic');
+        $this->assertSame(201, $response['headers']['status-code'], \json_encode($response['body']));
+
+        /**
+         * Test for FAILURE
+         */
+        // But a link carrying the secret is never sent to it.
+        $response = $magicUrl('http://localhost', 'https://' . $applicationId . '/magic');
+        $this->assertSame(400, $response['headers']['status-code'], \json_encode($response['body']));
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+    }
+
     public function testCreateMagicURLSessionRevokesUnverifiedAccountCredentials(): void
     {
         $data = $this->createFreshAccountWithSession();
@@ -6981,7 +7028,9 @@ final class AccountCustomClientTest extends Scope
             'secret' => $secret,
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        // An unknown user answers like a wrong secret, so the route doesn't reveal which accounts exist
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertSame('user_invalid_token', $response['body']['type']);
 
         $response = $this->client->call(Client::METHOD_PUT, '/account/verification/phone', array_merge([
             'origin' => 'http://localhost',
@@ -8001,6 +8050,20 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertSame(1, $counts[200] ?? 0, 'Exactly one concurrent confirmation may consume the recovery code: ' . json_encode($statuses));
         $this->assertSame(3, $counts[401] ?? 0, 'Every other concurrent confirmation must be rejected: ' . json_encode($statuses));
+
+        // The factor whitelist is case-insensitive, so other spellings must confirm too
+        foreach (['recoverycode', 'RECOVERYCODE'] as $index => $factor) {
+            $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenge', $headers, [
+                'factor' => $factor,
+            ]);
+            $this->assertEquals(201, $challenge['headers']['status-code']);
+
+            $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenge', $headers, [
+                'challengeId' => $challenge['body']['$id'],
+                'otp' => $recoveryCodes[$index + 2],
+            ]);
+            $this->assertEquals(200, $verification['headers']['status-code']);
+        }
 
         // Test FAILURE: Invalid recovery code
         $challenge3 = $this->client->call(Client::METHOD_POST, '/account/mfa/challenge', array_merge([
@@ -10816,7 +10879,9 @@ final class AccountCustomClientTest extends Scope
             'secret' => $otp,
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        // An unknown user answers like a wrong secret, so the route doesn't reveal which accounts exist
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertSame('user_invalid_token', $response['body']['type']);
 
         /**
          * Test for FAILURE - OTP is single use
@@ -11076,7 +11141,9 @@ final class AccountCustomClientTest extends Scope
             'password' => 'new-password-otp',
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        // An unknown user answers like a wrong secret, so the route doesn't reveal which accounts exist
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertSame('user_invalid_token', $response['body']['type']);
     }
 
     public function testCreateIdTokenSessionGoogleShapedClaims(): void

@@ -31,7 +31,6 @@ class Delete extends Base
         $this
             ->setHttpMethod(UtopiaAction::HTTP_REQUEST_METHOD_DELETE)
             ->setHttpPath('/v1/avatars/teams/:teamId/photo')
-            ->httpAlias('/v1/teams/:teamId/photo')
             ->desc('Delete photo')
             ->groups(['api', 'avatars', 'teams'])
             // Team photos belong to Teams too, so the project's Teams switch still covers them

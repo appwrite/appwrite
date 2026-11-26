@@ -69,6 +69,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     dateLabel: 'DECEMBER 1',
     weekdayLabel: 'TUESDAY, DECEMBER 1',
     films: [film('6b06b8ea2b4ba42f96fc', 'Appwrite Videos')],
+    launchesFilmPlayer: true,
     title: 'Introducing Appwrite Videos',
     description: 'Transcode, stream, and caption video in your project.',
     longDescription:
@@ -132,10 +133,6 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     day: 4,
     dateLabel: 'DECEMBER 3',
     weekdayLabel: 'THURSDAY, DECEMBER 3',
-    films: [
-      film('6b06b977275a9c08faf9', 'Appwrite Monitors'),
-      film('6b06b9bb1fe47403a7a5', 'Appwrite Beep'),
-    ],
     title: 'Introducing Appwrite Monitors & Appwrite Beep',
     description: 'Know when your project needs you, wherever you are.',
     longDescription:
@@ -146,16 +143,52 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
       imageAlt:
         'Know when your project needs you: a bandwidth monitor triggered as usage crosses its threshold, and the alert arriving as a push from Appwrite Beep',
     },
-    sessionCount: 1,
-    resources: [
+    announcements: [
       {
-        id: 'init5-day4-announce',
-        typeLabel: 'Blog',
-        title: 'Introducing Appwrite Monitors & Appwrite Beep',
-        href: '/init',
-        actionLabel: 'Coming soon',
+        id: 'monitors',
+        title: 'Introducing Appwrite Monitors',
+        longDescription:
+          'Appwrite Monitors alert you when your project crosses a threshold you set, like bandwidth nearing your plan, before it becomes a problem.',
+        visual: {
+          mockVisualId: 'monitors',
+          imageAlt:
+            'A bandwidth monitor triggered as usage crosses its 80% threshold',
+        },
+        films: [film('6b06b977275a9c08faf9', 'Appwrite Monitors')],
+        resources: [
+          {
+            id: 'init5-day4-monitors-announce',
+            typeLabel: 'Blog',
+            title: 'Introducing Appwrite Monitors',
+            href: '/init',
+            actionLabel: 'Coming soon',
+          },
+        ],
+      },
+      {
+        id: 'beep',
+        title: 'Introducing Appwrite Beep',
+        longDescription:
+          'Appwrite Beep, our mobile app, brings updates from your projects to your phone: triggered monitors, failed certificates and what is new in Appwrite. You choose what reaches you.',
+        visual: {
+          mockVisualId: 'beep',
+          imageAlt:
+            'Project updates arriving on a phone as pushes from Appwrite Beep: a triggered monitor, a failed SSL certificate and an Appwrite launch',
+        },
+        films: [film('6b06b9bb1fe47403a7a5', 'Appwrite Beep')],
+        resources: [
+          {
+            id: 'init5-day4-beep-announce',
+            typeLabel: 'Blog',
+            title: 'Introducing Appwrite Beep',
+            href: '/init',
+            actionLabel: 'Coming soon',
+          },
+        ],
       },
     ],
+    sessionCount: 1,
+    resources: [],
   },
   {
     day: 5,

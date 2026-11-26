@@ -599,8 +599,8 @@ export const jaSitesDictionary: Record<string, string> = {
     'Git プロバイダーを接続すると、プッシュのたびにデプロイされます。',
   'Deploy a working site in a few clicks, then make it yours.':
     '数クリックで動作するサイトをデプロイし、自由にカスタマイズできます。',
-  "This site's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
-    'このサイトの Git インストールからリポジトリにアクセスできなくなったため、プッシュはデプロイされません。リポジトリの接続を解除してから、現在そのリポジトリがあるインストールで接続し直してください。',
+  "This site's Git installation can no longer reach its repository, so pushes can't deploy. If the repository was removed from the installation's repository access, add it back with Update repository access. If it was deleted or moved to another installation, disconnect it and connect it again.":
+    'このサイトの Git インストールからリポジトリにアクセスできなくなったため、プッシュはデプロイされません。インストールのリポジトリアクセスから外された場合は、「リポジトリアクセスを更新」で追加し直してください。削除または別のインストールに移動された場合は、接続を解除してから接続し直してください。',
   'Action needed': '対応が必要',
   'Found:': '検出値:',
   'Wrong value': '値が正しくありません',

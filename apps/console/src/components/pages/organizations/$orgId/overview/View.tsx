@@ -31,6 +31,7 @@ import {
   Blocks,
   KeyRound,
   Handshake,
+  LockKeyhole,
   BellRing,
   Pin,
   PinOff} from '@/lib/icons'
@@ -71,6 +72,8 @@ import {
   useResendMembershipInvite,
   useUpdateMembershipRole,
   useRemoveTeamMember,
+  useOrganizationEmailDomains,
+  useOrganizationSSOProviders,
   syncConsoleAccountAfterMutation,
   updateAccountPrefs,
   mapProjectToListItem,
@@ -88,6 +91,7 @@ import {
   resolveFallbackOrganizationIdFromList,
 } from '@/lib/organization-overview-prefetch'
 import { USER_PREFS_KEY_ORGANIZATION } from '@/lib/user-prefs-keys'
+import { isSSORequiredError, redirectToRequiredSSO } from '@/lib/sso-required'
 import {
   canSeeProjects,
   canShowProjectSettings,
@@ -99,6 +103,7 @@ import {
   canAccessOrgSettingsBilling,
   canAccessOrgSettingsCompliance,
   canShowOrgApiKeysSettings,
+  canShowOrgSsoSettings,
   canShowOrgOAuthAppsSettings,
   canShowOrgInstalledAppsSettings,
   getFirstAllowedOrgSettingsPath,
@@ -195,6 +200,8 @@ import { View as MarketplaceView } from '../marketplace/View'
 import { View as OrgAppsView } from '../apps/View'
 import { InstalledApps } from '../settings/InstalledApps'
 import { Partners } from '../settings/Partners'
+import { SingleSignOn } from '../settings/SingleSignOn'
+import { useSSOAddonGate } from '@/components/global/shared/sso/SSOCardHelpers'
 import { Escalations } from '../settings/Escalations'
 import { EnterpriseSuccessManager } from '@/components/pages/projects/$projectId/shared/EnterpriseSuccessManager'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -217,7 +224,10 @@ import { CreateOrganizationDialog } from './CreateOrganization'
 import { CreateProjectDialog } from './CreateProjectDialog'
 import { useCreateOrganization } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { isUsageStatsCapabilityResolved } from '@/lib/console-profiles'
+import {
+  getActiveProfileFeatures,
+  isUsageStatsCapabilityResolved,
+} from '@/lib/console-profiles'
 import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
 import {
   SettingsCardsList,
@@ -243,7 +253,11 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
 import { EnterpriseBadge } from '@/components/global/shared/EnterpriseBadge'
-import { GripVertical } from 'lucide-react'
+import { GripVertical, TriangleAlert } from 'lucide-react'
+import {
+  getVerifiedEmailDomains,
+  isInternalEmail,
+} from '@/lib/email-domain-affiliation'
 import { useServiceListViewMode } from '@/hooks/use-service-list-view-mode'
 import { ServiceListViewToggle } from '@/components/pages/projects/$projectId/shared/ServiceListViewToggle'
 import { useT } from '@/lib/i18n/translate'
@@ -261,6 +275,7 @@ type OrgRoutePath =
   | '/organizations/$orgId/settings/oauth-apps'
   | '/organizations/$orgId/settings/installations'
   | '/organizations/$orgId/settings/partners'
+  | '/organizations/$orgId/settings/sso'
   | '/organizations/$orgId/settings/escalations'
 import { analyticsAttrs, getOrgTabAnalyticsAction } from '@/lib/analytics-actions'
 
@@ -339,6 +354,21 @@ function OrgRoleBadge({ role }: { role: string }) {
     >
       <Icon className="h-3 w-3 shrink-0" aria-hidden />
       {t(label)}
+    </Badge>
+  )
+}
+
+/** Single sign-on preview: a member whose email is not on a verified domain. */
+function ExternalMemberBadge() {
+  const t = useT()
+  return (
+    <Badge
+      variant="warning"
+      className="text-[11px] font-medium px-2 py-0.5 shrink-0"
+      title={t('Email not on a verified domain')}
+    >
+      <TriangleAlert aria-hidden />
+      {t('External')}
     </Badge>
   )
 }
@@ -608,7 +638,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     return 'projects'
   }, [tabProp, resolvedPathname, isDomainDetailRoute, isAppDetailRoute])
 
-  // Settings sub-tab (when on settings): 'overview' | 'members' | 'billing' | 'compliance' | 'oauth-apps' | 'installations' | 'partners'
+  // Settings sub-tab (when on settings): 'overview' | 'members' | 'billing' | 'compliance' | 'oauth-apps' | 'installations' | 'partners' | 'sso'
   const settingsSubTab = useMemo(() => {
     const pathParts = resolvedPathname.split('/').filter(Boolean)
     const orgIndex = pathParts.findIndex((part) => part === 'organizations')
@@ -620,6 +650,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       if (subTab === 'oauth-apps') return 'oauth-apps'
       if (subTab === 'installations') return 'installations'
       if (subTab === 'partners') return 'partners'
+      if (subTab === 'sso') return 'sso'
       if (subTab === 'escalations') return 'escalations'
       return 'overview'
     }
@@ -697,6 +728,16 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               keywords: ['partners', 'api', 'keys', 'credentials', 'partners keys']},
           ]
         : []),
+      ...(features.sso
+        ? [
+            {
+              id: 'sso',
+              label: t('Single sign-on'),
+              to: '/organizations/$orgId/settings/sso',
+              icon: LockKeyhole,
+              keywords: ['sso', 'single sign-on', 'domains', 'identity providers']},
+          ]
+        : []),
       ...(features.alerts
         ? [
             {
@@ -723,6 +764,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             return canShowOrgInstalledAppsSettings(access, features)
           if (item.id === 'partners')
             return canShowOrgApiKeysSettings(access, features)
+          if (item.id === 'sso') return canShowOrgSsoSettings(access, features)
           return true
         })
       : allNavItems
@@ -809,6 +851,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   // Redirect from disabled settings sub-tabs (feature flags or role-based)
   useEffect(() => {
+    // Experiments switched on in this browser reach `features` one render late,
+    // so a link straight to their tab would bounce; read them as they are now.
+    const showSso = canShowOrgSsoSettings(access, getActiveProfileFeatures())
     if (settingsSubTab === 'billing' && !features.billing) {
       navigate({
         to: '/organizations/$orgId/settings',
@@ -823,6 +868,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       (settingsSubTab === 'installations' &&
         !canShowOrgInstalledAppsSettings(access, features)) ||
       (settingsSubTab === 'partners' && !features.orgApiKeys) ||
+      (settingsSubTab === 'sso' && !showSso) ||
       (settingsSubTab === 'escalations' && !features.alerts)
     ) {
       navigate({
@@ -845,6 +891,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           canShowOrgInstalledAppsSettings(access, features)) ||
         (settingsSubTab === 'partners' &&
           canShowOrgApiKeysSettings(access, features)) ||
+        (settingsSubTab === 'sso' && showSso) ||
         settingsSubTab === 'escalations'
       if (!allowed) {
         const firstAllowed = getFirstAllowedOrgSettingsPath(
@@ -873,6 +920,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         'settings/oauth-apps': '/organizations/$orgId/settings/oauth-apps',
         'settings/installations': '/organizations/$orgId/settings/installations',
         'settings/partners': '/organizations/$orgId/settings/partners',
+        'settings/sso': '/organizations/$orgId/settings/sso',
         'settings/escalations':
           '/organizations/$orgId/settings/escalations',
       } as const satisfies Record<string, OrgRoutePath>
@@ -1837,6 +1885,29 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       mapOrganizationMembershipsToTeamMembers(displayedMembershipsRaw, orgId),
     [displayedMembershipsRaw, orgId],
   )
+  // Single sign-on preview: flag External members once the org has a verified domain.
+  const { domains: emailDomains } = useOrganizationEmailDomains(
+    canShowOrgSsoSettings(access, features) ? orgId : null,
+  )
+  const verifiedEmailDomains = useMemo(
+    () => getVerifiedEmailDomains(emailDomains),
+    [emailDomains],
+  )
+  // Single sign-on needs the organization's Single sign-on add-on: its
+  // settings tab says so while the add-on is not active.
+  const ssoNeedsAddon = useSSOAddonGate(
+    { scope: 'organization', organizationId: orgId },
+    canShowOrgSsoSettings(access, features),
+  ).locked
+  // A member on a verified domain joins again through an enabled provider:
+  // removing them here does not keep them out.
+  const { providers: ssoProviders } = useOrganizationSSOProviders(
+    canShowOrgSsoSettings(access, features) ? orgId : null,
+  )
+  const ssoRejoinsSelectedMember =
+    selectedMember?.status !== 'pending' &&
+    ssoProviders.some((provider) => provider.enabled) &&
+    isInternalEmail(selectedMember?.userEmail, verifiedEmailDomains)
   // Projects named by any member's project-specific roles on this page.
   // Resolved by id rather than read off the org's project list, which is
   // paginated and searched and so will not contain most of them.
@@ -2167,6 +2238,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       'oauth-apps': '/organizations/$orgId/settings/oauth-apps',
       installations: '/organizations/$orgId/settings/installations',
       partners: '/organizations/$orgId/settings/partners',
+      sso: '/organizations/$orgId/settings/sso',
       'escalations':
         '/organizations/$orgId/settings/escalations',
     } as const satisfies Record<string, OrgRoutePath>
@@ -2182,6 +2254,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     try {
       await prefetchOrganizationSwitchData(org.$id)
     } catch (error) {
+      // The organization requires single sign-on: sign in through it and come
+      // back to it. Stay here, and keep the preference, until then.
+      if (isSSORequiredError(error)) {
+        redirectToRequiredSSO(route.replace('$orgId', org.$id))
+        return
+      }
       console.warn('Failed to prefetch organization switch data:', error)
     }
 
@@ -3492,7 +3570,20 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 {activeTab === 'settings' && (
                   <SettingsLayoutShell
                     navItems={orgSettingsNavItems.map((item) =>
-                      item.id === 'billing' &&
+                      item.id === 'sso' && ssoNeedsAddon
+                        ? {
+                            ...item,
+                            // Set up with the Single sign-on add-on
+                            endAdornment: (
+                              <Badge
+                                variant="processing"
+                                className="px-1.5 py-0 text-[10px]"
+                              >
+                                {t('Add-on')}
+                              </Badge>
+                            ),
+                          }
+                        : item.id === 'billing' &&
                       (showProjectsLockedAlert || showFailedInvoiceOrgAlert)
                         ? {
                             ...item,
@@ -3541,6 +3632,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       <InstalledApps />
                     ) : settingsSubTab === 'partners' ? (
                       <Partners />
+                    ) : settingsSubTab === 'sso' ? (
+                      <SingleSignOn />
                     ) : settingsSubTab === 'escalations' ? (
                       <Escalations />
                     ) : settingsSubTab === 'members' ? (
@@ -3740,6 +3833,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                         {t('Pending')}
                                                       </Badge>
                                                     )}
+                                                    {verifiedEmailDomains.size >
+                                                      0 &&
+                                                      !isInternalEmail(
+                                                        member.userEmail,
+                                                        verifiedEmailDomains,
+                                                      ) && (
+                                                        <ExternalMemberBadge />
+                                                      )}
                                                   </div>
                                                   <div className="mt-0.5">
                                                     <p className="truncate text-[12px] text-muted-foreground">
@@ -4775,6 +4876,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   {t(
                     'from the team? They will lose access to all organization resources.',
                   )}
+                  {ssoRejoinsSelectedMember ? (
+                    <span className="mt-2 block">
+                      {t(
+                        'They can join again by signing in with single sign-on. To keep them out, remove them at your identity provider too.',
+                      )}
+                    </span>
+                  ) : null}
                 </>
               )}
             </DialogDescription>
