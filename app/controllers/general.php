@@ -659,20 +659,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             };
             $source = $deployment->getAttribute('buildPath', '');
 
-            $startCommand = $runtime['startCommand'];
-            if ($type === 'site') {
-                $frameworks = Config::getParam('frameworks', []);
-                $framework = $frameworks[$resource->getAttribute('framework', '')] ?? null;
-
-                if (!is_null($framework)) {
-                    $adapter = ($framework['adapters'] ?? [])[$deployment->getAttribute('adapter', '')] ?? null;
-                    if (!is_null($adapter) && isset($adapter['startCommand'])) {
-                        $startCommand = $adapter['startCommand'];
-                    }
-                }
-            }
-
-            $startCommand = Deployments::startCommand($deployment, $startCommand);
+            $startCommand = Deployments::startCommand($deployment, Deployments::defaultStartCommand($resource, $deployment, $runtime));
 
             $runtimeEntrypoint = match ($version) {
                 'v2' => '',

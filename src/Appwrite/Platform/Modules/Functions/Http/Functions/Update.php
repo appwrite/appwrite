@@ -115,6 +115,7 @@ class Update extends Base
             ->param('providerComments', null, new Nullable(new Boolean()), 'Post a build summary on pull requests for the repo linked to the function. Commit statuses are still reported when disabled. Ignored in silent mode.', true)
             ->param('providerDeployments', null, new Nullable(new Boolean()), 'Deploy every push that matches the branch and path rules for the repo linked to the function. When disabled, deploy manually.', true)
             ->param('providerStatuses', null, new Nullable(new Boolean()), 'Report the build status on each commit for the repo linked to the function. Ignored in silent mode.', true)
+            ->param('framework', null, new Nullable(new WhiteList(['', ...\array_keys(Config::getParam('functionFrameworks'))], true)), 'Web framework the function runs, such as `express`. The function\'s code is then an app of that framework, listening on the `PORT` environment variable. Set to an empty string for a function written for the Appwrite runtime.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -162,6 +163,7 @@ class Update extends Base
         ?bool $providerComments,
         ?bool $providerDeployments,
         ?bool $providerStatuses,
+        ?string $framework,
         Request $request,
         Response $response,
         Database $dbForProject,
@@ -222,6 +224,17 @@ class Update extends Base
         $logging ??= $function->getAttribute('logging', true);
         $entrypoint ??= $function->getAttribute('entrypoint', '');
         $commands ??= $function->getAttribute('commands', '');
+        $framework ??= $function->getAttribute('framework', '');
+
+        if ($framework !== '') {
+            $configFramework = Config::getParam('functionFrameworks')[$framework] ?? null;
+            if ($configFramework === null) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Framework "' . $framework . '" is not supported.');
+            }
+            if (!\in_array($runtime, $configFramework['runtimes'], true)) {
+                throw new Exception(Exception::FUNCTION_RUNTIME_UNSUPPORTED, $configFramework['name'] . ' does not support runtime "' . $runtime . '".');
+            }
+        }
         $deploymentRetention ??= $function->getAttribute('deploymentRetention', 0);
         $description ??= $function->getAttribute('description', '');
         $buildSpecification ??= $function->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT);
@@ -328,6 +341,7 @@ class Update extends Base
             $function->getAttribute('name') !== $name ||
             $function->getAttribute('entrypoint') !== $entrypoint ||
             $function->getAttribute('commands') !== $commands ||
+            $function->getAttribute('framework', '') !== $framework ||
             $function->getAttribute('providerRootDirectory') !== $providerRootDirectory ||
             $function->getAttribute('runtime') !== $runtime
         ) {
@@ -374,6 +388,7 @@ class Update extends Base
             'logging' => $logging,
             'entrypoint' => $entrypoint,
             'commands' => $commands,
+            'framework' => $framework,
             'scopes' => $scopes,
             'deploymentRetention' => $deploymentRetention,
             'installationId' => $installation->getId(),
