@@ -130,48 +130,4 @@ class XList extends Base
             'total' => $total,
         ]), Response::MODEL_VIDEO_RENDITION_LIST);
     }
-
-    /**
-     * Renditions store kilobits per second; filters arrive in bits per second, like
-     * the response. Logical queries hold their children in their values.
-     *
-     * @param array<Query> $queries
-     */
-    private function toStoredBitRates(array $queries): void
-    {
-        foreach ($queries as $query) {
-            $method = $query->getMethod();
-            if (\in_array($method, [QueryMethod::And, QueryMethod::Or], true)) {
-                $this->toStoredBitRates($query->getValues());
-                continue;
-            }
-
-            if (!\in_array($query->getAttribute(), ['videoBitRate', 'audioBitRate'], true)) {
-                continue;
-            }
-
-            $values = $query->getValues();
-            foreach ($values as $index => $value) {
-                if (!\is_int($value)) {
-                    continue;
-                }
-
-                $lower = $method === QueryMethod::GreaterThanEqual
-                    || $method === QueryMethod::LessThan
-                    || (\in_array($method, [QueryMethod::Between, QueryMethod::NotBetween], true) && $index === 0);
-                $upper = $method === QueryMethod::GreaterThan
-                    || $method === QueryMethod::LessThanEqual
-                    || \in_array($method, [QueryMethod::Between, QueryMethod::NotBetween], true);
-
-                $values[$index] = match (true) {
-                    $value % 1000 === 0 => \intdiv($value, 1000),
-                    $lower => (int) \ceil($value / 1000),
-                    $upper => (int) \floor($value / 1000),
-                    // No stored rate is that large, so equal never matches and notEqual always does.
-                    default => PHP_INT_MAX,
-                };
-            }
-            $query->setValues($values);
-        }
-    }
 }

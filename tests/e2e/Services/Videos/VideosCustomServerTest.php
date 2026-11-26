@@ -67,15 +67,6 @@ final class VideosCustomServerTest extends Scope
             $this->assertNotEmpty($profile['$createdAt']);
         }
 
-        $explicit = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
-            'codec' => 'h264',
-        ]);
-        $this->assertEquals(200, $explicit['headers']['status-code']);
-        $this->assertEquals(
-            \array_column($response['body']['profiles'], '$id'),
-            \array_column($explicit['body']['profiles'], '$id')
-        );
-
         $withoutTotal = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
             'total' => false,
         ]);
@@ -94,7 +85,7 @@ final class VideosCustomServerTest extends Scope
         ]);
         $this->assertEquals(200, $page['headers']['status-code']);
         $this->assertSame(['360p'], \array_column($page['body']['profiles'], 'name'));
-        $this->assertEquals(6, $page['body']['total'], 'total counts every profile for the codec, not the page');
+        $this->assertEquals(6, $page['body']['total'], 'total counts every profile, not the page');
 
         $uncounted = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
             'queries' => [Query::limit(1)->toString()],
@@ -280,36 +271,62 @@ final class VideosCustomServerTest extends Scope
         $this->assertNotContains('vp9', $ids);
     }
 
+    /**
+     * The list returns every codec; one ladder is a Query.equal('codec', [...])
+     * filter. Only h264 is enabled here, so no hevc or vp9 profile can exist.
+     */
     public function testListProfilesByCodec(): void
     {
-        $default = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers());
-        $h264 = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
-            'codec' => 'h264',
-        ]);
-        $this->assertEquals(200, $default['headers']['status-code']);
-        $this->assertEquals(200, $h264['headers']['status-code']);
-        $this->assertEquals(
-            \array_column($default['body']['profiles'], '$id'),
-            \array_column($h264['body']['profiles'], '$id')
-        );
+        $all = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers());
+        $this->assertEquals(200, $all['headers']['status-code']);
+        $allIds = \array_column($all['body']['profiles'], '$id');
+        $this->assertNotEmpty($allIds);
+        $this->assertEquals(\count($allIds), $all['body']['total']);
 
-        foreach (['hevc', 'vp9'] as $disabled) {
-            $response = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
-                'codec' => $disabled,
-            ]);
-            $this->assertEquals(400, $response['headers']['status-code'], $disabled);
-            $this->assertEquals('video_codec_disabled', $response['body']['type'], $disabled);
+        $h264 = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
+            'queries' => [Query::equal('codec', ['h264'])->toString()],
+        ]);
+        $this->assertEquals(200, $h264['headers']['status-code']);
+        $this->assertSame($allIds, \array_column($h264['body']['profiles'], '$id'));
+        $this->assertEquals($all['body']['total'], $h264['body']['total']);
+        $this->assertSame(['h264'], \array_values(\array_unique(\array_column($h264['body']['profiles'], 'codec'))));
+
+        $other = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
+            'queries' => [Query::equal('codec', ['hevc', 'vp9'])->toString()],
+        ]);
+        $this->assertEquals(200, $other['headers']['status-code']);
+        $this->assertSame([], $other['body']['profiles']);
+        $this->assertEquals(0, $other['body']['total']);
+
+        // The removed codec param is no longer declared, so it is ignored rather than filtering.
+        $legacy = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
+            'codec' => 'vp9',
+        ]);
+        $this->assertEquals(200, $legacy['headers']['status-code']);
+        $this->assertSame($allIds, \array_column($legacy['body']['profiles'], '$id'));
+
+        $tall = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
+            'queries' => [
+                Query::equal('codec', ['h264'])->toString(),
+                Query::greaterThanEqual('height', 1080)->toString(),
+            ],
+        ]);
+        $this->assertEquals(200, $tall['headers']['status-code']);
+        $this->assertNotEmpty($tall['body']['profiles']);
+        $this->assertEquals(\count($tall['body']['profiles']), $tall['body']['total']);
+        foreach ($tall['body']['profiles'] as $profile) {
+            $this->assertGreaterThanOrEqual(1080, $profile['height']);
         }
 
         $unknown = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
-            'codec' => 'av1',
+            'queries' => [Query::equal('codecs', ['h264'])->toString()],
         ]);
         $this->assertEquals(400, $unknown['headers']['status-code']);
     }
 
     /**
      * Full-text search is Query.search('search', term) inside queries. The term
-     * filters the project ladder and custom profiles; other attributes are rejected.
+     * filters the project ladder and custom profiles; name is also filterable.
      */
     public function testListProfilesBySearch(): void
     {
@@ -356,12 +373,14 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(0, $missing['body']['total']);
         $this->assertSame([], $missing['body']['profiles']);
 
-        $rejected = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
+        $byName = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
             'queries' => [
                 Query::equal('name', [$matchName])->toString(),
             ],
         ]);
-        $this->assertEquals(400, $rejected['headers']['status-code']);
+        $this->assertEquals(200, $byName['headers']['status-code']);
+        $this->assertSame([$match['body']['$id']], \array_column($byName['body']['profiles'], '$id'));
+        $this->assertEquals(1, $byName['body']['total']);
 
         $this->client->call(Client::METHOD_DELETE, '/project/videos/profiles/' . $match['body']['$id'], $this->headers());
         $this->client->call(Client::METHOD_DELETE, '/project/videos/profiles/' . $other['body']['$id'], $this->headers());

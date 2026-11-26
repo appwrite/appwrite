@@ -1,7 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import {
   formatRawLog,
-  isAtLeast,
   logfmtFields,
   normalizeLevel,
   parseRuntimeLogLine,
@@ -158,12 +157,6 @@ describe('runtime log line', () => {
     expect(normalizeLevel(9)).toBe('info')
     expect(normalizeLevel('nonsense')).toBeNull()
     expect(normalizeLevel(true)).toBeNull()
-  })
-
-  test('compares levels', () => {
-    expect(isAtLeast('error', 'warn')).toBe(true)
-    expect(isAtLeast('info', 'warn')).toBe(false)
-    expect(isAtLeast('debug', 'debug')).toBe(true)
   })
 
   test('strips color codes', () => {

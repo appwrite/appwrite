@@ -394,7 +394,7 @@ X-Appwrite-Key: <API_KEY>
 ```
 {% /multicode %}
 
-List profiles with `project.listVideoProfiles()`. Results are sorted from the lowest resolution to the highest, and you can search them by name with `Query.search('search', '720p')`.
+List profiles with `project.listVideoProfiles()`. It returns the profiles of every codec, sorted from the lowest resolution to the highest. Filter with queries, for example `Query.equal('codec', ['h264'])` for one codec, and search by name with `Query.search('search', '720p')`.
 
 # Design a ladder {% #design-a-ladder %}
 
