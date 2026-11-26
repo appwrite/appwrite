@@ -1061,7 +1061,7 @@ class Install extends Action
             return;
         }
 
-        // Cross-tool telemetry opt-out convention
+        // https://donottrack.sh
         if (!\in_array(System::getEnv('DO_NOT_TRACK', ''), ['', '0', 'false'], true)) {
             return;
         }
