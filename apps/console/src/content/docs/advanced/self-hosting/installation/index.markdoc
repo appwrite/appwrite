@@ -71,6 +71,10 @@ docker run -it --rm `
 
 Once the command is running, open your browser and navigate to `http://localhost:20080` to access the setup wizard.
 
+{% info title="Install report" %}
+On a new install, the installer sends Appwrite an install report with your Appwrite version, domain, server IP, database, operating system, CPU, RAM and the account name and email you enter. To turn it off, add `--env DO_NOT_TRACK=1` to the `docker run` command.
+{% /info %}
+
 # Setup wizard {% #setup-wizard %}
 
 The setup wizard walks you through four steps to configure your Appwrite instance.
