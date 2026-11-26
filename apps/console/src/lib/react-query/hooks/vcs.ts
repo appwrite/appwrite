@@ -477,7 +477,7 @@ export function useReusableVcsInstallations(
     () => false,
   )
   return useQuery({
-    queryKey: ['vcs', 'installations', projectId, 'reusable'],
+    queryKey: ['vcs', 'installations', projectId, 'reusable', enabled],
     queryFn: () => fetchReusableVcsInstallations(projectId!),
     enabled: !!projectId && enabled,
     staleTime: DEFAULT_STALE_TIME,
