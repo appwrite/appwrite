@@ -95,6 +95,31 @@ function getTanstackStartSitesOptions() {
   }
 }
 
+/**
+ * Marketing and docs loaders read content (blog, changelog, integrations,
+ * docs manifests). Left in the route file, that content loads with the route
+ * tree on every page, console pages included, so it ships in the chunk with
+ * the route's component. Console loaders stay in the route tree, where they
+ * start fetching the moment a link is clicked. `/` stays too: its loader sends
+ * signed-in users to the console and must not wait on the homepage chunk.
+ */
+function splitContentRouteLoaders({
+  routeId,
+}: {
+  routeId: string
+}):
+  | Array<
+      Array<'loader' | 'component' | 'errorComponent' | 'notFoundComponent'>
+    >
+  | undefined {
+  const isContentRoute =
+    (routeId.startsWith('/_marketing/') && routeId !== '/_marketing/') ||
+    routeId === '/docs' ||
+    routeId.startsWith('/docs/')
+  if (!isContentRoute) return undefined
+  return [['loader', 'component'], ['errorComponent'], ['notFoundComponent']]
+}
+
 function getTanstackStartCloudOptions() {
   return {
     prerender: {
@@ -134,7 +159,10 @@ export default defineConfig(async () => {
       }),
       tailwindcss(),
       tanstackStart({
-        router: { basepath: '/' },
+        router: {
+          basepath: '/',
+          codeSplittingOptions: { splitBehavior: splitContentRouteLoaders },
+        },
         ...(isSitesBuild
           ? getTanstackStartSitesOptions()
           : getTanstackStartCloudOptions()),
