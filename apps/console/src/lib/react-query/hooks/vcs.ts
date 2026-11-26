@@ -88,14 +88,24 @@ export async function fetchReusableVcsInstallations(
     )
     // Personal accounts stay out: installations keep no owner, so the list would offer
     // accounts of people who connected them once, including ones no longer on the team.
-    return [
-      ...new Map(
-        shared.installations
-          .filter((i) => !(i as { personal?: boolean }).personal)
-          .filter((i) => !linked.has(account(i)))
-          .map((i) => [account(i), i]),
-      ).values(),
-    ].sort((a, b) => account(a).localeCompare(account(b)))
+    // A reinstalled app leaves the old row behind with a dead ID. GitHub IDs only grow, so
+    // the highest one per account is the live installation.
+    const latest = new Map<string, Models.Installation>()
+    for (const i of shared.installations) {
+      if ((i as { personal?: boolean }).personal || linked.has(account(i))) {
+        continue
+      }
+      const kept = latest.get(account(i))
+      if (
+        !kept ||
+        Number(i.providerInstallationId) > Number(kept.providerInstallationId)
+      ) {
+        latest.set(account(i), i)
+      }
+    }
+    return [...latest.values()].sort((a, b) =>
+      account(a).localeCompare(account(b)),
+    )
   } catch {
     // Servers without installation reuse reject the shared param
     return []
