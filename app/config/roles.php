@@ -103,6 +103,8 @@ $admins = [
     'webhooks.write',
     'monitors.read',
     'monitors.write',
+    'escalations.read',
+    'escalations.write',
     'alerts.read',
     'alerts.write',
     'project.read',

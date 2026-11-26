@@ -77,6 +77,10 @@ zeroize = "1"
 sha3 = "0.10"
 # A stack sized for the work (the extension's Utopia\\Query AST: a tree as deep as PHP takes).
 stacker = "0.1"
+# A kept stack for the same work (crates/extension/src/classes/stack.rs): psm switches to it,
+# libc maps it with a guard page. Both are what stacker itself uses.
+psm = "0.1"
+libc = "0.2"
 unsafe-libyaml = "0.2"
 whirlpool = "0.10"
 xxhash-rust = { version = "0.8", features = ["xxh3"] }

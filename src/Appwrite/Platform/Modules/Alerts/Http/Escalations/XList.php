@@ -34,7 +34,7 @@ class XList extends Base
             ->setHttpPath('/v1/organization/escalations')
             ->desc('List escalations')
             ->groups(['api', 'organization', 'escalations'])
-            ->label('scope', 'monitors.read')
+            ->label('scope', ['escalations.read', 'monitors.read'])
             ->label('sdk', new Method(
                 namespace: 'organization',
                 group: 'escalations',
@@ -42,7 +42,7 @@ class XList extends Base
                 description: <<<EOT
                 Get a list of your organization's escalations. Use `Query.search('search', term)` to search escalation IDs and names.
                 EOT,
-                auth: [AuthType::ADMIN, AuthType::ORGANIZATION],
+                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::ORGANIZATION],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,

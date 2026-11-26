@@ -51,7 +51,7 @@ class Update extends Base
                 ]
             ))
             ->param('alertId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Alert ID.', false, ['dbForPlatform'])
-            ->param('acknowledged', false, new Boolean(), 'Whether the alert is acknowledged. False undoes an acknowledgement.')
+            ->param('acknowledged', false, new Boolean(), 'Whether the alert is acknowledged. False undoes an acknowledgement.', example: true)
             ->inject('response')
             ->inject('project')
             ->inject('user')

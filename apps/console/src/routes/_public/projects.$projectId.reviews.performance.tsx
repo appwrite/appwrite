@@ -18,9 +18,11 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
+    // Categories take longest and sit below the authors, so the tab opens
+    // without waiting for them.
+    void queryClient.prefetchQuery(reviewCategoriesQueryOptions(projectId))
     await Promise.all([
       queryClient.ensureQueryData(reviewAuthorsQueryOptions(projectId)),
-      queryClient.ensureQueryData(reviewCategoriesQueryOptions(projectId)),
       queryClient.ensureQueryData(reviewRepositoriesQueryOptions(projectId)),
     ])
   },

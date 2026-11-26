@@ -8002,6 +8002,20 @@ final class AccountCustomClientTest extends Scope
         $this->assertSame(1, $counts[200] ?? 0, 'Exactly one concurrent confirmation may consume the recovery code: ' . json_encode($statuses));
         $this->assertSame(3, $counts[401] ?? 0, 'Every other concurrent confirmation must be rejected: ' . json_encode($statuses));
 
+        // The factor whitelist is case-insensitive, so other spellings must confirm too
+        foreach (['recoverycode', 'RECOVERYCODE'] as $index => $factor) {
+            $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenge', $headers, [
+                'factor' => $factor,
+            ]);
+            $this->assertEquals(201, $challenge['headers']['status-code']);
+
+            $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenge', $headers, [
+                'challengeId' => $challenge['body']['$id'],
+                'otp' => $recoveryCodes[$index + 2],
+            ]);
+            $this->assertEquals(200, $verification['headers']['status-code']);
+        }
+
         // Test FAILURE: Invalid recovery code
         $challenge3 = $this->client->call(Client::METHOD_POST, '/account/mfa/challenge', array_merge([
             'content-type' => 'application/json',

@@ -9,7 +9,6 @@ class Monitors extends Base
         'type',
         'resourceType',
         'resourceId',
-        'metric',
         'enabled',
         'severity',
         'escalationId',

@@ -7,17 +7,13 @@
 
 import type { Client } from '@appwrite.io/console'
 
-import type {
-  Escalation,
-  EscalationInput,
-  EscalationList,
-} from './models'
+import type { Escalation, EscalationInput, EscalationList } from './models'
 
 const PATH = '/organization/escalations'
 
 function call<T>(
   client: Client,
-  method: 'get' | 'post' | 'put' | 'delete',
+  method: 'get' | 'post' | 'patch' | 'delete',
   path: string,
   payload: Record<string, unknown> = {},
 ): Promise<T> {
@@ -64,7 +60,7 @@ export function updateEscalation(
   escalationId: string,
   changes: Partial<EscalationInput>,
 ): Promise<Escalation> {
-  return call(client, 'put', escalationPath(escalationId), changes)
+  return call(client, 'patch', escalationPath(escalationId), changes)
 }
 
 export function deleteEscalation(

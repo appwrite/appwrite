@@ -1,5 +1,11 @@
 # Change Log
 
+## 11.4.0
+
+* Added: `Messaging.CreateBirdEmailProvider`, `UpdateBirdEmailProvider`, `CreateBirdSMSProvider` and `UpdateBirdSMSProvider` for the Bird email and SMS providers
+* Added: Atlassian, Instagram, LINE, Linear, Netlify, Patreon, Railway, Reddit, Roblox, Strava, Vercel, VK and WorkOS to `OAuthProvider`
+* Added: `project` OAuth2 settings and models for Atlassian, Instagram, LINE, Linear, Netlify, Patreon, Railway, Reddit, Roblox, Strava, Vercel, VK and WorkOS
+
 ## 11.3.0
 
 * Added: `Account.CreateLDAPSession` for LDAP sign-in

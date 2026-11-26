@@ -236,6 +236,15 @@ export const heReviewsDictionary: Record<string, string> = {
   // Performance
   Performance: 'ביצועים',
   'Unknown author': 'מחבר לא ידוע',
+  Outcome: 'תוצאה',
+  'Still open': 'עדיין פתוחים',
+  'Reviews queued before authors were recorded':
+    'סקירות שנכנסו לתור לפני שנשמרו מחברים',
+  Bot: 'בוט',
+  '{rate} first try': '{rate} בניסיון הראשון',
+  '{count} critical': '{count} קריטיים',
+  '{count} fixed': '{count} תוקנו',
+  '{count} reviews': '{count} סקירות',
   'Date range': 'טווח תאריכים',
   Author: 'מחבר',
   'Pull requests': 'בקשות משיכה',

@@ -10,6 +10,7 @@ import { useEffect } from 'react'
 import {
   fetchProject,
   functionTemplatesPageQueryOptions,
+  useVcsInstallations,
   vcsInstallationsQueryOptions,
   projectRuntimesQueryOptions,
   functionSpecificationsQueryOptions,
@@ -96,9 +97,7 @@ function CreateFunctionLayoutInner() {
   const { setInstallations, setBaseDomain, setEdgeBaseDomain, setRegion } =
     useFunctionWizard()
 
-  const { data: installationsData } = useQuery(
-    vcsInstallationsQueryOptions(projectId, 0, 100),
-  )
+  const { data: installationsData } = useVcsInstallations(projectId, 0, 100)
   const { data: project } = useQuery(projectQueryOptions(projectId as string))
   const { functionsDomain, sitesDomain } = useConsoleVariables(project?.region)
 

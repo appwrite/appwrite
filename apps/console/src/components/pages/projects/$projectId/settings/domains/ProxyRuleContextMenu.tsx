@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/context-menu'
 import {
   FileText,
-  RefreshCw,
   Globe,
   Pencil,
   Copy,
@@ -28,7 +27,7 @@ import {
   openInNewTab,
   openInNewWindow,
 } from '@/lib/utils/context-menu'
-import { canRetryRule, canViewRuleLogs } from '@/lib/utils/proxy-domains'
+import { canViewRuleLogs } from '@/lib/utils/proxy-domains'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { useT } from '@/lib/i18n/translate'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
@@ -39,7 +38,6 @@ interface ProxyRuleContextMenuProps {
   projectId: string
   rule: Models.ProxyRule
   onViewLogs: (rule: Models.ProxyRule) => void
-  onRetry: (rule: Models.ProxyRule) => void
   onUpdate?: (rule: Models.ProxyRule) => void
   onRecords: (rule: Models.ProxyRule) => void
   onDelete: (rule: Models.ProxyRule) => void
@@ -50,7 +48,6 @@ export function ProxyRuleContextMenu({
   projectId,
   rule,
   onViewLogs,
-  onRetry,
   onUpdate,
   onRecords,
   onDelete,
@@ -64,6 +61,12 @@ export function ProxyRuleContextMenu({
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-56">
+        <ContextMenuItem
+          onSelect={() => openDialogAfterOverlayCloses(() => onRecords(rule))}
+        >
+          <ContextMenuIcon icon={Globe} />
+          {t('DNS Records')}
+        </ContextMenuItem>
         {canViewRuleLogs(rule) && (
           <ContextMenuItem
             onSelect={() =>
@@ -74,14 +77,6 @@ export function ProxyRuleContextMenu({
             {t('View logs')}
           </ContextMenuItem>
         )}
-        {canRetryRule(rule) && (
-          <ContextMenuItem
-            onSelect={() => openDialogAfterOverlayCloses(() => onRetry(rule))}
-          >
-            <ContextMenuIcon icon={RefreshCw} />
-            {t('Retry')}
-          </ContextMenuItem>
-        )}
         {onUpdate && (
           <ContextMenuItem
             onSelect={() => openDialogAfterOverlayCloses(() => onUpdate(rule))}
@@ -90,12 +85,6 @@ export function ProxyRuleContextMenu({
             {t('Update')}
           </ContextMenuItem>
         )}
-        <ContextMenuItem
-          onSelect={() => openDialogAfterOverlayCloses(() => onRecords(rule))}
-        >
-          <ContextMenuIcon icon={Globe} />
-          {t('DNS Records')}
-        </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuSub>
           <ContextMenuSubTrigger>
