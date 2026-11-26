@@ -24,6 +24,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'per page': '件/ページ',
   'scopes.': 'スコープ。',
   'already exists': 'は既に存在します',
+  'is defined more than once': 'は複数回定義されています',
   'is longer than 8192 allowed characters':
     'は許可される8192文字を超えています',
   'to include more repos.': 'して、さらに多くのリポジトリを含めてください。',

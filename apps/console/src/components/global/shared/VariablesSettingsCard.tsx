@@ -25,7 +25,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useT } from '@/lib/i18n/translate'
+import { translate, useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   openDialogAfterOverlayCloses,
@@ -97,21 +97,148 @@ function isWizardProps(
   return props.variant === 'wizard'
 }
 
+function isAsciiSpace(char: string): boolean {
+  return (
+    char === ' ' ||
+    char === '\t' ||
+    char === '\n' ||
+    char === '\r' ||
+    char === '\f' ||
+    char === '\v'
+  )
+}
+
+/** `export KEY=value` is the same variable. `exported` is a different key. */
+function stripExportPrefix(key: string): string {
+  if (key.startsWith('export') && key.length > 6 && isAsciiSpace(key[6])) {
+    return key.slice(6).trim()
+  }
+  return key
+}
+
+/** Drop one leading quote and one trailing quote. */
+function stripSurroundingQuotes(value: string): string {
+  let start = 0
+  let end = value.length
+  if (start < end && (value[start] === '"' || value[start] === "'")) {
+    start += 1
+  }
+  if (end > start && (value[end - 1] === '"' || value[end - 1] === "'")) {
+    end -= 1
+  }
+  return value.slice(start, end)
+}
+
+/**
+ * Inner text of a quoted value, or null when the quotes do not close cleanly.
+ * A `#` inside the quotes stays. Whitespace or a comment may follow the close.
+ * Double quotes treat `\"` and `\\` as escaped so they do not end the value.
+ */
+function readQuotedValue(raw: string, quote: string): string | null {
+  for (let index = 1; index < raw.length; index++) {
+    const char = raw[index]
+    if (
+      char === '\\' &&
+      quote === '"' &&
+      index + 1 < raw.length &&
+      (raw[index + 1] === '"' || raw[index + 1] === '\\')
+    ) {
+      index += 1
+      continue
+    }
+    if (char === quote) {
+      const rest = raw.slice(index + 1).trim()
+      if (rest !== '' && !rest.startsWith('#')) return null
+      return raw.slice(1, index)
+    }
+  }
+  return null
+}
+
+/**
+ * In an unquoted value, `#` starts a comment at the start of the value or
+ * after whitespace, so `pa#ss` stays whole and `value # note` loses the note.
+ */
+function stripUnquotedComment(value: string): string {
+  let hash = value.indexOf('#')
+  while (hash !== -1) {
+    if (hash === 0) return ''
+    if (isAsciiSpace(value[hash - 1])) {
+      return value.slice(0, hash).trim()
+    }
+    hash = value.indexOf('#', hash + 1)
+  }
+  return value
+}
+
+function parseEnvValue(raw: string): string {
+  const trimmed = raw.trim()
+  if (trimmed === '') return ''
+
+  const quote = trimmed[0]
+  if (quote === '"' || quote === "'") {
+    const quoted = readQuotedValue(trimmed, quote)
+    if (quoted !== null) return quoted
+    return stripSurroundingQuotes(trimmed)
+  }
+
+  return stripUnquotedComment(trimmed)
+}
+
+function separatorIndex(line: string): number {
+  const equals = line.indexOf('=')
+  const colon = line.indexOf(':')
+  if (equals === -1) return colon
+  if (colon === -1) return equals
+  return Math.min(equals, colon)
+}
+
+class DuplicateVariableKeyError extends Error {
+  constructor(key: string) {
+    super(
+      `${translate('Variable')} ${key} ${translate(
+        'is defined more than once',
+      )}`,
+    )
+    this.name = 'DuplicateVariableKeyError'
+  }
+}
+
+function duplicateKeyError(error: unknown): string | null {
+  return error instanceof DuplicateVariableKeyError ? error.message : null
+}
+
+/**
+ * Parse a dotenv file into key/value pairs.
+ * Blank lines and whole-line comments are ignored. `KEY = value` is trimmed,
+ * surrounding quotes are removed, and `=` inside a value is kept.
+ * A key that appears twice is an error so the caller can reject the file
+ * before writing any variable.
+ */
 function parseEnvFile(content: string): Record<string, string> {
-  const result: Record<string, string> = {}
+  // No prototype, so a key named `__proto__` is stored instead of being dropped.
+  const result: Record<string, string> = Object.create(null)
   const lines = content.split('\n')
 
   for (const line of lines) {
     const trimmed = line.trim()
     if (!trimmed || trimmed.startsWith('#')) continue
 
-    const match = trimmed.match(/^([^=:#]+?)[=:](.*)$/)
-    if (match) {
-      const key = match[1].trim()
-      let value = match[2].trim()
-      value = value.replace(/^["']|["']$/g, '')
-      if (key) result[key] = value
+    const separator = separatorIndex(trimmed)
+    if (separator === -1) continue
+
+    // A `#` before the separator is a comment, so the line has no key.
+    const rawKey = trimmed.slice(0, separator)
+    if (rawKey.includes('#')) continue
+
+    const key = stripExportPrefix(rawKey.trim())
+    if (!key) continue
+
+    if (Object.hasOwn(result, key)) {
+      throw new DuplicateVariableKeyError(key)
     }
+
+    result[key] = parseEnvValue(trimmed.slice(separator + 1))
   }
 
   return result
@@ -479,7 +606,16 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
     const reader = new FileReader()
     reader.onload = (event) => {
       const content = (event.target?.result as string) || ''
-      const parsed = parseEnvFile(content)
+      let parsed: Record<string, string>
+      try {
+        parsed = parseEnvFile(content)
+      } catch (error: unknown) {
+        toast.error(
+          duplicateKeyError(error) ??
+            getErrorMessage(error, t('Invalid format')),
+        )
+        return
+      }
       const newVars: EnvVariable[] = []
       for (const [key, value] of Object.entries(parsed)) {
         if (
@@ -522,7 +658,9 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
       onWizardChange([...secretVars, ...newVars])
       setShowEditorModal(false)
     } catch (error: unknown) {
-      setEditorError(getErrorMessage(error, t('Invalid format')))
+      setEditorError(
+        duplicateKeyError(error) ?? getErrorMessage(error, t('Invalid format')),
+      )
     }
   }
 
@@ -707,7 +845,10 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
       setImportFile(null)
       setImportSecret(false)
     } catch (error: unknown) {
-      setImportError(getErrorMessage(error, t('Failed to import variables')))
+      setImportError(
+        duplicateKeyError(error) ??
+          getErrorMessage(error, t('Failed to import variables')),
+      )
     }
   }
 
@@ -794,7 +935,10 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
       setShowEditorModal(false)
       setEditorContent('')
     } catch (error: unknown) {
-      setEditorError(getErrorMessage(error, t('Failed to save variables')))
+      setEditorError(
+        duplicateKeyError(error) ??
+          getErrorMessage(error, t('Failed to save variables')),
+      )
     }
   }
 
@@ -840,7 +984,13 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
           : JSON.stringify(parsed, null, 2),
       )
       setEditorFormat(format)
-    } catch {
+      setEditorError('')
+    } catch (error: unknown) {
+      const duplicate = duplicateKeyError(error)
+      if (duplicate) {
+        setEditorError(duplicate)
+        return
+      }
       const editableVars = (isWizard ? wizardVariables : variables).filter(
         (v) => !v.secret,
       )
