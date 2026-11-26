@@ -7,6 +7,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useT } from '@/lib/i18n/translate'
+import { cn } from '@/lib/utils'
 import { formatMs } from '@/lib/review-trace'
 import type {
   Review,
@@ -148,6 +149,58 @@ export function FindingSeverityBadge({
   )
 }
 
+const SEVERITY_DOTS = {
+  critical: 'bg-red-500',
+  major: 'bg-amber-500',
+  minor: 'bg-muted-foreground/40',
+  info: 'bg-muted-foreground/40',
+} as const satisfies Record<ReviewFindingSeverity, string>
+
+/**
+ * How many findings a review posted, with a dot in the color of the worst.
+ * Nothing until the review completes; an API that predates the count leaves
+ * it out.
+ */
+export function ReviewFindingsCount({
+  review,
+}: {
+  review: Pick<Review, 'status' | 'findingsTotal' | 'severity'>
+}) {
+  const t = useT()
+  if (review.status !== 'completed' || review.findingsTotal === undefined) {
+    return <span className="text-[13px] text-muted-foreground">-</span>
+  }
+  if (review.findingsTotal === 0) {
+    return (
+      <span className="text-[13px] tabular-nums text-muted-foreground">0</span>
+    )
+  }
+  const label = review.severity
+    ? t('Most severe: {severity}').replace(
+        '{severity}',
+        t(SEVERITY_LABELS[review.severity]),
+      )
+    : undefined
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 text-[13px] tabular-nums text-foreground"
+      title={label}
+    >
+      {review.severity && (
+        <span
+          className={cn(
+            'h-2 w-2 shrink-0 rounded-full',
+            SEVERITY_DOTS[review.severity],
+          )}
+          aria-label={label}
+          role="img"
+        />
+      )}
+      {review.findingsTotal.toLocaleString()}
+    </span>
+  )
+}
+
 /** GitHub suffixes an app's login, such as `renovate[bot]`. */
 const BOT_SUFFIX = '[bot]'
 
@@ -232,7 +285,11 @@ export function reviewDuration(
   const start = Date.parse(review.startedAt)
   const end = review.completedAt ? Date.parse(review.completedAt) : now
   if (Number.isNaN(start) || Number.isNaN(end)) return ''
-  const ms = Math.max(0, end - start)
+  return formatReviewTime(Math.max(0, end - start))
+}
+
+/** A review's run time: `840ms`, `12.4s`, `2m 14s`, or `1h 5m` past an hour. */
+export function formatReviewTime(ms: number): string {
   if (ms < 60 * 60 * 1000) return formatMs(ms)
   const minutes = Math.floor(ms / 60_000)
   return `${Math.floor(minutes / 60)}h ${minutes % 60}m`

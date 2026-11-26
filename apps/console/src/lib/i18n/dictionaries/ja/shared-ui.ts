@@ -1394,10 +1394,11 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Starts in': '開始まで',
   'Join us on our biggest Init ever. 5 days, 5 new product launches. It will be electric.':
     '過去最大の Init に参加しよう。5日間で5つの新製品をローンチ。電撃的な1週間になります。',
-  "Init 5 is live. Catch today's reveal and the launch stream.":
-    'Init 5 開催中。今日の発表とローンチ配信をお見逃しなく。',
-  'Init 5 is a wrap. Explore every launch and rewatch the streams.':
-    'Init 5 は終了しました。すべてのローンチを確認し、配信をもう一度ご覧ください。',
+  "Init 5 is live. Catch today's reveal and join the launch event on Discord.":
+    'Init 5 開催中。今日の発表をチェックして、Discord のローンチイベントに参加しましょう。',
+  'Init 5 is a wrap. Explore every launch from the week.':
+    'Init 5 は終了しました。今週のすべてのローンチをご覧ください。',
+  'Init 5 launch event': 'Init 5 ローンチイベント',
   'Introducing Appwrite Analytics': 'Appwrite Analytics のご紹介',
   'Introducing Appwrite Videos': 'Appwrite Videos のご紹介',
   'Introducing Appwrite Zero': 'Appwrite Zero のご紹介',

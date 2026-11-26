@@ -26,17 +26,19 @@ describe('hasQualityLabel', () => {
 })
 
 describe('experiments catalog', () => {
-  test('lists Appwrite Analytics, alerts, Videos and Git installation reuse', () => {
+  test('lists Appwrite Analytics, alerts, Videos, Git installation reuse and alert CTAs', () => {
     expect(EXPERIMENTS.map((experiment) => experiment.flag)).toEqual([
       'analytics',
       'alerts',
       'videos',
       'gitInstallationReuse',
+      'alertCtas',
     ])
     expect(EXPERIMENTS[0]?.name).toBe('Appwrite Analytics')
     expect(EXPERIMENTS[1]?.name).toBe('Monitors and alerts')
     expect(EXPERIMENTS[2]?.name).toBe('Appwrite Videos')
     expect(EXPERIMENTS[3]?.name).toBe('Git installation reuse')
+    expect(EXPERIMENTS[4]?.name).toBe('Alert CTAs')
     for (const experiment of EXPERIMENTS) {
       expect(experiment.description.length).toBeGreaterThan(0)
     }

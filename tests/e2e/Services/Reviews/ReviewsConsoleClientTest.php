@@ -1020,6 +1020,177 @@ final class ReviewsConsoleClientTest extends Scope
         $this->client->call(Client::METHOD_DELETE, '/reviews/repositories/' . $repositoryId, $this->projectHeaders());
     }
 
+    public function testGetSummary(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $installationId = $this->setupInstallation();
+
+        $repository = $this->client->call(Client::METHOD_POST, '/reviews/repositories', $this->projectHeaders(), [
+            'installationId' => $installationId,
+            'providerRepositoryId' => $this->providerRepositoryId,
+        ]);
+        $this->assertSame(201, $repository['headers']['status-code']);
+        $repositoryId = $repository['body']['$id'];
+
+        $alicePull = \random_int(1000, 9_999_999);
+        $bobPull = $alicePull + 1;
+
+        // Alice's first review asks for changes; the second, after a push, approves
+        $this->sendPullRequestEvent('opened', $alicePull, \str_repeat('a', 40), 'alice');
+        $this->completeReview($projectId, $this->listReviews($alicePull)['body']['reviews'][0]['$id'], 'request_changes', 'C', [
+            ['severity' => 'critical', 'status' => 'posted'],
+            ['severity' => 'major', 'status' => 'posted'],
+            ['severity' => 'minor', 'status' => 'posted'],
+            ['severity' => 'info', 'status' => 'posted'],
+            ['severity' => 'minor', 'status' => 'dropped'],
+        ]);
+        $alicePath = '/reviews/repositories/' . $repositoryId . '/pulls/' . $alicePull . '/findings';
+        $alice = $this->callService(Client::METHOD_GET, $alicePath, ['projectId' => $projectId])['body']['findings'];
+        $critical = \array_values(\array_filter($alice, fn (array $finding) => $finding['severity'] === 'critical'))[0];
+        $resolved = $this->callService(Client::METHOD_PATCH, $alicePath . '/status', [
+            'projectId' => $projectId,
+            'findingIds' => [$critical['id']],
+            'status' => 'resolved',
+            'from' => 'posted',
+        ]);
+        $this->assertSame(204, $resolved['headers']['status-code']);
+
+        $this->sendPullRequestEvent('synchronize', $alicePull, \str_repeat('b', 40), 'alice');
+        $second = $this->listReviews($alicePull, [Query::equal('status', ['queued'])->toString()])['body']['reviews'][0];
+        $this->completeReview($projectId, $second['$id'], 'approve', 'A');
+
+        // Bob's pull request is approved by its first review, whose one finding he dismisses
+        $this->sendPullRequestEvent('opened', $bobPull, \str_repeat('c', 40), 'bob');
+        $this->completeReview($projectId, $this->listReviews($bobPull)['body']['reviews'][0]['$id'], 'approve', 'S', [
+            ['severity' => 'minor', 'status' => 'posted'],
+        ]);
+        $bobPath = '/reviews/repositories/' . $repositoryId . '/pulls/' . $bobPull . '/findings';
+        $bob = $this->callService(Client::METHOD_GET, $bobPath, ['projectId' => $projectId])['body']['findings'];
+        $dismissed = $this->callService(Client::METHOD_PATCH, $bobPath . '/status', [
+            'projectId' => $projectId,
+            'findingIds' => [$bob[0]['id']],
+            'status' => 'dismissed',
+            'reason' => 'Intended.',
+            'from' => 'posted',
+        ]);
+        $this->assertSame(204, $dismissed['headers']['status-code']);
+
+        // A review still running counts for nobody
+        $this->sendPullRequestEvent('opened', $bobPull + 1, \str_repeat('d', 40), 'carol');
+
+        /**
+         * Test for SUCCESS
+         */
+
+        $summary = $this->client->call(Client::METHOD_GET, '/reviews/summary', $this->projectHeaders(), [
+            'repositoryId' => $repositoryId,
+        ]);
+        $this->assertSame(200, $summary['headers']['status-code']);
+        $this->assertCount(2, $summary['body']['periods']);
+
+        [$current, $previous] = $summary['body']['periods'];
+        $this->assertSame(2, $current['pulls']);
+        $this->assertSame(3, $current['reviews']);
+        // Alice's latest review approved, and Bob's only one
+        $this->assertSame(2, $current['approved']);
+        $this->assertSame(1, $current['approvedFirst']);
+        // The dropped finding was never posted
+        $this->assertSame(5, $current['findings']);
+        $this->assertSame(1, $current['critical']);
+        $this->assertSame(1, $current['major']);
+        $this->assertSame(2, $current['minor']);
+        $this->assertSame(1, $current['info']);
+        $this->assertSame(1, $current['resolved']);
+        $this->assertSame(1, $current['dismissed']);
+        $this->assertIsInt($current['duration']);
+        $this->assertGreaterThanOrEqual(0, $current['duration']);
+
+        // The period before the range follows it back to back
+        $this->assertSame($previous['end'], $current['start']);
+        $this->assertSame(0, $previous['pulls']);
+        $this->assertSame(0, $previous['findings']);
+        $this->assertSame(0, $previous['duration']);
+
+        // One entry per day of the range, adding up to the range. Summed, so a run across
+        // midnight still passes.
+        $days = $summary['body']['days'];
+        $this->assertCount(30, $days);
+        $this->assertSame($current['start'], $days[0]['date']);
+        $sum = fn (string $key) => \array_sum(\array_column($days, $key));
+        $this->assertSame(3, $sum('reviews'));
+        $this->assertSame(2, $sum('approved'));
+        $this->assertSame(1, $sum('changesRequested'));
+        $this->assertSame(0, $sum('commented'));
+        $this->assertSame(5, $sum('findings'));
+        $this->assertSame(1, $sum('critical'));
+        $this->assertSame(2, $sum('minor'));
+        $this->assertSame(1, $sum('resolved'));
+        $this->assertSame(1, $sum('dismissed'));
+
+        // The repository sums up the same pull requests
+        $this->assertCount(1, $summary['body']['repositories']);
+        $byRepository = $summary['body']['repositories'][0];
+        $this->assertSame($repositoryId, $byRepository['repositoryId']);
+        $this->assertNotEmpty($byRepository['providerRepositoryName']);
+        $this->assertSame(2, $byRepository['pulls']);
+        $this->assertSame(3, $byRepository['reviews']);
+        $this->assertSame(2, $byRepository['approved']);
+        $this->assertSame(1, $byRepository['approvedFirst']);
+        $this->assertSame(5, $byRepository['findings']);
+        $this->assertSame(1, $byRepository['critical']);
+        $this->assertSame(1, $byRepository['major']);
+        $this->assertSame(1, $byRepository['resolved']);
+        $this->assertSame(1, $byRepository['dismissed']);
+        $this->assertNotEmpty($byRepository['lastReviewAt']);
+
+        // A listed review says what it posted, as getting it does
+        $aliceReviews = $this->listReviews($alicePull, [Query::equal('verdict', ['request_changes'])->toString()]);
+        $this->assertSame(1, $aliceReviews['body']['total']);
+        $listed = $aliceReviews['body']['reviews'][0];
+        $this->assertSame(4, $listed['findingsTotal']);
+        $this->assertSame('critical', $listed['severity']);
+        $this->assertSame([], $listed['findings']);
+
+        $got = $this->client->call(Client::METHOD_GET, '/reviews/' . $listed['$id'], $this->projectHeaders());
+        $this->assertSame(200, $got['headers']['status-code']);
+        $this->assertSame(4, $got['body']['findingsTotal']);
+        $this->assertSame('critical', $got['body']['severity']);
+        // The dropped finding is still returned, just not counted
+        $this->assertCount(5, $got['body']['findings']);
+
+        $approved = $this->listReviews($alicePull, [Query::equal('verdict', ['approve'])->toString()])['body']['reviews'][0];
+        $this->assertSame(0, $approved['findingsTotal']);
+        $this->assertSame('', $approved['severity']);
+
+        $week = $this->client->call(Client::METHOD_GET, '/reviews/summary', $this->projectHeaders(), [
+            'repositoryId' => $repositoryId,
+            'range' => '7d',
+        ]);
+        $this->assertSame(200, $week['headers']['status-code']);
+        $this->assertCount(7, $week['body']['days']);
+        $this->assertSame(2, $week['body']['periods'][0]['pulls']);
+
+        /**
+         * Test for FAILURE
+         */
+
+        $invalid = $this->client->call(Client::METHOD_GET, '/reviews/summary', $this->projectHeaders(), [
+            'range' => '1y',
+        ]);
+        $this->assertSame(400, $invalid['headers']['status-code']);
+
+        // Another project sees none of them
+        $summary = $this->client->call(Client::METHOD_GET, '/reviews/summary', $this->projectHeaders($this->getProject(true)['$id']), [
+            'repositoryId' => $repositoryId,
+        ]);
+        $this->assertSame(200, $summary['headers']['status-code']);
+        $this->assertSame(0, $summary['body']['periods'][0]['pulls']);
+        $this->assertSame(0, \array_sum(\array_column($summary['body']['days'], 'reviews')));
+        $this->assertSame([], $summary['body']['repositories']);
+
+        $this->client->call(Client::METHOD_DELETE, '/reviews/repositories/' . $repositoryId, $this->projectHeaders());
+    }
+
     public function testServiceNeedsTheSecret(): void
     {
         $projectId = $this->getProject()['$id'];

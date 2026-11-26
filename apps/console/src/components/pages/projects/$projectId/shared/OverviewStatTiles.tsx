@@ -22,6 +22,10 @@ export type OverviewStatTile = {
   value: ReactNode
   hint?: string
   change?: number
+  /** Lower is better (e.g. time taken): flip the change's colors. */
+  invert?: boolean
+  /** What the change compares with, shown on hover. */
+  changeTitle?: string
   points?: number[]
   loading?: boolean
 }
@@ -122,7 +126,14 @@ export function OverviewStatTiles({
                     >
                       {item.value}
                     </div>
-                    <ChangeBadge change={item.change} />
+                    {item.change !== undefined && (
+                      <span title={item.changeTitle}>
+                        <ChangeBadge
+                          change={item.change}
+                          invert={item.invert}
+                        />
+                      </span>
+                    )}
                   </>
                 )}
               </div>

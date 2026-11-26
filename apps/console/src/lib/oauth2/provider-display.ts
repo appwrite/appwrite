@@ -68,6 +68,7 @@ export const OAUTH2_NEW_PROVIDER_LAUNCH_DATES: Partial<Record<string, string>> =
   {
     [OAuthProvider.Atlassian]: '2026-11-18',
     [OAuthProvider.Bird]: '2026-11-19',
+    [OAuthProvider.Clerk]: '2026-11-26',
     [OAuthProvider.Cloudflare]: '2026-09-08',
     [OAuthProvider.Huggingface]: '2026-08-26',
     [OAuthProvider.Instagram]: '2026-11-18',

@@ -34,22 +34,33 @@ export type RowAction = {
 }
 
 /**
- * What a row's menus offer, in the Console's order: the Copy submenu, links,
- * then the destructive action last. Empty sections are left out.
+ * What a row's menus offer, in the Console's order: the views to open, named
+ * like the tabs they lead to, then the Copy submenu, links, and the
+ * destructive action last. Empty sections are left out.
  */
 export type RowActions = {
+  tabs?: RowAction[]
   copy: RowAction[]
   links: RowAction[]
   remove?: RowAction[]
 }
 
 /** The sections that have items, each to render after a separator but the first. */
-function sections({ copy, links, remove = [] }: RowActions) {
+function sections({ tabs = [], copy, links, remove = [] }: RowActions) {
   return [
+    tabs.length > 0 ? ('tabs' as const) : null,
     copy.length > 0 ? ('copy' as const) : null,
     links.length > 0 ? ('links' as const) : null,
     remove.length > 0 ? ('remove' as const) : null,
   ].filter((section) => section !== null)
+}
+
+/** The actions of a section other than the Copy submenu. */
+function sectionActions(
+  section: 'tabs' | 'links' | 'remove',
+  { tabs = [], links, remove = [] }: RowActions,
+): RowAction[] {
+  return section === 'tabs' ? tabs : section === 'links' ? links : remove
 }
 
 /** Right-click menu of a row in the review screens. */
@@ -88,10 +99,8 @@ export function RowContextMenu({
                   {actions.copy.map(item)}
                 </ContextMenuSubContent>
               </ContextMenuSub>
-            ) : section === 'links' ? (
-              actions.links.map(item)
             ) : (
-              (actions.remove ?? []).map(item)
+              sectionActions(section, actions).map(item)
             )}
           </Fragment>
         ))}
@@ -134,10 +143,8 @@ export function RowActionsDropdown({
                   {actions.copy.map(item)}
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
-            ) : section === 'links' ? (
-              actions.links.map(item)
             ) : (
-              (actions.remove ?? []).map(item)
+              sectionActions(section, actions).map(item)
             )}
           </Fragment>
         ))}

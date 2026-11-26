@@ -91,8 +91,9 @@ function getOverviewChartAxisFormat(metric: MetricType): UsageChartAxisFormat {
 }
 
 /** Soft greyscale placeholder - visible on the real chart canvas. */
-const SKELETON_CHART_STROKE = 'hsl(var(--muted-foreground) / 0.4)'
-const SKELETON_CHART_FILL = 'hsl(var(--muted-foreground))'
+const SKELETON_CHART_STROKE = 'var(--muted-foreground)'
+const SKELETON_CHART_STROKE_OPACITY = 0.4
+const SKELETON_CHART_FILL = 'var(--muted-foreground)'
 const SKELETON_CHART_FILL_TOP_OPACITY = 0.14
 const SKELETON_CHART_FILL_BOTTOM_OPACITY = 0.02
 const SKELETON_WAVE = [
@@ -532,6 +533,7 @@ export const RequestsChart = memo(function RequestsChart({
                         type="monotone"
                         dataKey="total"
                         stroke={SKELETON_CHART_STROKE}
+                        strokeOpacity={SKELETON_CHART_STROKE_OPACITY}
                         strokeWidth={2}
                         fill={`url(#${skeletonGradientId})`}
                         dot={false}
