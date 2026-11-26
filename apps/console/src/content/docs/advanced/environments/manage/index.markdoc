@@ -34,7 +34,7 @@ The environment ID is free again once the environment is deleted, so the same ID
 
 Environments belong to their project and follow it:
 
-- **Transferring the project** to another organization moves every environment with it. The transfer is refused if the target organization's plan allows fewer environments per project than the project has. An environment can't be transferred on its own.
+- **[Transferring the project](/docs/advanced/billing/project-transfers)** to another organization moves every environment with it. The transfer is refused if the target organization's plan allows fewer environments per project than the project has. An environment can't be transferred on its own.
 - **Deleting the project** deletes all of its environments and everything in them.
 
 Usage that environments recorded before they were deleted stays on the project's bill for the current billing period.

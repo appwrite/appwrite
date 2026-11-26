@@ -17,6 +17,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "announcing-project-environments",
+    "href": "/blog/post/announcing-project-environments",
+    "title": "Announcing project environments: dev, staging, and QA for every Appwrite project",
+    "description": "Appwrite Cloud projects now have environments: dev, staging, and QA backends with their own data and users, under the same project ID and on the same bill.",
+    "date": "2026-11-26",
+    "lastUpdated": "2026-11-26",
+    "timeToRead": 5,
+    "author": "matej-baco",
+    "category": "announcements, products",
+    "featured": false,
+    "cover": "/images/blog/announcing-project-environments/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-bird-messaging-providers",
     "href": "/blog/post/announcing-bird-messaging-providers",
     "title": "Announcing Bird email and SMS in Appwrite Messaging",
@@ -196,20 +210,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements, ai, security",
     "featured": false,
     "cover": "/images/blog/announcing-activity-reasons/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "announcing-project-environments",
-    "href": "/blog/post/announcing-project-environments",
-    "title": "Announcing project environments: dev, staging, and QA for every Appwrite project",
-    "description": "Appwrite Cloud projects now have environments. Give a project dev, staging, and QA backends with their own data and users, copied from production, under the same project ID and bill.",
-    "date": "2026-11-12",
-    "lastUpdated": "2026-11-12",
-    "timeToRead": 7,
-    "author": "matej-baco",
-    "category": "announcements, products",
-    "featured": false,
-    "cover": "/images/blog/announcing-project-environments/cover.avif",
     "hasCover": true
   },
   {

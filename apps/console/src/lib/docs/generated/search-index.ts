@@ -237,7 +237,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "advanced/environments/create",
     "title": "Create an environment",
     "description": "Create an Appwrite project environment from the Console, as an empty environment or as a copy of the project, and switch between production and its environments.",
-    "excerpt": "An environment is created from its project. It lands in the project's organization and region, and it's ready to use as soon as it's created. Open the environment switcher 1. Open your project in the Appwrite Console. 2. Click the environment switcher in the project sidebar, above **Overview**. It shows **Production** with a green dot. 3. Click **Create environment**. Name the environment 1. Enter a **Name**, such as . The Console suggests one that isn't taken yet. 2. Check the…",
+    "excerpt": "An environment is created from its project. It lands in the project's organization and region, and it's ready to use as soon as it's created. Open the environment switcher 1. Open your project in the Appwrite Console. 2. Click the environment switcher in the project sidebar, above **Overview**. It shows **Production** with a green dot. 3. Click **Create environment**. Environments are available on the Pro and Enterprise plans. On the Free plan, the switcher lists example environments such as **Staging**…",
     "breadcrumbs": [
       "Environments",
       "Getting started",
@@ -248,7 +248,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "advanced/environments/limits",
     "title": "Limits and billing",
     "description": "How many environments each Appwrite Cloud plan includes per project, the request and user limits of an environment, and how environment usage is billed.",
-    "excerpt": "Project environments are part of your Appwrite Cloud plan. They don't count as projects, and their usage is billed under the project they belong to. Environments per plan | Plan | Environments per project | |---|---| | Free | 5 | | Pro | 5 | | Enterprise | 25 by default, or custom | Production, the project itself, isn't counted. A Pro project can have production and five environments. A project can create as many environments in an hour…",
+    "excerpt": "Project environments are part of your Appwrite Cloud plan. They don't count as projects, and their usage is billed under the project they belong to. Environments per plan | Plan | Environments per project | |---|---| | Free | Not available | | Pro | 3 | | Enterprise | 3 | Production, the project itself, isn't counted. A Pro project can have production and three environments. A project can create as many environments in an hour as its plan…",
     "breadcrumbs": [
       "Environments",
       "Concepts",

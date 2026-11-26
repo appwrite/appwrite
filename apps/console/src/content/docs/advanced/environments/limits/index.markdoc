@@ -10,13 +10,13 @@ Project environments are part of your Appwrite Cloud plan. They don't count as p
 
 | Plan | Environments per project |
 |---|---|
-| Free | 5 |
-| Pro | 5 |
-| Enterprise | 25 by default, or custom |
+| Free | Not available |
+| Pro | 3 |
+| Enterprise | 3 |
 
-Production, the project itself, isn't counted. A Pro project can have production and five environments.
+Production, the project itself, isn't counted. A Pro project can have production and three environments.
 
-A project can create as many environments in an hour as its plan includes per project. Creating more within the hour returns a `429 Too Many Requests` error, and creating more than the plan allows returns a `403` error.
+A project can create as many environments in an hour as its plan includes per project. Creating more within the hour returns a `429 Too Many Requests` error. Creating more than the plan allows, or creating one on the Free plan, returns a `403` error.
 
 # Limits inside an environment {% #limits %}
 

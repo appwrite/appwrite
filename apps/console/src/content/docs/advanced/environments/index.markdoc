@@ -15,8 +15,8 @@ The project itself is **Production**. Environments sit under it, and the Console
 ![Environment switcher in the project sidebar with Production and two environments](/images/docs/environments/switcher.avif)
 {% /only_light %}
 
-{% info title="Appwrite Cloud" %}
-Project environments are available on Appwrite Cloud on the Free, Pro, and Enterprise plans. See [Limits and billing](/docs/advanced/environments/limits) for how many each plan includes.
+{% info title="Beta" %}
+Project environments are in beta on Appwrite Cloud. They are available on the Pro and Enterprise plans, with up to 3 environments per project. See [Limits and billing](/docs/advanced/environments/limits).
 {% /info %}
 
 # How environments work {% #how-it-works %}

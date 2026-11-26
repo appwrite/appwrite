@@ -21,6 +21,10 @@ An environment is created from its project. It lands in the project's organizati
 2. Click the environment switcher in the project sidebar, above **Overview**. It shows **Production** with a green dot.
 3. Click **Create environment**.
 
+{% info title="Pro and Enterprise plans" %}
+Environments are available on the Pro and Enterprise plans. On the Free plan, the switcher lists example environments such as **Staging** and **Preview** instead, and picking one offers to upgrade the organization to Pro.
+{% /info %}
+
 # Name the environment {% #name %}
 
 {% only_dark %}
