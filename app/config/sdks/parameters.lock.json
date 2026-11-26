@@ -915,11 +915,6 @@
             "code",
             "default"
         ],
-        "videos.createRendition": [
-            "videoId",
-            "profileId",
-            "output"
-        ],
         "videos.delete": [
             "videoId"
         ],

@@ -1270,7 +1270,7 @@ final class VideosCustomClientTest extends Scope
         $profileId = $profiles['body']['profiles'][0]['$id'] ?? '';
         $this->assertNotEmpty($profileId);
 
-        $rendition = $this->client->call(
+        $sessionRendition = $this->client->call(
             Client::METHOD_POST,
             '/videos/' . $videoId . '/renditions',
             $this->sessionHeaders(),
@@ -1279,7 +1279,23 @@ final class VideosCustomClientTest extends Scope
                 'output' => 'hls',
             ]
         );
-        $this->assertEquals(202, $rendition['headers']['status-code']);
+        $this->assertSame(401, $sessionRendition['headers']['status-code']);
+        $this->assertSame('user_unauthorized', $sessionRendition['body']['type']);
+
+        $renditions = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->serverHeaders());
+        $this->assertSame(200, $renditions['headers']['status-code']);
+        $this->assertSame(0, $renditions['body']['total']);
+
+        $rendition = $this->client->call(
+            Client::METHOD_POST,
+            '/videos/' . $videoId . '/renditions',
+            $this->serverHeaders(),
+            [
+                'profileId' => $profileId,
+                'output' => 'hls',
+            ]
+        );
+        $this->assertSame(202, $rendition['headers']['status-code']);
         $renditionId = $rendition['body']['$id'];
 
         $deleteRendition = $this->client->call(
