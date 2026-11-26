@@ -312,6 +312,38 @@ final class OriginTest extends TestCase
         }
     }
 
+    public function testGetEventPushReadsANonStringBeforeAsEmpty(): void
+    {
+        $payload = $this->pushPayload('main');
+        $payload['event']['payload']['refUpdates'][0]['before'] = ['abc123'];
+
+        $events = $this->adapter->getEvents('repository.pushed', (string) json_encode($payload));
+
+        $this->assertCount(1, $events);
+        $this->assertSame('', $events[0]['previousCommitHash']);
+    }
+
+    public function testCompareFilesReadsNonStringFieldsAsEmpty(): void
+    {
+        $adapter = new class (new Cache(new None())) extends Origin {
+            protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+            {
+                return [
+                    'headers' => ['status-code' => 200],
+                    'body' => ['files' => [
+                        ['filename' => 'src/index.php', 'status' => 'renamed', 'previousFilename' => 'index.php'],
+                        ['filename' => 42, 'status' => null, 'previousFilename' => ['old.php']],
+                    ]],
+                ];
+            }
+        };
+
+        $this->assertSame([
+            ['filename' => 'src/index.php', 'status' => 'renamed', 'previous_filename' => 'index.php'],
+            ['filename' => '', 'status' => '', 'previous_filename' => ''],
+        ], $adapter->compareFiles(self::OWNER, self::REPOSITORY_NAME, 'abc123', self::COMMIT_HASH));
+    }
+
     public function testGetSigningKeys(): void
     {
         $adapter = new FixtureKeysOrigin(new Cache(new None()));
