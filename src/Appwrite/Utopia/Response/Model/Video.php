@@ -15,20 +15,26 @@ class Video extends Model
      */
     public function filter(Document $document): Document
     {
-        $frameRate = (string) $document->getAttribute('videoFrameRate', '');
+        $frameRate = \trim((string) $document->getAttribute('videoFrameRate', ''));
         $fps = 0.0;
-        if (\preg_match('/^\s*([\d.]+)\s*\/\s*([\d.]+)\s*$/', $frameRate, $parts) && (float) $parts[2] > 0) {
-            $fps = (float) $parts[1] / (float) $parts[2];
-        } elseif (\is_numeric($frameRate)) {
+        if (\is_numeric($frameRate)) {
             $fps = (float) $frameRate;
+        } elseif (\substr_count($frameRate, '/') === 1) {
+            [$numerator, $denominator] = \array_map('trim', \explode('/', $frameRate));
+            if (\is_numeric($numerator) && \is_numeric($denominator) && (float) $denominator > 0) {
+                $fps = (float) $numerator / (float) $denominator;
+            }
         }
 
-        $sampleRate = (string) $document->getAttribute('audioSampleRate', '');
+        $sampleRate = \trim((string) $document->getAttribute('audioSampleRate', ''));
         $hertz = 0;
         if (\is_numeric($sampleRate)) {
             $hertz = (int) \round((float) $sampleRate);
-        } elseif (\preg_match('/^\s*([\d.]+)\s*kHz\s*$/i', $sampleRate, $parts)) {
-            $hertz = (int) \round((float) $parts[1] * 1000);
+        } elseif (\str_ends_with(\strtolower($sampleRate), 'khz')) {
+            $kilohertz = \trim(\substr($sampleRate, 0, -3));
+            if (\is_numeric($kilohertz)) {
+                $hertz = (int) \round((float) $kilohertz * 1000);
+            }
         }
 
         return $document

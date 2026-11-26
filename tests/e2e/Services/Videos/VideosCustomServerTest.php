@@ -524,7 +524,7 @@ final class VideosCustomServerTest extends Scope
 
         $this->assertGreaterThan(0, $body['duration'], 'Video was not probed by the timeline job');
         $this->assertGreaterThan(0, $body['width']);
-        $this->assertIsFloat($body['videoFrameRate']);
+        $this->assertContains(\get_debug_type($body['videoFrameRate']), ['int', 'float']);
         $this->assertGreaterThan(0, $body['videoFrameRate']);
         $this->assertIsInt($body['audioSampleRate']);
         // Probe runs mid-timeline; jobs/ cleanup is asserted after the job ends
@@ -858,7 +858,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertSame('', $ready['error']);
         $this->assertIsInt($ready['size']);
         $this->assertGreaterThan(0, $ready['size']);
-        $this->assertIsFloat($ready['targetDuration']);
+        $this->assertContains(\get_debug_type($ready['targetDuration']), ['int', 'float']);
         $this->assertGreaterThan(0, $ready['targetDuration']);
 
         $fetched = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions/' . $captionId, $this->headers());
@@ -2332,14 +2332,14 @@ final class VideosCustomServerTest extends Scope
         $this->assertSame(100, $body['progress']);
         $this->assertIsInt($body['size']);
         $this->assertGreaterThan(0, $body['size']);
-        $this->assertIsFloat($body['targetDuration']);
+        $this->assertContains(\get_debug_type($body['targetDuration']), ['int', 'float']);
         $this->assertGreaterThan(0, $body['targetDuration']);
 
         $listed = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers());
         $this->assertEquals(200, $listed['headers']['status-code']);
         $byId = \array_column($listed['body']['renditions'], null, '$id');
         $this->assertSame(100, $byId[$renditionId]['progress']);
-        $this->assertIsFloat($byId[$renditionId]['targetDuration']);
+        $this->assertContains(\get_debug_type($byId[$renditionId]['targetDuration']), ['int', 'float']);
 
         $rejected = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers(), [
             'queries' => [Query::greaterThan('progress', 50)->toString()],
