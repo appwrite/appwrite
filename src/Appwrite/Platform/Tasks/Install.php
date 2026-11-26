@@ -1061,7 +1061,7 @@ class Install extends Action
             return;
         }
 
-        // https://consoledonottrack.com
+        // Cross-tool telemetry opt-out convention
         if (!\in_array(System::getEnv('DO_NOT_TRACK', ''), ['', '0', 'false'], true)) {
             return;
         }
