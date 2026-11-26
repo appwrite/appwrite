@@ -129,7 +129,9 @@ abstract class Base extends Action
             // moved to another organization keeps the team it was created in on its monitors.
             $projectId = (string) $monitor->getAttribute('projectId', '');
             $project = $projectId === '' ? new Document() : $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
-            $teamInternalId = (string) $project->getAttribute('teamInternalId', '');
+            $teamInternalId = $projectId === ''
+                ? (string) $monitor->getAttribute('teamInternalId', '')
+                : (string) $project->getAttribute('teamInternalId', '');
             $membership = $teamInternalId === '' ? new Document() : $authorization->skip(fn () => $dbForPlatform->findOne('memberships', [
                 Query::equal('teamInternalId', [$teamInternalId]),
                 Query::equal('userInternalId', [(string) $user->getSequence()]),
