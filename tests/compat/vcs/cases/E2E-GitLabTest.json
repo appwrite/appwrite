@@ -17131,7 +17131,7 @@
                   "<body>"
                 ]
               ],
-              "body": "{\"url\":\"${vcs}\\/~${ns}\\/catcher\\/webhook\",\"token\":\"test-webhook-secret-06a0000000074\",\"enable_ssl_verification\":false,\"push_events\":true,\"merge_requests_events\":false}"
+              "body": "{\"url\":\"${vcs}\\/~${ns}\\/catcher\\/webhook\",\"token\":\"test-webhook-secret-06a0000000074\",\"enable_ssl_verification\":false,\"push_events\":true,\"merge_requests_events\":false,\"note_events\":false}"
             },
             {
               "provider": "gitlab",
@@ -17702,7 +17702,7 @@
                   "<body>"
                 ]
               ],
-              "body": "{\"url\":\"${vcs}\\/~${ns}\\/catcher\\/webhook\",\"token\":\"test-webhook-secret-06a0000000077\",\"enable_ssl_verification\":false,\"push_events\":false,\"merge_requests_events\":true}"
+              "body": "{\"url\":\"${vcs}\\/~${ns}\\/catcher\\/webhook\",\"token\":\"test-webhook-secret-06a0000000077\",\"enable_ssl_verification\":false,\"push_events\":false,\"merge_requests_events\":true,\"note_events\":false}"
             },
             {
               "provider": "gitlab",
