@@ -1077,6 +1077,15 @@ final class VideosCustomServerTest extends Scope
         ]);
         $this->assertEquals(200, $belowRate['headers']['status-code']);
         $this->assertNotContains($response['body']['$id'], \array_column($belowRate['body']['renditions'], '$id'));
+
+        $nested = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'queries' => [Query::or([
+                Query::equal('videoBitRate', [890000]),
+                Query::equal('audioBitRate', [1000]),
+            ])->toString()],
+        ]);
+        $this->assertEquals(200, $nested['headers']['status-code']);
+        $this->assertContains($response['body']['$id'], \array_column($nested['body']['renditions'], '$id'));
     }
 
     /**
