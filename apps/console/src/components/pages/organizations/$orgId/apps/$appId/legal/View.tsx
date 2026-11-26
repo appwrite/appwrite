@@ -41,6 +41,10 @@ function LegalSettings({ orgId, app }: { orgId: string; app: Models.App }) {
     setDataDeletionUrl(app.dataDeletionUrl ?? '')
   }, [app])
 
+  const privacyPolicyUrlError = urlFieldError(privacyPolicyUrl)
+  const termsUrlError = urlFieldError(termsUrl)
+  const dataDeletionUrlError = urlFieldError(dataDeletionUrl)
+
   const legalDirty =
     trimOrEmpty(privacyPolicyUrl) !== (app.privacyPolicyUrl ?? '') ||
     trimOrEmpty(termsUrl) !== (app.termsUrl ?? '') ||
@@ -61,13 +65,13 @@ function LegalSettings({ orgId, app }: { orgId: string; app: Models.App }) {
           <Input
             id="app-legal-privacy"
             value={privacyPolicyUrl}
-            aria-invalid={urlFieldError(privacyPolicyUrl) !== null}
+            aria-invalid={privacyPolicyUrlError !== null}
             onChange={(e) => setPrivacyPolicyUrl(e.target.value)}
             placeholder="https://example.com/privacy"
           />
-          {urlFieldError(privacyPolicyUrl) ? (
+          {privacyPolicyUrlError ? (
             <p className="text-[12px] text-destructive">
-              {t(urlFieldError(privacyPolicyUrl)!)}
+              {privacyPolicyUrlError}
             </p>
           ) : null}
         </div>
@@ -76,13 +80,13 @@ function LegalSettings({ orgId, app }: { orgId: string; app: Models.App }) {
           <Input
             id="app-legal-terms"
             value={termsUrl}
-            aria-invalid={urlFieldError(termsUrl) !== null}
+            aria-invalid={termsUrlError !== null}
             onChange={(e) => setTermsUrl(e.target.value)}
             placeholder="https://example.com/terms"
           />
-          {urlFieldError(termsUrl) ? (
+          {termsUrlError ? (
             <p className="text-[12px] text-destructive">
-              {t(urlFieldError(termsUrl)!)}
+              {termsUrlError}
             </p>
           ) : null}
         </div>
@@ -91,13 +95,13 @@ function LegalSettings({ orgId, app }: { orgId: string; app: Models.App }) {
           <Input
             id="app-legal-deletion"
             value={dataDeletionUrl}
-            aria-invalid={urlFieldError(dataDeletionUrl) !== null}
+            aria-invalid={dataDeletionUrlError !== null}
             onChange={(e) => setDataDeletionUrl(e.target.value)}
             placeholder="https://example.com/delete-data"
           />
-          {urlFieldError(dataDeletionUrl) ? (
+          {dataDeletionUrlError ? (
             <p className="text-[12px] text-destructive">
-              {t(urlFieldError(dataDeletionUrl)!)}
+              {dataDeletionUrlError}
             </p>
           ) : null}
         </div>
@@ -109,8 +113,8 @@ function LegalSettings({ orgId, app }: { orgId: string; app: Models.App }) {
           disabled={
             isUpdating ||
             !legalDirty ||
-            [privacyPolicyUrl, termsUrl, dataDeletionUrl].some(
-              (url) => urlFieldError(url) !== null,
+            [privacyPolicyUrlError, termsUrlError, dataDeletionUrlError].some(
+              (error) => error !== null,
             )
           }
           onClick={() =>

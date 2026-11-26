@@ -36,6 +36,8 @@ export function BrandingCard({ orgId, app }: BrandingCardProps) {
     setImages(app.images ?? [])
   }, [app])
 
+  const clientUriError = urlFieldError(clientUri)
+
   const brandingDirty =
     trimOrEmpty(clientUri) !== (app.clientUri ?? '') ||
     trimOrEmpty(logoUri) !== (app.logoUri ?? '') ||
@@ -60,11 +62,11 @@ export function BrandingCard({ orgId, app }: BrandingCardProps) {
             value={clientUri}
             onChange={(e) => setClientUri(e.target.value)}
             placeholder="https://example.com"
-            aria-invalid={urlFieldError(clientUri) !== null}
+            aria-invalid={clientUriError !== null}
           />
-          {urlFieldError(clientUri) ? (
+          {clientUriError ? (
             <p className="text-[12px] text-destructive">
-              {t(urlFieldError(clientUri)!)}
+              {clientUriError}
             </p>
           ) : null}
         </div>
@@ -92,7 +94,7 @@ export function BrandingCard({ orgId, app }: BrandingCardProps) {
           size="sm"
           className="h-9 text-[13px]"
           disabled={
-            isUpdating || !brandingDirty || urlFieldError(clientUri) !== null
+            isUpdating || !brandingDirty || clientUriError !== null
           }
           onClick={() =>
             submit({
