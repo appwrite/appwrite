@@ -157,6 +157,27 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(96, $response['body']['audioBitRate']);
         $this->assertEquals('h264', $response['body']['codec']);
 
+        $renamedName = 'renamedprofile' . \uniqid();
+        $renamed = $this->client->call(Client::METHOD_PATCH, '/project/videos/profiles/' . $profileId, $this->headers(), [
+            'name' => $renamedName,
+        ]);
+        $this->assertEquals(200, $renamed['headers']['status-code']);
+
+        $stored = $this->client->call(Client::METHOD_GET, '/project/videos/profiles/' . $profileId, $this->headers());
+        $this->assertEquals(200, $stored['headers']['status-code']);
+        $this->assertSame($renamedName, $stored['body']['name']);
+        $this->assertSame(2203, $stored['body']['videoBitRate']);
+        $this->assertSame(96, $stored['body']['audioBitRate']);
+        $this->assertSame(854, $stored['body']['width']);
+        $this->assertSame(480, $stored['body']['height']);
+        $this->assertSame('h264', $stored['body']['codec']);
+
+        $found = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
+            'queries' => [Query::search('search', $renamedName)->toString()],
+        ]);
+        $this->assertEquals(200, $found['headers']['status-code']);
+        $this->assertContains($profileId, \array_column($found['body']['profiles'], '$id'));
+
         $this->client->call(Client::METHOD_DELETE, '/project/videos/profiles/' . $profileId, $this->headers());
     }
 
@@ -307,7 +328,8 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(201, $omit['headers']['status-code']);
         $this->assertEquals('h264', $omit['body']['codec']);
 
-        foreach (['hevc', 'vp9', 'av1'] as $codec) {
+        // Known but disabled codecs pass the enum and are refused by the action.
+        foreach (['hevc' => 'video_codec_disabled', 'vp9' => 'video_codec_disabled', 'av1' => 'general_argument_invalid'] as $codec => $type) {
             $response = $this->client->call(Client::METHOD_POST, '/project/videos/profiles', $this->headers(), [
                 'name' => 'codec-' . $codec . '-' . \uniqid(),
                 'videoBitRate' => 890,
@@ -317,7 +339,7 @@ final class VideosCustomServerTest extends Scope
                 'codec' => $codec,
             ]);
             $this->assertEquals(400, $response['headers']['status-code'], $codec);
-            $this->assertEquals('general_argument_invalid', $response['body']['type'], $codec);
+            $this->assertEquals($type, $response['body']['type'], $codec);
         }
 
         $this->client->call(Client::METHOD_DELETE, '/project/videos/profiles/' . $omit['body']['$id'], $this->headers());
@@ -361,6 +383,16 @@ final class VideosCustomServerTest extends Scope
         ]));
         $this->assertEquals(409, $conflict['headers']['status-code']);
         $this->assertEquals('video_profile_already_exists', $conflict['body']['type']);
+
+        // A partial update is checked against the merged profile, not just the passed fields.
+        $partial = $this->client->call(Client::METHOD_PATCH, '/project/videos/profiles/' . $other['body']['$id'], $this->headers(), [
+            'videoBitRate' => 701,
+        ]);
+        $this->assertEquals(409, $partial['headers']['status-code']);
+        $this->assertEquals('video_profile_already_exists', $partial['body']['type']);
+
+        $unchanged = $this->client->call(Client::METHOD_GET, '/project/videos/profiles/' . $other['body']['$id'], $this->headers());
+        $this->assertSame(702, $unchanged['body']['videoBitRate']);
 
         $this->client->call(Client::METHOD_DELETE, '/project/videos/profiles/' . $first['body']['$id'], $this->headers());
         $this->client->call(Client::METHOD_DELETE, '/project/videos/profiles/' . $other['body']['$id'], $this->headers());
@@ -736,6 +768,8 @@ final class VideosCustomServerTest extends Scope
         $ready = $this->waitForCaptionTerminalState($videoId, $captionId);
         $this->assertEquals('ready', $ready['status']);
         $this->assertSame('', $ready['error']);
+        $this->assertIsInt($ready['size']);
+        $this->assertGreaterThan(0, $ready['size']);
     }
 
     public function testListCaptions(): void
@@ -2168,6 +2202,8 @@ final class VideosCustomServerTest extends Scope
         $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T/', $body['startedAt']);
         $this->assertNotEmpty($body['endedAt']);
         $this->assertEquals('100', $body['progress']);
+        $this->assertIsInt($body['size']);
+        $this->assertGreaterThan(0, $body['size']);
     }
 
     public function testListRenditions(): void

@@ -1802,11 +1802,6 @@ return [
         'description' => 'Video caption segment with the requested ID could not be found.',
         'code' => 404,
     ],
-    Exception::VIDEO_LANGUAGE_CODE_NOT_VALID => [
-        'name' => Exception::VIDEO_LANGUAGE_CODE_NOT_VALID,
-        'description' => 'The caption language code is not a valid ISO 639-2 code.',
-        'code' => 400,
-    ],
     Exception::VIDEO_THUMBNAIL_NOT_FOUND => [
         'name' => Exception::VIDEO_THUMBNAIL_NOT_FOUND,
         'description' => 'Video thumbnail with the requested ID could not be found.',
@@ -1821,11 +1816,6 @@ return [
         'name' => Exception::VIDEO_TIMELINE_IN_PROGRESS,
         'description' => 'Cannot delete a video while its timeline is being generated. Wait for the job to finish, or wait until a stuck timeline is older than the retention window.',
         'code' => 409,
-    ],
-    Exception::VIDEO_SECOND_OUT_OF_RANGE => [
-        'name' => Exception::VIDEO_SECOND_OUT_OF_RANGE,
-        'description' => 'The requested second is outside the video duration range.',
-        'code' => 400,
     ],
 
     /** Reviews */

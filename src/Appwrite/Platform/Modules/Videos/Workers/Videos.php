@@ -1642,7 +1642,7 @@ class Videos extends Action
                         $queueForRealtime,
                         $project,
                         $caption,
-                        'videos.[videoId].captions.[captionId].update',
+                        'videos.[videoId].captions.[captionId].create',
                         [
                             'videoId' => $video->getId(),
                             'captionId' => $caption->getId(),

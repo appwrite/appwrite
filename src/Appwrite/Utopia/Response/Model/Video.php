@@ -152,11 +152,12 @@ class Video extends Model
                 'example' => '48000',
             ])
             ->addRule('timelineStatus', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'Thumbnail timeline job status: one of `pending`, `started`, `ready`, `skipped` (source has no video track) or `error`.',
                 'default' => '',
                 'example' => 'ready',
                 'enum' => ['pending', 'started', 'ready', 'skipped', 'error'],
+                'enumSDKName' => 'VideoTimelineStatus',
             ])
             ->addRule('timelineError', [
                 'type' => self::TYPE_STRING,

@@ -90,11 +90,12 @@ class VideoRendition extends Model
                 'example' => '6',
             ])
             ->addRule('status', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'Transcoding status: one of `pending`, `started`, `ended`, `ready`, `error` or `aborted`.',
                 'default' => '',
                 'example' => 'ready',
                 'enum' => ['pending', 'started', 'ended', 'ready', 'error', 'aborted'],
+                'enumSDKName' => 'VideoRenditionStatus',
             ])
             ->addRule('error', [
                 'type' => self::TYPE_STRING,
@@ -109,17 +110,26 @@ class VideoRendition extends Model
                 'example' => '88',
             ])
             ->addRule('output', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'Streaming output format: `hls`, `dash`, or `cmaf`.',
                 'default' => '',
                 'example' => 'hls',
+                'enum' => ['hls', 'dash', 'cmaf'],
+                'enumSDKName' => 'VideoOutput',
             ])
             ->addRule('codec', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'Video encode codec snapshotted from the profile at create time: one of `h264`, `hevc`, or `vp9`.',
                 'default' => 'h264',
                 'example' => 'h264',
                 'enum' => ['h264', 'hevc', 'vp9'],
+                'enumSDKName' => 'VideoCodec',
+            ])
+            ->addRule('size', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Stored rendition size in bytes.',
+                'default' => 0,
+                'example' => 18350080,
             ])
         ;
     }

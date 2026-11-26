@@ -63,7 +63,7 @@ class Create extends Base
             ->param('audioBitRate', null, new Range(self::MIN_AUDIO_BITRATE, self::MAX_AUDIO_BITRATE), 'Target audio bitrate in kilobits per second.')
             ->param('width', null, new Range(self::MIN_DIMENSION, self::MAX_DIMENSION), 'Target video width in pixels.')
             ->param('height', null, new Range(self::MIN_DIMENSION, self::MAX_DIMENSION), 'Target video height in pixels.')
-            ->param('codec', self::CODEC_H264, new WhiteList(self::enabledCodecs(), true), 'Video encode codec. Only codecs enabled on this instance are accepted. Defaults to `h264`.', true, enum: new Enum(name: 'VideoCodec'))
+            ->param('codec', self::CODEC_H264, new WhiteList(self::codecIds(), true), 'Video encode codec. Codecs not enabled on this instance are rejected. Defaults to `h264`.', true, enum: new Enum(name: 'VideoCodec'))
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')

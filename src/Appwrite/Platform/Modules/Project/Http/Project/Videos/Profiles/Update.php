@@ -17,6 +17,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 
@@ -57,11 +58,11 @@ class Update extends Base
                 ]
             ))
             ->param('profileId', '', new UID(), 'Video profile unique ID.')
-            ->param('name', '', new Text(128), 'Video profile name.')
-            ->param('videoBitRate', null, new Range(self::MIN_VIDEO_BITRATE, self::MAX_VIDEO_BITRATE), 'Target video bitrate in kilobits per second.')
-            ->param('audioBitRate', null, new Range(self::MIN_AUDIO_BITRATE, self::MAX_AUDIO_BITRATE), 'Target audio bitrate in kilobits per second.')
-            ->param('width', null, new Range(self::MIN_DIMENSION, self::MAX_DIMENSION), 'Target video width in pixels.')
-            ->param('height', null, new Range(self::MIN_DIMENSION, self::MAX_DIMENSION), 'Target video height in pixels.')
+            ->param('name', null, new Nullable(new Text(128)), 'Video profile name.', true)
+            ->param('videoBitRate', null, new Nullable(new Range(self::MIN_VIDEO_BITRATE, self::MAX_VIDEO_BITRATE)), 'Target video bitrate in kilobits per second.', true)
+            ->param('audioBitRate', null, new Nullable(new Range(self::MIN_AUDIO_BITRATE, self::MAX_AUDIO_BITRATE)), 'Target audio bitrate in kilobits per second.', true)
+            ->param('width', null, new Nullable(new Range(self::MIN_DIMENSION, self::MAX_DIMENSION)), 'Target video width in pixels.', true)
+            ->param('height', null, new Nullable(new Range(self::MIN_DIMENSION, self::MAX_DIMENSION)), 'Target video height in pixels.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
@@ -72,11 +73,11 @@ class Update extends Base
 
     public function action(
         string $profileId,
-        string $name,
-        int $videoBitRate,
-        int $audioBitRate,
-        int $width,
-        int $height,
+        ?string $name,
+        ?int $videoBitRate,
+        ?int $audioBitRate,
+        ?int $width,
+        ?int $height,
         Response $response,
         Database $dbForProject,
         Document $project,
@@ -89,15 +90,20 @@ class Update extends Base
             throw new Exception(Exception::VIDEO_PROFILE_NOT_FOUND);
         }
 
+        $updates = \array_filter([
+            'name' => $name,
+            'videoBitRate' => $videoBitRate,
+            'audioBitRate' => $audioBitRate,
+            'width' => $width,
+            'height' => $height,
+        ], fn ($value) => $value !== null);
+
+        if (isset($updates['name'])) {
+            $updates['search'] = $updates['name'];
+        }
+
         try {
-            $profile = $authorization->skip(fn () => $dbForProject->updateDocument('videosProfiles', $profile->getId(), new Document([
-                'name' => $name,
-                'videoBitRate' => $videoBitRate,
-                'audioBitRate' => $audioBitRate,
-                'width' => $width,
-                'height' => $height,
-                'search' => $name,
-            ])));
+            $profile = $authorization->skip(fn () => $dbForProject->updateDocument('videosProfiles', $profile->getId(), new Document($updates)));
         } catch (DuplicateException) {
             throw new Exception(Exception::VIDEO_PROFILE_ALREADY_EXISTS);
         }

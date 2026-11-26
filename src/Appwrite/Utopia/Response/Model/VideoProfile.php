@@ -35,11 +35,12 @@ class VideoProfile extends Model
                 'example' => '360p',
             ])
             ->addRule('codec', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'Video encode codec: one of `h264`, `hevc`, or `vp9`.',
                 'default' => 'h264',
                 'example' => 'h264',
                 'enum' => ['h264', 'hevc', 'vp9'],
+                'enumSDKName' => 'VideoCodec',
             ])
             ->addRule('videoBitRate', [
                 'type' => self::TYPE_INTEGER,

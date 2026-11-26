@@ -88,16 +88,24 @@ class VideoCaption extends Model
                 'example' => '93',
             ])
             ->addRule('status', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'Packaging status: one of `pending`, `started`, `ready`, `error` or `aborted`.',
                 'default' => '',
                 'example' => 'ready',
+                'enum' => ['pending', 'started', 'ready', 'error', 'aborted'],
+                'enumSDKName' => 'VideoCaptionStatus',
             ])
             ->addRule('error', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Why the caption failed or was aborted. Empty unless `status` is `error` or `aborted`.',
                 'default' => '',
                 'example' => 'Caption is not a proper .srt file (Invalid timestamp delimiter at line 2)',
+            ])
+            ->addRule('size', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Stored caption size in bytes.',
+                'default' => 0,
+                'example' => 4096,
             ])
         ;
     }
