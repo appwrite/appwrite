@@ -8413,6 +8413,80 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(204, $delete['headers']['status-code']);
     }
 
+    public function testDeleteLastMFAFactorIsRefusedWhileMFAIsOn(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $projectId = $this->getProject()['$id'];
+
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $data['session'],
+        ];
+
+        $authenticator = $this->client->call(Client::METHOD_POST, '/account/mfa/authenticators/totp', $headers);
+        $this->assertEquals(200, $authenticator['headers']['status-code']);
+
+        $recoveryCodes = $this->client->call(Client::METHOD_POST, '/account/mfa/recovery-codes', $headers);
+        $this->assertEquals(201, $recoveryCodes['headers']['status-code']);
+
+        $totp = \OTPHP\TOTP::create($authenticator['body']['secret']);
+        if ($totp->expiresIn() <= 5) {
+            $this->getNextTOTP($totp, $totp->now());
+        }
+
+        $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $headers, [
+            'otp' => $totp->now(),
+        ]);
+        $this->assertEquals(200, $verification['headers']['status-code']);
+
+        $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $headers, [
+            'factor' => 'recoveryCode',
+        ]);
+        $this->assertEquals(201, $challenge['headers']['status-code']);
+
+        $challengeVerification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $headers, [
+            'challengeId' => $challenge['body']['$id'],
+            'otp' => $recoveryCodes['body']['recoveryCodes'][0],
+        ]);
+        $this->assertEquals(200, $challengeVerification['headers']['status-code']);
+
+        $enable = $this->client->call(Client::METHOD_PATCH, '/account/mfa', $headers, [
+            'mfa' => true,
+        ]);
+        $this->assertEquals(200, $enable['headers']['status-code']);
+        $this->assertTrue($enable['body']['mfa']);
+        $this->assertFalse($enable['body']['emailVerification']);
+
+        // The authenticator is the only verified second factor: deleting it would leave MFA
+        // reported as on with nothing to enforce
+        $delete = $this->client->call(Client::METHOD_DELETE, '/account/mfa/authenticators/totp', $headers);
+        $this->assertEquals(400, $delete['headers']['status-code']);
+        $this->assertEquals('user_authenticator_last_factor', $delete['body']['type']);
+
+        // An admin is held to the same rule through the Users API
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $delete = $this->client->call(Client::METHOD_DELETE, '/users/' . $data['id'] . '/mfa/authenticators/totp', $serverHeaders);
+        $this->assertEquals(400, $delete['headers']['status-code']);
+        $this->assertEquals('user_authenticator_last_factor', $delete['body']['type']);
+
+        // Once MFA is disabled, the last factor can go
+        $disable = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['id'] . '/mfa', $serverHeaders, [
+            'mfa' => false,
+        ]);
+        $this->assertEquals(200, $disable['headers']['status-code']);
+        $this->assertFalse($disable['body']['mfa']);
+
+        $delete = $this->client->call(Client::METHOD_DELETE, '/users/' . $data['id'] . '/mfa/authenticators/totp', $serverHeaders);
+        $this->assertEquals(204, $delete['headers']['status-code']);
+    }
+
     public function testCreateMFARecoveryCodesRequiresRecentChallengeOnceMFAIsOn(): void
     {
         $data = $this->createFreshAccountWithSession();
