@@ -1347,7 +1347,16 @@ class Videos extends Action
             if (\str_starts_with($detail, $srtPath)) {
                 $detail = \ltrim(\substr($detail, \strlen($srtPath)));
             }
-            throw new AppwriteException(AppwriteException::VIDEO_CAPTION_NOT_VALID, 'Caption ' . $detail, previous: $th);
+            // Files without a .srt or .vtt extension land here too, so name both
+            // accepted formats rather than the library's "not a proper .srt file".
+            if (\str_starts_with($detail, 'is not a proper .srt file')) {
+                $detail = \ltrim(\substr($detail, \strlen('is not a proper .srt file')), ' .');
+            }
+            $message = 'Caption is not a valid SubRip (.srt) or WebVTT (.vtt) file';
+            if ($detail !== '') {
+                $message .= ': ' . \trim($detail, '() ');
+            }
+            throw new AppwriteException(AppwriteException::VIDEO_CAPTION_NOT_VALID, $message, previous: $th);
         }
         $webvtt->build();
         $webvtt->save($vttPath);
