@@ -1097,7 +1097,7 @@ Content-Type: application/json
 
 {
   "total": 1,
-  "providers": [{ "$id": "${provider.$id}", "name": "${provider.name}" }]
+  "providers": [{ "$id": ${JSON.stringify(provider.$id)}, "name": ${JSON.stringify(provider.name)} }]
 }`,
       },
       {
