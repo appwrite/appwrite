@@ -27,7 +27,7 @@ export function DebugMenuInitEventPanel() {
         </p>
         <p className="mt-2 text-[11px] leading-relaxed text-[var(--network-globe-edge)]/80">
           Overrides which Init event `/init`, tickets, and org promo use in this
-          browser. Production default keeps Init 4 featured until Init 5 ships.
+          browser. Production default features Init 5.
         </p>
       </div>
 
