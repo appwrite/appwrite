@@ -2089,6 +2089,19 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals('prefValue1', $response['body']['prefs']['prefKey1']);
         $this->assertEquals('prefValue2', $response['body']['prefs']['prefKey2']);
 
+        // An empty JSON object clears the prefs, the same as an empty array
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'prefs' => new \stdClass(),
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertEmpty($response['body']['prefs']);
+
         /**
          * Test for FAILURE
          */
