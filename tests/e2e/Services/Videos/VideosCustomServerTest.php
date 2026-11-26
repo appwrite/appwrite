@@ -3498,12 +3498,14 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(200, $first['headers']['status-code']);
         $this->assertEquals('image/webp', $first['headers']['content-type'] ?? '');
 
-        $second = $this->client->call(Client::METHOD_GET, $path, \array_merge($this->headers(), [
-            'accept' => 'text/html,image/webp;q=0.9,*/*;q=0.5',
-        ]));
-        $this->assertEquals(200, $second['headers']['status-code']);
-        $this->assertEquals('image/webp', $second['headers']['content-type'] ?? '');
-        $this->assertEquals('hit', $second['headers']['x-appwrite-cache'] ?? '', 'a different Accept string that also lists webp must reuse the webp entry');
+        $this->assertEventually(function () use ($path) {
+            $second = $this->client->call(Client::METHOD_GET, $path, \array_merge($this->headers(), [
+                'accept' => 'text/html,image/webp;q=0.9,*/*;q=0.5',
+            ]));
+            $this->assertEquals(200, $second['headers']['status-code']);
+            $this->assertEquals('image/webp', $second['headers']['content-type'] ?? '');
+            $this->assertEquals('hit', $second['headers']['x-appwrite-cache'] ?? '', 'a different Accept string that also lists webp must reuse the webp entry');
+        });
 
         $plain = $this->client->call(Client::METHOD_GET, $path, \array_merge($this->headers(), ['accept' => 'image/jpeg']));
         $this->assertEquals(200, $plain['headers']['status-code']);
@@ -3515,9 +3517,10 @@ final class VideosCustomServerTest extends Scope
         foreach ($this->headers() as $name => $value) {
             $requestHeaders[] = $name . ': ' . $value;
         }
-        foreach (['miss', 'hit'] as $expected) {
+        $url = $this->client->getEndpoint() . $path . '?' . \http_build_query(['width' => 66, 'height' => 34]);
+        $fetch = function () use ($url, $requestHeaders): array {
             $received = [];
-            $handle = \curl_init($this->client->getEndpoint() . $path . '?' . \http_build_query(['width' => 66, 'height' => 34]));
+            $handle = \curl_init($url);
             \curl_setopt_array($handle, [
                 CURLOPT_HTTPHEADER => $requestHeaders,
                 CURLOPT_RETURNTRANSFER => true,
@@ -3534,11 +3537,23 @@ final class VideosCustomServerTest extends Scope
             $status = \curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
             \curl_close($handle);
 
+            return [$status, $received];
+        };
+        $assertHeaders = function (int $status, array $received, string $expected): void {
             $this->assertSame(200, $status, $expected);
             $this->assertSame([$expected], $received['x-appwrite-cache'] ?? null, $expected);
             $this->assertSame(['private, max-age=15552000'], $received['cache-control'] ?? null, $expected);
             $this->assertArrayNotHasKey('pragma', $received, $expected);
-        }
+        };
+
+        [$status, $received] = $fetch();
+        $assertHeaders($status, $received, 'miss');
+
+        // The entry is written after the miss is sent; a remote cache device can take a moment.
+        $this->assertEventually(function () use ($fetch, $assertHeaders) {
+            [$status, $received] = $fetch();
+            $assertHeaders($status, $received, 'hit');
+        });
 
         $missing = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/thumbnails/nope', $this->headers());
         $this->assertEquals(404, $missing['headers']['status-code']);
