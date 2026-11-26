@@ -10,6 +10,19 @@ export function trimOrEmpty(value: string): string {
   return value.trim()
 }
 
+/** Why a link field would be rejected, or null when it is empty or a web URL. */
+export function urlFieldError(value: string): string | null {
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  try {
+    const { protocol } = new URL(trimmed)
+    if (protocol === 'https:' || protocol === 'http:') return null
+  } catch {
+    // fall through
+  }
+  return 'Enter a full URL starting with https://'
+}
+
 export function nonEmptyList(values: string[]): string[] {
   return values.map((v) => v.trim()).filter(Boolean)
 }
