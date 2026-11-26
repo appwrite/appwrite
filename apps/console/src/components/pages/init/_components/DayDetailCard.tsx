@@ -371,7 +371,7 @@ function DayAnnouncementColumn({
       {announcement.resources.length > 0 ? (
         <ul className="divide-y divide-border border-t border-border">
           {announcement.resources.map((resource) => (
-            <DayResourceRow key={resource.id} resource={resource} alignTop />
+            <DayResourceRow key={resource.id} resource={resource} stacked />
           ))}
         </ul>
       ) : null}
@@ -393,11 +393,14 @@ interface DayDetailCardProps {
 
 function DayResourceRow({
   resource,
-  alignTop = false,
+  stacked = false,
 }: {
   resource: LaunchEventDayResource
-  /** Narrow columns wrap the title: keep the badge and action level with its first line. */
-  alignTop?: boolean
+  /**
+   * Half-width columns: the badge and action share the first line and the
+   * title gets the full width below, instead of wrapping in a narrow slot.
+   */
+  stacked?: boolean
 }) {
   const type = resource.typeLabel.toLowerCase()
   const ResourceIcon =
@@ -407,11 +410,29 @@ function DayResourceRow({
   const resolved = useInitHref(resource.href)
   // Phones give the title its own full-width line and drop the badge + action
   // below it; three inline columns left the title ~80px and shredded it.
-  const rowClassName = cn(
-    'group flex flex-wrap gap-x-4 gap-y-2 px-6 py-3.5 transition-colors hover:bg-accent/30 sm:flex-nowrap',
-    alignTop ? 'items-start' : 'items-center',
-  )
-  const rowContent = (
+  const rowClassName = stacked
+    ? 'group grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1.5 px-6 py-3.5 transition-colors hover:bg-accent/30'
+    : 'group flex flex-wrap items-center gap-x-4 gap-y-2 px-6 py-3.5 transition-colors hover:bg-accent/30 sm:flex-nowrap'
+  const rowContent = stacked ? (
+    <>
+      <span className="flex">
+        <Badge
+          variant="secondary"
+          className="gap-1.5 rounded-md bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
+        >
+          <ResourceIcon className="size-3 text-muted-foreground" aria-hidden />
+          {resource.typeLabel}
+        </Badge>
+      </span>
+      <span className="flex items-center gap-1 text-[12px] text-muted-foreground transition-colors group-hover:text-foreground">
+        {resource.actionLabel}
+        <ArrowUpRight className="size-3.5" aria-hidden />
+      </span>
+      <span className="col-span-2 min-w-0 text-[13px] font-medium text-foreground">
+        {resource.title}
+      </span>
+    </>
+  ) : (
     <>
       <span className="order-2 flex shrink-0 sm:order-none sm:w-[92px]">
         <Badge
