@@ -342,7 +342,7 @@ export function RepositoryConfigView({
         outputDirectory: outputDirectory || undefined,
         adapter: defaults.adapter || undefined,
         fallbackFile:
-          defaults.adapter === 'static' ? fallbackFile || undefined : undefined,
+          defaults.adapter !== 'ssr' ? fallbackFile || undefined : undefined,
         installationId,
         providerRepositoryId,
         providerBranch: branch,
