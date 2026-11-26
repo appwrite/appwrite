@@ -14,13 +14,14 @@ function init5Banner(currentDay: number) {
 }
 
 describe('Init org promo banner', () => {
-  test('stays hidden in production once the featured week has expired', () => {
+  test('promotes Init 5 as upcoming in production from the default day', () => {
     const banner = getInitOrgPromoBannerContent({
       now: WEEK_BEFORE_INIT_5,
       currentDay: getInitMockDayBannerExpired(),
       activeEventId: null,
     })
-    expect(banner).toBeNull()
+    expect(banner?.eventId).toBe(INIT_5)
+    expect(banner?.phase).toBe('before')
   })
 
   test('previews Init 5 as upcoming from the default expired day', () => {
@@ -47,7 +48,7 @@ describe('Init org promo banner', () => {
     })
     expect(banner?.phase).toBe('after')
     expect(banner?.message).toBe(
-      'Init 5 is a wrap. Explore every launch and rewatch the streams.',
+      'Init 5 is a wrap. Explore every launch from the week.',
     )
     expect(banner?.cta.label).toBe('View recap')
   })

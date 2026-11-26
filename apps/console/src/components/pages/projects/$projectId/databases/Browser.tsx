@@ -906,7 +906,7 @@ export function Browser({}: BrowserProps) {
                 refY="3"
                 orient="auto"
               >
-                <polygon points="0 0, 10 3, 0 6" fill="hsl(var(--border))" />
+                <polygon points="0 0, 10 3, 0 6" fill="var(--border)" />
               </marker>
             </defs>
             <g>
@@ -928,7 +928,7 @@ export function Browser({}: BrowserProps) {
                     y1={fromPoint.y}
                     x2={toPoint.x}
                     y2={toPoint.y}
-                    stroke="hsl(var(--border))"
+                    stroke="var(--border)"
                     strokeWidth="2"
                     markerEnd="url(#arrowhead-browser)"
                     strokeDasharray="4,4"
@@ -964,7 +964,7 @@ export function Browser({}: BrowserProps) {
                       y1={fromPoint.y}
                       x2={toPoint.x}
                       y2={toPoint.y}
-                      stroke="hsl(var(--primary))"
+                      stroke="var(--primary)"
                       strokeWidth="1.5"
                       markerEnd="url(#arrowhead-browser)"
                       strokeDasharray="3,3"

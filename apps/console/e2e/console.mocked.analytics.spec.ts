@@ -202,6 +202,17 @@ function listParam(url: URL, name: string): string[] {
     .map(([, value]) => value)
 }
 
+/** The one-row list the plan limit reads its property count from. */
+function isPropertyCount(url: URL): boolean {
+  return (
+    url.pathname.endsWith('/analytics/properties') &&
+    listParam(url, 'queries').some((query) => {
+      const { method, values } = JSON.parse(query)
+      return method === 'limit' && values[0] === 1
+    })
+  )
+}
+
 /** One identified user's last active bucket, hour-aligned like the API's. */
 const USER_LAST_SEEN = new Date(
   Math.floor((Date.now() - 2 * 3_600_000) / 3_600_000) * 3_600_000,
@@ -402,12 +413,8 @@ async function mockAppwriteApi(
       return json(200, property(identifyUsers, options.type))
     }
     if (apiPath === '/analytics/properties') {
-      const isCount = listParam(url, 'queries').some((query) => {
-        const { method, values } = JSON.parse(query)
-        return method === 'limit' && values[0] === 1
-      })
-      // The route loader awaits the full list, so only the count waits.
-      if (isCount) await options.countGate
+      // Only the count waits: the full list answers at once.
+      if (isPropertyCount(url)) await options.countGate
       return json(200, {
         total: 1,
         properties: [property(identifyUsers, options.type)],
@@ -1267,14 +1274,20 @@ test.describe('analytics property (mocked API)', () => {
       releaseCount = resolve
     })
     await mockAppwriteApi(page, { planPropertyLimit: 5, countGate })
+    const counting = page.waitForRequest((request) =>
+      isPropertyCount(new URL(request.url())),
+    )
     await page.goto(`/projects/${PROJECT_ID}/analytics/add`, {
       waitUntil: 'domcontentloaded',
     })
 
+    // The Analytics loader waits for the count, so the form is not there to
+    // submit before the limit is known
+    await counting
     const create = page.getByRole('button', { name: 'Create property' })
-    await expect(create).toBeDisabled({ timeout: 30_000 })
+    await expect(create).toHaveCount(0)
     releaseCount()
-    await expect(create).toBeEnabled()
+    await expect(create).toBeEnabled({ timeout: 30_000 })
     await expect(page.getByTestId('analytics-property-plan-limit')).toHaveCount(
       0,
     )

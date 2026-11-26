@@ -19,6 +19,7 @@ import type {
   ReviewRepository,
   ReviewRepositoryList,
   ReviewStrength,
+  ReviewSummary,
 } from './models'
 
 export class Reviews {
@@ -313,6 +314,33 @@ export class Reviews {
     return this.client.call(
       'get',
       this.uri('/reviews/categories'),
+      this.headers(),
+      payload,
+    )
+  }
+
+  /**
+   * Get how the project's pull requests fared in review over a range and over
+   * the same length of time before it, with each day of the range.
+   *
+   * @param {ReviewAuthorRange} params.range - Date range of the reviews: whole days, today included. Defaults to 30d.
+   * @param {string} params.repositoryId - Count only the reviews of this repository.
+   * @throws {AppwriteException}
+   * @returns {Promise<ReviewSummary>}
+   */
+  getSummary(
+    params: { range?: ReviewAuthorRange; repositoryId?: string } = {},
+  ): Promise<ReviewSummary> {
+    const payload: Record<string, unknown> = {}
+    if (typeof params.range !== 'undefined') {
+      payload['range'] = params.range
+    }
+    if (params.repositoryId) {
+      payload['repositoryId'] = params.repositoryId
+    }
+    return this.client.call(
+      'get',
+      this.uri('/reviews/summary'),
       this.headers(),
       payload,
     )

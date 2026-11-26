@@ -78,6 +78,8 @@ type DomainFormatError =
   | { code: 'wildcard' }
   | { code: 'trailing-dot' }
   | { code: 'spaces' }
+  | { code: 'email'; suggestion: string | null }
+  | { code: 'too-long' }
   | { code: 'invalid' }
 
 function looksLikeUrl(value: string): boolean {
@@ -116,7 +118,18 @@ function hasWhitespace(value: string): boolean {
  */
 function getDomainFormatError(value: string): DomainFormatError | null {
   const trimmed = value.trim()
-  if (!trimmed || isValidDomain(trimmed)) return null
+  if (!trimmed) return null
+  // DNS limits the pattern below does not check: 63 characters per label,
+  // 253 for the whole name. A pasted URL or email is reported as that instead.
+  if (
+    !looksLikeUrl(trimmed) &&
+    !trimmed.includes('@') &&
+    (trimmed.length > 253 ||
+      trimmed.split('.').some((label) => label.length > 63))
+  ) {
+    return { code: 'too-long' }
+  }
+  if (isValidDomain(trimmed)) return null
 
   if (looksLikeUrl(trimmed)) {
     const host = bareHost(trimmed)
@@ -129,6 +142,10 @@ function getDomainFormatError(value: string): DomainFormatError | null {
 
   if (trimmed.includes('*')) return { code: 'wildcard' }
   if (hasWhitespace(trimmed)) return { code: 'spaces' }
+  if (trimmed.includes('@')) {
+    const host = trimmed.slice(trimmed.lastIndexOf('@') + 1)
+    return { code: 'email', suggestion: isValidDomain(host) ? host : null }
+  }
   if (trimmed.endsWith('.')) return { code: 'trailing-dot' }
   return { code: 'invalid' }
 }
@@ -148,6 +165,14 @@ function domainFormatErrorMessage(
       return t('Remove the trailing dot.')
     case 'spaces':
       return t('Remove the spaces.')
+    case 'email':
+      return error.suggestion
+        ? `${t('Enter only the part after @:')} ${error.suggestion}`
+        : t('Enter only the domain, the part after @.')
+    case 'too-long':
+      return t(
+        'A domain can be at most 253 characters, and each part between dots at most 63.',
+      )
     case 'invalid':
       return t('Please enter a valid domain')
   }

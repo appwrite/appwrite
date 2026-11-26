@@ -12,7 +12,8 @@ use Utopia\Schedule\Trigger\Shifted;
 /**
  * One evaluation schedule per monitor, read from the monitor's row in
  * `schedules`. A monitor keeps its slot across restarts: it is shifted by
- * `crc32(monitorId) mod interval` seconds.
+ * `crc32(resourceId) mod interval` seconds, where `resourceId`
+ * is the monitor's stored ID.
  *
  * The interval is not stored on the row: an edition may derive it from
  * something the monitor does not own, such as its organization's plan. It is

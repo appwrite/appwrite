@@ -1110,7 +1110,7 @@ class DetectorTest extends TestCase
     #[DataProvider('jasprAdapterDataProvider')]
     public function testJasprAdapterDetection(string $pubspec, string $adapter): void
     {
-        $this->assertSame($adapter, (new Jaspr())->getAdapter($pubspec));
+        $this->assertSame($adapter, new Jaspr()->getAdapter($pubspec));
     }
 
     /**
@@ -1150,6 +1150,6 @@ class DetectorTest extends TestCase
 
     public function testJasprConfigFiles(): void
     {
-        $this->assertContains('pubspec.yaml', (new Jaspr())->getConfigFiles());
+        $this->assertContains('pubspec.yaml', new Jaspr()->getConfigFiles());
     }
 }

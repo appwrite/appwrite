@@ -13,6 +13,7 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -67,6 +68,7 @@ class Get extends Base
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('project')
             ->inject('user')
             ->inject('authorization')
             ->inject('deviceForVideos')
@@ -81,6 +83,7 @@ class Get extends Base
         Request $request,
         Response $response,
         Database $dbForProject,
+        Document $project,
         User $user,
         Authorization $authorization,
         Device $deviceForVideos
@@ -127,11 +130,9 @@ class Get extends Base
         }
 
         $response
-            ->setContentType($contentType)
-            // Permission-gated. A shared cache would keep serving this URL after
-            // access is revoked or the video is deleted, and nothing can purge it.
-            // The bytes never change, so a private cache may hold them.
-            ->addHeader('Cache-Control', 'private, max-age=31536000, immutable')
+            ->setContentType($contentType);
+        $this->cachePlaybackSegment($response, $project, $video);
+        $response
             ->addHeader('Accept-Ranges', 'bytes')
             ->addHeader('X-Peak', \memory_get_peak_usage());
 

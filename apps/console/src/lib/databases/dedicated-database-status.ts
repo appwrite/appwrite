@@ -226,7 +226,7 @@ export function dedicatedDatabaseStatusAlertDescriptionKey(
     case 'scaling':
       return 'A compute tier change is in progress. Your cluster remains available during this operation.'
     case 'upgrading':
-      return 'A database upgrade is in progress. Some operations may be temporarily unavailable.'
+      return 'A version upgrade is in progress. Your database stays online while it runs.'
     case 'migrating':
       return 'A database migration is in progress. Some operations may be temporarily unavailable.'
     case 'provisioning':

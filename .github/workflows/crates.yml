@@ -8,9 +8,17 @@ name: Crates
 on:
   push:
     tags: ['rs/*/*']
+  # Runs this branch's workflow against an existing tag: to finish a release whose run failed
+  # after the publish, since a re-run would use the workflow file the tag points at.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: The release tag to publish and mirror, such as rs/query/0.1.0.
+        required: true
+        type: string
 
 concurrency:
-  group: crates-${{ github.ref }}
+  group: crates-${{ inputs.tag || github.ref_name }}
   cancel-in-progress: false
 
 permissions:
@@ -22,13 +30,17 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          ref: refs/tags/${{ inputs.tag || github.ref_name }}
           persist-credentials: false
 
       # rs/query/0.2.0 is crates/utopia/query, the package utopia-query, at 0.2.0.
       - name: Resolve the crate
         id: crate
+        env:
+          TAG: ${{ inputs.tag || github.ref_name }}
         run: |
-          name="${GITHUB_REF_NAME#rs/}"
+          case "$TAG" in rs/*/*) ;; *) echo "not a crate release tag: $TAG" >&2; exit 1 ;; esac
+          name="${TAG#rs/}"
           version="${name##*/}"
           name="${name%/*}"
           directory="crates/utopia/$name"
@@ -39,6 +51,7 @@ jobs:
             jq -r --arg manifest "$PWD/$directory/Cargo.toml" '.packages[] | select(.manifest_path == $manifest) | .version')
           [ "$stated" = "$version" ] || { echo "$directory/Cargo.toml is at $stated, not $version" >&2; exit 1; }
           {
+            echo "commit=$(git rev-parse HEAD)"
             echo "name=$name"
             echo "version=$version"
             echo "directory=$directory"
@@ -49,8 +62,9 @@ jobs:
       - name: Install build dependencies
         run: sudo apt-get update && sudo apt-get install --yes --no-install-recommends libheif-dev
 
-      # A rerun after a publish that succeeded packages the same version again instead of
-      # failing on "already exists", so the mirror step still runs.
+      # A run after a publish that succeeded skips to packaging instead of failing on "already
+      # exists", so the mirror step still runs. The crate is packaged again either way: the
+      # publish leaves no .crate behind, and packaging the same commit gives the same files.
       #
       # The token is for a crate's first version: crates.io only lets a crate that exists be
       # given a trusted publisher. Once the fourteen are published, each can name this
@@ -65,10 +79,11 @@ jobs:
             --user-agent 'appwrite/appwrite crates.yml' "https://crates.io/api/v1/crates/$PACKAGE/$VERSION")
           if [ "$status" = "200" ]; then
             echo "$PACKAGE $VERSION is already on crates.io"
-            cargo package --package "$PACKAGE" --locked --no-verify
           else
             cargo publish --package "$PACKAGE" --locked
           fi
+          cargo package --package "$PACKAGE" --locked --no-verify
+          test -f "target/package/$PACKAGE-$VERSION.crate"
 
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: app-token
@@ -80,7 +95,9 @@ jobs:
           permission-contents: write
           permission-workflows: write
 
-      # The mirror's tree is the .crate Cargo just built: one commit and one tag per release.
+      # The mirror's tree is the .crate Cargo built: one commit and one tag per release. --force
+      # adds what the crate's own .gitignore names too, the Cargo.lock that packaging generates,
+      # so the mirror is the published crate file for file.
       - name: Push the release to the mirror
         env:
           TOKEN: ${{ steps.app-token.outputs.token }}
@@ -88,6 +105,7 @@ jobs:
           PACKAGE: ${{ steps.crate.outputs.package }}
           VERSION: ${{ steps.crate.outputs.version }}
           DIRECTORY: ${{ steps.crate.outputs.directory }}
+          COMMIT: ${{ steps.crate.outputs.commit }}
         run: |
           mirror=$(mktemp -d)
           git clone --quiet "https://x-access-token:$TOKEN@github.com/utopia-rs/$NAME.git" "$mirror"
@@ -97,10 +115,10 @@ jobs:
           fi
           git -C "$mirror" rm --quiet -r --ignore-unmatch .
           tar --extract --gzip --file "target/package/$PACKAGE-$VERSION.crate" --strip-components 1 --directory "$mirror"
-          git -C "$mirror" add --all
+          git -C "$mirror" add --all --force
           git -C "$mirror" \
             -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
             commit --quiet --message "$VERSION" \
-            --message "Published to crates.io as $PACKAGE $VERSION from $GITHUB_REPOSITORY@$GITHUB_SHA ($DIRECTORY)."
+            --message "Published to crates.io as $PACKAGE $VERSION from $GITHUB_REPOSITORY@$COMMIT ($DIRECTORY)."
           git -C "$mirror" tag "$VERSION"
           git -C "$mirror" push --quiet origin HEAD "refs/tags/$VERSION"

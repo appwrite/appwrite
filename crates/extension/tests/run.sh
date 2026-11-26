@@ -17,16 +17,18 @@ php "$tests/dsn-getters.php" > "$output/dsn-getters.jsonl"
 diff "$tests/dsn-getters.expected" "$output/dsn-getters.jsonl"
 php -d opcache.enable_cli=1 "$tests/dsn-getters.php" > "$output/dsn-getters.opcache.jsonl"
 diff "$tests/dsn-getters.expected" "$output/dsn-getters.opcache.jsonl"
+# Query likewise: its hand-written getters, constructor and classify(), shared strings and arrays,
+# clones and deep trees, against the output they gave through ext-php-rs.
+php "$tests/query-handlers.php" > "$output/query-handlers.txt"
+diff "$tests/query-handlers.expected" "$output/query-handlers.txt"
+php -d opcache.enable_cli=1 "$tests/query-handlers.php" > "$output/query-handlers.opcache.txt"
+diff "$tests/query-handlers.expected" "$output/query-handlers.opcache.txt"
 vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php packages/image/tests
 
 for library in $libraries; do
     echo "== $library" >&2
     [ -f "$tests/$library.php" ] || { echo "missing parity corpus $tests/$library.php" >&2; exit 1; }
-    # database is utopia-php/database in vendor/: the unit tests of the classes the extension serves.
-    suite="packages/$library/tests"
-    [ "$library" = database ] && suite=$(printf 'vendor/utopia-php/database/tests/unit/%sTest.php ' Id Role Permission DateTime)
-    # shellcheck disable=SC2086
-    _APP_EXTENSION_LIBRARIES=$library vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php $suite
+    _APP_EXTENSION_LIBRARIES=$library vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php "packages/$library/tests"
     _APP_EXTENSION_LIBRARIES= php "$tests/$library.php" > "$output/$library.php.jsonl"
     _APP_EXTENSION_LIBRARIES=$library php "$tests/$library.php" > "$output/$library.rust.jsonl"
     diff "$output/$library.php.jsonl" "$output/$library.rust.jsonl"
@@ -110,13 +112,34 @@ echo "$warnings" | grep -q 'utopia.libraries: unknown library "bogus" ignored' |
 echo "$warnings" | grep -q '^ok$'
 
 # Classes with no PHP implementation left: their packages' own tests, on the extension.
-for package in user-agent domains emails validators auth; do
+for package in user-agent domains emails validators auth detector compression; do
     echo "== $package (no PHP)" >&2
     vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php "packages/$package/tests"
 done
+# Database's four classes are the extension's by default, but utopia-php/database still ships them in
+# vendor/: its unit tests of them on the extension, and the corpus against the PHP classes, which
+# utopia.libraries without database brings back.
+echo "== database (against vendor/)" >&2
+# shellcheck disable=SC2046
+vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php \
+    $(printf 'vendor/utopia-php/database/tests/unit/%sTest.php ' Id Role Permission DateTime)
+php -d utopia.libraries="$(echo "$every" | sed 's/,database//')" "$tests/database.php" > "$output/database.php.jsonl"
+php "$tests/database.php" > "$output/database.rust.jsonl"
+_APP_EXTENSION_LIBRARIES=$all php "$tests/database.php" > "$output/database.all.jsonl"
+diff "$output/database.php.jsonl" "$output/database.rust.jsonl"
+diff "$output/database.php.jsonl" "$output/database.all.jsonl"
+[ -s "$output/database.rust.jsonl" ] || { echo "database corpus printed nothing" >&2; exit 1; }
 # packages/query/tests/E2E needs MySQL, PostgreSQL, ClickHouse and MongoDB servers.
 echo "== query (no PHP)" >&2
 vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php --exclude-filter '\\E2E\\' packages/query/tests
+
+# Compression likewise: its corpus (malformed, truncated and concatenated frames, every level's
+# bytes, 64 MB inputs, reflection and subclasses) against the output pinned from the PHP classes.
+echo "== compression (pinned PHP output)" >&2
+php "$tests/compression.php" > "$output/compression.jsonl"
+diff "$tests/compression.expected.jsonl" "$output/compression.jsonl"
+php -d opcache.enable_cli=1 "$tests/compression.php" > "$output/compression.opcache.jsonl"
+diff "$tests/compression.expected.jsonl" "$output/compression.opcache.jsonl"
 
 # Locale has no package to test, so its corpus is checked against the output pinned from the PHP
 # class it replaced (utopia-php/locale).

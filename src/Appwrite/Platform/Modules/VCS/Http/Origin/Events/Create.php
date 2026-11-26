@@ -467,13 +467,62 @@ class Create extends Action
             return;
         }
 
+        /** @var Origin $vcs */
         $vcs = $vcsFactory->fromInstallation(new Document([
             'provider' => 'origin',
             'providerInstallationId' => $providerInstallationId,
         ]));
 
-        // Origin push deliveries carry no file lists, so path triggers do not apply
-        $providerAffectedFiles = $parsedPayload['affectedFiles'] ?? [];
+        $providerPreviousCommitHash = $parsedPayload['previousCommitHash'] ?? '';
+        $providerBranchCreated = ($parsedPayload['branchCreated'] ?? false) || \trim($providerPreviousCommitHash, '0') === '';
+
+        // A new branch is compared with the default branch, as HEAD since
+        // compare takes branch names containing '/' only as their SHA;
+        // anything else with its previous tip
+        $providerBaseCommitHash = $providerPreviousCommitHash;
+        if ($providerBranchCreated) {
+            $providerBaseCommitHash = '';
+            try {
+                $providerDefaultBranch = \strval($vcs->getRepository($providerRepositoryOwner, $providerRepositoryName)['defaultBranch'] ?? '');
+                if ($providerDefaultBranch !== '' && $providerDefaultBranch !== $providerBranch) {
+                    $providerBaseCommitHash = 'HEAD';
+                }
+            } catch (\Throwable $e) {
+                Console::warning("Failed to fetch the default branch of '{$providerRepositoryName}': " . $e->getMessage());
+            }
+        }
+
+        $providerAffectedFiles = [];
+        if ($providerBaseCommitHash !== '') {
+            try {
+                // A branch created where the default branch already is holds nothing new to deploy
+                if ($providerBranchCreated) {
+                    $comparison = $vcs->compareCommits($providerRepositoryOwner, $providerRepositoryName, $providerBaseCommitHash, $providerCommitHash);
+                    if (isset($comparison['aheadBy']) && (int) $comparison['aheadBy'] === 0) {
+                        return;
+                    }
+                }
+
+                $files = $vcs->compareFiles($providerRepositoryOwner, $providerRepositoryName, $providerBaseCommitHash, $providerCommitHash);
+
+                // Compare diffs from the merge base, so a rewritten history also
+                // needs what the old tip had beyond it; a rollback has only that
+                if ($parsedPayload['forced'] ?? false) {
+                    $files = [
+                        ...$files,
+                        ...$vcs->compareFiles($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash, $providerBaseCommitHash),
+                    ];
+                }
+
+                $providerAffectedFiles = [
+                    ...\array_column($files, 'filename'),
+                    // Only renamed files carry a previous filename; skip missing values from other file changes.
+                    ...\array_filter(\array_column($files, 'previous_filename')),
+                ];
+            } catch (\Throwable $e) {
+                Console::warning("Failed to compare '{$providerBaseCommitHash}' with '{$providerCommitHash}': " . $e->getMessage());
+            }
+        }
 
         // One delivery can update several branches, so each claim names its branch
         $this->deployOnce($repositories, $deliveryId, 'push:' . $providerBranch, $providerCommitHash, $providerBranch, $dbForPlatform, $authorization, $getProjectDB, fn (Document $repository) => $this->createGitDeployments($vcs, $providerInstallationId, [$repository], $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory));

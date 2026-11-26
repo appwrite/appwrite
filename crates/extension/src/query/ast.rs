@@ -61,7 +61,7 @@ const MAX_LEVELS: usize = 100_000;
 
 /// `work` on a stack with room for a tree `levels` deep, the caller's when `inline` covers it.
 fn roomy<T>(levels: usize, inline: usize, work: impl FnOnce() -> T) -> T {
-    if levels <= inline { work() } else { stacker::grow(levels * LEVEL_BYTES + (64 << 10), work) }
+    if levels <= inline { work() } else { crate::classes::stack::grow(levels * LEVEL_BYTES + (64 << 10), work) }
 }
 
 /// `bytes` as text: a byte above 127 is the character of that number.

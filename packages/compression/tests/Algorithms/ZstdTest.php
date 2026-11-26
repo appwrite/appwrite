@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Utopia\Compression\Tests\Algorithms;
 
-use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Compression\Algorithms\Zstd;
 
-#[RequiresPhpExtension('zstd')]
 final class ZstdTest extends TestCase
 {
     protected Zstd $object;
@@ -40,6 +38,7 @@ final class ZstdTest extends TestCase
     public function testCompressDecompressWithLargeText(): void
     {
         $demo = file_get_contents(__DIR__ . '/../resources/disk-a/lorem.txt');
+        \assert(\is_string($demo));
         $demoSize = mb_strlen($demo, '8bit');
 
         $data = $this->object->compress($demo);
@@ -58,6 +57,7 @@ final class ZstdTest extends TestCase
     public function testCompressDecompressWithJPGImage(): void
     {
         $demo = file_get_contents(__DIR__ . '/../resources/disk-a/kitten-1.jpg');
+        \assert(\is_string($demo));
         $demoSize = mb_strlen($demo, '8bit');
 
         $data = $this->object->compress($demo);
@@ -77,6 +77,7 @@ final class ZstdTest extends TestCase
     public function testCompressDecompressWithPNGImage(): void
     {
         $demo = file_get_contents(__DIR__ . '/../resources/disk-b/kitten-1.png');
+        \assert(\is_string($demo));
         $demoSize = mb_strlen($demo, '8bit');
 
         $data = $this->object->compress($demo);

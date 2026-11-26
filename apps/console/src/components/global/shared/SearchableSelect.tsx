@@ -3,8 +3,15 @@
  * Use for column, operator, and value droplists in filters and elsewhere.
  */
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { ChevronDown, Loader2, type LucideIcon } from 'lucide-react'
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentType,
+  type ReactNode,
+} from 'react'
+import { ChevronDown, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Command,
@@ -32,8 +39,11 @@ export interface SearchableSelectItem {
   description?: string
   /** When true, description is shown on the same line as the label. */
   inlineDescription?: boolean
-  /** Optional leading icon in the trigger and list. */
-  icon?: LucideIcon
+  /**
+   * Optional leading icon in the trigger and list: a Lucide icon, or any mark
+   * that takes a class, such as a Git provider's.
+   */
+  icon?: ComponentType<{ className?: string }>
   /** Heading of the section the item is listed under; items keep their order within it. */
   group?: string
 }

@@ -134,7 +134,7 @@ class Get extends Base
         foreach ($segments as $segment) {
             $entries[] = [
                 'duration' => $segment->getAttribute('duration', 0),
-                'url' => $this->withProject($baseUri . $segment->getId(), $project),
+                'url' => $this->withProject($baseUri . $segment->getId(), $project, $video),
             ];
         }
 

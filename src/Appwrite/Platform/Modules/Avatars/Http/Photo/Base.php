@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Avatars\Http\Photo;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Avatars\Http\Action;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Request;
 use Psr\Http\Message\StreamInterface;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
@@ -21,6 +22,34 @@ abstract class Base extends Action
     private const MAX_UPDATE_ATTEMPTS = 5;
 
     /**
+     * The user whose photo the request changes: the caller, or the user passed as `userId`.
+     *
+     * Only callers holding `users.write` (API keys and Console admins) may change someone else's photo.
+     */
+    protected function getTarget(string $userId, User $user, Request $request, Database $dbForProject): Document
+    {
+        if ($userId === '' || $userId === $user->getId()) {
+            if ($user->isEmpty()) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
+
+            return $user;
+        }
+
+        if (!\in_array('users.write', $request->getScopes(), true)) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Missing users.write scope to change another user\'s photo');
+        }
+
+        $target = $dbForProject->getDocument('users', $userId);
+
+        if ($target->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        return $target;
+    }
+
+    /**
      * Store $photo as the user's photo in place of whatever they had.
      *
      * The file goes up before the attributes, so a failure at either step
@@ -28,7 +57,7 @@ abstract class Base extends Action
      *
      * @return Document The user, with the new photo
      */
-    protected function replacePhoto(User $user, StreamInterface $photo, int $size, string $mimeType, Database $dbForProject, Device $deviceForFiles): Document
+    protected function replacePhoto(Document $user, StreamInterface $photo, int $size, string $mimeType, Database $dbForProject, Device $deviceForFiles): Document
     {
         $userId = $user->getId();
         $photoId = Id::unique();
