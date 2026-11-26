@@ -26,7 +26,7 @@ export function UserPhoto({ projectId, userId, name }: UserPhotoProps) {
 
   const uploadMutation = useMutation({
     mutationFn: (file: File) =>
-      sdk.forProject(projectId).avatars.updateUserPhoto({ userId, file }),
+      sdk.forProject(projectId).avatars.updatePhoto({ userId, file }),
     onSuccess: () => {
       bumpUserPhotoVersion()
       toast.success(t('User photo updated'))
@@ -38,7 +38,7 @@ export function UserPhoto({ projectId, userId, name }: UserPhotoProps) {
 
   const removeMutation = useMutation({
     mutationFn: () =>
-      sdk.forProject(projectId).avatars.deleteUserPhoto({ userId }),
+      sdk.forProject(projectId).avatars.deletePhoto({ userId }),
     onSuccess: () => {
       bumpUserPhotoVersion()
       setRemoveDialogOpen(false)
