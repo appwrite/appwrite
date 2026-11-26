@@ -938,7 +938,7 @@ export function DatabaseClusterPreview({
       className={cn('relative min-w-0', className)}
       style={{
         height: interactiveHeight,
-        backgroundColor: 'hsl(var(--muted) / 0.3)',
+        backgroundColor: 'color-mix(in oklab, var(--muted) 30%, transparent)',
       }}
     >
       <div className="pointer-events-none absolute end-3 top-3 z-30 flex items-center gap-1.5">
@@ -1048,7 +1048,9 @@ export function DatabaseClusterPreview({
     >
       <div
         className="relative h-full w-full overflow-hidden"
-        style={{ backgroundColor: 'hsl(var(--muted) / 0.3)' }}
+        style={{
+          backgroundColor: 'color-mix(in oklab, var(--muted) 30%, transparent)',
+        }}
       >
         <div
           className="absolute left-1/2 top-1/2"

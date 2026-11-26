@@ -14,6 +14,7 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request\Validator\File;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Storage\Device;
@@ -48,10 +49,11 @@ class Update extends Base
             ->setHttpPath('/v1/avatars/photo')
             ->desc('Update photo')
             ->groups(['api', 'avatars'])
-            ->label('scope', 'avatars.write')
+            ->label('scope', ['avatars.write', 'users.write'])
             ->label('event', 'users.[userId].update.avatar')
             ->label('audits.event', 'user.update')
-            ->label('audits.resource', 'user/{user.$id}')
+            // The response is the user whose photo changed, which differs from the caller when userId is passed
+            ->label('audits.resource', 'user/{response.$id}')
             ->label('audits.userId', '{user.$id}')
             ->label('usage.resource', 'user/{user.$id}')
             ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
@@ -60,9 +62,9 @@ class Update extends Base
                 group: null,
                 name: 'updatePhoto',
                 description: <<<'EOT'
-                Update the profile photo of the currently authenticated user. The uploaded image takes priority over every other photo source, including OAuth2 identity photos, Gravatar, and Libravatar. Updating an already customized photo replaces it. The image must be at most 5MB and is sent in a single request.
+                Update the profile photo of the currently authenticated user, or of the user passed as `userId`. Setting another user's photo needs the `users.write` scope, so only API keys and Console admins can pass `userId`. The uploaded image takes priority over every other photo source, including OAuth2 identity photos, Gravatar, and Libravatar. Updating an already customized photo replaces it. The image must be at most 5MB and is sent in a single request.
                 EOT,
-                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -73,6 +75,7 @@ class Update extends Base
                 type: MethodType::UPLOAD,
             ))
             ->param('file', [], new File(), 'Binary image file of at most 5MB. Allowed file types are png, jpg, jpeg, and webp.', skipValidation: true)
+            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID whose photo to change. Needs the `users.write` scope. Defaults to the currently authenticated user.', true, ['dbForProject'])
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -85,6 +88,7 @@ class Update extends Base
 
     public function action(
         mixed $file,
+        string $userId,
         Request $request,
         Response $response,
         Database $dbForProject,
@@ -93,9 +97,7 @@ class Update extends Base
         Device $deviceForFiles,
         Device $deviceForLocal,
     ): void {
-        if ($user->isEmpty()) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        }
+        $user = $this->getTarget($userId, $user, $request, $dbForProject);
 
         // Photos fit in one chunk, so a chunked upload is refused rather than stored as a partial image
         if (!empty($request->getHeaderLine('content-range'))) {

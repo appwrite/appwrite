@@ -19,6 +19,9 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { VcsProviderButtons } from '@/components/global/shared/VcsProviderButtons'
+import { GitInstallationReuseDialog } from '@/components/global/shared/GitInstallationReuseDialog'
+import { useReusableVcsInstallations } from '@/lib/react-query/hooks/vcs'
+import { useParams } from '@tanstack/react-router'
 import { Pagination } from '@/components/global/shared/Pagination'
 import {
   fetchRepositories,
@@ -28,6 +31,7 @@ import {
   useProject,
   useReviewedRepositories,
   useReviewRepositories,
+  useReviewSummary,
   useVcsInstallations,
 } from '@/lib/react-query/hooks'
 import { DEFAULT_STALE_TIME } from '@/lib/react-query/hooks/constants'
@@ -42,7 +46,11 @@ import {
 } from '@/lib/vcs/providers'
 import type { ReviewInstallation } from '@/lib/appwrite/reviews'
 import { NewRepositories } from './NewRepositories'
-import { RepositoriesTable, type RepositoryRowData } from './RepositoriesTable'
+import {
+  RepositoriesTable,
+  type RepositoryActivity,
+  type RepositoryRowData,
+} from './RepositoriesTable'
 import { ReviewAll } from './ReviewAll'
 
 export type RepositoriesFilter = 'reviewed' | 'all'
@@ -226,6 +234,9 @@ export function RepositoriesActions({
   canWrite: boolean
 }) {
   const t = useT()
+  const { projectId } = useParams({ strict: false })
+  const { data: reusable = [] } = useReusableVcsInstallations(projectId)
+  const [reuseOpen, setReuseOpen] = useState(false)
   if (scope.loading || scope.filter !== 'all' || !scope.installationId) {
     return null
   }
@@ -241,17 +252,38 @@ export function RepositoriesActions({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {scope.connectProviders.map((provider) => (
-              <DropdownMenuItem key={provider.id} asChild>
-                <a href={scope.connectUrl(provider.id)}>
+            {scope.connectProviders.map((provider) =>
+              provider.id === 'github' && reusable.length > 0 ? (
+                <DropdownMenuItem
+                  key={provider.id}
+                  onSelect={() => setReuseOpen(true)}
+                >
                   <provider.Icon className="h-4 w-4" />
                   {provider.label}
-                </a>
-              </DropdownMenuItem>
-            ))}
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem key={provider.id} asChild>
+                  <a href={scope.connectUrl(provider.id)}>
+                    <provider.Icon className="h-4 w-4" />
+                    {provider.label}
+                  </a>
+                </DropdownMenuItem>
+              ),
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       )}
+      <GitInstallationReuseDialog
+        open={reuseOpen}
+        onOpenChange={setReuseOpen}
+        projectId={projectId}
+        installations={reusable}
+        installLink={
+          <a href={scope.connectUrl('github')}>
+            {t('Install on another account')}
+          </a>
+        }
+      />
       <Button
         variant="outline"
         size="sm"
@@ -261,6 +293,50 @@ export function RepositoriesActions({
       >
         {t('Review all')}
       </Button>
+    </>
+  )
+}
+
+/**
+ * Each reviewed repository's last 30 days, from the summary the Performance
+ * tab opens on, so moving between the tabs loads it once.
+ */
+function useRepositoryActivity(projectId: string): RepositoryActivity {
+  const { repositories, isLoading, error } = useReviewSummary(projectId)
+  const byRepository = useMemo(
+    () =>
+      new Map(
+        repositories.map((repository) => [repository.repositoryId, repository]),
+      ),
+    [repositories],
+  )
+  return { byRepository, loading: isLoading, unavailable: !!error }
+}
+
+/** The title row of a repositories card. */
+function CardHeader({
+  title,
+  description,
+  aside,
+}: {
+  title: string
+  description: string
+  aside?: string
+}) {
+  return (
+    <>
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-1 px-6 py-4">
+        <div className="min-w-0">
+          <h3 className="text-[15px] font-semibold text-foreground">{title}</h3>
+          <p className="mt-2 text-[13px] text-muted-foreground">
+            {description}
+          </p>
+        </div>
+        {aside && (
+          <span className="text-[13px] text-muted-foreground">{aside}</span>
+        )}
+      </div>
+      <div className="border-t border-border" />
     </>
   )
 }
@@ -398,6 +474,7 @@ function ReviewedRepositories({
   const [pageSize, setPageSize] = useState(REVIEW_REPOSITORIES_PAGE_SIZE)
   const { repositories, total, isLoading, isPlaceholderData, error } =
     useReviewRepositories(projectId, page - 1, pageSize)
+  const activity = useRepositoryActivity(projectId)
 
   // Turning off the last repository on a page leaves it empty: step back to
   // the last page that has any. Only a loaded page counts, not the previous
@@ -497,6 +574,19 @@ function ReviewedRepositories({
         projectId={projectId}
         rows={rows}
         canWrite={canWrite}
+        activity={activity}
+        header={
+          <CardHeader
+            title={t('Reviewed repositories')}
+            description={t(
+              'Pull requests reviewed in the last 30 days. Select a repository to see its reviews.',
+            )}
+            aside={t('{count} repositories').replace(
+              '{count}',
+              total.toLocaleString(),
+            )}
+          />
+        }
       />
       <Pagination
         currentPage={page}
@@ -571,6 +661,7 @@ function InstallationRepositories({
     projectId,
     ids,
   )
+  const activity = useRepositoryActivity(projectId)
 
   const rows: RepositoryRowData[] = repositories.map((repository) => ({
     installationId,
@@ -613,6 +704,19 @@ function InstallationRepositories({
           projectId={projectId}
           rows={rows}
           canWrite={canWrite && !reviewedLoading}
+          activity={activity}
+          header={
+            <CardHeader
+              title={t('All repositories')}
+              description={t(
+                'Turn on code review for a repository right where you find it. Reviewed ones show their last 30 days.',
+              )}
+              aside={t('{count} repositories').replace(
+                '{count}',
+                total.toLocaleString(),
+              )}
+            />
+          }
         />
       </div>
       <Pagination

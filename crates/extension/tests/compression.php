@@ -1,8 +1,11 @@
 <?php
 
 // Parity corpus for utopia-php/compression: the abstract Compression and its seven algorithms.
-// Run it on the PHP classes and on the utopia extension's (_APP_EXTENSION_LIBRARIES=compression),
-// and diff stdout: every line must match. Stderr names the implementation that ran.
+// The PHP classes are gone, so it runs on the utopia extension's and its stdout is diffed against
+// compression.expected.jsonl, what it printed on the PHP classes (appwrite/appwrite main 8739256)
+// before they were removed: every line must match.
+//
+// Reading what PHP's own functions wrote needs PECL zstd, brotli, lz4 and snappy (appwrite/base 2.5).
 //
 // Stored files are a wire format, so most of it is bytes: what each algorithm writes (as a hash,
 // so a byte that differs fails the diff), what it reads back, and what PHP's own functions
@@ -28,11 +31,8 @@ const CLASSES = [Compression::class, ...ALGORITHMS];
 ini_set('memory_limit', '-1');
 
 $internal = (new ReflectionClass(Compression::class))->isInternal();
-fwrite(STDERR, 'Utopia\\Compression: ' . ($internal ? 'utopia extension' : 'PHP') . PHP_EOL);
-// A run meant for the extension that gets the PHP classes would compare PHP with PHP and pass.
-$requested = in_array('compression', array_map(trim(...), explode(',', getenv('_APP_EXTENSION_LIBRARIES') ?: '')), true);
-if ($internal !== $requested) {
-    fwrite(STDERR, '_APP_EXTENSION_LIBRARIES ' . ($requested ? 'names' : 'does not name') . ' compression, but the other implementation loaded' . PHP_EOL);
+if (!$internal) {
+    fwrite(STDERR, 'Utopia\\Compression is not the utopia extension\'s: this corpus checks the extension against pinned PHP output' . PHP_EOL);
     exit(1);
 }
 foreach (CLASSES as $class) {
@@ -69,6 +69,12 @@ function show(mixed $value): mixed
     return $value;
 }
 
+/** A message without the corpus's own path and line, so the pinned output survives edits to it. */
+function unplaced(string $message): string
+{
+    return (string) preg_replace('/ in \(file\) on line \d+/', ' in (file) on line (line)', str_replace(' in ' . __FILE__ . ' ', ' in (file) ', $message));
+}
+
 /** What `$run` returns or throws, with the warnings it raised. */
 function outcome(callable $run): array
 {
@@ -77,10 +83,10 @@ function outcome(callable $run): array
     try {
         $result = ['value' => show($run())];
     } catch (Throwable $e) {
-        $result = ['throws' => get_class($e), 'message' => $e->getMessage()];
+        $result = ['throws' => get_class($e), 'message' => unplaced($e->getMessage())];
     }
     if ($warnings !== []) {
-        $result['warnings'] = $warnings;
+        $result['warnings'] = array_map(fn (array $warning): array => [$warning[0], unplaced($warning[1])], $warnings);
     }
 
     return $result;

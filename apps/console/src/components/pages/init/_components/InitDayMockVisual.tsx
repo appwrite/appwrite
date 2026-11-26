@@ -5,7 +5,9 @@ import { DatabasesProductVisual } from '@/components/pages/home/product-bento/Da
 import { FirewallProductVisual } from '@/components/pages/home/product-bento/FirewallProductVisual'
 import { Appwrite2DayVisual } from './day-visuals/Appwrite2DayVisual'
 import { AnalyticsDayVisual } from './day-visuals/AnalyticsDayVisual'
+import { BeepDayVisual } from './day-visuals/BeepDayVisual'
 import { MonitorsBeepDayVisual } from './day-visuals/MonitorsBeepDayVisual'
+import { MonitorsDayVisual } from './day-visuals/MonitorsDayVisual'
 import { ReviewsDayVisual } from './day-visuals/ReviewsDayVisual'
 import { VideosDayVisual } from './day-visuals/VideosDayVisual'
 import { ZeroDayVisual } from './day-visuals/ZeroDayVisual'
@@ -23,6 +25,8 @@ const INIT_DAY_MOCK_VISUALS: Record<InitDayMockVisualId, ComponentType> = {
   videos: VideosDayVisual,
   zero: ZeroDayVisual,
   'monitors-beep': MonitorsBeepDayVisual,
+  monitors: MonitorsDayVisual,
+  beep: BeepDayVisual,
   reviews: ReviewsDayVisual,
 }
 
@@ -32,6 +36,8 @@ const COVER_VISUALS = new Set<InitDayMockVisualId>([
   'videos',
   'zero',
   'monitors-beep',
+  'monitors',
+  'beep',
   'reviews',
 ])
 

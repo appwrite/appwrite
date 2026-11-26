@@ -61,9 +61,9 @@ describe('init schedule titles', () => {
     )?.title
 
   test('masks a launch session until its day unlocks', () => {
-    expect(titleOf(1, 'sched-nov5-videos')).toBe('Product tour')
+    expect(titleOf(1, 'sched-nov5-videos')).toBe('Launch event')
     expect(titleOf(2, 'sched-nov5-videos')).toBe(
-      'Appwrite Videos launch stream',
+      'Appwrite Videos launch event',
     )
   })
 

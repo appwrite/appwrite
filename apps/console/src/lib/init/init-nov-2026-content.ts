@@ -4,7 +4,8 @@ import type {
   LaunchEventPrizes,
   LaunchEventScheduleItem,
 } from './types'
-import { INIT_YOUTUBE_CHANNEL_HREF } from './links'
+/** Init 5's launch events happen on the Appwrite Discord server. */
+const INIT_DISCORD_HREF = '/discord'
 import { ZERO_PRODUCT_ICON } from '@/lib/zero/product-icon'
 
 /**
@@ -133,10 +134,6 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     day: 4,
     dateLabel: 'DECEMBER 3',
     weekdayLabel: 'THURSDAY, DECEMBER 3',
-    films: [
-      film('6b06b977275a9c08faf9', 'Appwrite Monitors'),
-      film('6b06b9bb1fe47403a7a5', 'Appwrite Beep'),
-    ],
     title: 'Introducing Appwrite Monitors & Appwrite Beep',
     description: 'Know when your project needs you, wherever you are.',
     longDescription:
@@ -147,16 +144,52 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
       imageAlt:
         'Know when your project needs you: a bandwidth monitor triggered as usage crosses its threshold, and the alert arriving as a push from Appwrite Beep',
     },
-    sessionCount: 1,
-    resources: [
+    announcements: [
       {
-        id: 'init5-day4-announce',
-        typeLabel: 'Blog',
-        title: 'Introducing Appwrite Monitors & Appwrite Beep',
-        href: '/init',
-        actionLabel: 'Coming soon',
+        id: 'monitors',
+        title: 'Introducing Appwrite Monitors',
+        longDescription:
+          'Appwrite Monitors alert you when your project crosses a threshold you set, like bandwidth nearing your plan, before it becomes a problem.',
+        visual: {
+          mockVisualId: 'monitors',
+          imageAlt:
+            'A bandwidth monitor triggered as usage crosses its 80% threshold',
+        },
+        films: [film('6b06b977275a9c08faf9', 'Appwrite Monitors')],
+        resources: [
+          {
+            id: 'init5-day4-monitors-announce',
+            typeLabel: 'Blog',
+            title: 'Introducing Appwrite Monitors',
+            href: '/init',
+            actionLabel: 'Coming soon',
+          },
+        ],
+      },
+      {
+        id: 'beep',
+        title: 'Introducing Appwrite Beep',
+        longDescription:
+          'Appwrite Beep, our mobile app, brings updates from your projects to your phone: triggered monitors, failed certificates and what is new in Appwrite. You choose what reaches you.',
+        visual: {
+          mockVisualId: 'beep',
+          imageAlt:
+            'Project updates arriving on a phone as pushes from Appwrite Beep: a triggered monitor, a failed SSL certificate and an Appwrite launch',
+        },
+        films: [film('6b0823090857b823a173', 'Appwrite Beep')],
+        resources: [
+          {
+            id: 'init5-day4-beep-announce',
+            typeLabel: 'Blog',
+            title: 'Introducing Appwrite Beep',
+            href: '/init',
+            actionLabel: 'Coming soon',
+          },
+        ],
       },
     ],
+    sessionCount: 1,
+    resources: [],
   },
   {
     day: 5,
@@ -194,54 +227,54 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
 ]
 
 /**
- * Init 5 week schedule (Pacific Time, PST in November): one YouTube launch
- * stream each weekday, then a single Reddit AMA on Saturday.
+ * Init 5 week schedule (Pacific Time, PST in November): one Discord launch
+ * event each weekday, then a single Reddit AMA on Saturday.
  */
 export const INIT_NOV_2026_SCHEDULE: LaunchEventScheduleItem[] = [
   {
     id: 'sched-nov5-analytics',
     day: 1,
-    platform: 'youtube',
-    title: 'Appwrite Analytics launch stream',
+    platform: 'discord',
+    title: 'Appwrite Analytics launch event',
     startsAt: '2026-11-30T09:00:00-08:00',
     isLive: true,
-    href: INIT_YOUTUBE_CHANNEL_HREF,
+    href: INIT_DISCORD_HREF,
   },
   {
     id: 'sched-nov5-videos',
     day: 2,
-    platform: 'youtube',
-    title: 'Appwrite Videos launch stream',
+    platform: 'discord',
+    title: 'Appwrite Videos launch event',
     startsAt: '2026-12-01T09:00:00-08:00',
     isLive: true,
-    href: INIT_YOUTUBE_CHANNEL_HREF,
+    href: INIT_DISCORD_HREF,
   },
   {
     id: 'sched-nov5-zero',
     day: 3,
-    platform: 'youtube',
-    title: 'Appwrite Zero launch stream',
+    platform: 'discord',
+    title: 'Appwrite Zero launch event',
     startsAt: '2026-12-02T09:00:00-08:00',
     isLive: true,
-    href: INIT_YOUTUBE_CHANNEL_HREF,
+    href: INIT_DISCORD_HREF,
   },
   {
     id: 'sched-nov5-monitors',
     day: 4,
-    platform: 'youtube',
-    title: 'Appwrite Monitors & Appwrite Beep launch stream',
+    platform: 'discord',
+    title: 'Appwrite Monitors & Appwrite Beep launch event',
     startsAt: '2026-12-03T09:00:00-08:00',
     isLive: true,
-    href: INIT_YOUTUBE_CHANNEL_HREF,
+    href: INIT_DISCORD_HREF,
   },
   {
     id: 'sched-nov5-finale',
     day: 5,
-    platform: 'youtube',
+    platform: 'discord',
     title: 'Appwrite Reviews launch, plus the finale',
     startsAt: '2026-12-04T09:00:00-08:00',
     isLive: true,
-    href: INIT_YOUTUBE_CHANNEL_HREF,
+    href: INIT_DISCORD_HREF,
   },
   {
     id: 'sched-nov5-ama',
@@ -265,10 +298,11 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
       day: 1,
       dateLabel: 'NOVEMBER 30',
       scheduleItemId: 'sched-nov5-analytics',
-      sessionTitle: 'Appwrite Analytics launch stream',
-      platform: 'youtube',
-      href: INIT_YOUTUBE_CHANNEL_HREF,
+      sessionTitle: 'Appwrite Analytics launch event',
+      platform: 'discord',
+      href: INIT_DISCORD_HREF,
       prizeDescription: 'Init 5 hoodie and cap',
+      presenceActivity: 'Hoodie and cap wishlist',
       // Init has no light theme: both themes show the image on its own dark ground.
       visual: {
         imageAlt: 'Day 1 giveaway: the Init 5 hoodie and the init_ cap',
@@ -280,10 +314,11 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
       day: 2,
       dateLabel: 'DECEMBER 1',
       scheduleItemId: 'sched-nov5-videos',
-      sessionTitle: 'Appwrite Videos launch stream',
-      platform: 'youtube',
-      href: INIT_YOUTUBE_CHANNEL_HREF,
+      sessionTitle: 'Appwrite Videos launch event',
+      platform: 'discord',
+      href: INIT_DISCORD_HREF,
       prizeDescription: 'Light Appwriter keyboard and desk mat',
+      presenceActivity: 'Keyboard and desk mat envy',
       visual: {
         imageAlt:
           'Day 2 giveaway: a light Appwriter keyboard on the Init 5 desk mat',
@@ -295,10 +330,11 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
       day: 3,
       dateLabel: 'DECEMBER 2',
       scheduleItemId: 'sched-nov5-zero',
-      sessionTitle: 'Appwrite Zero launch stream',
-      platform: 'youtube',
-      href: INIT_YOUTUBE_CHANNEL_HREF,
+      sessionTitle: 'Appwrite Zero launch event',
+      platform: 'discord',
+      href: INIT_DISCORD_HREF,
       prizeDescription: 'Dark Appwriter keyboard, mug and stickers',
+      presenceActivity: 'Keyboard, mug and sticker dreams',
       visual: {
         imageAlt:
           'Day 3 giveaway: a dark Appwriter keyboard, the Init 5 mug and the Init 5 sticker sheet',
@@ -310,10 +346,11 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
       day: 4,
       dateLabel: 'DECEMBER 3',
       scheduleItemId: 'sched-nov5-monitors',
-      sessionTitle: 'Appwrite Monitors & Appwrite Beep launch stream',
-      platform: 'youtube',
-      href: INIT_YOUTUBE_CHANNEL_HREF,
+      sessionTitle: 'Appwrite Monitors & Appwrite Beep launch event',
+      platform: 'discord',
+      href: INIT_DISCORD_HREF,
       prizeDescription: 'Init 5 tee, beanie and poster',
+      presenceActivity: 'Tee, beanie and poster wishlist',
       visual: {
         imageAlt:
           'Day 4 giveaway: the Init 5 Five Days tee, the init_ beanie and the Init 5 poster',
@@ -327,9 +364,10 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
     dateLabel: 'DECEMBER 4',
     scheduleItemId: 'sched-nov5-finale',
     sessionTitle: 'Appwrite Reviews launch, plus the finale',
-    platform: 'youtube',
-    href: INIT_YOUTUBE_CHANNEL_HREF,
+    platform: 'discord',
+    href: INIT_DISCORD_HREF,
     title: 'The full Init 5 swag collection',
+    presenceActivity: 'Full swag collection dreams',
     description:
       'All eight pieces: hoodie, tee, cap, beanie, mug, sticker sheet, poster and desk mat.',
     eligibility: 'Share Init on social during the week to enter.',

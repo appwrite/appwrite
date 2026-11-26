@@ -248,7 +248,9 @@
             "userId",
             "secret"
         ],
-        "avatars.deletePhoto": [],
+        "avatars.deletePhoto": [
+            "userId"
+        ],
         "avatars.getTeamPhoto": [
             "teamId",
             "width",
@@ -334,7 +336,8 @@
             "output"
         ],
         "avatars.updatePhoto": [
-            "file"
+            "file",
+            "userId"
         ],
         "databases.createDocument": [
             "databaseId",
@@ -1301,7 +1304,9 @@
             "alertId",
             "acknowledged"
         ],
-        "avatars.deletePhoto": [],
+        "avatars.deletePhoto": [
+            "userId"
+        ],
         "avatars.getTeamPhoto": [
             "teamId",
             "width",
@@ -1387,7 +1392,8 @@
             "output"
         ],
         "avatars.updatePhoto": [
-            "file"
+            "file",
+            "userId"
         ],
         "console.getEmailTemplate": [
             "templateId",
@@ -3998,6 +4004,10 @@
         "reviews.get": [
             "reviewId"
         ],
+        "reviews.getSummary": [
+            "range",
+            "repositoryId"
+        ],
         "reviews.list": [
             "queries",
             "total"
@@ -5917,7 +5927,9 @@
             "alertId",
             "acknowledged"
         ],
-        "avatars.deletePhoto": [],
+        "avatars.deletePhoto": [
+            "userId"
+        ],
         "avatars.getTeamPhoto": [
             "teamId",
             "width",
@@ -6003,7 +6015,8 @@
             "output"
         ],
         "avatars.updatePhoto": [
-            "file"
+            "file",
+            "userId"
         ],
         "databases.create": [
             "databaseId",
@@ -8517,6 +8530,10 @@
         ],
         "reviews.get": [
             "reviewId"
+        ],
+        "reviews.getSummary": [
+            "range",
+            "repositoryId"
         ],
         "reviews.list": [
             "queries",

@@ -125,8 +125,15 @@ abstract class Base extends Action
             ]));
 
         if (!$monitor->isEmpty()) {
-            $membership = $authorization->skip(fn () => $dbForPlatform->findOne('memberships', [
-                Query::equal('teamInternalId', [(string) $monitor->getAttribute('teamInternalId')]),
+            // The organization that owns the project now, as the alerts worker mails it: a project
+            // moved to another organization keeps the team it was created in on its monitors.
+            // A monitor without a project (an organization's budget) belongs to its own team.
+            $projectId = (string) $monitor->getAttribute('projectId', '');
+            $teamInternalId = $projectId === ''
+                ? (string) $monitor->getAttribute('teamInternalId', '')
+                : (string) $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId))->getAttribute('teamInternalId', '');
+            $membership = $teamInternalId === '' ? new Document() : $authorization->skip(fn () => $dbForPlatform->findOne('memberships', [
+                Query::equal('teamInternalId', [$teamInternalId]),
                 Query::equal('userInternalId', [(string) $user->getSequence()]),
                 Query::equal('confirm', [true]),
             ]));

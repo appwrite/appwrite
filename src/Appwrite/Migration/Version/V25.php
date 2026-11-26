@@ -624,6 +624,19 @@ class V25 extends Migration
                                 }
                             }
                         }
+                        // Indexes added since for review performance. An existing index is skipped.
+                        $index = match ($id) {
+                            'reviews' => '_key_status_createdAt',
+                            'reviewFindings' => '_key_reviewInternalId_status',
+                            default => null,
+                        };
+                        if ($existed && $index !== null) {
+                            try {
+                                $this->createIndexFromCollection($this->dbForProject, $id, $index);
+                            } catch (Duplicate) {
+                            }
+                            $this->dbForProject->purgeCachedCollection($id);
+                        }
                         // Segments created before each row stored its bytes. An existing
                         // attribute is skipped; a second migrate hits that path.
                         if ($existed && $id === 'videosRenditionsSegments') {

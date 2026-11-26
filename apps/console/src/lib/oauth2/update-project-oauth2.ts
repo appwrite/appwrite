@@ -34,6 +34,7 @@ const OAUTH2_UPDATE_BY_PROVIDER: Partial<
   [ProjectOAuthProviderId.Bitbucket]: (p, b) => p.updateOAuth2Bitbucket(b),
   [ProjectOAuthProviderId.Bitly]: (p, b) => p.updateOAuth2Bitly(b),
   [ProjectOAuthProviderId.Box]: (p, b) => p.updateOAuth2Box(b),
+  [ProjectOAuthProviderId.Clerk]: (p, b) => p.updateOAuth2Clerk(b),
   [ProjectOAuthProviderId.Cloudflare]: (p, b) => p.updateOAuth2Cloudflare(b),
   [ProjectOAuthProviderId.Dailymotion]: (p, b) => p.updateOAuth2Dailymotion(b),
   [ProjectOAuthProviderId.Discord]: (p, b) => p.updateOAuth2Discord(b),

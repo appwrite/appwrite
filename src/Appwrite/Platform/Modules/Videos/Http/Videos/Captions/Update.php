@@ -8,6 +8,7 @@ use Appwrite\Event\Message\VideoAction;
 use Appwrite\Event\Publisher\Video as VideoPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Base;
+use Appwrite\Platform\Modules\Videos\SegmentCache;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -82,6 +83,7 @@ class Update extends Base
             ->inject('timelimit')
             ->inject('queueForEvents')
             ->inject('publisherForVideos')
+            ->inject('purgeVideoSegmentCache')
             ->callback($this->action(...));
     }
 
@@ -100,7 +102,8 @@ class Update extends Base
         Authorization $authorization,
         callable $timelimit,
         Event $queueForEvents,
-        VideoPublisher $publisherForVideos
+        VideoPublisher $publisherForVideos,
+        SegmentCache $segmentCache
     ): void {
         $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
         $this->assertCanUpdateVideo($authorization, $user, $video);
@@ -198,6 +201,14 @@ class Update extends Base
         }
 
         if ($sourceChanged) {
+            // The old segment row still serves the previous VTT, and this write
+            // does not change its URL. Drop the row before the job and the purge:
+            // a refetch would store those bytes again, and the worker replaces
+            // this row, so a later delete would remove the new segment.
+            $authorization->skip(fn () => $dbForProject->deleteDocuments('videosCaptionsSegments', [
+                Query::equal('captionInternalId', [$caption->getSequence()]),
+            ]));
+
             $publisherForVideos->enqueue(new VideoMessage(
                 project: $project,
                 action: VideoAction::Caption,
@@ -205,6 +216,10 @@ class Update extends Base
                 caption: $caption,
             ));
         }
+
+        // Public caption segments share the video Surrogate-Key and the video's
+        // updatedAt, so this write does not change their URL.
+        $segmentCache->purge($project->getId(), $video->getId());
 
         $queueForEvents
             ->setParam('videoId', $video->getId())

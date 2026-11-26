@@ -1430,10 +1430,11 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Starts in': 'מתחיל בעוד',
   'Join us on our biggest Init ever. 5 days, 5 new product launches. It will be electric.':
     'הצטרפו ל-Init הגדול ביותר שלנו אי פעם. 5 ימים, 5 השקות מוצר חדשות. זה הולך להיות מחשמל.',
-  "Init 5 is live. Catch today's reveal and the launch stream.":
-    'Init 5 באוויר. אל תפספסו את החשיפה של היום ואת שידור ההשקה.',
-  'Init 5 is a wrap. Explore every launch and rewatch the streams.':
-    'Init 5 הסתיים. גלו כל השקה וצפו שוב בשידורים.',
+  "Init 5 is live. Catch today's reveal and join the launch event on Discord.":
+    'Init 5 באוויר. אל תפספסו את החשיפה של היום והצטרפו לאירוע ההשקה ב-Discord.',
+  'Init 5 is a wrap. Explore every launch from the week.':
+    'Init 5 הסתיים. גלו את כל ההשקות של השבוע.',
+  'Init 5 launch event': 'אירוע ההשקה של Init 5',
   'Introducing Appwrite Analytics': 'מציגים את Appwrite Analytics',
   'Introducing Appwrite Videos': 'מציגים את Appwrite Videos',
   'Introducing Appwrite Zero': 'מציגים את Appwrite Zero',
@@ -1452,9 +1453,6 @@ export const heSharedUiDictionary: Record<string, string> = {
     'מעקב אחרי מבקרים, עמודים וקמפיינים.',
   'Appwrite Videos': 'Appwrite Videos',
   'Transcode, stream, and caption videos.': 'קידוד, הזרמה וכתוביות לסרטונים.',
-  'Project environments': 'סביבות פרויקט',
-  'Switch or clone staging and production.':
-    'מעבר או שכפול בין staging לפרודקשן.',
   'Repository not available': 'ה-repo לא זמין',
   "This Git installation can no longer reach the repository. If it was removed from the installation's repository access, add it back with Update repository access. If it was deleted or moved, connect it again.":
     'התקנת ה-Git הזו כבר לא מגיעה ל-repo. אם הוא הוסר מהרשאות הגישה ל-repos של ההתקנה, הוסיפו אותו חזרה דרך עדכון הגישה ל-repos. אם הוא נמחק או הועבר, חברו אותו מחדש.',

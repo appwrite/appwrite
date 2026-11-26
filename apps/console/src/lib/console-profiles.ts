@@ -61,8 +61,10 @@ export type ConsoleProfileFeatures = {
   nativeDbsMongo: boolean
   /** An experiment, off by default; the quality team turns it on from the header Previews menu. Videos product (transcoding, renditions, subtitles, HLS/DASH playback) via the `videos` SDK service. */
   videos: boolean
-  /** An experiment, off by default; the quality team turns it on from the header Previews menu. A project without a Git installation reuses the GitHub organization installations of the organization's other projects. */
+  /** Internal only, switched on from the debug menu. A project without a Git installation reuses the GitHub organization installations of the organization's other projects. */
   gitInstallationReuse: boolean
+  /** Internal only, switched on from the debug menu. Link buttons on notification rows that open the Console page an alert acts on. */
+  alertCtas: boolean
   /**
    * Internal only, switched on from the debug menu. Review product (AI code
    * review of GitHub pull requests) via the `reviews` service. Even when on, it
@@ -70,8 +72,6 @@ export type ConsoleProfileFeatures = {
    * self-hosted instances run the review service only when they opt in.
    */
   reviews: boolean
-  /** Project environments switcher in the project sidebar (`/project/environments`, Cloud only). */
-  projectEnvironments: boolean
   /**
    * Organization settings → Single sign-on (Cloud only, owners). Owners verify
    * domains with a DNS record and connect identity providers, so people on
@@ -150,8 +150,8 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   nativeDbsMongo: 'Native DBs: MongoDB',
   videos: 'Videos',
   gitInstallationReuse: 'Git installation reuse',
+  alertCtas: 'Alert CTAs',
   reviews: 'Review',
-  projectEnvironments: 'Project environments',
   sso: 'Single sign-on',
   alerts: 'Alerts',
   multiRegion: 'Multi-region',
@@ -208,8 +208,8 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       nativeDbsMongo: false,
       videos: false,
       gitInstallationReuse: false,
+      alertCtas: false,
       reviews: false,
-      projectEnvironments: false,
       sso: true,
       alerts: false,
       multiRegion: true,
@@ -256,8 +256,8 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       nativeDbsMongo: false,
       videos: false,
       gitInstallationReuse: false,
+      alertCtas: false,
       reviews: false,
-      projectEnvironments: false,
       sso: false,
       alerts: false,
       multiRegion: false,
@@ -379,6 +379,7 @@ const REMOVED_PROFILE_FEATURE_KEYS = [
   'projectTransfers',
   'extraVcsOAuth',
   'vcsOrigin',
+  'projectEnvironments',
 ] as const
 
 function migrateStoredProfileFeatures(
@@ -548,7 +549,6 @@ function applyCloudOnlyFeatureGates(
       init: false,
       marketing: false,
       multiTenancy: false,
-      projectEnvironments: false,
       sso: false,
       zero: false,
     }
@@ -570,7 +570,7 @@ function parseEnvFeatureOverride(value: string): boolean | null {
  * Per-feature overrides from runtime env vars (e.g.
  * VITE_CONSOLE_USER_VERIFICATION, VITE_CONSOLE_COOKIE_BANNER,
  * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_DATABASE_PITR_RESTORE,
- * VITE_CONSOLE_PROJECT_ENVIRONMENTS, VITE_CONSOLE_BROWSER_ALERTS), applied on top
+ * VITE_CONSOLE_BROWSER_ALERTS), applied on top
  * of the canonical profile. A stored debug override still wins.
  */
 function applyEnvFeatureOverrides(
@@ -596,13 +596,6 @@ function applyEnvFeatureOverrides(
   )
   if (databasePitrRestore !== null) {
     next = { ...next, databasePitrRestore }
-  }
-  // Self-hosted has no `/project/environments` and rejects `parentId` in project list queries.
-  const projectEnvironments = parseEnvFeatureOverride(
-    config.projectEnvironments,
-  )
-  if (projectEnvironments !== null && profileId === 'cloud') {
-    next = { ...next, projectEnvironments }
   }
   const browserAlerts = parseEnvFeatureOverride(config.browserAlerts)
   if (browserAlerts !== null) {

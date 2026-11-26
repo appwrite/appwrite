@@ -43,7 +43,6 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     startDate: '2026-08-31',
     endDate: '2026-09-04',
     status: 'active',
-    featured: true,
     presenceEnabled: true,
     tickets: INIT_JULY_2026_TICKET_CONFIG,
     primaryCta: {
@@ -206,11 +205,12 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     dateRangeLabel: 'NOVEMBER 30 - DECEMBER 4',
     headline: 'Init returns November 30 - December 4',
     description:
-      'Init is back, and this one is electric: five days, a new reveal every day, live streams, and giveaways. November 30 - December 4.',
+      'Init is back, and this one is electric: five days, a new reveal every day, live Discord events, and giveaways. November 30 - December 4.',
     startDate: '2026-11-30',
     endDate: '2026-12-04',
     // 'active' lets the status follow the dates: upcoming, then live, then past.
     status: 'active',
+    featured: true,
     presenceEnabled: true,
     tickets: INIT_NOV_2026_TICKET_CONFIG,
     primaryCta: {
@@ -231,8 +231,9 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
       },
     },
     liveBanner: {
-      title: 'Init 5 launch stream',
-      href: INIT_YOUTUBE_CHANNEL_HREF,
+      title: 'Init 5 launch event',
+      href: '/discord',
+      actionLabel: 'Join event',
     },
     onlineCount: 0,
     hiddenOnlineCount: 0,
@@ -310,13 +311,14 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     promoBanner: {
       before:
         'Join us on our biggest Init ever. 5 days, 5 new product launches. It will be electric.',
-      during: "Init 5 is live. Catch today's reveal and the launch stream.",
-      after: 'Init 5 is a wrap. Explore every launch and rewatch the streams.',
+      during:
+        "Init 5 is live. Catch today's reveal and join the launch event on Discord.",
+      after: 'Init 5 is a wrap. Explore every launch from the week.',
     },
     recap: {
       headline: 'Init recap',
       description:
-        'Five days of Init 5 launches are in the books. Rewatch sessions and explore every announcement from November 30 - December 4.',
+        'Five days of Init 5 launches are in the books. Explore every announcement from November 30 - December 4.',
       bannerMessage:
         'Init November 30 - December 4 has ended. Browse the full recap below.',
       introTitle: 'Everything we shipped',

@@ -618,6 +618,44 @@ final class AvatarsCustomClientTest extends Scope
         $this->assertSamePhoto($red, $this->getPhoto($headers));
     }
 
+    public function testUpdatePhotoOtherUser(): void
+    {
+        $attacker = $this->createPhotoUser();
+        $victim = $this->createPhotoUser();
+        $victimId = $this->getPhotoUserId($victim);
+        $red = $this->createImage('#FF0000', 'png');
+        $blue = $this->createImage('#0000FF', 'png');
+
+        $response = $this->uploadPhoto($victim, $red, 'photo.png');
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE — a session cannot upload over another user's photo
+         */
+        $response = $this->uploadPhoto($attacker, $blue, 'photo.png', params: ['userId' => $victimId]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals(Exception::GENERAL_UNAUTHORIZED_SCOPE, $response['body']['type']);
+        $this->assertSamePhoto($red, $this->getPhoto($victim));
+
+        /**
+         * Test for FAILURE — nor delete it
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/avatars/photo', \array_merge($attacker, ['content-type' => 'application/json']), ['userId' => $victimId]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals(Exception::GENERAL_UNAUTHORIZED_SCOPE, $response['body']['type']);
+        $this->assertSamePhoto($red, $this->getPhoto($victim));
+
+        /**
+         * Test for SUCCESS — passing your own ID changes your own photo
+         */
+        $response = $this->uploadPhoto($victim, $blue, 'photo.png', params: ['userId' => $victimId]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSamePhoto($blue, $this->getPhoto($victim));
+    }
+
     public function testDeletePhotoOverridesIdentityPhoto(): void
     {
         /**

@@ -58,65 +58,57 @@ export async function fetchVcsInstallations(
 
   const projectSdk = sdk.forProject(projectId)
   const queries = [Query.limit(limit), Query.offset(page * limit)]
-  const list = await projectSdk.vcs.listInstallations({ queries })
+  return await projectSdk.vcs.listInstallations({ queries })
+}
 
-  if (page > 0 || !isFeatureEnabled('gitInstallationReuse')) {
-    return list
-  }
-
-  // The project reuses the GitHub organizations the organization's other
-  // projects already connected, instead of sending the user through GitHub's
-  // install flow again. Organizations it already has are left alone.
+/**
+ * GitHub installations the organization's other projects connected that this
+ * project doesn't have yet, so they can be reused without GitHub's install flow.
+ */
+export async function fetchReusableVcsInstallations(
+  projectId: string,
+): Promise<Models.Installation[]> {
+  const projectSdk = sdk.forProject(projectId)
   const { client } = projectSdk
-  const endpoint = `${client.config.endpoint}/vcs/installations`
   try {
-    const shared = (await client.call(
-      'get',
-      new URL(endpoint),
-      {},
-      { shared: true, queries: [Query.limit(100)] },
-    )) as Models.InstallationList
-    const own =
-      list.total > list.installations.length
-        ? (
-            await projectSdk.vcs.listInstallations({
-              queries: [Query.limit(100)],
-            })
-          ).installations
-        : list.installations
-    // Installation IDs are only unique within a provider, and only GitHub ones are shared
+    const [shared, own] = await Promise.all([
+      client.call(
+        'get',
+        new URL(`${client.config.endpoint}/vcs/installations`),
+        {},
+        { shared: true, queries: [Query.limit(100)] },
+      ) as Promise<Models.InstallationList>,
+      projectSdk.vcs.listInstallations({ queries: [Query.limit(100)] }),
+    ])
+    // Only GitHub installations are shared. One account can be installed from several
+    // projects under different IDs, so accounts are matched by name.
+    const account = (i: Models.Installation) => i.organization.toLowerCase()
     const linked = new Set(
-      own
-        .filter((i) => i.provider === 'github')
-        .map((i) => i.providerInstallationId),
+      own.installations.filter((i) => i.provider === 'github').map(account),
     )
-    const unique = [
-      ...new Map(
-        shared.installations
-          .filter((i) => !linked.has(i.providerInstallationId))
-          .map((i) => [i.providerInstallationId, i]),
-      ).values(),
-    ]
-    if (unique.length === 0) {
-      return list
+    // Only organization installations are offered for reuse.
+    // A reinstalled app leaves the old row behind with a dead ID. GitHub IDs only grow, so
+    // the highest one per account is the live installation.
+    const latest = new Map<string, Models.Installation>()
+    for (const i of shared.installations) {
+      if ((i as { personal?: boolean }).personal || linked.has(account(i))) {
+        continue
+      }
+      const kept = latest.get(account(i))
+      if (
+        !kept ||
+        Number(i.providerInstallationId) > Number(kept.providerInstallationId)
+      ) {
+        latest.set(account(i), i)
+      }
     }
-
-    await Promise.allSettled(
-      unique.map((installation) =>
-        client.call(
-          'post',
-          new URL(endpoint),
-          { 'content-type': 'application/json' },
-          { installationId: installation.$id },
-        ),
-      ),
+    return [...latest.values()].sort((a, b) =>
+      account(a).localeCompare(account(b)),
     )
   } catch {
-    // Servers without installation reuse reject the shared param; keep the list as is.
-    return list
+    // Servers without installation reuse reject the shared param
+    return []
   }
-
-  return await projectSdk.vcs.listInstallations({ queries })
 }
 
 /**
@@ -457,15 +449,7 @@ export function vcsInstallationsQueryOptions(
   limit: number = DEFAULT_PAGE_SIZE,
 ) {
   return queryOptions({
-    // An empty list cached with the experiment off would hide reuse once it is turned on
-    queryKey: [
-      'vcs',
-      'installations',
-      projectId,
-      page,
-      limit,
-      isFeatureEnabled('gitInstallationReuse'),
-    ],
+    queryKey: ['vcs', 'installations', projectId, page, limit],
     queryFn: () => fetchVcsInstallations(projectId!, page, limit),
     enabled: !!projectId,
     staleTime: LONG_STALE_TIME,
@@ -489,13 +473,51 @@ export function useVcsInstallations(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
 ) {
-  // Re-render when the reuse experiment is toggled, so the list is fetched under the new key
-  useSyncExternalStore(
+  return useQuery(vcsInstallationsQueryOptions(projectId, page, limit))
+}
+
+/**
+ * Hook for the GitHub installations this project can reuse from the
+ * organization's other projects. Empty while the reuse experiment is off.
+ */
+export function useReusableVcsInstallations(
+  projectId: string | null | undefined,
+) {
+  const enabled = useSyncExternalStore(
     subscribeToProfileChange,
     () => isFeatureEnabled('gitInstallationReuse'),
     () => false,
   )
-  return useQuery(vcsInstallationsQueryOptions(projectId, page, limit))
+  return useQuery({
+    queryKey: ['vcs', 'installations', projectId, 'reusable', enabled],
+    queryFn: () => fetchReusableVcsInstallations(projectId!),
+    enabled: !!projectId && enabled,
+    staleTime: DEFAULT_STALE_TIME,
+  })
+}
+
+/**
+ * Hook to connect another project's installation to this project.
+ */
+export function useReuseVcsInstallation(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (installationId: string) => {
+      const { client } = sdk.forProject(projectId!)
+      return (await client.call(
+        'post',
+        new URL(`${client.config.endpoint}/vcs/installations`),
+        { 'content-type': 'application/json' },
+        { installationId },
+      )) as Models.Installation
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['vcs', 'installations', projectId],
+      })
+    },
+  })
 }
 
 /**

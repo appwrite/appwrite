@@ -102,4 +102,38 @@ final class BaseTest extends TestCase
         $this->assertFalse(Base::jobMatches($name, 'proj1', '', 'rendition-ren1'));
         $this->assertTrue(Base::jobMatches($neighbor, 'proj1', 'vid1'));
     }
+
+    public function testWithProjectAppendsUpdatedAt(): void
+    {
+        $base = new class () extends Base {
+            public function expose(string $uri, \Utopia\Database\Document $project, \Utopia\Database\Document $video): string
+            {
+                return $this->withProject($uri, $project, $video);
+            }
+
+            public function exposePublic(\Utopia\Database\Document $video): bool
+            {
+                return $this->isPublicRead($video);
+            }
+        };
+
+        $project = new \Utopia\Database\Document(['$id' => 'proj1']);
+        $video = new \Utopia\Database\Document([
+            '$id' => 'vid1',
+            '$updatedAt' => '2026-01-02T03:04:05.000+00:00',
+            '$permissions' => ['read("any")'],
+        ]);
+
+        $this->assertSame(
+            '/v1/videos/vid1/outputs/hls/master.m3u8?project=proj1&updatedAt=2026-01-02T03%3A04%3A05.000%2B00%3A00',
+            $base->expose('/v1/videos/vid1/outputs/hls/master.m3u8', $project, $video)
+        );
+        $this->assertTrue($base->exposePublic($video));
+        $this->assertFalse($base->exposePublic(new \Utopia\Database\Document([
+            '$permissions' => ['read("user:abc")'],
+        ])));
+        $this->assertSame('video-proj1-vid1', Base::videoSurrogateKey('proj1', 'vid1'));
+        $this->assertSame('video-proj1-vid1', Base::videoSurrogateKey('Proj1', 'Vid1'));
+    }
+
 }
