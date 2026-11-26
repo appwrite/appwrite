@@ -23,6 +23,9 @@ use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\System\System;
+
+use function Swoole\Coroutine\run;
 
 final class FunctionsCustomServerTest extends Scope
 {
@@ -3183,6 +3186,189 @@ final class FunctionsCustomServerTest extends Scope
         // hosting the functions queue, which Cloud requires when several are configured; this task ignores it.
         \exec('queue-retry --name=' . \escapeshellarg(Event::FUNCTIONS_QUEUE_NAME) . ' --connection=queue --limit=1000 2>&1', $output, $exitCode);
         $this->assertSame(0, $exitCode, \implode("\n", $output));
+    }
+
+    /**
+     * A deployment whose callbacks lose the race for its deployment lock still
+     * completes once the lock is free: contended callbacks are requeued and
+     * applied instead of dead-lettering (#15745). On a worker without the
+     * requeue, the exit and complete callbacks of a build locked for this long
+     * dead-letter on their first contention and the deployment never completes.
+     */
+    public function testContendedCallbacksOfALockedBuildAreRequeuedAndApplied(): void
+    {
+        $functionId = '';
+        $redis = $this->redis();
+
+        try {
+            // Read the project's internal sequence before anything else: the
+            // read spawns a subprocess that takes a couple of seconds, and the
+            // lock below must be in place before the build's first callback.
+            $projectSequence = $this->projectSequence();
+
+            $functionId = $this->setupFunction([
+                'functionId' => Id::unique(),
+                'name' => 'Jobs contention requeue',
+                'runtime' => 'node-22',
+                'entrypoint' => 'index.js',
+                'timeout' => 60,
+            ]);
+
+            $deployment = $this->createDeployment($functionId, [
+                'code' => $this->packageFunction('basic'),
+                'activate' => true,
+            ]);
+            $this->assertSame(202, $deployment['headers']['status-code']);
+            $deploymentId = $deployment['body']['$id'];
+
+            // Hold the deployment lock while the build runs: every callback it
+            // streams waits out LOCK_TIMEOUT and is requeued instead of being
+            // dead-lettered. The hold stays well under the requeue cap (four
+            // deliveries cover about 40s of contention).
+            $this->holdDeploymentLock($redis, $projectSequence, $deploymentId, 20);
+
+            // Released, the requeued callbacks apply and the build completes.
+            $this->assertEventually(function () use ($functionId, $deploymentId) {
+                $deployment = $this->getDeployment($functionId, $deploymentId);
+                $this->assertSame('ready', $deployment['body']['status'], 'The build must complete once the lock is free');
+            }, 90000, 2000);
+        } finally {
+            $redis->close();
+
+            if ($functionId !== '') {
+                $this->cleanupFunction($functionId);
+            }
+        }
+    }
+
+    /**
+     * A lock held beyond every requeue dead-letters the callbacks on purpose
+     * instead of looping them forever: MAX_REQUEUES is enforced.
+     */
+    public function testALockHeldBeyondTheRequeueCapDeadLettersCallbacks(): void
+    {
+        $functionId = '';
+        $redis = $this->redis();
+
+        try {
+            $projectSequence = $this->projectSequence();
+
+            $functionId = $this->setupFunction([
+                'functionId' => Id::unique(),
+                'name' => 'Jobs contention cap',
+                'runtime' => 'node-22',
+                'entrypoint' => 'index.js',
+                'timeout' => 60,
+            ]);
+
+            $deployment = $this->createDeployment($functionId, [
+                'code' => $this->packageFunction('basic'),
+                'activate' => true,
+            ]);
+            $this->assertSame(202, $deployment['headers']['status-code']);
+            $deploymentId = $deployment['body']['$id'];
+
+            // Count dead-lettered callbacks that exhausted their requeues: the
+            // failed payloads carry the requeue count, so one with attempts >= 3
+            // went through the capped requeues — log callbacks never requeue and
+            // always carry attempts 0.
+            $cappedBefore = $this->countCappedCallbacks($redis);
+
+            // Hold the deployment lock past the requeue cap: each callback
+            // waits out LOCK_TIMEOUT per delivery, and the fourth delivery of
+            // each is dead-lettered on purpose. The hold outlasts every
+            // delivery of the build's handful of callbacks, so no requeued
+            // callback is freed by the release before its cap is reached.
+            $this->holdDeploymentLock($redis, $projectSequence, $deploymentId, 120);
+
+            $this->assertEventually(function () use ($redis, $cappedBefore) {
+                $this->assertGreaterThan(
+                    $cappedBefore,
+                    $this->countCappedCallbacks($redis),
+                    'A state callback must dead-letter once the requeue cap is reached',
+                );
+            }, 180000, 2000);
+
+            $deployment = $this->getDeployment($functionId, $deploymentId);
+            $this->assertNotSame('ready', $deployment['body']['status'], 'The dead-lettered callbacks must not have applied');
+        } finally {
+            $redis->close();
+
+            if ($functionId !== '') {
+                $this->cleanupFunction($functionId);
+            }
+        }
+    }
+
+    /**
+     * The project's internal $sequence, which never appears in API responses.
+     * The platform DB pools need a coroutine to read it, and Swoole's
+     * coroutine hooks would break the test's own curl, so a subprocess reads it.
+     */
+    private function projectSequence(): string
+    {
+        $stdout = '';
+        $stderr = '';
+        $exitCode = Console::execute(
+            (new Command('php'))->argument('tests/resources/functions/project-sequence.php')->argument($this->getProject()['$id']),
+            '',
+            $stdout,
+            $stderr,
+        );
+        $this->assertSame(0, $exitCode, 'Reading the project sequence failed: ' . $stderr . $stdout);
+
+        // Swoole may warn on stdout while booting, so take the last non-empty line.
+        $output = \array_values(\array_filter(\array_map('trim', \explode("\n", $stdout))));
+
+        return (string) (\array_pop($output) ?? '');
+    }
+
+    /**
+     * Hold the deployment's jobs callback lock for a while, so the build's
+     * callbacks contend with it. The lock is set immediately after the
+     * deployment is created — before the build's first callback, which the
+     * jobs-service delivers about a second later — and the test waits it out.
+     */
+    private function holdDeploymentLock(\Redis $redis, string $projectSequence, string $deploymentId, int $seconds): void
+    {
+        $key = 'jobs-deployment:' . $projectSequence . ':' . $deploymentId;
+        $redis->set($key, 'e2e-contention', ['EX' => $seconds + 120]);
+        \usleep($seconds * 1_000_000);
+        $redis->del($key);
+    }
+
+    private function redis(): \Redis
+    {
+        $redis = new \Redis();
+        $redis->connect(System::getEnv('_APP_REDIS_HOST', 'redis'), (int) System::getEnv('_APP_REDIS_PORT', '6379'));
+        $password = System::getEnv('_APP_REDIS_PASS', '');
+        if ($password !== '') {
+            $user = System::getEnv('_APP_REDIS_USER', '');
+            $redis->auth($user !== '' ? [$user, $password] : $password);
+        }
+
+        return $redis;
+    }
+
+    /**
+     * How many dead-lettered callbacks in the failed queue exhausted their
+     * requeues. The failed payloads carry the requeue count; log callbacks
+     * never requeue and always carry attempts 0.
+     */
+    private function countCappedCallbacks(\Redis $redis): int
+    {
+        $queue = System::getEnv('_APP_JOBS_QUEUE_NAME', Event::JOBS_QUEUE_NAME);
+        $capped = 0;
+
+        foreach ($redis->lRange('utopia-queue.failed.' . $queue, 0, -1) as $pid) {
+            $envelope = \json_decode((string) $redis->get('utopia-queue.jobs.' . $queue . '.' . $pid), true);
+
+            if ((int) ($envelope['payload']['attempts'] ?? 0) >= 3) {
+                $capped++;
+            }
+        }
+
+        return $capped;
     }
 
     public function testExecutionTimeout()
