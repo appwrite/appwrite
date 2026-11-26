@@ -76,8 +76,10 @@ export function View({ initialData }: ViewProps = {}) {
     }
     // The app finishes its own setup on its installation redirect page;
     // without one, the page switches to its Installed state.
-    if (mapped.installationRedirectUrl) {
-      window.location.assign(mapped.installationRedirectUrl)
+    // The redirect is publisher-controlled, so only a web URL is followed.
+    const redirect = URL.parse(mapped.installationRedirectUrl ?? '')
+    if (redirect?.protocol === 'https:' || redirect?.protocol === 'http:') {
+      window.location.assign(redirect.href)
       return
     }
     toast.success(t('App installed'))
