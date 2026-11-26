@@ -78,6 +78,10 @@ import { copyToClipboard } from '@/lib/utils/context-menu'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import { redirectUriError } from '@/lib/oauth2/redirect'
+import {
+  listsEqual,
+  setsEqual,
+} from '@/components/pages/organizations/$orgId/apps/$appId/_components/useOrgAppUpdate'
 import { useT } from '@/lib/i18n/translate'
 import { AppLogoFilePicker } from '@/components/pages/organizations/$orgId/apps/_components/AppLogoFilePicker'
 
@@ -216,7 +220,6 @@ export function ProjectOAuth2AppDrawer({
   const [name, setName] = useState('')
   const [tagline, setTagline] = useState('')
   const [description, setDescription] = useState('')
-  const [tags, setTags] = useState<string[]>([])
   const [enabled, setEnabled] = useState(true)
   const [clientType, setClientType] = useState('confidential')
   const [deviceFlow, setDeviceFlow] = useState(false)
@@ -228,16 +231,11 @@ export function ProjectOAuth2AppDrawer({
   const [installationRedirectUrl, setInstallationRedirectUrl] = useState('')
   const [clientUri, setClientUri] = useState('')
   const [logoUri, setLogoUri] = useState('')
-  const [images, setImages] = useState<string[]>([])
   const [privacyPolicyUrl, setPrivacyPolicyUrl] = useState('')
   const [termsUrl, setTermsUrl] = useState('')
   const [dataDeletionUrl, setDataDeletionUrl] = useState('')
   const [supportUrl, setSupportUrl] = useState('')
   const [contacts, setContacts] = useState<string[]>([])
-  // Typed but not yet added as tags; counts as an edit so Update enables.
-  const [pendingRedirectUri, setPendingRedirectUri] = useState('')
-  const [pendingPostLogoutUri, setPendingPostLogoutUri] = useState('')
-  const [pendingContact, setPendingContact] = useState('')
   const [newSecretPlaintext, setNewSecretPlaintext] = useState<string | null>(
     null,
   )
@@ -255,7 +253,6 @@ export function ProjectOAuth2AppDrawer({
       setName('')
       setTagline('')
       setDescription('')
-      setTags([])
       setEnabled(true)
       setClientType('confidential')
       setDeviceFlow(false)
@@ -265,7 +262,6 @@ export function ProjectOAuth2AppDrawer({
       setInstallationRedirectUrl('')
       setClientUri('')
       setLogoUri('')
-      setImages([])
       setPrivacyPolicyUrl('')
       setTermsUrl('')
       setDataDeletionUrl('')
@@ -280,7 +276,6 @@ export function ProjectOAuth2AppDrawer({
       setName(source.name || '')
       setTagline(source.tagline ?? '')
       setDescription(source.description ?? '')
-      setTags(source.tags ?? [])
       setEnabled(source.enabled ?? true)
       setClientType(source.type || 'confidential')
       setDeviceFlow(source.deviceFlow ?? false)
@@ -290,7 +285,6 @@ export function ProjectOAuth2AppDrawer({
       setInstallationRedirectUrl(source.installationRedirectUrl ?? '')
       setClientUri(source.clientUri ?? '')
       setLogoUri(source.logoUri ?? '')
-      setImages(source.images ?? [])
       setPrivacyPolicyUrl(source.privacyPolicyUrl ?? '')
       setTermsUrl(source.termsUrl ?? '')
       setDataDeletionUrl(source.dataDeletionUrl ?? '')
@@ -338,79 +332,45 @@ export function ProjectOAuth2AppDrawer({
     if (!isPending) onOpenChange(next)
   }
 
-  const withPending = (list: string[], pending: string) =>
-    nonEmptyList(
-      pending && !redirectUriError(pending) && !list.includes(pending)
-        ? [...list, pending]
-        : list,
-    )
-  const nextRedirectUris = withPending(redirectUris, pendingRedirectUri)
-  const nextPostLogoutUris = withPending(
-    postLogoutRedirectUris,
-    pendingPostLogoutUri,
-  )
-
-  // Update only enables once a field differs from the saved app.
   const isDirty =
     !isEditing ||
     !source ||
-    pendingContact !== '' ||
-    JSON.stringify([
-      name.trim(),
-      tagline.trim(),
-      description.trim(),
-      enabled,
-      clientType,
-      deviceFlow,
-      nextRedirectUris,
-      nextPostLogoutUris,
-      [...installationScopes].sort(),
-      installationRedirectUrl.trim(),
-      clientUri.trim(),
-      logoUri.trim(),
-      privacyPolicyUrl.trim(),
-      termsUrl.trim(),
-      dataDeletionUrl.trim(),
-      supportUrl.trim(),
-      nonEmptyList(contacts),
-    ]) !==
-      JSON.stringify([
-        source.name || '',
-        source.tagline ?? '',
-        source.description ?? '',
-        source.enabled ?? true,
-        source.type || 'confidential',
-        source.deviceFlow ?? false,
-        source.redirectUris ?? [],
-        source.postLogoutRedirectUris ?? [],
-        [...(source.installationScopes ?? [])].sort(),
-        source.installationRedirectUrl ?? '',
-        source.clientUri ?? '',
-        source.logoUri ?? '',
-        source.privacyPolicyUrl ?? '',
-        source.termsUrl ?? '',
-        source.dataDeletionUrl ?? '',
-        source.supportUrl ?? '',
-        source.contacts ?? [],
-      ])
+    name.trim() !== (source.name || '') ||
+    tagline.trim() !== (source.tagline ?? '') ||
+    description.trim() !== (source.description ?? '') ||
+    enabled !== (source.enabled ?? true) ||
+    clientType !== (source.type || 'confidential') ||
+    deviceFlow !== (source.deviceFlow ?? false) ||
+    !listsEqual(nonEmptyList(redirectUris), source.redirectUris ?? []) ||
+    !listsEqual(
+      nonEmptyList(postLogoutRedirectUris),
+      source.postLogoutRedirectUris ?? [],
+    ) ||
+    !setsEqual(installationScopes, source.installationScopes ?? []) ||
+    installationRedirectUrl.trim() !== (source.installationRedirectUrl ?? '') ||
+    clientUri.trim() !== (source.clientUri ?? '') ||
+    logoUri.trim() !== (source.logoUri ?? '') ||
+    privacyPolicyUrl.trim() !== (source.privacyPolicyUrl ?? '') ||
+    termsUrl.trim() !== (source.termsUrl ?? '') ||
+    dataDeletionUrl.trim() !== (source.dataDeletionUrl ?? '') ||
+    supportUrl.trim() !== (source.supportUrl ?? '') ||
+    !listsEqual(nonEmptyList(contacts), source.contacts ?? [])
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
-    const uris = nextRedirectUris
+    const uris = nonEmptyList(redirectUris)
     if (!name.trim() || uris.length === 0 || isPending || readOnly) return
 
     const consentPayload = {
       tagline: tagline.trim(),
       description: description.trim(),
-      tags: nonEmptyList(tags),
       enabled,
       type: clientType,
       deviceFlow,
       redirectUris: uris,
-      postLogoutRedirectUris: nextPostLogoutUris,
+      postLogoutRedirectUris: nonEmptyList(postLogoutRedirectUris),
       clientUri: clientUri.trim(),
       logoUri: logoUri.trim(),
-      images: nonEmptyList(images),
       privacyPolicyUrl: privacyPolicyUrl.trim(),
       termsUrl: termsUrl.trim(),
       dataDeletionUrl: dataDeletionUrl.trim(),
@@ -424,6 +384,10 @@ export function ProjectOAuth2AppDrawer({
           appId: source.$id,
           name: name.trim(),
           ...consentPayload,
+          // Tags and images have no field here; the update replaces the
+          // whole app, so pass the stored values through.
+          tags: source.tags ?? [],
+          images: source.images ?? [],
           // Installation settings are only accepted on update; always send
           // them so the endpoint does not reset them.
           installationScopes: installationScopeCatalogReady
@@ -527,7 +491,10 @@ export function ProjectOAuth2AppDrawer({
   }
 
   const canSubmit =
-    !!name.trim() && nextRedirectUris.length > 0 && isDirty && !readOnly
+    !!name.trim() &&
+    nonEmptyList(redirectUris).length > 0 &&
+    isDirty &&
+    !readOnly
   const serverDisabled = projectData?.oAuth2ServerEnabled === false
   const fieldsDisabled = isPending || readOnly
 
@@ -650,8 +617,9 @@ export function ProjectOAuth2AppDrawer({
                     unavailable={
                       isEditing && secrets.length > 0
                         ? {
-                            public:
+                            public: t(
                               "Delete this app's OAuth secrets before switching to a public client.",
+                            ),
                           }
                         : undefined
                     }
@@ -666,7 +634,6 @@ export function ProjectOAuth2AppDrawer({
                       value={redirectUris}
                       onChange={setRedirectUris}
                       validateTag={redirectUriError}
-                      onPendingChange={setPendingRedirectUri}
                       splitOnComma
                       placeholder={t('Add redirect URI and press Enter')}
                       disabled={fieldsDisabled}
@@ -681,7 +648,6 @@ export function ProjectOAuth2AppDrawer({
                       value={postLogoutRedirectUris}
                       onChange={setPostLogoutRedirectUris}
                       validateTag={redirectUriError}
-                      onPendingChange={setPendingPostLogoutUri}
                       splitOnComma
                       placeholder={t('Add post-logout URI and press Enter')}
                       disabled={fieldsDisabled}
@@ -1139,7 +1105,6 @@ export function ProjectOAuth2AppDrawer({
                     <InputTags
                       value={contacts}
                       onChange={setContacts}
-                      onPendingChange={setPendingContact}
                       validateEmail
                       splitOnComma
                       placeholder={t('Add email and press Enter')}
