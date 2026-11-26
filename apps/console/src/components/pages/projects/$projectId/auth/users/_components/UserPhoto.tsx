@@ -8,6 +8,9 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { useT } from '@/lib/i18n/translate'
 import { bumpUserPhotoVersion } from '@/lib/user-photo'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { useOrganizationScopes, useProject } from '@/lib/react-query/hooks'
+import { canCreateUser } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 const PHOTO_ACCEPT = 'image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp'
 const PHOTO_MIME_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp'])
@@ -23,6 +26,10 @@ interface UserPhotoProps {
 export function UserPhoto({ projectId, userId, name }: UserPhotoProps) {
   const t = useT()
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false)
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const canUpdate = canCreateUser(access, features)
 
   const uploadMutation = useMutation({
     mutationFn: (file: File) =>
@@ -37,8 +44,7 @@ export function UserPhoto({ projectId, userId, name }: UserPhotoProps) {
   })
 
   const removeMutation = useMutation({
-    mutationFn: () =>
-      sdk.forProject(projectId).avatars.deletePhoto({ userId }),
+    mutationFn: () => sdk.forProject(projectId).avatars.deletePhoto({ userId }),
     onSuccess: () => {
       bumpUserPhotoVersion()
       setRemoveDialogOpen(false)
@@ -84,13 +90,17 @@ export function UserPhoto({ projectId, userId, name }: UserPhotoProps) {
             />
           }
           accept={PHOTO_ACCEPT}
-          description={t('PNG, JPEG, or WebP up to 5MB.')}
+          description={
+            canUpdate
+              ? t('PNG, JPEG, or WebP up to 5MB.')
+              : t('You need write access to change the photo.')
+          }
           uploadLabel={t('Upload photo')}
           removeLabel={t('Remove photo')}
           onRemove={() => setRemoveDialogOpen(true)}
           onFile={handleFile}
           uploading={uploadMutation.isPending}
-          disabled={removeMutation.isPending}
+          disabled={!canUpdate || removeMutation.isPending}
         />
       </div>
       <ConfirmActionDialog
