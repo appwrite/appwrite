@@ -9,10 +9,10 @@ Appwrite **Monitors** checks your project usage or an endpoint on a schedule. A 
 You manage monitors and their alerts under **Observe** > **Monitors** in your project.
 
 {% only_dark %}
-![Monitors tab listing each monitor with the result of its last check](/images/docs/monitors/dark/monitors.avif)
+![Monitors tab listing three usage monitors and an HTTP check, each with its severity and last result, and one of them firing](/images/docs/monitors/dark/monitors.avif)
 {% /only_dark %}
 {% only_light %}
-![Monitors tab listing each monitor with the result of its last check](/images/docs/monitors/monitors.avif)
+![Monitors tab listing three usage monitors and an HTTP check, each with its severity and last result, and one of them firing](/images/docs/monitors/monitors.avif)
 {% /only_light %}
 
 # Monitor types {% #monitor-types %}

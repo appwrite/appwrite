@@ -21,15 +21,15 @@ Choose the whole project for an aggregate metric or select an individual resourc
 
 # Set the condition {% #set-the-condition %}
 
-Under **Alert when the value is**, choose **Greater than**, **Greater than or equal**, **Less than**, or **Less than or equal**, and enter the threshold. A usage monitor compares one metric with one threshold.
+Under **Alert when the value is**, choose **greater than**, **greater than or equal**, **less than**, or **less than or equal**, and enter the threshold. A usage monitor compares one metric with one threshold.
 
 Counters such as requests and outbound bandwidth are summed over the period in **Counted over**, from 5 minutes to 30 days. An outbound bandwidth monitor counted over 1 hour compares the sum over the preceding hour at each check. Gauges such as storage used compare the latest recorded value, so the Console hides **Counted over** for them.
 
 {% only_dark %}
-![Create monitor dialog with an outbound bandwidth threshold of 10 GB within 1 hour, above a chart of recent usage](/images/docs/monitors/dark/usage-condition.avif)
+![Create monitor page with outbound bandwidth greater than 10 GB counted over 1 hour, above a chart of the last 24 hours of usage](/images/docs/monitors/dark/usage-condition.avif)
 {% /only_dark %}
 {% only_light %}
-![Create monitor dialog with an outbound bandwidth threshold of 10 GB within 1 hour, above a chart of recent usage](/images/docs/monitors/usage-condition.avif)
+![Create monitor page with outbound bandwidth greater than 10 GB counted over 1 hour, above a chart of the last 24 hours of usage](/images/docs/monitors/usage-condition.avif)
 {% /only_light %}
 
 If a check has no usage reading, the monitor keeps its existing state. Check the monitor's last reading in the Console before adjusting the threshold.

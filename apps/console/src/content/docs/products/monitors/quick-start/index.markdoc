@@ -14,7 +14,7 @@ In this quick start you create a monitor that alerts your team when your project
 2. Open **Monitors** under **Observe** in the sidebar and click **Create monitor**.
 3. On Appwrite Cloud, choose **Usage** as the type. Self-hosted Appwrite only has usage monitors, so it skips this choice.
 4. Under **Condition**, set the **Metric** to **Outbound bandwidth** and leave **Applies to** on **The whole project**.
-5. Set **Alert when the value is** to **Greater than**, enter `1`, and select **GB**. Leave **Counted over** set to **1 hour**.
+5. Set **Alert when the value is** to **greater than**, enter `1`, and select **GB**. Leave **Counted over** set to **1 hour**.
 6. Under **Notify**, keep **Owners** selected.
 7. Expand **Name, cooldown** and enter a name such as `Outbound bandwidth spike`. If you leave it blank, the Console names the monitor after its condition.
 8. Click **Create**.
