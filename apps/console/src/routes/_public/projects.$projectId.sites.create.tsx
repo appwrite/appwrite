@@ -8,6 +8,7 @@
 import { createFileRoute, Outlet, useParams } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import {
+  useVcsInstallations,
   vcsInstallationsQueryOptions,
   siteFrameworksQueryOptions,
   fetchProject,
@@ -64,9 +65,7 @@ function CreateSiteLayoutInner() {
   const { setInstallations, setFrameworks, setBaseDomain } = useWizard()
 
   // Fetch installations
-  const { data: installationsData } = useQuery(
-    vcsInstallationsQueryOptions(projectId),
-  )
+  const { data: installationsData } = useVcsInstallations(projectId)
 
   // Fetch frameworks
   const { data: frameworksData } = useQuery(

@@ -42,6 +42,7 @@ import {
   resolveProjectTeamIdFromConsole,
   useOrganizationById,
 } from '@/lib/react-query/hooks'
+import { onboardingSnapshotQueryOptions } from '@/lib/react-query/hooks/onboarding'
 import {
   getActiveProfileFeatures,
   getActiveProfileId,
@@ -467,6 +468,11 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
           .catch(() => {}),
         queryClient
           .ensureQueryData(consoleAccountQueryOptions())
+          .catch(() => {}),
+        // Sidebar Get started card hides at 100%; knowing that before first
+        // paint keeps it from showing a skeleton and then collapsing.
+        queryClient
+          .ensureQueryData(onboardingSnapshotQueryOptions(projectId))
           .catch(() => {}),
       ]
       if (teamId && features.billing) {

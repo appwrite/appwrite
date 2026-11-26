@@ -1001,6 +1001,17 @@ export async function updatePostgresDatabaseMaintenance(
   })
 }
 
+export async function createPostgresDatabaseUpgrade(
+  projectId: string,
+  databaseId: string,
+  targetVersion: string,
+) {
+  return sdk.forProject(projectId).postgresql.createUpgrade({
+    databaseId,
+    targetVersion,
+  })
+}
+
 export async function deletePostgresDatabase(
   projectId: string,
   databaseId: string,
@@ -1045,6 +1056,29 @@ export function useUpdatePostgresDatabase(
           database,
         )
       }
+    },
+  })
+}
+
+export function useCreatePostgresDatabaseUpgrade(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (targetVersion: string) => {
+      requireOperationalDatabase(queryClient, projectId!, databaseId!)
+      return createPostgresDatabaseUpgrade(projectId!, databaseId!, targetVersion)
+    },
+    onSuccess: async (database) => {
+      if (!projectId || !databaseId) return
+      // The response carries `upgrading`, so the status banner shows at once;
+      // realtime moves it back to `ready` when the cutover finishes.
+      queryClient.setQueryData(
+        postgresDatabaseQueryOptions(projectId, databaseId).queryKey,
+        database,
+      )
+      await refetchProjectDatabaseLists(queryClient, projectId)
     },
   })
 }

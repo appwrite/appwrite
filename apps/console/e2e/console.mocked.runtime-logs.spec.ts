@@ -568,9 +568,21 @@ test.describe('runtime logs', () => {
     // ...and the whole entry as logged, indented
     await expect(logs).toContainText('"msg": "payment failed"')
 
-    // The level filter narrows the loaded lines
-    await page.getByRole('combobox', { name: 'Level' }).click()
-    await page.getByRole('option', { name: 'Warnings and up' }).click()
+    // The level filter narrows the loaded lines to the checked levels
+    await page.getByRole('button', { name: 'Level', exact: true }).click()
+    const level = (name: string) =>
+      page.getByRole('menuitemcheckbox', { name, exact: true })
+    await level('Info').click()
+    await level('Debug').click()
+    await expect(level('All levels')).not.toBeChecked()
+    // The open menu hides the page from the accessibility tree
+    await expect(
+      page.getByRole('button', {
+        name: 'Level',
+        exact: true,
+        includeHidden: true,
+      }),
+    ).toHaveText('Error, Warning')
     await expect(logs).toContainText('slow query')
     await expect(logs).toContainText('payment failed')
     await expect(logs).toContainText(STDERR)
@@ -578,9 +590,18 @@ test.describe('runtime logs', () => {
     await expect(logs).not.toContainText('cache miss')
     await expect(logs).not.toContainText(STDOUT)
 
+    // Levels need not be adjacent: errors and debug, without warnings
+    await level('Warning').click()
+    await level('Debug').click()
+    await expect(logs).toContainText('payment failed')
+    await expect(logs).toContainText('cache miss')
+    await expect(logs).not.toContainText('slow query')
+    await expect(logs).not.toContainText('request completed')
+
     // Time, stream and region as columns on request
-    await page.getByRole('combobox', { name: 'Level' }).click()
-    await page.getByRole('option', { name: 'All levels' }).click()
+    await level('All levels').click()
+    await expect(level('Warning')).toBeChecked()
+    await page.keyboard.press('Escape')
     await page
       .getByRole('button', { name: 'Show time, stream and region' })
       .click()

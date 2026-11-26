@@ -7,7 +7,7 @@
 
 export type RuntimeLogLevel = 'error' | 'warn' | 'info' | 'debug'
 
-/** Lowest first, so a minimum level keeps every entry at or after it. */
+/** Every level a runtime log line can carry, lowest first. */
 export const RUNTIME_LOG_LEVELS: RuntimeLogLevel[] = [
   'debug',
   'info',
@@ -152,16 +152,6 @@ function otelSeverity(value: unknown): RuntimeLogLevel | null {
 export function parseRuntimeLogLine(raw: string): RuntimeLogLine {
   const text = stripAnsi(raw)
   return parseJson(text) ?? parseLogfmt(text) ?? parseText(text)
-}
-
-/** True when `level` is at or above `minimum`. */
-export function isAtLeast(
-  level: RuntimeLogLevel,
-  minimum: RuntimeLogLevel,
-): boolean {
-  return (
-    RUNTIME_LOG_LEVELS.indexOf(level) >= RUNTIME_LOG_LEVELS.indexOf(minimum)
-  )
 }
 
 function parseJson(text: string): RuntimeLogLine | null {

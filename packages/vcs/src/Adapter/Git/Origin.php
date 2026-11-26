@@ -1080,6 +1080,8 @@ class Origin extends Git
                 'repositoryUrl' => $repositoryUrl,
                 'installationId' => $installationId,
                 'commitHash' => $commitHash,
+                'previousCommitHash' => \is_string($refUpdate['before'] ?? null) ? $refUpdate['before'] : '',
+                'forced' => (bool) ($refUpdate['forced'] ?? false),
                 'owner' => $owner,
                 'authorUrl' => '',
                 'authorAvatarUrl' => '',
@@ -2535,6 +2537,37 @@ class Origin extends Git
         }
 
         return \is_array($response['body'] ?? null) ? $response['body'] : [];
+    }
+
+    /**
+     * The files that differ between two commits, in the shape
+     * getPullRequestFiles() reports: filename, status and, for a rename,
+     * previous_filename. Like compareCommits(), refs containing '/' must be
+     * passed as their SHA.
+     *
+     * @return array<array<string, string>>
+     */
+    public function compareFiles(string $owner, string $repositoryName, string $base, string $head): array
+    {
+        $files = $this->collectPages(
+            $this->repositoryPath($owner, $repositoryName) . '/compare/' . rawurlencode($base) . '...' . rawurlencode($head) . '/files',
+            'files',
+        );
+
+        $normalized = [];
+        foreach ($files as $file) {
+            if (!\is_array($file)) {
+                continue;
+            }
+
+            $normalized[] = [
+                'filename' => \is_string($file['filename'] ?? null) ? $file['filename'] : '',
+                'status' => \is_string($file['status'] ?? null) ? $file['status'] : '',
+                'previous_filename' => \is_string($file['previousFilename'] ?? null) ? $file['previousFilename'] : '',
+            ];
+        }
+
+        return $normalized;
     }
 
     /**

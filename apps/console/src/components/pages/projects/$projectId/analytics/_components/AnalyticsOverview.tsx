@@ -97,8 +97,9 @@ const CURRENT_COLOR = 'var(--chart-brand)'
 const PREVIOUS_COLOR = 'var(--muted-foreground)'
 const GRADIENT_ID = 'analyticsOverviewGradient'
 const SKELETON_GRADIENT_ID = 'analyticsOverviewSkeletonGradient'
-const SKELETON_CHART_STROKE = 'hsl(var(--muted-foreground) / 0.4)'
-const SKELETON_CHART_FILL = 'hsl(var(--muted-foreground))'
+const SKELETON_CHART_STROKE = 'var(--muted-foreground)'
+const SKELETON_CHART_STROKE_OPACITY = 0.4
+const SKELETON_CHART_FILL = 'var(--muted-foreground)'
 /** Y-axis room above the highest point. */
 const Y_HEADROOM = 1.08
 /** Keeps the top of the ~200px plot clear for the notes lane. */
@@ -1267,6 +1268,9 @@ export function AnalyticsOverview({
                     connectNulls
                     stroke={
                       showSkeleton ? SKELETON_CHART_STROKE : CURRENT_COLOR
+                    }
+                    strokeOpacity={
+                      showSkeleton ? SKELETON_CHART_STROKE_OPACITY : undefined
                     }
                     strokeWidth={2}
                     fill={

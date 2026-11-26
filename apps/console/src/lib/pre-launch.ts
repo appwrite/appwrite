@@ -1,4 +1,5 @@
 import { getRuntimeConfig } from '@/lib/runtime-config'
+import { markdownTwinPage } from '@/lib/seo/markdown-twins'
 
 const LEGACY_PRE_LAUNCH_DEBUG_STORAGE_KEY = 'debug:preLaunch'
 const LEGACY_PRE_LAUNCH_COOKIE_NAME = 'debug_pre_launch'
@@ -107,6 +108,10 @@ export function isPreLaunchHeavyContentPath(
     '/robots.txt',
   ])
   if (heavyExact.has(normalized)) return true
+  // Markdown twins of marketing pages (`/company.md`) carry the same content as
+  // the page, so they are locked with it. Reusing the list the twin middleware
+  // serves from covers a twin added later without another entry here.
+  if (markdownTwinPage(normalized) !== null) return true
   if (normalized === '/sitemap.xml' || normalized.startsWith('/sitemap/')) {
     return true
   }

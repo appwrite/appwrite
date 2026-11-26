@@ -66,15 +66,6 @@ final class VideosCustomServerTest extends Scope
             $this->assertNotEmpty($profile['$createdAt']);
         }
 
-        $explicit = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
-            'codec' => 'h264',
-        ]);
-        $this->assertEquals(200, $explicit['headers']['status-code']);
-        $this->assertEquals(
-            \array_column($response['body']['profiles'], '$id'),
-            \array_column($explicit['body']['profiles'], '$id')
-        );
-
         $withoutTotal = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
             'total' => false,
         ]);
@@ -93,7 +84,7 @@ final class VideosCustomServerTest extends Scope
         ]);
         $this->assertEquals(200, $page['headers']['status-code']);
         $this->assertSame(['360p'], \array_column($page['body']['profiles'], 'name'));
-        $this->assertEquals(6, $page['body']['total'], 'total counts every profile for the codec, not the page');
+        $this->assertEquals(6, $page['body']['total'], 'total counts every profile, not the page');
 
         $uncounted = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
             'queries' => [Query::limit(1)->toString()],
@@ -177,6 +168,46 @@ final class VideosCustomServerTest extends Scope
             $response = $this->client->call(Client::METHOD_POST, '/project/videos/profiles', $this->headers(), \array_merge(['name' => 'bad'], $params));
             $this->assertEquals(400, $response['headers']['status-code']);
         }
+
+        // Odd dimensions cannot be encoded as 4:2:0, so they are refused up front
+        // instead of failing every later encode.
+        $odd = [
+            ['width' => 641, 'height' => 360],
+            ['width' => 640, 'height' => 361],
+        ];
+
+        foreach ($odd as $dimensions) {
+            $response = $this->client->call(Client::METHOD_POST, '/project/videos/profiles', $this->headers(), \array_merge([
+                'name' => 'e2e-odd',
+                'videoBitRate' => 2105,
+                'audioBitRate' => 64,
+            ], $dimensions));
+            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals('general_argument_invalid', $response['body']['type']);
+        }
+
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers());
+        $this->assertEquals(200, $profiles['headers']['status-code']);
+        $this->assertNotContains('e2e-odd', \array_column($profiles['body']['profiles'], 'name'), 'Odd-dimension profile was stored');
+
+        $profileId = $this->createProfile('e2e-odd-update', 2106);
+
+        foreach ($odd as $dimensions) {
+            $response = $this->client->call(Client::METHOD_PATCH, '/project/videos/profiles/' . $profileId, $this->headers(), \array_merge([
+                'name' => 'e2e-odd-update',
+                'videoBitRate' => 2106,
+                'audioBitRate' => 64,
+            ], $dimensions));
+            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals('general_argument_invalid', $response['body']['type']);
+        }
+
+        $stored = $this->client->call(Client::METHOD_GET, '/project/videos/profiles/' . $profileId, $this->headers());
+        $this->assertEquals(200, $stored['headers']['status-code']);
+        $this->assertSame(854, $stored['body']['width']);
+        $this->assertSame(480, $stored['body']['height']);
+
+        $this->client->call(Client::METHOD_DELETE, '/project/videos/profiles/' . $profileId, $this->headers());
     }
 
     public function testDeleteProfile(): void
@@ -210,36 +241,62 @@ final class VideosCustomServerTest extends Scope
         $this->assertNotContains('vp9', $ids);
     }
 
+    /**
+     * The list returns every codec; one ladder is a Query.equal('codec', [...])
+     * filter. Only h264 is enabled here, so no hevc or vp9 profile can exist.
+     */
     public function testListProfilesByCodec(): void
     {
-        $default = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers());
-        $h264 = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
-            'codec' => 'h264',
-        ]);
-        $this->assertEquals(200, $default['headers']['status-code']);
-        $this->assertEquals(200, $h264['headers']['status-code']);
-        $this->assertEquals(
-            \array_column($default['body']['profiles'], '$id'),
-            \array_column($h264['body']['profiles'], '$id')
-        );
+        $all = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers());
+        $this->assertEquals(200, $all['headers']['status-code']);
+        $allIds = \array_column($all['body']['profiles'], '$id');
+        $this->assertNotEmpty($allIds);
+        $this->assertEquals(\count($allIds), $all['body']['total']);
 
-        foreach (['hevc', 'vp9'] as $disabled) {
-            $response = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
-                'codec' => $disabled,
-            ]);
-            $this->assertEquals(400, $response['headers']['status-code'], $disabled);
-            $this->assertEquals('video_codec_disabled', $response['body']['type'], $disabled);
+        $h264 = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
+            'queries' => [Query::equal('codec', ['h264'])->toString()],
+        ]);
+        $this->assertEquals(200, $h264['headers']['status-code']);
+        $this->assertSame($allIds, \array_column($h264['body']['profiles'], '$id'));
+        $this->assertEquals($all['body']['total'], $h264['body']['total']);
+        $this->assertSame(['h264'], \array_values(\array_unique(\array_column($h264['body']['profiles'], 'codec'))));
+
+        $other = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
+            'queries' => [Query::equal('codec', ['hevc', 'vp9'])->toString()],
+        ]);
+        $this->assertEquals(200, $other['headers']['status-code']);
+        $this->assertSame([], $other['body']['profiles']);
+        $this->assertEquals(0, $other['body']['total']);
+
+        // The removed codec param is no longer declared, so it is ignored rather than filtering.
+        $legacy = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
+            'codec' => 'vp9',
+        ]);
+        $this->assertEquals(200, $legacy['headers']['status-code']);
+        $this->assertSame($allIds, \array_column($legacy['body']['profiles'], '$id'));
+
+        $tall = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
+            'queries' => [
+                Query::equal('codec', ['h264'])->toString(),
+                Query::greaterThanEqual('height', 1080)->toString(),
+            ],
+        ]);
+        $this->assertEquals(200, $tall['headers']['status-code']);
+        $this->assertNotEmpty($tall['body']['profiles']);
+        $this->assertEquals(\count($tall['body']['profiles']), $tall['body']['total']);
+        foreach ($tall['body']['profiles'] as $profile) {
+            $this->assertGreaterThanOrEqual(1080, $profile['height']);
         }
 
         $unknown = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
-            'codec' => 'av1',
+            'queries' => [Query::equal('codecs', ['h264'])->toString()],
         ]);
         $this->assertEquals(400, $unknown['headers']['status-code']);
     }
 
     /**
      * Full-text search is Query.search('search', term) inside queries. The term
-     * filters the project ladder and custom profiles; other attributes are rejected.
+     * filters the project ladder and custom profiles; name is also filterable.
      */
     public function testListProfilesBySearch(): void
     {
@@ -284,12 +341,14 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(0, $missing['body']['total']);
         $this->assertSame([], $missing['body']['profiles']);
 
-        $rejected = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
+        $byName = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
             'queries' => [
                 Query::equal('name', [$matchName])->toString(),
             ],
         ]);
-        $this->assertEquals(400, $rejected['headers']['status-code']);
+        $this->assertEquals(200, $byName['headers']['status-code']);
+        $this->assertSame([$match['body']['$id']], \array_column($byName['body']['profiles'], '$id'));
+        $this->assertEquals(1, $byName['body']['total']);
 
         $this->client->call(Client::METHOD_DELETE, '/project/videos/profiles/' . $match['body']['$id'], $this->headers());
         $this->client->call(Client::METHOD_DELETE, '/project/videos/profiles/' . $other['body']['$id'], $this->headers());
@@ -696,7 +755,7 @@ final class VideosCustomServerTest extends Scope
 
         $body = $this->waitForCaptionTerminalState($videoId, $captionId);
         $this->assertEquals('error', $body['status'], 'Malformed SubRip did not fail the caption');
-        $this->assertStringStartsWith('Caption is not a proper .srt file', $body['error']);
+        $this->assertStringStartsWith('Caption is not a valid SubRip (.srt) or WebVTT (.vtt) file', $body['error']);
         $this->assertStringNotContainsString('/storage', (string) $body['error']);
 
         $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', $this->headers());
@@ -2712,7 +2771,8 @@ final class VideosCustomServerTest extends Scope
     /**
      * A ready caption is an HLS subtitle rung: the master lists it, and the
      * playlist's first segment is the WebVTT cue. A private cache may hold
-     * those bytes and revalidate them. An unknown segment id is not a missing caption.
+     * those bytes and revalidate them; a year-long copy would keep playing
+     * after read access is revoked. An unknown segment id is not a missing caption.
      */
     public function testGetCaptionSegment(): void
     {
@@ -2742,6 +2802,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertStringContainsString('WEBVTT', (string) $segment['body']);
         $this->assertStringContainsString('Good evening, have a good week.', (string) $segment['body']);
         $this->assertSame('private, max-age=300', $segment['headers']['cache-control'] ?? null);
+        $this->assertArrayNotHasKey('surrogate-key', $segment['headers']);
         $etag = $segment['headers']['etag'] ?? '';
         $this->assertNotSame('', $etag);
 
@@ -3060,6 +3121,19 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(200, $timeline['headers']['status-code']);
         $this->assertStringContainsString('text/vtt', (string) ($timeline['headers']['content-type'] ?? ''));
         $this->assertSame('no-store, no-cache, must-revalidate', $timeline['headers']['cache-control'] ?? null);
+
+        // Without a project the request resolves to the console, which holds no
+        // videos: a player that drops the project gets a 404, not a server error.
+        foreach ([
+            '/videos/' . $videoId . '/outputs/hls/master.m3u8',
+            '/videos/' . $videoId . '/outputs/dash/master.mpd',
+            '/videos/' . $videoId . '/timelines',
+            '/videos/' . $videoId . '/thumbnails/' . $this->playlistToken((string) $timeline['body'], 'thumbnails/', '?project=', 'Timeline did not reference a thumbnail'),
+        ] as $path) {
+            $response = $this->client->call(Client::METHOD_GET, $path);
+            $this->assertEquals(404, $response['headers']['status-code'], $path);
+            $this->assertEquals('video_not_found', $response['body']['type'] ?? null, $path);
+        }
     }
 
     /**
@@ -3220,6 +3294,37 @@ final class VideosCustomServerTest extends Scope
         $plain = $this->client->call(Client::METHOD_GET, $path, \array_merge($this->headers(), ['accept' => 'image/jpeg']));
         $this->assertEquals(200, $plain['headers']['status-code']);
         $this->assertEquals('image/jpeg', $plain['headers']['content-type'] ?? '');
+
+        // A miss and the hit after it send one and the same Cache-Control. The e2e
+        // client keeps only the last value of a repeated header, so read them raw.
+        $requestHeaders = [];
+        foreach ($this->headers() as $name => $value) {
+            $requestHeaders[] = $name . ': ' . $value;
+        }
+        foreach (['miss', 'hit'] as $expected) {
+            $received = [];
+            $handle = \curl_init($this->client->getEndpoint() . $path . '?' . \http_build_query(['width' => 66, 'height' => 34]));
+            \curl_setopt_array($handle, [
+                CURLOPT_HTTPHEADER => $requestHeaders,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT => 30,
+                CURLOPT_HEADERFUNCTION => function ($curl, string $line) use (&$received): int {
+                    $parts = \explode(':', $line, 2);
+                    if (\count($parts) === 2) {
+                        $received[\strtolower(\trim($parts[0]))][] = \trim($parts[1]);
+                    }
+                    return \strlen($line);
+                },
+            ]);
+            \curl_exec($handle);
+            $status = \curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
+            \curl_close($handle);
+
+            $this->assertSame(200, $status, $expected);
+            $this->assertSame([$expected], $received['x-appwrite-cache'] ?? null, $expected);
+            $this->assertSame(['private, max-age=15552000'], $received['cache-control'] ?? null, $expected);
+            $this->assertArrayNotHasKey('pragma', $received, $expected);
+        }
 
         $missing = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/thumbnails/nope', $this->headers());
         $this->assertEquals(404, $missing['headers']['status-code']);
@@ -4181,6 +4286,29 @@ final class VideosCustomServerTest extends Scope
 
         $dash = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/cmaf/master.mpd', $this->headers());
         $this->assertEquals(200, $dash['headers']['status-code']);
+
+        // AdaptationSet@id is an unsignedInt unique within the Period, and every
+        // Representation needs @id and @bandwidth, caption sets included.
+        $document = new \DOMDocument();
+        $this->assertNotFalse(@$document->loadXML((string) $dash['body']), 'MPD is not valid XML');
+        $adaptationIds = [];
+        $captionSets = 0;
+        foreach ($document->getElementsByTagName('AdaptationSet') as $set) {
+            $adaptationId = $set->getAttribute('id');
+            $this->assertTrue(\ctype_digit($adaptationId), 'AdaptationSet@id is not numeric');
+            $adaptationIds[] = $adaptationId;
+
+            if ($set->getAttribute('mimeType') !== 'text/vtt') {
+                continue;
+            }
+            $captionSets++;
+            foreach ($set->getElementsByTagName('Representation') as $representation) {
+                $this->assertNotSame('', $representation->getAttribute('id'), 'Caption Representation is missing @id');
+                $this->assertTrue(\ctype_digit($representation->getAttribute('bandwidth')), 'Caption Representation is missing @bandwidth');
+            }
+        }
+        $this->assertGreaterThanOrEqual(1, $captionSets, 'MPD has no caption AdaptationSet');
+        $this->assertSame(\array_unique($adaptationIds), $adaptationIds, 'AdaptationSet ids repeat within the Period');
 
         $vttUri = $this->subtitleBaseUrl((string) $dash['body'], $captionId);
         $vtt = $this->client->call(Client::METHOD_GET, $this->manifestRequestPath($vttUri), $this->headers());

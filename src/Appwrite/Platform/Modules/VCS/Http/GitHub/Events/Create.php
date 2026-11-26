@@ -105,7 +105,7 @@ class Create extends Action
             // Without the secret no review service runs (optional on self-hosted), so nothing would consume the job.
             if (System::getEnv('_APP_REVIEWS_SECRET', '') !== '') {
                 match ($event) {
-                    GitHub::EVENT_PULL_REQUEST => $this->queueReviews('github', $parsedPayload, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
+                    GitHub::EVENT_PULL_REQUEST => $this->queueReviews('github', $parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
                     GitHub::EVENT_ISSUE_COMMENT, GitHub::EVENT_PULL_REQUEST_REVIEW_COMMENT => $this->queueComment('github', $parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $publisherForReviews, $platform),
                     GitHub::EVENT_INSTALLATION_REPOSITORIES => $this->createReviewRepositories($parsedPayload, $dbForPlatform, $authorization),
                     default => null,

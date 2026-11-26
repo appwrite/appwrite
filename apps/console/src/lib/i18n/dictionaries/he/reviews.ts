@@ -236,6 +236,15 @@ export const heReviewsDictionary: Record<string, string> = {
   // Performance
   Performance: 'ביצועים',
   'Unknown author': 'מחבר לא ידוע',
+  Outcome: 'תוצאה',
+  'Still open': 'עדיין פתוחים',
+  'Reviews queued before authors were recorded':
+    'סקירות שנכנסו לתור לפני שנשמרו מחברים',
+  Bot: 'בוט',
+  '{rate} first try': '{rate} בניסיון הראשון',
+  '{count} critical': '{count} קריטיים',
+  '{count} fixed': '{count} תוקנו',
+  '{count} reviews': '{count} סקירות',
   'Date range': 'טווח תאריכים',
   Author: 'מחבר',
   'Pull requests': 'בקשות משיכה',
@@ -246,23 +255,51 @@ export const heReviewsDictionary: Record<string, string> = {
   'Last review': 'סקירה אחרונה',
   'Pull requests reviewed': 'בקשות משיכה שנסקרו',
   '{count} authors': '{count} מחברים',
-  'Approval rate': 'שיעור אישור',
+  authors: 'מחברים',
+  'Search authors...': 'חיפוש מחברים...',
+  'No authors match your search': 'אין מחברים שתואמים לחיפוש',
+  '{count} pull request': 'בקשת משיכה אחת',
+  '{count} pull requests': '{count} בקשות משיכה',
   '{rate} approved by the first review': '{rate} אושרו בסקירה הראשונה',
   'Findings per pull request': 'ממצאים לבקשת משיכה',
   '{critical} critical, {major} major': '{critical} קריטיים, {major} משמעותיים',
-  'Fix rate': 'שיעור תיקון',
   '{count} findings fixed by a later commit':
     '{count} ממצאים תוקנו בקומיט מאוחר יותר',
   'No completed reviews in this range': 'אין סקירות שהושלמו בטווח הזה',
   'Performance shows how the authors of your pull requests fare in review once reviews complete. Try a longer range or another repository.':
     'כאן מוצג איך מחברי בקשות המשיכה שלכם מצליחים בסקירה, לאחר שהסקירות מושלמות. נסו טווח ארוך יותר או מאגר אחר.',
-  'Counts completed reviews in the range. Approval and confidence go by each pull request’s latest review; fixed counts findings resolved by a later commit.':
-    'נספרות סקירות שהושלמו בטווח. אישור וביטחון נקבעים לפי הסקירה האחרונה של כל בקשת משיכה; תוקנו סופר ממצאים שנפתרו בקומיט מאוחר יותר.',
+
+  // Performance: trends, comparison and charts
+  'Compared with the {count} days before': 'בהשוואה ל-{count} הימים שלפני כן',
+  'Review time': 'זמן סקירה',
+  median: 'חציון',
+  Authors: 'מחברים',
+  'How each author’s pull requests fared in review. Select an author to see their reviews.':
+    'איך נסקרו בקשות המשיכה של כל מחבר. בחרו מחבר כדי לראות את הסקירות שלו.',
+  'Author actions': 'פעולות למחבר',
+  'Ranges are whole days in UTC, today included, and changes compare each figure with the same number of days before.':
+    'הטווחים הם ימים שלמים לפי UTC, כולל היום, והשינויים משווים כל נתון למספר זהה של ימים שלפני כן.',
+  'Approval and confidence go by each pull request’s latest review; fixed counts findings resolved by a later commit.':
+    'אישור וביטחון נקבעים לפי הסקירה האחרונה של כל בקשת משיכה; תוקנו סופר ממצאים שנפתרו בקומיט מאוחר יותר.',
+  'Review time is the median from a review being queued to it completing.':
+    'זמן סקירה הוא החציון של הזמן מכניסת סקירה לתור ועד להשלמתה.',
+  '{resolved} fixed, {open} open, {dismissed} dismissed':
+    '{resolved} תוקנו, {open} פתוחים, {dismissed} נדחו',
+  Noisy: 'רועשת',
+  'Most settled findings in this category were dismissed. A learning can tell the reviewer to flag fewer of them.':
+    'רוב הממצאים שהוכרעו בקטגוריה הזו נדחו. למידה יכולה להורות לסוקר לסמן פחות מהם.',
+  'Completed reviews per week, by verdict':
+    'סקירות שהושלמו בכל שבוע, לפי החלטה',
+  'Completed reviews per day, by verdict': 'סקירות שהושלמו בכל יום, לפי החלטה',
+  'Findings posted per week, by severity': 'ממצאים שפורסמו בכל שבוע, לפי חומרה',
+  'Findings posted per day, by severity': 'ממצאים שפורסמו בכל יום, לפי חומרה',
+  Chart: 'תרשים',
+  'No findings in this range': 'אין ממצאים בטווח הזה',
+  'Critical and major': 'קריטיים ומשמעותיים',
+  'Minor and info': 'קלים ומידע',
 
   // Finding outcomes
   'Useful findings': 'ממצאים מועילים',
-  '{resolved} fixed, {dismissed} dismissed':
-    '{resolved} תוקנו, {dismissed} נדחו',
   Useful: 'מועילים',
   Dismissed: 'נדחו',
   'Findings by category': 'ממצאים לפי קטגוריה',
@@ -307,6 +344,48 @@ export const heReviewsDictionary: Record<string, string> = {
     'סקירות יופיעו כאן כש-Pull request נפתח או מקבל קומיטים חדשים.',
   'No reviews of this directory among the latest ones.':
     'אין סקירות של התיקייה הזו בין הסקירות האחרונות.',
+
+  // Tabs: repositories, learnings, findings and credits
+  'How each repository’s pull requests fared in review. Select a repository to narrow the tab to it.':
+    'איך נסקרו בקשות המשיכה של כל מאגר. בחרו מאגר כדי למקד בו את הלשונית.',
+  '{count} repositories': '{count} מאגרים',
+  'Repository actions': 'פעולות למאגר',
+  'Reviewed repositories': 'מאגרים שנסקרים',
+  'Pull requests reviewed in the last 30 days. Select a repository to see its reviews.':
+    'בקשות משיכה שנסקרו ב-30 הימים האחרונים. בחרו מאגר כדי לראות את הסקירות שלו.',
+  'Turn on code review for a repository right where you find it. Reviewed ones show their last 30 days.':
+    'הפעילו סקירת קוד למאגר ישירות במקום שבו מצאתם אותו. מאגרים שנסקרים מציגים את 30 הימים האחרונים שלהם.',
+  'Connect GitHub, GitLab, Gitea, Bitbucket or Origin to the project, then pick the repositories to review.':
+    'חברו GitHub, GitLab, Gitea, Bitbucket או Origin לפרויקט, ואז בחרו את המאגרים לסקירה.',
+  'Connect a Git provider to the project to review its repositories.':
+    'חברו ספק Git לפרויקט כדי לסקור את המאגרים שלו.',
+  'No learnings for this repository': 'אין למידות למאגר הזה',
+  'Ask the reviewer to remember a preference in one of its pull requests, and it shows up here.':
+    'בקשו מהסוקר לזכור העדפה באחת מבקשות המשיכה של המאגר, והיא תופיע כאן.',
+  'Show all repositories': 'הצגת כל המאגרים',
+  'What the reviewer was asked to remember in pull request conversations. Later reviews and answers of the repository follow them.':
+    'מה שהסוקר התבקש לזכור בשיחות על בקשות משיכה. הסקירות והתשובות הבאות של המאגר יפעלו לפיהן.',
+  'Show this repository only': 'הצגת המאגר הזה בלבד',
+  'Open conversation': 'פתיחת השיחה',
+  'Open on {provider}': 'פתיחה ב-{provider}',
+  'Most severe: {severity}': 'החמור ביותר: {severity}',
+  'Review credits this cycle (this project)':
+    'קרדיטי סקירה במחזור הזה (הפרויקט הזה)',
+  'Review credits this cycle': 'קרדיטי סקירה במחזור הזה',
+  'All included credits are used. New pull requests are not reviewed until the next billing cycle.':
+    'כל הקרדיטים הכלולים נוצלו. בקשות משיכה חדשות לא ייסקרו עד מחזור החיוב הבא.',
+  'All included credits are used. New pull requests are not reviewed until the next billing cycle or an upgrade.':
+    'כל הקרדיטים הכלולים נוצלו. בקשות משיכה חדשות לא ייסקרו עד מחזור החיוב הבא או עד שדרוג.',
+  '{extra} extra credits so far, about ${cost} on your next invoice.':
+    '{extra} קרדיטים נוספים עד כה, כ-${cost} בחשבונית הבאה שלכם.',
+  'Extra credits past the allowance are billed with your usage, up to your budget cap.':
+    'קרדיטים מעבר להקצאה מחויבים עם השימוש שלכם, עד תקרת התקציב.',
+  'Reviews stop when the included credits are used, so you are never billed for extra credits.':
+    'הסקירות נעצרות כשהקרדיטים הכלולים נוצלו, כך שלא תחויבו על קרדיטים נוספים.',
+  'A normal review costs 50 credits. Answers to comments are free.':
+    'סקירה רגילה עולה 50 קרדיטים. תשובות לתגובות הן בחינם.',
+  'Manage budget': 'ניהול תקציב',
+  'Upgrade for more credits': 'שדרוג לעוד קרדיטים',
 
   // Row menus
   'Copy text': 'העתקת הטקסט',

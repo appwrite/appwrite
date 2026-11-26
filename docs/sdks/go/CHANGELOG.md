@@ -1,5 +1,12 @@
 # Change Log
 
+## v7.23.0
+
+* Added: `monitors` service to create, list, get, update and delete HTTP, DNS, TCP, SMTP and usage monitors
+* Added: `alerts` service to list and get alerts, and acknowledge them with `alerts.update`
+* Added: `organization.listEscalations`, `createEscalation`, `getEscalation`, `updateEscalation` and `deleteEscalation`
+* Added: `Monitor`, `Alert`, `Escalation` and `EscalationStep` models and their list models
+
 ## v7.22.0
 
 * Breaking: `Teams.GetPhoto`, `UpdatePhoto` and `DeletePhoto` moved to `Avatars.GetTeamPhoto`, `UpdateTeamPhoto` and `DeleteTeamPhoto`

@@ -30,7 +30,10 @@ import {
 import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
 import { fetchProjectById } from '@/lib/project-settings'
 import { registerProjectRegionsFromProjects } from '@/lib/project-region'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import {
+  getActiveProfileFeatures,
+  isCloudProfile,
+} from '@/lib/console-profiles'
 import {
   fetchAllVariables,
   getVariableValueError,
@@ -253,7 +256,8 @@ export async function fetchActiveProjects(
     : []
 
   // Environments are reached through their project's switcher, not listed beside it.
-  const hideEnvironments = getActiveProfileFeatures().projectEnvironments
+  // Cloud only: self-hosted has no environments and rejects `parentId` in project list queries.
+  const hideEnvironments = isCloudProfile()
   const statusQueries = [
     ...getProjectStatusQueries(),
     ...(hideEnvironments ? [Query.isNull('parentId')] : []),
@@ -360,9 +364,7 @@ export async function fetchProjectsByIds(
       Query.select(getProjectListSelect()),
       Query.equal('teamId', teamId),
       ...getProjectStatusQueries(),
-      ...(getActiveProfileFeatures().projectEnvironments
-        ? [Query.isNull('parentId')]
-        : []),
+      ...(isCloudProfile() ? [Query.isNull('parentId')] : []),
       idQuery,
       Query.limit(validIds.length),
     ],
@@ -650,7 +652,7 @@ export function projectsForTeamInfiniteQueryKey(
     search,
     excludeKey,
     projectRestrictionKey(restrictToProjectIds),
-    getActiveProfileFeatures().projectEnvironments,
+    isCloudProfile(),
   ]
 }
 
@@ -670,7 +672,7 @@ export function activeProjectsTotalQueryOptions(
       'total',
       orgId,
       restrictKey,
-      getActiveProfileFeatures().projectEnvironments,
+      isCloudProfile(),
     ],
     queryFn: () =>
       fetchActiveProjects(orgId!, 0, 1, '', undefined, restrictToProjectIds),
@@ -707,7 +709,7 @@ export function activeProjectsQueryOptions(
       search,
       excludeKey,
       restrictKey,
-      getActiveProfileFeatures().projectEnvironments,
+      isCloudProfile(),
     ],
     queryFn: () =>
       fetchActiveProjects(
@@ -741,13 +743,7 @@ export function pinnedProjectsQueryOptions(
   const idsKey =
     projectIds.length > 0 ? projectIds.slice().sort().join(',') : ''
   return queryOptions({
-    queryKey: [
-      'projects',
-      'pinned',
-      orgId,
-      idsKey,
-      getActiveProfileFeatures().projectEnvironments,
-    ],
+    queryKey: ['projects', 'pinned', orgId, idsKey, isCloudProfile()],
     queryFn: () => fetchProjectsByIds(orgId!, projectIds),
     enabled: !!orgId,
     staleTime: DEFAULT_STALE_TIME,
@@ -771,13 +767,7 @@ export function projectsByIdsQueryOptions(
   const idsKey =
     projectIds.length > 0 ? projectIds.slice().sort().join(',') : ''
   return queryOptions({
-    queryKey: [
-      'projects',
-      'by-ids',
-      orgId,
-      idsKey,
-      getActiveProfileFeatures().projectEnvironments,
-    ],
+    queryKey: ['projects', 'by-ids', orgId, idsKey, isCloudProfile()],
     queryFn: () => fetchProjectsByIds(orgId!, projectIds),
     enabled: !!orgId && projectIds.length > 0,
     staleTime: DEFAULT_STALE_TIME,
@@ -1052,7 +1042,7 @@ export function useProjectsForTeam(
       page,
       limit,
       search,
-      getActiveProfileFeatures().projectEnvironments,
+      isCloudProfile(),
     ],
     queryFn: () => fetchActiveProjects(teamId!, page, limit, search),
     enabled: !!teamId,

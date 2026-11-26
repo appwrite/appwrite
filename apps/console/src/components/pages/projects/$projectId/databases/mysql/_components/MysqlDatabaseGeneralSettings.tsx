@@ -26,11 +26,14 @@ import {
   MYSQL_DATABASE_SPECS_SOURCE,
   useDatabaseSpecifications,
   useProject,
+  useCreateMysqlDatabaseUpgrade,
   useUpdateMysqlDatabase,
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import { dedicatedDatabaseStatusBadgeVariant } from '@/lib/databases/dedicated-database-status'
+import { MYSQL_ENGINE_VERSIONS } from '@/lib/databases/engine-versions'
+import { DedicatedDatabaseVersionCard } from '../../_components/DedicatedDatabaseVersionCard'
 import { localizeResourceStatusLabel } from '@/lib/i18n/resource-status-labels'
 import { useT } from '@/lib/i18n/translate'
 import type { MysqlDatabaseSettingsCardProps } from './mysql-database-settings-types'
@@ -250,6 +253,24 @@ export function MysqlDatabaseDetailsCard({
         </div>
       ) : null}
     </div>
+  )
+}
+
+export function MysqlDatabaseVersionCard({
+  projectId,
+  databaseId,
+  database,
+  canWrite,
+}: MysqlDatabaseSettingsCardProps) {
+  const upgrade = useCreateMysqlDatabaseUpgrade(projectId, databaseId)
+  return (
+    <DedicatedDatabaseVersionCard
+      engine="MySQL"
+      versions={MYSQL_ENGINE_VERSIONS}
+      database={database}
+      canWrite={canWrite}
+      upgrade={upgrade}
+    />
   )
 }
 

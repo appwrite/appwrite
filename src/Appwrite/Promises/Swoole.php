@@ -75,6 +75,8 @@ class Swoole extends Promise
                 return;
             }
 
+            // Values arrive in completion order; resolve them in the order of the promises.
+            \ksort($result);
             $resolve($result);
         });
     }
