@@ -14,7 +14,8 @@ use Utopia\Database\Query;
 trait Move
 {
     /**
-     * Give the project to the team, with the VCS records that carry its permissions.
+     * Give the project to the team, with the VCS records that carry its permissions and the
+     * monitors and alerts that name its organization.
      *
      * Writes several documents, so callers run it inside a transaction.
      *
@@ -31,8 +32,19 @@ trait Move
         ]));
 
         foreach (['installations', 'repositories', 'vcsComments'] as $collection) {
-            $this->moveProjectDocuments($collection, $project, $permissions, $dbForPlatform);
+            $this->moveProjectDocuments($collection, $project, ['$permissions' => $permissions], $dbForPlatform);
         }
+
+        // Monitors and their alerts name the organization that owns them. They carry no permissions,
+        // so only an internal read finds them.
+        $dbForPlatform->getAuthorization()->skip(function () use ($dbForPlatform, $project, $team) {
+            foreach (['monitors', 'monitorAlerts'] as $collection) {
+                $this->moveProjectDocuments($collection, $project, [
+                    'teamId' => $team->getId(),
+                    'teamInternalId' => (string) $team->getSequence(),
+                ], $dbForPlatform);
+            }
+        });
 
         return $project;
     }
@@ -57,13 +69,13 @@ trait Move
     }
 
     /**
-     * Give every document of the project in the collection the new organization's permissions.
+     * Apply the changes to every document of the project in the collection.
      *
      * Pages through all of them, since a project can have more than one page of VCS comments.
      *
-     * @param array<string> $permissions
+     * @param array<string, mixed> $changes
      */
-    private function moveProjectDocuments(string $collection, Document $project, array $permissions, Database $dbForPlatform): void
+    private function moveProjectDocuments(string $collection, Document $project, array $changes, Database $dbForPlatform): void
     {
         $limit = 100;
         $cursor = null;
@@ -80,7 +92,7 @@ trait Move
             $documents = $dbForPlatform->find($collection, $queries);
 
             foreach ($documents as $document) {
-                $dbForPlatform->updateDocument($collection, $document->getId(), new Document(['$permissions' => $permissions]));
+                $dbForPlatform->updateDocument($collection, $document->getId(), new Document($changes));
             }
 
             $cursor = \end($documents) ?: null;

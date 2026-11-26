@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Console\Http\Alerts\Unsubscribe;
 
 use Appwrite\Abuse\Limit;
+use Appwrite\Alert\Monitors;
 use Appwrite\Alert\Unsubscribe;
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\Extend\Exception;
@@ -12,6 +13,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Operator;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -79,7 +81,8 @@ abstract class Base extends Action
             $entry = Unsubscribe::type((string) $monitor->getAttribute('type'));
         }
 
-        $change = $this->change($user->getAttribute('alertsUnsubscribed', []), $entry);
+        // A deleted monitor has no emails of its own left to stop or resume.
+        $change = $entry === '' ? null : $this->change($user->getAttribute('alertsUnsubscribed', []), $entry);
         if ($change !== null) {
             $authorization->skip(fn () => $dbForPlatform->updateDocument('users', $user->getId(), new Document([
                 'alertsUnsubscribed' => $change,
@@ -91,7 +94,8 @@ abstract class Base extends Action
 
     /**
      * The user and the monitor the token names. A monitor deleted since the
-     * email was sent comes back holding only its ID and type.
+     * email was sent, or in a team the user no longer belongs to, comes back
+     * holding only its type, with an empty ID.
      *
      * @return array{0: Document, 1: Document}
      */
@@ -102,7 +106,7 @@ abstract class Base extends Action
         $token = $token !== '' ? $token : (string) $request->getQuery('token', '');
 
         try {
-            ['userId' => $userId, 'monitorId' => $monitorId, 'type' => $type] = (new Unsubscribe(EncryptionKey::accepted()))->verify($token);
+            ['userId' => $userId, 'monitorId' => $monitorId, 'scope' => $monitorScope, 'type' => $type] = (new Unsubscribe(EncryptionKey::accepted()))->verify($token);
         } catch (\InvalidArgumentException) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
@@ -112,10 +116,32 @@ abstract class Base extends Action
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $monitor = $authorization->skip(fn () => $dbForPlatform->getDocument('monitors', $monitorId));
+        $monitor = $authorization->skip(fn () => $monitorScope !== ''
+            ? $dbForPlatform->getDocument('monitors', Monitors::id($monitorScope, $monitorId))
+            // Issued before monitor IDs were scoped, when the chosen ID was unique across projects.
+            : $dbForPlatform->findOne('monitors', [
+                Query::equal('monitorId', [$monitorId]),
+                Query::orderAsc('$sequence'),
+            ]));
+
+        if (!$monitor->isEmpty()) {
+            // The organization that owns the project now, as the alerts worker mails it: a project
+            // moved to another organization keeps the team it was created in on its monitors.
+            $projectId = (string) $monitor->getAttribute('projectId', '');
+            $project = $projectId === '' ? new Document() : $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+            $teamInternalId = (string) $project->getAttribute('teamInternalId', '');
+            $membership = $teamInternalId === '' ? new Document() : $authorization->skip(fn () => $dbForPlatform->findOne('memberships', [
+                Query::equal('teamInternalId', [$teamInternalId]),
+                Query::equal('userInternalId', [(string) $user->getSequence()]),
+                Query::equal('confirm', [true]),
+            ]));
+            if ($membership->isEmpty()) {
+                $monitor = new Document();
+            }
+        }
 
         // The type comes from the token, so a deleted monitor's link still reaches its type-wide opt-out.
-        return [$user, $monitor->isEmpty() ? new Document(['$id' => $monitorId, 'type' => $type]) : $monitor];
+        return [$user, $monitor->isEmpty() ? new Document(['$id' => '', 'type' => $type]) : $monitor];
     }
 
     /**

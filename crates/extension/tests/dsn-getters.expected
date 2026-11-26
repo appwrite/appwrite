@@ -1,0 +1,83 @@
+full Utopia\DSN\DSN::getScheme => "mysql"
+full Utopia\DSN\DSN::getUser => "user"
+full Utopia\DSN\DSN::getPassword => "pa@ss"
+full Utopia\DSN\DSN::getHost => "db.example.com"
+full Utopia\DSN\DSN::getPort => "3306"
+full Utopia\DSN\DSN::getPath => "app"
+full Utopia\DSN\DSN::getQuery => "charset=utf8&x=1"
+full Utopia\DSN\DSN clone => ["db.example.com","3306","charset=utf8&x=1"]
+full Sub::getScheme => "mysql"
+full Sub::getUser => "user"
+full Sub::getPassword => "pa@ss"
+full Sub::getHost => "db.example.com"
+full Sub::getPort => "3306"
+full Sub::getPath => "app"
+full Sub::getQuery => "charset=utf8&x=1"
+full Sub clone => ["db.example.com","3306","charset=utf8&x=1"]
+full Over::getScheme => "mysql"
+full Over::getUser => "user"
+full Over::getPassword => "pa@ss"
+full Over::getHost => "over:db.example.com"
+full Over::getPort => "3306"
+full Over::getPath => "app"
+full Over::getQuery => "charset=utf8&x=1"
+full Over clone => ["over:db.example.com","3306","charset=utf8&x=1"]
+bare Utopia\DSN\DSN::getScheme => "redis"
+bare Utopia\DSN\DSN::getUser => null
+bare Utopia\DSN\DSN::getPassword => null
+bare Utopia\DSN\DSN::getHost => "cache"
+bare Utopia\DSN\DSN::getPort => null
+bare Utopia\DSN\DSN::getPath => ""
+bare Utopia\DSN\DSN::getQuery => null
+bare Utopia\DSN\DSN clone => ["cache",null,null]
+bare Sub::getScheme => "redis"
+bare Sub::getUser => null
+bare Sub::getPassword => null
+bare Sub::getHost => "cache"
+bare Sub::getPort => null
+bare Sub::getPath => ""
+bare Sub::getQuery => null
+bare Sub clone => ["cache",null,null]
+bare Over::getScheme => "redis"
+bare Over::getUser => null
+bare Over::getPassword => null
+bare Over::getHost => "over:cache"
+bare Over::getPort => null
+bare Over::getPath => ""
+bare Over::getQuery => null
+bare Over clone => ["over:cache",null,null]
+nopass Utopia\DSN\DSN::getScheme => "mariadb"
+nopass Utopia\DSN\DSN::getUser => "root"
+nopass Utopia\DSN\DSN::getPassword => null
+nopass Utopia\DSN\DSN::getHost => "localhost"
+nopass Utopia\DSN\DSN::getPort => null
+nopass Utopia\DSN\DSN::getPath => "x"
+nopass Utopia\DSN\DSN::getQuery => null
+nopass Utopia\DSN\DSN clone => ["localhost",null,null]
+nopass Sub::getScheme => "mariadb"
+nopass Sub::getUser => "root"
+nopass Sub::getPassword => null
+nopass Sub::getHost => "localhost"
+nopass Sub::getPort => null
+nopass Sub::getPath => "x"
+nopass Sub::getQuery => null
+nopass Sub clone => ["localhost",null,null]
+nopass Over::getScheme => "mariadb"
+nopass Over::getUser => "root"
+nopass Over::getPassword => null
+nopass Over::getHost => "over:localhost"
+nopass Over::getPort => null
+nopass Over::getPath => "x"
+nopass Over::getQuery => null
+nopass Over clone => ["over:localhost",null,null]
+extra arg !! ArgumentCountError: Utopia\DSN\DSN::getHost() expects exactly 0 arguments, 1 given
+two extra args !! ArgumentCountError: Utopia\DSN\DSN::getPort() expects exactly 0 arguments, 2 given
+reflection invoke => "user"
+first-class callable => "mysql"
+array_map => ["mysql","user","pa@ss","db.example.com","3306","app","charset=utf8&x=1"]
+no constructor !! Exception: Failed to retrieve reference to `$this`
+sub no constructor !! Exception: Failed to retrieve reference to `$this`
+static call !! Error: Non-static method Utopia\DSN\DSN::getHost() cannot be called statically
+held => [2000,"db.example.com","pa@ss"]
+after free => "cache"
+memory balanced => true

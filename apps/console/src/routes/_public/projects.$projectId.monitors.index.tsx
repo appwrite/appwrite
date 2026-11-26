@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { z } from 'zod'
 import {
   bucketsQueryOptions,
@@ -42,6 +42,16 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute('/_public/projects/$projectId/monitors/')({
   validateSearch: searchSchema,
+  // Alert emails and older links open a monitor with `?monitor=`; it has its own page now.
+  beforeLoad: ({ params, search }) => {
+    if (search.monitor) {
+      throw redirect({
+        to: '/projects/$projectId/monitors/$monitorId',
+        params: { projectId: params.projectId, monitorId: search.monitor },
+        replace: true,
+      })
+    }
+  },
   head: () => ({ meta: [{ title: pageTitle('Monitors') }] }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return
@@ -134,8 +144,6 @@ function MonitorsPage() {
       projectId={projectId}
       prefill={prefill}
       onPrefillConsumed={clearSearch}
-      openMonitorId={search.monitor}
-      onOpenMonitorConsumed={clearSearch}
       createDisabled={!canWrite || isAtPlanLimit}
       createDisabledTooltip={
         !canWrite

@@ -43,7 +43,6 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     startDate: '2026-08-31',
     endDate: '2026-09-04',
     status: 'active',
-    featured: true,
     presenceEnabled: true,
     tickets: INIT_JULY_2026_TICKET_CONFIG,
     primaryCta: {
@@ -211,6 +210,7 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     endDate: '2026-12-04',
     // 'active' lets the status follow the dates: upcoming, then live, then past.
     status: 'active',
+    featured: true,
     presenceEnabled: true,
     tickets: INIT_NOV_2026_TICKET_CONFIG,
     primaryCta: {
@@ -261,12 +261,12 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     prizes: INIT_NOV_2026_PRIZES,
     releaseAvailability: {
       unlockDay: 5,
-      sectionTitle: 'Cloud and Self-host ship with Init.',
+      sectionTitle: 'Cloud and Self-host are live.',
       sectionDescription:
-        'Init 5 features will roll out on Appwrite Cloud during launch week. Self-host availability will be announced per feature.',
-      lockedTitle: 'Cloud ships daily during Init week.',
+        'Every Init 5 feature is live on Appwrite Cloud, and Community Edition ships them all for self-hosting.',
+      lockedTitle: 'Cloud ships daily. Self-host lands when Init wraps.',
       lockedDescription:
-        'Each Init 5 feature goes live on Cloud on its launch day. Self-host timing will be shared in each announcement.',
+        'Each Init 5 feature goes live on Appwrite Cloud on its launch day. Community Edition ships every feature for self-hosting at the end of Init week.',
       cloud: {
         title: 'Appwrite Cloud',
         availabilityLabel: 'Live each Init day',
@@ -277,9 +277,9 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
       },
       selfHosted: {
         title: 'Community Edition',
-        availabilityLabel: 'Per feature',
+        availabilityLabel: 'End of Init week',
         description:
-          'Self-host availability will be shared in each Init 5 announcement.',
+          'Self-host every Init 5 feature on your own infrastructure.',
         ctaLabel: 'Installation docs',
         href: '/docs/advanced/self-hosting',
       },

@@ -32,12 +32,36 @@ export type InitDayMockVisualId =
   | 'videos'
   | 'zero'
   | 'monitors-beep'
+  | 'monitors'
+  | 'beep'
   | 'reviews'
 
 export interface LaunchEventDayVisual {
   mockVisualId: InitDayMockVisualId
   /** Accessible label for the mock UI frame. */
   imageAlt: string
+}
+
+/** A launch film played with the Appwrite player when a day's cover is clicked. */
+export interface LaunchEventDayFilm {
+  /** The Appwrite project the video lives in (public read). */
+  projectId: string
+  videoId: string
+  /** Switcher label when a day has several films (Monitors, Beep). */
+  label: string
+}
+
+/**
+ * One launch on a day that has several (Monitors and Beep): its own title,
+ * copy, cover, film and links, drawn as its own section of the day's card.
+ */
+export interface LaunchEventDayAnnouncement {
+  id: string
+  title: string
+  longDescription: string
+  visual?: LaunchEventDayVisual
+  films?: LaunchEventDayFilm[]
+  resources: LaunchEventDayResource[]
 }
 
 export interface LaunchEventDay {
@@ -50,6 +74,19 @@ export interface LaunchEventDay {
   /** The product's own icon where it has one (Zero's slashed zero), else Lucide. */
   icon: ProductIcon
   visual?: LaunchEventDayVisual
+  /** Launch films for the day, in order; the cover plays the first. */
+  films?: LaunchEventDayFilm[]
+  /**
+   * A day with several launches lists each; the card draws one section per
+   * announcement, and the day's own title, copy and films stand for them all
+   * elsewhere (day nav, hero, presence).
+   */
+  announcements?: LaunchEventDayAnnouncement[]
+  /**
+   * This day launches the player the films play in: once it is revealed, the
+   * films say they are powered by Appwrite Videos.
+   */
+  launchesFilmPlayer?: boolean
   isLive?: boolean
   sessionCount: number
   resources: LaunchEventDayResource[]
@@ -67,6 +104,22 @@ export interface LaunchEventDayLocked {
 }
 
 export type LaunchEventDayView = LaunchEventDay | LaunchEventDayLocked
+
+/** Every launch film of a day: its own, or each announcement's in order. */
+export function getLaunchEventDayFilms(
+  day: LaunchEventDay,
+): LaunchEventDayFilm[] {
+  return day.announcements?.length
+    ? day.announcements.flatMap((announcement) => announcement.films ?? [])
+    : (day.films ?? [])
+}
+
+/** True once the day that launches the films' player has been revealed. */
+export function isFilmPlayerRevealed(event: InitDisplayEvent): boolean {
+  return event.days.some(
+    (day) => !isLaunchEventDayLocked(day) && day.launchesFilmPlayer === true,
+  )
+}
 
 export function isLaunchEventDayLocked(
   day: LaunchEventDayView,
@@ -206,6 +259,8 @@ export interface LaunchEventDailyPrize {
   platform: LaunchSchedulePlatform
   href?: string
   prizeDescription: string
+  /** What someone looking at this prize shows as in the online list. */
+  presenceActivity?: string
   visual?: LaunchEventPrizeVisual
 }
 
@@ -219,6 +274,8 @@ export interface LaunchEventGrandPrize {
   sessionTitle?: string
   platform?: LaunchSchedulePlatform
   href?: string
+  /** What someone looking at the grand prize shows as in the online list. */
+  presenceActivity?: string
   visual?: LaunchEventPrizeVisual
 }
 

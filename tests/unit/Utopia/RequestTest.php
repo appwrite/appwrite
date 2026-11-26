@@ -720,4 +720,82 @@ final class RequestTest extends TestCase
 
         return $route;
     }
+
+    /**
+     * @return \Iterator<string, array{array<string, mixed>, array<string, string>, array<string, mixed>, string}>
+     */
+    public static function projectCases(): \Iterator
+    {
+        yield 'body is never read' => [['project' => 'body'], [], [], ''];
+        yield 'body does not override the header' => [['project' => 'body'], ['x-appwrite-project' => 'header'], [], 'header'];
+        yield 'header' => [[], ['x-appwrite-project' => 'header'], [], 'header'];
+        yield 'GitLab webhook project object' => [['project' => ['id' => 89442539]], [], [], ''];
+        yield 'GitLab webhook project object with the header' => [['project' => ['id' => 1]], ['x-appwrite-project' => 'header'], [], 'header'];
+        yield 'query on a POST' => [[], [], ['project' => 'query'], 'query'];
+        yield 'query over the header' => [[], ['x-appwrite-project' => 'header'], ['project' => 'query'], 'query'];
+        yield 'empty query falls back to the header' => [[], ['x-appwrite-project' => 'header'], ['project' => ''], 'header'];
+        yield 'query array' => [[], [], ['project' => ['x']], ''];
+        yield 'query array falls back to the header' => [[], ['x-appwrite-project' => 'header'], ['project' => ['x']], 'header'];
+        yield 'nothing' => [[], [], [], ''];
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @param array<string, string> $headers
+     * @param array<string, mixed> $query
+     */
+    #[DataProvider('projectCases')]
+    public function testGetProject(array $payload, array $headers, array $query, string $expected): void
+    {
+        $request = $this->post($payload, $headers, $query);
+
+        $this->assertSame($expected, $request->getProject());
+    }
+
+    /**
+     * @return \Iterator<string, array{array<string, mixed>, array<string, string>, array<string, mixed>, string}>
+     */
+    public static function modeCases(): \Iterator
+    {
+        yield 'body is never read' => [['mode' => 'admin'], [], [], APP_MODE_DEFAULT];
+        yield 'header' => [[], ['x-appwrite-mode' => 'admin'], [], 'admin'];
+        yield 'non-string body with the header' => [['mode' => ['admin']], ['x-appwrite-mode' => 'admin'], [], 'admin'];
+        yield 'query' => [[], [], ['mode' => 'admin'], 'admin'];
+        yield 'query array falls back to the header' => [[], ['x-appwrite-mode' => 'admin'], ['mode' => ['x']], 'admin'];
+        yield 'query over the header' => [[], ['x-appwrite-mode' => 'default'], ['mode' => 'admin'], 'admin'];
+        yield 'empty query falls back to the header' => [[], ['x-appwrite-mode' => 'admin'], ['mode' => ''], 'admin'];
+        yield 'nothing' => [[], [], [], APP_MODE_DEFAULT];
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @param array<string, string> $headers
+     * @param array<string, mixed> $query
+     */
+    #[DataProvider('modeCases')]
+    public function testGetMode(array $payload, array $headers, array $query, string $expected): void
+    {
+        $request = $this->post($payload, $headers, $query);
+
+        $this->assertSame($expected, $request->getMode());
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @param array<string, string> $headers
+     * @param array<string, mixed> $query
+     */
+    private function post(array $payload, array $headers, array $query): Request
+    {
+        $request = new Request(new SwooleRequest());
+        $request->setMethod(Request::METHOD_POST);
+        $request->setPayload($payload);
+        $request->setQueryString($query);
+
+        foreach ($headers as $name => $value) {
+            $request->setHeader($name, $value);
+        }
+
+        return $request;
+    }
 }

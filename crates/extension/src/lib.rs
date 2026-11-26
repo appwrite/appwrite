@@ -5,16 +5,17 @@
 //! `Utopia\Image\Canvas`, `Utopia\Image\Font`, `Utopia\DSN\DSN`,
 //! `Utopia\Locale\Locale`, `Utopia\UserAgent\UserAgent`, `Utopia\Domains\Domain`,
 //! `Utopia\Emails\Email`, the validators of `utopia-php/validators` (`Utopia\Validator\Validator`
-//! and its leaves) and the password hashes of `utopia-php/auth` (`Utopia\Auth\Hash` and
-//! `Hashes\*`) are registered by default (`if stable("<package>")`): they have no PHP
-//! implementation.
+//! and its leaves), the password hashes of `utopia-php/auth` (`Utopia\Auth\Hash` and
+//! `Hashes\*`), the classes of `utopia-php/query` it serves and every class of
+//! `utopia-php/detector` (`Utopia\Detector\*`) are registered by default
+//! (`if stable("<package>")`): they have no PHP implementation. So are `Utopia\Database\Id`,
+//! `Role`, `Permission` and `DateTime`: utopia-php/database still ships them in `vendor/`, where
+//! Composer loads them only when `utopia.libraries` leaves `database` out.
 //!
 //! A library that still has one registers its classes only when `_APP_EXTENSION_LIBRARIES` names
 //! its package (`if enabled("<package>")` in [`startup`] or [`get_module`]), so it can be canaried
-//! and switched back to PHP with a restart, not a deploy: `detector` (`Utopia\Detector\*`),
-//! `compression` (`Utopia\Compression\*`), `query` (`Utopia\Query\*`),
-//! `balancer` (`Utopia\Balancer\*`) and `database` (`Utopia\Database\Id`, `Role`, `Permission`
-//! and `DateTime`).
+//! and switched back to PHP with a restart, not a deploy: `compression` (`Utopia\Compression\*`)
+//! and `balancer` (`Utopia\Balancer\*`).
 //!
 //! The `utopia.libraries` php.ini setting, when set, replaces both: only the libraries it names
 //! register (see [`libraries`]).
@@ -87,7 +88,7 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     if stable("emails") {
         module = module.class::<emails::Email>();
     }
-    if enabled("query") {
+    if stable("query") {
         module = module
             .enumeration::<query::classifier::Type>()
             .interface::<query::classifier::PhpInterfaceClassifier>()
@@ -143,16 +144,17 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
             .class::<query::builder::ClickHouseBuilder>()
             .class::<query::builder::MongoDbBuilder>();
     }
-    module.request_shutdown_function(request_shutdown)
+    module.request_startup_function(request_startup).request_shutdown_function(request_shutdown)
 }
 
 /// Registers the classes built by hand rather than with `#[php_class]`: `Locale`, `UserAgent`, the
-/// validators, the password hashes and, when switched on, the detector, compression, balancer and
-/// database.
+/// validators, the password hashes, the detector, the four database classes and, when switched on,
+/// compression and balancer.
 /// Runs in MINIT, before the `#[php_class]` classes are registered. Also registers
 /// `utopia.libraries`.
 fn startup(_kind: i32, module: i32) -> i32 {
     ext_php_rs::internal::startup_guard(|| {
+        classes::retarget::reset();
         libraries::startup(module);
         if stable("locale") {
             locale::register()?;
@@ -171,10 +173,10 @@ fn startup(_kind: i32, module: i32) -> i32 {
         if stable("auth") {
             auth::register()?;
         }
-        if enabled("query") {
+        if stable("query") {
             query::features::register()?;
         }
-        if enabled("detector") {
+        if stable("detector") {
             detector::register()?;
         }
         if enabled("compression") {
@@ -183,21 +185,38 @@ fn startup(_kind: i32, module: i32) -> i32 {
         if enabled("balancer") {
             balancer::register()?;
         }
-        if enabled("database") {
+        if stable("database") {
             database::register()?;
         }
         Ok(())
     })
 }
 
+/// Points the `#[php_class]` methods that have hand-written handlers at them, once the classes
+/// are registered: the first RINIT after MINIT.
+extern "C" fn request_startup(_kind: i32, _module: i32) -> i32 {
+    classes::retarget::once(|| {
+        if stable("dsn") {
+            dsn::retarget();
+        }
+        if stable("query") {
+            query::value::retarget();
+            query::classifier::retarget();
+        }
+    });
+    0
+}
+
 /// Forgets what the classes hold for the request when it ends, as PHP frees its static state.
 extern "C" fn request_shutdown(kind: i32, module: i32) -> i32 {
     user_agent::request_shutdown();
     query::value::request_shutdown();
+    query::classifier::request_shutdown();
     query::ast::request_shutdown();
     query::schema::request_shutdown();
     query::builder::request_shutdown();
     balancer::request_shutdown();
     database::request_shutdown();
+    validators::compose::request_shutdown();
     locale::request_shutdown(kind, module)
 }

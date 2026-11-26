@@ -174,8 +174,26 @@ async function mockAppwriteApi(page: Page, { empty = false } = {}) {
       apiPath === `/projects/${PROJECT.$id}/console-access`
     )
       return json(200, PROJECT)
+    // The installation tells the review links which provider to point at.
     if (apiPath === '/vcs/installations')
-      return json(200, { total: 0, installations: [] })
+      return json(
+        200,
+        empty
+          ? { total: 0, installations: [] }
+          : {
+              total: 1,
+              installations: [
+                {
+                  $id: 'installation0001',
+                  $createdAt: NOW,
+                  $updatedAt: NOW,
+                  provider: 'github',
+                  organization: 'acme',
+                  providerInstallationId: '1',
+                },
+              ],
+            },
+      )
 
     if (apiPath === '/reviews') {
       const list = queries(url)
@@ -235,6 +253,17 @@ async function mockAppwriteApi(page: Page, { empty = false } = {}) {
 
 const row = (page: Page, pull: number) =>
   page.getByRole('row').filter({ hasText: `#${pull}` })
+
+/** Answers a request the shared mock does not know, preflight included. */
+function fulfillJson(route: Route, body: unknown) {
+  return route.request().method() === 'OPTIONS'
+    ? route.fulfill({ status: 204, headers: corsHeaders(route) })
+    : route.fulfill({
+        status: 200,
+        headers: { ...corsHeaders(route), 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+}
 
 test.describe('reviews', () => {
   test('keeps the page in the URL across a visit to a review', async ({
@@ -308,6 +337,411 @@ test.describe('reviews', () => {
     ).toBeVisible()
     await page.keyboard.press('Escape')
     await expect(page).toHaveURL(/\/reviews\/?$/)
+  })
+
+  test('Performance opens without waiting on categories or repository names', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page)
+    // Registered later, so these answer before the shared mock.
+    let releaseCategories = () => {}
+    const categoriesGate = new Promise<void>((resolve) => {
+      releaseCategories = resolve
+    })
+    const nameLookups: string[] = []
+    const fulfill = (route: Route, body: unknown) =>
+      route.fulfill({
+        status: 200,
+        headers: {
+          ...corsHeaders(route),
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      })
+    await page.route('**/v1/reviews/authors**', (route) =>
+      route.request().method() === 'OPTIONS'
+        ? route.fulfill({ status: 204, headers: corsHeaders(route) })
+        : fulfill(route, {
+            total: 1,
+            authors: [
+              {
+                author: 'octocat',
+                pulls: 3,
+                reviews: 4,
+                approved: 2,
+                approvedFirst: 1,
+                findings: 5,
+                critical: 0,
+                major: 1,
+                resolved: 2,
+                dismissed: 1,
+                tier: 'A',
+                lastReviewAt: NOW,
+              },
+            ],
+          }),
+    )
+    await page.route('**/v1/reviews/categories**', async (route) => {
+      if (route.request().method() === 'OPTIONS') {
+        return route.fulfill({ status: 204, headers: corsHeaders(route) })
+      }
+      await categoriesGate
+      return fulfill(route, {
+        total: 1,
+        categories: [
+          { category: 'bug', findings: 5, resolved: 2, dismissed: 1 },
+        ],
+      })
+    })
+    await page.route('**/providerRepositories/**', (route) => {
+      if (route.request().method() === 'OPTIONS') {
+        return route.fulfill({ status: 204, headers: corsHeaders(route) })
+      }
+      nameLookups.push(route.request().url())
+      return fulfill(route, {
+        id: '1000',
+        name: 'api',
+        organization: 'acme',
+        provider: 'github',
+        private: false,
+      })
+    })
+
+    await page.goto(`/projects/${PROJECT.$id}/reviews`, {
+      waitUntil: 'domcontentloaded',
+    })
+    await expect(row(page, 500)).toBeVisible({ timeout: 30_000 })
+    await page.getByRole('tab', { name: 'Performance' }).click()
+
+    // The authors show while categories are still on their way.
+    await expect(
+      page.getByRole('row').filter({ hasText: 'octocat' }),
+    ).toBeVisible()
+    await expect(page.getByText('Findings by category')).toHaveCount(0)
+    expect(nameLookups).toEqual([])
+
+    // Opening the repository list names the repositories.
+    await page.getByRole('combobox', { name: 'Repository' }).click()
+    await expect(page.getByRole('option', { name: 'acme/api' })).toBeVisible()
+    expect(nameLookups.length).toBeGreaterThan(0)
+    await page.keyboard.press('Escape')
+
+    releaseCategories()
+    await expect(page.getByText('Findings by category')).toBeVisible()
+
+    // Without a summary (an API that predates it), the authors add up to the
+    // tiles and the chart stays out.
+    await expect(page.getByText('Approved').first()).toBeVisible()
+    await expect(page.getByRole('tablist', { name: 'Chart' })).toHaveCount(0)
+  })
+
+  test('Performance compares with the days before and opens an author’s reviews', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page)
+    const fulfill = (route: Route, body: unknown) =>
+      route.request().method() === 'OPTIONS'
+        ? route.fulfill({ status: 204, headers: corsHeaders(route) })
+        : route.fulfill({
+            status: 200,
+            headers: {
+              ...corsHeaders(route),
+              'content-type': 'application/json',
+            },
+            body: JSON.stringify(body),
+          })
+    const period = {
+      start: NOW,
+      end: NOW,
+      critical: 0,
+      major: 1,
+      minor: 3,
+      info: 1,
+    }
+    const today = Date.UTC(2026, 10, 20)
+    await page.route('**/v1/reviews/summary**', (route) =>
+      fulfill(route, {
+        periods: [
+          {
+            ...period,
+            pulls: 3,
+            reviews: 4,
+            approved: 2,
+            approvedFirst: 1,
+            findings: 5,
+            resolved: 2,
+            dismissed: 1,
+            duration: 90_000,
+          },
+          {
+            ...period,
+            pulls: 2,
+            reviews: 2,
+            approved: 1,
+            approvedFirst: 1,
+            findings: 4,
+            resolved: 1,
+            dismissed: 1,
+            duration: 120_000,
+          },
+        ],
+        days: Array.from({ length: 30 }, (_, index) => {
+          const last = index === 29
+          return {
+            date: new Date(today - (29 - index) * 86_400_000).toISOString(),
+            reviews: last ? 4 : 0,
+            approved: last ? 2 : 0,
+            changesRequested: last ? 2 : 0,
+            commented: 0,
+            findings: last ? 5 : 0,
+            critical: 0,
+            major: last ? 1 : 0,
+            minor: last ? 3 : 0,
+            info: last ? 1 : 0,
+            resolved: last ? 2 : 0,
+            dismissed: last ? 1 : 0,
+          }
+        }),
+      }),
+    )
+    await page.route('**/v1/reviews/authors**', (route) =>
+      fulfill(route, {
+        total: 1,
+        authors: [
+          {
+            author: 'octocat',
+            pulls: 3,
+            reviews: 4,
+            approved: 2,
+            approvedFirst: 1,
+            findings: 5,
+            critical: 0,
+            major: 1,
+            resolved: 2,
+            dismissed: 1,
+            tier: 'A',
+            lastReviewAt: NOW,
+          },
+        ],
+      }),
+    )
+    const reviewListQueries: string[] = []
+    page.on('request', (request) => {
+      const url = new URL(request.url())
+      if (url.pathname === '/v1/reviews') {
+        reviewListQueries.push(decodeURIComponent(url.search))
+      }
+    })
+
+    await page.goto(`/projects/${PROJECT.$id}/reviews/performance`, {
+      waitUntil: 'domcontentloaded',
+    })
+
+    // Three pull requests against two the days before, and the median review time.
+    await expect(page.getByText('+50%')).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByText('1m 30s')).toBeVisible()
+
+    // The chart switches from verdicts to severity.
+    const chart = page.getByRole('tablist', { name: 'Chart' })
+    await expect(page.getByText('Changes requested')).toBeVisible()
+    await chart.getByRole('tab', { name: 'Findings' }).click()
+    await expect(page.getByText('Critical and major')).toBeVisible()
+
+    // Selecting an author opens the reviews list filtered to them.
+    await page
+      .getByRole('row')
+      .filter({ hasText: 'octocat' })
+      .getByText('4 reviews')
+      .click()
+    await expect(page).toHaveURL(/\/reviews\?query=/)
+    await expect
+      .poll(() =>
+        reviewListQueries.some(
+          (query) =>
+            query.includes('providerPullRequestAuthor') &&
+            query.includes('octocat'),
+        ),
+      )
+      .toBe(true)
+  })
+
+  test('status tabs count the reviews and filter the list', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page)
+    await page.goto(`/projects/${PROJECT.$id}/reviews`, {
+      waitUntil: 'domcontentloaded',
+    })
+
+    // 30 reviews: 8 failed, 7 skipped and 7 running among them.
+    const tabs = page.getByRole('tablist', { name: 'Status' })
+    await expect(tabs.getByRole('tab', { name: /^All\s*30$/ })).toBeVisible({
+      timeout: 30_000,
+    })
+    await expect(
+      tabs.getByRole('tab', { name: /^In progress\s*7$/ }),
+    ).toBeVisible()
+    await expect(tabs.getByRole('tab', { name: /^Failed\s*8$/ })).toBeVisible()
+
+    await tabs.getByRole('tab', { name: /^Failed/ }).click()
+    await expect(page).toHaveURL(/[?&]query=/)
+    await expect(row(page, 499)).toBeVisible()
+    await expect(row(page, 500)).toHaveCount(0)
+    await expect(
+      tabs.getByRole('tab', { name: /^Failed/, selected: true }),
+    ).toBeVisible()
+
+    await tabs.getByRole('tab', { name: /^All/ }).click()
+    await expect(row(page, 500)).toBeVisible()
+    await expect(page).not.toHaveURL(/[?&]query=/)
+  })
+
+  test('repositories show their last 30 days and open their reviews and performance', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page)
+    await page.route('**/v1/reviews/summary**', (route) =>
+      fulfillJson(route, {
+        periods: [],
+        days: [],
+        repositories: [
+          {
+            repositoryId: 'repository0001',
+            providerRepositoryOwner: 'acme',
+            providerRepositoryName: 'api',
+            pulls: 12,
+            reviews: 15,
+            approved: 9,
+            approvedFirst: 6,
+            findings: 20,
+            critical: 2,
+            major: 5,
+            resolved: 11,
+            dismissed: 3,
+            lastReviewAt: NOW,
+          },
+        ],
+      }),
+    )
+    await page.route('**/providerRepositories/**', (route) =>
+      fulfillJson(route, {
+        id: '1000',
+        name: 'api',
+        organization: 'acme',
+        provider: 'github',
+        private: false,
+      }),
+    )
+    // Performance needs its authors before it opens.
+    await page.route('**/v1/reviews/authors**', (route) =>
+      fulfillJson(route, { total: 0, authors: [] }),
+    )
+    await page.route('**/v1/reviews/categories**', (route) =>
+      fulfillJson(route, { total: 0, categories: [] }),
+    )
+    const listQueries: string[] = []
+    page.on('request', (request) => {
+      const url = new URL(request.url())
+      if (url.pathname === '/v1/reviews') {
+        listQueries.push(decodeURIComponent(url.search))
+      }
+    })
+
+    await page.goto(`/projects/${PROJECT.$id}/reviews/repositories`, {
+      waitUntil: 'domcontentloaded',
+    })
+    const repository = page.getByRole('row').filter({ hasText: 'acme/api' })
+    await expect(repository.getByText('15 reviews')).toBeVisible({
+      timeout: 30_000,
+    })
+    await expect(repository.getByText('2 critical')).toBeVisible()
+
+    // The row menu opens the repository's tabs first, like other Console menus.
+    await repository.getByRole('button', { name: /actions for/i }).click()
+    await expect(page.getByRole('menuitem').first()).toHaveText('Reviews')
+    await page
+      .getByRole('menuitem', { name: 'Performance', exact: true })
+      .click()
+    await expect(page).toHaveURL(
+      /\/reviews\/performance\?repositoryId=repository0001/,
+    )
+    await expect(
+      page.getByRole('combobox', { name: 'Repository' }),
+    ).toContainText('acme/api')
+
+    // Selecting the row opens its reviews.
+    await page.goBack()
+    await page
+      .getByRole('row')
+      .filter({ hasText: 'acme/api' })
+      .getByText('15 reviews')
+      .click()
+    await expect(page).toHaveURL(/\/reviews\?query=/)
+    await expect
+      .poll(() =>
+        listQueries.some(
+          (query) =>
+            query.includes('repositoryId') && query.includes('repository0001'),
+        ),
+      )
+      .toBe(true)
+  })
+
+  test('learnings narrow to one repository', async ({ page }) => {
+    await mockAppwriteApi(page)
+    const learning = (id: string, body: string) => ({
+      $id: id,
+      $createdAt: NOW,
+      repositoryId: 'repository0001',
+      body,
+      author: 'octocat',
+      sourceUrl: 'https://github.com/acme/api/pull/7#issuecomment-1',
+    })
+    const learningQueries: string[] = []
+    await page.route('**/v1/reviews/learnings**', (route) => {
+      learningQueries.push(
+        decodeURIComponent(new URL(route.request().url()).search),
+      )
+      return fulfillJson(route, {
+        total: 2,
+        learnings: [
+          learning('learning0001', 'Prefer early returns.'),
+          learning('learning0002', 'Keep snake_case column names.'),
+        ],
+      })
+    })
+    await page.route('**/providerRepositories/**', (route) =>
+      fulfillJson(route, {
+        id: '1000',
+        name: 'api',
+        organization: 'acme',
+        provider: 'github',
+        private: false,
+      }),
+    )
+
+    await page.goto(`/projects/${PROJECT.$id}/reviews/learnings`, {
+      waitUntil: 'domcontentloaded',
+    })
+    await expect(page.getByText('Prefer early returns.')).toBeVisible({
+      timeout: 30_000,
+    })
+
+    // The repository a learning is about narrows the list to it.
+    await page
+      .getByRole('row')
+      .filter({ hasText: 'Prefer early returns.' })
+      .getByRole('button', { name: 'acme/api' })
+      .click()
+    await expect(page).toHaveURL(/[?&]repositoryId=repository0001/)
+    await expect
+      .poll(() =>
+        learningQueries.some((query) => query.includes('repository0001')),
+      )
+      .toBe(true)
+    await expect(
+      page.getByRole('combobox', { name: 'Repository' }),
+    ).toContainText('acme/api')
   })
 
   test('shows the product empty state before the first repository', async ({

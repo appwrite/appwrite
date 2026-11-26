@@ -12,8 +12,8 @@ import { useT } from '@/lib/i18n/translate'
 
 /** The project events every alert fires, which a webhook or function subscribes to. */
 export const ALERT_EVENTS = [
-  'monitors.*.alerts.*.firing',
-  'monitors.*.alerts.*.resolved',
+  'monitors.*.alerts.*.create',
+  'monitors.*.alerts.*.update',
 ]
 
 /**

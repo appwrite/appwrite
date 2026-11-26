@@ -1,9 +1,10 @@
 import { lazy, Suspense, useMemo, useState, type ReactNode } from 'react'
 import type { Models } from '@appwrite.io/console'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useRouter } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import {
   ArrowLeft,
+  ArrowUpRight,
   Bell,
   BellOff,
   BellRing,
@@ -14,14 +15,19 @@ import {
   CircleAlert,
   CircleCheck,
   Clock,
+  Copy,
   ExternalLink,
+  FileJson,
   Info,
+  Link2,
   Loader2,
   MailOpen,
   MoreHorizontal,
   Settings,
+  Square,
   TriangleAlert,
   UserCheck,
+  type LucideIcon,
 } from 'lucide-react'
 import {
   Popover,
@@ -30,11 +36,24 @@ import {
 } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu'
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
@@ -44,14 +63,29 @@ import {
 } from '@/components/ui/tooltip'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
-import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
+import {
+  MenuItemContent,
+  MenuItemIcon,
+} from '@/components/global/shared/ContextMenuIcon'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { cn } from '@/lib/utils'
+import {
+  buildConsoleUrl,
+  copyResourceAsJson,
+  copyToClipboard,
+  openInNewTab,
+  openInNewWindow,
+} from '@/lib/utils/context-menu'
 import {
   getAppwriteErrorInfo,
   getErrorMessage,
 } from '@/lib/utils/error-formatting'
-import { getNotificationNavigateTarget } from '@/lib/notifications/notification-links'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import {
+  getNotificationLinks,
+  getNotificationNavigateTarget,
+  type NotificationNavigateTarget,
+} from '@/lib/notifications/notification-links'
 import {
   EVERY_ORGANIZATION,
   SNOOZE_DURATIONS,
@@ -218,6 +252,140 @@ function HeaderButton({
   )
 }
 
+const MENU_PRIMITIVES = {
+  context: {
+    Item: ContextMenuItem,
+    Separator: ContextMenuSeparator,
+    Sub: ContextMenuSub,
+    SubTrigger: ContextMenuSubTrigger,
+    SubContent: ContextMenuSubContent,
+  },
+  dropdown: {
+    Item: DropdownMenuItem,
+    Separator: DropdownMenuSeparator,
+    Sub: DropdownMenuSub,
+    SubTrigger: DropdownMenuSubTrigger,
+    SubContent: DropdownMenuSubContent,
+  },
+} as const
+
+/**
+ * Notification actions shared by the row context menu and the row ⋯ menu, so
+ * both list the same items in the same order.
+ */
+function NotificationMenuItems({
+  variant,
+  notification,
+  projectMuted,
+  onOpen,
+  onToggleRead,
+  onToggleMuteProject,
+  onAcknowledge,
+}: {
+  variant: 'context' | 'dropdown'
+  notification: Models.Notification
+  projectMuted: boolean
+  onOpen: (notification: Models.Notification) => void
+  onToggleRead: (notification: Models.Notification) => void
+  onToggleMuteProject: (projectId: string, muted: boolean) => void
+  onAcknowledge: (notification: Models.Notification) => void
+}) {
+  const t = useT()
+  const router = useRouter()
+  const { Item, Separator, Sub, SubTrigger, SubContent } =
+    MENU_PRIMITIVES[variant]
+  const projectId = notification.projectId?.trim() ?? ''
+  const target = getNotificationNavigateTarget(notification)
+  const href = target
+    ? buildConsoleUrl(
+        router.buildLocation({
+          to: target.to as never,
+          params: target.params as never,
+        }).href,
+      )
+    : null
+  const isAlert =
+    notification.subjectType === 'alerts' && !!notification.subjectId
+  // A firing alert of a project; an organization's budget alert has no project to acknowledge it in.
+  const canAcknowledge =
+    isAlert &&
+    notification.status === 'firing' &&
+    !!projectId &&
+    projectId !== 'console'
+
+  const row = (icon: LucideIcon, label: ReactNode) => (
+    <>
+      <MenuItemIcon icon={icon} />
+      {label}
+    </>
+  )
+
+  return (
+    <>
+      {target ? (
+        <Item onSelect={() => onOpen(notification)}>
+          {row(ArrowUpRight, t('Open'))}
+        </Item>
+      ) : null}
+      {canAcknowledge ? (
+        <Item onSelect={() => onAcknowledge(notification)}>
+          {row(UserCheck, t('Acknowledge'))}
+        </Item>
+      ) : null}
+      <Item onSelect={() => onToggleRead(notification)}>
+        {notification.read
+          ? row(Circle, t('Mark as unread'))
+          : row(MailOpen, t('Mark as read'))}
+      </Item>
+      {projectId ? (
+        <>
+          <Separator />
+          <Item onSelect={() => onToggleMuteProject(projectId, !projectMuted)}>
+            {projectMuted
+              ? row(BellRing, t('Unmute project pushes'))
+              : row(BellOff, t('Mute project pushes'))}
+          </Item>
+        </>
+      ) : null}
+      <Separator />
+      <Sub>
+        <SubTrigger>{row(Copy, t('Copy'))}</SubTrigger>
+        <SubContent className={ABOVE_POPOVER}>
+          <Item onSelect={() => copyToClipboard(t('ID'), notification.$id)}>
+            {row(Copy, t('Copy ID'))}
+          </Item>
+          {notification.title ? (
+            <Item
+              onSelect={() => copyToClipboard(t('Title'), notification.title)}
+            >
+              {row(Copy, t('Copy title'))}
+            </Item>
+          ) : null}
+          {href ? (
+            <Item onSelect={() => copyToClipboard(t('Link'), href)}>
+              {row(Link2, t('Copy link'))}
+            </Item>
+          ) : null}
+          <Item onSelect={() => void copyResourceAsJson(() => notification)}>
+            {row(FileJson, t('Copy as JSON'))}
+          </Item>
+        </SubContent>
+      </Sub>
+      {href ? (
+        <>
+          <Separator />
+          <Item onSelect={() => openInNewTab(href)}>
+            {row(ExternalLink, t('Open in new tab'))}
+          </Item>
+          <Item onSelect={() => openInNewWindow(href)}>
+            {row(Square, t('Open in new window'))}
+          </Item>
+        </>
+      ) : null}
+    </>
+  )
+}
+
 function NotificationRow({
   notification,
   projectMuted,
@@ -228,7 +396,10 @@ function NotificationRow({
 }: {
   notification: Models.Notification
   projectMuted: boolean
-  onOpen: (notification: Models.Notification) => void
+  onOpen: (
+    notification: Models.Notification,
+    target?: NotificationNavigateTarget,
+  ) => void
   onToggleRead: (notification: Models.Notification) => void
   onToggleMuteProject: (projectId: string, muted: boolean) => void
   onAcknowledge: (notification: Models.Notification) => void
@@ -237,123 +408,111 @@ function NotificationRow({
   const isUnread = !notification.read
   const severity = severityOf(notification.type)
   const resolved = isResolvedAlert(notification)
-  const projectId = notification.projectId?.trim() ?? ''
-  const canOpen = getNotificationNavigateTarget(notification) !== null
+  const alertCtasEnabled = useConsoleProfile().features.alertCtas
+  const links = alertCtasEnabled ? getNotificationLinks(notification) : []
   const isAlert =
     notification.subjectType === 'alerts' && !!notification.subjectId
-  // A firing alert of a project; an organization's budget alert has no project to acknowledge it in.
-  const canAcknowledge =
-    isAlert &&
-    notification.status === 'firing' &&
-    !!projectId &&
-    projectId !== 'console'
+  const menuProps = {
+    notification,
+    projectMuted,
+    onOpen,
+    onToggleRead,
+    onToggleMuteProject,
+    onAcknowledge,
+  }
 
   return (
-    <div className="group relative flex gap-3 px-5 py-3 transition-colors hover:bg-accent/50">
-      <button
-        type="button"
-        onClick={() => onOpen(notification)}
-        className="absolute inset-0 z-0 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
-        aria-label={notification.title}
-      />
-      {isUnread ? <UnreadDot /> : null}
-      <div className="pointer-events-none relative">
-        <NotificationIcon
-          icon={resolved ? CircleCheck : SEVERITY_ICONS[severity]}
-          className={resolved ? RESOLVED_GLYPH : SEVERITY_GLYPHS[severity]}
-        />
-      </div>
-      <div className="pointer-events-none relative min-w-0 flex-1 overflow-hidden">
-        <p
-          className={cn(
-            'break-words pe-7 text-[13px] leading-snug',
-            isUnread ? 'font-medium text-foreground' : 'text-foreground/80',
-          )}
-        >
-          {notification.title}
-        </p>
-        {notification.body?.trim() ? (
-          <p className="mt-1 line-clamp-2 break-words text-[12px] leading-relaxed text-muted-foreground">
-            {notification.body}
-          </p>
-        ) : null}
-        <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-          <DateTooltip
-            date={notification.$createdAt}
-            live
-            className="pointer-events-auto text-[11px] text-muted-foreground"
-          />
-          {isAlert && notification.status === 'acknowledged' ? (
-            <>
-              <span aria-hidden>·</span>
-              <span>{t('Acknowledged')}</span>
-            </>
-          ) : null}
-          {projectMuted ? (
-            <>
-              <span aria-hidden>·</span>
-              <span>{t('Pushes muted')}</span>
-            </>
-          ) : null}
-        </div>
-      </div>
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger asChild>
-          <Button
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <div className="group relative flex gap-3 px-5 py-3 transition-colors hover:bg-accent/50 data-[state=open]:bg-accent/50">
+          <button
             type="button"
-            variant="ghost"
-            size="icon"
-            className="absolute end-2 top-2 z-10 h-7 w-7 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
-            aria-label={t('Notification actions')}
-          >
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className={cn(ABOVE_POPOVER, 'w-56')}>
-          {canOpen ? (
-            <DropdownMenuItem onSelect={() => onOpen(notification)}>
-              <MenuItemContent icon={ExternalLink}>{t('Open')}</MenuItemContent>
-            </DropdownMenuItem>
-          ) : null}
-          {canAcknowledge ? (
-            <DropdownMenuItem onSelect={() => onAcknowledge(notification)}>
-              <MenuItemContent icon={UserCheck}>
-                {t('Acknowledge')}
-              </MenuItemContent>
-            </DropdownMenuItem>
-          ) : null}
-          <DropdownMenuItem onSelect={() => onToggleRead(notification)}>
-            {isUnread ? (
-              <MenuItemContent icon={MailOpen}>
-                {t('Mark as read')}
-              </MenuItemContent>
-            ) : (
-              <MenuItemContent icon={Circle}>
-                {t('Mark as unread')}
-              </MenuItemContent>
-            )}
-          </DropdownMenuItem>
-          {projectId ? (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onSelect={() => onToggleMuteProject(projectId, !projectMuted)}
+            onClick={() => onOpen(notification)}
+            className="absolute inset-0 z-0 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+            aria-label={notification.title}
+          />
+          {isUnread ? <UnreadDot /> : null}
+          <div className="pointer-events-none relative">
+            <NotificationIcon
+              icon={resolved ? CircleCheck : SEVERITY_ICONS[severity]}
+              className={resolved ? RESOLVED_GLYPH : SEVERITY_GLYPHS[severity]}
+            />
+          </div>
+          <div className="pointer-events-none relative min-w-0 flex-1 overflow-hidden">
+            <p
+              className={cn(
+                'break-words pe-7 text-[13px] leading-snug',
+                isUnread ? 'font-medium text-foreground' : 'text-foreground/80',
+              )}
+            >
+              {notification.title}
+            </p>
+            {notification.body?.trim() ? (
+              <p className="mt-1 line-clamp-2 break-words text-[12px] leading-relaxed text-muted-foreground">
+                {notification.body}
+              </p>
+            ) : null}
+            <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <DateTooltip
+                date={notification.$createdAt}
+                live
+                className="pointer-events-auto text-[11px] text-muted-foreground"
+              />
+              {isAlert && notification.status === 'acknowledged' ? (
+                <>
+                  <span aria-hidden>·</span>
+                  <span>{t('Acknowledged')}</span>
+                </>
+              ) : null}
+              {projectMuted ? (
+                <>
+                  <span aria-hidden>·</span>
+                  <span>{t('Pushes muted')}</span>
+                </>
+              ) : null}
+            </div>
+            {links.length > 0 ? (
+              <div className="pointer-events-auto mt-2 flex gap-2">
+                {links.map((link) => (
+                  <Button
+                    key={link.label}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2.5 text-[12px]"
+                    onClick={() => onOpen(notification, link.target)}
+                  >
+                    {t(link.label)}
+                  </Button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute end-2 top-2 z-10 h-7 w-7 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
+                aria-label={t('Notification actions')}
               >
-                {projectMuted ? (
-                  <MenuItemContent icon={BellRing}>
-                    {t('Unmute project pushes')}
-                  </MenuItemContent>
-                ) : (
-                  <MenuItemContent icon={BellOff}>
-                    {t('Mute project pushes')}
-                  </MenuItemContent>
-                )}
-              </DropdownMenuItem>
-            </>
-          ) : null}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className={cn(ABOVE_POPOVER, 'w-56')}
+            >
+              <NotificationMenuItems variant="dropdown" {...menuProps} />
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent className={cn(ABOVE_POPOVER, 'w-56')}>
+        <NotificationMenuItems variant="context" {...menuProps} />
+      </ContextMenuContent>
+    </ContextMenu>
   )
 }
 
@@ -516,7 +675,10 @@ export function NotificationCenterPopover() {
     }
   }
 
-  const handleNotificationOpen = async (notification: Models.Notification) => {
+  const handleNotificationOpen = async (
+    notification: Models.Notification,
+    link?: NotificationNavigateTarget,
+  ) => {
     if (!notification.read) {
       try {
         await updateReadMutation.mutateAsync({
@@ -528,13 +690,14 @@ export function NotificationCenterPopover() {
       }
     }
 
-    const target = getNotificationNavigateTarget(notification)
+    const target = link ?? getNotificationNavigateTarget(notification)
     if (target) {
       setOpen(false)
       void navigate({
         to: target.to as never,
         params: target.params as never,
         ...(target.search ? { search: target.search as never } : {}),
+        ...(target.hash ? { hash: target.hash } : {}),
       })
     }
   }

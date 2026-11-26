@@ -5,7 +5,7 @@
  * Runtime detection, branch/root, domain, variables, then create + VCS deployment.
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate, Link } from '@tanstack/react-router'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -72,6 +72,10 @@ import { useFunctionWizard } from './WizardContext'
 import { useT } from '@/lib/i18n/translate'
 import { getVcsProvider } from '@/lib/vcs/providers'
 import { validateVariables } from '@/lib/variables'
+import {
+  CreateReviewSwitch,
+  useCreateReview,
+} from '../../reviews/_components/CreateReviewSwitch'
 
 export interface FunctionWizardVariable {
   key: string
@@ -133,9 +137,16 @@ export function RepositoryConfigView({
   const [branch, setBranch] = useState('')
   const [rootDirectory, setRootDirectory] = useState('./')
   const [silentMode, setSilentMode] = useState(false)
+  const review = useCreateReview(
+    projectId,
+    installationId,
+    providerRepositoryId,
+  )
   const [variables, setVariables] = useState<FunctionWizardVariable[]>([])
   const [domain, setDomain] = useState('')
   const [domainValid, setDomainValid] = useState(false)
+  // Domain follows the function name until the user edits it
+  const domainEditedRef = useRef(false)
   const [isPublic, setIsPublic] = useState(true)
   const [specification, setSpecification] = useState('')
   const [isDeploying, setIsDeploying] = useState(false)
@@ -236,7 +247,7 @@ export function RepositoryConfigView({
   }
 
   useEffect(() => {
-    if (functionName && !domain) {
+    if (functionName && !domainEditedRef.current) {
       setDomain(generateDomain(functionName))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -290,6 +301,8 @@ export function RepositoryConfigView({
         buildSpecification: specification || undefined,
       })
       created = true
+
+      await review.apply()
 
       await projectSdk.proxy.createFunctionRule({
         domain: domainTrimmed,
@@ -686,6 +699,9 @@ export function RepositoryConfigView({
         setDomain={setDomain}
         domainValid={domainValid}
         setDomainValid={setDomainValid}
+        onEdit={() => {
+          domainEditedRef.current = true
+        }}
       />
 
       {/* Production branch – when Git is used */}
@@ -724,6 +740,7 @@ export function RepositoryConfigView({
             </div>
             <Switch checked={silentMode} onCheckedChange={setSilentMode} />
           </div>
+          <CreateReviewSwitch review={review} />
         </div>
       </div>
 

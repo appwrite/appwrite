@@ -10,7 +10,7 @@ import {
 export const QUALITY_ACCOUNT_LABEL = 'quality'
 
 export type Experiment = {
-  flag: 'alerts' | 'analytics' | 'projectEnvironments' | 'videos'
+  flag: 'alertCtas' | 'alerts' | 'analytics' | 'gitInstallationReuse' | 'videos'
   name: string
   description: string
   /** Day the experiment reached the popover, as `YYYY-MM-DD`. */
@@ -29,12 +29,6 @@ export const EXPERIMENTS: readonly Experiment[] = [
     introducedAt: '2026-10-23',
   },
   {
-    flag: 'projectEnvironments',
-    name: 'Project environments',
-    description: 'Switch or clone staging and production.',
-    introducedAt: '2026-10-29',
-  },
-  {
     flag: 'alerts',
     name: 'Monitors and alerts',
     description: 'Get alerted when project usage crosses a threshold.',
@@ -45,6 +39,18 @@ export const EXPERIMENTS: readonly Experiment[] = [
     name: 'Appwrite Videos',
     description: 'Transcode, stream, and caption videos.',
     introducedAt: '2026-11-19',
+  },
+  {
+    flag: 'gitInstallationReuse',
+    name: 'Git installation reuse',
+    description: 'Reuse GitHub organizations connected in your other projects.',
+    introducedAt: '2026-11-25',
+  },
+  {
+    flag: 'alertCtas',
+    name: 'Alert CTAs',
+    description: 'Buttons on notifications that open the page to act on.',
+    introducedAt: '2026-11-26',
   },
 ]
 

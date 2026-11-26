@@ -13,6 +13,7 @@
 //! call dispatched by the engine to its own method.
 
 pub mod hashes;
+mod native;
 
 use std::sync::atomic::{AtomicPtr, Ordering};
 
@@ -20,10 +21,12 @@ use ext_php_rs::args::{Arg, ArgInfoTables};
 use ext_php_rs::builders::FunctionBuilder;
 use ext_php_rs::exception::throw;
 use ext_php_rs::flags::{ClassFlags, DataType, MethodFlags};
-use ext_php_rs::types::{ZendObject, Zval};
+use ext_php_rs::types::{ZendObject, ZendStr, Zval};
 use ext_php_rs::zend::{ClassEntry, ExecuteData, ExecutorGlobals};
 
-use crate::classes::engine::{self, Key, MAY_BE_ANY, MAY_BE_ARRAY, MAY_BE_STRING, Property, string, too_few};
+use crate::classes::engine::{
+    self, Key, KeyRef, Literal, MAY_BE_ANY, MAY_BE_ARRAY, MAY_BE_STRING, Property, string, too_few,
+};
 use crate::classes::leaf::{self, Method, PUBLIC, this};
 
 /// The base class's name, which the hashes extend.
@@ -112,34 +115,73 @@ pub fn exact(this: &ZendObject, class: &ClassEntry) -> bool {
     std::ptr::eq(this.ce, class)
 }
 
+/// `ZEND_INTERNAL_CLASS`: a class an extension registered.
+const INTERNAL_CLASS: std::ffi::c_char = 1;
+
+/// The `$options` slot of an object of this module's classes, holding an array: none of them
+/// redeclares the property, so it sits where `Hash` declared it. A PHP subclass may redeclare
+/// it (with hooks) and goes through the engine, as does a slot unset or holding a reference.
+fn options_slot(this: &mut ZendObject) -> Option<&mut Zval> {
+    // SAFETY: an object's class lives as long as the object.
+    if unsafe { (*this.ce).type_ } != INTERNAL_CLASS {
+        return None;
+    }
+    engine::private_slot(this, &OPTIONS).filter(|slot| slot.is_array())
+}
+
 /// `$this->options`, `None` with the exception pending (a subclass that unset it).
 fn options(this: &mut ZendObject) -> Option<Zval> {
+    if let Some(slot) = options_slot(this) {
+        return Some(slot.shallow_clone());
+    }
     engine::get(base_class(), this, &OPTIONS)
 }
 
-/// `$this->options[$key] = $value`.
+/// `$this->options[$key] = $value`: in place, as PHP writes it, on this module's classes.
 fn store(this: &mut ZendObject, key: &[u8], value: Zval) -> Option<()> {
+    if let Some(table) = options_slot(this).and_then(engine::separate) {
+        engine::update(table, &Key::of(key), value);
+        return Some(());
+    }
     let current = options(this)?;
     let updated = engine::array_with(&current, &Key::of(key), value);
     engine::set(base_class(), this, &OPTIONS, updated);
     (!ExecutorGlobals::has_exception()).then_some(())
 }
 
-/// `$this->options[$key] ?? $default`.
-fn lookup(this: &mut ZendObject, key: &[u8], default: Zval) -> Option<Zval> {
-    let options = options(this)?;
-    Some(match engine::array_get(&options, &Key::of(key)) {
-        Some(value) if !value.is_null() => value.shallow_clone(),
-        _ => default,
-    })
+/// `$this->options[$name] = $value` for a `name` that is not a canonical integer (a literal, or
+/// a string key of an array): the table shares the string rather than copying it.
+fn store_name(this: &mut ZendObject, name: &ZendStr, value: Zval) -> Option<()> {
+    if let Some(table) = options_slot(this).and_then(engine::separate) {
+        engine::update_name(table, name, value);
+        return Some(());
+    }
+    store(this, name.as_bytes(), value)
 }
 
-/// `$this->setOption($key, $value)` on an object of `class` or a subclass.
-pub fn set_option_on(this: &mut ZendObject, class: &ClassEntry, key: &[u8], value: Zval) -> Option<()> {
-    if exact(this, class) {
-        return store(this, key, value);
+/// `$this->options[$key] ?? $default`.
+fn lookup(this: &mut ZendObject, key: &[u8], default: Zval) -> Option<Zval> {
+    let found = |options: &Zval| match engine::array_get(options, &Key::of(key)) {
+        Some(value) if !value.is_null() => Some(value.shallow_clone()),
+        _ => None,
+    };
+    if let Some(slot) = options_slot(this) {
+        return Some(found(slot).unwrap_or(default));
     }
-    engine::call_own_method(this, "setOption", &[&string(key), &value]).map(drop)
+    let options = options(this)?;
+    Some(found(&options).unwrap_or(default))
+}
+
+/// `$this->setOption($key, $value)` with a literal `key`, on an object of `class` or a subclass:
+/// the key interned, as PHP's literals are.
+pub fn set_literal_option(this: &mut ZendObject, class: &ClassEntry, key: &Literal, value: Zval) -> Option<()> {
+    if exact(this, class) {
+        return match key.zend_str() {
+            Some(name) => store_name(this, name, value),
+            None => store(this, key.text().as_bytes(), value),
+        };
+    }
+    engine::call_own_method(this, "setOption", &[&key.zval(), &value]).map(drop)
 }
 
 /// `$this->getOption($key)` on an object of `class` or a subclass.
@@ -159,9 +201,9 @@ pub fn options_of(this: &mut ZendObject, class: &ClassEntry) -> Option<Zval> {
 }
 
 /// `$this->getName()` on an object of `class` (named `name`) or a subclass.
-pub fn name_of(this: &mut ZendObject, class: &ClassEntry, name: &str) -> Option<Zval> {
+pub fn name_of(this: &mut ZendObject, class: &ClassEntry, name: &Literal) -> Option<Zval> {
     if exact(this, class) {
-        return Some(string(name.as_bytes()));
+        return Some(name.zval());
     }
     engine::call_own_method(this, "getName", &[])
 }
@@ -201,31 +243,34 @@ extern "C" fn set_options(ex: &mut ExecuteData, retval: &mut Zval) {
     let Some(args) = args(ex, "Utopia\\Auth\\Hash::setOptions", 1, 1) else { return };
     let Some(list) = engine::array_arg(ex, 1, args[0]) else { return };
     let Some(this) = this(ex) else { return };
-    let base = base_class();
-    // `foreach ($options as $key => $value) { $this->setOption($key, $value); }`, the loop
-    // over the array as it was passed.
-    let entries = list.array().map(engine::entries).unwrap_or_default();
-    for (key, value) in entries {
-        let overridden = !exact(this, base) && overrides_set_option(this);
-        match key {
-            Key::Name(name) if !overridden => {
-                if store(this, &name, value).is_none() {
-                    return;
-                }
-            }
-            Key::Name(name) => {
-                if engine::call_own_method(this, "setOption", &[&string(&name), &value]).is_none() {
-                    return;
-                }
-            }
-            // `Hash.php` declares `strict_types`: an integer key is a `TypeError` for the
-            // `string $key` of `setOption()` (PHP adds where `Hash.php` made the call).
-            Key::Index(_) if !overridden => {
+    // `foreach ($options as $key => $value) { $this->setOption($key, $value); }`.
+    if exact(this, base_class()) || !overrides_set_option(this) {
+        // No PHP code runs in the loop, so it reads the passed array in place.
+        for (key, value) in list.array().into_iter().flat_map(engine::keyed_values) {
+            let KeyRef::Name(name) = key else {
+                // `Hash.php` declares `strict_types`: an integer key is a `TypeError` for the
+                // `string $key` of `setOption()` (PHP adds where `Hash.php` made the call).
                 fail(
                     "TypeError",
                     "Utopia\\Auth\\Hash::setOption(): Argument #1 ($key) must be of type string, int given",
                 );
                 return;
+            };
+            if store_name(this, name, value.dereference().shallow_clone()).is_none() {
+                return;
+            }
+        }
+        return return_this(ex, retval);
+    }
+    // A subclass's own `setOption()` runs PHP code, so the loop goes over the array as it was
+    // passed, copied first.
+    let entries = list.array().map(engine::entries).unwrap_or_default();
+    for (key, value) in entries {
+        match key {
+            Key::Name(name) => {
+                if engine::call_own_method(this, "setOption", &[&string(&name), &value]).is_none() {
+                    return;
+                }
             }
             Key::Index(i) => {
                 if let Some(error) = strict_key_error(this) {

@@ -8,11 +8,22 @@ import type {
 const INIT_DISCORD_HREF = '/discord'
 import { ZERO_PRODUCT_ICON } from '@/lib/zero/product-icon'
 
+/**
+ * The Init project, where the launch films live as public Appwrite Videos
+ * (HLS at 360p, 720p and 1080p), uploaded from the videos repo's renders.
+ */
+const INIT_FILMS_PROJECT_ID = '659868b10fff07726b85'
+
+function film(videoId: string, label: string) {
+  return { projectId: INIT_FILMS_PROJECT_ID, videoId, label }
+}
+
 export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
   {
     day: 1,
     dateLabel: 'NOVEMBER 30',
     weekdayLabel: 'MONDAY, NOVEMBER 30',
+    films: [film('6b06b807746b9f1ac5e4', 'Appwrite Analytics')],
     title: 'Introducing Appwrite Analytics',
     description: 'Privacy-friendly analytics for your websites and apps.',
     longDescription:
@@ -58,6 +69,8 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     day: 2,
     dateLabel: 'DECEMBER 1',
     weekdayLabel: 'TUESDAY, DECEMBER 1',
+    films: [film('6b06b8ea2b4ba42f96fc', 'Appwrite Videos')],
+    launchesFilmPlayer: true,
     title: 'Introducing Appwrite Videos',
     description: 'Transcode, stream, and caption video in your project.',
     longDescription:
@@ -95,6 +108,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     day: 3,
     dateLabel: 'DECEMBER 2',
     weekdayLabel: 'WEDNESDAY, DECEMBER 2',
+    films: [film('6b06b92633329b5d1258', 'Appwrite Zero')],
     title: 'Introducing Appwrite Zero',
     description: 'A working Appwrite project, no signup needed.',
     longDescription:
@@ -130,21 +144,58 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
       imageAlt:
         'Know when your project needs you: a bandwidth monitor triggered as usage crosses its threshold, and the alert arriving as a push from Appwrite Beep',
     },
-    sessionCount: 1,
-    resources: [
+    announcements: [
       {
-        id: 'init5-day4-announce',
-        typeLabel: 'Blog',
-        title: 'Introducing Appwrite Monitors & Appwrite Beep',
-        href: '/init',
-        actionLabel: 'Coming soon',
+        id: 'monitors',
+        title: 'Introducing Appwrite Monitors',
+        longDescription:
+          'Appwrite Monitors alert you when your project crosses a threshold you set, like bandwidth nearing your plan, before it becomes a problem.',
+        visual: {
+          mockVisualId: 'monitors',
+          imageAlt:
+            'A bandwidth monitor triggered as usage crosses its 80% threshold',
+        },
+        films: [film('6b06b977275a9c08faf9', 'Appwrite Monitors')],
+        resources: [
+          {
+            id: 'init5-day4-monitors-announce',
+            typeLabel: 'Blog',
+            title: 'Introducing Appwrite Monitors',
+            href: '/init',
+            actionLabel: 'Coming soon',
+          },
+        ],
+      },
+      {
+        id: 'beep',
+        title: 'Introducing Appwrite Beep',
+        longDescription:
+          'Appwrite Beep, our mobile app, brings updates from your projects to your phone: triggered monitors, failed certificates and what is new in Appwrite. You choose what reaches you.',
+        visual: {
+          mockVisualId: 'beep',
+          imageAlt:
+            'Project updates arriving on a phone as pushes from Appwrite Beep: a triggered monitor, a failed SSL certificate and an Appwrite launch',
+        },
+        films: [film('6b06b9bb1fe47403a7a5', 'Appwrite Beep')],
+        resources: [
+          {
+            id: 'init5-day4-beep-announce',
+            typeLabel: 'Blog',
+            title: 'Introducing Appwrite Beep',
+            href: '/init',
+            actionLabel: 'Coming soon',
+          },
+        ],
       },
     ],
+    sessionCount: 1,
+    resources: [],
   },
   {
     day: 5,
     dateLabel: 'DECEMBER 4',
     weekdayLabel: 'FRIDAY, DECEMBER 4',
+    films: [film('6b06ba0983ebf4f23ebb', 'Appwrite Reviews')],
     title: 'Introducing Appwrite Reviews',
     description: 'Code review for your Sites, Functions and repositories.',
     longDescription:
@@ -251,6 +302,7 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
       platform: 'discord',
       href: INIT_DISCORD_HREF,
       prizeDescription: 'Init 5 hoodie and cap',
+      presenceActivity: 'Hoodie and cap wishlist',
       // Init has no light theme: both themes show the image on its own dark ground.
       visual: {
         imageAlt: 'Day 1 giveaway: the Init 5 hoodie and the init_ cap',
@@ -266,6 +318,7 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
       platform: 'discord',
       href: INIT_DISCORD_HREF,
       prizeDescription: 'Light Appwriter keyboard and desk mat',
+      presenceActivity: 'Keyboard and desk mat envy',
       visual: {
         imageAlt:
           'Day 2 giveaway: a light Appwriter keyboard on the Init 5 desk mat',
@@ -281,6 +334,7 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
       platform: 'discord',
       href: INIT_DISCORD_HREF,
       prizeDescription: 'Dark Appwriter keyboard, mug and stickers',
+      presenceActivity: 'Keyboard, mug and sticker dreams',
       visual: {
         imageAlt:
           'Day 3 giveaway: a dark Appwriter keyboard, the Init 5 mug and the Init 5 sticker sheet',
@@ -296,6 +350,7 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
       platform: 'discord',
       href: INIT_DISCORD_HREF,
       prizeDescription: 'Init 5 tee, beanie and poster',
+      presenceActivity: 'Tee, beanie and poster wishlist',
       visual: {
         imageAlt:
           'Day 4 giveaway: the Init 5 Five Days tee, the init_ beanie and the Init 5 poster',
@@ -312,6 +367,7 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
     platform: 'discord',
     href: INIT_DISCORD_HREF,
     title: 'The full Init 5 swag collection',
+    presenceActivity: 'Full swag collection dreams',
     description:
       'All eight pieces: hoodie, tee, cap, beanie, mug, sticker sheet, poster and desk mat.',
     eligibility: 'Share Init on social during the week to enter.',

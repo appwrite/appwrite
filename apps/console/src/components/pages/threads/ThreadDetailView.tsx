@@ -37,7 +37,7 @@ export function ThreadDetailView({
 
   return (
     <div className="relative overflow-x-hidden bg-background">
-      <section className="border-b border-border bg-[radial-gradient(circle_at_top_right,hsl(var(--muted))_0,transparent_34rem)] py-10 sm:py-14">
+      <section className="border-b border-border bg-[radial-gradient(circle_at_top_right,var(--muted)_0,transparent_34rem)] py-10 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <Button variant="ghost" size="sm" className="-ms-2 mb-6 h-8 px-2" asChild>
             <Link to="/threads">

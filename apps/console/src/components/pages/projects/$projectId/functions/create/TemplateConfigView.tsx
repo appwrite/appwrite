@@ -59,6 +59,10 @@ import type { FunctionWizardVariable } from './RepositoryConfigView'
 import { useT } from '@/lib/i18n/translate'
 import { buildVcsAuthUrl, type VcsProviderId } from '@/lib/vcs/providers'
 import { validateVariables } from '@/lib/variables'
+import {
+  CreateReviewSwitch,
+  useCreateReview,
+} from '../../reviews/_components/CreateReviewSwitch'
 
 interface TemplateConfigViewProps {
   templateId: string
@@ -100,6 +104,11 @@ export function TemplateConfigView({
   const [specification, setSpecification] = useState('')
   const [isDeploying, setIsDeploying] = useState(false)
   const [gitConnection, setGitConnection] = useState<'now' | 'later'>('later')
+  const review = useCreateReview(
+    projectId,
+    formData.installationId,
+    formData.providerRepositoryId,
+  )
 
   const connectRepoValue: ConnectRepositoryValue = useMemo(
     () => ({
@@ -328,6 +337,10 @@ export function TemplateConfigView({
         buildSpecification: specification || undefined,
       })
       created = true
+
+      if (connectNow) {
+        await review.apply()
+      }
 
       await projectSdk.proxy.createFunctionRule({
         domain: domainTrimmed,
@@ -755,7 +768,9 @@ export function TemplateConfigView({
             'Create and deploy a Function with a connected git repository.',
           )}
           className="mb-6"
-        />
+        >
+          <CreateReviewSwitch review={review} />
+        </ConnectRepositorySection>
       )}
 
       {/* Environment variables – template vars or shared card */}

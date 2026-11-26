@@ -45,7 +45,7 @@ interface InviteMembersDialogProps {
   memberLimit: number | null
 }
 
-const ROLE_OPTIONS = [
+export const ROLE_OPTIONS = [
   {
     value: 'owner',
     label: 'Owner',

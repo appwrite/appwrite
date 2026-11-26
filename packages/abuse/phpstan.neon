@@ -3,6 +3,8 @@ includes:
 
 parameters:
     level: max
+    scanFiles:
+        - stubs/Hash.php
     paths:
         - src
         - tests

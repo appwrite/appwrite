@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import { isRedirect } from '@tanstack/react-router'
 import {
   CONSOLE_PROFILES,
+  getCanonicalProfileFeatures,
   getDebugProfileFeatureOverrides,
 } from '@/lib/console-profiles'
 import {
@@ -25,17 +26,19 @@ describe('hasQualityLabel', () => {
 })
 
 describe('experiments catalog', () => {
-  test('lists Appwrite Analytics, project environments, alerts and Videos', () => {
+  test('lists Appwrite Analytics, alerts, Videos, Git installation reuse and alert CTAs', () => {
     expect(EXPERIMENTS.map((experiment) => experiment.flag)).toEqual([
       'analytics',
-      'projectEnvironments',
       'alerts',
       'videos',
+      'gitInstallationReuse',
+      'alertCtas',
     ])
     expect(EXPERIMENTS[0]?.name).toBe('Appwrite Analytics')
-    expect(EXPERIMENTS[1]?.name).toBe('Project environments')
-    expect(EXPERIMENTS[2]?.name).toBe('Monitors and alerts')
-    expect(EXPERIMENTS[3]?.name).toBe('Appwrite Videos')
+    expect(EXPERIMENTS[1]?.name).toBe('Monitors and alerts')
+    expect(EXPERIMENTS[2]?.name).toBe('Appwrite Videos')
+    expect(EXPERIMENTS[3]?.name).toBe('Git installation reuse')
+    expect(EXPERIMENTS[4]?.name).toBe('Alert CTAs')
     for (const experiment of EXPERIMENTS) {
       expect(experiment.description.length).toBeGreaterThan(0)
     }
@@ -49,6 +52,27 @@ describe('experiments catalog', () => {
       EXPERIMENTS.some(
         (experiment) => (experiment.flag as string) === 'vcsOrigin',
       ),
+    ).toBe(false)
+  })
+
+  test('Project environments are generally available: no feature flag and not in the previews menu', () => {
+    for (const profile of Object.values(CONSOLE_PROFILES)) {
+      expect(profile.features).not.toHaveProperty('projectEnvironments')
+    }
+    expect(
+      EXPERIMENTS.some(
+        (experiment) => (experiment.flag as string) === 'projectEnvironments',
+      ),
+    ).toBe(false)
+  })
+
+  test('Single sign-on is generally available on Cloud: on without a preview, and never on self-hosted', () => {
+    expect(CONSOLE_PROFILES.cloud.features.sso).toBe(true)
+    expect(getCanonicalProfileFeatures('cloud').sso).toBe(true)
+    // Self-hosted has no API for it, whatever its profile says
+    expect(getCanonicalProfileFeatures('self-hosted').sso).toBe(false)
+    expect(
+      EXPERIMENTS.some((experiment) => (experiment.flag as string) === 'sso'),
     ).toBe(false)
   })
 
@@ -104,6 +128,44 @@ describe('Origin flag removal', () => {
     const overrides = getDebugProfileFeatureOverrides()
     expect('vcsOrigin' in overrides).toBe(false)
     expect('extraVcsOAuth' in overrides).toBe(false)
+  })
+})
+
+describe('project environments flag removal', () => {
+  const globals = globalThis as { window?: unknown; localStorage?: unknown }
+  const originalWindow = globals.window
+  const originalLocalStorage = globals.localStorage
+
+  afterEach(() => {
+    globals.window = originalWindow
+    globals.localStorage = originalLocalStorage
+  })
+
+  test('an environments override saved in the browser is dropped', () => {
+    const storage = new Map<string, string>([
+      [
+        'debug:consoleProfile',
+        JSON.stringify({
+          id: 'cloud',
+          features: { projectEnvironments: false },
+        }),
+      ],
+    ])
+    const localStorage = {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => void storage.set(key, value),
+      removeItem: (key: string) => void storage.delete(key),
+    }
+    globals.localStorage = localStorage
+    globals.window = {
+      localStorage,
+      location: new URL('https://cloud.appwrite.io/console'),
+      dispatchEvent: () => true,
+    }
+
+    expect('projectEnvironments' in getDebugProfileFeatureOverrides()).toBe(
+      false,
+    )
   })
 })
 

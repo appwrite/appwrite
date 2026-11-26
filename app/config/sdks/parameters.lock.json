@@ -248,7 +248,9 @@
             "userId",
             "secret"
         ],
-        "avatars.deletePhoto": [],
+        "avatars.deletePhoto": [
+            "userId"
+        ],
         "avatars.getTeamPhoto": [
             "teamId",
             "width",
@@ -334,7 +336,8 @@
             "output"
         ],
         "avatars.updatePhoto": [
-            "file"
+            "file",
+            "userId"
         ],
         "databases.createDocument": [
             "databaseId",
@@ -1301,7 +1304,9 @@
             "alertId",
             "acknowledged"
         ],
-        "avatars.deletePhoto": [],
+        "avatars.deletePhoto": [
+            "userId"
+        ],
         "avatars.getTeamPhoto": [
             "teamId",
             "width",
@@ -1387,7 +1392,8 @@
             "output"
         ],
         "avatars.updatePhoto": [
-            "file"
+            "file",
+            "userId"
         ],
         "console.getEmailTemplate": [
             "templateId",
@@ -3495,6 +3501,12 @@
         "project.updateOAuth2Box": [
             "clientId",
             "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Clerk": [
+            "clientId",
+            "clientSecret",
+            "endpoint",
             "enabled"
         ],
         "project.updateOAuth2Cloudflare": [
@@ -5906,7 +5918,9 @@
             "alertId",
             "acknowledged"
         ],
-        "avatars.deletePhoto": [],
+        "avatars.deletePhoto": [
+            "userId"
+        ],
         "avatars.getTeamPhoto": [
             "teamId",
             "width",
@@ -5992,7 +6006,8 @@
             "output"
         ],
         "avatars.updatePhoto": [
-            "file"
+            "file",
+            "userId"
         ],
         "databases.create": [
             "databaseId",
@@ -7657,10 +7672,19 @@
             "scopes",
             "duration"
         ],
+        "organization.createEscalation": [
+            "escalationId",
+            "name",
+            "steps",
+            "repeat"
+        ],
         "organization.createProject": [
             "projectId",
             "name",
             "region"
+        ],
+        "organization.deleteEscalation": [
+            "escalationId"
         ],
         "organization.deleteProject": [
             "projectId"
@@ -7669,12 +7693,19 @@
             "projectId",
             "keyId"
         ],
+        "organization.getEscalation": [
+            "escalationId"
+        ],
         "organization.getProject": [
             "projectId"
         ],
         "organization.getProjectKey": [
             "projectId",
             "keyId"
+        ],
+        "organization.listEscalations": [
+            "queries",
+            "total"
         ],
         "organization.listProjectKeys": [
             "projectId",
@@ -7685,6 +7716,12 @@
             "queries",
             "search",
             "total"
+        ],
+        "organization.updateEscalation": [
+            "escalationId",
+            "name",
+            "steps",
+            "repeat"
         ],
         "organization.updateProject": [
             "projectId",
@@ -8012,6 +8049,12 @@
         "project.updateOAuth2Box": [
             "clientId",
             "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Clerk": [
+            "clientId",
+            "clientSecret",
+            "endpoint",
             "enabled"
         ],
         "project.updateOAuth2Cloudflare": [

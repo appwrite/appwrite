@@ -87,9 +87,9 @@ unsafe extern "C" {
     fn zend_release_fcall_info_cache(fcc: *mut c_void);
 }
 
-/// The engine's executor globals (`EG`).
+/// The engine's executor globals (`EG`), read without ext-php-rs's guard.
 #[inline]
-fn executor_globals() -> *mut ext_php_rs::ffi::zend_executor_globals {
+pub fn executor_globals() -> *mut ext_php_rs::ffi::zend_executor_globals {
     // SAFETY: the engine's own globals, alive for the process.
     unsafe { ext_php_rs::ffi::ext_php_rs_executor_globals() }
 }
@@ -366,16 +366,24 @@ pub fn array_slot<'a>(
     property: &Property,
 ) -> Option<&'a mut ZendHashTable> {
     let slot = own_slot(scope, this, property)?;
+    // SAFETY: reading the next free index of a live array slot's table.
+    if !slot.is_array() || unsafe { (*slot.value.arr).nNextFreeElement } == i64::MAX {
+        return None;
+    }
+    separate(slot)
+}
+
+/// The array `slot` holds, made the slot's own to write in place (`SEPARATE_ARRAY`): a shared
+/// or immutable table is replaced by a copy the slot owns. `None` for a slot that holds no
+/// array (a reference included).
+pub fn separate(slot: &mut Zval) -> Option<&mut ZendHashTable> {
     if !slot.is_array() {
         return None;
     }
-    // SAFETY: an array slot: its table is live; a shared or immutable one is replaced by a
-    // copy the slot owns (`SEPARATE_ARRAY`), then appended to in place.
+    // SAFETY: an array slot: its table is live; a shared or immutable one is released by the
+    // slot for the copy it then owns.
     unsafe {
         let mut table = slot.value.arr;
-        if (*table).nNextFreeElement == i64::MAX {
-            return None;
-        }
         if (*table.cast::<ZendHashTable>()).is_immutable() {
             table = zend_array_dup(table);
         } else if (*table).gc.refcount > 1 {
@@ -720,6 +728,17 @@ unsafe fn slot(ht: &ZendHashTable, i: usize) -> *mut Zval {
     }
 }
 
+/// [`values`], to change in place: `ht` must be separated (the caller's own).
+pub fn values_mut(ht: &mut ZendHashTable) -> impl Iterator<Item = &mut Zval> {
+    let ht: &ZendHashTable = ht;
+    (0..ht.nNumUsed as usize).filter_map(move |i| {
+        // SAFETY: within the used slots of a table the caller holds alone; each slot is
+        // handed out once.
+        let value = unsafe { &mut *slot(ht, i) };
+        (unsafe { value.u1.type_info } != 0).then_some(value)
+    })
+}
+
 /// `ht`'s values in order, read straight from its slots (packed or not), skipping the holes
 /// deletions leave: what `foreach` visits.
 pub fn values(ht: &ZendHashTable) -> impl Iterator<Item = &Zval> {
@@ -841,6 +860,17 @@ pub struct Literal {
 impl Literal {
     pub const fn new(text: &'static str) -> Self {
         Self { text, string: std::sync::atomic::AtomicPtr::new(std::ptr::null_mut()) }
+    }
+
+    pub fn text(&self) -> &'static str {
+        self.text
+    }
+
+    /// The interned string, once [`Literal::intern`] has run.
+    #[inline]
+    pub fn zend_str(&self) -> Option<&'static ZendStr> {
+        // SAFETY: an interned string lives for the process.
+        unsafe { self.string.load(Ordering::Acquire).cast::<ZendStr>().as_ref() }
     }
 
     /// Interns the string; called in MINIT, before any call.
@@ -1607,6 +1637,41 @@ pub fn array_with(array: &Zval, key: &Key, mut value: Zval) -> Zval {
         zval.set_hashtable(ZBox::from_raw(copy));
         zval
     }
+}
+
+/// `$table[$key] = $value` in place, on a table the caller owns (see [`separate`]): the old
+/// element is released, and the table takes `value`.
+pub fn update(table: &mut ZendHashTable, key: &Key, mut value: Zval) {
+    let ht = std::ptr::from_mut(table).cast::<HashTable>();
+    // SAFETY: a live table owned by the caller; the slot the engine stores into owns what
+    // `value` held.
+    unsafe {
+        match key {
+            Key::Index(i) => {
+                ext_php_rs::ffi::zend_hash_index_update(ht, *i as u64, std::ptr::from_mut(&mut value).cast());
+            }
+            Key::Name(name) => {
+                zend_hash_str_update(ht, name.as_ptr().cast(), name.len(), std::ptr::from_mut(&mut value).cast());
+            }
+        }
+    }
+    std::mem::forget(value);
+}
+
+/// `$table[$name] = $value` in place, on a table the caller owns (see [`separate`]), for a
+/// `name` that is not a canonical integer (a literal, or a string key of another array): the
+/// table shares the string, as the engine does, rather than copying it.
+pub fn update_name(table: &mut ZendHashTable, name: &ZendStr, mut value: Zval) {
+    // SAFETY: a live table owned by the caller and a live string, whose reference the engine
+    // adds when it stores a new key; the slot it stores into owns what `value` held.
+    unsafe {
+        ext_php_rs::ffi::zend_hash_update(
+            std::ptr::from_mut(table).cast(),
+            std::ptr::from_ref(name).cast_mut().cast(),
+            std::ptr::from_mut(&mut value).cast(),
+        );
+    }
+    std::mem::forget(value);
 }
 
 /// An array key as a table holds it: an index, or a name.

@@ -37,8 +37,10 @@ use Appwrite\Network\Validator\DeploymentHostname;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
+use Appwrite\Platform\Modules\Videos\SegmentCache;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
+use Appwrite\Storage\Uploads;
 use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Utopia\Database\Documents\Project;
 use Appwrite\Vcs\Factory as VcsFactory;
@@ -338,6 +340,7 @@ $container->set('executionStore', function (): ExecutionStore {
         dsn: $connection,
         client: $client,
         retention: (int) System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600),
+        insertBuffer: max(0, (int) System::getEnv('_APP_EXECUTIONS_INSERT_BUFFER', 0)),
     );
 }, []);
 
@@ -441,7 +444,14 @@ $container->set('cache', function (Registry $register, Telemetry $telemetry) {
 
 $container->set('cacheControlForStorage', fn () => fn (StorageCacheControl $config): string => \sprintf('private, max-age=%d', $config->maxAge));
 
+// Cloud replaces this with a Fastly purge of the video Surrogate-Key.
+// Self-hosted has no CDN in front of playback, so the default does nothing.
+$container->set('purgeVideoSegmentCache', fn () => new SegmentCache());
+
+
 $container->set('locks', fn (Group $pools) => Locks::using($pools), ['pools']);
+
+$container->set('uploads', fn (Group $pools) => new Uploads(fn (callable $callback): mixed => $pools->get('lock')->use($callback)), ['pools']);
 
 // The lease spans the callback; throwing from it makes the pool reconnect the socket.
 $container->set('timelimit', fn (Group $pools) => fn (string $key, int $limit, int $seconds, callable $callback): mixed => $pools->get('abuse')->use(

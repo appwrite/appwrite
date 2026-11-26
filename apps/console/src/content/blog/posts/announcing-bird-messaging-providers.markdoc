@@ -1,0 +1,151 @@
+---
+layout: post
+title: "Announcing Bird email and SMS in Appwrite Messaging"
+description: Appwrite Messaging now sends email and SMS through Bird, with one-click Bird setup in the Console for both providers and for your project's custom SMTP.
+date: 2026-11-25
+cover: /images/blog/announcing-bird-messaging-providers/cover.avif
+timeToRead: 7
+author: aditya-oberai
+category: announcements
+featured: false
+faqs:
+  - question: "Which Bird providers does Appwrite Messaging support?"
+    answer: "Appwrite Messaging has two Bird providers. The [Bird email provider](/docs/products/messaging/bird-email) sends through Bird's HTTP email API, and the [Bird SMS provider](/docs/products/messaging/bird-sms) sends through Bird's SMS API. Both appear as **Bird** under **Messaging** > **Providers** > **Add provider**, once under **Email** and once under **SMS**, and each takes its own Bird API key."
+  - question: "What Bird API key scopes do the Appwrite providers need?"
+    answer: "The email provider needs a key with the `emails` scope at the `write` level (`emails:write`), and the SMS provider needs the `sms` scope at the `write` level (`sms:write`). Create keys in Bird under **Platform tools** > **API keys**, or let one-click setup on Appwrite Cloud create a key with exactly that one scope for you."
+  - question: "How does Appwrite know which Bird region to send to?"
+    answer: "Bird API keys start with `bk_` followed by the region of your workspace, such as `bk_eu1_` or `bk_us1_`. Appwrite reads that prefix and sends to the matching regional API host, `https://<region>.platform.bird.com`. One-click SMTP setup uses the same region to pick the relay host, such as `eu1.smtp.bird.com`."
+  - question: "Is one-click Bird setup available on self-hosted Appwrite?"
+    answer: "No. One-click setup relies on Bird being configured as an OAuth2 provider for the Appwrite Cloud Console, so it only appears on Appwrite Cloud. The Bird email and SMS providers themselves are live on Appwrite Cloud and ship in the next self-hosted Appwrite release, where you create the API key in Bird and enter it by hand."
+  - question: "Why does Bird refuse my test emails to example.com addresses?"
+    answer: "Bird refuses placeholder domains such as `example.com` and `test.com`. Appwrite retries a refused batch one message at a time, so only those recipients fail and the rest are delivered. Use real addresses for test users, or Bird's sandbox addresses such as `delivered@messagebird.dev`, which accept mail without a real inbox."
+---
+
+If your team already sends through [Bird](https://bird.com), connecting it to Appwrite used to take a detour. Email only worked by pointing the generic [SMTP provider](/docs/products/messaging/smtp) at Bird's relay and working out the regional host and username yourself. SMS didn't work at all, so a project that sent email through Bird still needed a second vendor for one-time codes and reminders.
+
+Today, we are announcing **Bird email and SMS providers** in [Appwrite Messaging](/docs/products/messaging), along with **one-click Bird setup** in the Appwrite Console. Connect your Bird workspace once and Appwrite creates single-purpose API keys for email, SMS, and your project's custom SMTP.
+
+# What the Bird providers give you
+
+- **Email through Bird's API.** The Bird email provider sends over Bird's HTTP email API with an API key, not SMTP settings, like the Resend, SendGrid, Mailgun, and Amazon SES providers do.
+- **SMS through Bird.** The Bird SMS provider sends from a phone number or alphanumeric sender ID your Bird workspace owns.
+- **Regional routing from the key.** Bird keys carry their region, such as `bk_eu1_`, and Appwrite sends to that region's API without any extra setting.
+- **One-click setup on Appwrite Cloud.** Connect Bird and Appwrite creates a key with only `emails:write` or only `sms:write`, then fills in the provider for you.
+- **Custom SMTP with Bird.** The project **SMTP** tab gets a Bird tile next to Resend, so your authentication emails can go through Bird's relay too.
+- **One connection for all three.** The Bird connection lives on your Console account and covers both Messaging providers and custom SMTP in every project you manage.
+
+Both providers appear in the provider picker under **Messaging** > **Providers** > **Add provider**. Bird is the first vendor listed under both **Email** and **SMS**.
+
+{% only_dark %}
+![The Add provider page in Appwrite Messaging, with Bird listed under Email and under SMS](/images/blog/announcing-bird-messaging-providers/add-provider-dark.avif)
+{% /only_dark %}
+
+{% only_light %}
+![The Add provider page in Appwrite Messaging, with Bird listed under Email and under SMS](/images/blog/announcing-bird-messaging-providers/add-provider.avif)
+{% /only_light %}
+
+# Send email through Bird
+
+Before you start, verify a sending domain under **Email** > **Domains** in your Bird workspace. Bird only sends from verified domains and checks the DKIM, return-path, and DMARC records it gives you.
+
+1. Go to **Messaging** > **Providers** > **Add provider** and choose **Bird** under **Email**.
+2. On Appwrite Cloud, click **Connect with Bird** on the **One-click setup** card and authorize Appwrite in Bird.
+3. Pick a verified **Domain** and click **Generate API key**.
+4. Review the filled-in fields and click **Create provider**.
+
+{% only_dark %}
+![The Configure Bird step for the email provider after connecting Bird, with a verified domain selected and the Generate API key button above the provider fields](/images/blog/announcing-bird-messaging-providers/one-click-bird-email-dark.avif)
+{% /only_dark %}
+
+{% only_light %}
+![The Configure Bird step for the email provider after connecting Bird, with a verified domain selected and the Generate API key button above the provider fields](/images/blog/announcing-bird-messaging-providers/one-click-bird-email.avif)
+{% /only_light %}
+
+Appwrite creates a key named `Appwrite SMTP: <project name>` with only the `emails:write` scope.
+
+To fill the form by hand instead, create a key under **Platform tools** > **API keys** in Bird with the `emails` scope at the `write` level and paste it into **API key**. The [Bird email docs](/docs/products/messaging/bird-email) cover both paths.
+
+# Send SMS through Bird
+
+The SMS provider needs a sender your workspace owns. On Bird's **Senders** page, buy a number or claim an alphanumeric sender ID, and enable the countries you send to under **SMS** > **Destinations**. Bird refuses messages to countries that aren't enabled, and the US doesn't accept alphanumeric sender IDs.
+
+1. Go to **Messaging** > **Providers** > **Add provider** and choose **Bird** under **SMS**.
+2. On Appwrite Cloud, click **Connect with Bird**. If you already connected Bird for email, the senders load straight away.
+3. Pick a **Sender** and click **Generate API key**.
+4. Review the fields and click **Create provider**.
+
+{% only_dark %}
+![The Configure Bird step for the SMS provider after connecting Bird, with a sender selected and the Generate API key button above the provider fields](/images/blog/announcing-bird-messaging-providers/one-click-bird-sms-dark.avif)
+{% /only_dark %}
+
+{% only_light %}
+![The Configure Bird step for the SMS provider after connecting Bird, with a sender selected and the Generate API key button above the provider fields](/images/blog/announcing-bird-messaging-providers/one-click-bird-sms.avif)
+{% /only_light %}
+
+This key is named `Appwrite SMS: <project name>` and holds only `sms:write`, so the email key and the SMS key stay separate. You can revoke either in Bird without touching the other channel. The [Bird SMS docs](/docs/products/messaging/bird-sms) list the manual fields and the sender rules.
+
+# Set up custom SMTP with Bird
+
+Custom SMTP replaces Appwrite Cloud's default sender for authentication emails, such as verification, magic URL, and password recovery, and unlocks [custom email templates](/docs/products/auth/message-templates#customize). It's available on Pro and higher plans.
+
+1. Open your project's **Settings** and go to the **SMTP** tab.
+2. Under **One-click setup**, click **Connect with Bird** on the Bird tile.
+3. Select a verified **Domain**, review the **Sender name** and **Sender email**, and click **Set up**.
+
+{% only_dark %}
+![The One-click setup card on the SMTP tab, with Resend, Bird, and Mailgun tiles above the Custom SMTP server form](/images/blog/announcing-bird-messaging-providers/smtp-one-click-setup-dark.avif)
+{% /only_dark %}
+
+{% only_light %}
+![The One-click setup card on the SMTP tab, with Resend, Bird, and Mailgun tiles above the Custom SMTP server form](/images/blog/announcing-bird-messaging-providers/smtp-one-click-setup.avif)
+{% /only_light %}
+
+The setup dialog fills in your project name and `noreply@<domain>` as the sender, and its sidebar shows the relay settings before you confirm them.
+
+{% only_dark %}
+![The Set up SMTP with Bird dialog: a verified sending domain, the sender name and email, and a sidebar with the Bird relay host, port, username, and TLS](/images/blog/announcing-bird-messaging-providers/smtp-bird-wizard-dark.avif)
+{% /only_dark %}
+
+{% only_light %}
+![The Set up SMTP with Bird dialog: a verified sending domain, the sender name and email, and a sidebar with the Bird relay host, port, username, and TLS](/images/blog/announcing-bird-messaging-providers/smtp-bird-wizard.avif)
+{% /only_light %}
+
+Appwrite creates a sending-only key and writes the relay settings for your workspace's region:
+
+| Setting | Value |
+| --- | --- |
+| Server host | `<region>.smtp.bird.com`, for example `eu1.smtp.bird.com` |
+| Server port | `587` |
+| Username | `bird` |
+| Secure protocol | TLS |
+| Password | The `emails:write` key Appwrite creates |
+
+Custom SMTP is enabled as soon as the setup finishes, and your existing reply-to address is kept. The full steps are in the [custom SMTP docs](/docs/products/auth/message-templates#smtp-one-click-setup).
+
+# How Bird delivery works in Appwrite
+
+A few details of the email provider are worth knowing before your first campaign:
+
+- **One message per recipient.** Every recipient in **To** gets a message of their own, with CC and BCC copied on each. Several recipients go to Bird in batches of up to 100.
+- **Failures stay per recipient.** Bird validates a batch as one unit and refuses all of it when one address is unacceptable. When that happens, Appwrite sends the batch again one message at a time, so only the refused recipient fails. This matters because Bird refuses placeholder domains such as `example.com`, which are common on test users.
+- **Transactional by default.** Both providers send with Bird's `transactional` category. Bird's own email default is `marketing`, which adds an unsubscribe link and holds mail back from anyone who opted out or is suppressed for any reason, including password resets they asked for.
+- **A 20 MB message limit.** Bird counts the body and attachments after base64 encoding, which leaves room for about 15 MB of files. Larger messages fail in Appwrite before reaching Bird.
+
+For tests without a real inbox, [Bird's mail sandbox](https://bird.com/docs/guides/email/testing-sandbox) accepts addresses such as `delivered@messagebird.dev` through the normal API.
+
+# When to reach for Bird
+
+- **Your team already runs email or SMS on Bird.** Keep your verified domains, senders, and delivery reporting in one place, and let Appwrite send through them.
+- **You want email and SMS from one vendor.** A single Bird workspace covers both Messaging providers and custom SMTP, with a separate key per channel.
+- **Your messaging needs to stay in one region.** Each Bird workspace lives in one region, `eu1` or `us1` today, and Appwrite only sends to the region named in your key.
+
+If you already send through another provider, there's no reason to switch. Appwrite Messaging supports [several email and SMS providers](/docs/products/messaging/providers), and you can run more than one in the same project.
+
+# Get started with Bird in Appwrite Messaging
+
+The Bird email and SMS providers and one-click Bird setup are live on [Appwrite Cloud](/sign-in) today. The providers ship in the next self-hosted Appwrite release. Open **Messaging** > **Providers**, choose **Bird**, and click **Connect with Bird**.
+
+- [Bird email provider](/docs/products/messaging/bird-email)
+- [Bird SMS provider](/docs/products/messaging/bird-sms)
+- [Custom SMTP with one-click setup](/docs/products/auth/message-templates#smtp-one-click-setup)
+- [Send SMS messages with Appwrite Messaging](/docs/products/messaging/send-sms-messages)

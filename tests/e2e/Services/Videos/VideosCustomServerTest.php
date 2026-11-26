@@ -2712,7 +2712,8 @@ final class VideosCustomServerTest extends Scope
     /**
      * A ready caption is an HLS subtitle rung: the master lists it, and the
      * playlist's first segment is the WebVTT cue. A private cache may hold
-     * those bytes and revalidate them. An unknown segment id is not a missing caption.
+     * those bytes and revalidate them; a year-long copy would keep playing
+     * after read access is revoked. An unknown segment id is not a missing caption.
      */
     public function testGetCaptionSegment(): void
     {
@@ -2742,6 +2743,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertStringContainsString('WEBVTT', (string) $segment['body']);
         $this->assertStringContainsString('Good evening, have a good week.', (string) $segment['body']);
         $this->assertSame('private, max-age=300', $segment['headers']['cache-control'] ?? null);
+        $this->assertArrayNotHasKey('surrogate-key', $segment['headers']);
         $etag = $segment['headers']['etag'] ?? '';
         $this->assertNotSame('', $etag);
 
@@ -4470,6 +4472,34 @@ final class VideosCustomServerTest extends Scope
         }
 
         return \substr($line, $start, $end - $start);
+    }
+
+    /**
+     * H.264 with 10 bits per sample is High 10 profile, which browsers and
+     * most devices cannot decode. The master playlist names the profile the
+     * encoder really wrote, so it shows whether a 10-bit source was brought
+     * down to 8 bits.
+     */
+    public function testATenBitSourceIsEncodedAsEightBitH264(): void
+    {
+        $videoId = $this->createReadyVideo($this->getTenBitVideoFile())['$id'];
+        $this->createReadyRendition($videoId, 'hls');
+
+        $master = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/master.m3u8', $this->headers());
+        $this->assertEquals(200, $master['headers']['status-code']);
+
+        $variant = '';
+        foreach (\explode("\n", (string) $master['body']) as $line) {
+            if (\str_starts_with($line, '#EXT-X-STREAM-INF')) {
+                $variant = $line;
+                break;
+            }
+        }
+
+        // avc1.PPCCLL: PP is the profile, 64 for High and 6e for High 10.
+        $codecs = \strtolower($this->attributeValue($variant, 'CODECS'));
+        $this->assertStringContainsString('avc1.64', $codecs, 'Expected High profile, got: ' . $codecs);
+        $this->assertStringNotContainsString('avc1.6e', $codecs);
     }
 
     /**

@@ -335,4 +335,106 @@ final class ContainerTest extends TestCase
         $result = $container->get('collector');
         $this->assertSame(['val1', 'val2'], $result);
     }
+
+    public function testScopeRebuildsAParentDependencyFromTheChildsOverride(): void
+    {
+        $parent = new Container();
+        $parent->set('route', fn (): string => '/v1/graphql', []);
+        $parent->set('team', fn (string $route): string => "team for $route", ['route']);
+
+        $this->assertSame('team for /v1/graphql', $parent->get('team'));
+
+        $child = new Container($parent);
+        $child->set('route', fn (): string => '/v1/organization/projects', []);
+
+        $this->assertSame('team for /v1/graphql', $child->get('team'));
+
+        $child->scope('team');
+
+        $this->assertSame('team for /v1/organization/projects', $child->get('team'));
+        $this->assertSame('team for /v1/graphql', $parent->get('team'));
+    }
+
+    public function testScopeFindsTheFactoryOnAnyAncestor(): void
+    {
+        $root = new Container();
+        $root->set('route', fn (): string => 'root', []);
+        $root->set('team', fn (string $route): string => "team for $route", ['route']);
+
+        $grandchild = new Container(new Container($root));
+        $grandchild->set('route', fn (): string => 'field', []);
+        $grandchild->scope('team');
+
+        $this->assertSame('team for field', $grandchild->get('team'));
+    }
+
+    public function testScopeRebuildsWhatIsBuiltFromAScopedDependency(): void
+    {
+        $parent = new Container();
+        $parent->set('route', fn (): string => 'outer', []);
+        $parent->set('team', fn (string $route): string => "team for $route", ['route']);
+        $parent->set('key', fn (string $team): string => "key for $team", ['team']);
+        $parent->set('plan', fn (string $key): string => "plan for $key", ['key']);
+        $parent->set('user', fn (): string => 'user', []);
+
+        $this->assertSame('plan for key for team for outer', $parent->get('plan'));
+        $user = $parent->get('user');
+
+        $child = new Container($parent);
+        $child->set('route', fn (): string => 'field', []);
+        $child->scope('team');
+
+        $this->assertSame('key for team for field', $child->get('key'));
+        $this->assertSame('plan for key for team for field', $child->get('plan'));
+        $this->assertSame($user, $child->get('user'));
+        $this->assertSame('plan for key for team for outer', $parent->get('plan'));
+    }
+
+    public function testScopeRebuildsALocalDependency(): void
+    {
+        $calls = 0;
+        $container = new Container();
+        $container->set('counter', function () use (&$calls): int {
+            return ++$calls;
+        }, []);
+
+        $this->assertSame(1, $container->get('counter'));
+
+        $container->scope('counter');
+
+        $this->assertSame(2, $container->get('counter'));
+    }
+
+    public function testScopeThrowsForUnknownDependency(): void
+    {
+        $container = new Container(new Container());
+
+        $this->expectException(NotFoundExceptionInterface::class);
+        $this->expectExceptionMessage('Dependency missing has no factory on this container or a Container ancestor to scope');
+
+        $container->scope('missing');
+    }
+
+    public function testScopeCannotCopyAFactoryFromAnotherPsrContainer(): void
+    {
+        $psr = new class () implements \Psr\Container\ContainerInterface {
+            public function get(string $id): mixed
+            {
+                return 'value';
+            }
+
+            public function has(string $id): bool
+            {
+                return $id === 'foreign';
+            }
+        };
+
+        $child = new Container($psr);
+        $this->assertTrue($child->has('foreign'));
+
+        $this->expectException(NotFoundExceptionInterface::class);
+        $this->expectExceptionMessage('Dependency foreign has no factory on this container or a Container ancestor to scope');
+
+        $child->scope('foreign');
+    }
 }

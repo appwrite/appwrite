@@ -360,6 +360,10 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Search videos by name or ID...': '名前または ID で動画を検索…',
   'Search rows by ID...': 'ID で行を検索…',
   'Search sites...': 'サイトを検索…',
+  'Create a function to protect it with Firewall rules.':
+    'Firewall ルールで保護するには関数を作成してください。',
+  'Create a site to protect it with Firewall rules.':
+    'Firewall ルールで保護するにはサイトを作成してください。',
   'Search sites by name or ID...': '名前または ID でサイトを検索…',
   'Search tables by name or ID...': '名前または ID でテーブルを検索…',
   'Search teams...': 'チームを検索…',
@@ -722,12 +726,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Settings · Migrations': '設定 · マイグレーション',
   'Import data from other backends': '他のバックエンドからデータをインポート',
   'Settings · SMTP': '設定 · SMTP',
-  'Settings · Firewall': '設定 · ファイアウォール',
-  'Firewall has moved': 'ファイアウォールの場所が変わりました',
-  'Firewall rules now sit next to what they protect: a Firewall tab on each function and site, and one in project settings for the API.':
-    'ファイアウォールのルールは、保護する対象のそばに移りました。各関数とサイトの「ファイアウォール」タブと、API 用のプロジェクト設定のタブです。',
-  'Got it': '了解',
-  'Open API firewall': 'API のファイアウォールを開く',
+  'Security · Firewall rules': 'セキュリティ · ファイアウォールルール',
   // Function and site overview cards, filter chips
   '1 rule': '1 件のルール',
   '{count} rules': '{count} 件のルール',
@@ -1420,12 +1419,10 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Appwrite Videos': 'Appwrite Videos',
   'Transcode, stream, and caption videos.':
     '動画のトランスコード、配信、字幕付けを行います。',
-  'Project environments': 'プロジェクト環境',
-  'Switch or clone staging and production.':
-    'ステージングと本番を切り替え、複製します。',
   'Repository not available': 'リポジトリを利用できません',
-  'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
-    'この Git インストールからリポジトリにアクセスできなくなりました。削除された、インストールから外された、または別のインストールに移された可能性があります。デプロイを続けるには、リポジトリを接続し直してください。',
+  "This Git installation can no longer reach the repository. If it was removed from the installation's repository access, add it back with Update repository access. If it was deleted or moved, connect it again.":
+    'この Git インストールからリポジトリにアクセスできなくなりました。インストールのリポジトリアクセスから外された場合は、「リポジトリアクセスを更新」で追加し直してください。削除または移動された場合は、接続し直してください。',
+  'Update repository access': 'リポジトリアクセスを更新',
   // Halloween caution tape
   Caution: '注意',
   'Spooky zone': '恐怖ゾーン',

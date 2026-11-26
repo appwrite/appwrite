@@ -14,10 +14,7 @@
     "autoload": {
         "psr-4": {
             "Utopia\\Query\\": "src/"
-        },
-        "files": [
-            "src/extension.php"
-        ]
+        }
     },
     "autoload-dev": {
         "psr-4": {
@@ -30,7 +27,8 @@
         "test:e2e": "phpunit --testsuite e2e"
     },
     "require": {
-        "php": ">=8.4"
+        "php": ">=8.4",
+        "ext-utopia": "*"
     },
     "require-dev": {
         "mongodb/mongodb": "^2.0"
