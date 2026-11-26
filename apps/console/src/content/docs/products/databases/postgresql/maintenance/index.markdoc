@@ -227,7 +227,13 @@ curl -X PATCH \
 
 # Engine version upgrades {% #upgrades %}
 
-You can upgrade the PostgreSQL version online. A second instance is provisioned on the target version, data streams over with logical replication, and traffic cuts over once replication has caught up. Reads continue throughout. At the cutover the old instance is fenced read-only and existing client connections are closed, so writes pause for that moment and the application has to reconnect. The target version must be higher than the current one:
+You can upgrade a database to a newer PostgreSQL major version online. Appwrite supports PostgreSQL 17, 18, and 19. The target version must be higher than the current one, and an upgrade cannot be reversed.
+
+A second instance is provisioned on the target version, data streams over with logical replication, and traffic cuts over once replication has caught up. Reads continue throughout. At the cutover the old instance is fenced read-only and existing client connections are closed, so writes pause for that moment and the application has to reconnect. The database reports `upgrading` while the upgrade runs and returns to `ready` when the cutover finishes.
+
+In the Console, open your database's **Settings** > **General**. The **Version** card lists the current version and every newer supported version. Click **Upgrade** next to the target version, review the notes, and click **Upgrade** again to confirm. The database must be `ready` to start an upgrade.
+
+To upgrade through the API, call `createUpgrade` with the target version:
 
 {% multicode %}
 ```server-nodejs
@@ -242,7 +248,7 @@ const postgresql = new Postgresql(client);
 
 await postgresql.createUpgrade({
     databaseId: '<DATABASE_ID>',
-    targetVersion: '18',
+    targetVersion: '19',
 });
 ```
 ```server-deno
@@ -257,7 +263,7 @@ const postgresql = new Postgresql(client);
 
 await postgresql.createUpgrade({
     databaseId: '<DATABASE_ID>',
-    targetVersion: '18',
+    targetVersion: '19',
 });
 ```
 ```server-php
@@ -275,7 +281,7 @@ $postgresql = new Postgresql($client);
 
 $postgresql->createUpgrade(
     databaseId: '<DATABASE_ID>',
-    targetVersion: '18',
+    targetVersion: '19',
 );
 ```
 ```server-python
@@ -291,7 +297,7 @@ postgresql = Postgresql(client)
 
 postgresql.create_upgrade(
     database_id='<DATABASE_ID>',
-    target_version='18',
+    target_version='19',
 )
 ```
 ```server-ruby
@@ -308,7 +314,7 @@ postgresql = Postgresql.new(client)
 
 postgresql.create_upgrade(
     database_id: '<DATABASE_ID>',
-    target_version: '18',
+    target_version: '19',
 )
 ```
 ```server-dotnet
@@ -324,7 +330,7 @@ Postgresql postgresql = new Postgresql(client);
 
 await postgresql.CreateUpgrade(
     databaseId: "<DATABASE_ID>",
-    targetVersion: "18"
+    targetVersion: "19"
 );
 ```
 ```server-dart
@@ -339,7 +345,7 @@ Postgresql postgresql = Postgresql(client);
 
 await postgresql.createUpgrade(
     databaseId: '<DATABASE_ID>',
-    targetVersion: '18',
+    targetVersion: '19',
 );
 ```
 ```server-kotlin
@@ -355,7 +361,7 @@ val postgresql = Postgresql(client)
 
 postgresql.createUpgrade(
     databaseId = "<DATABASE_ID>",
-    targetVersion = "18",
+    targetVersion = "19",
 )
 ```
 ```server-swift
@@ -370,7 +376,7 @@ let postgresql = Postgresql(client)
 
 _ = try await postgresql.createUpgrade(
     databaseId: "<DATABASE_ID>",
-    targetVersion: "18"
+    targetVersion: "19"
 )
 ```
 ```server-go
@@ -389,7 +395,7 @@ func main() {
 
     service := appwrite.NewPostgresql(client)
 
-    _, err := service.CreateUpgrade("<DATABASE_ID>", "18")
+    _, err := service.CreateUpgrade("<DATABASE_ID>", "19")
     if err != nil {
         panic(err)
     }
@@ -408,7 +414,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let postgresql = Postgresql::new(&client);
 
-    postgresql.create_upgrade("<DATABASE_ID>", "18").await?;
+    postgresql.create_upgrade("<DATABASE_ID>", "19").await?;
 
     Ok(())
 }
@@ -419,13 +425,29 @@ curl -X POST \
   -H "X-Appwrite-Key: <API_KEY>" \
   -H "Content-Type: application/json" \
   -d '{
-      "targetVersion": "18"
+      "targetVersion": "19"
   }' \
   https://<REGION>.cloud.appwrite.io/v1/postgresql/<DATABASE_ID>/upgrades
 ```
 {% /multicode %}
 
-Before a major version upgrade, check that your installed [extensions](/docs/products/databases/postgresql/extensions) support the target version.
+## Before you upgrade {% #before-upgrade %}
+
+Because an upgrade cannot be reversed, prepare for it first:
+
+- Check that your installed [extensions](/docs/products/databases/postgresql/extensions) support the target version.
+- Take a [manual backup](/docs/products/databases/postgresql/backups#manual) right before you start.
+- Run your test suite against a new database created on the target version.
+- Make sure your application reconnects when its connections are closed.
+- Read the migration notes in the [PostgreSQL release notes](https://www.postgresql.org/docs/release/) for each major version you move past.
+
+## Changes in PostgreSQL 19 {% #postgresql-19 %}
+
+The [PostgreSQL 19 release notes](https://www.postgresql.org/docs/release/19.0/) list every change. These are the ones most likely to affect application code:
+
+- `json_array()` over a query that returns no rows now returns an empty JSON array instead of `NULL`.
+- `standard_conforming_strings` can no longer be turned off, so backslashes in ordinary string literals are always literal characters. Use `E'...'` strings for escape sequences.
+- A role that signs in with an MD5 password now gets a warning after each successful login. MD5 support will be removed in a future PostgreSQL release, so move those roles to SCRAM-SHA-256 passwords.
 
 # Pause and resume {% #pause-resume %}
 

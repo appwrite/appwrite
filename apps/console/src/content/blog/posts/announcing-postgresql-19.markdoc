@@ -1,0 +1,326 @@
+---
+layout: post
+title: "Announcing managed PostgreSQL 19 on Appwrite Cloud"
+description: New Appwrite managed PostgreSQL databases now run PostgreSQL 19, and existing PostgreSQL 17 and 18 databases upgrade to it online from the Console or API.
+date: 2026-11-27
+cover: /images/blog/announcing-postgresql-19/cover.avif
+timeToRead: 6
+author: jake-barnby
+category: announcements
+featured: false
+faqs:
+  - question: "Does Appwrite support PostgreSQL 19?"
+    answer: "Yes. Appwrite Cloud supports PostgreSQL 19 for managed PostgreSQL databases, and new databases run it by default. PostgreSQL 18 and 17 are also supported. See [supported versions](/docs/products/databases/postgresql#versions)."
+  - question: "How do I upgrade an Appwrite PostgreSQL database to PostgreSQL 19?"
+    answer: "In the Console, open the database's **Settings** > **General**, click **Upgrade** next to PostgreSQL 19 in the **Version** card, and confirm. From a Server SDK, call `createUpgrade` with `targetVersion` set to `'19'`. See [engine version upgrades](/docs/products/databases/postgresql/maintenance#upgrades)."
+  - question: "Is there downtime when upgrading to PostgreSQL 19?"
+    answer: "Reads continue throughout the upgrade. At the cutover, the old instance is fenced read-only and open connections are closed, so writes pause for a moment and your application has to reconnect."
+  - question: "Can I downgrade from PostgreSQL 19 to PostgreSQL 18?"
+    answer: "No. An upgrade can't be reversed, so take a [manual backup](/docs/products/databases/postgresql/backups#manual) and test your application against a PostgreSQL 19 database before you upgrade production."
+  - question: "Can I still create a PostgreSQL 18 or 17 database on Appwrite?"
+    answer: "Yes. New databases default to PostgreSQL 19, but you can pass `version` as `'18'` or `'17'` when you create a database through the API. Existing databases stay on their current version until you upgrade them."
+  - question: "Do I need to change my application code for PostgreSQL 19?"
+    answer: "Only if it depends on one of the behavior changes in PostgreSQL 19: `json_array()` over zero rows now returns an empty array instead of `NULL`, `standard_conforming_strings` is always on, and MD5 password logins now raise a warning. Also confirm that your installed [extensions](/docs/products/databases/postgresql/extensions) support PostgreSQL 19."
+---
+
+PostgreSQL ships one major version a year, and each release brings planner, maintenance, and SQL improvements that you only get by moving to it. On a database you run yourself, moving is the hard part. A major version upgrade has traditionally meant a `pg_dump` and restore, or `pg_upgrade` with the database offline, so teams put it off and drift a version or two behind.
+
+The PostgreSQL Global Development Group [released PostgreSQL 19](https://www.postgresql.org/about/news/postgresql-19-released-3449/) on November 19. Today, we are announcing **PostgreSQL 19 for Appwrite managed PostgreSQL databases**, available on Appwrite Cloud now.
+
+# What PostgreSQL 19 on Appwrite gives you
+
+- **PostgreSQL 19 by default.** New [managed PostgreSQL databases](/docs/products/databases/postgresql) run PostgreSQL 19 unless you pass a different `version` when you create them.
+- **Upgrades from the Console.** A new **Version** card under **Settings** > **General** lists every newer supported version with an **Upgrade** button. Until now, upgrades were only available through the API.
+- **The same upgrade through the API.** `createUpgrade` with `targetVersion` set to `'19'` runs the same online upgrade from a Server SDK or a script.
+- **Reads during the upgrade.** Your data streams to a new instance with logical replication while the current one keeps serving reads. Writes pause only at the cutover.
+- **PostgreSQL 17 and 18 stay supported.** Existing databases keep their version until you upgrade them, and you can still create a database on 18 or 17.
+
+# Create a PostgreSQL 19 database
+
+New databases get PostgreSQL 19 with no extra step:
+
+1. In your project, go to **Databases** and click **Create database**.
+2. Under **Choose database type**, select **PostgreSQL** from the **Native databases** group.
+3. Under **Specifications**, pick a tier, then review the summary and click **Create database**.
+
+Once the database reports `ready`, connect with `psql` or the SQL editor in the Console and confirm the version:
+
+```sql
+SHOW server_version;
+```
+
+# Upgrade an existing database to PostgreSQL 19
+
+Databases created on PostgreSQL 17 or 18 upgrade in place. The database keeps running on its current version until you start the upgrade.
+
+## Upgrade from the Console
+
+1. Open the database and go to **Settings** > **General**.
+2. In the **Version** card, click **Upgrade** next to **PostgreSQL 19**.
+3. Read the notes in the dialog and click **Upgrade** to confirm.
+
+The database moves to the `upgrading` state, the Console shows the upgrade in the database header, and the status returns to `ready` once the cutover is done.
+
+## Upgrade with a Server SDK
+
+Call `createUpgrade` with the database ID and the target version:
+
+{% multicode %}
+```server-nodejs
+import { Client, Postgresql } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+await postgresql.createUpgrade({
+    databaseId: '<DATABASE_ID>',
+    targetVersion: '19',
+});
+```
+```server-deno
+import { Client, Postgresql } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+const postgresql = new Postgresql(client);
+
+await postgresql.createUpgrade({
+    databaseId: '<DATABASE_ID>',
+    targetVersion: '19',
+});
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Postgresql;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>');
+
+$postgresql = new Postgresql($client);
+
+$postgresql->createUpgrade(
+    databaseId: '<DATABASE_ID>',
+    targetVersion: '19',
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.postgresql import Postgresql
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql(client)
+
+postgresql.create_upgrade(
+    database_id='<DATABASE_ID>',
+    target_version='19',
+)
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key('<YOUR_API_KEY>')
+
+postgresql = Postgresql.new(client)
+
+postgresql.create_upgrade(
+    database_id: '<DATABASE_ID>',
+    target_version: '19',
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetProject("<PROJECT_ID>")
+    .SetKey("<YOUR_API_KEY>");
+
+Postgresql postgresql = new Postgresql(client);
+
+await postgresql.CreateUpgrade(
+    databaseId: "<DATABASE_ID>",
+    targetVersion: "19"
+);
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+
+Postgresql postgresql = Postgresql(client);
+
+await postgresql.createUpgrade(
+    databaseId: '<DATABASE_ID>',
+    targetVersion: '19',
+);
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Postgresql
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+val postgresql = Postgresql(client)
+
+postgresql.createUpgrade(
+    databaseId = "<DATABASE_ID>",
+    targetVersion = "19",
+)
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<YOUR_API_KEY>")
+
+let postgresql = Postgresql(client)
+
+_ = try await postgresql.createUpgrade(
+    databaseId: "<DATABASE_ID>",
+    targetVersion: "19"
+)
+```
+```server-go
+package main
+
+import (
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<YOUR_API_KEY>"),
+    )
+
+    service := appwrite.NewPostgresql(client)
+
+    _, err := service.CreateUpgrade("<DATABASE_ID>", "19")
+    if err != nil {
+        panic(err)
+    }
+}
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::postgresql::Postgresql;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let postgresql = Postgresql::new(&client);
+
+    postgresql.create_upgrade("<DATABASE_ID>", "19").await?;
+
+    Ok(())
+}
+```
+```bash
+curl -X POST \
+  -H "X-Appwrite-Project: <PROJECT_ID>" \
+  -H "X-Appwrite-Key: <API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+      "targetVersion": "19"
+  }' \
+  https://<REGION>.cloud.appwrite.io/v1/postgresql/<DATABASE_ID>/upgrades
+```
+{% /multicode %}
+
+## How the online upgrade works
+
+An upgrade doesn't modify the instance that serves your traffic. Appwrite provisions a second instance on PostgreSQL 19, streams your data into it with logical replication, and waits for replication to catch up. Reads continue on the current instance the whole time.
+
+At the cutover, the old instance is fenced read-only and existing client connections are closed. Writes pause for that moment, and your application reconnects to the database, now on PostgreSQL 19. A connection pool that retries dropped connections handles this without code changes. Because connections close, start the upgrade during a low-traffic period.
+
+The target version must be newer than the current one, and an upgrade can't be reversed.
+
+# What's new in PostgreSQL 19
+
+PostgreSQL 19 adds new SQL for get-or-create writes, an online way to reclaim table bloat, and faster foreign key checks, alongside planner, replication, and monitoring work. The [PostgreSQL 19 release notes](https://www.postgresql.org/docs/release/19.0/) cover all of it. These are the changes application developers are likely to notice first.
+
+## Get-or-create with ON CONFLICT DO SELECT
+
+`INSERT ... ON CONFLICT DO NOTHING` skips a conflicting row and returns nothing for it. Get-or-create code usually follows it with a second `SELECT`, or uses a no-op `DO UPDATE` that writes a new row version just to get the row back. PostgreSQL 19 adds `DO SELECT`, which returns the existing row through `RETURNING`:
+
+```sql
+INSERT INTO tags (slug, name)
+VALUES ('postgres', 'Postgres')
+ON CONFLICT (slug) DO SELECT
+RETURNING id, slug, name;
+```
+
+One statement returns the row whether it was just inserted or already existed. `DO SELECT` requires a conflict target and a `RETURNING` clause, and `DO SELECT FOR UPDATE` also locks the existing row against concurrent updates.
+
+## Online table repacking with REPACK
+
+Tables with heavy updates and deletes accumulate dead space. Autovacuum marks that space for reuse, but it doesn't shrink the table. Reclaiming it used to mean `VACUUM FULL` or `CLUSTER`, which lock the table while they run.
+
+PostgreSQL 19 adds the `REPACK` command. `REPACK (CONCURRENTLY)` rewrites a table while reads and writes continue, and takes an exclusive lock only for its final phase. The concurrent mode needs a primary key or an index-based replica identity on the table, and it can't run inside a transaction block. `VACUUM FULL` and `CLUSTER` remain available.
+
+## Faster bulk inserts with foreign keys
+
+PostgreSQL 19 speeds up foreign key checks, which in the PostgreSQL project's testing made bulk inserts nearly 2x faster. There is nothing to turn on. Imports and batch writes into tables with foreign keys benefit as soon as the database runs PostgreSQL 19.
+
+## Behavior changes to check before you upgrade
+
+A few behaviors changed in ways application code can notice:
+
+- **`json_array()` over zero rows** now returns an empty JSON array instead of `NULL`. Code that checks for `NULL` there needs updating.
+- **`standard_conforming_strings`** can no longer be turned off, so backslashes in ordinary string literals are always literal characters. Use `E'...'` strings for escape sequences.
+- **MD5 passwords** now produce a warning after each successful login, and MD5 support will be removed in a future PostgreSQL release. Move roles that use MD5 to SCRAM-SHA-256 passwords.
+
+The [maintenance docs](/docs/products/databases/postgresql/maintenance#postgresql-19) keep this list next to the upgrade steps.
+
+# When to move to PostgreSQL 19
+
+The right time depends on where your database is today:
+
+- **New projects.** Create the database and you are on PostgreSQL 19. Start on an older version only if a dependency requires it.
+- **Existing databases on 17 or 18.** Create a new PostgreSQL 19 database, run your migrations and test suite against it, then upgrade production. Take a [manual backup](/docs/products/databases/postgresql/backups#manual) right before you start, so you have a recent restore point.
+- **Databases that depend on a specific extension.** Check that each installed [extension](/docs/products/databases/postgresql/extensions) supports PostgreSQL 19 before you upgrade. pgvector, PostGIS, and pg_trgm are already in the PostgreSQL 19 extension catalog. If one you need isn't yet, stay on your current version. Nothing changes until you start an upgrade.
+
+Upgrades are one-way, so test first. Once your application passes against PostgreSQL 19, the upgrade itself is a single click or API call.
+
+# Get started with PostgreSQL 19 on Appwrite
+
+PostgreSQL 19 is available on Appwrite Cloud today. Create a new database to start on it, or open **Settings** > **General** on an existing one to upgrade. If you are new to managed PostgreSQL on Appwrite, the [launch post](/blog/post/appwrite-now-speaks-postgresql) covers connections, backups, branches, and high availability.
+
+- [Managed PostgreSQL documentation](/docs/products/databases/postgresql)
+- [Engine version upgrades](/docs/products/databases/postgresql/maintenance#upgrades)
+- [PostgreSQL extensions](/docs/products/databases/postgresql/extensions)
+- [Sign up for Appwrite Cloud](/sign-in)

@@ -12,9 +12,9 @@ A native PostgreSQL database gives you the raw engine: you connect with `psql` o
 
 Appwrite manages the database container, storage, backups, and networking. You bring the application.
 
-New databases run PostgreSQL 18 by default. To create a database on PostgreSQL 17 instead, pass `version` when you create it through the API. The database listens on the standard PostgreSQL port, 5432.
+New databases run PostgreSQL 19 by default. PostgreSQL 18 and 17 are also supported: to create a database on one of them, pass `version` when you create it through the API. The database listens on the standard PostgreSQL port, 5432.
 
-The version is selected on create and can be upgraded later. Upgrades run online: a second instance is provisioned on the new version, data is streamed over with logical replication, and traffic cuts over once replication is caught up. Reads continue throughout. At the cutover itself the old instance is fenced read-only and existing client connections are closed, so the application must reconnect.
+The version is selected on create and can be [upgraded later](/docs/products/databases/postgresql/maintenance#upgrades) from the Console or the API. Upgrades run online: a second instance is provisioned on the new version, data is streamed over with logical replication, and traffic cuts over once replication is caught up. Reads continue throughout. At the cutover itself the old instance is fenced read-only and existing client connections are closed, so the application must reconnect.
 
 A new database starts in a `provisioning` state and becomes `ready` within a few minutes. Large specifications or high-availability configurations take longer to schedule; poll the database status or watch the Console until it reports `ready`.
 

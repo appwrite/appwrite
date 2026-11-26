@@ -3628,7 +3628,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/databases/postgresql/integrations/grafana",
     "title": "Grafana",
     "description": "Connect Grafana to an Appwrite native PostgreSQL database as a data source and build dashboards. Create a read-only reporting role, configure the PostgreSQL data source with TLS, and provision it from YAML.",
-    "excerpt": "An Appwrite native PostgreSQL database exposes a standard managed PostgreSQL 18 or 17 engine, so Grafana connects to it through the built-in **PostgreSQL data source** with no Appwrite-specific configuration. Point the data source at your database hostname, authenticate with a read-only reporting role, and query your tables to build dashboards and alerts. You'll need a native PostgreSQL database in a state and its credentials. In the Console, open the database and click **Credentials**. Use the **Details** tab for individual values,…",
+    "excerpt": "An Appwrite native PostgreSQL database exposes a standard managed PostgreSQL 19, 18, or 17 engine, so Grafana connects to it through the built-in **PostgreSQL data source** with no Appwrite-specific configuration. Point the data source at your database hostname, authenticate with a read-only reporting role, and query your tables to build dashboards and alerts. You'll need a native PostgreSQL database in a state and its credentials. In the Console, open the database and click **Credentials**. Use the **Details** tab for individual…",
     "breadcrumbs": [
       "PostgreSQL",
       "Integrations",
