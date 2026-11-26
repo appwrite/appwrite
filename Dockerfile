@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:2.5.2@sha256:d86e74364197be819b4051ec987b9b36d3b1331c67f857535afc7ea8ffb49516 AS ffmpeg
+FROM appwrite/base:2.5.3@sha256:0da43bedda4b97af653bb48f0416eb1f752546e95eda2dea63071af8309b91d6 AS ffmpeg
 
 # Same pin as utopia-php/video (docs/design.md, Dockerfile ARG FFMPEG_VERSION).
 # Alpine's apk ffmpeg is an older line and is not what the library CI tests against.
@@ -48,7 +48,7 @@ RUN apk add --no-cache \
 
 # The utopia extension, built against the base image's own PHP headers and
 # libheif and OpenSSL (utopia-auth's RSA keys) so the ABI matches. The recipe is crates/extension/build.sh.
-FROM appwrite/base:2.5.2@sha256:d86e74364197be819b4051ec987b9b36d3b1331c67f857535afc7ea8ffb49516 AS extension-build
+FROM appwrite/base:2.5.3@sha256:0da43bedda4b97af653bb48f0416eb1f752546e95eda2dea63071af8309b91d6 AS extension-build
 
 WORKDIR /usr/local/src
 
@@ -70,7 +70,7 @@ FROM scratch AS extension
 
 COPY --from=extension-build /usr/local/src/target/release/libutopia.so /utopia.so
 
-FROM appwrite/base:2.5.2@sha256:d86e74364197be819b4051ec987b9b36d3b1331c67f857535afc7ea8ffb49516 AS base
+FROM appwrite/base:2.5.3@sha256:0da43bedda4b97af653bb48f0416eb1f752546e95eda2dea63071af8309b91d6 AS base
 
 LABEL maintainer="team@appwrite.io"
 
@@ -215,7 +215,7 @@ EXPOSE 80
 
 CMD [ "php", "app/http.php" ]
 
-FROM appwrite/base:2.5.2-xdebug@sha256:1792fc129f1fdf4322b4b68b91e5512d6c6ef7c7d863d52e0e1324b1a7374cc3 AS xdebug
+FROM appwrite/base:2.5.3-xdebug@sha256:998e1c709bc4c976627f2fd6afc4b21daed5a628f3f46eeb16066826ac9cfa56 AS xdebug
 
 FROM base AS development
 
