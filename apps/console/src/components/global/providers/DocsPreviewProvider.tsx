@@ -22,6 +22,10 @@ import {
   isAnalyticsDocsSlug,
 } from '@/lib/docs/analytics-docs-feature'
 import {
+  isReviewsDocsEnabled,
+  isReviewsDocsSlug,
+} from '@/lib/docs/reviews-docs-feature'
+import {
   isVideosDocsEnabled,
   isVideosDocsSlug,
 } from '@/lib/docs/videos-docs-feature'
@@ -85,6 +89,7 @@ export function DocsPreviewProvider({ children }: { children: ReactNode }) {
       if (isAgentDocsSlug(nextSlug) && !isAgentDocsEnabled()) return
       if (isAnalyticsDocsSlug(nextSlug) && !isAnalyticsDocsEnabled()) return
       if (isVideosDocsSlug(nextSlug) && !isVideosDocsEnabled()) return
+      if (isReviewsDocsSlug(nextSlug) && !isReviewsDocsEnabled()) return
       showDocs()
       setSlug(nextSlug)
       setView(resolveDocsPreviewView(nextSlug, options?.view))

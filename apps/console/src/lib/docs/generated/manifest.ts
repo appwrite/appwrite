@@ -3409,6 +3409,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
+    "slug": "products/reviews",
+    "title": "Reviews",
+    "description": "Review pull requests with AI using Appwrite Reviews. Turn it on for GitHub, GitLab, Gitea, and Bitbucket repositories, choose what gets reviewed, and see how review credits are billed.",
+    "layout": "article",
+    "readingTimeMinutes": 11
+  },
+  {
     "slug": "products/sites",
     "title": "Sites",
     "description": "Appwrite Sites is your gateway to scalable web applications. Explore our complete guide to building and deploying websites effortlessly.",

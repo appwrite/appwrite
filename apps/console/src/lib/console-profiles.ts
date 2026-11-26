@@ -66,10 +66,11 @@ export type ConsoleProfileFeatures = {
   /** Internal only, switched on from the debug menu. Link buttons on notification rows that open the Console page an alert acts on. */
   alertCtas: boolean
   /**
-   * Internal only, switched on from the debug menu. Review product (AI code
-   * review of GitHub pull requests) via the `reviews` service. Even when on, it
-   * shows only where the server reports `_APP_REVIEWS_ENABLED`, since
-   * self-hosted instances run the review service only when they opt in.
+   * An experiment, off by default; the quality team turns it on from the
+   * header Previews menu. Review product (AI code review of pull requests) via
+   * the `reviews` service, and its docs. Even when on, the product shows only
+   * where the server reports `_APP_REVIEWS_ENABLED`, since self-hosted
+   * instances run the review service only when they opt in.
    */
   reviews: boolean
   /**

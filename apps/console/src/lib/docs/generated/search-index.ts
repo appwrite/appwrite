@@ -5317,6 +5317,16 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/reviews",
+    "title": "Reviews",
+    "description": "Review pull requests with AI using Appwrite Reviews. Turn it on for GitHub, GitLab, Gitea, and Bitbucket repositories, choose what gets reviewed, and see how review credits are billed.",
+    "excerpt": "Appwrite **Reviews** reviews the pull requests in your Git repositories with AI. Turn it on for a repository, and each pull request gets a review where it was opened: a summary, findings on the lines they concern, a verdict, and a merge confidence grade. Mention the reviewer in a comment to ask about a change, request another review, or teach it how your team works. You turn on reviews and follow them under **Review** in your project. Reviews is available…",
+    "breadcrumbs": [
+      "products",
+      "Reviews"
+    ]
+  },
+  {
     "slug": "products/sites",
     "title": "Sites",
     "description": "Appwrite Sites is your gateway to scalable web applications. Explore our complete guide to building and deploying websites effortlessly.",
