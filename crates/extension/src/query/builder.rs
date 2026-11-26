@@ -6177,7 +6177,44 @@ builder_class!(
     #[php(extends(Sql))]
     MySqlBuilder,
     MySqlDialect,
-    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, mysql_family, explain_format, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, hints, conditional_aggregates, json_aggregates, json, search, not_search, spatial_filters, transactions, max_execution_time, lateral_joins, group_concat, case_expressions, ast, steps_all, steps_sql, steps_aggregates, steps_mysql, helpers, helpers_group_by, helpers_wkt]
+    [
+        sql,
+        spatial,
+        literal,
+        raw_sql,
+        locking,
+        upsert,
+        upsert_select,
+        insert_or_ignore,
+        mysql_family,
+        explain_format,
+        cross_joins,
+        locking_modes,
+        statistical,
+        bitwise,
+        raw_sql_more,
+        rollup,
+        hints,
+        conditional_aggregates,
+        json_aggregates,
+        json,
+        search,
+        not_search,
+        spatial_filters,
+        transactions,
+        max_execution_time,
+        lateral_joins,
+        group_concat,
+        case_expressions,
+        ast,
+        steps_all,
+        steps_sql,
+        steps_aggregates,
+        steps_mysql,
+        helpers,
+        helpers_group_by,
+        helpers_wkt
+    ]
 );
 builder_class!(
     /// `Utopia\Query\Builder\MariaDB`.
@@ -6186,7 +6223,47 @@ builder_class!(
     #[php(extends(MySqlBuilder))]
     MariaDbBuilder,
     MariaDbDialect,
-    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, returning, mysql_family, explain_format, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, hints, conditional_aggregates, json_aggregates, json, search, not_search, sequences, spatial_filters, transactions, max_execution_time, lateral_joins, group_concat, case_expressions, ast, steps_all, steps_sql, steps_aggregates, steps_mysql, helpers, helpers_returning, helpers_group_by, helpers_wkt]
+    [
+        sql,
+        spatial,
+        literal,
+        raw_sql,
+        locking,
+        upsert,
+        upsert_select,
+        insert_or_ignore,
+        returning,
+        mysql_family,
+        explain_format,
+        cross_joins,
+        locking_modes,
+        statistical,
+        bitwise,
+        raw_sql_more,
+        rollup,
+        hints,
+        conditional_aggregates,
+        json_aggregates,
+        json,
+        search,
+        not_search,
+        sequences,
+        spatial_filters,
+        transactions,
+        max_execution_time,
+        lateral_joins,
+        group_concat,
+        case_expressions,
+        ast,
+        steps_all,
+        steps_sql,
+        steps_aggregates,
+        steps_mysql,
+        helpers,
+        helpers_returning,
+        helpers_group_by,
+        helpers_wkt
+    ]
 );
 builder_class!(
     /// `Utopia\Query\Builder\PostgreSQL`.
@@ -6195,7 +6272,51 @@ builder_class!(
     #[php(extends(Sql))]
     PostgreSqlBuilder,
     PostgreSqlDialect,
-    [sql, spatial, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, returning, postgres_from, explain_postgres, cross_joins, full_outer_joins, locking_modes, statistical, bitwise, raw_sql_more, rollup, cube, conditional_aggregates, json_aggregates, json, search, not_search, tablesample, sequences, spatial_filters, transactions, postgres_more, lateral_joins, merge_using, vector_search, group_concat, case_expressions, ast, steps_all, steps_sql, steps_aggregates, steps_postgres, helpers, helpers_returning, helpers_group_by, helpers_wkt]
+    [
+        sql,
+        spatial,
+        literal,
+        raw_sql,
+        locking,
+        upsert,
+        upsert_select,
+        insert_or_ignore,
+        returning,
+        postgres_from,
+        explain_postgres,
+        cross_joins,
+        full_outer_joins,
+        locking_modes,
+        statistical,
+        bitwise,
+        raw_sql_more,
+        rollup,
+        cube,
+        conditional_aggregates,
+        json_aggregates,
+        json,
+        search,
+        not_search,
+        tablesample,
+        sequences,
+        spatial_filters,
+        transactions,
+        postgres_more,
+        lateral_joins,
+        merge_using,
+        vector_search,
+        group_concat,
+        case_expressions,
+        ast,
+        steps_all,
+        steps_sql,
+        steps_aggregates,
+        steps_postgres,
+        helpers,
+        helpers_returning,
+        helpers_group_by,
+        helpers_wkt
+    ]
 );
 builder_class!(
     /// `Utopia\Query\Builder\SQLite`.
@@ -6204,7 +6325,32 @@ builder_class!(
     #[php(extends(Sql))]
     SqliteBuilder,
     SqliteDialect,
-    [sql, literal, raw_sql, locking, upsert, upsert_select, insert_or_ignore, explain_plain, cross_joins, locking_modes, statistical, bitwise, raw_sql_more, conditional_aggregates, json_aggregates, json, transactions, group_concat, case_expressions, ast, steps_all, steps_sql, steps_aggregates, helpers]
+    [
+        sql,
+        literal,
+        raw_sql,
+        locking,
+        upsert,
+        upsert_select,
+        insert_or_ignore,
+        explain_plain,
+        cross_joins,
+        locking_modes,
+        statistical,
+        bitwise,
+        raw_sql_more,
+        conditional_aggregates,
+        json_aggregates,
+        json,
+        transactions,
+        group_concat,
+        case_expressions,
+        ast,
+        steps_all,
+        steps_sql,
+        steps_aggregates,
+        helpers
+    ]
 );
 builder_class!(
     /// `Utopia\Query\Builder\ClickHouse`.
@@ -6213,7 +6359,36 @@ builder_class!(
     #[php(extends(Base))]
     ClickHouseBuilder,
     ClickHouseDialect,
-    [literal, raw_sql, explain_plain, cross_joins, full_outer_joins, statistical_clickhouse, bitwise, raw_sql_more, rollup, cube, totals, hints, conditional_aggregates, json_aggregates, tablesample, clickhouse_more, clickhouse_constants, asof_joins, quantiles, group_concat, case_expressions, bulk_insert, ast, steps_all, steps_aggregates, helpers, helpers_group_by, helpers_named]
+    [
+        literal,
+        raw_sql,
+        explain_plain,
+        cross_joins,
+        full_outer_joins,
+        statistical_clickhouse,
+        bitwise,
+        raw_sql_more,
+        rollup,
+        cube,
+        totals,
+        hints,
+        conditional_aggregates,
+        json_aggregates,
+        tablesample,
+        clickhouse_more,
+        clickhouse_constants,
+        asof_joins,
+        quantiles,
+        group_concat,
+        case_expressions,
+        bulk_insert,
+        ast,
+        steps_all,
+        steps_aggregates,
+        helpers,
+        helpers_group_by,
+        helpers_named
+    ]
 );
 builder_class!(
     /// `Utopia\Query\Builder\MongoDB`.
@@ -6222,5 +6397,18 @@ builder_class!(
     #[php(extends(Base))]
     MongoDbBuilder,
     MongoDbDialect,
-    [upsert, insert_or_ignore, explain_plain, search, tablesample, mongo_updates, mongo_stages, mongo_facet, mongo_more, ast, steps_all, helpers]
+    [
+        upsert,
+        insert_or_ignore,
+        explain_plain,
+        search,
+        tablesample,
+        mongo_updates,
+        mongo_stages,
+        mongo_facet,
+        mongo_more,
+        ast,
+        steps_all,
+        helpers
+    ]
 );

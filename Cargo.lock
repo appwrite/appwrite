@@ -5471,8 +5471,6 @@ dependencies = [
  "getrandom 0.3.4",
  "gost94",
  "hashbrown 0.17.1",
- "icu_normalizer",
- "icu_properties",
  "indexmap",
  "md-5 0.10.6",
  "md2",

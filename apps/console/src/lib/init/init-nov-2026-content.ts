@@ -155,7 +155,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
           imageAlt:
             'A bandwidth monitor triggered as usage crosses its 80% threshold',
         },
-        films: [film('6b06b977275a9c08faf9', 'Appwrite Monitors')],
+        films: [film('6b08b6fdd3e2bf05152a', 'Appwrite Monitors')],
         resources: [
           {
             id: 'init5-day4-monitors-announce',
@@ -195,7 +195,7 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
     day: 5,
     dateLabel: 'DECEMBER 4',
     weekdayLabel: 'FRIDAY, DECEMBER 4',
-    films: [film('6b06ba0983ebf4f23ebb', 'Appwrite Reviews')],
+    films: [film('6b08baf395df68853cc6', 'Appwrite Reviews')],
     title: 'Introducing Appwrite Reviews',
     description: 'Code review for your Sites, Functions and repositories.',
     longDescription:

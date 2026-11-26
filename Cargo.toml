@@ -21,7 +21,7 @@ members = ["crates/utopia/*", "crates/appwrite/*", "crates/tools/*", "crates/ext
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.97"
+rust-version = "1.100"
 license = "BSD-3-Clause"
 repository = "https://github.com/appwrite/appwrite"
 # The crates under crates/utopia are published to crates.io. See rfc/monorepo.md.
@@ -193,10 +193,6 @@ lz4-sys = "1.11.1"
 # XZ (LZMA2 in an .xz container with CRC64) for utopia-compression's optional
 # XZ algorithm; pure Rust, maintained.
 lzma-rust2 = { version = "0.22", default-features = false, features = ["std", "encoder", "xz"] }
-# UTS #46 mapping and Unicode properties at the Unicode version of PHP's ICU
-# (php-std's idn_to_ascii/idn_to_utf8); pure Rust, from the ICU project.
-icu_normalizer = { version = "2.3", default-features = false, features = ["compiled_data"] }
-icu_properties = { version = "2.3", default-features = false, features = ["compiled_data"] }
 md-5 = "0.10"
 # The official MongoDB driver (utopia-mongo, and utopia-database's Mongo
 # adapter through it) and its BSON library; pure Rust, maintained by MongoDB,
