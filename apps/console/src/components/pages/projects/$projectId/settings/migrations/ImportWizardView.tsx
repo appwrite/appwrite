@@ -57,6 +57,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
+import { SupabaseConnect, SUPABASE_CONNECT_PARAM } from './SupabaseConnect'
 
 export type ImportProvider =
   | 'AppwriteSelfHosted'
@@ -160,6 +161,26 @@ export function ImportWizardView() {
   const [supabaseUsername, setSupabaseUsername] = useState('postgres')
   const [supabasePassword, setSupabasePassword] = useState('')
   const [supabasePort, setSupabasePort] = useState('5432')
+
+  // Back from connecting a Supabase account: reopen its credentials step
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    const outcome = url.searchParams.get(SUPABASE_CONNECT_PARAM)
+    if (!outcome) return
+    const reason = url.searchParams.get('error')
+    url.searchParams.delete(SUPABASE_CONNECT_PARAM)
+    url.searchParams.delete('error')
+    window.history.replaceState(window.history.state, '', url.toString())
+    setProvider('Supabase')
+    setStep(2)
+    if (outcome === 'failed') {
+      toast.error(
+        reason === 'already_connected'
+          ? t('This Supabase account is connected to another console user')
+          : t('Supabase did not grant access'),
+      )
+    }
+  }, [t])
 
   const [serviceAccount, setServiceAccount] = useState('')
 
@@ -271,7 +292,8 @@ export function ImportWizardView() {
     })
   }
 
-  const handleFetchReport = async () => {
+  // Credentials from a connected Supabase account arrive before the form state updates
+  const handleFetchReport = async (connected?: Models.SupabaseCredentials) => {
     if (!provider || !pid) return
     setReportError(null)
     setLoadingReport(true)
@@ -292,27 +314,24 @@ export function ImportWizardView() {
         )
         setReportData(report)
       } else if (provider === 'Supabase') {
+        const supabase = connected ?? {
+          endpoint: supabaseEndpoint.trim(),
+          apiKey: supabaseApiKey.trim(),
+          databaseHost: databaseHost.trim(),
+          username: supabaseUsername.trim() || 'postgres',
+          password: supabasePassword,
+          port: parseInt(supabasePort, 10) || 5432,
+        }
         if (
-          !supabaseEndpoint.trim() ||
-          !supabaseApiKey.trim() ||
-          !databaseHost.trim() ||
-          !supabasePassword.trim()
+          !supabase.endpoint ||
+          !supabase.apiKey ||
+          !supabase.databaseHost ||
+          !supabase.password
         ) {
           toast.error(t('Please fill required Supabase fields'))
           return
         }
-        const report = await fetchSupabaseReport(
-          pid,
-          {
-            endpoint: supabaseEndpoint.trim(),
-            apiKey: supabaseApiKey.trim(),
-            databaseHost: databaseHost.trim(),
-            username: supabaseUsername.trim() || 'postgres',
-            password: supabasePassword,
-            port: parseInt(supabasePort, 10) || 5432,
-          },
-          region,
-        )
+        const report = await fetchSupabaseReport(pid, supabase, region)
         setReportData(report)
       } else if (provider === 'Firebase') {
         if (!serviceAccount.trim()) {
@@ -617,6 +636,20 @@ export function ImportWizardView() {
               <strong>service_role</strong> {t('key for the API key.')}
             </p>
           </div>
+          <div className="border-t border-border" />
+          <SupabaseConnect
+            projectId={pid}
+            region={region}
+            onCredentials={(credentials) => {
+              setSupabaseEndpoint(credentials.endpoint)
+              setSupabaseApiKey(credentials.apiKey)
+              setDatabaseHost(credentials.databaseHost)
+              setSupabaseUsername(credentials.username)
+              setSupabasePassword(credentials.password)
+              setSupabasePort(String(credentials.port))
+              void handleFetchReport(credentials)
+            }}
+          />
           <div className="border-t border-border" />
           <div className="px-6 py-4 space-y-4">
             <div className="space-y-2">
@@ -1206,7 +1239,7 @@ export function ImportWizardView() {
         <Button
           type="button"
           disabled={loadingReport}
-          onClick={handleFetchReport}
+          onClick={() => handleFetchReport()}
         >
           {t('Continue')}
         </Button>

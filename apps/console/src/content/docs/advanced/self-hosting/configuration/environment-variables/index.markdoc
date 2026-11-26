@@ -228,3 +228,5 @@ If running in production, it might be easier to use a 3rd party SMTP server as i
 |-------------------------------------------------|---------------------------------------------------------------------------------------------------------|
 | `_APP_MIGRATIONS_FIREBASE_CLIENT_ID`            | **version >= 1.4.0** - Google OAuth client ID. You can find it in your GCP application settings.        |
 | `_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET`        | **version >= 1.4.0** - Google OAuth client secret. You can generate secrets in your GCP application settings. |
+| `_APP_MIGRATIONS_SUPABASE_CLIENT_ID`            | **version >= 2.8.0** - Supabase OAuth app client ID, used to migrate from Supabase without pasting credentials. Create the app in your Supabase organization settings with the projects:read, secrets:read and database:write scopes. |
+| `_APP_MIGRATIONS_SUPABASE_CLIENT_SECRET`        | **version >= 2.8.0** - Supabase OAuth app client secret. |
