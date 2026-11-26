@@ -467,13 +467,53 @@ class Create extends Action
             return;
         }
 
+        /** @var Origin $vcs */
         $vcs = $vcsFactory->fromInstallation(new Document([
             'provider' => 'origin',
             'providerInstallationId' => $providerInstallationId,
         ]));
 
-        // Origin push deliveries carry no file lists, so path triggers do not apply
-        $providerAffectedFiles = $parsedPayload['affectedFiles'] ?? [];
+        // A new branch is compared with where it left the default branch,
+        // anything else with its previous tip
+        $providerPreviousCommitHash = $parsedPayload['previousCommitHash'] ?? '';
+        $providerBaseCommitHash = $providerPreviousCommitHash;
+        if (($parsedPayload['branchCreated'] ?? false) || \trim($providerBaseCommitHash, '0') === '') {
+            $providerBaseCommitHash = '';
+            try {
+                $providerDefaultBranch = \strval($vcs->getRepository($providerRepositoryOwner, $providerRepositoryName)['defaultBranch'] ?? '');
+                if ($providerDefaultBranch !== '' && $providerDefaultBranch !== $providerBranch) {
+                    $providerBaseCommitHash = $providerDefaultBranch;
+                }
+            } catch (\Throwable $e) {
+                Console::warning("Failed to fetch the default branch of '{$providerRepositoryName}': " . $e->getMessage());
+            }
+        }
+
+        // Origin push deliveries carry no file lists and its compare embeds none,
+        // so files come from the head commit when it is the only new one
+        $providerAffectedFiles = [];
+        if ($providerBaseCommitHash !== '') {
+            try {
+                $comparison = $vcs->compareCommits($providerRepositoryOwner, $providerRepositoryName, $providerBaseCommitHash, $providerCommitHash);
+                $aheadBy = (int) ($comparison['aheadBy'] ?? -1);
+
+                // A branch created where the default branch already is holds nothing new to deploy
+                if ($aheadBy === 0) {
+                    return;
+                }
+
+                if ($aheadBy === 1) {
+                    $files = $vcs->listCommitFiles($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash);
+                    $providerAffectedFiles = [
+                        ...\array_column($files, 'filename'),
+                        // Only renamed files carry a previous filename; skip missing values from other file changes.
+                        ...\array_filter(\array_column($files, 'previousFilename')),
+                    ];
+                }
+            } catch (\Throwable $e) {
+                Console::warning("Failed to compare '{$providerBaseCommitHash}' with '{$providerCommitHash}': " . $e->getMessage());
+            }
+        }
 
         // One delivery can update several branches, so each claim names its branch
         $this->deployOnce($repositories, $deliveryId, 'push:' . $providerBranch, $providerCommitHash, $providerBranch, $dbForPlatform, $authorization, $getProjectDB, fn (Document $repository) => $this->createGitDeployments($vcs, $providerInstallationId, [$repository], $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory));
