@@ -1705,9 +1705,22 @@ pub async fn redirect(ctx: &mut Context) -> Result<Response> {
             }
             None => bytes::Bytes::from_static(b"[]"),
         });
+        // The account can hold several identities with this provider, so the
+        // token names the one that signed in.
+        let signed_in = db
+            .find_one(
+                "identities",
+                vec![
+                    Query::equal("userInternalId", [user.sequence.to_string()]),
+                    Query::equal("provider", [provider.as_str()]),
+                    Query::equal("providerUid", [oauth_id.as_str()]),
+                ],
+            )
+            .await?;
         let mut claims = Map::new();
         claims.insert("secret".into(), Json::String(secret));
         claims.insert("provider".into(), Json::String(provider.clone()));
+        claims.insert("identity".into(), Json::String(signed_in.id().to_owned()));
         query.insert(
             "secret".into(),
             Json::String(appwrite_core::auth::jwt::encode(&ctx.state.config.openssl_key, claims, 60)),

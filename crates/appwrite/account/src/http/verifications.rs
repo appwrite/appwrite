@@ -365,8 +365,9 @@ async fn confirm(ctx: &mut Context, kind: i64, attribute: &str, payload: bool) -
     let db = ctx.db()?;
     let authorization = db.authorization();
     let document = authorization.skip(base::user_document(&db, &user_id, &[base::TOKENS])).await?;
+    // An unknown user answers like a wrong secret, so the route can't tell which accounts exist.
     if document.is_empty() {
-        return Err(Error::new(ErrorType::UserNotFound));
+        return Err(Error::new(ErrorType::UserInvalidToken));
     }
     let Some(verified) = base::token_verify(&document, kind, &secret) else {
         return Err(Error::new(ErrorType::UserInvalidToken));

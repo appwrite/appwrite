@@ -722,16 +722,20 @@ pub async fn magic_url(ctx: &mut Context) -> Result<Response> {
 /// Exchanges a token's secret for a session (`$createSession`).
 async fn exchange(ctx: &mut Context, secret_length: i64) -> Result<Response> {
     let user_id = ctx.required_str("userId", &CustomId)?;
-    let mut secret = ctx.required_str("secret", &Text::new(256))?;
+    // An OAuth2 token's JWT, naming its identity, takes up to 512.
+    let mut secret = ctx.required_str("secret", &Text::new(512))?;
 
-    // An OAuth2 token flow's secret is a JWT carrying the provider.
+    // An OAuth2 token flow's secret is a JWT carrying the provider and, since
+    // it names one, the identity that signed in.
     let mut oauth_provider: Option<String> = None;
+    let mut oauth_identity: Option<String> = None;
     if let Ok(claims) = appwrite_core::auth::jwt::decode_accepted(&ctx.state.config.openssl_keys, &secret, 60, 0) {
         let provider = claims.get("provider").and_then(Json::as_str).unwrap_or("").to_owned();
         if provider.is_empty() {
             return Err(Error::new(ErrorType::UserInvalidToken));
         }
         oauth_provider = Some(provider);
+        oauth_identity = claims.get("identity").and_then(Json::as_str).map(str::to_owned);
         secret = claims.get("secret").and_then(Json::as_str).unwrap_or("").to_owned();
     }
 
@@ -778,16 +782,16 @@ async fn exchange(ctx: &mut Context, secret_length: i64) -> Result<Response> {
     let db = ctx.db()?;
     if kind == token_type::OAUTH2 {
         let provider = oauth_provider.clone().unwrap_or_default();
-        let identity = db
-            .authorization()
-            .skip(db.find_one(
-                "identities",
-                vec![
-                    Query::equal("provider", [provider.as_str()]),
-                    Query::equal("userInternalId", [user.sequence.to_string()]),
-                ],
-            ))
-            .await?;
+        // The session is the identity the token names; a token issued before
+        // tokens named one falls back to any of the account's with the provider.
+        let mut queries = vec![
+            Query::equal("userInternalId", [user.sequence.to_string()]),
+            Query::equal("provider", [provider.as_str()]),
+        ];
+        if let Some(identity) = oauth_identity.as_deref().filter(|id| !id.is_empty()) {
+            queries.push(Query::equal("$id", [identity]));
+        }
+        let identity = db.authorization().skip(db.find_one("identities", queries)).await?;
         if identity.is_empty() {
             return Err(Error::new(ErrorType::UserInvalidToken));
         }
