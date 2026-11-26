@@ -440,7 +440,7 @@ export function GitRepositoryCard({
               >
                 {repositoryErrorKind === 'missing'
                   ? t(
-                      "This site's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.",
+                      "This site's Git installation can no longer reach its repository, so pushes can't deploy. If the repository was removed from the installation's repository access, add it back with Update repository access. If it was deleted or moved to another installation, disconnect it and connect it again.",
                     )
                   : t(
                       "This site's repository details could not be loaded. Its Git connection is unchanged, but branch and root directory options are unavailable until access is restored.",

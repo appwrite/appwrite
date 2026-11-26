@@ -51,6 +51,11 @@ function isReconnectKind(kind: VcsInstallationErrorKind) {
   return kind === 'reconnect'
 }
 
+/** Kinds fixed on the provider's side, so the provider link leads. */
+function leadsWithProvider(kind: VcsInstallationErrorKind) {
+  return kind === 'reconnect' || kind === 'missing'
+}
+
 function useVcsInstallationErrorCopy(kind: VcsInstallationErrorKind): {
   title: string
   description: string
@@ -72,7 +77,7 @@ function useVcsInstallationErrorCopy(kind: VcsInstallationErrorKind): {
     return {
       title: t('Repository not available'),
       description: t(
-        'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.',
+        "This Git installation can no longer reach the repository. If it was removed from the installation's repository access, add it back with Update repository access. If it was deleted or moved, connect it again.",
       ),
       icon: AlertTriangle,
     }
@@ -134,7 +139,7 @@ function VcsInstallationErrorActions({
   'kind' | 'reconnectUrl' | 'onRetry' | 'isRetrying'
 >) {
   const t = useT()
-  const reconnectIsPrimary = isReconnectKind(kind)
+  const reconnectIsPrimary = leadsWithProvider(kind)
 
   // A locked installation is healthy, it is just mid-refresh. Offering a
   // reconnect there would send the user to re-authorize for no reason.
@@ -149,7 +154,9 @@ function VcsInstallationErrorActions({
       >
         <a href={reconnectUrl}>
           <PlugZap className="me-1.5 h-3.5 w-3.5" />
-          {t('Reconnect installation')}
+          {kind === 'missing'
+            ? t('Update repository access')
+            : t('Reconnect installation')}
         </a>
       </Button>
     ) : null
