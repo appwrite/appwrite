@@ -25,9 +25,11 @@
   is named `p_by_resourceType_teamInternalId`. `migrate()` adds it to an
   existing table, where it covers only parts written afterwards. Run
   `ALTER TABLE <events> MATERIALIZE PROJECTION p_by_resourceType_teamInternalId`
-  once (per partition on a large table, newest first) so older data is
-  covered. Until a partition is materialized, its older and newer parts do
-  not merge with each other. The previous `p_by_resourceType` is left in
+  once so older data is covered. On a large table run it one partition at a
+  time, newest first, by appending `IN PARTITION <partition>` (`202611` for
+  November 2026); without the clause every run rewrites the whole table.
+  Until a partition is materialized, its older and newer parts do not merge
+  with each other. The previous `p_by_resourceType` is left in
   place and still serves reads without a team filter. Drop it by hand once
   the new projection is materialized.
 - The Database adapter's `setup()` (and so `migrate()`) adds the attributes
