@@ -12,7 +12,6 @@ use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Platform\Modules\Videos\Base;
-use Appwrite\Platform\Modules\Videos\SegmentCache;
 use Appwrite\Storage\Encryption;
 use Appwrite\Usage\Context;
 use Appwrite\Usage\Video as VideoUsage;
@@ -142,8 +141,6 @@ class Videos extends Action
     /** Encode speed buckets as a multiple of realtime. */
     private const SPEED_BUCKETS = [0.1, 0.25, 0.5, 1, 2, 4, 8, 16, 32];
 
-    private SegmentCache $segmentCache;
-
     /**
      * Must be exactly 'videos': app/worker.php derives the queue name
      * (`v1-videos`) and looks the action up by this key.
@@ -167,7 +164,6 @@ class Videos extends Action
             ->inject('usage')
             ->inject('publisherForUsage')
             ->inject('telemetry')
-            ->inject('purgeVideoSegmentCache')
             ->callback($this->action(...));
     }
 
@@ -182,9 +178,7 @@ class Videos extends Action
         Context $usage,
         UsagePublisher $publisherForUsage,
         Telemetry $telemetry,
-        SegmentCache $segmentCache,
     ): void {
-        $this->segmentCache = $segmentCache;
         $payload = $message->getPayload();
 
         if (empty($payload)) {
@@ -568,13 +562,6 @@ class Videos extends Action
                 ]
             );
             if ($updated === 0) {
-                $current = $dbForProject->getDocument('videosCaptions', $caption->getId());
-                // The write already committed. A purge that failed after it is
-                // why this message came back, and the previous segment URL
-                // stays cached for a year until this runs.
-                if (!$current->isEmpty() && $current->getAttribute('status') === Base::STATUS_READY) {
-                    $this->segmentCache->purge($project->getId(), $video->getId());
-                }
                 $outcome = 'duplicate';
                 return;
             }
@@ -663,11 +650,8 @@ class Videos extends Action
             // Do not overwrite aborted/error parks from maintenance.
             $current = $dbForProject->getDocument('videosCaptions', $caption->getId());
             $status = $current->isEmpty() ? '' : (string) $current->getAttribute('status', '');
-            // Ready means the bytes are stored and the failure is the purge
-            // after that write. Parking it as error would hide the new caption
-            // and the redelivery would have nothing left to retry.
             $mayPark = $claimed
-                ? !\in_array($status, [Base::STATUS_ABORTED, Base::STATUS_ERROR, Base::STATUS_READY], true)
+                ? !\in_array($status, [Base::STATUS_ABORTED, Base::STATUS_ERROR], true)
                 : $status === Base::STATUS_PENDING;
 
             if (!$current->isEmpty() && $mayPark) {
@@ -1452,7 +1436,7 @@ class Videos extends Action
         Document $project,
         array $permissions
     ): Document {
-        $removed = $dbForProject->deleteDocuments('videosCaptionsSegments', [
+        $dbForProject->deleteDocuments('videosCaptionsSegments', [
             Query::equal('captionInternalId', [$caption->getSequence()]),
         ]);
 
@@ -1504,14 +1488,6 @@ class Videos extends Action
             ],
             $permissions
         );
-
-        // A first encode has nothing cached. A replacement leaves the previous
-        // segment URL on Fastly, because the video's updatedAt did not change.
-        // A failure here fails the job. The caption stays ready, and the
-        // redelivery purges again instead of rewriting the file.
-        if ($removed > 0) {
-            $this->segmentCache->purge($project->getId(), $video->getId());
-        }
 
         return $caption;
     }

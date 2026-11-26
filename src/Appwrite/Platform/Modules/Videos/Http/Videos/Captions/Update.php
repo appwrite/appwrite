@@ -210,8 +210,7 @@ class Update extends Base
         }
 
         // Public caption segments share the video Surrogate-Key and the video's
-        // updatedAt, so this write does not change their URL. A replaced source
-        // is rewritten later; the worker purges again once the new bytes are stored.
+        // updatedAt, so this write does not change their URL.
         $segmentCache->purge($project->getId(), $video->getId());
 
         $queueForEvents
