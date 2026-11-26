@@ -251,7 +251,7 @@ export function ConsoleChartView({
               <BarChart data={barRows} margin={USAGE_CHART_MARGIN}>
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  stroke="hsl(var(--border))"
+                  stroke="var(--border)"
                   vertical={false}
                 />
                 <XAxis
@@ -265,7 +265,7 @@ export function ConsoleChartView({
                 <UsageChartYAxis tickFormatter={yAxisTickFormatter} />
                 <Tooltip
                   isAnimationActive={false}
-                  cursor={{ fill: 'hsl(var(--muted) / 0.35)' }}
+                  cursor={{ fill: 'var(--muted)', opacity: 0.35 }}
                   content={({ active, payload }) => {
                     if (!active || !payload?.length) return null
                     const row = payload[0]?.payload as {
@@ -307,7 +307,7 @@ export function ConsoleChartView({
                 </defs>
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  stroke="hsl(var(--border))"
+                  stroke="var(--border)"
                   vertical={false}
                 />
                 <UsageChartXAxis
