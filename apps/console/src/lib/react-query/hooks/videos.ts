@@ -620,7 +620,6 @@ export function useUpdateVideoPermissions(
     mutationFn: (permissions: string[]) =>
       sdk.forProject(projectId!).videos.update({
         videoId: video.$id,
-        name: video.name,
         permissions,
       }),
     onSuccess: async (updated) => {

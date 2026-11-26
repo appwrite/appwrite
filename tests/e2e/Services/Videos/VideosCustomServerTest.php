@@ -733,7 +733,16 @@ final class VideosCustomServerTest extends Scope
     {
         $videoId = $this->createReadyVideo()['$id'];
 
-        $response = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->headers(), [
+        $permissions = [Permission::read(Role::any()), Permission::update(Role::any())];
+        $granted = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId, $this->headers(), [
+            'permissions' => $permissions,
+        ]);
+        $this->assertEquals(200, $granted['headers']['status-code']);
+        $name = $granted['body']['name'];
+        $this->assertNotSame('', $name);
+
+        // Only the passed fields change: renaming keeps the permissions.
+        $response = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId, $this->headers(), [
             'name' => 'Renamed demo',
         ]);
 
@@ -741,8 +750,31 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals($videoId, $response['body']['$id']);
         $this->assertEquals('Renamed demo', $response['body']['name']);
 
-        $missing = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->headers(), []);
-        $this->assertEquals(400, $missing['headers']['status-code']);
+        $stored = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->headers());
+        $this->assertSame('Renamed demo', $stored['body']['name']);
+        $this->assertEqualsCanonicalizing($permissions, $stored['body']['$permissions']);
+
+        // And changing permissions keeps the name.
+        $narrowed = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId, $this->headers(), [
+            'permissions' => [Permission::read(Role::any())],
+        ]);
+        $this->assertEquals(200, $narrowed['headers']['status-code']);
+
+        $stored = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->headers());
+        $this->assertSame('Renamed demo', $stored['body']['name']);
+        $this->assertSame([Permission::read(Role::any())], $stored['body']['$permissions']);
+
+        $empty = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId, $this->headers(), []);
+        $this->assertEquals(200, $empty['headers']['status-code']);
+        $this->assertSame('Renamed demo', $empty['body']['name']);
+
+        $put = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->headers(), [
+            'name' => 'Put rename',
+        ]);
+        $this->assertEquals(404, $put['headers']['status-code']);
+
+        $stored = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->headers());
+        $this->assertSame('Renamed demo', $stored['body']['name']);
     }
 
     /**
@@ -3987,7 +4019,7 @@ final class VideosCustomServerTest extends Scope
         $encoded = $this->waitForRenditionTerminalState($videoId, $renditionId);
         $this->assertEquals('ready', $encoded['status']);
 
-        $update = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->headers(), [
+        $update = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId, $this->headers(), [
             'name' => 'Still the same source',
         ]);
         $this->assertEquals(200, $update['headers']['status-code']);
