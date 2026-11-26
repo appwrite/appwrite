@@ -95,7 +95,9 @@ jobs:
           permission-contents: write
           permission-workflows: write
 
-      # The mirror's tree is the .crate Cargo just built: one commit and one tag per release.
+      # The mirror's tree is the .crate Cargo built: one commit and one tag per release. --force
+      # adds what the crate's own .gitignore names too, the Cargo.lock that packaging generates,
+      # so the mirror is the published crate file for file.
       - name: Push the release to the mirror
         env:
           TOKEN: ${{ steps.app-token.outputs.token }}
@@ -113,7 +115,7 @@ jobs:
           fi
           git -C "$mirror" rm --quiet -r --ignore-unmatch .
           tar --extract --gzip --file "target/package/$PACKAGE-$VERSION.crate" --strip-components 1 --directory "$mirror"
-          git -C "$mirror" add --all
+          git -C "$mirror" add --all --force
           git -C "$mirror" \
             -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
             commit --quiet --message "$VERSION" \
