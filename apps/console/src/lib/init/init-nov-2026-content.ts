@@ -301,6 +301,7 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
       platform: 'youtube',
       href: INIT_YOUTUBE_CHANNEL_HREF,
       prizeDescription: 'Init 5 hoodie and cap',
+      presenceActivity: 'Hoodie and cap wishlist',
       // Init has no light theme: both themes show the image on its own dark ground.
       visual: {
         imageAlt: 'Day 1 giveaway: the Init 5 hoodie and the init_ cap',
@@ -316,6 +317,7 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
       platform: 'youtube',
       href: INIT_YOUTUBE_CHANNEL_HREF,
       prizeDescription: 'Light Appwriter keyboard and desk mat',
+      presenceActivity: 'Keyboard and desk mat envy',
       visual: {
         imageAlt:
           'Day 2 giveaway: a light Appwriter keyboard on the Init 5 desk mat',
@@ -331,6 +333,7 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
       platform: 'youtube',
       href: INIT_YOUTUBE_CHANNEL_HREF,
       prizeDescription: 'Dark Appwriter keyboard, mug and stickers',
+      presenceActivity: 'Keyboard, mug and sticker dreams',
       visual: {
         imageAlt:
           'Day 3 giveaway: a dark Appwriter keyboard, the Init 5 mug and the Init 5 sticker sheet',
@@ -346,6 +349,7 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
       platform: 'youtube',
       href: INIT_YOUTUBE_CHANNEL_HREF,
       prizeDescription: 'Init 5 tee, beanie and poster',
+      presenceActivity: 'Tee, beanie and poster wishlist',
       visual: {
         imageAlt:
           'Day 4 giveaway: the Init 5 Five Days tee, the init_ beanie and the Init 5 poster',
@@ -362,6 +366,7 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
     platform: 'youtube',
     href: INIT_YOUTUBE_CHANNEL_HREF,
     title: 'The full Init 5 swag collection',
+    presenceActivity: 'Full swag collection dreams',
     description:
       'All eight pieces: hoodie, tee, cap, beanie, mug, sticker sheet, poster and desk mat.',
     eligibility: 'Share Init on social during the week to enter.',
