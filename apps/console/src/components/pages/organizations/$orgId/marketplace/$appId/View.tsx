@@ -90,6 +90,17 @@ export function View({ initialData }: ViewProps = {}) {
               'This app may have been deleted or you do not have access.',
             )}
             variant="card"
+            action={
+              <Button variant="outline" asChild>
+                <Link
+                  to="/organizations/$orgId/marketplace"
+                  params={{ orgId: orgId! }}
+                >
+                  <ArrowLeft className="me-1.5 h-3.5 w-3.5" />
+                  {t('Back to marketplace')}
+                </Link>
+              </Button>
+            }
           />
         </div>
       </ConsoleLayout>
@@ -118,9 +129,7 @@ export function View({ initialData }: ViewProps = {}) {
 
   return (
     <ConsoleLayout
-      headerBanner={
-        <OrganizationBillingHeaderBanners organizationId={orgId} />
-      }
+      headerBanner={<OrganizationBillingHeaderBanners organizationId={orgId} />}
     >
       <div className="flex h-full flex-col">
         <div className="border-b border-border bg-background">
@@ -164,7 +173,9 @@ export function View({ initialData }: ViewProps = {}) {
                     <Badge variant="inactive" className="text-[10px] shrink-0">
                       {t(MARKETPLACE_CATEGORY_LABELS[mapped.category])}
                     </Badge>
-                    <span>{t('by')} {mapped.author}</span>
+                    <span>
+                      {t('by')} {mapped.author}
+                    </span>
                     <span>·</span>
                     <span>
                       {mapped.installs === 1
@@ -180,40 +191,59 @@ export function View({ initialData }: ViewProps = {}) {
                 </div>
               </div>
 
-              {installation ? (
-                <div className="flex items-center gap-2">
-                  <Badge variant="success" className="text-[11px]">
-                    {t('Installed')}
-                  </Badge>
+              <div className="flex shrink-0 items-center gap-2">
+                {app.teamId && teamNamesById[app.teamId] ? (
                   <Button variant="outline" asChild>
                     <Link
-                      to="/organizations/$orgId/settings/installations"
-                      params={{ orgId }}
+                      to="/organizations/$orgId/apps/$appId"
+                      params={{ orgId: app.teamId, appId: app.$id }}
                     >
-                      {t('Manage')}
+                      {t('Edit app')}
                     </Link>
                   </Button>
-                </div>
-              ) : (
-                <Button
-                  disabled={
-                    !isInstallationResolved ||
-                    mapped.installationScopes.length === 0 ||
-                    installMutation.isPending
-                  }
-                  title={
-                    !isInstallationResolved
-                      ? t('Checking installation…')
-                      : mapped.installationScopes.length === 0
-                        ? t('This app has no installation scopes to grant yet.')
-                        : undefined
-                  }
-                  onClick={() => installMutation.mutate()}
-                >
-                  {t('Install app')}
-                </Button>
-              )}
+                ) : null}
+                {installation ? (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="success" className="text-[11px]">
+                      {t('Installed')}
+                    </Badge>
+                    <Button variant="outline" asChild>
+                      <Link
+                        to="/organizations/$orgId/settings/installations"
+                        params={{ orgId }}
+                      >
+                        {t('Manage')}
+                      </Link>
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    disabled={
+                      !isInstallationResolved ||
+                      mapped.installationScopes.length === 0 ||
+                      installMutation.isPending
+                    }
+                    title={
+                      !isInstallationResolved
+                        ? t('Checking installation…')
+                        : mapped.installationScopes.length === 0
+                          ? t(
+                              'This app has no installation scopes to grant yet.',
+                            )
+                          : undefined
+                    }
+                    onClick={() => installMutation.mutate()}
+                  >
+                    {t('Install app')}
+                  </Button>
+                )}
+              </div>
             </div>
+            {!installation && mapped.installationScopes.length === 0 ? (
+              <p className="mt-3 text-[12px] text-muted-foreground sm:text-end">
+                {t('This app has no installation scopes to grant yet.')}
+              </p>
+            ) : null}
           </div>
         </div>
 
@@ -224,10 +254,12 @@ export function View({ initialData }: ViewProps = {}) {
               appName={mapped.name}
             />
             <div className="space-y-4 rounded-xl border border-border bg-card/50 p-6">
-              <MarkdownContent
-                content={mapped.description}
-                className="text-[13px] leading-relaxed text-muted-foreground"
-              />
+              {app.description?.trim() ? (
+                <MarkdownContent
+                  content={app.description}
+                  className="text-[13px] leading-relaxed text-muted-foreground"
+                />
+              ) : null}
               <MarketplaceAppResourceLinks app={mapped} />
               <MarketplaceAppContacts contacts={mapped.contacts ?? []} />
             </div>
