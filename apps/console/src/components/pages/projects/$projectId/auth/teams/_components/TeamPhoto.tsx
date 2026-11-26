@@ -8,6 +8,9 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { useT } from '@/lib/i18n/translate'
 import { bumpTeamPhotoVersion } from '@/lib/team-photo'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { useOrganizationScopes, useProject } from '@/lib/react-query/hooks'
+import { canCreateTeam } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 const PHOTO_ACCEPT = 'image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp'
 const PHOTO_MIME_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp'])
@@ -23,6 +26,10 @@ interface TeamPhotoProps {
 export function TeamPhoto({ projectId, teamId, name }: TeamPhotoProps) {
   const t = useT()
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false)
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const canUpdate = canCreateTeam(access, features)
 
   const uploadMutation = useMutation({
     mutationFn: (file: File) =>
@@ -84,13 +91,17 @@ export function TeamPhoto({ projectId, teamId, name }: TeamPhotoProps) {
             />
           }
           accept={PHOTO_ACCEPT}
-          description={t('PNG, JPEG, or WebP up to 5MB.')}
+          description={
+            canUpdate
+              ? t('PNG, JPEG, or WebP up to 5MB.')
+              : t('You need write access to change the photo.')
+          }
           uploadLabel={t('Upload photo')}
           removeLabel={t('Remove photo')}
           onRemove={() => setRemoveDialogOpen(true)}
           onFile={handleFile}
           uploading={uploadMutation.isPending}
-          disabled={removeMutation.isPending}
+          disabled={!canUpdate || removeMutation.isPending}
         />
       </div>
       <ConfirmActionDialog
