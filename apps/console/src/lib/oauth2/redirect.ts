@@ -16,3 +16,26 @@ export function isWebRedirect(uri: string): boolean {
     return false
   }
 }
+
+/**
+ * Why an OAuth2 redirect URI would be rejected, or null when it is allowed:
+ * web URIs must be https (http only on a loopback host), native schemes pass,
+ * and no URI may carry a fragment.
+ */
+export function redirectUriError(uri: string): string | null {
+  let url: URL
+  try {
+    url = new URL(uri)
+  } catch {
+    return 'Enter a valid URL'
+  }
+  if (url.hash || uri.includes('#'))
+    return 'Redirect URIs cannot contain a fragment (#)'
+  if (
+    url.protocol === 'http:' &&
+    !['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)
+  ) {
+    return 'Use https, or http only on localhost'
+  }
+  return null
+}
