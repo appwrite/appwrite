@@ -676,13 +676,7 @@ return [
                 '$description' => 'This event triggers when a monitor starts firing and opens an alert.',
             ],
             'update' => [
-                '$description' => 'This event triggers when an alert is updated.',
-                'status' => [
-                    '$description' => 'This event triggers when a monitor recovers and its alert resolves.',
-                ],
-                'acknowledgement' => [
-                    '$description' => 'This event triggers when a member acknowledges a firing alert or undoes the acknowledgement.',
-                ],
+                '$description' => 'This event triggers when an alert resolves, is acknowledged, or its acknowledgement is undone. The alert\'s status and acknowledgedAt tell which.',
             ],
         ],
     ],

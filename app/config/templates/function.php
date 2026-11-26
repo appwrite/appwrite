@@ -2457,7 +2457,7 @@ return [
         'score' => 6,
         'tagline' => 'Post every firing and resolved alert to Slack, Discord, Microsoft Teams or Google Chat.',
         'permissions' => [],
-        'events' => ['monitors.*.alerts.*.create', 'monitors.*.alerts.*.update.status'],
+        'events' => ['monitors.*.alerts.*.create', 'monitors.*.alerts.*.update'],
         'cron' => '',
         'timeout' => 15,
         'useCases' => [FunctionUseCases::MONITORING],
