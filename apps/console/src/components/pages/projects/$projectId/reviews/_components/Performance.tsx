@@ -1,4 +1,5 @@
-import { useMemo, useRef, useState } from 'react'
+import { useId, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import {
   ArrowDown,
@@ -8,6 +9,7 @@ import {
   FolderGit2,
   GitPullRequest,
   Loader2,
+  Search,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -26,7 +28,12 @@ import {
 } from '@/components/ui/tooltip'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { Pagination } from '@/components/global/shared/Pagination'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import {
+  SearchableSelect,
+  type SearchableSelectItem,
+} from '@/components/global/shared/SearchableSelect'
 import type {
   ReviewAuthor,
   ReviewAuthorRange,
@@ -35,15 +42,17 @@ import type {
   ReviewRepositorySummary,
 } from '@/lib/appwrite/reviews'
 import {
+  reviewSummaryQueryOptions,
   useReviewAuthors,
   useReviewCategories,
   useReviewSummary,
+  useVcsInstallations,
 } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
 import { mapToQueryParam, type CompactFilterKey } from '@/lib/table-filters'
 import { cn } from '@/lib/utils'
 import { copyToClipboard, openInNewTab } from '@/lib/utils/context-menu'
-import { VcsIcon } from '@/lib/vcs/providers'
+import { getVcsProvider, VcsIcon } from '@/lib/vcs/providers'
 import {
   OverviewStatTiles,
   type OverviewStatTile,
@@ -55,7 +64,11 @@ import {
   ReviewAuthorLink,
   ReviewTierBadge,
 } from './ReviewBadges'
-import { useRepositoryOptions } from './RepositorySelect'
+import {
+  RepositorySelect,
+  useRepositoryOptions,
+  type RepositoryOption,
+} from './RepositorySelect'
 import { RowActionsDropdown, RowContextMenu, type RowActions } from './RowMenus'
 
 const HEAD_CLASS =
@@ -91,6 +104,14 @@ const NOISY_SHARE = 0.5
 /** Tiers worst first, so a tier sorts by its index. */
 const TIERS = ['F', 'D', 'C', 'B', 'A', 'S']
 
+/**
+ * Rows per page of the authors and repositories, the first of them what a
+ * table opens on. A busy project has hundreds of each.
+ */
+const PAGE_SIZES = [10, 25, 50, 100]
+
+const ALL_REPOSITORIES = 'all'
+
 type SortKey =
   | 'pulls'
   | 'approval'
@@ -100,6 +121,23 @@ type SortKey =
   | 'useful'
   | 'tier'
   | 'lastReviewAt'
+
+type Sort = { key: SortKey; desc: boolean }
+
+/** What an author and a repository both count, which their tables sort by. */
+type Figures = Pick<
+  ReviewAuthor,
+  | 'pulls'
+  | 'reviews'
+  | 'approved'
+  | 'approvedFirst'
+  | 'findings'
+  | 'critical'
+  | 'major'
+  | 'resolved'
+  | 'dismissed'
+  | 'lastReviewAt'
+> & { tier?: string }
 
 /** What the summary tiles are computed from: a period, or the authors summed. */
 type Totals = Pick<
@@ -150,24 +188,120 @@ function percentChange(
   return Number((((current - previous) / previous) * 100).toFixed(1))
 }
 
-function sortValue(author: ReviewAuthor, key: SortKey): number | string {
+function sortValue(row: Figures, key: SortKey): number | string {
   switch (key) {
     case 'pulls':
-      return author.pulls
+      return row.pulls
     case 'approval':
-      return ratio(author.approved, author.pulls) ?? -1
+      return ratio(row.approved, row.pulls) ?? -1
     case 'findingsPerPull':
-      return ratio(author.findings, author.pulls) ?? -1
+      return ratio(row.findings, row.pulls) ?? -1
     case 'severe':
-      return author.critical + author.major
+      return row.critical + row.major
     case 'fixRate':
-      return ratio(author.resolved, author.findings) ?? -1
+      return ratio(row.resolved, row.findings) ?? -1
     case 'useful':
-      return usefulRate(author) ?? -1
+      return usefulRate(row) ?? -1
     case 'tier':
-      return TIERS.indexOf(author.tier)
+      return TIERS.indexOf(row.tier ?? '')
     case 'lastReviewAt':
-      return author.lastReviewAt
+      return row.lastReviewAt
+  }
+}
+
+/** An author's login; empty for reviews queued before logins were kept. */
+function authorName(author: ReviewAuthor): string {
+  return author.author
+}
+
+/**
+ * `owner/name`, as the repository's latest review named it, or its ID for
+ * reviews queued before names were kept.
+ */
+function repositoryName(repository: ReviewRepositorySummary): string {
+  if (repository.providerRepositoryOwner && repository.providerRepositoryName) {
+    return `${repository.providerRepositoryOwner}/${repository.providerRepositoryName}`
+  }
+  return repository.providerRepositoryName || repository.repositoryId
+}
+
+/** What a table shows of its rows, and how its controls change that. */
+type Breakdown<Row> = {
+  search: string
+  setSearch: (search: string) => void
+  sort: Sort
+  setSort: (key: SortKey) => void
+  page: number
+  setPage: (page: number) => void
+  pageSize: number
+  setPageSize: (pageSize: number) => void
+  /** Whether the rows outgrow the first page, which brings the search and pages. */
+  paged: boolean
+  /** The rows the search matches, sorted. */
+  matches: Row[]
+  /** The page of them shown. */
+  rows: Row[]
+}
+
+/**
+ * The authors or repositories table's search, sort and page. Sorting covers
+ * every match before a page of them is shown, so the busiest or the worst
+ * come first whichever page they started on.
+ */
+function useBreakdown<Row extends Figures>(
+  rows: Row[],
+  name: (row: Row) => string,
+): Breakdown<Row> {
+  const [search, setSearch] = useState('')
+  const [sort, setSort] = useState<Sort>({ key: 'pulls', desc: true })
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(PAGE_SIZES[0])
+  const paged = rows.length > PAGE_SIZES[0]
+
+  const matches = useMemo(() => {
+    // A range with fewer rows hides the search, so it stops filtering too.
+    const term = paged ? search.trim().toLowerCase() : ''
+    const direction = sort.desc ? -1 : 1
+    return rows
+      .filter((row) => !term || name(row).toLowerCase().includes(term))
+      .sort((a, b) => {
+        const left = sortValue(a, sort.key)
+        const right = sortValue(b, sort.key)
+        if (left === right) return b.pulls - a.pulls
+        return (left < right ? -1 : 1) * direction
+      })
+  }, [rows, name, paged, search, sort])
+
+  // Another range or repository can hold fewer pages than the one open.
+  const current = Math.min(
+    page,
+    Math.max(1, Math.ceil(matches.length / pageSize)),
+  )
+
+  return {
+    search,
+    setSearch: (next) => {
+      setSearch(next)
+      setPage(1)
+    },
+    sort,
+    setSort: (key) => {
+      setSort((previous) => ({
+        key,
+        desc: previous.key === key ? !previous.desc : true,
+      }))
+      setPage(1)
+    },
+    page: current,
+    setPage,
+    pageSize,
+    setPageSize: (next) => {
+      setPageSize(next)
+      setPage(1)
+    },
+    paged,
+    matches,
+    rows: matches.slice((current - 1) * pageSize, current * pageSize),
   }
 }
 
@@ -273,6 +407,113 @@ export function PerformanceRangeToggle({
 }
 
 /**
+ * The Git provider of a reviewed repository, for its mark. A summary row
+ * names no installation, so the first page of reviewed repositories names
+ * theirs, and past it a project whose installations are all on one provider
+ * names that one. Empty when neither tells.
+ */
+function useRepositoryProviders(
+  projectId: string,
+  options: RepositoryOption[],
+): (repositoryId: string) => string {
+  const { data } = useVcsInstallations(projectId, 0, 100)
+  const providers = new Set(
+    (data?.installations ?? []).map((installation) => installation.provider),
+  )
+  const only = providers.size === 1 ? [...providers][0] : ''
+  const byRepository = new Map(
+    options.map((option) => [option.id, option.provider]),
+  )
+  return (repositoryId) => byRepository.get(repositoryId) || only
+}
+
+/**
+ * The toolbar's repository filter: every repository reviewed in the range,
+ * busiest first, named by its reviews, so a project with hundreds lists them
+ * all without asking the Git provider for each name. While one is selected,
+ * the others load when the list opens. A server without the summary lists the
+ * reviewed repositories instead.
+ */
+export function PerformanceRepositorySelect({
+  projectId,
+  filters,
+}: {
+  projectId: string
+  filters: PerformanceFilters
+}) {
+  const t = useT()
+  const { range, repositoryId, setRepositoryId } = filters
+  const [open, setOpen] = useState(false)
+  // With no repository selected, this is the summary the tab shows.
+  const reviewed = useQuery({
+    ...reviewSummaryQueryOptions(projectId, range),
+    enabled: !repositoryId || open,
+  })
+  const selected = useReviewSummary(projectId, range, repositoryId)
+  const named = selected.repositories.find(
+    (repository) => repository.repositoryId === repositoryId,
+  )
+  // A repository with no reviews in the range is named by its provider.
+  const options = useRepositoryOptions(
+    projectId,
+    (repository) =>
+      !selected.isLoading && !named && repository.$id === repositoryId,
+  )
+  const providerOf = useRepositoryProviders(projectId, options)
+
+  if (reviewed.error || selected.error) {
+    return (
+      <RepositorySelect
+        projectId={projectId}
+        value={repositoryId}
+        onChange={setRepositoryId}
+      />
+    )
+  }
+
+  const items: SearchableSelectItem[] = [
+    { value: ALL_REPOSITORIES, label: t('All repositories'), icon: FolderGit2 },
+    ...(reviewed.data?.repositories ?? []).map((repository) => ({
+      value: repository.repositoryId,
+      label: repositoryName(repository),
+      description: t(
+        repository.pulls === 1
+          ? '{count} pull request'
+          : '{count} pull requests',
+      ).replace('{count}', repository.pulls.toLocaleString()),
+      inlineDescription: true,
+      icon: getVcsProvider(providerOf(repository.repositoryId)).Icon,
+    })),
+  ]
+  const option = options.find((candidate) => candidate.id === repositoryId)
+
+  return (
+    <SearchableSelect
+      value={repositoryId || ALL_REPOSITORIES}
+      onValueChange={(next) =>
+        setRepositoryId(next === ALL_REPOSITORIES ? '' : next)
+      }
+      items={items}
+      onOpenChange={setOpen}
+      isFetching={reviewed.isFetching}
+      ariaLabel={t('Repository')}
+      searchPlaceholder={t('Search repositories...')}
+      emptyMessage={t('No repositories found')}
+      selectedName={
+        named
+          ? repositoryName(named)
+          : option?.named
+            ? option.name
+            : repositoryId
+      }
+      triggerClassName="w-[260px]"
+      contentClassName="w-[300px]"
+      listClassName="min-h-0"
+    />
+  )
+}
+
+/**
  * The performance tab: how the project's pull requests fare in review. The
  * tiles compare the range with the same number of days before it, the chart
  * shows it day by day, and the tables break it down by author and by the
@@ -288,10 +529,6 @@ export function Performance({
   const t = useT()
   const navigate = useNavigate()
   const { range, repositoryId } = filters
-  const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({
-    key: 'pulls',
-    desc: true,
-  })
 
   const { authors, isLoading } = useReviewAuthors(
     projectId,
@@ -343,16 +580,6 @@ export function Performance({
       : undefined
   const days = summary.days.length
 
-  const sorted = useMemo(() => {
-    const direction = sort.desc ? -1 : 1
-    return [...authors].sort((a, b) => {
-      const left = sortValue(a, sort.key)
-      const right = sortValue(b, sort.key)
-      if (left === right) return b.pulls - a.pulls
-      return (left < right ? -1 : 1) * direction
-    })
-  }, [authors, sort])
-
   // The reviews tab, filtered to what a row stands for.
   const openReviews = (keys: CompactFilterKey[]) =>
     navigate({
@@ -377,58 +604,6 @@ export function Performance({
   const selectRepository = (id: string) => {
     filters.setRepositoryId(id)
     topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-
-  const authorActions = (login: string): RowActions =>
-    login
-      ? {
-          tabs: [
-            {
-              icon: GitPullRequest,
-              label: t('Reviews'),
-              onSelect: () => showReviews(login),
-            },
-          ],
-          copy: [
-            {
-              icon: Copy,
-              label: t('Copy name'),
-              onSelect: () => void copyToClipboard('Name', login),
-            },
-          ],
-          links: [
-            {
-              icon: ExternalLink,
-              label: t('Open profile on GitHub'),
-              onSelect: () => openInNewTab(authorUrl(login)),
-            },
-          ],
-        }
-      : { copy: [], links: [] }
-
-  const header = (key: SortKey, label: string, className = 'text-end') => {
-    const active = sort.key === key
-    const Icon = sort.desc ? ArrowDown : ArrowUp
-    return (
-      <TableHead className={cn(AUTHOR_HEAD_CLASS, className)}>
-        <button
-          type="button"
-          className={cn(
-            'inline-flex items-center gap-1 uppercase tracking-wider hover:text-foreground',
-            active && 'text-foreground',
-          )}
-          onClick={() =>
-            setSort((current) => ({
-              key,
-              desc: current.key === key ? !current.desc : true,
-            }))
-          }
-        >
-          {label}
-          {active && <Icon className="h-3 w-3" />}
-        </button>
-      </TableHead>
-    )
   }
 
   const compared = t('Compared with the {count} days before').replace(
@@ -530,164 +705,7 @@ export function Performance({
 
           {summary.days.length > 0 && <ActivityChart days={summary.days} />}
 
-          <div className="@container overflow-hidden rounded-xl border border-border bg-card/50">
-            <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-1 px-6 py-4">
-              <div className="min-w-0">
-                <h3 className="text-[15px] font-semibold text-foreground">
-                  {t('Authors')}
-                </h3>
-                <p className="mt-2 text-[13px] text-muted-foreground">
-                  {t(
-                    'How each author’s pull requests fared in review. Select an author to see their reviews.',
-                  )}
-                </p>
-              </div>
-              <span className="text-[13px] text-muted-foreground">
-                {t('{count} authors').replace(
-                  '{count}',
-                  authors.length.toLocaleString(),
-                )}
-              </span>
-            </div>
-            <div className="border-t border-border" />
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent border-b border-border">
-                  <TableHead className={cn(AUTHOR_HEAD_CLASS, 'w-full')}>
-                    {t('Author')}
-                  </TableHead>
-                  {header('pulls', t('Pull requests'))}
-                  {header('approval', t('Approved'))}
-                  {header('findingsPerPull', t('Findings / PR'))}
-                  {header(
-                    'severe',
-                    t('Critical / major'),
-                    'text-end hidden @[60rem]:table-cell',
-                  )}
-                  {header('fixRate', t('Fixed'))}
-                  {header('useful', t('Useful'))}
-                  {header('tier', t('Confidence'))}
-                  {header(
-                    'lastReviewAt',
-                    t('Last review'),
-                    'text-end hidden @[72rem]:table-cell',
-                  )}
-                  <TableHead className="w-[52px] pe-4" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sorted.map((author) => {
-                  const actions = authorActions(author.author)
-                  return (
-                    <RowContextMenu
-                      key={author.author || 'unknown'}
-                      actions={actions}
-                    >
-                      <TableRow
-                        className={cn(
-                          'border-b border-border/50 last:border-b-0',
-                          author.author
-                            ? 'cursor-pointer transition-colors hover:bg-muted/30'
-                            : 'hover:bg-transparent',
-                        )}
-                        onClick={(event) => {
-                          if (!author.author) return
-                          const target = event.target as HTMLElement
-                          // Clicks in the row's menus bubble here from their portals.
-                          if (!event.currentTarget.contains(target)) return
-                          if (target.closest('a, button')) return
-                          showReviews(author.author)
-                        }}
-                      >
-                        <TableCell className="max-w-0 min-w-[180px] py-2.5 ps-6 pe-3">
-                          <ReviewAuthorLink author={author.author} />
-                        </TableCell>
-                        <TableCell className={AUTHOR_CELL_CLASS}>
-                          {author.pulls.toLocaleString()}
-                          <span className={SUBLINE_CLASS}>
-                            {t('{count} reviews').replace(
-                              '{count}',
-                              author.reviews.toLocaleString(),
-                            )}
-                          </span>
-                        </TableCell>
-                        <TableCell className={AUTHOR_CELL_CLASS}>
-                          {formatPercent(ratio(author.approved, author.pulls))}
-                          <span className={SUBLINE_CLASS}>
-                            {t('{rate} first try').replace(
-                              '{rate}',
-                              formatPercent(
-                                ratio(author.approvedFirst, author.pulls),
-                              ),
-                            )}
-                          </span>
-                        </TableCell>
-                        <TableCell className={AUTHOR_CELL_CLASS}>
-                          {formatNumber(ratio(author.findings, author.pulls))}
-                        </TableCell>
-                        <TableCell
-                          className={cn(
-                            AUTHOR_CELL_CLASS,
-                            'hidden @[60rem]:table-cell',
-                          )}
-                        >
-                          <span
-                            className={cn(
-                              author.critical > 0
-                                ? 'text-red-600 dark:text-red-400'
-                                : 'text-muted-foreground',
-                            )}
-                          >
-                            {author.critical}
-                          </span>
-                          <span className="text-muted-foreground"> / </span>
-                          {author.major}
-                        </TableCell>
-                        <TableCell className={AUTHOR_CELL_CLASS}>
-                          {formatPercent(
-                            ratio(author.resolved, author.findings),
-                          )}
-                        </TableCell>
-                        <TableCell className={AUTHOR_CELL_CLASS}>
-                          {formatPercent(usefulRate(author))}
-                        </TableCell>
-                        <TableCell className={AUTHOR_CELL_CLASS}>
-                          <div className="flex justify-end">
-                            <ReviewTierBadge tier={author.tier} />
-                          </div>
-                        </TableCell>
-                        <TableCell
-                          className={cn(
-                            AUTHOR_CELL_CLASS,
-                            'hidden @[72rem]:table-cell',
-                          )}
-                        >
-                          {author.lastReviewAt && (
-                            <DateTooltip
-                              date={author.lastReviewAt}
-                              className="text-[12px] text-muted-foreground font-mono"
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell className="py-2.5 pe-4 ps-1 text-end">
-                          {author.author && (
-                            <RowActionsDropdown
-                              actions={actions}
-                              trigger={
-                                <RowActionsMenuTrigger
-                                  aria-label={t('Author actions')}
-                                />
-                              }
-                            />
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    </RowContextMenu>
-                  )
-                })}
-              </TableBody>
-            </Table>
-          </div>
+          <Authors authors={authors} onShowReviews={showReviews} />
 
           {!repositoryId && summary.repositories.length > 1 && (
             <Repositories
@@ -729,6 +747,159 @@ export function Performance({
 }
 
 /**
+ * How each author's pull requests fared in review, the busiest first.
+ * Selecting one opens their reviews.
+ */
+function Authors({
+  authors,
+  onShowReviews,
+}: {
+  authors: ReviewAuthor[]
+  onShowReviews: (login: string) => void
+}) {
+  const t = useT()
+  const view = useBreakdown(authors, authorName)
+
+  const actions = (login: string): RowActions =>
+    login
+      ? {
+          tabs: [
+            {
+              icon: GitPullRequest,
+              label: t('Reviews'),
+              onSelect: () => onShowReviews(login),
+            },
+          ],
+          copy: [
+            {
+              icon: Copy,
+              label: t('Copy name'),
+              onSelect: () => void copyToClipboard('Name', login),
+            },
+          ],
+          links: [
+            {
+              icon: ExternalLink,
+              label: t('Open profile on GitHub'),
+              onSelect: () => openInNewTab(authorUrl(login)),
+            },
+          ],
+        }
+      : { copy: [], links: [] }
+
+  return (
+    <BreakdownCard
+      title={t('Authors')}
+      description={t(
+        'How each author’s pull requests fared in review. Select an author to see their reviews.',
+      )}
+      count={t('{count} authors').replace(
+        '{count}',
+        authors.length.toLocaleString(),
+      )}
+      searchPlaceholder={t('Search authors...')}
+      itemLabel={t('authors')}
+      view={view}
+    >
+      <Table>
+        <TableHeader>
+          <TableRow className="hover:bg-transparent border-b border-border">
+            <TableHead className={cn(AUTHOR_HEAD_CLASS, 'w-full')}>
+              {t('Author')}
+            </TableHead>
+            <SortableHead
+              view={view}
+              sortKey="pulls"
+              label={t('Pull requests')}
+            />
+            <SortableHead
+              view={view}
+              sortKey="approval"
+              label={t('Approved')}
+            />
+            <SortableHead
+              view={view}
+              sortKey="findingsPerPull"
+              label={t('Findings / PR')}
+            />
+            <SortableHead
+              view={view}
+              sortKey="severe"
+              label={t('Critical / major')}
+              className="text-end hidden @[60rem]:table-cell"
+            />
+            <SortableHead view={view} sortKey="fixRate" label={t('Fixed')} />
+            <SortableHead view={view} sortKey="useful" label={t('Useful')} />
+            <SortableHead view={view} sortKey="tier" label={t('Confidence')} />
+            <SortableHead
+              view={view}
+              sortKey="lastReviewAt"
+              label={t('Last review')}
+              className="text-end hidden @[72rem]:table-cell"
+            />
+            <TableHead className="w-[52px] pe-4" />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {view.rows.map((author) => {
+            const rowActions = actions(author.author)
+            return (
+              <RowContextMenu
+                key={author.author || 'unknown'}
+                actions={rowActions}
+              >
+                <TableRow
+                  className={cn(
+                    'border-b border-border/50 last:border-b-0',
+                    author.author
+                      ? 'cursor-pointer transition-colors hover:bg-muted/30'
+                      : 'hover:bg-transparent',
+                  )}
+                  onClick={(event) => {
+                    if (!author.author) return
+                    const target = event.target as HTMLElement
+                    // Clicks in the row's menus bubble here from their portals.
+                    if (!event.currentTarget.contains(target)) return
+                    if (target.closest('a, button')) return
+                    onShowReviews(author.author)
+                  }}
+                >
+                  <TableCell className="max-w-0 min-w-[180px] py-2.5 ps-6 pe-3">
+                    <ReviewAuthorLink author={author.author} />
+                  </TableCell>
+                  <FigureCells row={author} />
+                  <TableCell className={AUTHOR_CELL_CLASS}>
+                    <div className="flex justify-end">
+                      <ReviewTierBadge tier={author.tier} />
+                    </div>
+                  </TableCell>
+                  <LastReviewCell date={author.lastReviewAt} />
+                  <TableCell className="py-2.5 pe-4 ps-1 text-end">
+                    {author.author && (
+                      <RowActionsDropdown
+                        actions={rowActions}
+                        trigger={
+                          <RowActionsMenuTrigger
+                            aria-label={t('Author actions')}
+                          />
+                        }
+                      />
+                    )}
+                  </TableCell>
+                </TableRow>
+              </RowContextMenu>
+            )
+          })}
+          {view.rows.length === 0 && (
+            <NoMatches message={t('No authors match your search')} />
+          )}
+        </TableBody>
+      </Table>
+    </BreakdownCard>
+  )
+}
+
+/**
  * How each repository's pull requests fared, busiest first. Selecting one
  * narrows the tab to it.
  */
@@ -744,81 +915,70 @@ function Repositories({
   onShowReviews: (repositoryId: string) => void
 }) {
   const t = useT()
-  // Names come with the summary; providers from the repositories still reviewed.
-  const options = useRepositoryOptions(projectId, () => false)
-  const providers = new Map(
-    options.map((option) => [option.id, option.provider]),
+  const view = useBreakdown(repositories, repositoryName)
+  const providerOf = useRepositoryProviders(
+    projectId,
+    useRepositoryOptions(projectId, () => false),
   )
 
   return (
-    <div className="@container overflow-hidden rounded-xl border border-border bg-card/50">
-      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-1 px-6 py-4">
-        <div className="min-w-0">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            {t('Repositories')}
-          </h3>
-          <p className="mt-2 text-[13px] text-muted-foreground">
-            {t(
-              'How each repository’s pull requests fared in review. Select a repository to narrow the tab to it.',
-            )}
-          </p>
-        </div>
-        <span className="text-[13px] text-muted-foreground">
-          {t('{count} repositories').replace(
-            '{count}',
-            repositories.length.toLocaleString(),
-          )}
-        </span>
-      </div>
-      <div className="border-t border-border" />
+    <BreakdownCard
+      title={t('Repositories')}
+      description={t(
+        'How each repository’s pull requests fared in review. Select a repository to narrow the tab to it.',
+      )}
+      count={t('{count} repositories').replace(
+        '{count}',
+        repositories.length.toLocaleString(),
+      )}
+      searchPlaceholder={t('Search repositories...')}
+      itemLabel={t('repositories')}
+      view={view}
+    >
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent border-b border-border">
             <TableHead className={cn(AUTHOR_HEAD_CLASS, 'w-full')}>
               {t('Repository')}
             </TableHead>
-            <TableHead className={cn(AUTHOR_HEAD_CLASS, 'text-end')}>
-              {t('Pull requests')}
-            </TableHead>
-            <TableHead className={cn(AUTHOR_HEAD_CLASS, 'text-end')}>
-              {t('Approved')}
-            </TableHead>
-            <TableHead className={cn(AUTHOR_HEAD_CLASS, 'text-end')}>
-              {t('Findings / PR')}
-            </TableHead>
-            <TableHead
-              className={cn(
-                AUTHOR_HEAD_CLASS,
-                'hidden text-end @[60rem]:table-cell',
-              )}
-            >
-              {t('Critical / major')}
-            </TableHead>
-            <TableHead className={cn(AUTHOR_HEAD_CLASS, 'text-end')}>
-              {t('Fixed')}
-            </TableHead>
-            <TableHead className={cn(AUTHOR_HEAD_CLASS, 'text-end')}>
-              {t('Useful')}
-            </TableHead>
-            <TableHead
-              className={cn(
-                AUTHOR_HEAD_CLASS,
-                'hidden text-end @[72rem]:table-cell',
-              )}
-            >
-              {t('Last review')}
-            </TableHead>
+            <SortableHead
+              view={view}
+              sortKey="pulls"
+              label={t('Pull requests')}
+            />
+            <SortableHead
+              view={view}
+              sortKey="approval"
+              label={t('Approved')}
+            />
+            <SortableHead
+              view={view}
+              sortKey="findingsPerPull"
+              label={t('Findings / PR')}
+            />
+            <SortableHead
+              view={view}
+              sortKey="severe"
+              label={t('Critical / major')}
+              className="text-end hidden @[60rem]:table-cell"
+            />
+            <SortableHead view={view} sortKey="fixRate" label={t('Fixed')} />
+            <SortableHead view={view} sortKey="useful" label={t('Useful')} />
+            <SortableHead
+              view={view}
+              sortKey="lastReviewAt"
+              label={t('Last review')}
+              className="text-end hidden @[72rem]:table-cell"
+            />
             <TableHead className="w-[52px] pe-4" />
           </TableRow>
         </TableHeader>
         <TableBody>
-          {repositories.map((repository) => {
-            const name =
-              repository.providerRepositoryOwner &&
-              repository.providerRepositoryName
-                ? `${repository.providerRepositoryOwner}/${repository.providerRepositoryName}`
-                : repository.providerRepositoryName
-            const provider = providers.get(repository.repositoryId) ?? ''
+          {view.rows.map((repository) => {
+            // Reviews queued before names were kept name a repository by its ID.
+            const named = !!repository.providerRepositoryName
+            const name = repositoryName(repository)
+            const provider = providerOf(repository.repositoryId)
             const actions: RowActions = {
               tabs: [
                 {
@@ -834,7 +994,7 @@ function Repositories({
                   onSelect: () =>
                     void copyToClipboard('ID', repository.repositoryId),
                 },
-                ...(name
+                ...(named
                   ? [
                       {
                         icon: Copy,
@@ -871,79 +1031,17 @@ function Repositories({
                       <span
                         className={cn(
                           'truncate',
-                          name
+                          named
                             ? 'text-[13px] font-medium text-foreground'
                             : 'font-mono text-[12px] text-muted-foreground',
                         )}
                       >
-                        {name || repository.repositoryId}
+                        {name}
                       </span>
                     </span>
                   </TableCell>
-                  <TableCell className={AUTHOR_CELL_CLASS}>
-                    {repository.pulls.toLocaleString()}
-                    <span className={SUBLINE_CLASS}>
-                      {t('{count} reviews').replace(
-                        '{count}',
-                        repository.reviews.toLocaleString(),
-                      )}
-                    </span>
-                  </TableCell>
-                  <TableCell className={AUTHOR_CELL_CLASS}>
-                    {formatPercent(
-                      ratio(repository.approved, repository.pulls),
-                    )}
-                    <span className={SUBLINE_CLASS}>
-                      {t('{rate} first try').replace(
-                        '{rate}',
-                        formatPercent(
-                          ratio(repository.approvedFirst, repository.pulls),
-                        ),
-                      )}
-                    </span>
-                  </TableCell>
-                  <TableCell className={AUTHOR_CELL_CLASS}>
-                    {formatNumber(ratio(repository.findings, repository.pulls))}
-                  </TableCell>
-                  <TableCell
-                    className={cn(
-                      AUTHOR_CELL_CLASS,
-                      'hidden @[60rem]:table-cell',
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        repository.critical > 0
-                          ? 'text-red-600 dark:text-red-400'
-                          : 'text-muted-foreground',
-                      )}
-                    >
-                      {repository.critical}
-                    </span>
-                    <span className="text-muted-foreground"> / </span>
-                    {repository.major}
-                  </TableCell>
-                  <TableCell className={AUTHOR_CELL_CLASS}>
-                    {formatPercent(
-                      ratio(repository.resolved, repository.findings),
-                    )}
-                  </TableCell>
-                  <TableCell className={AUTHOR_CELL_CLASS}>
-                    {formatPercent(usefulRate(repository))}
-                  </TableCell>
-                  <TableCell
-                    className={cn(
-                      AUTHOR_CELL_CLASS,
-                      'hidden @[72rem]:table-cell',
-                    )}
-                  >
-                    {repository.lastReviewAt && (
-                      <DateTooltip
-                        date={repository.lastReviewAt}
-                        className="text-[12px] text-muted-foreground font-mono"
-                      />
-                    )}
-                  </TableCell>
+                  <FigureCells row={repository} />
+                  <LastReviewCell date={repository.lastReviewAt} />
                   <TableCell className="py-2.5 pe-4 ps-1 text-end">
                     <RowActionsDropdown
                       actions={actions}
@@ -958,9 +1056,217 @@ function Repositories({
               </RowContextMenu>
             )
           })}
+          {view.rows.length === 0 && (
+            <NoMatches message={t('No repositories match your search')} />
+          )}
         </TableBody>
       </Table>
-    </div>
+    </BreakdownCard>
+  )
+}
+
+/**
+ * A card that breaks the range down by author or by repository. Once its
+ * rows outgrow the first page, a search takes the count's place and the
+ * rows come a page at a time.
+ */
+function BreakdownCard({
+  title,
+  description,
+  count,
+  searchPlaceholder,
+  itemLabel,
+  view,
+  children,
+}: {
+  title: string
+  description: string
+  count: string
+  searchPlaceholder: string
+  itemLabel: string
+  view: Breakdown<unknown>
+  children: ReactNode
+}) {
+  const cardRef = useRef<HTMLElement>(null)
+  const titleId = useId()
+
+  // A page turned at the bottom of a long page starts at the card's top.
+  const turnPage = (page: number) => {
+    view.setPage(page)
+    const card = cardRef.current
+    if (card && card.getBoundingClientRect().top < 0) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
+  return (
+    <section
+      ref={cardRef}
+      aria-labelledby={titleId}
+      className="@container scroll-mt-6 overflow-hidden rounded-xl border border-border bg-card/50"
+    >
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 px-6 py-4">
+        <div className="min-w-0">
+          <h3
+            id={titleId}
+            className="text-[15px] font-semibold text-foreground"
+          >
+            {title}
+          </h3>
+          <p className="mt-2 text-[13px] text-muted-foreground">
+            {description}
+          </p>
+        </div>
+        {view.paged ? (
+          <div className="relative w-full @[40rem]:w-64">
+            <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              value={view.search}
+              onChange={(event) => view.setSearch(event.target.value)}
+              placeholder={searchPlaceholder}
+              aria-label={searchPlaceholder}
+              className="h-9 w-full min-w-0 rounded-md border border-border bg-accent/50 ps-10 pe-4 text-[13px] text-foreground placeholder:text-muted-foreground outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            />
+          </div>
+        ) : (
+          <span className="text-[13px] text-muted-foreground">{count}</span>
+        )}
+      </div>
+      <div className="border-t border-border" />
+      {children}
+      {view.paged && (
+        <div className="border-t border-border px-6">
+          <Pagination
+            currentPage={view.page}
+            totalItems={view.matches.length}
+            pageSize={view.pageSize}
+            pageSizeOptions={PAGE_SIZES}
+            onPageChange={turnPage}
+            onPageSizeChange={view.setPageSize}
+            itemLabel={itemLabel}
+            scrollToTopOnPageChange={false}
+          />
+        </div>
+      )}
+    </section>
+  )
+}
+
+/** A column header that sorts its table, again to flip the direction. */
+function SortableHead({
+  view,
+  sortKey,
+  label,
+  className = 'text-end',
+}: {
+  view: Breakdown<unknown>
+  sortKey: SortKey
+  label: string
+  className?: string
+}) {
+  const active = view.sort.key === sortKey
+  const Icon = view.sort.desc ? ArrowDown : ArrowUp
+  return (
+    <TableHead
+      className={cn(AUTHOR_HEAD_CLASS, className)}
+      aria-sort={
+        active ? (view.sort.desc ? 'descending' : 'ascending') : undefined
+      }
+    >
+      <button
+        type="button"
+        className={cn(
+          'inline-flex items-center gap-1 uppercase tracking-wider hover:text-foreground',
+          active && 'text-foreground',
+        )}
+        onClick={() => view.setSort(sortKey)}
+      >
+        {label}
+        {active && <Icon className="h-3 w-3" />}
+      </button>
+    </TableHead>
+  )
+}
+
+/**
+ * The figures an author's and a repository's rows share, from pull requests
+ * to findings fixed and found useful.
+ */
+function FigureCells({ row }: { row: Figures }) {
+  const t = useT()
+  return (
+    <>
+      <TableCell className={AUTHOR_CELL_CLASS}>
+        {row.pulls.toLocaleString()}
+        <span className={SUBLINE_CLASS}>
+          {t('{count} reviews').replace(
+            '{count}',
+            row.reviews.toLocaleString(),
+          )}
+        </span>
+      </TableCell>
+      <TableCell className={AUTHOR_CELL_CLASS}>
+        {formatPercent(ratio(row.approved, row.pulls))}
+        <span className={SUBLINE_CLASS}>
+          {t('{rate} first try').replace(
+            '{rate}',
+            formatPercent(ratio(row.approvedFirst, row.pulls)),
+          )}
+        </span>
+      </TableCell>
+      <TableCell className={AUTHOR_CELL_CLASS}>
+        {formatNumber(ratio(row.findings, row.pulls))}
+      </TableCell>
+      <TableCell
+        className={cn(AUTHOR_CELL_CLASS, 'hidden @[60rem]:table-cell')}
+      >
+        <span
+          className={cn(
+            row.critical > 0
+              ? 'text-red-600 dark:text-red-400'
+              : 'text-muted-foreground',
+          )}
+        >
+          {row.critical}
+        </span>
+        <span className="text-muted-foreground"> / </span>
+        {row.major}
+      </TableCell>
+      <TableCell className={AUTHOR_CELL_CLASS}>
+        {formatPercent(ratio(row.resolved, row.findings))}
+      </TableCell>
+      <TableCell className={AUTHOR_CELL_CLASS}>
+        {formatPercent(usefulRate(row))}
+      </TableCell>
+    </>
+  )
+}
+
+function LastReviewCell({ date }: { date: string }) {
+  return (
+    <TableCell className={cn(AUTHOR_CELL_CLASS, 'hidden @[72rem]:table-cell')}>
+      {date && (
+        <DateTooltip
+          date={date}
+          className="text-[12px] text-muted-foreground font-mono"
+        />
+      )}
+    </TableCell>
+  )
+}
+
+/** The only row of a table whose search matches nothing. */
+function NoMatches({ message }: { message: string }) {
+  return (
+    <TableRow className="hover:bg-transparent">
+      <TableCell
+        colSpan={10}
+        className="py-10 text-center text-[13px] text-muted-foreground"
+      >
+        {message}
+      </TableCell>
+    </TableRow>
   )
 }
 
