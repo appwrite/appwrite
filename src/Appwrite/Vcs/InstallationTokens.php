@@ -114,6 +114,38 @@ class InstallationTokens
         }
     }
 
+    /**
+     * The caller's own GitHub access token, for an installation without tokens of its own. A
+     * refreshed pair goes back on the identity it came from, never on the shared installation.
+     */
+    public function refreshIdentity(Document $identity, Database $dbForPlatform, OAuth2 $oauth2): string
+    {
+        $accessToken = $identity->getAttribute('providerAccessToken', '');
+
+        if (!$this->isExpired($identity->getAttribute('providerAccessTokenExpiry'))) {
+            return $accessToken;
+        }
+
+        try {
+            $oauth2->refreshTokens($identity->getAttribute('providerRefreshToken', ''));
+        } catch (\Throwable) {
+            throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to refresh OAuth2 access token. Please sign in with GitHub again.');
+        }
+
+        $accessToken = $oauth2->getAccessToken('');
+        if (empty($accessToken)) {
+            throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to refresh OAuth2 access token. Please sign in with GitHub again.');
+        }
+
+        $dbForPlatform->updateDocument('identities', $identity->getId(), new Document([
+            'providerAccessToken' => $accessToken,
+            'providerRefreshToken' => $oauth2->getRefreshToken(''),
+            'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')),
+        ]));
+
+        return $accessToken;
+    }
+
     protected function exchange(Document $installation, Database $dbForPlatform, OAuth2 $oauth2): Document
     {
         try {
