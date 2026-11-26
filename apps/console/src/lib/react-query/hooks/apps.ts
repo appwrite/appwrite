@@ -993,6 +993,32 @@ export function useDeleteOrganizationAppInstallation(
   })
 }
 
+export function useCreateOrganizationAppInstallation(
+  organizationId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (appId: string) => {
+      if (!organizationId) throw new Error('Organization ID is required')
+      return sdk.forConsole.teams.createInstallation({
+        teamId: organizationId,
+        appId,
+      })
+    },
+    onSuccess: async (installation) => {
+      await Promise.all([
+        queryClient.refetchQueries({
+          queryKey: ['organization', organizationId, 'installations'],
+        }),
+        queryClient.refetchQueries({
+          queryKey: ['app', installation.appId, 'installations'],
+        }),
+      ])
+    },
+  })
+}
+
 export function useOrganizationInstalledApps(
   organizationId: string | null | undefined,
 ) {

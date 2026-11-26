@@ -5,12 +5,12 @@ return [
     // Project
     "project.read" => [
         "description" =>
-            "Access to read project\'s information",
+            "Access to read project's information",
         "category" => "Project",
     ],
     "project.write" => [
         "description" =>
-            "Access to update project\'s information",
+            "Access to update project's information",
         "category" => "Project",
     ],
     'usage.read' => [
@@ -21,99 +21,99 @@ return [
     // manage project keys through the Organization API (organization.projects.keys.*)
     "keys.read" => [
         "description" =>
-            "Access to read project\'s keys",
+            "Access to read project's keys",
         "category" => "Project",
     ],
     "keys.write" => [
         "description" =>
-            "Access to create, update, and delete project\'s keys",
+            "Access to create, update, and delete project's keys",
         "category" => "Project",
     ],
     "platforms.read" => [
         "description" =>
-            "Access to read project\'s platforms",
+            "Access to read project's platforms",
         "category" => "Project",
     ],
     "platforms.write" => [
         "description" =>
-            "Access to create, update, and delete project\'s platforms",
+            "Access to create, update, and delete project's platforms",
         "category" => "Project",
     ],
     "mocks.read" => [
         "description" =>
-            "Access to read project\'s mocks",
+            "Access to read project's mocks",
         "category" => "Project",
     ],
     "mocks.write" => [
         "description" =>
-            "Access to create, update, and delete project\'s mocks",
+            "Access to create, update, and delete project's mocks",
         "category" => "Project",
     ],
     "policies.read" => [
         "description" =>
-            "Access to read project\'s policies. Replaced by \'project.policies.read\' for more granular control",
+            "Access to read project's policies. Replaced by 'project.policies.read' for more granular control",
         "category" => "Project",
         'deprecated' => true,
     ],
     "policies.write" => [
         "description" =>
-            "Access to update project\'s policies. Replaces by \'project.policies.write\' for more granular control",
+            "Access to update project's policies. Replaces by 'project.policies.write' for more granular control",
         "category" => "Project",
         'deprecated' => true,
     ],
     "project.policies.read" => [
         "description" =>
-            "Access to read project\'s policies",
+            "Access to read project's policies",
         "category" => "Project",
     ],
     "project.policies.write" => [
         "description" =>
-            "Access to update project\'s policies",
+            "Access to update project's policies",
         "category" => "Project",
     ],
     "project.videos.profiles.read" => [
         "description" =>
-            "Access to read the project\'s video encode profiles",
+            "Access to read the project's video encode profiles",
         "category" => "Project",
     ],
     "project.videos.profiles.write" => [
         "description" =>
-            "Access to create, update, and delete the project\'s video encode profiles",
+            "Access to create, update, and delete the project's video encode profiles",
         "category" => "Project",
     ],
     "project.oauth2.read" => [
         "description" =>
-            "Access to read project\'s OAuth2 configuration.",
+            "Access to read project's OAuth2 configuration.",
         "category" => "Project",
     ],
     "project.oauth2.write" => [
         "description" =>
-            "Access to update project\'s OAuth2 configuration.",
+            "Access to update project's OAuth2 configuration.",
         "category" => "Project",
     ],
     "project.ldap.write" => [
         "description" =>
-            "Access to update and test project\'s LDAP configuration.",
+            "Access to update and test project's LDAP configuration.",
         "category" => "Project",
     ],
     "templates.read" => [
         "description" =>
-            "Access to read project\'s templates",
+            "Access to read project's templates",
         "category" => "Project",
     ],
     "templates.write" => [
         "description" =>
-            "Access to create, update, and delete project\'s templates",
+            "Access to create, update, and delete project's templates",
         "category" => "Project",
     ],
     "stages.read" => [
         "description" =>
-            "Access to read project\'s stages",
+            "Access to read project's stages",
         "category" => "Project",
     ],
     "stages.write" => [
         "description" =>
-            "Access to update project\'s stages",
+            "Access to update project's stages",
         "category" => "Project",
     ],
 
