@@ -637,8 +637,8 @@ export const heSitesDictionary: Record<string, string> = {
     'חברו ספק Git כדי לפרוס בכל Push.',
   'Deploy a working site in a few clicks, then make it yours.':
     'פרסו אתר עובד בכמה קליקים, ואז התאימו אותו לצרכים שלכם.',
-  "This site's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
-    'התקנת ה-Git של האתר הזה כבר לא מגיעה ל-repo שלו, ולכן Push חדש לא ייפרס. נתקו את ה-repo ואז חברו אותו מחדש דרך ההתקנה שבה הוא נמצא עכשיו.',
+  "This site's Git installation can no longer reach its repository, so pushes can't deploy. If the repository was removed from the installation's repository access, add it back with Update repository access. If it was deleted or moved to another installation, disconnect it and connect it again.":
+    'התקנת ה-Git של האתר הזה כבר לא מגיעה ל-repo שלו, ולכן Push חדש לא ייפרס. אם ה-repo הוסר מהרשאות הגישה של ההתקנה, הוסיפו אותו חזרה דרך עדכון הגישה ל-repos. אם הוא נמחק או הועבר להתקנה אחרת, נתקו אותו וחברו אותו מחדש.',
   'Action needed': 'נדרשת פעולה',
   'Last check': 'בדיקה אחרונה',
   'Found:': 'נמצא:',

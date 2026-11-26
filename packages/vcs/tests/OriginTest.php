@@ -117,7 +117,7 @@ final class OriginTest extends TestCase
      *
      * @return array<string, mixed>
      */
-    protected function pushPayload(string $branch, bool $created = false, bool $deleted = false): array
+    protected function pushPayload(string $branch, bool $created = false, bool $deleted = false, mixed $before = null): array
     {
         return [
             'deliveryId' => 'whd_0123456789',
@@ -135,7 +135,7 @@ final class OriginTest extends TestCase
                     ],
                     'refUpdates' => [[
                         'ref' => 'refs/heads/' . $branch,
-                        'before' => $created ? str_repeat('0', 40) : 'abc123',
+                        'before' => $before ?? ($created ? str_repeat('0', 40) : 'abc123'),
                         'after' => $deleted ? str_repeat('0', 40) : self::COMMIT_HASH,
                         'created' => $created,
                         'deleted' => $deleted,
@@ -310,6 +310,35 @@ final class OriginTest extends TestCase
                 $this->assertNotEmpty($e->getMessage(), $name);
             }
         }
+    }
+
+    public function testGetEventPushReadsANonStringBeforeAsEmpty(): void
+    {
+        $events = $this->adapter->getEvents('repository.pushed', (string) json_encode($this->pushPayload('main', before: ['abc123'])));
+
+        $this->assertCount(1, $events);
+        $this->assertSame('', $events[0]['previousCommitHash']);
+    }
+
+    public function testCompareFilesReadsNonStringFieldsAsEmpty(): void
+    {
+        $adapter = new class (new Cache(new None())) extends Origin {
+            protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+            {
+                return [
+                    'headers' => ['status-code' => 200],
+                    'body' => ['files' => [
+                        ['filename' => 'src/index.php', 'status' => 'renamed', 'previousFilename' => 'index.php'],
+                        ['filename' => 42, 'status' => null, 'previousFilename' => ['old.php']],
+                    ]],
+                ];
+            }
+        };
+
+        $this->assertSame([
+            ['filename' => 'src/index.php', 'status' => 'renamed', 'previous_filename' => 'index.php'],
+            ['filename' => '', 'status' => '', 'previous_filename' => ''],
+        ], $adapter->compareFiles(self::OWNER, self::REPOSITORY_NAME, 'abc123', self::COMMIT_HASH));
     }
 
     public function testGetSigningKeys(): void

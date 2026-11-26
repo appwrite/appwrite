@@ -54,6 +54,12 @@ class Installation extends Model
                 'default' => '',
                 'example' => 'https://github.com/appwrite',
             ])
+            ->addRule('personal', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the installation belongs to a personal account rather than an organization.',
+                'default' => false,
+                'example' => false,
+            ])
             ->addRule('reviewNewRepositories', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether code review is turned on for repositories added to the installation later.',
