@@ -55,7 +55,7 @@ class Get extends Base
             ->param('videoId', '', new UID(), 'Video unique ID.')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('project')
+            ->inject('request')
             ->inject('user')
             ->inject('authorization')
             ->callback($this->action(...));

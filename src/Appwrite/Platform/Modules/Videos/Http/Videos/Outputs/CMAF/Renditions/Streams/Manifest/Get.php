@@ -61,7 +61,7 @@ class Get extends Base
             ->param('streamIndex', 0, new Range(0, 10), 'Stream index within the rendition.')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('project')
+            ->inject('request')
             ->inject('user')
             ->inject('authorization')
             ->callback($this->action(...));
