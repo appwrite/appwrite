@@ -18,13 +18,6 @@
   "ops": {
     "packager.detect": {
       "doc": "new Packager(), addOption for each of `options` (names), addInput for each of `inputs`, detect()?->getName()",
-      "covers": [
-        "Utopia\\Detector\\Detector\\Packager::__construct",
-        "Utopia\\Detector\\Detector\\Packager::detect",
-        "Utopia\\Detector\\Detector::__construct",
-        "Utopia\\Detector\\Detector::addInput",
-        "Utopia\\Detector\\Detector::addOption"
-      ],
       "fuzz": [
         {
           "name": "files",
@@ -40,24 +33,13 @@
       ]
     },
     "packager.describe": {
-      "doc": "getName() and getFiles() of a packager",
-      "covers": [
-        "Utopia\\Detector\\Detection\\Packager\\*"
-      ]
+      "doc": "getName() and getFiles() of a packager"
     },
     "strategy.new": {
-      "doc": "(new Strategy(value))->getValue()",
-      "covers": [
-        "Utopia\\Detector\\Detector\\Strategy::__construct",
-        "Utopia\\Detector\\Detector\\Strategy::getValue"
-      ]
+      "doc": "(new Strategy(value))->getValue()"
     },
     "runtime.detect": {
       "doc": "new Runtime(new Strategy(strategy), packager?), options by name, inputs: {name, commands, entrypoint} of detect(), or null",
-      "covers": [
-        "Utopia\\Detector\\Detector\\Runtime::__construct",
-        "Utopia\\Detector\\Detector\\Runtime::detect"
-      ],
       "fuzz": [
         {
           "name": "inputs",
@@ -87,20 +69,10 @@
       ]
     },
     "runtime.describe": {
-      "doc": "every getter of a runtime, after setPackager(packager) when given",
-      "covers": [
-        "Utopia\\Detector\\Detection\\Runtime\\*",
-        "Utopia\\Detector\\Detection\\Runtime::__construct",
-        "Utopia\\Detector\\Detection\\Runtime::setPackager"
-      ]
+      "doc": "every getter of a runtime, after setPackager(packager) when given"
     },
     "framework.detect": {
       "doc": "new Framework(packager?), options by name, `files` as INPUT_FILE, `packages` as INPUT_PACKAGES, `inputs` ({content, type}): {name, install, build, output} of detect(), or null",
-      "covers": [
-        "Utopia\\Detector\\Detector\\Framework::__construct",
-        "Utopia\\Detector\\Detector\\Framework::addInput",
-        "Utopia\\Detector\\Detector\\Framework::detect"
-      ],
       "fuzz": [
         {
           "name": "scores",
@@ -119,20 +91,10 @@
       ]
     },
     "framework.describe": {
-      "doc": "every getter of a framework but getAdapter(), after setPackager(packager) when given",
-      "covers": [
-        "Utopia\\Detector\\Detection\\Framework\\*",
-        "Utopia\\Detector\\Detection\\Framework::__construct",
-        "Utopia\\Detector\\Detection\\Framework::setPackager",
-        "Utopia\\Detector\\Detection\\Framework::getPackages",
-        "Utopia\\Detector\\Detection\\Framework::getConfigFiles"
-      ]
+      "doc": "every getter of a framework but getAdapter(), after setPackager(packager) when given"
     },
     "framework.adapter": {
       "doc": "$framework->getAdapter(config): 'ssr', 'static' or ''",
-      "covers": [
-        "Utopia\\Detector\\Detection\\Framework::getAdapter"
-      ],
       "fuzz": [
         {
           "name": "configs",
@@ -164,10 +126,6 @@
     },
     "rendering.detect": {
       "doc": "new Rendering(framework), options (`ssr`, `static` or {type, fallback}), inputs: {name, fallback} of detect()",
-      "covers": [
-        "Utopia\\Detector\\Detector\\Rendering::__construct",
-        "Utopia\\Detector\\Detector\\Rendering::detect"
-      ],
       "fuzz": [
         {
           "name": "builds",
@@ -195,12 +153,7 @@
       ]
     },
     "rendering.describe": {
-      "doc": "getName(), getFiles(framework) and getFallbackFile() of a rendering",
-      "covers": [
-        "Utopia\\Detector\\Detection\\Rendering\\*",
-        "Utopia\\Detector\\Detection\\Rendering::__construct",
-        "Utopia\\Detector\\Detection\\Rendering::getFallbackFile"
-      ]
+      "doc": "getName(), getFiles(framework) and getFallbackFile() of a rendering"
     },
     "detect.fixture": {
       "doc": "every detector over tests/compat/detector/fixtures/<fixture>: its files (recursive, sorted), package.json and pubspec.yaml as manifests, the detected framework's first config file for its adapter, and build/ for the rendering"
