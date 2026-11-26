@@ -568,6 +568,13 @@ class Videos extends Action
                 ]
             );
             if ($updated === 0) {
+                $current = $dbForProject->getDocument('videosCaptions', $caption->getId());
+                // The write already committed. A purge that failed after it is
+                // why this message came back, and the previous segment URL
+                // stays cached for a year until this runs.
+                if (!$current->isEmpty() && $current->getAttribute('status') === Base::STATUS_READY) {
+                    $this->segmentCache->purge($project->getId(), $video->getId());
+                }
                 $outcome = 'duplicate';
                 return;
             }
@@ -656,8 +663,11 @@ class Videos extends Action
             // Do not overwrite aborted/error parks from maintenance.
             $current = $dbForProject->getDocument('videosCaptions', $caption->getId());
             $status = $current->isEmpty() ? '' : (string) $current->getAttribute('status', '');
+            // Ready means the bytes are stored and the failure is the purge
+            // after that write. Parking it as error would hide the new caption
+            // and the redelivery would have nothing left to retry.
             $mayPark = $claimed
-                ? !\in_array($status, [Base::STATUS_ABORTED, Base::STATUS_ERROR], true)
+                ? !\in_array($status, [Base::STATUS_ABORTED, Base::STATUS_ERROR, Base::STATUS_READY], true)
                 : $status === Base::STATUS_PENDING;
 
             if (!$current->isEmpty() && $mayPark) {
@@ -1497,12 +1507,10 @@ class Videos extends Action
 
         // A first encode has nothing cached. A replacement leaves the previous
         // segment URL on Fastly, because the video's updatedAt did not change.
+        // A failure here fails the job. The caption stays ready, and the
+        // redelivery purges again instead of rewriting the file.
         if ($removed > 0) {
-            try {
-                $this->segmentCache->purge($project->getId(), $video->getId());
-            } catch (\Throwable $th) {
-                $this->log('Videos worker: failed to purge caption cache for video ' . $video->getId() . ': ' . $th->getMessage(), 'error');
-            }
+            $this->segmentCache->purge($project->getId(), $video->getId());
         }
 
         return $caption;

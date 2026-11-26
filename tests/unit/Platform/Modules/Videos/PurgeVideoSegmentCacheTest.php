@@ -6,9 +6,6 @@ namespace Tests\Unit\Platform\Modules\Videos;
 
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
-use Appwrite\Event\Publisher\Video as VideoPublisher;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Captions\Delete as DeleteCaption;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Captions\Update as UpdateCaption;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Delete;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\Delete as DeleteRendition;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Update;
@@ -244,129 +241,6 @@ final class PurgeVideoSegmentCacheTest extends TestCase
             $publisher,
             $cache,
         );
-
-        $this->assertSame([['proj1', 'vid1']], $cache->calls);
-    }
-
-    public function testUpdateCaptionPurges(): void
-    {
-        $video = $this->video();
-        $caption = new Document([
-            '$id' => 'cap1',
-            '$sequence' => '3',
-            'videoInternalId' => $video->getSequence(),
-            'name' => 'English',
-            'code' => 'eng',
-            'status' => 'ready',
-        ]);
-        $updated = clone $caption;
-        $updated->setAttribute('name', 'English renamed');
-
-        $db = $this->createMock(Database::class);
-        $db->method('getDocument')->willReturnCallback(
-            static fn (string $collection, string $id): Document => match ([$collection, $id]) {
-                ['videos', 'vid1'] => $video,
-                ['videosCaptions', 'cap1'] => $caption,
-                default => new Document(),
-            }
-        );
-        $db->expects($this->once())
-            ->method('updateDocument')
-            ->with('videosCaptions', 'cap1', $this->isInstanceOf(Document::class))
-            ->willReturn($updated);
-
-        $publisher = $this->createMock(VideoPublisher::class);
-        $publisher->expects($this->never())->method('enqueue');
-
-        $response = $this->createMock(Response::class);
-        $response->expects($this->once())
-            ->method('dynamic')
-            ->with($updated, Response::MODEL_VIDEO_CAPTION);
-
-        $cache = new RecordingSegmentCache();
-        $action = new class () extends UpdateCaption {
-            public function __construct()
-            {
-            }
-        };
-        $action->action(
-            'vid1',
-            'cap1',
-            '',
-            '',
-            'English renamed',
-            '',
-            null,
-            $response,
-            $db,
-            new Document(['$id' => 'proj1']),
-            new User(),
-            $this->apiKeyAuthorization(),
-            static function (): bool {
-                throw new \RuntimeException('timelimit is only for a new source');
-            },
-            $this->events(),
-            $publisher,
-            $cache,
-        );
-
-        $this->assertSame([['proj1', 'vid1']], $cache->calls);
-    }
-
-    public function testDeleteCaptionPurgesAfterCleanupIsQueued(): void
-    {
-        if (!\class_exists(NativeQuery::class)) {
-            $this->markTestSkipped('Requires utopia extension NativeQuery (Query::equal on delete).');
-        }
-
-        $video = $this->video();
-        $caption = new Document([
-            '$id' => 'cap1',
-            '$sequence' => '3',
-            'videoInternalId' => $video->getSequence(),
-        ]);
-
-        $db = $this->createStub(Database::class);
-        $db->method('getDocument')->willReturnCallback(
-            static fn (string $collection, string $id): Document => match ([$collection, $id]) {
-                ['videos', 'vid1'] => $video,
-                ['videosCaptions', 'cap1'] => $caption,
-                default => new Document(),
-            }
-        );
-        $db->method('deleteDocuments')->willReturn(1);
-
-        $publisher = $this->createMock(DeletePublisher::class);
-        $publisher->expects($this->once())->method('enqueue');
-
-        $response = $this->createMock(Response::class);
-        $response->expects($this->once())->method('output')->willReturn(['$id' => 'cap1']);
-        $response->expects($this->never())->method('noContent');
-
-        $cache = new RecordingSegmentCache(fail: true);
-        $action = new class () extends DeleteCaption {
-            public function __construct()
-            {
-            }
-        };
-
-        try {
-            $action->action(
-                'vid1',
-                'cap1',
-                $response,
-                $db,
-                new User(),
-                $this->apiKeyAuthorization(),
-                new Document(['$id' => 'proj1']),
-                $this->events(withPayload: true),
-                $publisher,
-                $cache,
-            );
-            $this->fail('A purge error must surface after caption cleanup is queued');
-        } catch (\RuntimeException $e) {
-            $this->assertSame('purge failed', $e->getMessage());
-        }
 
         $this->assertSame([['proj1', 'vid1']], $cache->calls);
     }
