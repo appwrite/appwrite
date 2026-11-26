@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { Models } from '@appwrite.io/console'
 import { useParams } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,16 +15,24 @@ import {
 import { useT } from '@/lib/i18n/translate'
 
 export function View() {
-  const t = useT()
   const { orgId, appId } = useParams({ strict: false })
   const { app } = useOrganizationApp(appId)
   if (!app || !orgId) return null
 
+  return <SupportSettings orgId={orgId} app={app} />
+}
+
+function SupportSettings({ orgId, app }: { orgId: string; app: Models.App }) {
+  const t = useT()
   const { submit, isUpdating } = useOrgAppUpdate(orgId, app)
   const [supportUrl, setSupportUrl] = useState(app.supportUrl ?? '')
   const [contacts, setContacts] = useState(app.contacts ?? [])
 
+  const syncedAppRef = useRef(app)
+
   useEffect(() => {
+    if (syncedAppRef.current.$id === app.$id) return
+    syncedAppRef.current = app
     setSupportUrl(app.supportUrl ?? '')
     setContacts(app.contacts ?? [])
   }, [app])
@@ -71,6 +80,8 @@ export function View() {
             submit({
               supportUrl: trimOrEmpty(supportUrl),
               contacts: nonEmptyList(contacts),
+            }).catch(() => {
+              // toast handled in submit
             })
           }
         >
