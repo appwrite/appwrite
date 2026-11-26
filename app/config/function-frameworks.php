@@ -17,12 +17,10 @@ return [
     'express' => [
         'key' => 'express',
         'name' => 'Express',
-        // The helper preloads its shutdown hook with NODE_OPTIONS="--import …",
-        // which Node only accepts from 18 on: on older runtimes the app never starts.
-        'runtimes' => \array_values(\array_filter(
-            $templateRuntimes['NODE'],
-            fn (string $runtime): bool => \version_compare(\substr($runtime, \strlen('node-')), '18.0', '>=')
-        )),
+        // Every Node.js version. The helper needs Node 18+ (it preloads its shutdown
+        // hook with NODE_OPTIONS="--import …"): on older versions the app fails at
+        // start, and those runtimes are deprecated over time.
+        'runtimes' => $templateRuntimes['NODE'],
         'entrypoint' => 'server.js',
         'installCommand' => 'npm install',
         'startCommand' => 'bash helpers/express/server.sh',
