@@ -52,7 +52,8 @@ class Update extends Base
             ->label('scope', ['avatars.write', 'users.write'])
             ->label('event', 'users.[userId].update.avatar')
             ->label('audits.event', 'user.update')
-            ->label('audits.resource', 'user/{user.$id}')
+            // The response is the user whose photo changed, which differs from the caller when userId is passed
+            ->label('audits.resource', 'user/{response.$id}')
             ->label('audits.userId', '{user.$id}')
             ->label('usage.resource', 'user/{user.$id}')
             ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
