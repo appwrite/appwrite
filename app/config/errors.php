@@ -1444,7 +1444,7 @@ return [
     ],
     Exception::VARIABLE_ALREADY_EXISTS => [
         'name' => Exception::VARIABLE_ALREADY_EXISTS,
-        'description' => 'Variable with the same ID already exists in this project. Try again with a different ID.',
+        'description' => 'Variable with the same key already exists in this project. Try again with a different key.',
         'code' => 409,
     ],
     Exception::VARIABLE_CANNOT_UNSET_SECRET => [

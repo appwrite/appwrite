@@ -25,7 +25,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useT } from '@/lib/i18n/translate'
+import { translate, useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   openDialogAfterOverlayCloses,
@@ -73,7 +73,12 @@ import {
   wizardDialogContentClassName,
   wizardDropdownContentClassName,
 } from '@/lib/wizard-portal-z'
-import { getVariableValueError, validateVariables } from '@/lib/variables'
+import {
+  getVariableKeyError,
+  getVariableValueError,
+  validateVariables,
+  VARIABLE_VALUE_MAX_LENGTH,
+} from '@/lib/variables'
 
 /** Local variable for create wizards (no server id). */
 export interface EnvVariable {
@@ -189,18 +194,41 @@ function CopyableText({
   )
 }
 
+/** Shown under the key once it has text. An empty key only disables submit. */
+function variableKeyFieldError(key: string): string | null {
+  const trimmed = key.trim()
+  if (!trimmed) return null
+  return getVariableKeyError(trimmed)
+}
+
+function variableValueFieldError(value: string): string | null {
+  if (value.length <= VARIABLE_VALUE_MAX_LENGTH) return null
+  return translate('Variable value is longer than 8192 allowed characters')
+}
+
+function blocksVariableSubmit(pair: { key: string; value: string }): boolean {
+  return (
+    getVariableKeyError(pair.key.trim()) !== null ||
+    pair.value.length > VARIABLE_VALUE_MAX_LENGTH
+  )
+}
+
 function RevealableValueInput({
   id,
   value,
   onChange,
   placeholder,
   autoComplete,
+  invalid = false,
+  describedBy,
 }: {
   id: string
   value: string
   onChange: (value: string) => void
   placeholder?: string
   autoComplete?: string
+  invalid?: boolean
+  describedBy?: string
 }) {
   const t = useT()
   const [revealed, setRevealed] = useState(false)
@@ -218,7 +246,12 @@ function RevealableValueInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         autoComplete={autoComplete}
-        className="font-mono text-[13px] pe-10"
+        aria-invalid={invalid || undefined}
+        aria-describedby={describedBy}
+        className={cn(
+          'font-mono text-[13px] pe-10',
+          invalid && 'border-destructive',
+        )}
       />
       <button
         type="button"
@@ -415,11 +448,10 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
 
   const handleWizardCreate = () => {
     if (!onWizardChange) return
+    if (createPairs.some((pair) => blocksVariableSubmit(pair))) {
+      return
+    }
     for (const pair of createPairs) {
-      if (!pair.key.trim()) {
-        toast.error(t('All variable keys are required'))
-        return
-      }
       if (wizardVariables.some((v) => v.key === pair.key.trim())) {
         toast.error(
           `${t('Variable')} ${pair.key.trim()} ${t('already exists')}`,
@@ -428,13 +460,6 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
       }
     }
 
-    const validationError = validateVariables(
-      createPairs.map((pair) => ({ key: pair.key.trim(), value: pair.value })),
-    )
-    if (validationError) {
-      toast.error(validationError)
-      return
-    }
     const newVars = createPairs
       .filter((p) => p.key.trim())
       .map((pair) => ({
@@ -544,18 +569,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
       return
     }
     if (!createMutation) return
-    for (const pair of createPairs) {
-      if (!pair.key.trim()) {
-        toast.error(t('All variable keys are required'))
-        return
-      }
-    }
-
-    const validationError = validateVariables(
-      createPairs.map((pair) => ({ key: pair.key.trim(), value: pair.value })),
-    )
-    if (validationError) {
-      toast.error(validationError)
+    if (createPairs.some((pair) => blocksVariableSubmit(pair))) {
       return
     }
 
@@ -582,10 +596,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
 
   const handleUpdate = async () => {
     if (isWizard || !updateMutation || !selectedVar) return
-    if (updateValue.length > 8192) {
-      toast.error(t('Variable value is longer than 8192 allowed characters'))
-      return
-    }
+    if (variableValueFieldError(updateValue)) return
 
     try {
       await updateMutation.mutateAsync({
@@ -853,6 +864,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
     }
   }
 
+  const updateValueError = variableValueFieldError(updateValue)
   const isEmpty = isWizard ? wizardVariables.length === 0 : total === 0
   const listVariables = isWizard ? wizardVariables : variables
 
@@ -1320,72 +1332,103 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
           <div className="border-t border-border" />
           <div className="px-6 pb-4 pt-0 max-h-[60dvh] overflow-y-auto">
             <div className="space-y-4">
-              {createPairs.map((pair, index) => (
-                <div
-                  key={index}
-                  className="space-y-3 p-4 border border-border rounded-lg"
-                >
-                  <div className="flex items-center justify-between">
-                    <Label className="text-[13px] font-medium">
-                      {t('Variable')} {index + 1}
-                    </Label>
-                    {createPairs.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0"
-                        onClick={() =>
-                          setCreatePairs(
-                            createPairs.filter((_, i) => i !== index),
-                          )
+              {createPairs.map((pair, index) => {
+                const keyError = variableKeyFieldError(pair.key)
+                const valueError = variableValueFieldError(pair.value)
+                return (
+                  <div
+                    key={index}
+                    className="space-y-3 p-4 border border-border rounded-lg"
+                  >
+                    <div className="flex items-center justify-between">
+                      <Label className="text-[13px] font-medium">
+                        {t('Variable')} {index + 1}
+                      </Label>
+                      {createPairs.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0"
+                          onClick={() =>
+                            setCreatePairs(
+                              createPairs.filter((_, i) => i !== index),
+                            )
+                          }
+                          disabled={
+                            createPairs.length === 1 && !pair.key && !pair.value
+                          }
+                        >
+                          <XCircle className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`key-${index}`} className="text-[12px]">
+                        {t('Key')} <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id={`key-${index}`}
+                        ref={(el) => {
+                          if (el) createKeyRefs.current.set(index, el)
+                          else createKeyRefs.current.delete(index)
+                        }}
+                        value={pair.key}
+                        onChange={(e) => {
+                          const newPairs = [...createPairs]
+                          newPairs[index].key = e.target.value
+                          setCreatePairs(newPairs)
+                        }}
+                        placeholder="ENTER_KEY"
+                        autoComplete="off"
+                        aria-invalid={keyError ? true : undefined}
+                        aria-describedby={
+                          keyError ? `key-${index}-error` : undefined
                         }
-                        disabled={
-                          createPairs.length === 1 && !pair.key && !pair.value
+                        className={cn(
+                          'font-mono text-[13px]',
+                          keyError && 'border-destructive',
+                        )}
+                      />
+                      {keyError && (
+                        <p
+                          id={`key-${index}-error`}
+                          className="text-[12px] text-destructive"
+                        >
+                          {keyError}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`value-${index}`} className="text-[12px]">
+                        {t('Value')}
+                      </Label>
+                      <RevealableValueInput
+                        id={`value-${index}`}
+                        value={pair.value}
+                        onChange={(nextValue) => {
+                          const newPairs = [...createPairs]
+                          newPairs[index].value = nextValue
+                          setCreatePairs(newPairs)
+                        }}
+                        placeholder={t('Enter value')}
+                        invalid={!!valueError}
+                        describedBy={
+                          valueError ? `value-${index}-error` : undefined
                         }
-                      >
-                        <XCircle className="h-4 w-4" />
-                      </Button>
-                    )}
+                      />
+                      {valueError && (
+                        <p
+                          id={`value-${index}-error`}
+                          className="text-[12px] text-destructive"
+                        >
+                          {valueError}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor={`key-${index}`} className="text-[12px]">
-                      {t('Key')} <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id={`key-${index}`}
-                      ref={(el) => {
-                        if (el) createKeyRefs.current.set(index, el)
-                        else createKeyRefs.current.delete(index)
-                      }}
-                      value={pair.key}
-                      onChange={(e) => {
-                        const newPairs = [...createPairs]
-                        newPairs[index].key = e.target.value
-                        setCreatePairs(newPairs)
-                      }}
-                      placeholder="ENTER_KEY"
-                      autoComplete="off"
-                      className="font-mono text-[13px]"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor={`value-${index}`} className="text-[12px]">
-                      {t('Value')} <span className="text-destructive">*</span>
-                    </Label>
-                    <RevealableValueInput
-                      id={`value-${index}`}
-                      value={pair.value}
-                      onChange={(nextValue) => {
-                        const newPairs = [...createPairs]
-                        newPairs[index].value = nextValue
-                        setCreatePairs(newPairs)
-                      }}
-                      placeholder={t('Enter value')}
-                    />
-                  </div>
-                </div>
-              ))}
+                )
+              })}
 
               <Button
                 type="button"
@@ -1435,8 +1478,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
               onClick={handleCreate}
               disabled={
                 createMutation?.isPending ||
-                createPairs.some((p) => !p.key.trim()) ||
-                createPairs.some((p) => p.value.length > 8192)
+                createPairs.some((pair) => blocksVariableSubmit(pair))
               }
             >
               {t('Create')}
@@ -1480,7 +1522,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                   htmlFor={`update-value-${selectedVar?.$id ?? 'new'}`}
                   className="text-[13px]"
                 >
-                  {t('Value')} <span className="text-destructive">*</span>
+                  {t('Value')}
                 </Label>
                 <RevealableValueInput
                   id={`update-value-${selectedVar?.$id ?? 'new'}`}
@@ -1488,7 +1530,19 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                   onChange={setUpdateValue}
                   placeholder={t('Enter value')}
                   autoComplete="off"
+                  invalid={!!updateValueError}
+                  describedBy={
+                    updateValueError ? 'update-value-error' : undefined
+                  }
                 />
+                {updateValueError && (
+                  <p
+                    id="update-value-error"
+                    className="text-[12px] text-destructive"
+                  >
+                    {updateValueError}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -1509,11 +1563,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
               size="sm"
               className="h-9 text-[13px]"
               onClick={handleUpdate}
-              disabled={
-                updateMutation?.isPending ||
-                !updateValue.trim() ||
-                updateValue.length > 8192
-              }
+              disabled={updateMutation?.isPending || !!updateValueError}
             >
               {t('Update')}
             </Button>
