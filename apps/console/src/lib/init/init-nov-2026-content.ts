@@ -4,7 +4,8 @@ import type {
   LaunchEventPrizes,
   LaunchEventScheduleItem,
 } from './types'
-import { INIT_YOUTUBE_CHANNEL_HREF } from './links'
+/** Init 5's launch events happen on the Appwrite Discord server. */
+const INIT_DISCORD_HREF = '/discord'
 import { ZERO_PRODUCT_ICON } from '@/lib/zero/product-icon'
 
 /**
@@ -226,54 +227,54 @@ export const INIT_NOV_2026_DAYS: LaunchEventDay[] = [
 ]
 
 /**
- * Init 5 week schedule (Pacific Time, PST in November): one YouTube launch
- * stream each weekday, then a single Reddit AMA on Saturday.
+ * Init 5 week schedule (Pacific Time, PST in November): one Discord launch
+ * event each weekday, then a single Reddit AMA on Saturday.
  */
 export const INIT_NOV_2026_SCHEDULE: LaunchEventScheduleItem[] = [
   {
     id: 'sched-nov5-analytics',
     day: 1,
-    platform: 'youtube',
-    title: 'Appwrite Analytics launch stream',
+    platform: 'discord',
+    title: 'Appwrite Analytics launch event',
     startsAt: '2026-11-30T09:00:00-08:00',
     isLive: true,
-    href: INIT_YOUTUBE_CHANNEL_HREF,
+    href: INIT_DISCORD_HREF,
   },
   {
     id: 'sched-nov5-videos',
     day: 2,
-    platform: 'youtube',
-    title: 'Appwrite Videos launch stream',
+    platform: 'discord',
+    title: 'Appwrite Videos launch event',
     startsAt: '2026-12-01T09:00:00-08:00',
     isLive: true,
-    href: INIT_YOUTUBE_CHANNEL_HREF,
+    href: INIT_DISCORD_HREF,
   },
   {
     id: 'sched-nov5-zero',
     day: 3,
-    platform: 'youtube',
-    title: 'Appwrite Zero launch stream',
+    platform: 'discord',
+    title: 'Appwrite Zero launch event',
     startsAt: '2026-12-02T09:00:00-08:00',
     isLive: true,
-    href: INIT_YOUTUBE_CHANNEL_HREF,
+    href: INIT_DISCORD_HREF,
   },
   {
     id: 'sched-nov5-monitors',
     day: 4,
-    platform: 'youtube',
-    title: 'Appwrite Monitors & Appwrite Beep launch stream',
+    platform: 'discord',
+    title: 'Appwrite Monitors & Appwrite Beep launch event',
     startsAt: '2026-12-03T09:00:00-08:00',
     isLive: true,
-    href: INIT_YOUTUBE_CHANNEL_HREF,
+    href: INIT_DISCORD_HREF,
   },
   {
     id: 'sched-nov5-finale',
     day: 5,
-    platform: 'youtube',
+    platform: 'discord',
     title: 'Appwrite Reviews launch, plus the finale',
     startsAt: '2026-12-04T09:00:00-08:00',
     isLive: true,
-    href: INIT_YOUTUBE_CHANNEL_HREF,
+    href: INIT_DISCORD_HREF,
   },
   {
     id: 'sched-nov5-ama',
@@ -297,9 +298,9 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
       day: 1,
       dateLabel: 'NOVEMBER 30',
       scheduleItemId: 'sched-nov5-analytics',
-      sessionTitle: 'Appwrite Analytics launch stream',
-      platform: 'youtube',
-      href: INIT_YOUTUBE_CHANNEL_HREF,
+      sessionTitle: 'Appwrite Analytics launch event',
+      platform: 'discord',
+      href: INIT_DISCORD_HREF,
       prizeDescription: 'Init 5 hoodie and cap',
       presenceActivity: 'Hoodie and cap wishlist',
       // Init has no light theme: both themes show the image on its own dark ground.
@@ -313,9 +314,9 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
       day: 2,
       dateLabel: 'DECEMBER 1',
       scheduleItemId: 'sched-nov5-videos',
-      sessionTitle: 'Appwrite Videos launch stream',
-      platform: 'youtube',
-      href: INIT_YOUTUBE_CHANNEL_HREF,
+      sessionTitle: 'Appwrite Videos launch event',
+      platform: 'discord',
+      href: INIT_DISCORD_HREF,
       prizeDescription: 'Light Appwriter keyboard and desk mat',
       presenceActivity: 'Keyboard and desk mat envy',
       visual: {
@@ -329,9 +330,9 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
       day: 3,
       dateLabel: 'DECEMBER 2',
       scheduleItemId: 'sched-nov5-zero',
-      sessionTitle: 'Appwrite Zero launch stream',
-      platform: 'youtube',
-      href: INIT_YOUTUBE_CHANNEL_HREF,
+      sessionTitle: 'Appwrite Zero launch event',
+      platform: 'discord',
+      href: INIT_DISCORD_HREF,
       prizeDescription: 'Dark Appwriter keyboard, mug and stickers',
       presenceActivity: 'Keyboard, mug and sticker dreams',
       visual: {
@@ -345,9 +346,9 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
       day: 4,
       dateLabel: 'DECEMBER 3',
       scheduleItemId: 'sched-nov5-monitors',
-      sessionTitle: 'Appwrite Monitors & Appwrite Beep launch stream',
-      platform: 'youtube',
-      href: INIT_YOUTUBE_CHANNEL_HREF,
+      sessionTitle: 'Appwrite Monitors & Appwrite Beep launch event',
+      platform: 'discord',
+      href: INIT_DISCORD_HREF,
       prizeDescription: 'Init 5 tee, beanie and poster',
       presenceActivity: 'Tee, beanie and poster wishlist',
       visual: {
@@ -363,8 +364,8 @@ export const INIT_NOV_2026_PRIZES: LaunchEventPrizes = {
     dateLabel: 'DECEMBER 4',
     scheduleItemId: 'sched-nov5-finale',
     sessionTitle: 'Appwrite Reviews launch, plus the finale',
-    platform: 'youtube',
-    href: INIT_YOUTUBE_CHANNEL_HREF,
+    platform: 'discord',
+    href: INIT_DISCORD_HREF,
     title: 'The full Init 5 swag collection',
     presenceActivity: 'Full swag collection dreams',
     description:
