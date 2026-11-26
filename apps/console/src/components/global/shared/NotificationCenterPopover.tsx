@@ -80,7 +80,12 @@ import {
   getAppwriteErrorInfo,
   getErrorMessage,
 } from '@/lib/utils/error-formatting'
-import { getNotificationNavigateTarget } from '@/lib/notifications/notification-links'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import {
+  getNotificationLinks,
+  getNotificationNavigateTarget,
+  type NotificationNavigateTarget,
+} from '@/lib/notifications/notification-links'
 import {
   EVERY_ORGANIZATION,
   SNOOZE_DURATIONS,
@@ -391,7 +396,10 @@ function NotificationRow({
 }: {
   notification: Models.Notification
   projectMuted: boolean
-  onOpen: (notification: Models.Notification) => void
+  onOpen: (
+    notification: Models.Notification,
+    target?: NotificationNavigateTarget,
+  ) => void
   onToggleRead: (notification: Models.Notification) => void
   onToggleMuteProject: (projectId: string, muted: boolean) => void
   onAcknowledge: (notification: Models.Notification) => void
@@ -400,6 +408,8 @@ function NotificationRow({
   const isUnread = !notification.read
   const severity = severityOf(notification.type)
   const resolved = isResolvedAlert(notification)
+  const alertCtasEnabled = useConsoleProfile().features.alertCtas
+  const links = alertCtasEnabled ? getNotificationLinks(notification) : []
   const isAlert =
     notification.subjectType === 'alerts' && !!notification.subjectId
   const menuProps = {
@@ -461,6 +471,22 @@ function NotificationRow({
                 </>
               ) : null}
             </div>
+            {links.length > 0 ? (
+              <div className="pointer-events-auto mt-2 flex gap-2">
+                {links.map((link) => (
+                  <Button
+                    key={link.label}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2.5 text-[12px]"
+                    onClick={() => onOpen(notification, link.target)}
+                  >
+                    {t(link.label)}
+                  </Button>
+                ))}
+              </div>
+            ) : null}
           </div>
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
@@ -649,7 +675,10 @@ export function NotificationCenterPopover() {
     }
   }
 
-  const handleNotificationOpen = async (notification: Models.Notification) => {
+  const handleNotificationOpen = async (
+    notification: Models.Notification,
+    link?: NotificationNavigateTarget,
+  ) => {
     if (!notification.read) {
       try {
         await updateReadMutation.mutateAsync({
@@ -661,13 +690,14 @@ export function NotificationCenterPopover() {
       }
     }
 
-    const target = getNotificationNavigateTarget(notification)
+    const target = link ?? getNotificationNavigateTarget(notification)
     if (target) {
       setOpen(false)
       void navigate({
         to: target.to as never,
         params: target.params as never,
         ...(target.search ? { search: target.search as never } : {}),
+        ...(target.hash ? { hash: target.hash } : {}),
       })
     }
   }
