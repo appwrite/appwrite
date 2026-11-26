@@ -694,6 +694,13 @@ class V25 extends Migration
                 case 'ruleRecords':
                     // New with the DNS record checks. A platform collection, so only the console project visits it.
                     $this->createCollection($id);
+                    // What each region saw, added after the collection. An existing attribute is skipped;
+                    // any other failure propagates, since without it no check can be stored.
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'regions');
+                    } catch (Duplicate) {
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
                     break;
 
                 case 'pushLedger':

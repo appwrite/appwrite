@@ -444,6 +444,8 @@ $platformCollections = [
             Attribute::string(key: 'expected', required: true),
             // Values DNS returned, at most 10
             Attribute::string(key: 'current', array: true, default: []),
+            // What each region saw, when the record was checked from several: id, name, status and values
+            Attribute::string(key: 'regions', size: 65535, default: [], filters: [Filter::Json]),
             // 'verified', 'missing', 'mismatch', 'misplaced' or 'failed'
             Attribute::string(key: 'status', size: 16, required: true),
             Attribute::string(key: 'message', size: 1000, default: ''),
