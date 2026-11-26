@@ -17,6 +17,7 @@ import {
 } from '@tanstack/react-query'
 import {
   AppwriteException,
+  ID,
   Query,
   VideoCodec,
   VideoOutput,
@@ -826,7 +827,11 @@ export function useSaveVideoProfile(projectId: string | null | undefined) {
       const { profileId, codec, ...payload } = input
       return profileId
         ? project.updateVideoProfile({ profileId, ...payload })
-        : project.createVideoProfile({ ...payload, codec })
+        : project.createVideoProfile({
+            profileId: ID.unique(),
+            ...payload,
+            codec,
+          })
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
@@ -846,7 +851,9 @@ export function useCreateVideoProfiles(projectId: string | null | undefined) {
     mutationFn: async (inputs: VideoProfileInput[]) => {
       const project = sdk.forProject(projectId!).project
       const results = await Promise.allSettled(
-        inputs.map((input) => project.createVideoProfile(input)),
+        inputs.map((input) =>
+          project.createVideoProfile({ profileId: ID.unique(), ...input }),
+        ),
       )
       return results.flatMap((result, index) =>
         result.status === 'rejected'

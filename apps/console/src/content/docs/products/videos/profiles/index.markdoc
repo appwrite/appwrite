@@ -80,6 +80,7 @@ const client = new sdk.Client()
 const project = new sdk.Project(client);
 
 const profile = await project.createVideoProfile({
+    profileId: '<PROFILE_ID>',
     name: '720p',
     videoBitRate: 2800,
     audioBitRate: 128,
@@ -102,6 +103,7 @@ client.set_key('<API_KEY>')
 project = Project(client)
 
 profile = project.create_video_profile(
+    profile_id = '<PROFILE_ID>',
     name = '720p',
     video_bit_rate = 2800,
     audio_bit_rate = 128,
@@ -123,6 +125,7 @@ Client client = Client()
 Project project = Project(client);
 
 final profile = await project.createVideoProfile(
+    profileId: '<PROFILE_ID>',
     name: '720p',
     videoBitRate: 2800,
     audioBitRate: 128,
@@ -147,6 +150,7 @@ $client = (new Client())
 $project = new Project($client);
 
 $profile = $project->createVideoProfile(
+    profileId: '<PROFILE_ID>',
     name: '720p',
     videoBitRate: 2800,
     audioBitRate: 128,
@@ -170,6 +174,7 @@ client = Client.new
 project = Project.new(client)
 
 profile = project.create_video_profile(
+    profile_id: '<PROFILE_ID>',
     name: '720p',
     video_bit_rate: 2800,
     audio_bit_rate: 128,
@@ -193,6 +198,7 @@ Client client = new Client()
 Project project = new Project(client);
 
 VideoProfile profile = await project.CreateVideoProfile(
+    profileId: "<PROFILE_ID>",
     name: "720p",
     videoBitRate: 2800,
     audioBitRate: 128,
@@ -213,6 +219,7 @@ const client = new Client()
 const project = new Project(client);
 
 const profile = await project.createVideoProfile({
+    profileId: '<PROFILE_ID>',
     name: '720p',
     videoBitRate: 2800,
     audioBitRate: 128,
@@ -242,6 +249,7 @@ func main() {
 	service := project.New(client)
 
 	profile, err := service.CreateVideoProfile(
+		"<PROFILE_ID>",
 		"720p",
 		2800,
 		128,
@@ -269,6 +277,7 @@ let client = Client()
 let project = Project(client)
 
 let profile = try await project.createVideoProfile(
+    profileId: "<PROFILE_ID>",
     name: "720p",
     videoBitRate: 2800,
     audioBitRate: 128,
@@ -291,6 +300,7 @@ val client = Client()
 val project = Project(client)
 
 val profile = project.createVideoProfile(
+    profileId = "<PROFILE_ID>",
     name = "720p",
     videoBitRate = 2800,
     audioBitRate = 128,
@@ -316,6 +326,7 @@ Project project = new Project(client);
 
 try {
     project.createVideoProfile(
+        "<PROFILE_ID>", // profileId
         "720p", // name
         2800L, // videoBitRate
         128L, // audioBitRate
@@ -351,6 +362,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let project = Project::new(&client);
 
     let profile = project.create_video_profile(
+        "<PROFILE_ID>",
         "720p",
         2800,
         128,
@@ -372,6 +384,7 @@ X-Appwrite-Project: <PROJECT_ID>
 X-Appwrite-Key: <API_KEY>
 
 {
+  "profileId": "<PROFILE_ID>",
   "name": "720p",
   "videoBitRate": 2800,
   "audioBitRate": 128,

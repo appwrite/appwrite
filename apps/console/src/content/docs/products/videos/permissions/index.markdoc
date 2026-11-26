@@ -44,6 +44,7 @@ const client = new sdk.Client()
 const videos = new sdk.Videos(client);
 
 const video = await videos.create({
+    videoId: '<VIDEO_ID>',
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
     permissions: [sdk.Permission.read(sdk.Role.team('<TEAM_ID>'))] // optional
@@ -64,6 +65,7 @@ client.set_key('<API_KEY>')
 videos = Videos(client)
 
 video = videos.create(
+    video_id = '<VIDEO_ID>',
     bucket_id = '<BUCKET_ID>',
     file_id = '<FILE_ID>',
     permissions = [Permission.read(Role.team('<TEAM_ID>'))] # optional
@@ -81,6 +83,7 @@ Client client = Client()
 Videos videos = Videos(client);
 
 final video = await videos.create(
+    videoId: '<VIDEO_ID>',
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
     permissions: [Permission.read(Role.team('<TEAM_ID>'))], // (optional)
@@ -122,6 +125,7 @@ client = Client.new
 videos = Videos.new(client)
 
 video = videos.create(
+    video_id: '<VIDEO_ID>',
     bucket_id: '<BUCKET_ID>',
     file_id: '<FILE_ID>',
     permissions: [Permission.read(Role.team('<TEAM_ID>'))] # optional
@@ -141,6 +145,7 @@ Client client = new Client()
 Videos videos = new Videos(client);
 
 Video video = await videos.Create(
+    videoId: "<VIDEO_ID>",
     bucketId: "<BUCKET_ID>",
     fileId: "<FILE_ID>",
     permissions: new List<string> { Permission.Read(Role.Team("<TEAM_ID>")) } // optional
@@ -158,6 +163,7 @@ const client = new Client()
 const videos = new Videos(client);
 
 const video = await videos.create({
+    videoId: '<VIDEO_ID>',
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
     permissions: [Permission.read(Role.team('<TEAM_ID>'))] // optional
@@ -186,6 +192,7 @@ func main() {
 	service := videos.New(client)
 
 	video, err := service.Create(
+		"<VIDEO_ID>",
 		"<BUCKET_ID>",
 		"<FILE_ID>",
 		service.WithCreatePermissions([]string{permission.Read(role.Team("<TEAM_ID>", ""))}),
@@ -209,6 +216,7 @@ let client = Client()
 let videos = Videos(client)
 
 let video = try await videos.create(
+    videoId: "<VIDEO_ID>",
     bucketId: "<BUCKET_ID>",
     fileId: "<FILE_ID>",
     permissions: [Permission.read(Role.team("<TEAM_ID>"))] // optional
@@ -229,6 +237,7 @@ val client = Client()
 val videos = Videos(client)
 
 val video = videos.create(
+    videoId = "<VIDEO_ID>",
     bucketId = "<BUCKET_ID>",
     fileId = "<FILE_ID>",
     permissions = listOf(Permission.read(Role.team("<TEAM_ID>"))) // optional
@@ -253,6 +262,7 @@ Videos videos = new Videos(client);
 
 try {
     videos.create(
+        "<VIDEO_ID>", // videoId
         "<BUCKET_ID>", // bucketId
         "<FILE_ID>", // fileId
         null, // name (optional)
@@ -287,6 +297,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let videos = Videos::new(&client);
 
     let video = videos.create(
+        "<VIDEO_ID>",
         "<BUCKET_ID>",
         "<FILE_ID>",
         None, // name

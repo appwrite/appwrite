@@ -48,6 +48,7 @@ const client = new sdk.Client()
 const videos = new sdk.Videos(client);
 
 const video = await videos.create({
+    videoId: '<VIDEO_ID>',
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
     name: 'Launch keynote', // optional
@@ -69,6 +70,7 @@ client.set_key('<API_KEY>')
 videos = Videos(client)
 
 video = videos.create(
+    video_id = '<VIDEO_ID>',
     bucket_id = '<BUCKET_ID>',
     file_id = '<FILE_ID>',
     name = 'Launch keynote', # optional
@@ -87,6 +89,7 @@ Client client = Client()
 Videos videos = Videos(client);
 
 final video = await videos.create(
+    videoId: '<VIDEO_ID>',
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
     name: 'Launch keynote', // (optional)
@@ -130,6 +133,7 @@ client = Client.new
 videos = Videos.new(client)
 
 video = videos.create(
+    video_id: '<VIDEO_ID>',
     bucket_id: '<BUCKET_ID>',
     file_id: '<FILE_ID>',
     name: 'Launch keynote', # optional
@@ -150,6 +154,7 @@ Client client = new Client()
 Videos videos = new Videos(client);
 
 Video video = await videos.Create(
+    videoId: "<VIDEO_ID>",
     bucketId: "<BUCKET_ID>",
     fileId: "<FILE_ID>",
     name: "Launch keynote", // optional
@@ -168,6 +173,7 @@ const client = new Client()
 const videos = new Videos(client);
 
 const video = await videos.create({
+    videoId: '<VIDEO_ID>',
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
     name: 'Launch keynote', // optional
@@ -197,6 +203,7 @@ func main() {
 	service := videos.New(client)
 
 	video, err := service.Create(
+		"<VIDEO_ID>",
 		"<BUCKET_ID>",
 		"<FILE_ID>",
 		service.WithCreateName("Launch keynote"),
@@ -221,6 +228,7 @@ let client = Client()
 let videos = Videos(client)
 
 let video = try await videos.create(
+    videoId: "<VIDEO_ID>",
     bucketId: "<BUCKET_ID>",
     fileId: "<FILE_ID>",
     name: "Launch keynote", // optional
@@ -242,6 +250,7 @@ val client = Client()
 val videos = Videos(client)
 
 val video = videos.create(
+    videoId = "<VIDEO_ID>",
     bucketId = "<BUCKET_ID>",
     fileId = "<FILE_ID>",
     name = "Launch keynote", // optional
@@ -267,6 +276,7 @@ Videos videos = new Videos(client);
 
 try {
     videos.create(
+        "<VIDEO_ID>", // videoId
         "<BUCKET_ID>", // bucketId
         "<FILE_ID>", // fileId
         "Launch keynote", // name (optional)
@@ -301,6 +311,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let videos = Videos::new(&client);
 
     let video = videos.create(
+        "<VIDEO_ID>",
         "<BUCKET_ID>",
         "<FILE_ID>",
         Some("Launch keynote"), // name
@@ -320,6 +331,7 @@ X-Appwrite-Project: <PROJECT_ID>
 X-Appwrite-Key: <API_KEY>
 
 {
+  "videoId": "<VIDEO_ID>",
   "bucketId": "<BUCKET_ID>",
   "fileId": "<FILE_ID>",
   "name": "Launch keynote",
@@ -645,7 +657,7 @@ A video holds media details, not app details. Keep titles, descriptions, owners,
 To turn every upload into a stream without opening the Console, create the video and its renditions from a [function](/docs/products/functions) that runs on the `buckets.<BUCKET_ID>.files.*.create` [event](/docs/products/functions/execute#events). The event fires once the whole file is uploaded, including large files sent in chunks.
 
 ```js
-import { Client, Videos, VideoOutput, Permission, Role } from 'node-appwrite';
+import { Client, ID, Videos, VideoOutput, Permission, Role } from 'node-appwrite';
 
 // Profile IDs from Videos > Encoding profiles, stored as a function variable
 const PROFILE_IDS = process.env.VIDEO_PROFILE_IDS.split(',');
@@ -664,6 +676,7 @@ export default async ({ req, res, log }) => {
     const videos = new Videos(client);
 
     const video = await videos.create({
+        videoId: ID.unique(),
         bucketId: file.bucketId,
         fileId: file.$id,
         permissions: [Permission.read(Role.any())] // public; see Permissions for private videos
