@@ -31,6 +31,10 @@ interface InputTagsProps {
   onPrefillConsumed?: () => void
   /** Runs before the built-in paste handling; call `preventDefault()` to handle the paste instead. */
   onPaste?: (event: ClipboardEvent<HTMLInputElement>) => void
+  /** Rejects a tag with the returned message, or accepts it when null. */
+  validateTag?: (tag: string) => string | null
+  /** Reports text typed but not yet committed, so a form can treat it as a change. */
+  onPendingChange?: (pending: string) => void
 }
 
 export function InputTags({
@@ -47,9 +51,20 @@ export function InputTags({
   prefillRequest,
   onPrefillConsumed,
   onPaste,
+  validateTag,
+  onPendingChange,
 }: InputTagsProps) {
   const [inputValue, setInputValue] = useState('')
   const [error, setError] = useState<string | null>(null)
+  useEffect(() => {
+    onPendingChange?.(inputValue.trim())
+  }, [inputValue, onPendingChange])
+  // A saved or reset list makes an earlier error stale. Keyed on the joined
+  // list so a parent passing a fresh array each render doesn't clear it.
+  const valueKey = value.join('\n')
+  useEffect(() => {
+    setError(null)
+  }, [valueKey])
   useEffect(() => {
     if (!prefillRequest?.value) return
     const text = prefillRequest.value
@@ -99,6 +114,11 @@ export function InputTags({
     for (const tag of tokens) {
       if (validateEmail && !validateEmailFormat(tag)) {
         setError('Please enter a valid email address')
+        return
+      }
+      const tagError = validateTag?.(tag)
+      if (tagError) {
+        setError(tagError)
         return
       }
       if (maxTagLength !== undefined && tag.length > maxTagLength) {
@@ -161,9 +181,17 @@ export function InputTags({
   }
 
   const handleBlur = () => {
-    if (inputValue.trim()) {
-      handleAddMany(inputValue)
+    if (!inputValue.trim()) return
+    // Leaving the field with a value already in the list just drops the text.
+    const tokens = splitTokens(inputValue)
+    if (
+      tokens.every((tag) => lockedTags.includes(tag) || value.includes(tag))
+    ) {
+      setInputValue('')
+      setError(null)
+      return
     }
+    handleAddMany(inputValue)
   }
 
   const handleInputChange = (next: string) => {
