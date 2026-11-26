@@ -229,7 +229,10 @@ export function PhotoAvatar({
         height: pixels,
         userId: trimmedUserId,
       })
-      return isSelf ? withUserPhotoVersion(url, photoVersion) : url
+      // Project users change through the project's user photo card, which bumps the same version
+      return isSelf || !consoleScoped
+        ? withUserPhotoVersion(url, photoVersion)
+        : url
     }
 
     if (useCurrentUser && consoleScoped) {
