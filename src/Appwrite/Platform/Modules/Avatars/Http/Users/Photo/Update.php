@@ -73,7 +73,7 @@ class Update extends Base
                 requestType: ContentType::MULTIPART,
                 type: MethodType::UPLOAD,
             ))
-            ->param('userId', '', new UID(), 'User ID.')
+            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID.', false, ['dbForProject'])
             ->param('file', [], new File(), 'Binary image file of at most 5MB. Allowed file types are png, jpg, jpeg, and webp.', skipValidation: true)
             ->inject('request')
             ->inject('response')
